@@ -62,6 +62,27 @@ namespace MMT
                 && otherPawn != null
                 && !OverseerlessMechanitorUtility.IsNode(otherPawn))
             {
+                MMT_ShadowOverseerManager? manager = MMT_ShadowOverseerManager.EnsureInstance();
+                if (manager == null)
+                {
+                    if (Prefs.DevMode)
+                    {
+                        Log.Warning(
+                            "[MMT] Shadow overseer manager missing; blocked vanilla relation without shadow record.");
+                    }
+                }
+                else
+                {
+                    manager.SetShadowOverseer(otherPawn, controller);
+
+                    if (Prefs.DevMode)
+                    {
+                        Log.Message(
+                            $"[MMT] Created shadow overseer relation: controller={controller.LabelShort}, " +
+                            $"subject={otherPawn.LabelShort}");
+                    }
+                }
+
                 if (Prefs.DevMode)
                 {
                     Log.Message(
