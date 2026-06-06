@@ -5,6 +5,9 @@ namespace MMT
 {
     public class CompProperties_OverseerlessMechanitorNode : CompProperties
     {
+        public int extraMechBandwidth = 20;
+        public int extraMechControlGroups = 3;
+
         public CompProperties_OverseerlessMechanitorNode()
         {
             compClass = typeof(CompOverseerlessMechanitorNode);
@@ -32,7 +35,8 @@ namespace MMT
             {
                 Log.Message(
                     $"[MMT] Overseerless mechanitor node: {pawn.LabelShort}, " +
-                    $"mechanitor={(pawn.mechanitor != null)}, relations={(pawn.relations != null)}");
+                    $"mechanitor={(pawn.mechanitor != null)}, relations={(pawn.relations != null)}, " +
+                    $"noOverseer={(pawn.GetOverseer() == null)}");
             }
         }
     }
