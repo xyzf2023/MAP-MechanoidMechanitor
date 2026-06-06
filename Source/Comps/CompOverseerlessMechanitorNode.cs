@@ -16,7 +16,7 @@ namespace MMT
 
     public class CompOverseerlessMechanitorNode : ThingComp
     {
-        public static bool PawnHasNode(Pawn pawn)
+        public static bool PawnHasNode(Pawn? pawn)
         {
             return pawn?.GetComp<CompOverseerlessMechanitorNode>() != null;
         }
