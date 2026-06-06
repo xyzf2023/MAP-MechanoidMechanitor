@@ -110,6 +110,49 @@ namespace MMT
                 Log.Message(
                     $"[MMT] Shadow overseer set: subject={subject.LabelShort}, controller={controller.LabelShort}");
             }
+
+            EnsureSubjectInControllerGroup(subject, controller);
+        }
+
+        private static void EnsureSubjectInControllerGroup(Pawn subject, Pawn controller)
+        {
+            if (subject == null || controller == null)
+            {
+                return;
+            }
+
+            if (!OverseerlessMechanitorUtility.IsNode(controller))
+            {
+                return;
+            }
+
+            if (controller.mechanitor == null)
+            {
+                OverseerlessMechanitorUtility.EnsureBasicTrackers(controller);
+            }
+
+            if (controller.mechanitor == null)
+            {
+                return;
+            }
+
+            if (controller.mechanitor.controlGroups == null || controller.mechanitor.controlGroups.Count == 0)
+            {
+                controller.mechanitor.Notify_PawnSpawned(true);
+            }
+
+            if (controller.mechanitor.GetControlGroup(subject) == null)
+            {
+                controller.mechanitor.AssignPawnControlGroup(subject);
+            }
+
+            if (Prefs.DevMode)
+            {
+                bool groupAssigned = controller.mechanitor.GetControlGroup(subject) != null;
+                Log.Message(
+                    $"[MMT] Shadow subject assigned to control group: subject={subject.LabelShort}, " +
+                    $"controller={controller.LabelShort}, groupAssigned={groupAssigned}");
+            }
         }
 
         public Pawn? GetShadowOverseer(Pawn subject)
@@ -152,6 +195,10 @@ namespace MMT
             {
                 return;
             }
+
+            Pawn? controller = index < controllers.Count ? controllers[index] : null;
+            controller?.mechanitor?.UnassignPawnFromAnyControlGroup(subject);
+            controller?.mechanitor?.Notify_BandwidthChanged();
 
             RemoveAt(index);
 
