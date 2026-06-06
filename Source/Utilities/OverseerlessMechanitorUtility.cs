@@ -26,6 +26,8 @@ namespace MMT
             {
                 pawn.mechanitor = new Pawn_MechanitorTracker(pawn);
             }
+
+            pawn.mechanitor?.Notify_PawnSpawned(true);
         }
 
         public static void ClearExternalOverseerIfNode(Pawn pawn)
