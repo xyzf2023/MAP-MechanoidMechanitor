@@ -59,5 +59,31 @@ namespace MMT
 
             return true;
         }
+
+        [HarmonyPostfix]
+        public static void Postfix(Pawn_RelationsTracker __instance, PawnRelationDef def, Pawn otherPawn)
+        {
+            if (def != PawnRelationDefOf.Overseer)
+            {
+                return;
+            }
+
+            Pawn? controller = GetRelationsPawn(__instance);
+            if (controller == null
+                || !OverseerlessMechanitorUtility.IsNode(controller)
+                || otherPawn == null
+                || OverseerlessMechanitorUtility.IsNode(otherPawn))
+            {
+                return;
+            }
+
+            if (Prefs.DevMode)
+            {
+                Pawn? subjectOverseer = otherPawn.GetOverseer();
+                Log.Message(
+                    $"[MMT] Overseer relation added for node controller: controller={controller.LabelShort}, " +
+                    $"subject={otherPawn.LabelShort}, subjectOverseer={subjectOverseer?.LabelShort ?? "null"}");
+            }
+        }
     }
 }
