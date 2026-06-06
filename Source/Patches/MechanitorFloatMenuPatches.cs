@@ -4,12 +4,21 @@ using Verse;
 
 namespace MMT
 {
-    [HarmonyPatch(typeof(FloatMenuOptionProvider_Mechanitor), nameof(FloatMenuOptionProvider.SelectedPawnValid))]
+    [HarmonyPatch(typeof(FloatMenuOptionProvider), nameof(FloatMenuOptionProvider.SelectedPawnValid))]
     public static class MechanitorFloatMenuPatches
     {
         [HarmonyPostfix]
-        public static void Postfix(Pawn pawn, FloatMenuContext context, ref bool __result)
+        public static void Postfix(
+            FloatMenuOptionProvider __instance,
+            Pawn pawn,
+            FloatMenuContext context,
+            ref bool __result)
         {
+            if (__instance is not FloatMenuOptionProvider_Mechanitor)
+            {
+                return;
+            }
+
             if (__result || pawn == null || !ModsConfig.BiotechActive)
             {
                 return;
