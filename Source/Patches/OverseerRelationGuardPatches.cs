@@ -65,8 +65,8 @@ namespace MMT
                 if (Prefs.DevMode)
                 {
                     Log.Message(
-                        $"[MMT] DIAG blocked node-controller overseer relation write: controller={controller.LabelShort}, " +
-                        $"subject={otherPawn.LabelShort}");
+                        $"[MMT] Blocked vanilla overseer relation for node controller; use shadow overseer instead: " +
+                        $"controller={controller.LabelShort}, subject={otherPawn.LabelShort}");
                 }
 
                 return false;
@@ -76,9 +76,13 @@ namespace MMT
         }
 
         [HarmonyPostfix]
-        public static void Postfix(Pawn_RelationsTracker __instance, PawnRelationDef def, Pawn otherPawn)
+        public static void Postfix(
+            Pawn_RelationsTracker __instance,
+            PawnRelationDef def,
+            Pawn otherPawn,
+            bool __runOriginal)
         {
-            if (def != PawnRelationDefOf.Overseer)
+            if (!__runOriginal || def != PawnRelationDefOf.Overseer)
             {
                 return;
             }
@@ -88,6 +92,12 @@ namespace MMT
                 || !OverseerlessMechanitorUtility.IsNode(controller)
                 || otherPawn == null
                 || OverseerlessMechanitorUtility.IsNode(otherPawn))
+            {
+                return;
+            }
+
+            if (controller.relations == null
+                || !controller.relations.DirectRelationExists(PawnRelationDefOf.Overseer, otherPawn))
             {
                 return;
             }
