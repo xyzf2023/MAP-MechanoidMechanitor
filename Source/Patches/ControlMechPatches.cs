@@ -20,7 +20,7 @@ namespace MMT
             return RelationsPawnField.GetValue(relations) as Pawn;
         }
 
-        internal static bool ShouldHandleNodeController(Pawn controller, Pawn otherPawn)
+        internal static bool ShouldHandleNodeController(Pawn? controller, Pawn otherPawn)
         {
             if (controller == null || otherPawn == null || otherPawn == controller)
             {
@@ -45,30 +45,42 @@ namespace MMT
     public static class ControlMechPatches_CanControlMech
     {
         [HarmonyPrefix]
-        public static void Prefix(Pawn pawn, Pawn mech)
+        public static bool Prefix(Pawn pawn, Pawn mech, ref AcceptanceReport __result)
         {
-            if (pawn == null || mech == null || mech == pawn)
+            if (pawn != null && mech != null && pawn == mech && OverseerlessMechanitorUtility.IsNode(pawn))
             {
-                return;
+                __result = false;
+                if (Prefs.DevMode)
+                {
+                    Log.Message($"[MMT] Prevented node self-control: pawn={pawn.LabelShort}");
+                }
+
+                return false;
+            }
+
+            if (pawn == null || mech == null)
+            {
+                return true;
             }
 
             if (!ModsConfig.BiotechActive)
             {
-                return;
+                return true;
             }
 
             if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
             {
-                return;
+                return true;
             }
 
             if (!OverseerlessMechanitorUtility.IsNode(pawn))
             {
-                return;
+                return true;
             }
 
             OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
             OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(pawn);
+            return true;
         }
     }
 
@@ -83,8 +95,8 @@ namespace MMT
                 return;
             }
 
-            Pawn controller = ControlMechPatches.GetRelationsPawn(__instance);
-            if (!ControlMechPatches.ShouldHandleNodeController(controller, otherPawn))
+            Pawn? controller = ControlMechPatches.GetRelationsPawn(__instance);
+            if (controller == null || !ControlMechPatches.ShouldHandleNodeController(controller, otherPawn))
             {
                 return;
             }
@@ -131,8 +143,8 @@ namespace MMT
                 return;
             }
 
-            Pawn controller = ControlMechPatches.GetRelationsPawn(__instance);
-            if (!ControlMechPatches.ShouldHandleNodeController(controller, otherPawn))
+            Pawn? controller = ControlMechPatches.GetRelationsPawn(__instance);
+            if (controller == null || !ControlMechPatches.ShouldHandleNodeController(controller, otherPawn))
             {
                 return;
             }
