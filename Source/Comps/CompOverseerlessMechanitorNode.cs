@@ -28,7 +28,7 @@ namespace MMT
                 return;
             }
 
-            OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
+            OverseerlessMechanitorUtility.RefreshMechanitorStateIfNode(pawn);
             OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(pawn);
 
             if (Prefs.DevMode)

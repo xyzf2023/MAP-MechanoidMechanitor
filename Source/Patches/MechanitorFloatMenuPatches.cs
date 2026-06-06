@@ -40,7 +40,6 @@ namespace MMT
             }
 
             OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
-            OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(pawn);
             __result = true;
         }
     }

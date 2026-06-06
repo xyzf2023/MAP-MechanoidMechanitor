@@ -26,7 +26,6 @@ namespace MMT
             }
 
             OverseerlessMechanitorUtility.EnsureBasicTrackers(mech);
-            OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(mech);
             __result = true;
         }
     }
