@@ -135,6 +135,11 @@ namespace MMT
             return controller;
         }
 
+        public bool HasShadowOverseer(Pawn subject)
+        {
+            return GetShadowOverseer(subject) != null;
+        }
+
         public void RemoveShadowOverseer(Pawn subject)
         {
             if (subject == null)
