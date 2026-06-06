@@ -36,7 +36,8 @@ namespace MMT
                 Log.Message(
                     $"[MMT] Overseerless mechanitor node: {pawn.LabelShort}, " +
                     $"mechanitor={(pawn.mechanitor != null)}, relations={(pawn.relations != null)}, " +
-                    $"noOverseer={(pawn.GetOverseer() == null)}");
+                    $"noOverseer={(pawn.GetOverseer() == null)}, " +
+                    $"isMechanitor={MechanitorUtility.IsMechanitor(pawn)}");
             }
         }
     }

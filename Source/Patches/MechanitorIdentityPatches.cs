@@ -1,0 +1,38 @@
+using HarmonyLib;
+using RimWorld;
+using Verse;
+
+namespace MMT
+{
+    [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.ShouldBeMechanitor))]
+    public static class MechanitorIdentityPatches
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Pawn pawn, ref bool __result)
+        {
+            if (__result || pawn == null)
+            {
+                return;
+            }
+
+            if (!ModsConfig.BiotechActive)
+            {
+                return;
+            }
+
+            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
+            {
+                return;
+            }
+
+            if (!OverseerlessMechanitorUtility.IsNode(pawn))
+            {
+                return;
+            }
+
+            OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
+            OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(pawn);
+            __result = true;
+        }
+    }
+}
