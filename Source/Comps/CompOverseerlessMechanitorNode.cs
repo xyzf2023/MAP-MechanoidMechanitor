@@ -37,7 +37,8 @@ namespace MMT
                     $"[MMT] Overseerless mechanitor node: {pawn.LabelShort}, " +
                     $"mechanitor={(pawn.mechanitor != null)}, relations={(pawn.relations != null)}, " +
                     $"noOverseer={(pawn.GetOverseer() == null)}, " +
-                    $"isMechanitor={MechanitorUtility.IsMechanitor(pawn)}");
+                    $"isMechanitor={MechanitorUtility.IsMechanitor(pawn)}, " +
+                    $"requiresMechanitor={pawn.IsColonyMechRequiringMechanitor()}");
             }
         }
     }
