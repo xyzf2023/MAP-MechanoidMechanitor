@@ -8,7 +8,12 @@ namespace MMT
     {
         static ModInit()
         {
-            new Harmony("xyzf.mechmechanitor.prototype").PatchAll();
+            new Harmony("xyzf.mechanoidmechanitor.test").PatchAll();
+
+            if (Prefs.DevMode)
+            {
+                Log.Message("[MMT] Mechanoid Mechanitor Test loaded.");
+            }
         }
     }
 }

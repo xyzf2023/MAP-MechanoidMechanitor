@@ -12,7 +12,7 @@ namespace MMT
 
         public static void EnsureBasicTrackers(Pawn pawn)
         {
-            if (!IsNode(pawn) || !ModsConfig.BiotechActive)
+            if (pawn == null || !IsNode(pawn) || !ModsConfig.BiotechActive)
             {
                 return;
             }
@@ -30,16 +30,18 @@ namespace MMT
 
         public static void ClearExternalOverseerIfNode(Pawn pawn)
         {
-            if (!IsNode(pawn))
+            if (pawn == null || !IsNode(pawn))
             {
                 return;
             }
 
             Pawn overseer = pawn.GetOverseer();
-            if (overseer != null)
+            if (overseer == null || overseer.relations == null)
             {
-                overseer.relations.RemoveDirectRelation(PawnRelationDefOf.Overseer, pawn);
+                return;
             }
+
+            overseer.relations.RemoveDirectRelation(PawnRelationDefOf.Overseer, pawn);
         }
     }
 }

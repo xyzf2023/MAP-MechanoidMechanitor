@@ -1,11 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-  <ThingDef ParentName="Mech_Lifter">
+  <ThingDef MayRequire="Ludeon.RimWorld.Biotech" ParentName="LightMechanoid">
     <defName>MMT_TestCommander</defName>
     <label>test commander node</label>
     <description>Phase 1 test pawn for overseerless mechanitor node prototype.</description>
+    <statBases>
+      <MoveSpeed>2.8</MoveSpeed>
+    </statBases>
+    <race>
+      <mechEnabledWorkTypes>
+        <li>Hauling</li>
+      </mechEnabledWorkTypes>
+      <lifeStageAges>
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>0</minAge>
+          <soundWounded>Pawn_Mech_Lifter_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Lifter_Death</soundDeath>
+          <soundCall>Pawn_Mech_Lifter_Call</soundCall>
+        </li>
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>100</minAge>
+          <soundWounded>Pawn_Mech_Lifter_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Lifter_Death</soundDeath>
+          <soundCall>Pawn_Mech_Lifter_Call</soundCall>
+        </li>
+      </lifeStageAges>
+    </race>
     <comps>
-      <li MayRequire="Ludeon.RimWorld.Biotech" Class="MMT.CompProperties_OverseerlessMechanitorNode" />
+      <li Class="MMT.CompProperties_OverseerlessMechanitorNode">
+        <extraMechBandwidth>20</extraMechBandwidth>
+        <extraMechControlGroups>3</extraMechControlGroups>
+      </li>
     </comps>
   </ThingDef>
 </Defs>
