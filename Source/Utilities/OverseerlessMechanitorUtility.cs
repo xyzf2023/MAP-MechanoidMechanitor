@@ -5,7 +5,7 @@ namespace MMT
 {
     public static class OverseerlessMechanitorUtility
     {
-        public static bool IsNode(Pawn pawn)
+        public static bool IsNode(Pawn? pawn)
         {
             return CompOverseerlessMechanitorNode.PawnHasNode(pawn);
         }
