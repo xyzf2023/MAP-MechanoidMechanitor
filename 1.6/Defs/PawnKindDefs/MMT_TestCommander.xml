@@ -4,6 +4,7 @@
     <defName>MMT_TestCommander</defName>
     <label>test commander node</label>
     <race>MMT_TestCommander</race>
+    <defaultFactionDef>PlayerColony</defaultFactionDef>
     <lifeStages>
       <li>
         <bodyGraphicData>
