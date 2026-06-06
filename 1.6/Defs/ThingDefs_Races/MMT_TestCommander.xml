@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="Mech_Lifter">
+    <defName>MMT_TestCommander</defName>
+    <label>test commander node</label>
+    <description>Phase 1 test pawn for overseerless mechanitor node prototype.</description>
+    <comps>
+      <li MayRequire="Ludeon.RimWorld.Biotech" Class="MMT.CompProperties_OverseerlessMechanitorNode" />
+    </comps>
+  </ThingDef>
+</Defs>

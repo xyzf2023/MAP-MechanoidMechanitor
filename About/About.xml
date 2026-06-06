@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+	<name>机械族机械师-技术验证</name>
+	<packageId>xyzf.mechanoidmechanitor.test</packageId>
+	<supportedVersions>
+		<li>1.6</li>
+	</supportedVersions>
+	<author>星羽枝繁</author>
+	<description>无监管者机械师节点技术验证（第一阶段骨架）。</description>
+	<modDependencies>
+		<li>
+			<packageId>brrainz.harmony</packageId>
+			<displayName>Harmony</displayName>
+			<steamWorkshopUrl>https://steamcommunity.com/workshop/filedetails/?id=2009463077</steamWorkshopUrl>
+			<downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
+		</li>
+		<li>
+			<packageId>Ludeon.RimWorld.Biotech</packageId>
+			<displayName>Biotech</displayName>
+		</li>
+	</modDependencies>
+	<loadAfter>
+		<li>brrainz.harmony</li>
+	</loadAfter>
+</ModMetaData>

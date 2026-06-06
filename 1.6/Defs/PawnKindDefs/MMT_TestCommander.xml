@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <PawnKindDef ParentName="Mech_Lifter">
+    <defName>MMT_TestCommanderKind</defName>
+    <label>test commander node</label>
+    <race>MMT_TestCommander</race>
+  </PawnKindDef>
+</Defs>
