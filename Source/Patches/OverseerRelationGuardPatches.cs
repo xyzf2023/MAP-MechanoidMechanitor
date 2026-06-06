@@ -57,6 +57,21 @@ namespace MMT
                 return false;
             }
 
+            if (controller != null
+                && OverseerlessMechanitorUtility.IsNode(controller)
+                && otherPawn != null
+                && !OverseerlessMechanitorUtility.IsNode(otherPawn))
+            {
+                if (Prefs.DevMode)
+                {
+                    Log.Message(
+                        $"[MMT] DIAG blocked node-controller overseer relation write: controller={controller.LabelShort}, " +
+                        $"subject={otherPawn.LabelShort}");
+                }
+
+                return false;
+            }
+
             return true;
         }
 
