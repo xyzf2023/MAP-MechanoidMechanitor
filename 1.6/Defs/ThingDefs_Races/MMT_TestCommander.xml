@@ -6,6 +6,9 @@
     <description>Phase 1 test pawn for overseerless mechanitor node prototype.</description>
     <statBases>
       <MoveSpeed>2.8</MoveSpeed>
+      <BandwidthCost>0</BandwidthCost>
+      <MechBandwidth>20</MechBandwidth>
+      <MechControlGroups>3</MechControlGroups>
     </statBases>
     <race>
       <mechEnabledWorkTypes>

@@ -39,7 +39,9 @@ namespace MMT
                     $"noOverseer={(pawn.GetOverseer() == null)}, " +
                     $"isMechanitor={MechanitorUtility.IsMechanitor(pawn)}, " +
                     $"requiresMechanitor={pawn.IsColonyMechRequiringMechanitor()}, " +
-                    $"canDraft={MechanitorUtility.CanDraftMech(pawn).Accepted}");
+                    $"canDraft={MechanitorUtility.CanDraftMech(pawn).Accepted}, " +
+                    $"totalBandwidth={pawn.mechanitor?.TotalBandwidth}, " +
+                    $"controlGroups={pawn.mechanitor?.controlGroups?.Count}");
             }
         }
     }
