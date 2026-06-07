@@ -93,6 +93,26 @@ namespace MMT
                 return false;
             }
 
+            if (controller != null
+                && !OverseerlessMechanitorUtility.IsNode(controller)
+                && otherPawn != null
+                && !OverseerlessMechanitorUtility.IsNode(otherPawn))
+            {
+                MMT_ShadowOverseerManager? manager = MMT_ShadowOverseerManager.Current;
+                Pawn? oldShadow = manager?.GetShadowOverseer(otherPawn);
+                if (oldShadow != null && manager != null)
+                {
+                    manager.RemoveShadowOverseer(otherPawn);
+                    if (Prefs.DevMode)
+                    {
+                        Log.Message(
+                            $"[MMT] Removed shadow overseer because vanilla overseer took over: " +
+                            $"oldShadow={oldShadow.LabelShort}, newOverseer={controller.LabelShort}, " +
+                            $"subject={otherPawn.LabelShort}");
+                    }
+                }
+            }
+
             return true;
         }
 

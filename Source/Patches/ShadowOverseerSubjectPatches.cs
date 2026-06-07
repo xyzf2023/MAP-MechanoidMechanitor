@@ -53,6 +53,12 @@ namespace MMT
                 return;
             }
 
+            Pawn? realOverseer = subject.relations?.GetFirstDirectRelationPawn(PawnRelationDefOf.Overseer);
+            if (realOverseer != null)
+            {
+                return;
+            }
+
             Pawn? controller = MMT_ShadowOverseerManager.Current?.GetShadowOverseer(subject);
             if (controller == null)
             {
