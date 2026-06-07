@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-	<name>机械族机械师-技术验证</name>
+	<name>[MAP]机械族机械师 Mechanoid Mechanitor (1.6)</name>
 	<packageId>xyzf.mechanoidmechanitor</packageId>
 	<supportedVersions>
 		<li>1.6</li>
 	</supportedVersions>
 	<author>星羽枝繁</author>
-	<description>无监管者机械师节点技术验证（第一阶段骨架）。</description>
+	<description>TODO</description>
 	<modDependencies>
 		<li>
 			<packageId>brrainz.harmony</packageId>
