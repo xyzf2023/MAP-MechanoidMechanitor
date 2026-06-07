@@ -76,6 +76,26 @@ namespace MMT
             }
 
             CleanInvalidEntries();
+
+            for (int i = 0; i < subjects.Count; i++)
+            {
+                Pawn subject = subjects[i];
+                Pawn? controller = controllers[i];
+                if (!IsValidSubject(subject) || !IsValidController(controller))
+                {
+                    continue;
+                }
+
+                EnsureSubjectInControllerGroup(subject, controller);
+
+                if (Prefs.DevMode)
+                {
+                    bool groupAssigned = controller!.mechanitor?.GetControlGroup(subject) != null;
+                    Log.Message(
+                        $"[MMT] Shadow overseer restored after load: subject={subject.LabelShort}, " +
+                        $"controller={controller.LabelShort}, groupAssigned={groupAssigned}");
+                }
+            }
         }
 
         public void SetShadowOverseer(Pawn subject, Pawn controller)
@@ -215,6 +235,7 @@ namespace MMT
 
         private void CleanInvalidEntries()
         {
+            bool removedAny = false;
             for (int i = subjects.Count - 1; i >= 0; i--)
             {
                 Pawn subject = subjects[i];
@@ -222,7 +243,13 @@ namespace MMT
                 if (!IsValidSubject(subject) || !IsValidController(controller))
                 {
                     RemoveAt(i);
+                    removedAny = true;
                 }
+            }
+
+            if (removedAny && Prefs.DevMode)
+            {
+                Log.Message("[MMT] Removed invalid shadow overseer record during cleanup.");
             }
         }
 
