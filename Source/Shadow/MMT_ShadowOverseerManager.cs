@@ -239,6 +239,42 @@ namespace MMT
             return GetShadowOverseer(subject) == controller;
         }
 
+        public List<Pawn> GetShadowSubjectsFor(Pawn controller)
+        {
+            List<Pawn> result = new List<Pawn>();
+            if (controller == null || !OverseerlessMechanitorUtility.IsNode(controller))
+            {
+                return result;
+            }
+
+            for (int i = subjects.Count - 1; i >= 0; i--)
+            {
+                Pawn subject = subjects[i];
+                Pawn? recordController = i < controllers.Count ? controllers[i] : null;
+
+                if (!IsValidSubject(subject) || !IsValidController(recordController))
+                {
+                    RemoveAt(i);
+                    continue;
+                }
+
+                if (subject.relations?.GetFirstDirectRelationPawn(PawnRelationDefOf.Overseer) != null)
+                {
+                    RemoveShadowOverseer(subject);
+                    continue;
+                }
+
+                if (recordController != controller)
+                {
+                    continue;
+                }
+
+                result.Add(subject);
+            }
+
+            return result;
+        }
+
         private void CleanInvalidEntries()
         {
             bool removedAny = false;
