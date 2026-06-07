@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>MAP_UseChipForBandwidth</defName>
+    <label>提升带宽</label>
+    <driverClass>MAP_MechCommander.JobDriver_UseChipForBandwidth</driverClass>
+    <reportString>提升带宽</reportString>
+  </JobDef>
+  <JobDef>
+    <defName>MAP_UseBandwidthLink</defName>
+    <label>安装带宽协调模块</label>
+    <driverClass>MAP_MechCommander.JobDriver_UseBandwidthLink</driverClass>
+    <reportString>安装带宽协调模块</reportString>
+  </JobDef>
+</Defs>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ThingDef ParentName="MechanitorImplantBase">
+    <defName>MAP_MechBandwidthLink</defName>
+    <label>带宽协调模块</label>
+    <description>带宽协调模块是一种由机控中枢改造而来的信息处理装置，旨在适配机械体使用，而非建立直接的主控链接。该模块被设计用于信息分流与指令转换，使安装者能够作为子节点参与带宽传输，从而协助承担机械师的控制负载。\n\n在结构上，带宽协调模块保留了机控中枢用于感知与解析心灵信号的核心仿生组件，但其接口与协议已针对机械体的控制单元进行了全面重构。安装完成后，机械体将能够接收来自主控节点的高层指令，并在本地完成必要的信号转译、缓存与再分发，使集群中的指令流动更加稳定。\n\n由于该模块仍依赖心灵与电磁信号的双重机制，其运行需要维持最低限度的心灵感知能力。为保证指令解析与同步过程的可靠性，模块会主动校准并维持安装者的心灵敏感度，使其不再因外部因素而下降至无法参与协调的水平。\n\n与机控中枢不同，带宽协调模块并不建立完整的心灵主控关系，也不会赋予使用者对机械体的直接支配权。它更像是一个被部署于机械体体系内部的中继与稳定装置，使机械体在保持受控状态的同时，能够承担有限的指令处理与集群同步职责，从而维持高负载环境下的整体协调性。\n\n 选中目标机械体并右键此装置已下达安装指令。</description>
+    <graphicData>
+      <texPath>Things/MechBandwidthLink</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+    <stackLimit>1</stackLimit>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+      <Beauty>-4</Beauty>
+      <DeteriorationRate>0</DeteriorationRate>
+      <Mass>1</Mass>
+      <MarketValue>3000</MarketValue>
+    </statBases>
+    <comps>
+      <li Class="CompProperties_Forbiddable"/>
+    </comps>
+    <tradeTags>
+      <li>ExoticMisc</li>
+    </tradeTags>
+    <techLevel>Archotech</techLevel>
+  </ThingDef>
+</Defs>

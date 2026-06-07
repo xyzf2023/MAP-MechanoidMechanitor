@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <HediffDef>
+    <defName>MAP_Justice_SyncTracker</defName>
+    <label>「正义」同步追踪器</label>
+    <description>用于追踪由「正义」同步的健康状态的内部标记。</description>
+    <hediffClass>HediffWithComps</hediffClass>
+    <isBad>false</isBad>
+    <comps>
+      <li Class="MAP_MechCommander.HediffCompProperties_JusticeSyncTracker" />
+    </comps>
+  </HediffDef>
+</Defs>

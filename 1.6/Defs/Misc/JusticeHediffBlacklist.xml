@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <MAP_MechCommander.JusticeHediffBlacklistDef>
+    <defName>MAP_Justice_DefaultHediffBlacklist</defName>
+    <hediffs>
+      <!-- 在此填写要默认视为“不允许同步”的 HediffDef -->
+      <li>SelfShutdown</li>
+      <li>MAP_Mech_BandwidthLink</li>
+    </hediffs>
+  </MAP_MechCommander.JusticeHediffBlacklistDef>
+</Defs>

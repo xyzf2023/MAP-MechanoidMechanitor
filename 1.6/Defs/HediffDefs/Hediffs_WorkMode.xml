@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <HediffDef>
+    <defName>MAP_Justice_WorkMode_EfficientExecution</defName>
+    <label>行为模式：高效执行</label>
+    <description>在「正义」的协调下，该机械体采用由上位协调单元优化的高效工作行为模式，对任务顺序与路径进行高效率重排。在不改变基础性能的前提下，整体工作效率提升，并降低了能量消耗。</description>
+    <descriptionShort>在「正义」的协调下，该机械体正处于高效执行状态</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <stages>
+      <li>
+        <statFactors>
+          <MoveSpeed>1.5</MoveSpeed>
+          <WorkSpeedGlobal>1.5</WorkSpeedGlobal>
+          <MechEnergyUsageFactor>0.75</MechEnergyUsageFactor>
+        </statFactors>
+      </li>
+    </stages>
+  </HediffDef>
+
+  <HediffDef>
+    <defName>MAP_Justice_WorkMode_MobileCombat</defName>
+    <label>行为模式：机动作战</label>
+    <description>在「正义」的协调下，该机械体采用经上位协调单元优化的机动作战行为模式，综合步态控制系统使其移动不再受地形影响，而火控解算模块则同步压缩射击后的恢复间隔，并能一定程度上规避入射伤害。处于该模式下的机械体移动无视地形惩罚。</description>
+    <descriptionShort>在「正义」的协调下，该机械体正处于机动作战状态</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <hediffClass>HediffWithComps</hediffClass>
+    <isBad>false</isBad>
+    <comps>
+      <li Class="MAP_MechCommander.HediffCompProperties_MobileCombatMarker" />
+    </comps>
+    <stages>
+      <li>
+        <statFactors>
+          <MoveSpeed>1.2</MoveSpeed>
+          <RangedCooldownFactor>0.75</RangedCooldownFactor>
+          <IncomingDamageFactor>0.8</IncomingDamageFactor>
+        </statFactors>
+      </li>
+    </stages>
+  </HediffDef>
+
+  <HediffDef>
+    <defName>MAP_Justice_WorkMode_FortifiedDefense</defName>
+    <label>行为模式：阵地防御</label>
+    <description>在「正义」的协调下，该机械体采用经上位协调单元优化的阵地防御行为模式，使用阵位锚定系统主动限制机动，以换取更短的瞄准与射击恢复间隔，并显著提升射击稳定性。</description>
+    <descriptionShort>在「正义」的协调下，该机械体正处于阵地防御状态</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <stages>
+      <li>
+        <statFactors>
+          <MoveSpeed>0.5</MoveSpeed>
+          <RangedCooldownFactor>0.75</RangedCooldownFactor>
+          <RangedWeapon_WarmupMultiplier>0.75</RangedWeapon_WarmupMultiplier>
+          <ShootingAccuracyPawn>3</ShootingAccuracyPawn>
+        </statFactors>
+      </li>
+    </stages>
+  </HediffDef>
+</Defs>
