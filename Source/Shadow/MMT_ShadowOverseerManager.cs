@@ -60,6 +60,15 @@ namespace MMT
             PostLoadInit();
         }
 
+        public override void GameComponentTick()
+        {
+            base.GameComponentTick();
+            if (Find.TickManager.TicksGame % 250 == 0)
+            {
+                CleanInvalidEntries();
+            }
+        }
+
         private void PostLoadInit()
         {
             subjects ??= new List<Pawn>();
@@ -197,7 +206,7 @@ namespace MMT
             Pawn? controller = controllers[index];
             if (!IsValidSubject(subject) || !IsValidController(controller))
             {
-                RemoveAt(index);
+                RemoveAtAndCleanupControlGroup(index, "invalid GetShadowOverseer record");
                 return null;
             }
 
@@ -222,15 +231,7 @@ namespace MMT
                 return;
             }
 
-            Pawn? controller = index < controllers.Count ? controllers[index] : null;
-            RemoveAt(index);
-            controller?.mechanitor?.UnassignPawnFromAnyControlGroup(subject);
-            controller?.mechanitor?.Notify_BandwidthChanged();
-
-            if (Prefs.DevMode)
-            {
-                Log.Message($"[MMT] Shadow overseer removed: subject={subject.LabelShort}");
-            }
+            RemoveAtAndCleanupControlGroup(index, "explicit removal", devLogAsRemoved: true);
         }
 
         public bool IsShadowControlledBy(Pawn subject, Pawn controller)
@@ -253,7 +254,7 @@ namespace MMT
 
                 if (!IsValidSubject(subject) || !IsValidController(recordController))
                 {
-                    RemoveAt(i);
+                    RemoveAtAndCleanupControlGroup(i, "invalid GetShadowSubjectsFor record");
                     continue;
                 }
 
@@ -283,7 +284,7 @@ namespace MMT
                 Pawn? controller = i < controllers.Count ? controllers[i] : null;
                 if (!IsValidSubject(subject) || !IsValidController(controller))
                 {
-                    RemoveAt(i);
+                    RemoveAtAndCleanupControlGroup(i, "invalid cleanup record");
                     removedAny = true;
                 }
             }
@@ -321,6 +322,40 @@ namespace MMT
             if (index < controllers.Count)
             {
                 controllers.RemoveAt(index);
+            }
+        }
+
+        private void RemoveAtAndCleanupControlGroup(int index, string reason, bool devLogAsRemoved = false)
+        {
+            if (index < 0 || index >= subjects.Count)
+            {
+                return;
+            }
+
+            Pawn subject = subjects[index];
+            Pawn? controller = index < controllers.Count ? controllers[index] : null;
+
+            RemoveAt(index);
+
+            if (controller?.mechanitor != null && subject != null)
+            {
+                controller.mechanitor.UnassignPawnFromAnyControlGroup(subject);
+                controller.mechanitor.Notify_BandwidthChanged();
+            }
+
+            if (Prefs.DevMode)
+            {
+                string subjectLabel = subject?.LabelShort ?? "null";
+                if (devLogAsRemoved)
+                {
+                    Log.Message($"[MMT] Shadow overseer removed: subject={subjectLabel}");
+                }
+                else
+                {
+                    Log.Message(
+                        $"[MMT] Shadow overseer record cleaned: subject={subjectLabel}, " +
+                        $"controller={controller?.LabelShort ?? "null"}, reason={reason}");
+                }
             }
         }
     }
