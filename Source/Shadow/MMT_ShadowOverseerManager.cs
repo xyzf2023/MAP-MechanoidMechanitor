@@ -182,6 +182,12 @@ namespace MMT
                 return null;
             }
 
+            if (subject.relations?.GetFirstDirectRelationPawn(PawnRelationDefOf.Overseer) != null)
+            {
+                RemoveShadowOverseer(subject);
+                return null;
+            }
+
             int index = subjects.IndexOf(subject);
             if (index < 0)
             {
