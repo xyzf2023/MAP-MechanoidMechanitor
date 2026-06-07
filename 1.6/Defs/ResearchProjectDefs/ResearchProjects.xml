@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ResearchProjectDef>
+    <defName>ArchotechMechtech</defName>
+    <label>超凡机械科技</label>
+    <description>解锁机械师制造超凡机械科技所需的技术。</description>
+    <baseCost>12000</baseCost>
+    <techLevel>Spacer</techLevel>
+    <researchViewX>20.0</researchViewX>
+    <researchViewY>5.4</researchViewY>
+    <prerequisites>
+      <li>UltraMechtech</li>
+    </prerequisites>
+  </ResearchProjectDef>
+</Defs>

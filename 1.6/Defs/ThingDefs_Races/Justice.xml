@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <ThingDef ParentName="MechCentipede">
+    <defName>MAP_Mech_Justice</defName>
+    <label>「正义」</label>
+    <description>为机械体集群指挥而设计的机械体指挥官。「正义」并不以直接参战见长，而是作为扩展的机械师节点存在，持续为机械师分担通信带宽并拓展指挥范围。通过内置经过特殊调试的带宽协调模块，它能够支持远行队指挥与高负载多工调度，使机械体在长时间行动中仍能保持稳定的执行效率。\n\n与多数机械族不同，「正义」的作战与执行协议并非固定不变。它可以根据战场与任务环境快速切换运行模式，并将自身的状态修正与指令逻辑同步至受控机械体，从而在不显著增加单体负担的情况下提升整体协同性与机动性。\n\n尽管其主要职责在于协调与指挥，「正义」仍保留了基础的作战能力，能够自如使用人类武器，并具备相当可靠的社交与制造逻辑。这使它在机械体体系中不仅是战时的调度中枢，也能在非战斗阶段承担协调与维护角色。曾有殖民地记录指出，只要「正义」仍在运行，机械体集群的行动便会显得异常克制而高效，仿佛整个系统始终处于被持续校准的状态。</description>
+    <statBases>
+      <MarketValue>8000</MarketValue>
+      <MoveSpeed>3.2</MoveSpeed>
+      <WorkSpeedGlobal>1</WorkSpeedGlobal>
+      <EnergyShieldRechargeRate>0.25</EnergyShieldRechargeRate>
+      <EnergyShieldEnergyMax>1.5</EnergyShieldEnergyMax>
+      <MechEnergyLossPerHP>0.15</MechEnergyLossPerHP>
+      <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">0</BandwidthCost>
+      <PilotingAbility MayRequire="Ludeon.RimWorld.Odyssey">2</PilotingAbility>
+      <ControlTakingTime>10</ControlTakingTime>
+      <EMPResistance>1.0</EMPResistance>
+      <ArmorRating_Blunt>1.50</ArmorRating_Blunt>
+      <ArmorRating_Sharp>1.50</ArmorRating_Sharp>
+    </statBases>
+    <comps>
+      <li Class="MAP_MechCommander.CompProperties_MechanitorMarker">
+        <extraMechBandwidth>20</extraMechBandwidth>
+        <extraMechControlGroups>5</extraMechControlGroups>
+      </li>
+      <li Class="MAP_MechCommander.CompProperties_CommanderSkills">
+        <bodyType>Male</bodyType>
+        <skillLevels>
+          <li>
+            <skill>Shooting</skill>
+            <level>18</level>
+          </li>
+          <li>
+            <skill>Melee</skill>
+            <level>16</level>
+          </li>
+          <li>
+            <skill>Social</skill>
+            <level>12</level>
+          </li>
+          <li>
+            <skill>Crafting</skill>
+            <level>12</level>
+          </li>
+        </skillLevels>
+      </li>
+      <li Class="MAP_MechCommander.CompProperties_CaravanOwner" />
+      <li Class="MAP_MechCommander.CompProperties_JusticeHediffSync" />
+      <li Class="MAP_MechCommander.CompProperties_MechanitorBandwidth" />
+    </comps>
+    <race>
+      <mechFixedSkillLevel>12</mechFixedSkillLevel>
+      <mechEnabledWorkTypes>
+        <li>Smithing</li>
+        <li>Crafting</li>
+        <li>Firefighter</li>
+        <li>BasicWorker</li>
+      </mechEnabledWorkTypes>
+      <lifeStageAges Inherit="False">
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>0</minAge>
+          <soundWounded>Pawn_Mech_Militor_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Militor_Death</soundDeath>
+          <soundCall>Pawn_Mech_Militor_Call</soundCall>
+        </li>
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>100</minAge>
+          <soundWounded>Pawn_Mech_Militor_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Militor_Death</soundDeath>
+          <soundCall>Pawn_Mech_Militor_Call</soundCall>
+        </li>
+      </lifeStageAges>
+      <baseHealthScale>5.2</baseHealthScale>
+    </race>
+  </ThingDef>
+
+  <PawnKindDef ParentName="MechCentipedeBase">
+    <defName>MAP_Mech_Justice</defName>
+    <label>「正义」</label>
+    <race>MAP_Mech_Justice</race>
+    <destroyGearOnDrop>false</destroyGearOnDrop>
+    <combatPower>600</combatPower>
+    <lifeStages Inherit="False">
+      <li>
+        <bodyGraphicData>
+          <texPath>Justice/Justice</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>2</drawSize>
+          <shadowData>
+            <volume>(0.3, 0.4, 0.3)</volume>
+            <offset>(0,0,-0.25)</offset>
+          </shadowData>
+        </bodyGraphicData>
+      </li>
+      <li>
+        <bodyGraphicData>
+          <texPath>Justice/Justice</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>2</drawSize>
+          <shadowData>
+            <volume>(0.3, 0.4, 0.3)</volume>
+            <offset>(0,0,-0.25)</offset>
+          </shadowData>
+        </bodyGraphicData>
+      </li>
+    </lifeStages>
+    <weaponTags />
+  </PawnKindDef>
+
+</Defs>

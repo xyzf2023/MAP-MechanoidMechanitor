@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <MechWorkModeDef>
+    <defName>MAP_WorkMode_EfficientExecution</defName>
+    <label>工作（高效执行）</label>
+    <uiOrder>150</uiOrder>
+    <iconPath>UI/Icons/WorkMode/Work</iconPath>
+  </MechWorkModeDef>
+
+  <MechWorkModeDef>
+    <defName>MAP_WorkMode_MobileCombat</defName>
+    <label>工作（机动作战）</label>
+    <uiOrder>160</uiOrder>
+    <iconPath>UI/Icons/WorkMode/Work</iconPath>
+  </MechWorkModeDef>
+
+  <MechWorkModeDef>
+    <defName>MAP_WorkMode_MobileCombat_Guard</defName>
+    <label>守卫（机动作战）</label>
+    <uiOrder>210</uiOrder>
+    <iconPath>UI/Icons/WorkMode/Escort</iconPath>
+  </MechWorkModeDef>
+
+  <MechWorkModeDef>
+    <defName>MAP_WorkMode_FortifiedDefense</defName>
+    <label>工作（阵地防御）</label>
+    <uiOrder>170</uiOrder>
+    <iconPath>UI/Icons/WorkMode/Work</iconPath>
+  </MechWorkModeDef>
+</Defs>

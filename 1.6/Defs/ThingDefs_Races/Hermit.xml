@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ThingDef ParentName="BaseMechanoidWalker">
+    <defName>MAP_Mech_Hermit</defName>
+    <label>「隐者」</label>
+    <description>「隐者」是一种装备了大功率信号中继装置的机械体，搭载了带宽信息处理模块，拥有独立带宽。该机械体可以精确接收机械师的指挥信号，进而脱离机械师范围行动，并能独立带领远征队。\n\n注意：「隐者」控制的机械体只能在其控制范围内被征召。</description>
+    <statBases>
+      <MarketValue>1000</MarketValue>
+      <MoveSpeed>2.0</MoveSpeed>
+      <WorkSpeedGlobal>1</WorkSpeedGlobal>
+      <EnergyShieldRechargeRate>0.25</EnergyShieldRechargeRate>
+      <EnergyShieldEnergyMax>1.5</EnergyShieldEnergyMax>
+      <MechEnergyLossPerHP>0.25</MechEnergyLossPerHP>
+      <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">5</BandwidthCost>
+      <ControlTakingTime>15</ControlTakingTime>
+      <EMPResistance>0</EMPResistance>
+      <ArmorRating_Blunt>0.20</ArmorRating_Blunt>
+      <ArmorRating_Sharp>0.40</ArmorRating_Sharp>
+    </statBases>
+    <tools>
+      <li>
+        <label>head</label>
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+        <power>9</power>
+        <cooldownTime>1</cooldownTime>
+        <linkedBodyPartsGroup>HeadAttackTool</linkedBodyPartsGroup>
+        <ensureLinkedBodyPartsGroupAlwaysUsable>true</ensureLinkedBodyPartsGroupAlwaysUsable>
+        <chanceFactor>0.2</chanceFactor>
+      </li>
+    </tools>
+    <comps>
+      <li Class="MAP_MechCommander.CompProperties_MechanitorMarker">
+        <extraMechBandwidth>8</extraMechBandwidth>
+        <extraMechControlGroups>1</extraMechControlGroups>
+      </li>
+      <li Class="MAP_MechCommander.CompProperties_CaravanOwner" />
+    </comps>
+    <race>
+      <body>Scyther</body>
+      <baseHealthScale>1.32</baseHealthScale>
+    </race>
+  </ThingDef>
+
+  <PawnKindDef ParentName="BaseMechanoidKind">
+    <defName>MAP_Mech_Hermit</defName>
+    <label>「隐者」</label>
+    <race>MAP_Mech_Hermit</race>
+    <combatPower>150</combatPower>
+    <lifeStages>
+      <li>
+        <bodyGraphicData>
+          <texPath>Hermit/Hermit</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>2</drawSize>
+          <shadowData>
+            <volume>(0.4, 0.8, 0.4)</volume>
+          </shadowData>
+        </bodyGraphicData>
+      </li>
+      <li>
+        <bodyGraphicData>
+          <texPath>Hermit/Hermit</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>2</drawSize>
+          <shadowData>
+            <volume>(0.4, 0.8, 0.4)</volume>
+          </shadowData>
+        </bodyGraphicData>
+      </li>
+    </lifeStages>
+  </PawnKindDef>
+</Defs>
