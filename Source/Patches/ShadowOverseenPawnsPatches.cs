@@ -5,11 +5,11 @@ using Verse;
 
 namespace MMT
 {
-    [HarmonyPatch(typeof(Pawn_MechanitorTracker), nameof(Pawn_MechanitorTracker.UsedBandwidthFromSubjects), MethodType.Getter)]
-    public static class ShadowBandwidthPatches
+    [HarmonyPatch(typeof(Pawn_MechanitorTracker), nameof(Pawn_MechanitorTracker.OverseenPawns), MethodType.Getter)]
+    public static class ShadowOverseenPawnsPatches
     {
         [HarmonyPostfix]
-        public static void Postfix(Pawn_MechanitorTracker __instance, ref int __result)
+        public static void Postfix(Pawn_MechanitorTracker __instance, ref List<Pawn> __result)
         {
             Pawn controller = __instance.Pawn;
             if (controller == null || !OverseerlessMechanitorUtility.IsNode(controller))
@@ -24,19 +24,26 @@ namespace MMT
             }
 
             List<Pawn> shadowSubjects = manager.GetShadowSubjectsFor(controller);
-            int shadowBandwidth = 0;
+            if (shadowSubjects.Count == 0)
+            {
+                return;
+            }
+
+            __result ??= new List<Pawn>();
+
             for (int i = 0; i < shadowSubjects.Count; i++)
             {
                 Pawn subject = shadowSubjects[i];
-                if (subject == null || subject.IsGestating())
+                if (subject == null
+                    || OverseerlessMechanitorUtility.IsNode(subject)
+                    || subject.relations?.GetFirstDirectRelationPawn(PawnRelationDefOf.Overseer) != null
+                    || __result.Contains(subject))
                 {
                     continue;
                 }
 
-                shadowBandwidth += (int)subject.GetStatValue(StatDefOf.BandwidthCost);
+                __result.Add(subject);
             }
-
-            __result += shadowBandwidth;
         }
     }
 }
