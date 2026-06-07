@@ -223,10 +223,9 @@ namespace MMT
             }
 
             Pawn? controller = index < controllers.Count ? controllers[index] : null;
+            RemoveAt(index);
             controller?.mechanitor?.UnassignPawnFromAnyControlGroup(subject);
             controller?.mechanitor?.Notify_BandwidthChanged();
-
-            RemoveAt(index);
 
             if (Prefs.DevMode)
             {
