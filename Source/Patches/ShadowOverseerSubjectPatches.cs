@@ -16,8 +16,14 @@ namespace MMT
             }
 
             Pawn subject = __instance.Parent;
-            if (subject == null || OverseerlessMechanitorUtility.IsNode(subject))
+            if (subject == null)
             {
+                return;
+            }
+
+            if (OverseerlessMechanitorUtility.IsNode(subject))
+            {
+                __result = OverseerSubjectState.Overseen;
                 return;
             }
 
@@ -33,7 +39,7 @@ namespace MMT
     public static class ShadowOverseerSubjectPatches_InspectString
     {
         [HarmonyPostfix]
-        public static void Postfix(CompOverseerSubject __instance, ref string __result)
+        public static void Postfix(CompOverseerSubject __instance, ref string? __result)
         {
             Pawn subject = __instance.Parent;
             if (subject == null || subject.Faction != Faction.OfPlayer)
@@ -43,6 +49,7 @@ namespace MMT
 
             if (OverseerlessMechanitorUtility.IsNode(subject))
             {
+                __result = null;
                 return;
             }
 
