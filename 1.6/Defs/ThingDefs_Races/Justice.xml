@@ -20,7 +20,7 @@
       <ArmorRating_Sharp>1.50</ArmorRating_Sharp>
     </statBases>
     <comps>
-      <li Class="MMT.CompProperties_MAPMechanitorNode">
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
         <role>ShadowCommander</role>
         <controlBackend>Shadow</controlBackend>
         <extraMechBandwidth>20</extraMechBandwidth>

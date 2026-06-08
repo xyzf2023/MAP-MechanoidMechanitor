@@ -32,7 +32,7 @@
       </lifeStageAges>
     </race>
     <comps>
-      <li Class="MMT.CompProperties_MAPMechanitorNode">
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
         <role>ShadowTestNode</role>
         <controlBackend>Shadow</controlBackend>
         <extraMechBandwidth>20</extraMechBandwidth>

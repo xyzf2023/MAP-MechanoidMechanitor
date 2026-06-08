@@ -31,7 +31,7 @@
       </li>
     </tools>
     <comps>
-      <li Class="MMT.CompProperties_MAPMechanitorNode">
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
         <role>VanillaRelayMechanitor</role>
         <controlBackend>Vanilla</controlBackend>
         <extraMechBandwidth>8</extraMechBandwidth>

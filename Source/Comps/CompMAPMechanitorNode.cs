@@ -1,7 +1,8 @@
+using MMT;
 using RimWorld;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     public class CompProperties_MAPMechanitorNode : CompProperties
     {
