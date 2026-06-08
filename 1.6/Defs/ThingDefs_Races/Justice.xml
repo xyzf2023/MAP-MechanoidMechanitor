@@ -20,9 +20,14 @@
       <ArmorRating_Sharp>1.50</ArmorRating_Sharp>
     </statBases>
     <comps>
-      <li Class="MAP_MechCommander.CompProperties_MechanitorMarker">
+      <li Class="MMT.CompProperties_MAPMechanitorNode">
+        <role>ShadowCommander</role>
+        <controlBackend>Shadow</controlBackend>
         <extraMechBandwidth>20</extraMechBandwidth>
         <extraMechControlGroups>5</extraMechControlGroups>
+        <allowExternalOverseer>false</allowExternalOverseer>
+        <canControlMechs>true</canControlMechs>
+        <temporaryTestNode>false</temporaryTestNode>
       </li>
       <li Class="MAP_MechCommander.CompProperties_CommanderSkills">
         <bodyType>Male</bodyType>

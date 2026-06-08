@@ -32,9 +32,14 @@
       </lifeStageAges>
     </race>
     <comps>
-      <li Class="MMT.CompProperties_OverseerlessMechanitorNode">
+      <li Class="MMT.CompProperties_MAPMechanitorNode">
+        <role>ShadowTestNode</role>
+        <controlBackend>Shadow</controlBackend>
         <extraMechBandwidth>20</extraMechBandwidth>
         <extraMechControlGroups>3</extraMechControlGroups>
+        <allowExternalOverseer>false</allowExternalOverseer>
+        <canControlMechs>true</canControlMechs>
+        <temporaryTestNode>true</temporaryTestNode>
       </li>
     </comps>
   </ThingDef>
