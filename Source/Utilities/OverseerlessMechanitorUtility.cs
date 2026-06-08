@@ -7,6 +7,19 @@ namespace MMT
     {
         public static bool IsNode(Pawn? pawn)
         {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? comp)
+                && comp?.NodeProps is CompProperties_MAPMechanitorNode props
+                && props.controlBackend == MAPMechanitorControlBackend.Shadow
+                && !props.allowExternalOverseer)
+            {
+                return true;
+            }
+
             return CompOverseerlessMechanitorNode.PawnHasNode(pawn);
         }
 
