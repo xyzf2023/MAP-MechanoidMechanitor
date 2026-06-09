@@ -47,7 +47,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (MAPMechanitorNodeUtility.HasNode(target))
+            if (MAPMechanitorControlProtectionUtility.IsProtectedMechanitorTarget(target))
             {
                 return true;
             }
@@ -94,9 +94,9 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (MAPMechanitorNodeUtility.HasNode(target))
+            if (MAPMechanitorControlProtectionUtility.IsProtectedMechanitorTarget(target))
             {
-                rejectReason = "Target is a mechanitor node.";
+                rejectReason = "Target is a MAP mechanitor node.";
                 return false;
             }
 
@@ -107,9 +107,124 @@ namespace MAP_MechanoidMechanitor
             }
 
             Pawn overseer = target.GetOverseer();
-            if (overseer != null && overseer != controller)
+            if (overseer == null)
             {
-                rejectReason = "Target already has an overseer.";
+                return true;
+            }
+
+            if (overseer == controller)
+            {
+                rejectReason = "Target is already controlled by this relay.";
+                return false;
+            }
+
+            return CanRelayTakeOverFrom(controller!, target, overseer, out rejectReason);
+        }
+
+        public static bool CanRelayTakeOverFrom(
+            Pawn controller,
+            Pawn target,
+            Pawn oldOverseer,
+            out string rejectReason)
+        {
+            rejectReason = string.Empty;
+
+            if (oldOverseer == null)
+            {
+                rejectReason = "No overseer to take over from.";
+                return false;
+            }
+
+            if (oldOverseer == controller)
+            {
+                rejectReason = "Target is already controlled by this relay.";
+                return false;
+            }
+
+            if (oldOverseer.Faction == null || !oldOverseer.Faction.IsPlayerSafe())
+            {
+                rejectReason = "Target overseer is not player faction.";
+                return false;
+            }
+
+            if (VanillaRelayMechanitorUtility.IsVanillaRelayMechanitor(oldOverseer))
+            {
+                rejectReason = "Cannot take over from another vanilla relay mechanitor.";
+                return false;
+            }
+
+            if (MAPMechanitorControlProtectionUtility.IsProtectedMechanitorTarget(target))
+            {
+                rejectReason = "Target is a MAP mechanitor node.";
+                return false;
+            }
+
+            if (MAPMechanitorControlProtectionUtility.IsProtectedOverseer(oldOverseer))
+            {
+                rejectReason = "Cannot take over from a MAP mechanitor node.";
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool PassesVanillaControlBasics(Pawn pawn, Pawn mech, out string rejectReason)
+        {
+            rejectReason = string.Empty;
+
+            if (!ModsConfig.BiotechActive)
+            {
+                rejectReason = "Biotech not active.";
+                return false;
+            }
+
+            if (pawn.mechanitor == null)
+            {
+                rejectReason = "Controller has no mechanitor tracker.";
+                return false;
+            }
+
+            if (!mech.IsColonyMech)
+            {
+                rejectReason = "Target is not a colony mech.";
+                return false;
+            }
+
+            if (mech.Downed)
+            {
+                rejectReason = "Target is downed.";
+                return false;
+            }
+
+            if (mech.Dead)
+            {
+                rejectReason = "Target is dead.";
+                return false;
+            }
+
+            if (mech.IsAttacking())
+            {
+                rejectReason = "Target is attacking.";
+                return false;
+            }
+
+            if (!MechanitorUtility.EverControllable(mech))
+            {
+                rejectReason = "Target is never controllable.";
+                return false;
+            }
+
+            if (mech.GetOverseer() == pawn)
+            {
+                rejectReason = "Target is already controlled by this controller.";
+                return false;
+            }
+
+            int availableBandwidth = pawn.mechanitor.TotalBandwidth - pawn.mechanitor.UsedBandwidth;
+            float bandwidthCost = mech.GetStatValue(StatDefOf.BandwidthCost);
+            if ((float)availableBandwidth < bandwidthCost)
+            {
+                rejectReason = "Not enough bandwidth.";
                 return false;
             }
 
