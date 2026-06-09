@@ -1,5 +1,6 @@
 using HarmonyLib;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -8,7 +9,7 @@ namespace MAP_MechanoidMechanitor
     public static class VanillaRelayControlGroupPatches
     {
         [HarmonyPrefix]
-        public static bool DoCell_Prefix(Pawn pawn)
+        public static bool DoCell_Prefix(Rect rect, Pawn pawn, PawnTable table)
         {
             if (pawn == null || pawn.IsGestating())
             {
