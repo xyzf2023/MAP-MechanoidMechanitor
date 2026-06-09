@@ -22,10 +22,11 @@
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
         <role>ShadowCommander</role>
-        <controlBackend>Shadow</controlBackend>
+        <controlBackend>Vanilla</controlBackend>
         <extraMechBandwidth>20</extraMechBandwidth>
         <extraMechControlGroups>5</extraMechControlGroups>
         <allowExternalOverseer>false</allowExternalOverseer>
+        <requiresExternalOverseer>false</requiresExternalOverseer>
         <canControlMechs>true</canControlMechs>
         <temporaryTestNode>false</temporaryTestNode>
       </li>

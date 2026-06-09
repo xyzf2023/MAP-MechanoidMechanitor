@@ -1,4 +1,5 @@
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -20,13 +21,23 @@ namespace MMT
                 return;
             }
 
-            if (!OverseerlessMechanitorUtility.IsNode(mech))
+            if (!MAPMechanitorNodeUtility.HasNode(mech))
+            {
+                return;
+            }
+
+            if (MAPMechanitorNodeUtility.RequiresExternalOverseer(mech))
             {
                 return;
             }
 
             OverseerlessMechanitorUtility.EnsureBasicTrackers(mech);
-            OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(mech);
+
+            if (OverseerlessMechanitorUtility.ShouldClearOwnExternalOverseer(mech))
+            {
+                OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(mech);
+            }
+
             __result = false;
         }
     }

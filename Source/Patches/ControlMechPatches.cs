@@ -1,4 +1,5 @@
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -10,7 +11,10 @@ namespace MMT
         [HarmonyPrefix]
         public static bool Prefix(Pawn pawn, Pawn mech, ref AcceptanceReport __result)
         {
-            if (pawn != null && mech != null && pawn == mech && OverseerlessMechanitorUtility.IsNode(pawn))
+            if (pawn != null
+                && mech != null
+                && pawn == mech
+                && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
             {
                 __result = false;
                 if (Prefs.DevMode)
@@ -36,7 +40,7 @@ namespace MMT
                 return true;
             }
 
-            if (!OverseerlessMechanitorUtility.IsNode(pawn))
+            if (!OverseerlessMechanitorUtility.IsMAPMechanitorNodeController(pawn))
             {
                 return true;
             }

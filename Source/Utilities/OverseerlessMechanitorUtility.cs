@@ -4,17 +4,12 @@ using Verse;
 
 namespace MMT
 {
-    // MMT-era entry point; delegates to MAP_MechanoidMechanitor node identity for all Shadow nodes.
+    // MMT-era entry point; delegates to MAP_MechanoidMechanitor node identity.
     public static class OverseerlessMechanitorUtility
     {
-        public static bool IsNode(Pawn? pawn)
+        public static bool IsMAPMechanitorNodeController(Pawn? pawn)
         {
-            if (pawn == null)
-            {
-                return false;
-            }
-
-            if (MAPMechanitorNodeUtility.IsOverseerlessShadowNode(pawn))
+            if (MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
             {
                 return true;
             }
@@ -22,9 +17,52 @@ namespace MMT
             return CompOverseerlessMechanitorNode.PawnHasNode(pawn);
         }
 
+        public static bool IsNode(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (MAPMechanitorNodeUtility.UsesShadowControlPath(pawn)
+                && pawn.RaceProps.IsMechanoid
+                && pawn.Faction != null
+                && pawn.Faction.IsPlayerSafe())
+            {
+                return true;
+            }
+
+            return CompOverseerlessMechanitorNode.PawnHasNode(pawn);
+        }
+
+        public static bool ShouldClearOwnExternalOverseer(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (CompOverseerlessMechanitorNode.PawnHasNode(pawn))
+            {
+                return true;
+            }
+
+            if (!MAPMechanitorNodeUtility.HasNode(pawn))
+            {
+                return false;
+            }
+
+            return !MAPMechanitorNodeUtility.RequiresExternalOverseer(pawn);
+        }
+
         public static void EnsureBasicTrackers(Pawn pawn)
         {
-            if (pawn == null || !IsNode(pawn) || !ModsConfig.BiotechActive)
+            if (pawn == null || !ModsConfig.BiotechActive)
+            {
+                return;
+            }
+
+            if (!IsMAPMechanitorNodeController(pawn))
             {
                 return;
             }
@@ -51,22 +89,22 @@ namespace MMT
 
         public static void RefreshMechanitorStateIfNode(Pawn pawn)
         {
-            if (pawn == null || !IsNode(pawn) || !ModsConfig.BiotechActive)
+            if (pawn == null || !ModsConfig.BiotechActive)
+            {
+                return;
+            }
+
+            if (!IsMAPMechanitorNodeController(pawn) && !IsNode(pawn))
             {
                 return;
             }
 
             EnsureBasicTrackers(pawn);
-
-            if (pawn.mechanitor != null)
-            {
-                pawn.mechanitor.Notify_PawnSpawned(true);
-            }
         }
 
         public static void ClearExternalOverseerIfNode(Pawn pawn)
         {
-            if (pawn == null || !IsNode(pawn))
+            if (!ShouldClearOwnExternalOverseer(pawn))
             {
                 return;
             }

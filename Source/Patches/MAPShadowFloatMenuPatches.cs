@@ -30,7 +30,7 @@ namespace MAP_MechanoidMechanitor
             Pawn? controller = context.FirstSelectedPawn;
             if (controller == null
                 || !ModsConfig.BiotechActive
-                || !MAPMechanitorNodeUtility.IsShadowController(controller)
+                || !MAPMechanitorNodeUtility.UsesShadowControlPath(controller)
                 || VanillaRelayMechanitorUtility.IsVanillaRelayMechanitor(controller)
                 || !clickedPawn.IsColonyMech)
             {

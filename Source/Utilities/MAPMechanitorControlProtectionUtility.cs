@@ -8,12 +8,38 @@ namespace MAP_MechanoidMechanitor
     {
         public static bool IsProtectedMechanitorTarget(Pawn? target)
         {
+            return IsProtectedMechanitorTarget(target, null);
+        }
+
+        public static bool IsProtectedMechanitorTarget(Pawn? target, Pawn? controller)
+        {
             if (target == null)
             {
                 return true;
             }
 
-            return MAPMechanitorNodeUtility.HasNode(target);
+            if (!MAPMechanitorNodeUtility.HasNode(target))
+            {
+                return false;
+            }
+
+            if (!MAPMechanitorNodeUtility.RequiresExternalOverseer(target))
+            {
+                return true;
+            }
+
+            if (controller == null)
+            {
+                return true;
+            }
+
+            Pawn? currentOverseer = target.GetOverseer();
+            if (currentOverseer == null || currentOverseer == controller)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

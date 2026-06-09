@@ -158,7 +158,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MAPMechanitorNodeUtility.IsShadowController(controller))
+            if (!MAPMechanitorNodeUtility.UsesShadowControlPath(controller))
             {
                 rejectReason = "Controller is not a shadow mechanitor node.";
                 return false;
