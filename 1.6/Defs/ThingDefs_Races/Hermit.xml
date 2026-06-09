@@ -40,7 +40,6 @@
         <canControlMechs>true</canControlMechs>
         <temporaryTestNode>false</temporaryTestNode>
       </li>
-      <li Class="MAP_MechCommander.CompProperties_CaravanOwner" />
     </comps>
     <race>
       <body>Scyther</body>

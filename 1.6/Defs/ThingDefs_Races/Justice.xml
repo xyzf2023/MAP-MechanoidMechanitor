@@ -29,7 +29,7 @@
         <canControlMechs>true</canControlMechs>
         <temporaryTestNode>false</temporaryTestNode>
       </li>
-      <li Class="MAP_MechCommander.CompProperties_CommanderSkills">
+      <li Class="MAP_MechanoidMechanitor.CompProperties_CommanderSkills">
         <bodyType>Male</bodyType>
         <skillLevels>
           <li>
@@ -50,9 +50,6 @@
           </li>
         </skillLevels>
       </li>
-      <li Class="MAP_MechCommander.CompProperties_CaravanOwner" />
-      <li Class="MAP_MechCommander.CompProperties_JusticeHediffSync" />
-      <li Class="MAP_MechCommander.CompProperties_MechanitorBandwidth" />
     </comps>
     <race>
       <mechFixedSkillLevel>12</mechFixedSkillLevel>
