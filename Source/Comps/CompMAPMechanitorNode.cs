@@ -62,7 +62,7 @@ namespace MAP_MechanoidMechanitor
                 if (Prefs.DevMode)
                 {
                     Log.Message(
-                        $"[MMT] MAP mechanitor node (Shadow): {pawn.LabelShort}, " +
+                        $"[MAP-MechanoidMechanitor] MAP mechanitor node (Shadow): {pawn.LabelShort}, " +
                         $"role={nodeProps.role}, " +
                         $"mechanitor={(pawn.mechanitor != null)}, relations={(pawn.relations != null)}, " +
                         $"noOverseer={(pawn.GetOverseer() == null)}, " +
