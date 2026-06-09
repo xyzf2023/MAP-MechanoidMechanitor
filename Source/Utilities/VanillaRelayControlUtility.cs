@@ -159,12 +159,6 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (MAPMechanitorControlProtectionUtility.IsProtectedOverseer(oldOverseer))
-            {
-                rejectReason = "Cannot take over from a MAP mechanitor node.";
-                return false;
-            }
-
             return true;
         }
 

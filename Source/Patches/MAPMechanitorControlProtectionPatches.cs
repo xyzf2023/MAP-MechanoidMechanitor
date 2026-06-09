@@ -8,6 +8,7 @@ namespace MAP_MechanoidMechanitor
     public static class MAPMechanitorControlProtectionPatches
     {
         [HarmonyPostfix]
+        [HarmonyPriority(Priority.Last)]
         public static void CanControlMech_Postfix(Pawn pawn, Pawn mech, ref AcceptanceReport __result)
         {
             if (!ModsConfig.BiotechActive || mech == null)
@@ -18,15 +19,6 @@ namespace MAP_MechanoidMechanitor
             if (MAPMechanitorControlProtectionUtility.IsProtectedMechanitorTarget(mech))
             {
                 __result = "Target is a MAP mechanitor node.";
-                return;
-            }
-
-            Pawn overseer = mech.GetOverseer();
-            if (overseer != null
-                && overseer != pawn
-                && MAPMechanitorControlProtectionUtility.IsProtectedOverseer(overseer))
-            {
-                __result = "Target is overseen by a MAP mechanitor node.";
             }
         }
     }
