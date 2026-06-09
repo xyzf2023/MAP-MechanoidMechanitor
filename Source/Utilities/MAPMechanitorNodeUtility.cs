@@ -17,7 +17,7 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsShadowNode(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props))
+            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
             {
                 return false;
             }
@@ -27,7 +27,7 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsVanillaRelayNode(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props))
+            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
             {
                 return false;
             }
@@ -37,7 +37,7 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsTemporaryTestNode(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props))
+            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
             {
                 return false;
             }
@@ -47,7 +47,7 @@ namespace MAP_MechanoidMechanitor
 
         public static bool AllowsExternalOverseer(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props))
+            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
             {
                 return false;
             }
@@ -57,7 +57,7 @@ namespace MAP_MechanoidMechanitor
 
         public static bool CanControlMechs(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props))
+            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
             {
                 return false;
             }
@@ -67,7 +67,7 @@ namespace MAP_MechanoidMechanitor
 
         public static int GetExtraMechBandwidth(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props))
+            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
             {
                 return 0;
             }
@@ -77,7 +77,7 @@ namespace MAP_MechanoidMechanitor
 
         public static int GetExtraMechControlGroups(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props))
+            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
             {
                 return 0;
             }

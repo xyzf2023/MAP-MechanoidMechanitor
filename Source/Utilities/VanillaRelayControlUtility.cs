@@ -121,6 +121,9 @@ namespace MAP_MechanoidMechanitor
             return CanRelayTakeOverFrom(controller!, target, overseer, out rejectReason);
         }
 
+        // Hermit takeover layer: whether a relay may take a normal mech from oldOverseer.
+        // Rejects MAP node targets and another hermit; MAP node overseers are allowed.
+        // Overseer swap is handled by vanilla JobDriver_ControlMech, not here.
         public static bool CanRelayTakeOverFrom(
             Pawn controller,
             Pawn target,
