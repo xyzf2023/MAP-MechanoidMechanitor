@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 echo ========================================
-echo Mechanoid Mechanitor Test MOD build
+echo MAP Mechanoid Mechanitor MOD build
 echo ========================================
 echo.
 
@@ -33,12 +33,12 @@ set "CONFIG=Release"
 set "MAIN_OK=0"
 
 REM ============================================================
-REM  Phase 1: main mod (MMT_Prototype.dll)
+REM  Phase 1: main mod (MAP-MechanoidMechanitor.dll)
 REM ============================================================
 echo ----------------------------------------
-echo Building MMT_Prototype.csproj ...
+echo Building MAP-MechanoidMechanitor.csproj ...
 echo ----------------------------------------
-dotnet build "MMT_Prototype.csproj" --configuration %CONFIG% --verbosity normal
+dotnet build "MAP-MechanoidMechanitor.csproj" --configuration %CONFIG% --verbosity normal
 
 if %ERRORLEVEL% EQU 0 (
     set "MAIN_OK=1"
@@ -56,7 +56,7 @@ REM ============================================================
 if exist "bin" rmdir /s /q "bin"
 if exist "obj" rmdir /s /q "obj"
 
-if exist "..\1.6\Assemblies\MMT_Prototype.pdb" del /q "..\1.6\Assemblies\MMT_Prototype.pdb"
+if exist "..\1.6\Assemblies\MAP-MechanoidMechanitor.pdb" del /q "..\1.6\Assemblies\MAP-MechanoidMechanitor.pdb"
 
 echo ========================================
 echo Build summary
@@ -65,10 +65,10 @@ echo.
 
 if !MAIN_OK! EQU 1 (
     echo  [Main mod]     [OK]
-    if exist "..\1.6\Assemblies\MMT_Prototype.dll" (
-        echo                ..\1.6\Assemblies\MMT_Prototype.dll
+    if exist "..\1.6\Assemblies\MAP-MechanoidMechanitor.dll" (
+        echo                ..\1.6\Assemblies\MAP-MechanoidMechanitor.dll
     ) else (
-        echo                WARNING: MMT_Prototype.dll not found at expected path
+        echo                WARNING: MAP-MechanoidMechanitor.dll not found at expected path
     )
 ) else (
     echo  [Main mod]     [FAIL]

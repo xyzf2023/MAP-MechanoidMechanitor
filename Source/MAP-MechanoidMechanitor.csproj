@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <OutputType>Library</OutputType>
-    <AssemblyName>MMT_Prototype</AssemblyName>
-    <RootNamespace>MMT</RootNamespace>
+    <AssemblyName>MAP-MechanoidMechanitor</AssemblyName>
+    <RootNamespace>MAP_MechanoidMechanitor</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
