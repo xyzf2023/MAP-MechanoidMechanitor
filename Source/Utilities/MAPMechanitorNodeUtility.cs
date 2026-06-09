@@ -25,6 +25,36 @@ namespace MAP_MechanoidMechanitor
             return props.controlBackend == MAPMechanitorControlBackend.Shadow;
         }
 
+        public static bool IsShadowController(Pawn? pawn)
+        {
+            if (pawn == null || !ModsConfig.BiotechActive)
+            {
+                return false;
+            }
+
+            if (!pawn.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
+            {
+                return false;
+            }
+
+            if (!IsShadowNode(pawn))
+            {
+                return false;
+            }
+
+            return CanControlMechs(pawn);
+        }
+
+        public static bool IsOverseerlessShadowNode(Pawn? pawn)
+        {
+            return IsShadowController(pawn) && !AllowsExternalOverseer(pawn);
+        }
+
         public static bool IsVanillaRelayNode(Pawn? pawn)
         {
             if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)

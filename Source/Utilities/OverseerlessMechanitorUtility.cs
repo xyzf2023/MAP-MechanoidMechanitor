@@ -4,6 +4,7 @@ using Verse;
 
 namespace MMT
 {
+    // MMT-era entry point; delegates to MAP_MechanoidMechanitor node identity for all Shadow nodes.
     public static class OverseerlessMechanitorUtility
     {
         public static bool IsNode(Pawn? pawn)
@@ -13,10 +14,7 @@ namespace MMT
                 return false;
             }
 
-            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? comp)
-                && comp?.NodeProps is CompProperties_MAPMechanitorNode props
-                && props.controlBackend == MAPMechanitorControlBackend.Shadow
-                && !props.allowExternalOverseer)
+            if (MAPMechanitorNodeUtility.IsOverseerlessShadowNode(pawn))
             {
                 return true;
             }
