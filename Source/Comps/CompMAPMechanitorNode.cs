@@ -73,6 +73,10 @@ namespace MAP_MechanoidMechanitor
                         $"controlGroups={pawn.mechanitor?.controlGroups?.Count}");
                 }
             }
+            else if (nodeProps.controlBackend == MAPMechanitorControlBackend.Vanilla)
+            {
+                VanillaRelayMechanitorUtility.EnsureVanillaRelayMechanitorState(pawn);
+            }
         }
     }
 }

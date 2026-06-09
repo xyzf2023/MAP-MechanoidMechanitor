@@ -33,7 +33,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (StatField.GetValue(__instance) is not StatDef stat)
+            if (StatField == null || StatField.GetValue(__instance) is not StatDef stat)
             {
                 return;
             }
