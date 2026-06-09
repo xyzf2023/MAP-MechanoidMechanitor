@@ -32,6 +32,112 @@ namespace MAP_MechanoidMechanitor
 
         public static bool CanAssignShadowOverseer(Pawn? controller, Pawn? target, out string rejectReason)
         {
+            if (!PassesShadowControlBasics(controller, target, out rejectReason))
+            {
+                return false;
+            }
+
+            Pawn? vanillaOverseer = target!.GetOverseer();
+            if (vanillaOverseer != null)
+            {
+                if (vanillaOverseer == controller)
+                {
+                    rejectReason = "Target is already controlled by this controller.";
+                    return false;
+                }
+
+                if (vanillaOverseer.Faction == null || !vanillaOverseer.Faction.IsPlayerSafe())
+                {
+                    rejectReason = "Target overseer is not player faction.";
+                    return false;
+                }
+
+                return true;
+            }
+
+            Pawn? shadowOverseer = GetShadowOverseer(target);
+            if (shadowOverseer != null)
+            {
+                if (shadowOverseer == controller)
+                {
+                    rejectReason = "Target is already shadow controlled by this controller.";
+                    return false;
+                }
+
+                if (shadowOverseer.Faction == null || !shadowOverseer.Faction.IsPlayerSafe())
+                {
+                    rejectReason = "Target shadow overseer is not player faction.";
+                    return false;
+                }
+
+                return true;
+            }
+
+            return true;
+        }
+
+        public static bool TrySetShadowOverseer(Pawn? controller, Pawn? target, out string rejectReason)
+        {
+            return TryAssignOrTakeOverShadowOverseer(controller, target, out rejectReason);
+        }
+
+        public static bool TryAssignOrTakeOverShadowOverseer(Pawn? controller, Pawn? target, out string rejectReason)
+        {
+            if (!CanAssignShadowOverseer(controller, target, out rejectReason))
+            {
+                return false;
+            }
+
+            if (target == null || controller == null)
+            {
+                rejectReason = "Target or controller is null.";
+                return false;
+            }
+
+            GameComponent_MAPShadowOverseerTracker? tracker = Tracker;
+            if (tracker == null)
+            {
+                rejectReason = "Shadow overseer tracker unavailable.";
+                return false;
+            }
+
+            Pawn? oldVanillaOverseer = target.GetOverseer();
+            if (oldVanillaOverseer != null && oldVanillaOverseer.relations != null)
+            {
+                oldVanillaOverseer.relations.RemoveDirectRelation(PawnRelationDefOf.Overseer, target);
+            }
+
+            tracker.SetShadowOverseer(target, controller);
+            return true;
+        }
+
+        public static void RemoveShadowOverseer(Pawn? target)
+        {
+            Tracker?.RemoveShadowOverseer(target);
+        }
+
+        public static void RemoveAllForController(Pawn? controller)
+        {
+            Tracker?.RemoveAllForController(controller);
+        }
+
+        public static bool IsTakeoverScenario(Pawn? target)
+        {
+            if (target == null)
+            {
+                return false;
+            }
+
+            if (target.GetOverseer() != null)
+            {
+                return true;
+            }
+
+            return HasShadowOverseer(target);
+        }
+
+        private static bool PassesShadowControlBasics(Pawn? controller, Pawn? target, out string rejectReason)
+        {
             rejectReason = string.Empty;
 
             if (!ModsConfig.BiotechActive)
@@ -70,15 +176,15 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!target.RaceProps.IsMechanoid)
+            if (controller.mechanitor == null)
             {
-                rejectReason = "Target is not a mechanoid.";
+                rejectReason = "Controller has no mechanitor tracker.";
                 return false;
             }
 
-            if (target.Faction == null || !target.Faction.IsPlayerSafe())
+            if (!target.IsColonyMech)
             {
-                rejectReason = "Target is not player faction.";
+                rejectReason = "Target is not a colony mech.";
                 return false;
             }
 
@@ -94,21 +200,21 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (target.Downed)
+            {
+                rejectReason = "Target is downed.";
+                return false;
+            }
+
             if (target.Dead)
             {
                 rejectReason = "Target is dead.";
                 return false;
             }
 
-            if (target.GetOverseer() != null)
+            if (target.IsAttacking())
             {
-                rejectReason = "Target already has a vanilla overseer.";
-                return false;
-            }
-
-            if (HasShadowOverseer(target))
-            {
-                rejectReason = "Target already has a shadow overseer.";
+                rejectReason = "Target is attacking.";
                 return false;
             }
 
@@ -118,35 +224,15 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return true;
-        }
-
-        public static bool TrySetShadowOverseer(Pawn? controller, Pawn? target, out string rejectReason)
-        {
-            if (!CanAssignShadowOverseer(controller, target, out rejectReason))
+            int availableBandwidth = controller.mechanitor.TotalBandwidth - controller.mechanitor.UsedBandwidth;
+            float bandwidthCost = target.GetStatValue(StatDefOf.BandwidthCost);
+            if ((float)availableBandwidth < bandwidthCost)
             {
+                rejectReason = "Not enough bandwidth.";
                 return false;
             }
 
-            GameComponent_MAPShadowOverseerTracker? tracker = Tracker;
-            if (tracker == null)
-            {
-                rejectReason = "Shadow overseer tracker unavailable.";
-                return false;
-            }
-
-            tracker.SetShadowOverseer(target!, controller!);
             return true;
-        }
-
-        public static void RemoveShadowOverseer(Pawn? target)
-        {
-            Tracker?.RemoveShadowOverseer(target);
-        }
-
-        public static void RemoveAllForController(Pawn? controller)
-        {
-            Tracker?.RemoveAllForController(controller);
         }
     }
 }
