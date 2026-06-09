@@ -24,11 +24,7 @@
     <description>在「正义」的协调下，该机械体采用经上位协调单元优化的机动作战行为模式，综合步态控制系统使其移动不再受地形影响，而火控解算模块则同步压缩射击后的恢复间隔，并能一定程度上规避入射伤害。处于该模式下的机械体移动无视地形惩罚。</description>
     <descriptionShort>在「正义」的协调下，该机械体正处于机动作战状态</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
-    <hediffClass>HediffWithComps</hediffClass>
     <isBad>false</isBad>
-    <comps>
-      <li Class="MAP_MechCommander.HediffCompProperties_MobileCombatMarker" />
-    </comps>
     <stages>
       <li>
         <statFactors>
