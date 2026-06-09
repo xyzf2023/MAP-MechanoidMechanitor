@@ -17,42 +17,49 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsShadowNode(Pawn? pawn)
         {
+            return UsesShadowControlPath(pawn);
+        }
+
+        public static bool UsesVanillaControlPath(Pawn? pawn)
+        {
             if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
             {
                 return false;
             }
 
-            return props.controlBackend == MAPMechanitorControlBackend.Shadow;
+            return props.controlBackend == MAPMechanitorControlBackend.Vanilla
+                && props.canControlMechs;
+        }
+
+        public static bool UsesShadowControlPath(Pawn? pawn)
+        {
+            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
+            {
+                return false;
+            }
+
+            return props.controlBackend == MAPMechanitorControlBackend.Shadow
+                && props.canControlMechs;
+        }
+
+        public static bool IsMechanitorNodeController(Pawn? pawn)
+        {
+            if (!PassesMechanitorNodeControllerBasics(pawn))
+            {
+                return false;
+            }
+
+            return UsesVanillaControlPath(pawn) || UsesShadowControlPath(pawn);
         }
 
         public static bool IsShadowController(Pawn? pawn)
         {
-            if (pawn == null || !ModsConfig.BiotechActive)
-            {
-                return false;
-            }
-
-            if (!pawn.RaceProps.IsMechanoid)
-            {
-                return false;
-            }
-
-            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
-            {
-                return false;
-            }
-
-            if (!IsShadowNode(pawn))
-            {
-                return false;
-            }
-
-            return CanControlMechs(pawn);
+            return PassesMechanitorNodeControllerBasics(pawn) && UsesShadowControlPath(pawn);
         }
 
         public static bool IsOverseerlessShadowNode(Pawn? pawn)
         {
-            return IsShadowController(pawn) && !AllowsExternalOverseer(pawn);
+            return IsShadowController(pawn) && !RequiresExternalOverseer(pawn);
         }
 
         public static bool IsVanillaRelayNode(Pawn? pawn)
@@ -85,6 +92,16 @@ namespace MAP_MechanoidMechanitor
             return props.allowExternalOverseer;
         }
 
+        public static bool RequiresExternalOverseer(Pawn? pawn)
+        {
+            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
+            {
+                return false;
+            }
+
+            return props.requiresExternalOverseer;
+        }
+
         public static bool CanControlMechs(Pawn? pawn)
         {
             if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
@@ -113,6 +130,26 @@ namespace MAP_MechanoidMechanitor
             }
 
             return props.extraMechControlGroups;
+        }
+
+        private static bool PassesMechanitorNodeControllerBasics(Pawn? pawn)
+        {
+            if (pawn == null || !ModsConfig.BiotechActive)
+            {
+                return false;
+            }
+
+            if (!pawn.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private static bool TryGetProps(Pawn? pawn, out CompProperties_MAPMechanitorNode? props)

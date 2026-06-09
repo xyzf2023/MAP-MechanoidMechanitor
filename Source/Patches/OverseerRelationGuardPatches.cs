@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -36,11 +37,13 @@ namespace MMT
                 Log.Message(
                     $"[MMT] Overseer relation request: controller={controller?.LabelShort ?? "null"}, " +
                     $"subject={otherPawn?.LabelShort ?? "null"}, " +
-                    $"controllerIsNode={OverseerlessMechanitorUtility.IsNode(controller)}, " +
-                    $"subjectIsNode={OverseerlessMechanitorUtility.IsNode(otherPawn)}");
+                    $"controllerUsesShadow={MAPMechanitorNodeUtility.UsesShadowControlPath(controller)}, " +
+                    $"subjectRequiresExternalOverseer={MAPMechanitorNodeUtility.RequiresExternalOverseer(otherPawn)}");
             }
 
-            if (otherPawn != null && OverseerlessMechanitorUtility.IsNode(otherPawn))
+            if (otherPawn != null
+                && MAPMechanitorNodeUtility.HasNode(otherPawn)
+                && !MAPMechanitorNodeUtility.RequiresExternalOverseer(otherPawn))
             {
                 if (Prefs.DevMode)
                 {
@@ -52,15 +55,18 @@ namespace MMT
                 return false;
             }
 
-            if (controller != null && otherPawn != null && controller == otherPawn && OverseerlessMechanitorUtility.IsNode(otherPawn))
+            if (controller != null
+                && otherPawn != null
+                && controller == otherPawn
+                && MAPMechanitorNodeUtility.IsMechanitorNodeController(otherPawn))
             {
                 return false;
             }
 
             if (controller != null
-                && OverseerlessMechanitorUtility.IsNode(controller)
+                && MAPMechanitorNodeUtility.UsesShadowControlPath(controller)
                 && otherPawn != null
-                && !OverseerlessMechanitorUtility.IsNode(otherPawn))
+                && !MAPMechanitorNodeUtility.HasNode(otherPawn))
             {
                 MMT_ShadowOverseerManager? manager = MMT_ShadowOverseerManager.EnsureInstance();
                 if (manager == null)
@@ -86,7 +92,7 @@ namespace MMT
                 if (Prefs.DevMode)
                 {
                     Log.Message(
-                        $"[MMT] Blocked vanilla overseer relation for node controller; use shadow overseer instead: " +
+                        $"[MMT] Blocked vanilla overseer relation for shadow node controller; use shadow overseer instead: " +
                         $"controller={controller.LabelShort}, subject={otherPawn.LabelShort}");
                 }
 
@@ -94,9 +100,9 @@ namespace MMT
             }
 
             if (controller != null
-                && !OverseerlessMechanitorUtility.IsNode(controller)
+                && !MAPMechanitorNodeUtility.UsesShadowControlPath(controller)
                 && otherPawn != null
-                && !OverseerlessMechanitorUtility.IsNode(otherPawn))
+                && !MAPMechanitorNodeUtility.HasNode(otherPawn))
             {
                 MMT_ShadowOverseerManager? manager = MMT_ShadowOverseerManager.Current;
                 Pawn? oldShadow = manager?.GetShadowOverseer(otherPawn);
@@ -130,9 +136,9 @@ namespace MMT
 
             Pawn? controller = GetRelationsPawn(__instance);
             if (controller == null
-                || !OverseerlessMechanitorUtility.IsNode(controller)
+                || !MAPMechanitorNodeUtility.UsesShadowControlPath(controller)
                 || otherPawn == null
-                || OverseerlessMechanitorUtility.IsNode(otherPawn))
+                || MAPMechanitorNodeUtility.HasNode(otherPawn))
             {
                 return;
             }
@@ -147,7 +153,7 @@ namespace MMT
             {
                 Pawn? subjectOverseer = otherPawn.GetOverseer();
                 Log.Message(
-                    $"[MMT] Overseer relation added for node controller: controller={controller.LabelShort}, " +
+                    $"[MMT] Overseer relation added for shadow node controller: controller={controller.LabelShort}, " +
                     $"subject={otherPawn.LabelShort}, subjectOverseer={subjectOverseer?.LabelShort ?? "null"}");
             }
         }

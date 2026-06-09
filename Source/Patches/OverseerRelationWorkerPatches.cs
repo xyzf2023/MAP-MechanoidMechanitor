@@ -1,4 +1,5 @@
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -15,7 +16,8 @@ namespace MMT
                 return true;
             }
 
-            if (!OverseerlessMechanitorUtility.IsNode(firstPawn) || OverseerlessMechanitorUtility.IsNode(secondPawn))
+            if (!MAPMechanitorNodeUtility.UsesShadowControlPath(firstPawn)
+                || MAPMechanitorNodeUtility.HasNode(secondPawn))
             {
                 return true;
             }
@@ -23,7 +25,7 @@ namespace MMT
             if (Prefs.DevMode)
             {
                 Log.Message(
-                    $"[MMT] Skipped vanilla Overseer OnRelationCreated for node controller: " +
+                    $"[MMT] Skipped vanilla Overseer OnRelationCreated for shadow node controller: " +
                     $"controller={firstPawn.LabelShort}, subject={secondPawn.LabelShort}");
             }
 

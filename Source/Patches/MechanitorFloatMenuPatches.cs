@@ -29,7 +29,7 @@ namespace MMT
                 return;
             }
 
-            if (!OverseerlessMechanitorUtility.IsNode(pawn))
+            if (!OverseerlessMechanitorUtility.IsMAPMechanitorNodeController(pawn))
             {
                 return;
             }

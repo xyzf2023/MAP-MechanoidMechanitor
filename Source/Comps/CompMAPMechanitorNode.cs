@@ -11,6 +11,8 @@ namespace MAP_MechanoidMechanitor
         public int extraMechBandwidth = 0;
         public int extraMechControlGroups = 0;
         public bool allowExternalOverseer = false;
+        // Whether this node itself needs an external overseer; does not affect its ability to control other mechs.
+        public bool requiresExternalOverseer = false;
         public bool canControlMechs = false;
         public bool temporaryTestNode = false;
 
@@ -54,16 +56,25 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (nodeProps.controlBackend == MAPMechanitorControlBackend.Shadow)
+            if (nodeProps.controlBackend == MAPMechanitorControlBackend.Shadow
+                || nodeProps.controlBackend == MAPMechanitorControlBackend.Vanilla)
             {
-                OverseerlessMechanitorUtility.RefreshMechanitorStateIfNode(pawn);
-                OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(pawn);
+                if (nodeProps.canControlMechs)
+                {
+                    OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
+                }
+
+                if (!nodeProps.requiresExternalOverseer)
+                {
+                    OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(pawn);
+                }
 
                 if (Prefs.DevMode)
                 {
                     Log.Message(
-                        $"[MAP-MechanoidMechanitor] MAP mechanitor node (Shadow): {pawn.LabelShort}, " +
+                        $"[MAP-MechanoidMechanitor] MAP mechanitor node ({nodeProps.controlBackend}): {pawn.LabelShort}, " +
                         $"role={nodeProps.role}, " +
+                        $"requiresExternalOverseer={nodeProps.requiresExternalOverseer}, " +
                         $"mechanitor={(pawn.mechanitor != null)}, relations={(pawn.relations != null)}, " +
                         $"noOverseer={(pawn.GetOverseer() == null)}, " +
                         $"isMechanitor={MechanitorUtility.IsMechanitor(pawn)}, " +
@@ -72,10 +83,6 @@ namespace MAP_MechanoidMechanitor
                         $"totalBandwidth={pawn.mechanitor?.TotalBandwidth}, " +
                         $"controlGroups={pawn.mechanitor?.controlGroups?.Count}");
                 }
-            }
-            else if (nodeProps.controlBackend == MAPMechanitorControlBackend.Vanilla)
-            {
-                VanillaRelayMechanitorUtility.EnsureVanillaRelayMechanitorState(pawn);
             }
         }
     }

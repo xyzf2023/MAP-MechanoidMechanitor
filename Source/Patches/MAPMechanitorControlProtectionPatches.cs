@@ -16,7 +16,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (MAPMechanitorControlProtectionUtility.IsProtectedMechanitorTarget(mech))
+            if (MAPMechanitorControlProtectionUtility.IsProtectedMechanitorTarget(mech, pawn))
             {
                 __result = "Target is a MAP mechanitor node.";
             }

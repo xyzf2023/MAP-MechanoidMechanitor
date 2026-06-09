@@ -37,6 +37,7 @@
         <extraMechBandwidth>8</extraMechBandwidth>
         <extraMechControlGroups>1</extraMechControlGroups>
         <allowExternalOverseer>true</allowExternalOverseer>
+        <requiresExternalOverseer>true</requiresExternalOverseer>
         <canControlMechs>true</canControlMechs>
         <temporaryTestNode>false</temporaryTestNode>
       </li>
