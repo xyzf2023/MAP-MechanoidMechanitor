@@ -15,20 +15,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (MAPMechanitorControlProtectionUtility.IsProtectedMechanitorTarget(mech))
-            {
-                __result = "Target is a MAP mechanitor node.";
-                return;
-            }
-
             Pawn overseer = mech.GetOverseer();
-            if (overseer != null
-                && overseer != pawn
-                && MAPMechanitorControlProtectionUtility.IsProtectedOverseer(overseer))
-            {
-                __result = "Target is overseen by a MAP mechanitor node.";
-                return;
-            }
 
             if (__result.Accepted)
             {
