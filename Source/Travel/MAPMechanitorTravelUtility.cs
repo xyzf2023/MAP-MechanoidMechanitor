@@ -78,6 +78,31 @@ namespace MAP_MechanoidMechanitor
             return props.refreshTrackersOnTransporterArrival;
         }
 
+        public static bool ShouldBlockCampMapRemoval(Pawn? pawn)
+        {
+            if (pawn == null || !ModsConfig.BiotechActive)
+            {
+                return false;
+            }
+
+            if (!pawn.Spawned || pawn.Dead || pawn.Downed)
+            {
+                return false;
+            }
+
+            if (!PassesTravelPawnBasics(pawn))
+            {
+                return false;
+            }
+
+            if (!TryGetTravelProps(pawn, out CompProperties_MAPMechanitorTravelNode? props) || props == null)
+            {
+                return false;
+            }
+
+            return props.canLeadCaravan;
+        }
+
         private static bool PassesTravelPawnBasics(Pawn? pawn)
         {
             if (pawn == null || !ModsConfig.BiotechActive)
