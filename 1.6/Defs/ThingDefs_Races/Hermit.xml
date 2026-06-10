@@ -36,7 +36,6 @@
         <requiresExternalOverseer>true</requiresExternalOverseer>
         <extraMechBandwidth>8</extraMechBandwidth>
         <extraMechControlGroups>1</extraMechControlGroups>
-        <temporaryTestNode>false</temporaryTestNode>
       </li>
     </comps>
     <race>
@@ -49,6 +48,7 @@
     <defName>MAP_Mech_Hermit</defName>
     <label>「隐者」</label>
     <race>MAP_Mech_Hermit</race>
+    <defaultFactionDef>PlayerColony</defaultFactionDef>
     <combatPower>150</combatPower>
     <lifeStages>
       <li>
