@@ -122,6 +122,30 @@ namespace MMT
             return true;
         }
 
+        private static bool IsProtectedMapNode(Pawn pawn)
+        {
+            return MAPMechanitorNodeUtility.HasNode(pawn)
+                && !MAPMechanitorNodeUtility.RequiresExternalOverseer(pawn);
+        }
+
+        private static bool AnyControlGroupContains(Pawn controller, Pawn subject)
+        {
+            if (controller.mechanitor?.controlGroups == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < controller.mechanitor.controlGroups.Count; i++)
+            {
+                if (controller.mechanitor.controlGroups[i].MechsForReading.Contains(subject))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         [HarmonyPostfix]
         public static void Postfix(
             Pawn_RelationsTracker __instance,
@@ -129,12 +153,61 @@ namespace MMT
             Pawn otherPawn,
             bool __runOriginal)
         {
-            if (!__runOriginal || def != PawnRelationDefOf.Overseer)
+            if (def != PawnRelationDefOf.Overseer)
             {
                 return;
             }
 
             Pawn? controller = GetRelationsPawn(__instance);
+
+            if (Prefs.DevMode
+                && ModsConfig.BiotechActive
+                && controller != null
+                && otherPawn != null
+                && MAPMechanitorNodeUtility.UsesVanillaControlPath(controller)
+                && !IsProtectedMapNode(otherPawn))
+            {
+                bool controllerDirectRelationExists =
+                    controller.relations != null
+                    && controller.relations.DirectRelationExists(PawnRelationDefOf.Overseer, otherPawn);
+
+                bool subjectDirectRelationExists =
+                    otherPawn.relations != null
+                    && otherPawn.relations.DirectRelationExists(PawnRelationDefOf.Overseer, controller);
+
+                Pawn? subjectOverseer = otherPawn.GetOverseer();
+
+                bool controllerControlledContainsSubject =
+                    controller.mechanitor?.ControlledPawns != null
+                    && controller.mechanitor.ControlledPawns.Contains(otherPawn);
+
+                bool controllerAnyControlGroupContainsSubject =
+                    AnyControlGroupContains(controller, otherPawn);
+
+                Log.Message(
+                    "[MMT] Vanilla overseer post-add diagnostic: " +
+                    $"runOriginal={__runOriginal}, " +
+                    $"controller={controller.LabelShort}, " +
+                    $"subject={otherPawn.LabelShort}, " +
+                    $"controllerUsesVanilla={MAPMechanitorNodeUtility.UsesVanillaControlPath(controller)}, " +
+                    $"controllerUsesShadow={MAPMechanitorNodeUtility.UsesShadowControlPath(controller)}, " +
+                    $"controllerHasMechanitor={(controller.mechanitor != null)}, " +
+                    $"controllerHasRelations={(controller.relations != null)}, " +
+                    $"subjectHasRelations={(otherPawn.relations != null)}, " +
+                    $"controllerDirectRelationExists={controllerDirectRelationExists}, " +
+                    $"subjectDirectRelationExists={subjectDirectRelationExists}, " +
+                    $"subjectGetOverseer={(subjectOverseer?.LabelShort ?? "null")}, " +
+                    $"controllerControlledContainsSubject={controllerControlledContainsSubject}, " +
+                    $"controllerAnyControlGroupContainsSubject={controllerAnyControlGroupContainsSubject}, " +
+                    $"controllerControlGroupsCount={controller.mechanitor?.controlGroups?.Count}, " +
+                    $"controllerControlledPawnsCount={controller.mechanitor?.ControlledPawns?.Count}");
+            }
+
+            if (!__runOriginal)
+            {
+                return;
+            }
+
             if (controller == null
                 || !MAPMechanitorNodeUtility.UsesShadowControlPath(controller)
                 || otherPawn == null
