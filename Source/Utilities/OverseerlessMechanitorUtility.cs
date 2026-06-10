@@ -141,6 +141,11 @@ namespace MMT
                 return;
             }
 
+            if (pawn.mechanitor?.ControlledPawns.Contains(overseer) == true)
+            {
+                return;
+            }
+
             overseer.relations.RemoveDirectRelation(PawnRelationDefOf.Overseer, pawn);
         }
     }
