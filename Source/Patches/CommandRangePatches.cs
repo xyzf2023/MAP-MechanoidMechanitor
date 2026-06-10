@@ -7,26 +7,26 @@ namespace MMT
     [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.InMechanitorCommandRange))]
     public static class CommandRangePatches
     {
-        [HarmonyPostfix]
-        public static void Postfix(Pawn mech, ref bool __result)
+        [HarmonyPrefix]
+        public static bool Prefix(Pawn mech, ref bool __result)
         {
-            if (__result || mech == null || !ModsConfig.BiotechActive)
+            if (mech == null || !ModsConfig.BiotechActive)
             {
-                return;
+                return true;
             }
 
             if (mech.Faction == null || !mech.Faction.IsPlayerSafe())
             {
-                return;
+                return true;
             }
 
             if (!OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(mech))
             {
-                return;
+                return true;
             }
 
-            OverseerlessMechanitorUtility.EnsureBasicTrackers(mech);
             __result = true;
+            return false;
         }
     }
 }
