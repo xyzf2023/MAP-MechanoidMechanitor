@@ -17,12 +17,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!VanillaRelayMechanitorUtility.IsVanillaRelayMechanitor(pawn))
-            {
-                return false;
-            }
-
-            return MAPMechanitorNodeUtility.CanControlMechs(pawn);
+            return VanillaRelayMechanitorUtility.IsVanillaRelayMechanitor(pawn);
         }
 
         public static bool IsForbiddenRelayTarget(Pawn? target)

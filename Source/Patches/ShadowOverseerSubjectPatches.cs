@@ -21,7 +21,7 @@ namespace MMT
                 return;
             }
 
-            if (OverseerlessMechanitorUtility.IsNode(subject))
+            if (OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(subject))
             {
                 __result = OverseerSubjectState.Overseen;
                 return;
@@ -47,7 +47,7 @@ namespace MMT
                 return;
             }
 
-            if (OverseerlessMechanitorUtility.IsNode(subject))
+            if (OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(subject))
             {
                 __result = null;
                 return;

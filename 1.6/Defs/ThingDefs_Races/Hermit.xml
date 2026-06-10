@@ -32,13 +32,10 @@
     </tools>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
-        <role>VanillaRelayMechanitor</role>
         <controlBackend>Vanilla</controlBackend>
+        <requiresExternalOverseer>true</requiresExternalOverseer>
         <extraMechBandwidth>8</extraMechBandwidth>
         <extraMechControlGroups>1</extraMechControlGroups>
-        <allowExternalOverseer>true</allowExternalOverseer>
-        <requiresExternalOverseer>true</requiresExternalOverseer>
-        <canControlMechs>true</canControlMechs>
         <temporaryTestNode>false</temporaryTestNode>
       </li>
     </comps>
