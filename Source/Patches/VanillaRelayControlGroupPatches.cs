@@ -1,4 +1,5 @@
 using HarmonyLib;
+using MMT;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -14,6 +15,12 @@ namespace MAP_MechanoidMechanitor
             if (pawn == null || pawn.IsGestating())
             {
                 return true;
+            }
+
+            if (ModsConfig.BiotechActive
+                && OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(pawn))
+            {
+                return false;
             }
 
             Pawn overseer = pawn.GetOverseer();
