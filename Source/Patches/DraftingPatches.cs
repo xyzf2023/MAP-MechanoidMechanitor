@@ -21,16 +21,9 @@ namespace MMT
                 return;
             }
 
-            if (!OverseerlessMechanitorUtility.IsMAPMechanitorNodeController(pawn))
+            if (!OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(pawn))
             {
                 return;
-            }
-
-            OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
-
-            if (OverseerlessMechanitorUtility.ShouldClearOwnExternalOverseer(pawn))
-            {
-                OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(pawn);
             }
 
             __result = true;
@@ -53,16 +46,9 @@ namespace MMT
                 return;
             }
 
-            if (!OverseerlessMechanitorUtility.IsMAPMechanitorNodeController(mech))
+            if (!OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(mech))
             {
                 return;
-            }
-
-            OverseerlessMechanitorUtility.EnsureBasicTrackers(mech);
-
-            if (OverseerlessMechanitorUtility.ShouldClearOwnExternalOverseer(mech))
-            {
-                OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(mech);
             }
 
             if (mech.needs?.energy != null && mech.needs.energy.IsLowEnergySelfShutdown)
