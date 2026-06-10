@@ -25,7 +25,6 @@
         <requiresExternalOverseer>false</requiresExternalOverseer>
         <extraMechBandwidth>20</extraMechBandwidth>
         <extraMechControlGroups>5</extraMechControlGroups>
-        <temporaryTestNode>false</temporaryTestNode>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_CommanderSkills">
         <bodyType>Male</bodyType>
@@ -81,6 +80,7 @@
     <defName>MAP_Mech_Justice</defName>
     <label>「正义」</label>
     <race>MAP_Mech_Justice</race>
+    <defaultFactionDef>PlayerColony</defaultFactionDef>
     <destroyGearOnDrop>false</destroyGearOnDrop>
     <combatPower>600</combatPower>
     <lifeStages Inherit="False">

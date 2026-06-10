@@ -11,7 +11,6 @@ namespace MAP_MechanoidMechanitor
         public bool requiresExternalOverseer = false;
         public int extraMechBandwidth = 0;
         public int extraMechControlGroups = 0;
-        public bool temporaryTestNode = false;
 
         public CompProperties_MAPMechanitorNode()
         {

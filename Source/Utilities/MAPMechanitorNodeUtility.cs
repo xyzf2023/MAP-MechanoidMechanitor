@@ -71,16 +71,6 @@ namespace MAP_MechanoidMechanitor
             return UsesVanillaControlPath(pawn) && RequiresExternalOverseer(pawn);
         }
 
-        public static bool IsTemporaryTestNode(Pawn? pawn)
-        {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
-            {
-                return false;
-            }
-
-            return props.temporaryTestNode;
-        }
-
         public static bool RequiresExternalOverseer(Pawn? pawn)
         {
             if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
