@@ -33,31 +33,32 @@ namespace MMT
     [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.CanDraftMech))]
     public static class DraftingPatches_CanDraftMech
     {
-        [HarmonyPostfix]
-        public static void Postfix(Pawn mech, ref AcceptanceReport __result)
+        [HarmonyPrefix]
+        public static bool Prefix(Pawn mech, ref AcceptanceReport __result)
         {
             if (mech == null || !ModsConfig.BiotechActive)
             {
-                return;
+                return true;
             }
 
             if (mech.Faction == null || !mech.Faction.IsPlayerSafe())
             {
-                return;
+                return true;
             }
 
             if (!OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(mech))
             {
-                return;
+                return true;
             }
 
             if (mech.needs?.energy != null && mech.needs.energy.IsLowEnergySelfShutdown)
             {
                 __result = "IsLowEnergySelfShutdown".Translate(mech.Named("PAWN"));
-                return;
+                return false;
             }
 
             __result = true;
+            return false;
         }
     }
 }
