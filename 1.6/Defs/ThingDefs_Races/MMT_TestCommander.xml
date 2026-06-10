@@ -31,13 +31,10 @@
     </race>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
-        <role>ShadowTestNode</role>
         <controlBackend>Vanilla</controlBackend>
+        <requiresExternalOverseer>false</requiresExternalOverseer>
         <extraMechBandwidth>20</extraMechBandwidth>
         <extraMechControlGroups>3</extraMechControlGroups>
-        <allowExternalOverseer>false</allowExternalOverseer>
-        <requiresExternalOverseer>false</requiresExternalOverseer>
-        <canControlMechs>true</canControlMechs>
         <temporaryTestNode>true</temporaryTestNode>
       </li>
     </comps>

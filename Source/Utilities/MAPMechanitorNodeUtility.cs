@@ -27,8 +27,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return props.controlBackend == MAPMechanitorControlBackend.Vanilla
-                && props.canControlMechs;
+            return props.controlBackend == MAPMechanitorControlBackend.Vanilla;
         }
 
         public static bool UsesShadowControlPath(Pawn? pawn)
@@ -38,8 +37,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return props.controlBackend == MAPMechanitorControlBackend.Shadow
-                && props.canControlMechs;
+            return props.controlBackend == MAPMechanitorControlBackend.Shadow;
         }
 
         public static bool IsMechanitorNodeController(Pawn? pawn)
@@ -62,14 +60,15 @@ namespace MAP_MechanoidMechanitor
             return IsShadowController(pawn) && !RequiresExternalOverseer(pawn);
         }
 
-        public static bool IsVanillaRelayNode(Pawn? pawn)
+        // Vanilla backend + requires external overseer (e.g. Hermit relay node).
+        public static bool IsVanillaRelayMechanitorNode(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
+            if (!PassesMechanitorNodeControllerBasics(pawn))
             {
                 return false;
             }
 
-            return props.role == MAPMechanitorNodeRole.VanillaRelayMechanitor;
+            return UsesVanillaControlPath(pawn) && RequiresExternalOverseer(pawn);
         }
 
         public static bool IsTemporaryTestNode(Pawn? pawn)
@@ -79,17 +78,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return props.temporaryTestNode || props.role == MAPMechanitorNodeRole.ShadowTestNode;
-        }
-
-        public static bool AllowsExternalOverseer(Pawn? pawn)
-        {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
-            {
-                return false;
-            }
-
-            return props.allowExternalOverseer;
+            return props.temporaryTestNode;
         }
 
         public static bool RequiresExternalOverseer(Pawn? pawn)
@@ -109,7 +98,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return props.canControlMechs;
+            return props.controlBackend == MAPMechanitorControlBackend.Vanilla
+                || props.controlBackend == MAPMechanitorControlBackend.Shadow;
         }
 
         public static int GetExtraMechBandwidth(Pawn? pawn)

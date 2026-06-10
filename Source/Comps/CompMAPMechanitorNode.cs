@@ -6,14 +6,11 @@ namespace MAP_MechanoidMechanitor
 {
     public class CompProperties_MAPMechanitorNode : CompProperties
     {
-        public MAPMechanitorNodeRole role = MAPMechanitorNodeRole.None;
         public MAPMechanitorControlBackend controlBackend = MAPMechanitorControlBackend.None;
-        public int extraMechBandwidth = 0;
-        public int extraMechControlGroups = 0;
-        public bool allowExternalOverseer = false;
         // Whether this node itself needs an external overseer; does not affect its ability to control other mechs.
         public bool requiresExternalOverseer = false;
-        public bool canControlMechs = false;
+        public int extraMechBandwidth = 0;
+        public int extraMechControlGroups = 0;
         public bool temporaryTestNode = false;
 
         public CompProperties_MAPMechanitorNode()
@@ -59,10 +56,7 @@ namespace MAP_MechanoidMechanitor
             if (nodeProps.controlBackend == MAPMechanitorControlBackend.Shadow
                 || nodeProps.controlBackend == MAPMechanitorControlBackend.Vanilla)
             {
-                if (nodeProps.canControlMechs)
-                {
-                    OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
-                }
+                OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
 
                 if (!nodeProps.requiresExternalOverseer)
                 {
@@ -73,7 +67,6 @@ namespace MAP_MechanoidMechanitor
                 {
                     Log.Message(
                         $"[MAP-MechanoidMechanitor] MAP mechanitor node ({nodeProps.controlBackend}): {pawn.LabelShort}, " +
-                        $"role={nodeProps.role}, " +
                         $"requiresExternalOverseer={nodeProps.requiresExternalOverseer}, " +
                         $"mechanitor={(pawn.mechanitor != null)}, relations={(pawn.relations != null)}, " +
                         $"noOverseer={(pawn.GetOverseer() == null)}, " +

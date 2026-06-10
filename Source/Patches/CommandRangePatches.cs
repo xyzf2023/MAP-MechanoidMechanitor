@@ -20,7 +20,7 @@ namespace MMT
                 return;
             }
 
-            if (!OverseerlessMechanitorUtility.IsNode(mech))
+            if (!OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(mech))
             {
                 return;
             }
