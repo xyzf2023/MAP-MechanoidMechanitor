@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -24,7 +25,7 @@ namespace MMT
                 ThingOwner directlyHeldThings = pod.GetDirectlyHeldThings();
                 for (int i = 0; i < directlyHeldThings.Count; i++)
                 {
-                    if (directlyHeldThings[i] is Pawn pawn && OverseerlessMechanitorUtility.IsNode(pawn))
+                    if (directlyHeldThings[i] is Pawn pawn && MAPMechanitorTravelUtility.CanLeadCaravan(pawn))
                     {
                         hasMmtNode = true;
                         mmtCount++;
@@ -67,7 +68,7 @@ namespace MMT
                 for (int j = 0; j < pawns.Count; j++)
                 {
                     Pawn pawn = pawns[j];
-                    if (!OverseerlessMechanitorUtility.IsNode(pawn))
+                    if (!MAPMechanitorTravelUtility.ShouldRefreshTrackersOnTransporterArrival(pawn))
                     {
                         continue;
                     }
