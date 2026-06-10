@@ -47,6 +47,11 @@
           </li>
         </skillLevels>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorTravelNode">
+        <canLeadCaravan>true</canLeadCaravan>
+        <canCollectCaravanItems>true</canCollectCaravanItems>
+        <refreshTrackersOnTransporterArrival>true</refreshTrackersOnTransporterArrival>
+      </li>
     </comps>
     <race>
       <mechFixedSkillLevel>12</mechFixedSkillLevel>
