@@ -45,6 +45,38 @@
             <skill>Crafting</skill>
             <level>12</level>
           </li>
+          <li>
+            <skill>Construction</skill>
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Mining</skill>
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Cooking</skill>
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Plants</skill>
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Animals</skill>
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Artistic</skill>
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Medicine</skill>
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Intellectual</skill>
+            <level>10</level>
+          </li>
         </skillLevels>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_HumanWeaponUser">
@@ -64,10 +96,26 @@
     <race>
       <mechFixedSkillLevel>12</mechFixedSkillLevel>
       <mechEnabledWorkTypes>
-        <li>Smithing</li>
-        <li>Crafting</li>
         <li>Firefighter</li>
+        <li>Patient</li>
+        <li>Doctor</li>
+        <li>PatientBedRest</li>
         <li>BasicWorker</li>
+        <li>Warden</li>
+        <li>Handling</li>
+        <li>Cooking</li>
+        <li>Hunting</li>
+        <li>Construction</li>
+        <li>Growing</li>
+        <li>Mining</li>
+        <li>PlantCutting</li>
+        <li>Smithing</li>
+        <li>Tailoring</li>
+        <li>Art</li>
+        <li>Crafting</li>
+        <li>Hauling</li>
+        <li>Cleaning</li>
+        <li>Research</li>
       </mechEnabledWorkTypes>
       <lifeStageAges Inherit="False">
         <li>
