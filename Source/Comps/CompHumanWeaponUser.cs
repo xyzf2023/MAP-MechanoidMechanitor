@@ -19,12 +19,6 @@ namespace MAP_MechanoidMechanitor
     {
         public CompProperties_HumanWeaponUser Props => (CompProperties_HumanWeaponUser)props;
 
-        public override void PostPostMake()
-        {
-            base.PostPostMake();
-            EnsureTrackersIfNeeded();
-        }
-
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
@@ -56,8 +50,20 @@ namespace MAP_MechanoidMechanitor
 
             if (Prefs.DevMode)
             {
-                Log.Message($"[MAP] Created equipment tracker for human weapon user: pawn={pawn.LabelShort}");
+                Log.Message($"[MAP] Created equipment tracker for human weapon user: pawn={SafePawnDebugName(pawn)}");
             }
+        }
+
+        private static string SafePawnDebugName(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return "null";
+            }
+
+            string defName = pawn.def?.defName ?? "nullDef";
+            string kindDefName = pawn.kindDef?.defName ?? "nullKind";
+            return $"{defName}/{kindDefName}";
         }
 
         public static bool PawnCanUseHumanWeapons(Pawn? pawn)
