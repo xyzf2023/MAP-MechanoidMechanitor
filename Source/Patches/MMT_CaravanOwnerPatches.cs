@@ -35,11 +35,6 @@ namespace MMT
             }
 
             __result = true;
-
-            if (Prefs.DevMode)
-            {
-                Log.Message($"[MMT] Travel node accepted as caravan owner: pawn={pawn.LabelShort}");
-            }
         }
     }
 
