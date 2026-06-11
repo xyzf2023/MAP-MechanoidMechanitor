@@ -7,7 +7,7 @@
     <hediffClass>HediffWithComps</hediffClass>
     <isBad>false</isBad>
     <comps>
-      <li Class="MAP_MechCommander.HediffCompProperties_JusticeSyncTracker" />
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_JusticeSyncTracker" />
     </comps>
   </HediffDef>
 </Defs>
