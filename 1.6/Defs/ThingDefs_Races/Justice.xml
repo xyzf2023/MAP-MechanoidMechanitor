@@ -57,7 +57,6 @@
         <canCollectCaravanItems>true</canCollectCaravanItems>
         <refreshTrackersOnTransporterArrival>true</refreshTrackersOnTransporterArrival>
       </li>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_JusticeHediffSync" />
     </comps>
     <race>
       <mechFixedSkillLevel>12</mechFixedSkillLevel>
