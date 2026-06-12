@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -43,16 +44,28 @@ namespace MAP_MechanoidMechanitor
             selfWorkMode = sanitized;
         }
 
-        public void CycleSelfWorkMode()
+        public static string GetDisplayLabel(MechWorkModeDef mode)
         {
-            if (IsAutonomousDirective)
-            {
-                SetSelfWorkMode(MechWorkModeDefOf.Recharge);
-            }
-            else
-            {
-                SetSelfWorkMode(GetAutonomousDirectiveDef());
-            }
+            return mode.LabelCap;
+        }
+
+        public static void AddSelfWorkModeFloatMenuOptions(
+            List<FloatMenuOption> options,
+            CompJusticeSelfWorkMode comp)
+        {
+            MechWorkModeDef autonomous = GetAutonomousDirectiveDef();
+            options.Add(new FloatMenuOption(
+                GetDisplayLabel(autonomous),
+                () => comp.SetSelfWorkMode(autonomous),
+                autonomous.uiIcon,
+                Color.white));
+
+            MechWorkModeDef recharge = MechWorkModeDefOf.Recharge;
+            options.Add(new FloatMenuOption(
+                GetDisplayLabel(recharge),
+                () => comp.SetSelfWorkMode(recharge),
+                recharge.uiIcon,
+                Color.white));
         }
 
         public override void PostExposeData()
@@ -63,40 +76,6 @@ namespace MAP_MechanoidMechanitor
             {
                 selfWorkMode = SanitizeWorkMode(selfWorkMode);
             }
-        }
-
-        public override IEnumerable<Gizmo> CompGetGizmosExtra()
-        {
-            if (parent is not Pawn pawn || !ShouldShowGizmo(pawn))
-            {
-                yield break;
-            }
-
-            MechWorkModeDef mode = CurrentSelfWorkMode;
-            Command_Action command = new Command_Action
-            {
-                defaultLabel = mode.LabelCap,
-                defaultDesc = GetGizmoDescription(mode),
-                icon = mode.uiIcon ?? BaseContent.BadTex,
-                action = CycleSelfWorkMode
-            };
-            yield return command;
-        }
-
-        private static bool ShouldShowGizmo(Pawn pawn)
-        {
-            return pawn.Spawned && pawn.IsColonistPlayerControlled && !pawn.Dead;
-        }
-
-        private static string GetGizmoDescription(MechWorkModeDef mode)
-        {
-            string description = mode.description;
-            if (string.IsNullOrEmpty(description))
-            {
-                return mode.LabelCap;
-            }
-
-            return $"{mode.LabelCap}\n\n{description}";
         }
 
         private static MechWorkModeDef GetAutonomousDirectiveDef()
