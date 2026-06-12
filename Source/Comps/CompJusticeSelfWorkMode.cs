@@ -16,7 +16,7 @@ namespace MAP_MechanoidMechanitor
     public class CompJusticeSelfWorkMode : ThingComp
     {
         private const string AutonomousDirectiveDefName = "MAP_WorkMode_AutonomousDirective";
-        private const string RechargeDefName = "Recharge";
+        private const string SelfShutdownDefName = "SelfShutdown";
 
         private MechWorkModeDef? selfWorkMode;
 
@@ -27,8 +27,8 @@ namespace MAP_MechanoidMechanitor
         public bool IsAutonomousDirective =>
             CurrentSelfWorkMode.defName == AutonomousDirectiveDefName;
 
-        public bool IsSelfRecharge =>
-            CurrentSelfWorkMode.defName == RechargeDefName;
+        public bool IsSelfShutdown =>
+            CurrentSelfWorkMode.defName == SelfShutdownDefName;
 
         public static CompJusticeSelfWorkMode? GetFor(Pawn? pawn) =>
             pawn?.GetComp<CompJusticeSelfWorkMode>();
@@ -60,11 +60,11 @@ namespace MAP_MechanoidMechanitor
                 autonomous.uiIcon,
                 Color.white));
 
-            MechWorkModeDef recharge = MechWorkModeDefOf.Recharge;
+            MechWorkModeDef selfShutdown = MechWorkModeDefOf.SelfShutdown;
             options.Add(new FloatMenuOption(
-                GetDisplayLabel(recharge),
-                () => comp.SetSelfWorkMode(recharge),
-                recharge.uiIcon,
+                GetDisplayLabel(selfShutdown),
+                () => comp.SetSelfWorkMode(selfShutdown),
+                selfShutdown.uiIcon,
                 Color.white));
         }
 
@@ -91,9 +91,9 @@ namespace MAP_MechanoidMechanitor
                 return mode;
             }
 
-            if (mode?.defName == RechargeDefName)
+            if (mode?.defName == SelfShutdownDefName)
             {
-                return MechWorkModeDefOf.Recharge;
+                return MechWorkModeDefOf.SelfShutdown;
             }
 
             return GetAutonomousDirectiveDef();
