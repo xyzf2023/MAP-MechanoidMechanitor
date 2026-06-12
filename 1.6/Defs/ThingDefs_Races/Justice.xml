@@ -92,6 +92,10 @@
         <canCollectCaravanItems>true</canCollectCaravanItems>
         <refreshTrackersOnTransporterArrival>true</refreshTrackersOnTransporterArrival>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_WorkTabVisibleUser">
+        <showInWorkTab>true</showInWorkTab>
+        <ensureWorkSettings>true</ensureWorkSettings>
+      </li>
     </comps>
     <race>
       <mechFixedSkillLevel>12</mechFixedSkillLevel>
