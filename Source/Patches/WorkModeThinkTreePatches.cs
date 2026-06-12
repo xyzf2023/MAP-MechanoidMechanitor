@@ -10,6 +10,33 @@ namespace MAP_MechanoidMechanitor
     {
         private const string GuardMobileCombatDefName = "MAP_WorkMode_MobileCombat_Guard";
 
+        [HarmonyPrefix]
+        public static bool Prefix(ThinkNode_ConditionalWorkMode __instance, Pawn pawn, ref bool __result)
+        {
+            CompJusticeSelfWorkMode? comp = CompJusticeSelfWorkMode.GetFor(pawn);
+            if (comp == null)
+            {
+                return true;
+            }
+
+            if (pawn == null || !pawn.RaceProps.IsMechanoid || pawn.Faction != Faction.OfPlayer)
+            {
+                __result = false;
+                return false;
+            }
+
+            if (comp.IsSelfShutdown)
+            {
+                __result = __instance.workMode == MechWorkModeDefOf.SelfShutdown;
+            }
+            else
+            {
+                __result = __instance.workMode == MechWorkModeDefOf.Work;
+            }
+
+            return false;
+        }
+
         [HarmonyPostfix]
         public static void Postfix(ThinkNode_ConditionalWorkMode __instance, Pawn pawn, ref bool __result)
         {
