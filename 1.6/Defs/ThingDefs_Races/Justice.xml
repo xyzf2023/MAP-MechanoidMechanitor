@@ -96,6 +96,7 @@
         <showInWorkTab>true</showInWorkTab>
         <ensureWorkSettings>true</ensureWorkSettings>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_JusticeSelfWorkMode" />
     </comps>
     <race>
       <mechFixedSkillLevel>12</mechFixedSkillLevel>

@@ -14,6 +14,10 @@ namespace MAP_MechanoidMechanitor
             "MAP_WorkMode_MobileCombat_Guard",
             "MAP_WorkMode_FortifiedDefense"
         };
+        private static readonly HashSet<string> justiceSelfOnlyWorkModeDefNames = new HashSet<string>
+        {
+            "MAP_WorkMode_AutonomousDirective"
+        };
         private static readonly HashSet<string> justiceWorkModeHediffDefNames = new HashSet<string>
         {
             "MAP_Justice_WorkMode_EfficientExecution",
@@ -148,6 +152,11 @@ namespace MAP_MechanoidMechanitor
         public static bool IsJusticeWorkMode(MechWorkModeDef workMode)
         {
             return workMode != null && justiceWorkModeDefNames.Contains(workMode.defName);
+        }
+
+        public static bool IsJusticeSelfOnlyWorkMode(MechWorkModeDef workMode)
+        {
+            return workMode != null && justiceSelfOnlyWorkModeDefNames.Contains(workMode.defName);
         }
 
         public static bool IsJusticeWorkMode(HediffDef def)

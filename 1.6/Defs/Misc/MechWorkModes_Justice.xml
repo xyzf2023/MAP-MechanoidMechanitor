@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
   <MechWorkModeDef>
+    <defName>MAP_WorkMode_AutonomousDirective</defName>
+    <label>自律指令</label>
+    <description>正义本体进入自律执行状态，后续可映射为自动工作行为。</description>
+    <uiOrder>140</uiOrder>
+    <iconPath>UI/Icons/WorkMode/Work</iconPath>
+  </MechWorkModeDef>
+
+  <MechWorkModeDef>
     <defName>MAP_WorkMode_EfficientExecution</defName>
     <label>工作（高效执行）</label>
     <uiOrder>150</uiOrder>
