@@ -213,7 +213,8 @@ namespace MAP_MechanoidMechanitor
         {
             bool isJustice = WorkModeUtility.IsJusticeControlGroup(controlGroup);
 
-            IEnumerable<MechWorkModeDef> defs = DefDatabase<MechWorkModeDef>.AllDefsListForReading;
+            IEnumerable<MechWorkModeDef> defs = DefDatabase<MechWorkModeDef>.AllDefsListForReading
+                .Where(d => !WorkModeUtility.IsJusticeSelfOnlyWorkMode(d));
             if (!isJustice)
             {
                 defs = defs.Where(d => !WorkModeUtility.IsJusticeWorkMode(d));
