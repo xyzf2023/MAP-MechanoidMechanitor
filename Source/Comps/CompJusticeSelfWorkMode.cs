@@ -13,6 +13,16 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    // 正义本体的 Self Work Mode，与 mechanitor 控制组 WorkMode 是两套系统。
+    //
+    // 仅允许：MAP_WorkMode_AutonomousDirective（自律指令）与
+    // MechWorkModeDefOf.SelfShutdown（休眠/自机充电）。不允许 Recharge——
+    // Recharge 是去充电器充电；本体休眠自充电应使用 SelfShutdown。
+    //
+    // MAP_WorkMode_AutonomousDirective 不得出现在正义控制组菜单中
+    // （由 WorkModeUtility.IsJusticeSelfOnlyWorkMode 过滤）。
+    // 控制组模式（高效执行、机动作战、阵地防御等）用于正义监管的机械体，
+    // 不用于此处保存的正义本体模式。
     public class CompJusticeSelfWorkMode : ThingComp
     {
         private const string AutonomousDirectiveDefName = "MAP_WorkMode_AutonomousDirective";
