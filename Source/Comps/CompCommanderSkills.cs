@@ -15,6 +15,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             ApplyBodyType(pawn, SkillProps);
+            ApplyBackstories(pawn, SkillProps);
             ApplySkillLevels(pawn, SkillProps);
         }
 
@@ -31,6 +32,29 @@ namespace MAP_MechanoidMechanitor
             }
 
             pawn.story.bodyType = props.bodyType;
+        }
+
+        private static void ApplyBackstories(Pawn pawn, CompProperties_CommanderSkills props)
+        {
+            if (props.childhoodBackstory == null && props.adulthoodBackstory == null)
+            {
+                return;
+            }
+
+            if (pawn.story == null)
+            {
+                pawn.story = new Pawn_StoryTracker(pawn);
+            }
+
+            if (props.childhoodBackstory != null)
+            {
+                pawn.story.Childhood = props.childhoodBackstory;
+            }
+
+            if (props.adulthoodBackstory != null)
+            {
+                pawn.story.Adulthood = props.adulthoodBackstory;
+            }
         }
 
         private static void ApplySkillLevels(Pawn pawn, CompProperties_CommanderSkills props)

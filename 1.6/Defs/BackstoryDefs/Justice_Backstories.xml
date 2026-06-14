@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <BackstoryDef>
+    <defName>MAP_Justice_Childhood</defName>
+    <identifier>MAP_Justice_Childhood</identifier>
+    <slot>Childhood</slot>
+    <title>「正义」</title>
+    <titleFemale>「正义」</titleFemale>
+    <titleShort>「正义」</titleShort>
+    <titleShortFemale>「正义」</titleShortFemale>
+    <description>TODO</description>
+    <workDisables>None</workDisables>
+    <requiredWorkTags>None</requiredWorkTags>
+    <shuffleable>False</shuffleable>
+  </BackstoryDef>
+
+  <BackstoryDef>
+    <defName>MAP_Justice_Adulthood</defName>
+    <identifier>MAP_Justice_Adulthood</identifier>
+    <slot>Adulthood</slot>
+    <title>「正义」</title>
+    <titleFemale>「正义」</titleFemale>
+    <titleShort>「正义」</titleShort>
+    <titleShortFemale>「正义」</titleShortFemale>
+    <description>TODO</description>
+    <workDisables>None</workDisables>
+    <requiredWorkTags>None</requiredWorkTags>
+    <shuffleable>False</shuffleable>
+  </BackstoryDef>
+
+</Defs>
