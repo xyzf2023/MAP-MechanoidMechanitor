@@ -4,7 +4,7 @@ using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(Pawn_RelationsTracker), nameof(Pawn_RelationsTracker.AddDirectRelation))]
     public static class OverseerRelationGuardPatches
@@ -39,7 +39,7 @@ namespace MMT
                 if (Prefs.DevMode)
                 {
                     Log.Warning(
-                        $"[MMT] Blocked attempt to assign overseer to node: controller={controller?.LabelShort ?? "null"}, " +
+                        $"[MAP-MechanoidMechanitor] Blocked attempt to assign overseer to node: controller={controller?.LabelShort ?? "null"}, " +
                         $"node={otherPawn.LabelShort}");
                 }
 

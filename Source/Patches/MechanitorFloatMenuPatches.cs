@@ -3,7 +3,7 @@ using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(FloatMenuOptionProvider), nameof(FloatMenuOptionProvider.SelectedPawnValid))]
     public static class MechanitorFloatMenuPatches

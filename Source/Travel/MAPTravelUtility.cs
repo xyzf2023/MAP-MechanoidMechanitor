@@ -1,10 +1,9 @@
-using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
-    public static class MMT_TravelUtility
+    public static class MAPTravelUtility
     {
         public static bool CanActAsIndependentCaravanOwner(Pawn pawn)
         {

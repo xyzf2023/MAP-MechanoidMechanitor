@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using HarmonyLib;
-using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(MainButtonWorker_ToggleMechTab), nameof(MainButtonWorker_ToggleMechTab.Disabled), MethodType.Getter)]
-    public static class MMT_MechMainButtonPatches
+    public static class MAPMechMainButtonPatches
     {
         [HarmonyPostfix]
         public static void Postfix(ref bool __result)
@@ -23,14 +22,14 @@ namespace MMT
                 return;
             }
 
-            if (MapHasVisibleMmtNode(currentMap.mapPawns.SpawnedPawnsInFaction(Faction.OfPlayer))
-                || MapHasVisibleMmtNode(currentMap.mapPawns.PawnsInFaction(Faction.OfPlayer)))
+            if (MapHasVisibleMapNode(currentMap.mapPawns.SpawnedPawnsInFaction(Faction.OfPlayer))
+                || MapHasVisibleMapNode(currentMap.mapPawns.PawnsInFaction(Faction.OfPlayer)))
             {
                 __result = false;
             }
         }
 
-        private static bool MapHasVisibleMmtNode(List<Pawn> pawns)
+        private static bool MapHasVisibleMapNode(List<Pawn> pawns)
         {
             for (int i = 0; i < pawns.Count; i++)
             {
@@ -42,7 +41,7 @@ namespace MMT
                 {
                     if (Prefs.DevMode)
                     {
-                        Log.Message($"[MMT] Mechs main button enabled by MMT node: pawn={pawn.LabelShort}");
+                        Log.Message($"[MAP-MechanoidMechanitor] Mechs main button enabled by MAP node: pawn={pawn.LabelShort}");
                     }
 
                     return true;

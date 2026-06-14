@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using HarmonyLib;
-using MAP_MechanoidMechanitor;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(TransportersArrivalAction_FormCaravan), nameof(TransportersArrivalAction_FormCaravan.CanFormCaravanAt))]
-    public static class MMT_TransporterCanFormCaravanAtDiagnosticsPatch
+    public static class MAPTransporterCanFormCaravanAtDiagnosticsPatch
     {
         [HarmonyPostfix]
         public static void Postfix(IEnumerable<IThingHolder> pods, PlanetTile tile, ref bool __result)
@@ -18,8 +17,8 @@ namespace MMT
                 return;
             }
 
-            bool hasMmtNode = false;
-            int mmtCount = 0;
+            bool hasMapNode = false;
+            int mapNodeCount = 0;
             foreach (IThingHolder pod in pods)
             {
                 ThingOwner directlyHeldThings = pod.GetDirectlyHeldThings();
@@ -27,24 +26,24 @@ namespace MMT
                 {
                     if (directlyHeldThings[i] is Pawn pawn && MAPMechanitorTravelUtility.CanLeadCaravan(pawn))
                     {
-                        hasMmtNode = true;
-                        mmtCount++;
+                        hasMapNode = true;
+                        mapNodeCount++;
                     }
                 }
             }
 
-            if (!hasMmtNode)
+            if (!hasMapNode)
             {
                 return;
             }
 
             Log.Message(
-                $"[MMT] Transporter caravan form check: mmtCount={mmtCount}, result={__result}, tile={tile}");
+                $"[MAP-MechanoidMechanitor] Transporter caravan form check: mapNodeCount={mapNodeCount}, result={__result}, tile={tile}");
         }
     }
 
     [HarmonyPatch(typeof(TransportersArrivalAction_FormCaravan), nameof(TransportersArrivalAction_FormCaravan.Arrived))]
-    public static class MMT_TransporterArrivedDiagnosticsPatch
+    public static class MAPTransporterArrivedDiagnosticsPatch
     {
         [HarmonyPostfix]
         public static void Postfix(PlanetTile tile)
@@ -80,14 +79,14 @@ namespace MMT
 
                     bool hasOverseer = pawn.GetOverseer() != null;
                     Log.Message(
-                        $"[MMT] Transporter caravan arrived with node: pawn={pawn.LabelShort}, tile={searchTile}, " +
+                        $"[MAP-MechanoidMechanitor] Transporter caravan arrived with node: pawn={pawn.LabelShort}, tile={searchTile}, " +
                         $"isWorldPawn={pawn.IsWorldPawn()}, isMechanitor={MechanitorUtility.IsMechanitor(pawn)}, " +
                         $"hasOverseer={hasOverseer}");
 
                     if (hasOverseer)
                     {
                         Log.Warning(
-                            $"[MMT] Warning: travel node unexpectedly has overseer after transporter arrival: pawn={pawn.LabelShort}");
+                            $"[MAP-MechanoidMechanitor] Warning: travel node unexpectedly has overseer after transporter arrival: pawn={pawn.LabelShort}");
                     }
                 }
             }

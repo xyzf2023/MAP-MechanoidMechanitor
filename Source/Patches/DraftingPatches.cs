@@ -3,7 +3,7 @@ using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(Pawn_DraftController), nameof(Pawn_DraftController.ShowDraftGizmo), MethodType.Getter)]
     public static class DraftingPatches_ShowDraftGizmo
