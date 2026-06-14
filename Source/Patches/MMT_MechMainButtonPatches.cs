@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -37,7 +38,7 @@ namespace MMT
                 if (pawn != null
                     && !pawn.Destroyed
                     && !pawn.Dead
-                    && OverseerlessMechanitorUtility.IsNode(pawn))
+                    && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
                 {
                     if (Prefs.DevMode)
                     {

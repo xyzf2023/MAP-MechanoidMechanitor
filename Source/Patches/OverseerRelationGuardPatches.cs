@@ -54,41 +54,6 @@ namespace MMT
                 return false;
             }
 
-            if (controller != null
-                && MAPMechanitorNodeUtility.UsesShadowControlPath(controller)
-                && otherPawn != null
-                && !MAPMechanitorNodeUtility.HasNode(otherPawn))
-            {
-                MMT_ShadowOverseerManager? manager = MMT_ShadowOverseerManager.EnsureInstance();
-                if (manager == null)
-                {
-                    if (Prefs.DevMode)
-                    {
-                        Log.Warning(
-                            "[MMT] Shadow overseer manager missing; blocked vanilla relation without shadow record.");
-                    }
-                }
-                else
-                {
-                    manager.SetShadowOverseer(otherPawn, controller);
-                }
-
-                return false;
-            }
-
-            if (controller != null
-                && !MAPMechanitorNodeUtility.UsesShadowControlPath(controller)
-                && otherPawn != null
-                && !MAPMechanitorNodeUtility.HasNode(otherPawn))
-            {
-                MMT_ShadowOverseerManager? manager = MMT_ShadowOverseerManager.Current;
-                Pawn? oldShadow = manager?.GetShadowOverseer(otherPawn);
-                if (oldShadow != null && manager != null)
-                {
-                    manager.RemoveShadowOverseer(otherPawn);
-                }
-            }
-
             return true;
         }
     }

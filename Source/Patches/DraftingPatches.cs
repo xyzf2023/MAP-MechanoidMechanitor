@@ -1,4 +1,5 @@
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -21,7 +22,7 @@ namespace MMT
                 return;
             }
 
-            if (!OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(pawn))
+            if (!MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(pawn))
             {
                 return;
             }
@@ -46,7 +47,7 @@ namespace MMT
                 return true;
             }
 
-            if (!OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(mech))
+            if (!MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(mech))
             {
                 return true;
             }

@@ -15,11 +15,6 @@ namespace MAP_MechanoidMechanitor
             return CompMAPMechanitorNode.PawnHasNode(pawn);
         }
 
-        public static bool IsShadowNode(Pawn? pawn)
-        {
-            return UsesShadowControlPath(pawn);
-        }
-
         public static bool UsesVanillaControlPath(Pawn? pawn)
         {
             if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
@@ -30,16 +25,6 @@ namespace MAP_MechanoidMechanitor
             return props.controlBackend == MAPMechanitorControlBackend.Vanilla;
         }
 
-        public static bool UsesShadowControlPath(Pawn? pawn)
-        {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
-            {
-                return false;
-            }
-
-            return props.controlBackend == MAPMechanitorControlBackend.Shadow;
-        }
-
         public static bool IsMechanitorNodeController(Pawn? pawn)
         {
             if (!PassesMechanitorNodeControllerBasics(pawn))
@@ -47,17 +32,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return UsesVanillaControlPath(pawn) || UsesShadowControlPath(pawn);
-        }
-
-        public static bool IsShadowController(Pawn? pawn)
-        {
-            return PassesMechanitorNodeControllerBasics(pawn) && UsesShadowControlPath(pawn);
-        }
-
-        public static bool IsOverseerlessShadowNode(Pawn? pawn)
-        {
-            return IsShadowController(pawn) && !RequiresExternalOverseer(pawn);
+            return UsesVanillaControlPath(pawn);
         }
 
         // Vanilla backend + requires external overseer (e.g. Hermit relay node).
@@ -88,8 +63,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return props.controlBackend == MAPMechanitorControlBackend.Vanilla
-                || props.controlBackend == MAPMechanitorControlBackend.Shadow;
+            return props.controlBackend == MAPMechanitorControlBackend.Vanilla;
         }
 
         public static int GetExtraMechBandwidth(Pawn? pawn)

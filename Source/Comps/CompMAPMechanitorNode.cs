@@ -1,4 +1,3 @@
-using MMT;
 using RimWorld;
 using Verse;
 
@@ -52,14 +51,13 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (nodeProps.controlBackend == MAPMechanitorControlBackend.Shadow
-                || nodeProps.controlBackend == MAPMechanitorControlBackend.Vanilla)
+            if (nodeProps.controlBackend == MAPMechanitorControlBackend.Vanilla)
             {
-                OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
+                MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
 
                 if (!nodeProps.requiresExternalOverseer)
                 {
-                    OverseerlessMechanitorUtility.ClearExternalOverseerIfNode(pawn);
+                    MAPOverseerlessNodeUtility.ClearExternalOverseerIfNode(pawn);
                 }
 
                 if (Prefs.DevMode)

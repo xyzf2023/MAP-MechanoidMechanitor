@@ -73,8 +73,6 @@ namespace MMT
                         continue;
                     }
 
-                    OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
-
                     if (!Prefs.DevMode)
                     {
                         continue;
