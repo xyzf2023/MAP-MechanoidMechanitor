@@ -3,4 +3,5 @@
   <MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateJustice>Justice cannot gestate Justice</MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateJustice>
   <MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateHermit>Justice cannot gestate Hermit</MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateHermit>
   <MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>Missing skills tracker</MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>
+  <MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>Could not find the gravship launch ritual in the player's primary ideology.</MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>
 </LanguageData>
