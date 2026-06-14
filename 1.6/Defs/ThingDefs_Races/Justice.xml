@@ -89,6 +89,9 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeFloatMenuUser">
         <allowColonistLikeFloatMenu>true</allowColonistLikeFloatMenu>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_GravshipPilotUser">
+        <allowGravshipPilotConsole>true</allowGravshipPilotConsole>
+      </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_DirectedSocialInteractionUser">
         <ensureInteractionsTracker>true</ensureInteractionsTracker>
       </li>
