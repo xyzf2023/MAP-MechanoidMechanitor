@@ -2,10 +2,10 @@ using HarmonyLib;
 using RimWorld;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.IsColonyMechRequiringMechanitor))]
-    public static class OverseerRequirementPatches
+    public static class MAPOverseerlessNodeRequirementPatches
     {
         [HarmonyPostfix]
         public static void Postfix(Pawn mech, ref bool __result)
@@ -20,7 +20,7 @@ namespace MMT
                 return;
             }
 
-            if (!OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(mech))
+            if (!MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(mech))
             {
                 return;
             }

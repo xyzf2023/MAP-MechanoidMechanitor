@@ -1,5 +1,4 @@
 using HarmonyLib;
-using MMT;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -18,7 +17,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (ModsConfig.BiotechActive
-                && OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(pawn))
+                && MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(pawn))
             {
                 return false;
             }

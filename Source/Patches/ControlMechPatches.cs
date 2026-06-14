@@ -25,27 +25,6 @@ namespace MMT
                 return false;
             }
 
-            if (pawn == null || mech == null)
-            {
-                return true;
-            }
-
-            if (!ModsConfig.BiotechActive)
-            {
-                return true;
-            }
-
-            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
-            {
-                return true;
-            }
-
-            if (!OverseerlessMechanitorUtility.IsMAPMechanitorNodeController(pawn))
-            {
-                return true;
-            }
-
-            OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
             return true;
         }
     }

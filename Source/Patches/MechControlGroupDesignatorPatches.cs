@@ -1,4 +1,5 @@
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -12,7 +13,7 @@ namespace MMT
         {
             if (t is Pawn pawn
                 && ModsConfig.BiotechActive
-                && OverseerlessMechanitorUtility.IsOverseerlessMechanitorNodeSubject(pawn))
+                && MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(pawn))
             {
                 __result = false;
                 return false;

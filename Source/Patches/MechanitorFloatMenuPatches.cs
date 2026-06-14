@@ -1,4 +1,5 @@
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -29,7 +30,7 @@ namespace MMT
                 return;
             }
 
-            if (!OverseerlessMechanitorUtility.IsMAPMechanitorNodeController(pawn))
+            if (!MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
             {
                 return;
             }
@@ -39,7 +40,6 @@ namespace MMT
                 return;
             }
 
-            OverseerlessMechanitorUtility.EnsureBasicTrackers(pawn);
             __result = true;
         }
     }
