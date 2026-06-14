@@ -28,6 +28,8 @@
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_CommanderSkills">
         <bodyType>Male</bodyType>
+        <childhoodBackstory>MAP_Justice_Childhood</childhoodBackstory>
+        <adulthoodBackstory>MAP_Justice_Adulthood</adulthoodBackstory>
         <skillLevels>
           <li>
             <skill>Shooting</skill>
@@ -149,6 +151,12 @@
     <defaultFactionDef>PlayerColony</defaultFactionDef>
     <destroyGearOnDrop>false</destroyGearOnDrop>
     <combatPower>600</combatPower>
+    <fixedChildBackstories>
+      <li>MAP_Justice_Childhood</li>
+    </fixedChildBackstories>
+    <fixedAdultBackstories>
+      <li>MAP_Justice_Adulthood</li>
+    </fixedAdultBackstories>
     <lifeStages Inherit="False">
       <li>
         <bodyGraphicData>

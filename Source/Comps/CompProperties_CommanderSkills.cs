@@ -13,6 +13,8 @@ namespace MAP_MechanoidMechanitor
     public class CompProperties_CommanderSkills : CompProperties
     {
         public BodyTypeDef? bodyType;
+        public BackstoryDef? childhoodBackstory;
+        public BackstoryDef? adulthoodBackstory;
         public List<CommanderSkillLevel>? skillLevels;
 
         public CompProperties_CommanderSkills()
