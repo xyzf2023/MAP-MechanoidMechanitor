@@ -6,7 +6,7 @@ using RimWorld.Planet;
 using Verse;
 using Verse.AI;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     // Vanilla CompUsable only allows flesh pawns. MAP mechanitor nodes (e.g. Justice) are mechanoids
     // but must still use Bossgroup caller buildings (CommsConsole, etc.). This patch skips only that

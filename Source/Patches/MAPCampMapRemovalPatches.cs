@@ -1,12 +1,11 @@
 using HarmonyLib;
-using MAP_MechanoidMechanitor;
 using RimWorld.Planet;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(Camp), nameof(Camp.ShouldRemoveMapNow))]
-    public static class MMT_CampShouldRemoveMapNowPatch
+    public static class MAPCampShouldRemoveMapNowPatch
     {
         [HarmonyPostfix]
         public static void Postfix(Camp __instance, ref bool __result, ref bool alsoRemoveWorldObject)
@@ -35,7 +34,7 @@ namespace MMT
                 if (Prefs.DevMode)
                 {
                     Log.Message(
-                        $"[MMT] Camp map removal blocked by MAP mechanitor travel node: " +
+                        $"[MAP-MechanoidMechanitor] Camp map removal blocked by MAP mechanitor travel node: " +
                         $"pawn={pawn.LabelShort}, map={map}, camp={__instance}");
                 }
 

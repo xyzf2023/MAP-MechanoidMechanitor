@@ -1,18 +1,18 @@
 using HarmonyLib;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [StaticConstructorOnStartup]
     public static class ModInit
     {
         static ModInit()
         {
-            new Harmony("xyzf.mechanoidmechanitor.test").PatchAll();
+            new Harmony("xyzf.map.mechanoidmechanitor").PatchAll();
 
             if (Prefs.DevMode)
             {
-                Log.Message("[MMT] Mechanoid Mechanitor Test loaded.");
+                Log.Message("[MAP-MechanoidMechanitor] Loaded.");
             }
         }
     }

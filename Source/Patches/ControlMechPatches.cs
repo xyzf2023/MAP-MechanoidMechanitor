@@ -3,7 +3,7 @@ using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.CanControlMech))]
     public static class ControlMechPatches_CanControlMech
@@ -19,7 +19,7 @@ namespace MMT
                 __result = false;
                 if (Prefs.DevMode)
                 {
-                    Log.Message($"[MMT] Prevented node self-control: pawn={pawn.LabelShort}");
+                    Log.Message($"[MAP-MechanoidMechanitor] Prevented node self-control: pawn={pawn.LabelShort}");
                 }
 
                 return false;

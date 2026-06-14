@@ -5,16 +5,16 @@ using RimWorld;
 using RimWorld.Planet;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
-    public struct MMT_TrySendPatchState
+    public struct MAPTrySendPatchState
     {
         public List<Pawn> StoryAdded;
         public List<Pawn> SkillsAdded;
     }
 
     [HarmonyPatch(typeof(CaravanUtility), nameof(CaravanUtility.IsOwner))]
-    public static class MMT_CaravanUtilityIsOwnerPatch
+    public static class MAPCaravanUtilityIsOwnerPatch
     {
         [HarmonyPostfix]
         public static void Postfix(Pawn pawn, Faction caravanFaction, ref bool __result)
@@ -29,7 +29,7 @@ namespace MMT
                 return;
             }
 
-            if (!MMT_TravelUtility.CanActAsIndependentCaravanOwner(pawn))
+            if (!MAPTravelUtility.CanActAsIndependentCaravanOwner(pawn))
             {
                 return;
             }
@@ -39,7 +39,7 @@ namespace MMT
     }
 
     [HarmonyPatch(typeof(FormCaravanComp), nameof(FormCaravanComp.CanFormOrReformCaravanNow), MethodType.Getter)]
-    public static class MMT_FormCaravanCompCanFormOrReformCaravanNowPatch
+    public static class MAPFormCaravanCompCanFormOrReformCaravanNowPatch
     {
         [HarmonyPostfix]
         public static void Postfix(FormCaravanComp __instance, ref bool __result)
@@ -59,7 +59,7 @@ namespace MMT
                 return;
             }
 
-            if (MMT_TravelUtility.MapHasIndependentCaravanOwner(mapParent.Map))
+            if (MAPTravelUtility.MapHasIndependentCaravanOwner(mapParent.Map))
             {
                 __result = true;
             }
@@ -67,7 +67,7 @@ namespace MMT
     }
 
     [HarmonyPatch(typeof(FormCaravanComp), nameof(FormCaravanComp.CanReformNow))]
-    public static class MMT_FormCaravanCompCanReformNowPatch
+    public static class MAPFormCaravanCompCanReformNowPatch
     {
         [HarmonyPostfix]
         public static void Postfix(FormCaravanComp __instance, ref bool __result)
@@ -87,7 +87,7 @@ namespace MMT
                 return;
             }
 
-            if (MMT_TravelUtility.MapHasIndependentCaravanOwner(mapParent.Map))
+            if (MAPTravelUtility.MapHasIndependentCaravanOwner(mapParent.Map))
             {
                 __result = true;
             }
@@ -95,7 +95,7 @@ namespace MMT
     }
 
     [HarmonyPatch(typeof(FormCaravanComp), nameof(FormCaravanComp.GetGizmos))]
-    public static class MMT_FormCaravanCompGetGizmosPatch
+    public static class MAPFormCaravanCompGetGizmosPatch
     {
         [HarmonyPostfix]
         public static void Postfix(FormCaravanComp __instance, ref IEnumerable<Gizmo> __result)
@@ -116,7 +116,7 @@ namespace MMT
                 return;
             }
 
-            if (!MMT_TravelUtility.MapHasIndependentCaravanOwner(mapParent.Map))
+            if (!MAPTravelUtility.MapHasIndependentCaravanOwner(mapParent.Map))
             {
                 return;
             }
@@ -162,12 +162,12 @@ namespace MMT
     }
 
     [HarmonyPatch(typeof(Dialog_FormCaravan), "TrySend")]
-    public static class MMT_DialogFormCaravanTrySendPatch
+    public static class MAPDialogFormCaravanTrySendPatch
     {
         [HarmonyPrefix]
-        public static void Prefix(Dialog_FormCaravan __instance, ref MMT_TrySendPatchState __state)
+        public static void Prefix(Dialog_FormCaravan __instance, ref MAPTrySendPatchState __state)
         {
-            __state = new MMT_TrySendPatchState
+            __state = new MAPTrySendPatchState
             {
                 StoryAdded = new List<Pawn>(),
                 SkillsAdded = new List<Pawn>()
@@ -182,7 +182,7 @@ namespace MMT
             for (int i = 0; i < pawns.Count; i++)
             {
                 Pawn pawn = pawns[i];
-                if (!MMT_TravelUtility.CanActAsIndependentCaravanOwner(pawn))
+                if (!MAPTravelUtility.CanActAsIndependentCaravanOwner(pawn))
                 {
                     continue;
                 }
@@ -202,7 +202,7 @@ namespace MMT
         }
 
         [HarmonyPostfix]
-        public static void Postfix(MMT_TrySendPatchState __state)
+        public static void Postfix(MAPTrySendPatchState __state)
         {
             for (int i = 0; i < __state.SkillsAdded.Count; i++)
             {

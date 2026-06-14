@@ -3,7 +3,7 @@ using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(Designator_MechControlGroup), nameof(Designator_MechControlGroup.CanDesignateThing))]
     public static class Designator_MechControlGroup_CanDesignateThing_Patch

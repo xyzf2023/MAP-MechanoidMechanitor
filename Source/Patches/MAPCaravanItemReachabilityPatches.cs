@@ -6,25 +6,25 @@ using RimWorld.Planet;
 using Verse;
 using Verse.AI;
 
-namespace MMT
+namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(Dialog_FormCaravan), "CheckForErrors")]
-    public static class MMT_CaravanItemReachabilityPatches
+    public static class MAPCaravanItemReachabilityPatches
     {
         [HarmonyPrefix]
         public static bool Prefix(Dialog_FormCaravan __instance, List<Pawn> pawns, ref bool __result)
         {
             bool reform = Traverse.Create(__instance).Field("reform").GetValue<bool>();
-            if (!reform || !pawns.Any(MMT_TravelUtility.CanActAsIndependentCaravanOwner))
+            if (!reform || !pawns.Any(MAPTravelUtility.CanActAsIndependentCaravanOwner))
             {
                 return true;
             }
 
-            __result = CheckForErrorsWithMmtCollector(__instance, pawns, reform);
+            __result = CheckForErrorsWithMapCollector(__instance, pawns, reform);
             return false;
         }
 
-        private static bool CheckForErrorsWithMmtCollector(Dialog_FormCaravan dialog, List<Pawn> pawns, bool reform)
+        private static bool CheckForErrorsWithMapCollector(Dialog_FormCaravan dialog, List<Pawn> pawns, bool reform)
         {
             Traverse dialogTraverse = Traverse.Create(dialog);
             if (dialogTraverse.Property("MustChooseRoute").GetValue<bool>()
@@ -87,7 +87,7 @@ namespace MMT
                     Thing t = transferables[num].things[num3];
                     if (!t.Spawned
                         || pawns.Any(x =>
-                            MMT_TravelUtility.CanActAsCaravanCollector(x)
+                            MAPTravelUtility.CanActAsCaravanCollector(x)
                             && x.CanReach(t, PathEndMode.Touch, Danger.Deadly)))
                     {
                         reachableStackCount += t.stackCount;
