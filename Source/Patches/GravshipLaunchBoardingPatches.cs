@@ -2,7 +2,6 @@ using HarmonyLib;
 using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Verse;
 using Verse.AI;
 using Verse.AI.Group;
@@ -70,11 +69,6 @@ namespace MAP_MechanoidMechanitor
                     engine.pawnsToBoard.Add(tmpPawn);
                     tmpPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
                 }
-            }
-
-            if (GravshipLaunchDiagnosticUtility.ShouldLog)
-            {
-                LogPreLordCreation(engine, assignments, justiceParticipants);
             }
 
             if (playerForced)
@@ -146,11 +140,6 @@ namespace MAP_MechanoidMechanitor
                 target,
                 MessageTypeDefOf.NeutralEvent);
 
-            if (GravshipLaunchDiagnosticUtility.ShouldLog)
-            {
-                LogPostLordCreation(lordJob, justiceParticipants);
-            }
-
             return false;
         }
 
@@ -179,74 +168,6 @@ namespace MAP_MechanoidMechanitor
 
             engine = target.Thing.TryGetComp<CompPilotConsole>()?.engine;
             return engine != null && assignments != null;
-        }
-
-        private static void LogPreLordCreation(
-            Building_GravEngine engine,
-            RitualRoleAssignments assignments,
-            HashSet<Pawn> justiceParticipants)
-        {
-            Pawn? pilot = assignments.FirstAssignedPawn("pilot");
-            Pawn? copilot = assignments.FirstAssignedPawn("copilot");
-
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("TryExecuteOn Prefix after auto-boarding");
-            sb.AppendLine($"engine.pawnsToBoard.Count={engine.pawnsToBoard?.Count ?? 0}");
-            sb.AppendLine($"engine.pawnsToLeave.Count={engine.pawnsToLeave?.Count ?? 0}");
-            sb.AppendLine($"justiceParticipants.Count={justiceParticipants.Count}");
-
-            foreach (Pawn justice in justiceParticipants)
-            {
-                sb.AppendLine(
-                    $"  justice {GravshipLaunchDiagnosticUtility.PawnLabel(justice)} inBoard={engine.pawnsToBoard?.Contains(justice) == true}");
-            }
-
-            if (pilot != null)
-            {
-                sb.AppendLine(
-                    $"  pilot {GravshipLaunchDiagnosticUtility.PawnLabel(pilot)} inBoard={engine.pawnsToBoard?.Contains(pilot) == true}");
-            }
-
-            if (copilot != null)
-            {
-                sb.AppendLine(
-                    $"  copilot {GravshipLaunchDiagnosticUtility.PawnLabel(copilot)} inBoard={engine.pawnsToBoard?.Contains(copilot) == true}");
-            }
-
-            GravshipLaunchDiagnosticUtility.WriteMessage(sb.ToString());
-        }
-
-        private static void LogPostLordCreation(LordJob_Ritual lordJob, HashSet<Pawn> justiceParticipants)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("TryExecuteOn Prefix after LordMaker.MakeNewLord");
-
-            if (lordJob.assignments != null)
-            {
-                sb.AppendLine("assignments.Participants:");
-                foreach (Pawn pawn in lordJob.assignments.Participants)
-                {
-                    RitualRole? role = lordJob.assignments.RoleForPawn(pawn);
-                    sb.AppendLine(
-                        $"  {GravshipLaunchDiagnosticUtility.PawnLabel(pawn)} role={role?.id ?? "null"} spectator={lordJob.assignments.PawnSpectating(pawn)}");
-                }
-
-                sb.AppendLine("assignments.SpectatorsForReading:");
-                foreach (Pawn pawn in lordJob.assignments.SpectatorsForReading)
-                {
-                    sb.AppendLine($"  {GravshipLaunchDiagnosticUtility.PawnLabel(pawn)}");
-                }
-            }
-
-            sb.AppendLine($"ownedPawns.Count={lordJob.lord?.ownedPawns.Count ?? 0}");
-
-            foreach (Pawn justice in justiceParticipants)
-            {
-                sb.AppendLine(
-                    $"  justice {GravshipLaunchDiagnosticUtility.PawnLabel(justice)} inOwnedPawns={lordJob.lord?.ownedPawns.Contains(justice) == true} lordJob={GravshipLaunchDiagnosticUtility.LordJobType(justice)} job={GravshipLaunchDiagnosticUtility.JobDefName(justice)}");
-            }
-
-            GravshipLaunchDiagnosticUtility.WriteMessage(sb.ToString());
         }
 
         private static HashSet<Pawn> CollectGravshipJusticeParticipants(RitualRoleAssignments assignments)
