@@ -321,7 +321,11 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(Lord), nameof(Lord.Notify_PawnLost))]
     public static class GravshipLaunchDiagnostics_NotifyPawnLost_Patch
     {
-        public static void Prefix(Lord __instance, Pawn p, PawnLostCondition condition)
+        public static void Prefix(
+            Lord __instance,
+            Pawn pawn,
+            PawnLostCondition cond,
+            DamageInfo? dinfo)
         {
             if (!GravshipLaunchDiagnosticUtility.ShouldLog
                 || __instance.LordJob is not LordJob_Ritual ritualJob
@@ -330,18 +334,18 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            RitualRole? role = ritualJob.assignments?.RoleForPawn(p);
+            RitualRole? role = ritualJob.assignments?.RoleForPawn(pawn);
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Notify_PawnLost");
-            sb.AppendLine($"pawn={GravshipLaunchDiagnosticUtility.PawnLabel(p)}");
-            sb.AppendLine($"condition={condition}");
-            sb.AppendLine($"pawnLordJob={GravshipLaunchDiagnosticUtility.LordJobType(p)}");
-            sb.AppendLine($"pawnJob={GravshipLaunchDiagnosticUtility.JobDefName(p)}");
-            sb.AppendLine($"isJustice={CompGravshipPilotUser.PawnCanUseGravshipPilotConsole(p)}");
+            sb.AppendLine($"pawn={GravshipLaunchDiagnosticUtility.PawnLabel(pawn)}");
+            sb.AppendLine($"condition={cond}");
+            sb.AppendLine($"pawnLordJob={GravshipLaunchDiagnosticUtility.LordJobType(pawn)}");
+            sb.AppendLine($"pawnJob={GravshipLaunchDiagnosticUtility.JobDefName(pawn)}");
+            sb.AppendLine($"isJustice={CompGravshipPilotUser.PawnCanUseGravshipPilotConsole(pawn)}");
             sb.AppendLine($"roleId={role?.id ?? "null"}");
-            sb.AppendLine($"spectating={ritualJob.assignments?.PawnSpectating(p) == true}");
+            sb.AppendLine($"spectating={ritualJob.assignments?.PawnSpectating(pawn) == true}");
             sb.AppendLine($"ownedPawns.Count(before)={__instance.ownedPawns.Count}");
-            sb.AppendLine($"ownedPawns.Contains(pawn)={__instance.ownedPawns.Contains(p)}");
+            sb.AppendLine($"ownedPawns.Contains(pawn)={__instance.ownedPawns.Contains(pawn)}");
             GravshipLaunchDiagnosticUtility.WriteMessage(sb.ToString());
         }
     }
