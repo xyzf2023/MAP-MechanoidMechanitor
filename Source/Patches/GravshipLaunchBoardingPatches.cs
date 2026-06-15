@@ -1,16 +1,19 @@
 using HarmonyLib;
 using RimWorld;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Verse;
 using Verse.AI;
+using Verse.AI.Group;
 
 namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(RitualBehaviorWorker_GravshipLaunch), nameof(RitualBehaviorWorker_GravshipLaunch.TryExecuteOn))]
     public static class GravshipLaunchBoarding_TryExecuteOn_Patch
     {
-        public static void Postfix(
+        public static bool Prefix(
+            RitualBehaviorWorker_GravshipLaunch __instance,
             TargetInfo target,
             Pawn organizer,
             Precept_Ritual ritual,
@@ -18,111 +21,229 @@ namespace MAP_MechanoidMechanitor
             RitualRoleAssignments assignments,
             bool playerForced)
         {
-            if (!ModsConfig.OdysseyActive)
+            if (!ShouldHandle(target, ritual, assignments, out Building_GravEngine? engine))
             {
-                return;
+                return true;
             }
 
-            if (ritual == null || ritual.def != PreceptDefOf.GravshipLaunch)
+            if (__instance.CanStartRitualNow(target, ritual, null, assignments.ForcedRolesForReading) != null
+                || !__instance.CanExecuteOn(target, obligation))
             {
-                return;
+                return false;
             }
 
-            if (target.Thing == null)
-            {
-                return;
-            }
-
-            CompPilotConsole? console = target.Thing.TryGetComp<CompPilotConsole>();
-            Building_GravEngine? engine = console?.engine;
-            if (engine == null || assignments == null)
-            {
-                return;
-            }
-
-            int boardCountBefore = engine.pawnsToBoard?.Count ?? 0;
-            int leaveCountBefore = engine.pawnsToLeave?.Count ?? 0;
             HashSet<Pawn> justiceParticipants = CollectGravshipJusticeParticipants(assignments);
 
-            if (GravshipLaunchDiagnosticUtility.ShouldLog)
-            {
-                LogTryExecuteOnDiagnostics(assignments, engine, boardCountBefore, leaveCountBefore, justiceParticipants);
-            }
+            engine!.pawnsToBoard = new HashSet<Pawn>();
+            engine.pawnsToLeave = new HashSet<Pawn>();
 
-            foreach (Pawn pawn in justiceParticipants)
+            List<Pawn> tmpPawns = new List<Pawn>();
+            tmpPawns.AddRange(target.Map.mapPawns.AllPawnsSpawned);
+
+            foreach (Pawn tmpPawn in tmpPawns)
             {
-                if (!CompGravshipPilotUser.PawnCanUseGravshipPilotConsole(pawn))
+                if (tmpPawn.Downed)
                 {
                     continue;
                 }
 
-                engine.pawnsToBoard?.Remove(pawn);
-                engine.pawnsToLeave?.Remove(pawn);
-
-                if (pawn.jobs?.curJob?.def == JobDefOf.GotoShip)
+                if (justiceParticipants.Contains(tmpPawn))
                 {
-                    pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                    continue;
+                }
+
+                if (__instance.forceVisitorsToLeave
+                    && tmpPawn.Faction != null
+                    && tmpPawn.Faction != Faction.OfPlayer
+                    && !tmpPawn.Faction.HostileTo(Faction.OfPlayer))
+                {
+                    engine.pawnsToLeave.Add(tmpPawn);
+                    tmpPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                }
+                else if (__instance.boardColonyAnimals && tmpPawn.IsColonyAnimal)
+                {
+                    engine.pawnsToBoard.Add(tmpPawn);
+                    tmpPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                }
+                else if (ModsConfig.BiotechActive && __instance.boardColonyMechs && tmpPawn.IsColonyMech)
+                {
+                    engine.pawnsToBoard.Add(tmpPawn);
+                    tmpPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
                 }
             }
 
             if (GravshipLaunchDiagnosticUtility.ShouldLog)
             {
-                LogTryExecuteOnPostRemoval(engine, justiceParticipants, boardCountBefore, leaveCountBefore);
+                LogPreLordCreation(engine, assignments, justiceParticipants);
             }
+
+            if (playerForced)
+            {
+                foreach (Pawn participant in assignments.Participants)
+                {
+                    RitualRole ritualRole = assignments.RoleForPawn(participant);
+                    if (ritualRole == null
+                        || !ritualRole.allowKeepLayingDown
+                        || participant.GetPosture() != PawnPosture.LayingInBed)
+                    {
+                        participant.jobs.EndCurrentJob(JobCondition.InterruptForced, startNewJob: false);
+                    }
+                }
+            }
+
+            foreach (Pawn participant in assignments.Participants)
+            {
+                if (participant.GetLord()?.LordJob is LordJob_VoluntarilyJoinable)
+                {
+                    participant.GetLord().Notify_PawnLost(participant, PawnLostCondition.LeftVoluntarily);
+                }
+            }
+
+            LordJob_Ritual lordJob = new LordJob_Ritual(
+                target,
+                ritual,
+                obligation,
+                __instance.def.stages,
+                assignments);
+
+            LordMaker.MakeNewLord(
+                Faction.OfPlayer,
+                lordJob,
+                target.Map,
+                assignments.Participants.Where(p => lordJob.RoleFor(p)?.addToLord ?? true));
+
+            ritual.outcomeEffect?.ResetCompDatas();
+            lordJob.PreparePawns();
+
+            AbilityGroupDef useCooldownFromAbilityGroupDef = ritual.def.useCooldownFromAbilityGroupDef;
+            if (useCooldownFromAbilityGroupDef != null
+                && useCooldownFromAbilityGroupDef.cooldownTicks > 0
+                && !useCooldownFromAbilityGroupDef.ritualRoleIds.NullOrEmpty())
+            {
+                foreach (string ritualRoleId in useCooldownFromAbilityGroupDef.ritualRoleIds)
+                {
+                    if (!assignments.AnyPawnAssigned(ritualRoleId))
+                    {
+                        continue;
+                    }
+
+                    foreach (Pawn assignedPawn in assignments.AssignedPawns(ritualRoleId))
+                    {
+                        foreach (Ability ability in assignedPawn.abilities.AllAbilitiesForReading)
+                        {
+                            ability.Notify_GroupStartedCooldown(
+                                useCooldownFromAbilityGroupDef,
+                                useCooldownFromAbilityGroupDef.cooldownTicks);
+                        }
+                    }
+                }
+
+                ritual.Notify_CooldownFromAbilityStarted(useCooldownFromAbilityGroupDef.cooldownTicks);
+            }
+
+            Messages.Message(
+                "RitualBegun".Translate(ritual.Label).CapitalizeFirst(),
+                target,
+                MessageTypeDefOf.NeutralEvent);
+
+            if (GravshipLaunchDiagnosticUtility.ShouldLog)
+            {
+                LogPostLordCreation(lordJob, justiceParticipants);
+            }
+
+            return false;
         }
 
-        private static void LogTryExecuteOnDiagnostics(
+        private static bool ShouldHandle(
+            TargetInfo target,
+            Precept_Ritual ritual,
             RitualRoleAssignments assignments,
+            out Building_GravEngine? engine)
+        {
+            engine = null;
+
+            if (!ModsConfig.OdysseyActive)
+            {
+                return false;
+            }
+
+            if (ritual == null || ritual.def != PreceptDefOf.GravshipLaunch)
+            {
+                return false;
+            }
+
+            if (target.Thing == null)
+            {
+                return false;
+            }
+
+            engine = target.Thing.TryGetComp<CompPilotConsole>()?.engine;
+            return engine != null && assignments != null;
+        }
+
+        private static void LogPreLordCreation(
             Building_GravEngine engine,
-            int boardCountBefore,
-            int leaveCountBefore,
+            RitualRoleAssignments assignments,
             HashSet<Pawn> justiceParticipants)
         {
+            Pawn? pilot = assignments.FirstAssignedPawn("pilot");
+            Pawn? copilot = assignments.FirstAssignedPawn("copilot");
+
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("TryExecuteOn Postfix running");
+            sb.AppendLine("TryExecuteOn Prefix after auto-boarding");
+            sb.AppendLine($"engine.pawnsToBoard.Count={engine.pawnsToBoard?.Count ?? 0}");
+            sb.AppendLine($"engine.pawnsToLeave.Count={engine.pawnsToLeave?.Count ?? 0}");
+            sb.AppendLine($"justiceParticipants.Count={justiceParticipants.Count}");
 
-            sb.AppendLine("assignments.Participants:");
-            foreach (Pawn pawn in assignments.Participants)
-            {
-                RitualRole? role = assignments.RoleForPawn(pawn);
-                sb.AppendLine(
-                    $"  {GravshipLaunchDiagnosticUtility.PawnLabel(pawn)} role={role?.id ?? "null"} spectator={assignments.PawnSpectating(pawn)} justice={CompGravshipPilotUser.PawnCanUseGravshipPilotConsole(pawn)}");
-            }
-
-            sb.AppendLine("assignments.SpectatorsForReading:");
-            foreach (Pawn pawn in assignments.SpectatorsForReading)
+            foreach (Pawn justice in justiceParticipants)
             {
                 sb.AppendLine(
-                    $"  {GravshipLaunchDiagnosticUtility.PawnLabel(pawn)} justice={CompGravshipPilotUser.PawnCanUseGravshipPilotConsole(pawn)}");
+                    $"  justice {GravshipLaunchDiagnosticUtility.PawnLabel(justice)} inBoard={engine.pawnsToBoard?.Contains(justice) == true}");
             }
 
-            sb.AppendLine($"engine.pawnsToBoard(before)={boardCountBefore}");
-            sb.AppendLine($"engine.pawnsToLeave(before)={leaveCountBefore}");
-            sb.AppendLine($"justiceParticipantsToRemove.Count={justiceParticipants.Count}");
-
-            foreach (Pawn pawn in justiceParticipants)
+            if (pilot != null)
             {
-                sb.AppendLine($"  removeCandidate={GravshipLaunchDiagnosticUtility.PawnLabel(pawn)}");
+                sb.AppendLine(
+                    $"  pilot {GravshipLaunchDiagnosticUtility.PawnLabel(pilot)} inBoard={engine.pawnsToBoard?.Contains(pilot) == true}");
+            }
+
+            if (copilot != null)
+            {
+                sb.AppendLine(
+                    $"  copilot {GravshipLaunchDiagnosticUtility.PawnLabel(copilot)} inBoard={engine.pawnsToBoard?.Contains(copilot) == true}");
             }
 
             GravshipLaunchDiagnosticUtility.WriteMessage(sb.ToString());
         }
 
-        private static void LogTryExecuteOnPostRemoval(
-            Building_GravEngine engine,
-            HashSet<Pawn> justiceParticipants,
-            int boardCountBefore,
-            int leaveCountBefore)
+        private static void LogPostLordCreation(LordJob_Ritual lordJob, HashSet<Pawn> justiceParticipants)
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("TryExecuteOn Postfix after removal");
-            sb.AppendLine($"engine.pawnsToBoard(after)={engine.pawnsToBoard?.Count ?? 0} (before={boardCountBefore})");
-            sb.AppendLine($"engine.pawnsToLeave(after)={engine.pawnsToLeave?.Count ?? 0} (before={leaveCountBefore})");
+            sb.AppendLine("TryExecuteOn Prefix after LordMaker.MakeNewLord");
 
-            foreach (Pawn pawn in justiceParticipants)
+            if (lordJob.assignments != null)
+            {
+                sb.AppendLine("assignments.Participants:");
+                foreach (Pawn pawn in lordJob.assignments.Participants)
+                {
+                    RitualRole? role = lordJob.assignments.RoleForPawn(pawn);
+                    sb.AppendLine(
+                        $"  {GravshipLaunchDiagnosticUtility.PawnLabel(pawn)} role={role?.id ?? "null"} spectator={lordJob.assignments.PawnSpectating(pawn)}");
+                }
+
+                sb.AppendLine("assignments.SpectatorsForReading:");
+                foreach (Pawn pawn in lordJob.assignments.SpectatorsForReading)
+                {
+                    sb.AppendLine($"  {GravshipLaunchDiagnosticUtility.PawnLabel(pawn)}");
+                }
+            }
+
+            sb.AppendLine($"ownedPawns.Count={lordJob.lord?.ownedPawns.Count ?? 0}");
+
+            foreach (Pawn justice in justiceParticipants)
             {
                 sb.AppendLine(
-                    $"  {GravshipLaunchDiagnosticUtility.PawnLabel(pawn)} job={GravshipLaunchDiagnosticUtility.JobDefName(pawn)} lordJob={GravshipLaunchDiagnosticUtility.LordJobType(pawn)}");
+                    $"  justice {GravshipLaunchDiagnosticUtility.PawnLabel(justice)} inOwnedPawns={lordJob.lord?.ownedPawns.Contains(justice) == true} lordJob={GravshipLaunchDiagnosticUtility.LordJobType(justice)} job={GravshipLaunchDiagnosticUtility.JobDefName(justice)}");
             }
 
             GravshipLaunchDiagnosticUtility.WriteMessage(sb.ToString());
