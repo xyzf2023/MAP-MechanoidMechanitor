@@ -34,6 +34,11 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
+            if (!IsGravshipLaunchContext(ritual, assignments, precept))
+            {
+                return true;
+            }
+
             if (__instance.id != "pilot" && __instance.id != "copilot")
             {
                 return true;
@@ -88,6 +93,15 @@ namespace MAP_MechanoidMechanitor
             reason = null;
             __result = true;
             return false;
+        }
+
+        private static bool IsGravshipLaunchContext(
+            LordJob_Ritual? lordRitual,
+            RitualRoleAssignments? assignments,
+            Precept_Ritual? precept)
+        {
+            Precept_Ritual? ritual = precept ?? assignments?.Ritual ?? lordRitual?.Ritual;
+            return ritual != null && ritual.def == PreceptDefOf.GravshipLaunch;
         }
     }
 }

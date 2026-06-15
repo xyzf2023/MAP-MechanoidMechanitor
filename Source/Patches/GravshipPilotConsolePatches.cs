@@ -79,7 +79,6 @@ namespace MAP_MechanoidMechanitor
             Toil toil = ToilMaker.MakeToil("MAP_GravshipPilotConsole");
             toil.initAction = delegate
             {
-                Pawn pawn = driver.pawn;
                 Thing thing = driver.job.GetTarget(ConsoleInd).Thing;
                 if (thing == null)
                 {
@@ -97,17 +96,12 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                Dictionary<string, Pawn> forcedForRole = new Dictionary<string, Pawn>
-                {
-                    { "pilot", pawn }
-                };
-
                 Window window = ritual.GetRitualBeginWindow(
                     thing,
                     null,
                     null,
-                    pawn,
-                    forcedForRole,
+                    null,
+                    null,
                     null);
 
                 if (window != null)
