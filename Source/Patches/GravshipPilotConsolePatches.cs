@@ -97,7 +97,23 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                ritual.ShowRitualBeginWindow(thing, null, pawn);
+                Dictionary<string, Pawn> forcedForRole = new Dictionary<string, Pawn>
+                {
+                    { "pilot", pawn }
+                };
+
+                Window window = ritual.GetRitualBeginWindow(
+                    thing,
+                    null,
+                    null,
+                    pawn,
+                    forcedForRole,
+                    null);
+
+                if (window != null)
+                {
+                    Find.WindowStack.Add(window);
+                }
             };
 
             yield return toil;
