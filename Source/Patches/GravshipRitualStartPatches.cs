@@ -98,7 +98,7 @@ namespace MAP_MechanoidMechanitor
                             ? Gen.YieldSingle(role)
                             : roleList.Where(r => r.mergeId == role.mergeId);
 
-                        if (list.Count(p => role.AppliesToPawn(p, out _, target, null, null, null, skipReason: true)) < source.Count()
+                        if (list.Count(p => role.AppliesToPawn(p, out _, target, null, null, ritual, skipReason: true)) < source.Count()
                             && (forcedForRole == null || !forcedForRole.ContainsKey(role.id)))
                         {
                             Precept? precept = ritual.ideo.PreceptsListForReading.FirstOrDefault(p => p.def == role.precept);
