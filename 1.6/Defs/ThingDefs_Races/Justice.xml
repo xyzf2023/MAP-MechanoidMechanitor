@@ -104,6 +104,14 @@
         <showInWorkTab>true</showInWorkTab>
         <ensureWorkSettings>true</ensureWorkSettings>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_PsychicRitualParticipantUser">
+        <allowPsychicRituals>true</allowPsychicRituals>
+        <allowInvoker>true</allowInvoker>
+        <allowChanter>true</allowChanter>
+        <allowChanterAdvanced>true</allowChanterAdvanced>
+        <allowDefender>true</allowDefender>
+        <allowTargetRoles>false</allowTargetRoles>
+      </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_JusticeSelfWorkMode" />
     </comps>
     <race>
