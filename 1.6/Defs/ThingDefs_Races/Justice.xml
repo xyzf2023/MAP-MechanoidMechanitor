@@ -16,8 +16,8 @@
       <PilotingAbility MayRequire="Ludeon.RimWorld.Odyssey">2</PilotingAbility>
       <ControlTakingTime>10</ControlTakingTime>
       <EMPResistance>1.0</EMPResistance>
-      <ArmorRating_Blunt>1.50</ArmorRating_Blunt>
-      <ArmorRating_Sharp>1.50</ArmorRating_Sharp>
+      <ArmorRating_Blunt>2.0</ArmorRating_Blunt>
+      <ArmorRating_Sharp>2.0</ArmorRating_Sharp>
     </statBases>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
