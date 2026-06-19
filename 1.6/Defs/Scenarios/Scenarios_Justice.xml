@@ -16,7 +16,7 @@
     <label>机械族机械师</label> <!-- 剧本显示名称 -->
     <description>TODO</description> <!-- 剧本描述（待填写） -->
     <scenario> <!-- 剧本内容 -->
-      <summary>One mechanitor and a few servant mechanoids.</summary> <!-- 剧本摘要（暂用原版英文） -->
+      <summary>TODO</summary> <!-- 剧本摘要 -->
       <parts> <!-- 剧本部件列表 -->
 
         <li Class="ScenPart_GameStartDialog"> <!-- 开局对话部件 -->
@@ -26,7 +26,7 @@
         </li> <!-- 开局对话部件结束 -->
 
         <li Class="MAP_MechanoidMechanitor.Scenarios.ScenPart_JusticeScenario"> <!-- 正义专属剧本隐藏标记 -->
-          <def>MAP_JusticeScenario</def> <!-- 引用 MAP_JusticeScenario ScenPartDef -->
+          <def>MAP_JusticeScenario</def> 
           <visible>false</visible> <!-- 不在剧本摘要中显示 -->
         </li> <!-- 正义专属剧本标记结束 -->
 
@@ -69,16 +69,6 @@
           <def>StartingThing_Defined</def> <!-- 引用起始物资 ScenPartDef -->
           <thingDef>Silver</thingDef> <!-- 物品：白银 -->
           <count>1000</count> <!-- 数量：1000 -->
-        </li> <!-- 起始物资结束 -->
-        <li Class="ScenPart_StartingThing_Defined"> <!-- 起始物资：生存食品包 -->
-          <def>StartingThing_Defined</def> <!-- 引用起始物资 ScenPartDef -->
-          <thingDef>MealSurvivalPack</thingDef> <!-- 物品：生存食品包 -->
-          <count>40</count> <!-- 数量：40 -->
-        </li> <!-- 起始物资结束 -->
-        <li Class="ScenPart_StartingThing_Defined"> <!-- 起始物资：工业医药 -->
-          <def>StartingThing_Defined</def> <!-- 引用起始物资 ScenPartDef -->
-          <thingDef>MedicineIndustrial</thingDef> <!-- 物品：工业医药 -->
-          <count>10</count> <!-- 数量：10 -->
         </li> <!-- 起始物资结束 -->
         <li Class="ScenPart_StartingThing_Defined"> <!-- 起始物资：零部件 -->
           <def>StartingThing_Defined</def> <!-- 引用起始物资 ScenPartDef -->
