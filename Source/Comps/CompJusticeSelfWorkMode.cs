@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -46,12 +47,28 @@ namespace MAP_MechanoidMechanitor
         public void SetSelfWorkMode(MechWorkModeDef? mode)
         {
             MechWorkModeDef sanitized = SanitizeWorkMode(mode);
-            if (selfWorkMode == sanitized)
+            if (CurrentSelfWorkMode == sanitized)
             {
                 return;
             }
 
             selfWorkMode = sanitized;
+
+            if (parent is not Pawn pawn)
+            {
+                return;
+            }
+
+            PawnComponentsUtility.AddAndRemoveDynamicComponents(pawn, actAsIfSpawned: true);
+            if (sanitized != MechWorkModeDefOf.Recharge
+                && pawn.CurJobDef == JobDefOf.MechCharge
+                && pawn.IsCharging())
+            {
+                pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+            }
+
+            pawn.TryGetComp<CompCanBeDormant>()?.WakeUp();
+            pawn.jobs?.CheckForJobOverride();
         }
 
         public static string GetDisplayLabel(MechWorkModeDef mode)
