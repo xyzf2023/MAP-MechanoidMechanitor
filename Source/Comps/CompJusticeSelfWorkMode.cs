@@ -28,10 +28,14 @@ namespace MAP_MechanoidMechanitor
     {
         private const string AutonomousDirectiveDefName = "MAP_WorkMode_AutonomousDirective";
         private const string SelfShutdownDefName = "SelfShutdown";
+        private const string AutonomousDirectiveHediffDefName = "MAP_Justice_SelfWorkMode_AutonomousDirective";
+        private const string SelfRepairHediffDefName = "MAP_Justice_SelfWorkMode_SelfRepair";
 
         private MechWorkModeDef? selfWorkMode;
 
         private static MechWorkModeDef? autonomousDirectiveDef;
+        private static HediffDef? autonomousDirectiveHediffDef;
+        private static HediffDef? selfRepairHediffDef;
 
         public MechWorkModeDef CurrentSelfWorkMode => SanitizeWorkMode(selfWorkMode);
 
@@ -53,6 +57,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             selfWorkMode = sanitized;
+            SyncSelfWorkModeHediff();
 
             if (parent is not Pawn pawn)
             {
@@ -95,6 +100,17 @@ namespace MAP_MechanoidMechanitor
                 Color.white));
         }
 
+        public override void PostSpawnSetup(bool respawningAfterLoad)
+        {
+            base.PostSpawnSetup(respawningAfterLoad);
+            if (respawningAfterLoad)
+            {
+                return;
+            }
+
+            SyncSelfWorkModeHediff();
+        }
+
         public override void PostExposeData()
         {
             base.PostExposeData();
@@ -102,6 +118,47 @@ namespace MAP_MechanoidMechanitor
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 selfWorkMode = SanitizeWorkMode(selfWorkMode);
+            }
+        }
+
+        private void SyncSelfWorkModeHediff()
+        {
+            if (parent is not Pawn pawn || pawn.health?.hediffSet == null)
+            {
+                return;
+            }
+
+            HediffDef autonomousHediffDef = GetAutonomousDirectiveHediffDef();
+            HediffDef selfRepairHediffDef = GetSelfRepairHediffDef();
+
+            if (IsAutonomousDirective)
+            {
+                RemoveAllHediffsOfDef(pawn, selfRepairHediffDef);
+                if (pawn.health.hediffSet.GetFirstHediffOfDef(autonomousHediffDef) == null)
+                {
+                    pawn.health.AddHediff(autonomousHediffDef);
+                }
+            }
+            else if (IsSelfShutdown)
+            {
+                RemoveAllHediffsOfDef(pawn, autonomousHediffDef);
+                if (pawn.health.hediffSet.GetFirstHediffOfDef(selfRepairHediffDef) == null)
+                {
+                    pawn.health.AddHediff(selfRepairHediffDef);
+                }
+            }
+        }
+
+        private static void RemoveAllHediffsOfDef(Pawn pawn, HediffDef def)
+        {
+            HediffSet hediffSet = pawn.health.hediffSet;
+            for (int i = hediffSet.hediffs.Count - 1; i >= 0; i--)
+            {
+                Hediff hediff = hediffSet.hediffs[i];
+                if (hediff.def == def)
+                {
+                    pawn.health.RemoveHediff(hediff);
+                }
             }
         }
 
@@ -124,6 +181,18 @@ namespace MAP_MechanoidMechanitor
             }
 
             return GetAutonomousDirectiveDef();
+        }
+
+        private static HediffDef GetAutonomousDirectiveHediffDef()
+        {
+            return autonomousDirectiveHediffDef ??=
+                DefDatabase<HediffDef>.GetNamed(AutonomousDirectiveHediffDefName);
+        }
+
+        private static HediffDef GetSelfRepairHediffDef()
+        {
+            return selfRepairHediffDef ??=
+                DefDatabase<HediffDef>.GetNamed(SelfRepairHediffDefName);
         }
     }
 }
