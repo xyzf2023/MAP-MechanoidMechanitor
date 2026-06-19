@@ -5,6 +5,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed class ScenPart_JusticeScenario : ScenPart
     {
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            Scribe_Values.Look(ref visible, "visible", false);
+
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                visible = false;
+            }
+        }
+
+        public override void DoEditInterface(Listing_ScenEdit listing)
+        {
+        }
+
         public override void PostIdeoChosen()
         {
             base.PostIdeoChosen();
