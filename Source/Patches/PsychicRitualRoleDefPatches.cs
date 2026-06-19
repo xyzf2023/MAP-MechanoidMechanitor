@@ -1,18 +1,27 @@
 using HarmonyLib;
 using RimWorld;
+using System.Reflection;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    [HarmonyPatch(
-        typeof(PsychicRitualRoleDef),
-        nameof(PsychicRitualRoleDef.PawnCanDo),
-        typeof(PsychicRitualRoleDef.Context),
-        typeof(Pawn),
-        typeof(TargetInfo),
-        typeof(PsychicRitualRoleDef.Reason))]
+    [HarmonyPatch]
     public static class PsychicRitualRoleDef_PawnCanDo_Patch
     {
+        public static MethodBase? TargetMethod()
+        {
+            return AccessTools.Method(
+                typeof(PsychicRitualRoleDef),
+                nameof(PsychicRitualRoleDef.PawnCanDo),
+                new[]
+                {
+                    typeof(PsychicRitualRoleDef.Context),
+                    typeof(Pawn),
+                    typeof(TargetInfo),
+                    typeof(PsychicRitualRoleDef.Reason).MakeByRefType()
+                });
+        }
+
         public static void Postfix(
             PsychicRitualRoleDef __instance,
             PsychicRitualRoleDef.Context context,
