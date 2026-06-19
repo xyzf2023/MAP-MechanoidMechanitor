@@ -26,11 +26,9 @@
           <closeSound>GameStartSting</closeSound>
         </li>
 
-        <!-- Starting pawn: Justice -->
+        <!-- Justice scenario marker -->
         <li Class="MAP_MechanoidMechanitor.Scenarios.ScenPart_JusticeScenario">
           <def>MAP_JusticeScenario</def>
-          <startingPawnKind>MAP_Mech_Justice</startingPawnKind>
-          <startingPawnCount>1</startingPawnCount>
           <visible>false</visible>
         </li>
 
@@ -56,6 +54,11 @@
         </li>
 
         <!-- Starting mechs -->
+        <li Class="ScenPart_StartingMech">
+          <def>StartingMech</def>
+          <mechKind>MAP_Mech_Justice</mechKind>
+          <overseenByPlayerPawnChance>0</overseenByPlayerPawnChance>
+        </li>
         <li Class="ScenPart_StartingMech">
           <def>StartingMech</def>
           <mechKind>Mech_Lifter</mechKind>
