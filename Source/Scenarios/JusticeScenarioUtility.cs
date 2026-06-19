@@ -8,29 +8,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         private const string JusticePawnKindDefName = "MAP_Mech_Justice";
 
+        public static PawnKindDef? JusticePawnKind =>
+            DefDatabase<PawnKindDef>.GetNamedSilentFail(JusticePawnKindDefName);
+
         public static ScenPart_JusticeScenario? ActiveScenarioPart =>
             Find.Scenario?.AllParts.OfType<ScenPart_JusticeScenario>().FirstOrDefault();
 
         public static bool IsJusticeScenarioActive => ActiveScenarioPart != null;
 
+        public static bool IsJustice(Pawn? pawn) =>
+            pawn != null && pawn.kindDef == JusticePawnKind;
+
         public static bool HasLivingJustice
         {
             get
             {
-                if (!IsJusticeScenarioActive)
-                {
-                    return false;
-                }
-
-                PawnKindDef? justiceKind = DefDatabase<PawnKindDef>.GetNamedSilentFail(JusticePawnKindDefName);
-                if (justiceKind == null)
+                if (!IsJusticeScenarioActive || JusticePawnKind == null)
                 {
                     return false;
                 }
 
                 foreach (Pawn pawn in PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_OfPlayerFaction)
                 {
-                    if (!pawn.Dead && pawn.kindDef == justiceKind)
+                    if (!pawn.Dead && IsJustice(pawn))
                     {
                         return true;
                     }
