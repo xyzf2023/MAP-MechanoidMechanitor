@@ -125,7 +125,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 fixedBiologicalAge: null,
                 fixedChronologicalAge: null,
                 fixedGender: null,
-                fixedMelanin: null,
                 fixedLastName: null,
                 fixedBirthName: null,
                 fixedTitle: null,
