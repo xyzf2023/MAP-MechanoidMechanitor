@@ -60,6 +60,8 @@ namespace MAP_MechanoidMechanitor
 
             startingItems.Clear();
 
+            AssignAllStartingMechsToJustice(justice, justiceGroup);
+
             List<List<Thing>> dropGroups = new List<List<Thing>> { justiceGroup };
             bool openImmediately = initData.QuickStarted
                 || GetArriveMethod(__instance) != PlayerPawnsArriveMethod.DropPods;
@@ -74,8 +76,6 @@ namespace MAP_MechanoidMechanitor
                 canRoofPunch: true,
                 forbid: true,
                 allowFogged: false);
-
-            AssignStartingMechsToJustice(justice, justiceGroup);
 
             return false;
         }
@@ -103,32 +103,90 @@ namespace MAP_MechanoidMechanitor
             return null;
         }
 
-        private static void AssignStartingMechsToJustice(Pawn justice, List<Thing> justiceGroup)
+        private static bool EnsureJusticeMechanitorState(Pawn justice)
         {
-            VanillaRelayMechanitorUtility.EnsureVanillaRelayMechanitorState(justice);
+            MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(justice);
 
-            if (!MechanitorUtility.IsMechanitor(justice) || justice.mechanitor == null)
+            if (justice.relations == null
+                || justice.mechanitor == null
+                || !MechanitorUtility.IsMechanitor(justice)
+                || justice.mechanitor.controlGroups == null
+                || justice.mechanitor.controlGroups.Count == 0)
             {
                 Log.Error(
-                    "[MechanoidMechanitor] Justice scenario could not assign starting mech overseers: " +
-                    "Justice is not a valid mechanitor.");
+                    "[MechanoidMechanitor] Justice scenario could not initialize Justice mechanitor state. " +
+                    "Overseer assignment skipped; drop pods will still proceed.");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool IsOverseeCandidate(Pawn mech, Pawn justice)
+        {
+            if (mech == justice || mech.Dead)
+            {
+                return false;
+            }
+
+            if (!mech.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            if (mech.OverseerSubject == null)
+            {
+                return false;
+            }
+
+            if (MAPMechanitorNodeUtility.IsMechanitorNodeController(mech))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void AssignAllStartingMechsToJustice(Pawn justice, List<Thing> justiceGroup)
+        {
+            if (!EnsureJusticeMechanitorState(justice))
+            {
                 return;
+            }
+
+            if (justice.relations == null)
+            {
+                justice.relations = new Pawn_RelationsTracker(justice);
             }
 
             foreach (Thing item in justiceGroup)
             {
-                if (item is not Pawn mech || mech == justice)
+                if (item is not Pawn mech || !IsOverseeCandidate(mech, justice))
                 {
                     continue;
                 }
 
-                if (mech.GetOverseer() != null)
+                Pawn? existingOverseer = mech.GetOverseer();
+                if (existingOverseer == justice)
                 {
                     continue;
+                }
+
+                if (existingOverseer != null)
+                {
+                    existingOverseer.relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, mech);
+                }
+
+                if (mech.relations == null)
+                {
+                    mech.relations = new Pawn_RelationsTracker(mech);
                 }
 
                 if (!justice.mechanitor.CanOverseeSubject(mech))
                 {
+                    Log.Warning(
+                        "[MechanoidMechanitor] Justice scenario could not assign overseer to " +
+                        $"{mech.LabelShort} ({mech.kindDef?.defName ?? "unknown"}): insufficient bandwidth or incompatible subject.");
                     continue;
                 }
 
