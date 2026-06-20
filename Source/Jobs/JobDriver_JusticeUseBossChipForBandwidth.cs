@@ -63,8 +63,20 @@ namespace MAP_MechanoidMechanitor
 
         private void ApplyBandwidthUpgrade()
         {
+            if (pawn == null
+                || pawn.Destroyed
+                || !pawn.Spawned
+                || pawn.Map == null)
+            {
+                return;
+            }
+
             Thing chip = Chip;
-            if (chip == null || chip.Destroyed)
+            if (chip == null
+                || chip.Destroyed
+                || !chip.Spawned
+                || chip.Map != pawn.Map
+                || chip.IsForbidden(pawn))
             {
                 return;
             }
