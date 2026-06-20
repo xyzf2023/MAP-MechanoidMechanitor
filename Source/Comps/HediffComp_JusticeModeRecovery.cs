@@ -23,11 +23,6 @@ namespace MAP_MechanoidMechanitor
         public HediffCompProperties_JusticeModeRecovery Props =>
             (HediffCompProperties_JusticeModeRecovery)props;
 
-        public override void CompPostTick(ref float severityAdjustment)
-        {
-            ApplyRecovery(parent.pawn, 1);
-        }
-
         public override void CompPostTickInterval(ref float severityAdjustment, int delta)
         {
             ApplyRecovery(parent.pawn, delta);
@@ -42,19 +37,31 @@ namespace MAP_MechanoidMechanitor
 
             int currentHashTick = pawn.HashOffsetTicks();
 
-            if (Props.repairInterval > 0)
+            if (Props.repairInterval > 0 && Props.repairAmount > 0)
             {
                 int repairCrossings = CountIntervalCrossings(
                     currentHashTick,
                     delta,
                     Props.repairInterval);
-                for (int i = 0; i < repairCrossings; i++)
+                if (repairCrossings > 0)
                 {
-                    MechRepairUtility.RepairTick(pawn, Props.repairAmount);
+                    long repairUnitsLong = (long)repairCrossings * Props.repairAmount;
+                    if (repairUnitsLong > 0)
+                    {
+                        for (long i = 0; i < repairUnitsLong; i++)
+                        {
+                            if (!MechRepairUtility.CanRepair(pawn))
+                            {
+                                break;
+                            }
+
+                            MechRepairUtility.RepairTick(pawn);
+                        }
+                    }
                 }
             }
 
-            if (Props.energyRestoreInterval > 0)
+            if (Props.energyRestoreInterval > 0 && Props.energyRestoreFraction > 0f)
             {
                 int energyCrossings = CountIntervalCrossings(
                     currentHashTick,
