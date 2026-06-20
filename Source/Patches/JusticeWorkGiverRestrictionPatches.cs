@@ -13,7 +13,7 @@ namespace MAP_MechanoidMechanitor
         private const string LogPrefix =
             "[MAP_MechanoidMechanitor] JusticeWorkGiverRestrictionPatches:";
 
-        private static MethodBase TargetMethod()
+        private static MethodBase? TargetMethod()
         {
             MethodInfo? method = AccessTools.Method(
                 typeof(JobGiver_Work),
@@ -55,14 +55,14 @@ namespace MAP_MechanoidMechanitor
             {
                 Log.Error(
                     $"{LogPrefix} could not find WorkGiverDef.canBeDoneByMechs field. Patch not applied.");
-                return instructions;
+                return codes;
             }
 
             if (helperMethod == null)
             {
                 Log.Error(
                     $"{LogPrefix} could not find {nameof(CanBeDoneByMechsOrJustice)} helper method. Patch not applied.");
-                return instructions;
+                return codes;
             }
 
             int matchCount = 0;
@@ -85,7 +85,7 @@ namespace MAP_MechanoidMechanitor
             {
                 Log.Error(
                     $"{LogPrefix} expected exactly 1 ldfld for WorkGiverDef.canBeDoneByMechs in JobGiver_Work.PawnCanUseWorkGiver, found {matchCount}. Patch not applied.");
-                return instructions;
+                return codes;
             }
 
             codes.Insert(insertIndex, new CodeInstruction(OpCodes.Ldarg_1));
