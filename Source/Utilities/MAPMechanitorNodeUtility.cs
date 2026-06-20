@@ -68,12 +68,12 @@ namespace MAP_MechanoidMechanitor
 
         public static int GetExtraMechBandwidth(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
+            if (!TryGetNodeComp(pawn, out CompMAPMechanitorNode? comp) || comp == null)
             {
                 return 0;
             }
 
-            return props.extraMechBandwidth;
+            return comp.CurrentIntrinsicBandwidth;
         }
 
         public static int GetExtraMechControlGroups(Pawn? pawn)
