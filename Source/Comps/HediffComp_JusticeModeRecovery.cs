@@ -1,3 +1,4 @@
+using System;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -24,27 +25,61 @@ namespace MAP_MechanoidMechanitor
 
         public override void CompPostTick(ref float severityAdjustment)
         {
-            Pawn pawn = parent.pawn;
-            if (pawn == null || pawn.Dead || !pawn.RaceProps.IsMechanoid || pawn.health == null)
+            ApplyRecovery(parent.pawn, 1);
+        }
+
+        public override void CompPostTickInterval(ref float severityAdjustment, int delta)
+        {
+            ApplyRecovery(parent.pawn, delta);
+        }
+
+        private void ApplyRecovery(Pawn pawn, int delta)
+        {
+            if (pawn == null || pawn.Dead || !pawn.RaceProps.IsMechanoid || pawn.health == null || delta <= 0)
             {
                 return;
             }
 
-            if (pawn.IsHashIntervalTick(Props.repairInterval))
-            {
-                MechRepairUtility.RepairTick(pawn, Props.repairAmount);
-            }
+            int currentHashTick = pawn.HashOffsetTicks();
 
-            if (pawn.IsHashIntervalTick(Props.energyRestoreInterval))
+            if (Props.repairInterval > 0)
             {
-                Need_MechEnergy? energy = pawn.needs?.energy;
-                if (energy != null && energy.CurLevel < energy.MaxLevel)
+                int repairCrossings = CountIntervalCrossings(
+                    currentHashTick,
+                    delta,
+                    Props.repairInterval);
+                for (int i = 0; i < repairCrossings; i++)
                 {
-                    energy.CurLevel = Mathf.Min(
-                        energy.CurLevel + energy.MaxLevel * Props.energyRestoreFraction,
-                        energy.MaxLevel);
+                    MechRepairUtility.RepairTick(pawn, Props.repairAmount);
                 }
             }
+
+            if (Props.energyRestoreInterval > 0)
+            {
+                int energyCrossings = CountIntervalCrossings(
+                    currentHashTick,
+                    delta,
+                    Props.energyRestoreInterval);
+                if (energyCrossings > 0)
+                {
+                    Need_MechEnergy? energy = pawn.needs?.energy;
+                    if (energy != null && energy.CurLevel < energy.MaxLevel)
+                    {
+                        energy.CurLevel = Mathf.Min(
+                            energy.CurLevel
+                                + energy.MaxLevel * Props.energyRestoreFraction * energyCrossings,
+                            energy.MaxLevel);
+                    }
+                }
+            }
+        }
+
+        private static int CountIntervalCrossings(int currentHashTick, int delta, int interval)
+        {
+            int startTick = currentHashTick - delta;
+            int endCount = (int)Math.Floor((double)currentHashTick / interval);
+            int startCount = (int)Math.Floor((double)startTick / interval);
+            return endCount - startCount;
         }
     }
 }

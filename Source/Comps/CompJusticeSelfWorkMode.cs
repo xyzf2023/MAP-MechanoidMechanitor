@@ -32,6 +32,7 @@ namespace MAP_MechanoidMechanitor
         private const string SelfRepairHediffDefName = "MAP_Justice_SelfWorkMode_SelfRepair";
 
         private MechWorkModeDef? selfWorkMode;
+        private bool selfWorkModeHediffInitialized;
 
         private static MechWorkModeDef? autonomousDirectiveDef;
         private static HediffDef? autonomousDirectiveHediffDef;
@@ -57,7 +58,10 @@ namespace MAP_MechanoidMechanitor
             }
 
             selfWorkMode = sanitized;
-            SyncSelfWorkModeHediff();
+            if (SyncSelfWorkModeHediff())
+            {
+                selfWorkModeHediffInitialized = true;
+            }
 
             if (parent is not Pawn pawn)
             {
@@ -103,29 +107,36 @@ namespace MAP_MechanoidMechanitor
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
-            if (respawningAfterLoad)
+            if (respawningAfterLoad || selfWorkModeHediffInitialized)
             {
                 return;
             }
 
-            SyncSelfWorkModeHediff();
+            if (SyncSelfWorkModeHediff())
+            {
+                selfWorkModeHediffInitialized = true;
+            }
         }
 
         public override void PostExposeData()
         {
             base.PostExposeData();
             Scribe_Defs.Look(ref selfWorkMode, "justiceSelfWorkMode");
+            Scribe_Values.Look(
+                ref selfWorkModeHediffInitialized,
+                "justiceSelfWorkModeHediffInitialized",
+                false);
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 selfWorkMode = SanitizeWorkMode(selfWorkMode);
             }
         }
 
-        private void SyncSelfWorkModeHediff()
+        private bool SyncSelfWorkModeHediff()
         {
             if (parent is not Pawn pawn || pawn.health?.hediffSet == null)
             {
-                return;
+                return false;
             }
 
             HediffDef autonomousHediffDef = GetAutonomousDirectiveHediffDef();
@@ -147,6 +158,8 @@ namespace MAP_MechanoidMechanitor
                     pawn.health.AddHediff(selfRepairHediffDef);
                 }
             }
+
+            return true;
         }
 
         private static void RemoveAllHediffsOfDef(Pawn pawn, HediffDef def)
