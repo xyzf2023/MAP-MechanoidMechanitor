@@ -140,6 +140,9 @@
         <li>Hauling</li>
         <li>Cleaning</li>
         <li>Research</li>
+        <li>Childcare</li>
+        <li MayRequire="Ludeon.RimWorld.Anomaly">DarkStudy</li>
+        <li MayRequire="Ludeon.RimWorld.Odyssey">Fishing</li>
       </mechEnabledWorkTypes>
       <lifeStageAges Inherit="False">
         <li>
