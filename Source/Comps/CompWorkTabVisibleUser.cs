@@ -53,6 +53,12 @@ namespace MAP_MechanoidMechanitor
             }
 
             CompWorkTabVisibleUser comp = pawn.GetComp<CompWorkTabVisibleUser>()!;
+
+            if (pawn.guest == null)
+            {
+                pawn.guest = new Pawn_GuestTracker(pawn);
+            }
+
             if (!comp.Props.ensureWorkSettings)
             {
                 return;
