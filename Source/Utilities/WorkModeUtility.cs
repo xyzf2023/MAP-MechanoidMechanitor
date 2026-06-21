@@ -18,6 +18,16 @@ namespace MAP_MechanoidMechanitor
         {
             "MAP_WorkMode_AutonomousDirective"
         };
+        private static readonly HashSet<string> justiceWorkEquivalentModeDefNames = new HashSet<string>
+        {
+            "MAP_WorkMode_EfficientExecution",
+            "MAP_WorkMode_MobileCombat",
+            "MAP_WorkMode_FortifiedDefense"
+        };
+        private static readonly HashSet<string> justiceEscortEquivalentModeDefNames = new HashSet<string>
+        {
+            "MAP_WorkMode_MobileCombat_Guard"
+        };
         private static readonly HashSet<string> justiceWorkModeHediffDefNames = new HashSet<string>
         {
             "MAP_Justice_WorkMode_EfficientExecution",
@@ -157,6 +167,33 @@ namespace MAP_MechanoidMechanitor
         public static bool IsJusticeSelfOnlyWorkMode(MechWorkModeDef workMode)
         {
             return workMode != null && justiceSelfOnlyWorkModeDefNames.Contains(workMode.defName);
+        }
+
+        public static bool SatisfiesVanillaWorkMode(
+            MechWorkModeDef? actualMode,
+            MechWorkModeDef? requestedMode)
+        {
+            if (actualMode == null || requestedMode == null)
+            {
+                return false;
+            }
+
+            if (actualMode == requestedMode)
+            {
+                return true;
+            }
+
+            if (requestedMode == MechWorkModeDefOf.Work)
+            {
+                return justiceWorkEquivalentModeDefNames.Contains(actualMode.defName);
+            }
+
+            if (requestedMode == MechWorkModeDefOf.Escort)
+            {
+                return justiceEscortEquivalentModeDefNames.Contains(actualMode.defName);
+            }
+
+            return false;
         }
 
         public static bool IsJusticeWorkMode(HediffDef def)
