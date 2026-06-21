@@ -37,6 +37,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             initData.startingPawnsRequired = null;
             initData.startingXenotypesRequired = null;
             initData.startingMutantsRequired = null;
+
+            GameComponent_JusticeScenarioState.EnableForCurrentGame();
         }
 
         public override string Summary(Scenario scen)
