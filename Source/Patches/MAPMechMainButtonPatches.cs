@@ -39,11 +39,6 @@ namespace MAP_MechanoidMechanitor
                     && !pawn.Dead
                     && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
                 {
-                    if (Prefs.DevMode)
-                    {
-                        Log.Message($"[MAP-MechanoidMechanitor] Mechs main button enabled by MAP node: pawn={pawn.LabelShort}");
-                    }
-
                     return true;
                 }
             }
