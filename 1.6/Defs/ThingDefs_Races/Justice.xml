@@ -116,6 +116,7 @@
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_JusticeSelfWorkMode" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_FreeColonistEquivalentUser" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_EnsureEmptyGeneTracker" />
     </comps>
     <race>
       <mechFixedSkillLevel>12</mechFixedSkillLevel>
