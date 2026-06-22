@@ -5,4 +5,6 @@
   <MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>Missing skills tracker</MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>
   <MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>Could not find the gravship launch ritual.</MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>
   <MAP_MechanoidMechanitor.JusticeSelfMechanitorWorkSpeedFeedback>Offset from self: +{0}</MAP_MechanoidMechanitor.JusticeSelfMechanitorWorkSpeedFeedback>
+  <MAP_MechanoidMechanitor.MechRecode.InvalidTarget>This ability can only target the corpse of a non-player mechanoid.</MAP_MechanoidMechanitor.MechRecode.InvalidTarget>
+  <MAP_MechanoidMechanitor.MechRecode.Success>Completed mech recoding for {0}.</MAP_MechanoidMechanitor.MechRecode.Success>
 </LanguageData>
