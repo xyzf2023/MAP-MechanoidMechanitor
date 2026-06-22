@@ -3,7 +3,7 @@
   <AbilityDef>
     <defName>MAP_Ability_MechRecode</defName>
     <label>机体再编码</label>
-    <description>对一具非玩家阵营的机械体尸体执行底层协议覆写，将尸体内部机械体的阵营编码改写为玩家阵营。此过程不会复活、修复或建立监管关系；后续处理由机械培育器等原版流程决定。完成操作后，能力冷却时间等于目标机械体带宽占用乘以18000 ticks。</description>
+    <description>TODO</description>
     <iconPath>UI/Abilities/MechResurrection</iconPath>
     <jobDef>MAP_Job_MechRecode</jobDef>
     <hasExternallyHandledCooldown>true</hasExternallyHandledCooldown>

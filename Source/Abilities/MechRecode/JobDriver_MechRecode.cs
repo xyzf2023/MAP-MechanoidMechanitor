@@ -106,6 +106,7 @@ namespace MAP_MechanoidMechanitor
                 bandwidthCost * recodeComp.Props.cooldownTicksPerBandwidth);
 
             innerPawn.SetFactionDirect(Faction.OfPlayer);
+            innerPawn.GenerateNecessaryName();
             job.ability?.StartCooldown(cooldownTicks);
 
             Messages.Message(
