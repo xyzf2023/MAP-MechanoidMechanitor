@@ -33,7 +33,7 @@
     </verbProperties>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_AbilityMechRecode">
-        <recodeDurationTicks>900</recodeDurationTicks>
+        <recodeTicksPerBandwidth>300</recodeTicksPerBandwidth>
         <cooldownTicksPerBandwidth>18000</cooldownTicksPerBandwidth>
       </li>
     </comps>
