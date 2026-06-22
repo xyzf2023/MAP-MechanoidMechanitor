@@ -4,7 +4,7 @@ namespace MAP_MechanoidMechanitor
 {
     public class CompProperties_AbilityMechRecode : CompProperties_AbilityEffect
     {
-        public int recodeDurationTicks = 900;
+        public float recodeTicksPerBandwidth = 300f;
 
         public float cooldownTicksPerBandwidth = 18000f;
 
