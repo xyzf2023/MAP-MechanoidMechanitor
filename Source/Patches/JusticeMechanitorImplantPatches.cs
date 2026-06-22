@@ -18,29 +18,19 @@ namespace MAP_MechanoidMechanitor
         {
             List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
 
-            MethodInfo? isFleshGetter = AccessTools.PropertyGetter(typeof(RaceProperties), nameof(RaceProperties.IsFlesh));
             FieldInfo? userMustHaveHediffField = AccessTools.Field(typeof(CompProperties_Usable), nameof(CompProperties_Usable.userMustHaveHediff));
-            MethodInfo? resolveIsFleshMethod = AccessTools.Method(typeof(JusticeMechanitorImplantUtility), nameof(JusticeMechanitorImplantUtility.ResolveIsFleshOrJustice));
             MethodInfo? resolveRequiredHediffMethod = AccessTools.Method(typeof(JusticeMechanitorImplantUtility), nameof(JusticeMechanitorImplantUtility.ResolveRequiredHediff));
 
-            if (isFleshGetter == null || userMustHaveHediffField == null || resolveIsFleshMethod == null || resolveRequiredHediffMethod == null)
+            if (userMustHaveHediffField == null || resolveRequiredHediffMethod == null)
             {
                 Log.Error($"{LogPrefix} missing reflection target(s). Patch not applied.");
                 return codes;
             }
 
-            List<int> isFleshCallIndices = new List<int>();
             List<int> requiredHediffFieldIndices = new List<int>();
             for (int i = 0; i < codes.Count; i++)
             {
                 CodeInstruction code = codes[i];
-                if ((code.opcode == OpCodes.Call || code.opcode == OpCodes.Callvirt)
-                    && code.operand is MethodInfo method
-                    && method == isFleshGetter)
-                {
-                    isFleshCallIndices.Add(i);
-                }
-
                 if (code.opcode == OpCodes.Ldfld
                     && code.operand is FieldInfo field
                     && field.Equals(userMustHaveHediffField))
@@ -49,13 +39,14 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (isFleshCallIndices.Count != 1 || requiredHediffFieldIndices.Count != 3)
+            if (requiredHediffFieldIndices.Count != 3)
             {
                 Log.Error(
-                    $"{LogPrefix} unexpected IL match count: IsFlesh getter={isFleshCallIndices.Count}, userMustHaveHediff ldfld={requiredHediffFieldIndices.Count}. Patch not applied.");
+                    $"{LogPrefix} unexpected IL match count: userMustHaveHediff ldfld={requiredHediffFieldIndices.Count}. Patch not applied.");
                 return codes;
             }
 
+            // The generic colonist-like CompUsable patch already handles the IsFlesh gate.
             // Insert from back to front to avoid index shift.
             for (int i = requiredHediffFieldIndices.Count - 1; i >= 0; i--)
             {
@@ -64,11 +55,6 @@ namespace MAP_MechanoidMechanitor
                 codes.Insert(idx + 2, new CodeInstruction(OpCodes.Ldarg_1));
                 codes.Insert(idx + 3, new CodeInstruction(OpCodes.Call, resolveRequiredHediffMethod));
             }
-
-            int fleshIdx = isFleshCallIndices[0];
-            codes.Insert(fleshIdx + 1, new CodeInstruction(OpCodes.Ldarg_0));
-            codes.Insert(fleshIdx + 2, new CodeInstruction(OpCodes.Ldarg_1));
-            codes.Insert(fleshIdx + 3, new CodeInstruction(OpCodes.Call, resolveIsFleshMethod));
 
             return codes;
         }
