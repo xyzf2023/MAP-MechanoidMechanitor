@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_Ability_MechRecode.label>mech recoding</MAP_Ability_MechRecode.label>
+  <MAP_Ability_MechRecode.description>Rewrite the low-level protocols of a non-player mechanoid corpse, changing the faction encoded in its inner pawn to the player faction. This process does not resurrect or repair the mechanoid and does not establish an overseer relation; subsequent handling is left to vanilla systems such as the mech gestator. On completion, the ability cooldown equals the target mechanoid's bandwidth cost multiplied by 18,000 ticks.</MAP_Ability_MechRecode.description>
+</LanguageData>
