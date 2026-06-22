@@ -21,7 +21,21 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (!MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(mech))
+            if (MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(mech))
+            {
+                __result = true;
+                return false;
+            }
+
+            if (!CompMAPMechanitorNode.TryGetNodeComp(mech, out CompMAPMechanitorNode? nodeComp)
+                || nodeComp?.NodeProps?.ignoreExternalOverseerCommandRange != true)
+            {
+                return true;
+            }
+
+            Pawn overseer = mech.GetOverseer();
+            if (overseer?.mechanitor == null
+                || !overseer.mechanitor.ControlledPawns.Contains(mech))
             {
                 return true;
             }
