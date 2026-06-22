@@ -37,6 +37,12 @@
         <extraMechBandwidth>8</extraMechBandwidth>
         <extraMechControlGroups>1</extraMechControlGroups>
       </li>
+
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorTravelNode">
+        <canLeadCaravan>true</canLeadCaravan>
+        <canCollectCaravanItems>true</canCollectCaravanItems>
+        <refreshTrackersOnTransporterArrival>true</refreshTrackersOnTransporterArrival>
+      </li>
     </comps>
     <race>
       <body>Scyther</body>
