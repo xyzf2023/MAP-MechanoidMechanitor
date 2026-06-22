@@ -8,7 +8,7 @@ namespace MAP_MechanoidMechanitor
 {
     public class JobDriver_MechRecode : JobDriver
     {
-        private const int DefaultRecodeDurationTicks = 900;
+        private const float DefaultRecodeTicksPerBandwidth = 300f;
         private const string InvalidTargetMessageKey = "MAP_MechanoidMechanitor.MechRecode.InvalidTarget";
         private const string SuccessMessageKey = "MAP_MechanoidMechanitor.MechRecode.Success";
 
@@ -33,8 +33,12 @@ namespace MAP_MechanoidMechanitor
             yield return gotoTarget;
 
             CompAbilityEffect_MechRecode? recodeComp = GetRecodeComp();
-            int durationTicks = recodeComp?.Props.recodeDurationTicks
-                ?? DefaultRecodeDurationTicks;
+            Corpse? corpse = TargetCorpse;
+            float bandwidthCost = corpse?.InnerPawn?.GetStatValue(StatDefOf.BandwidthCost) ?? 0f;
+            float recodeTicksPerBandwidth = recodeComp?.Props.recodeTicksPerBandwidth
+                ?? DefaultRecodeTicksPerBandwidth;
+            int durationTicks = Mathf.RoundToInt(
+                bandwidthCost * recodeTicksPerBandwidth);
 
             Toil recode = Toils_General.Wait(
                 Mathf.Max(0, durationTicks),
