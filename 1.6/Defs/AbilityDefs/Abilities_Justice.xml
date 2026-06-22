@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <AbilityDef>
+    <defName>MAP_Ability_MechRecode</defName>
+    <label>机体再编码</label>
+    <description>对一具非玩家阵营的机械体尸体执行底层协议覆写，将尸体内部机械体的阵营编码改写为玩家阵营。此过程不会复活、修复或建立监管关系；后续处理由机械培育器等原版流程决定。完成操作后，能力冷却时间等于目标机械体带宽占用乘以18000 ticks。</description>
+    <iconPath>UI/Abilities/MechResurrection</iconPath>
+    <jobDef>MAP_Job_MechRecode</jobDef>
+    <hasExternallyHandledCooldown>true</hasExternallyHandledCooldown>
+    <canUseAoeToGetTargets>false</canUseAoeToGetTargets>
+    <hostile>false</hostile>
+    <casterMustBeCapableOfViolence>false</casterMustBeCapableOfViolence>
+    <displayGizmoWhileUndrafted>true</displayGizmoWhileUndrafted>
+    <disableGizmoWhileUndrafted>false</disableGizmoWhileUndrafted>
+    <verbProperties>
+      <verbClass>Verb_CastAbility</verbClass>
+      <drawAimPie>false</drawAimPie>
+      <range>999</range>
+      <warmupTime>0</warmupTime>
+      <requireLineOfSight>false</requireLineOfSight>
+      <targetParams>
+        <canTargetLocations>false</canTargetLocations>
+        <canTargetSelf>false</canTargetSelf>
+        <canTargetPawns>false</canTargetPawns>
+        <canTargetBuildings>false</canTargetBuildings>
+        <canTargetItems>false</canTargetItems>
+        <canTargetCorpses>true</canTargetCorpses>
+        <onlyTargetCorpses>true</onlyTargetCorpses>
+        <canTargetAnimals>false</canTargetAnimals>
+        <canTargetHumans>false</canTargetHumans>
+        <canTargetMechs>true</canTargetMechs>
+      </targetParams>
+    </verbProperties>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AbilityMechRecode">
+        <recodeDurationTicks>900</recodeDurationTicks>
+        <cooldownTicksPerBandwidth>18000</cooldownTicksPerBandwidth>
+      </li>
+    </comps>
+  </AbilityDef>
+</Defs>
