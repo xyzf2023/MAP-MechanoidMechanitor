@@ -46,7 +46,7 @@ namespace MAP_MechanoidMechanitor
 
         public bool CanRecode(Corpse corpse)
         {
-            Pawn innerPawn = corpse?.InnerPawn;
+            Pawn? innerPawn = corpse?.InnerPawn;
 
             return innerPawn != null
                 && innerPawn.Dead
