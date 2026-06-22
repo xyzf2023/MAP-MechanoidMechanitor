@@ -9,7 +9,6 @@ namespace MAP_MechanoidMechanitor
     public class JobDriver_MechRecode : JobDriver
     {
         private const int DefaultRecodeDurationTicks = 900;
-        private const float DefaultCooldownTicksPerBandwidth = 18000f;
         private const string InvalidTargetMessageKey = "MAP_MechanoidMechanitor.MechRecode.InvalidTarget";
         private const string SuccessMessageKey = "MAP_MechanoidMechanitor.MechRecode.Success";
 
@@ -103,14 +102,8 @@ namespace MAP_MechanoidMechanitor
 
             Pawn innerPawn = corpse.InnerPawn;
             float bandwidthCost = innerPawn.GetStatValue(StatDefOf.BandwidthCost);
-            float cooldownTicksPerBandwidth = recodeComp.Props.cooldownTicksPerBandwidth;
-            if (cooldownTicksPerBandwidth == 0f)
-            {
-                cooldownTicksPerBandwidth = DefaultCooldownTicksPerBandwidth;
-            }
-
             int cooldownTicks = Mathf.RoundToInt(
-                bandwidthCost * cooldownTicksPerBandwidth);
+                bandwidthCost * recodeComp.Props.cooldownTicksPerBandwidth);
 
             innerPawn.SetFactionDirect(Faction.OfPlayer);
             job.ability?.StartCooldown(cooldownTicks);
