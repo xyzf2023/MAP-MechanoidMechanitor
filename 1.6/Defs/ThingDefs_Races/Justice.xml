@@ -172,6 +172,9 @@
     <defaultFactionDef>PlayerColony</defaultFactionDef>
     <destroyGearOnDrop>false</destroyGearOnDrop>
     <combatPower>600</combatPower>
+    <abilities>
+      <li>MAP_Ability_MechRecode</li>
+    </abilities>
     <fixedChildBackstories>
       <li>MAP_Justice_Childhood</li>
     </fixedChildBackstories>
