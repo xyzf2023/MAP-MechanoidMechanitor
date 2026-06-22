@@ -10,6 +10,8 @@ namespace MAP_MechanoidMechanitor
         public MAPMechanitorControlBackend controlBackend = MAPMechanitorControlBackend.None;
         // Whether this node itself needs an external overseer; does not affect its ability to control other mechs.
         public bool requiresExternalOverseer = false;
+        // Whether this externally overseen node ignores its overseer's command radius while it is actually controlled.
+        public bool ignoreExternalOverseerCommandRange = false;
         public int extraMechBandwidth = 0;
         public int extraMechControlGroups = 0;
         public bool allowBossChipBandwidthUpgrade = false;
