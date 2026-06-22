@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef ParentName="CastAbilityOnThing">
+    <defName>MAP_Job_MechRecode</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_MechRecode</driverClass>
+    <reportString>正在对TargetA执行机体再编码。</reportString>
+    <neverShowWeapon>true</neverShowWeapon>
+    <playerInterruptible>true</playerInterruptible>
+  </JobDef>
+</Defs>
