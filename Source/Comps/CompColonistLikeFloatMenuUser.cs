@@ -30,13 +30,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            CompColonistLikeFloatMenuUser? comp = pawn.GetComp<CompColonistLikeFloatMenuUser>();
-            if (comp == null)
-            {
-                return false;
-            }
-
-            return comp.Props.allowColonistLikeFloatMenu;
+            return MechanoidMechanitorRoleUtility.AllowsColonistLikeFloatMenu(pawn);
         }
     }
 }
