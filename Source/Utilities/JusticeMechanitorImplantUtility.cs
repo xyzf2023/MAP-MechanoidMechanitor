@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsJusticePawn(Pawn? pawn)
         {
-            return CompJusticeSelfWorkMode.GetFor(pawn) != null;
+            return MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
         }
 
         public static bool IsSupportedMechanitorImplant(Thing? implant)
