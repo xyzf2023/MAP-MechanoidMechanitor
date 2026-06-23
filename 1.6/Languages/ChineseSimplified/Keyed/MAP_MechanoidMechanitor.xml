@@ -7,4 +7,7 @@
   <MAP_MechanoidMechanitor.JusticeSelfMechanitorWorkSpeedFeedback>工作速度偏移：+{0}</MAP_MechanoidMechanitor.JusticeSelfMechanitorWorkSpeedFeedback>
   <MAP_MechanoidMechanitor.MechRecode.InvalidTarget>只能对非玩家阵营的机械体尸体使用。</MAP_MechanoidMechanitor.MechRecode.InvalidTarget>
   <MAP_MechanoidMechanitor.MechRecode.Success>已完成对{0}的机体再编码。</MAP_MechanoidMechanitor.MechRecode.Success>
+  <MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget>只能对友方机械体尸体使用。</MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget>
+  <MAP_MechanoidMechanitor.MechReconstruction.ReportWithTarget>正在对{0}进行机体重构。</MAP_MechanoidMechanitor.MechReconstruction.ReportWithTarget>
+  <MAP_MechanoidMechanitor.MechReconstruction.ReportDefault>正在进行机体重构。</MAP_MechanoidMechanitor.MechReconstruction.ReportDefault>
 </LanguageData>
