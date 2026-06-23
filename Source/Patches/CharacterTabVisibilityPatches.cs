@@ -4,13 +4,9 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    [HarmonyPatch(
-        typeof(ITab_Pawn_Character),
-        nameof(ITab_Pawn_Character.IsVisible),
-        MethodType.Getter)]
+    [HarmonyPatch(typeof(ITab_Pawn_Character), nameof(ITab_Pawn_Character.IsVisible), MethodType.Getter)]
     public static class Patch_ITab_Pawn_Character_IsVisible_CommanderFaction
     {
-        private const string JusticeDefName = "MAP_Mech_Justice";
         private const string HermitDefName = "MAP_Mech_Hermit";
 
         [HarmonyPostfix]
@@ -33,8 +29,10 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            string? defName = pawn.def?.defName;
-            if (defName == JusticeDefName || defName == HermitDefName)
+            bool isMechanitorRole =
+                MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
+            bool isHermit = pawn.def?.defName == HermitDefName;
+            if (isMechanitorRole || isHermit)
             {
                 __result = false;
             }
