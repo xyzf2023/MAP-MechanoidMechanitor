@@ -5,7 +5,6 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MAPMechGestatorRecipeUtility
     {
-        private const string JusticePawnDefName = "MAP_Mech_Justice";
         private const string JusticeGestateDefName = "MAP_Gestate_Justice";
         private const string HermitGestateDefName = "MAP_Gestate_Hermit";
 
@@ -16,7 +15,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (pawn.def?.defName != JusticePawnDefName)
+            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
             {
                 return false;
             }
