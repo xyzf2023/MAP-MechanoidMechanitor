@@ -27,12 +27,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 GameComponent_JusticeScenarioState? component =
                     Current.Game.GetComponent<GameComponent_JusticeScenarioState>();
-                if (component == null)
-                {
-                    return false;
-                }
-
-                return component.justiceOnlyColonyEnabled;
+                return component?.justiceOnlyColonyEnabled == true;
             }
         }
 
@@ -52,7 +47,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (component == null)
             {
                 Log.Error(
-                    "[MechanoidMechanitor] Cannot enable Justice-only colony state: " +
+                    "[MechanoidMechanitor] Cannot enable mechanitor-only colony state: " +
                     "GameComponent_JusticeScenarioState is missing.");
                 return;
             }
@@ -69,12 +64,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             GameComponent_JusticeScenarioState? component =
                 Current.Game.GetComponent<GameComponent_JusticeScenarioState>();
-            if (component == null)
+            if (component != null)
             {
-                return;
+                component.justiceOnlyColonyEnabled =
+                    JusticeScenarioUtility.IsJusticeScenarioActive;
             }
-
-            component.justiceOnlyColonyEnabled = JusticeScenarioUtility.IsJusticeScenarioActive;
         }
 
         public override void ExposeData()
@@ -127,17 +121,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.GameComponentTick();
 
-            if (factionNamingRoutineFinished)
-            {
-                return;
-            }
-
-            if (Current.Game == null || Find.TickManager == null)
-            {
-                return;
-            }
-
-            if (Find.TickManager.TicksGame < nextFactionNamingCheckTick)
+            if (factionNamingRoutineFinished
+                || Current.Game == null
+                || Find.TickManager == null
+                || Find.TickManager.TicksGame < nextFactionNamingCheckTick)
             {
                 return;
             }
@@ -151,7 +138,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 factionNamingScenarioChecked = true;
                 factionNamingRoutineEnabled = JusticeScenarioUtility.IsJusticeScenarioActive;
-
                 if (!factionNamingRoutineEnabled)
                 {
                     FinishFactionNamingRoutine();
@@ -182,14 +168,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (waitingForFactionNameCompletion)
             {
-                if (playerFaction.HasName)
-                {
-                    FinishFactionNamingRoutine();
-                    return;
-                }
-
-                if (Find.WindowStack != null &&
-                    Find.WindowStack.IsOpen<Dialog_NamePlayerFaction>())
+                if (Find.WindowStack != null
+                    && Find.WindowStack.IsOpen<Dialog_NamePlayerFaction>())
                 {
                     return;
                 }
@@ -199,32 +179,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (Current.ProgramState != ProgramState.Playing ||
-                Find.WindowStack == null ||
-                Find.GameEnder == null ||
-                Find.GameEnder.gameEnding ||
-                LongEventHandler.AnyEventNowOrWaiting ||
-                Find.CurrentMap == null ||
-                !Find.CurrentMap.IsPlayerHome ||
-                Find.AnyPlayerHomeMap == null)
+            if (Current.ProgramState != ProgramState.Playing
+                || Find.WindowStack == null
+                || Find.GameEnder == null
+                || Find.GameEnder.gameEnding
+                || LongEventHandler.AnyEventNowOrWaiting
+                || Find.CurrentMap == null
+                || !Find.CurrentMap.IsPlayerHome
+                || Find.AnyPlayerHomeMap == null)
             {
                 RetryFactionNamingLater();
                 return;
             }
 
-            if (Find.WindowStack.IsOpen<Dialog_GiveName>())
-            {
-                RetryFactionNamingLater();
-                return;
-            }
-
-            if (Find.WindowStack.NonImmediateDialogWindowOpen)
-            {
-                RetryFactionNamingLater();
-                return;
-            }
-
-            if (Find.TickManager.TicksGame % 1000 == 200)
+            if (Find.WindowStack.IsOpen<Dialog_GiveName>()
+                || Find.WindowStack.NonImmediateDialogWindowOpen
+                || Find.TickManager.TicksGame % 1000 == 200)
             {
                 RetryFactionNamingLater();
                 return;
@@ -232,12 +202,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             Map namingHomeMap = Find.AnyPlayerHomeMap;
             List<Pawn> freeColonistsSpawned = namingHomeMap.mapPawns.FreeColonistsSpawned;
-            bool foundEligibleJustice = false;
+            bool foundEligibleProtagonist = false;
 
             for (int i = 0; i < freeColonistsSpawned.Count; i++)
             {
                 Pawn pawn = freeColonistsSpawned[i];
-                if (!JusticeScenarioUtility.IsJustice(pawn))
+                if (!JusticeScenarioUtility.IsScenarioProtagonist(pawn))
                 {
                     continue;
                 }
@@ -250,19 +220,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                if (!pawn.Spawned ||
-                    pawn.Map != namingHomeMap ||
-                    pawn.Dead ||
-                    pawn.Faction != Faction.OfPlayer)
+                if (!pawn.Spawned
+                    || pawn.Map != namingHomeMap
+                    || pawn.Dead
+                    || pawn.Faction != Faction.OfPlayer)
                 {
                     continue;
                 }
 
-                foundEligibleJustice = true;
+                foundEligibleProtagonist = true;
                 break;
             }
 
-            if (!foundEligibleJustice)
+            if (!foundEligibleProtagonist)
             {
                 RetryFactionNamingLater();
                 return;
@@ -282,12 +252,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void RetryFactionNamingLater()
         {
-            if (Find.TickManager == null)
+            if (Find.TickManager != null)
             {
-                return;
+                nextFactionNamingCheckTick =
+                    Find.TickManager.TicksGame + GenDate.TicksPerHour;
             }
-
-            nextFactionNamingCheckTick = Find.TickManager.TicksGame + GenDate.TicksPerHour;
         }
     }
 }
