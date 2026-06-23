@@ -75,16 +75,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 yield break;
             }
 
-            PawnKindDef? selected = ResolveSelectedMechKind();
-            if (selected != null)
-            {
-                yield return "机械族机械师：" + selected.LabelCap;
-            }
+            string selectedLabel = mechKind != null
+                ? mechKind.LabelCap
+                : "RandomMech".Translate().CapitalizeFirst();
+            yield return "机械族机械师：" + selectedLabel;
         }
 
         public override IEnumerable<Thing> PlayerStartingThings()
         {
-            PawnKindDef? selected = ResolveSelectedMechKind();
+            PawnKindDef? selected = ResolveSelectedMechKindForGeneration();
             if (selected == null)
             {
                 Log.Error("[MAP_MechanoidMechanitor] No valid mechanoid kind is available for the scenario mechanitor.");
@@ -157,15 +156,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return base.GetHashCode() ^ (mechKind?.GetHashCode() ?? 0);
         }
 
-        private PawnKindDef? ResolveSelectedMechKind()
+        private PawnKindDef? ResolveSelectedMechKindForGeneration()
         {
-            if (mechKind != null)
-            {
-                return mechKind;
-            }
-
-            mechKind = GetDefaultMechKind() ?? PossibleMechs.RandomElementWithFallback();
-            return mechKind;
+            return mechKind
+                ?? PossibleMechs.RandomElementWithFallback(GetDefaultMechKind());
         }
 
         private static PawnKindDef? GetDefaultMechKind()
