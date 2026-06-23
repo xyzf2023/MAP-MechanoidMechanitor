@@ -125,6 +125,7 @@ namespace MAP_MechanoidMechanitor
                 Pawn.story.bodyType = BodyTypeDefOf.Male;
             }
 
+            Pawn.Notify_DisabledWorkTypesChanged();
             MechanoidMechanitorRoleUtility.EnsureRoleState(Pawn);
             MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
                 Pawn,
