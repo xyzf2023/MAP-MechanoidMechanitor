@@ -14,8 +14,8 @@
       <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">5</BandwidthCost>
       <ControlTakingTime>15</ControlTakingTime>
       <EMPResistance>0</EMPResistance>
-      <ArmorRating_Blunt>0.20</ArmorRating_Blunt>
-      <ArmorRating_Sharp>0.40</ArmorRating_Sharp>
+      <ArmorRating_Blunt>0.60</ArmorRating_Blunt>
+      <ArmorRating_Sharp>0.80</ArmorRating_Sharp>
     </statBases>
     <tools>
       <li>
@@ -43,8 +43,17 @@
         <skillLevels>
           <li>
             <skill>Intellectual</skill>
+            <level>12</level>
+          </li>
+          <li>
+            <skill>Shooting</skill>
             <level>10</level>
           </li>
+          <li>
+            <skill>Melee</skill>
+            <level>8</level>
+          </li>
+
         </skillLevels>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechRestrictedWorkGiverUser">
