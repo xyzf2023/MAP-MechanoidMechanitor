@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <HediffDef>
+    <defName>MAP_AcquiredMechanoidMechanitor</defName>
+    <label>后天机械族机械师</label>
+    <description>该机械体已通过后天改造获得机械族机械师架构，可以作为机械师节点控制其他机械体，并使用机械族机械师的扩展工作、交互与迁移能力。</description>
+    <descriptionShort>该机械体已获得后天机械族机械师身份</descriptionShort>
+    <hediffClass>HediffWithComps</hediffClass>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_AcquiredMechanoidMechanitor" />
+    </comps>
+  </HediffDef>
+</Defs>
