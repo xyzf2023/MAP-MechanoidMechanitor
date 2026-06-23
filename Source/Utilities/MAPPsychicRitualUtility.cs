@@ -5,11 +5,9 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MAPPsychicRitualUtility
     {
-        private const string JusticeDefName = "MAP_Mech_Justice";
-
         public static bool IsJusticePsychicRitualPawn(Pawn? pawn)
         {
-            return pawn?.def?.defName == JusticeDefName;
+            return MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
         }
 
         public static bool IsAllowedPsychicRitualParticipant(Pawn? pawn)
@@ -19,7 +17,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!IsJusticePsychicRitualPawn(pawn))
+            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
+                || !MechanoidMechanitorRoleUtility.AllowsPsychicRituals(pawn))
             {
                 return false;
             }
@@ -30,12 +29,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
-            {
-                return false;
-            }
-
-            CompPsychicRitualParticipantUser? comp = pawn.GetComp<CompPsychicRitualParticipantUser>();
-            if (comp == null || !comp.Props.allowPsychicRituals)
             {
                 return false;
             }
@@ -59,12 +52,20 @@ namespace MAP_MechanoidMechanitor
 
         public static bool PawnCanDoSafeRole(Pawn? pawn, PsychicRitualRoleDef? roleDef)
         {
-            if (!IsAllowedPsychicRitualParticipant(pawn) || roleDef == null || !IsSafeRoleWhitelisted(roleDef))
+            if (!IsAllowedPsychicRitualParticipant(pawn)
+                || roleDef == null
+                || !IsSafeRoleWhitelisted(roleDef))
             {
                 return false;
             }
 
-            CompPsychicRitualParticipantUser? comp = pawn!.GetComp<CompPsychicRitualParticipantUser>();
+            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
+            {
+                return true;
+            }
+
+            CompPsychicRitualParticipantUser? comp =
+                pawn!.GetComp<CompPsychicRitualParticipantUser>();
             if (comp == null)
             {
                 return false;
