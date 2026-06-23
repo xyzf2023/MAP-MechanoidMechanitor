@@ -35,19 +35,21 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            Pawn? justice = FindJusticeInStartingItems(startingItems);
-            if (justice == null)
+            Pawn? scenarioMechanitor = FindScenarioMechanitorInStartingItems(startingItems);
+            if (scenarioMechanitor == null)
             {
                 Log.Error(
-                    "[MechanoidMechanitor] Justice scenario drop pod handling aborted: " +
-                    "no living MAP_Mech_Justice found in starting items.");
+                    "[MechanoidMechanitor] Scenario drop pod handling aborted: " +
+                    "no valid mechanical consciousness host was found in starting items.");
                 return false;
             }
 
-            startingItems.Remove(justice);
+            GameComponent_MechanoidMechanitorRegistry.RegisterScenarioPawn(
+                scenarioMechanitor,
+                promoteIfNeeded: true);
+            startingItems.Remove(scenarioMechanitor);
 
-            List<Thing> justiceGroup = new List<Thing> { justice };
-
+            List<Thing> mechanitorGroup = new List<Thing> { scenarioMechanitor };
             foreach (Thing startingItem in startingItems)
             {
                 if (startingItem.def.CanHaveFaction)
@@ -55,14 +57,13 @@ namespace MAP_MechanoidMechanitor
                     startingItem.SetFactionDirect(Faction.OfPlayer);
                 }
 
-                justiceGroup.Add(startingItem);
+                mechanitorGroup.Add(startingItem);
             }
 
             startingItems.Clear();
+            AssignAllStartingMechsToMechanitor(scenarioMechanitor, mechanitorGroup);
 
-            AssignAllStartingMechsToJustice(justice, justiceGroup);
-
-            List<List<Thing>> dropGroups = new List<List<Thing>> { justiceGroup };
+            List<List<Thing>> dropGroups = new List<List<Thing>> { mechanitorGroup };
             bool openImmediately = initData.QuickStarted
                 || GetArriveMethod(__instance) != PlayerPawnsArriveMethod.DropPods;
 
@@ -80,21 +81,25 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static PlayerPawnsArriveMethod GetArriveMethod(ScenPart_PlayerPawnsArriveMethod instance)
+        private static PlayerPawnsArriveMethod GetArriveMethod(
+            ScenPart_PlayerPawnsArriveMethod instance)
         {
             return (PlayerPawnsArriveMethod)MethodField.GetValue(instance);
         }
 
-        private static Pawn? FindJusticeInStartingItems(List<Thing> startingItems)
+        private static Pawn? FindScenarioMechanitorInStartingItems(List<Thing> startingItems)
         {
-            if (JusticeScenarioUtility.JusticePawnKind == null)
+            Pawn? registered = JusticeScenarioUtility.ScenarioProtagonist;
+            if (registered != null && startingItems.Contains(registered) && !registered.Dead)
             {
-                return null;
+                return registered;
             }
 
-            foreach (Thing item in startingItems)
+            for (int i = 0; i < startingItems.Count; i++)
             {
-                if (item is Pawn pawn && !pawn.Dead && JusticeScenarioUtility.IsJustice(pawn))
+                if (startingItems[i] is Pawn pawn
+                    && !pawn.Dead
+                    && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
                 {
                     return pawn;
                 }
@@ -103,33 +108,29 @@ namespace MAP_MechanoidMechanitor
             return null;
         }
 
-        private static bool EnsureJusticeMechanitorState(Pawn justice)
+        private static bool EnsureScenarioMechanitorState(Pawn mechanitor)
         {
-            MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(justice);
+            MechanoidMechanitorRoleUtility.EnsureRoleState(mechanitor);
+            MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(mechanitor);
 
-            if (justice.relations == null
-                || justice.mechanitor == null
-                || !MechanitorUtility.IsMechanitor(justice)
-                || justice.mechanitor.controlGroups == null
-                || justice.mechanitor.controlGroups.Count == 0)
+            if (mechanitor.relations == null
+                || mechanitor.mechanitor == null
+                || !MechanitorUtility.IsMechanitor(mechanitor)
+                || mechanitor.mechanitor.controlGroups == null
+                || mechanitor.mechanitor.controlGroups.Count == 0)
             {
                 Log.Error(
-                    "[MechanoidMechanitor] Justice scenario could not initialize Justice mechanitor state. " +
-                    "Overseer assignment skipped; drop pods will still proceed.");
+                    "[MechanoidMechanitor] Scenario could not initialize the selected " +
+                    "mechanitor state. Overseer assignment was skipped; drop pods will still proceed.");
                 return false;
             }
 
             return true;
         }
 
-        private static bool IsOverseeCandidate(Pawn mech, Pawn justice)
+        private static bool IsOverseeCandidate(Pawn mech, Pawn mechanitor)
         {
-            if (mech == justice || mech.Dead)
-            {
-                return false;
-            }
-
-            if (!mech.RaceProps.IsMechanoid)
+            if (mech == mechanitor || mech.Dead || !mech.RaceProps.IsMechanoid)
             {
                 return false;
             }
@@ -139,58 +140,51 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (MAPMechanitorNodeUtility.IsMechanitorNodeController(mech))
-            {
-                return false;
-            }
-
-            return true;
+            return !MAPMechanitorNodeUtility.IsMechanitorNodeController(mech);
         }
 
-        private static void AssignAllStartingMechsToJustice(Pawn justice, List<Thing> justiceGroup)
+        private static void AssignAllStartingMechsToMechanitor(
+            Pawn mechanitor,
+            List<Thing> mechanitorGroup)
         {
-            if (!EnsureJusticeMechanitorState(justice))
+            if (!EnsureScenarioMechanitorState(mechanitor))
             {
                 return;
             }
 
-            if (justice.relations == null)
-            {
-                justice.relations = new Pawn_RelationsTracker(justice);
-            }
+            mechanitor.relations ??= new Pawn_RelationsTracker(mechanitor);
 
-            foreach (Thing item in justiceGroup)
+            foreach (Thing item in mechanitorGroup)
             {
-                if (item is not Pawn mech || !IsOverseeCandidate(mech, justice))
+                if (item is not Pawn mech || !IsOverseeCandidate(mech, mechanitor))
                 {
                     continue;
                 }
 
                 Pawn? existingOverseer = mech.GetOverseer();
-                if (existingOverseer == justice)
+                if (existingOverseer == mechanitor)
                 {
                     continue;
                 }
 
-                if (existingOverseer != null)
+                if (existingOverseer?.relations != null)
                 {
-                    existingOverseer.relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, mech);
+                    existingOverseer.relations.TryRemoveDirectRelation(
+                        PawnRelationDefOf.Overseer,
+                        mech);
                 }
 
-                if (mech.relations == null)
-                {
-                    mech.relations = new Pawn_RelationsTracker(mech);
-                }
-
-                if (!justice.mechanitor.CanOverseeSubject(mech))
+                mech.relations ??= new Pawn_RelationsTracker(mech);
+                if (!mechanitor.mechanitor.CanOverseeSubject(mech))
                 {
                     Log.Warning(
-                        "[MechanoidMechanitor] Justice scenario could not assign overseer to " +
-                        $"{mech.LabelShort} ({mech.kindDef?.defName ?? "unknown"}): insufficient bandwidth or incompatible subject.");
+                        "[MechanoidMechanitor] Scenario could not assign overseer to " +
+                        $"{mech.LabelShort} ({mech.kindDef?.defName ?? "unknown"}): " +
+                        "insufficient bandwidth or incompatible subject.");
                     continue;
                 }
 
-                justice.relations.AddDirectRelation(PawnRelationDefOf.Overseer, mech);
+                mechanitor.relations.AddDirectRelation(PawnRelationDefOf.Overseer, mech);
             }
         }
     }
