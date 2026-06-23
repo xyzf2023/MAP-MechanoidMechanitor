@@ -13,30 +13,28 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!ModsConfig.BiotechActive)
+            if (!ModsConfig.BiotechActive || !pawn.RaceProps.IsMechanoid)
             {
                 return;
             }
 
-            if (!pawn.RaceProps.IsMechanoid)
+            List<WorkTypeDef> allowed =
+                MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
+                    ? MechanoidMechanitorRoleUtility.GetRoleWorkTypes()
+                    : pawn.RaceProps.mechEnabledWorkTypes;
+
+            if (allowed.NullOrEmpty())
             {
                 return;
             }
 
-            if (pawn.RaceProps.mechEnabledWorkTypes.NullOrEmpty())
-            {
-                return;
-            }
-
-            List<WorkTypeDef> allowed = pawn.RaceProps.mechEnabledWorkTypes;
             List<WorkTypeDef> allWorkTypes = DefDatabase<WorkTypeDef>.AllDefsListForReading;
-
             for (int i = 0; i < allWorkTypes.Count; i++)
             {
-                WorkTypeDef w = allWorkTypes[i];
-                if (!allowed.Contains(w))
+                WorkTypeDef workType = allWorkTypes[i];
+                if (!allowed.Contains(workType))
                 {
-                    pawn.workSettings.Disable(w);
+                    pawn.workSettings.Disable(workType);
                 }
             }
 
