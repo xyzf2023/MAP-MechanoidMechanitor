@@ -36,13 +36,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            CompWorkTabVisibleUser? comp = pawn.GetComp<CompWorkTabVisibleUser>();
-            if (comp == null)
-            {
-                return false;
-            }
-
-            return comp.Props.showInWorkTab;
+            return MechanoidMechanitorRoleUtility.AllowsWorkTab(pawn);
         }
 
         public static void EnsureWorkSettingsForWorkTab(Pawn pawn)
@@ -52,14 +46,16 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            CompWorkTabVisibleUser comp = pawn.GetComp<CompWorkTabVisibleUser>()!;
-
             if (pawn.guest == null)
             {
                 pawn.guest = new Pawn_GuestTracker(pawn);
             }
 
-            if (!comp.Props.ensureWorkSettings)
+            CompWorkTabVisibleUser? comp = pawn.GetComp<CompWorkTabVisibleUser>();
+            bool shouldEnsureWorkSettings =
+                MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn)
+                || comp?.Props.ensureWorkSettings == true;
+            if (!shouldEnsureWorkSettings)
             {
                 return;
             }
@@ -67,14 +63,14 @@ namespace MAP_MechanoidMechanitor
             if (pawn.workSettings == null)
             {
                 pawn.workSettings = new Pawn_WorkSettings(pawn);
-                pawn.workSettings.EnableAndInitialize();
-                MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
             }
-            else if (!pawn.workSettings.Initialized)
+
+            if (!pawn.workSettings.Initialized)
             {
                 pawn.workSettings.EnableAndInitialize();
-                MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
             }
+
+            MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
         }
     }
 }
