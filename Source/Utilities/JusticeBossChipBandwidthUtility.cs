@@ -33,35 +33,32 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        public static bool TryGetUpgradeNode(Pawn? pawn, out CompMAPMechanitorNode comp)
+        public static bool CanUpgradeBandwidth(Pawn? pawn)
         {
-            comp = null!;
-            if (!ModsConfig.BiotechActive || pawn == null)
+            if (!ModsConfig.BiotechActive
+                || pawn == null
+                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
             {
                 return false;
             }
 
-            if (CompJusticeSelfWorkMode.GetFor(pawn) == null)
-            {
-                return false;
-            }
+            return MechanoidMechanitorRoleUtility.AllowsBossChipBandwidthUpgrade(pawn)
+                && MechanoidMechanitorRoleUtility.GetMaxIntrinsicBandwidth(pawn) > 0;
+        }
 
-            if (!CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? nodeComp)
-                || nodeComp == null)
-            {
-                return false;
-            }
+        public static int GetRemainingIntrinsicBandwidth(Pawn? pawn)
+        {
+            return MechanoidMechanitorRoleUtility.GetRemainingIntrinsicBandwidth(pawn);
+        }
 
-            CompProperties_MAPMechanitorNode? nodeProps = nodeComp.NodeProps;
-            if (nodeProps == null
-                || !nodeProps.allowBossChipBandwidthUpgrade
-                || nodeProps.maxIntrinsicBandwidth <= 0)
-            {
-                return false;
-            }
+        public static int GetMaxIntrinsicBandwidth(Pawn? pawn)
+        {
+            return MechanoidMechanitorRoleUtility.GetMaxIntrinsicBandwidth(pawn);
+        }
 
-            comp = nodeComp;
-            return true;
+        public static int AddChipBandwidth(Pawn? pawn, int requestedAmount)
+        {
+            return MechanoidMechanitorRoleUtility.AddChipBandwidth(pawn, requestedAmount);
         }
 
         public static string UseOneLabel(string chipLabel, int bandwidthPerChip) =>
