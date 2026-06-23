@@ -44,24 +44,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return pawn != null && ReferenceEquals(CurrentScenarioProtagonist, pawn);
         }
 
+        public static bool CanHostMechanicalConsciousness(Pawn? pawn)
+        {
+            return JusticeScenarioUtility.IsJusticeScenarioActive
+                && pawn != null
+                && !pawn.Dead
+                && !pawn.Destroyed
+                && pawn.RaceProps.IsMechanoid
+                && pawn.Faction != null
+                && pawn.Faction.IsPlayerSafe()
+                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
+        }
+
         public static bool RegisterScenarioPawn(Pawn? pawn, bool promoteIfNeeded = true)
         {
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null || pawn == null)
+            if (registry == null
+                || pawn == null
+                || !JusticeScenarioUtility.IsJusticeScenarioActive)
             {
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!PrepareHost(pawn, promoteIfNeeded))
             {
-                if (!promoteIfNeeded
-                    || !MechanoidMechanitorRoleUtility.PromoteToAcquiredMechanoidMechanitor(pawn))
-                {
-                    return false;
-                }
+                return false;
             }
 
-            MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
             registry.mechanicalConsciousnessHost = pawn;
             registry.scenarioProtagonist = pawn;
             return true;
@@ -72,22 +81,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool promoteIfNeeded = false)
         {
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null || pawn == null)
+            if (registry == null
+                || pawn == null
+                || !JusticeScenarioUtility.IsJusticeScenarioActive)
             {
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!PrepareHost(pawn, promoteIfNeeded))
             {
-                if (!promoteIfNeeded
-                    || !MechanoidMechanitorRoleUtility.PromoteToAcquiredMechanoidMechanitor(pawn))
-                {
-                    return false;
-                }
+                return false;
             }
 
             registry.mechanicalConsciousnessHost = pawn;
-            MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
             return true;
         }
 
@@ -96,6 +102,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
             if (registry == null
                 || pawn == null
+                || !JusticeScenarioUtility.IsJusticeScenarioActive
                 || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
             {
                 return false;
@@ -129,14 +136,49 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (mechanicalConsciousnessHost != null)
             {
-                MechanoidMechanitorRoleUtility.EnsureRoleState(mechanicalConsciousnessHost);
+                if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(
+                        mechanicalConsciousnessHost))
+                {
+                    MechanoidMechanitorRoleUtility
+                        .PromoteToAcquiredMechanoidMechanitor(mechanicalConsciousnessHost);
+                }
+
+                MechanoidMechanitorRoleUtility.EnsureRoleState(
+                    mechanicalConsciousnessHost);
             }
+        }
+
+        private static bool PrepareHost(Pawn pawn, bool promoteIfNeeded)
+        {
+            if (pawn.Dead
+                || pawn.Destroyed
+                || !pawn.RaceProps.IsMechanoid
+                || pawn.Faction == null
+                || !pawn.Faction.IsPlayerSafe())
+            {
+                return false;
+            }
+
+            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            {
+                if (!promoteIfNeeded
+                    || !MechanoidMechanitorRoleUtility
+                        .PromoteToAcquiredMechanoidMechanitor(pawn))
+                {
+                    return false;
+                }
+            }
+
+            MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
+            return CanHostMechanicalConsciousness(pawn);
         }
 
         private void TryMigrateLegacyScenarioIdentity()
         {
             if (!JusticeScenarioUtility.IsJusticeScenarioActive)
             {
+                mechanicalConsciousnessHost = null;
+                scenarioProtagonist = null;
                 return;
             }
 
