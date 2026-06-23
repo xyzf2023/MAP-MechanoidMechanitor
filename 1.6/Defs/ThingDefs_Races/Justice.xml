@@ -18,6 +18,7 @@
       <EMPResistance>1.0</EMPResistance>
       <ArmorRating_Blunt>2.0</ArmorRating_Blunt>
       <ArmorRating_Sharp>2.0</ArmorRating_Sharp>
+      <PsychicSensitivity>1.0</PsychicSensitivity>
     </statBases>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
