@@ -56,11 +56,19 @@
 
         </skillLevels>
       </li>
+
+      <li Class="MAP_MechanoidMechanitor.CompProperties_HumanWeaponUser">
+        <allowEquipFloatMenu>true</allowEquipFloatMenu>
+        <allowDropEquipmentFloatMenu>true</allowDropEquipmentFloatMenu>
+        <ensureEquipmentTracker>true</ensureEquipmentTracker>
+      </li>
+
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechRestrictedWorkGiverUser">
         <allowedWorkTypes>
           <li>Research</li>
         </allowedWorkTypes>
       </li>
+      
       <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorTravelNode">
         <canLeadCaravan>true</canLeadCaravan>
         <canCollectCaravanItems>true</canCollectCaravanItems>
