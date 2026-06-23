@@ -2,4 +2,6 @@
 <LanguageData>
   <MAP_Ability_MechRecode.label>mech recoding</MAP_Ability_MechRecode.label>
   <MAP_Ability_MechRecode.description>Rewrite the low-level protocols of a non-player mechanoid corpse, changing the faction encoded in its inner pawn to the player faction. This process does not resurrect or repair the mechanoid and does not establish an overseer relation; subsequent handling is left to vanilla systems such as the mech gestator. On completion, the ability cooldown equals the target mechanoid's bandwidth cost multiplied by 18,000 ticks.</MAP_Ability_MechRecode.description>
+  <MAP_Ability_MechReconstruction.label>mech reconstruction</MAP_Ability_MechReconstruction.label>
+  <MAP_Ability_MechReconstruction.description>Justice repairs and restarts a friendly mechanoid corpse. The reconstructed mechanoid returns with 50% energy, all hediffs removed, and is assigned to Justice when control capacity permits. Cooldown: 4 days.</MAP_Ability_MechReconstruction.description>
 </LanguageData>
