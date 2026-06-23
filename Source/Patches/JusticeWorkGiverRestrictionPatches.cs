@@ -34,7 +34,7 @@ namespace MAP_MechanoidMechanitor
         private static bool CanBeDoneByMechsOrAuthorized(bool canBeDoneByMechs, Pawn pawn, WorkGiver workGiver)
         {
             return canBeDoneByMechs
-                || CompJusticeSelfWorkMode.GetFor(pawn) != null
+                || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
                 || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
         }
 
