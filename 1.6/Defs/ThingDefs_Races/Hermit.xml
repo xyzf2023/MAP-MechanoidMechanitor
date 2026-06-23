@@ -83,6 +83,8 @@
     <race>MAP_Mech_Hermit</race>
     <defaultFactionDef>PlayerColony</defaultFactionDef>
     <combatPower>150</combatPower>
+    <allowInMechClusters>false</allowInMechClusters>
+    <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
     <lifeStages>
       <li>
         <bodyGraphicData>
