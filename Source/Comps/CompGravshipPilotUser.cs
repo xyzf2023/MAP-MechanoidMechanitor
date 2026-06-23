@@ -20,12 +20,7 @@ namespace MAP_MechanoidMechanitor
 
         public static bool PawnCanUseGravshipPilotConsole(Pawn? pawn)
         {
-            if (pawn == null || pawn.Dead)
-            {
-                return false;
-            }
-
-            if (!ModsConfig.OdysseyActive)
+            if (pawn == null || pawn.Dead || !ModsConfig.OdysseyActive)
             {
                 return false;
             }
@@ -40,13 +35,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            CompGravshipPilotUser? comp = pawn.GetComp<CompGravshipPilotUser>();
-            if (comp == null)
-            {
-                return false;
-            }
-
-            return comp.Props.allowGravshipPilotConsole;
+            return MechanoidMechanitorRoleUtility.AllowsGravshipPilot(pawn);
         }
     }
 }
