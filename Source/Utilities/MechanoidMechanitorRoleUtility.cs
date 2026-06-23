@@ -75,12 +75,20 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsMechanicalConsciousnessHost(Pawn? pawn)
         {
-            return Scenarios.GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(pawn);
+            return Scenarios.GameComponent_MechanoidMechanitorRegistry
+                .IsMechanicalConsciousnessHost(pawn);
         }
 
         public static bool IsScenarioProtagonist(Pawn? pawn)
         {
-            return Scenarios.GameComponent_MechanoidMechanitorRegistry.IsScenarioProtagonist(pawn);
+            return Scenarios.GameComponent_MechanoidMechanitorRegistry
+                .IsScenarioProtagonist(pawn);
+        }
+
+        public static bool CanHostMechanicalConsciousness(Pawn? pawn)
+        {
+            return Scenarios.GameComponent_MechanoidMechanitorRegistry
+                .CanHostMechanicalConsciousness(pawn);
         }
 
         public static MechanoidMechanitorIdentity GetIdentity(Pawn? pawn)
@@ -123,12 +131,13 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (pawn.health?.hediffSet == null)
+            if (pawn.health?.hediffSet == null
+                || IsNativeMechanoidMechanitor(pawn))
             {
                 return false;
             }
 
-            return !IsNativeMechanoidMechanitor(pawn);
+            return pawn.Faction == null || pawn.Faction.IsPlayerSafe();
         }
 
         public static bool PromoteToAcquiredMechanoidMechanitor(Pawn pawn)
@@ -154,7 +163,9 @@ namespace MAP_MechanoidMechanitor
                 HediffDef? def = GetAcquiredIdentityDef();
                 if (def == null)
                 {
-                    Log.Error("[MAP_MechanoidMechanitor] Cannot promote pawn: acquired mechanitor HediffDef is missing.");
+                    Log.Error(
+                        "[MAP_MechanoidMechanitor] Cannot promote pawn: " +
+                        "acquired mechanitor HediffDef is missing.");
                     return false;
                 }
 
@@ -182,43 +193,27 @@ namespace MAP_MechanoidMechanitor
                 pawn.SetFactionDirect(Faction.OfPlayer);
             }
 
-            if (pawn.relations == null)
-            {
-                pawn.relations = new Pawn_RelationsTracker(pawn);
-            }
-
+            pawn.relations ??= new Pawn_RelationsTracker(pawn);
             MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
+            pawn.equipment ??= new Pawn_EquipmentTracker(pawn);
+            pawn.interactions ??= new Pawn_InteractionsTracker(pawn);
+            pawn.guest ??= new Pawn_GuestTracker(pawn);
+            pawn.genes ??= new Pawn_GeneTracker(pawn);
+            pawn.skills ??= new Pawn_SkillTracker(pawn);
 
-            if (pawn.equipment == null)
+            if (IsAcquiredMechanoidMechanitor(pawn))
             {
-                pawn.equipment = new Pawn_EquipmentTracker(pawn);
-            }
-
-            if (pawn.interactions == null)
-            {
-                pawn.interactions = new Pawn_InteractionsTracker(pawn);
-            }
-
-            if (pawn.guest == null)
-            {
-                pawn.guest = new Pawn_GuestTracker(pawn);
-            }
-
-            if (pawn.genes == null)
-            {
-                pawn.genes = new Pawn_GeneTracker(pawn);
-            }
-
-            if (pawn.skills == null)
-            {
-                pawn.skills = new Pawn_SkillTracker(pawn);
+                pawn.story ??= new Pawn_StoryTracker(pawn);
+                pawn.story.bodyType ??= BodyTypeDefOf.Male;
             }
 
             EnsureAcquiredSkillProfile(pawn);
             EnsureWorkSettings(pawn);
             EnsureRoleAbilities(pawn);
 
-            PawnComponentsUtility.AddAndRemoveDynamicComponents(pawn, actAsIfSpawned: true);
+            PawnComponentsUtility.AddAndRemoveDynamicComponents(
+                pawn,
+                actAsIfSpawned: true);
             pawn.mechanitor?.Notify_BandwidthChanged();
         }
 
@@ -229,7 +224,9 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            return CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? comp)
+            return CompMAPMechanitorNode.TryGetNodeComp(
+                    pawn,
+                    out CompMAPMechanitorNode? comp)
                 && comp?.NodeProps?.controlBackend == MAPMechanitorControlBackend.Vanilla;
         }
 
@@ -240,22 +237,28 @@ namespace MAP_MechanoidMechanitor
                 return !IsMechanicalConsciousnessHost(pawn);
             }
 
-            return CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? comp)
+            return CompMAPMechanitorNode.TryGetNodeComp(
+                    pawn,
+                    out CompMAPMechanitorNode? comp)
                 && comp?.NodeProps?.requiresExternalOverseer == true;
         }
 
         public static int GetExtraMechBandwidth(Pawn? pawn)
         {
-            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? nativeComp)
-                && nativeComp != null)
-            {
-                return nativeComp.CurrentIntrinsicBandwidth;
-            }
-
-            if (TryGetAcquiredIdentityComp(pawn, out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
+            if (TryGetAcquiredIdentityComp(
+                    pawn,
+                    out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
                 && acquiredComp != null)
             {
                 return acquiredComp.CurrentIntrinsicBandwidth;
+            }
+
+            if (CompMAPMechanitorNode.TryGetNodeComp(
+                    pawn,
+                    out CompMAPMechanitorNode? nativeComp)
+                && nativeComp != null)
+            {
+                return nativeComp.CurrentIntrinsicBandwidth;
             }
 
             return 0;
@@ -263,54 +266,75 @@ namespace MAP_MechanoidMechanitor
 
         public static int GetExtraMechControlGroups(Pawn? pawn)
         {
-            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? nativeComp)
+            if (IsAcquiredMechanoidMechanitor(pawn))
+            {
+                return AcquiredExtraControlGroups;
+            }
+
+            if (CompMAPMechanitorNode.TryGetNodeComp(
+                    pawn,
+                    out CompMAPMechanitorNode? nativeComp)
                 && nativeComp?.NodeProps != null)
             {
                 return nativeComp.NodeProps.extraMechControlGroups;
             }
 
-            return IsAcquiredMechanoidMechanitor(pawn)
-                ? AcquiredExtraControlGroups
-                : 0;
+            return 0;
         }
 
         public static bool AllowsBossChipBandwidthUpgrade(Pawn? pawn)
         {
-            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? nativeComp)
+            if (IsAcquiredMechanoidMechanitor(pawn))
+            {
+                return true;
+            }
+
+            if (CompMAPMechanitorNode.TryGetNodeComp(
+                    pawn,
+                    out CompMAPMechanitorNode? nativeComp)
                 && nativeComp?.NodeProps != null)
             {
                 return nativeComp.NodeProps.allowBossChipBandwidthUpgrade
                     && nativeComp.NodeProps.maxIntrinsicBandwidth > 0;
             }
 
-            return IsAcquiredMechanoidMechanitor(pawn);
+            return false;
         }
 
         public static int GetMaxIntrinsicBandwidth(Pawn? pawn)
         {
-            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? nativeComp)
+            if (IsAcquiredMechanoidMechanitor(pawn))
+            {
+                return AcquiredMaxIntrinsicBandwidth;
+            }
+
+            if (CompMAPMechanitorNode.TryGetNodeComp(
+                    pawn,
+                    out CompMAPMechanitorNode? nativeComp)
                 && nativeComp != null)
             {
                 return nativeComp.MaxIntrinsicBandwidth;
             }
 
-            return IsAcquiredMechanoidMechanitor(pawn)
-                ? AcquiredMaxIntrinsicBandwidth
-                : 0;
+            return 0;
         }
 
         public static int GetRemainingIntrinsicBandwidth(Pawn? pawn)
         {
-            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? nativeComp)
-                && nativeComp != null)
-            {
-                return nativeComp.RemainingIntrinsicBandwidth;
-            }
-
-            if (TryGetAcquiredIdentityComp(pawn, out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
+            if (TryGetAcquiredIdentityComp(
+                    pawn,
+                    out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
                 && acquiredComp != null)
             {
                 return acquiredComp.RemainingIntrinsicBandwidth;
+            }
+
+            if (CompMAPMechanitorNode.TryGetNodeComp(
+                    pawn,
+                    out CompMAPMechanitorNode? nativeComp)
+                && nativeComp != null)
+            {
+                return nativeComp.RemainingIntrinsicBandwidth;
             }
 
             return 0;
@@ -318,16 +342,20 @@ namespace MAP_MechanoidMechanitor
 
         public static int AddChipBandwidth(Pawn? pawn, int requestedAmount)
         {
-            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? nativeComp)
-                && nativeComp != null)
-            {
-                return nativeComp.AddChipBandwidth(requestedAmount);
-            }
-
-            if (TryGetAcquiredIdentityComp(pawn, out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
+            if (TryGetAcquiredIdentityComp(
+                    pawn,
+                    out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
                 && acquiredComp != null)
             {
                 return acquiredComp.AddChipBandwidth(requestedAmount);
+            }
+
+            if (CompMAPMechanitorNode.TryGetNodeComp(
+                    pawn,
+                    out CompMAPMechanitorNode? nativeComp)
+                && nativeComp != null)
+            {
+                return nativeComp.AddChipBandwidth(requestedAmount);
             }
 
             return 0;
@@ -351,7 +379,8 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            CompColonistLikeFloatMenuUser? comp = pawn?.GetComp<CompColonistLikeFloatMenuUser>();
+            CompColonistLikeFloatMenuUser? comp =
+                pawn?.GetComp<CompColonistLikeFloatMenuUser>();
             return comp != null && comp.Props.allowColonistLikeFloatMenu;
         }
 
@@ -384,13 +413,15 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            CompPsychicRitualParticipantUser? comp = pawn?.GetComp<CompPsychicRitualParticipantUser>();
+            CompPsychicRitualParticipantUser? comp =
+                pawn?.GetComp<CompPsychicRitualParticipantUser>();
             return comp != null && comp.Props.allowPsychicRituals;
         }
 
         public static bool IsRoleWorkType(WorkTypeDef? workType)
         {
-            return workType != null && roleWorkTypeDefNames.Contains(workType.defName);
+            return workType != null
+                && roleWorkTypeDefNames.Contains(workType.defName);
         }
 
         public static List<WorkTypeDef> GetRoleWorkTypes()
@@ -436,11 +467,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void EnsureWorkSettings(Pawn pawn)
         {
-            if (pawn.workSettings == null)
-            {
-                pawn.workSettings = new Pawn_WorkSettings(pawn);
-            }
-
+            pawn.workSettings ??= new Pawn_WorkSettings(pawn);
             if (!pawn.workSettings.Initialized)
             {
                 pawn.workSettings.EnableAndInitialize();
@@ -451,15 +478,13 @@ namespace MAP_MechanoidMechanitor
 
         private static void EnsureRoleAbilities(Pawn pawn)
         {
-            if (pawn.abilities == null)
-            {
-                pawn.abilities = new Pawn_AbilityTracker(pawn);
-            }
+            pawn.abilities ??= new Pawn_AbilityTracker(pawn);
 
             mechRecodeAbilityDef ??=
                 DefDatabase<AbilityDef>.GetNamedSilentFail(MechRecodeAbilityDefName);
             mechReconstructionAbilityDef ??=
-                DefDatabase<AbilityDef>.GetNamedSilentFail(MechReconstructionAbilityDefName);
+                DefDatabase<AbilityDef>.GetNamedSilentFail(
+                    MechReconstructionAbilityDefName);
 
             if (mechRecodeAbilityDef != null)
             {
