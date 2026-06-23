@@ -18,6 +18,8 @@
     <selectionWeight>0</selectionWeight>
     <summaryPriority>100</summaryPriority>
     <maxUses>1</maxUses>
+    <canBeRandomlyAdded>false</canBeRandomlyAdded>
+    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
   </ScenPartDef>
 
   <ScenarioDef ParentName="ScenarioBase">
