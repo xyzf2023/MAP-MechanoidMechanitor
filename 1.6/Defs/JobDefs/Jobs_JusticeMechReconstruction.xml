@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef ParentName="CastAbilityOnThing">
+    <defName>MAP_Job_MechReconstruction</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_MechReconstruction</driverClass>
+    <neverShowWeapon>true</neverShowWeapon>
+    <playerInterruptible>true</playerInterruptible>
+  </JobDef>
+</Defs>
