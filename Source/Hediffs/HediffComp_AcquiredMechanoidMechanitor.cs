@@ -116,6 +116,15 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (Pawn.story == null)
+            {
+                Pawn.story = new Pawn_StoryTracker(Pawn);
+            }
+            if (Pawn.story.bodyType == null)
+            {
+                Pawn.story.bodyType = BodyTypeDefOf.Male;
+            }
+
             MechanoidMechanitorRoleUtility.EnsureRoleState(Pawn);
             MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
                 Pawn,
