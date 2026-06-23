@@ -13,7 +13,9 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!CompMAPMechanitorTravelNode.TryGetTravelNodeComp(pawn, out CompMAPMechanitorTravelNode? comp)
+            if (!CompMAPMechanitorTravelNode.TryGetTravelNodeComp(
+                    pawn,
+                    out CompMAPMechanitorTravelNode? comp)
                 || comp?.TravelProps == null)
             {
                 return false;
@@ -30,12 +32,13 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!TryGetTravelProps(pawn, out CompProperties_MAPMechanitorTravelNode? props) || props == null)
+            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
             {
-                return false;
+                return true;
             }
 
-            return props.canLeadCaravan;
+            return TryGetTravelProps(pawn, out CompProperties_MAPMechanitorTravelNode? props)
+                && props?.canLeadCaravan == true;
         }
 
         public static bool CanCollectCaravanItems(Pawn? pawn)
@@ -55,12 +58,13 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!TryGetTravelProps(pawn, out CompProperties_MAPMechanitorTravelNode? props) || props == null)
+            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
             {
-                return false;
+                return true;
             }
 
-            return props.canCollectCaravanItems;
+            return TryGetTravelProps(pawn, out CompProperties_MAPMechanitorTravelNode? props)
+                && props?.canCollectCaravanItems == true;
         }
 
         public static bool ShouldRefreshTrackersOnTransporterArrival(Pawn? pawn)
@@ -70,12 +74,13 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!TryGetTravelProps(pawn, out CompProperties_MAPMechanitorTravelNode? props) || props == null)
+            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
             {
-                return false;
+                return true;
             }
 
-            return props.refreshTrackersOnTransporterArrival;
+            return TryGetTravelProps(pawn, out CompProperties_MAPMechanitorTravelNode? props)
+                && props?.refreshTrackersOnTransporterArrival == true;
         }
 
         public static bool ShouldBlockCampMapRemoval(Pawn? pawn)
@@ -90,17 +95,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!PassesTravelPawnBasics(pawn))
-            {
-                return false;
-            }
-
-            if (!TryGetTravelProps(pawn, out CompProperties_MAPMechanitorTravelNode? props) || props == null)
-            {
-                return false;
-            }
-
-            return props.canLeadCaravan;
+            return CanLeadCaravan(pawn);
         }
 
         private static bool PassesTravelPawnBasics(Pawn? pawn)
