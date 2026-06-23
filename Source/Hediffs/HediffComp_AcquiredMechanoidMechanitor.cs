@@ -74,6 +74,13 @@ namespace MAP_MechanoidMechanitor
             EnsureState();
         }
 
+        public override void CompPostPostRemoved()
+        {
+            base.CompPostPostRemoved();
+            Pawn?.Notify_DisabledWorkTypesChanged();
+            Pawn?.mechanitor?.Notify_BandwidthChanged();
+        }
+
         public override void Notify_Spawned()
         {
             base.Notify_Spawned();
