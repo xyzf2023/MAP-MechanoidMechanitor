@@ -41,29 +41,10 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (pawn.equipment != null)
+            if (pawn.equipment == null)
             {
-                return;
+                pawn.equipment = new Pawn_EquipmentTracker(pawn);
             }
-
-            pawn.equipment = new Pawn_EquipmentTracker(pawn);
-
-            if (Prefs.DevMode)
-            {
-                Log.Message($"[MAP] Created equipment tracker for human weapon user: pawn={SafePawnDebugName(pawn)}");
-            }
-        }
-
-        private static string SafePawnDebugName(Pawn? pawn)
-        {
-            if (pawn == null)
-            {
-                return "null";
-            }
-
-            string defName = pawn.def?.defName ?? "nullDef";
-            string kindDefName = pawn.kindDef?.defName ?? "nullKind";
-            return $"{defName}/{kindDefName}";
         }
 
         public static bool PawnCanUseHumanWeapons(Pawn? pawn)
@@ -78,28 +59,39 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
+            {
+                pawn.equipment ??= new Pawn_EquipmentTracker(pawn);
+                return true;
+            }
+
             CompHumanWeaponUser? comp = pawn.GetComp<CompHumanWeaponUser>();
             if (comp == null)
             {
                 return false;
             }
 
-            if (pawn.equipment != null)
-            {
-                return true;
-            }
-
-            return comp.Props.ensureEquipmentTracker;
+            return pawn.equipment != null || comp.Props.ensureEquipmentTracker;
         }
 
         public static bool PawnAllowsEquipFloatMenu(Pawn? pawn)
         {
+            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
+            {
+                return true;
+            }
+
             CompHumanWeaponUser? comp = pawn?.GetComp<CompHumanWeaponUser>();
             return comp != null && comp.Props.allowEquipFloatMenu;
         }
 
         public static bool PawnAllowsDropEquipmentFloatMenu(Pawn? pawn)
         {
+            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
+            {
+                return true;
+            }
+
             CompHumanWeaponUser? comp = pawn?.GetComp<CompHumanWeaponUser>();
             return comp != null && comp.Props.allowDropEquipmentFloatMenu;
         }
