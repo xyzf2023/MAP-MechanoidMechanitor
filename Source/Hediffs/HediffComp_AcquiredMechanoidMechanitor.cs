@@ -15,6 +15,7 @@ namespace MAP_MechanoidMechanitor
     {
         private int chipBandwidthBonus;
         private MechWorkModeDef? selfWorkMode;
+        private bool roleWorkSettingsInitialized;
 
         public int ChipBandwidthBonus => chipBandwidthBonus;
 
@@ -92,6 +93,10 @@ namespace MAP_MechanoidMechanitor
             base.CompExposeData();
             Scribe_Values.Look(ref chipBandwidthBonus, "acquiredMechanitorChipBandwidthBonus", 0);
             Scribe_Defs.Look(ref selfWorkMode, "acquiredMechanitorSelfWorkMode");
+            Scribe_Values.Look(
+                ref roleWorkSettingsInitialized,
+                "acquiredMechanitorRoleWorkSettingsInitialized",
+                false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -114,6 +119,7 @@ namespace MAP_MechanoidMechanitor
 
             chipBandwidthBonus = source.chipBandwidthBonus;
             selfWorkMode = source.selfWorkMode;
+            roleWorkSettingsInitialized = source.roleWorkSettingsInitialized;
         }
 
         private void EnsureState()
@@ -134,9 +140,30 @@ namespace MAP_MechanoidMechanitor
 
             Pawn.Notify_DisabledWorkTypesChanged();
             MechanoidMechanitorRoleUtility.EnsureRoleState(Pawn);
+            InitializeRoleWorkSettingsIfNeeded();
             MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
                 Pawn,
                 CurrentSelfWorkMode);
+        }
+
+        private void InitializeRoleWorkSettingsIfNeeded()
+        {
+            if (roleWorkSettingsInitialized || Pawn.workSettings == null)
+            {
+                return;
+            }
+
+            foreach (WorkTypeDef workType in
+                     MechanoidMechanitorRoleUtility.GetRoleWorkTypes())
+            {
+                if (!Pawn.WorkTypeIsDisabled(workType)
+                    && Pawn.workSettings.GetPriority(workType) == 0)
+                {
+                    Pawn.workSettings.SetPriority(workType, 3);
+                }
+            }
+
+            roleWorkSettingsInitialized = true;
         }
     }
 }
