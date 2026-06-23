@@ -38,4 +38,48 @@
       </li>
     </comps>
   </AbilityDef>
+
+  <AbilityDef>
+    <defName>MAP_Ability_MechReconstruction</defName>
+    <label>机体重构</label>
+    <description>「正义」将尝试修复友方机械体尸体的全部损伤并将其重新启动。重构完成后，机械体恢复至50%能量，并在可监管时交由「正义」控制。冷却时间：4天。</description>
+    <iconPath>UI/Abilities/MechResurrection</iconPath>
+    <cooldownTicksRange>240000~240000</cooldownTicksRange>
+    <warmupStartSound>MechResurrect_Warmup</warmupStartSound>
+    <warmupEffecter>ApocrionAoeWarmup</warmupEffecter>
+    <useAverageTargetPositionForWarmupEffecter>true</useAverageTargetPositionForWarmupEffecter>
+    <jobDef>MAP_Job_MechReconstruction</jobDef>
+    <canUseAoeToGetTargets>false</canUseAoeToGetTargets>
+    <hostile>false</hostile>
+    <casterMustBeCapableOfViolence>false</casterMustBeCapableOfViolence>
+    <displayGizmoWhileUndrafted>true</displayGizmoWhileUndrafted>
+    <disableGizmoWhileUndrafted>false</disableGizmoWhileUndrafted>
+    <verbProperties>
+      <verbClass>Verb_CastAbility</verbClass>
+      <drawAimPie>false</drawAimPie>
+      <range>999</range>
+      <warmupTime>2</warmupTime>
+      <soundCast>MechResurrect_Cast</soundCast>
+      <requireLineOfSight>false</requireLineOfSight>
+      <targetParams>
+        <canTargetLocations>false</canTargetLocations>
+        <canTargetSelf>false</canTargetSelf>
+        <canTargetPawns>false</canTargetPawns>
+        <canTargetBuildings>false</canTargetBuildings>
+        <canTargetItems>false</canTargetItems>
+        <canTargetCorpses>true</canTargetCorpses>
+        <onlyTargetCorpses>true</onlyTargetCorpses>
+        <canTargetAnimals>false</canTargetAnimals>
+        <canTargetHumans>false</canTargetHumans>
+        <canTargetMechs>true</canTargetMechs>
+      </targetParams>
+    </verbProperties>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AbilityMechReconstruction">
+        <invalidTargetMessageKey>MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget</invalidTargetMessageKey>
+        <reconstructionDurationTicks>900</reconstructionDurationTicks>
+        <appliedEffecterDef>MechResurrected</appliedEffecterDef>
+      </li>
+    </comps>
+  </AbilityDef>
 </Defs>
