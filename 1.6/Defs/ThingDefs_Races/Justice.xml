@@ -176,6 +176,7 @@
     <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
     <abilities>
       <li>MAP_Ability_MechRecode</li>
+      <li>MAP_Ability_MechReconstruction</li>
     </abilities>
     <fixedChildBackstories>
       <li>MAP_Justice_Childhood</li>
