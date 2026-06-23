@@ -1,4 +1,3 @@
-using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -11,54 +10,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MapPawns mapPawns,
             bool requireSpawned)
         {
-            if (!GameComponent_JusticeScenarioState.IsEnabled)
+            if (!GameComponent_JusticeScenarioState.IsEnabled || pawn == null)
             {
                 return false;
             }
 
-            if (pawn == null)
+            if (!JusticeScenarioUtility.IsScenarioProtagonist(pawn)
+                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
             {
                 return false;
             }
 
-            if (!CompFreeColonistEquivalentUser.IsOptedIn(pawn))
-            {
-                return false;
-            }
-
-            if (pawn.Faction != Faction.OfPlayer)
-            {
-                return false;
-            }
-
-            if (pawn.Dead)
-            {
-                return false;
-            }
-
-            if (pawn.HostFaction != null)
-            {
-                return false;
-            }
-
-            if (pawn.IsPrisoner)
-            {
-                return false;
-            }
-
-            if (pawn.Destroyed)
+            if (pawn.Faction != Faction.OfPlayer
+                || pawn.Dead
+                || pawn.HostFaction != null
+                || pawn.IsPrisoner
+                || pawn.Destroyed)
             {
                 return false;
             }
 
             if (requireSpawned)
             {
-                if (!pawn.Spawned)
-                {
-                    return false;
-                }
-
-                if (pawn.Map == null)
+                if (!pawn.Spawned || pawn.Map == null)
                 {
                     return false;
                 }
