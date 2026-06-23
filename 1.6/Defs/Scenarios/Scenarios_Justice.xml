@@ -1,102 +1,107 @@
-<?xml version="1.0" encoding="utf-8" ?> <!-- XML 声明 -->
-<Defs> <!-- 定义根节点 -->
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ScenPartDef>
+    <defName>MAP_JusticeScenario</defName>
+    <label>正义剧本规则</label>
+    <category>Fixed</category>
+    <scenPartClass>MAP_MechanoidMechanitor.Scenarios.ScenPart_JusticeScenario</scenPartClass>
+    <maxUses>1</maxUses>
+    <canBeRandomlyAdded>false</canBeRandomlyAdded>
+    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
+  </ScenPartDef>
 
-  <ScenPartDef> <!-- 剧本部件定义 -->
-    <defName>MAP_JusticeScenario</defName> <!-- 内部名称：正义剧本规则 -->
-    <label>正义剧本规则</label> <!-- 显示名称 -->
-    <category>Fixed</category> <!-- 类别：固定部件 -->
-    <scenPartClass>MAP_MechanoidMechanitor.Scenarios.ScenPart_JusticeScenario</scenPartClass> <!-- 对应 C# 类 -->
-    <maxUses>1</maxUses> <!-- 最多使用次数 -->
-    <canBeRandomlyAdded>false</canBeRandomlyAdded> <!-- 不可随机添加 -->
-    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved> <!-- 玩家不可增删 -->
-  </ScenPartDef> <!-- 剧本部件定义结束 -->
+  <ScenPartDef>
+    <defName>MAP_MechanoidMechanitorStart</defName>
+    <label>机械族机械师</label>
+    <scenPartClass>MAP_MechanoidMechanitor.Scenarios.ScenPart_MechanoidMechanitor</scenPartClass>
+    <category>StartingImportant</category>
+    <selectionWeight>0</selectionWeight>
+    <summaryPriority>100</summaryPriority>
+    <maxUses>1</maxUses>
+  </ScenPartDef>
 
-  <ScenarioDef ParentName="ScenarioBase"> <!-- 剧本定义，继承 ScenarioBase -->
-    <defName>MAP_JusticeMechanitor</defName> <!-- 内部名称：机械族机械师专属剧本 -->
-    <label>机械族机械师</label> <!-- 剧本显示名称 -->
-    <description>TODO</description> <!-- 剧本描述（待填写） -->
-    <scenario> <!-- 剧本内容 -->
-      <summary>TODO</summary> <!-- 剧本摘要 -->
-      <parts> <!-- 剧本部件列表 -->
+  <ScenarioDef ParentName="ScenarioBase">
+    <defName>MAP_JusticeMechanitor</defName>
+    <label>机械族机械师</label>
+    <description>TODO</description>
+    <scenario>
+      <summary>TODO</summary>
+      <parts>
+        <li Class="ScenPart_GameStartDialog">
+          <def>GameStartDialog</def>
+          <text>You knew you could only achieve greatness with help. People were too unreliable, so you chose to take on mechanoids as your servants, workers, and warriors.\n\nAs you gained strength, others became fearful. It became clear you needed to get away from the influence of humanity.\n\nNow you've migrated to this sparsely-populated rimworld with some of your metallic helpers. Finally, you have the space to grasp your true potential!</text>
+          <closeSound>GameStartSting</closeSound>
+        </li>
 
-        <li Class="ScenPart_GameStartDialog"> <!-- 开局对话部件 -->
-          <def>GameStartDialog</def> <!-- 引用开局对话 ScenPartDef -->
-          <text>You knew you could only achieve greatness with help. People were too unreliable, so you chose to take on mechanoids as your servants, workers, and warriors.\n\nAs you gained strength, others became fearful. It became clear you needed to get away from the influence of humanity.\n\nNow you've migrated to this sparsely-populated rimworld with some of your metallic helpers. Finally, you have the space to grasp your true potential!</text> <!-- 开局对话正文（暂用原版英文） -->
-          <closeSound>GameStartSting</closeSound> <!-- 关闭对话时播放的音效 -->
-        </li> <!-- 开局对话部件结束 -->
+        <li Class="MAP_MechanoidMechanitor.Scenarios.ScenPart_JusticeScenario">
+          <def>MAP_JusticeScenario</def>
+          <visible>false</visible>
+        </li>
 
-        <li Class="MAP_MechanoidMechanitor.Scenarios.ScenPart_JusticeScenario"> <!-- 正义专属剧本隐藏标记 -->
-          <def>MAP_JusticeScenario</def> 
-          <visible>false</visible> <!-- 不在剧本摘要中显示 -->
-        </li> <!-- 正义专属剧本标记结束 -->
+        <li Class="ScenPart_PlayerPawnsArriveMethod">
+          <def>PlayerPawnsArriveMethod</def>
+          <visible>false</visible>
+          <method>DropPods</method>
+        </li>
 
-        <li Class="ScenPart_PlayerPawnsArriveMethod"> <!-- 玩家抵达方式 -->
-          <def>PlayerPawnsArriveMethod</def> <!-- 引用抵达方式 ScenPartDef -->
-          <visible>false</visible> <!-- 不在剧本摘要中显示 -->
-          <method>DropPods</method> <!-- 抵达方式：空投舱 -->
-        </li> <!-- 玩家抵达方式结束 -->
+        <li Class="ScenPart_StartingResearch">
+          <def>StartingResearch</def>
+          <project>MicroelectronicsBasics</project>
+        </li>
+        <li Class="ScenPart_StartingResearch">
+          <def>StartingResearch</def>
+          <project>BasicMechtech</project>
+        </li>
+        <li Class="ScenPart_StartingResearch">
+          <def>StartingResearch</def>
+          <project>Batteries</project>
+        </li>
 
-        <li Class="ScenPart_StartingResearch"> <!-- 起始研究：微电子基础 -->
-          <def>StartingResearch</def> <!-- 引用起始研究 ScenPartDef -->
-          <project>MicroelectronicsBasics</project> <!-- 研究项目：微电子基础 -->
-        </li> <!-- 起始研究结束 -->
-        <li Class="ScenPart_StartingResearch"> <!-- 起始研究：基础机械科技 -->
-          <def>StartingResearch</def> <!-- 引用起始研究 ScenPartDef -->
-          <project>BasicMechtech</project> <!-- 研究项目：基础机械科技 -->
-        </li> <!-- 起始研究结束 -->
-        <li Class="ScenPart_StartingResearch"> <!-- 起始研究：电池 -->
-          <def>StartingResearch</def> <!-- 引用起始研究 ScenPartDef -->
-          <project>Batteries</project> <!-- 研究项目：电池 -->
-        </li> <!-- 起始研究结束 -->
+        <li Class="MAP_MechanoidMechanitor.Scenarios.ScenPart_MechanoidMechanitor">
+          <def>MAP_MechanoidMechanitorStart</def>
+          <mechKind>MAP_Mech_Justice</mechKind>
+        </li>
+        <li Class="ScenPart_StartingMech">
+          <def>StartingMech</def>
+          <mechKind>Mech_Lifter</mechKind>
+          <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance>
+        </li>
+        <li Class="ScenPart_StartingMech">
+          <def>StartingMech</def>
+          <mechKind>Mech_Constructoid</mechKind>
+          <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance>
+        </li>
 
-        <li Class="ScenPart_StartingMech"> <!-- 起始机械体：正义 -->
-          <def>StartingMech</def> <!-- 引用起始机械体 ScenPartDef -->
-          <mechKind>MAP_Mech_Justice</mechKind> <!-- 机械体种类：正义 -->
-          <overseenByPlayerPawnChance>0</overseenByPlayerPawnChance> <!-- 不由人类开局角色监管（由 C# 补丁绑定给正义） -->
-        </li> <!-- 起始机械体结束 -->
-        <li Class="ScenPart_StartingMech"> <!-- 起始机械体：搬运工 -->
-          <def>StartingMech</def> <!-- 引用起始机械体 ScenPartDef -->
-          <mechKind>Mech_Lifter</mechKind> <!-- 机械体种类：搬运工 -->
-          <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance> <!-- 原版监管概率（零人类开局时由 C# 补丁重绑给正义） -->
-        </li> <!-- 起始机械体结束 -->
-        <li Class="ScenPart_StartingMech"> <!-- 起始机械体：建造工 -->
-          <def>StartingMech</def> <!-- 引用起始机械体 ScenPartDef -->
-          <mechKind>Mech_Constructoid</mechKind> <!-- 机械体种类：建造工 -->
-          <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance> <!-- 原版监管概率（零人类开局时由 C# 补丁重绑给正义） -->
-        </li> <!-- 起始机械体结束 -->
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Silver</thingDef>
+          <count>1000</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>ComponentIndustrial</thingDef>
+          <count>55</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Steel</thingDef>
+          <count>900</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>Plasteel</thingDef>
+          <count>100</count>
+        </li>
+        <li Class="ScenPart_StartingThing_Defined">
+          <def>StartingThing_Defined</def>
+          <thingDef>SubcoreBasic</thingDef>
+          <count>5</count>
+        </li>
 
-        <li Class="ScenPart_StartingThing_Defined"> <!-- 起始物资：白银 -->
-          <def>StartingThing_Defined</def> <!-- 引用起始物资 ScenPartDef -->
-          <thingDef>Silver</thingDef> <!-- 物品：白银 -->
-          <count>1000</count> <!-- 数量：1000 -->
-        </li> <!-- 起始物资结束 -->
-        <li Class="ScenPart_StartingThing_Defined"> <!-- 起始物资：零部件 -->
-          <def>StartingThing_Defined</def> <!-- 引用起始物资 ScenPartDef -->
-          <thingDef>ComponentIndustrial</thingDef> <!-- 物品：零部件 -->
-          <count>55</count> <!-- 数量：55 -->
-        </li> <!-- 起始物资结束 -->
-        <li Class="ScenPart_StartingThing_Defined"> <!-- 起始物资：钢铁 -->
-          <def>StartingThing_Defined</def> <!-- 引用起始物资 ScenPartDef -->
-          <thingDef>Steel</thingDef> <!-- 物品：钢铁 -->
-          <count>900</count> <!-- 数量：900 -->
-        </li> <!-- 起始物资结束 -->
-        <li Class="ScenPart_StartingThing_Defined"> <!-- 起始物资：塑钢 -->
-          <def>StartingThing_Defined</def> <!-- 引用起始物资 ScenPartDef -->
-          <thingDef>Plasteel</thingDef> <!-- 物品：塑钢 -->
-          <count>100</count> <!-- 数量：100 -->
-        </li> <!-- 起始物资结束 -->
-        <li Class="ScenPart_StartingThing_Defined"> <!-- 起始物资：基础子核心 -->
-          <def>StartingThing_Defined</def> <!-- 引用起始物资 ScenPartDef -->
-          <thingDef>SubcoreBasic</thingDef> <!-- 物品：基础子核心 -->
-          <count>5</count> <!-- 数量：5 -->
-        </li> <!-- 起始物资结束 -->
-
-        <li Class="ScenPart_DisableMapGen"> <!-- 禁用地图生成：远古机甲残骸 -->
-          <def>DisableExostriderRemains</def> <!-- 引用禁用地图生成 ScenPartDef -->
-        </li> <!-- 禁用地图生成结束 -->
-
-      </parts> <!-- 剧本部件列表结束 -->
-    </scenario> <!-- 剧本内容结束 -->
-  </ScenarioDef> <!-- 剧本定义结束 -->
-
-</Defs> <!-- 定义根节点结束 -->
+        <li Class="ScenPart_DisableMapGen">
+          <def>DisableExostriderRemains</def>
+        </li>
+      </parts>
+    </scenario>
+  </ScenarioDef>
+</Defs>
