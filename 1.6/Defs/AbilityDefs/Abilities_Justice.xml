@@ -3,7 +3,7 @@
   <AbilityDef>
     <defName>MAP_Ability_MechRecode</defName>
     <label>机体再编码</label>
-    <description>TODO</description>
+    <description>「正义」将尝试修改敌方机械体尸体的敌我识别系统，使该机械体尸体的阵营变成我方。仅可选择敌方机械体尸体作为目标。</description>
     <iconPath>UI/Abilities/MechResurrection</iconPath>
     <jobDef>MAP_Job_MechRecode</jobDef>
     <hasExternallyHandledCooldown>true</hasExternallyHandledCooldown>
@@ -42,7 +42,7 @@
   <AbilityDef>
     <defName>MAP_Ability_MechReconstruction</defName>
     <label>机体重构</label>
-    <description>「正义」将尝试修复友方机械体尸体的全部损伤并将其重新启动。重构完成后，机械体恢复至50%能量，并在可监管时交由「正义」控制。冷却时间：4天。</description>
+    <description>「正义」将尝试修复友方机械体尸体的全部损伤并将其重新启动。</description>
     <iconPath>UI/Abilities/MechResurrection</iconPath>
     <cooldownTicksRange>240000~240000</cooldownTicksRange>
     <warmupStartSound>MechResurrect_Warmup</warmupStartSound>
