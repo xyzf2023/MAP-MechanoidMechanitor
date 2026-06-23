@@ -32,26 +32,19 @@ namespace MAP_MechanoidMechanitor
                 || !Chip.Spawned
                 || Chip.IsForbidden(pawn));
 
-            AddFailCondition(() => !JusticeBossChipBandwidthUtility.TryGetUpgradeNode(pawn, out _));
+            AddFailCondition(() =>
+                !JusticeBossChipBandwidthUtility.CanUpgradeBandwidth(pawn));
 
             AddFailCondition(() =>
                 Chip?.def == null
                 || !JusticeBossChipBandwidthUtility.TryGetBandwidthPerChip(Chip.def, out _));
 
             AddFailCondition(() =>
-            {
-                if (!JusticeBossChipBandwidthUtility.TryGetUpgradeNode(pawn, out CompMAPMechanitorNode nodeComp))
-                {
-                    return true;
-                }
-
-                return nodeComp.RemainingIntrinsicBandwidth <= 0;
-            });
+                JusticeBossChipBandwidthUtility.GetRemainingIntrinsicBandwidth(pawn) <= 0);
 
             yield return Toils_Reserve.Reserve(
                 TargetIndex.A,
                 stackCount: job.count > 0 ? job.count : 1);
-
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
 
             Toil wait = Toils_General.Wait(UseDurationTicks, TargetIndex.A);
@@ -81,17 +74,15 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!JusticeBossChipBandwidthUtility.TryGetBandwidthPerChip(chip.def, out int bandwidthPerChip))
+            if (!JusticeBossChipBandwidthUtility.TryGetBandwidthPerChip(
+                    chip.def,
+                    out int bandwidthPerChip))
             {
                 return;
             }
 
-            if (!JusticeBossChipBandwidthUtility.TryGetUpgradeNode(pawn, out CompMAPMechanitorNode nodeComp))
-            {
-                return;
-            }
-
-            if (nodeComp.RemainingIntrinsicBandwidth <= 0)
+            if (!JusticeBossChipBandwidthUtility.CanUpgradeBandwidth(pawn)
+                || JusticeBossChipBandwidthUtility.GetRemainingIntrinsicBandwidth(pawn) <= 0)
             {
                 return;
             }
@@ -105,7 +96,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             int theoreticalAmount = bandwidthPerChip * useCount;
-            int actualAdded = nodeComp.AddChipBandwidth(theoreticalAmount);
+            int actualAdded = JusticeBossChipBandwidthUtility.AddChipBandwidth(
+                pawn,
+                theoreticalAmount);
             if (actualAdded <= 0)
             {
                 return;
