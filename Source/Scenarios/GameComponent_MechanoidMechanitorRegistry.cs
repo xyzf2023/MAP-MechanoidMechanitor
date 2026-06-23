@@ -73,6 +73,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             registry.mechanicalConsciousnessHost = pawn;
             registry.scenarioProtagonist = pawn;
+            FinalizeHostAssignment(pawn);
             return true;
         }
 
@@ -94,6 +95,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             registry.mechanicalConsciousnessHost = pawn;
+            FinalizeHostAssignment(pawn);
             return true;
         }
 
@@ -143,8 +145,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         .PromoteToAcquiredMechanoidMechanitor(mechanicalConsciousnessHost);
                 }
 
-                MechanoidMechanitorRoleUtility.EnsureRoleState(
-                    mechanicalConsciousnessHost);
+                FinalizeHostAssignment(mechanicalConsciousnessHost);
             }
         }
 
@@ -171,6 +172,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
             return CanHostMechanicalConsciousness(pawn);
+        }
+
+        private static void FinalizeHostAssignment(Pawn pawn)
+        {
+            MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
+            MAPOverseerlessNodeUtility.ClearExternalOverseerIfNode(pawn);
         }
 
         private void TryMigrateLegacyScenarioIdentity()
