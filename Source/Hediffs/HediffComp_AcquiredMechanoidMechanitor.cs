@@ -1,0 +1,125 @@
+using RimWorld;
+using Verse;
+
+namespace MAP_MechanoidMechanitor
+{
+    public sealed class HediffCompProperties_AcquiredMechanoidMechanitor : HediffCompProperties
+    {
+        public HediffCompProperties_AcquiredMechanoidMechanitor()
+        {
+            compClass = typeof(HediffComp_AcquiredMechanoidMechanitor);
+        }
+    }
+
+    public sealed class HediffComp_AcquiredMechanoidMechanitor : HediffComp
+    {
+        private int chipBandwidthBonus;
+        private MechWorkModeDef? selfWorkMode;
+
+        public int ChipBandwidthBonus => chipBandwidthBonus;
+
+        public int CurrentIntrinsicBandwidth =>
+            MechanoidMechanitorRoleUtility.AcquiredBaseExtraBandwidth + chipBandwidthBonus;
+
+        public int MaxIntrinsicBandwidth =>
+            MechanoidMechanitorRoleUtility.AcquiredMaxIntrinsicBandwidth;
+
+        public int RemainingIntrinsicBandwidth =>
+            System.Math.Max(0, MaxIntrinsicBandwidth - CurrentIntrinsicBandwidth);
+
+        public MechWorkModeDef CurrentSelfWorkMode =>
+            MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(selfWorkMode);
+
+        public int AddChipBandwidth(int requestedAmount)
+        {
+            if (requestedAmount <= 0)
+            {
+                return 0;
+            }
+
+            int actualAdded = System.Math.Min(requestedAmount, RemainingIntrinsicBandwidth);
+            if (actualAdded <= 0)
+            {
+                return 0;
+            }
+
+            chipBandwidthBonus += actualAdded;
+            Pawn.mechanitor?.Notify_BandwidthChanged();
+            return actualAdded;
+        }
+
+        public void SetSelfWorkMode(MechWorkModeDef? mode)
+        {
+            MechWorkModeDef sanitized =
+                MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(mode);
+            if (CurrentSelfWorkMode == sanitized)
+            {
+                return;
+            }
+
+            selfWorkMode = sanitized;
+            MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(Pawn, sanitized);
+            MechanoidMechanitorSelfWorkModeUtility.NotifyModeChanged(Pawn, sanitized);
+        }
+
+        public override void CompPostMake()
+        {
+            base.CompPostMake();
+            selfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(selfWorkMode);
+        }
+
+        public override void CompPostPostAdd(DamageInfo? dinfo)
+        {
+            base.CompPostPostAdd(dinfo);
+            EnsureState();
+        }
+
+        public override void Notify_Spawned()
+        {
+            base.Notify_Spawned();
+            EnsureState();
+        }
+
+        public override void CompExposeData()
+        {
+            base.CompExposeData();
+            Scribe_Values.Look(ref chipBandwidthBonus, "acquiredMechanitorChipBandwidthBonus", 0);
+            Scribe_Defs.Look(ref selfWorkMode, "acquiredMechanitorSelfWorkMode");
+
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                int maxBonus = System.Math.Max(
+                    0,
+                    MaxIntrinsicBandwidth - MechanoidMechanitorRoleUtility.AcquiredBaseExtraBandwidth);
+                chipBandwidthBonus = UnityEngine.Mathf.Clamp(chipBandwidthBonus, 0, maxBonus);
+                selfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(selfWorkMode);
+                LongEventHandler.ExecuteWhenFinished(EnsureState);
+            }
+        }
+
+        public override void CopyFrom(HediffComp other)
+        {
+            base.CopyFrom(other);
+            if (other is not HediffComp_AcquiredMechanoidMechanitor source)
+            {
+                return;
+            }
+
+            chipBandwidthBonus = source.chipBandwidthBonus;
+            selfWorkMode = source.selfWorkMode;
+        }
+
+        private void EnsureState()
+        {
+            if (Pawn == null || Pawn.Destroyed)
+            {
+                return;
+            }
+
+            MechanoidMechanitorRoleUtility.EnsureRoleState(Pawn);
+            MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
+                Pawn,
+                CurrentSelfWorkMode);
+        }
+    }
+}
