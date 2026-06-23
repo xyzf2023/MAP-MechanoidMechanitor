@@ -12,17 +12,13 @@ namespace MAP_MechanoidMechanitor
 
         public static bool HasNode(Pawn? pawn)
         {
-            return CompMAPMechanitorNode.PawnHasNode(pawn);
+            return CompMAPMechanitorNode.PawnHasNode(pawn)
+                || MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn);
         }
 
         public static bool UsesVanillaControlPath(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
-            {
-                return false;
-            }
-
-            return props.controlBackend == MAPMechanitorControlBackend.Vanilla;
+            return MechanoidMechanitorRoleUtility.UsesVanillaControlPath(pawn);
         }
 
         public static bool IsMechanitorNodeController(Pawn? pawn)
@@ -35,7 +31,6 @@ namespace MAP_MechanoidMechanitor
             return UsesVanillaControlPath(pawn);
         }
 
-        // Vanilla backend + requires external overseer (e.g. Hermit relay node).
         public static bool IsVanillaRelayMechanitorNode(Pawn? pawn)
         {
             if (!PassesMechanitorNodeControllerBasics(pawn))
@@ -48,42 +43,23 @@ namespace MAP_MechanoidMechanitor
 
         public static bool RequiresExternalOverseer(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
-            {
-                return false;
-            }
-
-            return props.requiresExternalOverseer;
+            return MechanoidMechanitorRoleUtility.RequiresExternalOverseer(pawn);
         }
 
         public static bool CanControlMechs(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
-            {
-                return false;
-            }
-
-            return props.controlBackend == MAPMechanitorControlBackend.Vanilla;
+            return PassesMechanitorNodeControllerBasics(pawn)
+                && MechanoidMechanitorRoleUtility.UsesVanillaControlPath(pawn);
         }
 
         public static int GetExtraMechBandwidth(Pawn? pawn)
         {
-            if (!TryGetNodeComp(pawn, out CompMAPMechanitorNode? comp) || comp == null)
-            {
-                return 0;
-            }
-
-            return comp.CurrentIntrinsicBandwidth;
+            return MechanoidMechanitorRoleUtility.GetExtraMechBandwidth(pawn);
         }
 
         public static int GetExtraMechControlGroups(Pawn? pawn)
         {
-            if (!TryGetProps(pawn, out CompProperties_MAPMechanitorNode? props) || props == null)
-            {
-                return 0;
-            }
-
-            return props.extraMechControlGroups;
+            return MechanoidMechanitorRoleUtility.GetExtraMechControlGroups(pawn);
         }
 
         private static bool PassesMechanitorNodeControllerBasics(Pawn? pawn)
@@ -103,24 +79,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return true;
-        }
-
-        private static bool TryGetProps(Pawn? pawn, out CompProperties_MAPMechanitorNode? props)
-        {
-            props = null;
-            if (pawn == null || !ModsConfig.BiotechActive)
-            {
-                return false;
-            }
-
-            if (!TryGetNodeComp(pawn, out CompMAPMechanitorNode? comp) || comp == null)
-            {
-                return false;
-            }
-
-            props = comp.NodeProps;
-            return props != null;
+            return HasNode(pawn);
         }
     }
 }
