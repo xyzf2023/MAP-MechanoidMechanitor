@@ -32,6 +32,31 @@ namespace MAP_MechanoidMechanitor
         public MechWorkModeDef CurrentSelfWorkMode =>
             MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(selfWorkMode);
 
+        internal AcquiredMechanitorStateSnapshot CapturePersistentState()
+        {
+            return new AcquiredMechanitorStateSnapshot(
+                chipBandwidthBonus,
+                selfWorkMode,
+                roleWorkSettingsInitialized);
+        }
+
+        internal void RestorePersistentState(
+            int restoredChipBandwidthBonus,
+            MechWorkModeDef? restoredSelfWorkMode,
+            bool restoredRoleWorkSettingsInitialized)
+        {
+            int maxBonus = System.Math.Max(
+                0,
+                MaxIntrinsicBandwidth - MechanoidMechanitorRoleUtility.AcquiredBaseExtraBandwidth);
+            chipBandwidthBonus = UnityEngine.Mathf.Clamp(
+                restoredChipBandwidthBonus,
+                0,
+                maxBonus);
+            selfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(
+                restoredSelfWorkMode);
+            roleWorkSettingsInitialized = restoredRoleWorkSettingsInitialized;
+        }
+
         public int AddChipBandwidth(int requestedAmount)
         {
             if (requestedAmount <= 0)
@@ -74,6 +99,8 @@ namespace MAP_MechanoidMechanitor
         {
             base.CompPostPostAdd(dinfo);
             SyncRegistryOnAdd();
+            GameComponent_MechanoidMechanitorRegistry
+                .TryRestorePendingAcquiredMechanitorState(Pawn, this);
             EnsureState();
         }
 
@@ -83,10 +110,13 @@ namespace MAP_MechanoidMechanitor
             Pawn?.Notify_DisabledWorkTypesChanged();
             Pawn?.mechanitor?.Notify_BandwidthChanged();
 
-            if (Pawn != null)
+            if (Pawn != null
+                && GameComponent_MechanoidMechanitorRegistry
+                    .IsRegisteredAcquiredMechanitor(Pawn))
             {
-                GameComponent_MechanoidMechanitorRegistry
-                    .NotifyAcquiredMechanitorHediffRemoved(Pawn);
+                GameComponent_MechanoidMechanitorRegistry.NotifyAcquiredMechanitorHediffRemoved(
+                    Pawn,
+                    CapturePersistentState());
             }
         }
 
@@ -94,6 +124,7 @@ namespace MAP_MechanoidMechanitor
         {
             base.Notify_Spawned();
             GameComponent_MechanoidMechanitorRegistry.RefreshMechanitorRegistration(Pawn);
+            EnsureState();
         }
 
         public override void CompExposeData()

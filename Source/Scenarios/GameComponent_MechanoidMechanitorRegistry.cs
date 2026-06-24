@@ -4,6 +4,23 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
+    internal readonly struct AcquiredMechanitorStateSnapshot
+    {
+        public int ChipBandwidthBonus { get; }
+        public MechWorkModeDef? SelfWorkMode { get; }
+        public bool RoleWorkSettingsInitialized { get; }
+
+        public AcquiredMechanitorStateSnapshot(
+            int chipBandwidthBonus,
+            MechWorkModeDef? selfWorkMode,
+            bool roleWorkSettingsInitialized)
+        {
+            ChipBandwidthBonus = chipBandwidthBonus;
+            SelfWorkMode = selfWorkMode;
+            RoleWorkSettingsInitialized = roleWorkSettingsInitialized;
+        }
+    }
+
     public sealed class GameComponent_MechanoidMechanitorRegistry : GameComponent
     {
         private Pawn? mechanicalConsciousnessHost;
@@ -11,6 +28,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private List<Pawn> registeredMechanitors = new List<Pawn>();
         private List<Pawn> acquiredMechanitors = new List<Pawn>();
         private List<Pawn>? pendingAcquiredHediffSync;
+        private Dictionary<Pawn, AcquiredMechanitorStateSnapshot>? pendingAcquiredStateSnapshots;
 
         public Pawn? MechanicalConsciousnessHost => mechanicalConsciousnessHost;
         public Pawn? ScenarioProtagonist => scenarioProtagonist;
@@ -197,7 +215,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return registry.EnsureAcquiredMechanitorHediffInternal(pawn);
         }
 
-        public static void NotifyAcquiredMechanitorHediffRemoved(Pawn? pawn)
+        internal static void NotifyAcquiredMechanitorHediffRemoved(
+            Pawn? pawn,
+            AcquiredMechanitorStateSnapshot snapshot)
         {
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
             if (registry == null
@@ -208,8 +228,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            registry.pendingAcquiredStateSnapshots ??=
+                new Dictionary<Pawn, AcquiredMechanitorStateSnapshot>();
+            registry.pendingAcquiredStateSnapshots[pawn] = snapshot;
             registry.QueueAcquiredHediffSync(pawn);
-            LongEventHandler.ExecuteWhenFinished(() => ProcessPendingAcquiredHediffSyncFor(pawn));
+        }
+
+        public static bool TryRestorePendingAcquiredMechanitorState(
+            Pawn? pawn,
+            HediffComp_AcquiredMechanoidMechanitor? comp)
+        {
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (registry == null || pawn == null || comp == null)
+            {
+                return false;
+            }
+
+            return registry.TryApplyPendingSnapshotToComp(pawn, comp);
         }
 
         public static IEnumerable<Pawn> GetMechanicalConsciousnessCandidates()
@@ -329,6 +364,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public override void GameComponentTick()
+        {
+            base.GameComponentTick();
+            ProcessPendingAcquiredHediffSyncOnTick();
+        }
+
         public override void StartedNewGame()
         {
             base.StartedNewGame();
@@ -396,19 +437,60 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MAPOverseerlessNodeUtility.ClearExternalOverseerIfNode(pawn);
         }
 
-        private static void ProcessPendingAcquiredHediffSyncFor(Pawn pawn)
+        private void ProcessPendingAcquiredHediffSyncOnTick()
         {
-            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null
-                || pawn == null
-                || pawn.Destroyed
-                || !registry.acquiredMechanitors.Contains(pawn))
+            if (pendingAcquiredHediffSync == null || pendingAcquiredHediffSync.Count == 0)
             {
                 return;
             }
 
-            registry.pendingAcquiredHediffSync?.Remove(pawn);
-            registry.EnsureAcquiredMechanitorHediffInternal(pawn);
+            List<Pawn> pending = new List<Pawn>(pendingAcquiredHediffSync);
+            pendingAcquiredHediffSync.Clear();
+
+            for (int i = 0; i < pending.Count; i++)
+            {
+                ProcessPendingAcquiredHediffSyncFor(pending[i]);
+            }
+        }
+
+        private void ProcessPendingAcquiredHediffSyncFor(Pawn pawn)
+        {
+            if (pawn == null || pawn.Destroyed || !acquiredMechanitors.Contains(pawn))
+            {
+                ClearPendingAcquiredState(pawn);
+                return;
+            }
+
+            EnsureAcquiredMechanitorHediffInternal(pawn);
+
+            if (MechanoidMechanitorRoleUtility.TryGetAcquiredIdentityComp(
+                    pawn,
+                    out HediffComp_AcquiredMechanoidMechanitor? comp)
+                && comp != null)
+            {
+                TryApplyPendingSnapshotToComp(pawn, comp);
+            }
+        }
+
+        private bool TryApplyPendingSnapshotToComp(
+            Pawn pawn,
+            HediffComp_AcquiredMechanoidMechanitor comp)
+        {
+            if (pendingAcquiredStateSnapshots == null
+                || !pendingAcquiredStateSnapshots.TryGetValue(
+                    pawn,
+                    out AcquiredMechanitorStateSnapshot snapshot))
+            {
+                return false;
+            }
+
+            comp.RestorePersistentState(
+                snapshot.ChipBandwidthBonus,
+                snapshot.SelfWorkMode,
+                snapshot.RoleWorkSettingsInitialized);
+            ClearPendingAcquiredState(pawn);
+            pawn.mechanitor?.Notify_BandwidthChanged();
+            return true;
         }
 
         private void RefreshMechanitorRegistrationInternal(Pawn? pawn)
@@ -493,13 +575,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void RemoveFromRegisteredMechanitors(Pawn pawn)
         {
             registeredMechanitors.Remove(pawn);
-            pendingAcquiredHediffSync?.Remove(pawn);
+            ClearPendingAcquiredState(pawn);
         }
 
         private void RemoveFromAcquiredMechanitors(Pawn pawn)
         {
             acquiredMechanitors.Remove(pawn);
+            ClearPendingAcquiredState(pawn);
+        }
+
+        private void ClearPendingAcquiredState(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return;
+            }
+
             pendingAcquiredHediffSync?.Remove(pawn);
+            pendingAcquiredStateSnapshots?.Remove(pawn);
         }
 
         private void QueueAcquiredHediffSync(Pawn pawn)
@@ -521,7 +614,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             for (int i = 0; i < acquiredMechanitors.Count; i++)
             {
-                EnsureAcquiredMechanitorHediffInternal(acquiredMechanitors[i]);
+                Pawn pawn = acquiredMechanitors[i];
+                if (pawn == null || pawn.Destroyed)
+                {
+                    continue;
+                }
+
+                AddToRegisteredMechanitorsIdempotent(pawn);
+                EnsureAcquiredMechanitorHediffInternal(pawn);
             }
 
             for (int i = registeredMechanitors.Count - 1; i >= 0; i--)
@@ -557,23 +657,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && HasAuthoritativeIdentity(scenarioProtagonist))
             {
                 AddToRegisteredMechanitorsIdempotent(scenarioProtagonist);
-            }
-
-            ProcessAllPendingAcquiredHediffSync();
-        }
-
-        private void ProcessAllPendingAcquiredHediffSync()
-        {
-            if (pendingAcquiredHediffSync == null || pendingAcquiredHediffSync.Count == 0)
-            {
-                return;
-            }
-
-            List<Pawn> pending = new List<Pawn>(pendingAcquiredHediffSync);
-            pendingAcquiredHediffSync.Clear();
-            for (int i = 0; i < pending.Count; i++)
-            {
-                ProcessPendingAcquiredHediffSyncFor(pending[i]);
             }
         }
 
