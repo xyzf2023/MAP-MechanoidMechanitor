@@ -1,3 +1,4 @@
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
@@ -72,6 +73,7 @@ namespace MAP_MechanoidMechanitor
         public override void CompPostPostAdd(DamageInfo? dinfo)
         {
             base.CompPostPostAdd(dinfo);
+            SyncRegistryOnAdd();
             EnsureState();
         }
 
@@ -80,12 +82,18 @@ namespace MAP_MechanoidMechanitor
             base.CompPostPostRemoved();
             Pawn?.Notify_DisabledWorkTypesChanged();
             Pawn?.mechanitor?.Notify_BandwidthChanged();
+
+            if (Pawn != null)
+            {
+                GameComponent_MechanoidMechanitorRegistry
+                    .NotifyAcquiredMechanitorHediffRemoved(Pawn);
+            }
         }
 
         public override void Notify_Spawned()
         {
             base.Notify_Spawned();
-            EnsureState();
+            GameComponent_MechanoidMechanitorRegistry.RefreshMechanitorRegistration(Pawn);
         }
 
         public override void CompExposeData()
@@ -105,6 +113,9 @@ namespace MAP_MechanoidMechanitor
                     MaxIntrinsicBandwidth - MechanoidMechanitorRoleUtility.AcquiredBaseExtraBandwidth);
                 chipBandwidthBonus = UnityEngine.Mathf.Clamp(chipBandwidthBonus, 0, maxBonus);
                 selfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(selfWorkMode);
+
+                GameComponent_MechanoidMechanitorRegistry.RegisterLegacyAcquiredMechanitor(Pawn);
+                GameComponent_MechanoidMechanitorRegistry.RefreshMechanitorRegistration(Pawn);
                 LongEventHandler.ExecuteWhenFinished(EnsureState);
             }
         }
@@ -120,6 +131,23 @@ namespace MAP_MechanoidMechanitor
             chipBandwidthBonus = source.chipBandwidthBonus;
             selfWorkMode = source.selfWorkMode;
             roleWorkSettingsInitialized = source.roleWorkSettingsInitialized;
+        }
+
+        private void SyncRegistryOnAdd()
+        {
+            if (Pawn == null)
+            {
+                return;
+            }
+
+            if (GameComponent_MechanoidMechanitorRegistry.IsRegisteredAcquiredMechanitor(Pawn))
+            {
+                GameComponent_MechanoidMechanitorRegistry.RefreshMechanitorRegistration(Pawn);
+            }
+            else
+            {
+                GameComponent_MechanoidMechanitorRegistry.RegisterLegacyAcquiredMechanitor(Pawn);
+            }
         }
 
         private void EnsureState()

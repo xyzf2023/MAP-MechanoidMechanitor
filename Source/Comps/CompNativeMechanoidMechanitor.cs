@@ -1,3 +1,4 @@
+using MAP_MechanoidMechanitor.Scenarios;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -12,5 +13,33 @@ namespace MAP_MechanoidMechanitor
 
     public sealed class CompNativeMechanoidMechanitor : ThingComp
     {
+        public override void PostPostMake()
+        {
+            base.PostPostMake();
+            RegisterNativeMechanitorIfApplicable();
+        }
+
+        public override void PostSpawnSetup(bool respawningAfterLoad)
+        {
+            base.PostSpawnSetup(respawningAfterLoad);
+            RegisterNativeMechanitorIfApplicable();
+        }
+
+        public override void PostExposeData()
+        {
+            base.PostExposeData();
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                RegisterNativeMechanitorIfApplicable();
+            }
+        }
+
+        private void RegisterNativeMechanitorIfApplicable()
+        {
+            if (parent is Pawn pawn)
+            {
+                GameComponent_MechanoidMechanitorRegistry.RegisterNativeMechanitor(pawn);
+            }
+        }
     }
 }
