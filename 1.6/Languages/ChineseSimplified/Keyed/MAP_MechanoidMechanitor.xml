@@ -10,4 +10,8 @@
   <MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget>只能对友方机械体尸体使用。</MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget>
   <MAP_MechanoidMechanitor.MechReconstruction.ReportWithTarget>正在对{0}进行机体重构。</MAP_MechanoidMechanitor.MechReconstruction.ReportWithTarget>
   <MAP_MechanoidMechanitor.MechReconstruction.ReportDefault>正在进行机体重构。</MAP_MechanoidMechanitor.MechReconstruction.ReportDefault>
+  <MAP_MechanoidMechanitor.MechHack.InvalidTarget>只能选择非玩家阵营的活体机械体。</MAP_MechanoidMechanitor.MechHack.InvalidTarget>
+  <MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>目标机械体属于非敌对阵营，继续骇入会被视作敌对行为。\n\n确定要这么做？</MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>
+  <MAP_MechanoidMechanitor.MechHack.ReportWithTarget>正在骇入{0}。</MAP_MechanoidMechanitor.MechHack.ReportWithTarget>
+  <MAP_MechanoidMechanitor.MechHack.ReportDefault>正在执行机体骇入。</MAP_MechanoidMechanitor.MechHack.ReportDefault>
 </LanguageData>

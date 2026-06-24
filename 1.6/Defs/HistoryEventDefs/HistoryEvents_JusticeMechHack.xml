@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <HistoryEventDef>
+    <defName>MAP_MechHack</defName>
+    <label>骇入机械体</label>
+  </HistoryEventDef>
+</Defs>
