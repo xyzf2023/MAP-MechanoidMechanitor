@@ -1,3 +1,4 @@
+using System;
 using RimWorld;
 using Verse;
 
@@ -40,6 +41,25 @@ namespace MAP_MechanoidMechanitor
             }
 
             return false;
+        }
+
+        public override Window ConfirmationDialog(
+            LocalTargetInfo target,
+            Action confirmAction)
+        {
+            Pawn? targetPawn = target.Pawn;
+            Faction? targetFaction = targetPawn?.Faction;
+
+            if (targetFaction != null
+                && targetFaction != Faction.OfPlayer
+                && !targetFaction.HostileTo(Faction.OfPlayer))
+            {
+                return Dialog_MessageBox.CreateConfirmation(
+                    Props.nonHostileConfirmMessageKey.Translate(),
+                    confirmAction);
+            }
+
+            return null!;
         }
 
         public bool CanHack(Pawn? targetPawn, Pawn? caster)

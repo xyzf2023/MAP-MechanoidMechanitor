@@ -7,6 +7,9 @@ namespace MAP_MechanoidMechanitor
         public string invalidTargetMessageKey =
             "MAP_MechanoidMechanitor.MechHack.InvalidTarget";
 
+        public string nonHostileConfirmMessageKey =
+            "MAP_MechanoidMechanitor.MechHack.NonHostileConfirm";
+
         public int hackDurationTicks = 900;
 
         public int cooldownTicks = 300000;
