@@ -57,14 +57,37 @@ namespace MAP_MechanoidMechanitor
         private static AbilityDef? mechReconstructionAbilityDef;
         private static List<WorkTypeDef>? cachedRoleWorkTypes;
 
-        public static bool IsNativeMechanoidMechanitor(Pawn? pawn)
+        public static bool HasNativeMechanitorMarker(Pawn? pawn)
         {
             return pawn?.GetComp<CompNativeMechanoidMechanitor>() != null;
         }
 
-        public static bool IsAcquiredMechanoidMechanitor(Pawn? pawn)
+        public static bool HasAcquiredMechanitorHediff(Pawn? pawn)
         {
             return TryGetAcquiredIdentityComp(pawn, out _);
+        }
+
+        public static bool IsNativeMechanoidMechanitor(Pawn? pawn)
+        {
+            return HasNativeMechanitorMarker(pawn);
+        }
+
+        public static bool IsAcquiredMechanoidMechanitor(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (!Scenarios.GameComponent_MechanoidMechanitorRegistry
+                    .IsRegisteredAcquiredMechanitor(pawn))
+            {
+                return false;
+            }
+
+            Scenarios.GameComponent_MechanoidMechanitorRegistry
+                .EnsureAcquiredMechanitorHediff(pawn);
+            return true;
         }
 
         public static bool IsMechanoidMechanitor(Pawn? pawn)
@@ -149,36 +172,28 @@ namespace MAP_MechanoidMechanitor
 
             if (IsNativeMechanoidMechanitor(pawn))
             {
+                Scenarios.GameComponent_MechanoidMechanitorRegistry
+                    .RegisterNativeMechanitor(pawn);
                 EnsureRoleState(pawn);
                 return true;
             }
 
-            if (!IsAcquiredMechanoidMechanitor(pawn))
+            if (Scenarios.GameComponent_MechanoidMechanitorRegistry
+                    .IsRegisteredAcquiredMechanitor(pawn))
             {
-                if (!CanBecomeAcquiredMechanoidMechanitor(pawn))
-                {
-                    return false;
-                }
-
-                HediffDef? def = GetAcquiredIdentityDef();
-                if (def == null)
-                {
-                    Log.Error(
-                        "[MAP_MechanoidMechanitor] Cannot promote pawn: " +
-                        "acquired mechanitor HediffDef is missing.");
-                    return false;
-                }
-
-                pawn.health.AddHediff(def);
+                Scenarios.GameComponent_MechanoidMechanitorRegistry
+                    .RefreshMechanitorRegistration(pawn);
+                EnsureRoleState(pawn);
+                return true;
             }
 
-            if (!IsAcquiredMechanoidMechanitor(pawn))
+            if (!CanBecomeAcquiredMechanoidMechanitor(pawn))
             {
                 return false;
             }
 
-            EnsureRoleState(pawn);
-            return true;
+            return Scenarios.GameComponent_MechanoidMechanitorRegistry
+                .GrantAcquiredMechanitorIdentity(pawn);
         }
 
         public static void EnsureRoleState(Pawn? pawn)
@@ -459,7 +474,7 @@ namespace MAP_MechanoidMechanitor
             return comp != null;
         }
 
-        private static HediffDef? GetAcquiredIdentityDef()
+        internal static HediffDef? GetAcquiredIdentityDef()
         {
             return acquiredIdentityDef ??=
                 DefDatabase<HediffDef>.GetNamedSilentFail(AcquiredIdentityDefName);
