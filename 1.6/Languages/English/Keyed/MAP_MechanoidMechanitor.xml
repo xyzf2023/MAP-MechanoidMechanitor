@@ -10,4 +10,8 @@
   <MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget>This ability can only target a friendly mechanoid corpse.</MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget>
   <MAP_MechanoidMechanitor.MechReconstruction.ReportWithTarget>Reconstructing {0}.</MAP_MechanoidMechanitor.MechReconstruction.ReportWithTarget>
   <MAP_MechanoidMechanitor.MechReconstruction.ReportDefault>Performing mech reconstruction.</MAP_MechanoidMechanitor.MechReconstruction.ReportDefault>
+  <MAP_MechanoidMechanitor.MechHack.InvalidTarget>Only a live non-player mechanoid can be targeted.</MAP_MechanoidMechanitor.MechHack.InvalidTarget>
+  <MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>The target mechanoid belongs to a non-hostile faction. Continuing the hack will be treated as a hostile act.\n\nAre you sure?</MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>
+  <MAP_MechanoidMechanitor.MechHack.ReportWithTarget>Hacking {0}.</MAP_MechanoidMechanitor.MechHack.ReportWithTarget>
+  <MAP_MechanoidMechanitor.MechHack.ReportDefault>Performing mech hack.</MAP_MechanoidMechanitor.MechHack.ReportDefault>
 </LanguageData>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <HediffDef>
+    <defName>MAP_Hediff_MechHackImmobilized</defName>
+    <label>机体骇入</label>
+    <description>该机械体正在被骇入，无法移动。</description>
+    <hediffClass>HediffWithComps</hediffClass>
+    <isBad>false</isBad>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_MechHackNoMove" />
+    </comps>
+  </HediffDef>
+</Defs>

@@ -82,4 +82,45 @@
       </li>
     </comps>
   </AbilityDef>
+
+  <AbilityDef>
+    <defName>MAP_Ability_MechHack</defName>
+    <label>机体骇入</label>
+    <description>TODO</description>
+    <iconPath>UI/Abilities/MechResurrection</iconPath>
+    <cooldownTicksRange>300000~300000</cooldownTicksRange>
+    <jobDef>MAP_Job_MechHack</jobDef>
+    <hasExternallyHandledCooldown>true</hasExternallyHandledCooldown>
+    <canUseAoeToGetTargets>false</canUseAoeToGetTargets>
+    <hostile>false</hostile>
+    <casterMustBeCapableOfViolence>false</casterMustBeCapableOfViolence>
+    <displayGizmoWhileUndrafted>true</displayGizmoWhileUndrafted>
+    <disableGizmoWhileUndrafted>false</disableGizmoWhileUndrafted>
+    <verbProperties>
+      <verbClass>Verb_CastAbility</verbClass>
+      <drawAimPie>false</drawAimPie>
+      <range>999</range>
+      <warmupTime>0</warmupTime>
+      <requireLineOfSight>true</requireLineOfSight>
+      <targetParams>
+        <canTargetLocations>false</canTargetLocations>
+        <canTargetSelf>false</canTargetSelf>
+        <canTargetPawns>true</canTargetPawns>
+        <canTargetBuildings>false</canTargetBuildings>
+        <canTargetItems>false</canTargetItems>
+        <canTargetCorpses>false</canTargetCorpses>
+        <onlyTargetCorpses>false</onlyTargetCorpses>
+        <canTargetAnimals>false</canTargetAnimals>
+        <canTargetHumans>false</canTargetHumans>
+        <canTargetMechs>true</canTargetMechs>
+      </targetParams>
+    </verbProperties>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AbilityMechHack">
+        <invalidTargetMessageKey>MAP_MechanoidMechanitor.MechHack.InvalidTarget</invalidTargetMessageKey>
+        <hackDurationTicks>900</hackDurationTicks>
+        <cooldownTicks>300000</cooldownTicks>
+      </li>
+    </comps>
+  </AbilityDef>
 </Defs>

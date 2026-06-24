@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef ParentName="CastAbilityOnThing">
+    <defName>MAP_Job_MechHack</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_MechHack</driverClass>
+    <neverShowWeapon>true</neverShowWeapon>
+    <playerInterruptible>true</playerInterruptible>
+  </JobDef>
+</Defs>
