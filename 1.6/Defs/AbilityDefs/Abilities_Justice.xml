@@ -118,6 +118,7 @@
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_AbilityMechHack">
         <invalidTargetMessageKey>MAP_MechanoidMechanitor.MechHack.InvalidTarget</invalidTargetMessageKey>
+        <nonHostileConfirmMessageKey>MAP_MechanoidMechanitor.MechHack.NonHostileConfirm</nonHostileConfirmMessageKey>
         <hackDurationTicks>900</hackDurationTicks>
         <cooldownTicks>300000</cooldownTicks>
       </li>

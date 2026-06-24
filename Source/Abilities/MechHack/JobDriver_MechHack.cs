@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
@@ -12,19 +11,15 @@ namespace MAP_MechanoidMechanitor
         private const string WarmupEffecterDefName = "MAP_Effecter_MechReconstructionWarmupOnTarget";
         private const string ImmobilizeHediffDefName = "MAP_Hediff_MechHackImmobilized";
         private const string HistoryEventDefName = "MAP_MechHack";
-        private const string NonHostileConfirmKey = "MAP_MechanoidMechanitor.MechHack.NonHostileConfirm";
         private const string ReportWithTargetKey = "MAP_MechanoidMechanitor.MechHack.ReportWithTarget";
         private const string ReportDefaultKey = "MAP_MechanoidMechanitor.MechHack.ReportDefault";
 
         private Faction? originalFaction;
-        private bool confirmationResolved;
         private bool confirmedHostileAction;
+        private bool addedImmobilizeHediff;
         private Effecter? warmupEffecter;
 
         private Pawn? TargetPawn => job?.GetTarget(TargetIndex.A).Thing as Pawn;
-
-        private static JobDef? MechHackJobDef =>
-            DefDatabase<JobDef>.GetNamedSilentFail("MAP_Job_MechHack");
 
         private static HediffDef? ImmobilizeHediffDef =>
             DefDatabase<HediffDef>.GetNamedSilentFail(ImmobilizeHediffDefName);
@@ -36,8 +31,8 @@ namespace MAP_MechanoidMechanitor
         {
             base.ExposeData();
             Scribe_References.Look(ref originalFaction, "originalFaction");
-            Scribe_Values.Look(ref confirmationResolved, "confirmationResolved");
             Scribe_Values.Look(ref confirmedHostileAction, "confirmedHostileAction");
+            Scribe_Values.Look(ref addedImmobilizeHediff, "addedImmobilizeHediff");
         }
 
         public override string GetReport()
@@ -50,13 +45,7 @@ namespace MAP_MechanoidMechanitor
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
         {
-            return pawn.Reserve(
-                job.GetTarget(TargetIndex.A),
-                job,
-                1,
-                -1,
-                null,
-                errorOnFailed);
+            return true;
         }
 
         protected override IEnumerable<Toil> MakeNewToils()
@@ -68,7 +57,6 @@ namespace MAP_MechanoidMechanitor
             this.FailOn(() => !IsValidTargetDuringHack(requireLineOfSight: false));
 
             yield return Toils_General.StopDead();
-            yield return MakeConfirmationToil();
             yield return Toils_General.Do(ApplyImmobilizeHediff);
 
             CompAbilityEffect_MechHack? hackComp = GetHackComp();
@@ -90,82 +78,14 @@ namespace MAP_MechanoidMechanitor
         public override void Notify_Starting()
         {
             base.Notify_Starting();
+
             Pawn? targetPawn = TargetPawn;
-            if (targetPawn != null)
-            {
-                originalFaction = targetPawn.Faction;
-            }
-        }
+            originalFaction = targetPawn?.Faction;
 
-        private Toil MakeConfirmationToil()
-        {
-            Toil confirmToil = ToilMaker.MakeToil("MechHackConfirm");
-            confirmToil.initAction = BeginConfirmation;
-            confirmToil.defaultCompleteMode = ToilCompleteMode.Never;
-            confirmToil.AddEndCondition(() =>
-                confirmationResolved ? JobCondition.Succeeded : JobCondition.Ongoing);
-            confirmToil.FailOn(() => !IsValidTargetDuringHack(requireLineOfSight: false));
-            return confirmToil;
-        }
-
-        private void BeginConfirmation()
-        {
-            Pawn? targetPawn = TargetPawn;
-            if (targetPawn == null || !IsValidTargetDuringHack(requireLineOfSight: false))
-            {
-                EndJobWith(JobCondition.Incompletable);
-                return;
-            }
-
-            originalFaction = targetPawn.Faction;
-
-            if (!NeedsNonHostileConfirmation(originalFaction))
-            {
-                confirmationResolved = true;
-                confirmedHostileAction = false;
-                return;
-            }
-
-            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
-                NonHostileConfirmKey.Translate(),
-                OnConfirmNonHostileHack,
-                OnCancelNonHostileHack));
-        }
-
-        private static bool NeedsNonHostileConfirmation(Faction? faction)
-        {
-            return faction != null
-                && faction != Faction.OfPlayer
-                && !faction.HostileTo(Faction.OfPlayer);
-        }
-
-        private void OnConfirmNonHostileHack()
-        {
-            if (!IsActiveMechHackJob())
-            {
-                return;
-            }
-
-            confirmedHostileAction = true;
-            confirmationResolved = true;
-        }
-
-        private void OnCancelNonHostileHack()
-        {
-            if (!IsActiveMechHackJob())
-            {
-                return;
-            }
-
-            EndJobWith(JobCondition.Incompletable);
-        }
-
-        private bool IsActiveMechHackJob()
-        {
-            JobDef? mechHackJobDef = MechHackJobDef;
-            return mechHackJobDef != null
-                && pawn.CurJob?.def == mechHackJobDef
-                && pawn.jobs?.curDriver == this;
+            confirmedHostileAction =
+                originalFaction != null
+                && originalFaction != Faction.OfPlayer
+                && !originalFaction.HostileTo(Faction.OfPlayer);
         }
 
         private bool IsValidTargetDuringHack(bool requireLineOfSight)
@@ -200,6 +120,8 @@ namespace MAP_MechanoidMechanitor
 
         private void ApplyImmobilizeHediff()
         {
+            addedImmobilizeHediff = false;
+
             if (!IsValidTargetDuringHack(requireLineOfSight: true))
             {
                 EndJobWith(JobCondition.Incompletable);
@@ -214,10 +136,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!targetPawn.health.hediffSet.HasHediff(hediffDef))
+            if (targetPawn.health.hediffSet.HasHediff(hediffDef))
             {
-                targetPawn.health.AddHediff(HediffMaker.MakeHediff(hediffDef, targetPawn));
+                return;
             }
+
+            Hediff hediff = HediffMaker.MakeHediff(hediffDef, targetPawn);
+            targetPawn.health.AddHediff(hediff);
+            addedImmobilizeHediff = true;
         }
 
         private void StartWarmupEffecter()
@@ -272,26 +198,28 @@ namespace MAP_MechanoidMechanitor
             }
 
             Faction? hackedFaction = originalFaction;
+            Pawn? oldOverseer = targetPawn.GetOverseer();
 
             MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
 
-            Pawn? oldOverseer = targetPawn.GetOverseer();
+            if (pawn.relations == null
+                || pawn.mechanitor == null
+                || targetPawn.OverseerSubject == null
+                || Faction.OfPlayer == null)
+            {
+                Log.Warning(
+                    "[MAP-MechanoidMechanitor] Mech hack aborted: Justice cannot establish overseer relation.");
+                EndJobWith(JobCondition.Incompletable);
+                return;
+            }
+
             oldOverseer?.relations?.RemoveDirectRelation(
                 PawnRelationDefOf.Overseer,
                 targetPawn);
 
             targetPawn.SetFaction(Faction.OfPlayer);
-
-            if (pawn.relations == null)
-            {
-                Log.Warning(
-                    "[MAP-MechanoidMechanitor] Mech hack failed: Justice has no relations tracker.");
-                EndJobWith(JobCondition.Incompletable);
-                return;
-            }
-
             pawn.relations.AddDirectRelation(PawnRelationDefOf.Overseer, targetPawn);
-            pawn.mechanitor?.Notify_BandwidthChanged();
+            pawn.mechanitor.Notify_BandwidthChanged();
 
             if (!VerifyHackSucceeded(targetPawn))
             {
@@ -299,15 +227,45 @@ namespace MAP_MechanoidMechanitor
                 {
                     Log.Warning(
                         "[MAP-MechanoidMechanitor] Mech hack control transfer failed for " +
-                        $"{targetPawn.LabelShort} ({targetPawn.kindDef?.defName ?? "unknown"}).");
+                        $"{targetPawn.LabelShort} ({targetPawn.kindDef?.defName ?? "unknown"}), rolling back.");
                 }
 
+                RollbackFailedHack(targetPawn, hackedFaction, oldOverseer);
                 EndJobWith(JobCondition.Incompletable);
                 return;
             }
 
             ApplyDiplomaticConsequences(hackedFaction);
             StartHackCooldown(hackComp);
+        }
+
+        private void RollbackFailedHack(
+            Pawn targetPawn,
+            Faction? originalTargetFaction,
+            Pawn? oldOverseer)
+        {
+            if (targetPawn == null)
+            {
+                return;
+            }
+
+            pawn.relations?.TryRemoveDirectRelation(
+                PawnRelationDefOf.Overseer,
+                targetPawn);
+
+            targetPawn.SetFaction(originalTargetFaction);
+
+            if (oldOverseer != null
+                && !oldOverseer.Dead
+                && oldOverseer.relations != null)
+            {
+                oldOverseer.relations.AddDirectRelation(
+                    PawnRelationDefOf.Overseer,
+                    targetPawn);
+            }
+
+            pawn.mechanitor?.Notify_BandwidthChanged();
+            oldOverseer?.mechanitor?.Notify_BandwidthChanged();
         }
 
         private bool VerifyHackSucceeded(Pawn targetPawn)
@@ -388,10 +346,16 @@ namespace MAP_MechanoidMechanitor
 
         private void RemoveImmobilizeHediff()
         {
+            if (!addedImmobilizeHediff)
+            {
+                return;
+            }
+
             Pawn? targetPawn = TargetPawn;
             HediffDef? hediffDef = ImmobilizeHediffDef;
             if (targetPawn?.health?.hediffSet == null || hediffDef == null)
             {
+                addedImmobilizeHediff = false;
                 return;
             }
 
@@ -400,6 +364,8 @@ namespace MAP_MechanoidMechanitor
             {
                 targetPawn.health.RemoveHediff(hediff);
             }
+
+            addedImmobilizeHediff = false;
         }
     }
 }
