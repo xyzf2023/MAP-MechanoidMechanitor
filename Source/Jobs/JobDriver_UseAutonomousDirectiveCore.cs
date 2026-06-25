@@ -5,7 +5,7 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
-    public class JobDriver_UseBandwidthLink : JobDriver
+    public class JobDriver_UseAutonomousDirectiveCore : JobDriver
     {
         private const int InstallDurationTicks = 600;
         private const string AutonomousDirectiveCoreDefName = "MAP_AutonomousDirectiveCore";

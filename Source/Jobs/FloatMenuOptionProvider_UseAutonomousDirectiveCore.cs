@@ -6,7 +6,7 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
-    public class FloatMenuOptionProvider_UseBandwidthLink : FloatMenuOptionProvider
+    public class FloatMenuOptionProvider_UseAutonomousDirectiveCore : FloatMenuOptionProvider
     {
         private const string AutonomousDirectiveCoreDefName = "MAP_AutonomousDirectiveCore";
         private const string InstallLabel = "安装自律指令核心";
@@ -90,7 +90,7 @@ namespace MAP_MechanoidMechanitor
         {
             module.SetForbidden(false, false);
             Job job = JobMaker.MakeJob(
-                MAPMechanitor_JobDefOf.MAP_UseBandwidthLink,
+                MAPMechanitor_JobDefOf.MAP_UseAutonomousDirectiveCore,
                 module);
             pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
         }

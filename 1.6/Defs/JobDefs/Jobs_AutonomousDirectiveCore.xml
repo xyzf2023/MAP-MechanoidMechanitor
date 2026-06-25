@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
   <JobDef>
-    <defName>MAP_UseBandwidthLink</defName>
+    <defName>MAP_UseAutonomousDirectiveCore</defName>
     <label>安装自律指令核心</label>
-    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseBandwidthLink</driverClass>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseAutonomousDirectiveCore</driverClass>
     <reportString>正在安装自律指令核心。</reportString>
   </JobDef>
 </Defs>

@@ -61,8 +61,7 @@
   </RecipeDef>
 
   <RecipeDef MayRequire="Ludeon.RimWorld.Biotech">
-    <defName>MAP_Make_MechBandwidthLink</defName>
-    <label>制作自律指令核心</label>
+    <defName>MAP_Make_AutonomousDirectiveCore</defName>    <label>制作自律指令核心</label>
     <description>TODO</description>
     <jobString>正在制作自律指令核心。</jobString>
     <researchPrerequisite>ArchotechMechtech</researchPrerequisite>
