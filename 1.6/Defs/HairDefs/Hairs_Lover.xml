@@ -1,21 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
 
-  <!--
-    阶段二先建立固定 HairDef，阶段三再由专用 PawnRenderTree 实际绘制。
-    正式贴图路径预留为 Textures/Lover/Hair/LoverHair_*.png。
-  -->
   <HairDef>
     <defName>MAP_LoverHair</defName>
     <label>「恋人」发型</label>
     <styleGender>Female</styleGender>
-    <graphicData>
-      <texPath>Lover/Hair/LoverHair</texPath>
-      <graphicClass>Graphic_Multi</graphicClass>
-    </graphicData>
-    <hairTags>
+    <noGraphic>true</noGraphic>
+    <styleTags>
       <li>Urban</li>
-    </hairTags>
+    </styleTags>
   </HairDef>
 
 </Defs>
