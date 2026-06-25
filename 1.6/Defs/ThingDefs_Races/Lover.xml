@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <ThingDef ParentName="BaseMechanoid">
+    <defName>MAP_Mech_Lover</defName>
+    <label>「恋人」</label>
+    <description>一台具有仿生结构的特殊机械体。</description>
+
+    <statBases>
+      <MarketValue>1200</MarketValue>
+      <MoveSpeed>5.2</MoveSpeed>
+      <BandwidthCost>2</BandwidthCost>
+      <ControlTakingTime>18</ControlTakingTime>
+      <ArmorRating_Blunt>0.30</ArmorRating_Blunt>
+      <ArmorRating_Sharp>0.50</ArmorRating_Sharp>
+      <ShootingAccuracyFactor_Short>1.5</ShootingAccuracyFactor_Short>
+      <RangedWeapon_Cooldown>0.75</RangedWeapon_Cooldown>
+    </statBases>
+
+    <tools>
+
+      <li>
+        <label>left fist</label>
+        <labelNoLocation>fist</labelNoLocation>
+
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+
+        <power>8.2</power>
+        <cooldownTime>2</cooldownTime>
+        <linkedBodyPartsGroup>LeftHand</linkedBodyPartsGroup>
+
+        <surpriseAttack>
+          <extraMeleeDamages>
+            <li>
+              <def>Stun</def>
+              <amount>14</amount>
+            </li>
+          </extraMeleeDamages>
+        </surpriseAttack>
+      </li>
+
+      <li>
+        <label>right fist</label>
+        <labelNoLocation>fist</labelNoLocation>
+
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+
+        <power>8.2</power>
+        <cooldownTime>2</cooldownTime>
+        <linkedBodyPartsGroup>RightHand</linkedBodyPartsGroup>
+
+        <surpriseAttack>
+          <extraMeleeDamages>
+            <li>
+              <def>Stun</def>
+              <amount>14</amount>
+            </li>
+          </extraMeleeDamages>
+        </surpriseAttack>
+      </li>
+
+      <li>
+        <label>head</label>
+
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+
+        <power>5</power>
+        <cooldownTime>2</cooldownTime>
+        <linkedBodyPartsGroup>HeadAttackTool</linkedBodyPartsGroup>
+        <ensureLinkedBodyPartsGroupAlwaysUsable>true</ensureLinkedBodyPartsGroupAlwaysUsable>
+        <chanceFactor>0.2</chanceFactor>
+      </li>
+
+    </tools>
+
+    <race>
+      <body>MAP_Body_Lover</body>
+      <intelligence>ToolUser</intelligence>
+      <thinkTreeMain>Mechanoid</thinkTreeMain>
+      <baseBodySize>1.0</baseBodySize>
+      <baseHealthScale>1.32</baseHealthScale>
+
+      <!--
+        本阶段故意不设置 renderTree。
+        暂时继承 BasePawn 的 Misc 渲染树。
+        阶段三再建立 MAP_Lover 专用渲染树。
+      -->
+
+      <soundMeleeHitPawn>Pawn_Melee_MechanoidSlash_HitPawn</soundMeleeHitPawn>
+      <soundMeleeHitBuilding>Pawn_Melee_MechanoidSlash_HitBuilding</soundMeleeHitBuilding>
+      <soundMeleeMiss>Pawn_Melee_MechanoidSlash_Miss</soundMeleeMiss>
+
+      <lifeStageAges Inherit="False">
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>0</minAge>
+          <soundWounded>Pawn_Mech_Scyther_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Scyther_Death</soundDeath>
+          <soundCall>Pawn_Mech_Scyther_Call</soundCall>
+        </li>
+      </lifeStageAges>
+
+      <detritusLeavings>
+        <li>
+          <def>ChunkMechanoidSlag</def>
+          <texOverrideIndex>18</texOverrideIndex>
+          <spawnChance>0.1</spawnChance>
+        </li>
+
+        <li>
+          <def>ChunkMechanoidSlag</def>
+          <texOverrideIndex>15</texOverrideIndex>
+          <spawnChance>0.1</spawnChance>
+        </li>
+      </detritusLeavings>
+    </race>
+
+    <butcherProducts>
+      <Steel>20</Steel>
+      <Plasteel>10</Plasteel>
+    </butcherProducts>
+
+    <!--
+      不要在本阶段添加新的 comps。
+      BaseMechanoid 已继承机械体休眠、失控监管和维修组件。
+      特别禁止添加旧战术人形的身体类型组件和投射物护盾。
+    -->
+
+  </ThingDef>
+
+  <PawnKindDef ParentName="BaseMechanoidKind">
+    <defName>MAP_Mech_Lover</defName>
+    <label>「恋人」</label>
+    <race>MAP_Mech_Lover</race>
+
+    <defaultFactionDef>PlayerColony</defaultFactionDef>
+
+    <combatPower>200</combatPower>
+    <allowInMechClusters>false</allowInMechClusters>
+    <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
+
+    <weaponMoney>1000~1200</weaponMoney>
+
+    <weaponTags>
+      <li>Gun</li>
+    </weaponTags>
+
+    <techHediffsChance>1</techHediffsChance>
+    <techHediffsMoney>500~1000</techHediffsMoney>
+
+    <controlGroupPortraitZoom>1.2</controlGroupPortraitZoom>
+    <destroyGearOnDrop>false</destroyGearOnDrop>
+    <canStrip>true</canStrip>
+
+    <!--
+      本阶段使用原版米利托贴图作为临时占位。
+      不使用任何 TacticalDoll 贴图。
+    -->
+    <lifeStages Inherit="False">
+      <li>
+        <bodyGraphicData>
+          <texPath>Things/Pawn/Mechanoid/Militor</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>1.7</drawSize>
+        </bodyGraphicData>
+      </li>
+    </lifeStages>
+
+  </PawnKindDef>
+
+</Defs>
