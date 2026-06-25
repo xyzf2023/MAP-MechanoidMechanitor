@@ -354,11 +354,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public override void StartedNewGame()
         {
             base.StartedNewGame();
-            mechanitorRecords = new List<MechanoidMechanitorRecord>();
-            recordByPawn = new Dictionary<Pawn, MechanoidMechanitorRecord>();
+            mechanitorRecords ??= new List<MechanoidMechanitorRecord>();
             pendingAcquiredHediffSync = null;
-            InvalidateDerivedCaches();
-            CleanupAfterLoad();
+            CleanupRecords();
+            RebuildRecordIndex();
             TryMigrateLegacyScenarioIdentity();
         }
 
@@ -372,15 +371,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RestoreAcquiredRecordsAfterLoad();
             TryMigrateLegacyScenarioIdentity();
 
-            if (mechanicalConsciousnessHost != null)
+            if (mechanicalConsciousnessHost != null
+                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(
+                    mechanicalConsciousnessHost))
             {
-                if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(
-                        mechanicalConsciousnessHost))
-                {
-                    MechanoidMechanitorRoleUtility
-                        .PromoteToAcquiredMechanoidMechanitor(mechanicalConsciousnessHost);
-                }
-
                 FinalizeHostAssignment(mechanicalConsciousnessHost);
             }
         }
@@ -518,10 +512,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 CompJusticeSelfWorkMode? workModeComp =
                     CompJusticeSelfWorkMode.GetFor(record.Pawn);
-                if (workModeComp != null)
-                {
-                    workModeComp.SetSelfWorkMode(record.SelfWorkMode);
-                }
+                workModeComp?.SyncSelfWorkModeEffectsFromAuthoritativeState();
             }
         }
 
@@ -683,21 +674,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Pawn? fallback = null;
-            foreach (Pawn pawn in PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_OfPlayerFaction)
+            for (int i = 0; i < mechanitorRecords.Count; i++)
             {
-                if (pawn == null || pawn.Dead)
+                MechanoidMechanitorRecord record = mechanitorRecords[i];
+                Pawn? pawn = record.Pawn;
+                if (pawn == null
+                    || pawn.Dead
+                    || pawn.Destroyed
+                    || !pawn.RaceProps.IsMechanoid
+                    || pawn.Faction == null
+                    || !pawn.Faction.IsPlayerSafe())
                 {
                     continue;
                 }
 
-                if (MechanoidMechanitorRoleUtility.IsNativeMechanoidMechanitor(pawn))
+                if (record.Origin == MechanoidMechanitorOrigin.Native)
                 {
                     fallback = pawn;
                     break;
                 }
 
-                if (fallback == null
-                    && MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
+                if (fallback == null && record.Origin == MechanoidMechanitorOrigin.Acquired)
                 {
                     fallback = pawn;
                 }

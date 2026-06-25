@@ -95,6 +95,31 @@ namespace MAP_MechanoidMechanitor
             workPawn.jobs?.CheckForJobOverride();
         }
 
+        internal void SyncSelfWorkModeEffectsFromAuthoritativeState()
+        {
+            if (SyncSelfWorkModeHediff())
+            {
+                selfWorkModeHediffInitialized = true;
+            }
+
+            if (parent is not Pawn workPawn)
+            {
+                return;
+            }
+
+            PawnComponentsUtility.AddAndRemoveDynamicComponents(workPawn, actAsIfSpawned: true);
+            MechWorkModeDef mode = CurrentSelfWorkMode;
+            if (mode != MechWorkModeDefOf.Recharge
+                && workPawn.CurJobDef == JobDefOf.MechCharge
+                && workPawn.IsCharging())
+            {
+                workPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+            }
+
+            workPawn.TryGetComp<CompCanBeDormant>()?.WakeUp();
+            workPawn.jobs?.CheckForJobOverride();
+        }
+
         public static string GetDisplayLabel(MechWorkModeDef mode)
         {
             return mode.LabelCap;
