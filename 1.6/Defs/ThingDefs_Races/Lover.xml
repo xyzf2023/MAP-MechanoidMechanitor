@@ -126,11 +126,49 @@
       <Plasteel>10</Plasteel>
     </butcherProducts>
 
-    <!--
-      不要在本阶段添加新的 comps。
-      BaseMechanoid 已继承机械体休眠、失控监管和维修组件。
-      特别禁止添加旧战术人形的身体类型组件和投射物护盾。
-    -->
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
+        <profileVersion>1</profileVersion>
+        <bodyType>Female</bodyType>
+        <hairDef>MAP_LoverHair</hairDef>
+        <setHairColor>true</setHairColor>
+        <hairColor>(0.82, 0.84, 0.88)</hairColor>
+        <childhoodBackstory>MAP_Lover_Childhood</childhoodBackstory>
+        <adulthoodBackstory>MAP_Lover_Adulthood</adulthoodBackstory>
+        <skillLevels>
+          <li>
+            <skill>Shooting</skill>
+            <level>20</level>
+          </li>
+          <li>
+            <skill>Melee</skill>
+            <level>20</level>
+          </li>
+          <li>
+            <skill>Social</skill>
+            <level>12</level>
+          </li>
+          <li>
+            <skill>Animals</skill>
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Medicine</skill>
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Cooking</skill>
+            <level>10</level>
+          </li>
+        </skillLevels>
+        <ensureRelationsTracker>true</ensureRelationsTracker>
+        <ensureInteractionsTracker>true</ensureInteractionsTracker>
+        <ensureGuestTracker>true</ensureGuestTracker>
+        <ensureGuiltTracker>true</ensureGuiltTracker>
+        <ensureWorkSettings>true</ensureWorkSettings>
+        <ensureGeneTracker>true</ensureGeneTracker>
+      </li>
+    </comps>
 
   </ThingDef>
 
@@ -157,6 +195,13 @@
     <controlGroupPortraitZoom>1.2</controlGroupPortraitZoom>
     <destroyGearOnDrop>false</destroyGearOnDrop>
     <canStrip>true</canStrip>
+
+    <fixedChildBackstories>
+      <li>MAP_Lover_Childhood</li>
+    </fixedChildBackstories>
+    <fixedAdultBackstories>
+      <li>MAP_Lover_Adulthood</li>
+    </fixedAdultBackstories>
 
     <!--
       本阶段使用原版米利托贴图作为临时占位。
