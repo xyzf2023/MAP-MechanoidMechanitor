@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
@@ -29,11 +30,20 @@ namespace MAP_MechanoidMechanitor
                 createdMechanitor = true;
             }
 
-            if (createdMechanitor
-                || pawn.mechanitor.controlGroups == null
-                || pawn.mechanitor.controlGroups.Count == 0)
+            Pawn_MechanitorTracker mechanitor = pawn.mechanitor;
+            bool controlGroupsWereNull = mechanitor.controlGroups == null;
+            List<MechanitorControlGroup> controlGroups = mechanitor.controlGroups
+                ?? new List<MechanitorControlGroup>();
+            if (controlGroupsWereNull)
             {
-                pawn.mechanitor.Notify_PawnSpawned(true);
+                mechanitor.controlGroups = controlGroups;
+            }
+
+            if (createdMechanitor
+                || controlGroupsWereNull
+                || controlGroups.Count == 0)
+            {
+                mechanitor.Notify_PawnSpawned(true);
             }
         }
     }
