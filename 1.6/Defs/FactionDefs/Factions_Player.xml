@@ -30,7 +30,7 @@
       </li>
     </backstoryFilters>
 
-    <factionIconPath>UI/Factions/MAP_NewMechNest</factionIconPath>
+    <factionIconPath>Faction/NewMechHive</factionIconPath>
 
     <startingResearchTags>
       <li>ClassicStart</li>
