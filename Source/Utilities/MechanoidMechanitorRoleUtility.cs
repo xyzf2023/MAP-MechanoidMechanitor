@@ -22,8 +22,6 @@ namespace MAP_MechanoidMechanitor
         public const int AcquiredMaxIntrinsicBandwidth = 500;
 
         private const string AcquiredIdentityDefName = "MAP_AcquiredMechanoidMechanitor";
-        private const string MechRecodeAbilityDefName = "MAP_Ability_MechRecode";
-        private const string MechReconstructionAbilityDefName = "MAP_Ability_MechReconstruction";
 
         private static readonly HashSet<string> roleWorkTypeDefNames = new HashSet<string>
         {
@@ -53,8 +51,6 @@ namespace MAP_MechanoidMechanitor
         };
 
         private static HediffDef? acquiredIdentityDef;
-        private static AbilityDef? mechRecodeAbilityDef;
-        private static AbilityDef? mechReconstructionAbilityDef;
         private static List<WorkTypeDef>? cachedRoleWorkTypes;
 
         public static bool HasNativeMechanitorMarker(Pawn? pawn)
@@ -224,7 +220,6 @@ namespace MAP_MechanoidMechanitor
 
             EnsureAcquiredSkillProfile(pawn);
             EnsureWorkSettings(pawn);
-            EnsureRoleAbilities(pawn);
 
             PawnComponentsUtility.AddAndRemoveDynamicComponents(
                 pawn,
@@ -491,26 +486,6 @@ namespace MAP_MechanoidMechanitor
             MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
         }
 
-        private static void EnsureRoleAbilities(Pawn pawn)
-        {
-            pawn.abilities ??= new Pawn_AbilityTracker(pawn);
-
-            mechRecodeAbilityDef ??=
-                DefDatabase<AbilityDef>.GetNamedSilentFail(MechRecodeAbilityDefName);
-            mechReconstructionAbilityDef ??=
-                DefDatabase<AbilityDef>.GetNamedSilentFail(
-                    MechReconstructionAbilityDefName);
-
-            if (mechRecodeAbilityDef != null)
-            {
-                pawn.abilities.GainAbility(mechRecodeAbilityDef);
-            }
-            if (mechReconstructionAbilityDef != null)
-            {
-                pawn.abilities.GainAbility(mechReconstructionAbilityDef);
-            }
-        }
-
         private static void EnsureAcquiredSkillProfile(Pawn pawn)
         {
             if (!IsAcquiredMechanoidMechanitor(pawn) || pawn.skills == null)
@@ -534,11 +509,43 @@ namespace MAP_MechanoidMechanitor
 
         private static void SetSkillLevel(Pawn pawn, SkillDef skill, int level)
         {
-            SkillRecord? record = pawn.skills?.GetSkill(skill);
-            if (record != null && record.Level < level)
+            if (pawn.skills == null)
             {
-                record.Level = level;
+                return;
             }
+
+            if (pawn.skills.skills == null)
+            {
+                pawn.skills.skills = new List<SkillRecord>();
+            }
+
+            List<SkillRecord> skillsList = pawn.skills.skills;
+            SkillRecord? record = null;
+            for (int i = 0; i < skillsList.Count; i++)
+            {
+                SkillRecord? candidate = skillsList[i];
+                if (candidate != null && candidate.def == skill)
+                {
+                    record = candidate;
+                    break;
+                }
+            }
+
+            if (record != null)
+            {
+                if (record.Level < level)
+                {
+                    record.Level = level;
+                }
+
+                return;
+            }
+
+            record = new SkillRecord(pawn, skill)
+            {
+                Level = level
+            };
+            skillsList.Add(record);
         }
     }
 }
