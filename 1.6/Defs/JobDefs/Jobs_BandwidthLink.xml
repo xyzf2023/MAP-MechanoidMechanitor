@@ -2,8 +2,8 @@
 <Defs>
   <JobDef>
     <defName>MAP_UseBandwidthLink</defName>
-    <label>安装带宽协调模块</label>
+    <label>安装自律指令核心</label>
     <driverClass>MAP_MechanoidMechanitor.JobDriver_UseBandwidthLink</driverClass>
-    <reportString>正在安装带宽协调模块。</reportString>
+    <reportString>正在安装自律指令核心。</reportString>
   </JobDef>
 </Defs>
