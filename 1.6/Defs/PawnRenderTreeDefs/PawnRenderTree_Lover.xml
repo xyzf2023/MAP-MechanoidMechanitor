@@ -50,7 +50,7 @@
         <li>
           <debugLabel>Lover head</debugLabel>
           <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_LoverHead</nodeClass>
-          <workerClass>PawnRenderNodeWorker_Head</workerClass>
+          <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_LoverHead</workerClass>
           <tagDef>Head</tagDef>
           <skipFlag>Head</skipFlag>
           <pawnType>Any</pawnType>
