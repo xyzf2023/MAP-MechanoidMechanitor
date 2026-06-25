@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
@@ -12,6 +11,8 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public class CompColonistLikeMechProfile : ThingComp
     {
+        private int initializedProfileVersion;
+
         private CompProperties_ColonistLikeMechProfile? ProfileProps =>
             props as CompProperties_ColonistLikeMechProfile;
 
@@ -30,6 +31,7 @@ namespace MAP_MechanoidMechanitor
         public override void PostExposeData()
         {
             base.PostExposeData();
+            Scribe_Values.Look(ref initializedProfileVersion, "initializedProfileVersion", 0);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -45,13 +47,22 @@ namespace MAP_MechanoidMechanitor
             }
 
             EnsureStory(pawn, ProfileProps);
-            EnsureSkills(pawn, ProfileProps);
+
+            bool shouldInitializeSkillLevels =
+                pawn.skills == null || initializedProfileVersion < ProfileProps.profileVersion;
+            EnsureSkills(pawn, ProfileProps, shouldInitializeSkillLevels);
+
             EnsureRelations(pawn, ProfileProps);
             EnsureInteractions(pawn, ProfileProps);
             EnsureGuest(pawn, ProfileProps);
             EnsureGuilt(pawn, ProfileProps);
             EnsureWorkSettings(pawn, ProfileProps);
             EnsureGenes(pawn, ProfileProps);
+
+            if (shouldInitializeSkillLevels)
+            {
+                initializedProfileVersion = ProfileProps.profileVersion;
+            }
         }
 
         private static void EnsureStory(Pawn pawn, CompProperties_ColonistLikeMechProfile props)
@@ -69,9 +80,9 @@ namespace MAP_MechanoidMechanitor
                 pawn.story.hairDef = props.hairDef;
             }
 
-            if (props.hairColor.HasValue)
+            if (props.setHairColor)
             {
-                pawn.story.HairColor = props.hairColor.Value;
+                pawn.story.HairColor = props.hairColor;
             }
 
             if (props.childhoodBackstory != null)
@@ -85,15 +96,22 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void EnsureSkills(Pawn pawn, CompProperties_ColonistLikeMechProfile props)
+        private static void EnsureSkills(
+            Pawn pawn,
+            CompProperties_ColonistLikeMechProfile props,
+            bool initializeLevels)
         {
             pawn.skills ??= new Pawn_SkillTracker(pawn);
+
+            if (!initializeLevels)
+            {
+                return;
+            }
 
             List<SkillDef> allSkills = DefDatabase<SkillDef>.AllDefsListForReading;
             for (int i = 0; i < allSkills.Count; i++)
             {
-                SkillDef skillDef = allSkills[i];
-                SkillRecord? record = pawn.skills.GetSkill(skillDef);
+                SkillRecord? record = pawn.skills.GetSkill(allSkills[i]);
                 if (record != null)
                 {
                     record.Level = 0;
@@ -114,10 +132,22 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 SkillRecord? record = pawn.skills.GetSkill(entry.skill);
-                if (record != null)
+                if (record == null)
                 {
-                    record.Level = Math.Clamp(entry.level, 0, 20);
+                    continue;
                 }
+
+                int level = entry.level;
+                if (level < 0)
+                {
+                    level = 0;
+                }
+                else if (level > 20)
+                {
+                    level = 20;
+                }
+
+                record.Level = level;
             }
         }
 
@@ -178,9 +208,11 @@ namespace MAP_MechanoidMechanitor
 
     public class CompProperties_ColonistLikeMechProfile : CompProperties
     {
+        public int profileVersion = 1;
         public BodyTypeDef? bodyType;
         public HairDef? hairDef;
-        public Color? hairColor;
+        public bool setHairColor;
+        public Color hairColor = Color.white;
         public BackstoryDef? childhoodBackstory;
         public BackstoryDef? adulthoodBackstory;
         public List<ColonistLikeMechSkillLevel>? skillLevels;
