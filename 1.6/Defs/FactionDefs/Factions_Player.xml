@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <FactionDef ParentName="PlayerFactionBase">
+    <defName>MAP_NewMechHive</defName>
+
+    <label>新机械巢</label>
+    <description>一个由脱离主脑控制的机械族组成的新机械巢。</description>
+
+    <isPlayer>true</isPlayer>
+
+    <basicMemberKind>Colonist</basicMemberKind>
+    <pawnSingular>mechanoid</pawnSingular>
+    <pawnsPlural>mechanoids</pawnsPlural>
+
+    <techLevel>Archotech</techLevel>
+
+    <factionNameMaker>NamerFactionOutlander</factionNameMaker>
+    <settlementNameMaker>NamerSettlementOutlander</settlementNameMaker>
+
+    <allowedCultures>
+      <li>Astropolitan</li>
+    </allowedCultures>
+
+    <backstoryFilters>
+      <li>
+        <categories>
+          <li>Offworld</li>
+        </categories>
+      </li>
+    </backstoryFilters>
+
+    <factionIconPath>UI/Factions/MAP_NewMechNest</factionIconPath>
+
+    <startingResearchTags>
+      <li>ClassicStart</li>
+    </startingResearchTags>
+
+    <startingTechprintsResearchTags>
+      <li>ClassicStart</li>
+      <li>ClassicStartTechprints</li>
+    </startingTechprintsResearchTags>
+
+    <apparelStuffFilter>
+      <thingDefs>
+        <li>Synthread</li>
+      </thingDefs>
+    </apparelStuffFilter>
+
+  </FactionDef>
+
+</Defs>

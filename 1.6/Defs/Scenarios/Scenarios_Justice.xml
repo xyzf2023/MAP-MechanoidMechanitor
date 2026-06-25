@@ -28,10 +28,15 @@
     <description>TODO</description>
     <scenario>
       <summary>TODO</summary>
+
+      <playerFaction>
+        <factionDef>MAP_NewMechHive</factionDef>
+      </playerFaction>
+
       <parts>
         <li Class="ScenPart_GameStartDialog">
           <def>GameStartDialog</def>
-          <text>You knew you could only achieve greatness with help. People were too unreliable, so you chose to take on mechanoids as your servants, workers, and warriors.\n\nAs you gained strength, others became fearful. It became clear you needed to get away from the influence of humanity.\n\nNow you've migrated to this sparsely-populated rimworld with some of your metallic helpers. Finally, you have the space to grasp your true potential!</text>
+          <text>TODO</text>
           <closeSound>GameStartSting</closeSound>
         </li>
 
