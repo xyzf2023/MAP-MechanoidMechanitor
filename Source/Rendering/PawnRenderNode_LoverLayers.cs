@@ -80,7 +80,14 @@ namespace MAP_MechanoidMechanitor
 
         public override GraphicMeshSet MeshSetFor(Pawn pawn)
         {
-            return HumanlikeMeshPoolUtility.GetHumanlikeHairSetForPawn(pawn);
+            if (props.overrideMeshSize.HasValue)
+            {
+                return MeshPool.GetMeshSetForSize(
+                    props.overrideMeshSize.Value.x,
+                    props.overrideMeshSize.Value.y);
+            }
+
+            return HumanlikeMeshPoolUtility.GetHumanlikeHeadSetForPawn(pawn);
         }
 
         public override Graphic GraphicFor(Pawn pawn)
@@ -98,6 +105,58 @@ namespace MAP_MechanoidMechanitor
                 ShaderDatabase.CutoutHair,
                 Vector2.one,
                 ColorFor(pawn));
+        }
+    }
+
+    public class PawnRenderNodeWorker_LoverHead : PawnRenderNodeWorker_FlipWhenCrawling
+    {
+        public override bool CanDrawNow(
+            PawnRenderNode node,
+            PawnDrawParms parms)
+        {
+            return base.CanDrawNow(node, parms)
+                && !parms.flags.FlagSet(PawnRenderFlags.HeadStump);
+        }
+
+        public override Vector3 OffsetFor(
+            PawnRenderNode node,
+            PawnDrawParms parms,
+            out Vector3 pivot)
+        {
+            Vector3 result = base.OffsetFor(node, parms, out pivot);
+
+            if (parms.pawn.story?.bodyType != null)
+            {
+                result += parms.pawn.Drawer.renderer.BaseHeadOffsetAt(parms.facing);
+            }
+
+            if (!parms.Portrait && parms.swimming)
+            {
+                result.z -= 0.5f;
+            }
+
+            return result;
+        }
+
+        public override Quaternion RotationFor(
+            PawnRenderNode node,
+            PawnDrawParms parms)
+        {
+            Quaternion result = base.RotationFor(node, parms);
+
+            if (!parms.Portrait && parms.pawn.Crawling)
+            {
+                result *= PawnRenderUtility
+                    .CrawlingHeadAngle(parms.facing)
+                    .ToQuat();
+
+                if (parms.flipHead)
+                {
+                    result *= 180f.ToQuat();
+                }
+            }
+
+            return result;
         }
     }
 }
