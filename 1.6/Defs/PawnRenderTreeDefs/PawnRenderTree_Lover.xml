@@ -11,34 +11,38 @@
       <children>
 
         <li>
-          <debugLabel>Lover body</debugLabel>
-          <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_LoverBody</nodeClass>
+          <debugLabel>Body</debugLabel>
+          <nodeClass>PawnRenderNode_Body</nodeClass>
           <workerClass>PawnRenderNodeWorker_Body</workerClass>
           <tagDef>Body</tagDef>
           <skipFlag>Body</skipFlag>
           <pawnType>Any</pawnType>
-          <texPath>Lover/LoverBody</texPath>
-          <baseLayer>0</baseLayer>
-          <drawSize>1</drawSize>
-          <rotDrawMode>Fresh, Rotting, Dessicated</rotDrawMode>
 
           <children>
 
             <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Lover body wounds</debugLabel>
+              <debugLabel>Wounds - pre apparel</debugLabel>
               <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
               <overlayLayer>Body</overlayLayer>
               <baseLayer>8</baseLayer>
             </li>
 
             <li Class="PawnRenderNodeProperties_Parent">
-              <debugLabel>Lover body apparel root</debugLabel>
+              <debugLabel>Apparel root</debugLabel>
               <tagDef>ApparelBody</tagDef>
               <baseLayer>20</baseLayer>
             </li>
 
             <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Lover body firefoam</debugLabel>
+              <debugLabel>Wounds - post apparel</debugLabel>
+              <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
+              <overlayOverApparel>true</overlayOverApparel>
+              <overlayLayer>Body</overlayLayer>
+              <baseLayer>30</baseLayer>
+            </li>
+
+            <li Class="PawnRenderNodeProperties_Overlay">
+              <debugLabel>Firefoam</debugLabel>
               <workerClass>PawnRenderNodeWorker_OverlayFirefoam</workerClass>
               <overlayLayer>Body</overlayLayer>
               <baseLayer>40</baseLayer>
@@ -48,85 +52,98 @@
         </li>
 
         <li>
-          <debugLabel>Lover head</debugLabel>
-          <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_LoverHead</nodeClass>
-          <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_LoverHead</workerClass>
+          <debugLabel>Head stump</debugLabel>
+          <nodeClass>PawnRenderNode_Stump</nodeClass>
+          <workerClass>PawnRenderNodeWorker_Stump</workerClass>
+          <texPath>Things/Pawn/Humanlike/Heads/None_Average_Stump</texPath>
+          <baseLayer>50</baseLayer>
+          <skipFlag>Head</skipFlag>
+          <pawnType>Any</pawnType>
+          <rotDrawMode>Fresh, Rotting</rotDrawMode>
+        </li>
+
+        <li>
+          <debugLabel>Head</debugLabel>
+          <nodeClass>PawnRenderNode_Head</nodeClass>
+          <workerClass>PawnRenderNodeWorker_Head</workerClass>
           <tagDef>Head</tagDef>
           <skipFlag>Head</skipFlag>
           <pawnType>Any</pawnType>
-          <texPath>Lover/Lover_Head/LoverHead</texPath>
           <baseLayer>50</baseLayer>
-          <drawSize>1</drawSize>
-          <rotDrawMode>Fresh, Rotting, Dessicated</rotDrawMode>
-
-          <drawData>
-            <dataNorth>
-              <offset>(0, 0, 0)</offset>
-            </dataNorth>
-            <dataEast>
-              <offset>(0, 0, 0)</offset>
-            </dataEast>
-            <dataSouth>
-              <offset>(0, 0, 0)</offset>
-            </dataSouth>
-            <dataWest>
-              <offset>(0, 0, 0)</offset>
-            </dataWest>
-          </drawData>
 
           <children>
 
             <li>
-              <debugLabel>Lover hair back</debugLabel>
-              <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_LoverHairLayer</nodeClass>
+              <debugLabel>Hair back</debugLabel>
+              <nodeClass>PawnRenderNode</nodeClass>
               <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass>
               <pawnType>Any</pawnType>
               <texPath>Lover/Lover_Hair/LoverHairBack</texPath>
+              <shaderTypeDef>CutoutHair</shaderTypeDef>
               <colorType>Hair</colorType>
               <skipFlag>Hair</skipFlag>
+              <overrideMeshSize>(1.5, 1.5)</overrideMeshSize>
               <baseLayer>49</baseLayer>
-              <drawSize>1</drawSize>
-              <rotDrawMode>Fresh, Rotting, Dessicated</rotDrawMode>
+              <rotDrawMode>Fresh, Rotting</rotDrawMode>
+
+              <drawData>
+                <dataNorth>
+                  <layer>49</layer>
+                </dataNorth>
+                <dataEast>
+                  <layer>-1</layer>
+                </dataEast>
+                <dataSouth>
+                  <layer>-1</layer>
+                </dataSouth>
+                <dataWest>
+                  <layer>-1</layer>
+                </dataWest>
+              </drawData>
             </li>
 
             <li>
-              <debugLabel>Lover hair front</debugLabel>
-              <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_LoverHairLayer</nodeClass>
+              <debugLabel>Hair front</debugLabel>
+              <nodeClass>PawnRenderNode_Hair</nodeClass>
               <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass>
               <pawnType>Any</pawnType>
-              <texPath>Lover/Lover_Hair/LoverHairFront</texPath>
               <colorType>Hair</colorType>
               <skipFlag>Hair</skipFlag>
               <baseLayer>62</baseLayer>
-              <drawSize>1</drawSize>
-              <rotDrawMode>Fresh, Rotting, Dessicated</rotDrawMode>
+              <rotDrawMode>Fresh, Rotting</rotDrawMode>
             </li>
 
             <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Lover head wounds</debugLabel>
+              <debugLabel>Head wounds</debugLabel>
               <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
               <overlayLayer>Head</overlayLayer>
               <baseLayer>65</baseLayer>
             </li>
 
             <li Class="PawnRenderNodeProperties_Parent">
-              <debugLabel>Lover head apparel root</debugLabel>
+              <debugLabel>Apparel root</debugLabel>
               <tagDef>ApparelHead</tagDef>
               <baseLayer>70</baseLayer>
             </li>
 
             <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Lover head firefoam</debugLabel>
+              <debugLabel>Firefoam</debugLabel>
               <workerClass>PawnRenderNodeWorker_OverlayFirefoam</workerClass>
               <overlayLayer>Head</overlayLayer>
               <baseLayer>85</baseLayer>
+            </li>
+
+            <li Class="PawnRenderNodeProperties_Overlay">
+              <debugLabel>Status overlay</debugLabel>
+              <workerClass>PawnRenderNodeWorker_OverlayStatus</workerClass>
+              <baseLayer>100</baseLayer>
             </li>
 
           </children>
         </li>
 
         <li Class="PawnRenderNodeProperties_Carried">
-          <debugLabel>Lover carried thing</debugLabel>
+          <debugLabel>Weapon/carried thing</debugLabel>
           <workerClass>PawnRenderNodeWorker_Carried</workerClass>
         </li>
 
