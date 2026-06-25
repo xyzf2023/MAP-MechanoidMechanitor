@@ -136,7 +136,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 null,
                 null,
                 0f,
-                DevelopmentalStage.Newborn);
+                developmentalStages: DevelopmentalStage.Adult);
 
             Pawn pawn = PawnGenerator.GeneratePawn(request);
             if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
