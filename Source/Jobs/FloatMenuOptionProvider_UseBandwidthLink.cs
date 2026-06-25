@@ -8,8 +8,8 @@ namespace MAP_MechanoidMechanitor
 {
     public class FloatMenuOptionProvider_UseBandwidthLink : FloatMenuOptionProvider
     {
-        private const string BandwidthLinkDefName = "MAP_MechBandwidthLink";
-        private const string InstallLabel = "安装带宽协调模块";
+        private const string AutonomousDirectiveCoreDefName = "MAP_AutonomousDirectiveCore";
+        private const string InstallLabel = "安装自律指令核心";
         private const string AlreadyMechanitorSuffix = "：已经是机械族机械师";
 
         protected override bool Drafted => true;
@@ -26,7 +26,7 @@ namespace MAP_MechanoidMechanitor
             Thing clickedThing,
             FloatMenuContext context)
         {
-            if (clickedThing?.def?.defName != BandwidthLinkDefName)
+            if (clickedThing?.def?.defName != AutonomousDirectiveCoreDefName)
             {
                 yield break;
             }

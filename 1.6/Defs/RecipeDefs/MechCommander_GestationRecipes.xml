@@ -49,7 +49,7 @@
       <li>
         <filter>
           <thingDefs>
-            <li>MAP_MechBandwidthLink</li>
+            <li>MAP_AutonomousDirectiveCore</li>
           </thingDefs>
         </filter>
         <count>1</count>
@@ -61,7 +61,7 @@
         <li>AIPersonaCore</li>
         <li>Plasteel</li>
         <li>ComponentSpacer</li>
-        <li>MAP_MechBandwidthLink</li>
+        <li>MAP_AutonomousDirectiveCore</li>
       </thingDefs>
     </fixedIngredientFilter>
     <products>

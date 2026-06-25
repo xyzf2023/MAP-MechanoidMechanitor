@@ -8,7 +8,7 @@ namespace MAP_MechanoidMechanitor
     public class JobDriver_UseBandwidthLink : JobDriver
     {
         private const int InstallDurationTicks = 600;
-        private const string BandwidthLinkDefName = "MAP_MechBandwidthLink";
+        private const string AutonomousDirectiveCoreDefName = "MAP_AutonomousDirectiveCore";
 
         private Thing Module => TargetThingA;
 
@@ -51,7 +51,7 @@ namespace MAP_MechanoidMechanitor
                 && !Module.Destroyed
                 && Module.Spawned
                 && !Module.IsForbidden(pawn)
-                && IsBandwidthLink(Module)
+                && IsAutonomousDirectiveCore(Module)
                 && !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
                 && MechanoidMechanitorRoleUtility.CanBecomeAcquiredMechanoidMechanitor(pawn);
         }
@@ -66,7 +66,7 @@ namespace MAP_MechanoidMechanitor
             if (!CanInstallNow())
             {
                 Messages.Message(
-                    $"{pawn.LabelShort}无法安装带宽协调模块。",
+                    $"{pawn.LabelShort}无法安装自律指令核心。",
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
@@ -77,7 +77,7 @@ namespace MAP_MechanoidMechanitor
                 || !MechanoidMechanitorRoleUtility.HasAcquiredMechanitorHediff(pawn))
             {
                 Messages.Message(
-                    $"{pawn.LabelShort}无法安装带宽协调模块。",
+                    $"{pawn.LabelShort}无法安装自律指令核心。",
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
@@ -90,9 +90,9 @@ namespace MAP_MechanoidMechanitor
                 MessageTypeDefOf.PositiveEvent);
         }
 
-        private static bool IsBandwidthLink(Thing? thing)
+        private static bool IsAutonomousDirectiveCore(Thing? thing)
         {
-            return thing?.def?.defName == BandwidthLinkDefName;
+            return thing?.def?.defName == AutonomousDirectiveCoreDefName;
         }
     }
 }
