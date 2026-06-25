@@ -201,12 +201,11 @@ namespace MAP_MechanoidMechanitor
             pawn.interactions ??= new Pawn_InteractionsTracker(pawn);
             pawn.guest ??= new Pawn_GuestTracker(pawn);
             pawn.genes ??= new Pawn_GeneTracker(pawn);
-            pawn.skills ??= new Pawn_SkillTracker(pawn);
+            EnsureSkillInfrastructure(pawn);
 
             if (IsAcquiredMechanoidMechanitor(pawn))
             {
-                pawn.story ??= new Pawn_StoryTracker(pawn);
-                pawn.story.bodyType ??= BodyTypeDefOf.Male;
+                pawn.story!.bodyType ??= BodyTypeDefOf.Male;
             }
 
             EnsureAcquiredSkillProfile(pawn);
@@ -477,6 +476,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             return 0;
+        }
+
+        private static void EnsureSkillInfrastructure(Pawn pawn)
+        {
+            pawn.story ??= new Pawn_StoryTracker(pawn);
+            pawn.story.traits ??= new TraitSet(pawn);
+            pawn.skills ??= new Pawn_SkillTracker(pawn);
         }
 
         private static void EnsureWorkSettings(Pawn pawn)
