@@ -16,13 +16,13 @@ namespace MAP_MechanoidMechanitor
         public override void PostPostMake()
         {
             base.PostPostMake();
-            RegisterNativeMechanitorIfApplicable();
+            RegisterNativeMechanitorIfApplicable(pendingLegacyNativeStateImport: false);
         }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
-            RegisterNativeMechanitorIfApplicable();
+            RegisterNativeMechanitorIfApplicable(pendingLegacyNativeStateImport: false);
         }
 
         public override void PostExposeData()
@@ -30,15 +30,21 @@ namespace MAP_MechanoidMechanitor
             base.PostExposeData();
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
-                RegisterNativeMechanitorIfApplicable();
+                bool pendingLegacyImport = parent is Pawn pawn
+                    && !GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
+                        pawn,
+                        out _);
+                RegisterNativeMechanitorIfApplicable(pendingLegacyImport);
             }
         }
 
-        private void RegisterNativeMechanitorIfApplicable()
+        private void RegisterNativeMechanitorIfApplicable(bool pendingLegacyNativeStateImport)
         {
             if (parent is Pawn pawn)
             {
-                GameComponent_MechanoidMechanitorRegistry.RegisterNativeMechanitor(pawn);
+                GameComponent_MechanoidMechanitorRegistry.EnsureNativeMechanitorRecord(
+                    pawn,
+                    pendingLegacyNativeStateImport);
             }
         }
     }

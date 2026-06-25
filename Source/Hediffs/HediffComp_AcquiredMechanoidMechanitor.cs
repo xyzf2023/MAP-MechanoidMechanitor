@@ -14,93 +14,9 @@ namespace MAP_MechanoidMechanitor
 
     public sealed class HediffComp_AcquiredMechanoidMechanitor : HediffComp
     {
-        private int chipBandwidthBonus;
-        private MechWorkModeDef? selfWorkMode;
-        private bool roleWorkSettingsInitialized;
-
-        public int ChipBandwidthBonus => chipBandwidthBonus;
-
-        public int CurrentIntrinsicBandwidth =>
-            MechanoidMechanitorRoleUtility.AcquiredBaseExtraBandwidth + chipBandwidthBonus;
-
-        public int MaxIntrinsicBandwidth =>
-            MechanoidMechanitorRoleUtility.AcquiredMaxIntrinsicBandwidth;
-
-        public int RemainingIntrinsicBandwidth =>
-            System.Math.Max(0, MaxIntrinsicBandwidth - CurrentIntrinsicBandwidth);
-
-        public MechWorkModeDef CurrentSelfWorkMode =>
-            MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(selfWorkMode);
-
-        internal AcquiredMechanitorStateSnapshot CapturePersistentState()
-        {
-            return new AcquiredMechanitorStateSnapshot(
-                chipBandwidthBonus,
-                selfWorkMode,
-                roleWorkSettingsInitialized);
-        }
-
-        internal void RestorePersistentState(
-            int restoredChipBandwidthBonus,
-            MechWorkModeDef? restoredSelfWorkMode,
-            bool restoredRoleWorkSettingsInitialized)
-        {
-            int maxBonus = System.Math.Max(
-                0,
-                MaxIntrinsicBandwidth - MechanoidMechanitorRoleUtility.AcquiredBaseExtraBandwidth);
-            chipBandwidthBonus = UnityEngine.Mathf.Clamp(
-                restoredChipBandwidthBonus,
-                0,
-                maxBonus);
-            selfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(
-                restoredSelfWorkMode);
-            roleWorkSettingsInitialized = restoredRoleWorkSettingsInitialized;
-        }
-
-        public int AddChipBandwidth(int requestedAmount)
-        {
-            if (requestedAmount <= 0)
-            {
-                return 0;
-            }
-
-            int actualAdded = System.Math.Min(requestedAmount, RemainingIntrinsicBandwidth);
-            if (actualAdded <= 0)
-            {
-                return 0;
-            }
-
-            chipBandwidthBonus += actualAdded;
-            Pawn.mechanitor?.Notify_BandwidthChanged();
-            return actualAdded;
-        }
-
-        public void SetSelfWorkMode(MechWorkModeDef? mode)
-        {
-            MechWorkModeDef sanitized =
-                MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(mode);
-            if (CurrentSelfWorkMode == sanitized)
-            {
-                return;
-            }
-
-            selfWorkMode = sanitized;
-            MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(Pawn, sanitized);
-            MechanoidMechanitorSelfWorkModeUtility.NotifyModeChanged(Pawn, sanitized);
-        }
-
-        public override void CompPostMake()
-        {
-            base.CompPostMake();
-            selfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(selfWorkMode);
-        }
-
         public override void CompPostPostAdd(DamageInfo? dinfo)
         {
             base.CompPostPostAdd(dinfo);
-            SyncRegistryOnAdd();
-            GameComponent_MechanoidMechanitorRegistry
-                .TryRestorePendingAcquiredMechanitorState(Pawn, this);
             EnsureState();
         }
 
@@ -109,81 +25,27 @@ namespace MAP_MechanoidMechanitor
             base.CompPostPostRemoved();
             Pawn?.Notify_DisabledWorkTypesChanged();
             Pawn?.mechanitor?.Notify_BandwidthChanged();
-
-            if (Pawn != null
-                && GameComponent_MechanoidMechanitorRegistry
-                    .IsRegisteredAcquiredMechanitor(Pawn))
-            {
-                GameComponent_MechanoidMechanitorRegistry.NotifyAcquiredMechanitorHediffRemoved(
-                    Pawn,
-                    CapturePersistentState());
-            }
+            GameComponent_MechanoidMechanitorRegistry.NotifyAcquiredMechanitorHediffRemoved(Pawn);
         }
 
         public override void Notify_Spawned()
         {
             base.Notify_Spawned();
-            GameComponent_MechanoidMechanitorRegistry.RefreshMechanitorRegistration(Pawn);
+            GameComponent_MechanoidMechanitorRegistry.RequestAcquiredHediffMirror(Pawn);
             EnsureState();
-        }
-
-        public override void CompExposeData()
-        {
-            base.CompExposeData();
-            Scribe_Values.Look(ref chipBandwidthBonus, "acquiredMechanitorChipBandwidthBonus", 0);
-            Scribe_Defs.Look(ref selfWorkMode, "acquiredMechanitorSelfWorkMode");
-            Scribe_Values.Look(
-                ref roleWorkSettingsInitialized,
-                "acquiredMechanitorRoleWorkSettingsInitialized",
-                false);
-
-            if (Scribe.mode == LoadSaveMode.PostLoadInit)
-            {
-                int maxBonus = System.Math.Max(
-                    0,
-                    MaxIntrinsicBandwidth - MechanoidMechanitorRoleUtility.AcquiredBaseExtraBandwidth);
-                chipBandwidthBonus = UnityEngine.Mathf.Clamp(chipBandwidthBonus, 0, maxBonus);
-                selfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(selfWorkMode);
-
-                GameComponent_MechanoidMechanitorRegistry.RegisterLegacyAcquiredMechanitor(Pawn);
-                GameComponent_MechanoidMechanitorRegistry.RefreshMechanitorRegistration(Pawn);
-                LongEventHandler.ExecuteWhenFinished(EnsureState);
-            }
-        }
-
-        public override void CopyFrom(HediffComp other)
-        {
-            base.CopyFrom(other);
-            if (other is not HediffComp_AcquiredMechanoidMechanitor source)
-            {
-                return;
-            }
-
-            chipBandwidthBonus = source.chipBandwidthBonus;
-            selfWorkMode = source.selfWorkMode;
-            roleWorkSettingsInitialized = source.roleWorkSettingsInitialized;
-        }
-
-        private void SyncRegistryOnAdd()
-        {
-            if (Pawn == null)
-            {
-                return;
-            }
-
-            if (GameComponent_MechanoidMechanitorRegistry.IsRegisteredAcquiredMechanitor(Pawn))
-            {
-                GameComponent_MechanoidMechanitorRegistry.RefreshMechanitorRegistration(Pawn);
-            }
-            else
-            {
-                GameComponent_MechanoidMechanitorRegistry.RegisterLegacyAcquiredMechanitor(Pawn);
-            }
         }
 
         private void EnsureState()
         {
             if (Pawn == null || Pawn.Destroyed)
+            {
+                return;
+            }
+
+            if (!GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
+                    Pawn,
+                    out MechanoidMechanitorRecord? record)
+                || record == null)
             {
                 return;
             }
@@ -199,15 +61,16 @@ namespace MAP_MechanoidMechanitor
 
             Pawn.Notify_DisabledWorkTypesChanged();
             MechanoidMechanitorRoleUtility.EnsureRoleState(Pawn);
-            InitializeRoleWorkSettingsIfNeeded();
+            InitializeRoleWorkSettingsIfNeeded(record);
             MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
                 Pawn,
-                CurrentSelfWorkMode);
+                record.SelfWorkMode
+                    ?? MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(null));
         }
 
-        private void InitializeRoleWorkSettingsIfNeeded()
+        private void InitializeRoleWorkSettingsIfNeeded(MechanoidMechanitorRecord record)
         {
-            if (roleWorkSettingsInitialized || Pawn.workSettings == null)
+            if (record.RoleWorkSettingsInitialized || Pawn.workSettings == null)
             {
                 return;
             }
@@ -222,7 +85,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            roleWorkSettingsInitialized = true;
+            record.RoleWorkSettingsInitialized = true;
         }
     }
 }

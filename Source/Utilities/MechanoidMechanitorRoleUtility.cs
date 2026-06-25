@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
@@ -65,48 +66,40 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsNativeMechanoidMechanitor(Pawn? pawn)
         {
-            return HasNativeMechanitorMarker(pawn);
+            return GameComponent_MechanoidMechanitorRegistry.TryGetNativeMechanitorRecord(
+                pawn,
+                out _);
         }
 
         public static bool IsAcquiredMechanoidMechanitor(Pawn? pawn)
         {
-            if (pawn == null)
-            {
-                return false;
-            }
-
-            if (!Scenarios.GameComponent_MechanoidMechanitorRegistry
-                    .IsRegisteredAcquiredMechanitor(pawn))
-            {
-                return false;
-            }
-
-            Scenarios.GameComponent_MechanoidMechanitorRegistry
-                .EnsureAcquiredMechanitorHediff(pawn);
-            return true;
+            return GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
+                pawn,
+                out _);
         }
 
         public static bool IsMechanoidMechanitor(Pawn? pawn)
         {
-            return IsNativeMechanoidMechanitor(pawn)
-                || IsAcquiredMechanoidMechanitor(pawn);
+            return GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
+                pawn,
+                out _);
         }
 
         public static bool IsMechanicalConsciousnessHost(Pawn? pawn)
         {
-            return Scenarios.GameComponent_MechanoidMechanitorRegistry
+            return GameComponent_MechanoidMechanitorRegistry
                 .IsMechanicalConsciousnessHost(pawn);
         }
 
         public static bool IsScenarioProtagonist(Pawn? pawn)
         {
-            return Scenarios.GameComponent_MechanoidMechanitorRegistry
+            return GameComponent_MechanoidMechanitorRegistry
                 .IsScenarioProtagonist(pawn);
         }
 
         public static bool CanHostMechanicalConsciousness(Pawn? pawn)
         {
-            return Scenarios.GameComponent_MechanoidMechanitorRegistry
+            return GameComponent_MechanoidMechanitorRegistry
                 .CanHostMechanicalConsciousness(pawn);
         }
 
@@ -151,7 +144,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (pawn.health?.hediffSet == null
-                || IsNativeMechanoidMechanitor(pawn))
+                || HasNativeMechanitorMarker(pawn)
+                || IsAcquiredMechanoidMechanitor(pawn))
             {
                 return false;
             }
@@ -168,17 +162,14 @@ namespace MAP_MechanoidMechanitor
 
             if (IsNativeMechanoidMechanitor(pawn))
             {
-                Scenarios.GameComponent_MechanoidMechanitorRegistry
-                    .RegisterNativeMechanitor(pawn);
+                GameComponent_MechanoidMechanitorRegistry.EnsureNativeMechanitorRecord(pawn);
                 EnsureRoleState(pawn);
                 return true;
             }
 
-            if (Scenarios.GameComponent_MechanoidMechanitorRegistry
-                    .IsRegisteredAcquiredMechanitor(pawn))
+            if (IsAcquiredMechanoidMechanitor(pawn))
             {
-                Scenarios.GameComponent_MechanoidMechanitorRegistry
-                    .RefreshMechanitorRegistration(pawn);
+                GameComponent_MechanoidMechanitorRegistry.EnsureAcquiredMechanitorHediff(pawn);
                 EnsureRoleState(pawn);
                 return true;
             }
@@ -188,7 +179,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return Scenarios.GameComponent_MechanoidMechanitorRegistry
+            return GameComponent_MechanoidMechanitorRegistry
                 .GrantAcquiredMechanitorIdentity(pawn);
         }
 
@@ -255,23 +246,16 @@ namespace MAP_MechanoidMechanitor
 
         public static int GetExtraMechBandwidth(Pawn? pawn)
         {
-            if (TryGetAcquiredIdentityComp(
+            if (!GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
                     pawn,
-                    out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
-                && acquiredComp != null)
+                    out MechanoidMechanitorRecord? record)
+                || record == null
+                || record.Pawn == null)
             {
-                return acquiredComp.CurrentIntrinsicBandwidth;
+                return 0;
             }
 
-            if (CompMAPMechanitorNode.TryGetNodeComp(
-                    pawn,
-                    out CompMAPMechanitorNode? nativeComp)
-                && nativeComp != null)
-            {
-                return nativeComp.CurrentIntrinsicBandwidth;
-            }
-
-            return 0;
+            return GetBaseIntrinsicBandwidth(record.Pawn, record) + record.ChipBandwidthBonus;
         }
 
         public static int GetExtraMechControlGroups(Pawn? pawn)
@@ -331,44 +315,46 @@ namespace MAP_MechanoidMechanitor
 
         public static int GetRemainingIntrinsicBandwidth(Pawn? pawn)
         {
-            if (TryGetAcquiredIdentityComp(
+            if (!GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
                     pawn,
-                    out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
-                && acquiredComp != null)
+                    out MechanoidMechanitorRecord? record)
+                || record == null
+                || record.Pawn == null)
             {
-                return acquiredComp.RemainingIntrinsicBandwidth;
+                return 0;
             }
 
-            if (CompMAPMechanitorNode.TryGetNodeComp(
-                    pawn,
-                    out CompMAPMechanitorNode? nativeComp)
-                && nativeComp != null)
+            int maxIntrinsic = GetMaxIntrinsicBandwidth(pawn);
+            if (maxIntrinsic <= 0)
             {
-                return nativeComp.RemainingIntrinsicBandwidth;
+                return 0;
             }
 
-            return 0;
+            int current = GetBaseIntrinsicBandwidth(record.Pawn, record) + record.ChipBandwidthBonus;
+            return Math.Max(0, maxIntrinsic - current);
         }
 
         public static int AddChipBandwidth(Pawn? pawn, int requestedAmount)
         {
-            if (TryGetAcquiredIdentityComp(
+            if (requestedAmount <= 0
+                || !AllowsBossChipBandwidthUpgrade(pawn)
+                || !GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
                     pawn,
-                    out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
-                && acquiredComp != null)
+                    out MechanoidMechanitorRecord? record)
+                || record == null)
             {
-                return acquiredComp.AddChipBandwidth(requestedAmount);
+                return 0;
             }
 
-            if (CompMAPMechanitorNode.TryGetNodeComp(
-                    pawn,
-                    out CompMAPMechanitorNode? nativeComp)
-                && nativeComp != null)
+            int actualAdded = Math.Min(requestedAmount, GetRemainingIntrinsicBandwidth(pawn));
+            if (actualAdded <= 0)
             {
-                return nativeComp.AddChipBandwidth(requestedAmount);
+                return 0;
             }
 
-            return 0;
+            record.ChipBandwidthBonus += actualAdded;
+            pawn?.mechanitor?.Notify_BandwidthChanged();
+            return actualAdded;
         }
 
         public static bool AllowsHumanWeapons(Pawn? pawn)
@@ -473,6 +459,24 @@ namespace MAP_MechanoidMechanitor
         {
             return acquiredIdentityDef ??=
                 DefDatabase<HediffDef>.GetNamedSilentFail(AcquiredIdentityDefName);
+        }
+
+        private static int GetBaseIntrinsicBandwidth(
+            Pawn pawn,
+            MechanoidMechanitorRecord record)
+        {
+            if (record.Origin == MechanoidMechanitorOrigin.Acquired)
+            {
+                return AcquiredBaseExtraBandwidth;
+            }
+
+            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? nativeComp)
+                && nativeComp != null)
+            {
+                return nativeComp.BaseExtraMechBandwidth;
+            }
+
+            return 0;
         }
 
         private static void EnsureWorkSettings(Pawn pawn)

@@ -1,4 +1,5 @@
 using System;
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -30,11 +31,11 @@ namespace MAP_MechanoidMechanitor
 
         public CompProperties_MAPMechanitorNode? NodeProps => props as CompProperties_MAPMechanitorNode;
 
-        public int ChipBandwidthBonus => chipBandwidthBonus;
+        public int ChipBandwidthBonus => GetAuthoritativeChipBandwidthBonus();
 
         public int BaseExtraMechBandwidth => NodeProps?.extraMechBandwidth ?? 0;
 
-        public int CurrentIntrinsicBandwidth => BaseExtraMechBandwidth + chipBandwidthBonus;
+        public int CurrentIntrinsicBandwidth => BaseExtraMechBandwidth + ChipBandwidthBonus;
 
         public int MaxIntrinsicBandwidth => NodeProps?.maxIntrinsicBandwidth ?? 0;
 
@@ -74,25 +75,13 @@ namespace MAP_MechanoidMechanitor
             return comp != null;
         }
 
+        internal int GetLegacyChipBandwidthBonusForMigration() => chipBandwidthBonus;
+
         public int AddChipBandwidth(int requestedAmount)
         {
-            if (requestedAmount <= 0
-                || !AllowsBossChipBandwidthUpgrade
-                || MaxIntrinsicBandwidth <= 0)
-            {
-                return 0;
-            }
-
-            int remaining = RemainingIntrinsicBandwidth;
-            int actualAdded = Math.Min(requestedAmount, remaining);
-            if (actualAdded <= 0)
-            {
-                return 0;
-            }
-
-            chipBandwidthBonus += actualAdded;
-            NotifyBandwidthChanged();
-            return actualAdded;
+            return MechanoidMechanitorRoleUtility.AddChipBandwidth(
+                parent as Pawn,
+                requestedAmount);
         }
 
         public override void PostExposeData()
@@ -154,6 +143,21 @@ namespace MAP_MechanoidMechanitor
             {
                 NotifyBandwidthChanged();
             }
+        }
+
+        private int GetAuthoritativeChipBandwidthBonus()
+        {
+            if (parent is Pawn pawn
+                && GameComponent_MechanoidMechanitorRegistry.TryGetNativeMechanitorRecord(
+                    pawn,
+                    out MechanoidMechanitorRecord? record)
+                && record != null
+                && !record.PendingLegacyNativeStateImport)
+            {
+                return record.ChipBandwidthBonus;
+            }
+
+            return chipBandwidthBonus;
         }
 
         private void QueueBandwidthRefreshAfterLoad()
