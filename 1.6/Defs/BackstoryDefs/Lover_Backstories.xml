@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <BackstoryDef>
+    <defName>MAP_Lover_Childhood</defName>
+    <identifier>MAP_Lover_Childhood</identifier>
+    <slot>Childhood</slot>
+    <title>仿生机械体</title>
+    <titleFemale>仿生机械体</titleFemale>
+    <titleShort>仿生机械体</titleShort>
+    <titleShortFemale>仿生机械体</titleShortFemale>
+    <description>「恋人」以接近人类的身体结构制造，其感知、交流与精密操作协议均围绕长期协同任务进行了调整。</description>
+    <workDisables>None</workDisables>
+    <requiredWorkTags>None</requiredWorkTags>
+    <shuffleable>False</shuffleable>
+  </BackstoryDef>
+
+  <BackstoryDef>
+    <defName>MAP_Lover_Adulthood</defName>
+    <identifier>MAP_Lover_Adulthood</identifier>
+    <slot>Adulthood</slot>
+    <title>协同执行单元</title>
+    <titleFemale>协同执行单元</titleFemale>
+    <titleShort>协同执行单元</titleShort>
+    <titleShortFemale>协同执行单元</titleShortFemale>
+    <description>在完成基础人格与技能写入后，「恋人」被配置为兼顾战斗、医疗、照料和交流任务的机械执行单元。</description>
+    <workDisables>None</workDisables>
+    <requiredWorkTags>None</requiredWorkTags>
+    <shuffleable>False</shuffleable>
+  </BackstoryDef>
+
+</Defs>
