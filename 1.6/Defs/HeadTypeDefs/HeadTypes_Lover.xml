@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <HeadTypeDef ParentName="AverageBase">
+    <defName>MAP_LoverHead</defName>
+    <graphicPath>Lover/Lover_Head/LoverHead</graphicPath>
+    <gender>Female</gender>
+    <eyeOffsetEastWest>(0.13, 0, 0.17)</eyeOffsetEastWest>
+    <selectionWeight>0</selectionWeight>
+    <randomChosen>false</randomChosen>
+  </HeadTypeDef>
+
+</Defs>

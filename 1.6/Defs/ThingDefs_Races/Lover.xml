@@ -124,7 +124,8 @@
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
         <profileVersion>1</profileVersion>
-        <bodyType>Female</bodyType>
+        <bodyType>MAP_LoverFemale</bodyType>
+        <headType>MAP_LoverHead</headType>
         <hairDef>MAP_LoverHair</hairDef>
         <setHairColor>true</setHairColor>
         <hairColor>(0.82, 0.84, 0.88)</hairColor>
@@ -204,7 +205,7 @@
           <texPath>Lover/LoverBody</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
-          <drawSize>1.7</drawSize>
+          <drawSize>1</drawSize>
         </bodyGraphicData>
       </li>
     </lifeStages>

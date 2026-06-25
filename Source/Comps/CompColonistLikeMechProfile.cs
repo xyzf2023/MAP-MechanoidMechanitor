@@ -75,6 +75,11 @@ namespace MAP_MechanoidMechanitor
                 pawn.story.bodyType = props.bodyType;
             }
 
+            if (props.headType != null)
+            {
+                pawn.story.headType = props.headType;
+            }
+
             if (props.hairDef != null)
             {
                 pawn.story.hairDef = props.hairDef;
@@ -210,6 +215,7 @@ namespace MAP_MechanoidMechanitor
     {
         public int profileVersion = 1;
         public BodyTypeDef? bodyType;
+        public HeadTypeDef? headType;
         public HairDef? hairDef;
         public bool setHairColor;
         public Color hairColor = Color.white;
