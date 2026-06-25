@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -20,12 +21,17 @@ namespace MAP_MechanoidMechanitor
         public static bool HasSelfWorkMode(Pawn? pawn)
         {
             return CompJusticeSelfWorkMode.GetFor(pawn) != null
-                || MechanoidMechanitorRoleUtility.TryGetAcquiredIdentityComp(pawn, out _);
+                || MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn);
         }
 
         public static bool TryGetCurrentMode(Pawn? pawn, out MechWorkModeDef? mode)
         {
             mode = null;
+            if (pawn == null)
+            {
+                return false;
+            }
+
             CompJusticeSelfWorkMode? nativeComp = CompJusticeSelfWorkMode.GetFor(pawn);
             if (nativeComp != null)
             {
@@ -33,12 +39,12 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (MechanoidMechanitorRoleUtility.TryGetAcquiredIdentityComp(
+            if (GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
                     pawn,
-                    out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
-                && acquiredComp != null)
+                    out MechanoidMechanitorRecord? record)
+                && record != null)
             {
-                mode = acquiredComp.CurrentSelfWorkMode;
+                mode = SanitizeWorkMode(record.SelfWorkMode);
                 return true;
             }
 
@@ -60,13 +66,23 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (MechanoidMechanitorRoleUtility.TryGetAcquiredIdentityComp(
+            if (!GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
                     pawn,
-                    out HediffComp_AcquiredMechanoidMechanitor? acquiredComp)
-                && acquiredComp != null)
+                    out MechanoidMechanitorRecord? record)
+                || record == null)
             {
-                acquiredComp.SetSelfWorkMode(mode);
+                return;
             }
+
+            MechWorkModeDef sanitized = SanitizeWorkMode(mode);
+            if (SanitizeWorkMode(record.SelfWorkMode) == sanitized)
+            {
+                return;
+            }
+
+            record.SelfWorkMode = sanitized;
+            ApplyAcquiredSelfWorkMode(pawn, sanitized);
+            NotifyModeChanged(pawn, sanitized);
         }
 
         public static void AddSelfWorkModeFloatMenuOptions(

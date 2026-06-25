@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -38,7 +39,7 @@ namespace MAP_MechanoidMechanitor
         private static HediffDef? autonomousDirectiveHediffDef;
         private static HediffDef? selfRepairHediffDef;
 
-        public MechWorkModeDef CurrentSelfWorkMode => SanitizeWorkMode(selfWorkMode);
+        public MechWorkModeDef CurrentSelfWorkMode => SanitizeWorkMode(GetAuthoritativeSelfWorkMode());
 
         public bool IsAutonomousDirective =>
             CurrentSelfWorkMode.defName == AutonomousDirectiveDefName;
@@ -49,6 +50,8 @@ namespace MAP_MechanoidMechanitor
         public static CompJusticeSelfWorkMode? GetFor(Pawn? pawn) =>
             pawn?.GetComp<CompJusticeSelfWorkMode>();
 
+        internal MechWorkModeDef? GetLegacySelfWorkModeForMigration() => selfWorkMode;
+
         public void SetSelfWorkMode(MechWorkModeDef? mode)
         {
             MechWorkModeDef sanitized = SanitizeWorkMode(mode);
@@ -57,27 +60,39 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            selfWorkMode = sanitized;
+            if (parent is Pawn pawn
+                && GameComponent_MechanoidMechanitorRegistry.TryGetNativeMechanitorRecord(
+                    pawn,
+                    out MechanoidMechanitorRecord? record)
+                && record != null)
+            {
+                record.SelfWorkMode = sanitized;
+            }
+            else
+            {
+                selfWorkMode = sanitized;
+            }
+
             if (SyncSelfWorkModeHediff())
             {
                 selfWorkModeHediffInitialized = true;
             }
 
-            if (parent is not Pawn pawn)
+            if (parent is not Pawn workPawn)
             {
                 return;
             }
 
-            PawnComponentsUtility.AddAndRemoveDynamicComponents(pawn, actAsIfSpawned: true);
+            PawnComponentsUtility.AddAndRemoveDynamicComponents(workPawn, actAsIfSpawned: true);
             if (sanitized != MechWorkModeDefOf.Recharge
-                && pawn.CurJobDef == JobDefOf.MechCharge
-                && pawn.IsCharging())
+                && workPawn.CurJobDef == JobDefOf.MechCharge
+                && workPawn.IsCharging())
             {
-                pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                workPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
             }
 
-            pawn.TryGetComp<CompCanBeDormant>()?.WakeUp();
-            pawn.jobs?.CheckForJobOverride();
+            workPawn.TryGetComp<CompCanBeDormant>()?.WakeUp();
+            workPawn.jobs?.CheckForJobOverride();
         }
 
         public static string GetDisplayLabel(MechWorkModeDef mode)
@@ -130,6 +145,22 @@ namespace MAP_MechanoidMechanitor
             {
                 selfWorkMode = SanitizeWorkMode(selfWorkMode);
             }
+        }
+
+        private MechWorkModeDef? GetAuthoritativeSelfWorkMode()
+        {
+            if (parent is Pawn pawn
+                && GameComponent_MechanoidMechanitorRegistry.TryGetNativeMechanitorRecord(
+                    pawn,
+                    out MechanoidMechanitorRecord? record)
+                && record != null
+                && !record.PendingLegacyNativeStateImport
+                && record.SelfWorkMode != null)
+            {
+                return record.SelfWorkMode;
+            }
+
+            return selfWorkMode;
         }
 
         private bool SyncSelfWorkModeHediff()
