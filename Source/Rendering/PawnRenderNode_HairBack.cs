@@ -4,7 +4,7 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    public class PawnRenderNode_HairBack : PawnRenderNode_Hair
+    public sealed class PawnRenderNode_HairBack : PawnRenderNode_Hair
     {
         public PawnRenderNode_HairBack(
             Pawn pawn,
@@ -28,13 +28,6 @@ namespace MAP_MechanoidMechanitor
             if (extension == null || extension.backTexPath.NullOrEmpty())
             {
                 return null!;
-            }
-
-            if (props.overrideMeshSize.HasValue)
-            {
-                return MeshPool.GetMeshSetForSize(
-                    props.overrideMeshSize.Value.x,
-                    props.overrideMeshSize.Value.y);
             }
 
             return base.MeshSetFor(pawn);
