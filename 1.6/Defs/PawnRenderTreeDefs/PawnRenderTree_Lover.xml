@@ -75,10 +75,9 @@
 
             <li> <!-- 后发节点 -->
               <debugLabel>Hair back</debugLabel> <!-- 调试标签：后发 -->
-              <nodeClass>PawnRenderNode</nodeClass> <!-- 节点类：通用渲染节点 -->
+              <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_HairBack</nodeClass> <!-- 节点类：后发 -->
               <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass> <!-- 工作类：爬行时翻转 -->
               <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
-              <texPath>Lover/Lover_Hair/LoverHairBack</texPath> <!-- 贴图路径：Lover 后发 -->
               <shaderTypeDef>CutoutHair</shaderTypeDef> <!-- 着色器：头发镂空 -->
               <colorType>Hair</colorType> <!-- 颜色类型：发色 -->
               <skipFlag>Hair</skipFlag> <!-- 跳过标志：头发 -->

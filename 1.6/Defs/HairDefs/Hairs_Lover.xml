@@ -9,6 +9,12 @@
     <styleTags>
       <li>Urban</li>
     </styleTags>
+
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.HairRenderExtension">
+        <backTexPath>Lover/Lover_Hair/LoverHairBack</backTexPath>
+      </li>
+    </modExtensions>
   </HairDef>
 
 </Defs>
