@@ -30,7 +30,12 @@ namespace MAP_MechanoidMechanitor
                 return null!;
             }
 
-            return base.MeshSetFor(pawn);
+            if (pawn.DevelopmentalStage.Baby() || pawn.DevelopmentalStage.Newborn())
+            {
+                return null!;
+            }
+
+            return ExtendedHairRenderUtility.MeshSetFor(pawn, extension);
         }
 
         public override Graphic GraphicFor(Pawn pawn)

@@ -13,6 +13,14 @@
     <modExtensions>
       <li Class="MAP_MechanoidMechanitor.HairRenderExtension">
         <backTexPath>Lover/Lover_Hair/LoverHairBack</backTexPath>
+
+        <meshSize>(1.5, 1.5)</meshSize>
+        <drawSize>(1, 1)</drawSize>
+
+        <offsetNorth>(0, 0, 0)</offsetNorth>
+        <offsetEast>(0, 0, 0)</offsetEast>
+        <offsetSouth>(0, 0, -0.25)</offsetSouth>
+        <offsetWest>(0, 0, 0)</offsetWest>
       </li>
     </modExtensions>
   </HairDef>
