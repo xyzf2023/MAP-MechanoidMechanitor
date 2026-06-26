@@ -75,25 +75,69 @@
 
             <li> <!-- 后发节点 -->
               <debugLabel>Hair back</debugLabel> <!-- 调试标签：后发 -->
-              <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_HairBack</nodeClass> <!-- 节点类：后发 -->
-              <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_ExtendedHair</workerClass> <!-- 工作类：扩展发型 -->
+              <nodeClass>PawnRenderNode</nodeClass> <!-- 节点类：通用渲染节点 -->
+              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass> <!-- 工作类：爬行时翻转 -->
               <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
+              <texPath>Lover/Lover_Hair/LoverHairBack</texPath> <!-- 贴图路径：Lover 后发 -->
               <shaderTypeDef>CutoutHair</shaderTypeDef> <!-- 着色器：头发镂空 -->
               <colorType>Hair</colorType> <!-- 颜色类型：发色 -->
               <skipFlag>Hair</skipFlag> <!-- 跳过标志：头发 -->
+              <overrideMeshSize>(1.5, 1.5)</overrideMeshSize> <!-- 网格尺寸覆盖：1.5×1.5 -->
               <baseLayer>49</baseLayer> <!-- 基础渲染层级：49 -->
               <rotDrawMode>Fresh, Rotting</rotDrawMode> <!-- 绘制模式：新鲜、腐烂 -->
+
+              <drawData> <!-- 各朝向绘制数据 -->
+
+                <dataNorth> <!-- 朝北 -->
+                  <layer>49</layer> <!-- 渲染层级：49 -->
+                  <offset>(0, 0, -1)</offset>
+                </dataNorth> <!-- 朝北结束 -->
+
+                <dataEast> <!-- 朝东 -->
+                  <layer>-1</layer> <!-- 渲染层级：-1（不绘制） -->
+                  <offset>(0, 0, 0)</offset>
+                </dataEast> <!-- 朝东结束 -->
+
+                <dataSouth> <!-- 朝南 -->
+                  <layer>-1</layer> <!-- 渲染层级：-1（不绘制） -->
+                  <offset>(0, 0, -0.25)</offset>
+                </dataSouth> <!-- 朝南结束 -->
+
+                <dataWest> <!-- 朝西 -->
+                  <layer>-1</layer> <!-- 渲染层级：-1（不绘制） -->
+                  <offset>(0, 0, -1)</offset>
+                </dataWest> <!-- 朝西结束 -->
+
+              </drawData> <!-- 绘制数据结束 -->
             </li> <!-- 后发节点结束 -->
 
             <li> <!-- 前发节点 -->
               <debugLabel>Hair front</debugLabel> <!-- 调试标签：前发 -->
-              <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_HairFront</nodeClass> <!-- 节点类：前发 -->
-              <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_ExtendedHair</workerClass> <!-- 工作类：扩展发型 -->
+              <nodeClass>PawnRenderNode_Hair</nodeClass> <!-- 节点类：头发 -->
+              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass> <!-- 工作类：爬行时翻转 -->
               <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
               <colorType>Hair</colorType> <!-- 颜色类型：发色 -->
               <skipFlag>Hair</skipFlag> <!-- 跳过标志：头发 -->
               <baseLayer>62</baseLayer> <!-- 基础渲染层级：62 -->
               <rotDrawMode>Fresh, Rotting</rotDrawMode> <!-- 绘制模式：新鲜、腐烂 -->
+
+              <drawData>
+                <dataNorth>
+                  <offset>(0, 0, 0)</offset>
+                </dataNorth>
+            
+                <dataEast>
+                  <offset>(0, 0, 0)</offset>
+                </dataEast>
+            
+                <dataSouth>
+                  <offset>(0, 0, -0.25)</offset>
+                </dataSouth>
+            
+                <dataWest>
+                  <offset>(0, 0, 0)</offset>
+                </dataWest>
+              </drawData>
             </li> <!-- 前发节点结束 -->
 
             <li Class="PawnRenderNodeProperties_Overlay"> <!-- 叠加层：头部伤口 -->
