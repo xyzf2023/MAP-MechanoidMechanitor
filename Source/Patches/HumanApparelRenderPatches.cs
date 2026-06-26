@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -9,33 +10,90 @@ namespace MAP_MechanoidMechanitor
 {
     public static class HumanApparelRenderPatches
     {
-        private static readonly FieldInfo PawnField = AccessTools.Field(typeof(PawnRenderTree), "pawn");
         private static readonly MethodInfo HumanlikeOnlyGetter = AccessTools.PropertyGetter(
             typeof(DynamicPawnRenderNodeSetup),
             nameof(DynamicPawnRenderNodeSetup.HumanlikeOnly));
         private static readonly MethodInfo HumanlikeGetter = AccessTools.PropertyGetter(
             typeof(RaceProperties),
             nameof(RaceProperties.Humanlike));
+        private static readonly MethodInfo EffectiveHumanlikeOnlyMethod = AccessTools.Method(
+            typeof(HumanApparelRenderPatches),
+            nameof(EffectiveHumanlikeOnly));
+        private static readonly MethodInfo EffectiveHumanlikeMethod = AccessTools.Method(
+            typeof(HumanApparelRenderPatches),
+            nameof(EffectiveHumanlike));
 
-        public static bool ShouldSkipDynamicSetup(DynamicPawnRenderNodeSetup setup, Pawn pawn)
+        private static bool EffectiveHumanlikeOnly(
+            DynamicPawnRenderNodeSetup setup,
+            PawnRenderTree tree)
         {
-            if (!setup.HumanlikeOnly)
-            {
-                return false;
-            }
-
-            if (pawn.RaceProps.Humanlike)
-            {
-                return false;
-            }
-
             if (setup is DynamicPawnRenderNodeSetup_Apparel
-                && HumanApparelUtility.CanRenderHumanApparel(pawn))
+                && HumanApparelUtility.CanRenderHumanApparel(tree.pawn))
             {
                 return false;
             }
 
-            return true;
+            return setup.HumanlikeOnly;
+        }
+
+        private static bool EffectiveHumanlike(
+            RaceProperties raceProps,
+            PawnRenderTree tree)
+        {
+            return raceProps.Humanlike
+                || HumanApparelUtility.CanRenderHumanApparel(tree.pawn);
+        }
+
+        private static void TransferLabelsAndBlocks(
+            CodeInstruction from,
+            CodeInstruction to)
+        {
+            if (from.labels != null && from.labels.Count > 0)
+            {
+                to.labels.AddRange(from.labels);
+                from.labels.Clear();
+            }
+
+            if (from.blocks != null && from.blocks.Count > 0)
+            {
+                to.blocks.AddRange(from.blocks);
+                from.blocks.Clear();
+            }
+        }
+
+        private static IEnumerable<CodeInstruction> ReplaceGetterWithHelper(
+            IEnumerable<CodeInstruction> instructions,
+            MethodInfo getter,
+            MethodInfo helper,
+            string errorContext)
+        {
+            List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
+            int matchCount = 0;
+
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (!codes[i].Calls(getter))
+                {
+                    continue;
+                }
+
+                matchCount++;
+                CodeInstruction getterInstruction = codes[i];
+                CodeInstruction loadThis = new CodeInstruction(OpCodes.Ldarg_0);
+                TransferLabelsAndBlocks(getterInstruction, loadThis);
+                codes.Insert(i, loadThis);
+
+                getterInstruction.opcode = OpCodes.Call;
+                getterInstruction.operand = helper;
+            }
+
+            if (matchCount != 1)
+            {
+                throw new InvalidOperationException(
+                    $"{errorContext} transpiler expected 1 getter, found {matchCount}.");
+            }
+
+            return codes;
         }
 
         private static bool IsApparelRenderNodeProperties(PawnRenderNodeProperties props)
@@ -71,71 +129,18 @@ namespace MAP_MechanoidMechanitor
             {
                 return TargetMethod() != null
                     && HumanlikeOnlyGetter != null
-                    && HumanlikeGetter != null
-                    && PawnField != null;
+                    && EffectiveHumanlikeOnlyMethod != null;
             }
 
             [HarmonyTranspiler]
             public static IEnumerable<CodeInstruction> Transpiler(
                 IEnumerable<CodeInstruction> instructions)
             {
-                List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
-                MethodInfo shouldSkipMethod = AccessTools.Method(
-                    typeof(HumanApparelRenderPatches),
-                    nameof(ShouldSkipDynamicSetup));
-
-                for (int i = 0; i < codes.Count; i++)
-                {
-                    if (!codes[i].Calls(HumanlikeOnlyGetter) || i < 1)
-                    {
-                        continue;
-                    }
-
-                    CodeInstruction setupLoad = codes[i - 1];
-                    int humanlikeGetterIndex = -1;
-                    for (int j = i + 1; j < codes.Count && j < i + 12; j++)
-                    {
-                        if (codes[j].Calls(HumanlikeGetter))
-                        {
-                            humanlikeGetterIndex = j;
-                            break;
-                        }
-                    }
-
-                    if (humanlikeGetterIndex < 0)
-                    {
-                        continue;
-                    }
-
-                    CodeInstruction brFalse = codes[i + 1];
-                    CodeInstruction? brContinue = null;
-                    if (humanlikeGetterIndex + 2 < codes.Count)
-                    {
-                        OpCode continueOpcode = codes[humanlikeGetterIndex + 2].opcode;
-                        if (continueOpcode == OpCodes.Br || continueOpcode == OpCodes.Br_S)
-                        {
-                            brContinue = codes[humanlikeGetterIndex + 2];
-                        }
-                    }
-
-                    int removeCount = humanlikeGetterIndex - (i - 1) + 1;
-                    codes.RemoveRange(i - 1, removeCount);
-
-                    int insertIndex = i - 1;
-                    codes.Insert(insertIndex++, new CodeInstruction(setupLoad.opcode, setupLoad.operand));
-                    codes.Insert(insertIndex++, new CodeInstruction(OpCodes.Ldarg_0));
-                    codes.Insert(insertIndex++, new CodeInstruction(OpCodes.Ldfld, PawnField));
-                    codes.Insert(insertIndex++, new CodeInstruction(OpCodes.Call, shouldSkipMethod));
-                    codes.Insert(insertIndex++, brFalse);
-                    if (brContinue != null)
-                    {
-                        codes.Insert(insertIndex, brContinue);
-                    }
-
-                    break;
-                }
-
-                return codes;
+                return ReplaceGetterWithHelper(
+                    instructions,
+                    HumanlikeOnlyGetter,
+                    EffectiveHumanlikeOnlyMethod,
+                    "PawnRenderTree.SetupDynamicNodes HumanlikeOnly getter");
             }
         }
 
@@ -173,45 +178,18 @@ namespace MAP_MechanoidMechanitor
             {
                 return TargetMethod() != null
                     && HumanlikeGetter != null
-                    && PawnField != null;
+                    && EffectiveHumanlikeMethod != null;
             }
 
             [HarmonyTranspiler]
             public static IEnumerable<CodeInstruction> Transpiler(
                 IEnumerable<CodeInstruction> instructions)
             {
-                List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
-                MethodInfo racePropsGetter = AccessTools.PropertyGetter(
-                    typeof(Pawn),
-                    nameof(Pawn.RaceProps));
-                MethodInfo shouldAdjustMethod = AccessTools.Method(
-                    typeof(HumanApparelUtility),
-                    nameof(HumanApparelUtility.ShouldUseHumanlikeRenderAdjustments));
-
-                for (int i = 0; i < codes.Count; i++)
-                {
-                    if (!codes[i].Calls(HumanlikeGetter))
-                    {
-                        continue;
-                    }
-
-                    if (i < 2
-                        || !codes[i - 1].Calls(racePropsGetter)
-                        || codes[i - 2].opcode != OpCodes.Ldfld
-                        || codes[i - 2].operand is not FieldInfo pawnFieldOperand
-                        || pawnFieldOperand != PawnField)
-                    {
-                        continue;
-                    }
-
-                    codes.RemoveRange(i - 2, 3);
-                    codes.Insert(i - 2, new CodeInstruction(OpCodes.Ldarg_0));
-                    codes.Insert(i - 1, new CodeInstruction(OpCodes.Ldfld, PawnField));
-                    codes.Insert(i, new CodeInstruction(OpCodes.Call, shouldAdjustMethod));
-                    break;
-                }
-
-                return codes;
+                return ReplaceGetterWithHelper(
+                    instructions,
+                    HumanlikeGetter,
+                    EffectiveHumanlikeMethod,
+                    "PawnRenderTree.AdjustParms Humanlike getter");
             }
         }
     }
