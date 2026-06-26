@@ -166,7 +166,7 @@
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_HumanApparelUser">
         <allowWearFloatMenu>true</allowWearFloatMenu>
-        <allowRemoveApparel>false</allowRemoveApparel>
+        <allowRemoveApparel>true</allowRemoveApparel>
         <ensureApparelTracker>true</ensureApparelTracker>
         <enableHumanApparelRendering>true</enableHumanApparelRendering>
         <apparelBodyType>Female</apparelBodyType>
