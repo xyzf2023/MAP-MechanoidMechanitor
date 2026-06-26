@@ -73,34 +73,10 @@
 
           <children> <!-- 头部子节点列表 -->
 
-            <li Class="PawnRenderNodeProperties_Parent"> <!-- 父节点：发型对齐根 -->
-              <debugLabel>Hair alignment root</debugLabel> <!-- 调试标签：发型对齐根 -->
-              <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
-
-              <drawData> <!-- 各朝向共享绘制数据 -->
-                <dataNorth>
-                  <offset>(0, 0, 0)</offset>
-                </dataNorth>
-
-                <dataEast>
-                  <offset>(0, 0, 0)</offset>
-                </dataEast>
-
-                <dataSouth>
-                  <offset>(0, 0, -0.25)</offset>
-                </dataSouth>
-
-                <dataWest>
-                  <offset>(0, 0, 0)</offset>
-                </dataWest>
-              </drawData>
-
-              <children> <!-- 发型子节点列表 -->
-
             <li> <!-- 后发节点 -->
               <debugLabel>Hair back</debugLabel> <!-- 调试标签：后发 -->
               <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_HairBack</nodeClass> <!-- 节点类：后发 -->
-              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass> <!-- 工作类：爬行时翻转 -->
+              <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_ExtendedHair</workerClass> <!-- 工作类：扩展发型 -->
               <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
               <shaderTypeDef>CutoutHair</shaderTypeDef> <!-- 着色器：头发镂空 -->
               <colorType>Hair</colorType> <!-- 颜色类型：发色 -->
@@ -111,17 +87,14 @@
 
             <li> <!-- 前发节点 -->
               <debugLabel>Hair front</debugLabel> <!-- 调试标签：前发 -->
-              <nodeClass>PawnRenderNode_Hair</nodeClass> <!-- 节点类：头发 -->
-              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass> <!-- 工作类：爬行时翻转 -->
+              <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_HairFront</nodeClass> <!-- 节点类：前发 -->
+              <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_ExtendedHair</workerClass> <!-- 工作类：扩展发型 -->
               <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
               <colorType>Hair</colorType> <!-- 颜色类型：发色 -->
               <skipFlag>Hair</skipFlag> <!-- 跳过标志：头发 -->
               <baseLayer>62</baseLayer> <!-- 基础渲染层级：62 -->
               <rotDrawMode>Fresh, Rotting</rotDrawMode> <!-- 绘制模式：新鲜、腐烂 -->
             </li> <!-- 前发节点结束 -->
-
-              </children> <!-- 发型子节点列表结束 -->
-            </li> <!-- 发型对齐根结束 -->
 
             <li Class="PawnRenderNodeProperties_Overlay"> <!-- 叠加层：头部伤口 -->
               <debugLabel>Head wounds</debugLabel> <!-- 调试标签：头部伤口 -->
