@@ -46,7 +46,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            EnsureStory(pawn, ProfileProps);
+            bool isInitialProfileInitialization = initializedProfileVersion <= 0;
+            EnsureStory(pawn, ProfileProps, isInitialProfileInitialization);
 
             bool shouldInitializeSkillLevels =
                 pawn.skills == null || initializedProfileVersion < ProfileProps.profileVersion;
@@ -65,7 +66,10 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void EnsureStory(Pawn pawn, CompProperties_ColonistLikeMechProfile props)
+        private static void EnsureStory(
+            Pawn pawn,
+            CompProperties_ColonistLikeMechProfile props,
+            bool isInitialProfileInitialization)
         {
             pawn.story ??= new Pawn_StoryTracker(pawn);
             pawn.story.traits ??= new TraitSet(pawn);
@@ -80,7 +84,7 @@ namespace MAP_MechanoidMechanitor
                 pawn.story.headType = props.headType;
             }
 
-            if (props.hairDef != null)
+            if (isInitialProfileInitialization && props.hairDef != null)
             {
                 pawn.story.hairDef = props.hairDef;
             }
