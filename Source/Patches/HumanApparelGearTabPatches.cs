@@ -10,21 +10,6 @@ namespace MAP_MechanoidMechanitor
         private static readonly PropertyInfo? SelPawnForGearProperty =
             AccessTools.Property(typeof(ITab_Pawn_Gear), "SelPawnForGear");
 
-        [HarmonyPatch(typeof(ITab_Pawn_Gear), "ShouldShowApparel")]
-        public static class Patch_ITab_Pawn_Gear_ShouldShowApparel
-        {
-            [HarmonyPostfix]
-            public static void Postfix(Pawn p, ref bool __result)
-            {
-                if (__result || !HumanApparelUtility.CanRemoveApparel(p))
-                {
-                    return;
-                }
-
-                __result = true;
-            }
-        }
-
         [HarmonyPatch(typeof(ITab_Pawn_Gear), "CanControlColonist", MethodType.Getter)]
         public static class Patch_ITab_Pawn_Gear_CanControlColonist
         {
