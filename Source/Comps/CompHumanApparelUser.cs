@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
@@ -68,6 +69,27 @@ namespace MAP_MechanoidMechanitor
             {
                 pawn.Drawer?.renderer?.SetAllGraphicsDirty();
             }
+        }
+
+        public override List<PawnRenderNode> CompRenderNodes()
+        {
+            if (parent is not Pawn pawn || !EnableHumanApparelRendering)
+            {
+                return null!;
+            }
+
+            if (pawn.apparel == null || pawn.apparel.WornApparelCount == 0)
+            {
+                return null!;
+            }
+
+            PawnRenderTree? tree = pawn.Drawer?.renderer?.renderTree;
+            if (tree == null)
+            {
+                return null!;
+            }
+
+            return HumanApparelRenderNodeFactory.CreateNodes(pawn, tree) ?? null!;
         }
     }
 }
