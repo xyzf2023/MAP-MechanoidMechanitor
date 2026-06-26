@@ -5,7 +5,7 @@
     <defName>MAP_LoverHair</defName>
     <label>「恋人」发型</label>
     <styleGender>Female</styleGender>
-    <texPath>Lover/Lover_Hair/LoverHairFront</texPath>
+    <texPath>Lover/Lover_Hair/LoverHair</texPath>
     <styleTags>
       <li>Urban</li>
     </styleTags>
