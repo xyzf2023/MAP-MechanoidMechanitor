@@ -29,9 +29,9 @@ namespace MAP_MechanoidMechanitor
         public static bool CanRenderHumanApparel(Pawn? pawn)
         {
             return pawn != null
+                && pawn.apparel != null
                 && TryGetApparelComp(pawn, out CompHumanApparelUser? comp)
-                && comp!.EnableHumanApparelRendering
-                && pawn.apparel != null;
+                && comp!.EnableHumanApparelRendering;
         }
 
         public static BodyTypeDef ResolveApparelBodyType(Pawn pawn, BodyTypeDef fallback)
@@ -44,11 +44,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             return comp.ApparelBodyType;
-        }
-
-        public static bool ShouldUseHumanlikeRenderAdjustments(Pawn pawn)
-        {
-            return pawn.RaceProps.Humanlike || CanRenderHumanApparel(pawn);
         }
     }
 }

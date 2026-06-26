@@ -7,6 +7,9 @@ namespace MAP_MechanoidMechanitor
 {
     public static class HumanApparelGearTabPatches
     {
+        private static readonly PropertyInfo? SelPawnForGearProperty =
+            AccessTools.Property(typeof(ITab_Pawn_Gear), "SelPawnForGear");
+
         [HarmonyPatch(typeof(ITab_Pawn_Gear), "ShouldShowApparel")]
         public static class Patch_ITab_Pawn_Gear_ShouldShowApparel
         {
@@ -33,8 +36,7 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                Pawn? pawn = AccessTools.Property(typeof(ITab_Pawn_Gear), "SelPawnForGear")
-                    ?.GetValue(__instance) as Pawn;
+                Pawn? pawn = SelPawnForGearProperty?.GetValue(__instance) as Pawn;
 
                 if (!GearTabAllowsColonistControl(pawn))
                 {
