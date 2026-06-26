@@ -168,7 +168,7 @@
         <allowWearFloatMenu>true</allowWearFloatMenu>
         <allowRemoveApparel>true</allowRemoveApparel>
         <ensureApparelTracker>true</ensureApparelTracker>
-        <enableHumanApparelRendering>true</enableHumanApparelRendering>
+        <enableHumanApparelRendering>false</enableHumanApparelRendering>
         <apparelBodyType>Female</apparelBodyType>
       </li>
     </comps>
