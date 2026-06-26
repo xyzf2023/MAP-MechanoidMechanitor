@@ -1,0 +1,75 @@
+using System.Reflection;
+using HarmonyLib;
+using RimWorld;
+using Verse;
+
+namespace MAP_MechanoidMechanitor
+{
+    public static class HumanApparelGearTabPatches
+    {
+        [HarmonyPatch(typeof(ITab_Pawn_Gear), "ShouldShowApparel")]
+        public static class Patch_ITab_Pawn_Gear_ShouldShowApparel
+        {
+            [HarmonyPostfix]
+            public static void Postfix(Pawn p, ref bool __result)
+            {
+                if (__result || !HumanApparelUtility.CanRemoveApparel(p))
+                {
+                    return;
+                }
+
+                __result = true;
+            }
+        }
+
+        [HarmonyPatch(typeof(ITab_Pawn_Gear), "CanControlColonist", MethodType.Getter)]
+        public static class Patch_ITab_Pawn_Gear_CanControlColonist
+        {
+            [HarmonyPostfix]
+            public static void Postfix(ITab_Pawn_Gear __instance, ref bool __result)
+            {
+                if (__result)
+                {
+                    return;
+                }
+
+                Pawn? pawn = AccessTools.Property(typeof(ITab_Pawn_Gear), "SelPawnForGear")
+                    ?.GetValue(__instance) as Pawn;
+
+                if (!GearTabAllowsColonistControl(pawn))
+                {
+                    return;
+                }
+
+                __result = true;
+            }
+        }
+
+        private static bool GearTabAllowsColonistControl(Pawn? pawn)
+        {
+            if (pawn == null
+                || !HumanApparelUtility.TryGetApparelComp(pawn, out CompHumanApparelUser? comp)
+                || !comp!.AllowRemoveApparel)
+            {
+                return false;
+            }
+
+            if (pawn.Faction != Faction.OfPlayer)
+            {
+                return false;
+            }
+
+            if (pawn.Dead || pawn.Downed || pawn.InMentalState)
+            {
+                return false;
+            }
+
+            if (pawn.ParentHolder is Pawn_CarryTracker)
+            {
+                return false;
+            }
+
+            return pawn.apparel != null;
+        }
+    }
+}
