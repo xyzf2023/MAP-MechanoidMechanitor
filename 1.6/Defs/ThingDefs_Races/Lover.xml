@@ -171,6 +171,13 @@
         <enableHumanApparelRendering>true</enableHumanApparelRendering>
         <apparelBodyType>Female</apparelBodyType>
       </li>
+
+      <li Class="MAP_MechanoidMechanitor.CompProperties_HumanWeaponUser">
+        <allowEquipFloatMenu>true</allowEquipFloatMenu>
+        <allowDropEquipmentFloatMenu>true</allowDropEquipmentFloatMenu>
+        <ensureEquipmentTracker>true</ensureEquipmentTracker>
+      </li>
+
     </comps>
 
   </ThingDef>
