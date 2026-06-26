@@ -3,7 +3,7 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    public class CompProperties_HumanApparelUser : CompProperties
+    public sealed class CompProperties_HumanApparelUser : CompProperties
     {
         public bool allowWearFloatMenu = true;
         public bool allowRemoveApparel = true;
@@ -17,7 +17,7 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    public class CompHumanApparelUser : ThingComp
+    public sealed class CompHumanApparelUser : ThingComp
     {
         public CompProperties_HumanApparelUser Props => (CompProperties_HumanApparelUser)props;
 
