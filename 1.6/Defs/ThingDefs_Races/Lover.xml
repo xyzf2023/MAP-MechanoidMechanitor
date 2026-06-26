@@ -164,6 +164,13 @@
         <ensureWorkSettings>true</ensureWorkSettings>
         <ensureGeneTracker>true</ensureGeneTracker>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_HumanApparelUser">
+        <allowWearFloatMenu>true</allowWearFloatMenu>
+        <allowRemoveApparel>true</allowRemoveApparel>
+        <ensureApparelTracker>true</ensureApparelTracker>
+        <enableHumanApparelRendering>true</enableHumanApparelRendering>
+        <apparelBodyType>Female</apparelBodyType>
+      </li>
     </comps>
 
   </ThingDef>
