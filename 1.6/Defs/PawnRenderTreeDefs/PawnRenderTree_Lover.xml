@@ -1,154 +1,181 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Defs>
+<?xml version="1.0" encoding="utf-8"?> <!-- XML 声明 -->
+<Defs> <!-- 定义根节点 -->
 
-  <PawnRenderTreeDef>
-    <defName>MAP_Lover</defName>
+  <PawnRenderTreeDef> <!-- Pawn 渲染树定义 -->
+    <defName>MAP_Lover</defName> <!-- 定义名称：Lover -->
 
-    <root Class="PawnRenderNodeProperties_Parent">
-      <debugLabel>Lover root</debugLabel>
-      <tagDef>Root</tagDef>
+    <root Class="PawnRenderNodeProperties_Parent"> <!-- 根节点（父节点类型） -->
+      <debugLabel>Lover root</debugLabel> <!-- 调试标签：根节点 -->
+      <tagDef>Root</tagDef> <!-- 渲染标签：根 -->
 
-      <children>
+      <children> <!-- 子节点列表 -->
 
-        <li>
-          <debugLabel>Body</debugLabel>
-          <nodeClass>PawnRenderNode_Body</nodeClass>
-          <workerClass>PawnRenderNodeWorker_Body</workerClass>
-          <tagDef>Body</tagDef>
-          <skipFlag>Body</skipFlag>
-          <pawnType>Any</pawnType>
+        <li> <!-- 身体节点 -->
+          <debugLabel>Body</debugLabel> <!-- 调试标签：身体 -->
+          <nodeClass>PawnRenderNode_Body</nodeClass> <!-- 节点类：身体 -->
+          <workerClass>PawnRenderNodeWorker_Body</workerClass> <!-- 工作类：身体渲染 -->
+          <tagDef>Body</tagDef> <!-- 渲染标签：身体 -->
+          <skipFlag>Body</skipFlag> <!-- 跳过标志：身体 -->
+          <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
 
-          <children>
+          <children> <!-- 身体子节点列表 -->
 
-            <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Wounds - pre apparel</debugLabel>
-              <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
-              <overlayLayer>Body</overlayLayer>
-              <baseLayer>8</baseLayer>
+            <li Class="PawnRenderNodeProperties_Overlay"> <!-- 叠加层：服装前伤口 -->
+              <debugLabel>Wounds - pre apparel</debugLabel> <!-- 调试标签：服装前伤口 -->
+              <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass> <!-- 工作类：伤口叠加 -->
+              <overlayLayer>Body</overlayLayer> <!-- 叠加层：身体 -->
+              <baseLayer>8</baseLayer> <!-- 基础渲染层级：8 -->
             </li>
 
-            <li Class="PawnRenderNodeProperties_Parent">
-              <debugLabel>Apparel root</debugLabel>
-              <tagDef>ApparelBody</tagDef>
-              <baseLayer>20</baseLayer>
+            <li Class="PawnRenderNodeProperties_Parent"> <!-- 父节点：身体服装根 -->
+              <debugLabel>Apparel root</debugLabel> <!-- 调试标签：服装根 -->
+              <tagDef>ApparelBody</tagDef> <!-- 渲染标签：身体服装 -->
+              <baseLayer>20</baseLayer> <!-- 基础渲染层级：20 -->
             </li>
 
-            <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Wounds - post apparel</debugLabel>
-              <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
-              <overlayOverApparel>true</overlayOverApparel>
-              <overlayLayer>Body</overlayLayer>
-              <baseLayer>30</baseLayer>
+            <li Class="PawnRenderNodeProperties_Overlay"> <!-- 叠加层：服装后伤口 -->
+              <debugLabel>Wounds - post apparel</debugLabel> <!-- 调试标签：服装后伤口 -->
+              <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass> <!-- 工作类：伤口叠加 -->
+              <overlayOverApparel>true</overlayOverApparel> <!-- 绘制在服装之上 -->
+              <overlayLayer>Body</overlayLayer> <!-- 叠加层：身体 -->
+              <baseLayer>30</baseLayer> <!-- 基础渲染层级：30 -->
             </li>
 
-            <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Firefoam</debugLabel>
-              <workerClass>PawnRenderNodeWorker_OverlayFirefoam</workerClass>
-              <overlayLayer>Body</overlayLayer>
-              <baseLayer>40</baseLayer>
+            <li Class="PawnRenderNodeProperties_Overlay"> <!-- 叠加层：灭火泡沫 -->
+              <debugLabel>Firefoam</debugLabel> <!-- 调试标签：灭火泡沫 -->
+              <workerClass>PawnRenderNodeWorker_OverlayFirefoam</workerClass> <!-- 工作类：灭火泡沫叠加 -->
+              <overlayLayer>Body</overlayLayer> <!-- 叠加层：身体 -->
+              <baseLayer>40</baseLayer> <!-- 基础渲染层级：40 -->
             </li>
 
-          </children>
-        </li>
+          </children> <!-- 身体子节点列表结束 -->
+        </li> <!-- 身体节点结束 -->
 
-        <li>
-          <debugLabel>Head stump</debugLabel>
-          <nodeClass>PawnRenderNode_Stump</nodeClass>
-          <workerClass>PawnRenderNodeWorker_Stump</workerClass>
-          <texPath>Things/Pawn/Humanlike/Heads/None_Average_Stump</texPath>
-          <baseLayer>50</baseLayer>
-          <skipFlag>Head</skipFlag>
-          <pawnType>Any</pawnType>
-          <rotDrawMode>Fresh, Rotting</rotDrawMode>
-        </li>
+        <li> <!-- 头部残桩节点 -->
+          <debugLabel>Head stump</debugLabel> <!-- 调试标签：头部残桩 -->
+          <nodeClass>PawnRenderNode_Stump</nodeClass> <!-- 节点类：残桩 -->
+          <workerClass>PawnRenderNodeWorker_Stump</workerClass> <!-- 工作类：残桩渲染 -->
+          <texPath>Things/Pawn/Humanlike/Heads/None_Average_Stump</texPath> <!-- 贴图路径：通用残桩 -->
+          <baseLayer>50</baseLayer> <!-- 基础渲染层级：50 -->
+          <skipFlag>Head</skipFlag> <!-- 跳过标志：头部 -->
+          <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
+          <rotDrawMode>Fresh, Rotting</rotDrawMode> <!-- 绘制模式：新鲜、腐烂 -->
+        </li> <!-- 头部残桩节点结束 -->
 
-        <li>
-          <debugLabel>Head</debugLabel>
-          <nodeClass>PawnRenderNode_Head</nodeClass>
-          <workerClass>PawnRenderNodeWorker_Head</workerClass>
-          <tagDef>Head</tagDef>
-          <skipFlag>Head</skipFlag>
-          <pawnType>Any</pawnType>
-          <baseLayer>50</baseLayer>
+        <li> <!-- 头部节点 -->
+          <debugLabel>Head</debugLabel> <!-- 调试标签：头部 -->
+          <nodeClass>PawnRenderNode_Head</nodeClass> <!-- 节点类：头部 -->
+          <workerClass>PawnRenderNodeWorker_Head</workerClass> <!-- 工作类：头部渲染 -->
+          <tagDef>Head</tagDef> <!-- 渲染标签：头部 -->
+          <skipFlag>Head</skipFlag> <!-- 跳过标志：头部 -->
+          <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
+          <baseLayer>50</baseLayer> <!-- 基础渲染层级：50 -->
 
-          <children>
+          <children> <!-- 头部子节点列表 -->
 
-            <li>
-              <debugLabel>Hair back</debugLabel>
-              <nodeClass>PawnRenderNode</nodeClass>
-              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass>
-              <pawnType>Any</pawnType>
-              <texPath>Lover/Lover_Hair/LoverHairBack</texPath>
-              <shaderTypeDef>CutoutHair</shaderTypeDef>
-              <colorType>Hair</colorType>
-              <skipFlag>Hair</skipFlag>
-              <overrideMeshSize>(1.5, 1.5)</overrideMeshSize>
-              <baseLayer>49</baseLayer>
-              <rotDrawMode>Fresh, Rotting</rotDrawMode>
+            <li> <!-- 后发节点 -->
+              <debugLabel>Hair back</debugLabel> <!-- 调试标签：后发 -->
+              <nodeClass>PawnRenderNode</nodeClass> <!-- 节点类：通用渲染节点 -->
+              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass> <!-- 工作类：爬行时翻转 -->
+              <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
+              <texPath>Lover/Lover_Hair/LoverHairBack</texPath> <!-- 贴图路径：Lover 后发 -->
+              <shaderTypeDef>CutoutHair</shaderTypeDef> <!-- 着色器：头发镂空 -->
+              <colorType>Hair</colorType> <!-- 颜色类型：发色 -->
+              <skipFlag>Hair</skipFlag> <!-- 跳过标志：头发 -->
+              <overrideMeshSize>(1.5, 1.5)</overrideMeshSize> <!-- 网格尺寸覆盖：1.5×1.5 -->
+              <baseLayer>49</baseLayer> <!-- 基础渲染层级：49 -->
+              <rotDrawMode>Fresh, Rotting</rotDrawMode> <!-- 绘制模式：新鲜、腐烂 -->
+
+              <drawData> <!-- 各朝向绘制数据 -->
+
+                <dataNorth> <!-- 朝北 -->
+                  <layer>49</layer> <!-- 渲染层级：49 -->
+                  <offset>(0, 0, -1)</offset>
+                </dataNorth> <!-- 朝北结束 -->
+
+                <dataEast> <!-- 朝东 -->
+                  <layer>-1</layer> <!-- 渲染层级：-1（不绘制） -->
+                  <offset>(0, 0, 0)</offset>
+                </dataEast> <!-- 朝东结束 -->
+
+                <dataSouth> <!-- 朝南 -->
+                  <layer>-1</layer> <!-- 渲染层级：-1（不绘制） -->
+                  <offset>(0, 0, 0)</offset>
+                </dataSouth> <!-- 朝南结束 -->
+
+                <dataWest> <!-- 朝西 -->
+                  <layer>-1</layer> <!-- 渲染层级：-1（不绘制） -->
+                  <offset>(0, 0, 0)</offset>
+                </dataWest> <!-- 朝西结束 -->
+
+              </drawData> <!-- 绘制数据结束 -->
+            </li> <!-- 后发节点结束 -->
+
+            <li> <!-- 前发节点 -->
+              <debugLabel>Hair front</debugLabel> <!-- 调试标签：前发 -->
+              <nodeClass>PawnRenderNode_Hair</nodeClass> <!-- 节点类：头发 -->
+              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass> <!-- 工作类：爬行时翻转 -->
+              <pawnType>Any</pawnType> <!-- 适用 Pawn 类型：任意 -->
+              <colorType>Hair</colorType> <!-- 颜色类型：发色 -->
+              <skipFlag>Hair</skipFlag> <!-- 跳过标志：头发 -->
+              <baseLayer>62</baseLayer> <!-- 基础渲染层级：62 -->
+              <rotDrawMode>Fresh, Rotting</rotDrawMode> <!-- 绘制模式：新鲜、腐烂 -->
 
               <drawData>
                 <dataNorth>
-                  <layer>49</layer>
+                  <offset>(0, 0, 0)</offset>
                 </dataNorth>
+            
                 <dataEast>
-                  <layer>-1</layer>
+                  <offset>(0, 0, 0)</offset>
                 </dataEast>
+            
                 <dataSouth>
-                  <layer>-1</layer>
+                  <offset>(0, 0, 0)</offset>
                 </dataSouth>
+            
                 <dataWest>
-                  <layer>-1</layer>
+                  <offset>(0, 0, 0)</offset>
                 </dataWest>
               </drawData>
+            </li> <!-- 前发节点结束 -->
+
+            <li Class="PawnRenderNodeProperties_Overlay"> <!-- 叠加层：头部伤口 -->
+              <debugLabel>Head wounds</debugLabel> <!-- 调试标签：头部伤口 -->
+              <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass> <!-- 工作类：伤口叠加 -->
+              <overlayLayer>Head</overlayLayer> <!-- 叠加层：头部 -->
+              <baseLayer>65</baseLayer> <!-- 基础渲染层级：65 -->
             </li>
 
-            <li>
-              <debugLabel>Hair front</debugLabel>
-              <nodeClass>PawnRenderNode_Hair</nodeClass>
-              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass>
-              <pawnType>Any</pawnType>
-              <colorType>Hair</colorType>
-              <skipFlag>Hair</skipFlag>
-              <baseLayer>62</baseLayer>
-              <rotDrawMode>Fresh, Rotting</rotDrawMode>
+            <li Class="PawnRenderNodeProperties_Parent"> <!-- 父节点：头部服装根 -->
+              <debugLabel>Apparel root</debugLabel> <!-- 调试标签：服装根 -->
+              <tagDef>ApparelHead</tagDef> <!-- 渲染标签：头部服装 -->
+              <baseLayer>70</baseLayer> <!-- 基础渲染层级：70 -->
             </li>
 
-            <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Head wounds</debugLabel>
-              <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
-              <overlayLayer>Head</overlayLayer>
-              <baseLayer>65</baseLayer>
+            <li Class="PawnRenderNodeProperties_Overlay"> <!-- 叠加层：头部灭火泡沫 -->
+              <debugLabel>Firefoam</debugLabel> <!-- 调试标签：灭火泡沫 -->
+              <workerClass>PawnRenderNodeWorker_OverlayFirefoam</workerClass> <!-- 工作类：灭火泡沫叠加 -->
+              <overlayLayer>Head</overlayLayer> <!-- 叠加层：头部 -->
+              <baseLayer>85</baseLayer> <!-- 基础渲染层级：85 -->
             </li>
 
-            <li Class="PawnRenderNodeProperties_Parent">
-              <debugLabel>Apparel root</debugLabel>
-              <tagDef>ApparelHead</tagDef>
-              <baseLayer>70</baseLayer>
+            <li Class="PawnRenderNodeProperties_Overlay"> <!-- 叠加层：状态效果 -->
+              <debugLabel>Status overlay</debugLabel> <!-- 调试标签：状态叠加 -->
+              <workerClass>PawnRenderNodeWorker_OverlayStatus</workerClass> <!-- 工作类：状态叠加 -->
+              <baseLayer>100</baseLayer> <!-- 基础渲染层级：100 -->
             </li>
 
-            <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Firefoam</debugLabel>
-              <workerClass>PawnRenderNodeWorker_OverlayFirefoam</workerClass>
-              <overlayLayer>Head</overlayLayer>
-              <baseLayer>85</baseLayer>
-            </li>
+          </children> <!-- 头部子节点列表结束 -->
+        </li> <!-- 头部节点结束 -->
 
-            <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Status overlay</debugLabel>
-              <workerClass>PawnRenderNodeWorker_OverlayStatus</workerClass>
-              <baseLayer>100</baseLayer>
-            </li>
+        <li Class="PawnRenderNodeProperties_Carried"> <!-- 携带物节点 -->
+          <debugLabel>Weapon/carried thing</debugLabel> <!-- 调试标签：武器/携带物 -->
+          <workerClass>PawnRenderNodeWorker_Carried</workerClass> <!-- 工作类：携带物渲染 -->
+        </li> <!-- 携带物节点结束 -->
 
-          </children>
-        </li>
+      </children> <!-- 根子节点列表结束 -->
+    </root> <!-- 根节点结束 -->
+  </PawnRenderTreeDef> <!-- Pawn 渲染树定义结束 -->
 
-        <li Class="PawnRenderNodeProperties_Carried">
-          <debugLabel>Weapon/carried thing</debugLabel>
-          <workerClass>PawnRenderNodeWorker_Carried</workerClass>
-        </li>
-
-      </children>
-    </root>
-  </PawnRenderTreeDef>
-
-</Defs>
+</Defs> <!-- 定义根节点结束 -->
