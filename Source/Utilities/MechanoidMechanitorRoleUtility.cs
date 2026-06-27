@@ -31,7 +31,6 @@ namespace MAP_MechanoidMechanitor
             "Doctor",
             "PatientBedRest",
             "BasicWorker",
-            "Warden",
             "Handling",
             "Cooking",
             "Hunting",

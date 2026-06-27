@@ -8,7 +8,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch]
-    public static class Patch_JobGiver_Work_PawnCanUseWorkGiver_JusticeWorkGiverRestriction
+    public static class Patch_JobGiver_Work_PawnCanUseWorkGiver_MechWorkGiverRestriction
     {
         private const string LogPrefix = "[MAP_MechanoidMechanitor] MechWorkGiverRestrictionPatches:";
 
@@ -33,6 +33,12 @@ namespace MAP_MechanoidMechanitor
 
         private static bool CanBeDoneByMechsOrAuthorized(bool canBeDoneByMechs, Pawn pawn, WorkGiver workGiver)
         {
+            WorkTypeDef? workType = workGiver?.def?.workType;
+            if (workType == WardenWorkUtility.WardenWorkType)
+            {
+                return canBeDoneByMechs || WardenWorkUtility.IsAuthorized(pawn);
+            }
+
             return canBeDoneByMechs
                 || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
                 || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
@@ -46,7 +52,7 @@ namespace MAP_MechanoidMechanitor
                 typeof(WorkGiverDef),
                 nameof(WorkGiverDef.canBeDoneByMechs));
             MethodInfo? helperMethod = AccessTools.Method(
-                typeof(Patch_JobGiver_Work_PawnCanUseWorkGiver_JusticeWorkGiverRestriction),
+                typeof(Patch_JobGiver_Work_PawnCanUseWorkGiver_MechWorkGiverRestriction),
                 nameof(CanBeDoneByMechsOrAuthorized));
 
             if (canBeDoneByMechsField == null)
