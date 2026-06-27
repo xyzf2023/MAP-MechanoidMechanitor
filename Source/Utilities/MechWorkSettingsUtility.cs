@@ -91,6 +91,15 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
+            if (AnimalHandlingWorkUtility.IsAuthorized(pawn))
+            {
+                WorkTypeDef? handling = AnimalHandlingWorkUtility.HandlingWorkType;
+                if (handling != null)
+                {
+                    allowed.Add(handling);
+                }
+            }
+
             return allowed;
         }
     }

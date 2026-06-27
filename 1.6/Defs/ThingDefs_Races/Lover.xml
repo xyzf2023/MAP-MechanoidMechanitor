@@ -121,6 +121,7 @@
         <li>Firefighter</li> <!-- 灭火 -->
         <li>Doctor</li> <!-- 医生 -->
         <li>BasicWorker</li> <!-- 杂项 -->
+        <li>Warden</li> <!-- 监管 -->
         <li>Handling</li> <!-- 驯兽 -->
         <li>Cooking</li> <!-- 烹饪 -->
         <li>Childcare</li> <!-- 育儿 -->
@@ -135,6 +136,10 @@
 
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_WardenWorkUser">
+        <defaultPriority>3</defaultPriority>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AnimalHandlingWorkUser">
+        <scope>TameAndTrain</scope>
         <defaultPriority>3</defaultPriority>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">

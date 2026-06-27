@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <BackstoryDef>
+    <defName>MAP_GenericMechanoid_Childhood</defName>
+    <identifier>MAP_GenericMechanoid_Childhood</identifier>
+    <slot>Childhood</slot>
+    <title>机械体</title>
+    <titleFemale>机械体</titleFemale>
+    <titleShort>机械体</titleShort>
+    <titleShortFemale>机械体</titleShortFemale>
+    <description>这是一个机械体。</description>
+    <workDisables>None</workDisables>
+    <requiredWorkTags>None</requiredWorkTags>
+    <shuffleable>False</shuffleable>
+  </BackstoryDef>
+
+  <BackstoryDef>
+    <defName>MAP_GenericMechanoid_Adulthood</defName>
+    <identifier>MAP_GenericMechanoid_Adulthood</identifier>
+    <slot>Adulthood</slot>
+    <title>机械体</title>
+    <titleFemale>机械体</titleFemale>
+    <titleShort>机械体</titleShort>
+    <titleShortFemale>机械体</titleShortFemale>
+    <description>这是一个机械体。</description>
+    <workDisables>None</workDisables>
+    <requiredWorkTags>None</requiredWorkTags>
+    <shuffleable>False</shuffleable>
+  </BackstoryDef>
+
+</Defs>

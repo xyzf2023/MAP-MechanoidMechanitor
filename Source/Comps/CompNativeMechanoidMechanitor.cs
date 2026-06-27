@@ -52,7 +52,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            WardenWorkUtility.GrantAndEnsureInfrastructure(pawn);
+            MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
         }
     }
 }

@@ -50,7 +50,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            WardenWorkUtility.GrantAndEnsureInfrastructure(Pawn);
+            MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(Pawn);
 
             if (Pawn.story == null)
             {
