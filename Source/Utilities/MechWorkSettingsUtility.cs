@@ -18,25 +18,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            List<WorkTypeDef> allowed =
-                MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
-                    ? MechanoidMechanitorRoleUtility.GetRoleWorkTypes()
-                    : pawn.RaceProps.mechEnabledWorkTypes;
-
-            if (allowed == null)
-            {
-                allowed = new List<WorkTypeDef>();
-            }
-
-            if (WardenWorkUtility.IsAuthorized(pawn))
-            {
-                WorkTypeDef? warden = WardenWorkUtility.WardenWorkType;
-                if (warden != null && !allowed.Contains(warden))
-                {
-                    allowed.Add(warden);
-                }
-            }
-
+            HashSet<WorkTypeDef> allowed = BuildAllowedWorkTypes(pawn);
             if (allowed.Count == 0)
             {
                 return;
@@ -53,6 +35,40 @@ namespace MAP_MechanoidMechanitor
             }
 
             pawn.Notify_DisabledWorkTypesChanged();
+        }
+
+        private static HashSet<WorkTypeDef> BuildAllowedWorkTypes(Pawn pawn)
+        {
+            HashSet<WorkTypeDef> allowed = new HashSet<WorkTypeDef>();
+
+            if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            {
+                List<WorkTypeDef> roleWorkTypes =
+                    MechanoidMechanitorRoleUtility.GetRoleWorkTypes();
+                for (int i = 0; i < roleWorkTypes.Count; i++)
+                {
+                    allowed.Add(roleWorkTypes[i]);
+                }
+            }
+            else if (pawn.RaceProps.mechEnabledWorkTypes != null)
+            {
+                List<WorkTypeDef> mechEnabledWorkTypes = pawn.RaceProps.mechEnabledWorkTypes;
+                for (int i = 0; i < mechEnabledWorkTypes.Count; i++)
+                {
+                    allowed.Add(mechEnabledWorkTypes[i]);
+                }
+            }
+
+            if (WardenWorkUtility.IsAuthorized(pawn))
+            {
+                WorkTypeDef? warden = WardenWorkUtility.WardenWorkType;
+                if (warden != null)
+                {
+                    allowed.Add(warden);
+                }
+            }
+
+            return allowed;
         }
     }
 }

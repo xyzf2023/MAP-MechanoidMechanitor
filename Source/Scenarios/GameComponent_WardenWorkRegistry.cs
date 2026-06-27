@@ -46,12 +46,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static void Revoke(Pawn? pawn)
         {
             GameComponent_WardenWorkRegistry? registry = CurrentRegistry;
-            if (registry == null || pawn == null)
+            if (registry == null || pawn == null || pawn.Destroyed)
+            {
+                return;
+            }
+
+            if (registry.FindRecordForPawn(pawn) == null)
             {
                 return;
             }
 
             registry.RemoveRecordForPawn(pawn);
+
+            pawn.Notify_DisabledWorkTypesChanged();
+
+            if (pawn.workSettings != null)
+            {
+                WorkTypeDef? warden = WardenWorkUtility.WardenWorkType;
+                if (warden != null)
+                {
+                    pawn.workSettings.SetPriority(warden, 0);
+                }
+
+                MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
+            }
         }
 
         public static bool IsAuthorized(Pawn? pawn)
@@ -121,6 +139,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 authorizationRecords ??= new List<WardenWorkAuthorizationRecord>();
                 RebuildRecordIndex();
                 CleanupInvalidRecords();
+                EnsureInfrastructureForAllAuthorizedPawns();
+            }
+        }
+
+        private void EnsureInfrastructureForAllAuthorizedPawns()
+        {
+            List<Pawn> authorizedPawns = new List<Pawn>();
+            for (int i = 0; i < authorizationRecords.Count; i++)
+            {
+                Pawn? pawn = authorizationRecords[i].Pawn;
+                if (pawn != null && !pawn.Destroyed)
+                {
+                    authorizedPawns.Add(pawn);
+                }
+            }
+
+            for (int i = 0; i < authorizedPawns.Count; i++)
+            {
+                WardenWorkUtility.EnsureInfrastructure(authorizedPawns[i]);
             }
         }
 
