@@ -1,3 +1,4 @@
+using MAP_MechanoidMechanitor;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -58,14 +59,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             registry.RemoveRecordForPawn(pawn);
 
-            pawn.Notify_DisabledWorkTypesChanged();
-
-            if (pawn.workSettings != null)
+            if (WardenWorkUtility.IsAuthorized(pawn))
             {
+                WardenWorkUtility.EnsureInfrastructure(pawn);
+                return;
+            }
+
+            if (MechWorkSettingsUtility.TryEnsureWorkSettingsInitialized(pawn))
+            {
+                pawn.Notify_DisabledWorkTypesChanged();
+
                 WorkTypeDef? warden = WardenWorkUtility.WardenWorkType;
                 if (warden != null)
                 {
-                    pawn.workSettings.SetPriority(warden, 0);
+                    pawn.workSettings!.SetPriority(warden, 0);
                 }
 
                 MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);

@@ -193,7 +193,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Grant(pawn, AnimalHandlingWorkScope.FullHandling, 3);
+            GameComponent_AnimalHandlingWorkRegistry? registry = CurrentRegistry;
+            if (registry == null)
+            {
+                return;
+            }
+
+            if (registry.FindRecordForPawn(pawn) == null)
+            {
+                Grant(pawn, AnimalHandlingWorkScope.FullHandling, 3);
+            }
+
             AnimalHandlingWorkUtility.EnsureInfrastructure(pawn);
         }
 
