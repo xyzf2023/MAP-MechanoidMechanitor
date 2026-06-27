@@ -52,6 +52,8 @@ namespace MAP_MechanoidMechanitor
             pawn.skills ??= new Pawn_SkillTracker(pawn);
             pawn.interactions ??= new Pawn_InteractionsTracker(pawn);
 
+            pawn.Notify_DisabledWorkTypesChanged();
+
             pawn.workSettings ??= new Pawn_WorkSettings(pawn);
             if (!pawn.workSettings.Initialized)
             {
@@ -178,18 +180,44 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (pawn.workSettings.GetPriority(warden) <= 0)
+            if (pawn.workSettings.GetPriority(warden) > 0)
             {
-                pawn.workSettings.SetPriority(warden, GetDefaultPriority(pawn));
+                MarkDefaultPriorityInitialized(pawn);
+                return;
             }
 
-            MarkDefaultPriorityInitialized(pawn);
+            if (pawn.WorkTypeIsDisabled(warden))
+            {
+                return;
+            }
+
+            pawn.workSettings.SetPriority(warden, GetDefaultPriority(pawn));
+
+            if (pawn.workSettings.GetPriority(warden) > 0)
+            {
+                MarkDefaultPriorityInitialized(pawn);
+            }
         }
 
         private static int GetDefaultPriority(Pawn pawn)
         {
             CompWardenWorkUser? comp = pawn.GetComp<CompWardenWorkUser>();
-            return comp?.DefaultPriority ?? 3;
+            return ClampDefaultPriority(comp?.DefaultPriority ?? 3);
+        }
+
+        private static int ClampDefaultPriority(int priority)
+        {
+            if (priority < 1)
+            {
+                return 1;
+            }
+
+            if (priority > 4)
+            {
+                return 4;
+            }
+
+            return priority;
         }
 
         private static bool IsDefaultPriorityInitialized(Pawn pawn)
