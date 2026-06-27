@@ -14,27 +14,47 @@ namespace MAP_MechanoidMechanitor
         {
             if (pawn.IsMutant && pawn.mutant.HasTurned)
             {
-                return pawn.mutant.Def.DisabledWorkTypes.Contains(workType);
+                if (pawn.mutant.Def.DisabledWorkTypes != null
+                    && pawn.mutant.Def.DisabledWorkTypes.Contains(workType))
+                {
+                    return true;
+                }
             }
 
             if (pawn.story != null && !pawn.IsSlave)
             {
-                foreach (BackstoryDef backstory in pawn.story.AllBackstories)
+                List<BackstoryDef>? backstories = pawn.story.AllBackstories;
+                if (backstories != null)
                 {
-                    if (backstory.DisabledWorkTypes.Contains(workType))
+                    for (int i = 0; i < backstories.Count; i++)
                     {
-                        return true;
+                        BackstoryDef backstory = backstories[i];
+                        if (backstory?.DisabledWorkTypes != null
+                            && backstory.DisabledWorkTypes.Contains(workType))
+                        {
+                            return true;
+                        }
                     }
                 }
 
-                List<Trait> traits = pawn.story.traits.allTraits;
-                for (int i = 0; i < traits.Count; i++)
+                if (pawn.story.traits != null)
                 {
-                    Trait trait = traits[i];
-                    if (!trait.Suppressed
-                        && trait.GetDisabledWorkTypes().Contains(workType))
+                    List<Trait> traits = pawn.story.traits.allTraits;
+                    for (int i = 0; i < traits.Count; i++)
                     {
-                        return true;
+                        Trait trait = traits[i];
+                        if (trait == null || trait.Suppressed)
+                        {
+                            continue;
+                        }
+
+                        IEnumerable<WorkTypeDef>? disabledWorkTypes =
+                            trait.GetDisabledWorkTypes();
+                        if (disabledWorkTypes != null
+                            && disabledWorkTypes.Contains(workType))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
@@ -97,13 +117,17 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            for (int i = 0; i < pawn.RaceProps.lifeStageWorkSettings.Count; i++)
+            List<LifeStageWorkSettings>? lifeStageWorkSettings =
+                pawn.RaceProps?.lifeStageWorkSettings;
+            if (lifeStageWorkSettings != null)
             {
-                LifeStageWorkSettings settings =
-                    pawn.RaceProps.lifeStageWorkSettings[i];
-                if (settings.workType == workType && settings.IsDisabled(pawn))
+                for (int i = 0; i < lifeStageWorkSettings.Count; i++)
                 {
-                    return true;
+                    LifeStageWorkSettings settings = lifeStageWorkSettings[i];
+                    if (settings.workType == workType && settings.IsDisabled(pawn))
+                    {
+                        return true;
+                    }
                 }
             }
 

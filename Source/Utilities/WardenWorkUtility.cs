@@ -34,7 +34,11 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            GameComponent_WardenWorkRegistry.Grant(pawn);
+            if (pawn.GetComp<CompWardenWorkUser>() == null)
+            {
+                GameComponent_WardenWorkRegistry.Grant(pawn);
+            }
+
             EnsureInfrastructure(pawn);
         }
 
