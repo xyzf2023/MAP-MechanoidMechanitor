@@ -168,6 +168,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (existing != null && existing.Origin == MechanoidMechanitorOrigin.Acquired)
             {
                 registry.EnsureAcquiredMechanitorHediffInternal(pawn);
+                WardenWorkUtility.GrantAndEnsureInfrastructure(pawn);
                 MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
                 return true;
             }
@@ -181,6 +182,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 pawn,
                 MechanoidMechanitorOrigin.Acquired));
             registry.EnsureAcquiredMechanitorHediffInternal(pawn);
+            WardenWorkUtility.GrantAndEnsureInfrastructure(pawn);
             MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
             return true;
         }
@@ -577,6 +579,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     QueueAcquiredHediffSync(pawn);
                 }
 
+                WardenWorkUtility.GrantAndEnsureInfrastructure(pawn);
                 MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
                 MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
                     pawn,
@@ -613,6 +616,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (EnsureAcquiredMechanitorHediffInternal(pawn))
             {
+                WardenWorkUtility.GrantAndEnsureInfrastructure(pawn);
                 MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
             }
             else

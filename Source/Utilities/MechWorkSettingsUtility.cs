@@ -23,7 +23,21 @@ namespace MAP_MechanoidMechanitor
                     ? MechanoidMechanitorRoleUtility.GetRoleWorkTypes()
                     : pawn.RaceProps.mechEnabledWorkTypes;
 
-            if (allowed.NullOrEmpty())
+            if (allowed == null)
+            {
+                allowed = new List<WorkTypeDef>();
+            }
+
+            if (WardenWorkUtility.IsAuthorized(pawn))
+            {
+                WorkTypeDef? warden = WardenWorkUtility.WardenWorkType;
+                if (warden != null && !allowed.Contains(warden))
+                {
+                    allowed.Add(warden);
+                }
+            }
+
+            if (allowed.Count == 0)
             {
                 return;
             }

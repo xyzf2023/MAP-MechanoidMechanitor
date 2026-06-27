@@ -50,6 +50,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            WardenWorkUtility.GrantAndEnsureInfrastructure(Pawn);
+
             if (Pawn.story == null)
             {
                 Pawn.story = new Pawn_StoryTracker(Pawn);

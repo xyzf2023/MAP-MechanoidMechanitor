@@ -40,12 +40,19 @@ namespace MAP_MechanoidMechanitor
 
         private void RegisterNativeMechanitorIfApplicable(bool pendingLegacyNativeStateImport)
         {
-            if (parent is Pawn pawn)
+            if (parent is not Pawn pawn)
             {
-                GameComponent_MechanoidMechanitorRegistry.EnsureNativeMechanitorRecord(
-                    pawn,
-                    pendingLegacyNativeStateImport);
+                return;
             }
+
+            if (!GameComponent_MechanoidMechanitorRegistry.EnsureNativeMechanitorRecord(
+                    pawn,
+                    pendingLegacyNativeStateImport))
+            {
+                return;
+            }
+
+            WardenWorkUtility.GrantAndEnsureInfrastructure(pawn);
         }
     }
 }

@@ -198,14 +198,6 @@ namespace MAP_MechanoidMechanitor
             pawn.workSettings ??= new Pawn_WorkSettings(pawn);
             pawn.workSettings.EnableAndInitializeIfNotAlreadyInitialized();
             MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
-
-            WorkTypeDef? warden =
-                DefDatabase<WorkTypeDef>.GetNamedSilentFail("Warden");
-
-            if (warden != null && pawn.workSettings.GetPriority(warden) <= 0)
-            {
-                pawn.workSettings.SetPriority(warden, 3);
-            }
         }
 
         private static void EnsureGenes(Pawn pawn, CompProperties_ColonistLikeMechProfile props)
