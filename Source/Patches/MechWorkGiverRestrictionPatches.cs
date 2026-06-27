@@ -39,6 +39,17 @@ namespace MAP_MechanoidMechanitor
                 return canBeDoneByMechs || WardenWorkUtility.IsAuthorized(pawn);
             }
 
+            if (workType == AnimalHandlingWorkUtility.HandlingWorkType)
+            {
+                if (AnimalHandlingWorkUtility.IsAuthorized(pawn))
+                {
+                    return AnimalHandlingWorkUtility.AllowsWorkGiver(pawn, workGiver?.def);
+                }
+
+                return canBeDoneByMechs
+                    || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
+            }
+
             return canBeDoneByMechs
                 || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
                 || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);

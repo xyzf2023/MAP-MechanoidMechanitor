@@ -20,6 +20,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             WorkTypeDef? warden = WardenWorkUtility.WardenWorkType;
+            WorkTypeDef? handling = AnimalHandlingWorkUtility.HandlingWorkType;
             bool isAcquiredMechanitor =
                 MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(__instance);
 
@@ -30,16 +31,20 @@ namespace MAP_MechanoidMechanitor
                     warden != null
                     && workType == warden
                     && WardenWorkUtility.IsAuthorized(__instance);
+                bool authorizedHandling =
+                    handling != null
+                    && workType == handling
+                    && AnimalHandlingWorkUtility.IsAuthorized(__instance);
                 bool acquiredRoleWorkType =
                     isAcquiredMechanitor
                     && MechanoidMechanitorRoleUtility.IsRoleWorkType(workType);
 
-                if (!authorizedWarden && !acquiredRoleWorkType)
+                if (!authorizedWarden && !authorizedHandling && !acquiredRoleWorkType)
                 {
                     continue;
                 }
 
-                if (!WardenWorkUtility.IsDisabledOutsideMechRaceProfile(
+                if (!MechWorkTypeAuthorizationUtility.IsDisabledOutsideMechRaceProfile(
                         __instance,
                         workType,
                         permanentOnly))
