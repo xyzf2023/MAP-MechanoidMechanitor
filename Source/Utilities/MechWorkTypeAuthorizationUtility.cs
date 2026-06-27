@@ -14,11 +14,11 @@ namespace MAP_MechanoidMechanitor
         {
             if (pawn.IsMutant && pawn.mutant.HasTurned)
             {
-                if (pawn.mutant.Def.DisabledWorkTypes != null
-                    && pawn.mutant.Def.DisabledWorkTypes.Contains(workType))
-                {
-                    return true;
-                }
+                List<WorkTypeDef>? disabledWorkTypes =
+                    pawn.mutant.Def.DisabledWorkTypes;
+
+                return disabledWorkTypes != null
+                    && disabledWorkTypes.Contains(workType);
             }
 
             if (pawn.story != null && !pawn.IsSlave)

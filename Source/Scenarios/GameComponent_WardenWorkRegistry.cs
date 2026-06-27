@@ -36,6 +36,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            if (pawn.GetComp<CompWardenWorkUser>() != null)
+            {
+                return;
+            }
+
             if (registry.FindRecordForPawn(pawn) != null)
             {
                 return;
@@ -97,7 +102,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Grant(pawn);
+            if (pawn.GetComp<CompWardenWorkUser>() != null)
+            {
+                WardenWorkUtility.EnsureInfrastructure(pawn);
+                return;
+            }
+
+            if (!TryGetRecord(pawn, out _))
+            {
+                Grant(pawn);
+            }
+
             WardenWorkUtility.EnsureInfrastructure(pawn);
         }
 
