@@ -190,9 +190,21 @@ namespace MAP_MechanoidMechanitor
 
         private static void EnsureWorkSettings(Pawn pawn, CompProperties_ColonistLikeMechProfile props)
         {
-            if (props.ensureWorkSettings && pawn.workSettings == null)
+            if (!props.ensureWorkSettings)
             {
-                pawn.workSettings = new Pawn_WorkSettings(pawn);
+                return;
+            }
+
+            pawn.workSettings ??= new Pawn_WorkSettings(pawn);
+            pawn.workSettings.EnableAndInitializeIfNotAlreadyInitialized();
+            MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
+
+            WorkTypeDef? warden =
+                DefDatabase<WorkTypeDef>.GetNamedSilentFail("Warden");
+
+            if (warden != null && pawn.workSettings.GetPriority(warden) <= 0)
+            {
+                pawn.workSettings.SetPriority(warden, 3);
             }
         }
 
