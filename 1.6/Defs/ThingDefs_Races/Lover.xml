@@ -101,6 +101,10 @@
         </li>
       </lifeStageAges>
 
+      <mechEnabledWorkTypes>
+        <li>Warden</li>
+      </mechEnabledWorkTypes>
+
       <detritusLeavings>
         <li>
           <def>ChunkMechanoidSlag</def>
@@ -176,6 +180,12 @@
         <allowEquipFloatMenu>true</allowEquipFloatMenu>
         <allowDropEquipmentFloatMenu>true</allowDropEquipmentFloatMenu>
         <ensureEquipmentTracker>true</ensureEquipmentTracker>
+      </li>
+
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechRestrictedWorkGiverUser">
+        <allowedWorkTypes>
+          <li>Warden</li>
+        </allowedWorkTypes>
       </li>
 
     </comps>
