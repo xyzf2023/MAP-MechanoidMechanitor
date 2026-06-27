@@ -114,6 +114,18 @@
           <spawnChance>0.1</spawnChance>
         </li>
       </detritusLeavings>
+
+      <mechFixedSkillLevel>12</mechFixedSkillLevel>
+
+      <mechEnabledWorkTypes>
+        <li>Firefighter</li> <!-- 灭火 -->
+        <li>Doctor</li> <!-- 医生 -->
+        <li>BasicWorker</li> <!-- 杂项 -->
+        <li>Handling</li> <!-- 驯兽 -->
+        <li>Cooking</li> <!-- 烹饪 -->
+        <li>Childcare</li> <!-- 育儿 -->
+      </mechEnabledWorkTypes>
+
     </race>
 
     <butcherProducts>
