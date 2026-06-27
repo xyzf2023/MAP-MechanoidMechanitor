@@ -486,10 +486,9 @@ namespace MAP_MechanoidMechanitor
 
         private static void EnsureWorkSettings(Pawn pawn)
         {
-            pawn.workSettings ??= new Pawn_WorkSettings(pawn);
-            if (!pawn.workSettings.Initialized)
+            if (!MechWorkSettingsUtility.TryEnsureWorkSettingsInitialized(pawn))
             {
-                pawn.workSettings.EnableAndInitialize();
+                return;
             }
 
             MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);

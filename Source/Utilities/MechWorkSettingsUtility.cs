@@ -6,9 +6,32 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MechWorkSettingsUtility
     {
+        public static bool TryEnsureWorkSettingsInitialized(Pawn? pawn)
+        {
+            if (pawn == null || pawn.Destroyed)
+            {
+                return false;
+            }
+
+            pawn.workSettings ??= new Pawn_WorkSettings(pawn);
+
+            if (pawn.kindDef == null || pawn.def?.race == null)
+            {
+                return false;
+            }
+
+            pawn.workSettings.EnableAndInitializeIfNotAlreadyInitialized();
+            return pawn.workSettings.Initialized;
+        }
+
         public static void RestrictToMechEnabledWorkTypes(Pawn pawn)
         {
             if (pawn?.workSettings == null || !pawn.workSettings.EverWork)
+            {
+                return;
+            }
+
+            if (pawn.kindDef == null)
             {
                 return;
             }

@@ -52,14 +52,12 @@ namespace MAP_MechanoidMechanitor
             pawn.skills ??= new Pawn_SkillTracker(pawn);
             pawn.interactions ??= new Pawn_InteractionsTracker(pawn);
 
-            pawn.Notify_DisabledWorkTypesChanged();
-
-            pawn.workSettings ??= new Pawn_WorkSettings(pawn);
-            if (!pawn.workSettings.Initialized)
+            if (!MechWorkSettingsUtility.TryEnsureWorkSettingsInitialized(pawn))
             {
-                pawn.workSettings.EnableAndInitialize();
+                return;
             }
 
+            pawn.Notify_DisabledWorkTypesChanged();
             TryInitializeDefaultWardenPriority(pawn);
             pawn.Notify_DisabledWorkTypesChanged();
         }

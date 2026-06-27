@@ -195,8 +195,11 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            pawn.workSettings ??= new Pawn_WorkSettings(pawn);
-            pawn.workSettings.EnableAndInitializeIfNotAlreadyInitialized();
+            if (!MechWorkSettingsUtility.TryEnsureWorkSettingsInitialized(pawn))
+            {
+                return;
+            }
+
             MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
         }
 
