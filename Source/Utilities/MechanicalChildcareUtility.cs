@@ -90,7 +90,7 @@ namespace MAP_MechanoidMechanitor
             return priority;
         }
 
-        internal static void TryGainFedBabyMemoryIfMood(Pawn? caregiver, Pawn? baby)
+        internal static void TryGiveFedBabyThought(Pawn? caregiver, Pawn? baby)
         {
             if (caregiver?.needs?.mood?.thoughts?.memories == null || baby == null)
             {
