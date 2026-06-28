@@ -10,6 +10,11 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPrefix]
         public static void Prefix(Apparel apparel, ref BodyTypeDef bodyType)
         {
+            if (bodyType != null && bodyType.defName == "MAP_LoverFemale")
+            {
+                bodyType = BodyTypeDefOf.Female;
+            }
+
             if (apparel?.Wearer == null)
             {
                 return;
