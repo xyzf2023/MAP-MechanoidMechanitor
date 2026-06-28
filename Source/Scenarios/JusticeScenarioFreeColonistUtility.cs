@@ -6,11 +6,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public static class JusticeScenarioFreeColonistUtility
     {
         /// <summary>
-        /// 全局资格：专属剧本主角、机械族机械师、玩家派系、存活且未被销毁或俘虏。
+        /// 全局资格：仅在正义专属剧本启用时有效，且仅允许唯一的剧本主角充当自由殖民者替代者。
+        /// 另需为机械族机械师、玩家派系成员，并存活、未销毁、非俘虏且无 HostFaction。
         /// </summary>
         public static bool IsEligibleGlobal(Pawn? pawn)
         {
-            if (pawn == null)
+            if (!GameComponent_JusticeScenarioState.IsEnabled || pawn == null)
             {
                 return false;
             }
