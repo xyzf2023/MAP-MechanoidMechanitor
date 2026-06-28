@@ -361,7 +361,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            for (int i = start; i < end; i++)
+            for (int i = start; i <= end; i++)
             {
                 if (codes[i].blocks.Count > 0)
                 {
@@ -382,7 +382,6 @@ namespace MAP_MechanoidMechanitor
             MethodInfo helperMethod)
         {
             List<Label> entryLabels = new List<Label>(codes[start].labels);
-            List<ExceptionBlock> entryBlocks = new List<ExceptionBlock>(codes[start].blocks);
 
             codes.RemoveRange(start, end - start + 1);
 
@@ -395,11 +394,6 @@ namespace MAP_MechanoidMechanitor
             foreach (Label label in entryLabels)
             {
                 loadCaregiver.labels.Add(label);
-            }
-
-            foreach (ExceptionBlock block in entryBlocks)
-            {
-                loadCaregiver.blocks.Add(block);
             }
 
             codes.Insert(start, loadCaregiver);
