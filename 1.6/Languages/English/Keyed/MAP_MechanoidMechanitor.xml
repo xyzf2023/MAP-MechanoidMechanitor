@@ -14,4 +14,6 @@
   <MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>The target mechanoid belongs to a non-hostile faction. Continuing the hack will be treated as a hostile act.\n\nAre you sure?</MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>
   <MAP_MechanoidMechanitor.MechHack.ReportWithTarget>Hacking {0}.</MAP_MechanoidMechanitor.MechHack.ReportWithTarget>
   <MAP_MechanoidMechanitor.MechHack.ReportDefault>Performing mech hack.</MAP_MechanoidMechanitor.MechHack.ReportDefault>
+  <MAP_JusticeScenarioDescription_Title>Mechanoid Mechanitor</MAP_JusticeScenarioDescription_Title>
+  <MAP_JusticeScenarioDescription_Text>TODO</MAP_JusticeScenarioDescription_Text>
 </LanguageData>
