@@ -31,6 +31,9 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_AnimalHandlingWorkUser">
         <defaultPriority>3</defaultPriority>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechanicalChildcareUser">
+        <defaultPriority>3</defaultPriority>
+      </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_NativeMechanoidMechanitor" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
         <controlBackend>Vanilla</controlBackend>

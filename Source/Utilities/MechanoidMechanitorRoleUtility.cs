@@ -44,7 +44,6 @@ namespace MAP_MechanoidMechanitor
             "Hauling",
             "Cleaning",
             "Research",
-            "Childcare",
             "DarkStudy",
             "Fishing"
         };
