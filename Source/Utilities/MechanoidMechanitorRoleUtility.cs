@@ -243,16 +243,24 @@ namespace MAP_MechanoidMechanitor
 
         public static int GetExtraMechBandwidth(Pawn? pawn)
         {
-            if (!GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
+            if (GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
                     pawn,
                     out MechanoidMechanitorRecord? record)
-                || record == null
-                || record.Pawn == null)
+                && record != null
+                && record.Pawn != null)
             {
-                return 0;
+                return GetBaseIntrinsicBandwidth(record.Pawn, record) + record.ChipBandwidthBonus;
             }
 
-            return GetBaseIntrinsicBandwidth(record.Pawn, record) + record.ChipBandwidthBonus;
+            if (CompMAPMechanitorNode.TryGetNodeComp(
+                    pawn,
+                    out CompMAPMechanitorNode? nodeComp)
+                && nodeComp != null)
+            {
+                return nodeComp.CurrentIntrinsicBandwidth;
+            }
+
+            return 0;
         }
 
         public static int GetExtraMechControlGroups(Pawn? pawn)
