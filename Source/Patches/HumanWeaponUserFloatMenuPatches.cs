@@ -43,12 +43,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             __result = true;
-
-            if (Prefs.DevMode)
-            {
-                Log.Message(
-                    $"[MAP] HumanWeaponUser allowed equip float menu: pawn={pawn.LabelShort}, provider={__instance.GetType().Name}");
-            }
         }
     }
 }
