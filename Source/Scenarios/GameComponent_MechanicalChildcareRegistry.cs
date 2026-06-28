@@ -286,7 +286,49 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
+            Dictionary<Pawn, MechanicalChildcareAuthorizationRecord> keptRecords =
+                new Dictionary<Pawn, MechanicalChildcareAuthorizationRecord>();
+            List<MechanicalChildcareAuthorizationRecord> cleanedRecords =
+                new List<MechanicalChildcareAuthorizationRecord>();
+
+            for (int i = 0; i < authorizationRecords.Count; i++)
+            {
+                MechanicalChildcareAuthorizationRecord record = authorizationRecords[i];
+                Pawn? pawn = record.Pawn;
+                if (pawn == null)
+                {
+                    continue;
+                }
+
+                if (pawn.GetComp<CompMechanicalChildcareUser>() != null)
+                {
+                    continue;
+                }
+
+                if (keptRecords.TryGetValue(pawn, out MechanicalChildcareAuthorizationRecord? existing)
+                    && existing != null)
+                {
+                    MergeDuplicateRecordState(existing, record);
+                    continue;
+                }
+
+                keptRecords[pawn] = record;
+                cleanedRecords.Add(record);
+            }
+
+            authorizationRecords = cleanedRecords;
             RebuildRecordIndex();
+        }
+
+        private static void MergeDuplicateRecordState(
+            MechanicalChildcareAuthorizationRecord keep,
+            MechanicalChildcareAuthorizationRecord duplicate)
+        {
+            if (!keep.DefaultPriorityInitialized && duplicate.DefaultPriorityInitialized)
+            {
+                keep.DefaultPriority = duplicate.DefaultPriority;
+                keep.DefaultPriorityInitialized = true;
+            }
         }
 
         private MechanicalChildcareAuthorizationRecord? FindRecordForPawn(Pawn pawn)
