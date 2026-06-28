@@ -29,10 +29,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
         }
 
-        public static void Grant(
-            Pawn? pawn,
-            AnimalHandlingWorkScope scope,
-            int defaultPriority)
+        public static void Grant(Pawn? pawn, int defaultPriority)
         {
             GameComponent_AnimalHandlingWorkRegistry? registry = CurrentRegistry;
             if (registry == null || pawn == null || pawn.Destroyed)
@@ -49,7 +46,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 registry.FindRecordForPawn(pawn);
             if (existing != null)
             {
-                existing.Scope = scope;
                 existing.DefaultPriority = AnimalHandlingWorkUtility.ClampDefaultPriority(
                     defaultPriority);
                 return;
@@ -57,7 +53,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             registry.AddRecord(new AnimalHandlingWorkAuthorizationRecord(
                 pawn,
-                scope,
                 AnimalHandlingWorkUtility.ClampDefaultPriority(defaultPriority)));
         }
 
@@ -115,23 +110,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return registry.FindRecordForPawn(pawn) != null;
-        }
-
-        public static AnimalHandlingWorkScope GetScope(Pawn? pawn)
-        {
-            CompAnimalHandlingWorkUser? comp = pawn?.GetComp<CompAnimalHandlingWorkUser>();
-            if (comp != null)
-            {
-                return comp.Scope;
-            }
-
-            if (!TryGetRecord(pawn, out AnimalHandlingWorkAuthorizationRecord? record)
-                || record == null)
-            {
-                return AnimalHandlingWorkScope.TameAndTrain;
-            }
-
-            return record.Scope;
         }
 
         public static int GetDefaultPriority(Pawn? pawn)
@@ -201,7 +179,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (registry.FindRecordForPawn(pawn) == null)
             {
-                Grant(pawn, AnimalHandlingWorkScope.FullHandling, 3);
+                Grant(pawn, 3);
             }
 
             AnimalHandlingWorkUtility.EnsureInfrastructure(pawn);

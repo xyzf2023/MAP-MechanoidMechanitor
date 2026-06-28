@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using MAP_MechanoidMechanitor.Scenarios;
-using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -8,7 +6,6 @@ namespace MAP_MechanoidMechanitor
     public class CompProperties_AnimalHandlingWorkUser : CompProperties
     {
         public int defaultPriority = 3;
-        public AnimalHandlingWorkScope scope = AnimalHandlingWorkScope.TameAndTrain;
 
         public CompProperties_AnimalHandlingWorkUser()
         {
@@ -25,8 +22,6 @@ namespace MAP_MechanoidMechanitor
 
         public CompProperties_AnimalHandlingWorkUser Props =>
             (CompProperties_AnimalHandlingWorkUser)props;
-
-        public AnimalHandlingWorkScope Scope => Props.scope;
 
         public int DefaultPriority => Props.defaultPriority;
 

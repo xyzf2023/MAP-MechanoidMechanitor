@@ -7,8 +7,6 @@ namespace MAP_MechanoidMechanitor
     public static class AnimalHandlingWorkUtility
     {
         private static WorkTypeDef? cachedHandlingWorkType;
-        private static WorkGiverDef? cachedTameWorkGiver;
-        private static WorkGiverDef? cachedTrainWorkGiver;
 
         public static WorkTypeDef HandlingWorkType =>
             cachedHandlingWorkType ??=
@@ -19,32 +17,7 @@ namespace MAP_MechanoidMechanitor
             return GameComponent_AnimalHandlingWorkRegistry.IsAuthorized(pawn);
         }
 
-        public static AnimalHandlingWorkScope GetScope(Pawn? pawn)
-        {
-            return GameComponent_AnimalHandlingWorkRegistry.GetScope(pawn);
-        }
-
-        public static bool AllowsWorkGiver(Pawn? pawn, WorkGiverDef? workGiverDef)
-        {
-            if (pawn == null || workGiverDef == null || !IsAuthorized(pawn))
-            {
-                return false;
-            }
-
-            if (GetScope(pawn) == AnimalHandlingWorkScope.FullHandling)
-            {
-                return true;
-            }
-
-            WorkGiverDef? tame = GetTameWorkGiver();
-            WorkGiverDef? train = GetTrainWorkGiver();
-            return workGiverDef == tame || workGiverDef == train;
-        }
-
-        public static void GrantAndEnsureInfrastructure(
-            Pawn? pawn,
-            AnimalHandlingWorkScope scope,
-            int defaultPriority)
+        public static void GrantAndEnsureInfrastructure(Pawn? pawn, int defaultPriority)
         {
             if (pawn == null || pawn.Destroyed)
             {
@@ -53,7 +26,7 @@ namespace MAP_MechanoidMechanitor
 
             if (pawn.GetComp<CompAnimalHandlingWorkUser>() == null)
             {
-                GameComponent_AnimalHandlingWorkRegistry.Grant(pawn, scope, defaultPriority);
+                GameComponent_AnimalHandlingWorkRegistry.Grant(pawn, defaultPriority);
             }
 
             EnsureInfrastructure(pawn);
@@ -138,18 +111,6 @@ namespace MAP_MechanoidMechanitor
             {
                 GameComponent_AnimalHandlingWorkRegistry.MarkDefaultPriorityInitialized(pawn);
             }
-        }
-
-        private static WorkGiverDef? GetTameWorkGiver()
-        {
-            return cachedTameWorkGiver ??=
-                DefDatabase<WorkGiverDef>.GetNamedSilentFail("Tame");
-        }
-
-        private static WorkGiverDef? GetTrainWorkGiver()
-        {
-            return cachedTrainWorkGiver ??=
-                DefDatabase<WorkGiverDef>.GetNamedSilentFail("Train");
         }
     }
 }

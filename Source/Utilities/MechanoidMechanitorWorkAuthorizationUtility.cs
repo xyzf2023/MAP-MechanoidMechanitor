@@ -23,10 +23,7 @@ namespace MAP_MechanoidMechanitor
             }
             else
             {
-                AnimalHandlingWorkUtility.GrantAndEnsureInfrastructure(
-                    pawn,
-                    AnimalHandlingWorkScope.FullHandling,
-                    3);
+                AnimalHandlingWorkUtility.GrantAndEnsureInfrastructure(pawn, 3);
             }
         }
     }
