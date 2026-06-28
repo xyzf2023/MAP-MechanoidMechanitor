@@ -2,7 +2,7 @@
 <Defs>
   <ScenPartDef>
     <defName>MAP_JusticeScenario</defName>
-    <label>正义剧本规则</label>
+    <label>「正义」剧本</label>
     <category>Fixed</category>
     <scenPartClass>MAP_MechanoidMechanitor.Scenarios.ScenPart_JusticeScenario</scenPartClass>
     <maxUses>1</maxUses>
@@ -76,6 +76,16 @@
         <li Class="ScenPart_StartingMech">
           <def>StartingMech</def>
           <mechKind>Mech_Constructoid</mechKind>
+          <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance>
+        </li>
+        <li Class="ScenPart_StartingMech">
+          <def>StartingMech</def>
+          <mechKind>MAP_Mech_Hermit</mechKind>
+          <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance>
+        </li>
+        <li Class="ScenPart_StartingMech">
+          <def>StartingMech</def>
+          <mechKind>MAP_Mech_Lover</mechKind>
           <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance>
         </li>
 
