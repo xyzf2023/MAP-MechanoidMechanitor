@@ -212,7 +212,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                if (!JusticeScenarioFreeColonistUtility.IsEligible(
+                if (!JusticeScenarioFreeColonistUtility.IsEligibleOnMap(
                         pawn,
                         namingHomeMap.mapPawns,
                         requireSpawned: true))
