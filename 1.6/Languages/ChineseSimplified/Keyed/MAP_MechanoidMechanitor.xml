@@ -14,4 +14,6 @@
   <MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>目标机械体属于非敌对阵营，继续骇入会被视作敌对行为。\n\n确定要这么做？</MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>
   <MAP_MechanoidMechanitor.MechHack.ReportWithTarget>正在骇入{0}。</MAP_MechanoidMechanitor.MechHack.ReportWithTarget>
   <MAP_MechanoidMechanitor.MechHack.ReportDefault>正在执行机体骇入。</MAP_MechanoidMechanitor.MechHack.ReportDefault>
+  <MAP_JusticeScenarioDescription_Title>机械族机械师</MAP_JusticeScenarioDescription_Title>
+  <MAP_JusticeScenarioDescription_Text>TODO</MAP_JusticeScenarioDescription_Text>
 </LanguageData>
