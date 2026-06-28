@@ -132,9 +132,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool IsDefaultPriorityInitialized(Pawn? pawn)
         {
             CompMechanicalChildcareUser? comp = pawn?.GetComp<CompMechanicalChildcareUser>();
-            if (comp != null)
+            if (comp != null && comp.DefaultPriorityInitialized)
             {
-                return comp.DefaultPriorityInitialized;
+                return true;
             }
 
             return TryGetRecord(pawn, out MechanicalChildcareAuthorizationRecord? record)
@@ -300,8 +300,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                if (pawn.GetComp<CompMechanicalChildcareUser>() != null)
+                if (pawn.GetComp<CompMechanicalChildcareUser>() is CompMechanicalChildcareUser comp)
                 {
+                    if (record.DefaultPriorityInitialized)
+                    {
+                        comp.MarkDefaultPriorityInitialized();
+                    }
+
                     continue;
                 }
 
