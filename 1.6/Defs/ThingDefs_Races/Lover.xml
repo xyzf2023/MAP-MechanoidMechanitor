@@ -139,7 +139,6 @@
         <defaultPriority>3</defaultPriority>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_AnimalHandlingWorkUser">
-        <scope>TameAndTrain</scope>
         <defaultPriority>3</defaultPriority>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">

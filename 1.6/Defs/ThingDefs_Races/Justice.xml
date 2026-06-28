@@ -29,7 +29,6 @@
         <defaultPriority>3</defaultPriority>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_AnimalHandlingWorkUser">
-        <scope>FullHandling</scope>
         <defaultPriority>3</defaultPriority>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_NativeMechanoidMechanitor" />

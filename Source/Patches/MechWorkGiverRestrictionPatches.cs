@@ -43,7 +43,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (AnimalHandlingWorkUtility.IsAuthorized(pawn))
                 {
-                    return AnimalHandlingWorkUtility.AllowsWorkGiver(pawn, workGiver?.def);
+                    return true;
                 }
 
                 return canBeDoneByMechs
