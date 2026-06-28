@@ -171,6 +171,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 registry.EnsureAcquiredMechanitorHediffInternal(pawn);
                 MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
                 MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
+                NotifyJusticeColonistDisplaysIfNeeded();
                 return true;
             }
 
@@ -185,7 +186,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
             registry.EnsureAcquiredMechanitorHediffInternal(pawn);
             MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
             MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
+            NotifyJusticeColonistDisplaysIfNeeded();
             return true;
+        }
+
+        private static void NotifyJusticeColonistDisplaysIfNeeded()
+        {
+            if (!GameComponent_JusticeScenarioState.IsEnabled)
+            {
+                return;
+            }
+
+            JusticeScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
         }
 
         public static bool EnsureAcquiredMechanitorHediff(Pawn? pawn)

@@ -31,7 +31,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < allPawns.Count; i++)
             {
                 Pawn pawn = allPawns[i];
-                if (!JusticeScenarioFreeColonistUtility.IsEligibleOnMap(
+                if (!JusticeScenarioFreeColonistUtility.IsEligibleForMapFreeColonistAppend(
                         pawn,
                         __instance,
                         requireSpawned: false))
@@ -72,7 +72,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < allPawnsSpawned.Count; i++)
             {
                 Pawn pawn = allPawnsSpawned[i];
-                if (!JusticeScenarioFreeColonistUtility.IsEligibleOnMap(
+                if (!JusticeScenarioFreeColonistUtility.IsEligibleForMapFreeColonistAppend(
                         pawn,
                         __instance,
                         requireSpawned: true))
