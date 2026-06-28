@@ -21,6 +21,7 @@ namespace MAP_MechanoidMechanitor
 
             WorkTypeDef? warden = WardenWorkUtility.WardenWorkType;
             WorkTypeDef? handling = AnimalHandlingWorkUtility.HandlingWorkType;
+            WorkTypeDef? childcare = MechanicalChildcareUtility.ChildcareWorkType;
             bool isAcquiredMechanitor =
                 MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(__instance);
 
@@ -35,11 +36,18 @@ namespace MAP_MechanoidMechanitor
                     handling != null
                     && workType == handling
                     && AnimalHandlingWorkUtility.IsAuthorized(__instance);
+                bool authorizedChildcare =
+                    childcare != null
+                    && workType == childcare
+                    && MechanicalChildcareUtility.IsAuthorized(__instance);
                 bool acquiredRoleWorkType =
                     isAcquiredMechanitor
                     && MechanoidMechanitorRoleUtility.IsRoleWorkType(workType);
 
-                if (!authorizedWarden && !authorizedHandling && !acquiredRoleWorkType)
+                if (!authorizedWarden
+                    && !authorizedHandling
+                    && !authorizedChildcare
+                    && !acquiredRoleWorkType)
                 {
                     continue;
                 }

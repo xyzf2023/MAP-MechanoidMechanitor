@@ -50,6 +50,18 @@ namespace MAP_MechanoidMechanitor
                     || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
             }
 
+            if (workType == MechanicalChildcareUtility.ChildcareWorkType)
+            {
+                if (MechanicalChildcareUtility.IsAuthorized(pawn))
+                {
+                    return workGiver != null
+                        && MechanicalChildcareUtility.AllowsWorkGiver(pawn, workGiver.def);
+                }
+
+                return canBeDoneByMechs
+                    || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
+            }
+
             return canBeDoneByMechs
                 || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
                 || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);

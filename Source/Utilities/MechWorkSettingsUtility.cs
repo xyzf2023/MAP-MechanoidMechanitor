@@ -100,6 +100,15 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
+            if (MechanicalChildcareUtility.IsAuthorized(pawn))
+            {
+                WorkTypeDef? childcare = MechanicalChildcareUtility.ChildcareWorkType;
+                if (childcare != null)
+                {
+                    allowed.Add(childcare);
+                }
+            }
+
             return allowed;
         }
     }
