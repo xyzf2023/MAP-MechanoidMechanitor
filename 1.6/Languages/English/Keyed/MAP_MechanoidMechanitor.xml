@@ -18,6 +18,7 @@
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>Transfer this body's autonomous consciousness into another body capable of hosting it.</MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>No body is available to host the consciousness.</MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>Consciousness transfer failed.</MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>
+  <MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData>Recovering damaged consciousness data.</MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData>
   <MAP_JusticeScenarioDescription_Title>Mechanoid Mechanitor</MAP_JusticeScenarioDescription_Title>
   <MAP_JusticeScenarioDescription_Text>TODO</MAP_JusticeScenarioDescription_Text>
 </LanguageData>

@@ -18,6 +18,7 @@
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>将当前机体的自主意识转移到其他能承载自主意识的机体中。</MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>没有可承载意识的机体。</MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>意识转移失败。</MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>
+  <MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData>正在恢复损失的意识数据</MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData>
   <MAP_JusticeScenarioDescription_Title>机械族机械师</MAP_JusticeScenarioDescription_Title>
   <MAP_JusticeScenarioDescription_Text>TODO</MAP_JusticeScenarioDescription_Text>
 </LanguageData>

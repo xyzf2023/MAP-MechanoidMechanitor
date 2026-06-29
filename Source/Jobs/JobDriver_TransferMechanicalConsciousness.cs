@@ -49,9 +49,10 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return MechanicalConsciousnessTransferUtility.CanTransferMechanicalConsciousness(
-                source,
-                target);
+            return MechanicalConsciousnessTransferUtility
+                .CanVoluntarilyTransferMechanicalConsciousness(
+                    source,
+                    target);
         }
 
         private void ApplyTransfer()
@@ -59,18 +60,20 @@ namespace MAP_MechanoidMechanitor
             Pawn? source = GetSourceFromJob();
             Pawn? target = GetTargetFromJob();
             if (source != pawn
-                || !MechanicalConsciousnessTransferUtility.CanTransferMechanicalConsciousness(
-                    source,
-                    target))
+                || !MechanicalConsciousnessTransferUtility
+                    .CanVoluntarilyTransferMechanicalConsciousness(
+                        source,
+                        target))
             {
                 ShowFailureMessage();
                 EndJobWith(JobCondition.Incompletable);
                 return;
             }
 
-            if (!MechanicalConsciousnessTransferUtility.TryTransferMechanicalConsciousness(
-                    source,
-                    target))
+            if (!MechanicalConsciousnessTransferUtility
+                    .TryVoluntarilyTransferMechanicalConsciousness(
+                        source,
+                        target))
             {
                 ShowFailureMessage();
                 EndJobWith(JobCondition.Incompletable);

@@ -16,6 +16,8 @@ namespace MAP_MechanoidMechanitor
             "MAP_MechanoidMechanitor.ConsciousnessTransfer.Description";
         private const string NoCandidateKey =
             "MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate";
+        private const string RecoveringEmergencyDataKey =
+            "MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData";
         private const string FailedKey = "MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed";
 
         [HarmonyPostfix]
@@ -64,7 +66,12 @@ namespace MAP_MechanoidMechanitor
                 }
             };
 
-            if (candidates.Count == 0)
+            if (EmergencyMechanicalConsciousnessTransferUtility
+                    .HasEmergencyConsciousnessTransferHediff(source))
+            {
+                command.Disable(RecoveringEmergencyDataKey.Translate());
+            }
+            else if (candidates.Count == 0)
             {
                 command.Disable(NoCandidateKey.Translate());
             }
@@ -122,9 +129,10 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (!MechanicalConsciousnessTransferUtility.CanTransferMechanicalConsciousness(
-                        source,
-                        candidate))
+                if (!MechanicalConsciousnessTransferUtility
+                        .CanVoluntarilyTransferMechanicalConsciousness(
+                            source,
+                            candidate))
                 {
                     continue;
                 }
@@ -147,9 +155,10 @@ namespace MAP_MechanoidMechanitor
                 || !source.Spawned
                 || source.Map == null
                 || !GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(source)
-                || !MechanicalConsciousnessTransferUtility.CanTransferMechanicalConsciousness(
-                    source,
-                    target))
+                || !MechanicalConsciousnessTransferUtility
+                    .CanVoluntarilyTransferMechanicalConsciousness(
+                        source,
+                        target))
             {
                 Messages.Message(
                     FailedKey.Translate(),
