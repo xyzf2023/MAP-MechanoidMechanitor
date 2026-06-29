@@ -3,7 +3,7 @@
   <ThingDef ParentName="MechanitorImplantBase">
     <defName>MAP_AutonomousDirectiveCore</defName>
     <label>自律指令核心</label>
-    <description>TODO</description>
+    <description>为机械体提供自主意识的超凡核心，能让机械体成为机械族机械师。选中机械体并右键以下达使用命令。</description>
     <graphicData>
       <texPath>Things/AutonomousDirectiveCore</texPath>
       <graphicClass>Graphic_Single</graphicClass>

@@ -86,7 +86,7 @@
   <AbilityDef>
     <defName>MAP_Ability_MechHack</defName>
     <label>机体骇入</label>
-    <description>TODO</description>
+    <description>「正义」将尝试骇入一台非我方机械体。将一台目标内的非我方存活机械体的阵营改为我方。</description>
     <iconPath>UI/Abilities/MechResurrection</iconPath>
     <cooldownTicksRange>300000~300000</cooldownTicksRange>
     <jobDef>MAP_Job_MechHack</jobDef>
