@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>MAP_TransferMechanicalConsciousness</defName>
+    <label>意识转移</label>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_TransferMechanicalConsciousness</driverClass>
+    <reportString>正在进行意识转移。</reportString>
+  </JobDef>
+</Defs>

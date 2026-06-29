@@ -14,6 +14,10 @@
   <MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>The target mechanoid belongs to a non-hostile faction. Continuing the hack will be treated as a hostile act.\n\nAre you sure?</MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>
   <MAP_MechanoidMechanitor.MechHack.ReportWithTarget>Hacking {0}.</MAP_MechanoidMechanitor.MechHack.ReportWithTarget>
   <MAP_MechanoidMechanitor.MechHack.ReportDefault>Performing mech hack.</MAP_MechanoidMechanitor.MechHack.ReportDefault>
+  <MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>Consciousness transfer</MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>
+  <MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>Transfer this body's autonomous consciousness into another body capable of hosting it.</MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>
+  <MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>No body is available to host the consciousness.</MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>
+  <MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>Consciousness transfer failed.</MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>
   <MAP_JusticeScenarioDescription_Title>Mechanoid Mechanitor</MAP_JusticeScenarioDescription_Title>
   <MAP_JusticeScenarioDescription_Text>TODO</MAP_JusticeScenarioDescription_Text>
 </LanguageData>
