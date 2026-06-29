@@ -12,8 +12,7 @@ namespace MAP_MechanoidMechanitor
         None = 0,
         Native = 1,
         Acquired = 2,
-        MechanicalConsciousnessHost = 4,
-        ScenarioProtagonist = 8
+        MechanicalConsciousnessHost = 4
     }
 
     public static class MechanoidMechanitorRoleUtility
@@ -88,12 +87,6 @@ namespace MAP_MechanoidMechanitor
                 .IsMechanicalConsciousnessHost(pawn);
         }
 
-        public static bool IsScenarioProtagonist(Pawn? pawn)
-        {
-            return GameComponent_MechanoidMechanitorRegistry
-                .IsScenarioProtagonist(pawn);
-        }
-
         public static bool CanHostMechanicalConsciousness(Pawn? pawn)
         {
             return GameComponent_MechanoidMechanitorRegistry
@@ -119,10 +112,6 @@ namespace MAP_MechanoidMechanitor
             if (IsMechanicalConsciousnessHost(pawn))
             {
                 result |= MechanoidMechanitorIdentity.MechanicalConsciousnessHost;
-            }
-            if (IsScenarioProtagonist(pawn))
-            {
-                result |= MechanoidMechanitorIdentity.ScenarioProtagonist;
             }
 
             return result;

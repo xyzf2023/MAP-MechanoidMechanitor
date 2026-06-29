@@ -19,22 +19,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool IsJusticeScenarioActive => ActiveScenarioPart != null;
 
-        public static Pawn? ScenarioProtagonist =>
-            GameComponent_MechanoidMechanitorRegistry.CurrentScenarioProtagonist;
-
         public static Pawn? MechanicalConsciousnessHost =>
             GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
 
         public static bool IsJustice(Pawn? pawn) =>
             pawn != null && pawn.kindDef == JusticePawnKind;
 
-        public static bool IsScenarioProtagonist(Pawn? pawn) =>
-            GameComponent_MechanoidMechanitorRegistry.IsScenarioProtagonist(pawn);
-
         public static bool IsMechanicalConsciousnessHost(Pawn? pawn) =>
             GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(pawn);
 
-        public static bool HasLivingScenarioProtagonist
+        public static bool HasLivingMechanicalConsciousnessHost
         {
             get
             {
@@ -43,18 +37,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return false;
                 }
 
-                Pawn? protagonist = ScenarioProtagonist;
-                return protagonist != null
-                    && !protagonist.Dead
-                    && !protagonist.Destroyed
-                    && protagonist.Faction == Faction.OfPlayer;
+                Pawn? host = MechanicalConsciousnessHost;
+                return host != null
+                    && !host.Dead
+                    && !host.Destroyed
+                    && host.Faction == Faction.OfPlayer;
             }
         }
 
-        public static bool HasLivingJustice => HasLivingScenarioProtagonist;
+        public static bool HasLivingJustice => HasLivingMechanicalConsciousnessHost;
 
         public static bool ShouldPreventGameOver =>
-            IsJusticeScenarioActive && HasLivingScenarioProtagonist;
+            IsJusticeScenarioActive && HasLivingMechanicalConsciousnessHost;
 
         public static bool HasGameEndedLetter
         {

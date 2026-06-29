@@ -6,7 +6,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public static class JusticeScenarioFreeColonistUtility
     {
         /// <summary>
-        /// 特殊剧本中符合条件的玩家方机械族机械师（不涉及机械意识宿主或剧本主角身份）。
+        /// 特殊剧本中符合条件的玩家方机械族机械师（不涉及机械意识宿主身份）。
         /// </summary>
         public static bool IsJusticeScenarioPlayerMechanoidMechanitor(Pawn? pawn)
         {
@@ -86,7 +86,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 全局资格：仅在正义专属剧本启用时有效，且仅允许唯一的剧本主角充当自由殖民者替代者。
+        /// 全局资格：仅在正义专属剧本启用时有效，且仅允许唯一的机械意识宿主充当自由殖民者替代者。
         /// 另需为机械族机械师、玩家派系成员，并存活、未销毁、非俘虏且无 HostFaction。
         /// </summary>
         public static bool IsEligibleGlobal(Pawn? pawn)
@@ -96,7 +96,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (!JusticeScenarioUtility.IsScenarioProtagonist(pawn)
+            if (!JusticeScenarioUtility.IsMechanicalConsciousnessHost(pawn)
                 || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
             {
                 return false;
@@ -116,7 +116,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 地图资格：在全局资格基础上，检查 Pawn 与指定地图的关系。
-        /// 仅供唯一剧本主角相关逻辑使用。
+        /// 仅供唯一机械意识宿主相关逻辑使用。
         /// </summary>
         public static bool IsEligibleOnMap(
             Pawn? pawn,
@@ -145,7 +145,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 主角是否位于地图、远行队或运输载具等 PawnsFinder 全局存活集合中。
+        /// 机械意识宿主是否位于地图、远行队或运输载具等 PawnsFinder 全局存活集合中。
         /// </summary>
         public static bool IsPresentInMapsCaravansAndTransporters(Pawn pawn)
         {

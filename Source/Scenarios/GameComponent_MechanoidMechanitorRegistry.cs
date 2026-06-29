@@ -5,10 +5,9 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
-    public sealed class GameComponent_MechanoidMechanitorRegistry : GameComponent
+    public sealed partial class GameComponent_MechanoidMechanitorRegistry : GameComponent
     {
         private Pawn? mechanicalConsciousnessHost;
-        private Pawn? scenarioProtagonist;
         private List<MechanoidMechanitorRecord> mechanitorRecords = new List<MechanoidMechanitorRecord>();
         private Dictionary<Pawn, MechanoidMechanitorRecord> recordByPawn =
             new Dictionary<Pawn, MechanoidMechanitorRecord>();
@@ -16,7 +15,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private List<Pawn>? pendingAcquiredHediffSync;
 
         public Pawn? MechanicalConsciousnessHost => mechanicalConsciousnessHost;
-        public Pawn? ScenarioProtagonist => scenarioProtagonist;
 
         public IReadOnlyList<Pawn> RegisteredMechanitors
         {
@@ -47,17 +45,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static Pawn? CurrentMechanicalConsciousnessHost =>
             CurrentRegistry?.mechanicalConsciousnessHost;
 
-        public static Pawn? CurrentScenarioProtagonist =>
-            CurrentRegistry?.scenarioProtagonist;
-
         public static bool IsMechanicalConsciousnessHost(Pawn? pawn)
         {
             return pawn != null && ReferenceEquals(CurrentMechanicalConsciousnessHost, pawn);
-        }
-
-        public static bool IsScenarioProtagonist(Pawn? pawn)
-        {
-            return pawn != null && ReferenceEquals(CurrentScenarioProtagonist, pawn);
         }
 
         public static bool CanHostMechanicalConsciousness(Pawn? pawn)
@@ -296,7 +286,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             registry.mechanicalConsciousnessHost = pawn;
-            registry.scenarioProtagonist = pawn;
             FinalizeHostAssignment(pawn);
             return true;
         }
@@ -323,21 +312,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        public static bool SetScenarioProtagonist(Pawn? pawn)
-        {
-            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null
-                || pawn == null
-                || !JusticeScenarioUtility.IsJusticeScenarioActive
-                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
-            {
-                return false;
-            }
-
-            registry.scenarioProtagonist = pawn;
-            return true;
-        }
-
         public override void ExposeData()
         {
             base.ExposeData();
@@ -348,9 +322,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_References.Look(
                 ref mechanicalConsciousnessHost,
                 "mechanicalConsciousnessHost");
-            Scribe_References.Look(
-                ref scenarioProtagonist,
-                "mechanoidMechanitorScenarioProtagonist");
+            ExposeLegacyScenarioProtagonistMigration();
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -373,7 +345,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             pendingAcquiredHediffSync = null;
             CleanupRecords();
             RebuildRecordIndex();
-            TryMigrateLegacyScenarioIdentity();
+            TryRepairMechanicalConsciousnessHost();
         }
 
         public override void LoadedGame()
@@ -384,7 +356,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RebuildRecordIndex();
             ProcessPendingLegacyNativeStateImports();
             RestoreAcquiredRecordsAfterLoad();
-            TryMigrateLegacyScenarioIdentity();
+            TryRepairMechanicalConsciousnessHost();
 
             if (mechanicalConsciousnessHost != null
                 && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(
@@ -676,16 +648,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RebuildRecordIndex();
         }
 
-        private void TryMigrateLegacyScenarioIdentity()
+        partial void ExposeLegacyScenarioProtagonistMigration();
+
+        private void TryRepairMechanicalConsciousnessHost()
         {
             if (!JusticeScenarioUtility.IsJusticeScenarioActive)
             {
                 mechanicalConsciousnessHost = null;
-                scenarioProtagonist = null;
                 return;
             }
 
-            if (mechanicalConsciousnessHost != null && scenarioProtagonist != null)
+            if (mechanicalConsciousnessHost != null)
             {
                 return;
             }
@@ -722,8 +695,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            mechanicalConsciousnessHost ??= fallback;
-            scenarioProtagonist ??= fallback;
+            mechanicalConsciousnessHost = fallback;
         }
     }
 }
