@@ -566,18 +566,18 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            SetSkillLevel(pawn, SkillDefOf.Shooting, 18);
-            SetSkillLevel(pawn, SkillDefOf.Melee, 16);
-            SetSkillLevel(pawn, SkillDefOf.Social, 12);
-            SetSkillLevel(pawn, SkillDefOf.Crafting, 12);
-            SetSkillLevel(pawn, SkillDefOf.Construction, 10);
-            SetSkillLevel(pawn, SkillDefOf.Mining, 10);
-            SetSkillLevel(pawn, SkillDefOf.Cooking, 10);
-            SetSkillLevel(pawn, SkillDefOf.Plants, 10);
-            SetSkillLevel(pawn, SkillDefOf.Animals, 10);
-            SetSkillLevel(pawn, SkillDefOf.Artistic, 10);
-            SetSkillLevel(pawn, SkillDefOf.Medicine, 10);
-            SetSkillLevel(pawn, SkillDefOf.Intellectual, 10);
+            SetSkillLevel(pawn, SkillDefOf.Shooting, 18);      // 射击
+            SetSkillLevel(pawn, SkillDefOf.Melee, 16);         // 格斗
+            SetSkillLevel(pawn, SkillDefOf.Social, 12);        // 社交
+            SetSkillLevel(pawn, SkillDefOf.Crafting, 16);      // 制作
+            SetSkillLevel(pawn, SkillDefOf.Construction, 10);  // 建造
+            SetSkillLevel(pawn, SkillDefOf.Mining, 6);        // 采矿
+            SetSkillLevel(pawn, SkillDefOf.Cooking, 6);       // 烹饪
+            SetSkillLevel(pawn, SkillDefOf.Plants, 6);        // 种植
+            SetSkillLevel(pawn, SkillDefOf.Animals, 6);       // 驯兽
+            SetSkillLevel(pawn, SkillDefOf.Artistic, 10);      // 艺术
+            SetSkillLevel(pawn, SkillDefOf.Medicine, 6);      // 医疗
+            SetSkillLevel(pawn, SkillDefOf.Intellectual, 12);  // 智识
         }
 
         private static void SetSkillLevel(Pawn pawn, SkillDef skill, int level)
