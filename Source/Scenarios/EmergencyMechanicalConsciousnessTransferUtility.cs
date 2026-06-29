@@ -25,40 +25,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return pawn.health.hediffSet.HasHediff(def);
         }
 
-        public static void TryTriggerFromKillPrefix(Pawn? pawn)
+        public static bool TryBeginEmergencyTransferAttempt(Pawn? pawn)
         {
             if (pawn == null || pawn.Dead || pawn.Destroyed)
             {
-                return;
+                return false;
             }
 
-            if (!attemptGuard.Add(pawn))
+            if (!ModsConfig.BiotechActive
+                || !JusticeScenarioUtility.IsJusticeScenarioActive
+                || !GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(pawn)
+                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
             {
-                return;
+                return false;
             }
 
-            try
-            {
-                TryEmergencyTransferInternal(pawn);
-            }
-            catch (Exception ex)
-            {
-                LogEmergencyTriggerFailure(pawn, ex);
-            }
+            return attemptGuard.Add(pawn);
         }
 
-        public static void TryTriggerFromDestroyPrefix(Pawn? pawn)
+        public static void TryExecuteEmergencyTransfer(Pawn pawn)
         {
-            if (pawn == null || pawn.Destroyed || pawn.Dead)
-            {
-                return;
-            }
-
-            if (!attemptGuard.Add(pawn))
-            {
-                return;
-            }
-
             try
             {
                 TryEmergencyTransferInternal(pawn);

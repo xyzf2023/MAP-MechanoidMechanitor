@@ -1,5 +1,6 @@
 using HarmonyLib;
 using MAP_MechanoidMechanitor.Scenarios;
+using System;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -8,15 +9,26 @@ namespace MAP_MechanoidMechanitor
     public static class Patch_Pawn_Kill_EmergencyMechanicalConsciousnessTransfer
     {
         [HarmonyPrefix]
-        public static void Prefix(Pawn __instance)
+        public static void Prefix(Pawn __instance, ref bool __state)
         {
-            EmergencyMechanicalConsciousnessTransferUtility.TryTriggerFromKillPrefix(__instance);
+            __state = EmergencyMechanicalConsciousnessTransferUtility
+                .TryBeginEmergencyTransferAttempt(__instance);
+            if (__state)
+            {
+                EmergencyMechanicalConsciousnessTransferUtility
+                    .TryExecuteEmergencyTransfer(__instance);
+            }
         }
 
-        [HarmonyPostfix]
-        public static void Postfix(Pawn __instance)
+        [HarmonyFinalizer]
+        public static Exception? Finalizer(Pawn __instance, bool __state, Exception? __exception)
         {
-            EmergencyMechanicalConsciousnessTransferUtility.ClearAttemptGuard(__instance);
+            if (__state)
+            {
+                EmergencyMechanicalConsciousnessTransferUtility.ClearAttemptGuard(__instance);
+            }
+
+            return __exception;
         }
     }
 
@@ -24,15 +36,26 @@ namespace MAP_MechanoidMechanitor
     public static class Patch_Pawn_Destroy_EmergencyMechanicalConsciousnessTransfer
     {
         [HarmonyPrefix]
-        public static void Prefix(Pawn __instance)
+        public static void Prefix(Pawn __instance, ref bool __state)
         {
-            EmergencyMechanicalConsciousnessTransferUtility.TryTriggerFromDestroyPrefix(__instance);
+            __state = EmergencyMechanicalConsciousnessTransferUtility
+                .TryBeginEmergencyTransferAttempt(__instance);
+            if (__state)
+            {
+                EmergencyMechanicalConsciousnessTransferUtility
+                    .TryExecuteEmergencyTransfer(__instance);
+            }
         }
 
-        [HarmonyPostfix]
-        public static void Postfix(Pawn __instance)
+        [HarmonyFinalizer]
+        public static Exception? Finalizer(Pawn __instance, bool __state, Exception? __exception)
         {
-            EmergencyMechanicalConsciousnessTransferUtility.ClearAttemptGuard(__instance);
+            if (__state)
+            {
+                EmergencyMechanicalConsciousnessTransferUtility.ClearAttemptGuard(__instance);
+            }
+
+            return __exception;
         }
     }
 }
