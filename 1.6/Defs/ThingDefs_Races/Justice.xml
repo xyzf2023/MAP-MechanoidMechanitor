@@ -49,52 +49,52 @@
         <adulthoodBackstory>MAP_Justice_Adulthood</adulthoodBackstory>
         <skillLevels>
           <li>
-            <skill>Shooting</skill>
+            <skill>Shooting</skill> <!-- 射击 -->
             <level>18</level>
           </li>
           <li>
-            <skill>Melee</skill>
+            <skill>Melee</skill> <!-- 格斗 -->
             <level>16</level>
           </li>
           <li>
-            <skill>Social</skill>
+            <skill>Social</skill> <!-- 社交 -->
             <level>12</level>
           </li>
           <li>
-            <skill>Crafting</skill>
+            <skill>Crafting</skill> <!-- 制作 -->
+            <level>16</level>
+          </li>
+          <li>
+            <skill>Construction</skill> <!-- 建造 -->
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Mining</skill> <!-- 采矿 -->
+            <level>6</level>
+          </li>
+          <li>
+            <skill>Cooking</skill> <!-- 烹饪 -->
+            <level>6</level>
+          </li>
+          <li>
+            <skill>Plants</skill> <!-- 种植 -->
+            <level>6</level>
+          </li>
+          <li>
+            <skill>Animals</skill> <!-- 驯兽 -->
+            <level>6</level>
+          </li>
+          <li>
+            <skill>Artistic</skill> <!-- 艺术 -->
+            <level>10</level>
+          </li>
+          <li>
+            <skill>Medicine</skill> <!-- 医疗 -->
+            <level>6</level>
+          </li>
+          <li>
+            <skill>Intellectual</skill> <!-- 智识 -->
             <level>12</level>
-          </li>
-          <li>
-            <skill>Construction</skill>
-            <level>10</level>
-          </li>
-          <li>
-            <skill>Mining</skill>
-            <level>10</level>
-          </li>
-          <li>
-            <skill>Cooking</skill>
-            <level>10</level>
-          </li>
-          <li>
-            <skill>Plants</skill>
-            <level>10</level>
-          </li>
-          <li>
-            <skill>Animals</skill>
-            <level>10</level>
-          </li>
-          <li>
-            <skill>Artistic</skill>
-            <level>10</level>
-          </li>
-          <li>
-            <skill>Medicine</skill>
-            <level>10</level>
-          </li>
-          <li>
-            <skill>Intellectual</skill>
-            <level>10</level>
           </li>
         </skillLevels>
       </li>

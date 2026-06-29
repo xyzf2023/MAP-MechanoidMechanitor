@@ -6,7 +6,7 @@
 		<li>1.6</li>
 	</supportedVersions>
 	<author>星羽枝繁</author>
-	<modVersion IgnoreIfNoMatchingField="true">0.0.1</modVersion>
+	<modVersion IgnoreIfNoMatchingField="true">0.0.2</modVersion>
 	<description>TODO</description>
 	<modDependencies>
 		<li>
