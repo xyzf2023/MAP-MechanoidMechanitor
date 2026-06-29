@@ -141,7 +141,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        public static bool GrantAcquiredMechanitorIdentity(Pawn? pawn)
+        internal static bool GrantAcquiredMechanitorIdentity(Pawn? pawn)
         {
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
             if (registry == null || pawn == null || pawn.Destroyed)
