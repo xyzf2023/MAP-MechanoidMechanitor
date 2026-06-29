@@ -9,33 +9,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public static class MechanicalConsciousnessTransferUtility
     {
-        private enum OverseerRelationChangeKind
-        {
-            Transferred,
-            RemovedSourceOnly
-        }
-
-        private readonly struct OverseerRelationChange
+        private readonly struct OverseerRelationSnapshot
         {
             public readonly Pawn Mech;
-            public readonly OverseerRelationChangeKind Kind;
+            public readonly bool HadSourceRelation;
+            public readonly bool HadTargetRelation;
 
-            public OverseerRelationChange(Pawn mech, OverseerRelationChangeKind kind)
+            public OverseerRelationSnapshot(
+                Pawn mech,
+                bool hadSourceRelation,
+                bool hadTargetRelation)
             {
                 Mech = mech;
-                Kind = kind;
+                HadSourceRelation = hadSourceRelation;
+                HadTargetRelation = hadTargetRelation;
             }
         }
 
         public static bool CanTransferMechanicalConsciousness(Pawn? source, Pawn? target)
         {
-            if (!PassesTransferEligibility(source, target, out _, out _))
-            {
-                return false;
-            }
-
-            return HasMechanitorTransferComponents(source!)
-                && HasMechanitorTransferComponents(target!);
+            return PassesTransferEligibility(source, target, out _, out _);
         }
 
         public static bool TryTransferMechanicalConsciousness(Pawn? source, Pawn? target)
@@ -65,8 +58,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Pawn> overseenSnapshot = CaptureOverseenPawns(resolvedSource);
             Pawn? hostBeforeTransfer =
                 GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
-            List<OverseerRelationChange> overseerChanges = new List<OverseerRelationChange>();
-            bool hostReplaced = false;
+            List<OverseerRelationSnapshot> overseerSnapshots =
+                new List<OverseerRelationSnapshot>();
+            bool transactionCommitted = false;
 
             try
             {
@@ -81,11 +75,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     resolvedSource,
                     resolvedTarget,
                     overseenSnapshot,
-                    overseerChanges);
+                    overseerSnapshots);
 
-                hostReplaced = GameComponent_MechanoidMechanitorRegistry
-                    .TryReplaceMechanicalConsciousnessHost(resolvedSource, resolvedTarget);
-                if (!hostReplaced)
+                if (!GameComponent_MechanoidMechanitorRegistry.TryReplaceMechanicalConsciousnessHost(
+                        resolvedSource,
+                        resolvedTarget))
                 {
                     RollbackTransfer(
                         resolvedSource,
@@ -95,16 +89,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         targetSkillSnapshot,
                         sourceChipBandwidthBonus,
                         targetChipBandwidthBonus,
-                        overseerChanges);
+                        overseerSnapshots);
                     return false;
                 }
 
-                FinalizeSuccessfulTransfer(resolvedSource, resolvedTarget);
+                transactionCommitted = true;
+                FinalizeSuccessfulTransferBestEffort(
+                    resolvedSource,
+                    resolvedTarget,
+                    hostBeforeTransfer);
                 return true;
             }
             catch (Exception ex)
             {
-                if (!hostReplaced)
+                if (!transactionCommitted)
                 {
                     RollbackTransfer(
                         resolvedSource,
@@ -114,15 +112,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         targetSkillSnapshot,
                         sourceChipBandwidthBonus,
                         targetChipBandwidthBonus,
-                        overseerChanges);
+                        overseerSnapshots);
+                    LogTransferException(
+                        resolvedSource,
+                        resolvedTarget,
+                        hostBeforeTransfer,
+                        ex,
+                        committed: false);
+                    return false;
                 }
 
-                Log.Error(
-                    "[MAP-MechanoidMechanitor] TryTransferMechanicalConsciousness failed for " +
-                    $"source={resolvedSource.LabelShort} ({resolvedSource.ThingID}), " +
-                    $"target={resolvedTarget.LabelShort} ({resolvedTarget.ThingID}), " +
-                    $"hostBefore={hostBeforeTransfer?.LabelShort ?? "null"}: {ex}");
-                return false;
+                LogTransferException(
+                    resolvedSource,
+                    resolvedTarget,
+                    hostBeforeTransfer,
+                    ex,
+                    committed: true);
+                return true;
             }
         }
 
@@ -197,19 +203,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        private static bool HasMechanitorTransferComponents(Pawn pawn)
-        {
-            return pawn.relations != null && pawn.mechanitor != null;
-        }
-
         private static bool TryEnsureMechanitorTransferComponents(
             Pawn source,
             Pawn target)
         {
             MechanoidMechanitorRoleUtility.EnsureRoleState(source);
             MechanoidMechanitorRoleUtility.EnsureRoleState(target);
-            return HasMechanitorTransferComponents(source)
-                && HasMechanitorTransferComponents(target);
+            return source.relations != null
+                && target.relations != null
+                && source.mechanitor != null
+                && target.mechanitor != null;
         }
 
         private static Dictionary<SkillDef, int> CaptureSkillLevels(Pawn pawn)
@@ -310,7 +313,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Pawn source,
             Pawn target,
             List<Pawn> overseenSnapshot,
-            List<OverseerRelationChange> overseerChanges)
+            List<OverseerRelationSnapshot> overseerSnapshots)
         {
             Pawn_RelationsTracker sourceRelations = source.relations!;
             Pawn_RelationsTracker targetRelations = target.relations!;
@@ -323,27 +326,39 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
+                bool hadSourceRelation = HasOverseerRelation(sourceRelations, source, mech);
+                bool hadTargetRelation = HasOverseerRelation(targetRelations, target, mech);
+                overseerSnapshots.Add(
+                    new OverseerRelationSnapshot(mech, hadSourceRelation, hadTargetRelation));
+
                 if (ReferenceEquals(mech, target))
                 {
                     RemoveOverseerRelationIfPresent(sourceRelations, source, mech);
-                    overseerChanges.Add(
-                        new OverseerRelationChange(mech, OverseerRelationChangeKind.RemovedSourceOnly));
                     continue;
                 }
 
                 if (ReferenceEquals(mech, source))
                 {
                     RemoveOverseerRelationIfPresent(sourceRelations, source, mech);
-                    overseerChanges.Add(
-                        new OverseerRelationChange(mech, OverseerRelationChangeKind.RemovedSourceOnly));
                     continue;
                 }
 
                 RemoveOverseerRelationIfPresent(sourceRelations, source, mech);
                 AddOverseerRelationIfAbsent(targetRelations, target, mech);
-                overseerChanges.Add(
-                    new OverseerRelationChange(mech, OverseerRelationChangeKind.Transferred));
             }
+        }
+
+        private static bool HasOverseerRelation(
+            Pawn_RelationsTracker relations,
+            Pawn overseer,
+            Pawn subject)
+        {
+            if (ReferenceEquals(overseer, subject))
+            {
+                return false;
+            }
+
+            return relations.DirectRelationExists(PawnRelationDefOf.Overseer, subject);
         }
 
         private static void RemoveOverseerRelationIfPresent(
@@ -351,6 +366,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Pawn overseer,
             Pawn subject)
         {
+            if (ReferenceEquals(overseer, subject))
+            {
+                return;
+            }
+
             if (overseerRelations.DirectRelationExists(PawnRelationDefOf.Overseer, subject))
             {
                 overseerRelations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
@@ -379,12 +399,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Dictionary<SkillDef, int> targetSkillSnapshot,
             int sourceChipBandwidthBonus,
             int targetChipBandwidthBonus,
-            List<OverseerRelationChange> overseerChanges)
+            List<OverseerRelationSnapshot> overseerSnapshots)
         {
             RestoreSkillLevels(target, targetSkillSnapshot);
             sourceRecord.ChipBandwidthBonus = sourceChipBandwidthBonus;
             targetRecord.ChipBandwidthBonus = targetChipBandwidthBonus;
-            RollbackOverseerRelations(source, target, overseerChanges);
+            RollbackOverseerRelations(source, target, overseerSnapshots);
             source.mechanitor?.Notify_BandwidthChanged();
             target.mechanitor?.Notify_BandwidthChanged();
         }
@@ -412,7 +432,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static void RollbackOverseerRelations(
             Pawn source,
             Pawn target,
-            List<OverseerRelationChange> overseerChanges)
+            List<OverseerRelationSnapshot> overseerSnapshots)
         {
             Pawn_RelationsTracker? sourceRelations = source.relations;
             Pawn_RelationsTracker? targetRelations = target.relations;
@@ -421,34 +441,98 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            for (int i = overseerChanges.Count - 1; i >= 0; i--)
+            for (int i = overseerSnapshots.Count - 1; i >= 0; i--)
             {
-                OverseerRelationChange change = overseerChanges[i];
-                Pawn mech = change.Mech;
+                OverseerRelationSnapshot snapshot = overseerSnapshots[i];
+                Pawn mech = snapshot.Mech;
                 if (mech == null || mech.Destroyed)
                 {
                     continue;
                 }
 
-                switch (change.Kind)
-                {
-                    case OverseerRelationChangeKind.Transferred:
-                        RemoveOverseerRelationIfPresent(targetRelations, target, mech);
-                        AddOverseerRelationIfAbsent(sourceRelations, source, mech);
-                        break;
-                    case OverseerRelationChangeKind.RemovedSourceOnly:
-                        AddOverseerRelationIfAbsent(sourceRelations, source, mech);
-                        break;
-                }
+                RestoreOverseerRelation(
+                    source,
+                    sourceRelations,
+                    mech,
+                    snapshot.HadSourceRelation,
+                    allowSelfRelation: ReferenceEquals(mech, source));
+
+                bool allowTargetRelation = !ReferenceEquals(mech, target)
+                    && !ReferenceEquals(mech, source);
+                RestoreOverseerRelation(
+                    target,
+                    targetRelations,
+                    mech,
+                    allowTargetRelation && snapshot.HadTargetRelation,
+                    allowSelfRelation: false);
             }
         }
 
-        private static void FinalizeSuccessfulTransfer(Pawn source, Pawn target)
+        private static void RestoreOverseerRelation(
+            Pawn overseer,
+            Pawn_RelationsTracker relations,
+            Pawn subject,
+            bool shouldHaveRelation,
+            bool allowSelfRelation)
         {
-            source.mechanitor?.Notify_BandwidthChanged();
-            target.mechanitor?.Notify_BandwidthChanged();
-            MechanoidMechanitorRoleUtility.EnsureRoleState(source);
-            MechanoidMechanitorRoleUtility.EnsureRoleState(target);
+            if (overseer.Destroyed
+                || subject.Destroyed
+                || (!allowSelfRelation && ReferenceEquals(overseer, subject)))
+            {
+                return;
+            }
+
+            bool hasRelation = relations.DirectRelationExists(
+                PawnRelationDefOf.Overseer,
+                subject);
+            if (shouldHaveRelation)
+            {
+                if (!hasRelation)
+                {
+                    relations.AddDirectRelation(PawnRelationDefOf.Overseer, subject);
+                }
+            }
+            else if (hasRelation)
+            {
+                relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
+            }
+        }
+
+        private static void FinalizeSuccessfulTransferBestEffort(
+            Pawn source,
+            Pawn target,
+            Pawn? hostBeforeTransfer)
+        {
+            try
+            {
+                source.mechanitor?.Notify_BandwidthChanged();
+                target.mechanitor?.Notify_BandwidthChanged();
+                MechanoidMechanitorRoleUtility.EnsureRoleState(source);
+                MechanoidMechanitorRoleUtility.EnsureRoleState(target);
+                JusticeScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
+            }
+            catch (Exception ex)
+            {
+                LogTransferException(source, target, hostBeforeTransfer, ex, committed: true);
+            }
+        }
+
+        private static void LogTransferException(
+            Pawn source,
+            Pawn target,
+            Pawn? hostBeforeTransfer,
+            Exception ex,
+            bool committed)
+        {
+            string phase = committed ? "post-commit" : "pre-commit";
+            Pawn? currentHost =
+                GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
+            Log.Error(
+                "[MAP-MechanoidMechanitor] TryTransferMechanicalConsciousness " +
+                $"{phase} failure for source={source.LabelShort} ({source.ThingID}), " +
+                $"target={target.LabelShort} ({target.ThingID}), " +
+                $"hostBefore={hostBeforeTransfer?.LabelShort ?? "null"}, " +
+                $"currentHost={currentHost?.LabelShort ?? "null"}: {ex}");
         }
     }
 }
