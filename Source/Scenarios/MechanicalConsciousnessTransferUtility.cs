@@ -31,6 +31,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return PassesTransferEligibility(source, target, out _, out _);
         }
 
+        public static bool CanVoluntarilyTransferMechanicalConsciousness(Pawn? source, Pawn? target)
+        {
+            return !EmergencyMechanicalConsciousnessTransferUtility
+                    .HasEmergencyConsciousnessTransferHediff(source)
+                && CanTransferMechanicalConsciousness(source, target);
+        }
+
+        public static bool TryVoluntarilyTransferMechanicalConsciousness(Pawn? source, Pawn? target)
+        {
+            if (!CanVoluntarilyTransferMechanicalConsciousness(source, target))
+            {
+                return false;
+            }
+
+            return TryTransferMechanicalConsciousness(source, target);
+        }
+
         public static bool TryTransferMechanicalConsciousness(Pawn? source, Pawn? target)
         {
             if (!PassesTransferEligibility(source, target, out Pawn resolvedSource, out Pawn resolvedTarget)
