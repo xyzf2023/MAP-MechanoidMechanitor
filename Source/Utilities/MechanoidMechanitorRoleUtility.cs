@@ -136,6 +136,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (Current.Game?.GetComponent<GameComponent_MechanoidMechanitorRegistry>() == null)
+            {
+                return false;
+            }
+
             return pawn.Faction == null || pawn.Faction.IsPlayerSafe();
         }
 
@@ -165,8 +170,31 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return GameComponent_MechanoidMechanitorRegistry
-                .GrantAcquiredMechanitorIdentity(pawn);
+            Pawn? previousOverseer = pawn.GetOverseer();
+            RemoveExternalOverseerForPromotion(pawn, previousOverseer);
+
+            try
+            {
+                if (!GameComponent_MechanoidMechanitorRegistry
+                        .GrantAcquiredMechanitorIdentity(pawn))
+                {
+                    RestoreExternalOverseerAfterFailedPromotion(pawn, previousOverseer);
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (!IsAcquiredMechanoidMechanitor(pawn))
+                {
+                    RestoreExternalOverseerAfterFailedPromotion(pawn, previousOverseer);
+                }
+
+                Log.Error(
+                    $"[MAP-MechanoidMechanitor] PromoteToAcquiredMechanoidMechanitor failed for {pawn}: {ex}");
+                return false;
+            }
         }
 
         public static void EnsureRoleState(Pawn? pawn)
@@ -218,9 +246,9 @@ namespace MAP_MechanoidMechanitor
 
         public static bool RequiresExternalOverseer(Pawn? pawn)
         {
-            if (IsAcquiredMechanoidMechanitor(pawn))
+            if (IsMechanoidMechanitor(pawn))
             {
-                return !IsMechanicalConsciousnessHost(pawn);
+                return false;
             }
 
             return CompMAPMechanitorNode.TryGetNodeComp(
@@ -452,6 +480,48 @@ namespace MAP_MechanoidMechanitor
         {
             return acquiredIdentityDef ??=
                 DefDatabase<HediffDef>.GetNamedSilentFail(AcquiredIdentityDefName);
+        }
+
+        private static void RemoveExternalOverseerForPromotion(
+            Pawn pawn,
+            Pawn? previousOverseer)
+        {
+            if (previousOverseer?.relations == null)
+            {
+                return;
+            }
+
+            if (pawn.mechanitor?.ControlledPawns.Contains(previousOverseer) == true)
+            {
+                return;
+            }
+
+            previousOverseer.relations.RemoveDirectRelation(
+                PawnRelationDefOf.Overseer,
+                pawn);
+        }
+
+        private static void RestoreExternalOverseerAfterFailedPromotion(
+            Pawn pawn,
+            Pawn? previousOverseer)
+        {
+            if (IsAcquiredMechanoidMechanitor(pawn)
+                || previousOverseer == null
+                || previousOverseer.Destroyed
+                || previousOverseer.relations == null
+                || pawn.GetOverseer() != null)
+            {
+                return;
+            }
+
+            if (previousOverseer.relations.DirectRelationExists(
+                    PawnRelationDefOf.Overseer,
+                    pawn))
+            {
+                return;
+            }
+
+            previousOverseer.relations.AddDirectRelation(PawnRelationDefOf.Overseer, pawn);
         }
 
         private static int GetBaseIntrinsicBandwidth(
