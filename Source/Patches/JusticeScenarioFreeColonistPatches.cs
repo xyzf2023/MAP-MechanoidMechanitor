@@ -89,7 +89,7 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 在机械族机械师专属剧本中，让唯一的剧本主角在需要"全局自由殖民者代表"的系统中
+    /// 在机械族机械师专属剧本中，让唯一的机械意识宿主在需要"全局自由殖民者代表"的系统中
     /// 充当替代者，以兼容标准 GiveQuest 任务生成逻辑（如奥德赛机械族信号/逆重引擎任务）。
     /// </summary>
     [HarmonyPatch(
@@ -111,28 +111,28 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            Pawn? protagonist = JusticeScenarioUtility.ScenarioProtagonist;
-            if (!JusticeScenarioFreeColonistUtility.IsEligibleGlobal(protagonist))
+            Pawn? host = JusticeScenarioUtility.MechanicalConsciousnessHost;
+            if (!JusticeScenarioFreeColonistUtility.IsEligibleGlobal(host))
             {
                 return;
             }
 
-            if (protagonist!.Suspended)
+            if (host!.Suspended)
             {
                 return;
             }
 
-            if (!JusticeScenarioFreeColonistUtility.IsPresentInMapsCaravansAndTransporters(protagonist))
+            if (!JusticeScenarioFreeColonistUtility.IsPresentInMapsCaravansAndTransporters(host))
             {
                 return;
             }
 
-            if (__result.Contains(protagonist))
+            if (__result.Contains(host))
             {
                 return;
             }
 
-            __result.Add(protagonist);
+            __result.Add(host);
         }
     }
 }

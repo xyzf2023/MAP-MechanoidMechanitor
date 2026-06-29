@@ -202,12 +202,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             Map namingHomeMap = Find.AnyPlayerHomeMap;
             List<Pawn> freeColonistsSpawned = namingHomeMap.mapPawns.FreeColonistsSpawned;
-            bool foundEligibleProtagonist = false;
+            bool foundEligibleHost = false;
 
             for (int i = 0; i < freeColonistsSpawned.Count; i++)
             {
                 Pawn pawn = freeColonistsSpawned[i];
-                if (!JusticeScenarioUtility.IsScenarioProtagonist(pawn))
+                if (!JusticeScenarioUtility.IsMechanicalConsciousnessHost(pawn))
                 {
                     continue;
                 }
@@ -228,11 +228,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                foundEligibleProtagonist = true;
+                foundEligibleHost = true;
                 break;
             }
 
-            if (!foundEligibleProtagonist)
+            if (!foundEligibleHost)
             {
                 RetryFactionNamingLater();
                 return;

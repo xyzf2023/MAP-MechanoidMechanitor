@@ -89,7 +89,7 @@ namespace MAP_MechanoidMechanitor
 
         private static Pawn? FindScenarioMechanitorInStartingItems(List<Thing> startingItems)
         {
-            Pawn? registered = JusticeScenarioUtility.ScenarioProtagonist;
+            Pawn? registered = JusticeScenarioUtility.MechanicalConsciousnessHost;
             if (registered != null && startingItems.Contains(registered) && !registered.Dead)
             {
                 return registered;
