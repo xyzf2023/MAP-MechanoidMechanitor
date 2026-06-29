@@ -143,7 +143,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                // 将 ldfld 上的 labels/blocks 移到插入序列首条指令，避免分支跳过头像整合调用。
+                // labels 与 Begin 类 exception blocks 移到插入序列入口；EndExceptionBlock 留在 ldfld。
                 InsertBeforePreservingLabels(
                     codes,
                     i,
@@ -176,13 +176,60 @@ namespace MAP_MechanoidMechanitor
                 target.labels.Clear();
             }
 
-            if (target.blocks.Count > 0)
-            {
-                first.blocks.AddRange(target.blocks);
-                target.blocks.Clear();
-            }
+            TransferExceptionBlocksForInsertBefore(target, first);
 
             codes.InsertRange(index, new[] { first, second });
+        }
+
+        private static void TransferExceptionBlocksForInsertBefore(
+            CodeInstruction target,
+            CodeInstruction first)
+        {
+            if (target.blocks.Count == 0)
+            {
+                return;
+            }
+
+            List<ExceptionBlock> movedBlocks = new List<ExceptionBlock>();
+            List<ExceptionBlock> retainedBlocks = new List<ExceptionBlock>();
+
+            for (int i = 0; i < target.blocks.Count; i++)
+            {
+                ExceptionBlock block = target.blocks[i];
+                if (ShouldMoveExceptionBlockBeforeInsertedInstructions(block))
+                {
+                    movedBlocks.Add(block);
+                }
+                else
+                {
+                    retainedBlocks.Add(block);
+                }
+            }
+
+            target.blocks.Clear();
+            target.blocks.AddRange(retainedBlocks);
+            first.blocks.AddRange(movedBlocks);
+        }
+
+        /// <summary>
+        /// Begin 类边界在指令执行前生效，插入前移到新序列入口；End 与未知类型留在原指令。
+        /// </summary>
+        private static bool ShouldMoveExceptionBlockBeforeInsertedInstructions(
+            ExceptionBlock block)
+        {
+            switch (block.blockType)
+            {
+                case ExceptionBlockType.BeginExceptionBlock:
+                case ExceptionBlockType.BeginCatchBlock:
+                case ExceptionBlockType.BeginExceptFilterBlock:
+                case ExceptionBlockType.BeginFaultBlock:
+                case ExceptionBlockType.BeginFinallyBlock:
+                    return true;
+                case ExceptionBlockType.EndExceptionBlock:
+                    return false;
+                default:
+                    return false;
+            }
         }
     }
 }
