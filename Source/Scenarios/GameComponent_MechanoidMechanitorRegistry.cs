@@ -312,6 +312,46 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
+        internal static bool TryReplaceMechanicalConsciousnessHost(
+            Pawn expectedCurrentHost,
+            Pawn newHost)
+        {
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (registry == null
+                || !JusticeScenarioUtility.IsJusticeScenarioActive)
+            {
+                return false;
+            }
+
+            if (expectedCurrentHost == null
+                || newHost == null
+                || ReferenceEquals(expectedCurrentHost, newHost))
+            {
+                return false;
+            }
+
+            if (!ReferenceEquals(registry.mechanicalConsciousnessHost, expectedCurrentHost))
+            {
+                return false;
+            }
+
+            if (!CanHostMechanicalConsciousness(newHost))
+            {
+                return false;
+            }
+
+            MechanoidMechanitorRoleUtility.EnsureRoleState(newHost);
+            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(newHost))
+            {
+                return false;
+            }
+
+            registry.mechanicalConsciousnessHost = newHost;
+            FinalizeHostAssignment(newHost);
+            NotifyJusticeColonistDisplaysIfNeeded();
+            return true;
+        }
+
         public override void ExposeData()
         {
             base.ExposeData();
