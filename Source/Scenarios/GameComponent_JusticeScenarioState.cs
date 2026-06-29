@@ -8,6 +8,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         private bool justiceOnlyColonyEnabled;
 
+        private List<Pawn> portraitDisplayEnabledPawnsList = new List<Pawn>();
+        private HashSet<Pawn> portraitDisplayEnabledPawns = new HashSet<Pawn>();
+
         private bool factionNamingScenarioChecked;
         private bool factionNamingRoutineEnabled;
         private bool factionNamingRoutineFinished;
@@ -31,8 +34,76 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        private static GameComponent_JusticeScenarioState? CurrentComponent
+        {
+            get
+            {
+                if (Current.Game == null)
+                {
+                    return null;
+                }
+
+                return Current.Game.GetComponent<GameComponent_JusticeScenarioState>();
+            }
+        }
+
         public GameComponent_JusticeScenarioState(Game game)
         {
+        }
+
+        public static bool IsPortraitDisplayEnabled(Pawn? pawn)
+        {
+            GameComponent_JusticeScenarioState? component = CurrentComponent;
+            if (component == null || pawn == null)
+            {
+                return false;
+            }
+
+            return component.portraitDisplayEnabledPawns.Contains(pawn);
+        }
+
+        public static void SetPortraitDisplayEnabled(Pawn? pawn, bool enabled)
+        {
+            GameComponent_JusticeScenarioState? component = CurrentComponent;
+            if (component == null || pawn == null)
+            {
+                return;
+            }
+
+            bool changed;
+            if (enabled)
+            {
+                if (!JusticeScenarioFreeColonistUtility.CanUsePortraitDisplayToggle(pawn))
+                {
+                    return;
+                }
+
+                changed = component.portraitDisplayEnabledPawns.Add(pawn);
+                if (changed && !component.portraitDisplayEnabledPawnsList.Contains(pawn))
+                {
+                    component.portraitDisplayEnabledPawnsList.Add(pawn);
+                }
+            }
+            else
+            {
+                changed = component.portraitDisplayEnabledPawns.Remove(pawn);
+                component.portraitDisplayEnabledPawnsList.Remove(pawn);
+            }
+
+            if (changed)
+            {
+                JusticeScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
+            }
+        }
+
+        internal static IReadOnlyList<Pawn> PortraitDisplayEnabledPawnsList
+        {
+            get
+            {
+                GameComponent_JusticeScenarioState? component = CurrentComponent;
+                return component?.portraitDisplayEnabledPawnsList
+                    ?? (IReadOnlyList<Pawn>)System.Array.Empty<Pawn>();
+            }
         }
 
         public static void EnableForCurrentGame()
@@ -98,6 +169,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref nextFactionNamingCheckTick,
                 "nextFactionNamingCheckTick",
                 GenDate.TicksPerDay);
+            Scribe_Collections.Look(
+                ref portraitDisplayEnabledPawnsList,
+                "portraitDisplayEnabledPawns",
+                LookMode.Reference);
+
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                portraitDisplayEnabledPawnsList ??= new List<Pawn>();
+                RebuildPortraitDisplayCache();
+            }
+        }
+
+        private void RebuildPortraitDisplayCache()
+        {
+            portraitDisplayEnabledPawns = new HashSet<Pawn>();
+            for (int i = portraitDisplayEnabledPawnsList.Count - 1; i >= 0; i--)
+            {
+                Pawn? pawn = portraitDisplayEnabledPawnsList[i];
+                if (pawn == null || pawn.Destroyed)
+                {
+                    portraitDisplayEnabledPawnsList.RemoveAt(i);
+                    continue;
+                }
+
+                portraitDisplayEnabledPawns.Add(pawn);
+            }
         }
 
         public override void StartedNewGame()

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/PawnTableDef[defName="Mechs"]/columns/li[.="AutoRepair"]</xpath>
+    <order>Append</order>
+    <value>
+      <li>MAP_ColonistBarPortrait</li>
+    </value>
+  </Operation>
+</Patch>

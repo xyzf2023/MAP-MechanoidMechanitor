@@ -67,10 +67,43 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 是否可在 ColonistBar 远行队分组中作为殖民者头像显示。
+        /// 是否可在 ColonistBar 远行队分组中作为殖民者头像显示（机械族机械师自动显示）。
         /// </summary>
         public static bool IsEligibleForColonistBarCaravan(Pawn? pawn) =>
             IsJusticeScenarioPlayerMechanoidMechanitor(pawn);
+
+        /// <summary>
+        /// 普通玩家机械体是否可在机械族管理表中使用「头像显示」开关。
+        /// </summary>
+        public static bool CanUsePortraitDisplayToggle(Pawn? pawn)
+        {
+            if (!GameComponent_JusticeScenarioState.IsEnabled || pawn == null)
+            {
+                return false;
+            }
+
+            if (IsJusticeScenarioPlayerMechanoidMechanitor(pawn))
+            {
+                return false;
+            }
+
+            if (pawn.Faction != Faction.OfPlayer
+                || pawn.Dead
+                || pawn.Destroyed
+                || !pawn.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 是否因「头像显示」开关而在 ColonistBar 远行队分组中显示头像。
+        /// </summary>
+        public static bool IsPortraitDisplayEnabledForColonistBar(Pawn pawn) =>
+            GameComponent_JusticeScenarioState.IsPortraitDisplayEnabled(pawn)
+            && CanUsePortraitDisplayToggle(pawn);
 
         /// <summary>
         /// ColonistBar 远行队分组中的 IsColonist 兼容判断（不修改 Pawn.IsColonist 本身）。
@@ -82,7 +115,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return true;
             }
 
-            return IsEligibleForColonistBarCaravan(pawn);
+            if (IsEligibleForColonistBarCaravan(pawn))
+            {
+                return true;
+            }
+
+            return IsPortraitDisplayEnabledForColonistBar(pawn);
         }
 
         /// <summary>
