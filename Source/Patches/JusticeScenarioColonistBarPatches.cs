@@ -20,6 +20,11 @@ namespace MAP_MechanoidMechanitor
 
         private const int MaxInstructionsAfterIsColonist = 8;
 
+        private const int ErrorKeyCaravanPatchResolveFailed = 879345102;
+        private const int ErrorKeyCaravanIsColonistMatchCount = 879345103;
+        private const int ErrorKeyPortraitAppendResolveFailed = 879345104;
+        private const int ErrorKeyPortraitAppendInjectionFailed = 879345105;
+
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpiler(
             IEnumerable<CodeInstruction> instructions)
@@ -48,9 +53,10 @@ namespace MAP_MechanoidMechanitor
                 || isColonySubhumanGetter == null
                 || helperMethod == null)
             {
-                Log.Error(
+                Log.ErrorOnce(
                     $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    "could not resolve ColonistBar caravan filter methods. Patch not applied.");
+                    "could not resolve ColonistBar caravan filter methods. Patch not applied.",
+                    ErrorKeyCaravanPatchResolveFailed);
                 return;
             }
 
@@ -84,15 +90,19 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                codes[i] = new CodeInstruction(OpCodes.Call, helperMethod);
+                // 原地修改 opcode/operand，保留原 callvirt 指令上的 labels 与 exception blocks。
+                CodeInstruction instruction = codes[i];
+                instruction.opcode = OpCodes.Call;
+                instruction.operand = helperMethod;
                 matchCount++;
             }
 
             if (matchCount != 1)
             {
-                Log.Error(
+                Log.ErrorOnce(
                     $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    $"expected exactly one ColonistBar caravan IsColonist check, found {matchCount}.");
+                    $"expected exactly one ColonistBar caravan IsColonist check, found {matchCount}.",
+                    ErrorKeyCaravanIsColonistMatchCount);
             }
         }
 
@@ -112,9 +122,10 @@ namespace MAP_MechanoidMechanitor
                 || clearMethod == null
                 || appendMethod == null)
             {
-                Log.Error(
+                Log.ErrorOnce(
                     $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    "could not resolve ColonistBar portrait append methods. Patch not applied.");
+                    "could not resolve ColonistBar portrait append methods. Patch not applied.",
+                    ErrorKeyPortraitAppendResolveFailed);
                 return;
             }
 
@@ -132,23 +143,46 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                codes.InsertRange(
+                // 将 ldfld 上的 labels/blocks 移到插入序列首条指令，避免分支跳过头像整合调用。
+                InsertBeforePreservingLabels(
+                    codes,
                     i,
-                    new[]
-                    {
-                        new CodeInstruction(OpCodes.Ldarg_0),
-                        new CodeInstruction(OpCodes.Call, appendMethod)
-                    });
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Call, appendMethod));
                 injected = true;
                 break;
             }
 
             if (!injected)
             {
-                Log.Error(
+                Log.ErrorOnce(
                     $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    "could not inject ColonistBar portrait append call.");
+                    "could not inject ColonistBar portrait append call.",
+                    ErrorKeyPortraitAppendInjectionFailed);
             }
+        }
+
+        private static void InsertBeforePreservingLabels(
+            List<CodeInstruction> codes,
+            int index,
+            CodeInstruction first,
+            CodeInstruction second)
+        {
+            CodeInstruction target = codes[index];
+
+            if (target.labels.Count > 0)
+            {
+                first.labels.AddRange(target.labels);
+                target.labels.Clear();
+            }
+
+            if (target.blocks.Count > 0)
+            {
+                first.blocks.AddRange(target.blocks);
+                target.blocks.Clear();
+            }
+
+            codes.InsertRange(index, new[] { first, second });
         }
     }
 }

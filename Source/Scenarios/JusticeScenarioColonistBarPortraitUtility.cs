@@ -15,6 +15,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         private const string LogPrefix = "[MAP_MechanoidMechanitor]";
 
+        private const int ErrorKeyCachedEntriesFieldMissing = 879345101;
+        private const int ErrorKeyMapGroupNotContiguousBase = 879345200;
+
         private static readonly FieldInfo? CachedEntriesField =
             AccessTools.Field(typeof(ColonistBar), "cachedEntries");
 
@@ -32,7 +35,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (CachedEntriesField == null)
             {
-                Log.Error($"{LogPrefix} Could not resolve ColonistBar.cachedEntries field.");
+                Log.ErrorOnce(
+                    $"{LogPrefix} Could not resolve ColonistBar.cachedEntries field.",
+                    ErrorKeyCachedEntriesFieldMissing);
                 return;
             }
 
@@ -108,9 +113,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (!VerifyGroupContinuity(cachedEntries, startIndex, count, group))
             {
-                Log.Error(
+                Log.ErrorOnce(
                     $"{LogPrefix} ColonistBar map group {group} for map {map.uniqueID} " +
-                    "is not contiguous; skipping portrait integration.");
+                    "is not contiguous; skipping portrait integration.",
+                    GetMapGroupNotContiguousErrorKey(map.uniqueID, group));
                 return;
             }
 
@@ -285,6 +291,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return true;
+        }
+
+        private static int GetMapGroupNotContiguousErrorKey(int mapUniqueId, int group)
+        {
+            return unchecked(ErrorKeyMapGroupNotContiguousBase + mapUniqueId * 31 + group);
         }
     }
 }
