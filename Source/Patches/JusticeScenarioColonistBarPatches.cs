@@ -10,13 +10,13 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 在机械族机械师专属剧本中，扩展 ColonistBar 远行队分组的殖民者头像筛选，
+    /// 并为开启「头像显示」的普通机械体整合地图头像条目。
     /// 不修改 Pawn.IsColonist 的全局语义。
     /// </summary>
     [HarmonyPatch(typeof(ColonistBar), "CheckRecacheEntries")]
     public static class JusticeScenario_ColonistBar_CheckRecacheEntries_Patch
     {
-        private const string LogPrefix =
-            "[MAP_MechanoidMechanitor] JusticeScenarioColonistBarPatches:";
+        private const string LogPrefix = "[MAP_MechanoidMechanitor]";
 
         private const int MaxInstructionsAfterIsColonist = 8;
 
@@ -26,6 +26,14 @@ namespace MAP_MechanoidMechanitor
         {
             List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
 
+            PatchCaravanIsColonistCheck(codes);
+            InjectPortraitDisplayAppend(codes);
+
+            return codes;
+        }
+
+        private static void PatchCaravanIsColonistCheck(List<CodeInstruction> codes)
+        {
             MethodInfo? isColonistGetter = AccessTools.PropertyGetter(
                 typeof(Pawn),
                 nameof(Pawn.IsColonist));
@@ -41,8 +49,9 @@ namespace MAP_MechanoidMechanitor
                 || helperMethod == null)
             {
                 Log.Error(
-                    $"{LogPrefix} could not resolve ColonistBar caravan filter methods. Patch not applied.");
-                return codes;
+                    $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
+                    "could not resolve ColonistBar caravan filter methods. Patch not applied.");
+                return;
             }
 
             int matchCount = 0;
@@ -82,18 +91,13 @@ namespace MAP_MechanoidMechanitor
             if (matchCount != 1)
             {
                 Log.Error(
-                    $"{LogPrefix} expected exactly one ColonistBar caravan IsColonist check, found {matchCount}. Patch not applied.");
+                    $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
+                    $"expected exactly one ColonistBar caravan IsColonist check, found {matchCount}.");
             }
-
-            return codes;
         }
 
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> TranspilerAppendPortraitDisplayEntries(
-            IEnumerable<CodeInstruction> instructions)
+        private static void InjectPortraitDisplayAppend(List<CodeInstruction> codes)
         {
-            List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
-
             FieldInfo? reorderableGroupsField = AccessTools.Field(
                 typeof(ColonistBar),
                 "cachedReorderableGroups");
@@ -109,16 +113,16 @@ namespace MAP_MechanoidMechanitor
                 || appendMethod == null)
             {
                 Log.Error(
-                    $"{LogPrefix} could not resolve ColonistBar portrait append methods. Patch not applied.");
-                return codes;
+                    $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
+                    "could not resolve ColonistBar portrait append methods. Patch not applied.");
+                return;
             }
 
             bool injected = false;
 
             for (int i = 0; i < codes.Count; i++)
             {
-                if (codes[i].opcode != OpCodes.Ldfld
-                    || !ReferenceEquals(codes[i].operand, reorderableGroupsField))
+                if (!codes[i].LoadsField(reorderableGroupsField))
                 {
                     continue;
                 }
@@ -142,10 +146,9 @@ namespace MAP_MechanoidMechanitor
             if (!injected)
             {
                 Log.Error(
-                    $"{LogPrefix} could not inject ColonistBar portrait append call. Patch not applied.");
+                    $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
+                    "could not inject ColonistBar portrait append call.");
             }
-
-            return codes;
         }
     }
 }
