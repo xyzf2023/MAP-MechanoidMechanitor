@@ -87,5 +87,65 @@ namespace MAP_MechanoidMechanitor
 
             return codes;
         }
+
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> TranspilerAppendPortraitDisplayEntries(
+            IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
+
+            FieldInfo? reorderableGroupsField = AccessTools.Field(
+                typeof(ColonistBar),
+                "cachedReorderableGroups");
+            MethodInfo? clearMethod = AccessTools.Method(
+                typeof(List<int>),
+                nameof(List<int>.Clear));
+            MethodInfo? appendMethod = AccessTools.Method(
+                typeof(JusticeScenarioColonistBarPortraitUtility),
+                nameof(JusticeScenarioColonistBarPortraitUtility.AppendMapPortraitDisplayEntries));
+
+            if (reorderableGroupsField == null
+                || clearMethod == null
+                || appendMethod == null)
+            {
+                Log.Error(
+                    $"{LogPrefix} could not resolve ColonistBar portrait append methods. Patch not applied.");
+                return codes;
+            }
+
+            bool injected = false;
+
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].opcode != OpCodes.Ldfld
+                    || !ReferenceEquals(codes[i].operand, reorderableGroupsField))
+                {
+                    continue;
+                }
+
+                if (i + 1 >= codes.Count || !codes[i + 1].Calls(clearMethod))
+                {
+                    continue;
+                }
+
+                codes.InsertRange(
+                    i,
+                    new[]
+                    {
+                        new CodeInstruction(OpCodes.Ldarg_0),
+                        new CodeInstruction(OpCodes.Call, appendMethod)
+                    });
+                injected = true;
+                break;
+            }
+
+            if (!injected)
+            {
+                Log.Error(
+                    $"{LogPrefix} could not inject ColonistBar portrait append call. Patch not applied.");
+            }
+
+            return codes;
+        }
     }
 }

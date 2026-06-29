@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <PawnColumnDef>
+    <defName>MAP_ColonistBarPortrait</defName>
+    <label>portrait display</label>
+    <paintable>true</paintable>
+    <workerClass>MAP_MechanoidMechanitor.PawnColumnWorker_ColonistBarPortrait</workerClass>
+  </PawnColumnDef>
+</Defs>
