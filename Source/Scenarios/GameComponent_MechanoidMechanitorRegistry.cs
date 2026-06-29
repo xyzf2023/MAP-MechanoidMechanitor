@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MAP_MechanoidMechanitor;
 using RimWorld;
@@ -346,9 +347,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            MAPOverseerlessNodeUtility.ClearExternalOverseerIfNode(newHost);
+
             registry.mechanicalConsciousnessHost = newHost;
-            FinalizeHostAssignment(newHost);
-            NotifyJusticeColonistDisplaysIfNeeded();
+
+            try
+            {
+                NotifyJusticeColonistDisplaysIfNeeded();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-MechanoidMechanitor] Post-commit refresh failed after replacing " +
+                    $"mechanical consciousness host with {newHost.LabelShort} " +
+                    $"({newHost.ThingID}): {ex}");
+            }
+
             return true;
         }
 
