@@ -119,7 +119,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (target.health?.hediffSet == null)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 转移后 Hediff 失败：target={target.LabelShort} " +
+                    $"[MAP-机械族机械师] 转移后 Hediff 失败：target={target.LabelShort} " +
                     $"（{target.ThingID}）缺少 health tracker。");
                 return;
             }
@@ -140,7 +140,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 转移后 Hediff 失败：target={target.LabelShort} " +
+                    $"[MAP-机械族机械师] 转移后 Hediff 失败：target={target.LabelShort} " +
                     $"（{target.ThingID}）：{ex}");
             }
         }
@@ -180,7 +180,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     target))
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 紧急意识转移失败：source={source.LabelShort} " +
+                    $"[MAP-机械族机械师] 紧急意识转移失败：source={source.LabelShort} " +
                     $"（{source.ThingID}），target={target.LabelShort} " +
                     $"（{target.ThingID}），hostBefore={hostBefore?.LabelShort ?? "null"}。");
                 return;
@@ -206,7 +206,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (disappears == null)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 转移后 Hediff 失败：target={target.LabelShort} " +
+                    $"[MAP-机械族机械师] 转移后 Hediff 失败：target={target.LabelShort} " +
                     $"（{target.ThingID}）上的 {EmergencyTransferHediffDefName} 缺少 HediffComp_Disappears。");
                 return;
             }
@@ -219,7 +219,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Pawn? currentHost =
                 GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
             Log.Error(
-                "[MAP-机械族机械师] 紧急意识转移触发失败：source={source.LabelShort} " +
+                $"[MAP-机械族机械师] 紧急意识转移触发失败：source={source.LabelShort} " +
                 $"（{source.ThingID}），currentHost={currentHost?.LabelShort ?? "null"}：{ex}");
         }
     }
