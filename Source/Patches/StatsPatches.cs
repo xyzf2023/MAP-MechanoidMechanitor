@@ -1,4 +1,3 @@
-using System.Reflection;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -8,10 +7,11 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(StatWorker), nameof(StatWorker.GetValueUnfinalized))]
     public static class StatsPatches
     {
-        private static readonly FieldInfo StatField = AccessTools.Field(typeof(StatWorker), "stat");
-
         [HarmonyPostfix]
-        public static void GetValueUnfinalized_Postfix(StatWorker __instance, StatRequest req, ref float __result)
+        public static void GetValueUnfinalized_Postfix(
+            StatRequest req,
+            StatDef ___stat,
+            ref float __result)
         {
             if (!ModsConfig.BiotechActive)
             {
@@ -28,17 +28,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!MAPMechanitorNodeUtility.HasNode(pawn))
-            {
-                return;
-            }
-
-            if (StatField == null || StatField.GetValue(__instance) is not StatDef stat)
-            {
-                return;
-            }
-
-            if (stat == StatDefOf.MechBandwidth)
+            if (___stat == StatDefOf.MechBandwidth)
             {
                 int extra = MAPMechanitorNodeUtility.GetExtraMechBandwidth(pawn);
                 if (extra > 0)
@@ -49,7 +39,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (stat == StatDefOf.MechControlGroups)
+            if (___stat == StatDefOf.MechControlGroups)
             {
                 int extra = MAPMechanitorNodeUtility.GetExtraMechControlGroups(pawn);
                 if (extra > 0)

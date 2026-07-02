@@ -11,7 +11,7 @@ namespace MAP_MechanoidMechanitor
     {
         [HarmonyPostfix]
         public static void Postfix(
-            Dialog_BillConfig __instance,
+            Bill_Production ___bill,
             ref IEnumerable<Widgets.DropdownMenuElement<Pawn>> __result)
         {
             if (!ModsConfig.BiotechActive)
@@ -19,8 +19,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            Bill_Production? bill = AccessTools.Field(typeof(Dialog_BillConfig), "bill")
-                ?.GetValue(__instance) as Bill_Production;
+            Bill_Production? bill = ___bill;
 
             if (bill == null
                 || bill.recipe == null
@@ -46,22 +45,22 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            IEnumerable<Pawn> candidates = Find.Maps
+            SkillDef? workSkill = bill.recipe.workSkill;
+
+            IOrderedEnumerable<Pawn> candidates = Find.Maps
                 .SelectMany(map => map.mapPawns.AllPawnsSpawned)
                 .Where(pawn => IsCandidate(pawn) && !existingPayloads.Contains(pawn))
-                .OrderBy(pawn => pawn.LabelShortCap);
+                .OrderBy(pawn => pawn.WorkTypeIsDisabled(workGiver.workType))
+                .ThenByDescending(pawn => pawn.workSettings!.WorkIsActive(workGiver.workType));
 
-            SkillDef? workSkill = bill.recipe.workSkill;
             if (workSkill != null)
             {
-                candidates = candidates.OrderByDescending(pawn => pawn.skills?.GetSkill(workSkill).Level ?? 0);
+                candidates = candidates.ThenByDescending(pawn => pawn.skills?.GetSkill(workSkill).Level ?? 0);
             }
 
-            candidates = candidates
-                .OrderByDescending(pawn => pawn.workSettings!.WorkIsActive(workGiver.workType))
-                .OrderBy(pawn => pawn.WorkTypeIsDisabled(workGiver.workType));
+            IEnumerable<Pawn> sortedCandidates = candidates.ThenBy(pawn => pawn.LabelShortCap);
 
-            foreach (Pawn pawn in candidates)
+            foreach (Pawn pawn in sortedCandidates)
             {
                 options.Add(BuildMenuElementForPawn(bill, pawn, workGiver));
             }
