@@ -23,7 +23,7 @@ namespace MAP_MechanoidMechanitor
         private const int ErrorKeyCaravanPatchResolveFailed = 879345102;
         private const int ErrorKeyCaravanIsColonistMatchCount = 879345103;
         private const int ErrorKeyPortraitAppendResolveFailed = 879345104;
-        private const int ErrorKeyPortraitAppendInjectionFailed = 879345105;
+        private const int ErrorKeyPortraitAppendMatchCount = 879345106;
 
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpiler(
@@ -37,7 +37,7 @@ namespace MAP_MechanoidMechanitor
             return codes;
         }
 
-        private static void PatchCaravanIsColonistCheck(List<CodeInstruction> codes)
+        private static bool PatchCaravanIsColonistCheck(List<CodeInstruction> codes)
         {
             MethodInfo? isColonistGetter = AccessTools.PropertyGetter(
                 typeof(Pawn),
@@ -57,10 +57,10 @@ namespace MAP_MechanoidMechanitor
                     $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
                     "could not resolve ColonistBar caravan filter methods. Patch not applied.",
                     ErrorKeyCaravanPatchResolveFailed);
-                return;
+                return false;
             }
 
-            int matchCount = 0;
+            List<int> candidateIndices = new List<int>();
 
             for (int i = 0; i < codes.Count; i++)
             {
@@ -69,44 +69,52 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                bool followedBySubhumanCheck = false;
-                int searchLimit = i + MaxInstructionsAfterIsColonist;
-                if (searchLimit > codes.Count)
-                {
-                    searchLimit = codes.Count;
-                }
-
-                for (int j = i + 1; j < searchLimit; j++)
-                {
-                    if (codes[j].Calls(isColonySubhumanGetter))
-                    {
-                        followedBySubhumanCheck = true;
-                        break;
-                    }
-                }
-
-                if (!followedBySubhumanCheck)
+                if (!HasSubhumanCheckWithin(codes, i, isColonySubhumanGetter))
                 {
                     continue;
                 }
 
-                // 原地修改 opcode/operand，保留原 callvirt 指令上的 labels 与 exception blocks。
-                CodeInstruction instruction = codes[i];
-                instruction.opcode = OpCodes.Call;
-                instruction.operand = helperMethod;
-                matchCount++;
+                candidateIndices.Add(i);
             }
 
-            if (matchCount != 1)
+            if (candidateIndices.Count != 1)
             {
                 Log.ErrorOnce(
                     $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    $"expected exactly one ColonistBar caravan IsColonist check, found {matchCount}.",
+                    $"expected exactly one ColonistBar caravan IsColonist check, found {candidateIndices.Count}.",
                     ErrorKeyCaravanIsColonistMatchCount);
+                return false;
             }
+
+            CodeInstruction instruction = codes[candidateIndices[0]];
+            instruction.opcode = OpCodes.Call;
+            instruction.operand = helperMethod;
+            return true;
         }
 
-        private static void InjectPortraitDisplayAppend(List<CodeInstruction> codes)
+        private static bool HasSubhumanCheckWithin(
+            List<CodeInstruction> codes,
+            int isColonistIndex,
+            MethodInfo isColonySubhumanGetter)
+        {
+            int searchLimit = isColonistIndex + 1 + MaxInstructionsAfterIsColonist;
+            if (searchLimit > codes.Count)
+            {
+                searchLimit = codes.Count;
+            }
+
+            for (int j = isColonistIndex + 1; j < searchLimit; j++)
+            {
+                if (codes[j].Calls(isColonySubhumanGetter))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool InjectPortraitDisplayAppend(List<CodeInstruction> codes)
         {
             FieldInfo? cachedEntriesField = AccessTools.Field(
                 typeof(ColonistBar),
@@ -131,10 +139,10 @@ namespace MAP_MechanoidMechanitor
                     $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
                     "could not resolve ColonistBar portrait append methods. Patch not applied.",
                     ErrorKeyPortraitAppendResolveFailed);
-                return;
+                return false;
             }
 
-            bool injected = false;
+            List<int> candidateIndices = new List<int>();
 
             for (int i = 0; i < codes.Count; i++)
             {
@@ -148,24 +156,25 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                // labels 与 Begin 类 exception blocks 移到插入序列入口；EndExceptionBlock 留在 ldfld。
-                InsertBeforePreservingLabels(
-                    codes,
-                    i,
-                    new CodeInstruction(OpCodes.Ldarg_0),
-                    new CodeInstruction(OpCodes.Ldfld, cachedEntriesField),
-                    new CodeInstruction(OpCodes.Call, appendMethod));
-                injected = true;
-                break;
+                candidateIndices.Add(i);
             }
 
-            if (!injected)
+            if (candidateIndices.Count != 1)
             {
                 Log.ErrorOnce(
                     $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    "could not inject ColonistBar portrait append call.",
-                    ErrorKeyPortraitAppendInjectionFailed);
+                    $"expected exactly one ColonistBar portrait append injection site, found {candidateIndices.Count}.",
+                    ErrorKeyPortraitAppendMatchCount);
+                return false;
             }
+
+            InsertBeforePreservingLabels(
+                codes,
+                candidateIndices[0],
+                new CodeInstruction(OpCodes.Ldarg_0),
+                new CodeInstruction(OpCodes.Ldfld, cachedEntriesField),
+                new CodeInstruction(OpCodes.Call, appendMethod));
+            return true;
         }
 
         private static void InsertBeforePreservingLabels(
