@@ -7,6 +7,7 @@
     <graphicData>
       <texPath>Things/AutonomousDirectiveCore</texPath>
       <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>1.0</drawSize>
     </graphicData>
     <stackLimit>1</stackLimit>
     <statBases>
