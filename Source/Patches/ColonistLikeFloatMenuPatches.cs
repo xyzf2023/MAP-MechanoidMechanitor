@@ -14,6 +14,10 @@ namespace MAP_MechanoidMechanitor
 
         private const int ErrorKeyMechanoidGateResolveFailed = 879345301;
         private const int ErrorKeyMechanoidGateMatchCount = 879345302;
+        private const int ErrorKeyMechanoidGateExceptionBlocks = 879345303;
+
+        private const int MechanoidGateReplaceStartOffset = 1;
+        private const int MechanoidGateReplaceCount = 5;
 
         public static bool PassesMechanoidSelectedPawnCheck(bool mechanoidCanDo, Pawn pawn)
         {
@@ -59,21 +63,50 @@ namespace MAP_MechanoidMechanitor
                 return codes;
             }
 
-            int matchCount = 0;
-            int matchIndex = -1;
-
-            for (int i = 0; i < codes.Count - 5; i++)
+            if (!TryFindUniqueMechanoidGate(
+                    codes,
+                    mechanoidCanDoGetter,
+                    racePropsGetter,
+                    isMechanoidGetter,
+                    out int matchIndex,
+                    out int matchCount))
             {
-                if (!codes[i].Calls(mechanoidCanDoGetter))
-                {
-                    continue;
-                }
+                Log.ErrorOnce(
+                    $"{LogPrefix} expected exactly one mechanoid gate in FloatMenuOptionProvider.SelectedPawnValid, found {matchCount}. Patch not applied.",
+                    ErrorKeyMechanoidGateMatchCount);
+                return codes;
+            }
 
-                if (!IsUnconditionalBranch(codes[i + 1])
-                    || codes[i + 2].opcode != OpCodes.Ldarg_1
-                    || !codes[i + 3].Calls(racePropsGetter)
-                    || !codes[i + 4].Calls(isMechanoidGetter)
-                    || !IsUnconditionalBranch(codes[i + 5]))
+            if (!TryReplaceMechanoidGatePreservingMetadata(codes, matchIndex, helperMethod))
+            {
+                Log.ErrorOnce(
+                    $"{LogPrefix} could not safely replace mechanoid gate while preserving labels/exception blocks. Patch not applied.",
+                    ErrorKeyMechanoidGateExceptionBlocks);
+                return codes;
+            }
+
+            return codes;
+        }
+
+        private static bool TryFindUniqueMechanoidGate(
+            List<CodeInstruction> codes,
+            MethodInfo mechanoidCanDoGetter,
+            MethodInfo racePropsGetter,
+            MethodInfo isMechanoidGetter,
+            out int matchIndex,
+            out int matchCount)
+        {
+            matchIndex = -1;
+            matchCount = 0;
+
+            for (int i = 0; i <= codes.Count - MechanoidGateReplaceStartOffset - MechanoidGateReplaceCount; i++)
+            {
+                if (!MatchesMechanoidGateSequence(
+                        codes,
+                        i,
+                        mechanoidCanDoGetter,
+                        racePropsGetter,
+                        isMechanoidGetter))
                 {
                     continue;
                 }
@@ -82,36 +115,200 @@ namespace MAP_MechanoidMechanitor
                 matchIndex = i;
             }
 
-            if (matchCount != 1)
+            return matchCount == 1;
+        }
+
+        private static bool MatchesMechanoidGateSequence(
+            List<CodeInstruction> codes,
+            int mechanoidCanDoIndex,
+            MethodInfo mechanoidCanDoGetter,
+            MethodInfo racePropsGetter,
+            MethodInfo isMechanoidGetter)
+        {
+            int branchIfTrueIndex = mechanoidCanDoIndex + 1;
+            int loadPawnIndex = mechanoidCanDoIndex + 2;
+            int racePropsIndex = mechanoidCanDoIndex + 3;
+            int isMechanoidIndex = mechanoidCanDoIndex + 4;
+            int branchIfFalseIndex = mechanoidCanDoIndex + 5;
+
+            if (!codes[mechanoidCanDoIndex].Calls(mechanoidCanDoGetter))
             {
-                Log.ErrorOnce(
-                    $"{LogPrefix} expected exactly one mechanoid gate in FloatMenuOptionProvider.SelectedPawnValid, found {matchCount}. Patch not applied.",
-                    ErrorKeyMechanoidGateMatchCount);
-                return codes;
+                return false;
             }
 
-            CodeInstruction skipTarget = codes[matchIndex + 1];
-            object? skipLabel = skipTarget.operand;
-            OpCode branchOpcode = skipTarget.opcode == OpCodes.Brtrue_S
-                || skipTarget.opcode == OpCodes.Brfalse_S
+            if (!IsBranchIfTrue(codes[branchIfTrueIndex]))
+            {
+                return false;
+            }
+
+            if (codes[loadPawnIndex].opcode != OpCodes.Ldarg_1)
+            {
+                return false;
+            }
+
+            if (!codes[racePropsIndex].Calls(racePropsGetter))
+            {
+                return false;
+            }
+
+            if (!codes[isMechanoidIndex].Calls(isMechanoidGetter))
+            {
+                return false;
+            }
+
+            if (!IsBranchIfFalse(codes[branchIfFalseIndex]))
+            {
+                return false;
+            }
+
+            object? firstTarget = codes[branchIfTrueIndex].operand;
+            object? secondTarget = codes[branchIfFalseIndex].operand;
+
+            if (!IsValidBranchLabel(firstTarget) || !IsValidBranchLabel(secondTarget))
+            {
+                return false;
+            }
+
+            return ReferenceEquals(firstTarget, secondTarget)
+                || firstTarget!.Equals(secondTarget);
+        }
+
+        private static bool TryReplaceMechanoidGatePreservingMetadata(
+            List<CodeInstruction> codes,
+            int matchIndex,
+            MethodInfo helperMethod)
+        {
+            int replaceStart = matchIndex + MechanoidGateReplaceStartOffset;
+
+            if (!CanSafelyReplaceInstructionRange(codes, replaceStart, MechanoidGateReplaceCount))
+            {
+                return false;
+            }
+
+            CodeInstruction branchIfTrue = codes[replaceStart];
+            object skipLabel = branchIfTrue.operand!;
+            OpCode branchOpcode = branchIfTrue.opcode == OpCodes.Brtrue_S
                 ? OpCodes.Brtrue_S
                 : OpCodes.Brtrue;
 
-            codes[matchIndex + 1] = new CodeInstruction(OpCodes.Ldarg_1);
-            codes[matchIndex + 2] = new CodeInstruction(OpCodes.Call, helperMethod);
-            codes[matchIndex + 3] = new CodeInstruction(branchOpcode, skipLabel);
-            codes.RemoveAt(matchIndex + 4);
-            codes.RemoveAt(matchIndex + 4);
+            List<CodeInstruction> replacement = new List<CodeInstruction>
+            {
+                new CodeInstruction(OpCodes.Ldarg_1),
+                new CodeInstruction(OpCodes.Call, helperMethod),
+                new CodeInstruction(branchOpcode, skipLabel)
+            };
 
-            return codes;
+            List<CodeInstruction> replacedRange = codes.GetRange(
+                replaceStart,
+                MechanoidGateReplaceCount);
+            TransferEntryLabels(replacedRange, replacement[0]);
+            TransferExceptionBlocksForReplacement(replacedRange, replacement);
+
+            codes.RemoveRange(replaceStart, MechanoidGateReplaceCount);
+            codes.InsertRange(replaceStart, replacement);
+            return true;
         }
 
-        private static bool IsUnconditionalBranch(CodeInstruction instruction)
+        private static bool CanSafelyReplaceInstructionRange(
+            List<CodeInstruction> codes,
+            int start,
+            int count)
+        {
+            int end = start + count - 1;
+
+            for (int i = start; i <= end; i++)
+            {
+                for (int blockIndex = 0; blockIndex < codes[i].blocks.Count; blockIndex++)
+                {
+                    ExceptionBlock block = codes[i].blocks[blockIndex];
+                    if (block.blockType == ExceptionBlockType.EndExceptionBlock && i < end)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private static void TransferEntryLabels(
+            List<CodeInstruction> sourceInstructions,
+            CodeInstruction targetFirst)
+        {
+            for (int i = 0; i < sourceInstructions.Count; i++)
+            {
+                CodeInstruction source = sourceInstructions[i];
+                if (source.labels.Count == 0)
+                {
+                    continue;
+                }
+
+                targetFirst.labels.AddRange(source.labels);
+                source.labels.Clear();
+            }
+        }
+
+        private static void TransferExceptionBlocksForReplacement(
+            List<CodeInstruction> replacedRange,
+            List<CodeInstruction> replacement)
+        {
+            CodeInstruction replacementFirst = replacement[0];
+            CodeInstruction replacementLast = replacement[replacement.Count - 1];
+
+            for (int i = 0; i < replacedRange.Count; i++)
+            {
+                CodeInstruction source = replacedRange[i];
+                bool isLastSource = i == replacedRange.Count - 1;
+
+                for (int blockIndex = source.blocks.Count - 1; blockIndex >= 0; blockIndex--)
+                {
+                    ExceptionBlock block = source.blocks[blockIndex];
+                    source.blocks.RemoveAt(blockIndex);
+
+                    if (ShouldMoveExceptionBlockToReplacementEntry(block))
+                    {
+                        replacementFirst.blocks.Add(block);
+                    }
+                    else if (isLastSource)
+                    {
+                        replacementLast.blocks.Add(block);
+                    }
+                }
+            }
+        }
+
+        private static bool ShouldMoveExceptionBlockToReplacementEntry(ExceptionBlock block)
+        {
+            switch (block.blockType)
+            {
+                case ExceptionBlockType.BeginExceptionBlock:
+                case ExceptionBlockType.BeginCatchBlock:
+                case ExceptionBlockType.BeginExceptFilterBlock:
+                case ExceptionBlockType.BeginFaultBlock:
+                case ExceptionBlockType.BeginFinallyBlock:
+                    return true;
+                case ExceptionBlockType.EndExceptionBlock:
+                    return false;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool IsBranchIfTrue(CodeInstruction instruction)
         {
             return instruction.opcode == OpCodes.Brtrue
-                || instruction.opcode == OpCodes.Brtrue_S
-                || instruction.opcode == OpCodes.Brfalse
+                || instruction.opcode == OpCodes.Brtrue_S;
+        }
+
+        private static bool IsBranchIfFalse(CodeInstruction instruction)
+        {
+            return instruction.opcode == OpCodes.Brfalse
                 || instruction.opcode == OpCodes.Brfalse_S;
+        }
+
+        private static bool IsValidBranchLabel(object? operand)
+        {
+            return operand is Label;
         }
     }
 }
