@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -7,56 +9,78 @@ namespace MAP_MechanoidMechanitor
 {
     public static class HumanApparelGearTabPatches
     {
-        private static readonly PropertyInfo? SelPawnForGearProperty =
-            AccessTools.Property(typeof(ITab_Pawn_Gear), "SelPawnForGear");
+        private const string LogPrefix = "[MAP_MechanoidMechanitor] HumanApparelGearTabPatches:";
+
+        private const int ErrorKeyResolveFailed = 879345401;
+        private const int ErrorKeyMatchCount = 879345402;
+
+        public static bool GearTabCountsAsColonistPlayerControlled(Pawn pawn)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (pawn.IsColonistPlayerControlled)
+            {
+                return true;
+            }
+
+            return HumanApparelUtility.TryGetApparelComp(pawn, out CompHumanApparelUser? comp)
+                && comp!.AllowRemoveApparel;
+        }
 
         [HarmonyPatch(typeof(ITab_Pawn_Gear), "CanControlColonist", MethodType.Getter)]
         public static class Patch_ITab_Pawn_Gear_CanControlColonist
         {
-            [HarmonyPostfix]
-            public static void Postfix(ITab_Pawn_Gear __instance, ref bool __result)
+            [HarmonyTranspiler]
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
-                if (__result)
+                List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
+
+                MethodInfo? isColonistPlayerControlledGetter = AccessTools.PropertyGetter(
+                    typeof(Pawn),
+                    nameof(Pawn.IsColonistPlayerControlled));
+                MethodInfo? helperMethod = AccessTools.Method(
+                    typeof(HumanApparelGearTabPatches),
+                    nameof(GearTabCountsAsColonistPlayerControlled));
+
+                if (isColonistPlayerControlledGetter == null || helperMethod == null)
                 {
-                    return;
+                    Log.ErrorOnce(
+                        $"{LogPrefix} could not resolve CanControlColonist methods. Patch not applied.",
+                        ErrorKeyResolveFailed);
+                    return codes;
                 }
 
-                Pawn? pawn = SelPawnForGearProperty?.GetValue(__instance) as Pawn;
+                int matchCount = 0;
+                int matchIndex = -1;
 
-                if (!GearTabAllowsColonistControl(pawn))
+                for (int i = 0; i < codes.Count; i++)
                 {
-                    return;
+                    if (!codes[i].Calls(isColonistPlayerControlledGetter))
+                    {
+                        continue;
+                    }
+
+                    matchCount++;
+                    matchIndex = i;
                 }
 
-                __result = true;
-            }
-        }
+                if (matchCount != 1)
+                {
+                    Log.ErrorOnce(
+                        $"{LogPrefix} expected exactly one IsColonistPlayerControlled call in CanControlColonist, found {matchCount}. Patch not applied.",
+                        ErrorKeyMatchCount);
+                    return codes;
+                }
 
-        private static bool GearTabAllowsColonistControl(Pawn? pawn)
-        {
-            if (pawn == null
-                || !HumanApparelUtility.TryGetApparelComp(pawn, out CompHumanApparelUser? comp)
-                || !comp!.AllowRemoveApparel)
-            {
-                return false;
-            }
+                CodeInstruction instruction = codes[matchIndex];
+                instruction.opcode = OpCodes.Call;
+                instruction.operand = helperMethod;
 
-            if (pawn.Faction != Faction.OfPlayer)
-            {
-                return false;
+                return codes;
             }
-
-            if (pawn.Dead || pawn.Downed || pawn.InMentalState)
-            {
-                return false;
-            }
-
-            if (pawn.ParentHolder is Pawn_CarryTracker)
-            {
-                return false;
-            }
-
-            return pawn.apparel != null;
         }
     }
 }

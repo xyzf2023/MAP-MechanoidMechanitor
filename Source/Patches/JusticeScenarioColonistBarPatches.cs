@@ -108,6 +108,9 @@ namespace MAP_MechanoidMechanitor
 
         private static void InjectPortraitDisplayAppend(List<CodeInstruction> codes)
         {
+            FieldInfo? cachedEntriesField = AccessTools.Field(
+                typeof(ColonistBar),
+                "cachedEntries");
             FieldInfo? reorderableGroupsField = AccessTools.Field(
                 typeof(ColonistBar),
                 "cachedReorderableGroups");
@@ -116,9 +119,11 @@ namespace MAP_MechanoidMechanitor
                 nameof(List<int>.Clear));
             MethodInfo? appendMethod = AccessTools.Method(
                 typeof(JusticeScenarioColonistBarPortraitUtility),
-                nameof(JusticeScenarioColonistBarPortraitUtility.AppendMapPortraitDisplayEntries));
+                nameof(JusticeScenarioColonistBarPortraitUtility.AppendMapPortraitDisplayEntries),
+                new[] { typeof(List<ColonistBar.Entry>) });
 
-            if (reorderableGroupsField == null
+            if (cachedEntriesField == null
+                || reorderableGroupsField == null
                 || clearMethod == null
                 || appendMethod == null)
             {
@@ -148,6 +153,7 @@ namespace MAP_MechanoidMechanitor
                     codes,
                     i,
                     new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, cachedEntriesField),
                     new CodeInstruction(OpCodes.Call, appendMethod));
                 injected = true;
                 break;
@@ -165,10 +171,15 @@ namespace MAP_MechanoidMechanitor
         private static void InsertBeforePreservingLabels(
             List<CodeInstruction> codes,
             int index,
-            CodeInstruction first,
-            CodeInstruction second)
+            params CodeInstruction[] inserted)
         {
+            if (inserted.Length == 0)
+            {
+                return;
+            }
+
             CodeInstruction target = codes[index];
+            CodeInstruction first = inserted[0];
 
             if (target.labels.Count > 0)
             {
@@ -178,7 +189,7 @@ namespace MAP_MechanoidMechanitor
 
             TransferExceptionBlocksForInsertBefore(target, first);
 
-            codes.InsertRange(index, new[] { first, second });
+            codes.InsertRange(index, inserted);
         }
 
         private static void TransferExceptionBlocksForInsertBefore(

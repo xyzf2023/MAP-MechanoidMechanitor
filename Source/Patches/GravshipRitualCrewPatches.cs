@@ -1,34 +1,20 @@
+using System.Reflection;
 using HarmonyLib;
 using RimWorld;
-using System.Reflection;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
     public static class GravshipRitualCrewUtility
     {
-        private static readonly FieldInfo? RitualTargetField =
-            AccessTools.Field(typeof(RitualRoleAssignments), "ritualTarget");
-
         public static bool IsGravshipLaunch(RitualRoleAssignments? assignments)
         {
             return assignments?.Ritual != null
                 && assignments.Ritual.def == PreceptDefOf.GravshipLaunch;
         }
 
-        public static TargetInfo GetRitualTarget(RitualRoleAssignments assignments)
+        public static bool IsPilotConsoleTarget(TargetInfo target)
         {
-            if (RitualTargetField == null)
-            {
-                return TargetInfo.Invalid;
-            }
-
-            return (TargetInfo)RitualTargetField.GetValue(assignments);
-        }
-
-        public static bool IsPilotConsoleTarget(RitualRoleAssignments assignments)
-        {
-            TargetInfo target = GetRitualTarget(assignments);
             return target.Thing != null && target.Thing.TryGetComp<CompPilotConsole>() != null;
         }
 
@@ -62,17 +48,19 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        public static bool CanUseAsGravshipCrew(RitualRoleAssignments assignments, Pawn pawn)
+        public static bool CanUseAsGravshipCrew(
+            RitualRoleAssignments assignments,
+            Pawn pawn,
+            TargetInfo ritualTarget)
         {
             if (!IsGravshipLaunch(assignments)
-                || !IsPilotConsoleTarget(assignments)
+                || !IsPilotConsoleTarget(ritualTarget)
                 || !IsGravshipCrewCandidate(pawn))
             {
                 return false;
             }
 
             Precept_Ritual ritual = assignments.Ritual;
-            TargetInfo ritualTarget = GetRitualTarget(assignments);
 
             if (ritual.ritualOnlyForIdeoMembers
                 && pawn.Ideo != ritual.ideo
@@ -110,6 +98,7 @@ namespace MAP_MechanoidMechanitor
         public static void Postfix(
             RitualRoleAssignments __instance,
             Pawn pawn,
+            TargetInfo ___ritualTarget,
             ref bool __result)
         {
             if (__result)
@@ -122,7 +111,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (GravshipRitualCrewUtility.CanUseAsGravshipCrew(__instance, pawn))
+            if (GravshipRitualCrewUtility.CanUseAsGravshipCrew(__instance, pawn, ___ritualTarget))
             {
                 __result = true;
             }
@@ -144,6 +133,7 @@ namespace MAP_MechanoidMechanitor
             RitualRoleAssignments __instance,
             Pawn p,
             RitualRole role,
+            TargetInfo ___ritualTarget,
             ref string? __result,
             ref bool stillAddToPawnList)
         {
@@ -158,13 +148,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (!GravshipRitualCrewUtility.IsGravshipLaunch(__instance)
-                || !GravshipRitualCrewUtility.IsPilotConsoleTarget(__instance)
+                || !GravshipRitualCrewUtility.IsPilotConsoleTarget(___ritualTarget)
                 || !GravshipRitualCrewUtility.IsGravshipCrewCandidate(p))
             {
                 return;
             }
 
-            if (GravshipRitualCrewUtility.CanUseAsGravshipCrew(__instance, p))
+            if (GravshipRitualCrewUtility.CanUseAsGravshipCrew(__instance, p, ___ritualTarget))
             {
                 __result = null;
                 stillAddToPawnList = false;

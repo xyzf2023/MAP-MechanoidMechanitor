@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
-using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -15,33 +13,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         private const string LogPrefix = "[MAP_MechanoidMechanitor]";
 
-        private const int ErrorKeyCachedEntriesFieldMissing = 879345101;
         private const int ErrorKeyMapGroupNotContiguousBase = 879345200;
-
-        private static readonly FieldInfo? CachedEntriesField =
-            AccessTools.Field(typeof(ColonistBar), "cachedEntries");
 
         private static readonly List<Map> TmpMaps = new List<Map>();
         private static readonly List<Pawn> TmpPawns = new List<Pawn>();
         private static readonly List<ColonistBar.Entry> TmpEntries = new List<ColonistBar.Entry>();
         private static readonly HashSet<Pawn> TmpPawnSet = new HashSet<Pawn>();
+        private static readonly HashSet<Map> TmpMapSet = new HashSet<Map>();
 
-        public static void AppendMapPortraitDisplayEntries(ColonistBar bar)
+        public static void AppendMapPortraitDisplayEntries(List<ColonistBar.Entry> cachedEntries)
         {
             if (!GameComponent_JusticeScenarioState.IsEnabled)
             {
                 return;
             }
 
-            if (CachedEntriesField == null)
-            {
-                Log.ErrorOnce(
-                    $"{LogPrefix} Could not resolve ColonistBar.cachedEntries field.",
-                    ErrorKeyCachedEntriesFieldMissing);
-                return;
-            }
-
-            if (CachedEntriesField.GetValue(bar) is not List<ColonistBar.Entry> cachedEntries)
+            if (cachedEntries == null)
             {
                 return;
             }
@@ -66,8 +53,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Map> mapsOut)
         {
             mapsOut.Clear();
+            TmpMapSet.Clear();
 
-            HashSet<Map> seenMaps = new HashSet<Map>();
             IReadOnlyList<Pawn> enabledPawns =
                 GameComponent_JusticeScenarioState.PortraitDisplayEnabledPawnsList;
             for (int i = 0; i < enabledPawns.Count; i++)
@@ -83,10 +70,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                seenMaps.Add(pawn.Map);
+                TmpMapSet.Add(pawn.Map);
             }
 
-            foreach (Map map in seenMaps)
+            foreach (Map map in TmpMapSet)
             {
                 if (!TryFindMapGroupSpan(cachedEntries, map, out _, out _, out _))
                 {

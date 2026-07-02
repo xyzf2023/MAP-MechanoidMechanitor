@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using HarmonyLib;
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
@@ -10,12 +9,9 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(ScenPart_PlayerPawnsArriveMethod), "DoDropPods")]
     public static class JusticeScenarioDropPodPatch
     {
-        private static readonly FieldInfo MethodField =
-            AccessTools.Field(typeof(ScenPart_PlayerPawnsArriveMethod), "method");
-
         [HarmonyPrefix]
         public static bool Prefix(
-            ScenPart_PlayerPawnsArriveMethod __instance,
+            PlayerPawnsArriveMethod ___method,
             Map map,
             List<Thing> startingItems)
         {
@@ -30,7 +26,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (GetArriveMethod(__instance) != PlayerPawnsArriveMethod.DropPods)
+            if (___method != PlayerPawnsArriveMethod.DropPods)
             {
                 return true;
             }
@@ -65,7 +61,7 @@ namespace MAP_MechanoidMechanitor
 
             List<List<Thing>> dropGroups = new List<List<Thing>> { mechanitorGroup };
             bool openImmediately = initData.QuickStarted
-                || GetArriveMethod(__instance) != PlayerPawnsArriveMethod.DropPods;
+                || ___method != PlayerPawnsArriveMethod.DropPods;
 
             DropPodUtility.DropThingGroupsNear(
                 MapGenerator.PlayerStartSpot,
@@ -79,12 +75,6 @@ namespace MAP_MechanoidMechanitor
                 allowFogged: false);
 
             return false;
-        }
-
-        private static PlayerPawnsArriveMethod GetArriveMethod(
-            ScenPart_PlayerPawnsArriveMethod instance)
-        {
-            return (PlayerPawnsArriveMethod)MethodField.GetValue(instance);
         }
 
         private static Pawn? FindScenarioMechanitorInStartingItems(List<Thing> startingItems)

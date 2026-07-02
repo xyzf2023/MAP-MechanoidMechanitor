@@ -1,6 +1,4 @@
-using System.Reflection;
 using HarmonyLib;
-using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -9,28 +7,13 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(Pawn_RelationsTracker), nameof(Pawn_RelationsTracker.AddDirectRelation))]
     public static class OverseerRelationGuardPatches
     {
-        private static readonly FieldInfo RelationsPawnField =
-            AccessTools.Field(typeof(Pawn_RelationsTracker), "pawn");
-
-        private static Pawn? GetRelationsPawn(Pawn_RelationsTracker relations)
-        {
-            if (relations == null || RelationsPawnField == null)
-            {
-                return null;
-            }
-
-            return RelationsPawnField.GetValue(relations) as Pawn;
-        }
-
         [HarmonyPrefix]
-        public static bool Prefix(Pawn_RelationsTracker __instance, PawnRelationDef def, Pawn otherPawn)
+        public static bool Prefix(Pawn ___pawn, PawnRelationDef def, Pawn otherPawn)
         {
             if (def != PawnRelationDefOf.Overseer)
             {
                 return true;
             }
-
-            Pawn? controller = GetRelationsPawn(__instance);
 
             if (otherPawn != null
                 && MAPMechanitorNodeUtility.HasNode(otherPawn)
@@ -39,16 +22,16 @@ namespace MAP_MechanoidMechanitor
                 if (Prefs.DevMode)
                 {
                     Log.Warning(
-                        $"[MAP-MechanoidMechanitor] Blocked attempt to assign overseer to node: controller={controller?.LabelShort ?? "null"}, " +
+                        $"[MAP-MechanoidMechanitor] Blocked attempt to assign overseer to node: controller={___pawn?.LabelShort ?? "null"}, " +
                         $"node={otherPawn.LabelShort}");
                 }
 
                 return false;
             }
 
-            if (controller != null
+            if (___pawn != null
                 && otherPawn != null
-                && controller == otherPawn
+                && ___pawn == otherPawn
                 && MAPMechanitorNodeUtility.IsMechanitorNodeController(otherPawn))
             {
                 return false;
