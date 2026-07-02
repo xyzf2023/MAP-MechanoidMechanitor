@@ -11,7 +11,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// </summary>
     public static class JusticeScenarioColonistBarPortraitUtility
     {
-        private const string LogPrefix = "[MAP_MechanoidMechanitor]";
+        private const string LogPrefix = "[MAP-机械族机械师]";
 
         private const int ErrorKeyMapGroupNotContiguousBase = 879345200;
 
@@ -101,8 +101,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!VerifyGroupContinuity(cachedEntries, startIndex, count, group))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix} ColonistBar map group {group} for map {map.uniqueID} " +
-                    "is not contiguous; skipping portrait integration.",
+                    $"{LogPrefix} ColonistBar 地图分组 {group}（地图 {map.uniqueID}）不连续；跳过头像整合。",
                     GetMapGroupNotContiguousErrorKey(map.uniqueID, group));
                 return;
             }

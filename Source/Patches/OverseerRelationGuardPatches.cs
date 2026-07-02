@@ -19,13 +19,6 @@ namespace MAP_MechanoidMechanitor
                 && MAPMechanitorNodeUtility.HasNode(otherPawn)
                 && !MAPMechanitorNodeUtility.RequiresExternalOverseer(otherPawn))
             {
-                if (Prefs.DevMode)
-                {
-                    Log.Warning(
-                        $"[MAP-MechanoidMechanitor] Blocked attempt to assign overseer to node: controller={___pawn?.LabelShort ?? "null"}, " +
-                        $"node={otherPawn.LabelShort}");
-                }
-
                 return false;
             }
 

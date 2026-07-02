@@ -16,7 +16,7 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(ColonistBar), "CheckRecacheEntries")]
     public static class JusticeScenario_ColonistBar_CheckRecacheEntries_Patch
     {
-        private const string LogPrefix = "[MAP_MechanoidMechanitor]";
+        private const string LogPrefix = "[MAP-机械族机械师]";
 
         private const int MaxInstructionsAfterIsColonist = 8;
 
@@ -54,8 +54,7 @@ namespace MAP_MechanoidMechanitor
                 || helperMethod == null)
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    "could not resolve ColonistBar caravan filter methods. Patch not applied.",
+                    $"{LogPrefix} JusticeScenarioColonistBarPatches：无法解析 ColonistBar 远行队筛选相关方法，补丁未应用。",
                     ErrorKeyCaravanPatchResolveFailed);
                 return false;
             }
@@ -80,8 +79,7 @@ namespace MAP_MechanoidMechanitor
             if (candidateIndices.Count != 1)
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    $"expected exactly one ColonistBar caravan IsColonist check, found {candidateIndices.Count}.",
+                    $"{LogPrefix} JusticeScenarioColonistBarPatches：ColonistBar 远行队 IsColonist 检查预期仅 1 处，实际找到 {candidateIndices.Count} 处。",
                     ErrorKeyCaravanIsColonistMatchCount);
                 return false;
             }
@@ -136,8 +134,7 @@ namespace MAP_MechanoidMechanitor
                 || appendMethod == null)
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    "could not resolve ColonistBar portrait append methods. Patch not applied.",
+                    $"{LogPrefix} JusticeScenarioColonistBarPatches：无法解析 ColonistBar 头像追加相关方法，补丁未应用。",
                     ErrorKeyPortraitAppendResolveFailed);
                 return false;
             }
@@ -162,8 +159,7 @@ namespace MAP_MechanoidMechanitor
             if (candidateIndices.Count != 1)
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix} JusticeScenarioColonistBarPatches: " +
-                    $"expected exactly one ColonistBar portrait append injection site, found {candidateIndices.Count}.",
+                    $"{LogPrefix} JusticeScenarioColonistBarPatches：ColonistBar 头像追加入口预期仅 1 处，实际找到 {candidateIndices.Count} 处。",
                     ErrorKeyPortraitAppendMatchCount);
                 return false;
             }

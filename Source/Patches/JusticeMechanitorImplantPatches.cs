@@ -11,7 +11,7 @@ namespace MAP_MechanoidMechanitor
     public static class Patch_CompUsable_CanBeUsedBy_JusticeMechanitorImplant
     {
         private const string LogPrefix =
-            "[MAP_MechanoidMechanitor] JusticeMechanitorImplantPatches.CompUsable.CanBeUsedBy:";
+            "[MAP-机械族机械师] JusticeMechanitorImplantPatches.CompUsable.CanBeUsedBy：";
 
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -23,7 +23,7 @@ namespace MAP_MechanoidMechanitor
 
             if (userMustHaveHediffField == null || resolveRequiredHediffMethod == null)
             {
-                Log.Error($"{LogPrefix} missing reflection target(s). Patch not applied.");
+                Log.Error($"{LogPrefix}缺少反射目标，补丁未应用。");
                 return codes;
             }
 
@@ -42,7 +42,7 @@ namespace MAP_MechanoidMechanitor
             if (requiredHediffFieldIndices.Count != 3)
             {
                 Log.Error(
-                    $"{LogPrefix} unexpected IL match count: userMustHaveHediff ldfld={requiredHediffFieldIndices.Count}. Patch not applied.");
+                    $"{LogPrefix}userMustHaveHediff 的 IL 匹配数量异常，实际找到 {requiredHediffFieldIndices.Count} 处，补丁未应用。");
                 return codes;
             }
 
@@ -64,7 +64,7 @@ namespace MAP_MechanoidMechanitor
     public static class Patch_CompUseEffect_InstallImplant_CanBeUsedBy_JusticeMechanitorImplant
     {
         private const string LogPrefix =
-            "[MAP_MechanoidMechanitor] JusticeMechanitorImplantPatches.CompUseEffect_InstallImplant.CanBeUsedBy:";
+            "[MAP-机械族机械师] JusticeMechanitorImplantPatches.CompUseEffect_InstallImplant.CanBeUsedBy：";
 
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -78,7 +78,7 @@ namespace MAP_MechanoidMechanitor
 
             if (allowNonColonistsField == null || bodyPartField == null || resolveAllowNonColonistsMethod == null || resolveBodyPartMethod == null)
             {
-                Log.Error($"{LogPrefix} missing reflection target(s). Patch not applied.");
+                Log.Error($"{LogPrefix}缺少反射目标，补丁未应用。");
                 return codes;
             }
 
@@ -105,7 +105,7 @@ namespace MAP_MechanoidMechanitor
             if (allowIndices.Count != 1 || bodyPartIndices.Count != 2)
             {
                 Log.Error(
-                    $"{LogPrefix} unexpected IL match count: allowNonColonists ldfld={allowIndices.Count}, bodyPart ldfld={bodyPartIndices.Count}. Patch not applied.");
+                    $"{LogPrefix}allowNonColonists 与 bodyPart 的 IL 匹配数量异常，allowNonColonists ldfld={allowIndices.Count}，bodyPart ldfld={bodyPartIndices.Count}，补丁未应用。");
                 return codes;
             }
 
@@ -130,7 +130,7 @@ namespace MAP_MechanoidMechanitor
     public static class Patch_CompUseEffect_InstallImplant_DoEffect_JusticeMechanitorImplant
     {
         private const string LogPrefix =
-            "[MAP_MechanoidMechanitor] JusticeMechanitorImplantPatches.CompUseEffect_InstallImplant.DoEffect:";
+            "[MAP-机械族机械师] JusticeMechanitorImplantPatches.CompUseEffect_InstallImplant.DoEffect：";
 
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -140,7 +140,7 @@ namespace MAP_MechanoidMechanitor
             MethodInfo? resolveBodyPartMethod = AccessTools.Method(typeof(JusticeMechanitorImplantUtility), nameof(JusticeMechanitorImplantUtility.ResolveImplantBodyPart));
             if (bodyPartField == null || resolveBodyPartMethod == null)
             {
-                Log.Error($"{LogPrefix} missing reflection target(s). Patch not applied.");
+                Log.Error($"{LogPrefix}缺少反射目标，补丁未应用。");
                 return codes;
             }
 
@@ -157,7 +157,7 @@ namespace MAP_MechanoidMechanitor
 
             if (bodyPartIndices.Count != 1)
             {
-                Log.Error($"{LogPrefix} unexpected IL match count: bodyPart ldfld={bodyPartIndices.Count}. Patch not applied.");
+                Log.Error($"{LogPrefix}bodyPart 的 IL 匹配数量异常，实际找到 {bodyPartIndices.Count} 处，补丁未应用。");
                 return codes;
             }
 
@@ -173,7 +173,7 @@ namespace MAP_MechanoidMechanitor
     public static class Patch_CompUseEffect_InstallImplant_GetExistingImplant_JusticeMechanitorImplant
     {
         private const string LogPrefix =
-            "[MAP_MechanoidMechanitor] JusticeMechanitorImplantPatches.CompUseEffect_InstallImplant.GetExistingImplant:";
+            "[MAP-机械族机械师] JusticeMechanitorImplantPatches.CompUseEffect_InstallImplant.GetExistingImplant：";
 
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -183,7 +183,7 @@ namespace MAP_MechanoidMechanitor
             MethodInfo? resolveBodyPartMethod = AccessTools.Method(typeof(JusticeMechanitorImplantUtility), nameof(JusticeMechanitorImplantUtility.ResolveImplantBodyPart));
             if (bodyPartField == null || resolveBodyPartMethod == null)
             {
-                Log.Error($"{LogPrefix} missing reflection target(s). Patch not applied.");
+                Log.Error($"{LogPrefix}缺少反射目标，补丁未应用。");
                 return codes;
             }
 
@@ -200,7 +200,7 @@ namespace MAP_MechanoidMechanitor
 
             if (bodyPartIndices.Count != 1)
             {
-                Log.Error($"{LogPrefix} unexpected IL match count: bodyPart ldfld={bodyPartIndices.Count}. Patch not applied.");
+                Log.Error($"{LogPrefix}bodyPart 的 IL 匹配数量异常，实际找到 {bodyPartIndices.Count} 处，补丁未应用。");
                 return codes;
             }
 

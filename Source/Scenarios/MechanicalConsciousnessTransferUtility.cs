@@ -545,11 +545,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Pawn? currentHost =
                 GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
             Log.Error(
-                "[MAP-MechanoidMechanitor] TryTransferMechanicalConsciousness " +
-                $"{phase} failure for source={source.LabelShort} ({source.ThingID}), " +
-                $"target={target.LabelShort} ({target.ThingID}), " +
-                $"hostBefore={hostBeforeTransfer?.LabelShort ?? "null"}, " +
-                $"currentHost={currentHost?.LabelShort ?? "null"}: {ex}");
+                "[MAP-机械族机械师] 机械意识转移在 " +
+                $"{phase} 阶段失败：source={source.LabelShort}（{source.ThingID}），" +
+                $"target={target.LabelShort}（{target.ThingID}），" +
+                $"hostBefore={hostBeforeTransfer?.LabelShort ?? "null"}，" +
+                $"currentHost={currentHost?.LabelShort ?? "null"}：{ex}");
         }
     }
 }

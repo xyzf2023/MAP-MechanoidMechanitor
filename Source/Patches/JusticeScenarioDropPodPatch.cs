@@ -35,8 +35,7 @@ namespace MAP_MechanoidMechanitor
             if (scenarioMechanitor == null)
             {
                 Log.Error(
-                    "[MechanoidMechanitor] Scenario drop pod handling aborted: " +
-                    "no valid mechanical consciousness host was found in starting items.");
+                    "[MAP-机械族机械师] 剧本运输舱处理中止：起始物品中未找到有效的机械意识宿主。");
                 return false;
             }
 
@@ -110,8 +109,7 @@ namespace MAP_MechanoidMechanitor
                 || mechanitor.mechanitor.controlGroups.Count == 0)
             {
                 Log.Error(
-                    "[MechanoidMechanitor] Scenario could not initialize the selected " +
-                    "mechanitor state. Overseer assignment was skipped; drop pods will still proceed.");
+                    "[MAP-机械族机械师] 剧本无法初始化所选机械师状态，已跳过监管者分配；运输舱投放仍将继续。");
                 return false;
             }
 
@@ -168,9 +166,8 @@ namespace MAP_MechanoidMechanitor
                 if (!mechanitor.mechanitor.CanOverseeSubject(mech))
                 {
                     Log.Warning(
-                        "[MechanoidMechanitor] Scenario could not assign overseer to " +
-                        $"{mech.LabelShort} ({mech.kindDef?.defName ?? "unknown"}): " +
-                        "insufficient bandwidth or incompatible subject.");
+                        "[MAP-机械族机械师] 剧本无法为 " +
+                        $"{mech.LabelShort}（{mech.kindDef?.defName ?? "unknown"}）分配监管者：带宽不足或主体不兼容。");
                     continue;
                 }
 

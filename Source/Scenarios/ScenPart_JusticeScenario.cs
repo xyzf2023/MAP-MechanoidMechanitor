@@ -27,7 +27,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             GameInitData? initData = Find.GameInitData;
             if (initData == null)
             {
-                Log.Error("[MechanoidMechanitor] Cannot initialize Justice scenario because GameInitData is null.");
+                Log.Error("[MAP-机械族机械师] GameInitData 为 null，无法初始化专属剧本。");
                 return;
             }
 

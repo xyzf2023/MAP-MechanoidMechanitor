@@ -118,8 +118,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (component == null)
             {
                 Log.Error(
-                    "[MechanoidMechanitor] Cannot enable mechanitor-only colony state: " +
-                    "GameComponent_JusticeScenarioState is missing.");
+                    "[MAP-机械族机械师] 无法启用仅机械师殖民地状态：缺少 GameComponent_JusticeScenarioState 组件。");
                 return;
             }
 

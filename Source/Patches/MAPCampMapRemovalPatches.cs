@@ -30,14 +30,6 @@ namespace MAP_MechanoidMechanitor
 
                 __result = false;
                 alsoRemoveWorldObject = false;
-
-                if (Prefs.DevMode)
-                {
-                    Log.Message(
-                        $"[MAP-MechanoidMechanitor] Camp map removal blocked by MAP mechanitor travel node: " +
-                        $"pawn={pawn.LabelShort}, map={map}, camp={__instance}");
-                }
-
                 return;
             }
         }

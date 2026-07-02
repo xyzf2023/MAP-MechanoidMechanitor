@@ -17,11 +17,6 @@ namespace MAP_MechanoidMechanitor
                 && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
             {
                 __result = false;
-                if (Prefs.DevMode)
-                {
-                    Log.Message($"[MAP-MechanoidMechanitor] Prevented node self-control: pawn={pawn.LabelShort}");
-                }
-
                 return false;
             }
 

@@ -13,8 +13,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             base.LoadedGame();
 
             Log.Message(JusticeScenarioUtility.IsJusticeScenarioActive
-                ? "[MechanoidMechanitor]专属剧本已启用。"
-                : "[MechanoidMechanitor]专属剧本未启用。");
+                ? "[MAP-机械族机械师] 专属剧本已启用。"
+                : "[MAP-机械族机械师] 专属剧本未启用。");
         }
     }
 }

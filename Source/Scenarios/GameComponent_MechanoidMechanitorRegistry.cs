@@ -358,9 +358,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-MechanoidMechanitor] Post-commit refresh failed after replacing " +
-                    $"mechanical consciousness host with {newHost.LabelShort} " +
-                    $"({newHost.ThingID}): {ex}");
+                    "[MAP-机械族机械师] 替换机械意识宿主后 post-commit 刷新失败：" +
+                    $"{newHost.LabelShort}（{newHost.ThingID}）：{ex}");
             }
 
             return true;

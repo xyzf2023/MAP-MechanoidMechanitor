@@ -192,7 +192,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Log.Error(
-                    $"[MAP-MechanoidMechanitor] PromoteToAcquiredMechanoidMechanitor failed for {pawn}: {ex}");
+                    $"[MAP-机械族机械师] PromoteToAcquiredMechanoidMechanitor 对 {pawn} 失败：{ex}");
                 return false;
             }
         }

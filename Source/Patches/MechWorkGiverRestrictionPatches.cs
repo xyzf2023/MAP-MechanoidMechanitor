@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch]
     public static class Patch_JobGiver_Work_PawnCanUseWorkGiver_MechWorkGiverRestriction
     {
-        private const string LogPrefix = "[MAP_MechanoidMechanitor] MechWorkGiverRestrictionPatches:";
+        private const string LogPrefix = "[MAP-机械族机械师] MechWorkGiverRestrictionPatches：";
 
         private static MethodBase? TargetMethod()
         {
@@ -20,7 +20,7 @@ namespace MAP_MechanoidMechanitor
                 new[] { typeof(Pawn), typeof(WorkGiver) });
             if (method == null)
             {
-                Log.Error($"{LogPrefix} could not find JobGiver_Work.PawnCanUseWorkGiver(Pawn, WorkGiver). Patch not applied.");
+                Log.Error($"{LogPrefix}未找到 JobGiver_Work.PawnCanUseWorkGiver(Pawn, WorkGiver)，补丁未应用。");
             }
 
             return method;
@@ -80,13 +80,13 @@ namespace MAP_MechanoidMechanitor
 
             if (canBeDoneByMechsField == null)
             {
-                Log.Error($"{LogPrefix} could not find WorkGiverDef.canBeDoneByMechs field. Patch not applied.");
+                Log.Error($"{LogPrefix}未找到 WorkGiverDef.canBeDoneByMechs 字段，补丁未应用。");
                 return codes;
             }
 
             if (helperMethod == null)
             {
-                Log.Error($"{LogPrefix} could not find {nameof(CanBeDoneByMechsOrAuthorized)} helper method. Patch not applied.");
+                Log.Error($"{LogPrefix}未找到 {nameof(CanBeDoneByMechsOrAuthorized)} 辅助方法，补丁未应用。");
                 return codes;
             }
 
@@ -108,7 +108,7 @@ namespace MAP_MechanoidMechanitor
 
             if (matchCount != 1)
             {
-                Log.Error($"{LogPrefix} expected exactly 1 ldfld for WorkGiverDef.canBeDoneByMechs in JobGiver_Work.PawnCanUseWorkGiver, found {matchCount}. Patch not applied.");
+                Log.Error($"{LogPrefix}JobGiver_Work.PawnCanUseWorkGiver 中 WorkGiverDef.canBeDoneByMechs 的 ldfld 预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。");
                 return codes;
             }
 

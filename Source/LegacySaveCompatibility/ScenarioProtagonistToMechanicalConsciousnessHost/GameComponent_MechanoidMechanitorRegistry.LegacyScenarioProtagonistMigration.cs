@@ -37,9 +37,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && !ReferenceEquals(mechanicalConsciousnessHost, legacy))
             {
                 Log.Warning(
-                    "[MechanoidMechanitor] Legacy save has inconsistent scenario protagonist " +
-                    "and mechanical consciousness host references; keeping the mechanical " +
-                    "consciousness host.");
+                    "[MAP-机械族机械师] 旧存档中剧本主角与机械意识宿主引用不一致；保留机械意识宿主。");
             }
         }
     }
