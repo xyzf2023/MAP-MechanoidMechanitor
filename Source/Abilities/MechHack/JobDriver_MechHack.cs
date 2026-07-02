@@ -208,7 +208,7 @@ namespace MAP_MechanoidMechanitor
                 || Faction.OfPlayer == null)
             {
                 Log.Warning(
-                    "[MAP-MechanoidMechanitor] Mech hack aborted: Justice cannot establish overseer relation.");
+                    "[MAP-机械族机械师] 骇入中止：正义无法建立监管者关系。");
                 EndJobWith(JobCondition.Incompletable);
                 return;
             }
@@ -223,12 +223,9 @@ namespace MAP_MechanoidMechanitor
 
             if (!VerifyHackSucceeded(targetPawn))
             {
-                if (Prefs.DevMode)
-                {
-                    Log.Warning(
-                        "[MAP-MechanoidMechanitor] Mech hack control transfer failed for " +
-                        $"{targetPawn.LabelShort} ({targetPawn.kindDef?.defName ?? "unknown"}), rolling back.");
-                }
+                Log.Warning(
+                    "[MAP-机械族机械师] 骇入控制权转移失败：" +
+                    $"{targetPawn.LabelShort}（{targetPawn.kindDef?.defName ?? "unknown"}），正在回滚。");
 
                 RollbackFailedHack(targetPawn, hackedFaction, oldOverseer);
                 EndJobWith(JobCondition.Incompletable);

@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor
 {
     public static class HumanApparelGearTabPatches
     {
-        private const string LogPrefix = "[MAP_MechanoidMechanitor] HumanApparelGearTabPatches:";
+        private const string LogPrefix = "[MAP-机械族机械师] HumanApparelGearTabPatches：";
 
         private const int ErrorKeyResolveFailed = 879345401;
         private const int ErrorKeyMatchCount = 879345402;
@@ -48,7 +48,7 @@ namespace MAP_MechanoidMechanitor
                 if (isColonistPlayerControlledGetter == null || helperMethod == null)
                 {
                     Log.ErrorOnce(
-                        $"{LogPrefix} could not resolve CanControlColonist methods. Patch not applied.",
+                        $"{LogPrefix}无法解析 CanControlColonist 相关方法，补丁未应用。",
                         ErrorKeyResolveFailed);
                     return codes;
                 }
@@ -70,7 +70,7 @@ namespace MAP_MechanoidMechanitor
                 if (matchCount != 1)
                 {
                     Log.ErrorOnce(
-                        $"{LogPrefix} expected exactly one IsColonistPlayerControlled call in CanControlColonist, found {matchCount}. Patch not applied.",
+                        $"{LogPrefix}CanControlColonist 中 IsColonistPlayerControlled 调用预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。",
                         ErrorKeyMatchCount);
                     return codes;
                 }

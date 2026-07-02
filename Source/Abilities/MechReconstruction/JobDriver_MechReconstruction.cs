@@ -218,12 +218,9 @@ namespace MAP_MechanoidMechanitor
                 || reconstructedMech.OverseerSubject == null
                 || !pawn.mechanitor.CanOverseeSubject(reconstructedMech))
             {
-                if (Prefs.DevMode)
-                {
-                    Log.Warning(
-                        "[MAP-MechanoidMechanitor] Mech reconstruction succeeded, but Justice could not oversee " +
-                        $"{reconstructedMech.LabelShort} ({reconstructedMech.kindDef?.defName ?? "unknown"}).");
-                }
+                Log.Warning(
+                    "[MAP-机械族机械师] 机械重构成功，但正义无法监管 " +
+                    $"{reconstructedMech.LabelShort}（{reconstructedMech.kindDef?.defName ?? "unknown"}）。");
                 return;
             }
 

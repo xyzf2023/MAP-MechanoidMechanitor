@@ -12,7 +12,7 @@ namespace MAP_MechanoidMechanitor
 
             if (Prefs.DevMode)
             {
-                Log.Message("[MAP-MechanoidMechanitor] Loaded.");
+                Log.Message("[MAP-机械族机械师] Harmony补丁初始化成功。");
             }
         }
     }

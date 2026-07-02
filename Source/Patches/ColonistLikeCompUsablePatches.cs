@@ -14,7 +14,7 @@ namespace MAP_MechanoidMechanitor
     public static class Patch_CompUsable_CanBeUsedBy_ColonistLikeMechanoid
     {
         private const string LogPrefix =
-            "[MAP_MechanoidMechanitor] ColonistLikeCompUsablePatches:";
+            "[MAP-机械族机械师] ColonistLikeCompUsablePatches：";
 
         private static MethodBase? TargetMethod()
         {
@@ -26,7 +26,7 @@ namespace MAP_MechanoidMechanitor
             if (method == null)
             {
                 Log.Error(
-                    $"{LogPrefix} could not find CompUsable.CanBeUsedBy(Pawn, bool, bool). Patch not applied.");
+                    $"{LogPrefix}未找到 CompUsable.CanBeUsedBy(Pawn, bool, bool)，补丁未应用。");
             }
 
             return method;
@@ -72,7 +72,7 @@ namespace MAP_MechanoidMechanitor
             if (racePropsGetter == null || isFleshGetter == null || helperMethod == null)
             {
                 Log.Error(
-                    $"{LogPrefix} could not resolve the race-gate methods. Patch not applied.");
+                    $"{LogPrefix}无法解析种族门控相关方法，补丁未应用。");
                 return codes;
             }
 
@@ -96,7 +96,7 @@ namespace MAP_MechanoidMechanitor
             if (matchCount != 1)
             {
                 Log.Error(
-                    $"{LogPrefix} expected exactly one Pawn.RaceProps -> RaceProperties.IsFlesh sequence in CompUsable.CanBeUsedBy, found {matchCount}. Patch not applied.");
+                    $"{LogPrefix}CompUsable.CanBeUsedBy 中 Pawn.RaceProps -> RaceProperties.IsFlesh 序列预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。");
                 return codes;
             }
 

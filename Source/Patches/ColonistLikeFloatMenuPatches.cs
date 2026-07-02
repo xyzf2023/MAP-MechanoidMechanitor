@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(FloatMenuOptionProvider), nameof(FloatMenuOptionProvider.SelectedPawnValid))]
     public static class ColonistLikeFloatMenuPatches
     {
-        private const string LogPrefix = "[MAP_MechanoidMechanitor] ColonistLikeFloatMenuPatches:";
+        private const string LogPrefix = "[MAP-机械族机械师] ColonistLikeFloatMenuPatches：";
 
         private const int ErrorKeyMechanoidGateResolveFailed = 879345301;
         private const int ErrorKeyMechanoidGateMatchCount = 879345302;
@@ -58,7 +58,7 @@ namespace MAP_MechanoidMechanitor
                 || helperMethod == null)
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix} could not resolve SelectedPawnValid mechanoid-gate methods. Patch not applied.",
+                    $"{LogPrefix}无法解析 SelectedPawnValid 机械体门控相关方法，补丁未应用。",
                     ErrorKeyMechanoidGateResolveFailed);
                 return codes;
             }
@@ -72,7 +72,7 @@ namespace MAP_MechanoidMechanitor
                     out int matchCount))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix} expected exactly one mechanoid gate in FloatMenuOptionProvider.SelectedPawnValid, found {matchCount}. Patch not applied.",
+                    $"{LogPrefix}FloatMenuOptionProvider.SelectedPawnValid 中机械体门控预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。",
                     ErrorKeyMechanoidGateMatchCount);
                 return codes;
             }
@@ -80,7 +80,7 @@ namespace MAP_MechanoidMechanitor
             if (!TryReplaceMechanoidGatePreservingMetadata(codes, matchIndex, helperMethod))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix} could not safely replace mechanoid gate while preserving labels/exception blocks. Patch not applied.",
+                    $"{LogPrefix}无法安全替换机械体门控（保留标签/异常块失败），补丁未应用。",
                     ErrorKeyMechanoidGateExceptionBlocks);
                 return codes;
             }

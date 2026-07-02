@@ -86,7 +86,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             PawnKindDef? selected = ResolveSelectedMechKindForGeneration();
             if (selected == null)
             {
-                Log.Error("[MAP_MechanoidMechanitor] No valid mechanoid kind is available for the scenario mechanitor.");
+                Log.Error("[MAP-机械族机械师] 剧本无可用机械体种类用于生成机械师。");
                 yield break;
             }
 
@@ -143,7 +143,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && !MechanoidMechanitorRoleUtility.PromoteToAcquiredMechanoidMechanitor(pawn))
             {
                 Log.Error(
-                    "[MAP_MechanoidMechanitor] Failed to promote the selected scenario mechanoid to acquired mechanitor status.");
+                    "[MAP-机械族机械师] 所选剧本机械体升格为获得机械师身份失败。");
             }
 
             MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);

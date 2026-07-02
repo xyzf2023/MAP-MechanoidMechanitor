@@ -67,7 +67,7 @@ namespace MAP_MechanoidMechanitor
             {
                 missingWorkSpeedGlobalOffsetMechLogged = true;
                 Log.Error(
-                    "[MAP_MechanoidMechanitor] StatPart_JusticeSelfMechanitorOffset: StatDef 'WorkSpeedGlobalOffsetMech' not found.");
+                    "[MAP-机械族机械师] StatPart_JusticeSelfMechanitorOffset：未找到 StatDef 'WorkSpeedGlobalOffsetMech'。");
             }
 
             return workSpeedGlobalOffsetMechDef;

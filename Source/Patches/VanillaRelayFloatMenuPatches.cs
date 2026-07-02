@@ -58,7 +58,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (System.Exception ex)
             {
-                Log.Warning($"[MAP-MechanoidMechanitor] Failed to evaluate mechanitor float menu validity for {pawn.LabelShort}: {ex}");
+                Log.Warning($"[MAP-机械族机械师] 评估机械师浮动菜单可用性失败：{pawn.LabelShort}：{ex}");
             }
         }
     }

@@ -95,7 +95,7 @@ namespace MAP_MechanoidMechanitor
             {
                 missingArtificialBrainLogged = true;
                 Log.Error(
-                    "[MAP_MechanoidMechanitor] JusticeMechanitorImplantUtility: BodyPartDef 'ArtificialBrain' not found. Falling back to original body part.");
+                    "[MAP-机械族机械师] JusticeMechanitorImplantUtility：未找到 BodyPartDef 'ArtificialBrain'，回退使用原始身体部位。");
             }
 
             return artificialBrainDef;

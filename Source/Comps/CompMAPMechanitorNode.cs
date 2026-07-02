@@ -126,17 +126,6 @@ namespace MAP_MechanoidMechanitor
                 {
                     MAPOverseerlessNodeUtility.ClearExternalOverseerIfNode(pawn);
                 }
-
-                if (Prefs.DevMode)
-                {
-                    Log.Message(
-                        $"[MAP-MechanoidMechanitor] MAP mechanitor node ({nodeProps.controlBackend}): {pawn.LabelShort}, " +
-                        $"requiresExternalOverseer={nodeProps.requiresExternalOverseer}, " +
-                        $"mechanitor={(pawn.mechanitor != null)}, relations={(pawn.relations != null)}, " +
-                        $"noOverseer={(pawn.GetOverseer() == null)}, " +
-                        $"totalBandwidth={pawn.mechanitor?.TotalBandwidth}, " +
-                        $"controlGroups={pawn.mechanitor?.controlGroups?.Count}");
-                }
             }
 
             if (pawn.mechanitor != null)

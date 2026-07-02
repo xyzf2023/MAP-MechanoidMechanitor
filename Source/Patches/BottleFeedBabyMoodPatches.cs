@@ -13,7 +13,7 @@ namespace MAP_MechanoidMechanitor
     public static class Patch_JobDriver_BottleFeedBaby_FedBabyMemory_MoodSafe
     {
         private const string LogPrefix =
-            "[MAP_MechanoidMechanitor] BottleFeedBabyMoodPatches:";
+            "[MAP-机械族机械师] BottleFeedBabyMoodPatches：";
 
         private const int CaregiverFedBabyChainLength = 11;
 
@@ -40,7 +40,7 @@ namespace MAP_MechanoidMechanitor
                 if (match != null)
                 {
                     Log.Error(
-                        $"{LogPrefix} expected exactly 1 compiler-generated method referencing ThoughtDefOf.FedBaby in JobDriver_BottleFeedBaby, found multiple. Patch not applied.");
+                        $"{LogPrefix}JobDriver_BottleFeedBaby 中引用 ThoughtDefOf.FedBaby 的编译器生成方法预期仅 1 个，实际找到多个，补丁未应用。");
                     return null;
                 }
 
@@ -50,7 +50,7 @@ namespace MAP_MechanoidMechanitor
             if (match == null)
             {
                 Log.Error(
-                    $"{LogPrefix} could not find compiler-generated finish action referencing ThoughtDefOf.FedBaby in JobDriver_BottleFeedBaby. Patch not applied.");
+                    $"{LogPrefix}JobDriver_BottleFeedBaby 中未找到引用 ThoughtDefOf.FedBaby 的编译器生成完成动作，补丁未应用。");
             }
 
             return match;
@@ -79,7 +79,7 @@ namespace MAP_MechanoidMechanitor
             catch (InvalidOperationException ex)
             {
                 Log.Warning(
-                    $"{LogPrefix} could not read method body for {method.Name}: {ex.Message}");
+                    $"{LogPrefix}无法读取方法 {method.Name} 的方法体：{ex.Message}");
                 return false;
             }
 
@@ -96,7 +96,7 @@ namespace MAP_MechanoidMechanitor
             catch (InvalidOperationException ex)
             {
                 Log.Warning(
-                    $"{LogPrefix} could not read IL bytes for {method.Name}: {ex.Message}");
+                    $"{LogPrefix}无法读取方法 {method.Name} 的 IL 字节：{ex.Message}");
                 return false;
             }
 
@@ -171,7 +171,7 @@ namespace MAP_MechanoidMechanitor
                 || helperMethod == null
                 || getBabyMethod == null)
             {
-                Log.Error($"{LogPrefix} missing reflection target(s). Patch not applied.");
+                Log.Error($"{LogPrefix}缺少反射目标，补丁未应用。");
                 return codes;
             }
 
@@ -193,7 +193,7 @@ namespace MAP_MechanoidMechanitor
             if (!CanSafelyReplaceRange(codes, pattern.StartIndex, pattern.EndIndex, out string reason))
             {
                 Log.Error(
-                    $"{LogPrefix} cannot safely replace caregiver FedBaby IL chain: {reason}. Patch not applied.");
+                    $"{LogPrefix}无法安全替换护理者 FedBaby IL 链：{reason}，补丁未应用。");
                 return codes;
             }
 
@@ -258,7 +258,7 @@ namespace MAP_MechanoidMechanitor
             if (matchCount != 1)
             {
                 Log.Error(
-                    $"{LogPrefix} expected exactly 1 caregiver FedBaby TryGainMemory chain in JobDriver_BottleFeedBaby finish action, found {matchCount}. Patch not applied.");
+                    $"{LogPrefix}JobDriver_BottleFeedBaby 完成动作中护理者 FedBaby TryGainMemory 链预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。");
                 return false;
             }
 
@@ -356,7 +356,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (codes[i].labels.Count > 0)
                 {
-                    reason = $"instruction at index {i} has labels inside replacement range";
+                    reason = $"索引 {i} 的指令位于替换范围内且带有标签";
                     return false;
                 }
             }
@@ -365,7 +365,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (codes[i].blocks.Count > 0)
                 {
-                    reason = $"instruction at index {i} has exception blocks inside replacement range";
+                    reason = $"索引 {i} 的指令位于替换范围内且带有异常块";
                     return false;
                 }
             }
