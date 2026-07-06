@@ -26,6 +26,31 @@ namespace MAP_MechanoidMechanitor
                 && pawn.apparel != null;
         }
 
+        public static bool CanUseApparelVerbCommands(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (pawn.IsColonistPlayerControlled)
+            {
+                return true;
+            }
+
+            if (!pawn.Spawned)
+            {
+                return false;
+            }
+
+            if (!pawn.CanTakeOrder)
+            {
+                return false;
+            }
+
+            return TryGetApparelComp(pawn, out CompHumanApparelUser? _);
+        }
+
         public static bool CanRenderHumanApparel(Pawn? pawn)
         {
             return pawn != null
