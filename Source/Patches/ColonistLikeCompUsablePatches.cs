@@ -78,9 +78,6 @@ namespace MAP_MechanoidMechanitor
         }
 
         [HarmonyTranspiler]
-        [HarmonyPriority(Priority.First)]
-        // Priority.First only improves compatibility odds; keeping the vanilla RaceProps getter
-        // and only extending the IsFlesh value production point is the core strategy.
         public static IEnumerable<CodeInstruction> Transpiler(
             IEnumerable<CodeInstruction> instructions)
         {
@@ -120,7 +117,7 @@ namespace MAP_MechanoidMechanitor
             if (!TryExpandIsFleshGetter(codes, isFleshIndex, helperMethod))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}无法安全扩展 IsFlesh 值生产点（保留标签/异常块失败），补丁未应用。",
+                    $"{LogPrefix}无法安全扩展 IsFlesh 值生产点（目标 getter 上存在 exception block），补丁未应用。",
                     ErrorKeyExpandFailed);
                 return codes;
             }
@@ -208,7 +205,6 @@ namespace MAP_MechanoidMechanitor
             // Stack before expansion: RaceProperties
             // Inserted ldarg pushes Pawn -> RaceProperties, Pawn
             TransferEntryLabels(getterInstruction, loadPawn);
-            TransferBeginExceptionBlocks(getterInstruction, loadPawn);
 
             codes.Insert(isFleshIndex, loadPawn);
 
@@ -257,71 +253,14 @@ namespace MAP_MechanoidMechanitor
             source.labels.Clear();
         }
 
-        private static void TransferBeginExceptionBlocks(
-            CodeInstruction source,
-            CodeInstruction target)
-        {
-            if (source.blocks.Count == 0)
-            {
-                return;
-            }
-
-            List<ExceptionBlock> retainedBlocks = new List<ExceptionBlock>();
-
-            for (int i = 0; i < source.blocks.Count; i++)
-            {
-                ExceptionBlock block = source.blocks[i];
-                if (ShouldMoveExceptionBlockBeforeInsertedInstruction(block))
-                {
-                    target.blocks.Add(block);
-                }
-                else
-                {
-                    retainedBlocks.Add(block);
-                }
-            }
-
-            source.blocks.Clear();
-            source.blocks.AddRange(retainedBlocks);
-        }
-
-        private static bool ShouldMoveExceptionBlockBeforeInsertedInstruction(ExceptionBlock block)
-        {
-            switch (block.blockType)
-            {
-                case ExceptionBlockType.BeginExceptionBlock:
-                case ExceptionBlockType.BeginCatchBlock:
-                case ExceptionBlockType.BeginExceptFilterBlock:
-                case ExceptionBlockType.BeginFaultBlock:
-                case ExceptionBlockType.BeginFinallyBlock:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         private static bool CanSafelyInsertBefore(List<CodeInstruction> codes, int insertIndex)
         {
-            if (insertIndex < 0 || insertIndex > codes.Count)
+            if (insertIndex < 0 || insertIndex >= codes.Count)
             {
                 return false;
             }
 
-            if (insertIndex >= codes.Count)
-            {
-                return true;
-            }
-
-            CodeInstruction target = codes[insertIndex];
-            for (int i = 0; i < target.blocks.Count; i++)
-            {
-                if (ShouldMoveExceptionBlockBeforeInsertedInstruction(target.blocks[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return codes[insertIndex].blocks.Count == 0;
         }
     }
 }

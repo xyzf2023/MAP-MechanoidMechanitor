@@ -74,7 +74,8 @@ namespace MAP_MechanoidMechanitor
         private const string LogPrefix =
             "[MAP-机械族机械师] JusticeMechanitorImplantPatches.CompUseEffect_InstallImplant.CanBeUsedBy：";
 
-        private const int ErrorKeyResolveFailed = 879345511;
+        private const int ErrorKeyAllowNonColonistsResolveFailed = 879345511;
+        private const int ErrorKeyBodyPartResolveFailed = 879345516;
         private const int ErrorKeyAllowNonColonistsNotFound = 879345512;
         private const int ErrorKeyBodyPartNotFound = 879345513;
         private const int WarningKeyAllowNonColonistsCount = 879345514;
@@ -88,77 +89,85 @@ namespace MAP_MechanoidMechanitor
         {
             List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
 
+            List<JusticeMechanitorImplantTranspilerSupport.ResolverInsertion> insertions =
+                new List<JusticeMechanitorImplantTranspilerSupport.ResolverInsertion>();
+
             FieldInfo? allowNonColonistsField = AccessTools.Field(
                 typeof(CompProperties_UseEffectInstallImplant),
                 nameof(CompProperties_UseEffectInstallImplant.allowNonColonists));
-            FieldInfo? bodyPartField = AccessTools.Field(
-                typeof(CompProperties_UseEffectInstallImplant),
-                nameof(CompProperties_UseEffectInstallImplant.bodyPart));
             MethodInfo? resolveAllowNonColonistsMethod = AccessTools.Method(
                 typeof(JusticeMechanitorImplantUtility),
                 nameof(JusticeMechanitorImplantUtility.ResolveAllowNonColonists));
+
+            if (allowNonColonistsField == null || resolveAllowNonColonistsMethod == null)
+            {
+                Log.ErrorOnce(
+                    $"{LogPrefix}无法解析 allowNonColonists 字段或 ResolveAllowNonColonists，该子修改未应用；bodyPart 子修改仍可继续。",
+                    ErrorKeyAllowNonColonistsResolveFailed);
+            }
+            else
+            {
+                List<int> allowIndices = JusticeMechanitorImplantTranspilerSupport.FindFieldLoadIndices(
+                    codes,
+                    allowNonColonistsField);
+                if (allowIndices.Count == 0)
+                {
+                    Log.ErrorOnce(
+                        $"{LogPrefix}未找到 CompProperties_UseEffectInstallImplant.allowNonColonists 字段读取，实际 0 处，该子修改未应用；bodyPart 子修改仍可继续。",
+                        ErrorKeyAllowNonColonistsNotFound);
+                }
+                else
+                {
+                    JusticeMechanitorImplantTranspilerSupport.LogDevModeCountMismatch(
+                        LogPrefix,
+                        "CompProperties_UseEffectInstallImplant.allowNonColonists",
+                        allowIndices.Count,
+                        VanillaBaselineAllowNonColonistsCount,
+                        WarningKeyAllowNonColonistsCount);
+                    insertions.AddRange(
+                        JusticeMechanitorImplantTranspilerSupport.CreateFieldResolverInsertions(
+                            allowIndices,
+                            resolveAllowNonColonistsMethod));
+                }
+            }
+
+            FieldInfo? bodyPartField = AccessTools.Field(
+                typeof(CompProperties_UseEffectInstallImplant),
+                nameof(CompProperties_UseEffectInstallImplant.bodyPart));
             MethodInfo? resolveBodyPartMethod = AccessTools.Method(
                 typeof(JusticeMechanitorImplantUtility),
                 nameof(JusticeMechanitorImplantUtility.ResolveImplantBodyPart));
 
-            if (allowNonColonistsField == null
-                || bodyPartField == null
-                || resolveAllowNonColonistsMethod == null
-                || resolveBodyPartMethod == null)
+            if (bodyPartField == null || resolveBodyPartMethod == null)
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}缺少 allowNonColonists、bodyPart 或 resolver 反射目标，全部子修改未应用。",
-                    ErrorKeyResolveFailed);
-                return codes;
-            }
-
-            List<JusticeMechanitorImplantTranspilerSupport.ResolverInsertion> insertions =
-                new List<JusticeMechanitorImplantTranspilerSupport.ResolverInsertion>();
-
-            List<int> allowIndices = JusticeMechanitorImplantTranspilerSupport.FindFieldLoadIndices(
-                codes,
-                allowNonColonistsField);
-            if (allowIndices.Count == 0)
-            {
-                Log.ErrorOnce(
-                    $"{LogPrefix}未找到 CompProperties_UseEffectInstallImplant.allowNonColonists 字段读取，实际 0 处，该子修改未应用；bodyPart 子修改仍可继续。",
-                    ErrorKeyAllowNonColonistsNotFound);
+                    $"{LogPrefix}无法解析 bodyPart 字段或 ResolveImplantBodyPart，该子修改未应用；allowNonColonists 子修改仍可继续。",
+                    ErrorKeyBodyPartResolveFailed);
             }
             else
             {
-                JusticeMechanitorImplantTranspilerSupport.LogDevModeCountMismatch(
-                    LogPrefix,
-                    "CompProperties_UseEffectInstallImplant.allowNonColonists",
-                    allowIndices.Count,
-                    VanillaBaselineAllowNonColonistsCount,
-                    WarningKeyAllowNonColonistsCount);
-                insertions.AddRange(
-                    JusticeMechanitorImplantTranspilerSupport.CreateFieldResolverInsertions(
-                        allowIndices,
-                        resolveAllowNonColonistsMethod));
-            }
-
-            List<int> bodyPartIndices = JusticeMechanitorImplantTranspilerSupport.FindFieldLoadIndices(
-                codes,
-                bodyPartField);
-            if (bodyPartIndices.Count == 0)
-            {
-                Log.ErrorOnce(
-                    $"{LogPrefix}未找到 CompProperties_UseEffectInstallImplant.bodyPart 字段读取，实际 0 处，该子修改未应用；allowNonColonists 子修改仍可继续。",
-                    ErrorKeyBodyPartNotFound);
-            }
-            else
-            {
-                JusticeMechanitorImplantTranspilerSupport.LogDevModeCountMismatch(
-                    LogPrefix,
-                    "CompProperties_UseEffectInstallImplant.bodyPart",
-                    bodyPartIndices.Count,
-                    VanillaBaselineBodyPartCount,
-                    WarningKeyBodyPartCount);
-                insertions.AddRange(
-                    JusticeMechanitorImplantTranspilerSupport.CreateFieldResolverInsertions(
-                        bodyPartIndices,
-                        resolveBodyPartMethod));
+                List<int> bodyPartIndices = JusticeMechanitorImplantTranspilerSupport.FindFieldLoadIndices(
+                    codes,
+                    bodyPartField);
+                if (bodyPartIndices.Count == 0)
+                {
+                    Log.ErrorOnce(
+                        $"{LogPrefix}未找到 CompProperties_UseEffectInstallImplant.bodyPart 字段读取，实际 0 处，该子修改未应用；allowNonColonists 子修改仍可继续。",
+                        ErrorKeyBodyPartNotFound);
+                }
+                else
+                {
+                    JusticeMechanitorImplantTranspilerSupport.LogDevModeCountMismatch(
+                        LogPrefix,
+                        "CompProperties_UseEffectInstallImplant.bodyPart",
+                        bodyPartIndices.Count,
+                        VanillaBaselineBodyPartCount,
+                        WarningKeyBodyPartCount);
+                    insertions.AddRange(
+                        JusticeMechanitorImplantTranspilerSupport.CreateFieldResolverInsertions(
+                            bodyPartIndices,
+                            resolveBodyPartMethod));
+                }
             }
 
             if (insertions.Count > 0)
