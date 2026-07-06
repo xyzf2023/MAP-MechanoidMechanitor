@@ -184,6 +184,7 @@
     <defName>MAP_Mech_Justice</defName>
     <label>「正义」</label>
     <race>MAP_Mech_Justice</race>
+    <fixedGender>None</fixedGender>
     <defaultFactionDef>PlayerColony</defaultFactionDef>
     <destroyGearOnDrop>false</destroyGearOnDrop>
     <combatPower>600</combatPower>
