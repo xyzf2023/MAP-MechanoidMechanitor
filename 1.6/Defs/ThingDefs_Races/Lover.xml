@@ -217,11 +217,11 @@
     <allowInMechClusters>false</allowInMechClusters>
     <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
 
-    <weaponMoney>1000~1200</weaponMoney>
+    <!-- <weaponMoney>1000~1200</weaponMoney>
 
     <weaponTags>
       <li>Gun</li>
-    </weaponTags>
+    </weaponTags> -->
 
     <techHediffsChance>1</techHediffsChance>
     <techHediffsMoney>500~1000</techHediffsMoney>
