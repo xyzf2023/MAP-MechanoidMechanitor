@@ -8,25 +8,34 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     // CompUsable normally rejects every non-flesh pawn before running its other checks.
-    // Authorized player mechanoids may bypass only that generic race gate; power, path,
-    // reservation, required hediffs and every CompUseEffect check remain vanilla.
+    // This transpiler keeps the vanilla Pawn.RaceProps getter and replaces only the
+    // RaceProperties.IsFlesh value production with a helper that ORs in authorized player
+    // mechanoids. Power, path, reservation, required hediffs and every CompUseEffect
+    // check remain vanilla.
     [HarmonyPatch]
     public static class Patch_CompUsable_CanBeUsedBy_ColonistLikeMechanoid
     {
         private const string LogPrefix =
             "[MAP-机械族机械师] ColonistLikeCompUsablePatches：";
 
+        private const int ErrorKeyTargetMethodNotFound = 879345401;
+        private const int ErrorKeyResolveFailed = 879345402;
+        private const int ErrorKeyMatchCount = 879345403;
+        private const int ErrorKeyExpandFailed = 879345404;
+
+        // Instance method: arg0 = this, arg1 = Pawn p (MCP: CompUsable.CanBeUsedBy).
+        private const int PawnParameterIndex = 1;
+
+        private static MethodInfo? cachedCanBeUsedByMethod;
+
         private static MethodBase? TargetMethod()
         {
-            MethodInfo? method = AccessTools.Method(
-                typeof(CompUsable),
-                nameof(CompUsable.CanBeUsedBy),
-                new[] { typeof(Pawn), typeof(bool), typeof(bool) });
-
+            MethodInfo? method = GetCanBeUsedByMethod();
             if (method == null)
             {
-                Log.Error(
-                    $"{LogPrefix}未找到 CompUsable.CanBeUsedBy(Pawn, bool, bool)，补丁未应用。");
+                Log.ErrorOnce(
+                    $"{LogPrefix}未找到 CompUsable.CanBeUsedBy(Pawn, bool, bool)，补丁未应用。",
+                    ErrorKeyTargetMethodNotFound);
             }
 
             return method;
@@ -34,26 +43,44 @@ namespace MAP_MechanoidMechanitor
 
         private static bool Prepare()
         {
-            return TargetMethod() != null;
+            return GetCanBeUsedByMethod() != null;
         }
 
-        private static bool IsFleshOrAuthorizedCompUsableUser(Pawn pawn)
+        private static MethodInfo? GetCanBeUsedByMethod()
         {
+            if (cachedCanBeUsedByMethod != null)
+            {
+                return cachedCanBeUsedByMethod;
+            }
+
+            cachedCanBeUsedByMethod = AccessTools.Method(
+                typeof(CompUsable),
+                nameof(CompUsable.CanBeUsedBy),
+                new[] { typeof(Pawn), typeof(bool), typeof(bool) });
+
+            return cachedCanBeUsedByMethod;
+        }
+
+        private static bool IsFleshOrAuthorizedCompUsableUser(RaceProperties raceProps, Pawn pawn)
+        {
+            if (raceProps.IsFlesh)
+            {
+                return true;
+            }
+
             if (pawn == null)
             {
                 return false;
             }
 
-            if (pawn.RaceProps.IsFlesh)
-            {
-                return true;
-            }
-
-            return pawn.RaceProps.IsMechanoid
+            return raceProps.IsMechanoid
                 && CompColonistLikeFloatMenuUser.PawnCanUseColonistLikeFloatMenu(pawn);
         }
 
         [HarmonyTranspiler]
+        [HarmonyPriority(Priority.First)]
+        // Priority.First only improves compatibility odds; keeping the vanilla RaceProps getter
+        // and only extending the IsFlesh value production point is the core strategy.
         public static IEnumerable<CodeInstruction> Transpiler(
             IEnumerable<CodeInstruction> instructions)
         {
@@ -71,43 +98,230 @@ namespace MAP_MechanoidMechanitor
 
             if (racePropsGetter == null || isFleshGetter == null || helperMethod == null)
             {
-                Log.Error(
-                    $"{LogPrefix}无法解析种族门控相关方法，补丁未应用。");
+                Log.ErrorOnce(
+                    $"{LogPrefix}无法解析种族门控相关方法，补丁未应用。",
+                    ErrorKeyResolveFailed);
                 return codes;
             }
 
-            int matchCount = 0;
-            int matchIndex = -1;
-
-            for (int i = 0; i < codes.Count - 1; i++)
+            if (!TryFindUniqueIsFleshGateAnchor(
+                    codes,
+                    racePropsGetter,
+                    isFleshGetter,
+                    out int isFleshIndex,
+                    out int matchCount))
             {
-                if (codes[i].operand is not MethodInfo firstMethod
-                    || !firstMethod.Equals(racePropsGetter)
-                    || codes[i + 1].operand is not MethodInfo secondMethod
-                    || !secondMethod.Equals(isFleshGetter))
+                Log.ErrorOnce(
+                    $"{LogPrefix}CompUsable.CanBeUsedBy 中 RaceProperties.IsFlesh 语义锚点预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。",
+                    ErrorKeyMatchCount);
+                return codes;
+            }
+
+            if (!TryExpandIsFleshGetter(codes, isFleshIndex, helperMethod))
+            {
+                Log.ErrorOnce(
+                    $"{LogPrefix}无法安全扩展 IsFlesh 值生产点（保留标签/异常块失败），补丁未应用。",
+                    ErrorKeyExpandFailed);
+                return codes;
+            }
+
+            return codes;
+        }
+
+        private static bool TryFindUniqueIsFleshGateAnchor(
+            List<CodeInstruction> codes,
+            MethodInfo racePropsGetter,
+            MethodInfo isFleshGetter,
+            out int isFleshIndex,
+            out int matchCount)
+        {
+            isFleshIndex = -1;
+            matchCount = 0;
+
+            for (int i = 1; i < codes.Count; i++)
+            {
+                if (!MatchesIsFleshGateAnchor(codes, i, racePropsGetter, isFleshGetter))
                 {
                     continue;
                 }
 
                 matchCount++;
-                matchIndex = i;
+                isFleshIndex = i;
             }
 
-            if (matchCount != 1)
+            return matchCount == 1;
+        }
+
+        private static bool MatchesIsFleshGateAnchor(
+            List<CodeInstruction> codes,
+            int isFleshIndex,
+            MethodInfo racePropsGetter,
+            MethodInfo isFleshGetter)
+        {
+            int racePropsIndex = isFleshIndex - 1;
+
+            if (!codes[isFleshIndex].Calls(isFleshGetter))
             {
-                Log.Error(
-                    $"{LogPrefix}CompUsable.CanBeUsedBy 中 Pawn.RaceProps -> RaceProperties.IsFlesh 序列预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。");
-                return codes;
+                return false;
             }
 
-            // The Pawn instance is already on the evaluation stack before get_RaceProps.
-            // Removing that getter leaves the Pawn for our helper to consume instead.
-            codes[matchIndex].opcode = OpCodes.Nop;
-            codes[matchIndex].operand = null;
-            codes[matchIndex + 1].opcode = OpCodes.Call;
-            codes[matchIndex + 1].operand = helperMethod;
+            if (!codes[racePropsIndex].Calls(racePropsGetter))
+            {
+                return false;
+            }
 
-            return codes;
+            if (!HasPawnLoadBeforeRaceProps(codes, racePropsIndex))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool HasPawnLoadBeforeRaceProps(List<CodeInstruction> codes, int racePropsIndex)
+        {
+            int searchStart = System.Math.Max(0, racePropsIndex - 3);
+            for (int i = racePropsIndex - 1; i >= searchStart; i--)
+            {
+                if (LoadsPawnParameter(codes[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryExpandIsFleshGetter(
+            List<CodeInstruction> codes,
+            int isFleshIndex,
+            MethodInfo helperMethod)
+        {
+            if (!CanSafelyInsertBefore(codes, isFleshIndex))
+            {
+                return false;
+            }
+
+            CodeInstruction getterInstruction = codes[isFleshIndex];
+            CodeInstruction loadPawn = CreateLoadPawnParameterInstruction();
+
+            // Stack before expansion: RaceProperties
+            // Inserted ldarg pushes Pawn -> RaceProperties, Pawn
+            TransferEntryLabels(getterInstruction, loadPawn);
+            TransferBeginExceptionBlocks(getterInstruction, loadPawn);
+
+            codes.Insert(isFleshIndex, loadPawn);
+
+            CodeInstruction helperCall = codes[isFleshIndex + 1];
+            helperCall.opcode = OpCodes.Call;
+            helperCall.operand = helperMethod;
+
+            return true;
+        }
+
+        private static bool LoadsPawnParameter(CodeInstruction instruction)
+        {
+            return PawnParameterIndex switch
+            {
+                1 => instruction.opcode == OpCodes.Ldarg_1,
+                2 => instruction.opcode == OpCodes.Ldarg_2,
+                3 => instruction.opcode == OpCodes.Ldarg_3,
+                _ => instruction.opcode == OpCodes.Ldarg
+                    && instruction.operand is int index
+                    && index == PawnParameterIndex
+            };
+        }
+
+        private static CodeInstruction CreateLoadPawnParameterInstruction()
+        {
+            return PawnParameterIndex switch
+            {
+                0 => new CodeInstruction(OpCodes.Ldarg_0),
+                1 => new CodeInstruction(OpCodes.Ldarg_1),
+                2 => new CodeInstruction(OpCodes.Ldarg_2),
+                3 => new CodeInstruction(OpCodes.Ldarg_3),
+                _ => new CodeInstruction(OpCodes.Ldarg, PawnParameterIndex)
+            };
+        }
+
+        private static void TransferEntryLabels(
+            CodeInstruction source,
+            CodeInstruction target)
+        {
+            if (source.labels.Count == 0)
+            {
+                return;
+            }
+
+            target.labels.AddRange(source.labels);
+            source.labels.Clear();
+        }
+
+        private static void TransferBeginExceptionBlocks(
+            CodeInstruction source,
+            CodeInstruction target)
+        {
+            if (source.blocks.Count == 0)
+            {
+                return;
+            }
+
+            List<ExceptionBlock> retainedBlocks = new List<ExceptionBlock>();
+
+            for (int i = 0; i < source.blocks.Count; i++)
+            {
+                ExceptionBlock block = source.blocks[i];
+                if (ShouldMoveExceptionBlockBeforeInsertedInstruction(block))
+                {
+                    target.blocks.Add(block);
+                }
+                else
+                {
+                    retainedBlocks.Add(block);
+                }
+            }
+
+            source.blocks.Clear();
+            source.blocks.AddRange(retainedBlocks);
+        }
+
+        private static bool ShouldMoveExceptionBlockBeforeInsertedInstruction(ExceptionBlock block)
+        {
+            switch (block.blockType)
+            {
+                case ExceptionBlockType.BeginExceptionBlock:
+                case ExceptionBlockType.BeginCatchBlock:
+                case ExceptionBlockType.BeginExceptFilterBlock:
+                case ExceptionBlockType.BeginFaultBlock:
+                case ExceptionBlockType.BeginFinallyBlock:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool CanSafelyInsertBefore(List<CodeInstruction> codes, int insertIndex)
+        {
+            if (insertIndex < 0 || insertIndex > codes.Count)
+            {
+                return false;
+            }
+
+            if (insertIndex >= codes.Count)
+            {
+                return true;
+            }
+
+            CodeInstruction target = codes[insertIndex];
+            for (int i = 0; i < target.blocks.Count; i++)
+            {
+                if (ShouldMoveExceptionBlockBeforeInsertedInstruction(target.blocks[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

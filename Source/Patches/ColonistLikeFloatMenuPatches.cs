@@ -12,26 +12,26 @@ namespace MAP_MechanoidMechanitor
     {
         private const string LogPrefix = "[MAP-机械族机械师] ColonistLikeFloatMenuPatches：";
 
-        private const int ErrorKeyMechanoidGateResolveFailed = 879345301;
-        private const int ErrorKeyMechanoidGateMatchCount = 879345302;
-        private const int ErrorKeyMechanoidGateExceptionBlocks = 879345303;
+        private const int ErrorKeyResolveFailed = 879345301;
+        private const int ErrorKeyMatchCount = 879345302;
+        private const int ErrorKeyExpandFailed = 879345303;
 
-        private const int MechanoidGateReplaceStartOffset = 1;
-        private const int MechanoidGateReplaceCount = 5;
+        // Instance method: arg0 = this, arg1 = Pawn pawn (MCP: SelectedPawnValid).
+        private const int PawnParameterIndex = 1;
 
-        public static bool PassesMechanoidSelectedPawnCheck(bool mechanoidCanDo, Pawn pawn)
+        private static bool IsDisallowedMechanoid(RaceProperties raceProps, Pawn pawn)
         {
-            if (mechanoidCanDo)
+            if (pawn == null)
             {
-                return true;
+                return raceProps?.IsMechanoid ?? false;
             }
 
-            if (!pawn.RaceProps.IsMechanoid)
+            if (!raceProps.IsMechanoid)
             {
-                return true;
+                return false;
             }
 
-            return CompColonistLikeFloatMenuUser.PawnCanUseColonistLikeFloatMenu(pawn);
+            return !CompColonistLikeFloatMenuUser.PawnCanUseColonistLikeFloatMenu(pawn);
         }
 
         [HarmonyTranspiler]
@@ -39,9 +39,6 @@ namespace MAP_MechanoidMechanitor
         {
             List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
 
-            MethodInfo? mechanoidCanDoGetter = AccessTools.PropertyGetter(
-                typeof(FloatMenuOptionProvider),
-                "MechanoidCanDo");
             MethodInfo? racePropsGetter = AccessTools.PropertyGetter(
                 typeof(Pawn),
                 nameof(Pawn.RaceProps));
@@ -50,106 +47,72 @@ namespace MAP_MechanoidMechanitor
                 nameof(RaceProperties.IsMechanoid));
             MethodInfo? helperMethod = AccessTools.Method(
                 typeof(ColonistLikeFloatMenuPatches),
-                nameof(PassesMechanoidSelectedPawnCheck));
+                nameof(IsDisallowedMechanoid));
 
-            if (mechanoidCanDoGetter == null
-                || racePropsGetter == null
-                || isMechanoidGetter == null
-                || helperMethod == null)
+            if (racePropsGetter == null || isMechanoidGetter == null || helperMethod == null)
             {
                 Log.ErrorOnce(
                     $"{LogPrefix}无法解析 SelectedPawnValid 机械体门控相关方法，补丁未应用。",
-                    ErrorKeyMechanoidGateResolveFailed);
+                    ErrorKeyResolveFailed);
                 return codes;
             }
 
-            if (!TryFindUniqueMechanoidGate(
+            if (!TryFindUniqueMechanoidGateAnchor(
                     codes,
-                    mechanoidCanDoGetter,
                     racePropsGetter,
                     isMechanoidGetter,
-                    out int matchIndex,
+                    out int isMechanoidIndex,
                     out int matchCount))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}FloatMenuOptionProvider.SelectedPawnValid 中机械体门控预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。",
-                    ErrorKeyMechanoidGateMatchCount);
+                    $"{LogPrefix}FloatMenuOptionProvider.SelectedPawnValid 中 RaceProperties.IsMechanoid 语义锚点预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。",
+                    ErrorKeyMatchCount);
                 return codes;
             }
 
-            if (!TryReplaceMechanoidGatePreservingMetadata(codes, matchIndex, helperMethod))
+            if (!TryExpandIsMechanoidGetter(codes, isMechanoidIndex, helperMethod))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}无法安全替换机械体门控（保留标签/异常块失败），补丁未应用。",
-                    ErrorKeyMechanoidGateExceptionBlocks);
+                    $"{LogPrefix}无法安全扩展 IsMechanoid 值生产点（保留标签/异常块失败），补丁未应用。",
+                    ErrorKeyExpandFailed);
                 return codes;
             }
 
             return codes;
         }
 
-        private static bool TryFindUniqueMechanoidGate(
+        private static bool TryFindUniqueMechanoidGateAnchor(
             List<CodeInstruction> codes,
-            MethodInfo mechanoidCanDoGetter,
             MethodInfo racePropsGetter,
             MethodInfo isMechanoidGetter,
-            out int matchIndex,
+            out int isMechanoidIndex,
             out int matchCount)
         {
-            matchIndex = -1;
+            isMechanoidIndex = -1;
             matchCount = 0;
 
-            for (int i = 0; i <= codes.Count - MechanoidGateReplaceStartOffset - MechanoidGateReplaceCount; i++)
+            for (int i = 1; i < codes.Count - 1; i++)
             {
-                if (!MatchesMechanoidGateSequence(
-                        codes,
-                        i,
-                        mechanoidCanDoGetter,
-                        racePropsGetter,
-                        isMechanoidGetter))
+                if (!MatchesMechanoidGateAnchor(codes, i, racePropsGetter, isMechanoidGetter))
                 {
                     continue;
                 }
 
                 matchCount++;
-                matchIndex = i;
+                isMechanoidIndex = i;
             }
 
             return matchCount == 1;
         }
 
-        private static bool MatchesMechanoidGateSequence(
+        private static bool MatchesMechanoidGateAnchor(
             List<CodeInstruction> codes,
-            int mechanoidCanDoIndex,
-            MethodInfo mechanoidCanDoGetter,
+            int isMechanoidIndex,
             MethodInfo racePropsGetter,
             MethodInfo isMechanoidGetter)
         {
-            int branchIfTrueIndex = mechanoidCanDoIndex + 1;
-            int loadPawnIndex = mechanoidCanDoIndex + 2;
-            int racePropsIndex = mechanoidCanDoIndex + 3;
-            int isMechanoidIndex = mechanoidCanDoIndex + 4;
-            int branchIfFalseIndex = mechanoidCanDoIndex + 5;
-
-            if (!codes[mechanoidCanDoIndex].Calls(mechanoidCanDoGetter))
-            {
-                return false;
-            }
-
-            if (!IsBranchIfTrue(codes[branchIfTrueIndex]))
-            {
-                return false;
-            }
-
-            if (codes[loadPawnIndex].opcode != OpCodes.Ldarg_1)
-            {
-                return false;
-            }
-
-            if (!codes[racePropsIndex].Calls(racePropsGetter))
-            {
-                return false;
-            }
+            int racePropsIndex = isMechanoidIndex - 1;
+            int branchIfFalseIndex = isMechanoidIndex + 1;
 
             if (!codes[isMechanoidIndex].Calls(isMechanoidGetter))
             {
@@ -161,123 +124,125 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            object? firstTarget = codes[branchIfTrueIndex].operand;
-            object? secondTarget = codes[branchIfFalseIndex].operand;
-
-            if (!IsValidBranchLabel(firstTarget) || !IsValidBranchLabel(secondTarget))
+            if (!codes[racePropsIndex].Calls(racePropsGetter))
             {
                 return false;
             }
 
-            return ReferenceEquals(firstTarget, secondTarget)
-                || firstTarget!.Equals(secondTarget);
-        }
-
-        private static bool TryReplaceMechanoidGatePreservingMetadata(
-            List<CodeInstruction> codes,
-            int matchIndex,
-            MethodInfo helperMethod)
-        {
-            int replaceStart = matchIndex + MechanoidGateReplaceStartOffset;
-
-            if (!CanSafelyReplaceInstructionRange(codes, replaceStart, MechanoidGateReplaceCount))
+            if (!HasPawnLoadBeforeRaceProps(codes, racePropsIndex))
             {
                 return false;
             }
 
-            CodeInstruction branchIfTrue = codes[replaceStart];
-            object skipLabel = branchIfTrue.operand!;
-            OpCode branchOpcode = branchIfTrue.opcode == OpCodes.Brtrue_S
-                ? OpCodes.Brtrue_S
-                : OpCodes.Brtrue;
-
-            List<CodeInstruction> replacement = new List<CodeInstruction>
-            {
-                new CodeInstruction(OpCodes.Ldarg_1),
-                new CodeInstruction(OpCodes.Call, helperMethod),
-                new CodeInstruction(branchOpcode, skipLabel)
-            };
-
-            List<CodeInstruction> replacedRange = codes.GetRange(
-                replaceStart,
-                MechanoidGateReplaceCount);
-            TransferEntryLabels(replacedRange, replacement[0]);
-            TransferExceptionBlocksForReplacement(replacedRange, replacement);
-
-            codes.RemoveRange(replaceStart, MechanoidGateReplaceCount);
-            codes.InsertRange(replaceStart, replacement);
             return true;
         }
 
-        private static bool CanSafelyReplaceInstructionRange(
-            List<CodeInstruction> codes,
-            int start,
-            int count)
+        private static bool HasPawnLoadBeforeRaceProps(List<CodeInstruction> codes, int racePropsIndex)
         {
-            int end = start + count - 1;
-
-            for (int i = start; i <= end; i++)
+            int searchStart = System.Math.Max(0, racePropsIndex - 3);
+            for (int i = racePropsIndex - 1; i >= searchStart; i--)
             {
-                for (int blockIndex = 0; blockIndex < codes[i].blocks.Count; blockIndex++)
+                if (LoadsPawnParameter(codes[i]))
                 {
-                    ExceptionBlock block = codes[i].blocks[blockIndex];
-                    if (block.blockType == ExceptionBlockType.EndExceptionBlock && i < end)
-                    {
-                        return false;
-                    }
+                    return true;
                 }
             }
 
+            return false;
+        }
+
+        private static bool TryExpandIsMechanoidGetter(
+            List<CodeInstruction> codes,
+            int isMechanoidIndex,
+            MethodInfo helperMethod)
+        {
+            if (!CanSafelyInsertBefore(codes, isMechanoidIndex))
+            {
+                return false;
+            }
+
+            CodeInstruction getterInstruction = codes[isMechanoidIndex];
+            CodeInstruction loadPawn = CreateLoadPawnParameterInstruction();
+
+            TransferEntryLabels(getterInstruction, loadPawn);
+            TransferBeginExceptionBlocks(getterInstruction, loadPawn);
+
+            codes.Insert(isMechanoidIndex, loadPawn);
+
+            CodeInstruction helperCall = codes[isMechanoidIndex + 1];
+            helperCall.opcode = OpCodes.Call;
+            helperCall.operand = helperMethod;
+
             return true;
+        }
+
+        private static bool LoadsPawnParameter(CodeInstruction instruction)
+        {
+            return PawnParameterIndex switch
+            {
+                1 => instruction.opcode == OpCodes.Ldarg_1,
+                2 => instruction.opcode == OpCodes.Ldarg_2,
+                3 => instruction.opcode == OpCodes.Ldarg_3,
+                _ => instruction.opcode == OpCodes.Ldarg
+                    && instruction.operand is int index
+                    && index == PawnParameterIndex
+            };
+        }
+
+        private static CodeInstruction CreateLoadPawnParameterInstruction()
+        {
+            return PawnParameterIndex switch
+            {
+                0 => new CodeInstruction(OpCodes.Ldarg_0),
+                1 => new CodeInstruction(OpCodes.Ldarg_1),
+                2 => new CodeInstruction(OpCodes.Ldarg_2),
+                3 => new CodeInstruction(OpCodes.Ldarg_3),
+                _ => new CodeInstruction(OpCodes.Ldarg, PawnParameterIndex)
+            };
         }
 
         private static void TransferEntryLabels(
-            List<CodeInstruction> sourceInstructions,
-            CodeInstruction targetFirst)
+            CodeInstruction source,
+            CodeInstruction target)
         {
-            for (int i = 0; i < sourceInstructions.Count; i++)
+            if (source.labels.Count == 0)
             {
-                CodeInstruction source = sourceInstructions[i];
-                if (source.labels.Count == 0)
-                {
-                    continue;
-                }
-
-                targetFirst.labels.AddRange(source.labels);
-                source.labels.Clear();
+                return;
             }
+
+            target.labels.AddRange(source.labels);
+            source.labels.Clear();
         }
 
-        private static void TransferExceptionBlocksForReplacement(
-            List<CodeInstruction> replacedRange,
-            List<CodeInstruction> replacement)
+        private static void TransferBeginExceptionBlocks(
+            CodeInstruction source,
+            CodeInstruction target)
         {
-            CodeInstruction replacementFirst = replacement[0];
-            CodeInstruction replacementLast = replacement[replacement.Count - 1];
-
-            for (int i = 0; i < replacedRange.Count; i++)
+            if (source.blocks.Count == 0)
             {
-                CodeInstruction source = replacedRange[i];
-                bool isLastSource = i == replacedRange.Count - 1;
+                return;
+            }
 
-                for (int blockIndex = source.blocks.Count - 1; blockIndex >= 0; blockIndex--)
+            List<ExceptionBlock> retainedBlocks = new List<ExceptionBlock>();
+
+            for (int i = 0; i < source.blocks.Count; i++)
+            {
+                ExceptionBlock block = source.blocks[i];
+                if (ShouldMoveExceptionBlockBeforeInsertedInstruction(block))
                 {
-                    ExceptionBlock block = source.blocks[blockIndex];
-                    source.blocks.RemoveAt(blockIndex);
-
-                    if (ShouldMoveExceptionBlockToReplacementEntry(block))
-                    {
-                        replacementFirst.blocks.Add(block);
-                    }
-                    else if (isLastSource)
-                    {
-                        replacementLast.blocks.Add(block);
-                    }
+                    target.blocks.Add(block);
+                }
+                else
+                {
+                    retainedBlocks.Add(block);
                 }
             }
+
+            source.blocks.Clear();
+            source.blocks.AddRange(retainedBlocks);
         }
 
-        private static bool ShouldMoveExceptionBlockToReplacementEntry(ExceptionBlock block)
+        private static bool ShouldMoveExceptionBlockBeforeInsertedInstruction(ExceptionBlock block)
         {
             switch (block.blockType)
             {
@@ -287,28 +252,39 @@ namespace MAP_MechanoidMechanitor
                 case ExceptionBlockType.BeginFaultBlock:
                 case ExceptionBlockType.BeginFinallyBlock:
                     return true;
-                case ExceptionBlockType.EndExceptionBlock:
-                    return false;
                 default:
                     return false;
             }
         }
 
-        private static bool IsBranchIfTrue(CodeInstruction instruction)
+        private static bool CanSafelyInsertBefore(List<CodeInstruction> codes, int insertIndex)
         {
-            return instruction.opcode == OpCodes.Brtrue
-                || instruction.opcode == OpCodes.Brtrue_S;
+            if (insertIndex < 0 || insertIndex > codes.Count)
+            {
+                return false;
+            }
+
+            if (insertIndex >= codes.Count)
+            {
+                return true;
+            }
+
+            CodeInstruction target = codes[insertIndex];
+            for (int i = 0; i < target.blocks.Count; i++)
+            {
+                if (ShouldMoveExceptionBlockBeforeInsertedInstruction(target.blocks[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static bool IsBranchIfFalse(CodeInstruction instruction)
         {
             return instruction.opcode == OpCodes.Brfalse
                 || instruction.opcode == OpCodes.Brfalse_S;
-        }
-
-        private static bool IsValidBranchLabel(object? operand)
-        {
-            return operand is Label;
         }
     }
 }
