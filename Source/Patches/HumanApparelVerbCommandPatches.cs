@@ -18,22 +18,23 @@ namespace MAP_MechanoidMechanitor
 
         private static MethodInfo? cachedCreateVerbTargetCommandMethod;
 
-        private static MethodBase? TargetMethod()
-        {
-            MethodInfo? method = GetCreateVerbTargetCommandMethod();
-            if (method == null)
-            {
-                Log.ErrorOnce(
-                    $"{LogPrefix}未找到 CompApparelVerbOwner.CreateVerbTargetCommand(Thing, Verb)，补丁未应用。",
-                    ErrorKeyTargetMethodNotFound);
-            }
-
-            return method;
-        }
-
         private static bool Prepare()
         {
-            return GetCreateVerbTargetCommandMethod() != null;
+            if (GetCreateVerbTargetCommandMethod() != null)
+            {
+                return true;
+            }
+
+            Log.ErrorOnce(
+                $"{LogPrefix}未找到 CompApparelVerbOwner.CreateVerbTargetCommand(Thing, Verb)，补丁未应用。",
+                ErrorKeyTargetMethodNotFound);
+
+            return false;
+        }
+
+        private static MethodBase? TargetMethod()
+        {
+            return GetCreateVerbTargetCommandMethod();
         }
 
         private static MethodInfo? GetCreateVerbTargetCommandMethod()
