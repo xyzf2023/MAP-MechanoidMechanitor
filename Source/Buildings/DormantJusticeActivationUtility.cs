@@ -59,6 +59,7 @@ namespace MAP_MechanoidMechanitor
                         originalPosition,
                         pawn,
                         buildingTemporarilyDespawned,
+                        rollbackSucceeded: null,
                         "未找到 MAP_Mech_Justice PawnKindDef。");
                     return false;
                 }
@@ -74,6 +75,7 @@ namespace MAP_MechanoidMechanitor
                         originalPosition,
                         pawn,
                         buildingTemporarilyDespawned,
+                        rollbackSucceeded: null,
                         "Pawn 生成失败。");
                     CleanupFailedPawn(pawn);
                     pawn = null;
@@ -90,6 +92,7 @@ namespace MAP_MechanoidMechanitor
                         originalPosition,
                         pawn,
                         buildingTemporarilyDespawned,
+                        rollbackSucceeded: null,
                         "机械师记录或角色状态未就绪。");
                     CleanupFailedPawn(pawn);
                     pawn = null;
@@ -104,6 +107,13 @@ namespace MAP_MechanoidMechanitor
                 IntVec3 spawnCell = FindSpawnCell(map, preferredCell, pawn);
                 if (!spawnCell.IsValid)
                 {
+                    bool rollbackSucceeded = RollbackActivation(
+                        building,
+                        map,
+                        originalPosition,
+                        originalRotation,
+                        ref pawn,
+                        ref buildingTemporarilyDespawned);
                     LogActivationFailure(
                         phase,
                         building,
@@ -111,14 +121,8 @@ namespace MAP_MechanoidMechanitor
                         originalPosition,
                         pawn,
                         buildingTemporarilyDespawned,
+                        rollbackSucceeded,
                         $"未找到有效生成格，preferred={preferredCell}。");
-                    RollbackActivation(
-                        building,
-                        map,
-                        originalPosition,
-                        originalRotation,
-                        ref pawn,
-                        ref buildingTemporarilyDespawned);
                     return false;
                 }
 
@@ -131,6 +135,13 @@ namespace MAP_MechanoidMechanitor
                     && !pawn.Destroyed;
                 if (!pawnSpawnedSuccessfully)
                 {
+                    bool rollbackSucceeded = RollbackActivation(
+                        building,
+                        map,
+                        originalPosition,
+                        originalRotation,
+                        ref pawn,
+                        ref buildingTemporarilyDespawned);
                     LogActivationFailure(
                         phase,
                         building,
@@ -138,14 +149,8 @@ namespace MAP_MechanoidMechanitor
                         originalPosition,
                         pawn,
                         buildingTemporarilyDespawned,
+                        rollbackSucceeded,
                         "GenSpawn.Spawn 未将正义 Pawn 成功落地。");
-                    RollbackActivation(
-                        building,
-                        map,
-                        originalPosition,
-                        originalRotation,
-                        ref pawn,
-                        ref buildingTemporarilyDespawned);
                     return false;
                 }
 
@@ -161,31 +166,52 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
-                phase = "rollback";
-                if (map != null)
+                string failedPhase = phase;
+                Exception? rollbackException = null;
+                bool? rollbackSucceeded = null;
+
+                try
                 {
-                    RollbackActivation(
-                        building,
-                        map,
-                        originalPosition,
-                        originalRotation,
-                        ref pawn,
-                        ref buildingTemporarilyDespawned);
+                    if (map != null)
+                    {
+                        rollbackSucceeded = RollbackActivation(
+                            building,
+                            map,
+                            originalPosition,
+                            originalRotation,
+                            ref pawn,
+                            ref buildingTemporarilyDespawned);
+                    }
+                    else
+                    {
+                        CleanupFailedPawn(pawn);
+                        pawn = null;
+                        rollbackSucceeded = true;
+                    }
                 }
-                else
+                catch (Exception rollbackEx)
                 {
-                    CleanupFailedPawn(pawn);
-                    pawn = null;
+                    rollbackException = rollbackEx;
+                    Log.Error(
+                        "[MAP-机械族机械师] 未启动正义启动回滚异常：" +
+                        $"failedPhase={failedPhase}，" +
+                        $"building={building.LabelShort}（{building.ThingID}），" +
+                        $"originalPosition={originalPosition}，map={map?.ToString() ?? "null"}，" +
+                        $"buildingTemporarilyDespawned={buildingTemporarilyDespawned}，" +
+                        $"buildingSpawned={building.Spawned}，buildingDestroyed={building.Destroyed}：" +
+                        rollbackEx);
                 }
 
                 LogActivationException(
-                    phase,
+                    failedPhase,
                     building,
                     map,
                     originalPosition,
                     pawn,
                     buildingTemporarilyDespawned,
-                    ex);
+                    rollbackSucceeded,
+                    ex,
+                    rollbackException);
                 return false;
             }
             finally
@@ -303,7 +329,7 @@ namespace MAP_MechanoidMechanitor
             return IntVec3.Invalid;
         }
 
-        private static void RollbackActivation(
+        private static bool RollbackActivation(
             Building building,
             Map map,
             IntVec3 originalPosition,
@@ -314,26 +340,40 @@ namespace MAP_MechanoidMechanitor
             CleanupFailedPawn(pawn);
             pawn = null;
 
-            if (!buildingTemporarilyDespawned
-                || building.Destroyed
-                || building.Spawned)
+            if (!buildingTemporarilyDespawned)
+            {
+                return true;
+            }
+
+            if (building.Destroyed)
             {
                 buildingTemporarilyDespawned = false;
-                return;
+                Log.Error(
+                    "[MAP-机械族机械师] 未启动正义启动回滚失败：建筑已销毁，无法恢复，" +
+                    $"building={building.LabelShort}（{building.ThingID}），" +
+                    $"map={map}，originalPosition={originalPosition}。");
+                return false;
+            }
+
+            if (building.Spawned)
+            {
+                buildingTemporarilyDespawned = false;
+                return true;
             }
 
             if (TryRestoreDormantBuilding(building, map, originalPosition, originalRotation))
             {
                 buildingTemporarilyDespawned = false;
-                return;
+                return true;
             }
 
             Log.Error(
-                "[MAP-机械族机械师] 未启动正义启动回滚失败：无法恢复建筑，" +
+                "[MAP-机械族机械师] 未启动正义启动回滚失败：建筑仍处于未生成状态，" +
                 $"building={building.LabelShort}（{building.ThingID}），" +
                 $"map={map}，originalPosition={originalPosition}，" +
+                $"buildingPosition={building.Position}，" +
                 $"buildingSpawned={building.Spawned}，buildingDestroyed={building.Destroyed}。");
-            buildingTemporarilyDespawned = false;
+            return false;
         }
 
         private static bool TryRestoreDormantBuilding(
@@ -342,21 +382,23 @@ namespace MAP_MechanoidMechanitor
             IntVec3 originalPosition,
             Rot4 originalRotation)
         {
-            if (building.Destroyed || building.Spawned)
+            if (building.Destroyed)
             {
-                return building.Spawned;
+                return false;
             }
 
-            if (GenSpawn.CanSpawnAt(building.def, originalPosition, map, originalRotation))
+            if (building.Spawned)
             {
-                GenSpawn.Spawn(
+                return building.Map == map;
+            }
+
+            if (TryRestoreDormantBuildingAt(
                     building,
-                    originalPosition,
                     map,
-                    originalRotation,
-                    WipeMode.Vanish,
-                    respawningAfterLoad: false);
-                return building.Spawned;
+                    originalPosition,
+                    originalRotation))
+            {
+                return true;
             }
 
             foreach (IntVec3 cell in GenRadial.RadialCellsAround(originalPosition, 4f, true))
@@ -366,19 +408,12 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (!GenSpawn.CanSpawnAt(building.def, cell, map, originalRotation))
+                if (cell == originalPosition)
                 {
                     continue;
                 }
 
-                GenSpawn.Spawn(
-                    building,
-                    cell,
-                    map,
-                    originalRotation,
-                    WipeMode.Vanish,
-                    respawningAfterLoad: false);
-                if (building.Spawned)
+                if (TryRestoreDormantBuildingAt(building, map, cell, originalRotation))
                 {
                     Log.Warning(
                         "[MAP-机械族机械师] 未启动正义建筑已恢复到邻近格：" +
@@ -391,6 +426,82 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
+        private static bool TryRestoreDormantBuildingAt(
+            Building building,
+            Map map,
+            IntVec3 position,
+            Rot4 rotation)
+        {
+            if (!CanSafelyRestoreBuilding(building, map, position, rotation))
+            {
+                return false;
+            }
+
+            Thing? spawnedThing = GenSpawn.Spawn(
+                building,
+                position,
+                map,
+                rotation,
+                WipeMode.VanishOrMoveAside,
+                respawningAfterLoad: false);
+
+            bool restoredSuccessfully =
+                ReferenceEquals(spawnedThing, building)
+                && building.Spawned
+                && building.Map == map
+                && !building.Destroyed
+                && building.Position == position;
+            return restoredSuccessfully;
+        }
+
+        private static bool CanSafelyRestoreBuilding(
+            Building building,
+            Map map,
+            IntVec3 position,
+            Rot4 rotation)
+        {
+            if (!position.InBounds(map))
+            {
+                return false;
+            }
+
+            CellRect occupiedRect = GenAdj.OccupiedRect(position, rotation, building.def.Size);
+            if (!occupiedRect.InBounds(map))
+            {
+                return false;
+            }
+
+            foreach (IntVec3 cell in occupiedRect)
+            {
+                Building? edifice = cell.GetEdifice(map);
+                if (edifice != null && !ReferenceEquals(edifice, building))
+                {
+                    return false;
+                }
+            }
+
+            if (!GenSpawn.CanSpawnAt(
+                    building.def,
+                    position,
+                    map,
+                    rotation,
+                    canWipeEdifices: false))
+            {
+                return false;
+            }
+
+            if (GenSpawn.WouldWipeAnythingWith(
+                    occupiedRect,
+                    building.def,
+                    map,
+                    thing => thing.def.IsEdifice() && !ReferenceEquals(thing, building)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private static void CleanupFailedPawn(Pawn? pawn)
         {
             if (pawn == null)
@@ -398,16 +509,26 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            GameComponent_MechanoidMechanitorRegistry.RemoveFailedGeneratedMechanitor(pawn);
-
-            if (pawn.Spawned)
+            try
             {
-                pawn.DeSpawn(DestroyMode.Vanish);
+                GameComponent_MechanoidMechanitorRegistry.RemoveFailedGeneratedMechanitor(pawn);
+
+                if (pawn.Spawned)
+                {
+                    pawn.DeSpawn(DestroyMode.Vanish);
+                }
+
+                if (!pawn.Destroyed)
+                {
+                    pawn.Destroy(DestroyMode.Vanish);
+                }
             }
-
-            if (!pawn.Destroyed)
+            catch (Exception ex)
             {
-                pawn.Destroy(DestroyMode.Vanish);
+                Log.Error(
+                    "[MAP-机械族机械师] 未启动正义失败 Pawn 清理异常：" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                    $"pawnSpawned={pawn.Spawned}，pawnDestroyed={pawn.Destroyed}：{ex}");
             }
         }
 
@@ -418,13 +539,16 @@ namespace MAP_MechanoidMechanitor
             IntVec3 originalPosition,
             Pawn? pawn,
             bool buildingTemporarilyDespawned,
+            bool? rollbackSucceeded,
             string reason)
         {
             Log.Error(
                 "[MAP-机械族机械师] 未启动正义启动失败：" +
                 $"phase={phase}，reason={reason}，" +
+                $"rollbackSucceeded={rollbackSucceeded?.ToString() ?? "n/a"}，" +
                 $"building={building?.LabelShort ?? "null"}（{building?.ThingID ?? "null"}），" +
-                $"originalPosition={originalPosition}，map={map?.ToString() ?? "null"}，" +
+                $"originalPosition={originalPosition}，buildingPosition={building?.Position.ToString() ?? "null"}，" +
+                $"map={map?.ToString() ?? "null"}，" +
                 $"pawn={pawn?.LabelShort ?? "null"}（{pawn?.ThingID ?? "null"}），" +
                 $"pawnSpawned={pawn?.Spawned.ToString() ?? "null"}，" +
                 $"pawnDestroyed={pawn?.Destroyed.ToString() ?? "null"}，" +
@@ -434,25 +558,31 @@ namespace MAP_MechanoidMechanitor
         }
 
         private static void LogActivationException(
-            string phase,
+            string failedPhase,
             Building? building,
             Map? map,
             IntVec3 originalPosition,
             Pawn? pawn,
             bool buildingTemporarilyDespawned,
-            Exception ex)
+            bool? rollbackSucceeded,
+            Exception originalException,
+            Exception? rollbackException)
         {
             Log.Error(
                 "[MAP-机械族机械师] 未启动正义启动异常：" +
-                $"phase={phase}，" +
+                $"failedPhase={failedPhase}，" +
+                $"rollbackSucceeded={rollbackSucceeded?.ToString() ?? "n/a"}，" +
                 $"building={building?.LabelShort ?? "null"}（{building?.ThingID ?? "null"}），" +
-                $"originalPosition={originalPosition}，map={map?.ToString() ?? "null"}，" +
+                $"originalPosition={originalPosition}，buildingPosition={building?.Position.ToString() ?? "null"}，" +
+                $"map={map?.ToString() ?? "null"}，" +
                 $"pawn={pawn?.LabelShort ?? "null"}（{pawn?.ThingID ?? "null"}），" +
                 $"pawnSpawned={pawn?.Spawned.ToString() ?? "null"}，" +
                 $"pawnDestroyed={pawn?.Destroyed.ToString() ?? "null"}，" +
                 $"buildingSpawned={building?.Spawned.ToString() ?? "null"}，" +
                 $"buildingDestroyed={building?.Destroyed.ToString() ?? "null"}，" +
-                $"buildingTemporarilyDespawned={buildingTemporarilyDespawned}：{ex}");
+                $"buildingTemporarilyDespawned={buildingTemporarilyDespawned}，" +
+                $"originalException={originalException}" +
+                (rollbackException != null ? $"，rollbackException={rollbackException}" : string.Empty));
         }
     }
 }
