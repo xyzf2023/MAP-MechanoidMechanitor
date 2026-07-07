@@ -23,27 +23,14 @@ namespace MAP_MechanoidMechanitor
                 pawn.relations = new Pawn_RelationsTracker(pawn);
             }
 
-            bool createdMechanitor = false;
             if (pawn.mechanitor == null)
             {
                 pawn.mechanitor = new Pawn_MechanitorTracker(pawn);
-                createdMechanitor = true;
             }
 
-            Pawn_MechanitorTracker mechanitor = pawn.mechanitor;
-            bool controlGroupsWereNull = mechanitor.controlGroups == null;
-            List<MechanitorControlGroup> controlGroups = mechanitor.controlGroups
-                ?? new List<MechanitorControlGroup>();
-            if (controlGroupsWereNull)
+            if (pawn.mechanitor.controlGroups == null)
             {
-                mechanitor.controlGroups = controlGroups;
-            }
-
-            if (createdMechanitor
-                || controlGroupsWereNull
-                || controlGroups.Count == 0)
-            {
-                mechanitor.Notify_PawnSpawned(true);
+                pawn.mechanitor.controlGroups = new List<MechanitorControlGroup>();
             }
         }
     }

@@ -17,24 +17,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (pawn!.relations == null)
-            {
-                pawn.relations = new Pawn_RelationsTracker(pawn);
-            }
-
-            bool createdMechanitor = false;
-            if (pawn.mechanitor == null)
-            {
-                pawn.mechanitor = new Pawn_MechanitorTracker(pawn);
-                createdMechanitor = true;
-            }
-
-            if (createdMechanitor
-                || pawn.mechanitor.controlGroups == null
-                || pawn.mechanitor.controlGroups.Count == 0)
-            {
-                pawn.mechanitor.Notify_PawnSpawned(true);
-            }
+            MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn!);
         }
     }
 }

@@ -107,6 +107,8 @@ namespace MAP_MechanoidMechanitor
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
+            base.PostSpawnSetup(respawningAfterLoad);
+
             if (parent is not Pawn pawn)
             {
                 return;
@@ -126,6 +128,9 @@ namespace MAP_MechanoidMechanitor
                 {
                     MAPOverseerlessNodeUtility.ClearExternalOverseerIfNode(pawn);
                 }
+
+                GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
+                return;
             }
 
             if (pawn.mechanitor != null)
