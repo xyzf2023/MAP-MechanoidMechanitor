@@ -160,6 +160,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
+        /// <summary>
+        /// 仅用于新 Pawn 生成事务失败、且该 Pawn 从未成为正式宿主时的注册表清理。
+        /// </summary>
+        internal static void RemoveFailedGeneratedMechanitor(Pawn? pawn)
+        {
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (registry == null || pawn == null || pawn.Destroyed)
+            {
+                return;
+            }
+
+            if (IsMechanicalConsciousnessHost(pawn))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 拒绝清理失败生成 Pawn：其已成为机械意识宿主，" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
+                return;
+            }
+
+            registry.RemoveRecordForPawnInternal(pawn);
+            registry.pendingMechanitorInitializations.Remove(pawn);
+        }
+
         internal static bool GrantAcquiredMechanitorIdentity(Pawn? pawn)
         {
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
@@ -493,6 +516,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             mechanitorRecords.Add(record);
             recordByPawn[record.Pawn] = record;
+            InvalidateDerivedCaches();
+        }
+
+        private void RemoveRecordForPawnInternal(Pawn pawn)
+        {
+            if (!recordByPawn.TryGetValue(pawn, out MechanoidMechanitorRecord? indexed))
+            {
+                for (int i = mechanitorRecords.Count - 1; i >= 0; i--)
+                {
+                    if (ReferenceEquals(mechanitorRecords[i].Pawn, pawn))
+                    {
+                        mechanitorRecords.RemoveAt(i);
+                        InvalidateDerivedCaches();
+                        return;
+                    }
+                }
+
+                return;
+            }
+
+            mechanitorRecords.Remove(indexed);
+            recordByPawn.Remove(pawn);
             InvalidateDerivedCaches();
         }
 
