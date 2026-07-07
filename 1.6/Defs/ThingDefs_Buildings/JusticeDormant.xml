@@ -7,12 +7,11 @@
     <description>一台尚未开机的「正义」。</description>
     <thingClass>Building</thingClass>
     <tickerType>Normal</tickerType>
-    <!-- 待后续配置：占地尺寸 -->
     <size>(1,1)</size>
     <graphicData>
       <texPath>Justice/JusticeOff</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <!-- <drawSize>(2,2)</drawSize> -->
+      <drawSize>2</drawSize>
     </graphicData>
     <statBases>
       <MaxHitPoints>1200</MaxHitPoints>

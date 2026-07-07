@@ -166,7 +166,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         internal static void RemoveFailedGeneratedMechanitor(Pawn? pawn)
         {
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null || pawn == null || pawn.Destroyed)
+            if (registry == null || pawn == null)
             {
                 return;
             }
@@ -181,6 +181,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             registry.RemoveRecordForPawnInternal(pawn);
             registry.pendingMechanitorInitializations.Remove(pawn);
+            registry.RemovePendingAcquiredHediffSyncInternal(pawn);
         }
 
         internal static bool GrantAcquiredMechanitorIdentity(Pawn? pawn)
@@ -521,24 +522,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void RemoveRecordForPawnInternal(Pawn pawn)
         {
-            if (!recordByPawn.TryGetValue(pawn, out MechanoidMechanitorRecord? indexed))
+            if (recordByPawn.TryGetValue(pawn, out MechanoidMechanitorRecord? indexed))
+            {
+                mechanitorRecords.Remove(indexed);
+            }
+            else
             {
                 for (int i = mechanitorRecords.Count - 1; i >= 0; i--)
                 {
                     if (ReferenceEquals(mechanitorRecords[i].Pawn, pawn))
                     {
                         mechanitorRecords.RemoveAt(i);
-                        InvalidateDerivedCaches();
-                        return;
+                        break;
                     }
                 }
-
-                return;
             }
 
-            mechanitorRecords.Remove(indexed);
             recordByPawn.Remove(pawn);
             InvalidateDerivedCaches();
+        }
+
+        private void RemovePendingAcquiredHediffSyncInternal(Pawn pawn)
+        {
+            pendingAcquiredHediffSync?.Remove(pawn);
         }
 
         private void CleanupRecords()
