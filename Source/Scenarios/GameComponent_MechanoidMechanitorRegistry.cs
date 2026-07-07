@@ -192,6 +192,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 registry.RemoveRecordForPawnInternal(pawn);
                 registry.pendingMechanitorInitializations.Remove(pawn);
                 registry.RemovePendingAcquiredHediffSyncInternal(pawn);
+
+                if (HasRecordForPawnIncludingDestroyed(pawn))
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 失败生成 Pawn 注册表清理验证失败：记录仍存在，" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                        $"pawnDestroyed={pawn.Destroyed}。");
+                    return false;
+                }
+
                 return true;
             }
             catch (Exception ex)
@@ -201,6 +211,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     $"pawn={pawn?.LabelShort ?? "null"}（{pawn?.ThingID ?? "null"}）：{ex}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 按引用查询机械师记录；包含已 Destroyed 的 Pawn，仅供失败事务清理与诊断使用。
+        /// </summary>
+        internal static bool HasRecordForPawnIncludingDestroyed(Pawn? pawn)
+        {
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (registry == null || pawn == null)
+            {
+                return false;
+            }
+
+            if (registry.recordByPawn.ContainsKey(pawn))
+            {
+                return true;
+            }
+
+            List<MechanoidMechanitorRecord> records = registry.mechanitorRecords;
+            for (int i = 0; i < records.Count; i++)
+            {
+                MechanoidMechanitorRecord? record = records[i];
+                if (record != null && ReferenceEquals(record.Pawn, pawn))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         internal static bool GrantAcquiredMechanitorIdentity(Pawn? pawn)
@@ -541,19 +580,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void RemoveRecordForPawnInternal(Pawn pawn)
         {
-            if (recordByPawn.TryGetValue(pawn, out MechanoidMechanitorRecord? indexed))
+            for (int i = mechanitorRecords.Count - 1; i >= 0; i--)
             {
-                mechanitorRecords.Remove(indexed);
-            }
-            else
-            {
-                for (int i = mechanitorRecords.Count - 1; i >= 0; i--)
+                MechanoidMechanitorRecord? record = mechanitorRecords[i];
+                if (record != null && ReferenceEquals(record.Pawn, pawn))
                 {
-                    if (ReferenceEquals(mechanitorRecords[i].Pawn, pawn))
-                    {
-                        mechanitorRecords.RemoveAt(i);
-                        break;
-                    }
+                    mechanitorRecords.RemoveAt(i);
                 }
             }
 
