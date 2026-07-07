@@ -10,7 +10,8 @@ namespace MAP_MechanoidMechanitor
         private const float CheckboxSize = 24f;
         private const int ColumnWidth = 74;
 
-        public override bool VisibleCurrently => GameComponent_JusticeScenarioState.IsEnabled;
+        public override bool VisibleCurrently =>
+            JusticeScenarioFreeColonistUtility.IsPortraitDisplayFeatureAvailable;
 
         public override void DoCell(Rect rect, Pawn pawn, PawnTable table)
         {
