@@ -19,6 +19,11 @@
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>没有可承载意识的机体。</MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>意识转移失败。</MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData>正在恢复损失的意识数据</MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData>
+  <MAP_MechanoidMechanitor.DormantJustice.Activate.Label>开机</MAP_MechanoidMechanitor.DormantJustice.Activate.Label>
+  <MAP_MechanoidMechanitor.DormantJustice.Activate.Description>开始执行「正义」的启动与协议初始化流程。</MAP_MechanoidMechanitor.DormantJustice.Activate.Description>
+  <MAP_MechanoidMechanitor.DormantJustice.Initializing>协议初始化...</MAP_MechanoidMechanitor.DormantJustice.Initializing>
+  <MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Label>承载紧急意识转移</MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Label>
+  <MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Description>将这台尚未启动的「正义」指定为紧急意识转移的优先承载机体。当当前机械意识宿主即将被摧毁时，它会立即启动并接收机械意识。</MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Description>
   <MAP_JusticeScenarioDescription_Title>机械族机械师</MAP_JusticeScenarioDescription_Title>
   <MAP_JusticeScenarioDescription_Text>TODO</MAP_JusticeScenarioDescription_Text>
   <MAP_Settings_EnablePortraitDisplayForAllSaves_Label>在所有存档中启用机械族"头像显示"</MAP_Settings_EnablePortraitDisplayForAllSaves_Label>

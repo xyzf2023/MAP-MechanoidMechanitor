@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -63,7 +64,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        public static Pawn? SelectEmergencyTransferTarget(Pawn source)
+        public static Pawn? SelectEmergencyTransferTarget(Pawn source, Pawn? excludePawn = null)
         {
             Pawn? firstOtherMechanitor = null;
             HashSet<Pawn> seen = new HashSet<Pawn>();
@@ -73,7 +74,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (candidate == null
                     || candidate.Destroyed
-                    || !seen.Add(candidate))
+                    || !seen.Add(candidate)
+                    || ReferenceEquals(candidate, excludePawn))
                 {
                     continue;
                 }
@@ -167,7 +169,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Pawn? target = SelectEmergencyTransferTarget(source);
+            Pawn? excludePawn = null;
+            CompDormantJustice? dormantCarrier = CompDormantJustice.FindDesignatedEmergencyCarrier();
+            if (dormantCarrier != null)
+            {
+                Building? dormantBuilding = dormantCarrier.parent as Building;
+                if (DormantJusticeActivationUtility.TryActivate(
+                        dormantCarrier,
+                        out Pawn? newJustice)
+                    && newJustice != null)
+                {
+                    Pawn? hostBeforeDormant =
+                        GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
+                    if (MechanicalConsciousnessTransferUtility.TryTransferMechanicalConsciousness(
+                            source,
+                            newJustice))
+                    {
+                        return;
+                    }
+
+                    excludePawn = newJustice;
+                    Log.Error(
+                        "[MAP-机械族机械师] 紧急意识转移：未启动正义已生成但转移失败，" +
+                        $"source={source.LabelShort}（{source.ThingID}），" +
+                        $"building={dormantBuilding?.LabelShort ?? "null"} " +
+                        $"（{dormantBuilding?.ThingID ?? "null"}），" +
+                        $"newJustice={newJustice.LabelShort}（{newJustice.ThingID}），" +
+                        $"hostBefore={hostBeforeDormant?.LabelShort ?? "null"}。");
+                }
+                else
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 紧急意识转移：未启动正义启动失败，" +
+                        $"source={source.LabelShort}（{source.ThingID}），" +
+                        $"building={dormantBuilding?.LabelShort ?? "null"} " +
+                        $"（{dormantBuilding?.ThingID ?? "null"}），" +
+                        $"newJustice={newJustice?.LabelShort ?? "null"} " +
+                        $"（{newJustice?.ThingID ?? "null"}）。");
+                }
+            }
+
+            Pawn? target = SelectEmergencyTransferTarget(source, excludePawn);
             if (target == null)
             {
                 return;
