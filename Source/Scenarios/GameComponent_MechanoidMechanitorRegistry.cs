@@ -163,25 +163,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>
         /// 仅用于新 Pawn 生成事务失败、且该 Pawn 从未成为正式宿主时的注册表清理。
         /// </summary>
-        internal static void RemoveFailedGeneratedMechanitor(Pawn? pawn)
+        /// <returns>
+        /// 成功清理或确认无记录且非宿主时返回 true；宿主拒绝、注册表不可用或异常时返回 false。
+        /// </returns>
+        internal static bool RemoveFailedGeneratedMechanitor(Pawn? pawn)
         {
-            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null || pawn == null)
+            try
             {
-                return;
-            }
+                GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+                if (registry == null)
+                {
+                    return false;
+                }
 
-            if (IsMechanicalConsciousnessHost(pawn))
+                if (pawn == null)
+                {
+                    return true;
+                }
+
+                if (IsMechanicalConsciousnessHost(pawn))
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 拒绝清理失败生成 Pawn：其已成为机械意识宿主，" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
+                    return false;
+                }
+
+                registry.RemoveRecordForPawnInternal(pawn);
+                registry.pendingMechanitorInitializations.Remove(pawn);
+                registry.RemovePendingAcquiredHediffSyncInternal(pawn);
+                return true;
+            }
+            catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 拒绝清理失败生成 Pawn：其已成为机械意识宿主，" +
-                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
-                return;
+                    "[MAP-机械族机械师] 失败生成 Pawn 注册表清理异常：" +
+                    $"pawn={pawn?.LabelShort ?? "null"}（{pawn?.ThingID ?? "null"}）：{ex}");
+                return false;
             }
-
-            registry.RemoveRecordForPawnInternal(pawn);
-            registry.pendingMechanitorInitializations.Remove(pawn);
-            registry.RemovePendingAcquiredHediffSyncInternal(pawn);
         }
 
         internal static bool GrantAcquiredMechanitorIdentity(Pawn? pawn)
