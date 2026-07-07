@@ -45,11 +45,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (!mapPawns.AllPawns.Contains(pawn!))
-            {
-                return false;
-            }
-
             if (requireSpawned)
             {
                 if (!pawn!.Spawned || pawn.Map == null)
@@ -57,13 +52,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return false;
                 }
 
-                if (pawn.Map.mapPawns != mapPawns)
-                {
-                    return false;
-                }
+                return pawn.Map.mapPawns == mapPawns;
             }
 
-            return true;
+            Map? mapHeld = pawn!.MapHeld;
+            return mapHeld != null && mapHeld.mapPawns == mapPawns;
         }
 
         /// <summary>
