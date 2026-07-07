@@ -228,7 +228,7 @@ namespace MAP_MechanoidMechanitor
             PawnComponentsUtility.AddAndRemoveDynamicComponents(
                 pawn,
                 actAsIfSpawned: true);
-            pawn.mechanitor?.Notify_BandwidthChanged();
+            MAPMechanitorInitializationUtility.FinalizeNow(pawn);
         }
 
         public static bool UsesVanillaControlPath(Pawn? pawn)

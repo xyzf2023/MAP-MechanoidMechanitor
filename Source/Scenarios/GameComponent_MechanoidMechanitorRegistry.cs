@@ -14,6 +14,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             new Dictionary<Pawn, MechanoidMechanitorRecord>();
         private List<Pawn>? registeredMechanitorsCache;
         private List<Pawn>? pendingAcquiredHediffSync;
+        private HashSet<Pawn> pendingMechanitorInitializations = new HashSet<Pawn>();
 
         public Pawn? MechanicalConsciousnessHost => mechanicalConsciousnessHost;
 
@@ -385,6 +386,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public static void QueuePostSpawnInitialization(Pawn? pawn)
+        {
+            if (pawn == null || pawn.Destroyed)
+            {
+                return;
+            }
+
+            CurrentRegistry?.QueuePostSpawnInitializationInternal(pawn);
+        }
+
+        public override void GameComponentUpdate()
+        {
+            base.GameComponentUpdate();
+            ProcessPendingMechanitorInitializations();
+        }
+
         public override void GameComponentTick()
         {
             base.GameComponentTick();
@@ -623,7 +640,45 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     pawn,
                     record.SelfWorkMode
                         ?? MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(null));
-                pawn.mechanitor?.Notify_BandwidthChanged();
+            }
+        }
+
+        private void QueuePostSpawnInitializationInternal(Pawn pawn)
+        {
+            pendingMechanitorInitializations.Add(pawn);
+        }
+
+        private void ProcessPendingMechanitorInitializations()
+        {
+            if (pendingMechanitorInitializations.Count == 0)
+            {
+                return;
+            }
+
+            if (LongEventHandler.AnyEventNowOrWaiting)
+            {
+                return;
+            }
+
+            List<Pawn> pending = new List<Pawn>(pendingMechanitorInitializations);
+            for (int i = 0; i < pending.Count; i++)
+            {
+                Pawn pawn = pending[i];
+                pendingMechanitorInitializations.Remove(pawn);
+
+                if (pawn == null
+                    || pawn.Destroyed
+                    || pawn.Dead
+                    || !pawn.Spawned
+                    || pawn.Map == null
+                    || pawn.Faction == null
+                    || !pawn.Faction.IsPlayerSafe()
+                    || !MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
+                {
+                    continue;
+                }
+
+                MAPMechanitorInitializationUtility.FinalizeNow(pawn);
             }
         }
 
