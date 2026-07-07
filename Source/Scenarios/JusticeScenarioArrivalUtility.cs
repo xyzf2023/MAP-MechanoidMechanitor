@@ -43,7 +43,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool EnsureScenarioMechanitorState(
             Pawn mechanitor,
-            PlayerPawnsArriveMethod arrivalMethod)
+            PlayerPawnsArriveMethod arrivalMethod,
+            bool skipAssignmentOnly)
         {
             MechanoidMechanitorRoleUtility.EnsureRoleState(mechanitor);
             MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(mechanitor);
@@ -59,11 +60,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || mechanitor.mechanitor.controlGroups == null
                 || mechanitor.mechanitor.controlGroups.Count == 0)
             {
-                Log.Error(
-                    "[MAP-机械族机械师] 剧本" +
-                    GetArrivalLabel(arrivalMethod) +
-                    "初始化失败：机械师状态不完整，已跳过监管者分配；" +
-                    GetArrivalContinuationHint(arrivalMethod));
+                if (skipAssignmentOnly)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 剧本" +
+                        GetArrivalLabel(arrivalMethod) +
+                        "初始化失败：机械师状态不完整，已跳过监管者分配；" +
+                        GetArrivalContinuationHint(arrivalMethod));
+                }
+
                 return false;
             }
 
@@ -93,11 +98,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             IEnumerable<Thing> items,
             PlayerPawnsArriveMethod arrivalMethod)
         {
-            if (!EnsureScenarioMechanitorState(mechanitor, arrivalMethod))
-            {
-                return;
-            }
-
             mechanitor.relations ??= new Pawn_RelationsTracker(mechanitor);
 
             foreach (Thing item in items)
@@ -113,14 +113,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                if (existingOverseer?.relations != null)
-                {
-                    existingOverseer.relations.TryRemoveDirectRelation(
-                        PawnRelationDefOf.Overseer,
-                        mech);
-                }
-
-                mech.relations ??= new Pawn_RelationsTracker(mech);
                 if (!mechanitor.mechanitor.CanOverseeSubject(mech))
                 {
                     Log.Warning(
@@ -132,6 +124,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
+                if (existingOverseer?.relations != null)
+                {
+                    existingOverseer.relations.TryRemoveDirectRelation(
+                        PawnRelationDefOf.Overseer,
+                        mech);
+                }
+
+                mech.relations ??= new Pawn_RelationsTracker(mech);
                 mechanitor.relations.AddDirectRelation(PawnRelationDefOf.Overseer, mech);
             }
         }
@@ -151,7 +151,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            RegisterAndPrepareMechanicalConsciousnessHost(mechanitor);
+            if (!RegisterAndPrepareMechanicalConsciousnessHost(mechanitor))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 剧本" +
+                    GetArrivalLabel(arrivalMethod) +
+                    "初始化失败：无法登记机械意识宿主，已中止投放。");
+                return false;
+            }
+
+            if (!EnsureScenarioMechanitorState(mechanitor, arrivalMethod, skipAssignmentOnly: false))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 剧本" +
+                    GetArrivalLabel(arrivalMethod) +
+                    "初始化失败：机械师状态不完整，已中止投放。");
+                return false;
+            }
+
             AssignStartingMechsToMechanitor(mechanitor, startingItems, arrivalMethod);
             return true;
         }
@@ -172,6 +189,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Log.Warning(
                     "[MAP-机械族机械师] 剧本逆重飞船初始化失败：无法登记机械意识宿主。" +
                     "逆重飞船仍将继续生成，但起始机械体可能没有正确监管者。");
+                return;
+            }
+
+            if (!EnsureScenarioMechanitorState(
+                    mechanitor,
+                    PlayerPawnsArriveMethod.Gravship,
+                    skipAssignmentOnly: true))
+            {
                 return;
             }
 

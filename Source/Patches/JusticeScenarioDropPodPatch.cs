@@ -26,10 +26,11 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (___method != PlayerPawnsArriveMethod.DropPods
-                && ___method != PlayerPawnsArriveMethod.Standing)
+            if (startingItems == null)
             {
-                return true;
+                Log.Error(
+                    "[MAP-机械族机械师] 剧本运输舱/直接生成初始化失败：起始物品列表为空引用，已中止投放。");
+                return false;
             }
 
             if (!JusticeScenarioArrivalUtility.TryPrepareDropPodsOrStandingArrival(
