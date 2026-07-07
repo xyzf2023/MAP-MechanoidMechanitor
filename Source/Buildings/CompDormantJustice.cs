@@ -231,7 +231,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            DormantJusticeActivationUtility.TryActivate(this, out _);
+            if (!DormantJusticeActivationUtility.TryActivate(this, out _))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 未启动正义协议初始化完成但启动失败：" +
+                    $"building={parent.LabelShort}（{parent.ThingID}）。");
+            }
         }
 
         private void CancelInitialization()
