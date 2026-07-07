@@ -9,7 +9,7 @@
 		<li>星羽枝繁</li>
 		<li>数据删除</li>
 	</authors>
-	<modVersion IgnoreIfNoMatchingField="true">0.0.2</modVersion>
+	<modVersion IgnoreIfNoMatchingField="true">0.0.3</modVersion>
 	<description>TODO</description>
 	<modDependencies>
 		<li>
