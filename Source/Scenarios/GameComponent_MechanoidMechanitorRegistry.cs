@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
@@ -13,6 +14,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private Dictionary<Pawn, MechanoidMechanitorRecord> recordByPawn =
             new Dictionary<Pawn, MechanoidMechanitorRecord>();
         private List<Pawn>? registeredMechanitorsCache;
+        private ReadOnlyCollection<Pawn>? registeredMechanitorsReadOnlyCache;
         private List<Pawn>? pendingAcquiredHediffSync;
         private HashSet<Pawn> pendingMechanitorInitializations = new HashSet<Pawn>();
 
@@ -26,7 +28,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             get
             {
                 EnsureRegisteredMechanitorsCache();
-                return registeredMechanitorsCache!;
+                return registeredMechanitorsReadOnlyCache!;
             }
         }
 
@@ -546,11 +548,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void InvalidateDerivedCaches()
         {
             registeredMechanitorsCache = null;
+            registeredMechanitorsReadOnlyCache = null;
         }
 
         private void EnsureRegisteredMechanitorsCache()
         {
-            if (registeredMechanitorsCache != null)
+            if (registeredMechanitorsReadOnlyCache != null)
             {
                 return;
             }
@@ -564,6 +567,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     registeredMechanitorsCache.Add(pawn);
                 }
             }
+
+            registeredMechanitorsReadOnlyCache =
+                new ReadOnlyCollection<Pawn>(registeredMechanitorsCache);
         }
 
         private void ProcessPendingLegacyNativeStateImports()
