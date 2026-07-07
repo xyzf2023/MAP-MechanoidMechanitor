@@ -27,10 +27,11 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            List<Pawn> allPawns = __instance.AllPawns;
-            for (int i = 0; i < allPawns.Count; i++)
+            IReadOnlyList<Pawn> registeredMechanitors =
+                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
+            for (int i = 0; i < registeredMechanitors.Count; i++)
             {
-                Pawn pawn = allPawns[i];
+                Pawn pawn = registeredMechanitors[i];
                 if (!JusticeScenarioFreeColonistUtility.IsEligibleForMapFreeColonistAppend(
                         pawn,
                         __instance,
@@ -68,10 +69,11 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            IReadOnlyList<Pawn> allPawnsSpawned = __instance.AllPawnsSpawned;
-            for (int i = 0; i < allPawnsSpawned.Count; i++)
+            IReadOnlyList<Pawn> registeredMechanitors =
+                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
+            for (int i = 0; i < registeredMechanitors.Count; i++)
             {
-                Pawn pawn = allPawnsSpawned[i];
+                Pawn pawn = registeredMechanitors[i];
                 if (!JusticeScenarioFreeColonistUtility.IsEligibleForMapFreeColonistAppend(
                         pawn,
                         __instance,

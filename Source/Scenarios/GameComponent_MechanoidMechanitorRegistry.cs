@@ -18,12 +18,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public Pawn? MechanicalConsciousnessHost => mechanicalConsciousnessHost;
 
+        private static readonly IReadOnlyList<Pawn> EmptyRegisteredMechanitors =
+            Array.Empty<Pawn>();
+
         public IReadOnlyList<Pawn> RegisteredMechanitors
         {
             get
             {
                 EnsureRegisteredMechanitorsCache();
                 return registeredMechanitorsCache!;
+            }
+        }
+
+        /// <summary>
+        /// 当前游戏中已注册机械族机械师的只读缓存；无游戏或注册表时返回空列表。
+        /// </summary>
+        public static IReadOnlyList<Pawn> CurrentRegisteredMechanitors
+        {
+            get
+            {
+                GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+                return registry?.RegisteredMechanitors ?? EmptyRegisteredMechanitors;
             }
         }
 
