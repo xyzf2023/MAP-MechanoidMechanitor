@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <ThingDef ParentName="BuildingBase">
+    <defName>MAP_Building_JusticeDormant</defName>
+    <label>「正义」（未启动）</label>
+    <description>一台尚未开机的「正义」。</description>
+    <thingClass>Building</thingClass>
+    <tickerType>Normal</tickerType>
+    <!-- 待后续配置：占地尺寸 -->
+    <size>(1,1)</size>
+    <graphicData>
+      <texPath>Justice/JusticeOff</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <!-- <drawSize>(2,2)</drawSize> -->
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>1200</MaxHitPoints>
+      <WorkToBuild>2000</WorkToBuild>
+    </statBases>
+    <costList>
+      <SubcoreHigh>1</SubcoreHigh>
+      <AIPersonaCore>1</AIPersonaCore>
+      <Plasteel>225</Plasteel>
+      <ComponentSpacer>5</ComponentSpacer>
+      <MAP_AutonomousDirectiveCore>1</MAP_AutonomousDirectiveCore>
+    </costList>
+    <researchPrerequisites>
+      <li>ArchotechMechtech</li>
+    </researchPrerequisites>
+    <constructionSkillPrerequisite>12</constructionSkillPrerequisite>
+    <designationCategory>Biotech</designationCategory>
+    <building>
+      <buildingTags>
+        <li>Biotech</li>
+      </buildingTags>
+    </building>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_DormantJustice" />
+    </comps>
+  </ThingDef>
+
+</Defs>

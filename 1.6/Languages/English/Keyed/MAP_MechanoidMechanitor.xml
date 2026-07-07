@@ -19,6 +19,11 @@
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>No body is available to host the consciousness.</MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>Consciousness transfer failed.</MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData>Recovering damaged consciousness data.</MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData>
+  <MAP_MechanoidMechanitor.DormantJustice.Activate.Label>Power on</MAP_MechanoidMechanitor.DormantJustice.Activate.Label>
+  <MAP_MechanoidMechanitor.DormantJustice.Activate.Description>Begin Justice startup and protocol initialization.</MAP_MechanoidMechanitor.DormantJustice.Activate.Description>
+  <MAP_MechanoidMechanitor.DormantJustice.Initializing>Initializing protocol...</MAP_MechanoidMechanitor.DormantJustice.Initializing>
+  <MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Label>Carry emergency consciousness transfer</MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Label>
+  <MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Description>Designate this dormant Justice as the preferred body for emergency consciousness transfer. When the current mechanical consciousness host is about to be destroyed, it will immediately activate and receive the consciousness.</MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Description>
   <MAP_JusticeScenarioDescription_Title>Mechanoid Mechanitor</MAP_JusticeScenarioDescription_Title>
   <MAP_JusticeScenarioDescription_Text>TODO</MAP_JusticeScenarioDescription_Text>
 </LanguageData>
