@@ -66,7 +66,23 @@ namespace MAP_MechanoidMechanitor
                     pawn.Map?.ToString() ?? pawn.MapHeld?.ToString() ?? "null",
                     pawn.Position,
                     GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(pawn),
-                    GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _));
+                    QueryHasMechanitorRecordForSnapshot(pawn));
+            }
+
+            private static bool QueryHasMechanitorRecordForSnapshot(Pawn pawn)
+            {
+                try
+                {
+                    return GameComponent_MechanoidMechanitorRegistry
+                        .HasRecordForPawnIncludingDestroyed(pawn);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 未启动正义失败快照查询注册记录异常：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                    return true;
+                }
             }
         }
 
@@ -129,11 +145,11 @@ namespace MAP_MechanoidMechanitor
 
                 phase = "generate-pawn";
                 pawn = PawnGenerator.GeneratePawn(BuildJusticeGenerationRequest(justiceKind));
-                PawnActivationFailureSnapshot generateSnapshot =
-                    PawnActivationFailureSnapshot.From(pawn);
                 if (pawn.Destroyed)
                 {
-                    CleanupFailedPawn(pawn);
+                    PawnActivationFailureSnapshot generateSnapshot =
+                        PawnActivationFailureSnapshot.From(pawn);
+                    bool pawnCleanupSucceeded = CleanupFailedPawn(pawn);
                     LogActivationFailure(
                         phase,
                         building,
@@ -141,9 +157,13 @@ namespace MAP_MechanoidMechanitor
                         originalPosition,
                         generateSnapshot,
                         buildingTemporarilyDespawned,
-                        rollbackSucceeded: null,
+                        pawnCleanupSucceeded,
                         "Pawn 生成失败。");
-                    pawn = null;
+                    if (pawnCleanupSucceeded)
+                    {
+                        pawn = null;
+                    }
+
                     return false;
                 }
 
@@ -152,7 +172,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     PawnActivationFailureSnapshot initSnapshot =
                         PawnActivationFailureSnapshot.From(pawn);
-                    CleanupFailedPawn(pawn);
+                    bool pawnCleanupSucceeded = CleanupFailedPawn(pawn);
                     LogActivationFailure(
                         phase,
                         building,
@@ -160,9 +180,13 @@ namespace MAP_MechanoidMechanitor
                         originalPosition,
                         initSnapshot,
                         buildingTemporarilyDespawned,
-                        rollbackSucceeded: null,
+                        pawnCleanupSucceeded,
                         "机械师记录或角色状态未就绪。");
-                    pawn = null;
+                    if (pawnCleanupSucceeded)
+                    {
+                        pawn = null;
+                    }
+
                     return false;
                 }
 
@@ -207,6 +231,8 @@ namespace MAP_MechanoidMechanitor
                     && !pawn.Destroyed;
                 if (!pawnSpawnedSuccessfully)
                 {
+                    PawnActivationFailureSnapshot spawnFailureSnapshot =
+                        PawnActivationFailureSnapshot.From(pawn);
                     bool rollbackSucceeded = TryRollbackActivation(
                         building,
                         map,
@@ -214,14 +240,14 @@ namespace MAP_MechanoidMechanitor
                         originalRotation,
                         ref pawn,
                         ref buildingTemporarilyDespawned,
-                        pawnSnapshot,
+                        spawnFailureSnapshot,
                         out Exception? rollbackException);
                     LogActivationFailure(
                         phase,
                         building,
                         map,
                         originalPosition,
-                        pawnSnapshot,
+                        spawnFailureSnapshot,
                         buildingTemporarilyDespawned,
                         rollbackSucceeded,
                         "GenSpawn.Spawn 未将正义 Pawn 成功落地。",
@@ -675,21 +701,33 @@ namespace MAP_MechanoidMechanitor
             {
                 if (GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(pawn))
                 {
+                    Log.Error(
+                        "[MAP-机械族机械师] 未启动正义失败 Pawn 清理验证失败：stillHost，" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
                     return false;
                 }
 
                 if (pawn.Spawned)
                 {
+                    Log.Error(
+                        "[MAP-机械族机械师] 未启动正义失败 Pawn 清理验证失败：stillSpawned，" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
                     return false;
                 }
 
                 if (!pawn.Destroyed)
                 {
+                    Log.Error(
+                        "[MAP-机械族机械师] 未启动正义失败 Pawn 清理验证失败：notDestroyed，" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
                     return false;
                 }
 
-                if (GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _))
+                if (GameComponent_MechanoidMechanitorRegistry.HasRecordForPawnIncludingDestroyed(pawn))
                 {
+                    Log.Error(
+                        "[MAP-机械族机械师] 未启动正义失败 Pawn 清理验证失败：mechanitorRecordStillExists，" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
                     return false;
                 }
 
