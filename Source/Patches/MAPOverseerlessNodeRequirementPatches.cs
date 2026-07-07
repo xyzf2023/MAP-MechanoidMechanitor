@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPostfix]
         public static void Postfix(Pawn mech, ref bool __result)
         {
-            if (mech == null || !ModsConfig.BiotechActive)
+            if (!__result || mech == null || !ModsConfig.BiotechActive)
             {
                 return;
             }
