@@ -1,3 +1,4 @@
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -5,6 +6,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public static class JusticeScenarioFreeColonistUtility
     {
+        /// <summary>
+        /// 「头像显示」功能是否在当前游戏上下文中可用：
+        /// 正义特殊剧本始终可用；普通存档在全局 MOD 设置开启时可用。
+        /// </summary>
+        public static bool IsPortraitDisplayFeatureAvailable =>
+            GameComponent_JusticeScenarioState.IsEnabled
+            || MAPMechanitorMod.Settings?.enablePortraitDisplayForAllSaves == true;
+
         /// <summary>
         /// 特殊剧本中符合条件的玩家方机械族机械师（不涉及机械意识宿主身份）。
         /// </summary>
@@ -70,7 +79,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         public static bool CanUsePortraitDisplayToggle(Pawn? pawn)
         {
-            if (!GameComponent_JusticeScenarioState.IsEnabled || pawn == null)
+            if (!IsPortraitDisplayFeatureAvailable || pawn == null)
             {
                 return false;
             }

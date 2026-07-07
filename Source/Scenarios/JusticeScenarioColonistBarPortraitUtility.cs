@@ -23,7 +23,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static void AppendMapPortraitDisplayEntries(List<ColonistBar.Entry> cachedEntries)
         {
-            if (!GameComponent_JusticeScenarioState.IsEnabled)
+            if (!JusticeScenarioFreeColonistUtility.IsPortraitDisplayFeatureAvailable)
             {
                 return;
             }
