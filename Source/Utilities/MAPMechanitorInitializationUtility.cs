@@ -9,7 +9,10 @@ namespace MAP_MechanoidMechanitor
     {
         public static void FinalizeNow(Pawn? pawn)
         {
-            if (pawn == null || pawn.Destroyed || !ModsConfig.BiotechActive)
+            if (pawn == null
+                || pawn.Destroyed
+                || pawn.Dead
+                || !ModsConfig.BiotechActive)
             {
                 return;
             }
