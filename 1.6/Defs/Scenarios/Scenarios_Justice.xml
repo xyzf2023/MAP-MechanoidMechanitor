@@ -58,7 +58,6 @@
 
         <li Class="ScenPart_PlayerPawnsArriveMethod">
           <def>PlayerPawnsArriveMethod</def>
-          <visible>false</visible>
           <method>DropPods</method>
         </li>
 
