@@ -93,6 +93,8 @@
       <soundMeleeHitBuilding>Pawn_Melee_MechanoidSlash_HitBuilding</soundMeleeHitBuilding>
       <soundMeleeMiss>Pawn_Melee_MechanoidSlash_Miss</soundMeleeMiss>
 
+      <mechWeightClass>Medium</mechWeightClass><!--缺少这个会导致充不了电（恼）-->
+
       <lifeStageAges Inherit="False">
         <li>
           <def>MechanoidFullyFormed</def>
