@@ -137,6 +137,8 @@
       <Steel>20</Steel>
       <Plasteel>10</Plasteel>
     </butcherProducts>
+    
+    <uiIconPath>Lover/Lover_fullbody</uiIconPath>
 
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_WardenWorkUser">
