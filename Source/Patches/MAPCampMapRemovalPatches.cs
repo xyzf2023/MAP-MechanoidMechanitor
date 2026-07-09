@@ -23,7 +23,7 @@ namespace MAP_MechanoidMechanitor
             Map map = __instance.Map;
             foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
             {
-                if (!MAPMechanitorTravelUtility.ShouldBlockCampMapRemoval(pawn))
+                if (!MAPMechanitorTravelUtility.ShouldBlockMapRemoval(pawn))
                 {
                     continue;
                 }
