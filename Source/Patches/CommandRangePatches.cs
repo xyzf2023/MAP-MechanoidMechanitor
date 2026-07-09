@@ -21,6 +21,12 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
+            if (DataProcessingAllocationUtility.HasCommandRangeBypass(mech))
+            {
+                __result = true;
+                return false;
+            }
+
             if (MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(mech))
             {
                 __result = true;

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <HediffDef>
+    <defName>MAP_DataStreamDistribution</defName>
+    <label>数据流分发</label>
+    <description>该机械族机械师分配部分数据处理能力关注其下属，提升对目标机械族的命令精细度，但会降低自身数据处理。</description>
+    <descriptionShort>该机械族机械师正在向下属分发部分数据处理能力。</descriptionShort>
+    <defaultLabelColor>(0.8, 0.9, 1.0)</defaultLabelColor>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_DataStreamDistribution</hediffClass>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <initialSeverity>0.05</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>1</maxSeverity>
+  </HediffDef>
+
+  <HediffDef>
+    <defName>MAP_CommandFocus</defName>
+    <label>指令聚焦</label>
+    <description>监管者分配了部分算力用于精细指挥该机械族。部分能力得到提升。</description>
+    <descriptionShort>监管者正在向该机械族分配额外算力以提升指挥精细度。</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.8)</defaultLabelColor>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_CommandFocus</hediffClass>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <initialSeverity>0.05</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>1</maxSeverity>
+  </HediffDef>
+</Defs>
