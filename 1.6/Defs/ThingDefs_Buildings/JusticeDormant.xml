@@ -13,6 +13,7 @@
       <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>2</drawSize>
     </graphicData>
+    <uiIconScale>0.5</uiIconScale>
     <statBases>
       <MaxHitPoints>1200</MaxHitPoints>
       <WorkToBuild>2000</WorkToBuild>
