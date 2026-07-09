@@ -83,7 +83,7 @@ namespace MAP_MechanoidMechanitor
                 && props?.refreshTrackersOnTransporterArrival == true;
         }
 
-        public static bool ShouldBlockCampMapRemoval(Pawn? pawn)
+        public static bool ShouldBlockMapRemoval(Pawn? pawn)
         {
             if (pawn == null || !ModsConfig.BiotechActive)
             {
