@@ -27,7 +27,17 @@ namespace MAP_MechanoidMechanitor
 
         public static bool CanLeadCaravan(Pawn? pawn)
         {
-            if (!PassesTravelPawnBasics(pawn))
+            if (!PassesTravelSafetyChecks(pawn))
+            {
+                return false;
+            }
+
+            if (DataProcessingAllocationUtility.HasCaravanLeadQualification(pawn))
+            {
+                return true;
+            }
+
+            if (!MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
             {
                 return false;
             }
@@ -100,6 +110,12 @@ namespace MAP_MechanoidMechanitor
 
         private static bool PassesTravelPawnBasics(Pawn? pawn)
         {
+            return PassesTravelSafetyChecks(pawn)
+                && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn);
+        }
+
+        private static bool PassesTravelSafetyChecks(Pawn? pawn)
+        {
             if (pawn == null || !ModsConfig.BiotechActive)
             {
                 return false;
@@ -115,7 +131,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn);
+            return true;
         }
     }
 }
