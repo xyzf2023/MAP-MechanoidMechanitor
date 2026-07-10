@@ -798,13 +798,47 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            float workSpeedOffset = DataProcessingAllocationUtility.GetWorkSpeedOffset(steps);
+            effectLabels.Add(
+                "MAP_DataProcessingAllocation_EffectWorkSpeed".Translate(
+                    workSpeedOffset.ToStringPercent()));
+            effectTips.Add(string.Empty);
+
             effectLabels.Add("MAP_DataProcessingAllocation_EffectCommandRange".Translate());
             effectTips.Add("MAP_DataProcessingAllocation_EffectCommandRangeTip".Translate());
+
+            float rangedFactor = DataProcessingAllocationUtility.GetRangedActionFactor(steps);
+            if (rangedFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectRangedSpeed".Translate(
+                        rangedFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
+            }
 
             if (steps >= DataProcessingAllocationUtility.TravelNodeThresholdSteps)
             {
                 effectLabels.Add("MAP_DataProcessingAllocation_EffectTravelLead".Translate());
                 effectTips.Add("MAP_DataProcessingAllocation_EffectTravelLeadTip".Translate());
+            }
+
+            float moveSpeedOffset = DataProcessingAllocationUtility.GetMoveSpeedOffset(steps);
+            if (moveSpeedOffset > 0f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(
+                        moveSpeedOffset.ToString("F2")));
+                effectTips.Add(string.Empty);
+            }
+
+            float incomingDamageFactor =
+                DataProcessingAllocationUtility.GetIncomingDamageFactor(steps);
+            if (incomingDamageFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectIncomingDamage".Translate(
+                        incomingDamageFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
             }
         }
 

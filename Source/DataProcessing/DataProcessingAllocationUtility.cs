@@ -10,8 +10,22 @@ namespace MAP_MechanoidMechanitor
         public const float MinReservedConsciousness = 0.50f;
         public const int MinReservedConsciousnessPercent = 50;
         public const int MinConsciousnessPercentToAddStep = 55;
-        public const int CommandRangeThresholdSteps = 2;
-        public const int TravelNodeThresholdSteps = 4;
+
+        /// <summary>5%：脱离指挥范围。</summary>
+        public const int CommandRangeThresholdSteps = 1;
+
+        /// <summary>15%：完整虚拟旅行节点。</summary>
+        public const int TravelNodeThresholdSteps = 3;
+
+        /// <summary>特殊数值效果最多按 100%（20 档）计算；意识加成不受此限制。</summary>
+        public const int MaxSpecialEffectSteps = 20;
+
+        public const float WorkSpeedOffsetPerStep = 0.15f;
+        public const float RangedFactorReductionPerTenPercentTier = 0.05f;
+        public const float MoveSpeedOffsetPerTenPercentTier = 0.5f;
+        public const float IncomingDamageReductionPerTenPercentTier = 0.05f;
+        public const int MoveSpeedMinEffectSteps = 4;
+        public const int IncomingDamageMinEffectSteps = 6;
 
         private const string DataStreamDistributionDefName = "MAP_DataStreamDistribution";
         private const string CommandFocusDefName = "MAP_CommandFocus";
@@ -36,6 +50,38 @@ namespace MAP_MechanoidMechanitor
         {
             int percent = steps * 5;
             return positive ? $"+{percent}%" : $"-{percent}%";
+        }
+
+        public static int GetSpecialEffectSteps(int steps)
+        {
+            return Mathf.Clamp(steps, 0, MaxSpecialEffectSteps);
+        }
+
+        public static float GetWorkSpeedOffset(int steps)
+        {
+            return GetSpecialEffectSteps(steps) * WorkSpeedOffsetPerStep;
+        }
+
+        public static float GetRangedActionFactor(int steps)
+        {
+            int effectSteps = GetSpecialEffectSteps(steps);
+            return 1f - effectSteps / 2 * RangedFactorReductionPerTenPercentTier;
+        }
+
+        public static float GetMoveSpeedOffset(int steps)
+        {
+            int effectSteps = GetSpecialEffectSteps(steps);
+            return effectSteps >= MoveSpeedMinEffectSteps
+                ? effectSteps / 2 * MoveSpeedOffsetPerTenPercentTier
+                : 0f;
+        }
+
+        public static float GetIncomingDamageFactor(int steps)
+        {
+            int effectSteps = GetSpecialEffectSteps(steps);
+            return effectSteps >= IncomingDamageMinEffectSteps
+                ? 1f - effectSteps / 2 * IncomingDamageReductionPerTenPercentTier
+                : 1f;
         }
 
         public static float GetCurrentConsciousness(Pawn? pawn)

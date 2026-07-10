@@ -9,10 +9,14 @@
   <MAP_DataProcessingAllocation_SubjectsHeader>受监管机械体</MAP_DataProcessingAllocation_SubjectsHeader>
   <MAP_DataProcessingAllocation_CurrentEffects>当前生效效果：</MAP_DataProcessingAllocation_CurrentEffects>
   <MAP_DataProcessingAllocation_EffectNone>无</MAP_DataProcessingAllocation_EffectNone>
+  <MAP_DataProcessingAllocation_EffectWorkSpeed>工作速度 +{0}</MAP_DataProcessingAllocation_EffectWorkSpeed>
   <MAP_DataProcessingAllocation_EffectCommandRange>可脱离指挥范围行动</MAP_DataProcessingAllocation_EffectCommandRange>
   <MAP_DataProcessingAllocation_EffectCommandRangeTip>该机械体可以脱离当前机械族机械师的命令距离范围行动。</MAP_DataProcessingAllocation_EffectCommandRangeTip>
-  <MAP_DataProcessingAllocation_EffectTravelLead>可带领远行队</MAP_DataProcessingAllocation_EffectTravelLead>
+  <MAP_DataProcessingAllocation_EffectRangedSpeed>瞄准时间与射击冷却 ×{0}</MAP_DataProcessingAllocation_EffectRangedSpeed>
+  <MAP_DataProcessingAllocation_EffectTravelLead>完整旅行节点</MAP_DataProcessingAllocation_EffectTravelLead>
   <MAP_DataProcessingAllocation_EffectTravelLeadTip>该机械体获得完整的虚拟旅行节点能力，可以带领远行队、收集远行队物资，并在运输抵达后刷新相关状态。</MAP_DataProcessingAllocation_EffectTravelLeadTip>
+  <MAP_DataProcessingAllocation_EffectMoveSpeed>移动速度 +{0}格/秒</MAP_DataProcessingAllocation_EffectMoveSpeed>
+  <MAP_DataProcessingAllocation_EffectIncomingDamage>承伤系数 ×{0}</MAP_DataProcessingAllocation_EffectIncomingDamage>
   <MAP_DataProcessingAllocation_PinTip>顶置该机械体</MAP_DataProcessingAllocation_PinTip>
   <MAP_DataProcessingAllocation_UnpinTip>取消顶置该机械体</MAP_DataProcessingAllocation_UnpinTip>
   <MAP_DataProcessingAllocation_Add>+5%</MAP_DataProcessingAllocation_Add>
