@@ -7,8 +7,7 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 数据处理分配健康状态的动态效果基类。
-    /// 分配档位以注册表为唯一权威来源；Hediff severity 仅用于维持健康状态本身，
-    /// 实际意识修正通过动态生成的 CurStage.capMods 接入原版能力计算。
+    /// 分配档位以注册表为唯一权威来源；Hediff 本身只负责标识状态和向原版能力系统提供动态效果。
     /// </summary>
     public abstract class Hediff_DataProcessingAllocationBase : Hediff
     {
@@ -70,19 +69,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        public override float Severity
-        {
-            get => base.Severity;
-            set
-            {
-                base.Severity = value;
-
-                // 注册表同步 Hediff 时会设置 severity。即使 severity 因 maxSeverity 被钳制，
-                // 也仍以注册表 steps 为准检查动态效果是否需要更新。
-                RecacheAllocation();
-            }
-        }
-
         public override void PostAdd(DamageInfo? dinfo)
         {
             base.PostAdd(dinfo);
@@ -98,6 +84,9 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        /// <summary>
+        /// 从分配注册表重新读取档位。档位改变时丢弃动态阶段，并通过原版健康通知链刷新能力缓存。
+        /// </summary>
         public void RecacheAllocation(bool notifyHealth = true)
         {
             int newSteps = Mathf.Max(0, GetAllocationSteps());
