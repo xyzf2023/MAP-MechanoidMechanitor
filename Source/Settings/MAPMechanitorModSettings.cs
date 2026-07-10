@@ -6,6 +6,7 @@ namespace MAP_MechanoidMechanitor
     {
         public bool addJusticeToWorkTab = false;
         public bool enablePortraitDisplayForAllSaves = false;
+        public bool enableMechanoidMechanitorBrainImplants = false;
 
         public override void ExposeData()
         {
@@ -14,6 +15,10 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref enablePortraitDisplayForAllSaves,
                 "enablePortraitDisplayForAllSaves",
+                false);
+            Scribe_Values.Look(
+                ref enableMechanoidMechanitorBrainImplants,
+                "enableMechanoidMechanitorBrainImplants",
                 false);
         }
     }
