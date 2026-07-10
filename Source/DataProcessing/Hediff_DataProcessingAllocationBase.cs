@@ -7,7 +7,7 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 数据处理分配健康状态的动态效果基类。
-    /// 分配档位以注册表为唯一权威来源；Hediff 本身只负责标识状态和向原版能力系统提供动态效果。
+    /// 分配档位以注册表为唯一权威来源；Hediff 本身负责标识状态和向原版能力系统提供动态效果。
     /// </summary>
     public abstract class Hediff_DataProcessingAllocationBase : Hediff
     {
@@ -66,6 +66,20 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 return Mathf.Max(0, GetAllocationSteps()) <= 0;
+            }
+        }
+
+        public override float Severity
+        {
+            get => base.Severity;
+            set
+            {
+                base.Severity = value;
+
+                // 兼容现有注册表的同步入口：注册表会在档位变化后写入 Severity。
+                // 此处只把这次写入作为即时刷新信号；实际档位和意识效果始终重新读取注册表，
+                // 因而不会受到 HediffDef.maxSeverity 的限制。
+                RecacheAllocation();
             }
         }
 
