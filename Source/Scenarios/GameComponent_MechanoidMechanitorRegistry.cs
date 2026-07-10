@@ -10,8 +10,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public sealed partial class GameComponent_MechanoidMechanitorRegistry : GameComponent
     {
         private const string MechanicalConsciousnessHediffDefName = "MAP_MechanicalConsciousness";
+        private const string NativeMechanitorHediffDefName = "MAP_NativeMechanoidMechanitor";
 
         private static HediffDef? cachedMechanicalConsciousnessHediffDef;
+        private static HediffDef? cachedNativeMechanitorHediffDef;
 
         private Pawn? mechanicalConsciousnessHost;
         private List<MechanoidMechanitorRecord> mechanitorRecords = new List<MechanoidMechanitorRecord>();
@@ -147,13 +149,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorRecord? existing = registry.FindRecordForPawn(pawn);
             if (existing != null)
             {
-                if (existing.Origin != MechanoidMechanitorOrigin.Native)
+                bool convertedToNative = existing.Origin != MechanoidMechanitorOrigin.Native;
+                if (convertedToNative)
                 {
                     existing.Origin = MechanoidMechanitorOrigin.Native;
                     registry.InvalidateDerivedCaches();
                     registry.SynchronizeAcquiredMechanitorHediffs();
                 }
 
+                registry.SynchronizeNativeMechanitorHediffs();
                 return true;
             }
 
@@ -162,6 +166,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidMechanitorOrigin.Native,
                 pendingLegacyNativeStateImport));
             registry.SynchronizeAcquiredMechanitorHediffs();
+            registry.SynchronizeNativeMechanitorHediffs();
             return true;
         }
 
@@ -281,6 +286,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 registry.SynchronizeAcquiredMechanitorHediffs();
+                registry.SynchronizeNativeMechanitorHediffs();
                 NotifyJusticeColonistDisplaysIfNeeded();
                 return true;
             }
@@ -323,6 +329,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             registry.SynchronizeAcquiredMechanitorHediffs();
+            registry.SynchronizeNativeMechanitorHediffs();
             NotifyJusticeColonistDisplaysIfNeeded();
             return true;
         }
@@ -543,6 +550,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ProcessPendingLegacyNativeStateImports();
             RestoreAcquiredRecordsAfterLoad();
             SynchronizeAcquiredMechanitorHediffs();
+            SynchronizeNativeMechanitorHediffs();
             TryRepairMechanicalConsciousnessHost();
 
             if (mechanicalConsciousnessHost != null
@@ -883,6 +891,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 DefDatabase<HediffDef>.GetNamedSilentFail(MechanicalConsciousnessHediffDefName);
         }
 
+        private static HediffDef? GetNativeMechanitorHediffDef()
+        {
+            return cachedNativeMechanitorHediffDef ??=
+                DefDatabase<HediffDef>.GetNamedSilentFail(NativeMechanitorHediffDefName);
+        }
+
         private void SynchronizeAcquiredMechanitorHediffs()
         {
             if (Current.Game == null)
@@ -929,6 +943,56 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 Log.Error(
                     "[MAP-机械族机械师] 后天机械族机械师健康状态同步异常：" +
+                    $"{ex}");
+            }
+        }
+
+        private void SynchronizeNativeMechanitorHediffs()
+        {
+            if (Current.Game == null)
+            {
+                return;
+            }
+
+            try
+            {
+                HediffDef? def = GetNativeMechanitorHediffDef();
+                if (def == null)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 先天机械族机械师健康状态同步失败：未找到 HediffDef " +
+                        $"{NativeMechanitorHediffDefName}。");
+                    return;
+                }
+
+                for (int i = 0; i < mechanitorRecords.Count; i++)
+                {
+                    MechanoidMechanitorRecord? record = mechanitorRecords[i];
+                    if (record == null)
+                    {
+                        continue;
+                    }
+
+                    Pawn? pawn = record.Pawn;
+                    if (pawn == null || pawn.Destroyed)
+                    {
+                        continue;
+                    }
+
+                    if (record.Origin == MechanoidMechanitorOrigin.Native)
+                    {
+                        EnsureSingleHediffOnPawn(pawn, def, "先天机械族机械师");
+                    }
+                    else
+                    {
+                        RemoveAllHediffsFromPawn(pawn, def, "先天机械族机械师");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 先天机械族机械师健康状态同步异常：" +
                     $"{ex}");
             }
         }
