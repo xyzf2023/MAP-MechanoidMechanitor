@@ -104,6 +104,15 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             ref MechanoidMechanitorCapability capabilities)
         {
+            if (!GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
+                    pawn,
+                    out _))
+            {
+                return;
+            }
+
+            capabilities |= MechanoidMechanitorCapability.ImplantInstallation;
+
             if (!GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
                     pawn,
                     out _))
