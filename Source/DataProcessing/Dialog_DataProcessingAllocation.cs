@@ -832,6 +832,16 @@ namespace MAP_MechanoidMechanitor
                 effectTips.Add(string.Empty);
             }
 
+            float staggerDurationFactor =
+                DataProcessingAllocationUtility.GetStaggerDurationFactor(steps);
+            if (staggerDurationFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectStaggerDuration".Translate(
+                        staggerDurationFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
+            }
+
             float incomingDamageFactor =
                 DataProcessingAllocationUtility.GetIncomingDamageFactor(steps);
             if (incomingDamageFactor < 1f)

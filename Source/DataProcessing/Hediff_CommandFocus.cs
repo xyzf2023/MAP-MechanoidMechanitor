@@ -64,6 +64,18 @@ namespace MAP_MechanoidMechanitor
                 });
             }
 
+            float staggerDurationFactor =
+                DataProcessingAllocationUtility.GetStaggerDurationFactor(steps);
+            if (staggerDurationFactor < 1f)
+            {
+                factors ??= new List<StatModifier>();
+                factors.Add(new StatModifier
+                {
+                    stat = StatDefOf.StaggerDurationFactor,
+                    value = staggerDurationFactor
+                });
+            }
+
             float incomingDamageFactor =
                 DataProcessingAllocationUtility.GetIncomingDamageFactor(steps);
             if (incomingDamageFactor < 1f)

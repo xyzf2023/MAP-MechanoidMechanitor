@@ -24,8 +24,15 @@ namespace MAP_MechanoidMechanitor
         public const float AttackTimingFactorReductionPerTenPercentTier = 0.05f;
         public const float MoveSpeedOffsetPerTenPercentTier = 0.5f;
         public const float IncomingDamageReductionPerTenPercentTier = 0.05f;
+        public const float StaggerFactorReductionPerStep = 0.10f;
         public const int MoveSpeedMinEffectSteps = 4;
         public const int IncomingDamageMinEffectSteps = 6;
+
+        /// <summary>20%：开始缩短抑止时间。</summary>
+        public const int StaggerMinEffectSteps = 4;
+
+        /// <summary>50%：完全免疫原版抑止。</summary>
+        public const int StaggerImmunitySteps = 10;
 
         private const string DataStreamDistributionDefName = "MAP_DataStreamDistribution";
         private const string CommandFocusDefName = "MAP_CommandFocus";
@@ -86,6 +93,22 @@ namespace MAP_MechanoidMechanitor
             return effectSteps >= IncomingDamageMinEffectSteps
                 ? 1f - effectSteps / 2 * IncomingDamageReductionPerTenPercentTier
                 : 1f;
+        }
+
+        /// <summary>
+        /// 抑止持续时间倍率。20% 起效时直接为 ×60%，50% 起为 ×0%。
+        /// 与攻击时序系数相互独立。
+        /// </summary>
+        public static float GetStaggerDurationFactor(int steps)
+        {
+            int normalizedSteps = Mathf.Max(0, steps);
+            if (normalizedSteps < StaggerMinEffectSteps)
+            {
+                return 1f;
+            }
+
+            int effectiveSteps = Mathf.Min(normalizedSteps, StaggerImmunitySteps);
+            return Mathf.Max(0f, 1f - effectiveSteps * StaggerFactorReductionPerStep);
         }
 
         public static float GetCurrentConsciousness(Pawn? pawn)
