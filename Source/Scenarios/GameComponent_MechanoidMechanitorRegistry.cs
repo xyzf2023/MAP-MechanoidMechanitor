@@ -161,6 +161,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 pawn,
                 MechanoidMechanitorOrigin.Native,
                 pendingLegacyNativeStateImport));
+            registry.SynchronizeAcquiredMechanitorHediffs();
             return true;
         }
 
@@ -270,9 +271,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(
-                        "[MAP-机械族机械师] 后天机械族机械师状态初始化失败：" +
-                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                    LogAcquiredMechanitorStateFailure(
+                        pawn,
+                        existing,
+                        hadExistingRecord: true,
+                        phase: "已有后天机械师状态修复",
+                        ex);
+                    return false;
                 }
 
                 registry.SynchronizeAcquiredMechanitorHediffs();
@@ -296,14 +301,64 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Error(
-                    "[MAP-机械族机械师] 后天机械族机械师状态初始化失败：" +
-                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                LogAcquiredMechanitorStateFailure(
+                    pawn,
+                    record,
+                    hadExistingRecord: false,
+                    phase: "新建后天机械师初始化",
+                    ex);
+
+                try
+                {
+                    registry.RollbackFailedNewAcquiredIdentity(pawn);
+                }
+                catch (Exception rollbackEx)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 新建后天机械师初始化失败后回滚异常：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{rollbackEx}");
+                }
+
+                return false;
             }
 
             registry.SynchronizeAcquiredMechanitorHediffs();
             NotifyJusticeColonistDisplaysIfNeeded();
             return true;
+        }
+
+        private static void LogAcquiredMechanitorStateFailure(
+            Pawn pawn,
+            MechanoidMechanitorRecord record,
+            bool hadExistingRecord,
+            string phase,
+            Exception ex)
+        {
+            Log.Error(
+                $"[MAP-机械族机械师] {phase}失败：" +
+                $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                $"hadExistingRecord={hadExistingRecord}，" +
+                $"recordOrigin={record.Origin}：{ex}");
+        }
+
+        private void RollbackFailedNewAcquiredIdentity(Pawn pawn)
+        {
+            if (IsMechanicalConsciousnessHost(pawn))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 新建后天机械师初始化失败回滚中止：其为当前机械意识宿主，" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
+                return;
+            }
+
+            RemoveRecordForPawnInternal(pawn);
+            pendingMechanitorInitializations.Remove(pawn);
+
+            HediffDef? acquiredDef = MechanoidMechanitorRoleUtility.GetAcquiredIdentityDef();
+            if (acquiredDef != null && !pawn.Destroyed)
+            {
+                RemoveAllHediffsFromPawn(pawn, acquiredDef, "机械族机械师");
+            }
         }
 
         private static void NotifyJusticeColonistDisplaysIfNeeded()
