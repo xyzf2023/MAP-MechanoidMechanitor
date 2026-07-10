@@ -10,8 +10,9 @@ namespace MAP_MechanoidMechanitor
     // CompUsable normally rejects every non-flesh pawn before running its other checks.
     // This transpiler keeps the vanilla Pawn.RaceProps getter and replaces only the
     // RaceProperties.IsFlesh value production with a helper that ORs in authorized player
-    // mechanoids. Power, path, reservation, required hediffs and every CompUseEffect
-    // check remain vanilla.
+    // mechanoids. Full colonist-like users retain their existing access, while implant-only
+    // users are admitted only when the current item is a supported mechanitor implant.
+    // Power, path, reservation, required hediffs and every CompUseEffect check remain vanilla.
     [HarmonyPatch]
     public static class Patch_CompUsable_CanBeUsedBy_ColonistLikeMechanoid
     {
@@ -61,20 +62,30 @@ namespace MAP_MechanoidMechanitor
             return cachedCanBeUsedByMethod;
         }
 
-        private static bool IsFleshOrAuthorizedCompUsableUser(RaceProperties raceProps, Pawn pawn)
+        private static bool IsFleshOrAuthorizedCompUsableUser(
+            RaceProperties raceProps,
+            Pawn pawn,
+            CompUsable usable)
         {
             if (raceProps.IsFlesh)
             {
                 return true;
             }
 
-            if (pawn == null)
+            if (pawn == null || !raceProps.IsMechanoid)
             {
                 return false;
             }
 
-            return raceProps.IsMechanoid
-                && CompColonistLikeFloatMenuUser.PawnCanUseColonistLikeFloatMenu(pawn);
+            if (CompColonistLikeFloatMenuUser.PawnCanUseColonistLikeFloatMenu(pawn))
+            {
+                return true;
+            }
+
+            return usable != null
+                && MechanoidMechanitorImplantUtility.CanUseMechanitorImplant(
+                    pawn,
+                    usable.parent);
         }
 
         [HarmonyTranspiler]
@@ -201,14 +212,16 @@ namespace MAP_MechanoidMechanitor
 
             CodeInstruction getterInstruction = codes[isFleshIndex];
             CodeInstruction loadPawn = CreateLoadPawnParameterInstruction();
+            CodeInstruction loadUsable = new CodeInstruction(OpCodes.Ldarg_0);
 
             // Stack before expansion: RaceProperties
-            // Inserted ldarg pushes Pawn -> RaceProperties, Pawn
+            // Inserted loads push Pawn and CompUsable -> RaceProperties, Pawn, CompUsable.
             TransferEntryLabels(getterInstruction, loadPawn);
 
             codes.Insert(isFleshIndex, loadPawn);
+            codes.Insert(isFleshIndex + 1, loadUsable);
 
-            CodeInstruction helperCall = codes[isFleshIndex + 1];
+            CodeInstruction helperCall = codes[isFleshIndex + 2];
             helperCall.opcode = OpCodes.Call;
             helperCall.operand = helperMethod;
 
