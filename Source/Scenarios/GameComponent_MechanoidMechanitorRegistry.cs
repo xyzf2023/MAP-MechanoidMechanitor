@@ -19,7 +19,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             new Dictionary<Pawn, MechanoidMechanitorRecord>();
         private List<Pawn>? registeredMechanitorsCache;
         private ReadOnlyCollection<Pawn>? registeredMechanitorsReadOnlyCache;
-        private List<Pawn>? pendingAcquiredHediffSync;
         private HashSet<Pawn> pendingMechanitorInitializations = new HashSet<Pawn>();
 
         public Pawn? MechanicalConsciousnessHost => mechanicalConsciousnessHost;
@@ -152,6 +151,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     existing.Origin = MechanoidMechanitorOrigin.Native;
                     registry.InvalidateDerivedCaches();
+                    registry.SynchronizeAcquiredMechanitorHediffs();
                 }
 
                 return true;
@@ -195,7 +195,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 registry.RemoveRecordForPawnInternal(pawn);
                 registry.pendingMechanitorInitializations.Remove(pawn);
-                registry.RemovePendingAcquiredHediffSyncInternal(pawn);
 
                 if (HasRecordForPawnIncludingDestroyed(pawn))
                 {
@@ -263,9 +262,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorRecord? existing = registry.FindRecordForPawn(pawn);
             if (existing != null && existing.Origin == MechanoidMechanitorOrigin.Acquired)
             {
-                registry.EnsureAcquiredMechanitorHediffInternal(pawn);
-                MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
-                MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
+                try
+                {
+                    AcquiredMechanitorStateUtility.EnsureAcquiredMechanitorState(
+                        pawn,
+                        existing);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 后天机械族机械师状态初始化失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                }
+
+                registry.SynchronizeAcquiredMechanitorHediffs();
                 NotifyJusticeColonistDisplaysIfNeeded();
                 return true;
             }
@@ -275,12 +285,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            registry.AddRecord(new MechanoidMechanitorRecord(
+            MechanoidMechanitorRecord record = new MechanoidMechanitorRecord(
                 pawn,
-                MechanoidMechanitorOrigin.Acquired));
-            registry.EnsureAcquiredMechanitorHediffInternal(pawn);
-            MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
-            MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
+                MechanoidMechanitorOrigin.Acquired);
+            registry.AddRecord(record);
+
+            try
+            {
+                AcquiredMechanitorStateUtility.EnsureAcquiredMechanitorState(pawn, record);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 后天机械族机械师状态初始化失败：" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+            }
+
+            registry.SynchronizeAcquiredMechanitorHediffs();
             NotifyJusticeColonistDisplaysIfNeeded();
             return true;
         }
@@ -293,60 +314,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             JusticeScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
-        }
-
-        public static bool EnsureAcquiredMechanitorHediff(Pawn? pawn)
-        {
-            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null || pawn == null || pawn.Destroyed)
-            {
-                return false;
-            }
-
-            if (!TryGetAcquiredMechanitorRecord(pawn, out _))
-            {
-                return false;
-            }
-
-            return registry.EnsureAcquiredMechanitorHediffInternal(pawn);
-        }
-
-        internal static void NotifyAcquiredMechanitorHediffRemoved(Pawn? pawn)
-        {
-            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null
-                || pawn == null
-                || pawn.Destroyed
-                || !TryGetAcquiredMechanitorRecord(pawn, out _))
-            {
-                return;
-            }
-
-            registry.QueueAcquiredHediffSync(pawn);
-        }
-
-        internal static void RequestAcquiredHediffMirror(Pawn? pawn)
-        {
-            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null
-                || pawn == null
-                || pawn.Destroyed
-                || !TryGetAcquiredMechanitorRecord(pawn, out _))
-            {
-                return;
-            }
-
-            if (MechanoidMechanitorRoleUtility.HasAcquiredMechanitorHediff(pawn))
-            {
-                return;
-            }
-
-            if (registry.EnsureAcquiredMechanitorHediffInternal(pawn))
-            {
-                return;
-            }
-
-            registry.QueueAcquiredHediffSync(pawn);
         }
 
         public static IEnumerable<Pawn> GetMechanicalConsciousnessCandidates()
@@ -509,17 +476,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ProcessPendingMechanitorInitializations();
         }
 
-        public override void GameComponentTick()
-        {
-            base.GameComponentTick();
-            ProcessPendingAcquiredHediffSyncOnTick();
-        }
-
         public override void StartedNewGame()
         {
             base.StartedNewGame();
             mechanitorRecords ??= new List<MechanoidMechanitorRecord>();
-            pendingAcquiredHediffSync = null;
             CleanupRecords();
             RebuildRecordIndex();
             TryRepairMechanicalConsciousnessHost();
@@ -533,6 +493,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RebuildRecordIndex();
             ProcessPendingLegacyNativeStateImports();
             RestoreAcquiredRecordsAfterLoad();
+            SynchronizeAcquiredMechanitorHediffs();
             TryRepairMechanicalConsciousnessHost();
 
             if (mechanicalConsciousnessHost != null
@@ -601,11 +562,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             recordByPawn.Remove(pawn);
             InvalidateDerivedCaches();
-        }
-
-        private void RemovePendingAcquiredHediffSyncInternal(Pawn pawn)
-        {
-            pendingAcquiredHediffSync?.Remove(pawn);
         }
 
         private void CleanupRecords()
@@ -761,18 +717,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                Pawn pawn = record.Pawn;
-                if (!EnsureAcquiredMechanitorHediffInternal(pawn))
+                try
                 {
-                    QueueAcquiredHediffSync(pawn);
+                    AcquiredMechanitorStateUtility.EnsureAcquiredMechanitorState(
+                        record.Pawn,
+                        record);
                 }
-
-                MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
-                MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
-                MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
-                    pawn,
-                    record.SelfWorkMode
-                        ?? MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(null));
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 读档恢复后天机械族机械师状态失败：" +
+                        $"pawn={record.Pawn.LabelShort}（{record.Pawn.ThingID}）：{ex}");
+                }
             }
         }
 
@@ -812,73 +768,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 MAPMechanitorInitializationUtility.FinalizeNow(pawn);
-            }
-        }
-
-        private void ProcessPendingAcquiredHediffSyncOnTick()
-        {
-            if (pendingAcquiredHediffSync == null || pendingAcquiredHediffSync.Count == 0)
-            {
-                return;
-            }
-
-            List<Pawn> pending = new List<Pawn>(pendingAcquiredHediffSync);
-            pendingAcquiredHediffSync.Clear();
-
-            for (int i = 0; i < pending.Count; i++)
-            {
-                ProcessPendingAcquiredHediffSyncFor(pending[i]);
-            }
-        }
-
-        private void ProcessPendingAcquiredHediffSyncFor(Pawn pawn)
-        {
-            if (pawn == null
-                || pawn.Destroyed
-                || !TryGetAcquiredMechanitorRecord(pawn, out _))
-            {
-                return;
-            }
-
-            if (EnsureAcquiredMechanitorHediffInternal(pawn))
-            {
-                MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
-                MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
-            }
-            else
-            {
-                QueueAcquiredHediffSync(pawn);
-            }
-        }
-
-        private bool EnsureAcquiredMechanitorHediffInternal(Pawn pawn)
-        {
-            if (pawn.Destroyed || !TryGetAcquiredMechanitorRecord(pawn, out _))
-            {
-                return false;
-            }
-
-            if (MechanoidMechanitorRoleUtility.HasAcquiredMechanitorHediff(pawn))
-            {
-                return true;
-            }
-
-            HediffDef? def = MechanoidMechanitorRoleUtility.GetAcquiredIdentityDef();
-            if (def == null || pawn.health?.hediffSet == null)
-            {
-                return false;
-            }
-
-            pawn.health.AddHediff(def);
-            return MechanoidMechanitorRoleUtility.HasAcquiredMechanitorHediff(pawn);
-        }
-
-        private void QueueAcquiredHediffSync(Pawn pawn)
-        {
-            pendingAcquiredHediffSync ??= new List<Pawn>();
-            if (!pendingAcquiredHediffSync.Contains(pawn))
-            {
-                pendingAcquiredHediffSync.Add(pawn);
             }
         }
 
@@ -945,6 +834,56 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 DefDatabase<HediffDef>.GetNamedSilentFail(MechanicalConsciousnessHediffDefName);
         }
 
+        private void SynchronizeAcquiredMechanitorHediffs()
+        {
+            if (Current.Game == null)
+            {
+                return;
+            }
+
+            try
+            {
+                HediffDef? def = MechanoidMechanitorRoleUtility.GetAcquiredIdentityDef();
+                if (def == null)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 后天机械族机械师健康状态同步失败：未找到 HediffDef " +
+                        "MAP_AcquiredMechanoidMechanitor。");
+                    return;
+                }
+
+                for (int i = 0; i < mechanitorRecords.Count; i++)
+                {
+                    MechanoidMechanitorRecord? record = mechanitorRecords[i];
+                    if (record == null)
+                    {
+                        continue;
+                    }
+
+                    Pawn? pawn = record.Pawn;
+                    if (pawn == null || pawn.Destroyed)
+                    {
+                        continue;
+                    }
+
+                    if (record.Origin == MechanoidMechanitorOrigin.Acquired)
+                    {
+                        EnsureSingleHediffOnPawn(pawn, def, "机械族机械师");
+                    }
+                    else
+                    {
+                        RemoveAllHediffsFromPawn(pawn, def, "机械族机械师");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 后天机械族机械师健康状态同步异常：" +
+                    $"{ex}");
+            }
+        }
+
         private void SynchronizeMechanicalConsciousnessHediff()
         {
             if (Current.Game == null)
@@ -966,7 +905,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Pawn? host = mechanicalConsciousnessHost;
                 if (host != null && !host.Destroyed)
                 {
-                    EnsureMechanicalConsciousnessHediffOnPawn(host, def);
+                    EnsureSingleHediffOnPawn(host, def, "机械意识");
                 }
 
                 for (int i = 0; i < mechanitorRecords.Count; i++)
@@ -980,11 +919,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                     if (ReferenceEquals(pawn, host))
                     {
-                        EnsureMechanicalConsciousnessHediffOnPawn(pawn, def);
+                        EnsureSingleHediffOnPawn(pawn, def, "机械意识");
                     }
                     else
                     {
-                        RemoveMechanicalConsciousnessHediffsFromPawn(pawn, def);
+                        RemoveAllHediffsFromPawn(pawn, def, "机械意识");
                     }
                 }
             }
@@ -997,7 +936,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static void EnsureMechanicalConsciousnessHediffOnPawn(Pawn pawn, HediffDef def)
+        private static void EnsureSingleHediffOnPawn(
+            Pawn pawn,
+            HediffDef def,
+            string contextLabel)
         {
             if (pawn.health?.hediffSet == null)
             {
@@ -1027,8 +969,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 catch (Exception ex)
                 {
                     Log.Error(
-                        "[MAP-机械族机械师] 移除重复机械意识健康状态失败：" +
-                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                        $"[MAP-机械族机械师] 移除重复{contextLabel}健康状态失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                        $"hediffDef={def.defName}：{ex}");
                 }
             }
 
@@ -1044,12 +987,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 添加机械意识健康状态失败：" +
-                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                    $"[MAP-机械族机械师] 添加{contextLabel}健康状态失败：" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                    $"hediffDef={def.defName}：{ex}");
             }
         }
 
-        private static void RemoveMechanicalConsciousnessHediffsFromPawn(Pawn pawn, HediffDef def)
+        private static void RemoveAllHediffsFromPawn(
+            Pawn pawn,
+            HediffDef def,
+            string contextLabel)
         {
             if (pawn.health?.hediffSet == null)
             {
@@ -1072,8 +1019,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 catch (Exception ex)
                 {
                     Log.Error(
-                        "[MAP-机械族机械师] 移除机械意识健康状态失败：" +
-                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                        $"[MAP-机械族机械师] 移除{contextLabel}健康状态失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                        $"hediffDef={def.defName}：{ex}");
                 }
             }
         }

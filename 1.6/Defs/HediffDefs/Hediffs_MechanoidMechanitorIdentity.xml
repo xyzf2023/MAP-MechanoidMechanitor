@@ -6,12 +6,8 @@
     <description>在自律指令核心的作用下，该机械体已成为机械族机械师。</description>
     <descriptionShort>该机械体已获得机械族机械师身份。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
-    <hediffClass>HediffWithComps</hediffClass>
     <isBad>false</isBad>
     <scenarioCanAdd>false</scenarioCanAdd>
-    <comps>
-      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_AcquiredMechanoidMechanitor" />
-    </comps>
     <stages>
       <li>
         <capMods>
