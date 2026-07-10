@@ -193,9 +193,9 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (HasCompAssignableTo<CompUseEffect_InstallImplant>(implantDef.comps))
+            if (HasCompAssignableTo<CompUseEffect>(implantDef.comps))
             {
-                failureReason = $"物品 {implantDef.defName} 已包含植入效果组件";
+                failureReason = $"物品 {implantDef.defName} 已包含其他使用效果组件";
                 return false;
             }
 
@@ -224,10 +224,7 @@ namespace MAP_MechanoidMechanitor
                     allowNonColonists = false
                 });
 
-            if (!HasCompAssignableTo<CompUseEffect_DestroySelf>(implantDef.comps))
-            {
-                implantDef.comps.Add(new CompProperties_UseEffectDestroySelf());
-            }
+            implantDef.comps.Add(new CompProperties_UseEffectDestroySelf());
 
             if (!HasCompAssignableTo<CompMechanoidMechanitorImplantMarker>(implantDef.comps))
             {
