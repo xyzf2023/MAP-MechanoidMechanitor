@@ -14,6 +14,11 @@ namespace MAP_MechanoidMechanitor
         private Dictionary<Pawn, DataProcessingAllocationRecord> recordByTarget =
             new Dictionary<Pawn, DataProcessingAllocationRecord>();
 
+        // 顶置状态独立于分配记录，分配降到 0% 时仍需保留。
+        private List<DataProcessingAllocationPinRecord> pinRecords =
+            new List<DataProcessingAllocationPinRecord>();
+        private int nextPinOrder;
+
         private int protectionTickCounter;
 
         public static GameComponent_DataProcessingAllocationRegistry? CurrentRegistry
@@ -211,6 +216,77 @@ namespace MAP_MechanoidMechanitor
             RemoveHediff(overseer, DataProcessingAllocationUtility.DataStreamDistributionDef);
         }
 
+        public bool IsPinned(Pawn? overseer, Pawn? target)
+        {
+            return FindPinRecord(overseer, target) != null;
+        }
+
+        public int GetPinOrder(Pawn? overseer, Pawn? target)
+        {
+            DataProcessingAllocationPinRecord? pin = FindPinRecord(overseer, target);
+            return pin != null ? pin.pinOrder : int.MaxValue;
+        }
+
+        public bool TryPinTarget(Pawn? overseer, Pawn? target)
+        {
+            if (!DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target))
+            {
+                return false;
+            }
+
+            if (FindPinRecord(overseer, target) != null)
+            {
+                return false;
+            }
+
+            EnsureNextPinOrderValid();
+            pinRecords.Add(new DataProcessingAllocationPinRecord(
+                overseer!,
+                target!,
+                nextPinOrder++));
+            return true;
+        }
+
+        public bool TryUnpinTarget(Pawn? overseer, Pawn? target)
+        {
+            DataProcessingAllocationPinRecord? pin = FindPinRecord(overseer, target);
+            if (pin == null)
+            {
+                return false;
+            }
+
+            pinRecords.Remove(pin);
+            return true;
+        }
+
+        public void CleanupInvalidPinRecords()
+        {
+            pinRecords ??= new List<DataProcessingAllocationPinRecord>();
+
+            HashSet<(int overseerId, int targetId)> seenPairs = new HashSet<(int, int)>();
+            for (int i = pinRecords.Count - 1; i >= 0; i--)
+            {
+                DataProcessingAllocationPinRecord? pin = pinRecords[i];
+                if (pin == null
+                    || !DataProcessingAllocationUtility.IsValidAllocationPair(
+                        pin.overseer,
+                        pin.target))
+                {
+                    pinRecords.RemoveAt(i);
+                    continue;
+                }
+
+                int overseerId = pin.overseer!.thingIDNumber;
+                int targetId = pin.target!.thingIDNumber;
+                if (!seenPairs.Add((overseerId, targetId)))
+                {
+                    pinRecords.RemoveAt(i);
+                }
+            }
+
+            EnsureNextPinOrderValid();
+        }
+
         public void CleanupInvalidRecords()
         {
             for (int i = records.Count - 1; i >= 0; i--)
@@ -238,6 +314,8 @@ namespace MAP_MechanoidMechanitor
                     }
                 }
             }
+
+            CleanupInvalidPinRecords();
         }
 
         public void SyncHediffsForOverseer(Pawn? overseer)
@@ -314,10 +392,13 @@ namespace MAP_MechanoidMechanitor
         {
             base.ExposeData();
             Scribe_Collections.Look(ref records, "records", LookMode.Deep);
+            Scribe_Collections.Look(ref pinRecords, "pinRecords", LookMode.Deep);
+            Scribe_Values.Look(ref nextPinOrder, "nextPinOrder", 0);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 records ??= new List<DataProcessingAllocationRecord>();
+                pinRecords ??= new List<DataProcessingAllocationPinRecord>();
                 records.RemoveAll(record => record == null || record.steps <= 0);
                 RebuildCaches();
                 CleanupInvalidRecords();
@@ -351,6 +432,46 @@ namespace MAP_MechanoidMechanitor
             return DataProcessingAllocationUtility.IsValidAllocationPair(
                 record.overseer,
                 record.target);
+        }
+
+        private DataProcessingAllocationPinRecord? FindPinRecord(Pawn? overseer, Pawn? target)
+        {
+            if (overseer == null || target == null || pinRecords == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < pinRecords.Count; i++)
+            {
+                DataProcessingAllocationPinRecord pin = pinRecords[i];
+                if (pin != null
+                    && ReferenceEquals(pin.overseer, overseer)
+                    && ReferenceEquals(pin.target, target))
+                {
+                    return pin;
+                }
+            }
+
+            return null;
+        }
+
+        private void EnsureNextPinOrderValid()
+        {
+            pinRecords ??= new List<DataProcessingAllocationPinRecord>();
+            int maxOrder = -1;
+            for (int i = 0; i < pinRecords.Count; i++)
+            {
+                DataProcessingAllocationPinRecord? pin = pinRecords[i];
+                if (pin != null && pin.pinOrder > maxOrder)
+                {
+                    maxOrder = pin.pinOrder;
+                }
+            }
+
+            if (nextPinOrder <= maxOrder)
+            {
+                nextPinOrder = maxOrder + 1;
+            }
         }
 
         private void AddRecord(DataProcessingAllocationRecord record)
