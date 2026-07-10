@@ -9,9 +9,11 @@ namespace MAP_MechanoidMechanitor
         private static readonly HashSet<string> bodiesMissingConsciousnessSourceLogged =
             new HashSet<string>();
 
-        public static bool IsMechanoidMechanitor(Pawn? pawn)
+        public static bool HasImplantInstallationCapability(Pawn? pawn)
         {
-            return MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
+            return MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.ImplantInstallation);
         }
 
         public static bool IsSupportedMechanitorImplant(Thing? implant)
@@ -28,7 +30,21 @@ namespace MAP_MechanoidMechanitor
 
         public static bool CanUseMechanitorImplant(Pawn? pawn, Thing? implant)
         {
-            return IsMechanoidMechanitor(pawn) && IsSupportedMechanitorImplant(implant);
+            return HasImplantInstallationCapability(pawn)
+                && IsSupportedMechanitorImplant(implant);
+        }
+
+        public static BodyPartRecord? GetPrimaryConsciousnessSourcePart(Pawn? pawn)
+        {
+            BodyDef? body = pawn?.RaceProps?.body;
+            if (body == null)
+            {
+                return null;
+            }
+
+            List<BodyPartRecord> consciousnessSources =
+                body.GetPartsWithTag(BodyPartTagDefOf.ConsciousnessSource);
+            return consciousnessSources.NullOrEmpty() ? null : consciousnessSources[0];
         }
 
         public static HediffDef? ResolveRequiredHediff(
@@ -72,20 +88,14 @@ namespace MAP_MechanoidMechanitor
                 return requestedPart;
             }
 
+            BodyPartRecord? consciousnessSource = GetPrimaryConsciousnessSourcePart(pawn);
+            if (consciousnessSource != null)
+            {
+                return consciousnessSource.def;
+            }
+
             BodyDef? body = pawn.RaceProps?.body;
-            if (body == null)
-            {
-                return requestedPart;
-            }
-
-            List<BodyPartRecord> consciousnessSources =
-                body.GetPartsWithTag(BodyPartTagDefOf.ConsciousnessSource);
-            if (!consciousnessSources.NullOrEmpty())
-            {
-                return consciousnessSources[0].def;
-            }
-
-            if (bodiesMissingConsciousnessSourceLogged.Add(body.defName))
+            if (body != null && bodiesMissingConsciousnessSourceLogged.Add(body.defName))
             {
                 Log.Warning(
                     "[MAP-机械族机械师] MechanoidMechanitorImplantUtility：" +
