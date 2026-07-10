@@ -18,6 +18,7 @@ namespace MAP_MechanoidMechanitor
         WorkTab = 1 << 7,
         PsychicRituals = 1 << 8,
         SelfWorkMode = 1 << 9,
-        ImplantInstallation = 1 << 10
+        ImplantInstallation = 1 << 10,
+        ShuttlePilot = 1 << 11
     }
 }

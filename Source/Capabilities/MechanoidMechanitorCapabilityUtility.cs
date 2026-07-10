@@ -111,7 +111,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            capabilities |= MechanoidMechanitorCapability.ImplantInstallation;
+            capabilities |= MechanoidMechanitorCapability.ImplantInstallation
+                | MechanoidMechanitorCapability.ShuttlePilot;
 
             if (!GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
                     pawn,
@@ -135,14 +136,17 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             ref MechanoidMechanitorCapability capabilities)
         {
-            if (!DataProcessingAllocationUtility.HasVirtualTravelNode(pawn))
+            if (DataProcessingAllocationUtility.HasVirtualTravelNode(pawn))
             {
-                return;
+                capabilities |= MechanoidMechanitorCapability.TravelLeadCaravan
+                    | MechanoidMechanitorCapability.TravelCollectItems
+                    | MechanoidMechanitorCapability.TravelRefreshTrackers;
             }
 
-            capabilities |= MechanoidMechanitorCapability.TravelLeadCaravan
-                | MechanoidMechanitorCapability.TravelCollectItems
-                | MechanoidMechanitorCapability.TravelRefreshTrackers;
+            if (DataProcessingAllocationUtility.HasShuttlePilotAllocation(pawn))
+            {
+                capabilities |= MechanoidMechanitorCapability.ShuttlePilot;
+            }
         }
     }
 }
