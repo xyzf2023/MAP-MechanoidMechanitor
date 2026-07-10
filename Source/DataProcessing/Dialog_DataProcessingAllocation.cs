@@ -71,7 +71,11 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            Rect outRect = new Rect(inRect.x, curY, inRect.width, inRect.height - (curY - inRect.y));
+            Rect outRect = new Rect(
+                inRect.x,
+                curY,
+                inRect.width,
+                inRect.height - (curY - inRect.y));
             float viewHeight = subjects.Count * RowHeight;
             Rect viewRect = new Rect(0f, 0f, outRect.width - 16f, viewHeight);
 
@@ -98,10 +102,9 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < overseenPawns.Count; i++)
             {
                 Pawn target = overseenPawns[i];
-                if (target == null
-                    || target.Dead
-                    || target.Destroyed
-                    || !target.RaceProps.IsMechanoid)
+                if (!DataProcessingAllocationUtility.IsValidAllocationPair(
+                        overseer,
+                        target))
                 {
                     continue;
                 }
@@ -154,12 +157,12 @@ namespace MAP_MechanoidMechanitor
                 GUI.color = Color.gray;
             }
 
-            if (Widgets.ButtonText(removeRect, "MAP_DataProcessingAllocation_Remove".Translate()))
+            if (Widgets.ButtonText(
+                    removeRect,
+                    "MAP_DataProcessingAllocation_Remove".Translate())
+                && canRemove)
             {
-                if (canRemove)
-                {
-                    registry?.TryRemoveStep(overseer, target);
-                }
+                registry?.TryRemoveStep(overseer, target);
             }
 
             GUI.color = Color.white;
@@ -169,7 +172,9 @@ namespace MAP_MechanoidMechanitor
                 GUI.color = Color.gray;
             }
 
-            if (Widgets.ButtonText(addRect, "MAP_DataProcessingAllocation_Add".Translate()))
+            if (Widgets.ButtonText(
+                    addRect,
+                    "MAP_DataProcessingAllocation_Add".Translate()))
             {
                 if (canAdd)
                 {
