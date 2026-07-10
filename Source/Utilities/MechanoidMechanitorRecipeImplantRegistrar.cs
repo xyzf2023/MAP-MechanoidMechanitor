@@ -34,38 +34,48 @@ namespace MAP_MechanoidMechanitor
                 RecipeDef recipe = recipes[i];
                 scannedCount++;
 
-                if (!IsSupportedBrainImplantRecipe(recipe))
+                try
                 {
-                    continue;
-                }
+                    if (!IsSupportedBrainImplantRecipe(recipe))
+                    {
+                        continue;
+                    }
 
-                eligibleRecipeCount++;
-                if (!TryResolveImplantThing(recipe, out ThingDef? implantDef)
-                    || implantDef == null)
+                    eligibleRecipeCount++;
+                    if (!TryResolveImplantThing(recipe, out ThingDef? implantDef)
+                        || implantDef == null)
+                    {
+                        skippedCount++;
+                        LogSkippedRecipe(recipe, "无法唯一识别植入体物品");
+                        continue;
+                    }
+
+                    if (recipesByImplant.TryGetValue(implantDef, out RecipeDef existingRecipe))
+                    {
+                        skippedCount++;
+                        LogSkippedRecipe(
+                            recipe,
+                            $"物品 {implantDef.defName} 已由配方 {existingRecipe.defName} 注册");
+                        continue;
+                    }
+
+                    if (!TryAttachComponents(implantDef, recipe, out string? failureReason))
+                    {
+                        skippedCount++;
+                        LogSkippedRecipe(recipe, failureReason ?? "无法添加使用组件");
+                        continue;
+                    }
+
+                    recipesByImplant.Add(implantDef, recipe);
+                    registeredCount++;
+                }
+                catch (Exception ex)
                 {
                     skippedCount++;
-                    LogSkippedRecipe(recipe, "无法唯一识别植入体物品");
-                    continue;
+                    Log.Error(
+                        $"{LogPrefix}处理配方 {recipe?.defName ?? "null"} 时发生异常，" +
+                        $"已跳过该配方：{ex}");
                 }
-
-                if (recipesByImplant.TryGetValue(implantDef, out RecipeDef existingRecipe))
-                {
-                    skippedCount++;
-                    LogSkippedRecipe(
-                        recipe,
-                        $"物品 {implantDef.defName} 已由配方 {existingRecipe.defName} 注册");
-                    continue;
-                }
-
-                if (!TryAttachComponents(implantDef, recipe, out string? failureReason))
-                {
-                    skippedCount++;
-                    LogSkippedRecipe(recipe, failureReason ?? "无法添加使用组件");
-                    continue;
-                }
-
-                recipesByImplant.Add(implantDef, recipe);
-                registeredCount++;
             }
 
             if (Prefs.DevMode)
@@ -96,6 +106,7 @@ namespace MAP_MechanoidMechanitor
                 || recipe.addsHediff == null
                 || recipe.appliedOnFixedBodyParts == null
                 || recipe.appliedOnFixedBodyParts.Count != 1
+                || recipe.appliedOnFixedBodyParts[0] == null
                 || recipe.appliedOnFixedBodyParts[0].defName != "Brain"
                 || !recipe.appliedOnFixedBodyPartGroups.NullOrEmpty())
             {
@@ -123,12 +134,12 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < recipe.ingredients.Count; i++)
             {
                 IngredientCount ingredient = recipe.ingredients[i];
-                if (ingredient.filter.AllowedDefCount != 1)
+                if (ingredient?.filter == null || ingredient.filter.AllowedDefCount != 1)
                 {
                     continue;
                 }
 
-                ThingDef candidate = ingredient.filter.AnyAllowedDef;
+                ThingDef? candidate = ingredient.filter.AnyAllowedDef;
                 if (!IsFallbackCandidate(recipe, candidate))
                 {
                     continue;
