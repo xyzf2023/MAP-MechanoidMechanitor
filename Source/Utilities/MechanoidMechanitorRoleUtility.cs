@@ -163,8 +163,8 @@ namespace MAP_MechanoidMechanitor
 
             if (IsAcquiredMechanoidMechanitor(pawn))
             {
-                GameComponent_MechanoidMechanitorRegistry.GrantAcquiredMechanitorIdentity(pawn);
-                return true;
+                return GameComponent_MechanoidMechanitorRegistry
+                    .GrantAcquiredMechanitorIdentity(pawn);
             }
 
             if (!CanBecomeAcquiredMechanoidMechanitor(pawn))
