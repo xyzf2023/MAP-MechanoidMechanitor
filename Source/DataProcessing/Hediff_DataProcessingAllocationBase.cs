@@ -20,6 +20,13 @@ namespace MAP_MechanoidMechanitor
 
         protected abstract bool IsPositiveOffset { get; }
 
+        /// <summary>
+        /// 子类可在此追加 Stat 等额外阶段效果；意识修正始终使用未经封顶的真实档位。
+        /// </summary>
+        protected virtual void ConfigureAdditionalStage(HediffStage stage, int steps)
+        {
+        }
+
         public override HediffStage CurStage
         {
             get
@@ -49,6 +56,7 @@ namespace MAP_MechanoidMechanitor
                             }
                         }
                     };
+                    ConfigureAdditionalStage(cachedStage, cachedSteps);
                 }
 
                 return cachedStage;
