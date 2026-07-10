@@ -405,6 +405,11 @@ namespace MAP_MechanoidMechanitor
                 pawn,
                 MechanoidMechanitorCapability.PsychicRituals);
 
+        public static bool AllowsShuttlePilot(Pawn? pawn) =>
+            MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.ShuttlePilot);
+
         public static bool IsRoleWorkType(WorkTypeDef? workType)
         {
             return workType != null

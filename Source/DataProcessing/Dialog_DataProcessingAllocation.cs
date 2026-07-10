@@ -823,6 +823,12 @@ namespace MAP_MechanoidMechanitor
                 effectTips.Add("MAP_DataProcessingAllocation_EffectTravelLeadTip".Translate());
             }
 
+            if (steps >= DataProcessingAllocationUtility.ShuttlePilotThresholdSteps)
+            {
+                effectLabels.Add("MAP_DataProcessingAllocation_EffectShuttlePilot".Translate());
+                effectTips.Add("MAP_DataProcessingAllocation_EffectShuttlePilotTip".Translate());
+            }
+
             float moveSpeedOffset = DataProcessingAllocationUtility.GetMoveSpeedOffset(steps);
             if (moveSpeedOffset > 0f)
             {

@@ -17,6 +17,9 @@ namespace MAP_MechanoidMechanitor
         /// <summary>15%：完整虚拟旅行节点。</summary>
         public const int TravelNodeThresholdSteps = 3;
 
+        /// <summary>15%：穿梭机驾驶资格。</summary>
+        public const int ShuttlePilotThresholdSteps = 3;
+
         /// <summary>特殊数值效果最多按 100%（20 档）计算；意识加成不受此限制。</summary>
         public const int MaxSpecialEffectSteps = 20;
 
@@ -175,6 +178,29 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
             return registry != null
                 && registry.HasAtLeast(pawn, TravelNodeThresholdSteps);
+        }
+
+        public static bool HasShuttlePilotAllocation(Pawn? pawn)
+        {
+            if (pawn == null || !ModsConfig.BiotechActive)
+            {
+                return false;
+            }
+
+            if (!pawn.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
+            {
+                return false;
+            }
+
+            GameComponent_DataProcessingAllocationRegistry? registry =
+                GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
+            return registry != null
+                && registry.HasAtLeast(pawn, ShuttlePilotThresholdSteps);
         }
 
         public static bool IsValidAllocationPair(Pawn? overseer, Pawn? target)

@@ -15,6 +15,8 @@
   <MAP_DataProcessingAllocation_EffectAttackTiming>瞄准时间、射击冷却与近战冷却 ×{0}</MAP_DataProcessingAllocation_EffectAttackTiming>
   <MAP_DataProcessingAllocation_EffectTravelLead>可带领远行队</MAP_DataProcessingAllocation_EffectTravelLead>
   <MAP_DataProcessingAllocation_EffectTravelLeadTip>该机械体获得完整的虚拟旅行节点能力，可以带领远行队、收集远行队物资，并在运输抵达后刷新相关状态。</MAP_DataProcessingAllocation_EffectTravelLeadTip>
+  <MAP_DataProcessingAllocation_EffectShuttlePilot>可驾驶穿梭机</MAP_DataProcessingAllocation_EffectShuttlePilot>
+  <MAP_DataProcessingAllocation_EffectShuttlePilotTip>该机械体获得穿梭机驾驶资格，可作为奥德赛玩家穿梭机的有效驾驶员。</MAP_DataProcessingAllocation_EffectShuttlePilotTip>
   <MAP_DataProcessingAllocation_EffectMoveSpeed>移动速度 +{0}</MAP_DataProcessingAllocation_EffectMoveSpeed>
   <MAP_DataProcessingAllocation_EffectStaggerDuration>抑止时间 ×{0}</MAP_DataProcessingAllocation_EffectStaggerDuration>
   <MAP_DataProcessingAllocation_EffectIncomingDamage>承伤系数 ×{0}</MAP_DataProcessingAllocation_EffectIncomingDamage>
