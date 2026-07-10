@@ -11,7 +11,7 @@ namespace MAP_MechanoidMechanitor
         public const int MinReservedConsciousnessPercent = 50;
         public const int MinConsciousnessPercentToAddStep = 55;
         public const int CommandRangeThresholdSteps = 2;
-        public const int CaravanLeadThresholdSteps = 4;
+        public const int TravelNodeThresholdSteps = 4;
 
         private const string DataStreamDistributionDefName = "MAP_DataStreamDistribution";
         private const string CommandFocusDefName = "MAP_CommandFocus";
@@ -91,7 +91,7 @@ namespace MAP_MechanoidMechanitor
                 && registry.HasAtLeast(mech, CommandRangeThresholdSteps);
         }
 
-        public static bool HasCaravanLeadQualification(Pawn? pawn)
+        public static bool HasVirtualTravelNode(Pawn? pawn)
         {
             if (pawn == null || !ModsConfig.BiotechActive)
             {
@@ -101,7 +101,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry? registry =
                 GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
             return registry != null
-                && registry.HasAtLeast(pawn, CaravanLeadThresholdSteps);
+                && registry.HasAtLeast(pawn, TravelNodeThresholdSteps);
         }
 
         public static bool IsValidAllocationPair(Pawn? overseer, Pawn? target)

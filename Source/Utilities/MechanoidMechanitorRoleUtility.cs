@@ -378,62 +378,30 @@ namespace MAP_MechanoidMechanitor
             return actualAdded;
         }
 
-        public static bool AllowsHumanWeapons(Pawn? pawn)
-        {
-            if (IsAcquiredMechanoidMechanitor(pawn))
-            {
-                return true;
-            }
+        public static bool AllowsHumanWeapons(Pawn? pawn) =>
+            MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.HumanWeapons);
 
-            CompHumanWeaponUser? comp = pawn?.GetComp<CompHumanWeaponUser>();
-            return comp != null;
-        }
+        public static bool AllowsColonistLikeFloatMenu(Pawn? pawn) =>
+            MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.ColonistLikeFloatMenu);
 
-        public static bool AllowsColonistLikeFloatMenu(Pawn? pawn)
-        {
-            if (IsAcquiredMechanoidMechanitor(pawn))
-            {
-                return true;
-            }
+        public static bool AllowsGravshipPilot(Pawn? pawn) =>
+            MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.GravshipPilot);
 
-            CompColonistLikeFloatMenuUser? comp =
-                pawn?.GetComp<CompColonistLikeFloatMenuUser>();
-            return comp != null && comp.Props.allowColonistLikeFloatMenu;
-        }
+        public static bool AllowsWorkTab(Pawn? pawn) =>
+            MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.WorkTab);
 
-        public static bool AllowsGravshipPilot(Pawn? pawn)
-        {
-            if (IsAcquiredMechanoidMechanitor(pawn))
-            {
-                return true;
-            }
-
-            CompGravshipPilotUser? comp = pawn?.GetComp<CompGravshipPilotUser>();
-            return comp != null && comp.Props.allowGravshipPilotConsole;
-        }
-
-        public static bool AllowsWorkTab(Pawn? pawn)
-        {
-            if (IsAcquiredMechanoidMechanitor(pawn))
-            {
-                return true;
-            }
-
-            CompWorkTabVisibleUser? comp = pawn?.GetComp<CompWorkTabVisibleUser>();
-            return comp != null && comp.Props.showInWorkTab;
-        }
-
-        public static bool AllowsPsychicRituals(Pawn? pawn)
-        {
-            if (IsAcquiredMechanoidMechanitor(pawn))
-            {
-                return true;
-            }
-
-            CompPsychicRitualParticipantUser? comp =
-                pawn?.GetComp<CompPsychicRitualParticipantUser>();
-            return comp != null && comp.Props.allowPsychicRituals;
-        }
+        public static bool AllowsPsychicRituals(Pawn? pawn) =>
+            MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.PsychicRituals);
 
         public static bool IsRoleWorkType(WorkTypeDef? workType)
         {

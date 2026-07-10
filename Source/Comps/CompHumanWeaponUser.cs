@@ -1,3 +1,4 @@
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
@@ -59,24 +60,38 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn,
+                    MechanoidMechanitorCapability.HumanWeapons))
+            {
+                return false;
+            }
+
+            if (GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
+                    pawn,
+                    out _))
             {
                 pawn.equipment ??= new Pawn_EquipmentTracker(pawn);
                 return true;
             }
 
             CompHumanWeaponUser? comp = pawn.GetComp<CompHumanWeaponUser>();
-            if (comp == null)
-            {
-                return false;
-            }
-
-            return pawn.equipment != null || comp.Props.ensureEquipmentTracker;
+            return comp != null
+                && (pawn.equipment != null || comp.Props.ensureEquipmentTracker);
         }
 
         public static bool PawnAllowsEquipFloatMenu(Pawn? pawn)
         {
-            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn,
+                    MechanoidMechanitorCapability.HumanWeapons))
+            {
+                return false;
+            }
+
+            if (GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
+                    pawn,
+                    out _))
             {
                 return true;
             }
@@ -87,7 +102,16 @@ namespace MAP_MechanoidMechanitor
 
         public static bool PawnAllowsDropEquipmentFloatMenu(Pawn? pawn)
         {
-            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn,
+                    MechanoidMechanitorCapability.HumanWeapons))
+            {
+                return false;
+            }
+
+            if (GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
+                    pawn,
+                    out _))
             {
                 return true;
             }
