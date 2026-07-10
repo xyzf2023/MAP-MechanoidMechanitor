@@ -23,9 +23,12 @@ namespace MAP_MechanoidMechanitor
         private static readonly Color HintTextColor = new Color(0.65f, 0.65f, 0.65f);
         private static readonly Color EffectTextColor = new Color(0.75f, 0.75f, 0.75f);
         private static readonly Vector2 PortraitCameraOffset = default;
+        private static readonly StringComparer LabelComparer = StringComparer.CurrentCulture;
 
         private readonly Pawn overseer;
         private readonly Dictionary<string, string> truncateCache = new Dictionary<string, string>();
+        private readonly List<Pawn> displayOrder = new List<Pawn>();
+        private bool displayOrderInitialized;
         private Vector2 scrollPosition;
 
         public override Vector2 InitialSize => new Vector2(680f, 520f);
@@ -73,7 +76,8 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                List<SubjectRowData> rows = BuildSortedRows(registry);
+                EnsureDisplayOrder(registry);
+                List<SubjectRowData> rows = BuildRowsInDisplayOrder(registry);
                 if (rows.Count == 0)
                 {
                     DrawCenteredMessage(
@@ -124,12 +128,13 @@ namespace MAP_MechanoidMechanitor
                         .ToStringPercent()));
             curY += Text.LineHeight + 2f;
 
+            string hint = "MAP_DataProcessingAllocation_MinReserveHint"
+                .Translate(GetOverseerDisplayName());
+            float hintHeight = Text.CalcHeight(hint, contentRect.width);
             GUI.color = HintTextColor;
-            Widgets.Label(
-                new Rect(contentRect.x, curY, contentRect.width, Text.LineHeight * 1.5f),
-                "MAP_DataProcessingAllocation_MinReserveHint".Translate(GetOverseerDisplayName()));
+            Widgets.Label(new Rect(contentRect.x, curY, contentRect.width, hintHeight), hint);
             GUI.color = Color.white;
-            curY += Text.LineHeight + SectionGap;
+            curY += hintHeight + SectionGap;
         }
 
         private void DrawListHeader(Rect contentRect, ref float curY)
@@ -202,21 +207,24 @@ namespace MAP_MechanoidMechanitor
             float contentTop = rowRect.y + RowPadding;
             float leftX = rowRect.x + 2f;
 
-            Rect pinRect = new Rect(leftX, contentTop, PinButtonSize, PinButtonSize);
-            DrawPinButton(pinRect, row, registry);
-            leftX = pinRect.xMax + LeftColumnGap;
-
             Rect portraitRect = new Rect(leftX, contentTop, PortraitSize, PortraitSize);
             DrawPortrait(portraitRect, row.target);
             leftX = portraitRect.xMax + LeftColumnGap;
 
             float actionBlockWidth =
-                ActionButtonWidth + ActionGap + PercentWidth + ActionGap + ActionButtonWidth;
+                PinButtonSize
+                + ActionGap
+                + ActionButtonWidth
+                + ActionGap
+                + PercentWidth
+                + ActionGap
+                + ActionButtonWidth;
+            float actionHeight = Mathf.Max(PinButtonSize, Text.LineHeight + 4f);
             Rect actionRect = new Rect(
                 rowRect.xMax - actionBlockWidth - 2f,
                 contentTop,
                 actionBlockWidth,
-                Text.LineHeight + 4f);
+                actionHeight);
             DrawActionButtons(actionRect, row, registry);
 
             float nameWidth = Mathf.Max(40f, actionRect.x - leftX - 8f);
@@ -229,40 +237,166 @@ namespace MAP_MechanoidMechanitor
                 row);
         }
 
+        private void DrawActionButtons(
+            Rect actionRect,
+            SubjectRowData row,
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            float buttonY = actionRect.y + (actionRect.height - PinButtonSize) / 2f;
+            float adjustY = actionRect.y + (actionRect.height - (Text.LineHeight + 4f)) / 2f;
+            float adjustHeight = Text.LineHeight + 4f;
+
+            Rect pinRect = new Rect(actionRect.x, buttonY, PinButtonSize, PinButtonSize);
+            Rect removeRect = new Rect(
+                pinRect.xMax + ActionGap,
+                adjustY,
+                ActionButtonWidth,
+                adjustHeight);
+            Rect percentRect = new Rect(
+                removeRect.xMax + ActionGap,
+                adjustY,
+                PercentWidth,
+                adjustHeight);
+            Rect addRect = new Rect(
+                percentRect.xMax + ActionGap,
+                adjustY,
+                ActionButtonWidth,
+                adjustHeight);
+
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            Widgets.Label(
+                percentRect,
+                DataProcessingAllocationUtility.StepsToPercent(row.steps).ToStringPercent());
+            Text.Anchor = TextAnchor.UpperLeft;
+
+            DrawPinButton(pinRect, row, registry);
+
+            AllocationAdjustBlockReason removeReason = GetRemoveBlockReason(row);
+            bool canRemove = removeReason == AllocationAdjustBlockReason.None;
+            string removeTip = GetRemoveTip(removeReason);
+            if (!removeTip.NullOrEmpty())
+            {
+                TooltipHandler.TipRegion(removeRect, removeTip);
+            }
+
+            if (DrawActionButton(
+                    removeRect,
+                    "MAP_DataProcessingAllocation_Remove".Translate(),
+                    canRemove)
+                && registry != null)
+            {
+                if (!registry.TryRemoveStep(overseer, row.target))
+                {
+                    Messages.Message(
+                        "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
+                        overseer,
+                        MessageTypeDefOf.RejectInput,
+                        historical: false);
+                }
+            }
+
+            AllocationAdjustBlockReason addReason = GetAddBlockReason(row, registry);
+            bool canAdd = addReason == AllocationAdjustBlockReason.None;
+            string addTip = GetAddTip(addReason);
+            if (!addTip.NullOrEmpty())
+            {
+                TooltipHandler.TipRegion(addRect, addTip);
+            }
+
+            if (DrawActionButton(
+                    addRect,
+                    "MAP_DataProcessingAllocation_Add".Translate(),
+                    canAdd)
+                && registry != null)
+            {
+                if (!registry.TryAddStep(overseer, row.target))
+                {
+                    Messages.Message(
+                        "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
+                        overseer,
+                        MessageTypeDefOf.RejectInput,
+                        historical: false);
+                }
+            }
+        }
+
         private void DrawPinButton(
             Rect pinRect,
             SubjectRowData row,
             GameComponent_DataProcessingAllocationRegistry? registry)
         {
             string label = row.isPinned ? "-" : "♡";
-            string tip = row.isPinned
-                ? "MAP_DataProcessingAllocation_UnpinTip".Translate()
-                : "MAP_DataProcessingAllocation_PinTip".Translate();
+            bool canPin = registry != null
+                && DataProcessingAllocationUtility.IsValidAllocationPair(overseer, row.target);
+            string tip = !canPin
+                ? (registry == null || !IsOverseerCapable()
+                    ? "MAP_DataProcessingAllocation_OverseerInvalid".Translate()
+                    : "MAP_DataProcessingAllocation_TargetInvalid".Translate())
+                : (row.isPinned
+                    ? "MAP_DataProcessingAllocation_UnpinTip".Translate()
+                    : "MAP_DataProcessingAllocation_PinTip".Translate());
             TooltipHandler.TipRegion(pinRect, tip);
 
-            if (Widgets.ButtonText(
-                    pinRect,
+            if (!DrawActionButton(pinRect, label, canPin) || registry == null)
+            {
+                return;
+            }
+
+            if (row.isPinned)
+            {
+                if (registry.TryUnpinTarget(overseer, row.target))
+                {
+                    ApplyUnpinToDisplayOrder(row.target, registry);
+                    SoundDefOf.Click.PlayOneShotOnCamera();
+                }
+            }
+            else if (registry.TryPinTarget(overseer, row.target))
+            {
+                ApplyPinToDisplayOrder(row.target, registry);
+                SoundDefOf.Click.PlayOneShotOnCamera();
+            }
+        }
+
+        /// <summary>
+        /// 启用时走原版 ButtonText；禁用时固定普通底图并套 InactiveColor，
+        /// 避免原版 active:false 仍绘制悬停/按下背景的问题。
+        /// </summary>
+        private static bool DrawActionButton(Rect rect, string label, bool enabled)
+        {
+            if (enabled)
+            {
+                return Widgets.ButtonText(
+                    rect,
                     label,
                     drawBackground: true,
                     doMouseoverSound: true,
-                    active: registry != null))
-            {
-                if (registry == null)
-                {
-                    return;
-                }
-
-                if (row.isPinned)
-                {
-                    registry.TryUnpinTarget(overseer, row.target);
-                }
-                else
-                {
-                    registry.TryPinTarget(overseer, row.target);
-                }
-
-                SoundDefOf.Click.PlayOneShotOnCamera();
+                    active: true);
             }
+
+            Color oldColor = GUI.color;
+            TextAnchor oldAnchor = Text.Anchor;
+            bool oldWordWrap = Text.WordWrap;
+            try
+            {
+                GUI.color = Widgets.InactiveColor;
+                Widgets.DrawAtlas(rect, Widgets.ButtonBGAtlas);
+                Text.Anchor = TextAnchor.MiddleCenter;
+                if (rect.height < Text.LineHeight * 2f)
+                {
+                    Text.WordWrap = false;
+                }
+
+                Widgets.Label(rect, label);
+            }
+            finally
+            {
+                GUI.color = oldColor;
+                Text.Anchor = oldAnchor;
+                Text.WordWrap = oldWordWrap;
+            }
+
+            return false;
         }
 
         private static void DrawPortrait(Rect portraitRect, Pawn target)
@@ -306,87 +440,6 @@ namespace MAP_MechanoidMechanitor
             Text.Anchor = TextAnchor.UpperLeft;
         }
 
-        private void DrawActionButtons(
-            Rect actionRect,
-            SubjectRowData row,
-            GameComponent_DataProcessingAllocationRegistry? registry)
-        {
-            Rect removeRect = new Rect(
-                actionRect.x,
-                actionRect.y,
-                ActionButtonWidth,
-                actionRect.height);
-            Rect percentRect = new Rect(
-                removeRect.xMax + ActionGap,
-                actionRect.y,
-                PercentWidth,
-                actionRect.height);
-            Rect addRect = new Rect(
-                percentRect.xMax + ActionGap,
-                actionRect.y,
-                ActionButtonWidth,
-                actionRect.height);
-
-            Text.Font = GameFont.Small;
-            Text.Anchor = TextAnchor.MiddleCenter;
-            Widgets.Label(
-                percentRect,
-                DataProcessingAllocationUtility.StepsToPercent(row.steps).ToStringPercent());
-            Text.Anchor = TextAnchor.UpperLeft;
-
-            AllocationAdjustBlockReason removeReason = GetRemoveBlockReason(row);
-            bool canRemove = removeReason == AllocationAdjustBlockReason.None;
-            string removeTip = GetRemoveTip(removeReason);
-            if (!removeTip.NullOrEmpty())
-            {
-                TooltipHandler.TipRegion(removeRect, removeTip);
-            }
-
-            if (Widgets.ButtonText(
-                    removeRect,
-                    "MAP_DataProcessingAllocation_Remove".Translate(),
-                    drawBackground: true,
-                    doMouseoverSound: true,
-                    active: canRemove)
-                && registry != null)
-            {
-                if (!registry.TryRemoveStep(overseer, row.target))
-                {
-                    Messages.Message(
-                        "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
-                        overseer,
-                        MessageTypeDefOf.RejectInput,
-                        historical: false);
-                }
-            }
-
-            AllocationAdjustBlockReason addReason = GetAddBlockReason(row, registry);
-            bool canAdd = addReason == AllocationAdjustBlockReason.None;
-            string addTip = GetAddTip(addReason);
-            if (!addTip.NullOrEmpty())
-            {
-                TooltipHandler.TipRegion(addRect, addTip);
-            }
-
-            if (Widgets.ButtonText(
-                    addRect,
-                    "MAP_DataProcessingAllocation_Add".Translate(),
-                    drawBackground: true,
-                    doMouseoverSound: true,
-                    active: canAdd)
-                && registry != null)
-            {
-                if (!registry.TryAddStep(overseer, row.target))
-                {
-                    Messages.Message(
-                        "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
-                        overseer,
-                        MessageTypeDefOf.RejectInput,
-                        historical: false);
-                }
-            }
-        }
-
         private void DrawEffects(Rect effectRect, SubjectRowData row)
         {
             Text.Font = GameFont.Small;
@@ -422,49 +475,265 @@ namespace MAP_MechanoidMechanitor
             Text.Anchor = TextAnchor.UpperLeft;
         }
 
-        private List<SubjectRowData> BuildSortedRows(
+        private void EnsureDisplayOrder(
             GameComponent_DataProcessingAllocationRegistry? registry)
         {
-            List<SubjectRowData> rows = new List<SubjectRowData>();
+            List<Pawn> validTargets = CollectValidTargets();
+            if (!displayOrderInitialized)
+            {
+                InitializeDisplayOrder(validTargets, registry);
+                return;
+            }
+
+            SyncDisplayOrder(validTargets, registry);
+        }
+
+        private void InitializeDisplayOrder(
+            List<Pawn> validTargets,
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            displayOrder.Clear();
+            List<SubjectRowData> sorted = new List<SubjectRowData>(validTargets.Count);
+            for (int i = 0; i < validTargets.Count; i++)
+            {
+                SubjectRowData? row = TryCreateRowData(validTargets[i], registry);
+                if (row != null)
+                {
+                    sorted.Add(row);
+                }
+            }
+
+            sorted.Sort(CompareRows);
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                displayOrder.Add(sorted[i].target);
+            }
+
+            displayOrderInitialized = true;
+        }
+
+        private void SyncDisplayOrder(
+            List<Pawn> validTargets,
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            HashSet<Pawn> validSet = new HashSet<Pawn>(validTargets);
+            for (int i = displayOrder.Count - 1; i >= 0; i--)
+            {
+                Pawn pawn = displayOrder[i];
+                if (pawn == null || !validSet.Contains(pawn))
+                {
+                    displayOrder.RemoveAt(i);
+                }
+            }
+
+            // 按 Registry 顶置状态拆分，保留未顶置目标的相对顺序，避免加减档位引发跳动。
+            List<Pawn> pinned = new List<Pawn>();
+            List<Pawn> unpinned = new List<Pawn>();
+            for (int i = 0; i < displayOrder.Count; i++)
+            {
+                Pawn pawn = displayOrder[i];
+                if (registry?.IsPinned(overseer, pawn) == true)
+                {
+                    pinned.Add(pawn);
+                }
+                else
+                {
+                    unpinned.Add(pawn);
+                }
+            }
+
+            pinned.Sort((left, right) =>
+            {
+                int leftOrder = registry?.GetPinOrder(overseer, left) ?? int.MaxValue;
+                int rightOrder = registry?.GetPinOrder(overseer, right) ?? int.MaxValue;
+                int orderCompare = leftOrder.CompareTo(rightOrder);
+                if (orderCompare != 0)
+                {
+                    return orderCompare;
+                }
+
+                return left.thingIDNumber.CompareTo(right.thingIDNumber);
+            });
+
+            displayOrder.Clear();
+            displayOrder.AddRange(pinned);
+            displayOrder.AddRange(unpinned);
+
+            for (int i = 0; i < validTargets.Count; i++)
+            {
+                Pawn pawn = validTargets[i];
+                if (displayOrder.Contains(pawn))
+                {
+                    continue;
+                }
+
+                if (registry?.IsPinned(overseer, pawn) == true)
+                {
+                    InsertPinnedTarget(pawn, registry);
+                }
+                else
+                {
+                    displayOrder.Add(pawn);
+                }
+            }
+        }
+
+        private List<SubjectRowData> BuildRowsInDisplayOrder(
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            List<SubjectRowData> rows = new List<SubjectRowData>(displayOrder.Count);
+            for (int i = 0; i < displayOrder.Count; i++)
+            {
+                SubjectRowData? row = TryCreateRowData(displayOrder[i], registry);
+                if (row != null)
+                {
+                    rows.Add(row);
+                }
+            }
+
+            return rows;
+        }
+
+        private List<Pawn> CollectValidTargets()
+        {
+            List<Pawn> targets = new List<Pawn>();
             if (overseer?.mechanitor == null)
             {
-                return rows;
+                return targets;
             }
 
             List<Pawn> overseenPawns = overseer.mechanitor.OverseenPawns;
             for (int i = 0; i < overseenPawns.Count; i++)
             {
                 Pawn target = overseenPawns[i];
-                if (!DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target))
+                if (DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target))
                 {
-                    continue;
+                    targets.Add(target);
                 }
-
-                int steps = registry?.GetStepsForOverseerTarget(overseer, target) ?? 0;
-                bool isPinned = registry?.IsPinned(overseer, target) == true;
-                int pinOrder = isPinned
-                    ? registry!.GetPinOrder(overseer, target)
-                    : int.MaxValue;
-                int controlGroupIndex = target.GetMechControlGroup()?.Index ?? int.MaxValue;
-
-                List<string> effectLabels = new List<string>();
-                List<string> effectTips = new List<string>();
-                BuildEffectTexts(steps, effectLabels, effectTips);
-
-                SubjectRowData row = new SubjectRowData(
-                    target,
-                    steps,
-                    isPinned,
-                    pinOrder,
-                    controlGroupIndex,
-                    effectLabels,
-                    effectTips,
-                    CalculateRowHeight(effectLabels.Count));
-                rows.Add(row);
             }
 
-            rows.Sort(CompareRows);
-            return rows;
+            return targets;
+        }
+
+        private SubjectRowData? TryCreateRowData(
+            Pawn? target,
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            if (target == null
+                || !DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target))
+            {
+                return null;
+            }
+
+            int steps = registry?.GetStepsForOverseerTarget(overseer, target) ?? 0;
+            bool isPinned = registry?.IsPinned(overseer, target) == true;
+            int pinOrder = isPinned
+                ? registry!.GetPinOrder(overseer, target)
+                : int.MaxValue;
+            int controlGroupIndex = target.GetMechControlGroup()?.Index ?? int.MaxValue;
+
+            List<string> effectLabels = new List<string>();
+            List<string> effectTips = new List<string>();
+            BuildEffectTexts(steps, effectLabels, effectTips);
+
+            return new SubjectRowData(
+                target,
+                steps,
+                isPinned,
+                pinOrder,
+                controlGroupIndex,
+                effectLabels,
+                effectTips,
+                CalculateRowHeight(effectLabels.Count));
+        }
+
+        private void ApplyPinToDisplayOrder(
+            Pawn target,
+            GameComponent_DataProcessingAllocationRegistry registry)
+        {
+            displayOrder.Remove(target);
+            InsertPinnedTarget(target, registry);
+        }
+
+        private void ApplyUnpinToDisplayOrder(
+            Pawn target,
+            GameComponent_DataProcessingAllocationRegistry registry)
+        {
+            displayOrder.Remove(target);
+            InsertUnpinnedTarget(target, registry);
+        }
+
+        private void InsertPinnedTarget(
+            Pawn target,
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            int targetPinOrder = registry?.GetPinOrder(overseer, target) ?? int.MaxValue;
+            int insertIndex = 0;
+            while (insertIndex < displayOrder.Count)
+            {
+                Pawn candidate = displayOrder[insertIndex];
+                if (registry?.IsPinned(overseer, candidate) != true)
+                {
+                    break;
+                }
+
+                int candidateOrder = registry.GetPinOrder(overseer, candidate);
+                if (candidateOrder > targetPinOrder
+                    || (candidateOrder == targetPinOrder
+                        && candidate.thingIDNumber > target.thingIDNumber))
+                {
+                    break;
+                }
+
+                insertIndex++;
+            }
+
+            displayOrder.Insert(insertIndex, target);
+        }
+
+        private void InsertUnpinnedTarget(
+            Pawn target,
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            SubjectRowData? moving = TryCreateRowData(target, registry);
+            if (moving == null)
+            {
+                displayOrder.Add(target);
+                return;
+            }
+
+            int insertIndex = CountPinnedTargets(registry);
+            while (insertIndex < displayOrder.Count)
+            {
+                SubjectRowData? existing = TryCreateRowData(displayOrder[insertIndex], registry);
+                if (existing == null || CompareUnpinnedRows(moving, existing) < 0)
+                {
+                    break;
+                }
+
+                insertIndex++;
+            }
+
+            displayOrder.Insert(insertIndex, target);
+        }
+
+        private int CountPinnedTargets(
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            int count = 0;
+            for (int i = 0; i < displayOrder.Count; i++)
+            {
+                if (registry?.IsPinned(overseer, displayOrder[i]) == true)
+                {
+                    count++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return count;
         }
 
         private static int CompareRows(SubjectRowData left, SubjectRowData right)
@@ -485,6 +754,11 @@ namespace MAP_MechanoidMechanitor
                 return left.target.thingIDNumber.CompareTo(right.target.thingIDNumber);
             }
 
+            return CompareUnpinnedRows(left, right);
+        }
+
+        private static int CompareUnpinnedRows(SubjectRowData left, SubjectRowData right)
+        {
             int stepsCompare = right.steps.CompareTo(left.steps);
             if (stepsCompare != 0)
             {
@@ -497,19 +771,13 @@ namespace MAP_MechanoidMechanitor
                 return groupCompare;
             }
 
-            int kindCompare = string.Compare(
-                left.target.KindLabel,
-                right.target.KindLabel,
-                StringComparison.CurrentCultureIgnoreCase);
+            int kindCompare = LabelComparer.Compare(left.target.KindLabel, right.target.KindLabel);
             if (kindCompare != 0)
             {
                 return kindCompare;
             }
 
-            int labelCompare = string.Compare(
-                left.target.Label,
-                right.target.Label,
-                StringComparison.CurrentCultureIgnoreCase);
+            int labelCompare = LabelComparer.Compare(left.target.Label, right.target.Label);
             if (labelCompare != 0)
             {
                 return labelCompare;
