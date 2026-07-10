@@ -19,4 +19,23 @@
       </li>
     </stages>
   </HediffDef>
+  <HediffDef>
+    <defName>MAP_NativeMechanoidMechanitor</defName>
+    <label>机械族机械师</label>
+    <description>该机械体觉醒了自我意识，成为一名机械族机械师。</description>
+    <descriptionShort>该机械体已觉醒自我意识。</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <stages>
+      <li>
+        <capMods>
+          <li>
+            <capacity>Consciousness</capacity>
+            <offset>1.0</offset>
+          </li>
+        </capMods>
+      </li>
+    </stages>
+  </HediffDef>
 </Defs>
