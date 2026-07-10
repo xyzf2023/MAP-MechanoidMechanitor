@@ -1,23 +1,31 @@
-using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    public class Hediff_CommandFocus : HediffWithComps
+    public class Hediff_CommandFocus : Hediff_DataProcessingAllocationBase
     {
+        protected override bool IsPositiveOffset => true;
+
+        protected override int GetAllocationSteps()
+        {
+            GameComponent_DataProcessingAllocationRegistry? registry =
+                GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
+            return registry?.GetStepsForTarget(pawn) ?? 0;
+        }
+
         public override string LabelInBrackets
         {
             get
             {
-                GameComponent_DataProcessingAllocationRegistry? registry =
-                    GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
-                int steps = registry?.GetStepsForTarget(pawn) ?? 0;
+                int steps = GetAllocationSteps();
                 if (steps <= 0)
                 {
                     return base.LabelInBrackets;
                 }
 
-                return DataProcessingAllocationUtility.FormatPercentDelta(steps, positive: true);
+                return DataProcessingAllocationUtility.FormatPercentDelta(
+                    steps,
+                    positive: true);
             }
         }
     }
