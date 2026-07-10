@@ -21,7 +21,7 @@ namespace MAP_MechanoidMechanitor
         public const int MaxSpecialEffectSteps = 20;
 
         public const float WorkSpeedOffsetPerStep = 0.15f;
-        public const float RangedFactorReductionPerTenPercentTier = 0.05f;
+        public const float AttackTimingFactorReductionPerTenPercentTier = 0.05f;
         public const float MoveSpeedOffsetPerTenPercentTier = 0.5f;
         public const float IncomingDamageReductionPerTenPercentTier = 0.05f;
         public const int MoveSpeedMinEffectSteps = 4;
@@ -62,10 +62,14 @@ namespace MAP_MechanoidMechanitor
             return GetSpecialEffectSteps(steps) * WorkSpeedOffsetPerStep;
         }
 
-        public static float GetRangedActionFactor(int steps)
+        /// <summary>
+        /// 瞄准时间、远程冷却与近战冷却共用的时间系数。
+        /// </summary>
+        public static float GetAttackTimingFactor(int steps)
         {
             int effectSteps = GetSpecialEffectSteps(steps);
-            return 1f - effectSteps / 2 * RangedFactorReductionPerTenPercentTier;
+            return 1f
+                - effectSteps / 2 * AttackTimingFactorReductionPerTenPercentTier;
         }
 
         public static float GetMoveSpeedOffset(int steps)

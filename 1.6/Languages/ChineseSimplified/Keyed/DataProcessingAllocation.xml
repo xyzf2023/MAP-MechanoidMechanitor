@@ -12,7 +12,7 @@
   <MAP_DataProcessingAllocation_EffectWorkSpeed>工作速度 +{0}</MAP_DataProcessingAllocation_EffectWorkSpeed>
   <MAP_DataProcessingAllocation_EffectCommandRange>可脱离指挥范围行动</MAP_DataProcessingAllocation_EffectCommandRange>
   <MAP_DataProcessingAllocation_EffectCommandRangeTip>该机械体可以脱离当前机械族机械师的命令距离范围行动。</MAP_DataProcessingAllocation_EffectCommandRangeTip>
-  <MAP_DataProcessingAllocation_EffectRangedSpeed>瞄准时间与射击冷却 ×{0}</MAP_DataProcessingAllocation_EffectRangedSpeed>
+  <MAP_DataProcessingAllocation_EffectAttackTiming>瞄准时间、射击冷却与近战冷却 ×{0}</MAP_DataProcessingAllocation_EffectAttackTiming>
   <MAP_DataProcessingAllocation_EffectTravelLead>完整旅行节点</MAP_DataProcessingAllocation_EffectTravelLead>
   <MAP_DataProcessingAllocation_EffectTravelLeadTip>该机械体获得完整的虚拟旅行节点能力，可以带领远行队、收集远行队物资，并在运输抵达后刷新相关状态。</MAP_DataProcessingAllocation_EffectTravelLeadTip>
   <MAP_DataProcessingAllocation_EffectMoveSpeed>移动速度 +{0}格/秒</MAP_DataProcessingAllocation_EffectMoveSpeed>
