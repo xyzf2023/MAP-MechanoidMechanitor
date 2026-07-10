@@ -36,6 +36,17 @@ namespace MAP_MechanoidMechanitor
                 JusticeScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
             }
 
+            listing.CheckboxLabeled(
+                "MAP_Settings_EnableMechanoidMechanitorBrainImplants_Label".Translate(),
+                ref Settings.enableMechanoidMechanitorBrainImplants,
+                "MAP_Settings_EnableMechanoidMechanitorBrainImplants_Description".Translate());
+            if (MechanoidMechanitorBrainImplantFeatureState.RestartRequired)
+            {
+                listing.Label(
+                    "MAP_Settings_EnableMechanoidMechanitorBrainImplants_RestartRequired"
+                        .Translate());
+            }
+
             listing.End();
         }
     }
