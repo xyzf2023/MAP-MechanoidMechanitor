@@ -17,6 +17,7 @@ namespace MAP_MechanoidMechanitor
         GravshipPilot = 1 << 6,
         WorkTab = 1 << 7,
         PsychicRituals = 1 << 8,
-        SelfWorkMode = 1 << 9
+        SelfWorkMode = 1 << 9,
+        ImplantInstallation = 1 << 10
     }
 }
