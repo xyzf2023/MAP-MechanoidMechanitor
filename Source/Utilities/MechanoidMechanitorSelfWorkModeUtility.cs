@@ -18,11 +18,10 @@ namespace MAP_MechanoidMechanitor
         private static HediffDef? autonomousDirectiveHediffDef;
         private static HediffDef? selfRepairHediffDef;
 
-        public static bool HasSelfWorkMode(Pawn? pawn)
-        {
-            return CompJusticeSelfWorkMode.GetFor(pawn) != null
-                || MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn);
-        }
+        public static bool HasSelfWorkMode(Pawn? pawn) =>
+            MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.SelfWorkMode);
 
         public static bool TryGetCurrentMode(Pawn? pawn, out MechWorkModeDef? mode)
         {
