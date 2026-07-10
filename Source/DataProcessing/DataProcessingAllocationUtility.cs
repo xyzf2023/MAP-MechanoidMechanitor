@@ -8,7 +8,8 @@ namespace MAP_MechanoidMechanitor
     {
         public const float StepPercent = 0.05f;
         public const float MinReservedConsciousness = 0.50f;
-        public const float MinConsciousnessToAddStep = 0.55f;
+        public const int MinReservedConsciousnessPercent = 50;
+        public const int MinConsciousnessPercentToAddStep = 55;
         public const int CommandRangeThresholdSteps = 2;
         public const int CaravanLeadThresholdSteps = 4;
 
@@ -54,21 +55,22 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        public static int GetCurrentConsciousnessPercent(Pawn? pawn)
+        {
+            return Mathf.RoundToInt(GetCurrentConsciousness(pawn) * 100f);
+        }
+
         public static int GetAdditionalAssignableSteps(Pawn? overseer)
         {
-            float current = GetCurrentConsciousness(overseer);
-            float available = current - MinReservedConsciousness;
-            if (available < StepPercent)
-            {
-                return 0;
-            }
-
-            return Mathf.FloorToInt(available / StepPercent);
+            int availablePercent =
+                GetCurrentConsciousnessPercent(overseer) - MinReservedConsciousnessPercent;
+            return availablePercent >= 5 ? availablePercent / 5 : 0;
         }
 
         public static bool CanAddStep(Pawn? overseer)
         {
-            return GetCurrentConsciousness(overseer) >= MinConsciousnessToAddStep;
+            return GetCurrentConsciousnessPercent(overseer)
+                >= MinConsciousnessPercentToAddStep;
         }
 
         public static bool HasCommandRangeBypass(Pawn? mech)
