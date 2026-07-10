@@ -188,11 +188,18 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            JobDef? useItemJob = DefDatabase<JobDef>.GetNamedSilentFail("UseItem");
+            if (useItemJob == null)
+            {
+                failureReason = "未找到原版 UseItem 工作定义";
+                return false;
+            }
+
             implantDef.comps.Add(
                 new CompProperties_UsableMechanoidMechanitorBrainImplant
                 {
                     sourceRecipe = recipe,
-                    useJob = JobDefOf.UseItem,
+                    useJob = useItemJob,
                     useLabel =
                         "MAP_MechanoidMechanitor.BrainImplant.InstallLabel".Translate()
                 });
