@@ -807,12 +807,13 @@ namespace MAP_MechanoidMechanitor
             effectLabels.Add("MAP_DataProcessingAllocation_EffectCommandRange".Translate());
             effectTips.Add("MAP_DataProcessingAllocation_EffectCommandRangeTip".Translate());
 
-            float rangedFactor = DataProcessingAllocationUtility.GetRangedActionFactor(steps);
-            if (rangedFactor < 1f)
+            float attackTimingFactor =
+                DataProcessingAllocationUtility.GetAttackTimingFactor(steps);
+            if (attackTimingFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectRangedSpeed".Translate(
-                        rangedFactor.ToStringPercent()));
+                    "MAP_DataProcessingAllocation_EffectAttackTiming".Translate(
+                        attackTimingFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
 

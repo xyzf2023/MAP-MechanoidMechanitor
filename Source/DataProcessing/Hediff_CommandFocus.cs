@@ -42,19 +42,25 @@ namespace MAP_MechanoidMechanitor
                 });
             }
 
-            float rangedFactor = DataProcessingAllocationUtility.GetRangedActionFactor(steps);
-            if (rangedFactor < 1f)
+            float attackTimingFactor =
+                DataProcessingAllocationUtility.GetAttackTimingFactor(steps);
+            if (attackTimingFactor < 1f)
             {
                 factors ??= new List<StatModifier>();
                 factors.Add(new StatModifier
                 {
                     stat = StatDefOf.AimingDelayFactor,
-                    value = rangedFactor
+                    value = attackTimingFactor
                 });
                 factors.Add(new StatModifier
                 {
                     stat = StatDefOf.RangedCooldownFactor,
-                    value = rangedFactor
+                    value = attackTimingFactor
+                });
+                factors.Add(new StatModifier
+                {
+                    stat = StatDefOf.MeleeCooldownFactor,
+                    value = attackTimingFactor
                 });
             }
 
