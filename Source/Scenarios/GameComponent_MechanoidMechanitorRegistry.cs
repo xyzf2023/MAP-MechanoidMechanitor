@@ -9,6 +9,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed partial class GameComponent_MechanoidMechanitorRegistry : GameComponent
     {
+        private const string MechanicalConsciousnessHediffDefName = "MAP_MechanicalConsciousness";
+
+        private static HediffDef? cachedMechanicalConsciousnessHediffDef;
+
         private Pawn? mechanicalConsciousnessHost;
         private List<MechanoidMechanitorRecord> mechanitorRecords = new List<MechanoidMechanitorRecord>();
         private Dictionary<Pawn, MechanoidMechanitorRecord> recordByPawn =
@@ -388,6 +392,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             registry.mechanicalConsciousnessHost = pawn;
             FinalizeHostAssignment(pawn);
+            registry.SynchronizeMechanicalConsciousnessHediff();
             return true;
         }
 
@@ -410,6 +415,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             registry.mechanicalConsciousnessHost = pawn;
             FinalizeHostAssignment(pawn);
+            registry.SynchronizeMechanicalConsciousnessHediff();
             return true;
         }
 
@@ -453,13 +459,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             try
             {
+                registry.SynchronizeMechanicalConsciousnessHediff();
                 NotifyJusticeColonistDisplaysIfNeeded();
             }
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 替换机械意识宿主后 post-commit 刷新失败：" +
-                    $"{newHost.LabelShort}（{newHost.ThingID}）：{ex}");
+                    "[MAP-机械族机械师] 替换机械意识宿主后 post-commit 处理失败：" +
+                    $"newHost={newHost.LabelShort}（{newHost.ThingID}），" +
+                    $"oldHost={expectedCurrentHost.LabelShort}（{expectedCurrentHost.ThingID}）：{ex}");
             }
 
             return true;
@@ -533,6 +541,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 FinalizeHostAssignment(mechanicalConsciousnessHost);
             }
+
+            SynchronizeMechanicalConsciousnessHediff();
         }
 
         private static bool PrepareHost(Pawn pawn, bool promoteIfNeeded)
@@ -927,6 +937,145 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             mechanicalConsciousnessHost = fallback;
+        }
+
+        private static HediffDef? GetMechanicalConsciousnessHediffDef()
+        {
+            return cachedMechanicalConsciousnessHediffDef ??=
+                DefDatabase<HediffDef>.GetNamedSilentFail(MechanicalConsciousnessHediffDefName);
+        }
+
+        private void SynchronizeMechanicalConsciousnessHediff()
+        {
+            if (Current.Game == null)
+            {
+                return;
+            }
+
+            try
+            {
+                HediffDef? def = GetMechanicalConsciousnessHediffDef();
+                if (def == null)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 机械意识健康状态同步失败：未找到 HediffDef " +
+                        $"{MechanicalConsciousnessHediffDefName}。");
+                    return;
+                }
+
+                Pawn? host = mechanicalConsciousnessHost;
+                if (host != null && !host.Destroyed)
+                {
+                    EnsureMechanicalConsciousnessHediffOnPawn(host, def);
+                }
+
+                for (int i = 0; i < mechanitorRecords.Count; i++)
+                {
+                    MechanoidMechanitorRecord? record = mechanitorRecords[i];
+                    Pawn? pawn = record?.Pawn;
+                    if (pawn == null || pawn.Destroyed)
+                    {
+                        continue;
+                    }
+
+                    if (ReferenceEquals(pawn, host))
+                    {
+                        EnsureMechanicalConsciousnessHediffOnPawn(pawn, def);
+                    }
+                    else
+                    {
+                        RemoveMechanicalConsciousnessHediffsFromPawn(pawn, def);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Pawn? host = mechanicalConsciousnessHost;
+                Log.Error(
+                    "[MAP-机械族机械师] 机械意识健康状态同步异常：" +
+                    $"currentHost={host?.LabelShort ?? "null"}（{host?.ThingID ?? "null"}）：{ex}");
+            }
+        }
+
+        private static void EnsureMechanicalConsciousnessHediffOnPawn(Pawn pawn, HediffDef def)
+        {
+            if (pawn.health?.hediffSet == null)
+            {
+                return;
+            }
+
+            Hediff? keeper = null;
+            List<Hediff> hediffs = pawn.health.hediffSet.hediffs;
+            for (int i = hediffs.Count - 1; i >= 0; i--)
+            {
+                Hediff? hediff = hediffs[i];
+                if (hediff?.def != def)
+                {
+                    continue;
+                }
+
+                if (keeper == null)
+                {
+                    keeper = hediff;
+                    continue;
+                }
+
+                try
+                {
+                    pawn.health.RemoveHediff(hediff);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 移除重复机械意识健康状态失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                }
+            }
+
+            if (keeper != null)
+            {
+                return;
+            }
+
+            try
+            {
+                pawn.health.AddHediff(def);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 添加机械意识健康状态失败：" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+            }
+        }
+
+        private static void RemoveMechanicalConsciousnessHediffsFromPawn(Pawn pawn, HediffDef def)
+        {
+            if (pawn.health?.hediffSet == null)
+            {
+                return;
+            }
+
+            List<Hediff> hediffs = pawn.health.hediffSet.hediffs;
+            for (int i = hediffs.Count - 1; i >= 0; i--)
+            {
+                Hediff? hediff = hediffs[i];
+                if (hediff?.def != def)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    pawn.health.RemoveHediff(hediff);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 移除机械意识健康状态失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                }
+            }
         }
     }
 }
