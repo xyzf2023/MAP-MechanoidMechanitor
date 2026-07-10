@@ -9,6 +9,7 @@ namespace MAP_MechanoidMechanitor
         static ModInit()
         {
             new Harmony("xyzf.map.mechanoidmechanitor").PatchAll();
+            MechanoidMechanitorBrainImplantFeatureState.InitializeFromSettings();
 
             if (Prefs.DevMode)
             {
