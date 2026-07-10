@@ -353,12 +353,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             RemoveRecordForPawnInternal(pawn);
             pendingMechanitorInitializations.Remove(pawn);
-
-            HediffDef? acquiredDef = MechanoidMechanitorRoleUtility.GetAcquiredIdentityDef();
-            if (acquiredDef != null && !pawn.Destroyed)
-            {
-                RemoveAllHediffsFromPawn(pawn, acquiredDef, "机械族机械师");
-            }
         }
 
         private static void NotifyJusticeColonistDisplaysIfNeeded()
