@@ -38,7 +38,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!JusticeMechanitorImplantUtility.IsJusticePawn(pawn))
+            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
             {
                 return false;
             }
