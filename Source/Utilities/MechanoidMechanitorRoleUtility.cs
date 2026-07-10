@@ -57,7 +57,10 @@ namespace MAP_MechanoidMechanitor
 
         public static bool HasAcquiredMechanitorHediff(Pawn? pawn)
         {
-            return TryGetAcquiredIdentityComp(pawn, out _);
+            HediffDef? def = GetAcquiredIdentityDef();
+            return pawn?.health?.hediffSet != null
+                && def != null
+                && pawn.health.hediffSet.HasHediff(def);
         }
 
         public static bool IsNativeMechanoidMechanitor(Pawn? pawn)
@@ -160,8 +163,7 @@ namespace MAP_MechanoidMechanitor
 
             if (IsAcquiredMechanoidMechanitor(pawn))
             {
-                GameComponent_MechanoidMechanitorRegistry.EnsureAcquiredMechanitorHediff(pawn);
-                EnsureRoleState(pawn);
+                GameComponent_MechanoidMechanitorRegistry.GrantAcquiredMechanitorIdentity(pawn);
                 return true;
             }
 
@@ -426,22 +428,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             return cachedRoleWorkTypes;
-        }
-
-        public static bool TryGetAcquiredIdentityComp(
-            Pawn? pawn,
-            out HediffComp_AcquiredMechanoidMechanitor? comp)
-        {
-            comp = null;
-            HediffDef? def = GetAcquiredIdentityDef();
-            if (pawn?.health?.hediffSet == null || def == null)
-            {
-                return false;
-            }
-
-            Hediff? hediff = pawn.health.hediffSet.GetFirstHediffOfDef(def);
-            comp = hediff?.TryGetComp<HediffComp_AcquiredMechanoidMechanitor>();
-            return comp != null;
         }
 
         internal static HediffDef? GetAcquiredIdentityDef()

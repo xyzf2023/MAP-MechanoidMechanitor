@@ -73,14 +73,20 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (!MechanoidMechanitorRoleUtility.PromoteToAcquiredMechanoidMechanitor(pawn)
-                || !MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn)
-                || !MechanoidMechanitorRoleUtility.HasAcquiredMechanitorHediff(pawn))
+                || !MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
             {
                 Messages.Message(
                     $"{pawn.LabelShort}无法安装自律指令核心。",
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
+            }
+
+            if (!MechanoidMechanitorRoleUtility.HasAcquiredMechanitorHediff(pawn))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 自律指令核心升格成功但标识健康状态同步失败：" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
             }
 
             Module.Destroy(DestroyMode.Vanish);
