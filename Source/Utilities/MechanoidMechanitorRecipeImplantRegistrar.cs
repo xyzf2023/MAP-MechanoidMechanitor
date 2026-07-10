@@ -115,7 +115,6 @@ namespace MAP_MechanoidMechanitor
 
             Type? hediffClass = recipe.addsHediff.hediffClass;
             return recipe.addsHediff.countsAsAddedPartOrImplant
-                && recipe.addsHediff.addedPartProps == null
                 && hediffClass != null
                 && !typeof(Hediff_AddedPart).IsAssignableFrom(hediffClass);
         }
