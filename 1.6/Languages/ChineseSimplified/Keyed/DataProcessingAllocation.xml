@@ -2,12 +2,25 @@
 <LanguageData>
   <MAP_DataProcessingAllocation_Label>数据处理分配</MAP_DataProcessingAllocation_Label>
   <MAP_DataProcessingAllocation_Desc>打开数据处理分配界面，为该机械族机械师当前监管的机械体分配部分数据处理能力。</MAP_DataProcessingAllocation_Desc>
+  <MAP_DataProcessingAllocation_WindowTitle>数据处理分配：{0}</MAP_DataProcessingAllocation_WindowTitle>
   <MAP_DataProcessingAllocation_CurrentProcessing>当前数据处理：{0}</MAP_DataProcessingAllocation_CurrentProcessing>
-  <MAP_DataProcessingAllocation_AssignedProcessing>已分配数据处理：{0}</MAP_DataProcessingAllocation_AssignedProcessing>
-  <MAP_DataProcessingAllocation_RemainingProcessing>剩余可追加分配：{0}</MAP_DataProcessingAllocation_RemainingProcessing>
-  <MAP_DataProcessingAllocation_TargetAssigned>当前分配：{0}</MAP_DataProcessingAllocation_TargetAssigned>
+  <MAP_DataProcessingAllocation_RemainingProcessing>剩余可分配：{0}</MAP_DataProcessingAllocation_RemainingProcessing>
+  <MAP_DataProcessingAllocation_MinReserveHint>为保证基础数据处理，{0}的最低数据处理能力不能低于50%。</MAP_DataProcessingAllocation_MinReserveHint>
+  <MAP_DataProcessingAllocation_SubjectsHeader>受监管机械体</MAP_DataProcessingAllocation_SubjectsHeader>
+  <MAP_DataProcessingAllocation_CurrentEffects>当前生效效果：</MAP_DataProcessingAllocation_CurrentEffects>
+  <MAP_DataProcessingAllocation_EffectNone>无</MAP_DataProcessingAllocation_EffectNone>
+  <MAP_DataProcessingAllocation_EffectCommandRange>可脱离指挥范围行动</MAP_DataProcessingAllocation_EffectCommandRange>
+  <MAP_DataProcessingAllocation_EffectCommandRangeTip>该机械体可以脱离当前机械族机械师的命令距离范围行动。</MAP_DataProcessingAllocation_EffectCommandRangeTip>
+  <MAP_DataProcessingAllocation_EffectTravelLead>可带领远行队</MAP_DataProcessingAllocation_EffectTravelLead>
+  <MAP_DataProcessingAllocation_EffectTravelLeadTip>该机械体获得完整的虚拟旅行节点能力，可以带领远行队、收集远行队物资，并在运输抵达后刷新相关状态。</MAP_DataProcessingAllocation_EffectTravelLeadTip>
+  <MAP_DataProcessingAllocation_PinTip>顶置该机械体</MAP_DataProcessingAllocation_PinTip>
+  <MAP_DataProcessingAllocation_UnpinTip>取消顶置该机械体</MAP_DataProcessingAllocation_UnpinTip>
   <MAP_DataProcessingAllocation_Add>+5%</MAP_DataProcessingAllocation_Add>
   <MAP_DataProcessingAllocation_Remove>-5%</MAP_DataProcessingAllocation_Remove>
-  <MAP_DataProcessingAllocation_NotEnoughProcessing>数据处理不足：机械族机械师必须保留至少50%数据处理。</MAP_DataProcessingAllocation_NotEnoughProcessing>
-  <MAP_DataProcessingAllocation_NoSubjects>当前没有可分配数据处理的下属机械体。</MAP_DataProcessingAllocation_NoSubjects>
+  <MAP_DataProcessingAllocation_NothingToRemove>该机械体当前没有可回收的数据处理。</MAP_DataProcessingAllocation_NothingToRemove>
+  <MAP_DataProcessingAllocation_NotEnoughProcessing>为保证基础数据处理，{0}的数据处理能力不能低于50%。</MAP_DataProcessingAllocation_NotEnoughProcessing>
+  <MAP_DataProcessingAllocation_TargetInvalid>该机械体已不再是有效的数据处理分配目标。</MAP_DataProcessingAllocation_TargetInvalid>
+  <MAP_DataProcessingAllocation_OverseerInvalid>当前单位已不再具备数据处理分配能力。</MAP_DataProcessingAllocation_OverseerInvalid>
+  <MAP_DataProcessingAllocation_AdjustFailed>当前无法调整该机械体的数据处理分配。</MAP_DataProcessingAllocation_AdjustFailed>
+  <MAP_DataProcessingAllocation_NoSubjects>当前没有可分配数据处理的受监管机械体。</MAP_DataProcessingAllocation_NoSubjects>
 </LanguageData>
