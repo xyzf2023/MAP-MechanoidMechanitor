@@ -378,7 +378,7 @@ namespace MAP_MechanoidMechanitor
 
         private bool ShouldShowEmergencyCarryToggle(Building building)
         {
-            return JusticeScenarioUtility.IsJusticeScenarioActive
+            return MechanoidMechanitorScenarioUtility.IsScenarioActive
                 && building.Spawned
                 && building.Map != null
                 && building.Faction != null

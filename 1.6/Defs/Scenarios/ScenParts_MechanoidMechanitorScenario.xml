@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ScenPartDef>
+    <defName>MAP_MechanoidMechanitorScenario</defName>
+    <label>机械族机械师剧本</label>
+    <description>以机械族机械师作为殖民地核心。不会生成普通开局角色，并会自动追加一个可选择具体机体的「机械族机械师」词条。</description>
+    <category>Rule</category>
+    <scenPartClass>MAP_MechanoidMechanitor.Scenarios.ScenPart_MechanoidMechanitorScenario</scenPartClass>
+    <maxUses>1</maxUses>
+    <canBeRandomlyAdded>false</canBeRandomlyAdded>
+    <canBePlayerAddedRemoved>true</canBePlayerAddedRemoved>
+  </ScenPartDef>
+
+  <ScenPartDef>
+    <defName>MAP_MechanoidMechanitorStart</defName>
+    <label>机械族机械师</label>
+    <scenPartClass>MAP_MechanoidMechanitor.Scenarios.ScenPart_MechanoidMechanitor</scenPartClass>
+    <category>StartingImportant</category>
+    <selectionWeight>0</selectionWeight>
+    <summaryPriority>100</summaryPriority>
+    <maxUses>1</maxUses>
+    <canBeRandomlyAdded>false</canBeRandomlyAdded>
+    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
+  </ScenPartDef>
+</Defs>

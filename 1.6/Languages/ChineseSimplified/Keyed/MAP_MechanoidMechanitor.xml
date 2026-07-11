@@ -4,7 +4,7 @@
   <MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateHermit>正义不能培育「隐者」</MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateHermit>
   <MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>缺少技能追踪器</MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>
   <MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>无法找到逆重飞船发射仪式。</MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>
-  <MAP_MechanoidMechanitor.JusticeSelfMechanitorWorkSpeedFeedback>工作速度偏移：+{0}</MAP_MechanoidMechanitor.JusticeSelfMechanitorWorkSpeedFeedback>
+  <MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>工作速度偏移：+{0}</MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>
   <MAP_MechanoidMechanitor.MechRecode.InvalidTarget>只能对非玩家阵营的机械体尸体使用。</MAP_MechanoidMechanitor.MechRecode.InvalidTarget>
   <MAP_MechanoidMechanitor.MechRecode.Success>已完成对{0}的机体再编码。</MAP_MechanoidMechanitor.MechRecode.Success>
   <MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget>只能对友方机械体尸体使用。</MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget>

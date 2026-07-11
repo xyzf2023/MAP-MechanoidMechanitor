@@ -2,7 +2,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Scenarios
+namespace MAP_MechanoidMechanitor
 {
     public sealed class MechanoidMechanitorRecord : IExposable
     {
@@ -11,20 +11,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int ChipBandwidthBonus;
         public MechWorkModeDef? SelfWorkMode;
         public bool RoleWorkSettingsInitialized;
-        public bool PendingLegacyNativeStateImport;
 
         public MechanoidMechanitorRecord()
         {
         }
 
-        public MechanoidMechanitorRecord(
-            Pawn pawn,
-            MechanoidMechanitorOrigin origin,
-            bool pendingLegacyNativeStateImport = false)
+        public MechanoidMechanitorRecord(Pawn pawn, MechanoidMechanitorOrigin origin)
         {
             Pawn = pawn;
             Origin = origin;
-            PendingLegacyNativeStateImport = pendingLegacyNativeStateImport;
         }
 
         public void ExposeData()
@@ -36,10 +31,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(
                 ref RoleWorkSettingsInitialized,
                 "roleWorkSettingsInitialized",
-                false);
-            Scribe_Values.Look(
-                ref PendingLegacyNativeStateImport,
-                "pendingLegacyNativeStateImport",
                 false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)

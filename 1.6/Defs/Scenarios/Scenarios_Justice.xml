@@ -1,33 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
   <ScenPartDef>
-    <defName>MAP_JusticeScenario</defName>
-    <label>「正义」剧本</label>
-    <category>Fixed</category>
-    <scenPartClass>MAP_MechanoidMechanitor.Scenarios.ScenPart_JusticeScenario</scenPartClass>
-    <maxUses>1</maxUses>
-    <canBeRandomlyAdded>false</canBeRandomlyAdded>
-    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
-  </ScenPartDef>
-
-  <ScenPartDef>
     <defName>MAP_JusticeScenarioDescription</defName>
     <label>正义剧本描述</label>
     <category>Fixed</category>
     <scenPartClass>ScenPart_ConfigPage</scenPartClass>
     <pageClass>MAP_MechanoidMechanitor.Scenarios.Page_JusticeScenarioDescription</pageClass>
-    <maxUses>1</maxUses>
-    <canBeRandomlyAdded>false</canBeRandomlyAdded>
-    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
-  </ScenPartDef>
-
-  <ScenPartDef>
-    <defName>MAP_MechanoidMechanitorStart</defName>
-    <label>机械族机械师</label>
-    <scenPartClass>MAP_MechanoidMechanitor.Scenarios.ScenPart_MechanoidMechanitor</scenPartClass>
-    <category>StartingImportant</category>
-    <selectionWeight>0</selectionWeight>
-    <summaryPriority>100</summaryPriority>
     <maxUses>1</maxUses>
     <canBeRandomlyAdded>false</canBeRandomlyAdded>
     <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
@@ -51,9 +29,8 @@
           <closeSound>GameStartSting</closeSound>
         </li>
 
-        <li Class="MAP_MechanoidMechanitor.Scenarios.ScenPart_JusticeScenario">
-          <def>MAP_JusticeScenario</def>
-          <visible>false</visible>
+        <li Class="MAP_MechanoidMechanitor.Scenarios.ScenPart_MechanoidMechanitorScenario">
+          <def>MAP_MechanoidMechanitorScenario</def>
         </li>
 
         <li Class="ScenPart_PlayerPawnsArriveMethod">

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -14,10 +15,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public PawnKindDef? SelectedMechKind => mechKind;
 
+        public bool IsSelectedMechKindValid =>
+            mechKind != null && PossibleMechs.Contains(mechKind);
+
         private IEnumerable<PawnKindDef> PossibleMechs =>
             DefDatabase<PawnKindDef>.AllDefs.Where(kind =>
                 kind.RaceProps.IsMechanoid
                 && kind.race.GetCompProperties<CompProperties_OverseerSubject>() != null);
+
+        public void ApplyDefaultMechKind()
+        {
+            mechKind = GetDefaultMechKind();
+        }
+
+        public void EnsureValidOrDefaultMechKind()
+        {
+            if (mechKind == null || !PossibleMechs.Contains(mechKind))
+            {
+                ApplyDefaultMechKind();
+            }
+        }
 
         public override void ExposeData()
         {

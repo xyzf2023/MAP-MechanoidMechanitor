@@ -1,8 +1,8 @@
-namespace MAP_MechanoidMechanitor.Scenarios
+namespace MAP_MechanoidMechanitor
 {
     public enum MechanoidMechanitorOrigin
     {
-        Native,
-        Acquired
+        Native = 0,
+        Acquired = 1
     }
 }

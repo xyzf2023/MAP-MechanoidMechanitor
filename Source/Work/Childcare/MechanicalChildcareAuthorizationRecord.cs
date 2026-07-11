@@ -1,6 +1,6 @@
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Scenarios
+namespace MAP_MechanoidMechanitor
 {
     public sealed class MechanicalChildcareAuthorizationRecord : IExposable
     {

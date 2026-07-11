@@ -1,5 +1,4 @@
 using System;
-using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -26,7 +25,6 @@ namespace MAP_MechanoidMechanitor
 
     public class CompMAPMechanitorNode : ThingComp
     {
-        private int chipBandwidthBonus;
         private bool bandwidthRefreshQueued;
 
         public CompProperties_MAPMechanitorNode? NodeProps => props as CompProperties_MAPMechanitorNode;
@@ -75,34 +73,11 @@ namespace MAP_MechanoidMechanitor
             return comp != null;
         }
 
-        internal int GetLegacyChipBandwidthBonusForMigration() => chipBandwidthBonus;
-
         public int AddChipBandwidth(int requestedAmount)
         {
             return MechanoidMechanitorRoleUtility.AddChipBandwidth(
                 parent as Pawn,
                 requestedAmount);
-        }
-
-        public override void PostExposeData()
-        {
-            base.PostExposeData();
-            int loadedValue = chipBandwidthBonus;
-            Scribe_Values.Look(ref chipBandwidthBonus, "chipBandwidthBonus", 0);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit)
-            {
-                int maxBonus = Math.Max(0, MaxIntrinsicBandwidth - BaseExtraMechBandwidth);
-                int clamped = Mathf.Clamp(chipBandwidthBonus, 0, maxBonus);
-                if (clamped != loadedValue)
-                {
-                    chipBandwidthBonus = clamped;
-                    QueueBandwidthRefreshAfterLoad();
-                }
-                else
-                {
-                    chipBandwidthBonus = clamped;
-                }
-            }
         }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
@@ -145,16 +120,15 @@ namespace MAP_MechanoidMechanitor
                 && GameComponent_MechanoidMechanitorRegistry.TryGetNativeMechanitorRecord(
                     pawn,
                     out MechanoidMechanitorRecord? record)
-                && record != null
-                && !record.PendingLegacyNativeStateImport)
+                && record != null)
             {
                 return record.ChipBandwidthBonus;
             }
 
-            return chipBandwidthBonus;
+            return 0;
         }
 
-        private void QueueBandwidthRefreshAfterLoad()
+        public void QueueBandwidthRefreshAfterLoad()
         {
             if (bandwidthRefreshQueued)
             {

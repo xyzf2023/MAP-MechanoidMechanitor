@@ -79,7 +79,7 @@ namespace MAP_MechanoidMechanitor
 
                 foreach (Pawn pawn in target.Map.mapPawns.AllPawnsSpawned)
                 {
-                    if (IsGravshipJusticeCandidate(pawn))
+                    if (IsGravshipPilotCapableCandidate(pawn))
                     {
                         list.AddUnique(pawn);
                     }
@@ -165,7 +165,7 @@ namespace MAP_MechanoidMechanitor
             return target.Thing.TryGetComp<CompPilotConsole>() != null;
         }
 
-        private static bool IsGravshipJusticeCandidate(Pawn pawn)
+        private static bool IsGravshipPilotCapableCandidate(Pawn pawn)
         {
             if (!CompGravshipPilotUser.PawnCanUseGravshipPilotConsole(pawn))
             {

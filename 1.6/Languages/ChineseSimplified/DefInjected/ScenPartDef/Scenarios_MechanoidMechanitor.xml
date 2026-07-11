@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitorScenario.label>机械族机械师剧本</MAP_MechanoidMechanitorScenario.label>
+  <MAP_MechanoidMechanitorScenario.description>以机械族机械师作为殖民地核心。不会生成普通开局角色，并会自动追加一个可选择具体机体的「机械族机械师」词条。</MAP_MechanoidMechanitorScenario.description>
+  <MAP_MechanoidMechanitorStart.label>机械族机械师</MAP_MechanoidMechanitorStart.label>
+</LanguageData>

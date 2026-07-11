@@ -1,5 +1,4 @@
 using System;
-using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
@@ -128,7 +127,7 @@ namespace MAP_MechanoidMechanitor
                 preferredCell = building.OccupiedRect().CenterCell;
 
                 phase = "resolve-pawn-kind";
-                PawnKindDef? justiceKind = JusticeScenarioUtility.JusticePawnKind;
+                PawnKindDef? justiceKind = JusticePawnUtility.JusticePawnKind;
                 if (justiceKind == null)
                 {
                     LogActivationFailure(
