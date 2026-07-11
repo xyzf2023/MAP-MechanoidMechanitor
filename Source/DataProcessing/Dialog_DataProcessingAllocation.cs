@@ -823,7 +823,8 @@ namespace MAP_MechanoidMechanitor
                 effectTips.Add("MAP_DataProcessingAllocation_EffectTravelLeadTip".Translate());
             }
 
-            if (steps >= DataProcessingAllocationUtility.ShuttlePilotThresholdSteps)
+            if (ModsConfig.OdysseyActive
+                && steps >= DataProcessingAllocationUtility.ShuttlePilotThresholdSteps)
             {
                 effectLabels.Add("MAP_DataProcessingAllocation_EffectShuttlePilot".Translate());
                 effectTips.Add("MAP_DataProcessingAllocation_EffectShuttlePilotTip".Translate());
