@@ -20,9 +20,9 @@ namespace MAP_MechanoidMechanitor
             Listing_Standard listing = new Listing_Standard();
             listing.Begin(inRect);
             listing.CheckboxLabeled(
-                "将正义显示在工作标签页",
-                ref Settings!.addJusticeToWorkTab,
-                "启用后，正义会被追加显示到原版\"工作\"标签页中，方便调整工作优先级。若与修改工作标签页/工作优先级界面的 MOD 冲突，请关闭此项。");
+                "将机械族机械师显示在工作标签页",
+                ref Settings!.addMechanoidMechanitorsToWorkTab,
+                "启用后，符合条件的机械族机械师会被追加显示到原版“工作”标签页中，方便调整工作优先级。若与修改工作标签页或工作优先级界面的 MOD 冲突，请关闭此项。");
 
             bool previousEnablePortraitDisplayForAllSaves =
                 Settings.enablePortraitDisplayForAllSaves;

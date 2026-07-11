@@ -805,13 +805,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void CleanupAfterLoad()
-        {
-            mechanitorRecords ??= new List<MechanoidMechanitorRecord>();
-            CleanupRecords();
-            RebuildRecordIndex();
-        }
-
         private void TryRepairMechanicalConsciousnessHost()
         {
             if (!MechanoidMechanitorScenarioUtility.IsScenarioActive)

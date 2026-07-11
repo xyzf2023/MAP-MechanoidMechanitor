@@ -6,6 +6,57 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
+    [HarmonyPatch(
+        typeof(ScenPart_ConfigPage_ConfigureStartingPawnsBase),
+        nameof(ScenPart_ConfigPage_ConfigureStartingPawnsBase.PostIdeoChosen))]
+    public static class MechanoidMechanitorScenario_ConfigureStartingPawnsBase_PostIdeoChosen_Patch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix()
+        {
+            if (!MechanoidMechanitorScenarioUtility.IsScenarioActive)
+            {
+                return true;
+            }
+
+            Find.GameInitData.startingPawnCount = 0;
+
+            if (ModsConfig.BiotechActive)
+            {
+                Current.Game.customXenotypeDatabase.customXenotypes.Clear();
+                foreach (Ideo ideo in Find.IdeoManager.IdeosListForReading)
+                {
+                    foreach (Precept precept in ideo.PreceptsListForReading)
+                    {
+                        if (precept is Precept_Xenotype { customXenotype: not null } xenotypePrecept
+                            && !Current.Game.customXenotypeDatabase.customXenotypes.Contains(
+                                xenotypePrecept.customXenotype))
+                        {
+                            Current.Game.customXenotypeDatabase.customXenotypes.Add(
+                                xenotypePrecept.customXenotype);
+                        }
+                    }
+                }
+            }
+
+            if (ModsConfig.IdeologyActive
+                && Faction.OfPlayerSilentFail?.ideos?.PrimaryIdeo != null)
+            {
+                foreach (Precept precept in Faction.OfPlayerSilentFail.ideos.PrimaryIdeo
+                    .PreceptsListForReading)
+                {
+                    if (precept.def.defaultDrugPolicyOverride != null)
+                    {
+                        Current.Game.drugPolicyDatabase.MakePolicyDefault(
+                            precept.def.defaultDrugPolicyOverride);
+                    }
+                }
+            }
+
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(Page_ScenarioEditor), "AddScenPart")]
     public static class MechanoidMechanitorScenario_Page_ScenarioEditor_AddScenPart_Patch
     {

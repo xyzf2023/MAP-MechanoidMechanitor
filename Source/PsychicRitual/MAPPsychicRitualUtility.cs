@@ -5,11 +5,6 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MAPPsychicRitualUtility
     {
-        public static bool IsJusticePsychicRitualPawn(Pawn? pawn)
-        {
-            return MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
-        }
-
         public static bool IsAllowedPsychicRitualParticipant(Pawn? pawn)
         {
             if (!ModsConfig.AnomalyActive || pawn == null)

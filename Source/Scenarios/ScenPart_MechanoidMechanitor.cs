@@ -44,23 +44,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override void DoEditInterface(Listing_ScenEdit listing)
         {
+            EnsureValidOrDefaultMechKind();
+
             Rect rect = listing.GetScenPartRect(this, ScenPart.RowHeight);
             string label = mechKind != null
                 ? mechKind.LabelCap
-                : "RandomMech".Translate().CapitalizeFirst();
+                : GetDefaultMechKind()?.LabelCap ?? DefaultMechKindDefName;
 
             if (!Widgets.ButtonText(rect, label))
             {
                 return;
             }
 
-            List<FloatMenuOption> options = new List<FloatMenuOption>
-            {
-                new FloatMenuOption(
-                    "RandomMech".Translate().CapitalizeFirst(),
-                    () => mechKind = null)
-            };
-
+            List<FloatMenuOption> options = new List<FloatMenuOption>();
             foreach (PawnKindDef possibleMech in PossibleMechs.OrderBy(kind => kind.label))
             {
                 PawnKindDef localKind = possibleMech;
@@ -74,7 +70,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override void Randomize()
         {
-            mechKind = PossibleMechs.RandomElementWithFallback(GetDefaultMechKind());
+            // 原版 API 要求保留；自动绑定流程会随后调用 ApplyDefaultMechKind。
+            ApplyDefaultMechKind();
         }
 
         public override string Summary(Scenario scen)
@@ -92,9 +89,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 yield break;
             }
 
+            EnsureValidOrDefaultMechKind();
             string selectedLabel = mechKind != null
                 ? mechKind.LabelCap
-                : "RandomMech".Translate().CapitalizeFirst();
+                : GetDefaultMechKind()?.LabelCap ?? DefaultMechKindDefName;
             yield return "机械族机械师：" + selectedLabel;
         }
 
@@ -175,8 +173,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private PawnKindDef? ResolveSelectedMechKindForGeneration()
         {
-            return mechKind
-                ?? PossibleMechs.RandomElementWithFallback(GetDefaultMechKind());
+            EnsureValidOrDefaultMechKind();
+            return mechKind ?? GetDefaultMechKind();
         }
 
         private static PawnKindDef? GetDefaultMechKind()

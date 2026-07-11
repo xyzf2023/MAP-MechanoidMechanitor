@@ -5,10 +5,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed class ScenPart_MechanoidMechanitorScenario : ScenPart
     {
-        public override void DoEditInterface(Listing_ScenEdit listing)
-        {
-        }
-
         public override void PostIdeoChosen()
         {
             base.PostIdeoChosen();

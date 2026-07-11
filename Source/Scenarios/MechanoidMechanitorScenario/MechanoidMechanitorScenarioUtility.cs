@@ -95,12 +95,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // ClearAllStartingPawns 已处理 startingAndOptionalPawns、startingPossessions、
+            // 关系清理、组件移除与世界 Pawn 丢弃。
             StartingPawnUtility.ClearAllStartingPawns();
             initData.startingPawnCount = 0;
             initData.startingPawnKind = null;
             initData.startingPawnsRequired = null;
             initData.startingXenotypesRequired = null;
             initData.startingMutantsRequired = null;
+            initData.startingSkillsRequired = null;
+            initData.allowedDevelopmentalStages =
+                DevelopmentalStage.Baby
+                | DevelopmentalStage.Child
+                | DevelopmentalStage.Adult;
         }
 
         public static void NormalizeScenarioParts(Scenario? scen)

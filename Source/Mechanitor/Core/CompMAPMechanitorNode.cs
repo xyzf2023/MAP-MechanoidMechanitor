@@ -25,8 +25,6 @@ namespace MAP_MechanoidMechanitor
 
     public class CompMAPMechanitorNode : ThingComp
     {
-        private bool bandwidthRefreshQueued;
-
         public CompProperties_MAPMechanitorNode? NodeProps => props as CompProperties_MAPMechanitorNode;
 
         public int ChipBandwidthBonus => GetAuthoritativeChipBandwidthBonus();
@@ -126,29 +124,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             return 0;
-        }
-
-        public void QueueBandwidthRefreshAfterLoad()
-        {
-            if (bandwidthRefreshQueued)
-            {
-                return;
-            }
-
-            bandwidthRefreshQueued = true;
-            LongEventHandler.ExecuteWhenFinished(() =>
-            {
-                bandwidthRefreshQueued = false;
-
-                if (parent is not Pawn pawn
-                    || pawn.Destroyed
-                    || pawn.mechanitor == null)
-                {
-                    return;
-                }
-
-                NotifyBandwidthChanged();
-            });
         }
 
         private void NotifyBandwidthChanged()
