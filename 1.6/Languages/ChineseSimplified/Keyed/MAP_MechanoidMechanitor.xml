@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanoidMechanitor.Scenario.EditorTooltip>机械族机械师剧本：扮演一个觉醒了自我意识的机械族进行游戏。加入此词条后，当前剧本原定的殖民者将会被选定的机械族机械师替换，且存档会启用一系列机械族机械师殖民地专属效果。\n注意：可能与某些MOD剧本发生冲突。</MAP_MechanoidMechanitor.Scenario.EditorTooltip>
+  <MAP_MechanoidMechanitor.Scenario.MechanitorEditorTooltip>选择一个任意机械族以作为开局的机械族机械师。</MAP_MechanoidMechanitor.Scenario.MechanitorEditorTooltip>
   <MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>缺少技能追踪器</MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>
   <MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>无法找到逆重飞船发射仪式。</MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>
   <MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>工作速度偏移：+{0}</MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>
