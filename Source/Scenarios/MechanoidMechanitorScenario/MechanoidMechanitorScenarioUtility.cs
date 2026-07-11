@@ -130,6 +130,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (hasScenarioMarker)
                 {
                     EnsureMechanitorStartPartInternal(scen, resetExistingSelection: false);
+                    EnsureBoundGroupOrderInternal(scen, placeAtStart: false);
                 }
                 else
                 {
@@ -153,6 +154,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             try
             {
                 EnsureMechanitorStartPartInternal(scen, resetExistingSelection: false);
+                EnsureBoundGroupOrderInternal(scen, placeAtStart: true);
             }
             finally
             {
@@ -178,8 +180,344 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public static void EnsureEditorBoundGroupInvariant(Scenario? scen)
+        {
+            if (scen == null || syncingBoundParts)
+            {
+                return;
+            }
+
+            List<ScenPart> parts = ScenarioParts(scen);
+            int markerCount = 0;
+            int startCount = 0;
+            int markerIndex = -1;
+            int startIndex = -1;
+
+            for (int i = 0; i < parts.Count; i++)
+            {
+                if (parts[i] is ScenPart_MechanoidMechanitorScenario)
+                {
+                    markerCount++;
+                    if (markerIndex < 0)
+                    {
+                        markerIndex = i;
+                    }
+                }
+                else if (parts[i] is ScenPart_MechanoidMechanitor)
+                {
+                    startCount++;
+                    if (startIndex < 0)
+                    {
+                        startIndex = i;
+                    }
+                }
+            }
+
+            if (markerCount == 0)
+            {
+                return;
+            }
+
+            if (markerCount == 1
+                && startCount == 1
+                && startIndex == markerIndex + 1)
+            {
+                return;
+            }
+
+            NormalizeScenarioParts(scen);
+        }
+
+        public static bool TryGetBoundGroupCanReorder(
+            Scenario scen,
+            ScenPart part,
+            ReorderDirection dir,
+            out bool canReorder)
+        {
+            canReorder = false;
+
+            if (!TryGetAdjacentBoundGroup(
+                    scen,
+                    out _,
+                    out _,
+                    out int markerIndex,
+                    out int startIndex))
+            {
+                return false;
+            }
+
+            List<ScenPart> parts = ScenarioParts(scen);
+
+            if (part is ScenPart_MechanoidMechanitor)
+            {
+                canReorder = false;
+                return true;
+            }
+
+            if (part is ScenPart_MechanoidMechanitorScenario)
+            {
+                if (dir == ReorderDirection.Up)
+                {
+                    if (markerIndex == 0)
+                    {
+                        canReorder = false;
+                    }
+                    else if (!parts[markerIndex - 1].def.PlayerAddRemovable)
+                    {
+                        canReorder = false;
+                    }
+                    else
+                    {
+                        canReorder = true;
+                    }
+                }
+                else
+                {
+                    canReorder = startIndex < parts.Count - 1;
+                }
+
+                return true;
+            }
+
+            if (!part.def.PlayerAddRemovable)
+            {
+                return false;
+            }
+
+            int partIndex = parts.IndexOf(part);
+            if (partIndex < 0)
+            {
+                return false;
+            }
+
+            if (dir == ReorderDirection.Down && partIndex == markerIndex - 1)
+            {
+                canReorder = true;
+                return true;
+            }
+
+            if (dir == ReorderDirection.Up && partIndex == startIndex + 1)
+            {
+                canReorder = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool TryReorderBoundGroup(
+            Scenario scen,
+            ScenPart part,
+            ReorderDirection dir)
+        {
+            if (syncingBoundParts)
+            {
+                return false;
+            }
+
+            if (!TryGetAdjacentBoundGroup(
+                    scen,
+                    out _,
+                    out _,
+                    out int markerIndex,
+                    out int startIndex))
+            {
+                if (part is ScenPart_MechanoidMechanitor
+                    && ScenarioContainsMarker(scen))
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            List<ScenPart> parts = ScenarioParts(scen);
+
+            if (part is ScenPart_MechanoidMechanitor)
+            {
+                return true;
+            }
+
+            if (part is ScenPart_MechanoidMechanitorScenario)
+            {
+                if (dir == ReorderDirection.Up)
+                {
+                    if (markerIndex <= 0
+                        || !parts[markerIndex - 1].def.PlayerAddRemovable)
+                    {
+                        return true;
+                    }
+
+                    MoveBoundGroupUp(parts, markerIndex);
+                    return true;
+                }
+
+                if (startIndex >= parts.Count - 1)
+                {
+                    return true;
+                }
+
+                MoveBoundGroupDown(parts, markerIndex);
+                return true;
+            }
+
+            int partIndex = parts.IndexOf(part);
+            if (partIndex < 0)
+            {
+                return false;
+            }
+
+            if (dir == ReorderDirection.Down && partIndex == markerIndex - 1)
+            {
+                MoveBoundGroupUp(parts, markerIndex);
+                return true;
+            }
+
+            if (dir == ReorderDirection.Up && partIndex == startIndex + 1)
+            {
+                MoveBoundGroupDown(parts, markerIndex);
+                return true;
+            }
+
+            return false;
+        }
+
+        public static void EnsureBoundGroupAfterReorder(Scenario? scen)
+        {
+            if (scen == null || syncingBoundParts || !ScenarioContainsMarker(scen))
+            {
+                return;
+            }
+
+            if (TryGetAdjacentBoundGroup(scen, out _, out _, out _, out _))
+            {
+                return;
+            }
+
+            syncingBoundParts = true;
+            try
+            {
+                EnsureBoundGroupOrderInternal(scen, placeAtStart: false);
+            }
+            finally
+            {
+                syncingBoundParts = false;
+            }
+        }
+
         public static PawnKindDef? GetDefaultMechKind() =>
             DefDatabase<PawnKindDef>.GetNamedSilentFail(DefaultMechKindDefName);
+
+        private static void EnsureBoundGroupOrderInternal(Scenario scen, bool placeAtStart)
+        {
+            List<ScenPart> parts = ScenarioParts(scen);
+            if (!TryGetBoundParts(
+                    parts,
+                    out ScenPart_MechanoidMechanitorScenario marker,
+                    out ScenPart_MechanoidMechanitor start,
+                    out int markerIndex,
+                    out int startIndex))
+            {
+                return;
+            }
+
+            if (placeAtStart)
+            {
+                parts.Remove(marker);
+                parts.Remove(start);
+                parts.Insert(0, marker);
+                parts.Insert(1, start);
+                return;
+            }
+
+            if (startIndex == markerIndex + 1)
+            {
+                return;
+            }
+
+            parts.Remove(start);
+            markerIndex = parts.IndexOf(marker);
+            if (markerIndex < 0)
+            {
+                return;
+            }
+
+            parts.Insert(markerIndex + 1, start);
+        }
+
+        private static bool TryGetAdjacentBoundGroup(
+            Scenario scen,
+            out ScenPart_MechanoidMechanitorScenario marker,
+            out ScenPart_MechanoidMechanitor start,
+            out int markerIndex,
+            out int startIndex)
+        {
+            if (!TryGetBoundParts(
+                    ScenarioParts(scen),
+                    out marker,
+                    out start,
+                    out markerIndex,
+                    out startIndex))
+            {
+                return false;
+            }
+
+            return startIndex == markerIndex + 1;
+        }
+
+        private static bool TryGetBoundParts(
+            List<ScenPart> parts,
+            out ScenPart_MechanoidMechanitorScenario marker,
+            out ScenPart_MechanoidMechanitor start,
+            out int markerIndex,
+            out int startIndex)
+        {
+            marker = null!;
+            start = null!;
+            markerIndex = -1;
+            startIndex = -1;
+
+            for (int i = 0; i < parts.Count; i++)
+            {
+                if (markerIndex < 0 && parts[i] is ScenPart_MechanoidMechanitorScenario markerPart)
+                {
+                    marker = markerPart;
+                    markerIndex = i;
+                }
+                else if (startIndex < 0 && parts[i] is ScenPart_MechanoidMechanitor startPart)
+                {
+                    start = startPart;
+                    startIndex = i;
+                }
+
+                if (markerIndex >= 0 && startIndex >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void MoveBoundGroupUp(List<ScenPart> parts, int markerIndex)
+        {
+            ScenPart above = parts[markerIndex - 1];
+            ScenPart marker = parts[markerIndex];
+            ScenPart start = parts[markerIndex + 1];
+            parts[markerIndex - 1] = marker;
+            parts[markerIndex] = start;
+            parts[markerIndex + 1] = above;
+        }
+
+        private static void MoveBoundGroupDown(List<ScenPart> parts, int markerIndex)
+        {
+            ScenPart marker = parts[markerIndex];
+            ScenPart start = parts[markerIndex + 1];
+            ScenPart below = parts[markerIndex + 2];
+            parts[markerIndex] = below;
+            parts[markerIndex + 1] = marker;
+            parts[markerIndex + 2] = start;
+        }
 
         private static void EnsureMechanitorStartPartInternal(
             Scenario scen,
