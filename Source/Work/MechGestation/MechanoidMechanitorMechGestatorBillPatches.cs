@@ -118,19 +118,6 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             WorkGiverDef workGiver)
         {
-            if (MAPMechGestatorRecipeUtility.IsPawnDisabledForGestationRecipe(bill.recipe, pawn))
-            {
-                string reasonKey = MAPMechGestatorRecipeUtility.GetDisabledReasonKey(bill.recipe);
-
-                return new Widgets.DropdownMenuElement<Pawn>
-                {
-                    option = new FloatMenuOption(
-                        string.Format("{0} ({1})", pawn.LabelShortCap, reasonKey.Translate()),
-                        null),
-                    payload = pawn
-                };
-            }
-
             if (pawn.WorkTypeIsDisabled(workGiver.workType))
             {
                 return new Widgets.DropdownMenuElement<Pawn>

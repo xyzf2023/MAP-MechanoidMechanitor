@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-  <MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateJustice>正义不能培育「正义」</MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateJustice>
-  <MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateHermit>正义不能培育「隐者」</MAP_MechanoidMechanitor.Bill.Reason.JusticeCannotGestateHermit>
   <MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>缺少技能追踪器</MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>
   <MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>无法找到逆重飞船发射仪式。</MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>
   <MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>工作速度偏移：+{0}</MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>
