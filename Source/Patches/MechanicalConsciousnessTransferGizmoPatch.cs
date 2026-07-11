@@ -5,6 +5,7 @@ using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 using Verse.AI;
+using UnityEngine;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -59,7 +60,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = LabelKey.Translate(),
                 defaultDesc = DescriptionKey.Translate(),
-                icon = TexCommand.Install,
+                icon = ContentFinder<Texture2D>.Get("UI/MM_TransferMechanicalConsciousness"),
                 action = delegate
                 {
                     OpenTransferTargetMenu(source);
