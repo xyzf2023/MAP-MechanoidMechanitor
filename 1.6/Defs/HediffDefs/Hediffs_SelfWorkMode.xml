@@ -3,7 +3,7 @@
 <HediffDef>
     <defName>MAP_MechanoidMechanitor_SelfWorkMode_AutonomousDirective</defName>
     <label>自律指令</label>
-    <description>TODO</description>
+    <description>机械族机械师本体进入自律执行状态，可进行自我维护并映射为自动工作行为。</description>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <hediffClass>HediffWithComps</hediffClass>
     <isBad>false</isBad>

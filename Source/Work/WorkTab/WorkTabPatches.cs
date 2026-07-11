@@ -18,7 +18,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             MAPMechanitorModSettings? settings = MAPMechanitorMod.Settings;
-            if (settings == null || !settings.addJusticeToWorkTab)
+            if (settings == null || !settings.addMechanoidMechanitorsToWorkTab)
             {
                 return;
             }
