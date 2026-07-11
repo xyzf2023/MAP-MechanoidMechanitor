@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using MAP_MechanoidMechanitor;
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Scenarios
+namespace MAP_MechanoidMechanitor
 {
-    public sealed partial class GameComponent_MechanoidMechanitorRegistry : GameComponent
+    public sealed class GameComponent_MechanoidMechanitorRegistry : GameComponent
     {
         private const string MechanicalConsciousnessHediffDefName = "MAP_MechanicalConsciousness";
         private const string NativeMechanitorHediffDefName = "MAP_NativeMechanoidMechanitor";
@@ -76,7 +76,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool CanHostMechanicalConsciousness(Pawn? pawn)
         {
-            return JusticeScenarioUtility.IsJusticeScenarioActive
+            return MechanoidMechanitorScenarioUtility.IsScenarioActive
                 && pawn != null
                 && !pawn.Dead
                 && !pawn.Destroyed
@@ -133,9 +133,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        public static bool EnsureNativeMechanitorRecord(
-            Pawn? pawn,
-            bool pendingLegacyNativeStateImport = false)
+        public static bool EnsureNativeMechanitorRecord(Pawn? pawn)
         {
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
             if (registry == null
@@ -163,8 +161,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             registry.AddRecord(new MechanoidMechanitorRecord(
                 pawn,
-                MechanoidMechanitorOrigin.Native,
-                pendingLegacyNativeStateImport));
+                MechanoidMechanitorOrigin.Native));
             registry.SynchronizeAcquiredMechanitorHediffs();
             registry.SynchronizeNativeMechanitorHediffs();
             return true;
@@ -287,7 +284,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 registry.SynchronizeAcquiredMechanitorHediffs();
                 registry.SynchronizeNativeMechanitorHediffs();
-                NotifyJusticeColonistDisplaysIfNeeded();
+                NotifyScenarioColonistDisplaysIfNeeded();
                 return true;
             }
 
@@ -330,7 +327,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             registry.SynchronizeAcquiredMechanitorHediffs();
             registry.SynchronizeNativeMechanitorHediffs();
-            NotifyJusticeColonistDisplaysIfNeeded();
+            NotifyScenarioColonistDisplaysIfNeeded();
             return true;
         }
 
@@ -362,14 +359,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             pendingMechanitorInitializations.Remove(pawn);
         }
 
-        private static void NotifyJusticeColonistDisplaysIfNeeded()
+        private static void NotifyScenarioColonistDisplaysIfNeeded()
         {
-            if (!GameComponent_JusticeScenarioState.IsEnabled)
+            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
             {
                 return;
             }
 
-            JusticeScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
+            MechanoidMechanitorScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
         }
 
         public static IEnumerable<Pawn> GetMechanicalConsciousnessCandidates()
@@ -403,7 +400,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
             if (registry == null
                 || pawn == null
-                || !JusticeScenarioUtility.IsJusticeScenarioActive)
+                || !MechanoidMechanitorScenarioUtility.IsScenarioActive)
             {
                 return false;
             }
@@ -426,7 +423,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
             if (registry == null
                 || pawn == null
-                || !JusticeScenarioUtility.IsJusticeScenarioActive)
+                || !MechanoidMechanitorScenarioUtility.IsScenarioActive)
             {
                 return false;
             }
@@ -448,7 +445,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
             if (registry == null
-                || !JusticeScenarioUtility.IsJusticeScenarioActive)
+                || !MechanoidMechanitorScenarioUtility.IsScenarioActive)
             {
                 return false;
             }
@@ -483,7 +480,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             try
             {
                 registry.SynchronizeMechanicalConsciousnessHediff();
-                NotifyJusticeColonistDisplaysIfNeeded();
+                NotifyScenarioColonistDisplaysIfNeeded();
             }
             catch (Exception ex)
             {
@@ -506,7 +503,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_References.Look(
                 ref mechanicalConsciousnessHost,
                 "mechanicalConsciousnessHost");
-            ExposeLegacyScenarioProtagonistMigration();
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -547,10 +543,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             mechanitorRecords ??= new List<MechanoidMechanitorRecord>();
             CleanupRecords();
             RebuildRecordIndex();
-            ProcessPendingLegacyNativeStateImports();
             RestoreAcquiredRecordsAfterLoad();
             SynchronizeAcquiredMechanitorHediffs();
             SynchronizeNativeMechanitorHediffs();
+            SynchronizeSelfWorkModeEffectsAfterLoad();
             TryRepairMechanicalConsciousnessHost();
 
             if (mechanicalConsciousnessHost != null
@@ -697,49 +693,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new ReadOnlyCollection<Pawn>(registeredMechanitorsCache);
         }
 
-        private void ProcessPendingLegacyNativeStateImports()
+        private void SynchronizeSelfWorkModeEffectsAfterLoad()
         {
             for (int i = 0; i < mechanitorRecords.Count; i++)
             {
                 MechanoidMechanitorRecord record = mechanitorRecords[i];
-                if (!record.PendingLegacyNativeStateImport
-                    || record.Origin != MechanoidMechanitorOrigin.Native
-                    || record.Pawn == null
-                    || record.Pawn.Destroyed)
+                Pawn? pawn = record.Pawn;
+                if (pawn == null || pawn.Destroyed)
                 {
                     continue;
                 }
 
-                ImportLegacyNativeState(record);
-                record.PendingLegacyNativeStateImport = false;
-
-                CompJusticeSelfWorkMode? workModeComp =
-                    CompJusticeSelfWorkMode.GetFor(record.Pawn);
+                CompMechanoidMechanitorSelfWorkModeUser? workModeComp =
+                    CompMechanoidMechanitorSelfWorkModeUser.GetFor(pawn);
                 workModeComp?.SyncSelfWorkModeEffectsFromAuthoritativeState();
-            }
-        }
 
-        private static void ImportLegacyNativeState(MechanoidMechanitorRecord record)
-        {
-            Pawn pawn = record.Pawn!;
-            if (CompMAPMechanitorNode.TryGetNodeComp(pawn, out CompMAPMechanitorNode? nodeComp)
-                && nodeComp != null)
-            {
-                int legacyBonus = nodeComp.GetLegacyChipBandwidthBonusForMigration();
-                int maxBonus = MechanoidMechanitorRecord.GetMaxChipBandwidthBonus(
-                    pawn,
-                    MechanoidMechanitorOrigin.Native);
-                record.ChipBandwidthBonus = UnityEngine.Mathf.Clamp(legacyBonus, 0, maxBonus);
+                if (record.Origin == MechanoidMechanitorOrigin.Acquired
+                    && MechanoidMechanitorSelfWorkModeUtility.HasSelfWorkMode(pawn))
+                {
+                    MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
+                        pawn,
+                        MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(
+                            record.SelfWorkMode));
+                }
             }
-
-            CompJusticeSelfWorkMode? workModeComp = CompJusticeSelfWorkMode.GetFor(pawn);
-            if (workModeComp != null)
-            {
-                record.SelfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(
-                    workModeComp.GetLegacySelfWorkModeForMigration());
-            }
-
-            pawn.mechanitor?.Notify_BandwidthChanged();
         }
 
         private MechanoidMechanitorRecord? FindRecordForPawn(Pawn pawn)
@@ -835,11 +812,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RebuildRecordIndex();
         }
 
-        partial void ExposeLegacyScenarioProtagonistMigration();
-
         private void TryRepairMechanicalConsciousnessHost()
         {
-            if (!JusticeScenarioUtility.IsJusticeScenarioActive)
+            if (!MechanoidMechanitorScenarioUtility.IsScenarioActive)
             {
                 mechanicalConsciousnessHost = null;
                 return;

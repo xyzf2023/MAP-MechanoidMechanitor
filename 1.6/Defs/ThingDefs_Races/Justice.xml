@@ -129,7 +129,7 @@
         <allowDefender>true</allowDefender>
         <allowTargetRoles>false</allowTargetRoles>
       </li>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_JusticeSelfWorkMode" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechanoidMechanitorSelfWorkModeUser" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_FreeColonistEquivalentUser" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_EnsureEmptyGeneTracker" />
     </comps>

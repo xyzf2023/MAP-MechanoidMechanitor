@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using MAP_MechanoidMechanitor;
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Scenarios
+namespace MAP_MechanoidMechanitor
 {
     public static class EmergencyMechanicalConsciousnessTransferUtility
     {
@@ -34,7 +34,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             if (!ModsConfig.BiotechActive
-                || !JusticeScenarioUtility.IsJusticeScenarioActive
+                || !MechanoidMechanitorScenarioUtility.IsScenarioActive
                 || !GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(pawn)
                 || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
             {
@@ -150,7 +150,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static bool ShouldAttemptEmergencyTransfer(Pawn source)
         {
             return ModsConfig.BiotechActive
-                && JusticeScenarioUtility.IsJusticeScenarioActive
+                && MechanoidMechanitorScenarioUtility.IsScenarioActive
                 && !source.Dead
                 && !source.Destroyed
                 && GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(source)

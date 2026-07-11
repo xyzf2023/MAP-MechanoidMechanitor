@@ -33,7 +33,7 @@ namespace MAP_MechanoidMechanitor
             if (Settings.enablePortraitDisplayForAllSaves
                 != previousEnablePortraitDisplayForAllSaves)
             {
-                JusticeScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
+                MechanoidMechanitorScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
             }
 
             listing.CheckboxLabeled(

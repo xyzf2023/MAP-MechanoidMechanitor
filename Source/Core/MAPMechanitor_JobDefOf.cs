@@ -6,7 +6,7 @@ namespace MAP_MechanoidMechanitor
     [DefOf]
     public static class MAPMechanitor_JobDefOf
     {
-        public static JobDef MAP_JusticeUseBossChipForBandwidth = null!;
+        public static JobDef MAP_MechanoidMechanitorUseBossChipForBandwidth = null!;
         public static JobDef MAP_UseAutonomousDirectiveCore = null!;
         public static JobDef MAP_TransferMechanicalConsciousness = null!;
         static MAPMechanitor_JobDefOf()

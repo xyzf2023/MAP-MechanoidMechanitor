@@ -31,7 +31,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            HashSet<Pawn> justiceParticipants = CollectGravshipJusticeParticipants(assignments);
+            HashSet<Pawn> pilotCapableParticipants = CollectGravshipPilotCapableParticipants(assignments);
 
             engine!.pawnsToBoard = new HashSet<Pawn>();
             engine.pawnsToLeave = new HashSet<Pawn>();
@@ -46,7 +46,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (justiceParticipants.Contains(tmpPawn))
+                if (pilotCapableParticipants.Contains(tmpPawn))
                 {
                     continue;
                 }
@@ -170,7 +170,7 @@ namespace MAP_MechanoidMechanitor
             return engine != null && assignments != null;
         }
 
-        private static HashSet<Pawn> CollectGravshipJusticeParticipants(RitualRoleAssignments assignments)
+        private static HashSet<Pawn> CollectGravshipPilotCapableParticipants(RitualRoleAssignments assignments)
         {
             HashSet<Pawn> participants = new HashSet<Pawn>();
 

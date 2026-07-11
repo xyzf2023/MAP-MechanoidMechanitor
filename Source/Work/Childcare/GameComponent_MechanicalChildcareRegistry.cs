@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Scenarios
+namespace MAP_MechanoidMechanitor
 {
     public sealed class GameComponent_MechanicalChildcareRegistry : GameComponent
     {

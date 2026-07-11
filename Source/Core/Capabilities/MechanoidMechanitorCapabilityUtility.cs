@@ -1,4 +1,3 @@
-using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
@@ -94,7 +93,7 @@ namespace MAP_MechanoidMechanitor
                 capabilities |= MechanoidMechanitorCapability.PsychicRituals;
             }
 
-            if (CompJusticeSelfWorkMode.GetFor(pawn) != null)
+            if (CompMechanoidMechanitorSelfWorkModeUser.GetFor(pawn) != null)
             {
                 capabilities |= MechanoidMechanitorCapability.SelfWorkMode;
             }

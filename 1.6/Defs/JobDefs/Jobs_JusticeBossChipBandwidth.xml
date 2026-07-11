@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<Defs>
-  <JobDef>
-    <defName>MAP_JusticeUseBossChipForBandwidth</defName>
-    <label>扩展带宽</label>
-    <driverClass>MAP_MechanoidMechanitor.JobDriver_JusticeUseBossChipForBandwidth</driverClass>
-    <reportString>正在使用芯片以扩展带宽。</reportString>
-  </JobDef>
-</Defs>
