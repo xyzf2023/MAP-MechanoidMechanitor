@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
+  <MAP_MechanoidMechanitor.Scenario.EditorTooltip>TODO</MAP_MechanoidMechanitor.Scenario.EditorTooltip>
   <MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>缺少技能追踪器</MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>
   <MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>无法找到逆重飞船发射仪式。</MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>
   <MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>工作速度偏移：+{0}</MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>
