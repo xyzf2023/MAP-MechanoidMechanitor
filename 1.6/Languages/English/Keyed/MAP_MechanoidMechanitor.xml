@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanoidMechanitor.Scenario.EditorTooltip>Mechanoid Mechanitor scenario: play as a mechanoid with self-awareness. After adding this part, the ordinary starting colonists of the current scenario will be replaced by the selected mechanoid mechanitor, and the save will enable a series of colony-specific effects exclusive to mechanoid mechanitors. \nNote: may conflict with some MOD scenarios.</MAP_MechanoidMechanitor.Scenario.EditorTooltip>
+  <MAP_MechanoidMechanitor.Scenario.MechanitorEditorTooltip>Select a mechanoid to play as the mechanoid mechanitor.</MAP_MechanoidMechanitor.Scenario.MechanitorEditorTooltip>
   <MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>Missing skills tracker</MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker>
   <MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>Could not find the gravship launch ritual.</MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual>
   <MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>Offset from self: +{0}</MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback>

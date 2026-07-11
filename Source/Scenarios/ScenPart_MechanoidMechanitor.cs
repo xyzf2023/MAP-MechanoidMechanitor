@@ -10,6 +10,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public sealed class ScenPart_MechanoidMechanitor : ScenPart
     {
         private const string DefaultMechKindDefName = "MAP_Mech_Justice";
+        private const int TooltipId = 684272;
 
         private PawnKindDef? mechKind;
 
@@ -46,12 +47,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             EnsureValidOrDefaultMechKind();
 
-            Rect rect = listing.GetScenPartRect(this, ScenPart.RowHeight);
+            Rect rightRect = listing.GetScenPartRect(this, ScenPart.RowHeight);
+
+            Rect fullRowRect = new Rect(
+                rightRect.x - rightRect.width,
+                rightRect.y,
+                rightRect.width * 2f,
+                rightRect.height);
+
+            TooltipHandler.TipRegion(
+                fullRowRect,
+                new TipSignal(
+                    "MAP_MechanoidMechanitor.Scenario.MechanitorEditorTooltip".Translate(),
+                    TooltipId));
+
             string label = mechKind != null
                 ? mechKind.LabelCap
                 : GetDefaultMechKind()?.LabelCap ?? DefaultMechKindDefName;
 
-            if (!Widgets.ButtonText(rect, label))
+            if (!Widgets.ButtonText(rightRect, label))
             {
                 return;
             }
