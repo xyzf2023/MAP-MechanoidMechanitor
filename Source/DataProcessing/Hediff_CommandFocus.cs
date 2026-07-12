@@ -15,6 +15,24 @@ namespace MAP_MechanoidMechanitor
             return registry?.GetStepsForTarget(pawn) ?? 0;
         }
 
+        protected override float GetConsciousnessOffsetMultiplier()
+        {
+            GameComponent_DataProcessingAllocationRegistry? registry =
+                GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
+
+            return registry?.IsSelfAllocationTarget(pawn) == true
+                ? 0.5f
+                : 1f;
+        }
+
+        protected override int GetAllocationStageVariantKey()
+        {
+            GameComponent_DataProcessingAllocationRegistry? registry =
+                GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
+
+            return registry?.IsSelfAllocationTarget(pawn) == true ? 1 : 0;
+        }
+
         protected override void ConfigureAdditionalStage(HediffStage stage, int steps)
         {
             List<StatModifier>? offsets = null;
@@ -102,8 +120,9 @@ namespace MAP_MechanoidMechanitor
                     return base.LabelInBrackets;
                 }
 
+                float percentPoints = steps * 5f * GetConsciousnessOffsetMultiplier();
                 return DataProcessingAllocationUtility.FormatPercentDelta(
-                    steps,
+                    percentPoints,
                     positive: true);
             }
         }

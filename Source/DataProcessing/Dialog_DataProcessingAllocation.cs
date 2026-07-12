@@ -326,6 +326,12 @@ namespace MAP_MechanoidMechanitor
             SubjectRowData row,
             GameComponent_DataProcessingAllocationRegistry? registry)
         {
+            // 自身永久居顶，保留横向占位但不提供顶置操作。
+            if (row.isSelf)
+            {
+                return;
+            }
+
             string label = row.isPinned ? "-" : "♡";
             bool canPin = registry != null
                 && DataProcessingAllocationUtility.IsValidAllocationPair(overseer, row.target);
@@ -526,13 +532,18 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            // 按 Registry 顶置状态拆分，保留未顶置目标的相对顺序，避免加减档位引发跳动。
+            // 顺序固定为：自身 → 顶置 → 未顶置；保留未顶置相对顺序，避免加减档位跳动。
+            Pawn? self = null;
             List<Pawn> pinned = new List<Pawn>();
             List<Pawn> unpinned = new List<Pawn>();
             for (int i = 0; i < displayOrder.Count; i++)
             {
                 Pawn pawn = displayOrder[i];
-                if (registry?.IsPinned(overseer, pawn) == true)
+                if (ReferenceEquals(pawn, overseer))
+                {
+                    self = pawn;
+                }
+                else if (registry?.IsPinned(overseer, pawn) == true)
                 {
                     pinned.Add(pawn);
                 }
@@ -556,6 +567,11 @@ namespace MAP_MechanoidMechanitor
             });
 
             displayOrder.Clear();
+            if (self != null)
+            {
+                displayOrder.Add(self);
+            }
+
             displayOrder.AddRange(pinned);
             displayOrder.AddRange(unpinned);
 
@@ -567,7 +583,11 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (registry?.IsPinned(overseer, pawn) == true)
+                if (ReferenceEquals(pawn, overseer))
+                {
+                    displayOrder.Insert(0, pawn);
+                }
+                else if (registry?.IsPinned(overseer, pawn) == true)
                 {
                     InsertPinnedTarget(pawn, registry);
                 }
@@ -602,11 +622,17 @@ namespace MAP_MechanoidMechanitor
                 return targets;
             }
 
+            if (DataProcessingAllocationUtility.IsValidAllocationPair(overseer, overseer))
+            {
+                targets.Add(overseer);
+            }
+
             List<Pawn> overseenPawns = overseer.mechanitor.OverseenPawns;
             for (int i = 0; i < overseenPawns.Count; i++)
             {
                 Pawn target = overseenPawns[i];
-                if (DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target))
+                if (!ReferenceEquals(target, overseer)
+                    && DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target))
                 {
                     targets.Add(target);
                 }
@@ -625,8 +651,9 @@ namespace MAP_MechanoidMechanitor
                 return null;
             }
 
+            bool isSelf = ReferenceEquals(target, overseer);
             int steps = registry?.GetStepsForOverseerTarget(overseer, target) ?? 0;
-            bool isPinned = registry?.IsPinned(overseer, target) == true;
+            bool isPinned = !isSelf && registry?.IsPinned(overseer, target) == true;
             int pinOrder = isPinned
                 ? registry!.GetPinOrder(overseer, target)
                 : int.MaxValue;
@@ -638,6 +665,7 @@ namespace MAP_MechanoidMechanitor
 
             return new SubjectRowData(
                 target,
+                isSelf,
                 steps,
                 isPinned,
                 pinOrder,
@@ -668,7 +696,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry? registry)
         {
             int targetPinOrder = registry?.GetPinOrder(overseer, target) ?? int.MaxValue;
-            int insertIndex = 0;
+            int insertIndex = GetSelfRowCount();
             while (insertIndex < displayOrder.Count)
             {
                 Pawn candidate = displayOrder[insertIndex];
@@ -717,11 +745,19 @@ namespace MAP_MechanoidMechanitor
             displayOrder.Insert(insertIndex, target);
         }
 
+        private int GetSelfRowCount()
+        {
+            return displayOrder.Count > 0 && ReferenceEquals(displayOrder[0], overseer)
+                ? 1
+                : 0;
+        }
+
         private int CountPinnedTargets(
             GameComponent_DataProcessingAllocationRegistry? registry)
         {
-            int count = 0;
-            for (int i = 0; i < displayOrder.Count; i++)
+            int index = GetSelfRowCount();
+            int count = index;
+            for (int i = index; i < displayOrder.Count; i++)
             {
                 if (registry?.IsPinned(overseer, displayOrder[i]) == true)
                 {
@@ -738,6 +774,11 @@ namespace MAP_MechanoidMechanitor
 
         private static int CompareRows(SubjectRowData left, SubjectRowData right)
         {
+            if (left.isSelf != right.isSelf)
+            {
+                return left.isSelf ? -1 : 1;
+            }
+
             if (left.isPinned != right.isPinned)
             {
                 return left.isPinned ? -1 : 1;
@@ -995,6 +1036,7 @@ namespace MAP_MechanoidMechanitor
         private sealed class SubjectRowData
         {
             public readonly Pawn target;
+            public readonly bool isSelf;
             public readonly int steps;
             public readonly bool isPinned;
             public readonly int pinOrder;
@@ -1005,6 +1047,7 @@ namespace MAP_MechanoidMechanitor
 
             public SubjectRowData(
                 Pawn target,
+                bool isSelf,
                 int steps,
                 bool isPinned,
                 int pinOrder,
@@ -1014,6 +1057,7 @@ namespace MAP_MechanoidMechanitor
                 float rowHeight)
             {
                 this.target = target;
+                this.isSelf = isSelf;
                 this.steps = steps;
                 this.isPinned = isPinned;
                 this.pinOrder = pinOrder;

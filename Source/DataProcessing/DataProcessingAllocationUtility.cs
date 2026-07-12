@@ -62,6 +62,33 @@ namespace MAP_MechanoidMechanitor
             return positive ? $"+{percent}%" : $"-{percent}%";
         }
 
+        /// <summary>
+        /// 按实际百分点格式化意识偏移；整数不强制小数，半百分点保留一位。
+        /// </summary>
+        public static string FormatPercentDelta(float percentPoints, bool positive)
+        {
+            string body = FormatPercentPoints(Mathf.Abs(percentPoints));
+            return positive ? $"+{body}%" : $"-{body}%";
+        }
+
+        public static string FormatPercentPoints(float percentPoints)
+        {
+            float tenths = Mathf.Round(Mathf.Abs(percentPoints) * 10f) / 10f;
+            if (Mathf.Approximately(tenths % 1f, 0f))
+            {
+                return Mathf.RoundToInt(tenths).ToString();
+            }
+
+            return tenths.ToString("0.0");
+        }
+
+        public static bool IsSelfAllocationPair(Pawn? overseer, Pawn? target)
+        {
+            return overseer != null
+                && target != null
+                && ReferenceEquals(overseer, target);
+        }
+
         public static int GetSpecialEffectSteps(int steps)
         {
             return Mathf.Clamp(steps, 0, MaxSpecialEffectSteps);
@@ -222,7 +249,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (target.GetOverseer() != overseer)
+            bool isSelf = IsSelfAllocationPair(overseer, target);
+            if (!isSelf && target.GetOverseer() != overseer)
             {
                 return false;
             }
