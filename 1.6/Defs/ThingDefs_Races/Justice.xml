@@ -177,7 +177,7 @@
           <soundCall>Pawn_Mech_Militor_Call</soundCall>
         </li>
       </lifeStageAges>
-      <baseHealthScale>5.2</baseHealthScale>
+      <baseHealthScale>2.5</baseHealthScale>
     </race>
   </ThingDef>
 
