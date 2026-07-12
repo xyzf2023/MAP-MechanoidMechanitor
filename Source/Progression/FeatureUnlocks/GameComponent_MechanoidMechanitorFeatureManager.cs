@@ -7,11 +7,13 @@ namespace MAP_MechanoidMechanitor
     public sealed class GameComponent_MechanoidMechanitorFeatureManager : GameComponent
     {
         private const int UnlockStateSafetyCheckIntervalTicks = 120;
+        private const int ForcedSyncRetryIntervalTicks = 60;
 
         private bool pendingForcedSync;
         private readonly HashSet<Pawn> pendingPawnSyncs = new HashSet<Pawn>();
         private Dictionary<string, bool>? lastKnownUnlockStates;
         private int nextUnlockStateSafetyCheckTick;
+        private int nextForcedSyncAttemptTick;
 
         public GameComponent_MechanoidMechanitorFeatureManager(Game game)
         {
@@ -63,6 +65,7 @@ namespace MAP_MechanoidMechanitor
             base.StartedNewGame();
             CaptureUnlockStates();
             pendingForcedSync = true;
+            nextForcedSyncAttemptTick = 0;
             ScheduleNextUnlockStateSafetyCheck();
         }
 
@@ -71,6 +74,7 @@ namespace MAP_MechanoidMechanitor
             base.LoadedGame();
             CaptureUnlockStates();
             pendingForcedSync = true;
+            nextForcedSyncAttemptTick = 0;
             ScheduleNextUnlockStateSafetyCheck();
         }
 
@@ -84,17 +88,50 @@ namespace MAP_MechanoidMechanitor
 
             if (pendingForcedSync)
             {
-                pendingForcedSync = false;
-                CaptureUnlockStates();
-                ManagedResearchAbilitySyncUtility.SyncAllRelevantPawns();
-                // 全量同步已覆盖相关 Pawn，清空队列避免同帧重复单 Pawn 同步。
-                pendingPawnSyncs.Clear();
-                ScheduleNextUnlockStateSafetyCheck();
+                TryProcessPendingForcedSync();
                 return;
             }
 
             ProcessPendingPawnSyncs();
             TryRunUnlockStateSafetyCheck();
+        }
+
+        private void TryProcessPendingForcedSync()
+        {
+            TickManager? tickManager = Find.TickManager;
+            int ticksGame = tickManager?.TicksGame ?? 0;
+            if (ticksGame < nextForcedSyncAttemptTick)
+            {
+                return;
+            }
+
+            if (TryPerformForcedFullSync())
+            {
+                pendingForcedSync = false;
+                pendingPawnSyncs.Clear();
+                nextForcedSyncAttemptTick = 0;
+                ScheduleNextUnlockStateSafetyCheck();
+                return;
+            }
+
+            // 失败后延迟重试，避免每帧刷错误日志。
+            nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
+        }
+
+        private bool TryPerformForcedFullSync()
+        {
+            try
+            {
+                CaptureUnlockStates();
+                ManagedResearchAbilitySyncUtility.SyncAllRelevantPawns();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 受管理科研能力全量同步失败，将在稍后重试：" + ex);
+                return false;
+            }
         }
 
         private void ProcessPendingPawnSyncs()
@@ -150,18 +187,42 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            CaptureUnlockStates();
-            ManagedResearchAbilitySyncUtility.SyncAllRelevantPawns();
-            pendingPawnSyncs.Clear();
+            if (TryPerformForcedFullSync())
+            {
+                pendingPawnSyncs.Clear();
+            }
+            else
+            {
+                // 低频检查发现变化但同步失败时，转入强制同步重试路径。
+                pendingForcedSync = true;
+                nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
+            }
         }
 
         private void OnResearchProjectFinished()
         {
-            if (HasUnlockStateChanged())
+            if (!IsSyncEnvironmentSafe())
             {
-                CaptureUnlockStates();
-                ManagedResearchAbilitySyncUtility.SyncAllRelevantPawns();
+                pendingForcedSync = true;
+                return;
+            }
+
+            if (!HasUnlockStateChanged())
+            {
+                return;
+            }
+
+            if (TryPerformForcedFullSync())
+            {
                 pendingPawnSyncs.Clear();
+                ScheduleNextUnlockStateSafetyCheck();
+            }
+            else
+            {
+                pendingForcedSync = true;
+                TickManager? tickManager = Find.TickManager;
+                int ticksGame = tickManager?.TicksGame ?? 0;
+                nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
             }
         }
 

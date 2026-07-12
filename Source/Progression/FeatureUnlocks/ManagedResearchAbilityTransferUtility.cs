@@ -108,23 +108,36 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < results.Count; i++)
             {
                 SnapshotApplyOutcome outcome = results[i];
-                ManagedResearchAbilityDescriptor? descriptor =
-                    ManagedResearchAbilitySyncUtility.FindDescriptor(outcome.Snapshot.AbilityDef);
-                if (descriptor == null)
+                try
                 {
-                    continue;
-                }
+                    ManagedResearchAbilityDescriptor? descriptor =
+                        ManagedResearchAbilitySyncUtility.FindDescriptor(
+                            outcome.Snapshot.AbilityDef);
+                    if (descriptor == null)
+                    {
+                        continue;
+                    }
 
-                if (outcome.Result
-                    == ManagedResearchAbilityTransferApplyResult.TargetPreparationFailed)
-                {
-                    // 故障保护：跳过来源该能力的资格同步，避免因失去宿主而被删掉。
+                    if (outcome.Result
+                        == ManagedResearchAbilityTransferApplyResult.TargetPreparationFailed)
+                    {
+                        // 故障保护：跳过来源该能力的资格同步，避免因失去宿主而被删掉。
+                        ManagedResearchAbilitySyncUtility.SyncPawnAbility(target, descriptor);
+                        continue;
+                    }
+
+                    ManagedResearchAbilitySyncUtility.SyncPawnAbility(source, descriptor);
                     ManagedResearchAbilitySyncUtility.SyncPawnAbility(target, descriptor);
-                    continue;
                 }
-
-                ManagedResearchAbilitySyncUtility.SyncPawnAbility(source, descriptor);
-                ManagedResearchAbilitySyncUtility.SyncPawnAbility(target, descriptor);
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] post-commit 能力最终资格同步异常：" +
+                        $"ability={outcome.Snapshot.AbilityDef?.defName ?? "null"}，" +
+                        $"result={outcome.Result}，" +
+                        $"source={source.LabelShort}（{source.ThingID}），" +
+                        $"target={target.LabelShort}（{target.ThingID}）：{ex}");
+                }
             }
         }
 
