@@ -40,6 +40,7 @@ namespace MAP_MechanoidMechanitor
         private static bool ShouldShowConsciousnessTransferGizmo(Pawn? mech)
         {
             return ModsConfig.BiotechActive
+                && ResearchFeatureUnlockUtility.IsMechanicalConsciousnessTransferUnlocked()
                 && MechanoidMechanitorScenarioUtility.IsScenarioActive
                 && mech != null
                 && !mech.Dead

@@ -17,6 +17,8 @@
   <MAP_MechanoidMechanitor.AbilityUnlockLetter.Title>能力：{0}</MAP_MechanoidMechanitor.AbilityUnlockLetter.Title>
   <MAP_MechanoidMechanitor.AbilityUnlockLetter.SpecialScenarioText>「正义」及机械意识载体获得技能：{0}。</MAP_MechanoidMechanitor.AbilityUnlockLetter.SpecialScenarioText>
   <MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText>「正义」获得技能：{0}。</MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText>
+  <MAP_MechanoidMechanitor.FeatureUnlockLetter.Title>特性：{0}</MAP_MechanoidMechanitor.FeatureUnlockLetter.Title>
+  <MAP_MechanoidMechanitor.FeatureUnlockLetter.Text>已解锁机械族机械师特性：{0}。</MAP_MechanoidMechanitor.FeatureUnlockLetter.Text>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>意识转移</MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>将当前机体的自主意识转移到其他能承载自主意识的机体中。</MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>没有可承载意识的机体。</MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>

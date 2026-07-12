@@ -24,6 +24,72 @@ namespace MAP_MechanoidMechanitor
                 pawn,
                 MechanoidMechanitorCapability.SelfWorkMode);
 
+        public static bool HasSelfWorkModeHediffs(Pawn? pawn)
+        {
+            if (pawn?.health?.hediffSet == null)
+            {
+                return false;
+            }
+
+            HediffDef? autonomous = TryGetAutonomousDirectiveHediffDef();
+            HediffDef? selfRepair = TryGetSelfRepairHediffDef();
+            return (autonomous != null && pawn.health.hediffSet.HasHediff(autonomous))
+                || (selfRepair != null && pawn.health.hediffSet.HasHediff(selfRepair));
+        }
+
+        /// <summary>
+        /// 按科研解锁与当前本体工作模式同步两种健康状态。
+        /// 未解锁时移除状态但不改变工作模式。
+        /// </summary>
+        public static void SyncSelfWorkModeEffects(Pawn? pawn)
+        {
+            if (pawn == null || pawn.Destroyed || pawn.Dead || pawn.health?.hediffSet == null)
+            {
+                return;
+            }
+
+            HediffDef? autonomousHediff = TryGetAutonomousDirectiveHediffDef();
+            HediffDef? selfRepairHediff = TryGetSelfRepairHediffDef();
+            if (autonomousHediff == null && selfRepairHediff == null)
+            {
+                return;
+            }
+
+            bool unlocked =
+                ResearchFeatureUnlockUtility.IsAutonomousDirectiveOptimizationUnlocked();
+            if (!HasSelfWorkMode(pawn) || !unlocked)
+            {
+                if (autonomousHediff != null)
+                {
+                    RemoveAllHediffsOfDef(pawn, autonomousHediff);
+                }
+
+                if (selfRepairHediff != null)
+                {
+                    RemoveAllHediffsOfDef(pawn, selfRepairHediff);
+                }
+
+                return;
+            }
+
+            if (!TryGetCurrentMode(pawn, out MechWorkModeDef? mode) || mode == null)
+            {
+                if (autonomousHediff != null)
+                {
+                    RemoveAllHediffsOfDef(pawn, autonomousHediff);
+                }
+
+                if (selfRepairHediff != null)
+                {
+                    RemoveAllHediffsOfDef(pawn, selfRepairHediff);
+                }
+
+                return;
+            }
+
+            ApplyUnlockedModeHediffs(pawn, mode, autonomousHediff, selfRepairHediff);
+        }
+
         public static bool TryGetCurrentMode(Pawn? pawn, out MechWorkModeDef? mode)
         {
             mode = null;
@@ -123,30 +189,7 @@ namespace MAP_MechanoidMechanitor
 
         public static void ApplyAcquiredSelfWorkMode(Pawn pawn, MechWorkModeDef mode)
         {
-            if (pawn.health?.hediffSet == null)
-            {
-                return;
-            }
-
-            HediffDef autonomousHediff = GetAutonomousDirectiveHediffDef();
-            HediffDef selfRepairHediff = GetSelfRepairHediffDef();
-
-            if (mode.defName == AutonomousDirectiveDefName)
-            {
-                RemoveAllHediffsOfDef(pawn, selfRepairHediff);
-                if (pawn.health.hediffSet.GetFirstHediffOfDef(autonomousHediff) == null)
-                {
-                    pawn.health.AddHediff(autonomousHediff);
-                }
-            }
-            else
-            {
-                RemoveAllHediffsOfDef(pawn, autonomousHediff);
-                if (pawn.health.hediffSet.GetFirstHediffOfDef(selfRepairHediff) == null)
-                {
-                    pawn.health.AddHediff(selfRepairHediff);
-                }
-            }
+            SyncSelfWorkModeEffects(pawn);
         }
 
         public static void NotifyModeChanged(Pawn pawn, MechWorkModeDef mode)
@@ -163,22 +206,56 @@ namespace MAP_MechanoidMechanitor
             pawn.jobs?.CheckForJobOverride();
         }
 
+        private static void ApplyUnlockedModeHediffs(
+            Pawn pawn,
+            MechWorkModeDef mode,
+            HediffDef? autonomousHediff,
+            HediffDef? selfRepairHediff)
+        {
+            if (mode.defName == AutonomousDirectiveDefName)
+            {
+                if (selfRepairHediff != null)
+                {
+                    RemoveAllHediffsOfDef(pawn, selfRepairHediff);
+                }
+
+                if (autonomousHediff != null
+                    && pawn.health.hediffSet.GetFirstHediffOfDef(autonomousHediff) == null)
+                {
+                    pawn.health.AddHediff(autonomousHediff);
+                }
+
+                return;
+            }
+
+            if (autonomousHediff != null)
+            {
+                RemoveAllHediffsOfDef(pawn, autonomousHediff);
+            }
+
+            if (selfRepairHediff != null
+                && pawn.health.hediffSet.GetFirstHediffOfDef(selfRepairHediff) == null)
+            {
+                pawn.health.AddHediff(selfRepairHediff);
+            }
+        }
+
         private static MechWorkModeDef GetAutonomousDirectiveDef()
         {
             return autonomousDirectiveDef ??=
                 DefDatabase<MechWorkModeDef>.GetNamed(AutonomousDirectiveDefName);
         }
 
-        private static HediffDef GetAutonomousDirectiveHediffDef()
+        private static HediffDef? TryGetAutonomousDirectiveHediffDef()
         {
             return autonomousDirectiveHediffDef ??=
-                DefDatabase<HediffDef>.GetNamed(AutonomousDirectiveHediffDefName);
+                DefDatabase<HediffDef>.GetNamedSilentFail(AutonomousDirectiveHediffDefName);
         }
 
-        private static HediffDef GetSelfRepairHediffDef()
+        private static HediffDef? TryGetSelfRepairHediffDef()
         {
             return selfRepairHediffDef ??=
-                DefDatabase<HediffDef>.GetNamed(SelfRepairHediffDefName);
+                DefDatabase<HediffDef>.GetNamedSilentFail(SelfRepairHediffDefName);
         }
 
         private static void RemoveAllHediffsOfDef(Pawn pawn, HediffDef def)

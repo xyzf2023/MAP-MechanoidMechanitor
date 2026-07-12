@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
@@ -39,7 +40,8 @@ namespace MAP_MechanoidMechanitor
 
         public int GetStepsForTarget(Pawn? target)
         {
-            if (target == null)
+            if (target == null
+                || !ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
             {
                 return 0;
             }
@@ -51,7 +53,9 @@ namespace MAP_MechanoidMechanitor
 
         public int GetStepsForOverseerTarget(Pawn? overseer, Pawn? target)
         {
-            if (overseer == null || target == null)
+            if (overseer == null
+                || target == null
+                || !ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
             {
                 return 0;
             }
@@ -63,6 +67,7 @@ namespace MAP_MechanoidMechanitor
         public int GetTotalStepsForOverseer(Pawn? overseer)
         {
             if (overseer == null
+                || !ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked()
                 || !recordsByOverseer.TryGetValue(overseer, out List<DataProcessingAllocationRecord>? overseerRecords))
             {
                 return 0;
@@ -105,7 +110,8 @@ namespace MAP_MechanoidMechanitor
 
         public bool TryAddStep(Pawn? overseer, Pawn? target)
         {
-            if (!DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target)
+            if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked()
+                || !DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target)
                 || !DataProcessingAllocationUtility.CanAddStep(overseer))
             {
                 return false;
@@ -159,6 +165,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             steps = Mathf.Max(0, steps);
+            if (steps > 0
+                && (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked()
+                    || !DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target)))
+            {
+                return;
+            }
+
             DataProcessingAllocationRecord? record = FindRecord(overseer, target);
             if (steps <= 0)
             {
@@ -250,6 +263,11 @@ namespace MAP_MechanoidMechanitor
 
         public bool TryPinTarget(Pawn? overseer, Pawn? target)
         {
+            if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
+            {
+                return false;
+            }
+
             if (ReferenceEquals(overseer, target))
             {
                 return false;
@@ -411,6 +429,211 @@ namespace MAP_MechanoidMechanitor
                 if (overseer != null && !overseer.Destroyed && syncedOverseers.Add(overseer))
                 {
                     SyncHediffsForOverseer(overseer);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 数据处理分配科研关闭时清空全部记录、顶置与相关健康状态。
+        /// </summary>
+        public void ClearAllAllocationsAndEffects()
+        {
+            HashSet<Pawn> overseers = new HashSet<Pawn>();
+            HashSet<Pawn> targets = new HashSet<Pawn>();
+
+            for (int i = 0; i < records.Count; i++)
+            {
+                DataProcessingAllocationRecord? record = records[i];
+                if (record == null)
+                {
+                    continue;
+                }
+
+                if (record.overseer != null)
+                {
+                    overseers.Add(record.overseer);
+                }
+
+                if (record.target != null)
+                {
+                    targets.Add(record.target);
+                }
+            }
+
+            for (int i = 0; i < pinRecords.Count; i++)
+            {
+                DataProcessingAllocationPinRecord? pin = pinRecords[i];
+                if (pin?.overseer != null)
+                {
+                    overseers.Add(pin.overseer);
+                }
+
+                if (pin?.target != null)
+                {
+                    targets.Add(pin.target);
+                }
+            }
+
+            records.Clear();
+            recordsByOverseer.Clear();
+            recordByTarget.Clear();
+            pinRecords.Clear();
+            nextPinOrder = 0;
+
+            foreach (Pawn overseer in overseers)
+            {
+                try
+                {
+                    if (overseer != null && !overseer.Destroyed)
+                    {
+                        RemoveHediff(
+                            overseer,
+                            DataProcessingAllocationUtility.DataStreamDistributionDef);
+                        RemoveHediff(
+                            overseer,
+                            DataProcessingAllocationUtility.CommandFocusDef);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 清空数据处理分配时清理 overseer 失败：" +
+                        $"pawn={overseer?.LabelShort ?? "null"}：{ex}");
+                }
+            }
+
+            foreach (Pawn target in targets)
+            {
+                try
+                {
+                    if (target != null && !target.Destroyed)
+                    {
+                        RemoveHediff(
+                            target,
+                            DataProcessingAllocationUtility.CommandFocusDef);
+                        RemoveHediff(
+                            target,
+                            DataProcessingAllocationUtility.DataStreamDistributionDef);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 清空数据处理分配时清理 target 失败：" +
+                        $"pawn={target?.LabelShort ?? "null"}：{ex}");
+                }
+            }
+
+            ScrubResidualDataProcessingHediffs();
+        }
+
+        /// <summary>
+        /// 自我指令聚焦科研关闭时，仅清除 overseer==target 的自身分配。
+        /// </summary>
+        public void ClearSelfAllocationsAndEffects()
+        {
+            HashSet<Pawn> affected = new HashSet<Pawn>();
+            List<DataProcessingAllocationRecord> toRemove =
+                new List<DataProcessingAllocationRecord>();
+
+            for (int i = 0; i < records.Count; i++)
+            {
+                DataProcessingAllocationRecord? record = records[i];
+                if (record == null
+                    || !DataProcessingAllocationUtility.IsSelfAllocationPair(
+                        record.overseer,
+                        record.target))
+                {
+                    continue;
+                }
+
+                toRemove.Add(record);
+                if (record.overseer != null)
+                {
+                    affected.Add(record.overseer);
+                }
+            }
+
+            for (int i = 0; i < toRemove.Count; i++)
+            {
+                DataProcessingAllocationRecord record = toRemove[i];
+                try
+                {
+                    RemoveRecord(record);
+                    if (record.target != null && !record.target.Destroyed)
+                    {
+                        RemoveHediff(
+                            record.target,
+                            DataProcessingAllocationUtility.CommandFocusDef);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 清除自我指令聚焦分配失败：" +
+                        $"pawn={record.target?.LabelShort ?? "null"}：{ex}");
+                }
+            }
+
+            foreach (Pawn pawn in affected)
+            {
+                try
+                {
+                    if (pawn != null && !pawn.Destroyed)
+                    {
+                        SyncHediffsForOverseer(pawn);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 自我指令聚焦清理后重算数据流分发失败：" +
+                        $"pawn={pawn?.LabelShort ?? "null"}：{ex}");
+                }
+            }
+        }
+
+        private void ScrubResidualDataProcessingHediffs()
+        {
+            if (Current.Game == null || Find.World == null)
+            {
+                return;
+            }
+
+            HediffDef? streamDef = DataProcessingAllocationUtility.DataStreamDistributionDef;
+            HediffDef? focusDef = DataProcessingAllocationUtility.CommandFocusDef;
+            if (streamDef == null && focusDef == null)
+            {
+                return;
+            }
+
+            List<Pawn> playerFactionPawns =
+                PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_OfPlayerFaction;
+            for (int i = 0; i < playerFactionPawns.Count; i++)
+            {
+                Pawn pawn = playerFactionPawns[i];
+                if (pawn == null || pawn.Destroyed || pawn.health?.hediffSet == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    if (streamDef != null)
+                    {
+                        RemoveHediff(pawn, streamDef);
+                    }
+
+                    if (focusDef != null)
+                    {
+                        RemoveHediff(pawn, focusDef);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 清理残留数据处理分配健康状态失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
                 }
             }
         }

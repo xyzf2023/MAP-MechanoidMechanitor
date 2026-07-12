@@ -178,6 +178,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool HasCommandRangeBypass(Pawn? mech)
         {
+            if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
+            {
+                return false;
+            }
+
             if (mech == null || !ModsConfig.BiotechActive)
             {
                 return false;
@@ -196,6 +201,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool HasVirtualTravelNode(Pawn? pawn)
         {
+            if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
+            {
+                return false;
+            }
+
             if (pawn == null || !ModsConfig.BiotechActive)
             {
                 return false;
@@ -209,6 +219,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool HasShuttlePilotAllocation(Pawn? pawn)
         {
+            if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
+            {
+                return false;
+            }
+
             if (pawn == null || !ModsConfig.BiotechActive)
             {
                 return false;
@@ -232,6 +247,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsValidAllocationPair(Pawn? overseer, Pawn? target)
         {
+            if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
+            {
+                return false;
+            }
+
             if (overseer == null
                 || target == null
                 || overseer.Dead
@@ -250,7 +270,14 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool isSelf = IsSelfAllocationPair(overseer, target);
-            if (!isSelf && target.GetOverseer() != overseer)
+            if (isSelf)
+            {
+                if (!ResearchFeatureUnlockUtility.IsSelfDirectiveFocusUnlocked())
+                {
+                    return false;
+                }
+            }
+            else if (target.GetOverseer() != overseer)
             {
                 return false;
             }

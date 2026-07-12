@@ -33,6 +33,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (!ModsConfig.BiotechActive
+                || !ResearchFeatureUnlockUtility.IsMechanicalConsciousnessTransferUnlocked()
                 || !MechanoidMechanitorScenarioUtility.IsScenarioActive
                 || !GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(pawn)
                 || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
@@ -149,6 +150,7 @@ namespace MAP_MechanoidMechanitor
         private static bool ShouldAttemptEmergencyTransfer(Pawn source)
         {
             return ModsConfig.BiotechActive
+                && ResearchFeatureUnlockUtility.IsMechanicalConsciousnessTransferUnlocked()
                 && MechanoidMechanitorScenarioUtility.IsScenarioActive
                 && !source.Dead
                 && !source.Destroyed

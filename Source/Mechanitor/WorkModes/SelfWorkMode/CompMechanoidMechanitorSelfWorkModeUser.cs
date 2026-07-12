@@ -28,16 +28,10 @@ namespace MAP_MechanoidMechanitor
     {
         private const string AutonomousDirectiveDefName = "MAP_WorkMode_AutonomousDirective";
         private const string SelfShutdownDefName = "SelfShutdown";
-        private const string AutonomousDirectiveHediffDefName =
-            "MAP_MechanoidMechanitor_SelfWorkMode_AutonomousDirective";
-        private const string SelfRepairHediffDefName =
-            "MAP_MechanoidMechanitor_SelfWorkMode_SelfRepair";
 
         private bool selfWorkModeEffectsInitialized;
 
         private static MechWorkModeDef? autonomousDirectiveDef;
-        private static HediffDef? autonomousDirectiveHediffDef;
-        private static HediffDef? selfRepairHediffDef;
 
         public MechWorkModeDef CurrentSelfWorkMode => SanitizeWorkMode(GetAuthoritativeSelfWorkMode());
 
@@ -166,45 +160,13 @@ namespace MAP_MechanoidMechanitor
 
         private bool SyncSelfWorkModeHediff()
         {
-            if (parent is not Pawn pawn || pawn.health?.hediffSet == null)
+            if (parent is not Pawn pawn)
             {
                 return false;
             }
 
-            HediffDef autonomousHediffDef = GetAutonomousDirectiveHediffDef();
-            HediffDef selfRepairHediffDef = GetSelfRepairHediffDef();
-
-            if (IsAutonomousDirective)
-            {
-                RemoveAllHediffsOfDef(pawn, selfRepairHediffDef);
-                if (pawn.health.hediffSet.GetFirstHediffOfDef(autonomousHediffDef) == null)
-                {
-                    pawn.health.AddHediff(autonomousHediffDef);
-                }
-            }
-            else if (IsSelfShutdown)
-            {
-                RemoveAllHediffsOfDef(pawn, autonomousHediffDef);
-                if (pawn.health.hediffSet.GetFirstHediffOfDef(selfRepairHediffDef) == null)
-                {
-                    pawn.health.AddHediff(selfRepairHediffDef);
-                }
-            }
-
-            return true;
-        }
-
-        private static void RemoveAllHediffsOfDef(Pawn pawn, HediffDef def)
-        {
-            HediffSet hediffSet = pawn.health.hediffSet;
-            for (int i = hediffSet.hediffs.Count - 1; i >= 0; i--)
-            {
-                Hediff hediff = hediffSet.hediffs[i];
-                if (hediff.def == def)
-                {
-                    pawn.health.RemoveHediff(hediff);
-                }
-            }
+            MechanoidMechanitorSelfWorkModeUtility.SyncSelfWorkModeEffects(pawn);
+            return pawn.health?.hediffSet != null;
         }
 
         private static MechWorkModeDef GetAutonomousDirectiveDef()
@@ -226,18 +188,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             return GetAutonomousDirectiveDef();
-        }
-
-        private static HediffDef GetAutonomousDirectiveHediffDef()
-        {
-            return autonomousDirectiveHediffDef ??=
-                DefDatabase<HediffDef>.GetNamed(AutonomousDirectiveHediffDefName);
-        }
-
-        private static HediffDef GetSelfRepairHediffDef()
-        {
-            return selfRepairHediffDef ??=
-                DefDatabase<HediffDef>.GetNamed(SelfRepairHediffDefName);
         }
     }
 }

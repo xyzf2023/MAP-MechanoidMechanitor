@@ -30,6 +30,7 @@ namespace MAP_MechanoidMechanitor
         private static bool ShouldShowDataProcessingAllocationGizmo(Pawn? mech)
         {
             return ModsConfig.BiotechActive
+                && ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked()
                 && mech != null
                 && !mech.Dead
                 && !mech.Destroyed

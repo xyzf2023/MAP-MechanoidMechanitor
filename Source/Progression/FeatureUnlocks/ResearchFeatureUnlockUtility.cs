@@ -66,6 +66,23 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
+        public static bool IsFeatureUnlocked(ManagedResearchFeatureDescriptor descriptor)
+        {
+            return descriptor != null && descriptor.IsResearchFinished();
+        }
+
+        public static bool IsAutonomousDirectiveOptimizationUnlocked() =>
+            IsFeatureUnlocked(ManagedResearchFeatureCatalog.AutonomousDirectiveOptimization);
+
+        public static bool IsMechanicalConsciousnessTransferUnlocked() =>
+            IsFeatureUnlocked(ManagedResearchFeatureCatalog.MechanicalConsciousnessTransfer);
+
+        public static bool IsDataProcessingAllocationUnlocked() =>
+            IsFeatureUnlocked(ManagedResearchFeatureCatalog.DataProcessingAllocation);
+
+        public static bool IsSelfDirectiveFocusUnlocked() =>
+            IsFeatureUnlocked(ManagedResearchFeatureCatalog.SelfDirectiveFocus);
+
         public static bool ShouldPawnHaveAbility(
             Pawn? pawn,
             ManagedResearchAbilityDescriptor descriptor)
