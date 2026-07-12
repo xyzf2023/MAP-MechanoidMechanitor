@@ -230,7 +230,6 @@ namespace MAP_MechanoidMechanitor
                 pawn,
                 actAsIfSpawned: true);
             MAPMechanitorInitializationUtility.FinalizeNow(pawn);
-            GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorInitialized(pawn);
         }
 
         public static bool UsesVanillaControlPath(Pawn? pawn)
