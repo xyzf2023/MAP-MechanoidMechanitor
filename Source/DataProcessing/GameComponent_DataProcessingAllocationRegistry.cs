@@ -436,7 +436,7 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         /// 数据处理分配科研关闭时清空全部记录、顶置与相关健康状态。
         /// </summary>
-        public void ClearAllAllocationsAndEffects()
+        public bool ClearAllAllocationsAndEffects()
         {
             HashSet<Pawn> overseers = new HashSet<Pawn>();
             HashSet<Pawn> targets = new HashSet<Pawn>();
@@ -480,6 +480,8 @@ namespace MAP_MechanoidMechanitor
             pinRecords.Clear();
             nextPinOrder = 0;
 
+            bool allSucceeded = true;
+
             foreach (Pawn overseer in overseers)
             {
                 try
@@ -496,9 +498,11 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
+                    allSucceeded = false;
                     Log.Error(
                         "[MAP-机械族机械师] 清空数据处理分配时清理 overseer 失败：" +
-                        $"pawn={overseer?.LabelShort ?? "null"}：{ex}");
+                        $"pawn={overseer?.LabelShort ?? "null"}" +
+                        $"（{overseer?.ThingID ?? "null"}）：{ex}");
                 }
             }
 
@@ -518,19 +522,22 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
+                    allSucceeded = false;
                     Log.Error(
                         "[MAP-机械族机械师] 清空数据处理分配时清理 target 失败：" +
-                        $"pawn={target?.LabelShort ?? "null"}：{ex}");
+                        $"pawn={target?.LabelShort ?? "null"}" +
+                        $"（{target?.ThingID ?? "null"}）：{ex}");
                 }
             }
 
-            ScrubResidualDataProcessingHediffs();
+            bool residualScrubSucceeded = ScrubResidualDataProcessingHediffs();
+            return allSucceeded && residualScrubSucceeded;
         }
 
         /// <summary>
         /// 自我指令聚焦科研关闭时，仅清除 overseer==target 的自身分配。
         /// </summary>
-        public void ClearSelfAllocationsAndEffects()
+        public bool ClearSelfAllocationsAndEffects()
         {
             HashSet<Pawn> affected = new HashSet<Pawn>();
             List<DataProcessingAllocationRecord> toRemove =
@@ -554,6 +561,8 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
+            bool allSucceeded = true;
+
             for (int i = 0; i < toRemove.Count; i++)
             {
                 DataProcessingAllocationRecord record = toRemove[i];
@@ -569,12 +578,15 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
+                    allSucceeded = false;
                     Log.Error(
                         "[MAP-机械族机械师] 清除自我指令聚焦分配失败：" +
-                        $"pawn={record.target?.LabelShort ?? "null"}：{ex}");
+                        $"pawn={record.target?.LabelShort ?? "null"}" +
+                        $"（{record.target?.ThingID ?? "null"}）：{ex}");
                 }
             }
 
+            CollectOverseersNeedingDataStreamResync(affected);
             foreach (Pawn pawn in affected)
             {
                 try
@@ -586,27 +598,75 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
+                    allSucceeded = false;
                     Log.Error(
                         "[MAP-机械族机械师] 自我指令聚焦清理后重算数据流分发失败：" +
-                        $"pawn={pawn?.LabelShort ?? "null"}：{ex}");
+                        $"pawn={pawn?.LabelShort ?? "null"}" +
+                        $"（{pawn?.ThingID ?? "null"}）：{ex}");
                 }
             }
+
+            bool residualScrubSucceeded = ScrubResidualOrphanCommandFocusHediffs();
+            return allSucceeded && residualScrubSucceeded;
         }
 
-        private void ScrubResidualDataProcessingHediffs()
+        /// <summary>
+        /// 把仍持有下属记录或残留 DataStreamDistribution 的监督者并入重算集合，
+        /// 保证前一轮记录已删但重算失败时，下次重试仍能校正数值。
+        /// </summary>
+        private void CollectOverseersNeedingDataStreamResync(HashSet<Pawn> overseers)
         {
+            foreach (Pawn overseer in recordsByOverseer.Keys)
+            {
+                if (overseer != null)
+                {
+                    overseers.Add(overseer);
+                }
+            }
+
             if (Current.Game == null || Find.World == null)
             {
                 return;
             }
 
             HediffDef? streamDef = DataProcessingAllocationUtility.DataStreamDistributionDef;
-            HediffDef? focusDef = DataProcessingAllocationUtility.CommandFocusDef;
-            if (streamDef == null && focusDef == null)
+            if (streamDef == null)
             {
                 return;
             }
 
+            List<Pawn> playerFactionPawns =
+                PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_OfPlayerFaction;
+            for (int i = 0; i < playerFactionPawns.Count; i++)
+            {
+                Pawn pawn = playerFactionPawns[i];
+                if (pawn == null
+                    || pawn.Destroyed
+                    || pawn.health?.hediffSet == null
+                    || !pawn.health.hediffSet.HasHediff(streamDef))
+                {
+                    continue;
+                }
+
+                overseers.Add(pawn);
+            }
+        }
+
+        private bool ScrubResidualDataProcessingHediffs()
+        {
+            if (Current.Game == null || Find.World == null)
+            {
+                return true;
+            }
+
+            HediffDef? streamDef = DataProcessingAllocationUtility.DataStreamDistributionDef;
+            HediffDef? focusDef = DataProcessingAllocationUtility.CommandFocusDef;
+            if (streamDef == null && focusDef == null)
+            {
+                return true;
+            }
+
+            bool allSucceeded = true;
             List<Pawn> playerFactionPawns =
                 PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_OfPlayerFaction;
             for (int i = 0; i < playerFactionPawns.Count; i++)
@@ -631,11 +691,70 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
+                    allSucceeded = false;
                     Log.Error(
                         "[MAP-机械族机械师] 清理残留数据处理分配健康状态失败：" +
                         $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
                 }
             }
+
+            return allSucceeded;
+        }
+
+        /// <summary>
+        /// 清理“已无任何分配记录却仍残留 CommandFocus”的状态，不误删合法下属。
+        /// </summary>
+        private bool ScrubResidualOrphanCommandFocusHediffs()
+        {
+            if (Current.Game == null || Find.World == null)
+            {
+                return true;
+            }
+
+            HediffDef? focusDef = DataProcessingAllocationUtility.CommandFocusDef;
+            if (focusDef == null)
+            {
+                return true;
+            }
+
+            bool allSucceeded = true;
+            List<Pawn> playerFactionPawns =
+                PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_OfPlayerFaction;
+            for (int i = 0; i < playerFactionPawns.Count; i++)
+            {
+                Pawn pawn = playerFactionPawns[i];
+                if (pawn == null
+                    || pawn.Destroyed
+                    || pawn.health?.hediffSet == null
+                    || !pawn.health.hediffSet.HasHediff(focusDef))
+                {
+                    continue;
+                }
+
+                if (HasAnyAllocationRecordForTarget(pawn))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    RemoveHediff(pawn, focusDef);
+                }
+                catch (Exception ex)
+                {
+                    allSucceeded = false;
+                    Log.Error(
+                        "[MAP-机械族机械师] 清理残留指令聚焦健康状态失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                }
+            }
+
+            return allSucceeded;
+        }
+
+        private bool HasAnyAllocationRecordForTarget(Pawn pawn)
+        {
+            return recordByTarget.ContainsKey(pawn);
         }
 
         public override void ExposeData()

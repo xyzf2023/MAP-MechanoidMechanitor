@@ -11,29 +11,36 @@ namespace MAP_MechanoidMechanitor
         public static bool SyncAllFeatures()
         {
             bool allSucceeded = true;
-            allSucceeded &= SyncFeatureSafe(
+            bool result = SyncFeatureSafe(
                 ManagedResearchFeatureCatalog.AutonomousDirectiveOptimization,
                 SyncAutonomousDirectiveOptimization);
-            allSucceeded &= SyncFeatureSafe(
+            allSucceeded = result && allSucceeded;
+
+            result = SyncFeatureSafe(
                 ManagedResearchFeatureCatalog.MechanicalConsciousnessTransfer,
                 SyncMechanicalConsciousnessTransfer);
-            allSucceeded &= SyncFeatureSafe(
+            allSucceeded = result && allSucceeded;
+
+            result = SyncFeatureSafe(
                 ManagedResearchFeatureCatalog.DataProcessingAllocation,
                 SyncDataProcessingAllocation);
-            allSucceeded &= SyncFeatureSafe(
+            allSucceeded = result && allSucceeded;
+
+            result = SyncFeatureSafe(
                 ManagedResearchFeatureCatalog.SelfDirectiveFocus,
                 SyncSelfDirectiveFocus);
+            allSucceeded = result && allSucceeded;
+
             return allSucceeded;
         }
 
         private static bool SyncFeatureSafe(
             ManagedResearchFeatureDescriptor descriptor,
-            Action syncAction)
+            Func<bool> syncAction)
         {
             try
             {
-                syncAction();
-                return true;
+                return syncAction();
             }
             catch (Exception ex)
             {
@@ -45,8 +52,9 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void SyncAutonomousDirectiveOptimization()
+        private static bool SyncAutonomousDirectiveOptimization()
         {
+            bool allSucceeded = true;
             HashSet<Pawn> targets = CollectSelfWorkModeSyncTargets();
             foreach (Pawn pawn in targets)
             {
@@ -56,26 +64,33 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
+                    allSucceeded = false;
                     Log.Error(
                         "[MAP-机械族机械师] 自律指令优化状态同步失败：" +
                         $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
                 }
             }
+
+            return allSucceeded;
         }
 
-        private static void SyncMechanicalConsciousnessTransfer()
+        private static bool SyncMechanicalConsciousnessTransfer()
         {
             if (ResearchFeatureUnlockUtility.IsMechanicalConsciousnessTransferUnlocked())
             {
-                return;
+                return true;
             }
 
             JobDef? transferJobDef = MAPMechanitor_JobDefOf.MAP_TransferMechanicalConsciousness;
             if (transferJobDef == null)
             {
-                return;
+                Log.Error(
+                    "[MAP-机械族机械师] 取消机械意识转移工作失败：缺少 JobDef " +
+                    "MAP_TransferMechanicalConsciousness。");
+                return false;
             }
 
+            bool allSucceeded = true;
             HashSet<Pawn> targets = CollectPlayerMechanitorPawns();
             foreach (Pawn pawn in targets)
             {
@@ -85,40 +100,69 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
+                    allSucceeded = false;
                     Log.Error(
                         "[MAP-机械族机械师] 取消机械意识转移工作失败：" +
                         $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
                 }
             }
+
+            return allSucceeded;
         }
 
-        private static void SyncDataProcessingAllocation()
+        private static bool SyncDataProcessingAllocation()
         {
             if (ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
             {
-                return;
+                return true;
+            }
+
+            if (Current.Game == null)
+            {
+                return true;
             }
 
             GameComponent_DataProcessingAllocationRegistry? registry =
                 GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
-            registry?.ClearAllAllocationsAndEffects();
+            if (registry == null)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 数据处理分配清理失败：缺少 " +
+                    "GameComponent_DataProcessingAllocationRegistry。");
+                return false;
+            }
+
+            return registry.ClearAllAllocationsAndEffects();
         }
 
-        private static void SyncSelfDirectiveFocus()
+        private static bool SyncSelfDirectiveFocus()
         {
             if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
             {
-                return;
+                return true;
             }
 
             if (ResearchFeatureUnlockUtility.IsSelfDirectiveFocusUnlocked())
             {
-                return;
+                return true;
+            }
+
+            if (Current.Game == null)
+            {
+                return true;
             }
 
             GameComponent_DataProcessingAllocationRegistry? registry =
                 GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
-            registry?.ClearSelfAllocationsAndEffects();
+            if (registry == null)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 自我指令聚焦清理失败：缺少 " +
+                    "GameComponent_DataProcessingAllocationRegistry。");
+                return false;
+            }
+
+            return registry.ClearSelfAllocationsAndEffects();
         }
 
         private static void CancelTransferJobs(Pawn pawn, JobDef transferJobDef)
