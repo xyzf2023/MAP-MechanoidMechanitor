@@ -183,10 +183,10 @@
           </parts>
         </li>
 
-        <!-- 左髋部结构 -->
+        <!-- 左腿部连接结构 -->
         <li>
           <def>MAP_JusticeHipStructure</def>
-          <customLabel>左髋部结构</customLabel>
+          <customLabel>左腿部连接结构</customLabel>
           <coverage>0.13</coverage>
           <height>Bottom</height>
           <depth>Outside</depth>
@@ -221,10 +221,10 @@
           </parts>
         </li>
 
-        <!-- 右髋部结构 -->
+        <!-- 右腿部连接结构 -->
         <li>
           <def>MAP_JusticeHipStructure</def>
-          <customLabel>右髋部结构</customLabel>
+          <customLabel>右腿部连接结构</customLabel>
           <coverage>0.13</coverage>
           <height>Bottom</height>
           <depth>Outside</depth>
