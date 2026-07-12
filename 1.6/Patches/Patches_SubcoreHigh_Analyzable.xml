@@ -16,7 +16,7 @@
           <completedLetterDef>PositiveEvent</completedLetterDef>
           <activateTexPath>UI/Icons/Study</activateTexPath>
           <activateLabelString>分析……</activateLabelString>
-          <activateDescString>分析次生核心（高级），从其复杂的心智基质中提取自律指令技术所需的数据。</activateDescString>
+          <activateDescString>分析次生核心（高级），以获取自律指令技术所需的数据。</activateDescString>
           <jobString>正在分析次生核心（高级）</jobString>
           <guiLabelString>选择执行分析的机械师</guiLabelString>
           <inspectString>可由机械师进行分析。</inspectString>
@@ -43,7 +43,7 @@
             <completedLetterDef>PositiveEvent</completedLetterDef>
             <activateTexPath>UI/Icons/Study</activateTexPath>
             <activateLabelString>分析……</activateLabelString>
-            <activateDescString>分析次生核心（高级），从其复杂的心智基质中提取自律指令技术所需的数据。</activateDescString>
+            <activateDescString>分析次生核心（高级），以获取自律指令技术所需的数据。</activateDescString>
             <jobString>正在分析次生核心（高级）</jobString>
             <guiLabelString>选择执行分析的机械师</guiLabelString>
             <inspectString>可由机械师进行分析。</inspectString>
