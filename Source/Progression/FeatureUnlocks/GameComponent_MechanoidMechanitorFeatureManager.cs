@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using MAP_MechanoidMechanitor.Scenarios;
+using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -9,8 +11,16 @@ namespace MAP_MechanoidMechanitor
         private const int UnlockStateSafetyCheckIntervalTicks = 120;
         private const int ForcedSyncRetryIntervalTicks = 60;
 
+        private const string AbilityUnlockLetterTitleKey =
+            "MAP_MechanoidMechanitor.AbilityUnlockLetter.Title";
+        private const string AbilityUnlockLetterSpecialScenarioTextKey =
+            "MAP_MechanoidMechanitor.AbilityUnlockLetter.SpecialScenarioText";
+        private const string AbilityUnlockLetterJusticeOnlyTextKey =
+            "MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText";
+
         private bool pendingForcedSync;
         private readonly HashSet<Pawn> pendingPawnSyncs = new HashSet<Pawn>();
+        private readonly HashSet<string> pendingUnlockLetterIds = new HashSet<string>();
         private Dictionary<string, bool>? lastKnownUnlockStates;
         private int nextUnlockStateSafetyCheckTick;
         private int nextForcedSyncAttemptTick;
@@ -111,6 +121,7 @@ namespace MAP_MechanoidMechanitor
                 pendingPawnSyncs.Clear();
                 nextForcedSyncAttemptTick = 0;
                 ScheduleNextUnlockStateSafetyCheck();
+                SendPendingUnlockLetters();
                 return;
             }
 
@@ -187,13 +198,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 低频检查只修正能力状态，不把意外发现的 false→true 记为待发信件。
             if (TryPerformForcedFullSync())
             {
                 pendingPawnSyncs.Clear();
+                SendPendingUnlockLetters();
             }
             else
             {
-                // 低频检查发现变化但同步失败时，转入强制同步重试路径。
                 pendingForcedSync = true;
                 nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
             }
@@ -201,13 +213,23 @@ namespace MAP_MechanoidMechanitor
 
         private void OnResearchProjectFinished()
         {
+            // 初始化阶段（如起始科研）：只延迟同步，不记录解锁信件。
+            if (Current.ProgramState != ProgramState.Playing)
+            {
+                pendingForcedSync = true;
+                return;
+            }
+
+            // Playing 下即使 LongEvent 导致暂时不安全，也先记录 false→true 待发信件。
+            EnqueueNewlyUnlockedLetterIds();
+
             if (!IsSyncEnvironmentSafe())
             {
                 pendingForcedSync = true;
                 return;
             }
 
-            if (!HasUnlockStateChanged())
+            if (!HasUnlockStateChanged() && pendingUnlockLetterIds.Count == 0)
             {
                 return;
             }
@@ -216,6 +238,7 @@ namespace MAP_MechanoidMechanitor
             {
                 pendingPawnSyncs.Clear();
                 ScheduleNextUnlockStateSafetyCheck();
+                SendPendingUnlockLetters();
             }
             else
             {
@@ -224,6 +247,126 @@ namespace MAP_MechanoidMechanitor
                 int ticksGame = tickManager?.TicksGame ?? 0;
                 nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
             }
+        }
+
+        private List<ManagedResearchAbilityDescriptor> CollectNewlyUnlockedAbilities()
+        {
+            List<ManagedResearchAbilityDescriptor> newlyUnlocked =
+                new List<ManagedResearchAbilityDescriptor>();
+            lastKnownUnlockStates ??= new Dictionary<string, bool>();
+
+            IReadOnlyList<ManagedResearchAbilityDescriptor> all =
+                ManagedResearchAbilityCatalog.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                ManagedResearchAbilityDescriptor descriptor = all[i];
+                bool current = ResearchFeatureUnlockUtility.IsAbilityUnlocked(descriptor);
+                if (!lastKnownUnlockStates.TryGetValue(descriptor.Id, out bool previous))
+                {
+                    // 缓存缺失视为初始化/读档状态，不视为正常科研解锁。
+                    continue;
+                }
+
+                if (!previous && current)
+                {
+                    newlyUnlocked.Add(descriptor);
+                }
+            }
+
+            return newlyUnlocked;
+        }
+
+        private void EnqueueNewlyUnlockedLetterIds()
+        {
+            List<ManagedResearchAbilityDescriptor> newlyUnlocked =
+                CollectNewlyUnlockedAbilities();
+            for (int i = 0; i < newlyUnlocked.Count; i++)
+            {
+                pendingUnlockLetterIds.Add(newlyUnlocked[i].Id);
+            }
+        }
+
+        private void SendPendingUnlockLetters()
+        {
+            if (pendingUnlockLetterIds.Count == 0)
+            {
+                return;
+            }
+
+            if (Current.ProgramState != ProgramState.Playing
+                || LongEventHandler.AnyEventNowOrWaiting
+                || Find.LetterStack == null)
+            {
+                return;
+            }
+
+            List<string> ids = new List<string>(pendingUnlockLetterIds);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                string id = ids[i];
+                ManagedResearchAbilityDescriptor? descriptor = FindDescriptorById(id);
+                if (descriptor == null)
+                {
+                    pendingUnlockLetterIds.Remove(id);
+                    continue;
+                }
+
+                if (!ResearchFeatureUnlockUtility.IsAbilityUnlocked(descriptor))
+                {
+                    pendingUnlockLetterIds.Remove(id);
+                    continue;
+                }
+
+                AbilityDef? abilityDef = descriptor.AbilityDef;
+                if (abilityDef == null)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 无法发送科研解锁信件：缺少 AbilityDef，" +
+                        $"descriptorId={descriptor.Id}，" +
+                        $"abilityDefName={descriptor.AbilityDefName}。");
+                    pendingUnlockLetterIds.Remove(id);
+                    continue;
+                }
+
+                try
+                {
+                    SendAbilityUnlockLetter(abilityDef);
+                    pendingUnlockLetterIds.Remove(id);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 发送科研解锁信件失败：" +
+                        $"descriptorId={descriptor.Id}，" +
+                        $"abilityDefName={descriptor.AbilityDefName}：{ex}");
+                }
+            }
+        }
+
+        private void SendAbilityUnlockLetter(AbilityDef abilityDef)
+        {
+            TaggedString abilityLabel = abilityDef.LabelCap;
+            TaggedString title = AbilityUnlockLetterTitleKey.Translate(abilityLabel);
+            TaggedString text = GameComponent_MechanoidMechanitorScenarioState.IsEnabled
+                ? AbilityUnlockLetterSpecialScenarioTextKey.Translate(abilityLabel)
+                : AbilityUnlockLetterJusticeOnlyTextKey.Translate(abilityLabel);
+
+            Find.LetterStack.ReceiveLetter(title, text, LetterDefOf.PositiveEvent);
+        }
+
+        private static ManagedResearchAbilityDescriptor? FindDescriptorById(string id)
+        {
+            IReadOnlyList<ManagedResearchAbilityDescriptor> all =
+                ManagedResearchAbilityCatalog.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (all[i].Id == id)
+                {
+                    return all[i];
+                }
+            }
+
+            return null;
         }
 
         private bool IsSyncEnvironmentSafe()

@@ -14,6 +14,9 @@
   <MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>目标机械体属于非敌对阵营，继续骇入会被视作敌对行为。\n\n确定要这么做？</MAP_MechanoidMechanitor.MechHack.NonHostileConfirm>
   <MAP_MechanoidMechanitor.MechHack.ReportWithTarget>正在骇入{0}。</MAP_MechanoidMechanitor.MechHack.ReportWithTarget>
   <MAP_MechanoidMechanitor.MechHack.ReportDefault>正在执行机体骇入。</MAP_MechanoidMechanitor.MechHack.ReportDefault>
+  <MAP_MechanoidMechanitor.AbilityUnlockLetter.Title>能力：{0}</MAP_MechanoidMechanitor.AbilityUnlockLetter.Title>
+  <MAP_MechanoidMechanitor.AbilityUnlockLetter.SpecialScenarioText>「正义」及机械意识载体获得技能：{0}。</MAP_MechanoidMechanitor.AbilityUnlockLetter.SpecialScenarioText>
+  <MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText>「正义」获得技能：{0}。</MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>意识转移</MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>将当前机体的自主意识转移到其他能承载自主意识的机体中。</MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>没有可承载意识的机体。</MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>
