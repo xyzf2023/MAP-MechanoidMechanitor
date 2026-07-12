@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <BodyDef>
+    <defName>MAP_Body_Hermit</defName>
+    <label>「隐者」身体</label>
+
+    <corePart>
+      <def>MAP_HermitFrame</def>
+      <height>Middle</height>
+      <depth>Outside</depth>
+
+      <groups>
+        <li>Torso</li>
+      </groups>
+
+      <parts>
+
+        <!-- 颈 -->
+        <li>
+          <def>MechanicalNeck</def>
+          <coverage>0.10</coverage>
+          <height>Top</height>
+          <depth>Outside</depth>
+
+          <parts>
+
+            <!-- 头 -->
+            <li>
+              <def>MechanicalHead</def>
+              <coverage>0.80</coverage>
+
+              <groups>
+                <li>HeadAttackTool</li>
+              </groups>
+
+              <parts>
+
+                <!-- 仿生大脑 -->
+                <li>
+                  <def>ArtificialBrain</def>
+                  <coverage>0.10</coverage>
+                  <depth>Inside</depth>
+                </li>
+
+                <!-- 左视觉传感器 -->
+                <li>
+                  <def>SightSensor</def>
+                  <customLabel>左视觉传感器</customLabel>
+                  <coverage>0.13</coverage>
+                  <depth>Outside</depth>
+                </li>
+
+                <!-- 右视觉传感器 -->
+                <li>
+                  <def>SightSensor</def>
+                  <customLabel>右视觉传感器</customLabel>
+                  <coverage>0.13</coverage>
+                  <depth>Outside</depth>
+                </li>
+
+                <!-- 左听觉传感器 -->
+                <li>
+                  <def>HearingSensor</def>
+                  <customLabel>左听觉传感器</customLabel>
+                  <coverage>0.10</coverage>
+                  <depth>Outside</depth>
+                </li>
+
+                <!-- 右听觉传感器 -->
+                <li>
+                  <def>HearingSensor</def>
+                  <customLabel>右听觉传感器</customLabel>
+                  <coverage>0.10</coverage>
+                  <depth>Outside</depth>
+                </li>
+
+                <!-- 嗅觉传感器 -->
+                <li>
+                  <def>SmellSensor</def>
+                  <coverage>0.10</coverage>
+                  <depth>Outside</depth>
+                </li>
+
+              </parts>
+            </li>
+
+          </parts>
+        </li>
+
+        <!-- 左肩部结构 -->
+        <li>
+          <def>MechanicalShoulder</def>
+          <customLabel>左肩部结构</customLabel>
+          <coverage>0.17</coverage>
+          <height>Middle</height>
+          <depth>Outside</depth>
+
+          <parts>
+
+            <!-- 左机械臂 -->
+            <li>
+              <def>MechanicalArm</def>
+              <customLabel>左机械臂</customLabel>
+              <coverage>0.85</coverage>
+
+              <parts>
+
+                <!-- 左手 -->
+                <li>
+                  <def>MechanicalHand</def>
+                  <customLabel>左手</customLabel>
+                  <coverage>0.20</coverage>
+                  <height>Bottom</height>
+                </li>
+
+              </parts>
+            </li>
+
+          </parts>
+        </li>
+
+        <!-- 右肩部结构 -->
+        <li>
+          <def>MechanicalShoulder</def>
+          <customLabel>右肩部结构</customLabel>
+          <coverage>0.17</coverage>
+          <height>Middle</height>
+          <depth>Outside</depth>
+
+          <parts>
+
+            <!-- 右机械臂 -->
+            <li>
+              <def>MechanicalArm</def>
+              <customLabel>右机械臂</customLabel>
+              <coverage>0.85</coverage>
+
+              <parts>
+
+                <!-- 右手 -->
+                <li>
+                  <def>MechanicalHand</def>
+                  <customLabel>右手</customLabel>
+                  <coverage>0.20</coverage>
+                  <height>Bottom</height>
+                </li>
+
+              </parts>
+            </li>
+
+          </parts>
+        </li>
+
+        <!-- 左腿部连接结构 -->
+        <li>
+          <def>MAP_HermitLegConnectionStructure</def>
+          <customLabel>左腿部连接结构</customLabel>
+          <coverage>0.18</coverage>
+          <height>Bottom</height>
+          <depth>Outside</depth>
+
+          <parts>
+
+            <!-- 左腿 -->
+            <li>
+              <def>MechanicalLeg</def>
+              <customLabel>左腿</customLabel>
+              <coverage>0.85</coverage>
+
+              <parts>
+
+                <!-- 左足 -->
+                <li>
+                  <def>MechanicalFoot</def>
+                  <customLabel>左足</customLabel>
+                  <coverage>0.20</coverage>
+                </li>
+
+              </parts>
+            </li>
+
+          </parts>
+        </li>
+
+        <!-- 右腿部连接结构 -->
+        <li>
+          <def>MAP_HermitLegConnectionStructure</def>
+          <customLabel>右腿部连接结构</customLabel>
+          <coverage>0.18</coverage>
+          <height>Bottom</height>
+          <depth>Outside</depth>
+
+          <parts>
+
+            <!-- 右腿 -->
+            <li>
+              <def>MechanicalLeg</def>
+              <customLabel>右腿</customLabel>
+              <coverage>0.85</coverage>
+
+              <parts>
+
+                <!-- 右足 -->
+                <li>
+                  <def>MechanicalFoot</def>
+                  <customLabel>右足</customLabel>
+                  <coverage>0.20</coverage>
+                </li>
+
+              </parts>
+            </li>
+
+          </parts>
+        </li>
+
+        <!-- 反应堆 -->
+        <li>
+          <def>Reactor</def>
+          <coverage>0.06</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+        <!-- 液体过滤器 -->
+        <li>
+          <def>FluidReprocessor</def>
+          <coverage>0.04</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+        <!-- 液体过滤器 -->
+        <li>
+          <def>FluidReprocessor</def>
+          <coverage>0.04</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+      </parts>
+    </corePart>
+  </BodyDef>
+
+</Defs>

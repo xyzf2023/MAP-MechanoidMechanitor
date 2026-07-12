@@ -76,7 +76,7 @@
       </li>
     </comps>
     <race>
-      <body>Scyther</body>
+      <body>MAP_Body_Hermit</body>
       <mechFixedSkillLevel>10</mechFixedSkillLevel>
       <mechEnabledWorkTypes>
         <li>Research</li>
