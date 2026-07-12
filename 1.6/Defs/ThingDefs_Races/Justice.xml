@@ -192,7 +192,6 @@
     <allowInMechClusters>false</allowInMechClusters>
     <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
     <abilities>
-      <li>MAP_Ability_MechRecode</li>
       <li>MAP_Ability_MechReconstruction</li>
       <li>MAP_Ability_MechHack</li>
     </abilities>

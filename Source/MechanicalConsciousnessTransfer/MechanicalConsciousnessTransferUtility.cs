@@ -77,6 +77,10 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
             List<OverseerRelationSnapshot> overseerSnapshots =
                 new List<OverseerRelationSnapshot>();
+            List<ManagedResearchAbilityTransferSnapshot> abilitySnapshots =
+                ManagedResearchAbilityTransferUtility.CaptureSnapshots(
+                    resolvedSource,
+                    resolvedTarget);
             bool transactionCommitted = false;
 
             try
@@ -111,6 +115,10 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 transactionCommitted = true;
+                ApplyManagedAbilityTransferBestEffort(
+                    resolvedSource,
+                    resolvedTarget,
+                    abilitySnapshots);
                 FinalizeSuccessfulTransferBestEffort(
                     resolvedSource,
                     resolvedTarget,
@@ -512,6 +520,27 @@ namespace MAP_MechanoidMechanitor
             else if (hasRelation)
             {
                 relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
+            }
+        }
+
+        private static void ApplyManagedAbilityTransferBestEffort(
+            Pawn source,
+            Pawn target,
+            List<ManagedResearchAbilityTransferSnapshot> abilitySnapshots)
+        {
+            try
+            {
+                ManagedResearchAbilityTransferUtility.ApplyAfterCommittedTransfer(
+                    source,
+                    target,
+                    abilitySnapshots);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] post-commit 能力迁移处理异常：" +
+                    $"source={source.LabelShort}（{source.ThingID}），" +
+                    $"target={target.LabelShort}（{target.ThingID}）：{ex}");
             }
         }
 
