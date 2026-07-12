@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- 「隐者」核心机体结构 -->
+  <BodyPartDef>
+    <defName>MAP_HermitFrame</defName>
+    <label>机体结构</label>
+    <hitPoints>40</hitPoints>
+    <permanentInjuryChanceFactor>0</permanentInjuryChanceFactor>
+    <skinCovered>false</skinCovered>
+    <solid>true</solid>
+    <alive>false</alive>
+    <bleedRate>0</bleedRate>
+  </BodyPartDef>
+
+  <!-- 「隐者」腿部连接结构（左右共用，通过 customLabel 区分） -->
+  <BodyPartDef>
+    <defName>MAP_HermitLegConnectionStructure</defName>
+    <label>腿部连接结构</label>
+    <hitPoints>25</hitPoints>
+    <permanentInjuryChanceFactor>0</permanentInjuryChanceFactor>
+    <skinCovered>false</skinCovered>
+    <solid>true</solid>
+    <alive>false</alive>
+    <bleedRate>0</bleedRate>
+    <tags>
+      <li>MovingLimbSegment</li>
+    </tags>
+  </BodyPartDef>
+
+</Defs>
