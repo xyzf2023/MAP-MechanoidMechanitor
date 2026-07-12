@@ -10,6 +10,7 @@ namespace MAP_MechanoidMechanitor
     {
         private const int UnlockStateSafetyCheckIntervalTicks = 120;
         private const int ForcedSyncRetryIntervalTicks = 60;
+        private const int UnlockLetterRetryIntervalTicks = 60;
 
         private const string AbilityUnlockLetterTitleKey =
             "MAP_MechanoidMechanitor.AbilityUnlockLetter.Title";
@@ -24,6 +25,7 @@ namespace MAP_MechanoidMechanitor
         private Dictionary<string, bool>? lastKnownUnlockStates;
         private int nextUnlockStateSafetyCheckTick;
         private int nextForcedSyncAttemptTick;
+        private int nextUnlockLetterAttemptTick;
 
         public GameComponent_MechanoidMechanitorFeatureManager(Game game)
         {
@@ -76,6 +78,7 @@ namespace MAP_MechanoidMechanitor
             CaptureUnlockStates();
             pendingForcedSync = true;
             nextForcedSyncAttemptTick = 0;
+            nextUnlockLetterAttemptTick = 0;
             ScheduleNextUnlockStateSafetyCheck();
         }
 
@@ -85,6 +88,7 @@ namespace MAP_MechanoidMechanitor
             CaptureUnlockStates();
             pendingForcedSync = true;
             nextForcedSyncAttemptTick = 0;
+            nextUnlockLetterAttemptTick = 0;
             ScheduleNextUnlockStateSafetyCheck();
         }
 
@@ -103,6 +107,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             ProcessPendingPawnSyncs();
+            TryProcessPendingUnlockLetters();
             TryRunUnlockStateSafetyCheck();
         }
 
@@ -122,6 +127,7 @@ namespace MAP_MechanoidMechanitor
                 nextForcedSyncAttemptTick = 0;
                 ScheduleNextUnlockStateSafetyCheck();
                 SendPendingUnlockLetters();
+                SchedulePendingUnlockLetterRetryIfNeeded();
                 return;
             }
 
@@ -203,6 +209,7 @@ namespace MAP_MechanoidMechanitor
             {
                 pendingPawnSyncs.Clear();
                 SendPendingUnlockLetters();
+                SchedulePendingUnlockLetterRetryIfNeeded();
             }
             else
             {
@@ -239,6 +246,7 @@ namespace MAP_MechanoidMechanitor
                 pendingPawnSyncs.Clear();
                 ScheduleNextUnlockStateSafetyCheck();
                 SendPendingUnlockLetters();
+                SchedulePendingUnlockLetterRetryIfNeeded();
             }
             else
             {
@@ -283,6 +291,46 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < newlyUnlocked.Count; i++)
             {
                 pendingUnlockLetterIds.Add(newlyUnlocked[i].Id);
+            }
+        }
+
+        private void TryProcessPendingUnlockLetters()
+        {
+            if (pendingUnlockLetterIds.Count == 0)
+            {
+                nextUnlockLetterAttemptTick = 0;
+                return;
+            }
+
+            TickManager? tickManager = Find.TickManager;
+            if (tickManager == null)
+            {
+                return;
+            }
+
+            int ticksGame = tickManager.TicksGame;
+            if (ticksGame < nextUnlockLetterAttemptTick)
+            {
+                return;
+            }
+
+            SendPendingUnlockLetters();
+            SchedulePendingUnlockLetterRetryIfNeeded();
+        }
+
+        private void SchedulePendingUnlockLetterRetryIfNeeded()
+        {
+            if (pendingUnlockLetterIds.Count == 0)
+            {
+                nextUnlockLetterAttemptTick = 0;
+                return;
+            }
+
+            TickManager? tickManager = Find.TickManager;
+            if (tickManager != null)
+            {
+                nextUnlockLetterAttemptTick =
+                    tickManager.TicksGame + UnlockLetterRetryIntervalTicks;
             }
         }
 
