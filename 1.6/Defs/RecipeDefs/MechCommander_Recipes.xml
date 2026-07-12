@@ -5,7 +5,7 @@
     <label>制作机控中枢</label>
     <description>制作机控中枢。</description>
     <jobString>正在制作机控中枢。</jobString>
-    <researchPrerequisite>ArchotechMechtech</researchPrerequisite>
+    <researchPrerequisite>MAP_MechanitorPrinciples</researchPrerequisite>
     <workAmount>5000</workAmount>
     <workSpeedStat>GeneralLaborSpeed</workSpeedStat>
     <effectWorking>Cook</effectWorking>
@@ -65,7 +65,7 @@
     <label>制作自律指令核心</label>
     <description>制作一个自律指令核心。</description>
     <jobString>正在制作自律指令核心。</jobString>
-    <researchPrerequisite>ArchotechMechtech</researchPrerequisite>
+    <researchPrerequisite>MAP_AutonomousDirectiveCore</researchPrerequisite>
     <workAmount>2000</workAmount>
     <workSpeedStat>GeneralLaborSpeed</workSpeedStat>
     <effectWorking>Cook</effectWorking>
