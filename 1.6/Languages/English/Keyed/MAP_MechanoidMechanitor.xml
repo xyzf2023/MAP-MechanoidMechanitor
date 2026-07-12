@@ -17,6 +17,8 @@
   <MAP_MechanoidMechanitor.AbilityUnlockLetter.Title>Ability: {0}</MAP_MechanoidMechanitor.AbilityUnlockLetter.Title>
   <MAP_MechanoidMechanitor.AbilityUnlockLetter.SpecialScenarioText>"Justice" and the mechanical consciousness host have gained the ability: {0}.</MAP_MechanoidMechanitor.AbilityUnlockLetter.SpecialScenarioText>
   <MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText>"Justice" has gained the ability: {0}.</MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText>
+  <MAP_MechanoidMechanitor.FeatureUnlockLetter.Title>Feature: {0}</MAP_MechanoidMechanitor.FeatureUnlockLetter.Title>
+  <MAP_MechanoidMechanitor.FeatureUnlockLetter.Text>Unlocked mechanoid mechanitor feature: {0}.</MAP_MechanoidMechanitor.FeatureUnlockLetter.Text>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>Consciousness transfer</MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>Transfer this body's autonomous consciousness into another body capable of hosting it.</MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>No body is available to host the consciousness.</MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>

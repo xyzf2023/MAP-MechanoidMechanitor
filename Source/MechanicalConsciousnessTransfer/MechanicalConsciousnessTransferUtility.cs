@@ -33,7 +33,8 @@ namespace MAP_MechanoidMechanitor
 
         public static bool CanVoluntarilyTransferMechanicalConsciousness(Pawn? source, Pawn? target)
         {
-            return !EmergencyMechanicalConsciousnessTransferUtility
+            return ResearchFeatureUnlockUtility.IsMechanicalConsciousnessTransferUnlocked()
+                && !EmergencyMechanicalConsciousnessTransferUtility
                     .HasEmergencyConsciousnessTransferHediff(source)
                 && CanTransferMechanicalConsciousness(source, target);
         }

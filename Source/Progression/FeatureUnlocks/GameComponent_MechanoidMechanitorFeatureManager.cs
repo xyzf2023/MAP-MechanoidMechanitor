@@ -18,11 +18,17 @@ namespace MAP_MechanoidMechanitor
             "MAP_MechanoidMechanitor.AbilityUnlockLetter.SpecialScenarioText";
         private const string AbilityUnlockLetterJusticeOnlyTextKey =
             "MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText";
+        private const string FeatureUnlockLetterTitleKey =
+            "MAP_MechanoidMechanitor.FeatureUnlockLetter.Title";
+        private const string FeatureUnlockLetterTextKey =
+            "MAP_MechanoidMechanitor.FeatureUnlockLetter.Text";
 
         private bool pendingForcedSync;
         private readonly HashSet<Pawn> pendingPawnSyncs = new HashSet<Pawn>();
         private readonly HashSet<string> pendingUnlockLetterIds = new HashSet<string>();
+        private readonly HashSet<string> pendingFeatureUnlockLetterIds = new HashSet<string>();
         private Dictionary<string, bool>? lastKnownUnlockStates;
+        private Dictionary<string, bool>? lastKnownFeatureUnlockStates;
         private int nextUnlockStateSafetyCheckTick;
         private int nextForcedSyncAttemptTick;
         private int nextUnlockLetterAttemptTick;
@@ -75,7 +81,8 @@ namespace MAP_MechanoidMechanitor
         public override void StartedNewGame()
         {
             base.StartedNewGame();
-            CaptureUnlockStates();
+            CaptureAbilityUnlockStates();
+            CaptureFeatureUnlockStates();
             pendingForcedSync = true;
             nextForcedSyncAttemptTick = 0;
             nextUnlockLetterAttemptTick = 0;
@@ -85,7 +92,8 @@ namespace MAP_MechanoidMechanitor
         public override void LoadedGame()
         {
             base.LoadedGame();
-            CaptureUnlockStates();
+            CaptureAbilityUnlockStates();
+            CaptureFeatureUnlockStates();
             pendingForcedSync = true;
             nextForcedSyncAttemptTick = 0;
             nextUnlockLetterAttemptTick = 0;
@@ -131,7 +139,6 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 失败后延迟重试，避免每帧刷错误日志。
             nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
         }
 
@@ -139,14 +146,21 @@ namespace MAP_MechanoidMechanitor
         {
             try
             {
-                CaptureUnlockStates();
+                CaptureAbilityUnlockStates();
+                CaptureFeatureUnlockStates();
                 ManagedResearchAbilitySyncUtility.SyncAllRelevantPawns();
+                if (!ManagedResearchFeatureSyncUtility.SyncAllFeatures())
+                {
+                    throw new InvalidOperationException(
+                        "一个或多个受管理特性同步失败。");
+                }
+
                 return true;
             }
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 受管理科研能力全量同步失败，将在稍后重试：" + ex);
+                    "[MAP-机械族机械师] 受管理科研能力/特性全量同步失败，将在稍后重试：" + ex);
                 return false;
             }
         }
@@ -199,12 +213,11 @@ namespace MAP_MechanoidMechanitor
             nextUnlockStateSafetyCheckTick =
                 ticksGame + UnlockStateSafetyCheckIntervalTicks;
 
-            if (!HasUnlockStateChanged())
+            if (!HasAbilityUnlockStateChanged() && !HasFeatureUnlockStateChanged())
             {
                 return;
             }
 
-            // 低频检查只修正能力状态，不把意外发现的 false→true 记为待发信件。
             if (TryPerformForcedFullSync())
             {
                 pendingPawnSyncs.Clear();
@@ -220,15 +233,14 @@ namespace MAP_MechanoidMechanitor
 
         private void OnResearchProjectFinished()
         {
-            // 初始化阶段（如起始科研）：只延迟同步，不记录解锁信件。
             if (Current.ProgramState != ProgramState.Playing)
             {
                 pendingForcedSync = true;
                 return;
             }
 
-            // Playing 下即使 LongEvent 导致暂时不安全，也先记录 false→true 待发信件。
-            EnqueueNewlyUnlockedLetterIds();
+            EnqueueNewlyUnlockedAbilityLetterIds();
+            EnqueueNewlyUnlockedFeatureLetterIds();
 
             if (!IsSyncEnvironmentSafe())
             {
@@ -236,7 +248,10 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!HasUnlockStateChanged() && pendingUnlockLetterIds.Count == 0)
+            if (!HasAbilityUnlockStateChanged()
+                && !HasFeatureUnlockStateChanged()
+                && pendingUnlockLetterIds.Count == 0
+                && pendingFeatureUnlockLetterIds.Count == 0)
             {
                 return;
             }
@@ -271,7 +286,6 @@ namespace MAP_MechanoidMechanitor
                 bool current = ResearchFeatureUnlockUtility.IsAbilityUnlocked(descriptor);
                 if (!lastKnownUnlockStates.TryGetValue(descriptor.Id, out bool previous))
                 {
-                    // 缓存缺失视为初始化/读档状态，不视为正常科研解锁。
                     continue;
                 }
 
@@ -284,7 +298,33 @@ namespace MAP_MechanoidMechanitor
             return newlyUnlocked;
         }
 
-        private void EnqueueNewlyUnlockedLetterIds()
+        private List<ManagedResearchFeatureDescriptor> CollectNewlyUnlockedFeatures()
+        {
+            List<ManagedResearchFeatureDescriptor> newlyUnlocked =
+                new List<ManagedResearchFeatureDescriptor>();
+            lastKnownFeatureUnlockStates ??= new Dictionary<string, bool>();
+
+            IReadOnlyList<ManagedResearchFeatureDescriptor> all =
+                ManagedResearchFeatureCatalog.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                ManagedResearchFeatureDescriptor descriptor = all[i];
+                bool current = ResearchFeatureUnlockUtility.IsFeatureUnlocked(descriptor);
+                if (!lastKnownFeatureUnlockStates.TryGetValue(descriptor.Id, out bool previous))
+                {
+                    continue;
+                }
+
+                if (!previous && current)
+                {
+                    newlyUnlocked.Add(descriptor);
+                }
+            }
+
+            return newlyUnlocked;
+        }
+
+        private void EnqueueNewlyUnlockedAbilityLetterIds()
         {
             List<ManagedResearchAbilityDescriptor> newlyUnlocked =
                 CollectNewlyUnlockedAbilities();
@@ -294,9 +334,20 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        private void EnqueueNewlyUnlockedFeatureLetterIds()
+        {
+            List<ManagedResearchFeatureDescriptor> newlyUnlocked =
+                CollectNewlyUnlockedFeatures();
+            for (int i = 0; i < newlyUnlocked.Count; i++)
+            {
+                pendingFeatureUnlockLetterIds.Add(newlyUnlocked[i].Id);
+            }
+        }
+
         private void TryProcessPendingUnlockLetters()
         {
-            if (pendingUnlockLetterIds.Count == 0)
+            if (pendingUnlockLetterIds.Count == 0
+                && pendingFeatureUnlockLetterIds.Count == 0)
             {
                 nextUnlockLetterAttemptTick = 0;
                 return;
@@ -320,7 +371,8 @@ namespace MAP_MechanoidMechanitor
 
         private void SchedulePendingUnlockLetterRetryIfNeeded()
         {
-            if (pendingUnlockLetterIds.Count == 0)
+            if (pendingUnlockLetterIds.Count == 0
+                && pendingFeatureUnlockLetterIds.Count == 0)
             {
                 nextUnlockLetterAttemptTick = 0;
                 return;
@@ -336,14 +388,20 @@ namespace MAP_MechanoidMechanitor
 
         private void SendPendingUnlockLetters()
         {
-            if (pendingUnlockLetterIds.Count == 0)
+            if (Current.ProgramState != ProgramState.Playing
+                || LongEventHandler.AnyEventNowOrWaiting
+                || Find.LetterStack == null)
             {
                 return;
             }
 
-            if (Current.ProgramState != ProgramState.Playing
-                || LongEventHandler.AnyEventNowOrWaiting
-                || Find.LetterStack == null)
+            SendPendingAbilityUnlockLetters();
+            SendPendingFeatureUnlockLetters();
+        }
+
+        private void SendPendingAbilityUnlockLetters()
+        {
+            if (pendingUnlockLetterIds.Count == 0)
             {
                 return;
             }
@@ -352,7 +410,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < ids.Count; i++)
             {
                 string id = ids[i];
-                ManagedResearchAbilityDescriptor? descriptor = FindDescriptorById(id);
+                ManagedResearchAbilityDescriptor? descriptor = FindAbilityDescriptorById(id);
                 if (descriptor == null)
                 {
                     pendingUnlockLetterIds.Remove(id);
@@ -391,6 +449,56 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        private void SendPendingFeatureUnlockLetters()
+        {
+            if (pendingFeatureUnlockLetterIds.Count == 0)
+            {
+                return;
+            }
+
+            List<string> ids = new List<string>(pendingFeatureUnlockLetterIds);
+            for (int i = 0; i < ids.Count; i++)
+            {
+                string id = ids[i];
+                ManagedResearchFeatureDescriptor? descriptor = FindFeatureDescriptorById(id);
+                if (descriptor == null)
+                {
+                    pendingFeatureUnlockLetterIds.Remove(id);
+                    continue;
+                }
+
+                if (!ResearchFeatureUnlockUtility.IsFeatureUnlocked(descriptor))
+                {
+                    pendingFeatureUnlockLetterIds.Remove(id);
+                    continue;
+                }
+
+                ResearchProjectDef? research = descriptor.ResearchProjectDef;
+                if (research == null)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 无法发送特性解锁信件：缺少 ResearchProjectDef，" +
+                        $"descriptorId={descriptor.Id}，" +
+                        $"research={descriptor.ResearchProjectDefName}。");
+                    pendingFeatureUnlockLetterIds.Remove(id);
+                    continue;
+                }
+
+                try
+                {
+                    SendFeatureUnlockLetter(research);
+                    pendingFeatureUnlockLetterIds.Remove(id);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 发送特性解锁信件失败：" +
+                        $"descriptorId={descriptor.Id}，" +
+                        $"research={descriptor.ResearchProjectDefName}：{ex}");
+                }
+            }
+        }
+
         private void SendAbilityUnlockLetter(AbilityDef abilityDef)
         {
             TaggedString abilityLabel = abilityDef.LabelCap;
@@ -402,10 +510,33 @@ namespace MAP_MechanoidMechanitor
             Find.LetterStack.ReceiveLetter(title, text, LetterDefOf.PositiveEvent);
         }
 
-        private static ManagedResearchAbilityDescriptor? FindDescriptorById(string id)
+        private void SendFeatureUnlockLetter(ResearchProjectDef research)
+        {
+            TaggedString researchLabel = research.LabelCap;
+            TaggedString title = FeatureUnlockLetterTitleKey.Translate(researchLabel);
+            TaggedString text = FeatureUnlockLetterTextKey.Translate(researchLabel);
+            Find.LetterStack.ReceiveLetter(title, text, LetterDefOf.PositiveEvent);
+        }
+
+        private static ManagedResearchAbilityDescriptor? FindAbilityDescriptorById(string id)
         {
             IReadOnlyList<ManagedResearchAbilityDescriptor> all =
                 ManagedResearchAbilityCatalog.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (all[i].Id == id)
+                {
+                    return all[i];
+                }
+            }
+
+            return null;
+        }
+
+        private static ManagedResearchFeatureDescriptor? FindFeatureDescriptorById(string id)
+        {
+            IReadOnlyList<ManagedResearchFeatureDescriptor> all =
+                ManagedResearchFeatureCatalog.All;
             for (int i = 0; i < all.Count; i++)
             {
                 if (all[i].Id == id)
@@ -439,7 +570,6 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // Find.ResearchManager 在 Game 非空时访问 researchManager 字段是安全的。
             return Current.Game.researchManager != null;
         }
 
@@ -456,7 +586,7 @@ namespace MAP_MechanoidMechanitor
                 tickManager.TicksGame + UnlockStateSafetyCheckIntervalTicks;
         }
 
-        private bool HasUnlockStateChanged()
+        private bool HasAbilityUnlockStateChanged()
         {
             lastKnownUnlockStates ??= new Dictionary<string, bool>();
             IReadOnlyList<ManagedResearchAbilityDescriptor> all =
@@ -475,7 +605,26 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private void CaptureUnlockStates()
+        private bool HasFeatureUnlockStateChanged()
+        {
+            lastKnownFeatureUnlockStates ??= new Dictionary<string, bool>();
+            IReadOnlyList<ManagedResearchFeatureDescriptor> all =
+                ManagedResearchFeatureCatalog.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                ManagedResearchFeatureDescriptor descriptor = all[i];
+                bool current = ResearchFeatureUnlockUtility.IsFeatureUnlocked(descriptor);
+                if (!lastKnownFeatureUnlockStates.TryGetValue(descriptor.Id, out bool previous)
+                    || previous != current)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void CaptureAbilityUnlockStates()
         {
             lastKnownUnlockStates ??= new Dictionary<string, bool>();
             lastKnownUnlockStates.Clear();
@@ -486,6 +635,20 @@ namespace MAP_MechanoidMechanitor
                 ManagedResearchAbilityDescriptor descriptor = all[i];
                 lastKnownUnlockStates[descriptor.Id] =
                     ResearchFeatureUnlockUtility.IsAbilityUnlocked(descriptor);
+            }
+        }
+
+        private void CaptureFeatureUnlockStates()
+        {
+            lastKnownFeatureUnlockStates ??= new Dictionary<string, bool>();
+            lastKnownFeatureUnlockStates.Clear();
+            IReadOnlyList<ManagedResearchFeatureDescriptor> all =
+                ManagedResearchFeatureCatalog.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                ManagedResearchFeatureDescriptor descriptor = all[i];
+                lastKnownFeatureUnlockStates[descriptor.Id] =
+                    ResearchFeatureUnlockUtility.IsFeatureUnlocked(descriptor);
             }
         }
     }
