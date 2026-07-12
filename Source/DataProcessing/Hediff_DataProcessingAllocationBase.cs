@@ -14,11 +14,28 @@ namespace MAP_MechanoidMechanitor
         private const int FallbackRecacheIntervalTicks = 60;
 
         private int cachedSteps = -1;
+        private int cachedVariantKey = int.MinValue;
         private HediffStage? cachedStage;
 
         protected abstract int GetAllocationSteps();
 
         protected abstract bool IsPositiveOffset { get; }
+
+        /// <summary>
+        /// 意识容量偏移倍率。默认完整计入；指令聚焦自我分配可覆写为半倍率。
+        /// </summary>
+        protected virtual float GetConsciousnessOffsetMultiplier()
+        {
+            return 1f;
+        }
+
+        /// <summary>
+        /// 阶段变体键。档位相同但分配关系类型变化时用于使动态阶段失效重建。
+        /// </summary>
+        protected virtual int GetAllocationStageVariantKey()
+        {
+            return 0;
+        }
 
         /// <summary>
         /// 子类可在此追加 Stat 等额外阶段效果；意识修正始终使用未经封顶的真实档位。
@@ -39,7 +56,10 @@ namespace MAP_MechanoidMechanitor
 
                 if (cachedStage == null)
                 {
-                    float offset = cachedSteps * DataProcessingAllocationUtility.StepPercent;
+                    float offset =
+                        cachedSteps
+                        * DataProcessingAllocationUtility.StepPercent
+                        * GetConsciousnessOffsetMultiplier();
                     if (!IsPositiveOffset)
                     {
                         offset = -offset;
@@ -107,17 +127,19 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 从分配注册表重新读取档位。档位改变时丢弃动态阶段，并通过原版健康通知链刷新能力缓存。
+        /// 从分配注册表重新读取档位。档位或关系变体改变时丢弃动态阶段，并通过原版健康通知链刷新能力缓存。
         /// </summary>
         public void RecacheAllocation(bool notifyHealth = true)
         {
             int newSteps = Mathf.Max(0, GetAllocationSteps());
-            if (newSteps == cachedSteps)
+            int newVariantKey = GetAllocationStageVariantKey();
+            if (newSteps == cachedSteps && newVariantKey == cachedVariantKey)
             {
                 return;
             }
 
             cachedSteps = newSteps;
+            cachedVariantKey = newVariantKey;
             cachedStage = null;
 
             if (notifyHealth
@@ -131,9 +153,11 @@ namespace MAP_MechanoidMechanitor
         private void EnsureAllocationCached()
         {
             int currentSteps = Mathf.Max(0, GetAllocationSteps());
-            if (currentSteps != cachedSteps)
+            int currentVariantKey = GetAllocationStageVariantKey();
+            if (currentSteps != cachedSteps || currentVariantKey != cachedVariantKey)
             {
                 cachedSteps = currentSteps;
+                cachedVariantKey = currentVariantKey;
                 cachedStage = null;
             }
         }

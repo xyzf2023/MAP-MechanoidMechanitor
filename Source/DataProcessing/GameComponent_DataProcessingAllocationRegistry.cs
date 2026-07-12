@@ -86,6 +86,23 @@ namespace MAP_MechanoidMechanitor
             return requiredSteps <= 0 || GetStepsForTarget(target) >= requiredSteps;
         }
 
+        /// <summary>
+        /// 仅当注册表记录中 overseer 与 target 为同一 Pawn 时视为自我分配。
+        /// </summary>
+        public bool IsSelfAllocationTarget(Pawn? target)
+        {
+            if (target == null
+                || !recordByTarget.TryGetValue(
+                    target,
+                    out DataProcessingAllocationRecord? record))
+            {
+                return false;
+            }
+
+            return ReferenceEquals(record.overseer, target)
+                && ReferenceEquals(record.target, target);
+        }
+
         public bool TryAddStep(Pawn? overseer, Pawn? target)
         {
             if (!DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target)
@@ -217,6 +234,11 @@ namespace MAP_MechanoidMechanitor
 
         public bool IsPinned(Pawn? overseer, Pawn? target)
         {
+            if (ReferenceEquals(overseer, target))
+            {
+                return false;
+            }
+
             return FindPinRecord(overseer, target) != null;
         }
 
@@ -228,6 +250,11 @@ namespace MAP_MechanoidMechanitor
 
         public bool TryPinTarget(Pawn? overseer, Pawn? target)
         {
+            if (ReferenceEquals(overseer, target))
+            {
+                return false;
+            }
+
             if (!DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target))
             {
                 return false;
@@ -267,6 +294,7 @@ namespace MAP_MechanoidMechanitor
             {
                 DataProcessingAllocationPinRecord? pin = pinRecords[i];
                 if (pin == null
+                    || ReferenceEquals(pin.overseer, pin.target)
                     || !DataProcessingAllocationUtility.IsValidAllocationPair(
                         pin.overseer,
                         pin.target))
