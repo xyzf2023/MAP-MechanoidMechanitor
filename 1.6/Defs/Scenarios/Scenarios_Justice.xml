@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-  <ScenPartDef>
-    <defName>MAP_JusticeScenarioDescription</defName>
-    <label>正义剧本描述</label>
-    <category>Fixed</category>
-    <scenPartClass>ScenPart_ConfigPage</scenPartClass>
-    <pageClass>MAP_MechanoidMechanitor.Scenarios.Page_JusticeScenarioDescription</pageClass>
-    <maxUses>1</maxUses>
-    <canBeRandomlyAdded>false</canBeRandomlyAdded>
-    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
-  </ScenPartDef>
-
   <ScenarioDef ParentName="ScenarioBase">
     <defName>MAP_JusticeMechanitor</defName>
     <label>机械族机械师</label>
@@ -104,11 +93,6 @@
 
         <li Class="ScenPart_DisableMapGen">
           <def>DisableExostriderRemains</def>
-        </li>
-
-        <li Class="ScenPart_ConfigPage">
-          <def>MAP_JusticeScenarioDescription</def>
-          <visible>false</visible>
         </li>
       </parts>
     </scenario>

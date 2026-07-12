@@ -24,6 +24,6 @@
   <MAP_MechanoidMechanitor.DormantJustice.Initializing>Initializing protocol...</MAP_MechanoidMechanitor.DormantJustice.Initializing>
   <MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Label>Carry emergency consciousness transfer</MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Label>
   <MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Description>Designate this dormant Justice as the preferred body for emergency consciousness transfer. When the current mechanical consciousness host is about to be destroyed, it will immediately activate and receive the consciousness.</MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Description>
-  <MAP_JusticeScenarioDescription_Title>Mechanoid Mechanitor</MAP_JusticeScenarioDescription_Title>
-  <MAP_JusticeScenarioDescription_Text>TODO</MAP_JusticeScenarioDescription_Text>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>Mechanoid Mechanitor</MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>TODO</MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>
 </LanguageData>

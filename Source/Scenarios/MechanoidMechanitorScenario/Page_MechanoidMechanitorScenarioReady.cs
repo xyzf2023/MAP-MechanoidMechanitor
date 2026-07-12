@@ -4,19 +4,18 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
-    public sealed class Page_JusticeScenarioDescription : Page
+    public sealed class Page_MechanoidMechanitorScenarioReady : Page
     {
         private Vector2 scrollPosition;
 
         public override string PageTitle =>
-            "MAP_JusticeScenarioDescription_Title".Translate();
+            "MAP_MechanoidMechanitor.Scenario.ReadyPage.Title".Translate();
 
         public override void DoWindowContents(Rect inRect)
         {
             DrawPageTitle(inRect);
 
             Rect mainRect = GetMainRect(inRect);
-
             Rect outRect = mainRect;
             Rect viewRect = new Rect(
                 0f,
@@ -34,7 +33,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             Widgets.Label(
                 viewRect,
-                "MAP_JusticeScenarioDescription_Text".Translate());
+                "MAP_MechanoidMechanitor.Scenario.ReadyPage.Text".Translate());
 
             Widgets.EndScrollView();
 
