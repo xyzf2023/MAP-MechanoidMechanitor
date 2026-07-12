@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <ResearchProjectDef>
+    <defName>MAP_AutonomousDirectiveCore</defName>
+    <label>自律指令核心</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <requiredAnalyzed>
+      <li>SubcoreHigh</li>
+    </requiredAnalyzed>
+    <researchViewX>0.00</researchViewX>
+    <researchViewY>2.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_AutonomousDirectiveOptimization</defName>
+    <label>自律指令优化</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_AutonomousDirectiveCore</li>
+    </prerequisites>
+    <researchViewX>1.00</researchViewX>
+    <researchViewY>2.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_MechanicalConsciousnessTransfer</defName>
+    <label>机械意识传输</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_AutonomousDirectiveOptimization</li>
+    </prerequisites>
+    <researchViewX>2.00</researchViewX>
+    <researchViewY>2.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_MechanitorPrinciples</defName>
+    <label>机控原理研究</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>UltraMechtech</li>
+    </prerequisites>
+    <researchViewX>2.00</researchViewX>
+    <researchViewY>0.50</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_DataStreamReorganization</defName>
+    <label>数据流重整</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_MechanicalConsciousnessTransfer</li>
+      <li>MAP_MechanitorPrinciples</li>
+    </prerequisites>
+    <researchViewX>3.00</researchViewX>
+    <researchViewY>2.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_ParallelThoughtMatrix</defName>
+    <label>并行思维矩阵</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_DataStreamReorganization</li>
+    </prerequisites>
+    <researchViewX>4.00</researchViewX>
+    <researchViewY>2.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_DataProcessingAllocation</defName>
+    <label>数据处理分配</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_AutonomousDirectiveCore</li>
+    </prerequisites>
+    <researchViewX>1.00</researchViewX>
+    <researchViewY>3.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_SelfDirectiveFocus</defName>
+    <label>自我指令聚焦</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_DataProcessingAllocation</li>
+    </prerequisites>
+    <researchViewX>2.00</researchViewX>
+    <researchViewY>3.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_MechanicalCommandProxy</defName>
+    <label>机械指挥代理</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <researchViewX>1.00</researchViewX>
+    <researchViewY>5.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_BionicMechanicalStructure</defName>
+    <label>仿生机械结构</label>
+    <description>TODO</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <researchViewX>2.00</researchViewX>
+    <researchViewY>5.00</researchViewY>
+  </ResearchProjectDef>
+
+</Defs>

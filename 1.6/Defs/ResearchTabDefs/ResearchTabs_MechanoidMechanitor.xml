@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <ResearchTabDef>
+    <defName>MAP_MechanoidMechanitorResearch</defName>
+    <label>机械族机械师</label>
+    <generalTitle>机械族机械师</generalTitle>
+    <generalDescription>TODO</generalDescription>
+    <visibleByDefault>true</visibleByDefault>
+  </ResearchTabDef>
+
+</Defs>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+  <Operation Class="PatchOperationConditional">
+    <xpath>Defs/ThingDef[defName="SubcoreHigh"]/comps</xpath>
+    <match Class="PatchOperationAdd">
+      <xpath>Defs/ThingDef[defName="SubcoreHigh"]/comps</xpath>
+      <value>
+        <li Class="CompProperties_CompAnalyzableUnlockResearch">
+          <analysisID>824731906</analysisID>
+          <requiresMechanitor>true</requiresMechanitor>
+          <analysisDurationHours>0.5</analysisDurationHours>
+          <destroyedOnAnalyzed>false</destroyedOnAnalyzed>
+          <completedLetterLabel>已分析次生核心（高级）：已解锁{RESEARCH}</completedLetterLabel>
+          <completedLetter>通过分析次生核心（高级），{PAWN_labelShort}获得了开展{RESEARCH}所需的关键数据。\n\n研究人员现在可以在研究台开始研究相关技术。</completedLetter>
+          <completedLetterDef>PositiveEvent</completedLetterDef>
+          <activateTexPath>UI/Icons/Study</activateTexPath>
+          <activateLabelString>分析……</activateLabelString>
+          <activateDescString>分析次生核心（高级），从其复杂的心智基质中提取自律指令技术所需的数据。</activateDescString>
+          <jobString>正在分析次生核心（高级）</jobString>
+          <guiLabelString>选择执行分析的机械师</guiLabelString>
+          <inspectString>可由机械师进行分析。</inspectString>
+          <targetingParameters>
+            <canTargetBuildings>false</canTargetBuildings>
+            <canTargetAnimals>false</canTargetAnimals>
+            <canTargetMechs>false</canTargetMechs>
+            <onlyTargetControlledPawns>true</onlyTargetControlledPawns>
+          </targetingParameters>
+        </li>
+      </value>
+    </match>
+    <nomatch Class="PatchOperationAdd">
+      <xpath>Defs/ThingDef[defName="SubcoreHigh"]</xpath>
+      <value>
+        <comps>
+          <li Class="CompProperties_CompAnalyzableUnlockResearch">
+            <analysisID>824731906</analysisID>
+            <requiresMechanitor>true</requiresMechanitor>
+            <analysisDurationHours>0.5</analysisDurationHours>
+            <destroyedOnAnalyzed>false</destroyedOnAnalyzed>
+            <completedLetterLabel>已分析次生核心（高级）：已解锁{RESEARCH}</completedLetterLabel>
+            <completedLetter>通过分析次生核心（高级），{PAWN_labelShort}获得了开展{RESEARCH}所需的关键数据。\n\n研究人员现在可以在研究台开始研究相关技术。</completedLetter>
+            <completedLetterDef>PositiveEvent</completedLetterDef>
+            <activateTexPath>UI/Icons/Study</activateTexPath>
+            <activateLabelString>分析……</activateLabelString>
+            <activateDescString>分析次生核心（高级），从其复杂的心智基质中提取自律指令技术所需的数据。</activateDescString>
+            <jobString>正在分析次生核心（高级）</jobString>
+            <guiLabelString>选择执行分析的机械师</guiLabelString>
+            <inspectString>可由机械师进行分析。</inspectString>
+            <targetingParameters>
+              <canTargetBuildings>false</canTargetBuildings>
+              <canTargetAnimals>false</canTargetAnimals>
+              <canTargetMechs>false</canTargetMechs>
+              <onlyTargetControlledPawns>true</onlyTargetControlledPawns>
+            </targetingParameters>
+          </li>
+        </comps>
+      </value>
+    </nomatch>
+  </Operation>
+
+</Patch>

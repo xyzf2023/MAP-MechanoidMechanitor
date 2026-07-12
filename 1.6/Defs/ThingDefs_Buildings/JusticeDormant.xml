@@ -26,7 +26,7 @@
       <MAP_AutonomousDirectiveCore>1</MAP_AutonomousDirectiveCore>
     </costList>
     <researchPrerequisites>
-      <li>ArchotechMechtech</li>
+      <li>MAP_MechanicalConsciousnessTransfer</li>
     </researchPrerequisites>
     <constructionSkillPrerequisite>12</constructionSkillPrerequisite>
     <designationCategory>Biotech</designationCategory>
