@@ -13,10 +13,10 @@
     <bleedRate>0</bleedRate>
   </BodyPartDef>
 
-  <!-- 「正义」髋部结构（左右共用，通过 customLabel 区分） -->
+  <!-- 「正义」腿部连接结构（左右共用，通过 customLabel 区分） -->
   <BodyPartDef>
     <defName>MAP_JusticeHipStructure</defName>
-    <label>髋部结构</label>
+    <label>腿部连接结构</label>
     <hitPoints>25</hitPoints>
     <permanentInjuryChanceFactor>0</permanentInjuryChanceFactor>
     <skinCovered>false</skinCovered>
