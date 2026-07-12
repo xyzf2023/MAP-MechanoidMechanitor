@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- 「正义」核心机体结构 -->
+  <BodyPartDef>
+    <defName>MAP_JusticeFrame</defName>
+    <label>机体结构</label>
+    <hitPoints>40</hitPoints>
+    <permanentInjuryChanceFactor>0</permanentInjuryChanceFactor>
+    <skinCovered>false</skinCovered>
+    <solid>true</solid>
+    <alive>false</alive>
+    <bleedRate>0</bleedRate>
+  </BodyPartDef>
+
+  <!-- 「正义」髋部结构（左右共用，通过 customLabel 区分） -->
+  <BodyPartDef>
+    <defName>MAP_JusticeHipStructure</defName>
+    <label>髋部结构</label>
+    <hitPoints>25</hitPoints>
+    <permanentInjuryChanceFactor>0</permanentInjuryChanceFactor>
+    <skinCovered>false</skinCovered>
+    <solid>true</solid>
+    <alive>false</alive>
+    <bleedRate>0</bleedRate>
+    <tags>
+      <li>MovingLimbSegment</li>
+    </tags>
+  </BodyPartDef>
+
+  <!-- 「正义」主装甲 -->
+  <BodyPartDef>
+    <defName>MAP_JusticeMainArmor</defName>
+    <label>主装甲</label>
+    <hitPoints>40</hitPoints>
+    <permanentInjuryChanceFactor>0</permanentInjuryChanceFactor>
+    <skinCovered>false</skinCovered>
+    <solid>true</solid>
+    <alive>false</alive>
+    <bleedRate>0</bleedRate>
+  </BodyPartDef>
+
+  <!-- 「正义」局部装甲板（头部护甲 / 四肢装甲，通过 customLabel 区分） -->
+  <BodyPartDef>
+    <defName>MAP_JusticeArmorPlate</defName>
+    <label>装甲板</label>
+    <hitPoints>25</hitPoints>
+    <permanentInjuryChanceFactor>0</permanentInjuryChanceFactor>
+    <skinCovered>false</skinCovered>
+    <solid>true</solid>
+    <alive>false</alive>
+    <bleedRate>0</bleedRate>
+  </BodyPartDef>
+
+</Defs>
