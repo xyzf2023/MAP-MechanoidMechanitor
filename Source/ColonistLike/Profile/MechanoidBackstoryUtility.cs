@@ -5,7 +5,6 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MechanoidBackstoryUtility
     {
-        private const string JusticeDefName = "MAP_Mech_Justice";
         private const string LoverDefName = "MAP_Mech_Lover";
         private const string GenericChildhoodDefName = "MAP_GenericMechanoid_Childhood";
         private const string GenericAdulthoodDefName = "MAP_GenericMechanoid_Adulthood";
@@ -49,7 +48,7 @@ namespace MAP_MechanoidMechanitor
 
         private static bool ShouldSkipDedicatedBackstoryPawn(Pawn pawn)
         {
-            if (pawn.def?.defName == JusticeDefName || pawn.def?.defName == LoverDefName)
+            if (JusticePawnUtility.IsJustice(pawn) || pawn.def?.defName == LoverDefName)
             {
                 return true;
             }

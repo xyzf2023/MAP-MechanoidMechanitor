@@ -8,7 +8,6 @@ namespace MAP_MechanoidMechanitor
 {
     public static class EmergencyMechanicalConsciousnessTransferUtility
     {
-        public const string JusticeDefName = "MAP_Mech_Justice";
         public const string EmergencyTransferHediffDefName = "MAP_EmergencyConsciousnessTransfer";
         public const int EmergencyTransferDurationTicks = 60000;
 
@@ -87,7 +86,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (IsJustice(candidate))
+                if (JusticePawnUtility.IsJustice(candidate))
                 {
                     return candidate;
                 }
@@ -229,11 +228,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             ApplyOrRefreshEmergencyConsciousnessTransferHediff(target);
-        }
-
-        private static bool IsJustice(Pawn pawn)
-        {
-            return pawn.def?.defName == JusticeDefName;
         }
 
         private static HediffDef? GetEmergencyTransferHediffDef()
