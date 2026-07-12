@@ -134,6 +134,7 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_EnsureEmptyGeneTracker" />
     </comps>
     <race>
+      <body>MAP_Body_Justice</body>
       <mechFixedSkillLevel>12</mechFixedSkillLevel>
       <mechEnabledWorkTypes>
         <li>Firefighter</li> <!-- 灭火 -->
