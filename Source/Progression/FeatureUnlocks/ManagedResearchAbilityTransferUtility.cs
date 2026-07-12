@@ -11,6 +11,20 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class ManagedResearchAbilityTransferUtility
     {
+        private readonly struct SnapshotApplyOutcome
+        {
+            public readonly ManagedResearchAbilityTransferSnapshot Snapshot;
+            public readonly ManagedResearchAbilityTransferApplyResult Result;
+
+            public SnapshotApplyOutcome(
+                ManagedResearchAbilityTransferSnapshot snapshot,
+                ManagedResearchAbilityTransferApplyResult result)
+            {
+                Snapshot = snapshot;
+                Result = result;
+            }
+        }
+
         public static List<ManagedResearchAbilityTransferSnapshot> CaptureSnapshots(
             Pawn source,
             Pawn target)
@@ -67,35 +81,61 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            List<SnapshotApplyOutcome> results =
+                new List<SnapshotApplyOutcome>(snapshots.Count);
+
             for (int i = 0; i < snapshots.Count; i++)
             {
                 ManagedResearchAbilityTransferSnapshot snapshot = snapshots[i];
+                ManagedResearchAbilityTransferApplyResult result;
                 try
                 {
-                    ApplySnapshot(source, target, snapshot);
+                    result = ApplySnapshot(source, target, snapshot);
                 }
                 catch (Exception ex)
                 {
+                    result = ManagedResearchAbilityTransferApplyResult.TargetPreparationFailed;
                     Log.Error(
                         "[MAP-机械族机械师] post-commit 能力迁移处理异常：" +
                         $"ability={snapshot.AbilityDef?.defName ?? "null"}，" +
                         $"source={source.LabelShort}（{source.ThingID}），" +
                         $"target={target.LabelShort}（{target.ThingID}）：{ex}");
                 }
+
+                results.Add(new SnapshotApplyOutcome(snapshot, result));
             }
 
-            ManagedResearchAbilitySyncUtility.SyncPawn(source);
-            ManagedResearchAbilitySyncUtility.SyncPawn(target);
+            for (int i = 0; i < results.Count; i++)
+            {
+                SnapshotApplyOutcome outcome = results[i];
+                ManagedResearchAbilityDescriptor? descriptor =
+                    ManagedResearchAbilitySyncUtility.FindDescriptor(outcome.Snapshot.AbilityDef);
+                if (descriptor == null)
+                {
+                    continue;
+                }
+
+                if (outcome.Result
+                    == ManagedResearchAbilityTransferApplyResult.TargetPreparationFailed)
+                {
+                    // 故障保护：跳过来源该能力的资格同步，避免因失去宿主而被删掉。
+                    ManagedResearchAbilitySyncUtility.SyncPawnAbility(target, descriptor);
+                    continue;
+                }
+
+                ManagedResearchAbilitySyncUtility.SyncPawnAbility(source, descriptor);
+                ManagedResearchAbilitySyncUtility.SyncPawnAbility(target, descriptor);
+            }
         }
 
-        private static void ApplySnapshot(
+        private static ManagedResearchAbilityTransferApplyResult ApplySnapshot(
             Pawn source,
             Pawn target,
             ManagedResearchAbilityTransferSnapshot snapshot)
         {
             if (!snapshot.Unlocked || snapshot.AbilityDef == null)
             {
-                return;
+                return ManagedResearchAbilityTransferApplyResult.Skipped;
             }
 
             AbilityDef abilityDef = snapshot.AbilityDef;
@@ -103,7 +143,7 @@ namespace MAP_MechanoidMechanitor
             // A. 正义 → 正义：完全不迁移
             if (snapshot.SourceIsJustice && snapshot.TargetIsJustice)
             {
-                return;
+                return ManagedResearchAbilityTransferApplyResult.Skipped;
             }
 
             // B. 正义 → 非正义
@@ -112,16 +152,12 @@ namespace MAP_MechanoidMechanitor
                 Ability? targetAbility = EnsureAbility(target, abilityDef);
                 if (targetAbility == null)
                 {
-                    Log.Error(
-                        "[MAP-机械族机械师] 目标能力处理失败，因此没有移除来源能力：" +
-                        $"ability={abilityDef.defName}，" +
-                        $"source={source.LabelShort}（{source.ThingID}），" +
-                        $"target={target.LabelShort}（{target.ThingID}）。");
-                    return;
+                    LogTargetPreparationFailed(source, target, abilityDef);
+                    return ManagedResearchAbilityTransferApplyResult.TargetPreparationFailed;
                 }
 
                 targetAbility.ResetCooldown();
-                return;
+                return ManagedResearchAbilityTransferApplyResult.Success;
             }
 
             // C. 非正义 → 正义
@@ -130,12 +166,8 @@ namespace MAP_MechanoidMechanitor
                 Ability? targetAbility = EnsureAbility(target, abilityDef);
                 if (targetAbility == null)
                 {
-                    Log.Error(
-                        "[MAP-机械族机械师] 目标能力处理失败，因此没有移除来源能力：" +
-                        $"ability={abilityDef.defName}，" +
-                        $"source={source.LabelShort}（{source.ThingID}），" +
-                        $"target={target.LabelShort}（{target.ThingID}）。");
-                    return;
+                    LogTargetPreparationFailed(source, target, abilityDef);
+                    return ManagedResearchAbilityTransferApplyResult.TargetPreparationFailed;
                 }
 
                 int resultRemaining = Mathf.Min(
@@ -145,8 +177,8 @@ namespace MAP_MechanoidMechanitor
                     targetAbility,
                     resultRemaining,
                     snapshot.TargetRemainingCooldown);
-                RemoveAbility(source, abilityDef);
-                return;
+                ManagedResearchAbilitySyncUtility.SafeRemoveAbility(source, abilityDef);
+                return ManagedResearchAbilityTransferApplyResult.Success;
             }
 
             // D. 非正义 → 非正义
@@ -154,12 +186,8 @@ namespace MAP_MechanoidMechanitor
                 Ability? targetAbility = EnsureAbility(target, abilityDef);
                 if (targetAbility == null)
                 {
-                    Log.Error(
-                        "[MAP-机械族机械师] 目标能力处理失败，因此没有移除来源能力：" +
-                        $"ability={abilityDef.defName}，" +
-                        $"source={source.LabelShort}（{source.ThingID}），" +
-                        $"target={target.LabelShort}（{target.ThingID}）。");
-                    return;
+                    LogTargetPreparationFailed(source, target, abilityDef);
+                    return ManagedResearchAbilityTransferApplyResult.TargetPreparationFailed;
                 }
 
                 if (snapshot.SourceRemainingCooldown <= 0)
@@ -171,8 +199,22 @@ namespace MAP_MechanoidMechanitor
                     targetAbility.StartCooldown(snapshot.SourceRemainingCooldown);
                 }
 
-                RemoveAbility(source, abilityDef);
+                ManagedResearchAbilitySyncUtility.SafeRemoveAbility(source, abilityDef);
+                return ManagedResearchAbilityTransferApplyResult.Success;
             }
+        }
+
+        private static void LogTargetPreparationFailed(
+            Pawn source,
+            Pawn target,
+            AbilityDef abilityDef)
+        {
+            Log.Error(
+                "[MAP-机械族机械师] 目标能力处理失败，因此没有移除来源能力：" +
+                $"ability={abilityDef.defName}，" +
+                $"source={source.LabelShort}（{source.ThingID}），" +
+                $"target={target.LabelShort}（{target.ThingID}）。" +
+                "该能力保留在来源 Pawn 上作为故障保护状态。");
         }
 
         private static void ApplyCooldownResult(
@@ -224,30 +266,6 @@ namespace MAP_MechanoidMechanitor
 
             tracker.GainAbility(abilityDef);
             return tracker.GetAbility(abilityDef);
-        }
-
-        private static void RemoveAbility(Pawn pawn, AbilityDef abilityDef)
-        {
-            Pawn_AbilityTracker? tracker = pawn.abilities;
-            if (tracker == null)
-            {
-                return;
-            }
-
-            Ability? ability = tracker.GetAbility(abilityDef);
-            if (ability == null)
-            {
-                return;
-            }
-
-            if (pawn.CurJob != null && ReferenceEquals(pawn.CurJob.ability, ability))
-            {
-                pawn.jobs?.EndCurrentJob(
-                    Verse.AI.JobCondition.InterruptForced,
-                    startNewJob: false);
-            }
-
-            tracker.RemoveAbility(abilityDef);
         }
     }
 }

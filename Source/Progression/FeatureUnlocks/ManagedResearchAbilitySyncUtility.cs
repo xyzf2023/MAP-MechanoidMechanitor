@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -32,9 +33,14 @@ namespace MAP_MechanoidMechanitor
         }
 
         public static void SyncPawnAbility(
-            Pawn pawn,
+            Pawn? pawn,
             ManagedResearchAbilityDescriptor descriptor)
         {
+            if (pawn == null || pawn.Destroyed || pawn.Dead || descriptor == null)
+            {
+                return;
+            }
+
             AbilityDef? abilityDef = descriptor.AbilityDef;
             if (abilityDef == null)
             {
@@ -66,8 +72,80 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            EndJobReferencingAbilityIfNeeded(pawn, existing);
-            tracker.RemoveAbility(abilityDef);
+            SafeRemoveAbility(pawn, abilityDef);
+        }
+
+        public static bool SafeRemoveAbility(Pawn? pawn, AbilityDef? abilityDef)
+        {
+            if (pawn == null || pawn.Destroyed || abilityDef == null)
+            {
+                return true;
+            }
+
+            try
+            {
+                Pawn_AbilityTracker? tracker = pawn.abilities;
+                if (tracker == null)
+                {
+                    return true;
+                }
+
+                Ability? ability = tracker.GetAbility(abilityDef);
+                if (ability == null)
+                {
+                    return true;
+                }
+
+                Pawn_JobTracker? jobs = pawn.jobs;
+                if (jobs != null)
+                {
+                    Job? curJob = pawn.CurJob;
+                    if (curJob != null && ReferenceEquals(curJob.ability, ability))
+                    {
+                        jobs.EndCurrentJob(JobCondition.InterruptForced, startNewJob: false);
+                    }
+
+                    JobQueue? queue = jobs.jobQueue;
+                    if (queue != null && queue.Count > 0)
+                    {
+                        queue.RemoveAll(
+                            pawn,
+                            job => job != null && ReferenceEquals(job.ability, ability));
+                    }
+                }
+
+                tracker.RemoveAbility(abilityDef);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 安全移除能力或工作清理异常：" +
+                    $"ability={abilityDef.defName}，" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                return false;
+            }
+        }
+
+        public static ManagedResearchAbilityDescriptor? FindDescriptor(AbilityDef? abilityDef)
+        {
+            if (abilityDef == null)
+            {
+                return null;
+            }
+
+            IReadOnlyList<ManagedResearchAbilityDescriptor> all =
+                ManagedResearchAbilityCatalog.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                ManagedResearchAbilityDescriptor descriptor = all[i];
+                if (descriptor.AbilityDef == abilityDef)
+                {
+                    return descriptor;
+                }
+            }
+
+            return null;
         }
 
         public static HashSet<Pawn> CollectRelevantPawns()
@@ -146,17 +224,6 @@ namespace MAP_MechanoidMechanitor
                 "[MAP-机械族机械师] 符合资格但无法创建 Pawn_AbilityTracker：" +
                 $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
             return false;
-        }
-
-        private static void EndJobReferencingAbilityIfNeeded(Pawn pawn, Ability ability)
-        {
-            Job? job = pawn.CurJob;
-            if (job == null || !ReferenceEquals(job.ability, ability))
-            {
-                return;
-            }
-
-            pawn.jobs?.EndCurrentJob(JobCondition.InterruptForced, startNewJob: false);
         }
     }
 }
