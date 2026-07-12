@@ -31,8 +31,8 @@
   <MAP_MechanoidMechanitor.BrainImplant.NoConsciousnessSource>未找到可用于安装植入体的意识相关部位</MAP_MechanoidMechanitor.BrainImplant.NoConsciousnessSource>
   <MAP_MechanoidMechanitor.BrainImplant.PartReplaced>意识相关部位或其上级部位已被替换</MAP_MechanoidMechanitor.BrainImplant.PartReplaced>
   <MAP_MechanoidMechanitor.BrainImplant.IncompatibleImplant>与已安装的{0}不兼容</MAP_MechanoidMechanitor.BrainImplant.IncompatibleImplant>
-  <MAP_JusticeScenarioDescription_Title>机械族机械师</MAP_JusticeScenarioDescription_Title>
-  <MAP_JusticeScenarioDescription_Text>TODO</MAP_JusticeScenarioDescription_Text>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>机械族机械师</MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>TODO</MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>
   <MAP_Settings_EnablePortraitDisplayForAllSaves_Label>在所有存档中启用机械族"头像显示"</MAP_Settings_EnablePortraitDisplayForAllSaves_Label>
   <MAP_Settings_EnablePortraitDisplayForAllSaves_Description>启用后，所有存档中的玩家机械体均可通过"机械族"管理表的"头像显示"选项，将头像追加到殖民者栏。关闭时此功能仅在机械族机械师剧本中启用。</MAP_Settings_EnablePortraitDisplayForAllSaves_Description>
   <MAP_Settings_EnableMechanoidMechanitorBrainImplants_Label>启用机械族机械师使用并安装脑部植入体</MAP_Settings_EnableMechanoidMechanitorBrainImplants_Label>
