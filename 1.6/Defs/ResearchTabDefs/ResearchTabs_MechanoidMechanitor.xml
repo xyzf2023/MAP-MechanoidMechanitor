@@ -5,7 +5,7 @@
     <defName>MAP_MechanoidMechanitorResearch</defName>
     <label>机械族机械师</label>
     <generalTitle>机械族机械师</generalTitle>
-    <generalDescription>TODO</generalDescription>
+    <generalDescription>机械族机械师相关研究。</generalDescription>
     <visibleByDefault>true</visibleByDefault>
   </ResearchTabDef>
 
