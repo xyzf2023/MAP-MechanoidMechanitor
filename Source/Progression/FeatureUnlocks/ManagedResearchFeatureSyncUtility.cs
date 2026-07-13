@@ -31,7 +31,79 @@ namespace MAP_MechanoidMechanitor
                 SyncSelfDirectiveFocus);
             allSucceeded = result && allSucceeded;
 
+            result = SyncDynamicConsciousnessBonusesSafe();
+            allSucceeded = result && allSucceeded;
+
             return allSucceeded;
+        }
+
+        /// <summary>
+        /// 刷新所有有效注册机械族机械师与机械意识宿主上的动态意识加成。
+        /// 目标仅来自注册表，不扫描全局 Pawn。
+        /// </summary>
+        public static bool SyncDynamicConsciousnessBonuses()
+        {
+            HashSet<Pawn> targets = new HashSet<Pawn>();
+            IReadOnlyList<Pawn> registered =
+                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
+            for (int i = 0; i < registered.Count; i++)
+            {
+                TryAddConsciousnessRefreshTarget(targets, registered[i]);
+            }
+
+            TryAddConsciousnessRefreshTarget(
+                targets,
+                GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost);
+
+            // 先建立快照，再执行可能触发 Notify_HediffChanged 的刷新。
+            List<Pawn> snapshot = new List<Pawn>(targets);
+            bool allSucceeded = true;
+            for (int i = 0; i < snapshot.Count; i++)
+            {
+                Pawn pawn = snapshot[i];
+                if (pawn == null || pawn.Destroyed || pawn.Dead)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    DynamicConsciousnessBonusUtility.RefreshForPawn(pawn);
+                }
+                catch (Exception ex)
+                {
+                    allSucceeded = false;
+                    Log.Error(
+                        "[MAP-机械族机械师] 动态意识加成刷新失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                }
+            }
+
+            return allSucceeded;
+        }
+
+        private static bool SyncDynamicConsciousnessBonusesSafe()
+        {
+            try
+            {
+                return SyncDynamicConsciousnessBonuses();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 动态意识加成同步失败：" + ex);
+                return false;
+            }
+        }
+
+        private static void TryAddConsciousnessRefreshTarget(HashSet<Pawn> result, Pawn? pawn)
+        {
+            if (pawn == null || pawn.Destroyed || pawn.Dead)
+            {
+                return;
+            }
+
+            result.Add(pawn);
         }
 
         private static bool SyncFeatureSafe(

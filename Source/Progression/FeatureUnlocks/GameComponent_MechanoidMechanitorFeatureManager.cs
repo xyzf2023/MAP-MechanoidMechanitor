@@ -8,7 +8,7 @@ namespace MAP_MechanoidMechanitor
 {
     public sealed class GameComponent_MechanoidMechanitorFeatureManager : GameComponent
     {
-        private const int UnlockStateSafetyCheckIntervalTicks = 120;
+        private const int UnlockStateSafetyCheckIntervalTicks = 60000;
         private const int ForcedSyncRetryIntervalTicks = 60;
         private const int UnlockLetterRetryIntervalTicks = 60;
 
@@ -24,6 +24,7 @@ namespace MAP_MechanoidMechanitor
             "MAP_MechanoidMechanitor.FeatureUnlockLetter.Text";
 
         private bool pendingForcedSync;
+        private bool pendingDynamicConsciousnessRefresh;
         private readonly HashSet<Pawn> pendingPawnSyncs = new HashSet<Pawn>();
         private readonly HashSet<string> pendingUnlockLetterIds = new HashSet<string>();
         private readonly HashSet<string> pendingFeatureUnlockLetterIds = new HashSet<string>();
@@ -54,6 +55,20 @@ namespace MAP_MechanoidMechanitor
         public static void NotifyResearchProjectFinished()
         {
             CurrentManager?.OnResearchProjectFinished();
+        }
+
+        /// <summary>
+        /// 机械族机械师注册数量可能变化时调用。仅设置 pending，由 GameComponentUpdate 在安全时合并刷新。
+        /// </summary>
+        public static void NotifyMechanitorRosterChanged()
+        {
+            GameComponent_MechanoidMechanitorFeatureManager? manager = CurrentManager;
+            if (manager == null)
+            {
+                return;
+            }
+
+            manager.pendingDynamicConsciousnessRefresh = true;
         }
 
         public static void NotifyMechanitorInitialized(Pawn? pawn)
@@ -115,6 +130,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             ProcessPendingPawnSyncs();
+            ProcessPendingDynamicConsciousnessRefresh();
             TryProcessPendingUnlockLetters();
             TryRunUnlockStateSafetyCheck();
         }
@@ -149,8 +165,17 @@ namespace MAP_MechanoidMechanitor
                 CaptureAbilityUnlockStates();
                 CaptureFeatureUnlockStates();
                 ManagedResearchAbilitySyncUtility.SyncAllRelevantPawns();
+
+                // 全量同步前清除 pending；失败时恢复原 pending。同步过程中新置位的请求予以保留。
+                bool hadPendingConsciousnessRefresh = pendingDynamicConsciousnessRefresh;
+                pendingDynamicConsciousnessRefresh = false;
                 if (!ManagedResearchFeatureSyncUtility.SyncAllFeatures())
                 {
+                    if (hadPendingConsciousnessRefresh)
+                    {
+                        pendingDynamicConsciousnessRefresh = true;
+                    }
+
                     throw new InvalidOperationException(
                         "一个或多个受管理特性同步失败。");
                 }
@@ -269,6 +294,34 @@ namespace MAP_MechanoidMechanitor
                 TickManager? tickManager = Find.TickManager;
                 int ticksGame = tickManager?.TicksGame ?? 0;
                 nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
+            }
+        }
+
+        /// <summary>
+        /// 处理机械师名册变化引起的动态意识合并刷新请求。
+        /// </summary>
+        private void ProcessPendingDynamicConsciousnessRefresh()
+        {
+            if (!pendingDynamicConsciousnessRefresh)
+            {
+                return;
+            }
+
+            // 先清除再同步：同步过程中若死亡/名册变化再次置位，可保留到下一次处理。
+            pendingDynamicConsciousnessRefresh = false;
+            try
+            {
+                if (!ManagedResearchFeatureSyncUtility.SyncDynamicConsciousnessBonuses())
+                {
+                    pendingDynamicConsciousnessRefresh = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                pendingDynamicConsciousnessRefresh = true;
+                Log.Error(
+                    "[MAP-机械族机械师] 机械师名册变化后的动态意识加成刷新失败，将保留 pending 稍后重试："
+                    + ex);
             }
         }
 

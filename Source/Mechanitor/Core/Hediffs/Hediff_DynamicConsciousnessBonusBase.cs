@@ -7,18 +7,18 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 身份类健康状态的动态意识加成基类。
     /// 使用运行时创建的 HediffStage，使意识偏移可按条件变化，且不受 Def 固定 stages / Severity 限制。
+    /// 科研与机械师数量变化由外部事件驱动刷新，本类不再做周期轮询。
     /// </summary>
     public abstract class Hediff_DynamicConsciousnessBonusBase : Hediff
     {
-        private const int FallbackRecacheIntervalTicks = 60;
-
-        // 缓存上次动态结果，避免每次访问 CurStage 都新建 HediffStage。
-        private float cachedOffset = float.NaN;
+        // 缓存动态结果，避免每次访问 CurStage 都重新计算或新建 HediffStage。
+        private bool cacheInitialized;
+        private float cachedOffset;
         private int cachedVariantKey = int.MinValue;
         private HediffStage? cachedStage;
 
         /// <summary>
-        /// 计算当前意识容量偏移。子类按各自条件覆写；当前身份实现固定返回 1f。
+        /// 计算当前意识容量偏移。子类按各自条件覆写。
         /// </summary>
         protected virtual float CalculateConsciousnessOffset()
         {
@@ -26,7 +26,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 阶段变体键。偏移值相同但附加效果变化时，用于使缓存阶段失效并重建。
+        /// 阶段变体键。偏移值相同但附加效果或科研阶段变化时，用于使缓存阶段失效并重建。
         /// </summary>
         protected virtual int GetStageVariantKey()
         {
@@ -44,7 +44,8 @@ namespace MAP_MechanoidMechanitor
         {
             get
             {
-                EnsureDynamicCached();
+                // 仅在尚未初始化时惰性计算一次；正常读取只返回已缓存阶段。
+                EnsureDynamicCacheInitialized();
                 if (cachedStage == null)
                 {
                     cachedStage = BuildDynamicStage(cachedOffset);
@@ -60,19 +61,24 @@ namespace MAP_MechanoidMechanitor
             RefreshDynamicEffects(notifyHealth: false);
         }
 
-        public override void PostTickInterval(int delta)
+        public override void Notify_PawnDied(DamageInfo? dinfo, Hediff? culprit = null)
         {
-            base.PostTickInterval(delta);
+            base.Notify_PawnDied(dinfo, culprit);
 
-            // 低频兜底：防止未来条件变化后遗漏主动刷新调用。
-            if (pawn != null && !pawn.Destroyed && pawn.IsHashIntervalTick(FallbackRecacheIntervalTicks, delta))
-            {
-                RefreshDynamicEffects();
-            }
+            // 有效机械师数量排除 Dead；死亡时只请求合并刷新，不在死亡流程中立即整批刷新。
+            GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorRosterChanged();
+        }
+
+        public override void Notify_Resurrected()
+        {
+            base.Notify_Resurrected();
+
+            // 复活后重新计入有效数量；同样只设置 pending，由科研管理器安全时合并处理。
+            GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorRosterChanged();
         }
 
         /// <summary>
-        /// 主动刷新动态意识效果。科研、身份或其他条件改变时可立即调用以使数值生效。
+        /// 主动刷新动态意识效果。科研、机械师数量或其他条件改变时可立即调用以使数值生效。
         /// </summary>
         public void RefreshDynamicEffects(bool notifyHealth = true)
         {
@@ -83,7 +89,9 @@ namespace MAP_MechanoidMechanitor
 
             float newOffset = CalculateConsciousnessOffset();
             int newVariantKey = GetStageVariantKey();
-            if (OffsetsEqual(cachedOffset, newOffset) && newVariantKey == cachedVariantKey)
+            if (cacheInitialized
+                && OffsetsEqual(cachedOffset, newOffset)
+                && newVariantKey == cachedVariantKey)
             {
                 return;
             }
@@ -91,6 +99,7 @@ namespace MAP_MechanoidMechanitor
             cachedOffset = newOffset;
             cachedVariantKey = newVariantKey;
             cachedStage = null;
+            cacheInitialized = true;
 
             if (notifyHealth && pawn.health.hediffSet.hediffs.Contains(this))
             {
@@ -98,16 +107,20 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void EnsureDynamicCached()
+        /// <summary>
+        /// 惰性初始化：仅在缓存尚未建立时计算一次，不在每次 CurStage 读取时核对科研或数量。
+        /// </summary>
+        private void EnsureDynamicCacheInitialized()
         {
-            float currentOffset = CalculateConsciousnessOffset();
-            int currentVariantKey = GetStageVariantKey();
-            if (!OffsetsEqual(cachedOffset, currentOffset) || currentVariantKey != cachedVariantKey)
+            if (cacheInitialized)
             {
-                cachedOffset = currentOffset;
-                cachedVariantKey = currentVariantKey;
-                cachedStage = null;
+                return;
             }
+
+            cachedOffset = CalculateConsciousnessOffset();
+            cachedVariantKey = GetStageVariantKey();
+            cachedStage = null;
+            cacheInitialized = true;
         }
 
         private HediffStage BuildDynamicStage(float offset)
@@ -132,11 +145,6 @@ namespace MAP_MechanoidMechanitor
 
         private static bool OffsetsEqual(float left, float right)
         {
-            if (float.IsNaN(left) && float.IsNaN(right))
-            {
-                return true;
-            }
-
             return left == right;
         }
     }

@@ -600,26 +600,34 @@ namespace MAP_MechanoidMechanitor
             mechanitorRecords.Add(record);
             recordByPawn[record.Pawn] = record;
             InvalidateDerivedCaches();
+            GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorRosterChanged();
         }
 
         private void RemoveRecordForPawnInternal(Pawn pawn)
         {
+            bool removed = false;
             for (int i = mechanitorRecords.Count - 1; i >= 0; i--)
             {
                 MechanoidMechanitorRecord? record = mechanitorRecords[i];
                 if (record != null && ReferenceEquals(record.Pawn, pawn))
                 {
                     mechanitorRecords.RemoveAt(i);
+                    removed = true;
                 }
             }
 
-            recordByPawn.Remove(pawn);
+            bool removedFromIndex = recordByPawn.Remove(pawn);
             InvalidateDerivedCaches();
+            if (removed || removedFromIndex)
+            {
+                GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorRosterChanged();
+            }
         }
 
         private void CleanupRecords()
         {
             mechanitorRecords ??= new List<MechanoidMechanitorRecord>();
+            int countBefore = mechanitorRecords.Count;
 
             for (int i = mechanitorRecords.Count - 1; i >= 0; i--)
             {
@@ -648,10 +656,17 @@ namespace MAP_MechanoidMechanitor
                     }
                 }
             }
+
+            if (mechanitorRecords.Count != countBefore)
+            {
+                GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorRosterChanged();
+            }
         }
 
         private void RebuildRecordIndex()
         {
+            int previousActiveCount = CountActiveRegisteredInRecords();
+
             recordByPawn = new Dictionary<Pawn, MechanoidMechanitorRecord>();
             for (int i = 0; i < mechanitorRecords.Count; i++)
             {
@@ -664,6 +679,29 @@ namespace MAP_MechanoidMechanitor
             }
 
             InvalidateDerivedCaches();
+
+            int newActiveCount = CountActiveRegisteredInRecords();
+            if (previousActiveCount != newActiveCount)
+            {
+                GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorRosterChanged();
+            }
+        }
+
+        private int CountActiveRegisteredInRecords()
+        {
+            int count = 0;
+            for (int i = 0; i < mechanitorRecords.Count; i++)
+            {
+                Pawn? pawn = mechanitorRecords[i]?.Pawn;
+                if (pawn == null || pawn.Destroyed || pawn.Dead)
+                {
+                    continue;
+                }
+
+                count++;
+            }
+
+            return count;
         }
 
         private void InvalidateDerivedCaches()
