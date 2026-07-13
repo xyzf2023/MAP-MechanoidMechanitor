@@ -127,6 +127,7 @@ namespace MAP_MechanoidMechanitor
                 icon = TexCommand.ForbidOff,
                 isActive = () => carriesEmergencyConsciousnessTransfer,
                 toggleAction = ToggleEmergencyCarry,
+                activateIfAmbiguous = true,
             };
         }
 
@@ -282,50 +283,7 @@ namespace MAP_MechanoidMechanitor
 
         private void ToggleEmergencyCarry()
         {
-            if (carriesEmergencyConsciousnessTransfer)
-            {
-                carriesEmergencyConsciousnessTransfer = false;
-                return;
-            }
-
-            DisableOtherEmergencyCarriers(this);
-            carriesEmergencyConsciousnessTransfer = true;
-        }
-
-        private static void DisableOtherEmergencyCarriers(CompDormantJustice keeper)
-        {
-            ThingDef? def = DefDatabase<ThingDef>.GetNamedSilentFail(BuildingDefName);
-            if (def == null || Current.Game == null)
-            {
-                return;
-            }
-
-            foreach (Map map in Find.Maps)
-            {
-                if (map == null)
-                {
-                    continue;
-                }
-
-                List<Thing> things = map.listerThings.ThingsOfDef(def);
-                for (int i = 0; i < things.Count; i++)
-                {
-                    if (things[i] is not Building building)
-                    {
-                        continue;
-                    }
-
-                    CompDormantJustice? comp = building.GetComp<CompDormantJustice>();
-                    if (comp == null
-                        || ReferenceEquals(comp, keeper)
-                        || !comp.carriesEmergencyConsciousnessTransfer)
-                    {
-                        continue;
-                    }
-
-                    comp.carriesEmergencyConsciousnessTransfer = false;
-                }
-            }
+            carriesEmergencyConsciousnessTransfer = !carriesEmergencyConsciousnessTransfer;
         }
 
         private static int CompareEmergencyCarrierPriority(
