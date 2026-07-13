@@ -44,7 +44,7 @@ namespace MAP_MechanoidMechanitor
             TooltipHandler.TipRegion(rect, "ClickToChangeWorkMode".Translate());
             if (Widgets.ButtonInvisible(rect))
             {
-                List<FloatMenuOption> options = new List<FloatMenuOption>(2);
+                List<FloatMenuOption> options = new List<FloatMenuOption>(3);
                 MechanoidMechanitorSelfWorkModeUtility
                     .AddSelfWorkModeFloatMenuOptions(options, pawn);
                 Find.WindowStack.Add(new FloatMenu(options));

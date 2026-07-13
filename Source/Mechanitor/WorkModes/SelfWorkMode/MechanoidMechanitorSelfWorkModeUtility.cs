@@ -10,6 +10,7 @@ namespace MAP_MechanoidMechanitor
     {
         public const string AutonomousDirectiveDefName = "MAP_WorkMode_AutonomousDirective";
         private const string SelfShutdownDefName = "SelfShutdown";
+        private const string RechargeDefName = "Recharge";
         private const string AutonomousDirectiveHediffDefName =
             "MAP_MechanoidMechanitor_SelfWorkMode_AutonomousDirective";
         private const string SelfRepairHediffDefName =
@@ -37,8 +38,60 @@ namespace MAP_MechanoidMechanitor
                 || (selfRepair != null && pawn.health.hediffSet.HasHediff(selfRepair));
         }
 
+        public static bool IsAutonomousDirectiveMode(MechWorkModeDef? mode) =>
+            mode?.defName == AutonomousDirectiveDefName;
+
+        public static bool IsRechargeMode(MechWorkModeDef? mode) =>
+            mode == MechWorkModeDefOf.Recharge
+            || mode?.defName == RechargeDefName;
+
+        public static bool IsSelfShutdownMode(MechWorkModeDef? mode) =>
+            mode == MechWorkModeDefOf.SelfShutdown
+            || mode?.defName == SelfShutdownDefName;
+
         /// <summary>
-        /// 按科研解锁与当前本体工作模式同步两种健康状态。
+        /// 将机械族机械师本体工作模式映射到原版思维树使用的 MechWorkModeDef。
+        /// </summary>
+        public static MechWorkModeDef GetMappedVanillaWorkMode(MechWorkModeDef? mode)
+        {
+            if (IsRechargeMode(mode))
+            {
+                return MechWorkModeDefOf.Recharge;
+            }
+
+            if (IsSelfShutdownMode(mode))
+            {
+                return MechWorkModeDefOf.SelfShutdown;
+            }
+
+            return MechWorkModeDefOf.Work;
+        }
+
+        /// <summary>
+        /// 无原版控制组的机械族机械师本体，应使用本 MOD 的默认充电阈值。
+        /// </summary>
+        public static bool ShouldApplyDefaultRechargeThresholds(Pawn? pawn)
+        {
+            if (pawn == null || pawn.Destroyed || pawn.Dead)
+            {
+                return false;
+            }
+
+            if (!pawn.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            if (!HasSelfWorkMode(pawn))
+            {
+                return false;
+            }
+
+            return pawn.GetMechControlGroup() == null;
+        }
+
+        /// <summary>
+        /// 按科研解锁与当前本体工作模式同步健康状态。
         /// 未解锁时移除状态但不改变工作模式。
         /// </summary>
         public static void SyncSelfWorkModeEffects(Pawn? pawn)
@@ -121,7 +174,7 @@ namespace MAP_MechanoidMechanitor
         public static bool IsSelfShutdown(Pawn? pawn)
         {
             return TryGetCurrentMode(pawn, out MechWorkModeDef? mode)
-                && mode?.defName == SelfShutdownDefName;
+                && IsSelfShutdownMode(mode);
         }
 
         public static void SetSelfWorkMode(Pawn pawn, MechWorkModeDef? mode)
@@ -164,6 +217,13 @@ namespace MAP_MechanoidMechanitor
                 autonomous.uiIcon,
                 Color.white));
 
+            MechWorkModeDef recharge = MechWorkModeDefOf.Recharge;
+            options.Add(new FloatMenuOption(
+                recharge.LabelCap,
+                () => SetSelfWorkMode(pawn, recharge),
+                recharge.uiIcon,
+                Color.white));
+
             MechWorkModeDef selfShutdown = MechWorkModeDefOf.SelfShutdown;
             options.Add(new FloatMenuOption(
                 selfShutdown.LabelCap,
@@ -172,14 +232,23 @@ namespace MAP_MechanoidMechanitor
                 Color.white));
         }
 
+        /// <summary>
+        /// 本体允许：自律指令、充电（原版 Recharge）、休眠（SelfShutdown）。
+        /// 其他未知模式回退为自律指令。
+        /// </summary>
         public static MechWorkModeDef SanitizeWorkMode(MechWorkModeDef? mode)
         {
-            if (mode?.defName == AutonomousDirectiveDefName)
+            if (IsAutonomousDirectiveMode(mode) && mode != null)
             {
                 return mode;
             }
 
-            if (mode?.defName == SelfShutdownDefName)
+            if (IsRechargeMode(mode))
+            {
+                return MechWorkModeDefOf.Recharge;
+            }
+
+            if (IsSelfShutdownMode(mode))
             {
                 return MechWorkModeDefOf.SelfShutdown;
             }
@@ -195,7 +264,7 @@ namespace MAP_MechanoidMechanitor
         public static void NotifyModeChanged(Pawn pawn, MechWorkModeDef mode)
         {
             PawnComponentsUtility.AddAndRemoveDynamicComponents(pawn, actAsIfSpawned: true);
-            if (mode != MechWorkModeDefOf.Recharge
+            if (!IsRechargeMode(mode)
                 && pawn.CurJobDef == JobDefOf.MechCharge
                 && pawn.IsCharging())
             {
@@ -212,7 +281,8 @@ namespace MAP_MechanoidMechanitor
             HediffDef? autonomousHediff,
             HediffDef? selfRepairHediff)
         {
-            if (mode.defName == AutonomousDirectiveDefName)
+            // 自律指令：仅保留自律指令 Hediff
+            if (IsAutonomousDirectiveMode(mode))
             {
                 if (selfRepairHediff != null)
                 {
@@ -228,15 +298,32 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 休眠：仅保留自我修复 Hediff
+            if (IsSelfShutdownMode(mode))
+            {
+                if (autonomousHediff != null)
+                {
+                    RemoveAllHediffsOfDef(pawn, autonomousHediff);
+                }
+
+                if (selfRepairHediff != null
+                    && pawn.health.hediffSet.GetFirstHediffOfDef(selfRepairHediff) == null)
+                {
+                    pawn.health.AddHediff(selfRepairHediff);
+                }
+
+                return;
+            }
+
+            // 充电及其他：不附加任何本体模式 Hediff（充电仅用原版充电站）
             if (autonomousHediff != null)
             {
                 RemoveAllHediffsOfDef(pawn, autonomousHediff);
             }
 
-            if (selfRepairHediff != null
-                && pawn.health.hediffSet.GetFirstHediffOfDef(selfRepairHediff) == null)
+            if (selfRepairHediff != null)
             {
-                pawn.health.AddHediff(selfRepairHediff);
+                RemoveAllHediffsOfDef(pawn, selfRepairHediff);
             }
         }
 
