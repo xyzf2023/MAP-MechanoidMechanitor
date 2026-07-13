@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -21,13 +22,39 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 正向遍历且不在此修改列表，避免遍历中改集合；各实例内部仅在结果变化时通知健康系统。
-            for (int i = 0; i < hediffSet.hediffs.Count; i++)
+            // 第一阶段：先建立本地快照，此阶段不调用 RefreshDynamicEffects，避免通知健康系统。
+            List<Hediff_DynamicConsciousnessBonusBase> snapshot = new List<Hediff_DynamicConsciousnessBonusBase>();
+            List<Hediff> hediffs = hediffSet.hediffs;
+            for (int i = 0; i < hediffs.Count; i++)
             {
-                if (hediffSet.hediffs[i] is Hediff_DynamicConsciousnessBonusBase dynamicBonus)
+                if (hediffs[i] is Hediff_DynamicConsciousnessBonusBase dynamicBonus)
                 {
-                    dynamicBonus.RefreshDynamicEffects();
+                    snapshot.Add(dynamicBonus);
                 }
+            }
+
+            // 第二阶段：遍历快照执行刷新。Notify_HediffChanged 可能触发倒地、死亡等，
+            // 进而改变 hediff 集合，因此不能在通知过程中继续依赖原始列表的稳定性。
+            for (int i = 0; i < snapshot.Count; i++)
+            {
+                if (pawn.Destroyed || pawn.Dead)
+                {
+                    return;
+                }
+
+                hediffSet = pawn.health?.hediffSet;
+                if (hediffSet?.hediffs == null)
+                {
+                    return;
+                }
+
+                Hediff_DynamicConsciousnessBonusBase dynamicBonus = snapshot[i];
+                if (!hediffSet.hediffs.Contains(dynamicBonus))
+                {
+                    continue;
+                }
+
+                dynamicBonus.RefreshDynamicEffects();
             }
         }
     }
