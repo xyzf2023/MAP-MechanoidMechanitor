@@ -6,18 +6,9 @@
     <description>在自律指令核心的作用下，该机械体已成为机械族机械师。</description>
     <descriptionShort>该机械体已获得机械族机械师身份。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_AcquiredMechanoidMechanitor</hediffClass>
     <isBad>false</isBad>
     <scenarioCanAdd>false</scenarioCanAdd>
-    <stages>
-      <li>
-        <capMods>
-          <li>
-            <capacity>Consciousness</capacity>
-            <offset>1.0</offset>
-          </li>
-        </capMods>
-      </li>
-    </stages>
   </HediffDef>
   <HediffDef>
     <defName>MAP_NativeMechanoidMechanitor</defName>
@@ -25,17 +16,8 @@
     <description>该机械体觉醒了自我意识，成为一名机械族机械师。</description>
     <descriptionShort>该机械体已觉醒自我意识。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_NativeMechanoidMechanitor</hediffClass>
     <isBad>false</isBad>
     <scenarioCanAdd>false</scenarioCanAdd>
-    <stages>
-      <li>
-        <capMods>
-          <li>
-            <capacity>Consciousness</capacity>
-            <offset>1.0</offset>
-          </li>
-        </capMods>
-      </li>
-    </stages>
   </HediffDef>
 </Defs>

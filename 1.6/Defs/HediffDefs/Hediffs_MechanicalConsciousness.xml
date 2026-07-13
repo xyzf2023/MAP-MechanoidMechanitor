@@ -4,17 +4,8 @@
     <defName>MAP_MechanicalConsciousness</defName>
     <label>机械意识</label>
     <description>该机体承载着当前机械巢的自主机械意识。</description>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_MechanicalConsciousness</hediffClass>
     <isBad>false</isBad>
     <scenarioCanAdd>false</scenarioCanAdd>
-    <stages>
-      <li>
-        <capMods>
-          <li>
-            <capacity>Consciousness</capacity>
-            <offset>1.0</offset>
-          </li>
-        </capMods>
-      </li>
-    </stages>
   </HediffDef>
 </Defs>
