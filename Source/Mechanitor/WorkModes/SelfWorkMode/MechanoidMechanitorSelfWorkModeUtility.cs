@@ -82,6 +82,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (pawn.Faction != Faction.OfPlayer)
+            {
+                return false;
+            }
+
             if (!HasSelfWorkMode(pawn))
             {
                 return false;
@@ -264,9 +269,9 @@ namespace MAP_MechanoidMechanitor
         public static void NotifyModeChanged(Pawn pawn, MechWorkModeDef mode)
         {
             PawnComponentsUtility.AddAndRemoveDynamicComponents(pawn, actAsIfSpawned: true);
+            // 切离充电模式时中断 MechCharge（含前往途中，不依赖 IsCharging）
             if (!IsRechargeMode(mode)
-                && pawn.CurJobDef == JobDefOf.MechCharge
-                && pawn.IsCharging())
+                && pawn.CurJobDef == JobDefOf.MechCharge)
             {
                 pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
             }

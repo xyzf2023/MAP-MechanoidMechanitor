@@ -71,10 +71,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             PawnComponentsUtility.AddAndRemoveDynamicComponents(pawn, actAsIfSpawned: true);
-            // 切离充电模式时中断当前 MechCharge；切到充电则保留并立即重算工作
+            // 切离充电模式时中断 MechCharge（含前往途中）；切到充电则保留并立即重算工作
             if (!MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(sanitized)
-                && pawn.CurJobDef == JobDefOf.MechCharge
-                && pawn.IsCharging())
+                && pawn.CurJobDef == JobDefOf.MechCharge)
             {
                 pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
             }
@@ -98,8 +97,7 @@ namespace MAP_MechanoidMechanitor
             PawnComponentsUtility.AddAndRemoveDynamicComponents(workPawn, actAsIfSpawned: true);
             MechWorkModeDef mode = CurrentSelfWorkMode;
             if (!MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(mode)
-                && workPawn.CurJobDef == JobDefOf.MechCharge
-                && workPawn.IsCharging())
+                && workPawn.CurJobDef == JobDefOf.MechCharge)
             {
                 workPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
             }
