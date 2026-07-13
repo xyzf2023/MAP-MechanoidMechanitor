@@ -25,6 +25,11 @@ namespace MAP_MechanoidMechanitor
             return pawn.health.hediffSet.HasHediff(def);
         }
 
+        internal static bool IsAttemptInProgress(Pawn? pawn)
+        {
+            return pawn != null && attemptGuard.Contains(pawn);
+        }
+
         public static bool TryBeginEmergencyTransferAttempt(Pawn? pawn)
         {
             if (pawn == null || pawn.Dead || pawn.Destroyed)
@@ -184,7 +189,8 @@ namespace MAP_MechanoidMechanitor
                         GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
                     if (MechanicalConsciousnessTransferUtility.TryTransferMechanicalConsciousness(
                             source,
-                            newJustice))
+                            newJustice,
+                            MechanicalConsciousnessTransferContext.Emergency))
                     {
                         return;
                     }
@@ -220,7 +226,8 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
             if (!MechanicalConsciousnessTransferUtility.TryTransferMechanicalConsciousness(
                     source,
-                    target))
+                    target,
+                    MechanicalConsciousnessTransferContext.Emergency))
             {
                 Log.Error(
                     $"[MAP-机械族机械师] 紧急意识转移失败：source={source.LabelShort} " +
