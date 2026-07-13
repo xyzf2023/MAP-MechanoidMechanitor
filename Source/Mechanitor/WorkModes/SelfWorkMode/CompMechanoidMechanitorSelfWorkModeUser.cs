@@ -75,7 +75,8 @@ namespace MAP_MechanoidMechanitor
             if (!MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(sanitized)
                 && pawn.CurJobDef == JobDefOf.MechCharge)
             {
-                pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                // 仅清除工作，由后续 CheckForJobOverride 统一重算，避免 EndCurrentJob 默认立刻再分配一次
+                pawn.jobs.EndCurrentJob(JobCondition.InterruptForced, startNewJob: false);
             }
 
             pawn.TryGetComp<CompCanBeDormant>()?.WakeUp();
@@ -99,7 +100,7 @@ namespace MAP_MechanoidMechanitor
             if (!MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(mode)
                 && workPawn.CurJobDef == JobDefOf.MechCharge)
             {
-                workPawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                workPawn.jobs.EndCurrentJob(JobCondition.InterruptForced, startNewJob: false);
             }
 
             workPawn.TryGetComp<CompCanBeDormant>()?.WakeUp();
