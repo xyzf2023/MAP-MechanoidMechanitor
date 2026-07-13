@@ -7,6 +7,12 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
+    internal enum MechanicalConsciousnessTransferContext
+    {
+        Voluntary,
+        Emergency
+    }
+
     public static class MechanicalConsciousnessTransferUtility
     {
         private readonly struct OverseerRelationSnapshot
@@ -50,6 +56,17 @@ namespace MAP_MechanoidMechanitor
         }
 
         public static bool TryTransferMechanicalConsciousness(Pawn? source, Pawn? target)
+        {
+            return TryTransferMechanicalConsciousness(
+                source,
+                target,
+                MechanicalConsciousnessTransferContext.Voluntary);
+        }
+
+        internal static bool TryTransferMechanicalConsciousness(
+            Pawn? source,
+            Pawn? target,
+            MechanicalConsciousnessTransferContext context)
         {
             if (!PassesTransferEligibility(source, target, out Pawn resolvedSource, out Pawn resolvedTarget)
                 || !TryEnsureMechanitorTransferComponents(resolvedSource, resolvedTarget))
@@ -123,7 +140,8 @@ namespace MAP_MechanoidMechanitor
                 FinalizeSuccessfulTransferBestEffort(
                     resolvedSource,
                     resolvedTarget,
-                    hostBeforeTransfer);
+                    hostBeforeTransfer,
+                    context);
                 return true;
             }
             catch (Exception ex)
@@ -548,13 +566,18 @@ namespace MAP_MechanoidMechanitor
         private static void FinalizeSuccessfulTransferBestEffort(
             Pawn source,
             Pawn target,
-            Pawn? hostBeforeTransfer)
+            Pawn? hostBeforeTransfer,
+            MechanicalConsciousnessTransferContext context)
         {
             try
             {
                 source.mechanitor?.Notify_BandwidthChanged();
                 target.mechanitor?.Notify_BandwidthChanged();
-                MechanoidMechanitorRoleUtility.EnsureRoleState(source);
+                if (context != MechanicalConsciousnessTransferContext.Emergency)
+                {
+                    MechanoidMechanitorRoleUtility.EnsureRoleState(source);
+                }
+
                 MechanoidMechanitorRoleUtility.EnsureRoleState(target);
                 MechanoidMechanitorScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
             }
