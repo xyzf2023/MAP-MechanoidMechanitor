@@ -24,9 +24,10 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            __result = currentMode == MechWorkModeDefOf.SelfShutdown
-                ? __instance.workMode == MechWorkModeDefOf.SelfShutdown
-                : __instance.workMode == MechWorkModeDefOf.Work;
+            // 本体三模式 → 原版思维树：自律指令→Work，充电→Recharge，休眠→SelfShutdown
+            MechWorkModeDef vanillaMode =
+                MechanoidMechanitorSelfWorkModeUtility.GetMappedVanillaWorkMode(currentMode);
+            __result = __instance.workMode == vanillaMode;
             return false;
         }
 

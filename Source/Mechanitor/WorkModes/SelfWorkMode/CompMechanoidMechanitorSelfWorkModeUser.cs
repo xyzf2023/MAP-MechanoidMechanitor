@@ -16,30 +16,30 @@ namespace MAP_MechanoidMechanitor
 
     // 机械族机械师本体的 Self Work Mode，与 mechanitor 控制组 WorkMode 是两套系统。
     //
-    // 仅允许：MAP_WorkMode_AutonomousDirective（自律指令）与
-    // MechWorkModeDefOf.SelfShutdown（休眠/自机充电）。不允许 Recharge——
-    // Recharge 是去充电器充电；本体休眠自充电应使用 SelfShutdown。
+    // 允许三种本体模式：
+    // - MAP_WorkMode_AutonomousDirective（自律指令）
+    // - MechWorkModeDefOf.Recharge（充电，前往机械充电站）
+    // - MechWorkModeDefOf.SelfShutdown（休眠/自机充电）
     //
     // MAP_WorkMode_AutonomousDirective 不得出现在机械族机械师控制组菜单中
     // （由 MechanoidMechanitorWorkModeUtility.IsMechanoidMechanitorSelfOnlyWorkMode 过滤）。
     // 控制组模式（高效执行、机动作战、阵地防御等）用于机械族机械师监管的机械体，
-    // 不用于此处保存的本体模式。
+    // 不用于此处保存的本体模式。原版 Recharge 可同时作为控制组模式与本体模式。
     public class CompMechanoidMechanitorSelfWorkModeUser : ThingComp
     {
-        private const string AutonomousDirectiveDefName = "MAP_WorkMode_AutonomousDirective";
-        private const string SelfShutdownDefName = "SelfShutdown";
-
         private bool selfWorkModeEffectsInitialized;
 
-        private static MechWorkModeDef? autonomousDirectiveDef;
-
-        public MechWorkModeDef CurrentSelfWorkMode => SanitizeWorkMode(GetAuthoritativeSelfWorkMode());
+        public MechWorkModeDef CurrentSelfWorkMode =>
+            MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(GetAuthoritativeSelfWorkMode());
 
         public bool IsAutonomousDirective =>
-            CurrentSelfWorkMode.defName == AutonomousDirectiveDefName;
+            MechanoidMechanitorSelfWorkModeUtility.IsAutonomousDirectiveMode(CurrentSelfWorkMode);
+
+        public bool IsRecharge =>
+            MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(CurrentSelfWorkMode);
 
         public bool IsSelfShutdown =>
-            CurrentSelfWorkMode.defName == SelfShutdownDefName;
+            MechanoidMechanitorSelfWorkModeUtility.IsSelfShutdownMode(CurrentSelfWorkMode);
 
         public static CompMechanoidMechanitorSelfWorkModeUser? GetFor(Pawn? pawn) =>
             pawn?.GetComp<CompMechanoidMechanitorSelfWorkModeUser>();
@@ -55,8 +55,10 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            MechWorkModeDef sanitized = SanitizeWorkMode(mode);
-            if (SanitizeWorkMode(record.SelfWorkMode) == sanitized)
+            MechWorkModeDef sanitized =
+                MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(mode);
+            if (MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(record.SelfWorkMode)
+                == sanitized)
             {
                 return;
             }
@@ -69,7 +71,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             PawnComponentsUtility.AddAndRemoveDynamicComponents(pawn, actAsIfSpawned: true);
-            if (sanitized != MechWorkModeDefOf.Recharge
+            // 切离充电模式时中断当前 MechCharge；切到充电则保留并立即重算工作
+            if (!MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(sanitized)
                 && pawn.CurJobDef == JobDefOf.MechCharge
                 && pawn.IsCharging())
             {
@@ -94,7 +97,7 @@ namespace MAP_MechanoidMechanitor
 
             PawnComponentsUtility.AddAndRemoveDynamicComponents(workPawn, actAsIfSpawned: true);
             MechWorkModeDef mode = CurrentSelfWorkMode;
-            if (mode != MechWorkModeDefOf.Recharge
+            if (!MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(mode)
                 && workPawn.CurJobDef == JobDefOf.MechCharge
                 && workPawn.IsCharging())
             {
@@ -114,11 +117,19 @@ namespace MAP_MechanoidMechanitor
             List<FloatMenuOption> options,
             CompMechanoidMechanitorSelfWorkModeUser comp)
         {
-            MechWorkModeDef autonomous = GetAutonomousDirectiveDef();
+            MechWorkModeDef autonomous =
+                MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(null);
             options.Add(new FloatMenuOption(
                 GetDisplayLabel(autonomous),
                 () => comp.SetSelfWorkMode(autonomous),
                 autonomous.uiIcon,
+                Color.white));
+
+            MechWorkModeDef recharge = MechWorkModeDefOf.Recharge;
+            options.Add(new FloatMenuOption(
+                GetDisplayLabel(recharge),
+                () => comp.SetSelfWorkMode(recharge),
+                recharge.uiIcon,
                 Color.white));
 
             MechWorkModeDef selfShutdown = MechWorkModeDefOf.SelfShutdown;
@@ -155,7 +166,7 @@ namespace MAP_MechanoidMechanitor
                 return record.SelfWorkMode;
             }
 
-            return SanitizeWorkMode(null);
+            return MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(null);
         }
 
         private bool SyncSelfWorkModeHediff()
@@ -167,27 +178,6 @@ namespace MAP_MechanoidMechanitor
 
             MechanoidMechanitorSelfWorkModeUtility.SyncSelfWorkModeEffects(pawn);
             return pawn.health?.hediffSet != null;
-        }
-
-        private static MechWorkModeDef GetAutonomousDirectiveDef()
-        {
-            return autonomousDirectiveDef ??=
-                DefDatabase<MechWorkModeDef>.GetNamed(AutonomousDirectiveDefName);
-        }
-
-        private static MechWorkModeDef SanitizeWorkMode(MechWorkModeDef? mode)
-        {
-            if (mode?.defName == AutonomousDirectiveDefName)
-            {
-                return mode;
-            }
-
-            if (mode?.defName == SelfShutdownDefName)
-            {
-                return MechWorkModeDefOf.SelfShutdown;
-            }
-
-            return GetAutonomousDirectiveDef();
         }
     }
 }
