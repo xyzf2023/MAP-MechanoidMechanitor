@@ -17,6 +17,12 @@ namespace MAP_MechanoidMechanitor
         public const string SelfDirectiveFocusResearchDefName =
             "MAP_SelfDirectiveFocus";
 
+        public const string DataStreamReorganizationResearchDefName =
+            "MAP_DataStreamReorganization";
+
+        public const string ParallelThoughtMatrixResearchDefName =
+            "MAP_ParallelThoughtMatrix";
+
         public static readonly ManagedResearchFeatureDescriptor AutonomousDirectiveOptimization =
             new ManagedResearchFeatureDescriptor(
                 id: "AutonomousDirectiveOptimization",
@@ -37,12 +43,24 @@ namespace MAP_MechanoidMechanitor
                 id: "SelfDirectiveFocus",
                 researchProjectDefName: SelfDirectiveFocusResearchDefName);
 
+        public static readonly ManagedResearchFeatureDescriptor DataStreamReorganization =
+            new ManagedResearchFeatureDescriptor(
+                id: "DataStreamReorganization",
+                researchProjectDefName: DataStreamReorganizationResearchDefName);
+
+        public static readonly ManagedResearchFeatureDescriptor ParallelThoughtMatrix =
+            new ManagedResearchFeatureDescriptor(
+                id: "ParallelThoughtMatrix",
+                researchProjectDefName: ParallelThoughtMatrixResearchDefName);
+
         private static readonly ManagedResearchFeatureDescriptor[] allInternal =
         {
             AutonomousDirectiveOptimization,
             MechanicalConsciousnessTransfer,
             DataProcessingAllocation,
-            SelfDirectiveFocus
+            SelfDirectiveFocus,
+            DataStreamReorganization,
+            ParallelThoughtMatrix
         };
 
         private static readonly ReadOnlyCollection<ManagedResearchFeatureDescriptor> allReadOnly =

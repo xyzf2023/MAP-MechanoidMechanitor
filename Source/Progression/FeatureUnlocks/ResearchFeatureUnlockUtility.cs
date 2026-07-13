@@ -83,6 +83,12 @@ namespace MAP_MechanoidMechanitor
         public static bool IsSelfDirectiveFocusUnlocked() =>
             IsFeatureUnlocked(ManagedResearchFeatureCatalog.SelfDirectiveFocus);
 
+        public static bool IsDataStreamReorganizationUnlocked() =>
+            IsFeatureUnlocked(ManagedResearchFeatureCatalog.DataStreamReorganization);
+
+        public static bool IsParallelThoughtMatrixUnlocked() =>
+            IsFeatureUnlocked(ManagedResearchFeatureCatalog.ParallelThoughtMatrix);
+
         public static bool ShouldPawnHaveAbility(
             Pawn? pawn,
             ManagedResearchAbilityDescriptor descriptor)
