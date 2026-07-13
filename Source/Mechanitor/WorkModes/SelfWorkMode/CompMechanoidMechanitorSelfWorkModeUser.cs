@@ -83,6 +83,7 @@ namespace MAP_MechanoidMechanitor
             pawn.jobs?.CheckForJobOverride();
         }
 
+        // 读档同步不是工作模式切换：只同步 Hediff/动态组件，保留存档恢复的当前工作。
         internal void SyncSelfWorkModeEffectsFromAuthoritativeState()
         {
             if (SyncSelfWorkModeHediff())
@@ -96,15 +97,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             PawnComponentsUtility.AddAndRemoveDynamicComponents(workPawn, actAsIfSpawned: true);
-            MechWorkModeDef mode = CurrentSelfWorkMode;
-            if (!MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(mode)
-                && workPawn.CurJobDef == JobDefOf.MechCharge)
-            {
-                workPawn.jobs.EndCurrentJob(JobCondition.InterruptForced, startNewJob: false);
-            }
-
-            workPawn.TryGetComp<CompCanBeDormant>()?.WakeUp();
-            workPawn.jobs?.CheckForJobOverride();
         }
 
         public static string GetDisplayLabel(MechWorkModeDef mode)
