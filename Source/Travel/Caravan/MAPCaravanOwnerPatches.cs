@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
@@ -7,10 +8,19 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    public struct MAPTrySendPatchState
+    public sealed class MAPTemporaryPawnTrackerState
     {
-        public List<Pawn> StoryAdded;
-        public List<Pawn> SkillsAdded;
+        public Pawn? Pawn;
+        public Pawn_StoryTracker? OriginalStory;
+        public Pawn_StoryTracker? TemporaryStory;
+        public Pawn_SkillTracker? OriginalSkills;
+        public Pawn_SkillTracker? TemporarySkills;
+    }
+
+    public sealed class MAPTrySendPatchState
+    {
+        public List<MAPTemporaryPawnTrackerState> Entries { get; } =
+            new List<MAPTemporaryPawnTrackerState>();
     }
 
     [HarmonyPatch(typeof(CaravanUtility), nameof(CaravanUtility.IsOwner))]
@@ -164,14 +174,12 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(Dialog_FormCaravan), "TrySend")]
     public static class MAPDialogFormCaravanTrySendPatch
     {
+        private const int RestoreTemporaryTrackerFailureLogKeyBase = 0x4D415054; // "MAPT"
+
         [HarmonyPrefix]
-        public static void Prefix(Dialog_FormCaravan __instance, ref MAPTrySendPatchState __state)
+        public static void Prefix(Dialog_FormCaravan __instance, out MAPTrySendPatchState __state)
         {
-            __state = new MAPTrySendPatchState
-            {
-                StoryAdded = new List<Pawn>(),
-                SkillsAdded = new List<Pawn>()
-            };
+            __state = new MAPTrySendPatchState();
 
             if (__instance.transferables == null)
             {
@@ -187,32 +195,114 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (pawn.story == null)
+                Pawn_StoryTracker? originalStory = pawn.story;
+                Pawn_SkillTracker? originalSkills = pawn.skills;
+                Pawn_StoryTracker? temporaryStory = null;
+                Pawn_SkillTracker? temporarySkills = null;
+
+                if (originalStory == null)
                 {
-                    pawn.story = new Pawn_StoryTracker(pawn);
-                    __state.StoryAdded.Add(pawn);
+                    temporaryStory = new Pawn_StoryTracker(pawn);
                 }
 
-                if (pawn.skills == null)
+                if (originalSkills == null)
                 {
-                    pawn.skills = new Pawn_SkillTracker(pawn);
-                    __state.SkillsAdded.Add(pawn);
+                    temporarySkills = new Pawn_SkillTracker(pawn);
+                }
+
+                if (temporaryStory == null && temporarySkills == null)
+                {
+                    continue;
+                }
+
+                // 先记录，后赋值：确保中途异常时 Finalizer 仍能恢复已安装的临时 Tracker。
+                __state.Entries.Add(new MAPTemporaryPawnTrackerState
+                {
+                    Pawn = pawn,
+                    OriginalStory = originalStory,
+                    TemporaryStory = temporaryStory,
+                    OriginalSkills = originalSkills,
+                    TemporarySkills = temporarySkills
+                });
+
+                if (temporaryStory != null)
+                {
+                    pawn.story = temporaryStory;
+                }
+
+                if (temporarySkills != null)
+                {
+                    pawn.skills = temporarySkills;
                 }
             }
         }
 
         [HarmonyPostfix]
-        public static void Postfix(MAPTrySendPatchState __state)
+        public static void Postfix(MAPTrySendPatchState? __state)
         {
-            for (int i = 0; i < __state.SkillsAdded.Count; i++)
+            RestoreTemporaryTrackers(__state);
+        }
+
+        [HarmonyFinalizer]
+        public static Exception? Finalizer(Exception? __exception, MAPTrySendPatchState? __state)
+        {
+            RestoreTemporaryTrackers(__state);
+            return __exception;
+        }
+
+        private static void RestoreTemporaryTrackers(MAPTrySendPatchState? state)
+        {
+            if (state?.Entries == null || state.Entries.Count == 0)
             {
-                __state.SkillsAdded[i].skills = null;
+                return;
             }
 
-            for (int i = 0; i < __state.StoryAdded.Count; i++)
+            for (int i = 0; i < state.Entries.Count; i++)
             {
-                __state.StoryAdded[i].story = null;
+                MAPTemporaryPawnTrackerState? entry = state.Entries[i];
+                if (entry?.Pawn == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    RestoreTemporaryStory(entry);
+                    RestoreTemporarySkills(entry);
+                }
+                catch (Exception ex)
+                {
+                    Pawn pawn = entry.Pawn;
+                    Log.ErrorOnce(
+                        "[MAP-机械族机械师] 恢复临时远行队 Tracker 失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}",
+                        unchecked(RestoreTemporaryTrackerFailureLogKeyBase + pawn.thingIDNumber));
+                }
             }
+        }
+
+        private static void RestoreTemporaryStory(MAPTemporaryPawnTrackerState entry)
+        {
+            Pawn pawn = entry.Pawn!;
+            if (entry.TemporaryStory == null
+                || !ReferenceEquals(pawn.story, entry.TemporaryStory))
+            {
+                return;
+            }
+
+            pawn.story = entry.OriginalStory;
+        }
+
+        private static void RestoreTemporarySkills(MAPTemporaryPawnTrackerState entry)
+        {
+            Pawn pawn = entry.Pawn!;
+            if (entry.TemporarySkills == null
+                || !ReferenceEquals(pawn.skills, entry.TemporarySkills))
+            {
+                return;
+            }
+
+            pawn.skills = entry.OriginalSkills;
         }
     }
 }
