@@ -117,11 +117,12 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            Pawn? replacedOverseer = null;
             DataProcessingAllocationRecord? record = FindRecord(overseer!, target!);
             if (record == null)
             {
                 record = new DataProcessingAllocationRecord(overseer!, target!, 1);
-                AddRecord(record);
+                replacedOverseer = AddRecord(record);
             }
             else
             {
@@ -130,6 +131,7 @@ namespace MAP_MechanoidMechanitor
 
             SyncHediffForTarget(target!);
             SyncHediffsForOverseer(overseer!);
+            SyncReplacedOverseerIfNeeded(replacedOverseer, overseer!);
             return true;
         }
 
@@ -172,6 +174,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            Pawn? replacedOverseer = null;
             DataProcessingAllocationRecord? record = FindRecord(overseer, target);
             if (steps <= 0)
             {
@@ -182,7 +185,8 @@ namespace MAP_MechanoidMechanitor
             }
             else if (record == null)
             {
-                AddRecord(new DataProcessingAllocationRecord(overseer, target, steps));
+                replacedOverseer = AddRecord(
+                    new DataProcessingAllocationRecord(overseer, target, steps));
             }
             else
             {
@@ -191,6 +195,7 @@ namespace MAP_MechanoidMechanitor
 
             SyncHediffForTarget(target);
             SyncHediffsForOverseer(overseer);
+            SyncReplacedOverseerIfNeeded(replacedOverseer, overseer);
         }
 
         public void ClearTarget(Pawn? target)
@@ -843,21 +848,37 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void AddRecord(DataProcessingAllocationRecord record)
+        private Pawn? AddRecord(DataProcessingAllocationRecord record)
         {
             if (record.overseer == null || record.target == null)
             {
-                return;
+                return null;
             }
 
-            if (recordByTarget.TryGetValue(record.target, out DataProcessingAllocationRecord? existing))
+            Pawn? replacedOverseer = null;
+            if (recordByTarget.TryGetValue(
+                    record.target, out DataProcessingAllocationRecord? existing)
+                && existing != null)
             {
-                records.Remove(existing);
-                RemoveFromOverseerCache(existing);
+                replacedOverseer = existing.overseer;
+                RemoveRecord(existing);
             }
 
             records.Add(record);
             AddToCaches(record);
+            return replacedOverseer;
+        }
+
+        private void SyncReplacedOverseerIfNeeded(Pawn? oldOverseer, Pawn newOverseer)
+        {
+            if (oldOverseer == null
+                || oldOverseer.Destroyed
+                || ReferenceEquals(oldOverseer, newOverseer))
+            {
+                return;
+            }
+
+            SyncHediffsForOverseer(oldOverseer);
         }
 
         private void RemoveRecord(DataProcessingAllocationRecord record)
