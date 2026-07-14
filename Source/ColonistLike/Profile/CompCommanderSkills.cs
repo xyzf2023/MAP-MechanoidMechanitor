@@ -5,10 +5,21 @@ namespace MAP_MechanoidMechanitor
 {
     public class CompCommanderSkills : ThingComp
     {
+        private bool skillsInitialized;
+
         private CompProperties_CommanderSkills? SkillProps => props as CompProperties_CommanderSkills;
+
+        public override void PostExposeData()
+        {
+            base.PostExposeData();
+            // 旧存档缺少该字段时默认 true，避免更新 MOD 后首次读档重置已有技能。
+            Scribe_Values.Look(ref skillsInitialized, "skillsInitialized", true);
+        }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
+            base.PostSpawnSetup(respawningAfterLoad);
+
             if (parent is not Pawn pawn || SkillProps == null)
             {
                 return;
@@ -16,7 +27,24 @@ namespace MAP_MechanoidMechanitor
 
             ApplyBodyType(pawn, SkillProps);
             ApplyBackstories(pawn, SkillProps);
-            ApplySkillLevels(pawn, SkillProps);
+            EnsureSkillsInitialized(pawn, SkillProps);
+        }
+
+        private void EnsureSkillsInitialized(Pawn pawn, CompProperties_CommanderSkills props)
+        {
+            bool trackerWasMissing = pawn.skills == null;
+            if (trackerWasMissing)
+            {
+                pawn.skills = new Pawn_SkillTracker(pawn);
+            }
+
+            // 仅在首次初始化，或技能 Tracker 异常缺失时写入 XML 初始技能。
+            // 不以 respawningAfterLoad 判断：远行队 / 运输舱等重入图也会走 PostSpawnSetup。
+            if (!skillsInitialized || trackerWasMissing)
+            {
+                ApplySkillLevels(pawn, props);
+                skillsInitialized = true;
+            }
         }
 
         private static void ApplyBodyType(Pawn pawn, CompProperties_CommanderSkills props)
