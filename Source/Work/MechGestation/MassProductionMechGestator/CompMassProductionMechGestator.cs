@@ -15,9 +15,13 @@ namespace MAP_MechanoidMechanitor
 
         private bool completionInProgress;
 
+        private bool settlementCommitted;
+
         private bool releasePending;
 
         private bool pendingResourceCountUpdate;
+
+        private bool settlementNotificationsSent;
 
         private bool releaseFailureLogged;
 
@@ -25,11 +29,23 @@ namespace MAP_MechanoidMechanitor
 
         private Bill_ProductionMech? settlementBlockedForBill;
 
+        private Bill_ProductionMech? committedBill;
+
+        private Pawn? settledProducer;
+
         public int RemainingTicks => remainingTicks;
 
         public bool TimerInitialized => timerInitialized;
 
+        public bool SettlementCommitted => settlementCommitted;
+
         public bool ReleasePending => releasePending;
+
+        public bool SettlementNotificationsSent => settlementNotificationsSent;
+
+        public Bill_ProductionMech? CommittedBill => committedBill;
+
+        public Pawn? SettledProducer => settledProducer;
 
         public float FormingPercent
         {
@@ -52,9 +68,10 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (releasePending)
+            // 第一优先级：已提交结算或待释放时，绝不二次结算。
+            if (settlementCommitted || releasePending)
             {
-                TickReleasePending(gestator);
+                TickCommittedSettlement(gestator);
                 return;
             }
 
@@ -65,6 +82,7 @@ namespace MAP_MechanoidMechanitor
 
             Bill_Mech? activeBill = gestator.ActiveMechBill;
 
+            // 第二优先级：Formed，且尚未提交结算。
             if (activeBill is Bill_ProductionMech formedBill
                 && formedBill.State == FormingState.Formed)
             {
@@ -82,6 +100,7 @@ namespace MAP_MechanoidMechanitor
                 settlementBlockedForBill = null;
             }
 
+            // 第三优先级：Forming。
             if (activeBill is Bill_ProductionMech productionBill
                 && productionBill.State == FormingState.Forming)
             {
@@ -93,6 +112,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 第四优先级：其他状态。不清除仍有效的 settlementCommitted（已在第一优先级处理）。
             ResetTimer();
         }
 
@@ -101,8 +121,12 @@ namespace MAP_MechanoidMechanitor
             base.PostExposeData();
             Scribe_Values.Look(ref remainingTicks, "massProdGestatorRemainingTicks", -1);
             Scribe_Values.Look(ref timerInitialized, "massProdGestatorTimerInitialized", false);
+            Scribe_Values.Look(ref settlementCommitted, "massProdGestatorSettlementCommitted", false);
             Scribe_Values.Look(ref releasePending, "massProdGestatorReleasePending", false);
             Scribe_Values.Look(ref pendingResourceCountUpdate, "massProdGestatorPendingResourceCountUpdate", false);
+            Scribe_Values.Look(ref settlementNotificationsSent, "massProdGestatorSettlementNotificationsSent", false);
+            Scribe_References.Look(ref committedBill, "massProdGestatorCommittedBill");
+            Scribe_References.Look(ref settledProducer, "massProdGestatorSettledProducer");
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit && timerInitialized)
             {
@@ -117,26 +141,46 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        internal void MarkReleasePending(bool updateResourceCountsOnRelease)
+        internal void MarkSettlementCommitted(
+            Bill_ProductionMech bill,
+            Pawn producer,
+            bool updateResourceCountsOnRelease)
         {
+            settlementCommitted = true;
             releasePending = true;
+            committedBill = bill;
+            settledProducer = producer;
             pendingResourceCountUpdate = updateResourceCountsOnRelease;
+            settlementNotificationsSent = false;
             releaseFailureLogged = false;
             releaseMissingLogged = false;
             settlementBlockedForBill = null;
         }
 
-        internal void NotifyReleaseSucceeded()
+        internal void MarkSettlementNotificationsSent()
+        {
+            settlementNotificationsSent = true;
+        }
+
+        internal void NotifySettlementFullyCompleted()
         {
             releasePending = false;
+            settlementCommitted = false;
+            committedBill = null;
+            settledProducer = null;
+            settlementNotificationsSent = false;
             releaseFailureLogged = false;
             releaseMissingLogged = false;
         }
 
-        internal void ClearReleasePending()
+        internal void ClearSettlementAndReleaseState()
         {
             releasePending = false;
+            settlementCommitted = false;
+            committedBill = null;
+            settledProducer = null;
             pendingResourceCountUpdate = false;
+            settlementNotificationsSent = false;
             releaseFailureLogged = false;
             releaseMissingLogged = false;
         }
@@ -193,33 +237,22 @@ namespace MAP_MechanoidMechanitor
             {
                 releaseMissingLogged = true;
                 Log.Error(
-                    "[MAP-MechanoidMechanitor] Mass production gestator releasePending was true but no pawn remains in innerContainer. Clearing releasePending. Building="
+                    "[MAP-MechanoidMechanitor] Mass production gestator settlementCommitted/releasePending was true but no pawn remains in innerContainer. Clearing settlement state. Building="
                     + gestator.ToStringSafe()
                     + ".");
             }
 
-            ClearReleasePending();
+            ClearSettlementAndReleaseState();
         }
 
-        private void TickReleasePending(Building_MassProductionMechGestator gestator)
+        private void TickCommittedSettlement(Building_MassProductionMechGestator gestator)
         {
             if (!gestator.IsHashIntervalTick(ReleaseRetryIntervalTicks))
             {
                 return;
             }
 
-            Pawn? product = MassProductionMechGestatorCompletionUtility.FindContainedPawn(gestator);
-            if (product == null)
-            {
-                NotifyReleaseProductMissing(gestator);
-                return;
-            }
-
-            if (MassProductionMechGestatorCompletionUtility.TryReleaseProduct(gestator, this, product)
-                && gestator.Map != null)
-            {
-                ApplyPendingResourceCountUpdate(gestator.Map);
-            }
+            MassProductionMechGestatorCompletionUtility.TryContinueCommittedSettlement(gestator, this);
         }
 
         private void TickForming(
@@ -254,7 +287,7 @@ namespace MAP_MechanoidMechanitor
             Building_MassProductionMechGestator gestator,
             Bill_ProductionMech bill)
         {
-            if (completionInProgress)
+            if (completionInProgress || settlementCommitted)
             {
                 return;
             }
@@ -271,6 +304,7 @@ namespace MAP_MechanoidMechanitor
                         gestator,
                         this,
                         bill)
+                    && !settlementCommitted
                     && !releasePending)
                 {
                     NotifySettlementBlocked(bill);
@@ -278,7 +312,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception e)
             {
-                if (!releasePending)
+                if (!settlementCommitted && !releasePending)
                 {
                     NotifySettlementBlocked(bill);
                 }
@@ -307,7 +341,7 @@ namespace MAP_MechanoidMechanitor
             Building_MassProductionMechGestator gestator,
             Bill_ProductionMech bill)
         {
-            if (completionInProgress)
+            if (completionInProgress || settlementCommitted)
             {
                 return;
             }
@@ -319,6 +353,7 @@ namespace MAP_MechanoidMechanitor
                         gestator,
                         this,
                         bill)
+                    && !settlementCommitted
                     && !releasePending)
                 {
                     NotifySettlementBlocked(bill);
@@ -326,7 +361,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception e)
             {
-                if (!releasePending)
+                if (!settlementCommitted && !releasePending)
                 {
                     NotifySettlementBlocked(bill);
                 }

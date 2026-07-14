@@ -18,6 +18,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (comp.SettlementCommitted)
+            {
+                return false;
+            }
+
             if (!ValidateFormedState(gestator, bill, out Pawn producer, out Pawn product))
             {
                 return false;
@@ -45,65 +50,18 @@ namespace MAP_MechanoidMechanitor
 
             bill.Notify_IterationCompleted(producer, new List<Thing>());
 
-            bool settlementLooksComplete = gestator.ActiveMechBill != bill
-                && bill.State == FormingState.Gathering
-                && gestator.innerContainer.Contains(product);
+            // Notify_IterationCompleted 已正常返回：本轮绝对不得再次结算。
+            comp.MarkSettlementCommitted(bill, producer, updateResourceCounts);
 
-            if (!settlementLooksComplete)
+            if (!EnsureSettlementPostconditions(gestator, bill, product))
             {
-                Log.Error(
-                    "[MAP-MechanoidMechanitor] Mass production gestator bill settlement ended in an unexpected state. Building="
-                    + gestator.ToStringSafe()
-                    + ", bill="
-                    + bill.ToStringSafe()
-                    + ", recipe="
-                    + bill.recipe.ToStringSafe()
-                    + ", activeBill="
-                    + gestator.ActiveMechBill.ToStringSafe()
-                    + ", state="
-                    + bill.State
-                    + ", productContained="
-                    + gestator.innerContainer.Contains(product)
-                    + ".");
+                LogPostconditionFailureOnce(gestator, bill, product);
+                return false;
             }
 
-            // Notify_IterationCompleted 已成功：后续失败只进入释放重试，不得再次结算。
-            comp.MarkReleasePending(updateResourceCounts);
+            SendSettlementNotifications(gestator, bill, producer, products, comp);
 
-            try
-            {
-                RecordsUtility.Notify_BillDone(producer, products);
-            }
-            catch (Exception e)
-            {
-                Log.Error(
-                    "[MAP-MechanoidMechanitor] RecordsUtility.Notify_BillDone failed after mass production settlement. Building="
-                    + gestator.ToStringSafe()
-                    + ", recipe="
-                    + bill.recipe.ToStringSafe()
-                    + ": "
-                    + e);
-            }
-
-            try
-            {
-                if (products.Count > 0)
-                {
-                    Find.QuestManager.Notify_ThingsProduced(producer, products);
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(
-                    "[MAP-MechanoidMechanitor] QuestManager.Notify_ThingsProduced failed after mass production settlement. Building="
-                    + gestator.ToStringSafe()
-                    + ", recipe="
-                    + bill.recipe.ToStringSafe()
-                    + ": "
-                    + e);
-            }
-
-            bool released = TryReleaseProduct(gestator, comp, product);
+            bool released = TryReleaseProduct(gestator, comp, bill, product);
             if (released)
             {
                 comp.ApplyPendingResourceCountUpdate(map);
@@ -112,9 +70,141 @@ namespace MAP_MechanoidMechanitor
             return released;
         }
 
+        public static bool TryContinueCommittedSettlement(
+            Building_MassProductionMechGestator gestator,
+            CompMassProductionMechGestator comp)
+        {
+            if (gestator == null || comp == null)
+            {
+                return false;
+            }
+
+            if (!comp.SettlementCommitted && !comp.ReleasePending)
+            {
+                return false;
+            }
+
+            Pawn? product = FindContainedPawn(gestator);
+            if (product == null)
+            {
+                comp.NotifyReleaseProductMissing(gestator);
+                return false;
+            }
+
+            Bill_ProductionMech? bill = comp.CommittedBill;
+            if (bill == null && gestator.ActiveMechBill is Bill_ProductionMech activeProduction)
+            {
+                bill = activeProduction;
+            }
+
+            if (bill != null && !AreSettlementPostconditionsMet(gestator, bill, product))
+            {
+                if (!EnsureSettlementPostconditions(gestator, bill, product))
+                {
+                    LogPostconditionFailureOnce(gestator, bill, product);
+                    return false;
+                }
+            }
+            else if (bill == null
+                && gestator.ActiveMechBill is Bill_ProductionMech leftover
+                && leftover.State == FormingState.Formed)
+            {
+                Log.ErrorOnce(
+                    "[MAP-MechanoidMechanitor] Mass production gestator has settlementCommitted but lost committed bill reference while ActiveBill is still Formed. Building="
+                    + gestator.ToStringSafe()
+                    + ", activeBill="
+                    + leftover.ToStringSafe()
+                    + ".",
+                    gestator.thingIDNumber ^ 0x4D505343);
+                return false;
+            }
+
+            if (bill != null && !AreSettlementPostconditionsMet(gestator, bill, product))
+            {
+                return false;
+            }
+
+            Pawn? producer = comp.SettledProducer;
+            if (!comp.SettlementNotificationsSent && producer != null && !producer.Destroyed)
+            {
+                SendSettlementNotifications(
+                    gestator,
+                    bill,
+                    producer,
+                    new List<Thing> { product },
+                    comp);
+            }
+
+            Map? map = gestator.Map;
+            bool released = TryReleaseProduct(gestator, comp, bill, product);
+            if (released && map != null)
+            {
+                comp.ApplyPendingResourceCountUpdate(map);
+            }
+
+            return released;
+        }
+
+        public static bool EnsureSettlementPostconditions(
+            Building_MassProductionMechGestator gestator,
+            Bill_ProductionMech bill,
+            Pawn product)
+        {
+            if (gestator == null || bill == null || product == null)
+            {
+                return false;
+            }
+
+            if (!gestator.innerContainer.Contains(product))
+            {
+                return false;
+            }
+
+            if (bill.State != FormingState.Gathering || bill.BoundPawn != null)
+            {
+                bill.Reset();
+            }
+
+            if (ReferenceEquals(gestator.ActiveMechBill, bill))
+            {
+                gestator.ActiveBill = null;
+            }
+
+            return AreSettlementPostconditionsMet(gestator, bill, product);
+        }
+
+        public static bool AreSettlementPostconditionsMet(
+            Building_MassProductionMechGestator gestator,
+            Bill_ProductionMech bill,
+            Pawn product)
+        {
+            if (gestator == null || bill == null || product == null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(gestator.ActiveMechBill, bill))
+            {
+                return false;
+            }
+
+            if (bill.State != FormingState.Gathering)
+            {
+                return false;
+            }
+
+            if (bill.BoundPawn != null)
+            {
+                return false;
+            }
+
+            return gestator.innerContainer.Contains(product);
+        }
+
         public static bool TryReleaseProduct(
             Building_MassProductionMechGestator gestator,
             CompMassProductionMechGestator comp,
+            Bill_ProductionMech? bill,
             Pawn product)
         {
             if (gestator == null || comp == null || product == null)
@@ -122,7 +212,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!comp.ReleasePending)
+            if (!comp.ReleasePending && !comp.SettlementCommitted)
             {
                 return false;
             }
@@ -137,6 +227,11 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 product = remaining;
+            }
+
+            if (bill != null && !AreSettlementPostconditionsMet(gestator, bill, product))
+            {
+                return false;
             }
 
             Map? map = gestator.Map;
@@ -156,8 +251,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 先清 releasePending，保留 pendingResourceCountUpdate 供调用方在产品落地后更新。
-            comp.NotifyReleaseSucceeded();
+            // 产品已离开容器后再清除 settlementCommitted / releasePending。
+            comp.NotifySettlementFullyCompleted();
             return true;
         }
 
@@ -177,6 +272,54 @@ namespace MAP_MechanoidMechanitor
             }
 
             return null;
+        }
+
+        private static void SendSettlementNotifications(
+            Building_MassProductionMechGestator gestator,
+            Bill_ProductionMech? bill,
+            Pawn producer,
+            List<Thing> products,
+            CompMassProductionMechGestator comp)
+        {
+            if (comp.SettlementNotificationsSent)
+            {
+                return;
+            }
+
+            comp.MarkSettlementNotificationsSent();
+
+            try
+            {
+                RecordsUtility.Notify_BillDone(producer, products);
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    "[MAP-MechanoidMechanitor] RecordsUtility.Notify_BillDone failed after mass production settlement. Building="
+                    + gestator.ToStringSafe()
+                    + ", recipe="
+                    + bill?.recipe.ToStringSafe()
+                    + ": "
+                    + e);
+            }
+
+            try
+            {
+                if (products.Count > 0)
+                {
+                    Find.QuestManager.Notify_ThingsProduced(producer, products);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    "[MAP-MechanoidMechanitor] QuestManager.Notify_ThingsProduced failed after mass production settlement. Building="
+                    + gestator.ToStringSafe()
+                    + ", recipe="
+                    + bill?.recipe.ToStringSafe()
+                    + ": "
+                    + e);
+            }
         }
 
         private static bool ValidateFormedState(
@@ -254,6 +397,30 @@ namespace MAP_MechanoidMechanitor
                 + bill.recipe.ToStringSafe()
                 + ". Leaving Formed state for diagnosis.",
                 gestator.thingIDNumber ^ bill.GetUniqueLoadID().GetHashCode() ^ 0x4D505341);
+        }
+
+        private static void LogPostconditionFailureOnce(
+            Building_MassProductionMechGestator gestator,
+            Bill_ProductionMech bill,
+            Pawn? product)
+        {
+            Log.ErrorOnce(
+                "[MAP-MechanoidMechanitor] Mass production gestator settlement postconditions unsafe after Notify_IterationCompleted. Holding product in innerContainer and retrying repair only. Building="
+                + gestator.ToStringSafe()
+                + ", bill="
+                + bill.ToStringSafe()
+                + ", recipe="
+                + bill.recipe.ToStringSafe()
+                + ", activeBill="
+                + gestator.ActiveMechBill.ToStringSafe()
+                + ", state="
+                + bill.State
+                + ", boundPawn="
+                + bill.BoundPawn.ToStringSafe()
+                + ", productContained="
+                + (product != null && gestator.innerContainer.Contains(product))
+                + ".",
+                gestator.thingIDNumber ^ bill.GetUniqueLoadID().GetHashCode() ^ 0x4D505350);
         }
 
         private static ThingStyleDef? ResolveProductStyle(Bill_ProductionMech bill)
