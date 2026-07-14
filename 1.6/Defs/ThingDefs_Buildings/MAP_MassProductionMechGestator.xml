@@ -5,15 +5,16 @@
     <defName>MAP_MassProductionMechGestator</defName>
     <label>量产型机械培育仓</label>
     <description>使用超凡科技铸造而成的机械族培育仓，是主脑快速培育规模化机械部队的关键设施。\n\n该培育仓的培育时间固定为6小时，且培育完成后自动释放其中机械族。同时该培育仓可以培育所有已解锁配方的机械族。\n\n（现在这个建筑的贴图尚未完成，先使用原版贴图占位）</description>
+    <thingClass>MAP_MechanoidMechanitor.Building_MassProductionMechGestator</thingClass>
     <graphicData>
-      <texPath>Things/Building/Production/MAP_MassProductionMechGestator</texPath>
+      <texPath>Things/Building/Production/MechGestatorStandard</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(5.6,4)</drawSize>
       <shadowData>
         <volume>(3, 2, 1.9)</volume>
       </shadowData>
     </graphicData>
-    <uiIconPath>Things/Building/Production/MAP_MassProductionMechGestator_MenuIcon</uiIconPath>
+    <uiIconPath>Things/Building/Production/MechGestatorStandard_MenuIcon</uiIconPath>
     <uiIconScale>1.85</uiIconScale>
     <interactionCellOffset>(1,0,2)</interactionCellOffset>
     <recipes>
@@ -106,6 +107,7 @@
         <basePowerConsumption>350</basePowerConsumption>
         <idlePowerDraw>50</idlePowerDraw>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MassProductionMechGestator" />
     </comps>
   </ThingDef>
 
