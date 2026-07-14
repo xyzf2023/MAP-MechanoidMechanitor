@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+  <!-- 将量产型机械培育仓注册到原版机械培育账单工作分配器。
+       WorkGiver_DoBill.ThingIsUsableBillGiver 使用 ThingDef 精确匹配 fixedBillGiverDefs，
+       仅继承 Building_MechGestator 不足以被 DoBillsMechGestator 接受。 -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/WorkGiverDef[defName="DoBillsMechGestator"]/fixedBillGiverDefs</xpath>
+    <value>
+      <li>MAP_MassProductionMechGestator</li>
+    </value>
+  </Operation>
+
+</Patch>
