@@ -9,7 +9,6 @@ namespace MAP_MechanoidMechanitor
     public sealed class GameComponent_MechanoidMechanitorFeatureManager : GameComponent
     {
         private const int UnlockStateSafetyCheckIntervalTicks = 60000;
-        private const int UnlockLetterRetryIntervalTicks = 60;
 
         private const int ForcedSyncShortRetryIntervalTicks = 60;
         private const int ForcedSyncMediumRetryIntervalTicks = 600;
@@ -43,13 +42,16 @@ namespace MAP_MechanoidMechanitor
         private bool pendingForcedSync;
         private bool pendingDynamicConsciousnessRefresh;
         private readonly HashSet<Pawn> pendingPawnSyncs = new HashSet<Pawn>();
-        private readonly HashSet<string> pendingUnlockLetterIds = new HashSet<string>();
-        private readonly HashSet<string> pendingFeatureUnlockLetterIds = new HashSet<string>();
+        private HashSet<string> pendingUnlockLetterIds = new HashSet<string>();
+        private HashSet<string> pendingFeatureUnlockLetterIds = new HashSet<string>();
+        private readonly HashSet<string> attemptedAbilityUnlockLetterIdsThisSession =
+            new HashSet<string>();
+        private readonly HashSet<string> attemptedFeatureUnlockLetterIdsThisSession =
+            new HashSet<string>();
         private Dictionary<string, bool>? lastKnownUnlockStates;
         private Dictionary<string, bool>? lastKnownFeatureUnlockStates;
         private int nextUnlockStateSafetyCheckTick;
         private int nextForcedSyncAttemptTick;
-        private int nextUnlockLetterAttemptTick;
         private int forcedSyncFailureCount;
         private string? lastForcedSyncFailureSignature;
         private int dynamicConsciousnessRefreshFailureCount;
@@ -144,7 +146,8 @@ namespace MAP_MechanoidMechanitor
             CaptureAbilityUnlockStates();
             CaptureFeatureUnlockStates();
             pendingForcedSync = true;
-            nextUnlockLetterAttemptTick = 0;
+            attemptedAbilityUnlockLetterIdsThisSession.Clear();
+            attemptedFeatureUnlockLetterIdsThisSession.Clear();
             ResetForcedSyncRetryState();
             ResetDynamicConsciousnessRefreshRetryState();
             ResetPendingPawnSyncRetryState();
@@ -157,11 +160,34 @@ namespace MAP_MechanoidMechanitor
             CaptureAbilityUnlockStates();
             CaptureFeatureUnlockStates();
             pendingForcedSync = true;
-            nextUnlockLetterAttemptTick = 0;
+            // attempted 仅会话态；pending 由存档保留，待首次强制全量同步成功后再试发一次。
+            attemptedAbilityUnlockLetterIdsThisSession.Clear();
+            attemptedFeatureUnlockLetterIdsThisSession.Clear();
             ResetForcedSyncRetryState();
             ResetDynamicConsciousnessRefreshRetryState();
             ResetPendingPawnSyncRetryState();
             ScheduleNextUnlockStateSafetyCheck();
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            Scribe_Collections.Look(
+                ref pendingUnlockLetterIds,
+                "pendingAbilityUnlockLetterIds",
+                LookMode.Value);
+            Scribe_Collections.Look(
+                ref pendingFeatureUnlockLetterIds,
+                "pendingFeatureUnlockLetterIds",
+                LookMode.Value);
+
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                pendingUnlockLetterIds ??= new HashSet<string>();
+                pendingFeatureUnlockLetterIds ??= new HashSet<string>();
+                SanitizePendingLetterIds(pendingUnlockLetterIds);
+                SanitizePendingLetterIds(pendingFeatureUnlockLetterIds);
+            }
         }
 
         public override void GameComponentUpdate()
@@ -180,7 +206,6 @@ namespace MAP_MechanoidMechanitor
 
             ProcessPendingPawnSyncs();
             ProcessPendingDynamicConsciousnessRefresh();
-            TryProcessPendingUnlockLetters();
             TryRunUnlockStateSafetyCheck();
         }
 
@@ -199,7 +224,6 @@ namespace MAP_MechanoidMechanitor
                 pendingPawnSyncs.Clear();
                 ScheduleNextUnlockStateSafetyCheck();
                 SendPendingUnlockLetters();
-                SchedulePendingUnlockLetterRetryIfNeeded();
             }
 
             // 失败时由 TryPerformForcedFullSync 内统一计数、排程与日志，此处不再重复处理。
@@ -442,7 +466,6 @@ namespace MAP_MechanoidMechanitor
             {
                 pendingPawnSyncs.Clear();
                 SendPendingUnlockLetters();
-                SchedulePendingUnlockLetterRetryIfNeeded();
             }
 
             // 失败时由 TryPerformForcedFullSync 内统一计数与排程。
@@ -473,7 +496,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 已在失败退避或排队中：保留 pending 与重试时间，信件已入队，由统一入口执行。
+            // 已在失败退避或排队中：保留 pending，信件已入队，由统一入口执行。
             if (pendingForcedSync)
             {
                 return;
@@ -484,7 +507,6 @@ namespace MAP_MechanoidMechanitor
                 pendingPawnSyncs.Clear();
                 ScheduleNextUnlockStateSafetyCheck();
                 SendPendingUnlockLetters();
-                SchedulePendingUnlockLetterRetryIfNeeded();
             }
 
             // 失败时由 TryPerformForcedFullSync 内统一计数与排程。
@@ -637,59 +659,69 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void TryProcessPendingUnlockLetters()
+        private static void SanitizePendingLetterIds(HashSet<string> letterIds)
         {
-            if (pendingUnlockLetterIds.Count == 0
-                && pendingFeatureUnlockLetterIds.Count == 0)
-            {
-                nextUnlockLetterAttemptTick = 0;
-                return;
-            }
-
-            TickManager? tickManager = Find.TickManager;
-            if (tickManager == null)
-            {
-                return;
-            }
-
-            int ticksGame = tickManager.TicksGame;
-            if (ticksGame < nextUnlockLetterAttemptTick)
-            {
-                return;
-            }
-
-            SendPendingUnlockLetters();
-            SchedulePendingUnlockLetterRetryIfNeeded();
-        }
-
-        private void SchedulePendingUnlockLetterRetryIfNeeded()
-        {
-            if (pendingUnlockLetterIds.Count == 0
-                && pendingFeatureUnlockLetterIds.Count == 0)
-            {
-                nextUnlockLetterAttemptTick = 0;
-                return;
-            }
-
-            TickManager? tickManager = Find.TickManager;
-            if (tickManager != null)
-            {
-                nextUnlockLetterAttemptTick =
-                    tickManager.TicksGame + UnlockLetterRetryIntervalTicks;
-            }
+            letterIds.RemoveWhere(static id => string.IsNullOrEmpty(id));
         }
 
         private void SendPendingUnlockLetters()
         {
             if (Current.ProgramState != ProgramState.Playing
-                || LongEventHandler.AnyEventNowOrWaiting
-                || Find.LetterStack == null)
+                || LongEventHandler.AnyEventNowOrWaiting)
             {
+                // 尚未进入可发送状态：不标记 attempted，不算真正尝试。
+                return;
+            }
+
+            if (Find.LetterStack == null)
+            {
+                MarkUnattemptedPendingLettersAttemptedDueToMissingLetterStack();
                 return;
             }
 
             SendPendingAbilityUnlockLetters();
             SendPendingFeatureUnlockLetters();
+        }
+
+        private void MarkUnattemptedPendingLettersAttemptedDueToMissingLetterStack()
+        {
+            int abilityMarked = MarkUnattemptedIds(
+                pendingUnlockLetterIds,
+                attemptedAbilityUnlockLetterIdsThisSession);
+            int featureMarked = MarkUnattemptedIds(
+                pendingFeatureUnlockLetterIds,
+                attemptedFeatureUnlockLetterIdsThisSession);
+
+            if (abilityMarked == 0 && featureMarked == 0)
+            {
+                return;
+            }
+
+            Log.Warning(
+                "[MAP-机械族机械师] 信件系统不可用（LetterStack 为 null），" +
+                $"已保留待发送科研解锁信件（能力 {abilityMarked}，特性 {featureMarked}）。" +
+                "本次游戏会话不再尝试，将在下次加载存档后再次尝试。");
+        }
+
+        private static int MarkUnattemptedIds(
+            HashSet<string> pendingIds,
+            HashSet<string> attemptedIds)
+        {
+            int marked = 0;
+            foreach (string id in pendingIds)
+            {
+                if (string.IsNullOrEmpty(id))
+                {
+                    continue;
+                }
+
+                if (attemptedIds.Add(id))
+                {
+                    marked++;
+                }
+            }
+
+            return marked;
         }
 
         private void SendPendingAbilityUnlockLetters()
@@ -727,6 +759,12 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (attemptedAbilityUnlockLetterIdsThisSession.Contains(id))
+                {
+                    continue;
+                }
+
+                attemptedAbilityUnlockLetterIdsThisSession.Add(id);
                 try
                 {
                     SendAbilityUnlockLetter(abilityDef);
@@ -734,10 +772,11 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(
+                    Log.Warning(
                         "[MAP-机械族机械师] 发送科研解锁信件失败：" +
                         $"descriptorId={descriptor.Id}，" +
-                        $"abilityDefName={descriptor.AbilityDefName}：{ex}");
+                        $"abilityDefName={descriptor.AbilityDefName}：{ex}。" +
+                        "已保留待发送记录，本次游戏会话不再重试，将在下次加载存档后再次尝试。");
                 }
             }
         }
@@ -777,6 +816,12 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (attemptedFeatureUnlockLetterIdsThisSession.Contains(id))
+                {
+                    continue;
+                }
+
+                attemptedFeatureUnlockLetterIdsThisSession.Add(id);
                 try
                 {
                     SendFeatureUnlockLetter(research);
@@ -784,10 +829,11 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(
+                    Log.Warning(
                         "[MAP-机械族机械师] 发送特性解锁信件失败：" +
                         $"descriptorId={descriptor.Id}，" +
-                        $"research={descriptor.ResearchProjectDefName}：{ex}");
+                        $"research={descriptor.ResearchProjectDefName}：{ex}。" +
+                        "已保留待发送记录，本次游戏会话不再重试，将在下次加载存档后再次尝试。");
                 }
             }
         }
