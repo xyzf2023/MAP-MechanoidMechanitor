@@ -18,6 +18,12 @@ namespace MAP_MechanoidMechanitor
         private const int DynamicConsciousnessRefreshShortStageMaxFailures = 3;
         private const int DynamicConsciousnessRefreshMediumStageMaxFailures = 6;
 
+        private const int PendingPawnSyncShortRetryIntervalTicks = 60;
+        private const int PendingPawnSyncMediumRetryIntervalTicks = 600;
+        private const int PendingPawnSyncLongRetryIntervalTicks = 60000;
+        private const int PendingPawnSyncShortStageMaxFailures = 3;
+        private const int PendingPawnSyncMediumStageMaxFailures = 6;
+
         private const string AbilityUnlockLetterTitleKey =
             "MAP_MechanoidMechanitor.AbilityUnlockLetter.Title";
         private const string AbilityUnlockLetterSpecialScenarioTextKey =
@@ -41,6 +47,8 @@ namespace MAP_MechanoidMechanitor
         private int nextUnlockLetterAttemptTick;
         private int dynamicConsciousnessRefreshFailureCount;
         private int nextDynamicConsciousnessRefreshAttemptTick;
+        private int pendingPawnSyncFailureCount;
+        private int nextPendingPawnSyncAttemptTick;
 
         public GameComponent_MechanoidMechanitorFeatureManager(Game game)
         {
@@ -100,11 +108,27 @@ namespace MAP_MechanoidMechanitor
 
             if (manager.IsSyncEnvironmentSafe())
             {
-                ManagedResearchAbilitySyncUtility.SyncPawn(pawn);
+                try
+                {
+                    ManagedResearchAbilitySyncUtility.SyncPawn(pawn);
+                }
+                catch (Exception ex)
+                {
+                    // 立即同步失败：并入 pending，不向初始化调用链传播异常。
+                    manager.pendingPawnSyncs.Add(pawn);
+                    TickManager? tickManager = Find.TickManager;
+                    int ticksGame = tickManager?.TicksGame ?? 0;
+                    manager.SchedulePendingPawnSyncRetry(ticksGame);
+                    Log.Error(
+                        "[MAP-机械族机械师] 机械师初始化时科研能力同步失败，已加入待处理队列并进入分级退避重试：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                }
+
                 return;
             }
 
-            manager.pendingPawnSyncs.Add(pawn);
+            // 环境暂不安全：入队但不计为同步失败。
+            manager.EnqueuePendingPawnSync(pawn);
         }
 
         public override void StartedNewGame()
@@ -116,6 +140,7 @@ namespace MAP_MechanoidMechanitor
             nextForcedSyncAttemptTick = 0;
             nextUnlockLetterAttemptTick = 0;
             ResetDynamicConsciousnessRefreshRetryState();
+            ResetPendingPawnSyncRetryState();
             ScheduleNextUnlockStateSafetyCheck();
         }
 
@@ -128,6 +153,7 @@ namespace MAP_MechanoidMechanitor
             nextForcedSyncAttemptTick = 0;
             nextUnlockLetterAttemptTick = 0;
             ResetDynamicConsciousnessRefreshRetryState();
+            ResetPendingPawnSyncRetryState();
             ScheduleNextUnlockStateSafetyCheck();
         }
 
@@ -198,6 +224,8 @@ namespace MAP_MechanoidMechanitor
 
                 // SyncAllFeatures 已含动态意识刷新；仅清除失败退避状态，不覆盖同步中新产生的 pending。
                 ResetDynamicConsciousnessRefreshRetryState();
+                // SyncAllRelevantPawns 已同步相关能力；仅清除单 Pawn pending 退避状态，不清空集合。
+                ResetPendingPawnSyncRetryState();
                 return true;
             }
             catch (Exception ex)
@@ -212,12 +240,28 @@ namespace MAP_MechanoidMechanitor
         {
             if (pendingPawnSyncs.Count == 0)
             {
+                ResetPendingPawnSyncRetryState();
                 return;
             }
 
+            TickManager? tickManager = Find.TickManager;
+            if (tickManager == null)
+            {
+                // TickManager 暂不可用：保留整个 pending 集合，不视为失败。
+                return;
+            }
+
+            int ticksGame = tickManager.TicksGame;
+            if (ticksGame < nextPendingPawnSyncAttemptTick)
+            {
+                return;
+            }
+
+            // 先复制再清空：同步过程中的新请求可留在原集合。
             List<Pawn> toSync = new List<Pawn>(pendingPawnSyncs);
             pendingPawnSyncs.Clear();
 
+            bool anySyncFailed = false;
             for (int i = 0; i < toSync.Count; i++)
             {
                 Pawn pawn = toSync[i];
@@ -232,11 +276,63 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
+                    // 失败回填直接 Add，避免经入队辅助方法因“集合为空”而重置连续失败次数。
+                    pendingPawnSyncs.Add(pawn);
+                    anySyncFailed = true;
                     Log.Error(
                         "[MAP-机械族机械师] 待处理 Pawn 同步异常：" +
                         $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
                 }
             }
+
+            if (anySyncFailed)
+            {
+                SchedulePendingPawnSyncRetry(ticksGame);
+            }
+            else
+            {
+                ResetPendingPawnSyncRetryState();
+            }
+        }
+
+        /// <summary>
+        /// 环境不安全时的入队。集合从空变为非空时清除旧退避，使其可立即处理。
+        /// 失败回填不要调用本方法。
+        /// </summary>
+        private void EnqueuePendingPawnSync(Pawn pawn)
+        {
+            bool wasEmpty = pendingPawnSyncs.Count == 0;
+            pendingPawnSyncs.Add(pawn);
+            if (wasEmpty)
+            {
+                ResetPendingPawnSyncRetryState();
+            }
+        }
+
+        private void ResetPendingPawnSyncRetryState()
+        {
+            pendingPawnSyncFailureCount = 0;
+            nextPendingPawnSyncAttemptTick = 0;
+        }
+
+        private void SchedulePendingPawnSyncRetry(int currentTick)
+        {
+            pendingPawnSyncFailureCount++;
+            int retryIntervalTicks;
+            if (pendingPawnSyncFailureCount <= PendingPawnSyncShortStageMaxFailures)
+            {
+                retryIntervalTicks = PendingPawnSyncShortRetryIntervalTicks;
+            }
+            else if (pendingPawnSyncFailureCount <= PendingPawnSyncMediumStageMaxFailures)
+            {
+                retryIntervalTicks = PendingPawnSyncMediumRetryIntervalTicks;
+            }
+            else
+            {
+                retryIntervalTicks = PendingPawnSyncLongRetryIntervalTicks;
+            }
+
+            nextPendingPawnSyncAttemptTick = currentTick + retryIntervalTicks;
         }
 
         private void TryRunUnlockStateSafetyCheck()
