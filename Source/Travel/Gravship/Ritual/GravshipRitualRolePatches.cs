@@ -28,13 +28,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (selectedTarget.Thing == null
-                || selectedTarget.Thing.TryGetComp<CompPilotConsole>() == null)
-            {
-                return true;
-            }
-
-            if (!IsGravshipLaunchContext(ritual, assignments, precept))
+            if (!IsGravshipLaunchContext(ritual, assignments, precept, selectedTarget))
             {
                 return true;
             }
@@ -98,10 +92,20 @@ namespace MAP_MechanoidMechanitor
         private static bool IsGravshipLaunchContext(
             LordJob_Ritual? lordRitual,
             RitualRoleAssignments? assignments,
-            Precept_Ritual? precept)
+            Precept_Ritual? precept,
+            TargetInfo selectedTarget)
         {
-            Precept_Ritual? ritual = precept ?? assignments?.Ritual ?? lordRitual?.Ritual;
-            return ritual != null && ritual.def == PreceptDefOf.GravshipLaunch;
+            Precept_Ritual? explicitRitual =
+                precept ?? assignments?.Ritual ?? lordRitual?.Ritual;
+            if (explicitRitual != null)
+            {
+                return explicitRitual.def == PreceptDefOf.GravshipLaunch;
+            }
+
+            // lordRitual / assignments / precept 均无法提供 ritual 时，
+            // 才回退到 CanStartRitualNow 的 ThreadStatic 作用域，并校验同一驾驶台目标。
+            return GravshipRitualStart_CanStartRitualNow_Scope_Patch
+                .IsActiveForSelectedTarget(selectedTarget);
         }
     }
 }
