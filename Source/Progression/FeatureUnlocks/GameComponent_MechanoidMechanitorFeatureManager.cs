@@ -9,8 +9,13 @@ namespace MAP_MechanoidMechanitor
     public sealed class GameComponent_MechanoidMechanitorFeatureManager : GameComponent
     {
         private const int UnlockStateSafetyCheckIntervalTicks = 60000;
-        private const int ForcedSyncRetryIntervalTicks = 60;
         private const int UnlockLetterRetryIntervalTicks = 60;
+
+        private const int ForcedSyncShortRetryIntervalTicks = 60;
+        private const int ForcedSyncMediumRetryIntervalTicks = 600;
+        private const int ForcedSyncLongRetryIntervalTicks = 60000;
+        private const int ForcedSyncShortStageMaxFailures = 3;
+        private const int ForcedSyncMediumStageMaxFailures = 6;
 
         private const int DynamicConsciousnessRefreshShortRetryIntervalTicks = 60;
         private const int DynamicConsciousnessRefreshMediumRetryIntervalTicks = 600;
@@ -45,6 +50,8 @@ namespace MAP_MechanoidMechanitor
         private int nextUnlockStateSafetyCheckTick;
         private int nextForcedSyncAttemptTick;
         private int nextUnlockLetterAttemptTick;
+        private int forcedSyncFailureCount;
+        private string? lastForcedSyncFailureSignature;
         private int dynamicConsciousnessRefreshFailureCount;
         private int nextDynamicConsciousnessRefreshAttemptTick;
         private int pendingPawnSyncFailureCount;
@@ -137,8 +144,8 @@ namespace MAP_MechanoidMechanitor
             CaptureAbilityUnlockStates();
             CaptureFeatureUnlockStates();
             pendingForcedSync = true;
-            nextForcedSyncAttemptTick = 0;
             nextUnlockLetterAttemptTick = 0;
+            ResetForcedSyncRetryState();
             ResetDynamicConsciousnessRefreshRetryState();
             ResetPendingPawnSyncRetryState();
             ScheduleNextUnlockStateSafetyCheck();
@@ -150,8 +157,8 @@ namespace MAP_MechanoidMechanitor
             CaptureAbilityUnlockStates();
             CaptureFeatureUnlockStates();
             pendingForcedSync = true;
-            nextForcedSyncAttemptTick = 0;
             nextUnlockLetterAttemptTick = 0;
+            ResetForcedSyncRetryState();
             ResetDynamicConsciousnessRefreshRetryState();
             ResetPendingPawnSyncRetryState();
             ScheduleNextUnlockStateSafetyCheck();
@@ -190,14 +197,12 @@ namespace MAP_MechanoidMechanitor
             {
                 pendingForcedSync = false;
                 pendingPawnSyncs.Clear();
-                nextForcedSyncAttemptTick = 0;
                 ScheduleNextUnlockStateSafetyCheck();
                 SendPendingUnlockLetters();
                 SchedulePendingUnlockLetterRetryIfNeeded();
-                return;
             }
 
-            nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
+            // 失败时由 TryPerformForcedFullSync 内统一计数、排程与日志，此处不再重复处理。
         }
 
         private bool TryPerformForcedFullSync()
@@ -222,6 +227,13 @@ namespace MAP_MechanoidMechanitor
                         "一个或多个受管理特性同步失败。");
                 }
 
+                if (forcedSyncFailureCount > 0)
+                {
+                    Log.Message(
+                        "[MAP-机械族机械师] 受管理科研能力/特性全量同步已恢复。");
+                }
+
+                ResetForcedSyncRetryState();
                 // SyncAllFeatures 已含动态意识刷新；仅清除失败退避状态，不覆盖同步中新产生的 pending。
                 ResetDynamicConsciousnessRefreshRetryState();
                 // SyncAllRelevantPawns 已同步相关能力；仅清除单 Pawn pending 退避状态，不清空集合。
@@ -230,9 +242,78 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
-                Log.Error(
-                    "[MAP-机械族机械师] 受管理科研能力/特性全量同步失败，将在稍后重试：" + ex);
+                TickManager? tickManager = Find.TickManager;
+                int ticksGame = tickManager?.TicksGame ?? 0;
+                ScheduleForcedSyncRetry(ticksGame, ex);
                 return false;
+            }
+        }
+
+        private void ResetForcedSyncRetryState()
+        {
+            forcedSyncFailureCount = 0;
+            nextForcedSyncAttemptTick = 0;
+            lastForcedSyncFailureSignature = null;
+        }
+
+        private void ScheduleForcedSyncRetry(int currentTick, Exception exception)
+        {
+            forcedSyncFailureCount++;
+            pendingForcedSync = true;
+
+            int retryIntervalTicks;
+            if (forcedSyncFailureCount <= ForcedSyncShortStageMaxFailures)
+            {
+                retryIntervalTicks = ForcedSyncShortRetryIntervalTicks;
+            }
+            else if (forcedSyncFailureCount <= ForcedSyncMediumStageMaxFailures)
+            {
+                retryIntervalTicks = ForcedSyncMediumRetryIntervalTicks;
+            }
+            else
+            {
+                retryIntervalTicks = ForcedSyncLongRetryIntervalTicks;
+            }
+
+            nextForcedSyncAttemptTick = currentTick + retryIntervalTicks;
+            LogForcedSyncFailure(exception, retryIntervalTicks);
+        }
+
+        private static string BuildForcedSyncFailureSignature(Exception exception)
+        {
+            Exception root = exception;
+            while (root.InnerException != null)
+            {
+                root = root.InnerException;
+            }
+
+            return root.GetType().FullName + ": " + (root.Message ?? string.Empty);
+        }
+
+        private void LogForcedSyncFailure(Exception exception, int retryIntervalTicks)
+        {
+            string signature = BuildForcedSyncFailureSignature(exception);
+            if (forcedSyncFailureCount == 1
+                || !string.Equals(
+                    lastForcedSyncFailureSignature, signature, StringComparison.Ordinal))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 受管理科研能力/特性全量同步失败，已进入分级退避重试："
+                    + exception);
+                lastForcedSyncFailureSignature = signature;
+            }
+
+            if (forcedSyncFailureCount == ForcedSyncShortStageMaxFailures + 1)
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 强制全量同步已连续失败 " +
+                    $"{forcedSyncFailureCount} 次，进入中期退避，下次重试间隔 {retryIntervalTicks} tick。");
+            }
+            else if (forcedSyncFailureCount == ForcedSyncMediumStageMaxFailures + 1)
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 强制全量同步已连续失败 " +
+                    $"{forcedSyncFailureCount} 次，进入长期退避，下次重试间隔 {retryIntervalTicks} tick。");
             }
         }
 
@@ -363,11 +444,8 @@ namespace MAP_MechanoidMechanitor
                 SendPendingUnlockLetters();
                 SchedulePendingUnlockLetterRetryIfNeeded();
             }
-            else
-            {
-                pendingForcedSync = true;
-                nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
-            }
+
+            // 失败时由 TryPerformForcedFullSync 内统一计数与排程。
         }
 
         private void OnResearchProjectFinished()
@@ -395,6 +473,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 已在失败退避或排队中：保留 pending 与重试时间，信件已入队，由统一入口执行。
+            if (pendingForcedSync)
+            {
+                return;
+            }
+
             if (TryPerformForcedFullSync())
             {
                 pendingPawnSyncs.Clear();
@@ -402,13 +486,8 @@ namespace MAP_MechanoidMechanitor
                 SendPendingUnlockLetters();
                 SchedulePendingUnlockLetterRetryIfNeeded();
             }
-            else
-            {
-                pendingForcedSync = true;
-                TickManager? tickManager = Find.TickManager;
-                int ticksGame = tickManager?.TicksGame ?? 0;
-                nextForcedSyncAttemptTick = ticksGame + ForcedSyncRetryIntervalTicks;
-            }
+
+            // 失败时由 TryPerformForcedFullSync 内统一计数与排程。
         }
 
         /// <summary>
