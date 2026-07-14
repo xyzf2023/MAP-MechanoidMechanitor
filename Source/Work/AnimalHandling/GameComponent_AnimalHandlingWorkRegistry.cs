@@ -211,8 +211,8 @@ namespace MAP_MechanoidMechanitor
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 authorizationRecords ??= new List<AnimalHandlingWorkAuthorizationRecord>();
+                NormalizeAuthorizationRecords();
                 RebuildRecordIndex();
-                CleanupInvalidRecords();
                 EnsureInfrastructureForAllAuthorizedPawns();
             }
         }
@@ -250,11 +250,16 @@ namespace MAP_MechanoidMechanitor
         {
             for (int i = authorizationRecords.Count - 1; i >= 0; i--)
             {
-                AnimalHandlingWorkAuthorizationRecord record = authorizationRecords[i];
+                AnimalHandlingWorkAuthorizationRecord? record = authorizationRecords[i];
+                if (record == null)
+                {
+                    authorizationRecords.RemoveAt(i);
+                    continue;
+                }
+
                 if (ReferenceEquals(record.Pawn, pawn))
                 {
                     authorizationRecords.RemoveAt(i);
-                    break;
                 }
             }
 
@@ -275,18 +280,69 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void CleanupInvalidRecords()
+        /// <summary>
+        /// 读档后清理失效记录、迁移静态 Comp 状态，并按 Pawn 合并重复动态授权。
+        /// </summary>
+        private void NormalizeAuthorizationRecords()
         {
-            for (int i = authorizationRecords.Count - 1; i >= 0; i--)
+            List<AnimalHandlingWorkAuthorizationRecord> source = authorizationRecords;
+            List<AnimalHandlingWorkAuthorizationRecord> cleaned =
+                new List<AnimalHandlingWorkAuthorizationRecord>();
+            Dictionary<Pawn, AnimalHandlingWorkAuthorizationRecord> keptByPawn =
+                new Dictionary<Pawn, AnimalHandlingWorkAuthorizationRecord>();
+
+            for (int i = 0; i < source.Count; i++)
             {
-                Pawn? pawn = authorizationRecords[i].Pawn;
+                AnimalHandlingWorkAuthorizationRecord? record = source[i];
+                if (record == null)
+                {
+                    continue;
+                }
+
+                Pawn? pawn = record.Pawn;
                 if (pawn == null || pawn.Destroyed)
                 {
-                    authorizationRecords.RemoveAt(i);
+                    continue;
                 }
+
+                // 静态 Comp 已授权：迁移初始化状态后丢弃动态记录，不覆盖 Comp 默认优先级。
+                if (pawn.GetComp<CompAnimalHandlingWorkUser>() is CompAnimalHandlingWorkUser comp)
+                {
+                    if (record.DefaultPriorityInitialized)
+                    {
+                        comp.MarkDefaultPriorityInitialized();
+                    }
+
+                    continue;
+                }
+
+                if (keptByPawn.TryGetValue(
+                        pawn, out AnimalHandlingWorkAuthorizationRecord? existing)
+                    && existing != null)
+                {
+                    MergeDuplicateRecordState(existing, record);
+                    continue;
+                }
+
+                record.DefaultPriority =
+                    AnimalHandlingWorkUtility.ClampDefaultPriority(record.DefaultPriority);
+                keptByPawn[pawn] = record;
+                cleaned.Add(record);
             }
 
-            RebuildRecordIndex();
+            authorizationRecords = cleaned;
+        }
+
+        private static void MergeDuplicateRecordState(
+            AnimalHandlingWorkAuthorizationRecord keep,
+            AnimalHandlingWorkAuthorizationRecord duplicate)
+        {
+            if (!keep.DefaultPriorityInitialized && duplicate.DefaultPriorityInitialized)
+            {
+                keep.DefaultPriority = AnimalHandlingWorkUtility.ClampDefaultPriority(
+                    duplicate.DefaultPriority);
+                keep.DefaultPriorityInitialized = true;
+            }
         }
 
         private AnimalHandlingWorkAuthorizationRecord? FindRecordForPawn(Pawn pawn)
