@@ -166,7 +166,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (gestator.MassProductionGestationComp?.ReleasePending == true)
+            CompMassProductionMechGestator? comp = gestator.MassProductionGestationComp;
+            if (comp != null && (comp.ReleasePending || comp.SettlementCommitted))
             {
                 __result = false;
             }
