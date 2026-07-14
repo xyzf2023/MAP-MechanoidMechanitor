@@ -143,19 +143,51 @@ namespace MAP_MechanoidMechanitor
 
         public static float GetCurrentConsciousness(Pawn? pawn)
         {
+            TryGetCurrentConsciousness(pawn, out float consciousness);
+            return consciousness;
+        }
+
+        /// <summary>
+        /// 尝试读取意识容量。失败时 <paramref name="consciousness"/> 为安全默认值 0，并返回 false。
+        /// </summary>
+        public static bool TryGetCurrentConsciousness(Pawn? pawn, out float consciousness)
+        {
+            consciousness = 0f;
             if (pawn?.health?.capacities == null)
             {
-                return 0f;
+                return false;
             }
 
             try
             {
-                return pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness);
+                float level = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness);
+                if (float.IsNaN(level) || float.IsInfinity(level))
+                {
+                    Log.ErrorOnce(
+                        "[MAP-机械族机械师] 读取意识容量得到无效数值：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}），value={level}。",
+                        BuildConsciousnessReadFailureLogKey(pawn));
+                    return false;
+                }
+
+                consciousness = level;
+                return true;
             }
-            catch
+            catch (System.Exception ex)
             {
-                return 0f;
+                Log.ErrorOnce(
+                    "[MAP-机械族机械师] 读取意识容量失败：" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}",
+                    BuildConsciousnessReadFailureLogKey(pawn));
+                return false;
             }
+        }
+
+        private const int ConsciousnessReadFailureLogKeyBase = 0x4D415043; // "MAPC"
+
+        private static int BuildConsciousnessReadFailureLogKey(Pawn pawn)
+        {
+            return unchecked(ConsciousnessReadFailureLogKeyBase + pawn.thingIDNumber);
         }
 
         public static int GetCurrentConsciousnessPercent(Pawn? pawn)
