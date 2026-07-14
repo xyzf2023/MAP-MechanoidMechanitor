@@ -29,6 +29,7 @@
   <MAP_MechanoidMechanitor.DormantJustice.Initializing>Initializing protocol...</MAP_MechanoidMechanitor.DormantJustice.Initializing>
   <MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Label>Carry emergency consciousness transfer</MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Label>
   <MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Description>Designate this dormant Justice as the preferred body for emergency consciousness transfer. When the current mechanical consciousness host is about to be destroyed, it will immediately activate and receive the consciousness.</MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Description>
-  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>Mechanoid Mechanitor</MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>
-  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>TODO</MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>Choose this colony's mechanoid mechanitor story style</MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>What kind of mechanoid colony story do you want to experience? These story styles will affect this playthrough.</MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>Could not save the story style selection. Please try again or restart the new game setup.</MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>
 </LanguageData>
