@@ -12,6 +12,12 @@ namespace MAP_MechanoidMechanitor
         private const int ForcedSyncRetryIntervalTicks = 60;
         private const int UnlockLetterRetryIntervalTicks = 60;
 
+        private const int DynamicConsciousnessRefreshShortRetryIntervalTicks = 60;
+        private const int DynamicConsciousnessRefreshMediumRetryIntervalTicks = 600;
+        private const int DynamicConsciousnessRefreshLongRetryIntervalTicks = 60000;
+        private const int DynamicConsciousnessRefreshShortStageMaxFailures = 3;
+        private const int DynamicConsciousnessRefreshMediumStageMaxFailures = 6;
+
         private const string AbilityUnlockLetterTitleKey =
             "MAP_MechanoidMechanitor.AbilityUnlockLetter.Title";
         private const string AbilityUnlockLetterSpecialScenarioTextKey =
@@ -33,6 +39,8 @@ namespace MAP_MechanoidMechanitor
         private int nextUnlockStateSafetyCheckTick;
         private int nextForcedSyncAttemptTick;
         private int nextUnlockLetterAttemptTick;
+        private int dynamicConsciousnessRefreshFailureCount;
+        private int nextDynamicConsciousnessRefreshAttemptTick;
 
         public GameComponent_MechanoidMechanitorFeatureManager(Game game)
         {
@@ -68,6 +76,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 新 pending：允许立即处理。已有 pending（含失败退避中）：保留重试时间，避免连续通知绕过节流。
+            if (!manager.pendingDynamicConsciousnessRefresh)
+            {
+                manager.nextDynamicConsciousnessRefreshAttemptTick = 0;
+            }
+
             manager.pendingDynamicConsciousnessRefresh = true;
         }
 
@@ -101,6 +115,7 @@ namespace MAP_MechanoidMechanitor
             pendingForcedSync = true;
             nextForcedSyncAttemptTick = 0;
             nextUnlockLetterAttemptTick = 0;
+            ResetDynamicConsciousnessRefreshRetryState();
             ScheduleNextUnlockStateSafetyCheck();
         }
 
@@ -112,6 +127,7 @@ namespace MAP_MechanoidMechanitor
             pendingForcedSync = true;
             nextForcedSyncAttemptTick = 0;
             nextUnlockLetterAttemptTick = 0;
+            ResetDynamicConsciousnessRefreshRetryState();
             ScheduleNextUnlockStateSafetyCheck();
         }
 
@@ -180,6 +196,8 @@ namespace MAP_MechanoidMechanitor
                         "一个或多个受管理特性同步失败。");
                 }
 
+                // SyncAllFeatures 已含动态意识刷新；仅清除失败退避状态，不覆盖同步中新产生的 pending。
+                ResetDynamicConsciousnessRefreshRetryState();
                 return true;
             }
             catch (Exception ex)
@@ -299,6 +317,7 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 处理机械师名册变化引起的动态意识合并刷新请求。
+        /// 失败时按连续失败次数分级退避，避免每个 Unity 更新帧立即重试。
         /// </summary>
         private void ProcessPendingDynamicConsciousnessRefresh()
         {
@@ -307,22 +326,68 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            TickManager? tickManager = Find.TickManager;
+            if (tickManager == null)
+            {
+                // TickManager 暂不可用：不视为同步失败，保留 pending，不写错误日志。
+                return;
+            }
+
+            int ticksGame = tickManager.TicksGame;
+            if (ticksGame < nextDynamicConsciousnessRefreshAttemptTick)
+            {
+                return;
+            }
+
             // 先清除再同步：同步过程中若死亡/名册变化再次置位，可保留到下一次处理。
             pendingDynamicConsciousnessRefresh = false;
             try
             {
-                if (!ManagedResearchFeatureSyncUtility.SyncDynamicConsciousnessBonuses())
+                if (ManagedResearchFeatureSyncUtility.SyncDynamicConsciousnessBonuses())
                 {
-                    pendingDynamicConsciousnessRefresh = true;
+                    ResetDynamicConsciousnessRefreshRetryState();
+                    return;
                 }
+
+                // 底层已记录具体失败 Pawn，此处不再写泛化错误。
+                ScheduleDynamicConsciousnessRefreshRetry(ticksGame);
             }
             catch (Exception ex)
             {
-                pendingDynamicConsciousnessRefresh = true;
+                ScheduleDynamicConsciousnessRefreshRetry(ticksGame);
                 Log.Error(
-                    "[MAP-机械族机械师] 机械师名册变化后的动态意识加成刷新失败，将保留 pending 稍后重试："
+                    "[MAP-机械族机械师] 机械师名册变化后的动态意识加成刷新失败，已进入分级退避重试："
                     + ex);
             }
+        }
+
+        private void ResetDynamicConsciousnessRefreshRetryState()
+        {
+            dynamicConsciousnessRefreshFailureCount = 0;
+            nextDynamicConsciousnessRefreshAttemptTick = 0;
+        }
+
+        private void ScheduleDynamicConsciousnessRefreshRetry(int currentTick)
+        {
+            dynamicConsciousnessRefreshFailureCount++;
+            int retryIntervalTicks;
+            if (dynamicConsciousnessRefreshFailureCount
+                <= DynamicConsciousnessRefreshShortStageMaxFailures)
+            {
+                retryIntervalTicks = DynamicConsciousnessRefreshShortRetryIntervalTicks;
+            }
+            else if (dynamicConsciousnessRefreshFailureCount
+                <= DynamicConsciousnessRefreshMediumStageMaxFailures)
+            {
+                retryIntervalTicks = DynamicConsciousnessRefreshMediumRetryIntervalTicks;
+            }
+            else
+            {
+                retryIntervalTicks = DynamicConsciousnessRefreshLongRetryIntervalTicks;
+            }
+
+            nextDynamicConsciousnessRefreshAttemptTick = currentTick + retryIntervalTicks;
+            pendingDynamicConsciousnessRefresh = true;
         }
 
         private List<ManagedResearchAbilityDescriptor> CollectNewlyUnlockedAbilities()
