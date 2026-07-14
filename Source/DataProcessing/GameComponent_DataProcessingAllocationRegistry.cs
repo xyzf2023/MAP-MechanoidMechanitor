@@ -969,6 +969,9 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 全表清理每轮只执行一次；即使没有机械师也要清理无效记录。
+            CleanupInvalidRecords();
+
             IReadOnlyList<Pawn> mechanitors =
                 GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
             for (int i = 0; i < mechanitors.Count; i++)
@@ -979,54 +982,228 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                CleanupInvalidRecords();
+                ProtectOverseerConsciousness(overseer);
+            }
+        }
+
+        private void ProtectOverseerConsciousness(Pawn overseer)
+        {
+            if (GetTotalStepsForOverseer(overseer) <= 0)
+            {
+                return;
+            }
+
+            if (!DataProcessingAllocationUtility.TryGetCurrentConsciousness(
+                    overseer,
+                    out float consciousness))
+            {
+                // 读取失败不得误判为意识归零；等待下一周期重试。
+                return;
+            }
+
+            if (consciousness >= DataProcessingAllocationUtility.MinReservedConsciousness)
+            {
+                return;
+            }
+
+            // 每名机械师最多两轮批量规划/提交，禁止逐档同步循环。
+            for (int round = 0; round < 2; round++)
+            {
                 if (GetTotalStepsForOverseer(overseer) <= 0)
                 {
-                    continue;
+                    return;
                 }
 
-                while (DataProcessingAllocationUtility.GetCurrentConsciousness(overseer)
-                    < DataProcessingAllocationUtility.MinReservedConsciousness)
+                if (consciousness >= DataProcessingAllocationUtility.MinReservedConsciousness)
                 {
-                    DataProcessingAllocationRecord? largest = FindLargestStepRecordForOverseer(overseer);
-                    if (largest == null || largest.target == null)
-                    {
-                        break;
-                    }
+                    return;
+                }
 
-                    TryRemoveStep(overseer, largest.target);
-                    if (GetTotalStepsForOverseer(overseer) <= 0)
-                    {
-                        break;
-                    }
+                Dictionary<DataProcessingAllocationRecord, int> plan =
+                    BuildProtectionReductionPlan(overseer, consciousness);
+                if (plan.Count == 0)
+                {
+                    return;
+                }
+
+                ApplyProtectionReductionPlan(overseer, plan);
+
+                if (!DataProcessingAllocationUtility.TryGetCurrentConsciousness(
+                        overseer,
+                        out consciousness))
+                {
+                    return;
                 }
             }
         }
 
-        private DataProcessingAllocationRecord? FindLargestStepRecordForOverseer(Pawn overseer)
+        /// <summary>
+        /// 规划阶段：只计算每条记录应减少的档数，不修改真实记录，也不同步 Hediff。
+        /// </summary>
+        private Dictionary<DataProcessingAllocationRecord, int> BuildProtectionReductionPlan(
+            Pawn overseer,
+            float currentConsciousness)
         {
-            if (!recordsByOverseer.TryGetValue(overseer, out List<DataProcessingAllocationRecord>? overseerRecords)
+            Dictionary<DataProcessingAllocationRecord, int> plannedReduction =
+                new Dictionary<DataProcessingAllocationRecord, int>();
+
+            if (!recordsByOverseer.TryGetValue(
+                    overseer,
+                    out List<DataProcessingAllocationRecord>? overseerRecords)
+                || overseerRecords == null
                 || overseerRecords.Count == 0)
             {
-                return null;
+                return plannedReduction;
             }
 
-            DataProcessingAllocationRecord? largest = null;
-            for (int i = 0; i < overseerRecords.Count; i++)
+            // 快照列表顺序，保证档数相同时取先出现者（严格大于比较）。
+            List<DataProcessingAllocationRecord> orderedRecords =
+                new List<DataProcessingAllocationRecord>(overseerRecords);
+            Dictionary<DataProcessingAllocationRecord, int> plannedRemaining =
+                new Dictionary<DataProcessingAllocationRecord, int>();
+
+            for (int i = 0; i < orderedRecords.Count; i++)
             {
-                DataProcessingAllocationRecord record = overseerRecords[i];
-                if (record.steps <= 0)
+                DataProcessingAllocationRecord? record = orderedRecords[i];
+                if (record == null || record.steps <= 0)
                 {
                     continue;
                 }
 
-                if (largest == null || record.steps > largest.steps)
+                plannedRemaining[record] = record.steps;
+                plannedReduction[record] = 0;
+            }
+
+            if (plannedRemaining.Count == 0)
+            {
+                return plannedReduction;
+            }
+
+            float projectedConsciousness = currentConsciousness;
+            while (projectedConsciousness
+                < DataProcessingAllocationUtility.MinReservedConsciousness)
+            {
+                DataProcessingAllocationRecord? largest =
+                    FindLargestPlannedRemainingRecord(orderedRecords, plannedRemaining);
+                if (largest == null)
+                {
+                    break;
+                }
+
+                plannedRemaining[largest]--;
+                plannedReduction[largest]++;
+                projectedConsciousness += GetProtectionRecoveryPerReducedStep(largest);
+            }
+
+            // 去掉零减档条目，便于提交阶段快速判断空计划。
+            List<DataProcessingAllocationRecord> zeroKeys =
+                new List<DataProcessingAllocationRecord>();
+            foreach (KeyValuePair<DataProcessingAllocationRecord, int> pair in plannedReduction)
+            {
+                if (pair.Value <= 0)
+                {
+                    zeroKeys.Add(pair.Key);
+                }
+            }
+
+            for (int i = 0; i < zeroKeys.Count; i++)
+            {
+                plannedReduction.Remove(zeroKeys[i]);
+            }
+
+            return plannedReduction;
+        }
+
+        private static DataProcessingAllocationRecord? FindLargestPlannedRemainingRecord(
+            List<DataProcessingAllocationRecord> orderedRecords,
+            Dictionary<DataProcessingAllocationRecord, int> plannedRemaining)
+        {
+            DataProcessingAllocationRecord? largest = null;
+            int largestRemaining = 0;
+            for (int i = 0; i < orderedRecords.Count; i++)
+            {
+                DataProcessingAllocationRecord record = orderedRecords[i];
+                if (!plannedRemaining.TryGetValue(record, out int remaining) || remaining <= 0)
+                {
+                    continue;
+                }
+
+                // 严格大于：档数相同时保留先出现的记录。
+                if (largest == null || remaining > largestRemaining)
                 {
                     largest = record;
+                    largestRemaining = remaining;
                 }
             }
 
             return largest;
+        }
+
+        private static float GetProtectionRecoveryPerReducedStep(
+            DataProcessingAllocationRecord record)
+        {
+            if (DataProcessingAllocationUtility.IsSelfAllocationPair(
+                    record.overseer,
+                    record.target))
+            {
+                return DataProcessingAllocationUtility.StepPercent * 0.5f;
+            }
+
+            return DataProcessingAllocationUtility.StepPercent;
+        }
+
+        /// <summary>
+        /// 提交阶段：按计划一次性减档，再统一同步受影响目标与监督者 Hediff。
+        /// </summary>
+        private void ApplyProtectionReductionPlan(
+            Pawn overseer,
+            Dictionary<DataProcessingAllocationRecord, int> plannedReduction)
+        {
+            if (plannedReduction.Count == 0)
+            {
+                return;
+            }
+
+            HashSet<Pawn> affectedTargets = new HashSet<Pawn>();
+            List<KeyValuePair<DataProcessingAllocationRecord, int>> snapshot =
+                new List<KeyValuePair<DataProcessingAllocationRecord, int>>(plannedReduction);
+            bool anyChanged = false;
+
+            for (int i = 0; i < snapshot.Count; i++)
+            {
+                DataProcessingAllocationRecord record = snapshot[i].Key;
+                int reduction = snapshot[i].Value;
+                if (record == null || reduction <= 0)
+                {
+                    continue;
+                }
+
+                Pawn? target = record.target;
+                record.steps -= reduction;
+                anyChanged = true;
+
+                if (record.steps <= 0)
+                {
+                    RemoveRecord(record);
+                }
+
+                if (target != null && !target.Destroyed)
+                {
+                    affectedTargets.Add(target);
+                }
+            }
+
+            if (!anyChanged)
+            {
+                return;
+            }
+
+            foreach (Pawn target in affectedTargets)
+            {
+                SyncHediffForTarget(target);
+            }
+
+            SyncHediffsForOverseer(overseer);
         }
     }
 }
