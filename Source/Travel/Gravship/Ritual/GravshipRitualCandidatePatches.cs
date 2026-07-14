@@ -40,7 +40,7 @@ namespace MAP_MechanoidMechanitor
 
             foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
             {
-                if (!IsCandidate(pawn))
+                if (!GravshipRitualPilotCandidateUtility.IsEligiblePilotCandidate(pawn))
                 {
                     continue;
                 }
@@ -62,41 +62,6 @@ namespace MAP_MechanoidMechanitor
         private static bool IsPilotConsoleTarget(TargetInfo target)
         {
             return target.Thing != null && target.Thing.TryGetComp<CompPilotConsole>() != null;
-        }
-
-        private static bool IsCandidate(Pawn pawn)
-        {
-            if (!CompGravshipPilotUser.PawnCanUseGravshipPilotConsole(pawn))
-            {
-                return false;
-            }
-
-            if (!pawn.Spawned || pawn.Dead || pawn.Downed)
-            {
-                return false;
-            }
-
-            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
-            {
-                return false;
-            }
-
-            if (pawn.GuestStatus == GuestStatus.Prisoner)
-            {
-                return false;
-            }
-
-            if (pawn.health?.capacities?.CapableOf(PawnCapacityDefOf.Moving) != true)
-            {
-                return false;
-            }
-
-            if (pawn.skills == null || pawn.skills.GetSkill(SkillDefOf.Intellectual).TotallyDisabled)
-            {
-                return false;
-            }
-
-            return true;
         }
     }
 }
