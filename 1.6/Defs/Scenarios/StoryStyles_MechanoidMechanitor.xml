@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
+    <defName>MAP_StoryStyle_Classic</defName>
+    <label>经典</label>
+    <description>经典的游戏体验。不启用任何额外故事线，体验完全自由的机械族殖民地。</description>
+    <displayOrder>100</displayOrder>
+    <iconThingDef>Mechlink</iconThingDef>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
+
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
+    <defName>MAP_StoryStyle_Disorder</defName>
+    <label>脱序</label>
+    <description>敬请期待</description>
+    <displayOrder>200</displayOrder>
+    <iconThingDef>Wastepack</iconThingDef>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
+</Defs>
