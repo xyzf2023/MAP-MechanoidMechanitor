@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Text;
 using HarmonyLib;
 using RimWorld;
@@ -8,12 +10,64 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(Bill_Mech), nameof(Bill_Mech.BillTick))]
     public static class MassProductionMechGestatorTimingPatches
     {
-        public static bool AllowVanillaBillTickOnce;
+        [ThreadStatic]
+        private static Stack<Bill_Mech>? vanillaBillTickAllowanceStack;
+
+        internal static void RunWithVanillaBillTickAllowed(Bill_Mech bill, Action action)
+        {
+            if (bill == null)
+            {
+                throw new ArgumentNullException(nameof(bill));
+            }
+
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
+            Stack<Bill_Mech> stack = vanillaBillTickAllowanceStack ??= new Stack<Bill_Mech>();
+            stack.Push(bill);
+            try
+            {
+                action();
+            }
+            finally
+            {
+                if (stack.Count == 0)
+                {
+                    Log.Error(
+                        "[MAP-MechanoidMechanitor] vanilla BillTick allowance stack was empty when unwinding for "
+                        + bill.ToStringSafe()
+                        + ".");
+                }
+                else
+                {
+                    Bill_Mech popped = stack.Pop();
+                    if (!ReferenceEquals(popped, bill))
+                    {
+                        Log.Error(
+                            "[MAP-MechanoidMechanitor] vanilla BillTick allowance stack mismatch. Expected "
+                            + bill.ToStringSafe()
+                            + ", popped "
+                            + popped.ToStringSafe()
+                            + ".");
+                    }
+                }
+            }
+        }
+
+        internal static bool IsVanillaBillTickAllowed(Bill_Mech bill)
+        {
+            Stack<Bill_Mech>? stack = vanillaBillTickAllowanceStack;
+            return stack != null
+                && stack.Count > 0
+                && ReferenceEquals(stack.Peek(), bill);
+        }
 
         [HarmonyPrefix]
         public static bool Prefix(Bill_Mech __instance)
         {
-            if (AllowVanillaBillTickOnce)
+            if (IsVanillaBillTickAllowed(__instance))
             {
                 return true;
             }
@@ -93,6 +147,29 @@ namespace MAP_MechanoidMechanitor
                     "1",
                     ")"));
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(Bill_Autonomous), nameof(Bill_Autonomous.PawnAllowedToStartAnew))]
+    public static class Patch_MassProductionMechGestator_PawnAllowedToStartAnew
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Bill_Autonomous __instance, ref bool __result)
+        {
+            if (!__result)
+            {
+                return;
+            }
+
+            if (__instance.billStack?.billGiver is not Building_MassProductionMechGestator gestator)
+            {
+                return;
+            }
+
+            if (gestator.MassProductionGestationComp?.ReleasePending == true)
+            {
+                __result = false;
+            }
         }
     }
 }
