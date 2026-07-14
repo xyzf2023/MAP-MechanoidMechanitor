@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <ThingDef ParentName="MechGestatorBase" MayRequire="Ludeon.RimWorld.Biotech">
+    <defName>MAP_MassProductionMechGestator</defName>
+    <label>量产型机械培育仓</label>
+    <description>使用超凡科技铸造而成的机械族培育仓，是主脑快速培育规模化机械部队的关键设施。\n\n该培育仓的培育时间固定为6小时，且培育完成后自动释放其中机械族。同时该培育仓可以培育所有已解锁配方的机械族。\n\n（现在这个建筑的贴图尚未完成，先使用原版贴图占位）</description>
+    <graphicData>
+      <texPath>Things/Building/Production/MAP_MassProductionMechGestator</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(5.6,4)</drawSize>
+      <shadowData>
+        <volume>(3, 2, 1.9)</volume>
+      </shadowData>
+    </graphicData>
+    <uiIconPath>Things/Building/Production/MAP_MassProductionMechGestator_MenuIcon</uiIconPath>
+    <uiIconScale>1.85</uiIconScale>
+    <interactionCellOffset>(1,0,2)</interactionCellOffset>
+    <recipes>
+      <li>Militor</li>
+      <li>Lifter</li>
+      <li>Constructoid</li>
+      <li>Agrihand</li>
+      <li>Cleansweeper</li>
+      <li>Fabricor</li>
+      <li>Paramedic</li>
+      <li>ResurrectLightMech</li>
+    </recipes>
+    <statBases>
+      <MaxHitPoints>250</MaxHitPoints>
+      <WorkToBuild>8000</WorkToBuild>
+      <Mass>25</Mass>
+      <Flammability>0.5</Flammability>
+    </statBases>
+    <size>(3,2)</size>
+    <costList>
+      <Steel>150</Steel>
+      <ComponentIndustrial>3</ComponentIndustrial>
+    </costList>
+    <researchPrerequisites>
+      <li>BasicMechtech</li>
+    </researchPrerequisites>
+    <building>
+      <barDrawData>
+        <north>
+          <preRotationOffset>(-1.06, 0.91)</preRotationOffset>
+          <size>(0.7, 0.13)</size>
+        </north>
+        <south>
+          <preRotationOffset>(-1.06, 0.82)</preRotationOffset>
+          <size>(0.7, 0.13)</size>
+        </south>
+        <east>
+          <preRotationOffset>(1.06, -0.97)</preRotationOffset>
+          <size>(0.7, 0.13)</size>
+        </east>
+        <west>
+          <preRotationOffset>(-1.06, -0.97)</preRotationOffset>
+          <size>(0.7, 0.13)</size>
+        </west>
+      </barDrawData>
+      <formingGraphicData>
+        <texPath>Things/Pawn/Mechanoid/HalfGestatedMechSmall</texPath>
+        <graphicClass>Graphic_Single</graphicClass>
+        <drawSize>(1,1)</drawSize>
+      </formingGraphicData>
+      <formingMechPerRotationOffset>
+        <li>(0, 0, 0.45)</li>
+        <li>(0, 0, 0.45)</li>
+        <li>(0, 0, 0.45)</li>
+        <li>(0, 0, 0.45)</li>
+      </formingMechPerRotationOffset>
+      <mechGestatorCylinderGraphic>
+        <texPath>Things/Building/Production/MechGestatorStandardGlass</texPath>
+        <graphicClass>Graphic_Multi</graphicClass>
+        <drawSize>(5.6,4)</drawSize>
+        <shaderType>Transparent</shaderType>
+      </mechGestatorCylinderGraphic>
+      <mechGestatorTopGraphic>
+        <texPath>Things/Building/Production/MechGestatorStandardTop</texPath>
+        <graphicClass>Graphic_Multi</graphicClass>
+        <drawSize>(5.6,4)</drawSize>
+      </mechGestatorTopGraphic>
+      <gestatorFormingMote>
+        <north>MechGestatorForming_North</north>
+        <east>MechGestatorForming_East</east>
+        <west>MechGestatorForming_East</west>
+        <south>MechGestatorForming_South</south>
+      </gestatorFormingMote>
+      <gestatorCycleCompleteMote>
+        <north>MechGestatorCycleComplete_North</north>
+        <east>MechGestatorCycleComplete_East</east>
+        <west>MechGestatorCycleComplete_East</west>
+        <south>MechGestatorCycleComplete_South</south>
+      </gestatorCycleCompleteMote>
+      <gestatorFormedMote>
+        <north>MechGestatorFormed_North</north>
+        <east>MechGestatorFormed_East</east>
+        <west>MechGestatorFormed_East</west>
+        <south>MechGestatorFormed_South</south>
+      </gestatorFormedMote>
+    </building>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <basePowerConsumption>350</basePowerConsumption>
+        <idlePowerDraw>50</idlePowerDraw>
+      </li>
+    </comps>
+  </ThingDef>
+
+</Defs>
