@@ -100,6 +100,8 @@ namespace MAP_MechanoidMechanitor
                     resolvedSource,
                     resolvedTarget);
             bool transactionCommitted = false;
+            bool rollbackAttempted = false;
+            List<string> rollbackFailures = new List<string>();
 
             try
             {
@@ -120,7 +122,8 @@ namespace MAP_MechanoidMechanitor
                         resolvedSource,
                         resolvedTarget))
                 {
-                    RollbackTransfer(
+                    rollbackAttempted = true;
+                    RollbackTransferBestEffort(
                         resolvedSource,
                         resolvedTarget,
                         sourceRecord,
@@ -128,7 +131,20 @@ namespace MAP_MechanoidMechanitor
                         targetSkillSnapshot,
                         sourceChipBandwidthBonus,
                         targetChipBandwidthBonus,
-                        overseerSnapshots);
+                        overseerSnapshots,
+                        rollbackFailures);
+                    if (rollbackFailures.Count > 0)
+                    {
+                        LogTransferFailureWithRollback(
+                            resolvedSource,
+                            resolvedTarget,
+                            hostBeforeTransfer,
+                            originalException: null,
+                            hostReplaceRejected: true,
+                            rollbackAttempted: true,
+                            rollbackFailures);
+                    }
+
                     return false;
                 }
 
@@ -148,21 +164,38 @@ namespace MAP_MechanoidMechanitor
             {
                 if (!transactionCommitted)
                 {
-                    RollbackTransfer(
-                        resolvedSource,
-                        resolvedTarget,
-                        sourceRecord,
-                        targetRecord,
-                        targetSkillSnapshot,
-                        sourceChipBandwidthBonus,
-                        targetChipBandwidthBonus,
-                        overseerSnapshots);
-                    LogTransferException(
+                    if (!rollbackAttempted)
+                    {
+                        rollbackAttempted = true;
+                        try
+                        {
+                            RollbackTransferBestEffort(
+                                resolvedSource,
+                                resolvedTarget,
+                                sourceRecord,
+                                targetRecord,
+                                targetSkillSnapshot,
+                                sourceChipBandwidthBonus,
+                                targetChipBandwidthBonus,
+                                overseerSnapshots,
+                                rollbackFailures);
+                        }
+                        catch (Exception rollbackEx)
+                        {
+                            // BestEffort 正常不应抛出；兜底记录，仍保证不重复回滚且返回 false。
+                            rollbackFailures.Add(
+                                "RollbackTransferBestEffort 未捕获异常：" + rollbackEx);
+                        }
+                    }
+
+                    LogTransferFailureWithRollback(
                         resolvedSource,
                         resolvedTarget,
                         hostBeforeTransfer,
-                        ex,
-                        committed: false);
+                        originalException: ex,
+                        hostReplaceRejected: false,
+                        rollbackAttempted: rollbackAttempted,
+                        rollbackFailures);
                     return false;
                 }
 
@@ -435,7 +468,7 @@ namespace MAP_MechanoidMechanitor
             overseerRelations.AddDirectRelation(PawnRelationDefOf.Overseer, subject);
         }
 
-        private static void RollbackTransfer(
+        private static void RollbackTransferBestEffort(
             Pawn source,
             Pawn target,
             MechanoidMechanitorRecord sourceRecord,
@@ -443,14 +476,53 @@ namespace MAP_MechanoidMechanitor
             Dictionary<SkillDef, int> targetSkillSnapshot,
             int sourceChipBandwidthBonus,
             int targetChipBandwidthBonus,
-            List<OverseerRelationSnapshot> overseerSnapshots)
+            List<OverseerRelationSnapshot> overseerSnapshots,
+            List<string> rollbackFailures)
         {
-            RestoreSkillLevels(target, targetSkillSnapshot);
-            sourceRecord.ChipBandwidthBonus = sourceChipBandwidthBonus;
-            targetRecord.ChipBandwidthBonus = targetChipBandwidthBonus;
-            RollbackOverseerRelations(source, target, overseerSnapshots);
-            source.mechanitor?.Notify_BandwidthChanged();
-            target.mechanitor?.Notify_BandwidthChanged();
+            RunRollbackStep(
+                "恢复目标技能快照",
+                () => RestoreSkillLevels(target, targetSkillSnapshot),
+                rollbackFailures);
+
+            RunRollbackStep(
+                "恢复 sourceRecord.ChipBandwidthBonus",
+                () => sourceRecord.ChipBandwidthBonus = sourceChipBandwidthBonus,
+                rollbackFailures);
+
+            RunRollbackStep(
+                "恢复 targetRecord.ChipBandwidthBonus",
+                () => targetRecord.ChipBandwidthBonus = targetChipBandwidthBonus,
+                rollbackFailures);
+
+            RunRollbackStep(
+                "恢复监管关系",
+                () => RollbackOverseerRelations(source, target, overseerSnapshots, rollbackFailures),
+                rollbackFailures);
+
+            RunRollbackStep(
+                "通知 source.mechanitor 带宽变化",
+                () => source.mechanitor?.Notify_BandwidthChanged(),
+                rollbackFailures);
+
+            RunRollbackStep(
+                "通知 target.mechanitor 带宽变化",
+                () => target.mechanitor?.Notify_BandwidthChanged(),
+                rollbackFailures);
+        }
+
+        private static void RunRollbackStep(
+            string stepName,
+            Action action,
+            List<string> rollbackFailures)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                rollbackFailures.Add($"{stepName}：{ex}");
+            }
         }
 
         private static void RestoreSkillLevels(
@@ -476,39 +548,50 @@ namespace MAP_MechanoidMechanitor
         private static void RollbackOverseerRelations(
             Pawn source,
             Pawn target,
-            List<OverseerRelationSnapshot> overseerSnapshots)
+            List<OverseerRelationSnapshot> overseerSnapshots,
+            List<string> rollbackFailures)
         {
             Pawn_RelationsTracker? sourceRelations = source.relations;
             Pawn_RelationsTracker? targetRelations = target.relations;
             if (sourceRelations == null || targetRelations == null)
             {
+                rollbackFailures.Add(
+                    "恢复监管关系：source 或 target 缺少 relations " +
+                    $"(source={source.LabelShort}（{source.ThingID}），" +
+                    $"target={target.LabelShort}（{target.ThingID}））。");
                 return;
             }
 
             for (int i = overseerSnapshots.Count - 1; i >= 0; i--)
             {
                 OverseerRelationSnapshot snapshot = overseerSnapshots[i];
-                Pawn mech = snapshot.Mech;
+                Pawn? mech = snapshot.Mech;
                 if (mech == null || mech.Destroyed)
                 {
                     continue;
                 }
 
-                RestoreOverseerRelation(
-                    source,
-                    sourceRelations,
-                    mech,
-                    snapshot.HadSourceRelation,
-                    allowSelfRelation: ReferenceEquals(mech, source));
+                RunRollbackStep(
+                    $"恢复源监管关系：mech={mech.LabelShort}（{mech.ThingID}）",
+                    () => RestoreOverseerRelation(
+                        source,
+                        sourceRelations,
+                        mech,
+                        snapshot.HadSourceRelation,
+                        allowSelfRelation: ReferenceEquals(mech, source)),
+                    rollbackFailures);
 
                 bool allowTargetRelation = !ReferenceEquals(mech, target)
                     && !ReferenceEquals(mech, source);
-                RestoreOverseerRelation(
-                    target,
-                    targetRelations,
-                    mech,
-                    allowTargetRelation && snapshot.HadTargetRelation,
-                    allowSelfRelation: false);
+                RunRollbackStep(
+                    $"恢复目标监管关系：mech={mech.LabelShort}（{mech.ThingID}）",
+                    () => RestoreOverseerRelation(
+                        target,
+                        targetRelations,
+                        mech,
+                        allowTargetRelation && snapshot.HadTargetRelation,
+                        allowSelfRelation: false),
+                    rollbackFailures);
             }
         }
 
@@ -585,6 +668,44 @@ namespace MAP_MechanoidMechanitor
             {
                 LogTransferException(source, target, hostBeforeTransfer, ex, committed: true);
             }
+        }
+
+        private static void LogTransferFailureWithRollback(
+            Pawn source,
+            Pawn target,
+            Pawn? hostBeforeTransfer,
+            Exception? originalException,
+            bool hostReplaceRejected,
+            bool rollbackAttempted,
+            List<string> rollbackFailures)
+        {
+            Pawn? currentHost =
+                GameComponent_MechanoidMechanitorRegistry.CurrentMechanicalConsciousnessHost;
+            bool rollbackComplete = rollbackFailures.Count == 0;
+            string cause = hostReplaceRejected
+                ? "宿主替换未提交（TryReplaceMechanicalConsciousnessHost 返回 false）"
+                : "pre-commit 阶段异常";
+
+            string message =
+                "[MAP-机械族机械师] 机械意识转移失败（" + cause + "）：" +
+                $"source={source.LabelShort}（{source.ThingID}），" +
+                $"target={target.LabelShort}（{target.ThingID}），" +
+                $"hostBefore={hostBeforeTransfer?.LabelShort ?? "null"}，" +
+                $"currentHost={currentHost?.LabelShort ?? "null"}，" +
+                $"rollbackAttempted={rollbackAttempted}，" +
+                $"rollbackComplete={rollbackComplete}";
+
+            if (originalException != null)
+            {
+                message += "：" + originalException;
+            }
+
+            if (!rollbackComplete)
+            {
+                message += "；回滚失败步骤：[" + string.Join(" | ", rollbackFailures) + "]";
+            }
+
+            Log.Error(message);
         }
 
         private static void LogTransferException(
