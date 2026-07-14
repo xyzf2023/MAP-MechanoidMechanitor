@@ -8,6 +8,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public MechanoidMechanitorStoryStyleDef? SelectedStoryStyle => selectedStoryStyle;
 
+        public static MechanoidMechanitorStoryStyleDef? CurrentStoryStyle
+        {
+            get
+            {
+                if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+                {
+                    return null;
+                }
+
+                return CurrentComponent?.selectedStoryStyle;
+            }
+        }
+
+        public static bool HasSelectedStoryStyle => CurrentStoryStyle != null;
+
         private static GameComponent_MechanoidMechanitorStoryState? CurrentComponent
         {
             get
@@ -32,14 +47,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool IsStoryStyleActive(MechanoidMechanitorStoryStyleDef? storyStyle)
         {
-            if (storyStyle == null
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (storyStyle == null)
             {
                 return false;
             }
 
-            GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
-            return component != null && component.selectedStoryStyle == storyStyle;
+            return CurrentStoryStyle == storyStyle;
         }
 
         public override void ExposeData()
