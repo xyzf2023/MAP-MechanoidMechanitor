@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
@@ -15,11 +16,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const float StoryStyleCardGap = 20f;
         private const float DescriptionGap = 10f;
 
-        private MechanoidMechanitorStoryStyleDef selectedStoryStyle;
+        private MechanoidMechanitorStoryStyleDef? selectedStoryStyle;
+        private bool loggedNoStylesAvailable;
 
         public Page_MechanoidMechanitorScenarioReady()
         {
-            selectedStoryStyle = MechanoidMechanitorStoryStyleDefOf.MAP_StoryStyle_Classic;
+            EnsureValidSelectedStoryStyle(GetAvailableStoryStylesSorted());
         }
 
         public override string PageTitle =>
@@ -47,12 +49,38 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 nextLabel: "Play".Translate());
         }
 
+        protected override bool CanDoNext()
+        {
+            if (!base.CanDoNext())
+            {
+                return false;
+            }
+
+            return selectedStoryStyle != null;
+        }
+
         protected override void DoNext()
         {
-            if (selectedStoryStyle == null)
+            List<MechanoidMechanitorStoryStyleDef> availableStyles =
+                GetAvailableStoryStylesSorted();
+            EnsureValidSelectedStoryStyle(availableStyles);
+
+            if (availableStyles.Count == 0)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 无法保存剧情风格：当前页面未选择任何剧情风格。");
+                    "[MAP-机械族机械师] 无法保存剧情风格：未找到可用的剧情风格 Def。");
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.Scenario.ReadyPage.NoStylesAvailable".Translate(),
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                return;
+            }
+
+            if (selectedStoryStyle == null
+                || !availableStyles.Contains(selectedStoryStyle))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 无法保存剧情风格：当前页面未选择有效的剧情风格。");
                 Messages.Message(
                     "MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed".Translate(),
                     MessageTypeDefOf.RejectInput,
@@ -90,12 +118,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void DrawStoryStyleCards(Rect area)
         {
-            List<MechanoidMechanitorStoryStyleDef> styles = DefDatabase<MechanoidMechanitorStoryStyleDef>
-                .AllDefsListForReading
-                .OrderBy(def => def.displayOrder)
-                .ToList();
+            List<MechanoidMechanitorStoryStyleDef> styles = GetAvailableStoryStylesSorted();
+            EnsureValidSelectedStoryStyle(styles);
+
             if (styles.Count == 0)
             {
+                TextAnchor previousAnchor = Text.Anchor;
+                Text.Anchor = TextAnchor.MiddleCenter;
+                Widgets.Label(
+                    area,
+                    "MAP_MechanoidMechanitor.Scenario.ReadyPage.NoStylesAvailable".Translate());
+                Text.Anchor = previousAnchor;
                 return;
             }
 
@@ -166,6 +199,48 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 selectedStoryStyle = style;
                 SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
             }
+        }
+
+        private static List<MechanoidMechanitorStoryStyleDef> GetAvailableStoryStylesSorted()
+        {
+            return DefDatabase<MechanoidMechanitorStoryStyleDef>
+                .AllDefsListForReading
+                .OrderBy(def => def.displayOrder)
+                .ThenBy(def => def.defName, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        private void EnsureValidSelectedStoryStyle(
+            List<MechanoidMechanitorStoryStyleDef> availableStyles)
+        {
+            if (availableStyles.Count == 0)
+            {
+                selectedStoryStyle = null;
+                if (!loggedNoStylesAvailable)
+                {
+                    loggedNoStylesAvailable = true;
+                    Log.Error(
+                        "[MAP-机械族机械师] 未找到可用的剧情风格 Def。请检查 MOD 配置。");
+                }
+
+                return;
+            }
+
+            if (selectedStoryStyle != null
+                && availableStyles.Contains(selectedStoryStyle))
+            {
+                return;
+            }
+
+            MechanoidMechanitorStoryStyleDef classic =
+                MechanoidMechanitorStoryStyleDefOf.MAP_StoryStyle_Classic;
+            if (classic != null && availableStyles.Contains(classic))
+            {
+                selectedStoryStyle = classic;
+                return;
+            }
+
+            selectedStoryStyle = availableStyles[0];
         }
 
         private static Rect RectForStoryStyle(MechanoidMechanitorStoryStyleDef style)
