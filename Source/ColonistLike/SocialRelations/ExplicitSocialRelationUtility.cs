@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -9,7 +10,21 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class ExplicitSocialRelationUtility
     {
+        private const string AssignSpouseButtonKey =
+            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButton";
+        private const string AssignSpouseButtonDescKey =
+            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButtonDesc";
+        private const string NoCandidateKey =
+            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseNoCandidate";
+        private const string SuccessKey =
+            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseSuccess";
+        private const string FailedKey =
+            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseFailed";
+
+        private const float MinSpouseCandidateAgeYears = 16f;
+
         private static readonly List<Pawn> EmptySocialInfoPawns = new List<Pawn>();
+        private static readonly List<Pawn> SpouseCandidateTmp = new List<Pawn>();
 
         /// <summary>
         /// 社交面板「见过的人」列表的空结果；调用方只遍历、不修改。
@@ -18,6 +33,29 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsOptedIn(Pawn? pawn) =>
             pawn?.GetComp<CompExplicitSocialRelationUser>() != null;
+
+        /// <summary>
+        /// 是否应在社交面板底部为授权 Pawn 预留「指定配偶……」按钮区域。
+        /// </summary>
+        public static bool CanShowAssignSpouseButton(Pawn? pawn)
+        {
+            if (!IsOptedIn(pawn) || pawn == null)
+            {
+                return false;
+            }
+
+            if (pawn.Dead || !pawn.Spawned)
+            {
+                return false;
+            }
+
+            if (pawn.Faction != Faction.OfPlayer)
+            {
+                return false;
+            }
+
+            return pawn.relations != null;
+        }
 
         /// <summary>
         /// 双方 DirectRelations 中是否存在对方（任一方向均可；不依赖 everSeenByPlayer / 好感度）。
@@ -124,6 +162,131 @@ namespace MAP_MechanoidMechanitor
             {
                 yield return PawnRelationDefOf.Kin;
             }
+        }
+
+        /// <summary>
+        /// 在原版「恋爱……」按钮区域内绘制「指定配偶……」。
+        /// </summary>
+        public static void DrawAssignSpouseButton(Rect buttonRect, Pawn pawn)
+        {
+            if (Widgets.ButtonText(buttonRect, AssignSpouseButtonKey.Translate()))
+            {
+                TryOpenAssignSpouseMenu(pawn);
+            }
+
+            TooltipHandler.TipRegion(buttonRect, AssignSpouseButtonDescKey.Translate());
+        }
+
+        private static void TryOpenAssignSpouseMenu(Pawn lover)
+        {
+            List<Pawn> candidates = CollectSpouseCandidates(lover);
+            if (candidates.Count == 0)
+            {
+                Messages.Message(
+                    NoCandidateKey.Translate(),
+                    lover,
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                return;
+            }
+
+            List<FloatMenuOption> options = new List<FloatMenuOption>(candidates.Count);
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                Pawn candidate = candidates[i];
+                Pawn localCandidate = candidate;
+                options.Add(new FloatMenuOption(
+                    localCandidate.LabelCap,
+                    delegate
+                    {
+                        TryAssignSpouseFromMenu(lover, localCandidate);
+                    }));
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        private static void TryAssignSpouseFromMenu(Pawn lover, Pawn target)
+        {
+            if (AssignSpouseUnchecked(lover, target))
+            {
+                Messages.Message(
+                    SuccessKey.Translate(lover.Named("LOVER"), target.Named("TARGET")),
+                    new LookTargets(lover, target),
+                    MessageTypeDefOf.TaskCompletion,
+                    historical: false);
+                return;
+            }
+
+            Messages.Message(
+                FailedKey.Translate(),
+                lover,
+                MessageTypeDefOf.RejectInput,
+                historical: false);
+        }
+
+        /// <summary>
+        /// 点击时收集当前地图上的成年自由殖民者；不按性别/取向/意识形态过滤。
+        /// </summary>
+        private static List<Pawn> CollectSpouseCandidates(Pawn lover)
+        {
+            SpouseCandidateTmp.Clear();
+
+            if (lover?.Map == null || lover.relations == null)
+            {
+                return SpouseCandidateTmp;
+            }
+
+            List<Pawn> freeColonists = lover.Map.mapPawns.FreeColonistsSpawned;
+            for (int i = 0; i < freeColonists.Count; i++)
+            {
+                Pawn candidate = freeColonists[i];
+                if (!IsValidSpouseCandidate(lover, candidate))
+                {
+                    continue;
+                }
+
+                SpouseCandidateTmp.Add(candidate);
+            }
+
+            SpouseCandidateTmp.Sort((a, b) => string.CompareOrdinal(a.LabelShort, b.LabelShort));
+            return SpouseCandidateTmp;
+        }
+
+        private static bool IsValidSpouseCandidate(Pawn lover, Pawn candidate)
+        {
+            if (candidate == null || candidate == lover)
+            {
+                return false;
+            }
+
+            if (!candidate.Spawned || candidate.Dead)
+            {
+                return false;
+            }
+
+            if (candidate.Faction != Faction.OfPlayer)
+            {
+                return false;
+            }
+
+            if (candidate.relations == null)
+            {
+                return false;
+            }
+
+            if (candidate.ageTracker == null
+                || candidate.ageTracker.AgeBiologicalYearsFloat < MinSpouseCandidateAgeYears)
+            {
+                return false;
+            }
+
+            if (lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, candidate))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private static bool HasOtherPawnInDirectRelations(Pawn owner, Pawn other)

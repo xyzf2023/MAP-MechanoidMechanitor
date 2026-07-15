@@ -32,4 +32,9 @@
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>Choose this colony's mechanoid mechanitor story style</MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>What kind of mechanoid colony story do you want to experience? These story styles will affect this playthrough.</MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>Could not save the story style selection. Please try again or restart the new game setup.</MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>
+  <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButton>Assign spouse...</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButton>
+  <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButtonDesc>Assign a spouse from adult free colonists on the current map. Does not check ideology, orientation, or existing marriages.</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButtonDesc>
+  <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseNoCandidate>There are no colonists available to assign as a spouse.</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseNoCandidate>
+  <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseSuccess>{LOVER_labelShort} has become {TARGET_labelShort}'s wife.</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseSuccess>
+  <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseFailed>Could not assign that colonist as spouse.</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseFailed>
 </LanguageData>
