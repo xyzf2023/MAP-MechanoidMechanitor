@@ -159,6 +159,7 @@ namespace MAP_MechanoidMechanitor
             ApplyNewlyMarriedFeedback(lover, target);
             TaleRecorder.RecordTale(TaleDefOf.Marriage, lover, target);
             SendMarriageLetter(lover, target);
+            DisableLovinWithSpouseAfterSuccessfulAssignment(lover);
             SocialCardUtility.ClearCaches();
             return true;
         }
@@ -368,7 +369,8 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 恋人与单个旧配偶的受控离婚：仅关系、定向记忆、信封与故事，不含改姓/婚床/意识形态。
+        /// 恋人与单个旧配偶的受控离婚：仅关系、定向新婚记忆清理、离婚心情、信封与故事。
+        /// 不添加 DivorcedMe 社交评价减益；不改姓、不处理婚床、不记录意识形态事件。
         /// </summary>
         private static void DivorceLoverFromOldSpouse(Pawn lover, Pawn oldSpouse)
         {
@@ -391,13 +393,31 @@ namespace MAP_MechanoidMechanitor
 
             RemovePairMarriageMemories(lover, oldSpouse);
 
-            if (oldSpouse.needs?.mood != null)
-            {
-                oldSpouse.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.DivorcedMe, lover);
-            }
+            // 只添加原版 DivorcedMeMood（心情 −20），不添加 DivorcedMe 社交记忆（好感 −70）。
+            TryGainDivorcedMoodOnly(oldSpouse, lover);
 
             TaleRecorder.RecordTale(TaleDefOf.Breakup, lover, oldSpouse);
             SendBreakupLetter(lover, oldSpouse);
+        }
+
+        /// <summary>
+        /// 通过 DivorcedMe.thoughtToMake 取得原版 DivorcedMeMood 并单独写入。
+        /// </summary>
+        private static void TryGainDivorcedMoodOnly(Pawn oldSpouse, Pawn lover)
+        {
+            MemoryThoughtHandler? memories = oldSpouse.needs?.mood?.thoughts?.memories;
+            if (memories == null)
+            {
+                return;
+            }
+
+            ThoughtDef? divorcedMood = ThoughtDefOf.DivorcedMe?.thoughtToMake;
+            if (divorcedMood == null)
+            {
+                return;
+            }
+
+            memories.TryGainMemory(divorcedMood, lover);
         }
 
         private static void RemovePairMarriageMemories(Pawn lover, Pawn oldSpouse)
@@ -432,9 +452,18 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 清理此前测试存档可能残留的 DivorcedMe 社交记忆；不负责全面迁移。
             memories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.DivorcedMe, otherPawn);
             memories.TryGainMemory(ThoughtDefOf.GotMarried, otherPawn);
             memories.TryGainMemory(ThoughtDefOf.HoneymoonPhase, otherPawn);
+        }
+
+        /// <summary>
+        /// 新婚成功后关闭「与配偶爱爱」；每名新配偶需玩家重新授权。
+        /// </summary>
+        private static void DisableLovinWithSpouseAfterSuccessfulAssignment(Pawn lover)
+        {
+            lover.GetComp<CompExplicitSocialRelationUser>()?.DisableLovinWithSpouse();
         }
 
         private static void SendBreakupLetter(Pawn lover, Pawn oldSpouse)
