@@ -11,23 +11,68 @@ namespace MAP_MechanoidMechanitor
     public static class ExplicitSocialLovinUtility
     {
         /// <summary>
+        /// 授权恋人正在床上执行 JobDefOf.Lovin 时，使用与 Humanlike 相同的床上绘制分支。
+        /// </summary>
+        public static bool ShouldUseHumanlikeBedLovinRender(Pawn? pawn, bool isPortrait = false)
+        {
+            if (isPortrait || pawn == null)
+            {
+                return false;
+            }
+
+            if (!ExplicitSocialRelationUtility.IsOptedIn(pawn))
+            {
+                return false;
+            }
+
+            if (pawn.CurJobDef != JobDefOf.Lovin)
+            {
+                return false;
+            }
+
+            if (!pawn.GetPosture().InBed())
+            {
+                return false;
+            }
+
+            return pawn.CurrentBed() != null;
+        }
+
+        public static bool ShouldUseHumanlikeBedLovinRender(Pawn? pawn, PawnRenderFlags flags)
+        {
+            if (flags.FlagSet(PawnRenderFlags.Portrait))
+            {
+                return false;
+            }
+
+            return ShouldUseHumanlikeBedLovinRender(pawn, isPortrait: false);
+        }
+
+        /// <summary>
         /// 在人类配偶已躺在可用双人床、且床上尚无原版伴侣时，查找可响应 Lovin 的授权恋人。
         /// </summary>
         public static Pawn? TryFindEnabledLoverPartnerForRemoteLovin(Pawn? humanSpouse)
         {
-            if (!IsValidHumanSpouseInitiator(humanSpouse))
+            if (humanSpouse == null || !IsValidHumanSpouseInitiator(humanSpouse))
             {
                 return null;
             }
 
-            Building_Bed? bed = humanSpouse!.CurrentBed();
-            if (!IsBedStructurallyEligibleForRemoteLovin(bed))
+            Building_Bed? bed = humanSpouse.CurrentBed();
+            if (bed == null || !IsBedStructurallyEligibleForRemoteLovin(bed))
+            {
+                return null;
+            }
+
+            // IsValidHumanSpouseInitiator 已确认 relations 非空；此处再判一次供可空流分析。
+            Pawn_RelationsTracker? relationsTracker = humanSpouse.relations;
+            if (relationsTracker == null)
             {
                 return null;
             }
 
             Pawn? best = null;
-            List<DirectPawnRelation> relations = humanSpouse.relations!.DirectRelations;
+            List<DirectPawnRelation> relations = relationsTracker.DirectRelations;
             for (int i = 0; i < relations.Count; i++)
             {
                 DirectPawnRelation relation = relations[i];
@@ -37,7 +82,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Pawn? lover = relation.otherPawn;
-                if (!IsValidEnabledLoverForRemoteLovin(humanSpouse, lover, bed!))
+                if (!IsValidEnabledLoverForRemoteLovin(humanSpouse, lover, bed))
                 {
                     continue;
                 }
