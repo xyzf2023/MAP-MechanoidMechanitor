@@ -30,12 +30,7 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                // 发起者必须是人类配偶一侧，不能是挂载授权组件的恋人本人。
-                if (pawn == null || ExplicitSocialRelationUtility.IsOptedIn(pawn))
-                {
-                    return;
-                }
-
+                // 发起者资格（Humanlike、存活、非授权恋人等）在 TryFind 入口统一校验。
                 Pawn? partner =
                     ExplicitSocialLovinUtility.TryFindEnabledLoverPartnerForRemoteLovin(pawn);
                 if (partner != null)
