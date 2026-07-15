@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -97,203 +98,683 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 发起者必须是存活、已生成、具备必要 Tracker 的 Humanlike，且不能是授权恋人本人。
+        /// 只读复刻原版 GetPartnerInMyBed 床上占用者查找，不经过模组 Postfix。
         /// </summary>
-        private static bool IsValidHumanSpouseInitiator(Pawn? pawn)
+        internal static Pawn? TryFindVanillaLovePartnerOccupyingBed(Pawn pawn)
         {
-            if (pawn == null || ExplicitSocialRelationUtility.IsOptedIn(pawn))
+            Building_Bed? bed = pawn.CurrentBed();
+            if (bed == null || bed.SleepingSlotsCount <= 1)
             {
-                return false;
+                return null;
             }
 
-            if (pawn.Destroyed || pawn.Dead || !pawn.Spawned)
+            if (!LovePartnerRelationUtility.HasAnyLovePartner(pawn))
             {
-                return false;
+                return null;
+            }
+
+            foreach (Pawn curOccupant in bed.CurOccupants)
+            {
+                if (curOccupant != pawn
+                    && LovePartnerRelationUtility.LovePartnerRelationExists(pawn, curOccupant))
+                {
+                    return curOccupant;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 直接遍历 DirectRelations 收集 Spouse（不受 IsFlesh 限制）。
+        /// </summary>
+        internal static void CollectDirectSpousePawns(Pawn pawn, List<Pawn> into)
+        {
+            into.Clear();
+            if (pawn.relations == null)
+            {
+                return;
+            }
+
+            List<DirectPawnRelation> relations = pawn.relations.DirectRelations;
+            for (int i = 0; i < relations.Count; i++)
+            {
+                DirectPawnRelation relation = relations[i];
+                if (relation.def != PawnRelationDefOf.Spouse || relation.otherPawn == null)
+                {
+                    continue;
+                }
+
+                if (!into.Contains(relation.otherPawn))
+                {
+                    into.Add(relation.otherPawn);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 与 TryFindEnabledLoverPartnerForRemoteLovin 相同的选型键：thingIDNumber 升序。
+        /// </summary>
+        internal static Pawn? SelectPreferredLoverByThingId(List<Pawn> lovers)
+        {
+            Pawn? best = null;
+            for (int i = 0; i < lovers.Count; i++)
+            {
+                Pawn lover = lovers[i];
+                if (best == null || lover.thingIDNumber < best.thingIDNumber)
+                {
+                    best = lover;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>
+        /// 发起者必须是存活、已生成、具备必要 Tracker 的 Humanlike，且不能是授权恋人本人。
+        /// </summary>
+        internal static bool IsValidHumanSpouseInitiator(Pawn? pawn)
+        {
+            return EvaluateHumanSpouseInitiator(pawn, null) == null;
+        }
+
+        /// <summary>
+        /// 返回首个发起者阻断原因；通过时返回 null。failures 非空时收集全部失败项（不改变正式结果语义）。
+        /// </summary>
+        internal static string? EvaluateHumanSpouseInitiator(Pawn? pawn, List<string>? failures)
+        {
+            bool collecting = failures != null;
+            string? first = null;
+
+            void Fail(string reason)
+            {
+                first ??= reason;
+                failures?.Add(reason);
+            }
+
+            if (pawn == null)
+            {
+                Fail("发起者不存在。");
+                return first;
+            }
+
+            if (ExplicitSocialRelationUtility.IsOptedIn(pawn))
+            {
+                Fail("发起者错误地是授权恋人本人（必须由人类配偶发起）。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (pawn.Destroyed)
+            {
+                Fail("发起者已销毁。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (pawn.Dead)
+            {
+                Fail("发起者已死亡。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (!pawn.Spawned)
+            {
+                Fail("发起者未在地图上生成。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             if (pawn.RaceProps == null || !pawn.RaceProps.Humanlike)
             {
-                return false;
+                Fail("发起者不是 Humanlike。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            if (pawn.Map == null
-                || pawn.relations == null
-                || pawn.health == null
-                || pawn.jobs == null
-                || pawn.mindState == null)
+            if (pawn.Map == null)
             {
-                return false;
+                Fail("发起者不在有效地图上。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            return true;
+            if (pawn.relations == null)
+            {
+                Fail("发起者缺少 relations Tracker。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (pawn.health == null)
+            {
+                Fail("发起者缺少 health Tracker。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (pawn.jobs == null)
+            {
+                Fail("发起者缺少 jobs Tracker。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (pawn.mindState == null)
+            {
+                Fail("发起者缺少 mindState Tracker。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            return collecting ? (failures!.Count > 0 ? first : null) : first;
         }
 
-        private static bool IsBedStructurallyEligibleForRemoteLovin(Building_Bed? bed)
+        internal static bool IsBedStructurallyEligibleForRemoteLovin(Building_Bed? bed)
         {
-            if (bed == null || !bed.Spawned || bed.Destroyed)
-            {
-                return false;
-            }
-
-            if (bed.Medical || bed.SleepingSlotsCount <= 1)
-            {
-                return false;
-            }
-
-            // 人类已占一格，必须还有空闲睡眠位供恋人使用。
-            return bed.AnyUnoccupiedSleepingSlot;
+            return EvaluateBedStructurallyEligible(bed, null) == null;
         }
 
-        private static bool IsValidEnabledLoverForRemoteLovin(
+        internal static string? EvaluateBedStructurallyEligible(Building_Bed? bed, List<string>? failures)
+        {
+            bool collecting = failures != null;
+            string? first = null;
+
+            void Fail(string reason)
+            {
+                first ??= reason;
+                failures?.Add(reason);
+            }
+
+            if (bed == null)
+            {
+                Fail("无法取得发起者当前床铺（CurrentBed 为空）。");
+                return first;
+            }
+
+            if (!bed.Spawned)
+            {
+                Fail("床铺未生成。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (bed.Destroyed)
+            {
+                Fail("床铺已销毁。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (bed.Medical)
+            {
+                Fail("床铺是医疗床。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (bed.SleepingSlotsCount <= 1)
+            {
+                Fail("床铺睡眠位数不足（需要双人及以上床）。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (!bed.AnyUnoccupiedSleepingSlot)
+            {
+                Fail("床铺没有空闲睡眠位。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            return collecting ? (failures!.Count > 0 ? first : null) : first;
+        }
+
+        internal static bool IsValidEnabledLoverForRemoteLovin(
             Pawn humanSpouse,
             Pawn? lover,
             Building_Bed bed)
         {
-            if (lover == null || lover == humanSpouse)
+            return EvaluateEnabledLoverForRemoteLovin(humanSpouse, lover, bed, null) == null;
+        }
+
+        /// <summary>
+        /// 正式候选恋人条件；failures 非空时收集全部阻断原因。
+        /// </summary>
+        internal static string? EvaluateEnabledLoverForRemoteLovin(
+            Pawn humanSpouse,
+            Pawn? lover,
+            Building_Bed? bed,
+            List<string>? failures)
+        {
+            bool collecting = failures != null;
+            string? first = null;
+
+            void Fail(string reason)
             {
-                return false;
+                first ??= reason;
+                failures?.Add(reason);
+            }
+
+            if (lover == null)
+            {
+                Fail("恋人引用为空。");
+                return first;
+            }
+
+            if (lover == humanSpouse)
+            {
+                Fail("恋人与发起者是同一 Pawn。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             CompExplicitSocialRelationUser? comp =
                 lover.GetComp<CompExplicitSocialRelationUser>();
-            if (comp == null || !comp.LovinWithSpouseEnabled)
+            if (comp == null)
             {
-                return false;
+                Fail("恋人不具备 CompExplicitSocialRelationUser。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+            else if (!comp.LovinWithSpouseEnabled)
+            {
+                Fail("「与配偶爱爱」开关未开启。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            if (lover.Destroyed || lover.Dead || !lover.Spawned)
+            if (lover.Destroyed)
             {
-                return false;
+                Fail("恋人已销毁。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (lover.Dead)
+            {
+                Fail("恋人已死亡。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (!lover.Spawned)
+            {
+                Fail("恋人未在地图上生成。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             if (lover.Map != humanSpouse.Map)
             {
-                return false;
+                Fail("恋人与发起者不在同一地图。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             if (lover.Faction != Faction.OfPlayer)
             {
-                return false;
+                Fail("恋人不属于玩家阵营。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
+            if (lover.relations == null)
+            {
+                Fail("恋人缺少 relations Tracker。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (lover.health == null)
+            {
+                Fail("恋人缺少 health Tracker。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (lover.jobs == null)
+            {
+                Fail("恋人缺少 jobs Tracker。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (lover.mindState == null)
+            {
+                Fail("恋人缺少 mindState Tracker。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            // 正式路径只要求恋人对发起者存在 Spouse（与变更前一致）。
             if (lover.relations == null
-                || lover.health == null
-                || lover.jobs == null
-                || lover.mindState == null)
+                || !lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, humanSpouse))
             {
-                return false;
+                Fail("恋人对发起者不存在直接 Spouse 关系。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+            else if (collecting
+                && (humanSpouse.relations == null
+                    || !humanSpouse.relations.DirectRelationExists(
+                        PawnRelationDefOf.Spouse,
+                        lover)))
+            {
+                Fail("发起者对恋人不存在直接 Spouse 关系（双方关系不一致）。");
             }
 
-            if (!lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, humanSpouse))
+            if (lover.health != null && !lover.health.capacities.CanBeAwake)
             {
-                return false;
+                Fail("恋人不具备 CanBeAwake。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            if (!lover.health.capacities.CanBeAwake
-                || lover.Downed
-                || lover.Drafted
-                || lover.InMentalState
-                || lover.IsBurning())
+            if (lover.Downed)
             {
-                return false;
+                Fail("恋人处于倒地状态。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            if (!CanSafelyInterruptCurrentJobForForcedLovin(lover))
+            if (lover.Drafted)
             {
-                return false;
+                Fail("恋人已被征召。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            if (!lover.CanReach(bed, PathEndMode.OnCell, Danger.Some))
+            if (lover.InMentalState)
             {
-                return false;
+                Fail("恋人处于精神状态。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            if (!CanLoverUseBedForRemoteLovin(humanSpouse, lover, bed))
+            if (lover.IsBurning())
             {
-                return false;
+                Fail("恋人正在着火。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            // 提前排除必然导致原版预约失败的情况；双方互约仍由 JobGiver_DoLovin 再验一次。
-            if (!lover.CanReserve(bed, bed.SleepingSlotsCount, 0))
+            string? interruptFail = EvaluateCurrentJobInterruptible(lover, failures);
+            if (interruptFail != null && !collecting)
             {
-                return false;
+                return first ?? interruptFail;
+            }
+
+            if (first != null && !collecting)
+            {
+                return first;
+            }
+
+            if (bed == null)
+            {
+                Fail("缺少可用于预检的床铺。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+            else
+            {
+                if (!lover.CanReach(bed, PathEndMode.OnCell, Danger.Some))
+                {
+                    Fail("恋人以 Danger.Some 无法到达床铺。");
+                    if (!collecting)
+                    {
+                        return first;
+                    }
+                }
+
+                string? bedFail = EvaluateCanLoverUseBedForRemoteLovin(
+                    humanSpouse,
+                    lover,
+                    bed,
+                    failures);
+                if (bedFail != null && !collecting)
+                {
+                    return first ?? bedFail;
+                }
+
+                if (!lover.CanReserve(bed, bed.SleepingSlotsCount, 0))
+                {
+                    Fail("恋人无法预约该床铺。");
+                    if (!collecting)
+                    {
+                        return first;
+                    }
+                }
             }
 
             if (!humanSpouse.CanReserve(lover) || !lover.CanReserve(humanSpouse))
             {
-                return false;
+                Fail("双方无法互相预约。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            return true;
+            return collecting ? (failures!.Count > 0 ? (first ?? failures[0]) : null) : first;
+        }
+
+        internal static bool CanLoverUseBedForRemoteLovin(
+            Pawn humanSpouse,
+            Pawn lover,
+            Building_Bed bed)
+        {
+            return EvaluateCanLoverUseBedForRemoteLovin(humanSpouse, lover, bed, null) == null;
         }
 
         /// <summary>
         /// 受控镜像原版 RestUtility.CanUseBedNow / CanUseBedEver 中与本场景相关的硬门槛。
         /// 不调用 CanUseBedNow：恋人此时尚未持有 JobDefOf.Lovin，现有 CanUseBedEver 补丁不会放行机械体。
-        /// 不临时修改 CurJob，也不使用全局预检标记。目的是避免原版配套 Lovin Job 开始后立刻因床铺条件失败。
         /// </summary>
-        private static bool CanLoverUseBedForRemoteLovin(
+        internal static string? EvaluateCanLoverUseBedForRemoteLovin(
             Pawn humanSpouse,
             Pawn lover,
-            Building_Bed bed)
+            Building_Bed bed,
+            List<string>? failures)
         {
-            if (bed.Destroyed || !bed.Spawned)
+            bool collecting = failures != null;
+            string? first = null;
+
+            void Fail(string reason)
             {
-                return false;
+                first ??= reason;
+                failures?.Add(reason);
+            }
+
+            if (bed.Destroyed)
+            {
+                Fail("床铺已销毁。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (!bed.Spawned)
+            {
+                Fail("床铺未生成。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             Map? map = humanSpouse.Map;
             if (map == null || bed.Map != map || lover.Map != map)
             {
-                return false;
+                Fail("床铺与双方不在同一地图。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             if (bed.IsBurning())
             {
-                return false;
+                Fail("床铺正在燃烧。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            if (bed.Medical || bed.SleepingSlotsCount <= 1)
+            if (bed.Medical)
             {
-                return false;
+                Fail("床铺是医疗床。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (bed.SleepingSlotsCount <= 1)
+            {
+                Fail("床铺不是双人及以上床。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             if (!bed.AnyUnoccupiedSleepingSlot)
             {
-                return false;
+                Fail("床铺没有空闲睡眠位。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             ThingDef? bedDef = bed.def;
             if (bedDef == null || !bedDef.IsBed || bedDef.building == null)
             {
-                return false;
+                Fail("床铺 def / building 数据无效。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+            else
+            {
+                if (!bedDef.building.bed_humanlike)
+                {
+                    Fail("床铺不是 humanlike bed。");
+                    if (!collecting)
+                    {
+                        return first;
+                    }
+                }
+
+                if (lover.BodySize > bedDef.building.bed_maxBodySize)
+                {
+                    Fail(
+                        $"恋人体型 {lover.BodySize} 超过床铺 bed_maxBodySize {bedDef.building.bed_maxBodySize}。");
+                    if (!collecting)
+                    {
+                        return first;
+                    }
+                }
             }
 
-            // 镜像 CanUseBedEver 中与「人类床 + 体型」相关的部分；故意跳过 IsMechanoid / Humanlike 门槛。
-            if (!bedDef.building.bed_humanlike)
+            if (map != null && lover.HarmedByVacuum && bed.Position.GetVacuum(map) >= 0.5f)
             {
-                return false;
-            }
-
-            if (lover.BodySize > bedDef.building.bed_maxBodySize)
-            {
-                return false;
-            }
-
-            if (lover.HarmedByVacuum && bed.Position.GetVacuum(map) >= 0.5f)
-            {
-                return false;
+                Fail("真空环境会伤害恋人。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             CompAssignableToPawn? assignable = bed.CompAssignableToPawn;
             if (assignable == null)
             {
-                return false;
+                Fail("床铺缺少 CompAssignableToPawn。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
-
-            if (assignable.IdeoligionForbids(lover))
+            else if (assignable.IdeoligionForbids(lover))
             {
-                return false;
+                Fail("IdeoligionForbids 阻止恋人使用该床。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             GuestStatus? guestStatus = lover.GuestStatus;
@@ -301,62 +782,215 @@ namespace MAP_MechanoidMechanitor
             bool forSlave = guestStatus == GuestStatus.Slave;
             if (bed.ForPrisoners != forPrisoner)
             {
-                return false;
+                Fail(
+                    $"囚犯床属性不匹配（床 ForPrisoners={bed.ForPrisoners}，恋人 Prisoner={forPrisoner}）。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             if (bed.ForSlaves != forSlave)
             {
-                return false;
+                Fail(
+                    $"奴隶床属性不匹配（床 ForSlaves={bed.ForSlaves}，恋人 Slave={forSlave}）。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            if (bed.ForPrisoners && !bed.Position.IsInPrisonCell(map))
+            if (map != null && bed.ForPrisoners && !bed.Position.IsInPrisonCell(map))
             {
-                return false;
+                Fail("囚犯床不位于牢房内。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            // 自动 Lovin 不得绕过玩家 Forbidden；不必依赖 IsColonist。
             if (!lover.Downed && bed.IsForbidden(lover))
             {
-                return false;
+                Fail("床铺对恋人 Forbidden。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             bool isOwner = bed.IsOwner(lover, out _);
             if (!isOwner && !RestUtility.BedOwnerWillShare(bed, lover, null))
             {
-                return false;
+                Fail("恋人不是床主，且 RestUtility.BedOwnerWillShare 不允许共享。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
-            return true;
+            return collecting ? (failures!.Count > 0 ? first : null) : first;
+        }
+
+        internal static bool CanSafelyInterruptCurrentJobForForcedLovin(Pawn lover)
+        {
+            return EvaluateCurrentJobInterruptible(lover, null) == null;
         }
 
         /// <summary>
         /// 玩家强制 Job、须完成当前 Job，或不可中断 Job 不得作为远程 Lovin 候选人。
-        /// IsCurrentJobPlayerInterruptible 覆盖 JobDef.playerInterruptible 与 JobDriver.PlayerInterruptable。
         /// </summary>
-        private static bool CanSafelyInterruptCurrentJobForForcedLovin(Pawn lover)
+        internal static string? EvaluateCurrentJobInterruptible(Pawn lover, List<string>? failures)
         {
+            bool collecting = failures != null;
+            string? first = null;
+
+            void Fail(string reason)
+            {
+                first ??= reason;
+                failures?.Add(reason);
+            }
+
             Job? curJob = lover.CurJob;
             if (curJob == null)
             {
-                return true;
+                return null;
             }
 
             if (curJob.playerForced)
             {
-                return false;
+                Fail(
+                    $"当前 Job 为玩家强制（playerForced，JobDef={curJob.def?.defName ?? "null"}）。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
 
             if (curJob.def == null)
             {
-                return false;
+                Fail("当前 JobDef 为空。");
+                if (!collecting)
+                {
+                    return first;
+                }
             }
-
-            if (curJob.def.forceCompleteBeforeNextJob)
+            else if (curJob.def.forceCompleteBeforeNextJob)
             {
+                Fail(
+                    $"当前 JobDef 要求完成后才能接下一个任务（forceCompleteBeforeNextJob，{curJob.def.defName}）。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            if (lover.jobs != null && !lover.jobs.IsCurrentJobPlayerInterruptible())
+            {
+                Fail(
+                    $"IsCurrentJobPlayerInterruptible 不允许中断（JobDef={curJob.def?.defName ?? "null"}）。");
+                if (!collecting)
+                {
+                    return first;
+                }
+            }
+
+            return collecting ? (failures!.Count > 0 ? first : null) : first;
+        }
+
+        /// <summary>
+        /// 将 canLovinTick 格式化为可读状态；冷却未结束时返回 true（阻断）。
+        /// </summary>
+        internal static bool FormatCanLovinCooldown(
+            Pawn? pawn,
+            int ticksGame,
+            out int canLovinTick,
+            out int remainingTicks,
+            out string readableRemaining)
+        {
+            canLovinTick = 0;
+            remainingTicks = 0;
+            readableRemaining = "无";
+
+            if (pawn?.mindState == null)
+            {
+                readableRemaining = "mindState 缺失";
+                return true;
+            }
+
+            canLovinTick = pawn.mindState.canLovinTick;
+            if (ticksGame >= canLovinTick)
+            {
+                readableRemaining = "已就绪";
                 return false;
             }
 
-            return lover.jobs.IsCurrentJobPlayerInterruptible();
+            remainingTicks = canLovinTick - ticksGame;
+            readableRemaining = remainingTicks.ToStringTicksToPeriod();
+            return true;
+        }
+
+        /// <summary>
+        /// 诊断用：追加床铺占用者与所有者摘要（只读）。
+        /// </summary>
+        internal static void AppendBedOccupancySummary(StringBuilder sb, Building_Bed bed)
+        {
+            sb.AppendLine($"床铺名称：{bed.LabelCap}");
+            sb.AppendLine($"床铺位置：{bed.Position}");
+            sb.AppendLine($"床铺旋转：{bed.Rotation}");
+            sb.AppendLine($"睡眠位数量：{bed.SleepingSlotsCount}");
+            sb.AppendLine($"空闲睡眠位：{bed.AnyUnoccupiedSleepingSlot}");
+            sb.AppendLine($"医疗床：{bed.Medical}");
+            sb.AppendLine($"囚犯床：{bed.ForPrisoners}，奴隶床：{bed.ForSlaves}");
+
+            sb.Append("当前占用者：");
+            bool anyOcc = false;
+            foreach (Pawn occ in bed.CurOccupants)
+            {
+                if (anyOcc)
+                {
+                    sb.Append("，");
+                }
+
+                sb.Append(DescribePawn(occ));
+                anyOcc = true;
+            }
+
+            sb.AppendLine(anyOcc ? string.Empty : "无");
+
+            sb.Append("当前所有者：");
+            bool anyOwner = false;
+            if (bed.CompAssignableToPawn != null)
+            {
+                List<Pawn> owners = bed.OwnersForReading;
+                for (int i = 0; i < owners.Count; i++)
+                {
+                    Pawn owner = owners[i];
+                    if (owner == null)
+                    {
+                        continue;
+                    }
+
+                    if (anyOwner)
+                    {
+                        sb.Append("，");
+                    }
+
+                    sb.Append(DescribePawn(owner));
+                    anyOwner = true;
+                }
+            }
+
+            sb.AppendLine(anyOwner ? string.Empty : "无");
+        }
+
+        internal static string DescribePawn(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return "null";
+            }
+
+            return $"{pawn.LabelShort}（{pawn.ThingID}，thingIDNumber={pawn.thingIDNumber}）";
         }
     }
 }
