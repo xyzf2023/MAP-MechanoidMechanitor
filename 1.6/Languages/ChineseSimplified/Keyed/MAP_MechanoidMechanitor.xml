@@ -51,4 +51,6 @@
   <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseFailed>无法指定该殖民者为配偶。</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseFailed>
   <MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterLabel>结婚</MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterLabel>
   <MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterText>{LOVER_labelShort}与{TARGET_labelShort}已经结婚。{LOVER_labelShort}已成为{TARGET_labelShort}的妻子。</MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterText>
+  <MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggle>与配偶爱爱</MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggle>
+  <MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggleDesc>开启后，恋人将尝试在配偶允许时与配偶爱爱。</MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggleDesc>
 </LanguageData>
