@@ -16,15 +16,18 @@ namespace MAP_MechanoidMechanitor
             "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButtonDesc";
         private const string NoCandidateKey =
             "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseNoCandidate";
-        private const string SuccessKey =
-            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseSuccess";
         private const string FailedKey =
             "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseFailed";
+        private const string MarriageLetterLabelKey =
+            "MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterLabel";
+        private const string MarriageLetterTextKey =
+            "MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterText";
 
         private const float MinSpouseCandidateAgeYears = 16f;
 
         private static readonly List<Pawn> EmptySocialInfoPawns = new List<Pawn>();
         private static readonly List<Pawn> SpouseCandidateTmp = new List<Pawn>();
+        private static readonly List<Pawn> OldSpouseTmp = new List<Pawn>();
 
         /// <summary>
         /// 社交面板「见过的人」列表的空结果；调用方只遍历、不修改。
@@ -76,7 +79,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 写入 Spouse 关系。不做婚姻合法性检查；由上游选择系统保证目标已通过规则校验。
+        /// 写入 Spouse 关系。不做婚姻合法性检查；不发送事件、不触发生成记忆。
         /// 只调用一次 AddDirectRelation（Spouse 为 reflexive，原版会自动写入双方）。
         /// </summary>
         public static bool AssignSpouseUnchecked(Pawn? optedInPawn, Pawn? target)
@@ -107,6 +110,56 @@ namespace MAP_MechanoidMechanitor
             }
 
             optedInPawn.relations.AddDirectRelation(PawnRelationDefOf.Spouse, target);
+            return true;
+        }
+
+        /// <summary>
+        /// 更换恋人为唯一当前配偶：先解除旧婚姻并发送离婚反馈，再建立新婚并发送结婚反馈。
+        /// 不调用原版 DoDivorce / Married / InteractionWorker_Breakup.Interacted。
+        /// </summary>
+        public static bool TryReplaceSpouseWithEvents(Pawn? lover, Pawn? target)
+        {
+            if (lover == null || target == null)
+            {
+                return false;
+            }
+
+            if (!IsOptedIn(lover) || lover.relations == null || target.relations == null)
+            {
+                return false;
+            }
+
+            if (!CanShowAssignSpouseButton(lover))
+            {
+                return false;
+            }
+
+            // 菜单打开后状态可能变化：必须先确认新目标仍可指定，再解除旧婚姻。
+            if (!IsValidSpouseCandidate(lover, target))
+            {
+                return false;
+            }
+
+            CollectCurrentSpousesExcluding(lover, target, OldSpouseTmp);
+            for (int i = 0; i < OldSpouseTmp.Count; i++)
+            {
+                DivorceLoverFromOldSpouse(lover, OldSpouseTmp[i]);
+            }
+
+            if (lover.relations.DirectRelationExists(PawnRelationDefOf.ExSpouse, target))
+            {
+                lover.relations.TryRemoveDirectRelation(PawnRelationDefOf.ExSpouse, target);
+            }
+
+            if (!AssignSpouseUnchecked(lover, target))
+            {
+                return false;
+            }
+
+            ApplyNewlyMarriedFeedback(lover, target);
+            TaleRecorder.RecordTale(TaleDefOf.Marriage, lover, target);
+            SendMarriageLetter(lover, target);
+            SocialCardUtility.ClearCaches();
             return true;
         }
 
@@ -208,13 +261,8 @@ namespace MAP_MechanoidMechanitor
 
         private static void TryAssignSpouseFromMenu(Pawn lover, Pawn target)
         {
-            if (AssignSpouseUnchecked(lover, target))
+            if (TryReplaceSpouseWithEvents(lover, target))
             {
-                Messages.Message(
-                    SuccessKey.Translate(lover.Named("LOVER"), target.Named("TARGET")),
-                    new LookTargets(lover, target),
-                    MessageTypeDefOf.TaskCompletion,
-                    historical: false);
                 return;
             }
 
@@ -270,7 +318,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (candidate.relations == null)
+            if (lover.relations == null || candidate.relations == null)
             {
                 return false;
             }
@@ -287,6 +335,130 @@ namespace MAP_MechanoidMechanitor
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 直接遍历 DirectRelations 复制旧配偶列表；禁止使用带 IsFlesh 门槛的 GetSpouses 等扩展。
+        /// </summary>
+        private static void CollectCurrentSpousesExcluding(Pawn lover, Pawn exclude, List<Pawn> into)
+        {
+            into.Clear();
+            if (lover.relations == null)
+            {
+                return;
+            }
+
+            List<DirectPawnRelation> relations = lover.relations.DirectRelations;
+            for (int i = 0; i < relations.Count; i++)
+            {
+                DirectPawnRelation relation = relations[i];
+                if (relation.def != PawnRelationDefOf.Spouse)
+                {
+                    continue;
+                }
+
+                Pawn? other = relation.otherPawn;
+                if (other == null || other == exclude)
+                {
+                    continue;
+                }
+
+                into.Add(other);
+            }
+        }
+
+        /// <summary>
+        /// 恋人与单个旧配偶的受控离婚：仅关系、定向记忆、信封与故事，不含改姓/婚床/意识形态。
+        /// </summary>
+        private static void DivorceLoverFromOldSpouse(Pawn lover, Pawn oldSpouse)
+        {
+            if (lover.relations == null || oldSpouse.relations == null)
+            {
+                return;
+            }
+
+            if (!lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, oldSpouse))
+            {
+                return;
+            }
+
+            lover.relations.RemoveDirectRelation(PawnRelationDefOf.Spouse, oldSpouse);
+
+            if (!lover.relations.DirectRelationExists(PawnRelationDefOf.ExSpouse, oldSpouse))
+            {
+                lover.relations.AddDirectRelation(PawnRelationDefOf.ExSpouse, oldSpouse);
+            }
+
+            RemovePairMarriageMemories(lover, oldSpouse);
+
+            if (oldSpouse.needs?.mood != null)
+            {
+                oldSpouse.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.DivorcedMe, lover);
+            }
+
+            TaleRecorder.RecordTale(TaleDefOf.Breakup, lover, oldSpouse);
+            SendBreakupLetter(lover, oldSpouse);
+        }
+
+        private static void RemovePairMarriageMemories(Pawn lover, Pawn oldSpouse)
+        {
+            // 必须按 otherPawn 定向删除，禁止 RemoveMemoriesOfDef(GotMarried)，以免误删与他人的新婚记忆。
+            MemoryThoughtHandler? loverMemories = lover.needs?.mood?.thoughts?.memories;
+            if (loverMemories != null)
+            {
+                loverMemories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.GotMarried, oldSpouse);
+                loverMemories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.HoneymoonPhase, oldSpouse);
+            }
+
+            MemoryThoughtHandler? oldSpouseMemories = oldSpouse.needs?.mood?.thoughts?.memories;
+            if (oldSpouseMemories != null)
+            {
+                oldSpouseMemories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.GotMarried, lover);
+                oldSpouseMemories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.HoneymoonPhase, lover);
+            }
+        }
+
+        private static void ApplyNewlyMarriedFeedback(Pawn lover, Pawn target)
+        {
+            ApplyNewlyMarriedSide(lover, target);
+            ApplyNewlyMarriedSide(target, lover);
+        }
+
+        private static void ApplyNewlyMarriedSide(Pawn pawn, Pawn otherPawn)
+        {
+            MemoryThoughtHandler? memories = pawn.needs?.mood?.thoughts?.memories;
+            if (memories == null)
+            {
+                return;
+            }
+
+            memories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.DivorcedMe, otherPawn);
+            memories.TryGainMemory(ThoughtDefOf.GotMarried, otherPawn);
+            memories.TryGainMemory(ThoughtDefOf.HoneymoonPhase, otherPawn);
+        }
+
+        private static void SendBreakupLetter(Pawn lover, Pawn oldSpouse)
+        {
+            TaggedString label = "LetterLabelBreakup".Translate();
+            TaggedString text = "LetterNoLongerLovers".Translate(
+                lover.LabelShort,
+                oldSpouse.LabelShort,
+                lover.Named("PAWN1"),
+                oldSpouse.Named("PAWN2"));
+            Find.LetterStack.ReceiveLetter(
+                label,
+                text,
+                LetterDefOf.NegativeEvent,
+                new LookTargets(lover, oldSpouse));
+        }
+
+        private static void SendMarriageLetter(Pawn lover, Pawn target)
+        {
+            Find.LetterStack.ReceiveLetter(
+                MarriageLetterLabelKey.Translate(),
+                MarriageLetterTextKey.Translate(lover.Named("LOVER"), target.Named("TARGET")),
+                LetterDefOf.PositiveEvent,
+                new LookTargets(lover, target));
         }
 
         private static bool HasOtherPawnInDirectRelations(Pawn owner, Pawn other)
