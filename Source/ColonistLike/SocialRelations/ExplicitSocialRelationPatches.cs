@@ -2,19 +2,22 @@ using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 显式社交关系：开放社交面板、限制列表来源、修复 GetRelations 的 IsFlesh 门槛。
+    /// 显式社交关系：开放社交面板、限制列表来源、修复 GetRelations，并提供指定配偶按钮。
     /// </summary>
     public static class ExplicitSocialRelationPatches
     {
         private const string LogPrefix = "[MAP-机械族机械师] ExplicitSocialRelationPatches：";
 
-        private const int ErrorKeyShouldShowTargetNotFound = 879345501;
-        private const int ErrorKeyShowAllRelationsFieldNotFound = 879345502;
+        // 与 ImplantPatches 的 8793455xx 段分开，避免 ErrorOnce 键冲突。
+        private const int ErrorKeyShouldShowTargetNotFound = 879346601;
+        private const int ErrorKeyCanDrawTryRomanceNotFound = 879346602;
+        private const int ErrorKeyDrawTryRomanceNotFound = 879346603;
 
         [HarmonyPatch(typeof(ITab_Pawn_Social), nameof(ITab_Pawn_Social.IsVisible), MethodType.Getter)]
         public static class Patch_ITab_Pawn_Social_IsVisible
@@ -73,8 +76,6 @@ namespace MAP_MechanoidMechanitor
         public static class Patch_SocialCardUtility_ShouldShowPawnRelations
         {
             private static MethodInfo? cachedTargetMethod;
-            private static FieldInfo? cachedShowAllRelationsField;
-            private static bool loggedShowAllRelationsMissing;
 
             private static bool Prepare()
             {
@@ -112,20 +113,7 @@ namespace MAP_MechanoidMechanitor
                     return true;
                 }
 
-                if (TryGetShowAllRelations())
-                {
-                    __result = true;
-                    return false;
-                }
-
-                if ((pawn.RaceProps.Animal && pawn.Dead && pawn.Corpse == null)
-                    || pawn.Name == null
-                    || pawn.Name.Numerical)
-                {
-                    __result = false;
-                    return false;
-                }
-
+                // 显式关系路径：忽略 Name.Numerical / null Name 与 DEV showAllRelations。
                 if (pawn.relations == null || selPawnForSocialInfo.relations == null)
                 {
                     __result = false;
@@ -142,31 +130,6 @@ namespace MAP_MechanoidMechanitor
                     pawn,
                     selPawnForSocialInfo);
                 return false;
-            }
-
-            private static bool TryGetShowAllRelations()
-            {
-                if (cachedShowAllRelationsField == null)
-                {
-                    cachedShowAllRelationsField = AccessTools.Field(
-                        typeof(SocialCardUtility),
-                        "showAllRelations");
-                }
-
-                if (cachedShowAllRelationsField == null)
-                {
-                    if (!loggedShowAllRelationsMissing)
-                    {
-                        loggedShowAllRelationsMissing = true;
-                        Log.ErrorOnce(
-                            $"{LogPrefix}未找到 SocialCardUtility.showAllRelations，DEV AllRelations 开关将对此路径无效。",
-                            ErrorKeyShowAllRelationsFieldNotFound);
-                    }
-
-                    return false;
-                }
-
-                return (bool)cachedShowAllRelationsField.GetValue(null);
             }
         }
 
@@ -186,6 +149,96 @@ namespace MAP_MechanoidMechanitor
                 __result = ExplicitSocialRelationUtility.EnumerateRelationsWithoutFleshRequirement(
                     me,
                     other);
+                return false;
+            }
+        }
+
+        [HarmonyPatch]
+        public static class Patch_SocialCardUtility_CanDrawTryRomance
+        {
+            private static MethodInfo? cachedTargetMethod;
+
+            private static bool Prepare()
+            {
+                if (TargetMethod() != null)
+                {
+                    return true;
+                }
+
+                Log.ErrorOnce(
+                    $"{LogPrefix}未找到 SocialCardUtility.CanDrawTryRomance，补丁未应用。",
+                    ErrorKeyCanDrawTryRomanceNotFound);
+                return false;
+            }
+
+            private static MethodBase? TargetMethod()
+            {
+                if (cachedTargetMethod != null)
+                {
+                    return cachedTargetMethod;
+                }
+
+                cachedTargetMethod = AccessTools.Method(
+                    typeof(SocialCardUtility),
+                    "CanDrawTryRomance",
+                    new[] { typeof(Pawn) });
+                return cachedTargetMethod;
+            }
+
+            [HarmonyPrefix]
+            public static bool Prefix(Pawn pawn, ref bool __result)
+            {
+                if (!ExplicitSocialRelationUtility.IsOptedIn(pawn))
+                {
+                    return true;
+                }
+
+                __result = ExplicitSocialRelationUtility.CanShowAssignSpouseButton(pawn);
+                return false;
+            }
+        }
+
+        [HarmonyPatch]
+        public static class Patch_SocialCardUtility_DrawTryRomance
+        {
+            private static MethodInfo? cachedTargetMethod;
+
+            private static bool Prepare()
+            {
+                if (TargetMethod() != null)
+                {
+                    return true;
+                }
+
+                Log.ErrorOnce(
+                    $"{LogPrefix}未找到 SocialCardUtility.DrawTryRomance，补丁未应用。",
+                    ErrorKeyDrawTryRomanceNotFound);
+                return false;
+            }
+
+            private static MethodBase? TargetMethod()
+            {
+                if (cachedTargetMethod != null)
+                {
+                    return cachedTargetMethod;
+                }
+
+                cachedTargetMethod = AccessTools.Method(
+                    typeof(SocialCardUtility),
+                    "DrawTryRomance",
+                    new[] { typeof(Rect), typeof(Pawn) });
+                return cachedTargetMethod;
+            }
+
+            [HarmonyPrefix]
+            public static bool Prefix(Rect buttonRect, Pawn pawn)
+            {
+                if (!ExplicitSocialRelationUtility.IsOptedIn(pawn))
+                {
+                    return true;
+                }
+
+                ExplicitSocialRelationUtility.DrawAssignSpouseButton(buttonRect, pawn);
                 return false;
             }
         }

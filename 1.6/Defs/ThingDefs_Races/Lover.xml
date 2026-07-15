@@ -216,6 +216,8 @@
     <label>「恋人」</label>
     <race>MAP_Mech_Lover</race>
 
+    <fixedGender>Female</fixedGender>
+
     <defaultFactionDef>PlayerColony</defaultFactionDef>
 
     <combatPower>200</combatPower>
