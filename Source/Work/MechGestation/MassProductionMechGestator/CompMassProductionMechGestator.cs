@@ -245,6 +245,73 @@ namespace MAP_MechanoidMechanitor
             ClearSettlementAndReleaseState();
         }
 
+        internal void DebugAdvanceForming(float fraction)
+        {
+            if (parent is not Building_MassProductionMechGestator gestator)
+            {
+                return;
+            }
+
+            if (gestator.ActiveMechBill is not Bill_ProductionMech { State: FormingState.Forming })
+            {
+                return;
+            }
+
+            if (settlementCommitted || releasePending || completionInProgress)
+            {
+                return;
+            }
+
+            if (fraction <= 0f)
+            {
+                return;
+            }
+
+            if (!timerInitialized)
+            {
+                remainingTicks = Building_MassProductionMechGestator.FixedFormingTicks;
+                timerInitialized = true;
+            }
+
+            remainingTicks -= Mathf.RoundToInt(
+                Building_MassProductionMechGestator.FixedFormingTicks * fraction);
+            remainingTicks = Mathf.Clamp(
+                remainingTicks,
+                0,
+                Building_MassProductionMechGestator.FixedFormingTicks);
+        }
+
+        internal void DebugCompleteForming()
+        {
+            if (parent is not Building_MassProductionMechGestator gestator)
+            {
+                return;
+            }
+
+            if (gestator.ActiveMechBill is not Bill_ProductionMech { State: FormingState.Forming })
+            {
+                return;
+            }
+
+            if (settlementCommitted || releasePending || completionInProgress)
+            {
+                return;
+            }
+
+            if (!timerInitialized)
+            {
+                remainingTicks = Building_MassProductionMechGestator.FixedFormingTicks;
+                timerInitialized = true;
+            }
+
+            remainingTicks = 0;
+        }
+
+        internal void DebugCompleteAllForming()
+        {
+            DebugCompleteForming();
+        }
+
         private void TickCommittedSettlement(Building_MassProductionMechGestator gestator)
         {
             if (!gestator.IsHashIntervalTick(ReleaseRetryIntervalTicks))
