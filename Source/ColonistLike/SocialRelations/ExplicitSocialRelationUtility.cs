@@ -223,9 +223,27 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static void DrawAssignSpouseButton(Rect buttonRect, Pawn pawn)
         {
-            if (Widgets.ButtonText(buttonRect, AssignSpouseButtonKey.Translate()))
+            Color previousColor = GUI.color;
+            bool previousEnabled = GUI.enabled;
+            try
             {
-                TryOpenAssignSpouseMenu(pawn);
+                // 社交面板其他区域可能留下灰色 GUI.color；本按钮始终使用正常可用样式。
+                GUI.color = Color.white;
+                GUI.enabled = true;
+                if (Widgets.ButtonText(
+                        buttonRect,
+                        AssignSpouseButtonKey.Translate(),
+                        drawBackground: true,
+                        doMouseoverSound: true,
+                        active: true))
+                {
+                    TryOpenAssignSpouseMenu(pawn);
+                }
+            }
+            finally
+            {
+                GUI.color = previousColor;
+                GUI.enabled = previousEnabled;
             }
 
             TooltipHandler.TipRegion(buttonRect, AssignSpouseButtonDescKey.Translate());
