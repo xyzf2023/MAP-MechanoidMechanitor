@@ -1307,6 +1307,19 @@ namespace MAP_MechanoidMechanitor
                 ref ourPatchesPresent);
             allResolved &= ReportMethodPatches(
                 sb,
+                AccessTools.Method(typeof(ThinkNode_ChancePerHour_Lovin), "MtbHours"),
+                "ThinkNode_ChancePerHour_Lovin.MtbHours",
+                ref ourPatchesPresent);
+            allResolved &= ReportMethodPatches(
+                sb,
+                AccessTools.Method(
+                    typeof(JobDriver_Lovin),
+                    "GenerateRandomMinTicksToNextLovin",
+                    new[] { typeof(Pawn) }),
+                "JobDriver_Lovin.GenerateRandomMinTicksToNextLovin",
+                ref ourPatchesPresent);
+            allResolved &= ReportMethodPatches(
+                sb,
                 AccessTools.Method(
                     typeof(PawnRenderer),
                     "GetBodyPos",
@@ -1329,14 +1342,6 @@ namespace MAP_MechanoidMechanitor
                     typeof(PawnRenderNodeWorker_Body),
                     nameof(PawnRenderNodeWorker_Body.CanDrawNow)),
                 "PawnRenderNodeWorker_Body.CanDrawNow",
-                ref ourPatchesPresent);
-            allResolved &= ReportMethodPatches(
-                sb,
-                AccessTools.Method(
-                    typeof(Pawn_Ownership),
-                    nameof(Pawn_Ownership.ClaimBedIfNonMedical),
-                    new[] { typeof(Building_Bed) }),
-                "Pawn_Ownership.ClaimBedIfNonMedical(Building_Bed)",
                 ref ourPatchesPresent);
 
             sb.AppendLine(

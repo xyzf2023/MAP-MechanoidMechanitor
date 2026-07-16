@@ -99,6 +99,101 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
+        /// ThinkNode_ChancePerHour_Lovin：仅当躺床发起者是 Humanlike，且 GetPartnerInMyBed
+        /// 实际结果为已开「与配偶爱爱」的授权恋人配偶时，才套用特殊 MTB。
+        /// </summary>
+        public static bool IsFrequencyBoostRemoteEnabledLoverPartner(
+            Pawn? initiator,
+            Pawn? partner)
+        {
+            if (initiator == null || partner == null || initiator == partner)
+            {
+                return false;
+            }
+
+            if (ExplicitSocialRelationUtility.IsOptedIn(initiator)
+                || !ExplicitSocialRelationUtility.IsOptedIn(partner))
+            {
+                return false;
+            }
+
+            if (initiator.RaceProps == null || !initiator.RaceProps.Humanlike)
+            {
+                return false;
+            }
+
+            CompExplicitSocialRelationUser? comp =
+                partner.GetComp<CompExplicitSocialRelationUser>();
+            if (comp == null || !comp.LovinWithSpouseEnabled)
+            {
+                return false;
+            }
+
+            if (initiator.relations == null || partner.relations == null)
+            {
+                return false;
+            }
+
+            if (!initiator.relations.DirectRelationExists(PawnRelationDefOf.Spouse, partner)
+                || !partner.relations.DirectRelationExists(PawnRelationDefOf.Spouse, initiator))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 已开始并正确绑定的殖民者—授权恋人同床 Lovin（不依赖开关当前是否仍开启）。
+        /// </summary>
+        public static bool IsBoundHumanLoverSpouseLovinDriver(JobDriver? driver)
+        {
+            if (driver?.pawn == null || driver.job == null || driver.job.def != JobDefOf.Lovin)
+            {
+                return false;
+            }
+
+            if (!TryGetLovinPartnerAndBed(driver.job, out Pawn? partner, out Building_Bed? bed)
+                || partner == null
+                || bed == null)
+            {
+                return false;
+            }
+
+            Pawn actor = driver.pawn;
+            Pawn? human;
+            Pawn? lover;
+            if (IsRemoteLoverCompanionLovinJob(actor, partner, bed))
+            {
+                lover = actor;
+                human = partner;
+            }
+            else if (IsRemoteHumanSpouseLovinJob(actor, partner, bed))
+            {
+                human = actor;
+                lover = partner;
+            }
+            else
+            {
+                return false;
+            }
+
+            if (human.relations == null || lover.relations == null)
+            {
+                return false;
+            }
+
+            if (!lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, human)
+                || !human.relations.DirectRelationExists(PawnRelationDefOf.Spouse, lover))
+            {
+                return false;
+            }
+
+            // 不要求对方此刻仍持有 Lovin：后结束的一方结束时，对方可能已离开该 Job。
+            return true;
+        }
+
+        /// <summary>
         /// 从 Lovin Job 读取 TargetIndex.A / B（伴侣与床铺）。
         /// </summary>
         public static bool TryGetLovinPartnerAndBed(

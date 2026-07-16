@@ -14,8 +14,8 @@ namespace MAP_MechanoidMechanitor
     public static class ExplicitSocialLovinPatches
     {
         private const string LogPrefix = "[MAP-机械族机械师] ExplicitSocialLovinPatches：";
-        private const int ErrorKeyClaimBedTargetNotFound = 879346701;
         private const int ErrorKeyLovinToilStructureUnexpected = 879346702;
+        private const int ErrorKeyGenerateLovinCooldownNotFound = 879346706;
 
         /// <summary>
         /// 原版未找到床上伴侣时，把已开启「与配偶爱爱」的远程恋人配偶交给 ThinkNode / JobGiver。
@@ -44,8 +44,37 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
+        /// 仅对「人类配偶躺床 + GetPartnerInMyBed 实际解析到已开开关的授权恋人」提高触发频率。
+        /// 消除跨 PawnDef 的 SecondaryLovinChanceFactor 约100倍惩罚，并再给予2倍倾向（合计 /200）。
+        /// </summary>
+        [HarmonyPatch(typeof(ThinkNode_ChancePerHour_Lovin), "MtbHours")]
+        public static class Patch_ThinkNode_ChancePerHour_Lovin_MtbHours
+        {
+            [HarmonyPostfix]
+            public static void Postfix(Pawn pawn, ref float __result)
+            {
+                if (__result <= 0f || DebugSettings.alwaysDoLovin)
+                {
+                    return;
+                }
+
+                // 必须尊重 GetPartnerInMyBed 的最终结果（含原版床上伴侣优先）。
+                Pawn? partner = LovePartnerRelationUtility.GetPartnerInMyBed(pawn);
+                if (!ExplicitSocialLovinUtility.IsFrequencyBoostRemoteEnabledLoverPartner(
+                        pawn,
+                        partner))
+                {
+                    return;
+                }
+
+                __result /= 200f;
+            }
+        }
+
+        /// <summary>
         /// 远程 Lovin：人类侧在最终倒计时前等待恋人入床；恋人侧全程校验配偶仍在对应 Lovin。
         /// 仅包装原版 MakeNewToils，不复制完整 JobDriver。
+        /// 恋人配套 Job 正常执行原版 ClaimBedIfNonMedical，永久认领目标床位。
         /// </summary>
         [HarmonyPatch(typeof(JobDriver_Lovin), "MakeNewToils")]
         public static class Patch_JobDriver_Lovin_MakeNewToils
@@ -226,6 +255,59 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
+        /// 殖民者—授权恋人已绑定 Lovin 结束后使用短冷却（0.5–1.5 游戏小时）。
+        /// </summary>
+        [HarmonyPatch]
+        public static class Patch_JobDriver_Lovin_GenerateRandomMinTicksToNextLovin
+        {
+            private static MethodInfo? cachedTargetMethod;
+
+            private static bool Prepare()
+            {
+                if (TargetMethod() != null)
+                {
+                    return true;
+                }
+
+                Log.ErrorOnce(
+                    $"{LogPrefix}未找到 JobDriver_Lovin.GenerateRandomMinTicksToNextLovin，冷却补丁未应用。",
+                    ErrorKeyGenerateLovinCooldownNotFound);
+                return false;
+            }
+
+            private static MethodBase? TargetMethod()
+            {
+                if (cachedTargetMethod != null)
+                {
+                    return cachedTargetMethod;
+                }
+
+                cachedTargetMethod = AccessTools.Method(
+                    typeof(JobDriver_Lovin),
+                    "GenerateRandomMinTicksToNextLovin",
+                    new[] { typeof(Pawn) });
+                return cachedTargetMethod;
+            }
+
+            [HarmonyPostfix]
+            public static void Postfix(JobDriver_Lovin __instance, Pawn pawn, ref int __result)
+            {
+                if (DebugSettings.alwaysDoLovin)
+                {
+                    return;
+                }
+
+                if (!ExplicitSocialLovinUtility.IsBoundHumanLoverSpouseLovinDriver(__instance))
+                {
+                    return;
+                }
+
+                // 0.5–1.5 游戏小时 = 1250–3750 Tick；双方各自随机。
+                __result = Rand.RangeInclusive(1250, 3750);
+            }
+        }
+
+        /// <summary>
         /// 仅当授权恋人正在执行 JobDefOf.Lovin 时，绕过机械体不能用人床的门槛。
         /// 开关关闭后已开始的本次 Lovin 仍可完成；不依赖开关状态维持床检查。
         /// </summary>
@@ -293,57 +375,6 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 return true;
-            }
-        }
-
-        /// <summary>
-        /// 恋人执行 Lovin 时跳过 ClaimBedIfNonMedical，避免永久占用配偶床位。
-        /// 原版 Toils_Bed 在 ownership 非空时会认领；普通 Pawn 不受影响。
-        /// </summary>
-        [HarmonyPatch]
-        public static class Patch_Pawn_Ownership_ClaimBedIfNonMedical
-        {
-            private static MethodInfo? cachedTargetMethod;
-
-            private static bool Prepare()
-            {
-                if (TargetMethod() != null)
-                {
-                    return true;
-                }
-
-                Log.ErrorOnce(
-                    $"{LogPrefix}未找到 Pawn_Ownership.ClaimBedIfNonMedical，补丁未应用。",
-                    ErrorKeyClaimBedTargetNotFound);
-                return false;
-            }
-
-            private static MethodBase? TargetMethod()
-            {
-                if (cachedTargetMethod != null)
-                {
-                    return cachedTargetMethod;
-                }
-
-                cachedTargetMethod = AccessTools.Method(
-                    typeof(Pawn_Ownership),
-                    nameof(Pawn_Ownership.ClaimBedIfNonMedical),
-                    new[] { typeof(Building_Bed) });
-                return cachedTargetMethod;
-            }
-
-            [HarmonyPrefix]
-            public static bool Prefix(Pawn ___pawn, ref bool __result)
-            {
-                if (___pawn == null
-                    || !ExplicitSocialRelationUtility.IsOptedIn(___pawn)
-                    || ___pawn.CurJobDef != JobDefOf.Lovin)
-                {
-                    return true;
-                }
-
-                __result = false;
-                return false;
             }
         }
     }
