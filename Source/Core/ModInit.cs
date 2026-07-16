@@ -6,9 +6,14 @@ namespace MAP_MechanoidMechanitor
     [StaticConstructorOnStartup]
     public static class ModInit
     {
+        /// <summary>
+        /// 与 Harmony.PatchAll 使用的 ID 保持一致；诊断工具用此核对补丁是否加载。
+        /// </summary>
+        public const string HarmonyId = "xyzf.map.mechanoidmechanitor";
+
         static ModInit()
         {
-            new Harmony("xyzf.map.mechanoidmechanitor").PatchAll();
+            new Harmony(HarmonyId).PatchAll();
             MechanoidMechanitorBrainImplantFeatureState.InitializeFromSettings();
 
             if (Prefs.DevMode)

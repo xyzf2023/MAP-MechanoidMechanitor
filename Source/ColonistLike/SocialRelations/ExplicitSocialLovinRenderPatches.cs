@@ -14,6 +14,7 @@ namespace MAP_MechanoidMechanitor
     {
         private const string LogPrefix = "[MAP-机械族机械师] ExplicitSocialLovinRenderPatches：";
         private const int ErrorKeyGetBodyPosNotFound = 879346711;
+        private const int ErrorKeyGetBodyPosException = 879346712;
 
         [HarmonyPatch]
         public static class Patch_PawnRenderer_GetBodyPos
@@ -84,8 +85,20 @@ namespace MAP_MechanoidMechanitor
                     showBody = ___pawn.mindState?.duty?.def?.drawBodyOverride ?? showBody;
                     return false;
                 }
-                catch (System.Exception)
+                catch (System.Exception ex)
                 {
+                    // 仍回退原版绘制；仅 ErrorOnce，避免每 Tick 刷屏。
+                    Log.ErrorOnce(
+                        $"{LogPrefix}GetBodyPos 特殊渲染异常，已回退原版。"
+                        + $" pawn={___pawn?.LabelShort}/{___pawn?.ThingID}"
+                        + $", CurJobDef={___pawn?.CurJobDef?.defName ?? "null"}"
+                        + $", jobs.posture={___pawn?.jobs?.posture.ToString() ?? "null"}"
+                        + $", GetPosture={___pawn?.GetPosture().ToString() ?? "null"}"
+                        + $", CurrentBed={___pawn?.CurrentBed()?.LabelCap ?? "null"}"
+                        + $", story={( ___pawn?.story != null ? "有" : "无")}"
+                        + $", bodyType={___pawn?.story?.bodyType?.defName ?? "null"}"
+                        + $"\n{ex}",
+                        ErrorKeyGetBodyPosException);
                     return true;
                 }
             }
