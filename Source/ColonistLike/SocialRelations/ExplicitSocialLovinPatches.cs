@@ -93,6 +93,37 @@ namespace MAP_MechanoidMechanitor
                             lover,
                             humanSpouse,
                             sharedBed));
+
+                    // 开发者模式：枚举 Toil 并安装事件触发式自动诊断（不影响正式流程）。
+                    if (Prefs.DevMode)
+                    {
+                        List<Toil> loverToils = new List<Toil>();
+                        foreach (Toil toil in original)
+                        {
+                            loverToils.Add(toil);
+                        }
+
+                        ExplicitSocialLovinDebugActions.TryInstallRemoteLoverAutoCapture(
+                            driver,
+                            lover,
+                            humanSpouse,
+                            sharedBed,
+                            loverToils);
+
+                        for (int i = 0; i < loverToils.Count; i++)
+                        {
+                            yield return loverToils[i];
+                        }
+                    }
+                    else
+                    {
+                        foreach (Toil toil in original)
+                        {
+                            yield return toil;
+                        }
+                    }
+
+                    yield break;
                 }
 
                 bool isHumanInitiator =
