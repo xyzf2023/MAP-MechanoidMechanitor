@@ -18,6 +18,20 @@ namespace MAP_MechanoidMechanitor
     {
         private static readonly List<Pawn> TmpRuntimeSpouses = new List<Pawn>();
 
+        private const int ErrorKeyAutoCaptureSelf = 879346704;
+        private const int ErrorKeyAutoCaptureToilStructure = 879346705;
+        private const int MaxAutoCaptureCacheEntries = 256;
+
+        private const string StageGotoBedEnd = "恋人抵达床位／GotoBed结束";
+        private const string StageLayDownInitBefore = "最终LayDown初始化前";
+        private const string StageLayDownInitAfter = "最终LayDown初始化后";
+        private const string StageLayDownInitAfterException = "最终LayDown初始化后／初始化异常现场";
+        private const string StageJobFinished = "恋人Lovin工作结束";
+
+        private static readonly HashSet<string> AutoCapturedStageKeys = new HashSet<string>();
+        private static readonly HashSet<string> AutoFinishedJobKeys = new HashSet<string>();
+        private static readonly HashSet<string> AutoNotifiedJobKeys = new HashSet<string>();
+
         [DebugAction(
             "MAP-机械族机械师",
             "诊断当前爱爱运行状态",
@@ -41,14 +55,439 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (!TryBuildFullRuntimeReport(
+                    clicked,
+                    reportTitle: "=== MAP-机械族机械师：当前爱爱运行状态诊断 ===",
+                    stageName: null,
+                    jobCondition: null,
+                    autoCaptureMeta: null,
+                    out string report,
+                    out string? failureScreenMessage))
+            {
+                Log.Message(report);
+                Messages.Message(
+                    failureScreenMessage ?? "当前爱爱运行状态诊断失败：无法解析双方。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                return;
+            }
+
+            Log.Message(report);
+            Messages.Message(
+                "当前爱爱运行状态诊断完成，详细信息已写入日志。",
+                MessageTypeDefOf.TaskCompletion,
+                historical: false);
+        }
+
+        /// <summary>
+        /// 在恋人配套 Lovin 的 MakeNewToils 包装中安装事件触发式自动诊断（仅 DevMode）。
+        /// </summary>
+        internal static void TryInstallRemoteLoverAutoCapture(
+            JobDriver_Lovin driver,
+            Pawn lover,
+            Pawn humanSpouse,
+            Building_Bed bed,
+            List<Toil> toils)
+        {
+            if (!Prefs.DevMode || driver == null || lover == null || humanSpouse == null || bed == null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (!TryIdentifyRemoteLoverLovinToils(
+                        toils,
+                        out Toil? gotoBedToil,
+                        out Toil? finalLayDownToil))
+                {
+                    Log.ErrorOnce(
+                        "[MAP-机械族机械师] 自动 Lovin 诊断：无法识别恋人配套 Job 的 GotoBed／最终 LayDown 结构，"
+                        + "已跳过自动捕获（正式 Lovin 流程不受影响）。",
+                        ErrorKeyAutoCaptureToilStructure);
+                    return;
+                }
+
+                int thingId = lover.thingIDNumber;
+                int loadId = driver.job?.loadID ?? -1;
+
+                if (gotoBedToil != null)
+                {
+                    gotoBedToil.AddPreTickIntervalAction(
+                        delegate(int _)
+                        {
+                            if (!Prefs.DevMode)
+                            {
+                                return;
+                            }
+
+                            if (HasLoverArrivedAtBedSlot(lover, bed))
+                            {
+                                TryEmitAutoRuntimeCapture(
+                                    lover,
+                                    humanSpouse,
+                                    bed,
+                                    thingId,
+                                    loadId,
+                                    StageGotoBedEnd,
+                                    jobCondition: null);
+                            }
+                        });
+                    gotoBedToil.AddFinishAction(
+                        delegate
+                        {
+                            if (!Prefs.DevMode)
+                            {
+                                return;
+                            }
+
+                            TryEmitAutoRuntimeCapture(
+                                lover,
+                                humanSpouse,
+                                bed,
+                                thingId,
+                                loadId,
+                                StageGotoBedEnd,
+                                jobCondition: null);
+                        });
+                }
+
+                if (finalLayDownToil != null)
+                {
+                    Action? originalInit = finalLayDownToil.initAction;
+                    finalLayDownToil.initAction = delegate
+                    {
+                        // 诊断异常不得阻止原版 initAction。
+                        TryEmitAutoRuntimeCapture(
+                            lover,
+                            humanSpouse,
+                            bed,
+                            thingId,
+                            loadId,
+                            StageLayDownInitBefore,
+                            jobCondition: null);
+
+                        bool initCompleted = false;
+                        try
+                        {
+                            originalInit?.Invoke();
+                            initCompleted = true;
+                        }
+                        finally
+                        {
+                            // 成功或异常现场都尽量记录一次；原版异常在 finally 后继续向外抛出。
+                            TryEmitAutoRuntimeCapture(
+                                lover,
+                                humanSpouse,
+                                bed,
+                                thingId,
+                                loadId,
+                                initCompleted
+                                    ? StageLayDownInitAfter
+                                    : StageLayDownInitAfterException,
+                                jobCondition: null);
+                        }
+                    };
+                }
+
+                driver.AddFinishAction(
+                    delegate(JobCondition condition)
+                    {
+                        if (!Prefs.DevMode)
+                        {
+                            MarkAutoJobFinished(thingId, loadId);
+                            return;
+                        }
+
+                        TryEmitAutoRuntimeCapture(
+                            lover,
+                            humanSpouse,
+                            bed,
+                            thingId,
+                            loadId,
+                            StageJobFinished,
+                            condition);
+                        MarkAutoJobFinished(thingId, loadId);
+                    });
+            }
+            catch (Exception ex)
+            {
+                Log.ErrorOnce(
+                    "[MAP-机械族机械师] 自动 Lovin 诊断：安装捕获钩子时自身发生异常（正式流程不受影响）。\n"
+                    + ex,
+                    ErrorKeyAutoCaptureSelf);
+            }
+        }
+
+        private static bool TryIdentifyRemoteLoverLovinToils(
+            List<Toil> toils,
+            out Toil? gotoBedToil,
+            out Toil? finalLayDownToil)
+        {
+            gotoBedToil = null;
+            finalLayDownToil = null;
+            if (toils == null || toils.Count == 0)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < toils.Count; i++)
+            {
+                Toil toil = toils[i];
+                string name = toil.debugName ?? string.Empty;
+                if (name.IndexOf("GotoBed", StringComparison.OrdinalIgnoreCase) >= 0
+                    || toil.defaultCompleteMode == ToilCompleteMode.PatherArrival)
+                {
+                    gotoBedToil = toil;
+                    break;
+                }
+            }
+
+            // 原版：瞬时初始化(Instant) 后紧跟最终 LayDown(Never)。
+            for (int i = 0; i < toils.Count - 1; i++)
+            {
+                if (toils[i].defaultCompleteMode == ToilCompleteMode.Instant
+                    && toils[i + 1].defaultCompleteMode == ToilCompleteMode.Never)
+                {
+                    finalLayDownToil = toils[i + 1];
+                    break;
+                }
+            }
+
+            if (finalLayDownToil == null)
+            {
+                for (int i = 0; i < toils.Count; i++)
+                {
+                    Toil toil = toils[i];
+                    string name = toil.debugName ?? string.Empty;
+                    if (toil.defaultCompleteMode == ToilCompleteMode.Never
+                        && name.IndexOf("LayDown", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        finalLayDownToil = toil;
+                        break;
+                    }
+                }
+            }
+
+            return gotoBedToil != null && finalLayDownToil != null;
+        }
+
+        private static bool HasLoverArrivedAtBedSlot(Pawn lover, Building_Bed bed)
+        {
+            try
+            {
+                if (lover == null || bed == null || !lover.Spawned || bed.Destroyed || !bed.Spawned)
+                {
+                    return false;
+                }
+
+                IntVec3 slot = RestUtility.GetBedSleepingSlotPosFor(lover, bed);
+                if (lover.Position == slot)
+                {
+                    return true;
+                }
+
+                if (bed.OccupiedRect().Contains(lover.Position)
+                    && (lover.pather == null || !lover.pather.Moving))
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                // 只读检查失败时不触发捕获。
+            }
+
+            return false;
+        }
+
+        private static void TryEmitAutoRuntimeCapture(
+            Pawn lover,
+            Pawn humanSpouse,
+            Building_Bed bed,
+            int thingId,
+            int loadId,
+            string stageName,
+            JobCondition? jobCondition)
+        {
+            try
+            {
+                if (!Prefs.DevMode)
+                {
+                    return;
+                }
+
+                string jobKey = thingId + ":" + loadId;
+                // Job 结束后不再接受迟到的阶段钩子（结束阶段在 MarkAutoJobFinished 之前写入）。
+                if (AutoFinishedJobKeys.Contains(jobKey))
+                {
+                    return;
+                }
+
+                string stageKey = jobKey + ":" + stageName;
+                if (!TryMarkAutoStageCaptured(stageKey))
+                {
+                    return;
+                }
+
+                string autoHeader =
+                    "=== 自动 Lovin 运行诊断：" + stageName + " ===";
+                AutoCaptureMeta meta = new AutoCaptureMeta(
+                    stageName,
+                    lover.ThingID,
+                    loadId,
+                    Find.TickManager.TicksGame);
+
+                if (!TryBuildFullRuntimeReport(
+                        lover,
+                        reportTitle: autoHeader,
+                        stageName: stageName,
+                        jobCondition: jobCondition,
+                        autoCaptureMeta: meta,
+                        out string report,
+                        out _))
+                {
+                    // 即便解析失败也输出已有内容，便于定位。
+                    Log.Message(report);
+                    MaybeNotifyAutoCapture(jobKey);
+                    return;
+                }
+
+                Log.Message(report);
+                MaybeNotifyAutoCapture(jobKey);
+            }
+            catch (Exception ex)
+            {
+                Log.ErrorOnce(
+                    "[MAP-机械族机械师] 自动 Lovin 诊断自身发生异常（正式 Job 不受影响）。\n" + ex,
+                    ErrorKeyAutoCaptureSelf);
+            }
+        }
+
+        private static bool TryMarkAutoStageCaptured(string stageKey)
+        {
+            TrimAutoCaptureCacheIfNeeded();
+            if (AutoCapturedStageKeys.Contains(stageKey))
+            {
+                return false;
+            }
+
+            AutoCapturedStageKeys.Add(stageKey);
+            return true;
+        }
+
+        private static void MarkAutoJobFinished(int thingId, int loadId)
+        {
+            string jobKey = thingId + ":" + loadId;
+            AutoFinishedJobKeys.Add(jobKey);
+
+            List<string> toRemove = new List<string>();
+            foreach (string key in AutoCapturedStageKeys)
+            {
+                if (key.StartsWith(jobKey + ":", StringComparison.Ordinal))
+                {
+                    // 保留结束阶段键，防止 FinishAction 被重复调用时再次输出。
+                    if (key.EndsWith(":" + StageJobFinished, StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    toRemove.Add(key);
+                }
+            }
+
+            for (int i = 0; i < toRemove.Count; i++)
+            {
+                AutoCapturedStageKeys.Remove(toRemove[i]);
+            }
+
+            TrimAutoCaptureCacheIfNeeded();
+        }
+
+        private static void MaybeNotifyAutoCapture(string jobKey)
+        {
+            if (!AutoNotifiedJobKeys.Add(jobKey))
+            {
+                return;
+            }
+
+            Messages.Message(
+                "已自动记录恋人 Lovin 运行诊断，请在日志中搜索“自动 Lovin 运行诊断”。",
+                MessageTypeDefOf.NeutralEvent,
+                historical: false);
+        }
+
+        private static void TrimAutoCaptureCacheIfNeeded()
+        {
+            if (AutoCapturedStageKeys.Count <= MaxAutoCaptureCacheEntries
+                && AutoFinishedJobKeys.Count <= MaxAutoCaptureCacheEntries
+                && AutoNotifiedJobKeys.Count <= MaxAutoCaptureCacheEntries)
+            {
+                return;
+            }
+
+            AutoCapturedStageKeys.Clear();
+            AutoFinishedJobKeys.Clear();
+            AutoNotifiedJobKeys.Clear();
+        }
+
+        private readonly struct AutoCaptureMeta
+        {
+            public readonly string StageName;
+            public readonly string LoverThingId;
+            public readonly int JobLoadId;
+            public readonly int GameTick;
+
+            public AutoCaptureMeta(
+                string stageName,
+                string loverThingId,
+                int jobLoadId,
+                int gameTick)
+            {
+                StageName = stageName;
+                LoverThingId = loverThingId;
+                JobLoadId = jobLoadId;
+                GameTick = gameTick;
+            }
+        }
+
+        /// <summary>
+        /// 构建完整运行状态报告；供手动诊断与自动捕获共用。
+        /// </summary>
+        private static bool TryBuildFullRuntimeReport(
+            Pawn focus,
+            string reportTitle,
+            string? stageName,
+            JobCondition? jobCondition,
+            AutoCaptureMeta? autoCaptureMeta,
+            out string report,
+            out string? failureScreenMessage)
+        {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("=== MAP-机械族机械师：当前爱爱运行状态诊断 ===");
+            failureScreenMessage = null;
+            sb.AppendLine(reportTitle);
             sb.AppendLine("说明：只读诊断，不修改 Job、姿态、寻路、床主、预约、关系、开关或冷却。");
-            sb.AppendLine("点击的 Pawn：" + ExplicitSocialLovinUtility.DescribePawn(clicked));
-            sb.AppendLine("当前游戏 Tick：" + Find.TickManager.TicksGame);
+
+            if (autoCaptureMeta.HasValue)
+            {
+                AutoCaptureMeta meta = autoCaptureMeta.Value;
+                sb.AppendLine("游戏 Tick：" + meta.GameTick);
+                sb.AppendLine("恋人 ThingID：" + meta.LoverThingId);
+                sb.AppendLine("恋人 Job.loadID：" + meta.JobLoadId);
+                sb.AppendLine("当前阶段：" + meta.StageName);
+                if (jobCondition.HasValue)
+                {
+                    sb.AppendLine("JobCondition：" + DescribeJobCondition(jobCondition.Value));
+                }
+            }
+            else
+            {
+                sb.AppendLine("点击的 Pawn：" + ExplicitSocialLovinUtility.DescribePawn(focus));
+                sb.AppendLine("当前游戏 Tick：" + Find.TickManager.TicksGame);
+            }
 
             if (!TryResolveRuntimePair(
-                    clicked,
+                    focus,
                     sb,
                     out Pawn? humanSpouse,
                     out Pawn? lover,
@@ -62,12 +501,14 @@ namespace MAP_MechanoidMechanitor
                     sb.AppendLine(resolveNote);
                 }
 
-                Log.Message(sb.ToString());
-                Messages.Message(
-                    resolveNote ?? "当前爱爱运行状态诊断失败：无法解析双方。",
-                    MessageTypeDefOf.RejectInput,
-                    historical: false);
-                return;
+                if (!string.IsNullOrEmpty(stageName))
+                {
+                    sb.AppendLine("自动捕获阶段：" + stageName);
+                }
+
+                report = sb.ToString();
+                failureScreenMessage = resolveNote;
+                return false;
             }
 
             sb.AppendLine("解析到的人类配偶：" + ExplicitSocialLovinUtility.DescribePawn(humanSpouse));
@@ -88,19 +529,15 @@ namespace MAP_MechanoidMechanitor
                 sb.AppendLine("[状态] " + resolveNote);
             }
 
-            AppendPawnRuntimeSection(sb, "点击的 Pawn", clicked, humanSpouse, lover, sharedBed);
-            if (humanSpouse != null && humanSpouse != clicked)
+            AppendPawnRuntimeSection(sb, "焦点 Pawn", focus, humanSpouse, lover, sharedBed);
+            if (humanSpouse != null && humanSpouse != focus)
             {
                 AppendPawnRuntimeSection(sb, "人类配偶", humanSpouse, humanSpouse, lover, sharedBed);
             }
 
-            if (lover != null && lover != clicked)
+            if (lover != null && lover != focus)
             {
                 AppendPawnRuntimeSection(sb, "授权恋人", lover, humanSpouse, lover, sharedBed);
-            }
-            else if (lover != null && lover == clicked)
-            {
-                // 点击区段已输出恋人；仍补一份绑定相关摘要会在绑定区给出。
             }
 
             AppendBindingSection(sb, humanSpouse, lover, sharedBed);
@@ -108,19 +545,39 @@ namespace MAP_MechanoidMechanitor
             AppendBedSection(sb, humanSpouse, lover, sharedBed);
             bool harmonyOk = AppendHarmonyPatchSection(sb);
             string conclusion = BuildRuntimeConclusion(
-                clicked,
+                focus,
                 humanSpouse,
                 lover,
                 sharedBed,
                 harmonyOk);
             sb.AppendLine("--- 最终结论 ---");
             sb.AppendLine("可能故障阶段：" + conclusion);
+            if (jobCondition.HasValue)
+            {
+                sb.AppendLine("本次结束 JobCondition：" + DescribeJobCondition(jobCondition.Value));
+            }
 
-            Log.Message(sb.ToString());
-            Messages.Message(
-                "当前爱爱运行状态诊断完成，详细信息已写入日志。",
-                MessageTypeDefOf.TaskCompletion,
-                historical: false);
+            report = sb.ToString();
+            return true;
+        }
+
+        private static string DescribeJobCondition(JobCondition condition)
+        {
+            switch (condition)
+            {
+                case JobCondition.Succeeded:
+                    return "Succeeded（成功完成）";
+                case JobCondition.Incompletable:
+                    return "Incompletable（无法完成／失败条件）";
+                case JobCondition.InterruptForced:
+                    return "InterruptForced（强制中断）";
+                case JobCondition.Errored:
+                    return "Errored（错误）";
+                case JobCondition.ErroredPather:
+                    return "ErroredPather（寻路错误）";
+                default:
+                    return condition.ToString();
+            }
         }
 
         private static bool TryResolveRuntimePair(
