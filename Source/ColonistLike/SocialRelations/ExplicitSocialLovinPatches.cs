@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using RimWorld;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -13,6 +15,7 @@ namespace MAP_MechanoidMechanitor
     {
         private const string LogPrefix = "[MAP-机械族机械师] ExplicitSocialLovinPatches：";
         private const int ErrorKeyClaimBedTargetNotFound = 879346701;
+        private const int ErrorKeyLovinToilStructureUnexpected = 879346702;
 
         /// <summary>
         /// 原版未找到床上伴侣时，把已开启「与配偶爱爱」的远程恋人配偶交给 ThinkNode / JobGiver。
@@ -37,6 +40,157 @@ namespace MAP_MechanoidMechanitor
                 {
                     __result = partner;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 远程 Lovin：人类侧在最终倒计时前等待恋人入床；恋人侧全程校验配偶仍在对应 Lovin。
+        /// 仅包装原版 MakeNewToils，不复制完整 JobDriver。
+        /// </summary>
+        [HarmonyPatch(typeof(JobDriver_Lovin), "MakeNewToils")]
+        public static class Patch_JobDriver_Lovin_MakeNewToils
+        {
+            [HarmonyPostfix]
+            public static IEnumerable<Toil> Postfix(
+                IEnumerable<Toil> __result,
+                JobDriver_Lovin __instance)
+            {
+                return WrapRemoteLovinToils(__result, __instance);
+            }
+
+            private static IEnumerable<Toil> WrapRemoteLovinToils(
+                IEnumerable<Toil> original,
+                JobDriver_Lovin driver)
+            {
+                Pawn actor = driver.pawn;
+                Job? job = driver.job;
+                if (!ExplicitSocialLovinUtility.TryGetLovinPartnerAndBed(
+                    job,
+                    out Pawn? partner,
+                    out Building_Bed? bed)
+                    || partner == null
+                    || bed == null)
+                {
+                    foreach (Toil toil in original)
+                    {
+                        yield return toil;
+                    }
+
+                    yield break;
+                }
+
+                bool isLoverCompanion =
+                    ExplicitSocialLovinUtility.IsRemoteLoverCompanionLovinJob(actor, partner, bed);
+                if (isLoverCompanion)
+                {
+                    // 覆盖 ClaimBed / GotoBed / 瞬时初始化 / 最终 LayDown；
+                    // 配偶已中断时阻止进入瞬时 Toil，避免反向重新启动人类 Lovin。
+                    Pawn humanSpouse = partner;
+                    Building_Bed sharedBed = bed;
+                    Pawn lover = actor;
+                    driver.AddFailCondition(
+                        () => ExplicitSocialLovinUtility.ShouldFailRemoteLoverCompanionLovin(
+                            lover,
+                            humanSpouse,
+                            sharedBed));
+                }
+
+                bool isHumanInitiator =
+                    ExplicitSocialLovinUtility.IsRemoteHumanSpouseLovinJob(actor, partner, bed);
+                if (!isHumanInitiator)
+                {
+                    foreach (Toil toil in original)
+                    {
+                        yield return toil;
+                    }
+
+                    yield break;
+                }
+
+                List<Toil> toils = new List<Toil>();
+                foreach (Toil toil in original)
+                {
+                    toils.Add(toil);
+                }
+
+                int insertIndex = FindWaitInsertIndex(toils);
+                if (insertIndex < 0)
+                {
+                    Log.ErrorOnce(
+                        $"{LogPrefix}无法识别 JobDriver_Lovin 的瞬时初始化→最终 LayDown 结构，" +
+                        "已回退原版 Toil 流程（远程入床等待未插入）。",
+                        ErrorKeyLovinToilStructureUnexpected);
+                    for (int i = 0; i < toils.Count; i++)
+                    {
+                        yield return toils[i];
+                    }
+
+                    yield break;
+                }
+
+                Toil waitForLover = CreateWaitForRemoteLoverInBedToil(driver, actor, partner, bed);
+                for (int i = 0; i < toils.Count; i++)
+                {
+                    if (i == insertIndex)
+                    {
+                        yield return waitForLover;
+                    }
+
+                    yield return toils[i];
+                }
+            }
+
+            /// <summary>
+            /// 原版结构：Claim(Instant) → Goto(PatherArrival) → 初始化(Instant) → LayDown(Never)。
+            /// 在「Instant 后紧跟 Never」之间插入等待 Toil。
+            /// </summary>
+            private static int FindWaitInsertIndex(List<Toil> toils)
+            {
+                for (int i = 0; i < toils.Count - 1; i++)
+                {
+                    if (toils[i].defaultCompleteMode == ToilCompleteMode.Instant
+                        && toils[i + 1].defaultCompleteMode == ToilCompleteMode.Never)
+                    {
+                        return i + 1;
+                    }
+                }
+
+                return -1;
+            }
+
+            /// <summary>
+            /// 复用原版 LayDown 床上姿态；不递减 ticksLeft，恋人入床后再进入最终倒计时。
+            /// </summary>
+            private static Toil CreateWaitForRemoteLoverInBedToil(
+                JobDriver_Lovin driver,
+                Pawn humanSpouse,
+                Pawn lover,
+                Building_Bed bed)
+            {
+                Toil wait = Toils_LayDown.LayDown(
+                    TargetIndex.B,
+                    hasBed: true,
+                    lookForOtherJobs: false,
+                    canSleep: false,
+                    gainRestAndHealth: false);
+                wait.socialMode = RandomSocialMode.Off;
+                wait.FailOn(
+                    () => !ExplicitSocialLovinUtility.IsRemoteLoverStillBoundForHumanWait(
+                        humanSpouse,
+                        lover,
+                        bed));
+                wait.AddPreTickIntervalAction(
+                    delegate(int _)
+                    {
+                        if (ExplicitSocialLovinUtility.IsRemoteLoverPhysicallyReadyInBed(
+                            humanSpouse,
+                            lover,
+                            bed))
+                        {
+                            driver.ReadyForNextToil();
+                        }
+                    });
+                return wait;
             }
         }
 

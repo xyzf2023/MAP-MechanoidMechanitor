@@ -50,6 +50,176 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
+        /// 人类配偶发起、授权恋人远程响应的 Lovin Job（执行者是人类发起者）。
+        /// </summary>
+        public static bool IsRemoteHumanSpouseLovinJob(Pawn? actor, Pawn? partner, Building_Bed? bed)
+        {
+            if (actor == null || partner == null || bed == null || bed.Destroyed)
+            {
+                return false;
+            }
+
+            // 发起者必须不是授权恋人，伴侣必须是授权恋人。
+            if (ExplicitSocialRelationUtility.IsOptedIn(actor)
+                || !ExplicitSocialRelationUtility.IsOptedIn(partner))
+            {
+                return false;
+            }
+
+            if (actor.RaceProps == null || !actor.RaceProps.Humanlike)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 授权恋人配套响应人类配偶的 Lovin Job（执行者是授权恋人）。
+        /// </summary>
+        public static bool IsRemoteLoverCompanionLovinJob(Pawn? actor, Pawn? partner, Building_Bed? bed)
+        {
+            if (actor == null || partner == null || bed == null || bed.Destroyed)
+            {
+                return false;
+            }
+
+            if (!ExplicitSocialRelationUtility.IsOptedIn(actor)
+                || ExplicitSocialRelationUtility.IsOptedIn(partner))
+            {
+                return false;
+            }
+
+            if (partner.RaceProps == null || !partner.RaceProps.Humanlike)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 从 Lovin Job 读取 TargetIndex.A / B（伴侣与床铺）。
+        /// </summary>
+        public static bool TryGetLovinPartnerAndBed(
+            Job? job,
+            out Pawn? partner,
+            out Building_Bed? bed)
+        {
+            partner = null;
+            bed = null;
+            if (job == null || job.def != JobDefOf.Lovin)
+            {
+                return false;
+            }
+
+            partner = job.GetTarget(TargetIndex.A).Thing as Pawn;
+            bed = job.GetTarget(TargetIndex.B).Thing as Building_Bed;
+            return partner != null && bed != null;
+        }
+
+        /// <summary>
+        /// 恋人仍绑定本次远程 Lovin（可在赶路中）；供人类等待 Toil 的 FailOn。
+        /// </summary>
+        public static bool IsRemoteLoverStillBoundForHumanWait(
+            Pawn humanSpouse,
+            Pawn? lover,
+            Building_Bed bed)
+        {
+            if (!IsLivingSpawnedPawn(lover) || lover!.Map != humanSpouse.Map)
+            {
+                return false;
+            }
+
+            if (bed.Destroyed || !bed.Spawned)
+            {
+                return false;
+            }
+
+            if (lover.CurJobDef != JobDefOf.Lovin || lover.CurJob == null)
+            {
+                return false;
+            }
+
+            Job loverJob = lover.CurJob;
+            if (loverJob.GetTarget(TargetIndex.A).Thing != humanSpouse)
+            {
+                return false;
+            }
+
+            return loverJob.GetTarget(TargetIndex.B).Thing == bed;
+        }
+
+        /// <summary>
+        /// 恋人已真正入床，可进入原版最终 LayDown 倒计时。
+        /// </summary>
+        public static bool IsRemoteLoverPhysicallyReadyInBed(
+            Pawn humanSpouse,
+            Pawn? lover,
+            Building_Bed bed)
+        {
+            if (!IsRemoteLoverStillBoundForHumanWait(humanSpouse, lover, bed))
+            {
+                return false;
+            }
+
+            if (!lover!.GetPosture().InBed())
+            {
+                return false;
+            }
+
+            return lover.CurrentBed() == bed;
+        }
+
+        /// <summary>
+        /// 人类配偶仍绑定本次远程 Lovin；供恋人全程 AddFailCondition（true=应失败）。
+        /// </summary>
+        public static bool ShouldFailRemoteLoverCompanionLovin(
+            Pawn lover,
+            Pawn? humanSpouse,
+            Building_Bed? bed)
+        {
+            return !IsRemoteHumanStillBoundForLoverCompanion(lover, humanSpouse, bed);
+        }
+
+        /// <summary>
+        /// 人类配偶仍在执行针对该恋人的 Lovin，且床铺有效。
+        /// </summary>
+        public static bool IsRemoteHumanStillBoundForLoverCompanion(
+            Pawn lover,
+            Pawn? humanSpouse,
+            Building_Bed? bed)
+        {
+            if (!IsLivingSpawnedPawn(humanSpouse) || humanSpouse!.Map != lover.Map)
+            {
+                return false;
+            }
+
+            if (bed == null || bed.Destroyed || !bed.Spawned)
+            {
+                return false;
+            }
+
+            if (humanSpouse.CurJobDef != JobDefOf.Lovin || humanSpouse.CurJob == null)
+            {
+                return false;
+            }
+
+            Job humanJob = humanSpouse.CurJob;
+            if (humanJob.GetTarget(TargetIndex.A).Thing != lover)
+            {
+                return false;
+            }
+
+            return humanJob.GetTarget(TargetIndex.B).Thing == bed;
+        }
+
+        private static bool IsLivingSpawnedPawn(Pawn? pawn)
+        {
+            return pawn != null && !pawn.Destroyed && !pawn.Dead && pawn.Spawned;
+        }
+
+        /// <summary>
         /// 在人类配偶已躺在可用双人床、且床上尚无原版伴侣时，查找可响应 Lovin 的授权恋人。
         /// </summary>
         public static Pawn? TryFindEnabledLoverPartnerForRemoteLovin(Pawn? humanSpouse)

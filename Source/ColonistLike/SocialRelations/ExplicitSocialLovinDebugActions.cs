@@ -142,7 +142,8 @@ namespace MAP_MechanoidMechanitor
                         initiator,
                         null,
                         ticksGame);
-                    Finish(sb, CollectJobGiverDoLovinBlocks(initiator));
+                    AbsorbFailures(CollectJobGiverDoLovinBlocks(initiator));
+                    Finish(sb, reportBlocks);
                     return;
                 }
 
@@ -198,7 +199,8 @@ namespace MAP_MechanoidMechanitor
                 primaryLover,
                 ticksGame);
 
-            Finish(sb, CollectJobGiverDoLovinBlocks(initiator));
+            AbsorbFailures(CollectJobGiverDoLovinBlocks(initiator));
+            Finish(sb, reportBlocks);
         }
 
         /// <summary>
@@ -535,10 +537,13 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void Finish(StringBuilder sb, List<string> jobGiverBlocks)
+        /// <summary>
+        /// 最终阻断数量必须与日志中去重后的全部 [阻断] 一致（含 JobGiver 链与候选预检）。
+        /// </summary>
+        private static void Finish(StringBuilder sb, List<string> reportBlocks)
         {
             sb.AppendLine("--- 最终结论 ---");
-            int n = jobGiverBlocks.Count;
+            int n = reportBlocks.Count;
             if (n == 0)
             {
                 sb.AppendLine("诊断结果：当前满足 Try job giver → JobGiver_DoLovin 的条件。");
