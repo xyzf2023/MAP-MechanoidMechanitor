@@ -50,6 +50,66 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
+        /// Lovin 频率计算中，授权恋人采用的有效年龄（原版 FlatHill 峰值区间内）。
+        /// </summary>
+        public const float LovinEffectiveAgeYearsForOptedInLover = 18f;
+
+        /// <summary>
+        /// 与原版 LovePartnerRelationUtility.LovinMtbSinglePawnFactor 完全相同的年龄 FlatHill。
+        /// GenMath.FlatHill(0f, 14f, 16f, 25f, 80f, 0.2f, age)
+        /// </summary>
+        public static float EvaluateLovinAgeFlatHill(float ageYears)
+        {
+            return GenMath.FlatHill(0f, 14f, 16f, 25f, 80f, 0.2f, ageYears);
+        }
+
+        /// <summary>
+        /// 将 LovinMtbSinglePawnFactor 结果中的真实年龄除数替换为有效年龄 18 岁的系数。
+        /// 等价：__result *= 真实年龄系数 / 18岁年龄系数。保留疼痛、意识等其他影响。
+        /// </summary>
+        public static bool TryReplaceOptedInLoverLovinAgeFactor(Pawn? pawn, ref float result)
+        {
+            if (pawn == null || !ExplicitSocialRelationUtility.IsOptedIn(pawn))
+            {
+                return false;
+            }
+
+            if (pawn.ageTracker == null)
+            {
+                return false;
+            }
+
+            if (result <= 0f || float.IsNaN(result) || float.IsInfinity(result))
+            {
+                return false;
+            }
+
+            float realAgeYears = pawn.ageTracker.AgeBiologicalYearsFloat;
+            float realAgeFactor = EvaluateLovinAgeFlatHill(realAgeYears);
+            float effectiveAgeFactor =
+                EvaluateLovinAgeFlatHill(LovinEffectiveAgeYearsForOptedInLover);
+
+            if (realAgeFactor <= 0f
+                || effectiveAgeFactor <= 0f
+                || float.IsNaN(realAgeFactor)
+                || float.IsNaN(effectiveAgeFactor)
+                || float.IsInfinity(realAgeFactor)
+                || float.IsInfinity(effectiveAgeFactor))
+            {
+                return false;
+            }
+
+            float adjusted = result * (realAgeFactor / effectiveAgeFactor);
+            if (adjusted <= 0f || float.IsNaN(adjusted) || float.IsInfinity(adjusted))
+            {
+                return false;
+            }
+
+            result = adjusted;
+            return true;
+        }
+
+        /// <summary>
         /// 人类配偶发起、授权恋人远程响应的 Lovin Job（执行者是人类发起者）。
         /// </summary>
         public static bool IsRemoteHumanSpouseLovinJob(Pawn? actor, Pawn? partner, Building_Bed? bed)

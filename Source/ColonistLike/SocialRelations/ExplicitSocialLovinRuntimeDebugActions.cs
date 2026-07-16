@@ -807,6 +807,11 @@ namespace MAP_MechanoidMechanitor
                     + (pawn.jobs != null) + " / "
                     + (pawn.pather != null));
 
+                if (ExplicitSocialRelationUtility.IsOptedIn(pawn))
+                {
+                    AppendOptedInLoverLovinAgeDiagnostics(sb, pawn);
+                }
+
                 if (job != null && job.def == JobDefOf.Lovin)
                 {
                     AppendLovinTargetLines(sb, pawn, job, humanSpouse, lover, sharedBed);
@@ -815,6 +820,35 @@ namespace MAP_MechanoidMechanitor
             catch (Exception ex)
             {
                 sb.AppendLine("该区段诊断异常：" + ex);
+            }
+        }
+
+        private static void AppendOptedInLoverLovinAgeDiagnostics(StringBuilder sb, Pawn lover)
+        {
+            try
+            {
+                float realAge = lover.ageTracker != null
+                    ? lover.ageTracker.AgeBiologicalYearsFloat
+                    : -1f;
+                float realFactor = ExplicitSocialLovinUtility.EvaluateLovinAgeFlatHill(realAge);
+                float effectiveAge =
+                    ExplicitSocialLovinUtility.LovinEffectiveAgeYearsForOptedInLover;
+                float effectiveFactor =
+                    ExplicitSocialLovinUtility.EvaluateLovinAgeFlatHill(effectiveAge);
+
+                sb.AppendLine("--- 授权恋人 Lovin 年龄系数（仅频率计算） ---");
+                sb.AppendLine("实际生物年龄（AgeBiologicalYearsFloat）：" + realAge);
+                sb.AppendLine("Lovin 频率计算采用的有效年龄：" + effectiveAge + " 岁");
+                sb.AppendLine(
+                    "实际年龄系数 FlatHill(0,14,16,25,80,0.2)：" + realFactor);
+                sb.AppendLine("有效年龄系数（同上参数，年龄=" + effectiveAge + "）：" + effectiveFactor);
+                sb.AppendLine(
+                    "LovinMtbSinglePawnFactor 年龄补丁已安装："
+                    + ExplicitSocialLovinPatches.LovinMtbSinglePawnFactorAgePatchInstalled);
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine("恋人 Lovin 年龄系数诊断异常：" + ex);
             }
         }
 
@@ -1318,6 +1352,17 @@ namespace MAP_MechanoidMechanitor
                     new[] { typeof(Pawn) }),
                 "JobDriver_Lovin.GenerateRandomMinTicksToNextLovin",
                 ref ourPatchesPresent);
+            allResolved &= ReportMethodPatches(
+                sb,
+                AccessTools.Method(
+                    typeof(LovePartnerRelationUtility),
+                    "LovinMtbSinglePawnFactor",
+                    new[] { typeof(Pawn) }),
+                "LovePartnerRelationUtility.LovinMtbSinglePawnFactor",
+                ref ourPatchesPresent);
+            sb.AppendLine(
+                "LovinMtbSinglePawnFactor 年龄补丁 Prepare 标志："
+                + ExplicitSocialLovinPatches.LovinMtbSinglePawnFactorAgePatchInstalled);
             allResolved &= ReportMethodPatches(
                 sb,
                 AccessTools.Method(
