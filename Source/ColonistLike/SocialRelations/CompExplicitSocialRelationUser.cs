@@ -26,19 +26,46 @@ namespace MAP_MechanoidMechanitor
         private bool lovinWithSpouseEnabled;
 
         /// <summary>
+        /// 默认避孕；新生成与旧存档缺字段时均回落到避孕。
+        /// </summary>
+        private LoverPregnancyApproach pregnancyApproach = LoverPregnancyApproach.AvoidPregnancy;
+
+        /// <summary>
         /// 玩家是否授权该恋人响应人类配偶发起的原版 Lovin。默认关闭。
         /// </summary>
         public bool LovinWithSpouseEnabled => lovinWithSpouseEnabled;
+
+        /// <summary>
+        /// 恋人专用生育方式（不写入原版 PregnancyApproach 字典）。
+        /// </summary>
+        public LoverPregnancyApproach PregnancyApproach => pregnancyApproach;
 
         public void DisableLovinWithSpouse()
         {
             lovinWithSpouseEnabled = false;
         }
 
+        public void SetPregnancyApproach(LoverPregnancyApproach approach)
+        {
+            pregnancyApproach = approach;
+        }
+
+        /// <summary>
+        /// 更换配偶后重置为避孕，避免新配偶下意外受孕。
+        /// </summary>
+        public void ResetPregnancyApproachToAvoid()
+        {
+            pregnancyApproach = LoverPregnancyApproach.AvoidPregnancy;
+        }
+
         public override void PostExposeData()
         {
             base.PostExposeData();
             Scribe_Values.Look(ref lovinWithSpouseEnabled, "lovinWithSpouseEnabled", false);
+            Scribe_Values.Look(
+                ref pregnancyApproach,
+                "loverPregnancyApproach",
+                LoverPregnancyApproach.AvoidPregnancy);
         }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()

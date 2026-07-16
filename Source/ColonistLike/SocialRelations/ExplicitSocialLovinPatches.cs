@@ -233,6 +233,21 @@ namespace MAP_MechanoidMechanitor
                     yield break;
                 }
 
+                // 仅非恋人配偶侧安装一次，并且只在整个 Job 正常成功时判定受孕。
+                // 两个 JobDriver 均有原版结束动作，因此不得在恋人侧重复安装。
+                Pawn conceptionSpouse = actor;
+                Pawn conceptionLover = partner;
+                driver.AddFinishAction(
+                    condition =>
+                    {
+                        if (condition == JobCondition.Succeeded)
+                        {
+                            LoverPregnancyUtility.TryConceiveAfterSuccessfulLovin(
+                                conceptionSpouse,
+                                conceptionLover);
+                        }
+                    });
+
                 List<Toil> toils = new List<Toil>();
                 foreach (Toil toil in original)
                 {
@@ -423,7 +438,8 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 临时安全门：后续恋人自定义怀孕完成前，任一参与者为授权恋人则怀孕概率为零。
+        /// 安全门：任一参与者为授权恋人时阻止进入原版怀孕流程。
+        /// 恋人受孕仅由本 MOD 在 Lovin 正常完成后处理。
         /// </summary>
         [HarmonyPatch(
             typeof(PregnancyUtility),

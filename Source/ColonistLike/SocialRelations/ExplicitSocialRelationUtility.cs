@@ -477,11 +477,19 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 新婚成功后关闭「与配偶爱爱」；每名新配偶需玩家重新授权。
+        /// 新婚成功后关闭「与配偶爱爱」，并将生育方式重置为避孕；每名新配偶需玩家重新授权。
         /// </summary>
         private static void DisableLovinWithSpouseAfterSuccessfulAssignment(Pawn lover)
         {
-            lover.GetComp<CompExplicitSocialRelationUser>()?.DisableLovinWithSpouse();
+            CompExplicitSocialRelationUser? comp =
+                lover.GetComp<CompExplicitSocialRelationUser>();
+            if (comp == null)
+            {
+                return;
+            }
+
+            comp.DisableLovinWithSpouse();
+            comp.ResetPregnancyApproachToAvoid();
         }
 
         private static void SendBreakupLetter(Pawn lover, Pawn oldSpouse)
