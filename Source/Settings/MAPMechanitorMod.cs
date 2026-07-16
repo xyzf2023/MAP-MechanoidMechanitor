@@ -47,6 +47,11 @@ namespace MAP_MechanoidMechanitor
                         .Translate());
             }
 
+            listing.CheckboxLabeled(
+                "MAP_Settings_LoverOffspringInheritXenogenes_Label".Translate(),
+                ref Settings.loverOffspringInheritXenogenes,
+                "MAP_Settings_LoverOffspringInheritXenogenes_Description".Translate());
+
             listing.End();
         }
     }

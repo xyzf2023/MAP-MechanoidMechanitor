@@ -18,6 +18,7 @@ namespace MAP_MechanoidMechanitor
         private const int ErrorKeyShouldShowTargetNotFound = 879346601;
         private const int ErrorKeyCanDrawTryRomanceNotFound = 879346602;
         private const int ErrorKeyDrawTryRomanceNotFound = 879346603;
+        private const int ErrorKeyDrawPregnancyApproachNotFound = 879346604;
 
         [HarmonyPatch(typeof(ITab_Pawn_Social), nameof(ITab_Pawn_Social.IsVisible), MethodType.Getter)]
         public static class Patch_ITab_Pawn_Social_IsVisible
@@ -241,6 +242,72 @@ namespace MAP_MechanoidMechanitor
                 ExplicitSocialRelationUtility.DrawAssignSpouseButton(buttonRect, pawn);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 授权恋人的配偶行不使用原版 PregnancyApproach 菜单；
+        /// 原版缓存仍负责为该行预留图标宽度。
+        /// </summary>
+        [HarmonyPatch]
+        public static class Patch_SocialCardUtility_DrawPregnancyApproach
+        {
+            private static MethodBase? TargetMethod()
+            {
+                MethodBase? method = AccessTools.Method(
+                    typeof(SocialCardUtility),
+                    "DrawPregnancyApproach");
+                if (method == null)
+                {
+                    Log.ErrorOnce(
+                        $"{LogPrefix}未找到 SocialCardUtility.DrawPregnancyApproach，" +
+                        "恋人生育方式按钮补丁未应用。",
+                        ErrorKeyDrawPregnancyApproachNotFound);
+                }
+
+                return method;
+            }
+
+            [HarmonyPrefix]
+            public static bool Prefix(
+                object entry,
+                Rect rect,
+                Pawn selPawnForSocialInfo)
+            {
+                if (!TryResolveLoverSpouseEntry(
+                    entry,
+                    selPawnForSocialInfo,
+                    out Pawn? spouse)
+                    || spouse == null)
+                {
+                    return true;
+                }
+
+                LoverPregnancyUIUtility.DrawApproachButton(
+                    rect,
+                    selPawnForSocialInfo,
+                    spouse);
+                return false;
+            }
+        }
+
+        private static bool TryResolveLoverSpouseEntry(
+            object? entry,
+            Pawn? selectedPawn,
+            out Pawn? spouse)
+        {
+            spouse = null;
+            if (entry == null
+                || !ExplicitSocialRelationUtility.IsOptedIn(selectedPawn)
+                || selectedPawn?.relations == null)
+            {
+                return false;
+            }
+
+            spouse = Traverse.Create(entry).Field<Pawn>("otherPawn").Value;
+            return spouse != null
+                && selectedPawn.relations.DirectRelationExists(
+                    PawnRelationDefOf.Spouse,
+                    spouse);
         }
     }
 }

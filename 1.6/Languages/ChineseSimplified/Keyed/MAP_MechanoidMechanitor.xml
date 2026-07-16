@@ -53,4 +53,9 @@
   <MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterText>{LOVER_labelShort}与{TARGET_labelShort}已经结婚。{LOVER_labelShort}已成为{TARGET_labelShort}的妻子。</MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterText>
   <MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggle>与配偶爱爱</MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggle>
   <MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggleDesc>开启后，恋人将尝试在配偶允许时与配偶爱爱。</MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggleDesc>
+  <MAP_MechanoidMechanitor.LoverPregnancy.ApproachTitle>恋人生育方式</MAP_MechanoidMechanitor.LoverPregnancy.ApproachTitle>
+  <MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyMale>尝试生育（孕育男婴）</MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyMale>
+  <MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyFemale>尝试生育（孕育女婴）</MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyFemale>
+  <MAP_Settings_LoverOffspringInheritXenogenes_Label>通过恋人孕育的子嗣继承异种基因</MAP_Settings_LoverOffspringInheritXenogenes_Label>
+  <MAP_Settings_LoverOffspringInheritXenogenes_Description>开启后，恋人孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_Settings_LoverOffspringInheritXenogenes_Description>
 </LanguageData>
