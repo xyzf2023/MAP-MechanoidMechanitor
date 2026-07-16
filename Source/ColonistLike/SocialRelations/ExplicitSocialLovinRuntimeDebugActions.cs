@@ -843,7 +843,7 @@ namespace MAP_MechanoidMechanitor
                     "实际年龄系数 FlatHill(0,14,16,25,80,0.2)：" + realFactor);
                 sb.AppendLine("有效年龄系数（同上参数，年龄=" + effectiveAge + "）：" + effectiveFactor);
                 sb.AppendLine(
-                    "LovinMtbSinglePawnFactor 年龄补丁已安装："
+                    "LovinMtbSinglePawnFactor 有效年龄 Prefix 已安装："
                     + ExplicitSocialLovinPatches.LovinMtbSinglePawnFactorAgePatchInstalled);
             }
             catch (Exception ex)
@@ -1361,7 +1361,7 @@ namespace MAP_MechanoidMechanitor
                 "LovePartnerRelationUtility.LovinMtbSinglePawnFactor",
                 ref ourPatchesPresent);
             sb.AppendLine(
-                "LovinMtbSinglePawnFactor 年龄补丁 Prepare 标志："
+                "LovinMtbSinglePawnFactor 有效年龄 Prefix Prepare 标志："
                 + ExplicitSocialLovinPatches.LovinMtbSinglePawnFactorAgePatchInstalled);
             allResolved &= ReportMethodPatches(
                 sb,

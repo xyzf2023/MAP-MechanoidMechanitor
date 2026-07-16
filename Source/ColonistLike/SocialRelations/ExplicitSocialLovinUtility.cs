@@ -64,48 +64,44 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 将 LovinMtbSinglePawnFactor 结果中的真实年龄除数替换为有效年龄 18 岁的系数。
-        /// 等价：__result *= 真实年龄系数 / 18岁年龄系数。保留疼痛、意识等其他影响。
+        /// 直接按原版 LovinMtbSinglePawnFactor 计算授权恋人单体系数，但年龄固定为有效年龄 18 岁。
+        /// 保留疼痛与意识；成功写入 result 时返回 true（由 Prefix 跳过原版）。
         /// </summary>
-        public static bool TryReplaceOptedInLoverLovinAgeFactor(Pawn? pawn, ref float result)
+        public static bool TryComputeOptedInLoverLovinMtbSinglePawnFactor(
+            Pawn? pawn,
+            out float result)
         {
+            result = 0f;
             if (pawn == null || !ExplicitSocialRelationUtility.IsOptedIn(pawn))
             {
                 return false;
             }
 
-            if (pawn.ageTracker == null)
+            if (pawn.health?.hediffSet == null || pawn.health.capacities == null)
             {
                 return false;
             }
 
-            if (result <= 0f || float.IsNaN(result) || float.IsInfinity(result))
-            {
-                return false;
-            }
-
-            float realAgeYears = pawn.ageTracker.AgeBiologicalYearsFloat;
-            float realAgeFactor = EvaluateLovinAgeFlatHill(realAgeYears);
             float effectiveAgeFactor =
                 EvaluateLovinAgeFlatHill(LovinEffectiveAgeYearsForOptedInLover);
-
-            if (realAgeFactor <= 0f
-                || effectiveAgeFactor <= 0f
-                || float.IsNaN(realAgeFactor)
+            if (effectiveAgeFactor <= 0f
                 || float.IsNaN(effectiveAgeFactor)
-                || float.IsInfinity(realAgeFactor)
                 || float.IsInfinity(effectiveAgeFactor))
             {
                 return false;
             }
 
-            float adjusted = result * (realAgeFactor / effectiveAgeFactor);
-            if (adjusted <= 0f || float.IsNaN(adjusted) || float.IsInfinity(adjusted))
+            // 严格镜像原版：疼痛 → 意识 → 再除以年龄 FlatHill。
+            float num = 1f;
+            num /= 1f - pawn.health.hediffSet.PainTotal;
+            float consciousness =
+                pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness);
+            if (consciousness < 0.5f)
             {
-                return false;
+                num /= consciousness * 2f;
             }
 
-            result = adjusted;
+            result = num / effectiveAgeFactor;
             return true;
         }
 

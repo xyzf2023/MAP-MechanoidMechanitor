@@ -487,7 +487,7 @@ namespace MAP_MechanoidMechanitor
                 + loverRealAgeFactor
                 + "，有效年龄系数="
                 + loverEffectiveAgeFactor
-                + "，年龄补丁已安装="
+                + "，有效年龄 Prefix 已安装="
                 + ExplicitSocialLovinPatches.LovinMtbSinglePawnFactorAgePatchInstalled);
 
             sb.AppendLine("--- 三、模组候选恋人条件 ---");

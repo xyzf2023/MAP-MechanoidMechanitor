@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor
         private const int ErrorKeyLovinMtbSinglePawnFactorNotFound = 879346707;
 
         /// <summary>
-        /// 诊断用：LovinMtbSinglePawnFactor 年龄补丁是否成功定位并应用。
+        /// 诊断用：LovinMtbSinglePawnFactor 有效年龄 Prefix 是否成功定位并应用。
         /// </summary>
         internal static bool LovinMtbSinglePawnFactorAgePatchInstalled { get; private set; }
 
@@ -78,8 +78,8 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 仅抵消授权恋人在 LovinMtbSinglePawnFactor 中的年龄惩罚（有效年龄按 18 岁峰值）。
-        /// 不改真实年龄；保留疼痛、意识等其它原版因子。
+        /// 授权恋人 LovinMtbSinglePawnFactor：Prefix 跳过原版，按有效年龄 18 岁直接计算。
+        /// 避免真实年龄 ≤14 时 FlatHill=0 导致 Infinity，从而无法再换算。
         /// </summary>
         [HarmonyPatch]
         public static class Patch_LovePartnerRelationUtility_LovinMtbSinglePawnFactor
@@ -97,7 +97,7 @@ namespace MAP_MechanoidMechanitor
                 LovinMtbSinglePawnFactorAgePatchInstalled = false;
                 Log.ErrorOnce(
                     $"{LogPrefix}未找到 LovePartnerRelationUtility.LovinMtbSinglePawnFactor(Pawn)，"
-                    + "恋人 Lovin 年龄系数补丁未应用。",
+                    + "恋人 Lovin 有效年龄 Prefix 未应用。",
                     ErrorKeyLovinMtbSinglePawnFactorNotFound);
                 return false;
             }
@@ -116,10 +116,24 @@ namespace MAP_MechanoidMechanitor
                 return cachedTargetMethod;
             }
 
-            [HarmonyPostfix]
-            public static void Postfix(Pawn pawn, ref float __result)
+            [HarmonyPrefix]
+            public static bool Prefix(Pawn pawn, ref float __result)
             {
-                ExplicitSocialLovinUtility.TryReplaceOptedInLoverLovinAgeFactor(pawn, ref __result);
+                if (!ExplicitSocialRelationUtility.IsOptedIn(pawn))
+                {
+                    return true;
+                }
+
+                if (!ExplicitSocialLovinUtility.TryComputeOptedInLoverLovinMtbSinglePawnFactor(
+                        pawn,
+                        out float computed))
+                {
+                    // 有效年龄系数异常或健康数据不足时回退原版。
+                    return true;
+                }
+
+                __result = computed;
+                return false;
             }
         }
 
