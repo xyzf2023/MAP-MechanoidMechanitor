@@ -16,6 +16,12 @@ namespace MAP_MechanoidMechanitor
         private const string LogPrefix = "[MAP-机械族机械师] ExplicitSocialLovinPatches：";
         private const int ErrorKeyLovinToilStructureUnexpected = 879346702;
         private const int ErrorKeyGenerateLovinCooldownNotFound = 879346706;
+        private const int ErrorKeyLovinMtbSinglePawnFactorNotFound = 879346707;
+
+        /// <summary>
+        /// 诊断用：LovinMtbSinglePawnFactor 年龄补丁是否成功定位并应用。
+        /// </summary>
+        internal static bool LovinMtbSinglePawnFactorAgePatchInstalled { get; private set; }
 
         /// <summary>
         /// 原版未找到床上伴侣时，把已开启「与配偶爱爱」的远程恋人配偶交给 ThinkNode / JobGiver。
@@ -68,6 +74,52 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 __result /= 200f;
+            }
+        }
+
+        /// <summary>
+        /// 仅抵消授权恋人在 LovinMtbSinglePawnFactor 中的年龄惩罚（有效年龄按 18 岁峰值）。
+        /// 不改真实年龄；保留疼痛、意识等其它原版因子。
+        /// </summary>
+        [HarmonyPatch]
+        public static class Patch_LovePartnerRelationUtility_LovinMtbSinglePawnFactor
+        {
+            private static MethodInfo? cachedTargetMethod;
+
+            private static bool Prepare()
+            {
+                if (TargetMethod() != null)
+                {
+                    LovinMtbSinglePawnFactorAgePatchInstalled = true;
+                    return true;
+                }
+
+                LovinMtbSinglePawnFactorAgePatchInstalled = false;
+                Log.ErrorOnce(
+                    $"{LogPrefix}未找到 LovePartnerRelationUtility.LovinMtbSinglePawnFactor(Pawn)，"
+                    + "恋人 Lovin 年龄系数补丁未应用。",
+                    ErrorKeyLovinMtbSinglePawnFactorNotFound);
+                return false;
+            }
+
+            private static MethodBase? TargetMethod()
+            {
+                if (cachedTargetMethod != null)
+                {
+                    return cachedTargetMethod;
+                }
+
+                cachedTargetMethod = AccessTools.Method(
+                    typeof(LovePartnerRelationUtility),
+                    "LovinMtbSinglePawnFactor",
+                    new[] { typeof(Pawn) });
+                return cachedTargetMethod;
+            }
+
+            [HarmonyPostfix]
+            public static void Postfix(Pawn pawn, ref float __result)
+            {
+                ExplicitSocialLovinUtility.TryReplaceOptedInLoverLovinAgeFactor(pawn, ref __result);
             }
         }
 

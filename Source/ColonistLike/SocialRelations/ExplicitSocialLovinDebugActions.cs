@@ -469,6 +469,27 @@ namespace MAP_MechanoidMechanitor
                     + (comp.LovinWithSpouseEnabled ? "开启" : "关闭"));
             }
 
+            float loverRealAge = primaryLover.ageTracker != null
+                ? primaryLover.ageTracker.AgeBiologicalYearsFloat
+                : -1f;
+            float loverRealAgeFactor =
+                ExplicitSocialLovinUtility.EvaluateLovinAgeFlatHill(loverRealAge);
+            float loverEffectiveAge =
+                ExplicitSocialLovinUtility.LovinEffectiveAgeYearsForOptedInLover;
+            float loverEffectiveAgeFactor =
+                ExplicitSocialLovinUtility.EvaluateLovinAgeFlatHill(loverEffectiveAge);
+            Status(
+                "恋人实际生物年龄="
+                + loverRealAge
+                + "，Lovin 有效年龄="
+                + loverEffectiveAge
+                + "，实际年龄系数="
+                + loverRealAgeFactor
+                + "，有效年龄系数="
+                + loverEffectiveAgeFactor
+                + "，年龄补丁已安装="
+                + ExplicitSocialLovinPatches.LovinMtbSinglePawnFactorAgePatchInstalled);
+
             sb.AppendLine("--- 三、模组候选恋人条件 ---");
             TmpFailures.Clear();
             ExplicitSocialLovinUtility.EvaluateEnabledLoverForRemoteLovin(
