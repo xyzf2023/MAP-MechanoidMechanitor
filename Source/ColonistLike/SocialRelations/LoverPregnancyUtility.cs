@@ -89,13 +89,17 @@ namespace MAP_MechanoidMechanitor
                 $"继承异种基因={inheritXenogenes}。");
         }
 
-        public static void TryCompleteBirth(Hediff_LoverPregnant pregnancy)
+        /// <summary>
+        /// 尝试完成自定义生产。成功返回已生成并放置的新生儿；失败返回 null，孕期保留以便重试。
+        /// 调用方在成功后负责移除怀孕 Hediff。
+        /// </summary>
+        public static Pawn? TryCompleteBirth(Hediff_LoverPregnant pregnancy)
         {
             Pawn? lover = pregnancy.pawn;
             PawnKindDef? kind = pregnancy.ChildKindDef;
             if (lover == null || lover.Dead)
             {
-                return;
+                return null;
             }
 
             if (kind?.RaceProps?.lifeStageAges == null
@@ -103,9 +107,9 @@ namespace MAP_MechanoidMechanitor
                     stage => stage.def.developmentalStage.Newborn()))
             {
                 Log.Error(
-                    $"{LogPrefix}生产终止：受孕时保存的 PawnKindDef " +
+                    $"{LogPrefix}生产失败：受孕时保存的 PawnKindDef " +
                     $"{kind?.defName ?? "<null>"} 不支持 Newborn 阶段。");
-                return;
+                return null;
             }
 
             List<GeneDef> endogenes = DistinctValid(pregnancy.EndogeneSnapshot);
@@ -144,35 +148,57 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 EnforceExactGenes(child, endogenes, xenogenes);
-                AddBirthRelations(child, lover, pregnancy.GeneticParent);
                 if (child.health == null)
                 {
                     throw new InvalidOperationException("新生儿没有 health tracker。");
                 }
 
-                child.health.AddHediff(MAPMechanitor_HediffDefOf.MAP_ExtraordinaryOffspring);
+                // 亲属与超凡子嗣属于出生后附加；即使失败也不回滚已生成的新生儿放置。
+                AddBirthRelations(child, lover, pregnancy.GeneticParent);
+                try
+                {
+                    child.health.AddHediff(MAPMechanitor_HediffDefOf.MAP_ExtraordinaryOffspring);
+                }
+                catch (Exception hediffException)
+                {
+                    Log.Warning(
+                        $"{LogPrefix}为新生儿添加超凡子嗣健康状态失败（出生仍视为成功）：" +
+                        hediffException);
+                }
 
                 if (!PawnUtility.TrySpawnHatchedOrBornPawn(child, lover))
                 {
                     Log.Error(
                         $"{LogPrefix}生产失败：无法将 {child} 放置到 {lover} 所在环境；" +
-                        "该 Pawn 将被安全丢弃，且不会重复生成。");
+                        "该 Pawn 将被安全丢弃，孕期保留以便重试。");
                     Find.WorldPawns.PassToWorld(child, PawnDiscardDecideMode.Discard);
-                    return;
+                    return null;
                 }
 
-                TaleRecorder.RecordTale(TaleDefOf.GaveBirth, lover, child);
+                try
+                {
+                    TaleRecorder.RecordTale(TaleDefOf.GaveBirth, lover, child);
+                }
+                catch (Exception taleException)
+                {
+                    Log.Warning(
+                        $"{LogPrefix}记录 GaveBirth 故事失败（出生仍视为成功）：{taleException}");
+                }
+
                 Log.Message(
                     $"{LogPrefix}{lover.LabelShort} 成功产下 {child.LabelShort} " +
                     $"({kind.defName})。");
+                return child;
             }
             catch (Exception exception)
             {
-                Log.Error($"{LogPrefix}自定义生产发生异常，已终止且不会重试：{exception}");
+                Log.Error($"{LogPrefix}自定义生产发生异常，孕期保留以便重试：{exception}");
                 if (child != null && !child.Spawned && !child.IsCaravanMember())
                 {
                     Find.WorldPawns.PassToWorld(child, PawnDiscardDecideMode.Discard);
                 }
+
+                return null;
             }
         }
 

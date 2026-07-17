@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>MAP_LoverGiveBirth</defName>
+    <label>开始分娩</label>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_LoverGiveBirth</driverClass>
+    <reportString>正在分娩。</reportString>
+    <casualInterruptible>true</casualInterruptible>
+    <playerInterruptible>true</playerInterruptible>
+  </JobDef>
+</Defs>
