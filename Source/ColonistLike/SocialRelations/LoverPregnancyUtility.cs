@@ -198,6 +198,14 @@ namespace MAP_MechanoidMechanitor
                     }
                 }
 
+                if (!spawned && IsChildInGameWorld(child))
+                {
+                    Log.Warning(
+                        $"{LogPrefix}TrySpawnHatchedOrBornPawn 返回 false，但新生儿已进入" +
+                        "实际环境，仍视为生产成功。");
+                    spawned = true;
+                }
+
                 if (!spawned)
                 {
                     Log.Error(
@@ -209,8 +217,6 @@ namespace MAP_MechanoidMechanitor
                         geneticParent,
                         addedParentBirth,
                         addedGeneticParent);
-                    addedParentBirth = false;
-                    addedGeneticParent = false;
                     DiscardUncommittedChild(child);
                     return null;
                 }
@@ -377,63 +383,74 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            try
+            bool parentBirthExistedBefore =
+                child.relations.DirectRelationExists(PawnRelationDefOf.ParentBirth, lover);
+            bool geneticParentRequired = geneticParent != null && geneticParent != lover;
+            bool geneticParentExistedBefore = geneticParentRequired
+                && child.relations.DirectRelationExists(PawnRelationDefOf.Parent, geneticParent!);
+            bool failed = false;
+
+            // 恋人仅作生母（ParentBirth），不作普通 Parent，避免同时显示“母亲”和“生母”。
+            if (!parentBirthExistedBefore)
             {
-                // 恋人仅作生母（ParentBirth），不作普通 Parent，避免同时显示“母亲”和“生母”。
-                child.relations.AddDirectRelation(PawnRelationDefOf.ParentBirth, lover);
-                if (!child.relations.DirectRelationExists(PawnRelationDefOf.ParentBirth, lover))
+                try
                 {
+                    child.relations.AddDirectRelation(PawnRelationDefOf.ParentBirth, lover);
+                }
+                catch (Exception exception)
+                {
+                    failed = true;
                     Log.Error(
-                        $"{LogPrefix}未能为新生儿 {child} 添加恋人 {lover} 的 ParentBirth 关系。");
-                    return false;
+                        $"{LogPrefix}为新生儿 {child} 添加恋人 {lover} 的 ParentBirth " +
+                        $"关系时发生异常：{exception}");
                 }
-
-                addedParentBirth = true;
-
-                if (geneticParent != null && geneticParent != lover)
-                {
-                    child.relations.AddDirectRelation(PawnRelationDefOf.Parent, geneticParent);
-                    if (!child.relations.DirectRelationExists(
-                        PawnRelationDefOf.Parent,
-                        geneticParent))
-                    {
-                        Log.Error(
-                            $"{LogPrefix}未能为新生儿 {child} 添加遗传配偶 {geneticParent} " +
-                            "的 Parent 关系。");
-                        ClearAttemptedBirthRelations(
-                            child,
-                            lover,
-                            geneticParent,
-                            addedParentBirth,
-                            addedGeneticParent: false);
-                        addedParentBirth = false;
-                        return false;
-                    }
-
-                    addedGeneticParent = true;
-                }
-
-                return true;
             }
-            catch (Exception exception)
+
+            bool parentBirthExistsNow =
+                child.relations.DirectRelationExists(PawnRelationDefOf.ParentBirth, lover);
+            addedParentBirth = !parentBirthExistedBefore && parentBirthExistsNow;
+            if (!parentBirthExistsNow)
             {
+                failed = true;
                 Log.Error(
-                    $"{LogPrefix}为新生儿 {child} 建立亲属关系时发生异常：{exception}");
-                ClearAttemptedBirthRelations(
-                    child,
-                    lover,
-                    geneticParent,
-                    addedParentBirth,
-                    addedGeneticParent);
-                addedParentBirth = false;
-                addedGeneticParent = false;
-                return false;
+                    $"{LogPrefix}未能为新生儿 {child} 添加恋人 {lover} 的 ParentBirth 关系。");
             }
+
+            if (geneticParentRequired)
+            {
+                if (!geneticParentExistedBefore)
+                {
+                    try
+                    {
+                        child.relations.AddDirectRelation(PawnRelationDefOf.Parent, geneticParent!);
+                    }
+                    catch (Exception exception)
+                    {
+                        failed = true;
+                        Log.Error(
+                            $"{LogPrefix}为新生儿 {child} 添加遗传配偶 {geneticParent} " +
+                            $"的 Parent 关系时发生异常：{exception}");
+                    }
+                }
+
+                bool geneticParentExistsNow =
+                    child.relations.DirectRelationExists(PawnRelationDefOf.Parent, geneticParent!);
+                addedGeneticParent = !geneticParentExistedBefore && geneticParentExistsNow;
+                if (!geneticParentExistsNow)
+                {
+                    failed = true;
+                    Log.Error(
+                        $"{LogPrefix}未能为新生儿 {child} 添加遗传配偶 {geneticParent} " +
+                        "的 Parent 关系。");
+                }
+            }
+
+            return !failed;
         }
 
         /// <summary>
         /// 仅清理本次尝试实际添加的关系，不触碰恋人或遗传配偶原有的其他亲属关系。
-        /// 使用原版 RemoveDirectRelation，由其维护双向索引。
+        /// 使用原版 TryRemoveDirectRelation，由其维护双向索引。
         /// </summary>
         private static void ClearAttemptedBirthRelations(
             Pawn child,
@@ -447,33 +464,58 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            try
+            if (addedGeneticParent && geneticParent != null)
             {
-                if (addedGeneticParent
-                    && geneticParent != null
-                    && child.relations.DirectRelationExists(
+                try
+                {
+                    if (child.relations.DirectRelationExists(
                         PawnRelationDefOf.Parent,
                         geneticParent))
-                {
-                    child.relations.RemoveDirectRelation(
-                        PawnRelationDefOf.Parent,
-                        geneticParent);
+                    {
+                        bool removed = child.relations.TryRemoveDirectRelation(
+                            PawnRelationDefOf.Parent,
+                            geneticParent);
+                        if (!removed)
+                        {
+                            Log.Error(
+                                $"{LogPrefix}清理本次添加的遗传配偶 Parent 关系失败：" +
+                                $"child={child}，geneticParent={geneticParent}。");
+                        }
+                    }
                 }
-
-                if (addedParentBirth
-                    && child.relations.DirectRelationExists(
-                        PawnRelationDefOf.ParentBirth,
-                        lover))
+                catch (Exception exception)
                 {
-                    child.relations.RemoveDirectRelation(
-                        PawnRelationDefOf.ParentBirth,
-                        lover);
+                    Log.Error(
+                        $"{LogPrefix}清理本次添加的遗传配偶 Parent 关系时发生异常：" +
+                        exception);
                 }
             }
-            catch (Exception exception)
+
+            if (addedParentBirth)
             {
-                Log.Error(
-                    $"{LogPrefix}清理本次尝试添加的亲属关系失败：{exception}");
+                try
+                {
+                    if (child.relations.DirectRelationExists(
+                        PawnRelationDefOf.ParentBirth,
+                        lover))
+                    {
+                        bool removed = child.relations.TryRemoveDirectRelation(
+                            PawnRelationDefOf.ParentBirth,
+                            lover);
+                        if (!removed)
+                        {
+                            Log.Error(
+                                $"{LogPrefix}清理本次添加的恋人 ParentBirth 关系失败：" +
+                                $"child={child}，lover={lover}。");
+                        }
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(
+                        $"{LogPrefix}清理本次添加的恋人 ParentBirth 关系时发生异常：" +
+                        exception);
+                }
             }
         }
 
