@@ -8,11 +8,11 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 授权恋人床上 Lovin 时复用原版 Humanlike 床上绘制分支；不修改 RaceProps.Humanlike。
+    /// 授权机械体床上 Lovin 时复用原版 Humanlike 床上绘制分支；不修改 RaceProps.Humanlike。
     /// </summary>
-    public static class ExplicitSocialLovinRenderPatches
+    public static class SyntheticLovinRenderPatches
     {
-        private const string LogPrefix = "[MAP-机械族机械师] ExplicitSocialLovinRenderPatches：";
+        private const string LogPrefix = "[MAP-机械族机械师] SyntheticLovinRenderPatches：";
         private const int ErrorKeyGetBodyPosNotFound = 879346711;
         private const int ErrorKeyGetBodyPosException = 879346712;
 
@@ -57,7 +57,7 @@ namespace MAP_MechanoidMechanitor
                 ref bool showBody,
                 ref Vector3 __result)
             {
-                if (!ExplicitSocialLovinUtility.ShouldUseHumanlikeBedLovinRender(___pawn))
+                if (!SyntheticLovinUtility.ShouldUseHumanlikeBedLovinRender(___pawn))
                 {
                     return true;
                 }
@@ -66,7 +66,6 @@ namespace MAP_MechanoidMechanitor
                 if (bed?.def?.building == null
                     || ___pawn.story?.bodyType == null)
                 {
-                    // 缺少人类床上偏移所需数据时回退原版。
                     return true;
                 }
 
@@ -87,16 +86,10 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (System.Exception ex)
                 {
-                    // 仍回退原版绘制；仅 ErrorOnce，避免每 Tick 刷屏。
                     Log.ErrorOnce(
                         $"{LogPrefix}GetBodyPos 特殊渲染异常，已回退原版。"
                         + $" pawn={___pawn?.LabelShort}/{___pawn?.ThingID}"
                         + $", CurJobDef={___pawn?.CurJobDef?.defName ?? "null"}"
-                        + $", jobs.posture={___pawn?.jobs?.posture.ToString() ?? "null"}"
-                        + $", GetPosture={___pawn?.GetPosture().ToString() ?? "null"}"
-                        + $", CurrentBed={___pawn?.CurrentBed()?.LabelCap ?? "null"}"
-                        + $", story={( ___pawn?.story != null ? "有" : "无")}"
-                        + $", bodyType={___pawn?.story?.bodyType?.defName ?? "null"}"
                         + $"\n{ex}",
                         ErrorKeyGetBodyPosException);
                     return true;
@@ -110,7 +103,7 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Pawn ___pawn, PawnRenderFlags flags, ref float __result)
             {
-                if (!ExplicitSocialLovinUtility.ShouldUseHumanlikeBedLovinRender(___pawn, flags))
+                if (!SyntheticLovinUtility.ShouldUseHumanlikeBedLovinRender(___pawn, flags))
                 {
                     return true;
                 }
@@ -134,12 +127,11 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Pawn ___pawn, ref Rot4 __result)
             {
-                if (!ExplicitSocialLovinUtility.ShouldUseHumanlikeBedLovinRender(___pawn))
+                if (!SyntheticLovinUtility.ShouldUseHumanlikeBedLovinRender(___pawn))
                 {
                     return true;
                 }
 
-                // 复刻原版 ForcedLayingRotation / FaceUp 优先，以及 Humanlike 成年躺卧朝向分布。
                 if (___pawn.jobs?.curDriver != null
                     && ___pawn.jobs.curDriver.ForcedLayingRotation.IsValid)
                 {
@@ -196,7 +188,7 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                if (!ExplicitSocialLovinUtility.ShouldUseHumanlikeBedLovinRender(
+                if (!SyntheticLovinUtility.ShouldUseHumanlikeBedLovinRender(
                         parms.pawn,
                         parms.flags))
                 {
@@ -206,7 +198,6 @@ namespace MAP_MechanoidMechanitor
                 Pawn_MindState? mindState = parms.pawn.mindState;
                 if (mindState != null && mindState.duty?.def?.drawBodyOverride.HasValue == true)
                 {
-                    // 保留原版 duty.drawBodyOverride 结果。
                     return;
                 }
 

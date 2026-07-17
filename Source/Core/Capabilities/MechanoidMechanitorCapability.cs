@@ -19,6 +19,10 @@ namespace MAP_MechanoidMechanitor
         PsychicRituals = 1 << 8,
         SelfWorkMode = 1 << 9,
         ImplantInstallation = 1 << 10,
-        ShuttlePilot = 1 << 11
+        ShuttlePilot = 1 << 11,
+
+        ColonistLikeSocialTab = 1 << 12,
+        SyntheticSpouseInteraction = 1 << 13,
+        SyntheticPregnancy = 1 << 14
     }
 }

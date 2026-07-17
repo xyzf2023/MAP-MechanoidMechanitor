@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
   <HediffDef>
-    <defName>MAP_LoverPregnant</defName>
+    <defName>MAP_SyntheticPregnant</defName>
     <label>怀孕</label>
-    <description>一个由「恋人」孕育的新生命正在成长。</description>
+    <description>一个由具备仿生孕育能力的机械体孕育的新生命正在成长。</description>
     <defaultLabelColor>(0.7, 1.0, 0.7)</defaultLabelColor>
-    <hediffClass>MAP_MechanoidMechanitor.Hediff_LoverPregnant</hediffClass>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_SyntheticPregnant</hediffClass>
     <initialSeverity>0.001</initialSeverity>
     <maxSeverity>1</maxSeverity>
     <isBad>false</isBad>
@@ -28,7 +28,7 @@
       </li>
     </stages>
     <modExtensions>
-      <li Class="MAP_MechanoidMechanitor.HediffDefExtension_LoverPregnancy">
+      <li Class="MAP_MechanoidMechanitor.HediffDefExtension_SyntheticPregnancy">
         <gestationDays>5</gestationDays>
       </li>
     </modExtensions>
@@ -37,7 +37,7 @@
   <HediffDef>
     <defName>MAP_ExtraordinaryOffspring</defName>
     <label>超凡子嗣</label>
-    <description>该人类由「恋人」孕育，拥有更强的身体素质。</description>
+    <description>该人类由具备仿生孕育能力的机械体孕育，拥有更强的身体素质。</description>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <scenarioCanAdd>false</scenarioCanAdd>

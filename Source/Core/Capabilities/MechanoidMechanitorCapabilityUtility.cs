@@ -97,6 +97,17 @@ namespace MAP_MechanoidMechanitor
             {
                 capabilities |= MechanoidMechanitorCapability.SelfWorkMode;
             }
+
+            if (pawn.GetComp<CompColonistLikeSocialTabUser>() != null)
+            {
+                capabilities |= MechanoidMechanitorCapability.ColonistLikeSocialTab;
+            }
+
+            if (pawn.GetComp<CompSyntheticCompanionUser>() != null)
+            {
+                capabilities |= MechanoidMechanitorCapability.SyntheticSpouseInteraction
+                    | MechanoidMechanitorCapability.SyntheticPregnancy;
+            }
         }
 
         private static void AddCapabilitiesFromMechanitorIdentity(

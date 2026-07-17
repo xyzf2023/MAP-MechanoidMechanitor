@@ -2,7 +2,7 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    public sealed class HediffDefExtension_LoverPregnancy : DefModExtension
+    public sealed class HediffDefExtension_SyntheticPregnancy : DefModExtension
     {
         public const float DefaultGestationDays = 5f;
 

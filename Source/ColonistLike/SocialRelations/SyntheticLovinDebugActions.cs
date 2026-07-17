@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 开发者模式一次性 Lovin 条件诊断。仅在玩家主动点击 DebugAction 时输出日志。
     /// </summary>
-    public static class ExplicitSocialLovinDebugActions
+    public static class SyntheticLovinDebugActions
     {
         private static readonly List<Pawn> TmpSpouses = new List<Pawn>();
         private static readonly List<Pawn> TmpOptedInLovers = new List<Pawn>();
@@ -18,7 +18,7 @@ namespace MAP_MechanoidMechanitor
 
         [DebugAction(
             "MAP-机械族机械师",
-            "诊断恋人与配偶爱爱条件",
+            "诊断机械体与配偶爱爱条件",
             false,
             false,
             false,
@@ -28,7 +28,7 @@ namespace MAP_MechanoidMechanitor
             false,
             actionType = DebugActionType.ToolMapForPawns,
             allowedGameStates = AllowedGameStates.PlayingOnMap)]
-        private static void DiagnoseLoverSpouseLovinConditions(Pawn clicked)
+        private static void DiagnoseSyntheticSpouseLovinConditions(Pawn clicked)
         {
             if (clicked == null)
             {
@@ -67,8 +67,8 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            sb.AppendLine("=== MAP-机械族机械师：恋人与配偶爱爱条件诊断 ===");
-            sb.AppendLine("点击的 Pawn：" + ExplicitSocialLovinUtility.DescribePawn(clicked));
+            sb.AppendLine("=== MAP-机械族机械师：机械体与配偶爱爱条件诊断 ===");
+            sb.AppendLine("点击的 Pawn：" + SyntheticLovinUtility.DescribePawn(clicked));
             sb.AppendLine("说明：只读诊断，不会分配 Job、修改冷却、开关、关系、床主或预约。");
 
             int ticksGame = Find.TickManager.TicksGame;
@@ -76,29 +76,30 @@ namespace MAP_MechanoidMechanitor
 
             Pawn? initiator = null;
             Pawn? primaryLover = null;
-            bool clickedIsLover = ExplicitSocialRelationUtility.IsOptedIn(clicked);
+            bool clickedIsLover = MechanoidMechanitorCapabilityUtility.HasCapability(
+                clicked, MechanoidMechanitorCapability.SyntheticSpouseInteraction);
 
             if (clickedIsLover)
             {
-                Status("点击的是挂载 CompExplicitSocialRelationUser 的恋人。");
-                ExplicitSocialLovinUtility.CollectDirectSpousePawns(clicked, TmpSpouses);
+                Status("点击的是拥有 SyntheticSpouseInteraction 能力的仿生伴侣。");
+                SyntheticLovinUtility.CollectDirectSpousePawns(clicked, TmpSpouses);
                 if (TmpSpouses.Count == 0)
                 {
-                    Block("恋人当前没有直接配偶关系。");
+                    Block("仿生伴侣当前没有直接配偶关系。");
                     Finish(sb, reportBlocks);
                     return;
                 }
 
-                sb.AppendLine("恋人对端直接 Spouse 列表：");
+                sb.AppendLine("仿生伴侣对端直接 Spouse 列表：");
                 for (int i = 0; i < TmpSpouses.Count; i++)
                 {
-                    sb.AppendLine("  - " + ExplicitSocialLovinUtility.DescribePawn(TmpSpouses[i]));
+                    sb.AppendLine("  - " + SyntheticLovinUtility.DescribePawn(TmpSpouses[i]));
                 }
 
                 for (int i = 0; i < TmpSpouses.Count; i++)
                 {
                     Pawn candidate = TmpSpouses[i];
-                    if (ExplicitSocialLovinUtility.IsValidHumanSpouseInitiator(candidate))
+                    if (SyntheticLovinUtility.IsValidHumanSpouseInitiator(candidate))
                     {
                         if (initiator == null
                             || candidate.thingIDNumber < initiator.thingIDNumber)
@@ -110,7 +111,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (initiator == null)
                 {
-                    initiator = ExplicitSocialLovinUtility.SelectPreferredLoverByThingId(TmpSpouses);
+                    initiator = SyntheticLovinUtility.SelectPreferredLoverByThingId(TmpSpouses);
                     Block("未能解析到合法的人类发起者（Spouse 中无有效 Humanlike 发起者）。");
                 }
 
@@ -120,12 +121,13 @@ namespace MAP_MechanoidMechanitor
             {
                 Status("点击的是普通 Pawn，视为 Lovin 发起者。");
                 initiator = clicked;
-                ExplicitSocialLovinUtility.CollectDirectSpousePawns(clicked, TmpSpouses);
+                SyntheticLovinUtility.CollectDirectSpousePawns(clicked, TmpSpouses);
                 TmpOptedInLovers.Clear();
                 for (int i = 0; i < TmpSpouses.Count; i++)
                 {
                     Pawn spouse = TmpSpouses[i];
-                    if (ExplicitSocialRelationUtility.IsOptedIn(spouse))
+                    if (MechanoidMechanitorCapabilityUtility.HasCapability(
+                        spouse, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
                     {
                         TmpOptedInLovers.Add(spouse);
                     }
@@ -133,7 +135,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (TmpOptedInLovers.Count == 0)
                 {
-                    Block("发起者的直接 Spouse 中找不到挂载 CompExplicitSocialRelationUser 的授权恋人。");
+                    Block("发起者的直接 Spouse 中找不到拥有 SyntheticSpouseInteraction 的授权机械体。");
                     DiagnosePairDetails(
                         sb,
                         Block,
@@ -147,41 +149,34 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                sb.AppendLine("授权恋人配偶候选（按 DirectRelations 收集）：");
+                sb.AppendLine("授权机械体配偶候选（按 DirectRelations 收集）：");
                 for (int i = 0; i < TmpOptedInLovers.Count; i++)
                 {
                     sb.AppendLine(
-                        "  - " + ExplicitSocialLovinUtility.DescribePawn(TmpOptedInLovers[i]));
+                        "  - " + SyntheticLovinUtility.DescribePawn(TmpOptedInLovers[i]));
                 }
 
                 Pawn? formalPick =
-                    ExplicitSocialLovinUtility.TryFindEnabledLoverPartnerForRemoteLovin(initiator);
+                    SyntheticLovinUtility.TryFindEnabledLoverPartnerForRemoteLovin(initiator);
                 if (formalPick != null)
                 {
                     primaryLover = formalPick;
                     Status(
                         "正式逻辑 TryFindEnabledLoverPartnerForRemoteLovin 最终选择："
-                        + ExplicitSocialLovinUtility.DescribePawn(formalPick)
-                        + "（thingIDNumber 最小且条件全过）。");
+                        + SyntheticLovinUtility.DescribePawn(formalPick));
                 }
                 else
                 {
                     primaryLover =
-                        ExplicitSocialLovinUtility.SelectPreferredLoverByThingId(TmpOptedInLovers);
+                        SyntheticLovinUtility.SelectPreferredLoverByThingId(TmpOptedInLovers);
                     Status(
-                        "正式逻辑当前返回 null；诊断仍对 thingIDNumber 最小的授权恋人逐项展开："
-                        + ExplicitSocialLovinUtility.DescribePawn(primaryLover));
-                }
-
-                if (TmpOptedInLovers.Count > 1)
-                {
-                    Status(
-                        "存在多个授权恋人配偶；正式选型顺序与 TryFindEnabledLoverPartnerForRemoteLovin 一致（thingIDNumber 升序取通过者）。");
+                        "正式逻辑当前返回 null；诊断仍对 thingIDNumber 最小的授权机械体逐项展开："
+                        + SyntheticLovinUtility.DescribePawn(primaryLover));
                 }
             }
 
-            sb.AppendLine("发起者：" + ExplicitSocialLovinUtility.DescribePawn(initiator));
-            sb.AppendLine("恋人：" + ExplicitSocialLovinUtility.DescribePawn(primaryLover));
+            sb.AppendLine("发起者：" + SyntheticLovinUtility.DescribePawn(initiator));
+            sb.AppendLine("仿生伴侣：" + SyntheticLovinUtility.DescribePawn(primaryLover));
 
             if (initiator == null)
             {
@@ -203,9 +198,6 @@ namespace MAP_MechanoidMechanitor
             Finish(sb, reportBlocks);
         }
 
-        /// <summary>
-        /// 按原版 JobGiver_DoLovin.TryGiveJob 的实际判断顺序收集阻断（全部列出，不做短路遗漏）。
-        /// </summary>
         private static List<string> CollectJobGiverDoLovinBlocks(Pawn initiator)
         {
             List<string> blocks = new List<string>();
@@ -251,7 +243,7 @@ namespace MAP_MechanoidMechanitor
             Pawn? partner = LovePartnerRelationUtility.GetPartnerInMyBed(initiator);
             if (partner == null)
             {
-                blocks.Add("GetPartnerInMyBed 返回 null（无床上伴侣且模组未注入远程恋人）。");
+                blocks.Add("GetPartnerInMyBed 返回 null（无床上伴侣且模组未注入远程仿生伴侣）。");
                 return blocks;
             }
 
@@ -295,14 +287,14 @@ namespace MAP_MechanoidMechanitor
             sb.AppendLine("--- 一、原版 JobGiver_DoLovin 条件 ---");
 
             TmpFailures.Clear();
-            ExplicitSocialLovinUtility.EvaluateHumanSpouseInitiator(initiator, TmpFailures);
+            SyntheticLovinUtility.EvaluateHumanSpouseInitiator(initiator, TmpFailures);
             AbsorbFailures(TmpFailures);
             if (TmpFailures.Count == 0)
             {
-                Status("发起者存在、存活、已生成、Humanlike、非授权恋人，且必要 Tracker 齐全。");
+                Status("发起者条件通过。");
             }
 
-            bool initiatorCooldownBlocking = ExplicitSocialLovinUtility.FormatCanLovinCooldown(
+            bool initiatorCooldownBlocking = SyntheticLovinUtility.FormatCanLovinCooldown(
                 initiator,
                 ticksGame,
                 out int initiatorCanLovinTick,
@@ -328,105 +320,30 @@ namespace MAP_MechanoidMechanitor
                 Status("发起者 Lovin 冷却已就绪。");
             }
 
-            bool inBedPosture = initiator.GetPosture().InBed();
-            if (!inBedPosture)
-            {
-                Block("发起者实际未处于床上（GetPosture().InBed() == false）。");
-            }
-            else
-            {
-                Status("发起者实际处于床上（GetPosture().InBed() == true）。");
-            }
-
             Building_Bed? bed = initiator.CurrentBed();
             if (bed == null)
             {
                 Block("发起者 CurrentBed() 为空，无法取得有效床铺。");
             }
-            else
-            {
-                Status("发起者 CurrentBed() 有效：" + bed.LabelCap + " @ " + bed.Position);
-                if (bed.Medical)
-                {
-                    Block("床铺是医疗床（JobGiver_DoLovin 直接拒绝）。");
-                }
-                else
-                {
-                    Status("床铺不是医疗床。");
-                }
-            }
-
-            if (initiator.health == null || !initiator.health.capacities.CanBeAwake)
-            {
-                Block("发起者不具备 CanBeAwake。");
-            }
-            else
-            {
-                Status("发起者具备 CanBeAwake。");
-            }
-
-            Pawn? vanillaPartner =
-                ExplicitSocialLovinUtility.TryFindVanillaLovePartnerOccupyingBed(initiator);
-            Pawn? finalPartner = LovePartnerRelationUtility.GetPartnerInMyBed(initiator);
-
-            if (vanillaPartner != null)
-            {
-                Status(
-                    "原版 GetPartnerInMyBed 床上已有伴侣："
-                    + ExplicitSocialLovinUtility.DescribePawn(vanillaPartner)
-                    + "。模组 Postfix 不会替换该结果。");
-            }
-            else
-            {
-                Status("原版床上占用伴侣查询结果：null（Postfix 可以尝试注入远程恋人）。");
-            }
-
-            if (finalPartner != null)
-            {
-                if (ExplicitSocialRelationUtility.IsOptedIn(finalPartner))
-                {
-                    Status(
-                        "GetPartnerInMyBed 最终结果为授权恋人："
-                        + ExplicitSocialLovinUtility.DescribePawn(finalPartner)
-                        + "（候选查询成功）。");
-                }
-                else
-                {
-                    Status(
-                        "GetPartnerInMyBed 最终结果："
-                        + ExplicitSocialLovinUtility.DescribePawn(finalPartner)
-                        + "。");
-                }
-            }
-            else
-            {
-                Status("GetPartnerInMyBed 最终结果：null。");
-            }
 
             if (primaryLover == null)
             {
-                Block("没有可用于逐项诊断的授权恋人。");
+                Block("没有可用于逐项诊断的授权机械体。");
                 return;
             }
 
-            sb.AppendLine("--- 二、恋人冷却与当前工作 ---");
+            sb.AppendLine("--- 二、仿生伴侣冷却与当前工作 ---");
 
-            bool loverCooldownBlocking = ExplicitSocialLovinUtility.FormatCanLovinCooldown(
+            bool loverCooldownBlocking = SyntheticLovinUtility.FormatCanLovinCooldown(
                 primaryLover,
                 ticksGame,
                 out int loverCanLovinTick,
                 out int loverRemaining,
                 out string loverReadable);
-            sb.AppendLine(
-                "恋人 mindState.canLovinTick："
-                + loverCanLovinTick
-                + "（当前 Tick="
-                + ticksGame
-                + "）");
             if (loverCooldownBlocking)
             {
                 Block(
-                    "恋人 Lovin 冷却未结束：剩余 "
+                    "仿生伴侣 Lovin 冷却未结束：剩余 "
                     + loverRemaining
                     + " Tick（"
                     + loverReadable
@@ -434,72 +351,23 @@ namespace MAP_MechanoidMechanitor
             }
             else
             {
-                Status("恋人 Lovin 冷却已就绪。");
+                Status("仿生伴侣 Lovin 冷却已就绪。");
             }
 
-            Job? curJob = primaryLover.CurJob;
-            if (curJob == null)
-            {
-                Status("恋人当前无 Job。");
-            }
-            else
-            {
-                Status(
-                    "恋人当前 JobDef="
-                    + (curJob.def?.defName ?? "null")
-                    + "，playerForced="
-                    + curJob.playerForced
-                    + "，forceCompleteBeforeNextJob="
-                    + (curJob.def != null && curJob.def.forceCompleteBeforeNextJob)
-                    + "，IsCurrentJobPlayerInterruptible="
-                    + (primaryLover.jobs != null
-                        && primaryLover.jobs.IsCurrentJobPlayerInterruptible()));
-            }
-
-            CompExplicitSocialRelationUser? comp =
-                primaryLover.GetComp<CompExplicitSocialRelationUser>();
-            if (comp == null)
-            {
-                Block("恋人未挂载 CompExplicitSocialRelationUser。");
-            }
-            else
-            {
-                Status(
-                    "「与配偶爱爱」开关："
-                    + (comp.LovinWithSpouseEnabled ? "开启" : "关闭"));
-            }
-
-            float loverRealAge = primaryLover.ageTracker != null
-                ? primaryLover.ageTracker.AgeBiologicalYearsFloat
-                : -1f;
-            float loverRealAgeFactor =
-                ExplicitSocialLovinUtility.EvaluateLovinAgeFlatHill(loverRealAge);
-            float loverEffectiveAge =
-                ExplicitSocialLovinUtility.LovinEffectiveAgeYearsForOptedInLover;
-            float loverEffectiveAgeFactor =
-                ExplicitSocialLovinUtility.EvaluateLovinAgeFlatHill(loverEffectiveAge);
             Status(
-                "恋人实际生物年龄="
-                + loverRealAge
-                + "，Lovin 有效年龄="
-                + loverEffectiveAge
-                + "，实际年龄系数="
-                + loverRealAgeFactor
-                + "，有效年龄系数="
-                + loverEffectiveAgeFactor
-                + "，有效年龄 Prefix 已安装="
-                + ExplicitSocialLovinPatches.LovinMtbSinglePawnFactorAgePatchInstalled);
+                "「与配偶爱爱」开关："
+                + (SyntheticCompanionStateUtility.IsLovinWithSpouseEnabled(primaryLover) ? "开启" : "关闭"));
 
-            sb.AppendLine("--- 三、模组候选恋人条件 ---");
+            sb.AppendLine("--- 三、模组候选仿生伴侣条件 ---");
             TmpFailures.Clear();
-            ExplicitSocialLovinUtility.EvaluateEnabledLoverForRemoteLovin(
+            SyntheticLovinUtility.EvaluateEnabledLoverForRemoteLovin(
                 initiator,
                 primaryLover,
                 bed,
                 TmpFailures);
             if (TmpFailures.Count == 0)
             {
-                Status("模组候选恋人全部条件通过。");
+                Status("模组候选仿生伴侣全部条件通过。");
             }
             else
             {
@@ -513,66 +381,25 @@ namespace MAP_MechanoidMechanitor
             }
             else
             {
-                ExplicitSocialLovinUtility.AppendBedOccupancySummary(sb, bed);
-
-                // 床铺细项已包含在 EvaluateEnabledLover / EvaluateCanLoverUseBed；
-                // 此处仅补结构门槛中可能尚未出现的说明，并复述共享预检结果。
+                SyntheticLovinUtility.AppendBedOccupancySummary(sb, bed);
                 TmpFailures.Clear();
-                ExplicitSocialLovinUtility.EvaluateBedStructurallyEligible(bed, TmpFailures);
+                SyntheticLovinUtility.EvaluateBedStructurallyEligible(bed, TmpFailures);
                 AbsorbFailures(TmpFailures);
-
-                bool isOwner = bed.IsOwner(primaryLover, out _);
-                Status("恋人是否已经是床铺所有者：" + isOwner);
-                if (!isOwner)
-                {
-                    Status(
-                        "RestUtility.BedOwnerWillShare："
-                        + RestUtility.BedOwnerWillShare(bed, primaryLover, null));
-                }
-
-                Status(
-                    "床铺预约是否允许恋人加入（CanReserve slots="
-                    + bed.SleepingSlotsCount
-                    + "）："
-                    + primaryLover.CanReserve(bed, bed.SleepingSlotsCount, 0));
-            }
-
-            Pawn? reservePartner = finalPartner ?? primaryLover;
-            if (reservePartner != null)
-            {
-                bool canReservePartner = initiator.CanReserve(reservePartner);
-                bool partnerCanReserveInitiator = reservePartner.CanReserve(initiator);
-                if (!canReservePartner || !partnerCanReserveInitiator)
-                {
-                    Block(
-                        "双方无法互相预约（发起者→伴侣="
-                        + canReservePartner
-                        + "，伴侣→发起者="
-                        + partnerCanReserveInitiator
-                        + "）。");
-                }
-                else
-                {
-                    Status("双方可以互相预约。");
-                }
             }
         }
 
-        /// <summary>
-        /// 最终阻断数量必须与日志中去重后的全部 [阻断] 一致（含 JobGiver 链与候选预检）。
-        /// </summary>
         private static void Finish(StringBuilder sb, List<string> reportBlocks)
         {
             sb.AppendLine("--- 最终结论 ---");
             int n = reportBlocks.Count;
             if (n == 0)
             {
-                sb.AppendLine("诊断结果：当前满足 Try job giver → JobGiver_DoLovin 的条件。");
+                sb.AppendLine("诊断结果：当前满足条件。");
             }
             else
             {
                 sb.AppendLine(
-                    "诊断结果：当前存在 " + n + " 项阻断条件，无法获得 Lovin Job。");
+                    "诊断结果：当前存在 " + n + " 项阻断条件。");
             }
 
             Log.Message(sb.ToString());

@@ -8,27 +8,30 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 恋人专用受孕与出生；不调用原版 Hediff_Pregnant 或人类产程链。
+    /// 仿生受孕与出生；不调用原版 Hediff_Pregnant 或人类产程链。
     /// </summary>
-    public static class LoverPregnancyUtility
+    public static class SyntheticPregnancyUtility
     {
-        private const string LogPrefix = "[MAP-机械族机械师] LoverPregnancy：";
+        private const string LogPrefix = "[MAP-机械族机械师] SyntheticPregnancy：";
 
         public static void TryConceiveAfterSuccessfulLovin(Pawn? spouse, Pawn? lover)
         {
             if (spouse == null
                 || lover == null
                 || spouse == lover
-                || ExplicitSocialRelationUtility.IsOptedIn(spouse)
-                || !ExplicitSocialRelationUtility.IsOptedIn(lover))
+                || !MechanoidMechanitorCapabilityUtility.HasCapability(
+                    lover, MechanoidMechanitorCapability.SyntheticPregnancy)
+                || !MechanoidMechanitorCapabilityUtility.HasCapability(
+                    lover, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
+                || MechanoidMechanitorCapabilityUtility.HasCapability(
+                    spouse, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
             {
                 return;
             }
 
-            CompExplicitSocialRelationUser? comp =
-                lover.GetComp<CompExplicitSocialRelationUser>();
-            if (comp == null
-                || !comp.LovinWithSpouseEnabled
+            if (!SyntheticCompanionStateUtility.TryGetState(lover, out ISyntheticCompanionState? state)
+                || state == null
+                || !state.LovinWithSpouseEnabled
                 || lover.Dead
                 || spouse.Dead
                 || lover.relations == null
@@ -41,7 +44,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            float chance = GetConceptionChance(comp.PregnancyApproach);
+            float chance = GetConceptionChance(state.PregnancyApproach);
             if (chance <= 0f || !Rand.Chance(chance))
             {
                 return;
@@ -60,13 +63,13 @@ namespace MAP_MechanoidMechanitor
             List<GeneDef> xenogenes = inheritXenogenes
                 ? SnapshotGenes(spouse.genes?.Xenogenes)
                 : new List<GeneDef>();
-            Gender? fixedGender = GetFixedOffspringGender(comp.PregnancyApproach);
+            Gender? fixedGender = GetFixedOffspringGender(state.PregnancyApproach);
 
-            Hediff_LoverPregnant pregnancy;
+            Hediff_SyntheticPregnant pregnancy;
             try
             {
-                pregnancy = (Hediff_LoverPregnant)HediffMaker.MakeHediff(
-                    MAPMechanitor_HediffDefOf.MAP_LoverPregnant,
+                pregnancy = (Hediff_SyntheticPregnant)HediffMaker.MakeHediff(
+                    MAPMechanitor_HediffDefOf.MAP_SyntheticPregnant,
                     lover);
                 pregnancy.Initialize(
                     spouse,
@@ -79,7 +82,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception exception)
             {
-                Log.Error($"{LogPrefix}为恋人 {lover} 添加自定义怀孕失败：{exception}");
+                Log.Error($"{LogPrefix}为仿生伴侣 {lover} 添加自定义怀孕失败：{exception}");
                 return;
             }
 
@@ -92,9 +95,9 @@ namespace MAP_MechanoidMechanitor
             {
                 string name = lover.LabelShortCap;
                 Find.LetterStack.ReceiveLetter(
-                    "MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterLabel"
+                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterLabel"
                         .Translate(name),
-                    "MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterText"
+                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterText"
                         .Translate(name),
                     LetterDefOf.PositiveEvent,
                     lover);
@@ -106,12 +109,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        /// <summary>
-        /// 尝试完成自定义生产。成功返回已生成并放置的新生儿；失败返回 null，孕期保留以便重试。
-        /// 调用方在成功后负责移除怀孕 Hediff。
-        /// 新生儿一旦成功进入实际环境，即视为出生已提交，此后不得再返回 null。
-        /// </summary>
-        public static Pawn? TryCompleteBirth(Hediff_LoverPregnant pregnancy)
+        public static Pawn? TryCompleteBirth(Hediff_SyntheticPregnant pregnancy)
         {
             Pawn? lover = pregnancy.pawn;
             PawnKindDef? kind = pregnancy.ChildKindDef;
@@ -198,7 +196,6 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception spawnException)
                 {
-                    // 放置过程抛异常，但新生儿可能已进入实际环境——此时必须提交。
                     if (IsChildInGameWorld(child))
                     {
                         birthCommitted = true;
@@ -236,7 +233,6 @@ namespace MAP_MechanoidMechanitor
                     return null;
                 }
 
-                // 从此刻起出生已提交：后续任何非关键异常都不得返回 null。
                 birthCommitted = true;
 
                 try
@@ -249,23 +245,14 @@ namespace MAP_MechanoidMechanitor
                         $"{LogPrefix}记录 GaveBirth 故事失败（出生仍视为成功）：{taleException}");
                 }
 
-                try
-                {
-                    Log.Message(
-                        $"{LogPrefix}{lover.LabelShort} 成功产下 {child.LabelShort} " +
-                        $"({kind.defName})。");
-                }
-                catch (Exception logException)
-                {
-                    Log.Warning(
-                        $"{LogPrefix}记录成功生产日志失败（出生仍视为成功）：{logException}");
-                }
+                Log.Message(
+                    $"{LogPrefix}{lover.LabelShort} 成功产下 {child.LabelShort} " +
+                    $"({kind.defName})。");
 
                 return child;
             }
             catch (Exception exception)
             {
-                // 已提交或已实际存在于游戏环境：必须返回新生儿，绝不可丢弃或保留孕期重产。
                 if (child != null && (birthCommitted || IsChildInGameWorld(child)))
                 {
                     Log.Error(
@@ -305,24 +292,24 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static float GetConceptionChance(LoverPregnancyApproach approach)
+        private static float GetConceptionChance(SyntheticPregnancyApproach approach)
         {
             return approach switch
             {
-                LoverPregnancyApproach.AvoidPregnancy => 0f,
-                LoverPregnancyApproach.TryForBaby => 1f,
-                LoverPregnancyApproach.TryForBabyMale => 1f,
-                LoverPregnancyApproach.TryForBabyFemale => 1f,
+                SyntheticPregnancyApproach.AvoidPregnancy => 0f,
+                SyntheticPregnancyApproach.TryForBaby => 1f,
+                SyntheticPregnancyApproach.TryForBabyMale => 1f,
+                SyntheticPregnancyApproach.TryForBabyFemale => 1f,
                 _ => 0f,
             };
         }
 
-        private static Gender? GetFixedOffspringGender(LoverPregnancyApproach approach)
+        private static Gender? GetFixedOffspringGender(SyntheticPregnancyApproach approach)
         {
             return approach switch
             {
-                LoverPregnancyApproach.TryForBabyMale => Gender.Male,
-                LoverPregnancyApproach.TryForBabyFemale => Gender.Female,
+                SyntheticPregnancyApproach.TryForBabyMale => Gender.Male,
+                SyntheticPregnancyApproach.TryForBabyFemale => Gender.Female,
                 _ => null,
             };
         }
@@ -404,7 +391,6 @@ namespace MAP_MechanoidMechanitor
                 && child.relations.DirectRelationExists(PawnRelationDefOf.Parent, geneticParent!);
             bool failed = false;
 
-            // 恋人仅作生母（ParentBirth），不作普通 Parent，避免同时显示“母亲”和“生母”。
             if (!parentBirthExistedBefore)
             {
                 try
@@ -415,7 +401,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     failed = true;
                     Log.Error(
-                        $"{LogPrefix}为新生儿 {child} 添加恋人 {lover} 的 ParentBirth " +
+                        $"{LogPrefix}为新生儿 {child} 添加仿生伴侣 {lover} 的 ParentBirth " +
                         $"关系时发生异常：{exception}");
                 }
             }
@@ -427,7 +413,7 @@ namespace MAP_MechanoidMechanitor
             {
                 failed = true;
                 Log.Error(
-                    $"{LogPrefix}未能为新生儿 {child} 添加恋人 {lover} 的 ParentBirth 关系。");
+                    $"{LogPrefix}未能为新生儿 {child} 添加仿生伴侣 {lover} 的 ParentBirth 关系。");
             }
 
             if (geneticParentRequired)
@@ -462,10 +448,6 @@ namespace MAP_MechanoidMechanitor
             return !failed;
         }
 
-        /// <summary>
-        /// 仅清理本次尝试实际添加的关系，不触碰恋人或遗传配偶原有的其他亲属关系。
-        /// 使用原版 TryRemoveDirectRelation，由其维护双向索引。
-        /// </summary>
         private static void ClearAttemptedBirthRelations(
             Pawn child,
             Pawn lover,
@@ -519,7 +501,7 @@ namespace MAP_MechanoidMechanitor
                         if (!removed)
                         {
                             Log.Error(
-                                $"{LogPrefix}清理本次添加的恋人 ParentBirth 关系失败：" +
+                                $"{LogPrefix}清理本次添加的仿生伴侣 ParentBirth 关系失败：" +
                                 $"child={child}，lover={lover}。");
                         }
                     }
@@ -527,7 +509,7 @@ namespace MAP_MechanoidMechanitor
                 catch (Exception exception)
                 {
                     Log.Error(
-                        $"{LogPrefix}清理本次添加的恋人 ParentBirth 关系时发生异常：" +
+                        $"{LogPrefix}清理本次添加的仿生伴侣 ParentBirth 关系时发生异常：" +
                         exception);
                 }
             }
