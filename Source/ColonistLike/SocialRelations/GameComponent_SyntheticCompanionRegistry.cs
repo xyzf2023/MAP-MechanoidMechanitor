@@ -145,7 +145,7 @@ namespace MAP_MechanoidMechanitor
                 SyntheticCompanionAuthorizationRecord candidate = authorizationRecords[i];
                 if (candidate != null && ReferenceEquals(candidate.Pawn, pawn))
                 {
-                    if (!pawn.Destroyed)
+                    if (!pawn.Discarded)
                     {
                         recordByPawn[pawn] = candidate;
                     }
@@ -158,8 +158,9 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 移除空记录、空 Pawn 引用，以及 Pawn 已真正销毁的记录。
-        /// 保留仅死亡、位于尸体中、未生成、远行队或暂时离图的 Pawn，以便复活后仍保留授权。
+        /// 移除空记录、空 Pawn 引用，以及已经永久 Discarded 的 Pawn。
+        /// 死亡、位于尸体中、未生成、远行队中或暂时离图的 Pawn 仍保留授权；
+        /// 不可用 Destroyed 判断，因尸体中的 InnerPawn 也会处于 Destroyed。
         /// </summary>
         private void CleanupInvalidRecords()
         {
@@ -170,7 +171,7 @@ namespace MAP_MechanoidMechanitor
                 SyntheticCompanionAuthorizationRecord? record = authorizationRecords[i];
                 if (record == null
                     || record.Pawn == null
-                    || record.Pawn.Destroyed)
+                    || record.Pawn.Discarded)
                 {
                     authorizationRecords.RemoveAt(i);
                 }
@@ -202,8 +203,8 @@ namespace MAP_MechanoidMechanitor
             {
                 SyntheticCompanionAuthorizationRecord record = authorizationRecords[i];
                 Pawn? pawn = record?.Pawn;
-                // 不得把已销毁 Pawn 放入索引；死亡但未销毁的仍可索引。
-                if (pawn != null && !pawn.Destroyed)
+                // 排除永久 Discarded 的 Pawn；尸体中的死亡 Pawn（Destroyed 但仍可复活）保留索引。
+                if (pawn != null && !pawn.Discarded)
                 {
                     recordByPawn[pawn] = record!;
                 }
