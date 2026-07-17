@@ -33,19 +33,33 @@ namespace MAP_MechanoidMechanitor
                     if (condition != JobCondition.Succeeded
                         || newbornForFinalizer == null
                         || !newbornForFinalizer.Spawned
+                        || newbornForFinalizer.Dead
                         || pawn == null
                         || !pawn.Spawned
                         || pawn.Dead
                         || pawn.Downed
+                        || pawn.Drafted
                         || pawn.InMentalState
                         || pawn.IsBurning()
-                        || pawn.Map != newbornForFinalizer.Map)
+                        || pawn.Map != newbornForFinalizer.Map
+                        || pawn.health?.capacities == null
+                        || !pawn.health.capacities.CapableOf(
+                            PawnCapacityDefOf.Manipulation))
                     {
                         return null!;
                     }
 
                     if (!ChildcareUtility.CanSuckle(
                         newbornForFinalizer,
+                        out ChildcareUtility.BreastfeedFailReason? _))
+                    {
+                        return null!;
+                    }
+
+                    if (!ChildcareUtility.CanHaulBabyNow(
+                        pawn,
+                        newbornForFinalizer,
+                        ignoreOtherReservations: false,
                         out ChildcareUtility.BreastfeedFailReason? _))
                     {
                         return null!;
