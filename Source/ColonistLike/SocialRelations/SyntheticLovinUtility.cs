@@ -419,7 +419,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        public static Pawn? SelectPreferredSyntheticCompanionByThingId(List<Pawn> candidates)
+        public static Pawn? SelectPreferredPawnByThingId(List<Pawn> candidates)
         {
             if (candidates == null || candidates.Count == 0)
             {
