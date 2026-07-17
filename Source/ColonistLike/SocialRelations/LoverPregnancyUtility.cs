@@ -87,6 +87,23 @@ namespace MAP_MechanoidMechanitor
                 $"{LogPrefix}{lover.LabelShort} 已受孕；遗传来源={spouse.LabelShort}，" +
                 $"kind={childKind.defName}，固定性别={fixedGender?.ToString() ?? "随机"}，" +
                 $"继承异种基因={inheritXenogenes}。");
+
+            try
+            {
+                string name = lover.LabelShortCap;
+                Find.LetterStack.ReceiveLetter(
+                    "MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterLabel"
+                        .Translate(name),
+                    "MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterText"
+                        .Translate(name),
+                    LetterDefOf.PositiveEvent,
+                    lover);
+            }
+            catch (Exception letterException)
+            {
+                Log.Warning(
+                    $"{LogPrefix}发送受孕信件失败（怀孕仍有效）：{letterException}");
+            }
         }
 
         /// <summary>
@@ -103,13 +120,11 @@ namespace MAP_MechanoidMechanitor
                 return null;
             }
 
-            if (kind?.RaceProps?.lifeStageAges == null
-                || !kind.RaceProps.lifeStageAges.Any(
-                    stage => stage.def.developmentalStage.Newborn()))
+            if (kind?.RaceProps == null)
             {
                 Log.Error(
                     $"{LogPrefix}生产失败：受孕时保存的 PawnKindDef " +
-                    $"{kind?.defName ?? "<null>"} 不支持 Newborn 阶段。");
+                    $"{kind?.defName ?? "<null>"} 无效。");
                 return null;
             }
 
@@ -294,7 +309,6 @@ namespace MAP_MechanoidMechanitor
         {
             return approach switch
             {
-                LoverPregnancyApproach.Normal => 0.05f,
                 LoverPregnancyApproach.AvoidPregnancy => 0f,
                 LoverPregnancyApproach.TryForBaby => 1f,
                 LoverPregnancyApproach.TryForBabyMale => 1f,

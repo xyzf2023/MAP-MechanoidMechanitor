@@ -56,6 +56,11 @@
   <MAP_MechanoidMechanitor.LoverPregnancy.ApproachTitle>恋人生育方式</MAP_MechanoidMechanitor.LoverPregnancy.ApproachTitle>
   <MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyMale>尝试生育（孕育男婴）</MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyMale>
   <MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyFemale>尝试生育（孕育女婴）</MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyFemale>
+  <MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterLabel>{0}怀孕</MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterLabel>
+  <MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterText>{0}正在使用仿生子宫孕育新生命！由{0}孕育的胚胎能更快成熟，并在出生后拥有更强的身体素质。</MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterText>
+  <MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterLabel>{0}可以进行分娩</MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterLabel>
+  <MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterText>{0}孕育的婴儿已发育完成，可随时选中{0}为其下达分娩指令。\n\n在分娩完成前，婴儿的生理活动将暂时处于冻结状态。</MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterText>
+  <MAP_MechanoidMechanitor.LoverPregnancy.StartBirthGizmoDesc>命令{0}在原地执行分娩流程。请确保环境安全后再下达此命令。</MAP_MechanoidMechanitor.LoverPregnancy.StartBirthGizmoDesc>
   <MAP_Settings_LoverOffspringInheritXenogenes_Label>通过恋人孕育的子嗣继承异种基因</MAP_Settings_LoverOffspringInheritXenogenes_Label>
   <MAP_Settings_LoverOffspringInheritXenogenes_Description>开启后，恋人孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_Settings_LoverOffspringInheritXenogenes_Description>
 </LanguageData>

@@ -70,7 +70,6 @@ namespace MAP_MechanoidMechanitor
             CompExplicitSocialRelationUser comp)
         {
             List<FloatMenuOption> options = new List<FloatMenuOption>();
-            AddOption(options, comp, LoverPregnancyApproach.Normal);
             AddOption(options, comp, LoverPregnancyApproach.AvoidPregnancy);
             AddOption(options, comp, LoverPregnancyApproach.TryForBaby);
             AddOption(options, comp, LoverPregnancyApproach.TryForBabyMale);
@@ -96,8 +95,6 @@ namespace MAP_MechanoidMechanitor
             // 仅用原版基础名称，不用 GetDescription()（其会附带原版怀孕概率倍率）。
             return approach switch
             {
-                LoverPregnancyApproach.Normal =>
-                    PregnancyApproach.Normal.GetLabel().CapitalizeFirst(),
                 LoverPregnancyApproach.AvoidPregnancy =>
                     PregnancyApproach.AvoidPregnancy.GetLabel().CapitalizeFirst(),
                 LoverPregnancyApproach.TryForBaby =>
@@ -114,10 +111,15 @@ namespace MAP_MechanoidMechanitor
         {
             return approach switch
             {
-                LoverPregnancyApproach.Normal => PregnancyApproach.Normal.GetIcon(),
                 LoverPregnancyApproach.AvoidPregnancy =>
                     PregnancyApproach.AvoidPregnancy.GetIcon(),
-                _ => PregnancyApproach.TryForBaby.GetIcon(),
+                LoverPregnancyApproach.TryForBaby =>
+                    PregnancyApproach.TryForBaby.GetIcon(),
+                LoverPregnancyApproach.TryForBabyMale =>
+                    PregnancyApproach.TryForBaby.GetIcon(),
+                LoverPregnancyApproach.TryForBabyFemale =>
+                    PregnancyApproach.TryForBaby.GetIcon(),
+                _ => PregnancyApproach.AvoidPregnancy.GetIcon(),
             };
         }
     }

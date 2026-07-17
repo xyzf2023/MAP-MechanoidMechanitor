@@ -29,7 +29,7 @@
     </stages>
     <modExtensions>
       <li Class="MAP_MechanoidMechanitor.HediffDefExtension_LoverPregnancy">
-        <gestationDays>18</gestationDays>
+        <gestationDays>5</gestationDays>
       </li>
     </modExtensions>
   </HediffDef>

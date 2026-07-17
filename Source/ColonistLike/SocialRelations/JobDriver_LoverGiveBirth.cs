@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -109,6 +110,19 @@ namespace MAP_MechanoidMechanitor
                     birthCompleted = true;
                     newbornForFinalizer = newborn;
                     pawn.health?.RemoveHediff(pregnancy);
+
+                    // 生产已提交后重置为避孕；失败不影响已完成的出生。
+                    try
+                    {
+                        pawn.GetComp<CompExplicitSocialRelationUser>()
+                            ?.ResetPregnancyApproachToAvoid();
+                    }
+                    catch (Exception resetException)
+                    {
+                        Log.Warning(
+                            $"{LogPrefix}成功生产后重置生育方式失败（出生仍有效）：" +
+                            resetException);
+                    }
                 });
         }
 
