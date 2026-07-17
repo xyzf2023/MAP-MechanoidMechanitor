@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 开发者模式一次性 Lovin 条件诊断。仅在玩家主动点击 DebugAction 时输出日志。
     /// </summary>
-    public static partial class ExplicitSocialLovinDebugActions
+    public static class ExplicitSocialLovinDebugActions
     {
         private static readonly List<Pawn> TmpSpouses = new List<Pawn>();
         private static readonly List<Pawn> TmpOptedInLovers = new List<Pawn>();
