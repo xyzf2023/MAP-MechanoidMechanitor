@@ -119,4 +119,73 @@
       <MAP_AutonomousDirectiveCore>1</MAP_AutonomousDirectiveCore>
     </products>
   </RecipeDef>
+
+  <RecipeDef MayRequire="Ludeon.RimWorld.Biotech">
+    <defName>MAP_Make_BionicCompanionModule</defName>
+    <label>制作仿生伴侣模块</label>
+    <description>制作一个仿生伴侣模块。</description>
+    <jobString>正在制作仿生伴侣模块。</jobString>
+    <researchPrerequisite>MAP_BionicMechanicalStructure</researchPrerequisite>
+    <workAmount>2000</workAmount>
+    <workSpeedStat>GeneralLaborSpeed</workSpeedStat>
+    <effectWorking>Cook</effectWorking>
+    <soundWorking>Recipe_Machining</soundWorking>
+    <recipeUsers>
+      <li>TableMachining</li>
+    </recipeUsers>
+    <ingredients>
+      <li>
+        <filter>
+          <thingDefs>
+            <li>Plasteel</li>
+          </thingDefs>
+        </filter>
+        <count>30</count>
+      </li>
+      <li>
+        <filter>
+          <thingDefs>
+            <li>Gold</li>
+          </thingDefs>
+        </filter>
+        <count>100</count>
+      </li>
+      <li>
+        <filter>
+          <thingDefs>
+            <li>ComponentSpacer</li>
+          </thingDefs>
+        </filter>
+        <count>3</count>
+      </li>
+      <li>
+        <filter>
+          <thingDefs>
+            <li>SubcoreHigh</li>
+          </thingDefs>
+        </filter>
+        <count>1</count>
+      </li>
+      <li>
+        <filter>
+          <thingDefs>
+            <li>ArchiteCapsule</li>
+          </thingDefs>
+        </filter>
+        <count>5</count>
+      </li>
+    </ingredients>
+    <fixedIngredientFilter>
+      <thingDefs>
+        <li>Plasteel</li>
+        <li>Gold</li>
+        <li>ComponentSpacer</li>
+        <li>SubcoreHigh</li>
+        <li>ArchiteCapsule</li>
+      </thingDefs>
+    </fixedIngredientFilter>
+    <products>
+      <MAP_BionicCompanionModule>1</MAP_BionicCompanionModule>
+    </products>
+  </RecipeDef>
 </Defs>

@@ -25,4 +25,27 @@
     </tradeTags>
     <techLevel>Archotech</techLevel>
   </ThingDef>
+
+  <ThingDef ParentName="MechanitorImplantBase">
+    <defName>MAP_BionicCompanionModule</defName>
+    <label>仿生伴侣模块</label>
+    <description>一种由超凡科技打造的机械族模块。机械族安装后将拥有情感模拟器，并能通过人造子宫孕育生命。</description>
+    <graphicData>
+      <texPath>Things/BionicCompanionModule</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>1.0</drawSize>
+    </graphicData>
+    <stackLimit>1</stackLimit>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+      <Beauty>-4</Beauty>
+      <DeteriorationRate>0</DeteriorationRate>
+      <Mass>1</Mass>
+      <MarketValue>3000</MarketValue>
+    </statBases>
+    <comps>
+      <li Class="CompProperties_Forbiddable"/>
+    </comps>
+    <techLevel>Archotech</techLevel>
+  </ThingDef>
 </Defs>
