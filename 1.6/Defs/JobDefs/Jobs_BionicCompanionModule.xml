@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>MAP_UseBionicCompanionModule</defName>
+    <label>安装仿生伴侣模块</label>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseBionicCompanionModule</driverClass>
+    <reportString>正在安装仿生伴侣模块。</reportString>
+  </JobDef>
+</Defs>

@@ -85,6 +85,11 @@ namespace MAP_MechanoidMechanitor
         public override void ExposeData()
         {
             base.ExposeData();
+            if (Scribe.mode == LoadSaveMode.Saving)
+            {
+                CleanupInvalidRecords();
+            }
+
             Scribe_Collections.Look(
                 ref authorizationRecords,
                 "syntheticCompanionAuthorizationRecords",
@@ -140,7 +145,11 @@ namespace MAP_MechanoidMechanitor
                 SyntheticCompanionAuthorizationRecord candidate = authorizationRecords[i];
                 if (candidate != null && ReferenceEquals(candidate.Pawn, pawn))
                 {
-                    recordByPawn[pawn] = candidate;
+                    if (!pawn.Destroyed)
+                    {
+                        recordByPawn[pawn] = candidate;
+                    }
+
                     return candidate;
                 }
             }
@@ -149,7 +158,8 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 仅移除空记录或空 Pawn 引用；不因死亡删除仍可能复活的授权。
+        /// 移除空记录、空 Pawn 引用，以及 Pawn 已真正销毁的记录。
+        /// 保留仅死亡、位于尸体中、未生成、远行队或暂时离图的 Pawn，以便复活后仍保留授权。
         /// </summary>
         private void CleanupInvalidRecords()
         {
@@ -158,7 +168,9 @@ namespace MAP_MechanoidMechanitor
             for (int i = authorizationRecords.Count - 1; i >= 0; i--)
             {
                 SyntheticCompanionAuthorizationRecord? record = authorizationRecords[i];
-                if (record == null || record.Pawn == null)
+                if (record == null
+                    || record.Pawn == null
+                    || record.Pawn.Destroyed)
                 {
                     authorizationRecords.RemoveAt(i);
                 }
@@ -190,7 +202,7 @@ namespace MAP_MechanoidMechanitor
             {
                 SyntheticCompanionAuthorizationRecord record = authorizationRecords[i];
                 Pawn? pawn = record?.Pawn;
-                // 死亡保留索引以便复活后继续授权；已销毁且无引用价值的不入缓存。
+                // 不得把已销毁 Pawn 放入索引；死亡但未销毁的仍可索引。
                 if (pawn != null && !pawn.Destroyed)
                 {
                     recordByPawn[pawn] = record!;
