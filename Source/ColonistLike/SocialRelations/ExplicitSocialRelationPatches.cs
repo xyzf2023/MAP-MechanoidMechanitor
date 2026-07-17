@@ -276,38 +276,66 @@ namespace MAP_MechanoidMechanitor
                 if (!TryResolveLoverSpouseEntry(
                     entry,
                     selPawnForSocialInfo,
+                    out Pawn? lover,
                     out Pawn? spouse)
+                    || lover == null
                     || spouse == null)
                 {
                     return true;
                 }
 
-                LoverPregnancyUIUtility.DrawApproachButton(
-                    rect,
-                    selPawnForSocialInfo,
-                    spouse);
+                LoverPregnancyUIUtility.DrawApproachButton(rect, lover, spouse);
                 return false;
             }
         }
 
+        /// <summary>
+        /// 从恋人或普通配偶任意一侧解析同一对关系，始终返回真正的授权恋人。
+        /// </summary>
         private static bool TryResolveLoverSpouseEntry(
             object? entry,
             Pawn? selectedPawn,
+            out Pawn? lover,
             out Pawn? spouse)
         {
+            lover = null;
             spouse = null;
-            if (entry == null
-                || !ExplicitSocialRelationUtility.IsOptedIn(selectedPawn)
-                || selectedPawn?.relations == null)
+            if (entry == null || selectedPawn?.relations == null)
             {
                 return false;
             }
 
-            spouse = Traverse.Create(entry).Field<Pawn>("otherPawn").Value;
-            return spouse != null
-                && selectedPawn.relations.DirectRelationExists(
+            Pawn? otherPawn = Traverse.Create(entry).Field<Pawn>("otherPawn").Value;
+            if (otherPawn?.relations == null)
+            {
+                return false;
+            }
+
+            if (!selectedPawn.relations.DirectRelationExists(
                     PawnRelationDefOf.Spouse,
-                    spouse);
+                    otherPawn)
+                || !otherPawn.relations.DirectRelationExists(
+                    PawnRelationDefOf.Spouse,
+                    selectedPawn))
+            {
+                return false;
+            }
+
+            if (ExplicitSocialRelationUtility.IsOptedIn(selectedPawn))
+            {
+                lover = selectedPawn;
+                spouse = otherPawn;
+                return true;
+            }
+
+            if (ExplicitSocialRelationUtility.IsOptedIn(otherPawn))
+            {
+                lover = otherPawn;
+                spouse = selectedPawn;
+                return true;
+            }
+
+            return false;
         }
     }
 }

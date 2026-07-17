@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace MAP_MechanoidMechanitor
     public sealed class Hediff_LoverPregnant : HediffWithComps
     {
         private const float TicksPerDay = 60000f;
+        private const string LogPrefix = "[MAP-机械族机械师] LoverPregnancy：";
 
         private static Texture2D? cachedBirthIcon;
 
@@ -22,6 +24,7 @@ namespace MAP_MechanoidMechanitor
         private List<GeneDef>? xenogeneSnapshot;
         private bool inheritXenogenes;
         private int fixedGender = -1;
+        private bool readyForBirthLetterSent;
 
         public Pawn? GeneticParent => geneticParent;
         public PawnKindDef? ChildKindDef => childKindDef;
@@ -54,6 +57,7 @@ namespace MAP_MechanoidMechanitor
             xenogeneSnapshot = xenogenes;
             inheritXenogenes = inheritXenogeneSnapshot;
             fixedGender = offspringGender.HasValue ? (int)offspringGender.Value : -1;
+            readyForBirthLetterSent = false;
             Severity = 0.001f;
         }
 
@@ -65,25 +69,51 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 已足月：封顶在 100% 并保持，不自动生产、不自动消失。
-            if (Severity >= 1f)
+            if (Severity < 1f)
             {
+                float gestationDays =
+                    def.GetModExtension<HediffDefExtension_LoverPregnancy>()
+                        ?.ResolveGestationDays()
+                    ?? HediffDefExtension_LoverPregnancy.DefaultGestationDays;
+                Severity += delta / (gestationDays * TicksPerDay);
                 if (Severity > 1f)
                 {
                     Severity = 1f;
                 }
+            }
+            else if (Severity > 1f)
+            {
+                Severity = 1f;
+            }
 
+            // 足月信件必须在「保持 100% 并返回」之前处理，覆盖自然到达与开发者工具拉满。
+            TrySendReadyForBirthLetter();
+        }
+
+        private void TrySendReadyForBirthLetter()
+        {
+            if (readyForBirthLetterSent || Severity < 1f || pawn == null)
+            {
                 return;
             }
 
-            float gestationDays =
-                def.GetModExtension<HediffDefExtension_LoverPregnancy>()
-                    ?.ResolveGestationDays()
-                ?? HediffDefExtension_LoverPregnancy.DefaultGestationDays;
-            Severity += delta / (gestationDays * TicksPerDay);
-            if (Severity > 1f)
+            // 先标记，确保每个孕期只尝试一次，避免发送失败时每 Tick 刷信。
+            readyForBirthLetterSent = true;
+            try
             {
-                Severity = 1f;
+                string name = pawn.LabelShortCap;
+                Find.LetterStack.ReceiveLetter(
+                    "MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterLabel"
+                        .Translate(name),
+                    "MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterText"
+                        .Translate(name),
+                    LetterDefOf.PositiveEvent,
+                    pawn);
+            }
+            catch (Exception exception)
+            {
+                Log.Warning(
+                    $"{LogPrefix}发送足月分娩信件失败（孕期与冻结状态不受影响）：{exception}");
             }
         }
 
@@ -105,7 +135,8 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = "开始分娩",
                 defaultDesc =
-                    "命令恋人执行分娩流程。请在确保恋人处于安全环境时下达此命令。",
+                    "MAP_MechanoidMechanitor.LoverPregnancy.StartBirthGizmoDesc"
+                        .Translate(pawn.LabelShortCap),
                 icon = BirthIcon,
                 action = StartBirthJob,
             };
@@ -191,6 +222,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Collections.Look(ref xenogeneSnapshot, "xenogeneSnapshot", LookMode.Def);
             Scribe_Values.Look(ref inheritXenogenes, "inheritXenogenes", false);
             Scribe_Values.Look(ref fixedGender, "fixedGender", -1);
+            Scribe_Values.Look(ref readyForBirthLetterSent, "readyForBirthLetterSent", false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
