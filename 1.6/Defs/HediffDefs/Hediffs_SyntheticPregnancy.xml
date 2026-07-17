@@ -42,7 +42,21 @@
     <isBad>false</isBad>
     <scenarioCanAdd>false</scenarioCanAdd>
     <stages>
-      <li />
+        <li>
+          <restFallFactorOffset>-0.10</restFallFactorOffset>
+          <painFactor>0.90</painFactor>
+      
+          <statOffsets>
+            <ComfyTemperatureMax>15</ComfyTemperatureMax>
+            <ComfyTemperatureMin>-15</ComfyTemperatureMin>
+            <GlobalLearningFactor>0.50</GlobalLearningFactor>
+          </statOffsets>
+      
+          <statFactors>
+            <IncomingDamageFactor>0.80</IncomingDamageFactor>
+            <LearningRateFactor>2.00</LearningRateFactor>
+          </statFactors>
+        </li>
     </stages>
   </HediffDef>
 </Defs>
