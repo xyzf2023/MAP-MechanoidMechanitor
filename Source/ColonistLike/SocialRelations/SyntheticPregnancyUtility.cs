@@ -14,32 +14,32 @@ namespace MAP_MechanoidMechanitor
     {
         private const string LogPrefix = "[MAP-机械族机械师] SyntheticPregnancy：";
 
-        public static void TryConceiveAfterSuccessfulLovin(Pawn? spouse, Pawn? lover)
+        public static void TryConceiveAfterSuccessfulLovin(Pawn? spouse, Pawn? pregnantCompanion)
         {
             if (spouse == null
-                || lover == null
-                || spouse == lover
+                || pregnantCompanion == null
+                || spouse == pregnantCompanion
                 || !MechanoidMechanitorCapabilityUtility.HasCapability(
-                    lover, MechanoidMechanitorCapability.SyntheticPregnancy)
+                    pregnantCompanion, MechanoidMechanitorCapability.SyntheticPregnancy)
                 || !MechanoidMechanitorCapabilityUtility.HasCapability(
-                    lover, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
+                    pregnantCompanion, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
                 || MechanoidMechanitorCapabilityUtility.HasCapability(
                     spouse, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
             {
                 return;
             }
 
-            if (!SyntheticCompanionStateUtility.TryGetState(lover, out ISyntheticCompanionState? state)
+            if (!SyntheticCompanionStateUtility.TryGetState(pregnantCompanion, out ISyntheticCompanionState? state)
                 || state == null
                 || !state.LovinWithSpouseEnabled
-                || lover.Dead
+                || pregnantCompanion.Dead
                 || spouse.Dead
-                || lover.relations == null
+                || pregnantCompanion.relations == null
                 || spouse.relations == null
-                || !lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, spouse)
-                || !spouse.relations.DirectRelationExists(PawnRelationDefOf.Spouse, lover)
-                || lover.health?.hediffSet == null
-                || HasPregnancyBlockingHediff(lover))
+                || !pregnantCompanion.relations.DirectRelationExists(PawnRelationDefOf.Spouse, spouse)
+                || !spouse.relations.DirectRelationExists(PawnRelationDefOf.Spouse, pregnantCompanion)
+                || pregnantCompanion.health?.hediffSet == null
+                || HasPregnancyBlockingHediff(pregnantCompanion))
             {
                 return;
             }
@@ -58,7 +58,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool inheritXenogenes =
-                MAPMechanitorMod.Settings?.loverOffspringInheritXenogenes ?? false;
+                MAPMechanitorMod.Settings?.syntheticOffspringInheritXenogenes ?? false;
             List<GeneDef> endogenes = SnapshotGenes(spouse.genes?.Endogenes);
             List<GeneDef> xenogenes = inheritXenogenes
                 ? SnapshotGenes(spouse.genes?.Xenogenes)
@@ -70,7 +70,7 @@ namespace MAP_MechanoidMechanitor
             {
                 pregnancy = (Hediff_SyntheticPregnant)HediffMaker.MakeHediff(
                     MAPMechanitor_HediffDefOf.MAP_SyntheticPregnant,
-                    lover);
+                    pregnantCompanion);
                 pregnancy.Initialize(
                     spouse,
                     childKind,
@@ -78,29 +78,29 @@ namespace MAP_MechanoidMechanitor
                     xenogenes,
                     inheritXenogenes,
                     fixedGender);
-                lover.health.AddHediff(pregnancy);
+                pregnantCompanion.health.AddHediff(pregnancy);
             }
             catch (Exception exception)
             {
-                Log.Error($"{LogPrefix}为仿生伴侣 {lover} 添加自定义怀孕失败：{exception}");
+                Log.Error($"{LogPrefix}为仿生伴侣 {pregnantCompanion} 添加自定义怀孕失败：{exception}");
                 return;
             }
 
             Log.Message(
-                $"{LogPrefix}{lover.LabelShort} 已受孕；遗传来源={spouse.LabelShort}，" +
+                $"{LogPrefix}{pregnantCompanion.LabelShort} 已受孕；遗传来源={spouse.LabelShort}，" +
                 $"kind={childKind.defName}，固定性别={fixedGender?.ToString() ?? "随机"}，" +
                 $"继承异种基因={inheritXenogenes}。");
 
             try
             {
-                string name = lover.LabelShortCap;
+                string name = pregnantCompanion.LabelShortCap;
                 Find.LetterStack.ReceiveLetter(
                     "MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterLabel"
                         .Translate(name),
                     "MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterText"
                         .Translate(name),
                     LetterDefOf.PositiveEvent,
-                    lover);
+                    pregnantCompanion);
             }
             catch (Exception letterException)
             {
@@ -111,9 +111,9 @@ namespace MAP_MechanoidMechanitor
 
         public static Pawn? TryCompleteBirth(Hediff_SyntheticPregnant pregnancy)
         {
-            Pawn? lover = pregnancy.pawn;
+            Pawn? pregnantCompanion = pregnancy.pawn;
             PawnKindDef? kind = pregnancy.ChildKindDef;
-            if (lover == null || lover.Dead)
+            if (pregnantCompanion == null || pregnantCompanion.Dead)
             {
                 return null;
             }
@@ -142,7 +142,7 @@ namespace MAP_MechanoidMechanitor
             {
                 PawnGenerationRequest request = new PawnGenerationRequest(
                     kind,
-                    lover.Faction,
+                    pregnantCompanion.Faction,
                     PawnGenerationContext.NonPlayer,
                     forceGenerateNewPawn: false,
                     allowDead: false,
@@ -181,7 +181,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (!TryAddBirthRelations(
                     child,
-                    lover,
+                    pregnantCompanion,
                     geneticParent,
                     out addedParentBirth,
                     out addedGeneticParent))
@@ -192,7 +192,7 @@ namespace MAP_MechanoidMechanitor
                 bool spawned;
                 try
                 {
-                    spawned = PawnUtility.TrySpawnHatchedOrBornPawn(child, lover);
+                    spawned = PawnUtility.TrySpawnHatchedOrBornPawn(child, pregnantCompanion);
                 }
                 catch (Exception spawnException)
                 {
@@ -221,11 +221,11 @@ namespace MAP_MechanoidMechanitor
                 if (!spawned)
                 {
                     Log.Error(
-                        $"{LogPrefix}生产失败：无法将 {child} 放置到 {lover} 所在环境；" +
+                        $"{LogPrefix}生产失败：无法将 {child} 放置到 {pregnantCompanion} 所在环境；" +
                         "将清理本次亲属关系并丢弃未落地新生儿，孕期保留以便重试。");
                     ClearAttemptedBirthRelations(
                         child,
-                        lover,
+                        pregnantCompanion,
                         geneticParent,
                         addedParentBirth,
                         addedGeneticParent);
@@ -237,7 +237,7 @@ namespace MAP_MechanoidMechanitor
 
                 try
                 {
-                    TaleRecorder.RecordTale(TaleDefOf.GaveBirth, lover, child);
+                    TaleRecorder.RecordTale(TaleDefOf.GaveBirth, pregnantCompanion, child);
                 }
                 catch (Exception taleException)
                 {
@@ -246,7 +246,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Log.Message(
-                    $"{LogPrefix}{lover.LabelShort} 成功产下 {child.LabelShort} " +
+                    $"{LogPrefix}{pregnantCompanion.LabelShort} 成功产下 {child.LabelShort} " +
                     $"({kind.defName})。");
 
                 return child;
@@ -266,7 +266,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     ClearAttemptedBirthRelations(
                         child,
-                        lover,
+                        pregnantCompanion,
                         geneticParent,
                         addedParentBirth,
                         addedGeneticParent);
@@ -277,9 +277,9 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool HasPregnancyBlockingHediff(Pawn lover)
+        private static bool HasPregnancyBlockingHediff(Pawn pregnantCompanion)
         {
-            List<Hediff> hediffs = lover.health.hediffSet.hediffs;
+            List<Hediff> hediffs = pregnantCompanion.health.hediffSet.hediffs;
             for (int i = 0; i < hediffs.Count; i++)
             {
                 HediffDef? def = hediffs[i]?.def;
@@ -369,7 +369,7 @@ namespace MAP_MechanoidMechanitor
 
         private static bool TryAddBirthRelations(
             Pawn child,
-            Pawn lover,
+            Pawn pregnantCompanion,
             Pawn? geneticParent,
             out bool addedParentBirth,
             out bool addedGeneticParent)
@@ -385,8 +385,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool parentBirthExistedBefore =
-                child.relations.DirectRelationExists(PawnRelationDefOf.ParentBirth, lover);
-            bool geneticParentRequired = geneticParent != null && geneticParent != lover;
+                child.relations.DirectRelationExists(PawnRelationDefOf.ParentBirth, pregnantCompanion);
+            bool geneticParentRequired = geneticParent != null && geneticParent != pregnantCompanion;
             bool geneticParentExistedBefore = geneticParentRequired
                 && child.relations.DirectRelationExists(PawnRelationDefOf.Parent, geneticParent!);
             bool failed = false;
@@ -395,25 +395,25 @@ namespace MAP_MechanoidMechanitor
             {
                 try
                 {
-                    child.relations.AddDirectRelation(PawnRelationDefOf.ParentBirth, lover);
+                    child.relations.AddDirectRelation(PawnRelationDefOf.ParentBirth, pregnantCompanion);
                 }
                 catch (Exception exception)
                 {
                     failed = true;
                     Log.Error(
-                        $"{LogPrefix}为新生儿 {child} 添加仿生伴侣 {lover} 的 ParentBirth " +
+                        $"{LogPrefix}为新生儿 {child} 添加仿生伴侣 {pregnantCompanion} 的 ParentBirth " +
                         $"关系时发生异常：{exception}");
                 }
             }
 
             bool parentBirthExistsNow =
-                child.relations.DirectRelationExists(PawnRelationDefOf.ParentBirth, lover);
+                child.relations.DirectRelationExists(PawnRelationDefOf.ParentBirth, pregnantCompanion);
             addedParentBirth = !parentBirthExistedBefore && parentBirthExistsNow;
             if (!parentBirthExistsNow)
             {
                 failed = true;
                 Log.Error(
-                    $"{LogPrefix}未能为新生儿 {child} 添加仿生伴侣 {lover} 的 ParentBirth 关系。");
+                    $"{LogPrefix}未能为新生儿 {child} 添加仿生伴侣 {pregnantCompanion} 的 ParentBirth 关系。");
             }
 
             if (geneticParentRequired)
@@ -450,7 +450,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void ClearAttemptedBirthRelations(
             Pawn child,
-            Pawn lover,
+            Pawn pregnantCompanion,
             Pawn? geneticParent,
             bool addedParentBirth,
             bool addedGeneticParent)
@@ -493,16 +493,16 @@ namespace MAP_MechanoidMechanitor
                 {
                     if (child.relations.DirectRelationExists(
                         PawnRelationDefOf.ParentBirth,
-                        lover))
+                        pregnantCompanion))
                     {
                         bool removed = child.relations.TryRemoveDirectRelation(
                             PawnRelationDefOf.ParentBirth,
-                            lover);
+                            pregnantCompanion);
                         if (!removed)
                         {
                             Log.Error(
                                 $"{LogPrefix}清理本次添加的仿生伴侣 ParentBirth 关系失败：" +
-                                $"child={child}，lover={lover}。");
+                                $"child={child}，pregnantCompanion={pregnantCompanion}。");
                         }
                     }
                 }

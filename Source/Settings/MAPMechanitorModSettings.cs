@@ -9,9 +9,9 @@ namespace MAP_MechanoidMechanitor
         public bool enableMechanoidMechanitorBrainImplants = false;
 
         /// <summary>
-        /// 默认关闭。开启后，恋人孕育的子嗣在受孕时额外继承配偶全部异种基因。
+        /// 默认关闭。开启后，仿生孕育的子嗣在受孕时额外继承配偶全部异种基因。
         /// </summary>
-        public bool loverOffspringInheritXenogenes = false;
+        public bool syntheticOffspringInheritXenogenes = false;
 
         public override void ExposeData()
         {
@@ -29,8 +29,8 @@ namespace MAP_MechanoidMechanitor
                 "enableMechanoidMechanitorBrainImplants",
                 false);
             Scribe_Values.Look(
-                ref loverOffspringInheritXenogenes,
-                "loverOffspringInheritXenogenes",
+                ref syntheticOffspringInheritXenogenes,
+                "syntheticOffspringInheritXenogenes",
                 false);
         }
     }

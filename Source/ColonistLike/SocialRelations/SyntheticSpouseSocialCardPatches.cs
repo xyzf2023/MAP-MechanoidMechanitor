@@ -136,21 +136,21 @@ namespace MAP_MechanoidMechanitor
                 if (!TryResolveSyntheticSpouseEntry(
                     entry,
                     selPawnForSocialInfo,
-                    out Pawn? lover,
+                    out Pawn? syntheticCompanion,
                     out Pawn? spouse)
-                    || lover == null
+                    || syntheticCompanion == null
                     || spouse == null)
                 {
                     return true;
                 }
 
                 if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                    lover, MechanoidMechanitorCapability.SyntheticPregnancy))
+                    syntheticCompanion, MechanoidMechanitorCapability.SyntheticPregnancy))
                 {
                     return true;
                 }
 
-                SyntheticPregnancyUIUtility.DrawApproachButton(rect, lover, spouse);
+                SyntheticPregnancyUIUtility.DrawApproachButton(rect, syntheticCompanion, spouse);
                 return false;
             }
         }
@@ -158,10 +158,10 @@ namespace MAP_MechanoidMechanitor
         private static bool TryResolveSyntheticSpouseEntry(
             object? entry,
             Pawn? selectedPawn,
-            out Pawn? lover,
+            out Pawn? syntheticCompanion,
             out Pawn? spouse)
         {
-            lover = null;
+            syntheticCompanion = null;
             spouse = null;
             if (entry == null || selectedPawn?.relations == null)
             {
@@ -187,7 +187,7 @@ namespace MAP_MechanoidMechanitor
             if (MechanoidMechanitorCapabilityUtility.HasCapability(
                 selectedPawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
             {
-                lover = selectedPawn;
+                syntheticCompanion = selectedPawn;
                 spouse = otherPawn;
                 return true;
             }
@@ -195,7 +195,7 @@ namespace MAP_MechanoidMechanitor
             if (MechanoidMechanitorCapabilityUtility.HasCapability(
                 otherPawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
             {
-                lover = otherPawn;
+                syntheticCompanion = otherPawn;
                 spouse = selectedPawn;
                 return true;
             }

@@ -54,70 +54,72 @@ namespace MAP_MechanoidMechanitor
             return pawn.relations != null;
         }
 
-        public static bool AssignSpouseUnchecked(Pawn? optedInPawn, Pawn? target)
+        public static bool AssignSpouseUnchecked(Pawn? syntheticCompanion, Pawn? target)
         {
-            if (optedInPawn == null || target == null || optedInPawn == target)
+            if (syntheticCompanion == null || target == null || syntheticCompanion == target)
             {
                 return false;
             }
 
             if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                optedInPawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+                syntheticCompanion, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
             {
                 return false;
             }
 
-            if (optedInPawn.relations == null || target.relations == null)
+            if (syntheticCompanion.relations == null || target.relations == null)
             {
                 return false;
             }
 
-            if (optedInPawn.relations.DirectRelationExists(PawnRelationDefOf.Spouse, target))
+            if (syntheticCompanion.relations.DirectRelationExists(PawnRelationDefOf.Spouse, target))
             {
                 return false;
             }
 
-            optedInPawn.relations.AddDirectRelation(PawnRelationDefOf.Spouse, target);
+            syntheticCompanion.relations.AddDirectRelation(PawnRelationDefOf.Spouse, target);
             return true;
         }
 
-        public static bool TryReplaceSpouseWithEvents(Pawn? lover, Pawn? target)
+        public static bool TryReplaceSpouseWithEvents(Pawn? syntheticCompanion, Pawn? target)
         {
-            if (lover == null || target == null)
+            if (syntheticCompanion == null || target == null)
             {
                 return false;
             }
 
-            if (!CanShowAssignSpouseButton(lover) || lover.relations == null || target.relations == null)
+            if (!CanShowAssignSpouseButton(syntheticCompanion)
+                || syntheticCompanion.relations == null
+                || target.relations == null)
             {
                 return false;
             }
 
-            if (!IsValidSpouseCandidate(lover, target))
+            if (!IsValidSpouseCandidate(syntheticCompanion, target))
             {
                 return false;
             }
 
-            CollectCurrentSpousesExcluding(lover, target, OldSpouseTmp);
+            CollectCurrentSpousesExcluding(syntheticCompanion, target, OldSpouseTmp);
             for (int i = 0; i < OldSpouseTmp.Count; i++)
             {
-                DivorceLoverFromOldSpouse(lover, OldSpouseTmp[i]);
+                DivorceSyntheticCompanionFromOldSpouse(syntheticCompanion, OldSpouseTmp[i]);
             }
 
-            if (lover.relations.DirectRelationExists(PawnRelationDefOf.ExSpouse, target))
+            if (syntheticCompanion.relations.DirectRelationExists(PawnRelationDefOf.ExSpouse, target))
             {
-                lover.relations.TryRemoveDirectRelation(PawnRelationDefOf.ExSpouse, target);
+                syntheticCompanion.relations.TryRemoveDirectRelation(PawnRelationDefOf.ExSpouse, target);
             }
 
-            if (!AssignSpouseUnchecked(lover, target))
+            if (!AssignSpouseUnchecked(syntheticCompanion, target))
             {
                 return false;
             }
 
-            ApplyNewlyMarriedFeedback(lover, target);
-            TaleRecorder.RecordTale(TaleDefOf.Marriage, lover, target);
-            SendMarriageLetter(lover, target);
-            DisableLovinAndResetAfterAssignment(lover);
+            ApplyNewlyMarriedFeedback(syntheticCompanion, target);
+            TaleRecorder.RecordTale(TaleDefOf.Marriage, syntheticCompanion, target);
+            SendMarriageLetter(syntheticCompanion, target);
+            DisableLovinAndResetAfterAssignment(syntheticCompanion);
             SocialCardUtility.ClearCaches();
             return true;
         }
@@ -149,14 +151,14 @@ namespace MAP_MechanoidMechanitor
             TooltipHandler.TipRegion(buttonRect, AssignSpouseButtonDescKey.Translate());
         }
 
-        private static void TryOpenAssignSpouseMenu(Pawn lover)
+        private static void TryOpenAssignSpouseMenu(Pawn syntheticCompanion)
         {
-            List<Pawn> candidates = CollectSpouseCandidates(lover);
+            List<Pawn> candidates = CollectSpouseCandidates(syntheticCompanion);
             if (candidates.Count == 0)
             {
                 Messages.Message(
                     NoCandidateKey.Translate(),
-                    lover,
+                    syntheticCompanion,
                     MessageTypeDefOf.RejectInput,
                     historical: false);
                 return;
@@ -171,41 +173,41 @@ namespace MAP_MechanoidMechanitor
                     localCandidate.LabelCap,
                     delegate
                     {
-                        TryAssignSpouseFromMenu(lover, localCandidate);
+                        TryAssignSpouseFromMenu(syntheticCompanion, localCandidate);
                     }));
             }
 
             Find.WindowStack.Add(new FloatMenu(options));
         }
 
-        private static void TryAssignSpouseFromMenu(Pawn lover, Pawn target)
+        private static void TryAssignSpouseFromMenu(Pawn syntheticCompanion, Pawn target)
         {
-            if (TryReplaceSpouseWithEvents(lover, target))
+            if (TryReplaceSpouseWithEvents(syntheticCompanion, target))
             {
                 return;
             }
 
             Messages.Message(
                 FailedKey.Translate(),
-                lover,
+                syntheticCompanion,
                 MessageTypeDefOf.RejectInput,
                 historical: false);
         }
 
-        private static List<Pawn> CollectSpouseCandidates(Pawn lover)
+        private static List<Pawn> CollectSpouseCandidates(Pawn syntheticCompanion)
         {
             SpouseCandidateTmp.Clear();
 
-            if (lover?.Map == null || lover.relations == null)
+            if (syntheticCompanion?.Map == null || syntheticCompanion.relations == null)
             {
                 return SpouseCandidateTmp;
             }
 
-            List<Pawn> freeColonists = lover.Map.mapPawns.FreeColonistsSpawned;
+            List<Pawn> freeColonists = syntheticCompanion.Map.mapPawns.FreeColonistsSpawned;
             for (int i = 0; i < freeColonists.Count; i++)
             {
                 Pawn candidate = freeColonists[i];
-                if (!IsValidSpouseCandidate(lover, candidate))
+                if (!IsValidSpouseCandidate(syntheticCompanion, candidate))
                 {
                     continue;
                 }
@@ -217,9 +219,9 @@ namespace MAP_MechanoidMechanitor
             return SpouseCandidateTmp;
         }
 
-        private static bool IsValidSpouseCandidate(Pawn lover, Pawn candidate)
+        private static bool IsValidSpouseCandidate(Pawn syntheticCompanion, Pawn candidate)
         {
-            if (candidate == null || candidate == lover)
+            if (candidate == null || candidate == syntheticCompanion)
             {
                 return false;
             }
@@ -234,7 +236,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (lover.relations == null || candidate.relations == null)
+            if (syntheticCompanion.relations == null || candidate.relations == null)
             {
                 return false;
             }
@@ -245,7 +247,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, candidate))
+            if (syntheticCompanion.relations.DirectRelationExists(PawnRelationDefOf.Spouse, candidate))
             {
                 return false;
             }
@@ -253,15 +255,18 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        private static void CollectCurrentSpousesExcluding(Pawn lover, Pawn exclude, List<Pawn> into)
+        private static void CollectCurrentSpousesExcluding(
+            Pawn syntheticCompanion,
+            Pawn exclude,
+            List<Pawn> into)
         {
             into.Clear();
-            if (lover.relations == null)
+            if (syntheticCompanion.relations == null)
             {
                 return;
             }
 
-            List<DirectPawnRelation> relations = lover.relations.DirectRelations;
+            List<DirectPawnRelation> relations = syntheticCompanion.relations.DirectRelations;
             for (int i = 0; i < relations.Count; i++)
             {
                 DirectPawnRelation relation = relations[i];
@@ -280,32 +285,34 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void DivorceLoverFromOldSpouse(Pawn lover, Pawn oldSpouse)
+        private static void DivorceSyntheticCompanionFromOldSpouse(
+            Pawn syntheticCompanion,
+            Pawn oldSpouse)
         {
-            if (lover.relations == null || oldSpouse.relations == null)
+            if (syntheticCompanion.relations == null || oldSpouse.relations == null)
             {
                 return;
             }
 
-            if (!lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, oldSpouse))
+            if (!syntheticCompanion.relations.DirectRelationExists(PawnRelationDefOf.Spouse, oldSpouse))
             {
                 return;
             }
 
-            lover.relations.RemoveDirectRelation(PawnRelationDefOf.Spouse, oldSpouse);
+            syntheticCompanion.relations.RemoveDirectRelation(PawnRelationDefOf.Spouse, oldSpouse);
 
-            if (!lover.relations.DirectRelationExists(PawnRelationDefOf.ExSpouse, oldSpouse))
+            if (!syntheticCompanion.relations.DirectRelationExists(PawnRelationDefOf.ExSpouse, oldSpouse))
             {
-                lover.relations.AddDirectRelation(PawnRelationDefOf.ExSpouse, oldSpouse);
+                syntheticCompanion.relations.AddDirectRelation(PawnRelationDefOf.ExSpouse, oldSpouse);
             }
 
-            RemovePairMarriageMemories(lover, oldSpouse);
-            TryGainDivorcedMoodOnly(oldSpouse, lover);
-            TaleRecorder.RecordTale(TaleDefOf.Breakup, lover, oldSpouse);
-            SendBreakupLetter(lover, oldSpouse);
+            RemovePairMarriageMemories(syntheticCompanion, oldSpouse);
+            TryGainDivorcedMoodOnly(oldSpouse, syntheticCompanion);
+            TaleRecorder.RecordTale(TaleDefOf.Breakup, syntheticCompanion, oldSpouse);
+            SendBreakupLetter(syntheticCompanion, oldSpouse);
         }
 
-        private static void TryGainDivorcedMoodOnly(Pawn oldSpouse, Pawn lover)
+        private static void TryGainDivorcedMoodOnly(Pawn oldSpouse, Pawn syntheticCompanion)
         {
             MemoryThoughtHandler? memories = oldSpouse.needs?.mood?.thoughts?.memories;
             if (memories == null)
@@ -319,30 +326,35 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            memories.TryGainMemory(divorcedMood, lover);
+            memories.TryGainMemory(divorcedMood, syntheticCompanion);
         }
 
-        private static void RemovePairMarriageMemories(Pawn lover, Pawn oldSpouse)
+        private static void RemovePairMarriageMemories(Pawn syntheticCompanion, Pawn oldSpouse)
         {
-            MemoryThoughtHandler? loverMemories = lover.needs?.mood?.thoughts?.memories;
-            if (loverMemories != null)
+            MemoryThoughtHandler? companionMemories =
+                syntheticCompanion.needs?.mood?.thoughts?.memories;
+            if (companionMemories != null)
             {
-                loverMemories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.GotMarried, oldSpouse);
-                loverMemories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.HoneymoonPhase, oldSpouse);
+                companionMemories.RemoveMemoriesOfDefWhereOtherPawnIs(
+                    ThoughtDefOf.GotMarried, oldSpouse);
+                companionMemories.RemoveMemoriesOfDefWhereOtherPawnIs(
+                    ThoughtDefOf.HoneymoonPhase, oldSpouse);
             }
 
             MemoryThoughtHandler? oldSpouseMemories = oldSpouse.needs?.mood?.thoughts?.memories;
             if (oldSpouseMemories != null)
             {
-                oldSpouseMemories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.GotMarried, lover);
-                oldSpouseMemories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.HoneymoonPhase, lover);
+                oldSpouseMemories.RemoveMemoriesOfDefWhereOtherPawnIs(
+                    ThoughtDefOf.GotMarried, syntheticCompanion);
+                oldSpouseMemories.RemoveMemoriesOfDefWhereOtherPawnIs(
+                    ThoughtDefOf.HoneymoonPhase, syntheticCompanion);
             }
         }
 
-        private static void ApplyNewlyMarriedFeedback(Pawn lover, Pawn target)
+        private static void ApplyNewlyMarriedFeedback(Pawn syntheticCompanion, Pawn target)
         {
-            ApplyNewlyMarriedSide(lover, target);
-            ApplyNewlyMarriedSide(target, lover);
+            ApplyNewlyMarriedSide(syntheticCompanion, target);
+            ApplyNewlyMarriedSide(target, syntheticCompanion);
         }
 
         private static void ApplyNewlyMarriedSide(Pawn pawn, Pawn otherPawn)
@@ -358,34 +370,36 @@ namespace MAP_MechanoidMechanitor
             memories.TryGainMemory(ThoughtDefOf.HoneymoonPhase, otherPawn);
         }
 
-        private static void DisableLovinAndResetAfterAssignment(Pawn lover)
+        private static void DisableLovinAndResetAfterAssignment(Pawn syntheticCompanion)
         {
-            SyntheticCompanionStateUtility.DisableLovinWithSpouse(lover);
-            SyntheticCompanionStateUtility.ResetPregnancyApproachToAvoid(lover);
+            SyntheticCompanionStateUtility.DisableLovinWithSpouse(syntheticCompanion);
+            SyntheticCompanionStateUtility.ResetPregnancyApproachToAvoid(syntheticCompanion);
         }
 
-        private static void SendBreakupLetter(Pawn lover, Pawn oldSpouse)
+        private static void SendBreakupLetter(Pawn syntheticCompanion, Pawn oldSpouse)
         {
             TaggedString label = "LetterLabelBreakup".Translate();
             TaggedString text = "LetterNoLongerLovers".Translate(
-                lover.LabelShort,
+                syntheticCompanion.LabelShort,
                 oldSpouse.LabelShort,
-                lover.Named("PAWN1"),
+                syntheticCompanion.Named("PAWN1"),
                 oldSpouse.Named("PAWN2"));
             Find.LetterStack.ReceiveLetter(
                 label,
                 text,
                 LetterDefOf.NegativeEvent,
-                new LookTargets(lover, oldSpouse));
+                new LookTargets(syntheticCompanion, oldSpouse));
         }
 
-        private static void SendMarriageLetter(Pawn lover, Pawn target)
+        private static void SendMarriageLetter(Pawn syntheticCompanion, Pawn target)
         {
             Find.LetterStack.ReceiveLetter(
                 MarriageLetterLabelKey.Translate(),
-                MarriageLetterTextKey.Translate(lover.Named("LOVER"), target.Named("TARGET")),
+                MarriageLetterTextKey.Translate(
+                    syntheticCompanion.Named("COMPANION"),
+                    target.Named("TARGET")),
                 LetterDefOf.PositiveEvent,
-                new LookTargets(lover, target));
+                new LookTargets(syntheticCompanion, target));
         }
     }
 }

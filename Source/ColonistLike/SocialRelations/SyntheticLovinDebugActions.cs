@@ -13,7 +13,7 @@ namespace MAP_MechanoidMechanitor
     public static class SyntheticLovinDebugActions
     {
         private static readonly List<Pawn> TmpSpouses = new List<Pawn>();
-        private static readonly List<Pawn> TmpOptedInLovers = new List<Pawn>();
+        private static readonly List<Pawn> TmpSyntheticCompanions = new List<Pawn>();
         private static readonly List<string> TmpFailures = new List<string>();
 
         [DebugAction(
@@ -75,11 +75,11 @@ namespace MAP_MechanoidMechanitor
             sb.AppendLine("当前游戏 Tick：" + ticksGame);
 
             Pawn? initiator = null;
-            Pawn? primaryLover = null;
-            bool clickedIsLover = MechanoidMechanitorCapabilityUtility.HasCapability(
+            Pawn? primaryCompanion = null;
+            bool clickedIsSyntheticCompanion = MechanoidMechanitorCapabilityUtility.HasCapability(
                 clicked, MechanoidMechanitorCapability.SyntheticSpouseInteraction);
 
-            if (clickedIsLover)
+            if (clickedIsSyntheticCompanion)
             {
                 Status("点击的是拥有 SyntheticSpouseInteraction 能力的仿生伴侣。");
                 SyntheticLovinUtility.CollectDirectSpousePawns(clicked, TmpSpouses);
@@ -111,29 +111,29 @@ namespace MAP_MechanoidMechanitor
 
                 if (initiator == null)
                 {
-                    initiator = SyntheticLovinUtility.SelectPreferredLoverByThingId(TmpSpouses);
+                    initiator = SyntheticLovinUtility.SelectPreferredSyntheticCompanionByThingId(TmpSpouses);
                     Block("未能解析到合法的人类发起者（Spouse 中无有效 Humanlike 发起者）。");
                 }
 
-                primaryLover = clicked;
+                primaryCompanion = clicked;
             }
             else
             {
                 Status("点击的是普通 Pawn，视为 Lovin 发起者。");
                 initiator = clicked;
                 SyntheticLovinUtility.CollectDirectSpousePawns(clicked, TmpSpouses);
-                TmpOptedInLovers.Clear();
+                TmpSyntheticCompanions.Clear();
                 for (int i = 0; i < TmpSpouses.Count; i++)
                 {
                     Pawn spouse = TmpSpouses[i];
                     if (MechanoidMechanitorCapabilityUtility.HasCapability(
                         spouse, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
                     {
-                        TmpOptedInLovers.Add(spouse);
+                        TmpSyntheticCompanions.Add(spouse);
                     }
                 }
 
-                if (TmpOptedInLovers.Count == 0)
+                if (TmpSyntheticCompanions.Count == 0)
                 {
                     Block("发起者的直接 Spouse 中找不到拥有 SyntheticSpouseInteraction 的授权机械体。");
                     DiagnosePairDetails(
@@ -150,33 +150,34 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 sb.AppendLine("授权机械体配偶候选（按 DirectRelations 收集）：");
-                for (int i = 0; i < TmpOptedInLovers.Count; i++)
+                for (int i = 0; i < TmpSyntheticCompanions.Count; i++)
                 {
                     sb.AppendLine(
-                        "  - " + SyntheticLovinUtility.DescribePawn(TmpOptedInLovers[i]));
+                        "  - " + SyntheticLovinUtility.DescribePawn(TmpSyntheticCompanions[i]));
                 }
 
                 Pawn? formalPick =
-                    SyntheticLovinUtility.TryFindEnabledLoverPartnerForRemoteLovin(initiator);
+                    SyntheticLovinUtility.TryFindEnabledSyntheticCompanionForRemoteLovin(initiator);
                 if (formalPick != null)
                 {
-                    primaryLover = formalPick;
+                    primaryCompanion = formalPick;
                     Status(
-                        "正式逻辑 TryFindEnabledLoverPartnerForRemoteLovin 最终选择："
+                        "正式逻辑 TryFindEnabledSyntheticCompanionForRemoteLovin 最终选择："
                         + SyntheticLovinUtility.DescribePawn(formalPick));
                 }
                 else
                 {
-                    primaryLover =
-                        SyntheticLovinUtility.SelectPreferredLoverByThingId(TmpOptedInLovers);
+                    primaryCompanion =
+                        SyntheticLovinUtility.SelectPreferredSyntheticCompanionByThingId(
+                            TmpSyntheticCompanions);
                     Status(
                         "正式逻辑当前返回 null；诊断仍对 thingIDNumber 最小的授权机械体逐项展开："
-                        + SyntheticLovinUtility.DescribePawn(primaryLover));
+                        + SyntheticLovinUtility.DescribePawn(primaryCompanion));
                 }
             }
 
             sb.AppendLine("发起者：" + SyntheticLovinUtility.DescribePawn(initiator));
-            sb.AppendLine("仿生伴侣：" + SyntheticLovinUtility.DescribePawn(primaryLover));
+            sb.AppendLine("仿生伴侣：" + SyntheticLovinUtility.DescribePawn(primaryCompanion));
 
             if (initiator == null)
             {
@@ -191,7 +192,7 @@ namespace MAP_MechanoidMechanitor
                 Status,
                 AbsorbFailures,
                 initiator,
-                primaryLover,
+                primaryCompanion,
                 ticksGame);
 
             AbsorbFailures(CollectJobGiverDoLovinBlocks(initiator));
@@ -281,7 +282,7 @@ namespace MAP_MechanoidMechanitor
             System.Action<string> Status,
             System.Action<List<string>> AbsorbFailures,
             Pawn initiator,
-            Pawn? primaryLover,
+            Pawn? primaryCompanion,
             int ticksGame)
         {
             sb.AppendLine("--- 一、原版 JobGiver_DoLovin 条件 ---");
@@ -326,7 +327,7 @@ namespace MAP_MechanoidMechanitor
                 Block("发起者 CurrentBed() 为空，无法取得有效床铺。");
             }
 
-            if (primaryLover == null)
+            if (primaryCompanion == null)
             {
                 Block("没有可用于逐项诊断的授权机械体。");
                 return;
@@ -334,19 +335,19 @@ namespace MAP_MechanoidMechanitor
 
             sb.AppendLine("--- 二、仿生伴侣冷却与当前工作 ---");
 
-            bool loverCooldownBlocking = SyntheticLovinUtility.FormatCanLovinCooldown(
-                primaryLover,
+            bool companionCooldownBlocking = SyntheticLovinUtility.FormatCanLovinCooldown(
+                primaryCompanion,
                 ticksGame,
-                out int loverCanLovinTick,
-                out int loverRemaining,
-                out string loverReadable);
-            if (loverCooldownBlocking)
+                out int companionCanLovinTick,
+                out int companionRemaining,
+                out string companionReadable);
+            if (companionCooldownBlocking)
             {
                 Block(
                     "仿生伴侣 Lovin 冷却未结束：剩余 "
-                    + loverRemaining
+                    + companionRemaining
                     + " Tick（"
-                    + loverReadable
+                    + companionReadable
                     + "）。");
             }
             else
@@ -356,13 +357,13 @@ namespace MAP_MechanoidMechanitor
 
             Status(
                 "「与配偶爱爱」开关："
-                + (SyntheticCompanionStateUtility.IsLovinWithSpouseEnabled(primaryLover) ? "开启" : "关闭"));
+                + (SyntheticCompanionStateUtility.IsLovinWithSpouseEnabled(primaryCompanion) ? "开启" : "关闭"));
 
             sb.AppendLine("--- 三、模组候选仿生伴侣条件 ---");
             TmpFailures.Clear();
-            SyntheticLovinUtility.EvaluateEnabledLoverForRemoteLovin(
+            SyntheticLovinUtility.EvaluateEnabledSyntheticCompanionForRemoteLovin(
                 initiator,
-                primaryLover,
+                primaryCompanion,
                 bed,
                 TmpFailures);
             if (TmpFailures.Count == 0)
