@@ -277,7 +277,7 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
-                child.relations.AddDirectRelation(PawnRelationDefOf.Parent, lover);
+                // 恋人仅作生母（ParentBirth），不作普通 Parent，避免同时显示“母亲”和“生母”。
                 child.relations.AddDirectRelation(PawnRelationDefOf.ParentBirth, lover);
                 if (geneticParent != null && geneticParent != lover)
                 {

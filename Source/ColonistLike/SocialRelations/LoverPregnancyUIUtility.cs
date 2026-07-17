@@ -93,19 +93,20 @@ namespace MAP_MechanoidMechanitor
 
         private static string GetLabel(LoverPregnancyApproach approach)
         {
+            // 仅用原版基础名称，不用 GetDescription()（其会附带原版怀孕概率倍率）。
             return approach switch
             {
                 LoverPregnancyApproach.Normal =>
-                    PregnancyApproach.Normal.GetDescription(),
+                    PregnancyApproach.Normal.GetLabel().CapitalizeFirst(),
                 LoverPregnancyApproach.AvoidPregnancy =>
-                    PregnancyApproach.AvoidPregnancy.GetDescription(),
+                    PregnancyApproach.AvoidPregnancy.GetLabel().CapitalizeFirst(),
                 LoverPregnancyApproach.TryForBaby =>
-                    PregnancyApproach.TryForBaby.GetDescription(),
+                    PregnancyApproach.TryForBaby.GetLabel().CapitalizeFirst(),
                 LoverPregnancyApproach.TryForBabyMale =>
                     "MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyMale".Translate(),
                 LoverPregnancyApproach.TryForBabyFemale =>
                     "MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyFemale".Translate(),
-                _ => PregnancyApproach.AvoidPregnancy.GetDescription(),
+                _ => PregnancyApproach.AvoidPregnancy.GetLabel().CapitalizeFirst(),
             };
         }
 
