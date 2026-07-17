@@ -19,7 +19,6 @@ namespace MAP_MechanoidMechanitor
             LoverPregnancyApproach current = comp.PregnancyApproach;
             GUI.color = Color.white;
             GUI.DrawTexture(rect, GetIcon(current));
-            DrawSpecifiedGenderMarker(rect, current);
             if (Widgets.ButtonInvisible(rect))
             {
                 Find.WindowStack.Add(new FloatMenu(BuildOptions(comp)));
@@ -37,33 +36,6 @@ namespace MAP_MechanoidMechanitor
                     + "ClickToChangePregnancyApproach".Translate()
                     .Colorize(ColoredText.SubtleGrayColor));
             }
-        }
-
-        private static void DrawSpecifiedGenderMarker(
-            Rect rect,
-            LoverPregnancyApproach approach)
-        {
-            string marker = approach switch
-            {
-                LoverPregnancyApproach.TryForBabyMale => "男",
-                LoverPregnancyApproach.TryForBabyFemale => "女",
-                _ => string.Empty,
-            };
-            if (marker.NullOrEmpty())
-            {
-                return;
-            }
-
-            GameFont previousFont = Text.Font;
-            TextAnchor previousAnchor = Text.Anchor;
-            Color previousColor = GUI.color;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.LowerRight;
-            GUI.color = Color.white;
-            Widgets.Label(rect, marker);
-            GUI.color = previousColor;
-            Text.Anchor = previousAnchor;
-            Text.Font = previousFont;
         }
 
         private static List<FloatMenuOption> BuildOptions(

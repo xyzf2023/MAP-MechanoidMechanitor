@@ -148,7 +148,7 @@
         <defaultPriority>3</defaultPriority>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechanicalChildcareUser">
-        <defaultPriority>3</defaultPriority>
+        <defaultPriority>1</defaultPriority>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ExplicitSocialRelationUser" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
