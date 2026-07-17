@@ -92,6 +92,7 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         /// 尝试完成自定义生产。成功返回已生成并放置的新生儿；失败返回 null，孕期保留以便重试。
         /// 调用方在成功后负责移除怀孕 Hediff。
+        /// 新生儿一旦成功进入实际环境，即视为出生已提交，此后不得再返回 null。
         /// </summary>
         public static Pawn? TryCompleteBirth(Hediff_LoverPregnant pregnancy)
         {
@@ -118,8 +119,12 @@ namespace MAP_MechanoidMechanitor
                 : new List<GeneDef>();
             xenogenes.RemoveAll(endogenes.Contains);
             string? lastName = TryGetLastName(pregnancy.GeneticParent);
+            Pawn? geneticParent = pregnancy.GeneticParent;
 
             Pawn? child = null;
+            bool birthCommitted = false;
+            bool addedParentBirth = false;
+            bool addedGeneticParent = false;
             try
             {
                 PawnGenerationRequest request = new PawnGenerationRequest(
@@ -148,32 +153,70 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 EnforceExactGenes(child, endogenes, xenogenes);
-                if (child.health == null)
+                if (child.health?.hediffSet == null)
                 {
                     throw new InvalidOperationException("新生儿没有 health tracker。");
                 }
 
-                // 亲属与超凡子嗣属于出生后附加；即使失败也不回滚已生成的新生儿放置。
-                AddBirthRelations(child, lover, pregnancy.GeneticParent);
-                try
+                child.health.AddHediff(MAPMechanitor_HediffDefOf.MAP_ExtraordinaryOffspring);
+                if (!child.health.hediffSet.HasHediff(
+                    MAPMechanitor_HediffDefOf.MAP_ExtraordinaryOffspring))
                 {
-                    child.health.AddHediff(MAPMechanitor_HediffDefOf.MAP_ExtraordinaryOffspring);
-                }
-                catch (Exception hediffException)
-                {
-                    Log.Warning(
-                        $"{LogPrefix}为新生儿添加超凡子嗣健康状态失败（出生仍视为成功）：" +
-                        hediffException);
+                    throw new InvalidOperationException(
+                        "未能为新生儿添加或确认「超凡子嗣」健康状态。");
                 }
 
-                if (!PawnUtility.TrySpawnHatchedOrBornPawn(child, lover))
+                if (!TryAddBirthRelations(
+                    child,
+                    lover,
+                    geneticParent,
+                    out addedParentBirth,
+                    out addedGeneticParent))
+                {
+                    throw new InvalidOperationException("未能建立必要亲属关系。");
+                }
+
+                bool spawned;
+                try
+                {
+                    spawned = PawnUtility.TrySpawnHatchedOrBornPawn(child, lover);
+                }
+                catch (Exception spawnException)
+                {
+                    // 放置过程抛异常，但新生儿可能已进入实际环境——此时必须提交。
+                    if (IsChildInGameWorld(child))
+                    {
+                        birthCommitted = true;
+                        Log.Warning(
+                            $"{LogPrefix}TrySpawnHatchedOrBornPawn 抛出异常，但新生儿已进入" +
+                            $"实际环境，仍视为生产成功：{spawnException}");
+                        spawned = true;
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+
+                if (!spawned)
                 {
                     Log.Error(
                         $"{LogPrefix}生产失败：无法将 {child} 放置到 {lover} 所在环境；" +
-                        "该 Pawn 将被安全丢弃，孕期保留以便重试。");
-                    Find.WorldPawns.PassToWorld(child, PawnDiscardDecideMode.Discard);
+                        "将清理本次亲属关系并丢弃未落地新生儿，孕期保留以便重试。");
+                    ClearAttemptedBirthRelations(
+                        child,
+                        lover,
+                        geneticParent,
+                        addedParentBirth,
+                        addedGeneticParent);
+                    addedParentBirth = false;
+                    addedGeneticParent = false;
+                    DiscardUncommittedChild(child);
                     return null;
                 }
+
+                // 从此刻起出生已提交：后续任何非关键异常都不得返回 null。
+                birthCommitted = true;
 
                 try
                 {
@@ -185,17 +228,41 @@ namespace MAP_MechanoidMechanitor
                         $"{LogPrefix}记录 GaveBirth 故事失败（出生仍视为成功）：{taleException}");
                 }
 
-                Log.Message(
-                    $"{LogPrefix}{lover.LabelShort} 成功产下 {child.LabelShort} " +
-                    $"({kind.defName})。");
+                try
+                {
+                    Log.Message(
+                        $"{LogPrefix}{lover.LabelShort} 成功产下 {child.LabelShort} " +
+                        $"({kind.defName})。");
+                }
+                catch (Exception logException)
+                {
+                    Log.Warning(
+                        $"{LogPrefix}记录成功生产日志失败（出生仍视为成功）：{logException}");
+                }
+
                 return child;
             }
             catch (Exception exception)
             {
-                Log.Error($"{LogPrefix}自定义生产发生异常，孕期保留以便重试：{exception}");
-                if (child != null && !child.Spawned && !child.IsCaravanMember())
+                // 已提交或已实际存在于游戏环境：必须返回新生儿，绝不可丢弃或保留孕期重产。
+                if (child != null && (birthCommitted || IsChildInGameWorld(child)))
                 {
-                    Find.WorldPawns.PassToWorld(child, PawnDiscardDecideMode.Discard);
+                    Log.Error(
+                        $"{LogPrefix}生产已提交后发生异常，仍返回新生儿且不会重试：" +
+                        exception);
+                    return child;
+                }
+
+                Log.Error($"{LogPrefix}自定义生产发生异常，孕期保留以便重试：{exception}");
+                if (child != null)
+                {
+                    ClearAttemptedBirthRelations(
+                        child,
+                        lover,
+                        geneticParent,
+                        addedParentBirth,
+                        addedGeneticParent);
+                    DiscardUncommittedChild(child);
                 }
 
                 return null;
@@ -293,27 +360,147 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void AddBirthRelations(Pawn child, Pawn lover, Pawn? geneticParent)
+        private static bool TryAddBirthRelations(
+            Pawn child,
+            Pawn lover,
+            Pawn? geneticParent,
+            out bool addedParentBirth,
+            out bool addedGeneticParent)
         {
+            addedParentBirth = false;
+            addedGeneticParent = false;
+
             if (child.relations == null)
             {
-                Log.Warning($"{LogPrefix}新生儿 {child} 没有 relations tracker，无法建立亲属关系。");
-                return;
+                Log.Error(
+                    $"{LogPrefix}新生儿 {child} 没有 relations tracker，无法建立必要亲属关系。");
+                return false;
             }
 
             try
             {
                 // 恋人仅作生母（ParentBirth），不作普通 Parent，避免同时显示“母亲”和“生母”。
                 child.relations.AddDirectRelation(PawnRelationDefOf.ParentBirth, lover);
+                if (!child.relations.DirectRelationExists(PawnRelationDefOf.ParentBirth, lover))
+                {
+                    Log.Error(
+                        $"{LogPrefix}未能为新生儿 {child} 添加恋人 {lover} 的 ParentBirth 关系。");
+                    return false;
+                }
+
+                addedParentBirth = true;
+
                 if (geneticParent != null && geneticParent != lover)
                 {
                     child.relations.AddDirectRelation(PawnRelationDefOf.Parent, geneticParent);
+                    if (!child.relations.DirectRelationExists(
+                        PawnRelationDefOf.Parent,
+                        geneticParent))
+                    {
+                        Log.Error(
+                            $"{LogPrefix}未能为新生儿 {child} 添加遗传配偶 {geneticParent} " +
+                            "的 Parent 关系。");
+                        ClearAttemptedBirthRelations(
+                            child,
+                            lover,
+                            geneticParent,
+                            addedParentBirth,
+                            addedGeneticParent: false);
+                        addedParentBirth = false;
+                        return false;
+                    }
+
+                    addedGeneticParent = true;
+                }
+
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Log.Error(
+                    $"{LogPrefix}为新生儿 {child} 建立亲属关系时发生异常：{exception}");
+                ClearAttemptedBirthRelations(
+                    child,
+                    lover,
+                    geneticParent,
+                    addedParentBirth,
+                    addedGeneticParent);
+                addedParentBirth = false;
+                addedGeneticParent = false;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 仅清理本次尝试实际添加的关系，不触碰恋人或遗传配偶原有的其他亲属关系。
+        /// 使用原版 RemoveDirectRelation，由其维护双向索引。
+        /// </summary>
+        private static void ClearAttemptedBirthRelations(
+            Pawn child,
+            Pawn lover,
+            Pawn? geneticParent,
+            bool addedParentBirth,
+            bool addedGeneticParent)
+        {
+            if (child.relations == null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (addedGeneticParent
+                    && geneticParent != null
+                    && child.relations.DirectRelationExists(
+                        PawnRelationDefOf.Parent,
+                        geneticParent))
+                {
+                    child.relations.RemoveDirectRelation(
+                        PawnRelationDefOf.Parent,
+                        geneticParent);
+                }
+
+                if (addedParentBirth
+                    && child.relations.DirectRelationExists(
+                        PawnRelationDefOf.ParentBirth,
+                        lover))
+                {
+                    child.relations.RemoveDirectRelation(
+                        PawnRelationDefOf.ParentBirth,
+                        lover);
                 }
             }
             catch (Exception exception)
             {
                 Log.Error(
-                    $"{LogPrefix}为新生儿 {child} 建立亲属关系失败；出生仍继续：{exception}");
+                    $"{LogPrefix}清理本次尝试添加的亲属关系失败：{exception}");
+            }
+        }
+
+        private static bool IsChildInGameWorld(Pawn child)
+        {
+            return child.Spawned
+                || child.SpawnedOrAnyParentSpawned
+                || child.IsCaravanMember()
+                || child.IsWorldPawn();
+        }
+
+        private static void DiscardUncommittedChild(Pawn child)
+        {
+            if (IsChildInGameWorld(child))
+            {
+                Log.Warning(
+                    $"{LogPrefix}拒绝丢弃已进入实际环境的新生儿 {child}。");
+                return;
+            }
+
+            try
+            {
+                Find.WorldPawns.PassToWorld(child, PawnDiscardDecideMode.Discard);
+            }
+            catch (Exception exception)
+            {
+                Log.Error($"{LogPrefix}丢弃未落地新生儿失败：{exception}");
             }
         }
 
