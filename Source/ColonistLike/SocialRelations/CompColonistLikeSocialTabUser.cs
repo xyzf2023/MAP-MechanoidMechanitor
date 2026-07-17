@@ -1,4 +1,3 @@
-using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -44,8 +43,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            pawn.relations ??= new Pawn_RelationsTracker(pawn);
-            pawn.interactions ??= new Pawn_InteractionsTracker(pawn);
+            ColonistLikeSocialTrackerUtility.EnsureTrackers(pawn);
         }
     }
 }

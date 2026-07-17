@@ -111,7 +111,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (initiator == null)
                 {
-                    initiator = SyntheticLovinUtility.SelectPreferredSyntheticCompanionByThingId(TmpSpouses);
+                    initiator = SyntheticLovinUtility.SelectPreferredPawnByThingId(TmpSpouses);
                     Block("未能解析到合法的人类发起者（Spouse 中无有效 Humanlike 发起者）。");
                 }
 
@@ -168,7 +168,7 @@ namespace MAP_MechanoidMechanitor
                 else
                 {
                     primaryCompanion =
-                        SyntheticLovinUtility.SelectPreferredSyntheticCompanionByThingId(
+                        SyntheticLovinUtility.SelectPreferredPawnByThingId(
                             TmpSyntheticCompanions);
                     Status(
                         "正式逻辑当前返回 null；诊断仍对 thingIDNumber 最小的授权机械体逐项展开："

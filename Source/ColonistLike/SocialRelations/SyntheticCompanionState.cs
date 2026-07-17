@@ -26,8 +26,21 @@ namespace MAP_MechanoidMechanitor
             Pawn? pawn,
             out ISyntheticCompanionState? state)
         {
-            state = pawn?.GetComp<CompSyntheticCompanionUser>();
-            return state != null;
+            state = null;
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            // 真实组件优先；同时存在动态授权时也以 Comp 为状态来源。
+            CompSyntheticCompanionUser? comp = pawn.GetComp<CompSyntheticCompanionUser>();
+            if (comp != null)
+            {
+                state = comp;
+                return true;
+            }
+
+            return GameComponent_SyntheticCompanionRegistry.TryGetRecord(pawn, out state);
         }
 
         public static bool HasState(Pawn? pawn)

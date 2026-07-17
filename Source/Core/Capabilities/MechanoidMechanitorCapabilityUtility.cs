@@ -27,6 +27,7 @@ namespace MAP_MechanoidMechanitor
             MechanoidMechanitorCapability capabilities = MechanoidMechanitorCapability.None;
             AddCapabilitiesFromRealComponents(pawn, ref capabilities);
             AddCapabilitiesFromMechanitorIdentity(pawn, ref capabilities);
+            AddCapabilitiesFromSyntheticCompanionAuthorization(pawn, ref capabilities);
             AddCapabilitiesFromDataProcessingAllocation(pawn, ref capabilities);
             return capabilities;
         }
@@ -140,6 +141,23 @@ namespace MAP_MechanoidMechanitor
                 | MechanoidMechanitorCapability.TravelLeadCaravan
                 | MechanoidMechanitorCapability.TravelCollectItems
                 | MechanoidMechanitorCapability.TravelRefreshTrackers;
+        }
+
+        /// <summary>
+        /// 动态仿生伴侣授权来源。仅查询注册表，不回调状态工具，避免与 TryGetState 递归。
+        /// </summary>
+        private static void AddCapabilitiesFromSyntheticCompanionAuthorization(
+            Pawn pawn,
+            ref MechanoidMechanitorCapability capabilities)
+        {
+            if (!GameComponent_SyntheticCompanionRegistry.IsAuthorized(pawn))
+            {
+                return;
+            }
+
+            capabilities |= MechanoidMechanitorCapability.ColonistLikeSocialTab
+                | MechanoidMechanitorCapability.SyntheticSpouseInteraction
+                | MechanoidMechanitorCapability.SyntheticPregnancy;
         }
 
         private static void AddCapabilitiesFromDataProcessingAllocation(

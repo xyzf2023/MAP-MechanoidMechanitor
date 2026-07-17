@@ -3,31 +3,32 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 仿生伴侣组件：保存 Lovin 开关与仿生生育方式，提供配偶交互与仿生孕育的静态能力来源。
-    /// 不负责社交面板可见性（由 CompColonistLikeSocialTabUser 独立提供）。
-    /// Gizmo 由 SyntheticCompanionGizmoPatches 统一提供，避免与动态授权路径重复。
+    /// 动态仿生伴侣授权记录：独立于真实 Comp，保存 Lovin 开关与生育方式。
     /// </summary>
-    public sealed class CompProperties_SyntheticCompanionUser : CompProperties
+    public sealed class SyntheticCompanionAuthorizationRecord
+        : IExposable, ISyntheticCompanionState
     {
-        public CompProperties_SyntheticCompanionUser()
-        {
-            compClass = typeof(CompSyntheticCompanionUser);
-        }
-    }
-
-    public sealed class CompSyntheticCompanionUser : ThingComp, ISyntheticCompanionState
-    {
+        private Pawn? pawn;
         private bool lovinWithSpouseEnabled;
-
-        /// <summary>
-        /// 默认避孕；新生成时均回落到避孕。
-        /// </summary>
         private SyntheticPregnancyApproach pregnancyApproach =
             SyntheticPregnancyApproach.AvoidPregnancy;
+
+        public Pawn? Pawn => pawn;
 
         public bool LovinWithSpouseEnabled => lovinWithSpouseEnabled;
 
         public SyntheticPregnancyApproach PregnancyApproach => pregnancyApproach;
+
+        public SyntheticCompanionAuthorizationRecord()
+        {
+        }
+
+        public SyntheticCompanionAuthorizationRecord(Pawn authorizedPawn)
+        {
+            pawn = authorizedPawn;
+            lovinWithSpouseEnabled = false;
+            pregnancyApproach = SyntheticPregnancyApproach.AvoidPregnancy;
+        }
 
         public void ToggleLovinWithSpouse()
         {
@@ -49,14 +50,19 @@ namespace MAP_MechanoidMechanitor
             pregnancyApproach = SyntheticPregnancyApproach.AvoidPregnancy;
         }
 
-        public override void PostExposeData()
+        public void ExposeData()
         {
-            base.PostExposeData();
-            Scribe_Values.Look(ref lovinWithSpouseEnabled, "lovinWithSpouseEnabled", false);
+            Scribe_References.Look(ref pawn, "authorizedPawn");
+            Scribe_Values.Look(
+                ref lovinWithSpouseEnabled,
+                "syntheticCompanionLovinWithSpouseEnabled",
+                false);
             Scribe_Values.Look(
                 ref pregnancyApproach,
-                "syntheticPregnancyApproach",
+                "syntheticCompanionPregnancyApproach",
                 SyntheticPregnancyApproach.AvoidPregnancy);
+            // PostLoadInit：空 Pawn 由注册表 CleanupInvalidRecords 剔除；
+            // 死亡、尸体与可复活对象保留授权，此处不删除记录。
         }
     }
 }
