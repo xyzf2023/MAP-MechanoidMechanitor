@@ -5,30 +5,29 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    public static class LoverPregnancyUIUtility
+    public static class SyntheticPregnancyUIUtility
     {
         public static void DrawApproachButton(Rect rect, Pawn lover, Pawn spouse)
         {
-            CompExplicitSocialRelationUser? comp =
-                lover.GetComp<CompExplicitSocialRelationUser>();
-            if (comp == null)
+            if (!SyntheticCompanionStateUtility.TryGetState(lover, out ISyntheticCompanionState? state)
+                || state == null)
             {
                 return;
             }
 
-            LoverPregnancyApproach current = comp.PregnancyApproach;
+            SyntheticPregnancyApproach current = state.PregnancyApproach;
             GUI.color = Color.white;
             GUI.DrawTexture(rect, GetIcon(current));
             if (Widgets.ButtonInvisible(rect))
             {
-                Find.WindowStack.Add(new FloatMenu(BuildOptions(comp)));
+                Find.WindowStack.Add(new FloatMenu(BuildOptions(state)));
             }
 
             if (Mouse.IsOver(rect))
             {
                 TooltipHandler.TipRegion(
                     rect,
-                    "MAP_MechanoidMechanitor.LoverPregnancy.ApproachTitle".Translate()
+                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ApproachTitle".Translate()
                     .Colorize(ColoredText.TipSectionTitleColor)
                     + "\n"
                     + GetLabel(current)
@@ -38,58 +37,56 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static List<FloatMenuOption> BuildOptions(
-            CompExplicitSocialRelationUser comp)
+        private static List<FloatMenuOption> BuildOptions(ISyntheticCompanionState state)
         {
             List<FloatMenuOption> options = new List<FloatMenuOption>();
-            AddOption(options, comp, LoverPregnancyApproach.AvoidPregnancy);
-            AddOption(options, comp, LoverPregnancyApproach.TryForBaby);
-            AddOption(options, comp, LoverPregnancyApproach.TryForBabyMale);
-            AddOption(options, comp, LoverPregnancyApproach.TryForBabyFemale);
+            AddOption(options, state, SyntheticPregnancyApproach.AvoidPregnancy);
+            AddOption(options, state, SyntheticPregnancyApproach.TryForBaby);
+            AddOption(options, state, SyntheticPregnancyApproach.TryForBabyMale);
+            AddOption(options, state, SyntheticPregnancyApproach.TryForBabyFemale);
             return options;
         }
 
         private static void AddOption(
             List<FloatMenuOption> options,
-            CompExplicitSocialRelationUser comp,
-            LoverPregnancyApproach approach)
+            ISyntheticCompanionState state,
+            SyntheticPregnancyApproach approach)
         {
             options.Add(
                 new FloatMenuOption(
                     GetLabel(approach),
-                    () => comp.SetPregnancyApproach(approach),
+                    () => state.SetPregnancyApproach(approach),
                     GetIcon(approach),
                     Color.white));
         }
 
-        private static string GetLabel(LoverPregnancyApproach approach)
+        private static string GetLabel(SyntheticPregnancyApproach approach)
         {
-            // 仅用原版基础名称，不用 GetDescription()（其会附带原版怀孕概率倍率）。
             return approach switch
             {
-                LoverPregnancyApproach.AvoidPregnancy =>
+                SyntheticPregnancyApproach.AvoidPregnancy =>
                     PregnancyApproach.AvoidPregnancy.GetLabel().CapitalizeFirst(),
-                LoverPregnancyApproach.TryForBaby =>
+                SyntheticPregnancyApproach.TryForBaby =>
                     PregnancyApproach.TryForBaby.GetLabel().CapitalizeFirst(),
-                LoverPregnancyApproach.TryForBabyMale =>
-                    "MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyMale".Translate(),
-                LoverPregnancyApproach.TryForBabyFemale =>
-                    "MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyFemale".Translate(),
+                SyntheticPregnancyApproach.TryForBabyMale =>
+                    "MAP_MechanoidMechanitor.SyntheticPregnancy.TryForBabyMale".Translate(),
+                SyntheticPregnancyApproach.TryForBabyFemale =>
+                    "MAP_MechanoidMechanitor.SyntheticPregnancy.TryForBabyFemale".Translate(),
                 _ => PregnancyApproach.AvoidPregnancy.GetLabel().CapitalizeFirst(),
             };
         }
 
-        private static Texture2D GetIcon(LoverPregnancyApproach approach)
+        private static Texture2D GetIcon(SyntheticPregnancyApproach approach)
         {
             return approach switch
             {
-                LoverPregnancyApproach.AvoidPregnancy =>
+                SyntheticPregnancyApproach.AvoidPregnancy =>
                     PregnancyApproach.AvoidPregnancy.GetIcon(),
-                LoverPregnancyApproach.TryForBaby =>
+                SyntheticPregnancyApproach.TryForBaby =>
                     PregnancyApproach.TryForBaby.GetIcon(),
-                LoverPregnancyApproach.TryForBabyMale =>
+                SyntheticPregnancyApproach.TryForBabyMale =>
                     PregnancyApproach.TryForBaby.GetIcon(),
-                LoverPregnancyApproach.TryForBabyFemale =>
+                SyntheticPregnancyApproach.TryForBabyFemale =>
                     PregnancyApproach.TryForBaby.GetIcon(),
                 _ => PregnancyApproach.AvoidPregnancy.GetIcon(),
             };

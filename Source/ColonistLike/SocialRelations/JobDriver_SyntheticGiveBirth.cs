@@ -7,16 +7,16 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 恋人主动产程：原地等待读条，成功完成后生成新生儿并可选衔接「将婴儿带到安全处」。
+    /// 仿生主动产程：原地等待读条，成功完成后生成新生儿并可选衔接「将婴儿带到安全处」。
     /// 中断不会移除怀孕状态，玩家可再次下达「开始分娩」。
     /// </summary>
-    public sealed class JobDriver_LoverGiveBirth : JobDriver
+    public sealed class JobDriver_SyntheticGiveBirth : JobDriver
     {
-        private const string LogPrefix = "[MAP-机械族机械师] LoverPregnancy：";
+        private const string LogPrefix = "[MAP-机械族机械师] SyntheticPregnancy：";
 
-        private Hediff_LoverPregnant? Pregnancy =>
+        private Hediff_SyntheticPregnant? Pregnancy =>
             pawn?.health?.hediffSet?.GetFirstHediffOfDef(
-                MAPMechanitor_HediffDefOf.MAP_LoverPregnant) as Hediff_LoverPregnant;
+                MAPMechanitor_HediffDefOf.MAP_SyntheticPregnant) as Hediff_SyntheticPregnant;
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
         {
@@ -25,7 +25,6 @@ namespace MAP_MechanoidMechanitor
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            // 成功产下新生儿后，由 Finalizer 衔接原版「将婴儿带到安全处」。
             Pawn? newbornForFinalizer = null;
             bool birthCompleted = false;
             SetFinalizerJob(
@@ -90,14 +89,14 @@ namespace MAP_MechanoidMechanitor
                         return;
                     }
 
-                    Hediff_LoverPregnant? pregnancy = Pregnancy;
+                    Hediff_SyntheticPregnant? pregnancy = Pregnancy;
                     if (pregnancy == null || !pregnancy.ReadyForBirth)
                     {
                         EndJobWith(JobCondition.Incompletable);
                         return;
                     }
 
-                    Pawn? newborn = LoverPregnancyUtility.TryCompleteBirth(pregnancy);
+                    Pawn? newborn = SyntheticPregnancyUtility.TryCompleteBirth(pregnancy);
                     if (newborn == null)
                     {
                         Log.Warning(
@@ -106,16 +105,13 @@ namespace MAP_MechanoidMechanitor
                         return;
                     }
 
-                    // 先标记完成，再移除孕期，避免 RemoveHediff 触发失败条件把成功 Job 改判失败。
                     birthCompleted = true;
                     newbornForFinalizer = newborn;
                     pawn.health?.RemoveHediff(pregnancy);
 
-                    // 生产已提交后重置为避孕；失败不影响已完成的出生。
                     try
                     {
-                        pawn.GetComp<CompExplicitSocialRelationUser>()
-                            ?.ResetPregnancyApproachToAvoid();
+                        SyntheticCompanionStateUtility.ResetPregnancyApproachToAvoid(pawn);
                     }
                     catch (Exception resetException)
                     {
@@ -139,7 +135,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            Hediff_LoverPregnant? pregnancy = Pregnancy;
+            Hediff_SyntheticPregnant? pregnancy = Pregnancy;
             return pregnancy != null && pregnancy.ReadyForBirth;
         }
     }

@@ -150,7 +150,8 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechanicalChildcareUser">
         <defaultPriority>1</defaultPriority>
       </li>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_ExplicitSocialRelationUser" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeSocialTabUser" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_SyntheticCompanionUser" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
         <profileVersion>1</profileVersion>
         <bodyType>MAP_LoverFemale</bodyType>
@@ -186,8 +187,8 @@
             <level>10</level>
           </li>
         </skillLevels>
-        <ensureRelationsTracker>true</ensureRelationsTracker>
-        <ensureInteractionsTracker>true</ensureInteractionsTracker>
+        <ensureRelationsTracker>false</ensureRelationsTracker>
+        <ensureInteractionsTracker>false</ensureInteractionsTracker>
         <ensureGuestTracker>true</ensureGuestTracker>
         <ensureGuiltTracker>true</ensureGuiltTracker>
         <ensureWorkSettings>true</ensureWorkSettings>

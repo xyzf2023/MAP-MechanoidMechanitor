@@ -8,24 +8,17 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 恋人响应人类配偶原版 Lovin：仅窄范围补丁。
-    /// 不修改机械体 ThinkTree；恋人配套 Job 由原版 JobDriver_Lovin 自动创建。
+    /// 仿生伴侣响应人类配偶原版 Lovin：仅窄范围补丁。
     /// </summary>
-    public static class ExplicitSocialLovinPatches
+    public static class SyntheticLovinPatches
     {
-        private const string LogPrefix = "[MAP-机械族机械师] ExplicitSocialLovinPatches：";
+        private const string LogPrefix = "[MAP-机械族机械师] SyntheticLovinPatches：";
         private const int ErrorKeyLovinToilStructureUnexpected = 879346702;
         private const int ErrorKeyGenerateLovinCooldownNotFound = 879346706;
         private const int ErrorKeyLovinMtbSinglePawnFactorNotFound = 879346707;
 
-        /// <summary>
-        /// 诊断用：LovinMtbSinglePawnFactor 有效年龄 Prefix 是否成功定位并应用。
-        /// </summary>
         internal static bool LovinMtbSinglePawnFactorAgePatchInstalled { get; private set; }
 
-        /// <summary>
-        /// 原版未找到床上伴侣时，把已开启「与配偶爱爱」的远程恋人配偶交给 ThinkNode / JobGiver。
-        /// </summary>
         [HarmonyPatch(
             typeof(LovePartnerRelationUtility),
             nameof(LovePartnerRelationUtility.GetPartnerInMyBed))]
@@ -39,9 +32,8 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                // 发起者资格（Humanlike、存活、非授权恋人等）在 TryFind 入口统一校验。
                 Pawn? partner =
-                    ExplicitSocialLovinUtility.TryFindEnabledLoverPartnerForRemoteLovin(pawn);
+                    SyntheticLovinUtility.TryFindEnabledLoverPartnerForRemoteLovin(pawn);
                 if (partner != null)
                 {
                     __result = partner;
@@ -49,10 +41,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        /// <summary>
-        /// 仅对「人类配偶躺床 + GetPartnerInMyBed 实际解析到已开开关的授权恋人」提高触发频率。
-        /// 消除跨 PawnDef 的 SecondaryLovinChanceFactor 约100倍惩罚，并再给予2倍倾向（合计 /200）。
-        /// </summary>
         [HarmonyPatch(typeof(ThinkNode_ChancePerHour_Lovin), "MtbHours")]
         public static class Patch_ThinkNode_ChancePerHour_Lovin_MtbHours
         {
@@ -64,9 +52,8 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                // 必须尊重 GetPartnerInMyBed 的最终结果（含原版床上伴侣优先）。
                 Pawn? partner = LovePartnerRelationUtility.GetPartnerInMyBed(pawn);
-                if (!ExplicitSocialLovinUtility.IsFrequencyBoostRemoteEnabledLoverPartner(
+                if (!SyntheticLovinUtility.IsFrequencyBoostRemoteEnabledLoverPartner(
                         pawn,
                         partner))
                 {
@@ -77,10 +64,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        /// <summary>
-        /// 授权恋人 LovinMtbSinglePawnFactor：Prefix 跳过原版，按有效年龄 18 岁直接计算。
-        /// 避免真实年龄 ≤14 时 FlatHill=0 导致 Infinity，从而无法再换算。
-        /// </summary>
         [HarmonyPatch]
         public static class Patch_LovePartnerRelationUtility_LovinMtbSinglePawnFactor
         {
@@ -97,7 +80,7 @@ namespace MAP_MechanoidMechanitor
                 LovinMtbSinglePawnFactorAgePatchInstalled = false;
                 Log.ErrorOnce(
                     $"{LogPrefix}未找到 LovePartnerRelationUtility.LovinMtbSinglePawnFactor(Pawn)，"
-                    + "恋人 Lovin 有效年龄 Prefix 未应用。",
+                    + "仿生伴侣 Lovin 有效年龄 Prefix 未应用。",
                     ErrorKeyLovinMtbSinglePawnFactorNotFound);
                 return false;
             }
@@ -119,16 +102,16 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Pawn pawn, ref float __result)
             {
-                if (!ExplicitSocialRelationUtility.IsOptedIn(pawn))
+                if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
                 {
                     return true;
                 }
 
-                if (!ExplicitSocialLovinUtility.TryComputeOptedInLoverLovinMtbSinglePawnFactor(
+                if (!SyntheticLovinUtility.TryComputeOptedInLoverLovinMtbSinglePawnFactor(
                         pawn,
                         out float computed))
                 {
-                    // 有效年龄系数异常或健康数据不足时回退原版。
                     return true;
                 }
 
@@ -137,11 +120,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        /// <summary>
-        /// 远程 Lovin：人类侧在最终倒计时前等待恋人入床；恋人侧全程校验配偶仍在对应 Lovin。
-        /// 仅包装原版 MakeNewToils，不复制完整 JobDriver。
-        /// 恋人配套 Job 正常执行原版 ClaimBedIfNonMedical，永久认领目标床位。
-        /// </summary>
         [HarmonyPatch(typeof(JobDriver_Lovin), "MakeNewToils")]
         public static class Patch_JobDriver_Lovin_MakeNewToils
         {
@@ -159,7 +137,7 @@ namespace MAP_MechanoidMechanitor
             {
                 Pawn actor = driver.pawn;
                 Job? job = driver.job;
-                if (!ExplicitSocialLovinUtility.TryGetLovinPartnerAndBed(
+                if (!SyntheticLovinUtility.TryGetLovinPartnerAndBed(
                     job,
                     out Pawn? partner,
                     out Building_Bed? bed)
@@ -175,16 +153,14 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 bool isLoverCompanion =
-                    ExplicitSocialLovinUtility.IsRemoteLoverCompanionLovinJob(actor, partner, bed);
+                    SyntheticLovinUtility.IsRemoteLoverCompanionLovinJob(actor, partner, bed);
                 if (isLoverCompanion)
                 {
-                    // 覆盖 ClaimBed / GotoBed / 瞬时初始化 / 最终 LayDown；
-                    // 配偶已中断时阻止进入瞬时 Toil，避免反向重新启动人类 Lovin。
                     Pawn humanSpouse = partner;
                     Building_Bed sharedBed = bed;
                     Pawn lover = actor;
                     driver.AddFailCondition(
-                        () => ExplicitSocialLovinUtility.ShouldFailRemoteLoverCompanionLovin(
+                        () => SyntheticLovinUtility.ShouldFailRemoteLoverCompanionLovin(
                             lover,
                             humanSpouse,
                             sharedBed));
@@ -198,7 +174,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 bool isHumanInitiator =
-                    ExplicitSocialLovinUtility.IsRemoteHumanSpouseLovinJob(actor, partner, bed);
+                    SyntheticLovinUtility.IsRemoteHumanSpouseLovinJob(actor, partner, bed);
                 if (!isHumanInitiator)
                 {
                     foreach (Toil toil in original)
@@ -209,8 +185,6 @@ namespace MAP_MechanoidMechanitor
                     yield break;
                 }
 
-                // 仅非恋人配偶侧安装一次，并且只在整个 Job 正常成功时判定受孕。
-                // 两个 JobDriver 均有原版结束动作，因此不得在恋人侧重复安装。
                 Pawn conceptionSpouse = actor;
                 Pawn conceptionLover = partner;
                 driver.AddFinishAction(
@@ -218,7 +192,7 @@ namespace MAP_MechanoidMechanitor
                     {
                         if (condition == JobCondition.Succeeded)
                         {
-                            LoverPregnancyUtility.TryConceiveAfterSuccessfulLovin(
+                            SyntheticPregnancyUtility.TryConceiveAfterSuccessfulLovin(
                                 conceptionSpouse,
                                 conceptionLover);
                         }
@@ -257,10 +231,6 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            /// <summary>
-            /// 原版结构：Claim(Instant) → Goto(PatherArrival) → 初始化(Instant) → LayDown(Never)。
-            /// 在「Instant 后紧跟 Never」之间插入等待 Toil。
-            /// </summary>
             private static int FindWaitInsertIndex(List<Toil> toils)
             {
                 for (int i = 0; i < toils.Count - 1; i++)
@@ -275,9 +245,6 @@ namespace MAP_MechanoidMechanitor
                 return -1;
             }
 
-            /// <summary>
-            /// 复用原版 LayDown 床上姿态；不递减 ticksLeft，恋人入床后再进入最终倒计时。
-            /// </summary>
             private static Toil CreateWaitForRemoteLoverInBedToil(
                 JobDriver_Lovin driver,
                 Pawn humanSpouse,
@@ -292,14 +259,14 @@ namespace MAP_MechanoidMechanitor
                     gainRestAndHealth: false);
                 wait.socialMode = RandomSocialMode.Off;
                 wait.FailOn(
-                    () => !ExplicitSocialLovinUtility.IsRemoteLoverStillBoundForHumanWait(
+                    () => !SyntheticLovinUtility.IsRemoteLoverStillBoundForHumanWait(
                         humanSpouse,
                         lover,
                         bed));
                 wait.AddPreTickIntervalAction(
                     delegate(int _)
                     {
-                        if (ExplicitSocialLovinUtility.IsRemoteLoverPhysicallyReadyInBed(
+                        if (SyntheticLovinUtility.IsRemoteLoverPhysicallyReadyInBed(
                             humanSpouse,
                             lover,
                             bed))
@@ -311,9 +278,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        /// <summary>
-        /// 殖民者—授权恋人已绑定 Lovin 结束后使用短冷却（0.5–1.5 游戏小时）。
-        /// </summary>
         [HarmonyPatch]
         public static class Patch_JobDriver_Lovin_GenerateRandomMinTicksToNextLovin
         {
@@ -354,20 +318,15 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                if (!ExplicitSocialLovinUtility.IsBoundHumanLoverSpouseLovinDriver(__instance))
+                if (!SyntheticLovinUtility.IsBoundHumanLoverSpouseLovinDriver(__instance))
                 {
                     return;
                 }
 
-                // 0.5–1.5 游戏小时 = 1250–3750 Tick；双方各自随机。
                 __result = Rand.RangeInclusive(1250, 3750);
             }
         }
 
-        /// <summary>
-        /// 仅当授权恋人正在执行 JobDefOf.Lovin 时，绕过机械体不能用人床的门槛。
-        /// 开关关闭后已开始的本次 Lovin 仍可完成；不依赖开关状态维持床检查。
-        /// </summary>
         [HarmonyPatch(typeof(RestUtility), nameof(RestUtility.CanUseBedEver))]
         public static class Patch_RestUtility_CanUseBedEver
         {
@@ -375,7 +334,8 @@ namespace MAP_MechanoidMechanitor
             public static bool Prefix(Pawn p, ThingDef bedDef, ref bool __result)
             {
                 if (p == null
-                    || !ExplicitSocialRelationUtility.IsOptedIn(p)
+                    || !MechanoidMechanitorCapabilityUtility.HasCapability(
+                        p, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
                     || p.CurJobDef != JobDefOf.Lovin)
                 {
                     return true;
@@ -387,7 +347,6 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
-                // 仍要求床适用于人类，且体型不超过上限。
                 if (!bedDef.building.bed_humanlike)
                 {
                     __result = false;
@@ -413,10 +372,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        /// <summary>
-        /// 安全门：任一参与者为授权恋人时阻止进入原版怀孕流程。
-        /// 恋人受孕仅由本 MOD 在 Lovin 正常完成后处理。
-        /// </summary>
         [HarmonyPatch(
             typeof(PregnancyUtility),
             nameof(PregnancyUtility.PregnancyChanceForPartners))]
@@ -425,8 +380,10 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Pawn woman, Pawn man, ref float __result)
             {
-                if (ExplicitSocialRelationUtility.IsOptedIn(woman)
-                    || ExplicitSocialRelationUtility.IsOptedIn(man))
+                if (MechanoidMechanitorCapabilityUtility.HasCapability(
+                        woman, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
+                    || MechanoidMechanitorCapabilityUtility.HasCapability(
+                        man, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
                 {
                     __result = 0f;
                     return false;

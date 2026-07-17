@@ -6,43 +6,37 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 显式社交关系工具：只作用于真正挂载 CompExplicitSocialRelationUser 的 Pawn。
+    /// 仿生配偶指定/替换流程。入口检查 SyntheticSpouseInteraction。
     /// </summary>
-    public static class ExplicitSocialRelationUtility
+    public static class SyntheticSpouseUtility
     {
         private const string AssignSpouseButtonKey =
-            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButton";
+            "MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButton";
         private const string AssignSpouseButtonDescKey =
-            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButtonDesc";
+            "MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButtonDesc";
         private const string NoCandidateKey =
-            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseNoCandidate";
+            "MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseNoCandidate";
         private const string FailedKey =
-            "MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseFailed";
+            "MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseFailed";
         private const string MarriageLetterLabelKey =
-            "MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterLabel";
+            "MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterLabel";
         private const string MarriageLetterTextKey =
-            "MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterText";
+            "MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterText";
 
         private const float MinSpouseCandidateAgeYears = 16f;
 
-        private static readonly List<Pawn> EmptySocialInfoPawns = new List<Pawn>();
         private static readonly List<Pawn> SpouseCandidateTmp = new List<Pawn>();
         private static readonly List<Pawn> OldSpouseTmp = new List<Pawn>();
 
-        /// <summary>
-        /// 社交面板「见过的人」列表的空结果；调用方只遍历、不修改。
-        /// </summary>
-        public static List<Pawn> EmptyPawnsForSocialInfo => EmptySocialInfoPawns;
-
-        public static bool IsOptedIn(Pawn? pawn) =>
-            pawn?.GetComp<CompExplicitSocialRelationUser>() != null;
-
-        /// <summary>
-        /// 是否应在社交面板底部为授权 Pawn 预留「指定配偶……」按钮区域。
-        /// </summary>
         public static bool CanShowAssignSpouseButton(Pawn? pawn)
         {
-            if (!IsOptedIn(pawn) || pawn == null)
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
             {
                 return false;
             }
@@ -60,41 +54,15 @@ namespace MAP_MechanoidMechanitor
             return pawn.relations != null;
         }
 
-        /// <summary>
-        /// 双方 DirectRelations 中是否存在对方（任一方向均可；不依赖 everSeenByPlayer / 好感度）。
-        /// </summary>
-        public static bool HasExplicitDirectRelation(Pawn? a, Pawn? b)
-        {
-            if (a == null || b == null || a == b)
-            {
-                return false;
-            }
-
-            if (HasOtherPawnInDirectRelations(a, b) || HasOtherPawnInDirectRelations(b, a))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// 写入 Spouse 关系。不做婚姻合法性检查；不发送事件、不触发生成记忆。
-        /// 只调用一次 AddDirectRelation（Spouse 为 reflexive，原版会自动写入双方）。
-        /// </summary>
         public static bool AssignSpouseUnchecked(Pawn? optedInPawn, Pawn? target)
         {
-            if (optedInPawn == null || target == null)
+            if (optedInPawn == null || target == null || optedInPawn == target)
             {
                 return false;
             }
 
-            if (optedInPawn == target)
-            {
-                return false;
-            }
-
-            if (!IsOptedIn(optedInPawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                optedInPawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
             {
                 return false;
             }
@@ -113,10 +81,6 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        /// <summary>
-        /// 更换恋人为唯一当前配偶：先解除旧婚姻并发送离婚反馈，再建立新婚并发送结婚反馈。
-        /// 不调用原版 DoDivorce / Married / InteractionWorker_Breakup.Interacted。
-        /// </summary>
         public static bool TryReplaceSpouseWithEvents(Pawn? lover, Pawn? target)
         {
             if (lover == null || target == null)
@@ -124,17 +88,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!IsOptedIn(lover) || lover.relations == null || target.relations == null)
+            if (!CanShowAssignSpouseButton(lover) || lover.relations == null || target.relations == null)
             {
                 return false;
             }
 
-            if (!CanShowAssignSpouseButton(lover))
-            {
-                return false;
-            }
-
-            // 菜单打开后状态可能变化：必须先确认新目标仍可指定，再解除旧婚姻。
             if (!IsValidSpouseCandidate(lover, target))
             {
                 return false;
@@ -159,75 +117,17 @@ namespace MAP_MechanoidMechanitor
             ApplyNewlyMarriedFeedback(lover, target);
             TaleRecorder.RecordTale(TaleDefOf.Marriage, lover, target);
             SendMarriageLetter(lover, target);
-            DisableLovinWithSpouseAfterSuccessfulAssignment(lover);
+            DisableLovinAndResetAfterAssignment(lover);
             SocialCardUtility.ClearCaches();
             return true;
         }
 
-        /// <summary>
-        /// 在已确认存在主动写入的明确关系时，按原版 Worker 逻辑解析关系，且不要求双方 IsFlesh。
-        /// 不得再调用 GetRelations，以免递归进 Harmony 补丁。
-        /// </summary>
-        public static IEnumerable<PawnRelationDef> EnumerateRelationsWithoutFleshRequirement(
-            Pawn me,
-            Pawn other)
-        {
-            if (me == null || other == null || me == other)
-            {
-                yield break;
-            }
-
-            if (me.relations == null || other.relations == null)
-            {
-                yield break;
-            }
-
-            if (!HasExplicitDirectRelation(me, other))
-            {
-                yield break;
-            }
-
-            bool anyNonKinFamilyByBloodRelation = false;
-            List<PawnRelationDef> defs = DefDatabase<PawnRelationDef>.AllDefsListForReading;
-            int count = defs.Count;
-            for (int i = 0; i < count; i++)
-            {
-                PawnRelationDef pawnRelationDef = defs[i];
-                if (pawnRelationDef == PawnRelationDefOf.Kin)
-                {
-                    continue;
-                }
-
-                if (!pawnRelationDef.Worker.InRelation(me, other))
-                {
-                    continue;
-                }
-
-                if (pawnRelationDef.familyByBloodRelation)
-                {
-                    anyNonKinFamilyByBloodRelation = true;
-                }
-
-                yield return pawnRelationDef;
-            }
-
-            if (!anyNonKinFamilyByBloodRelation
-                && PawnRelationDefOf.Kin.Worker.InRelation(me, other))
-            {
-                yield return PawnRelationDefOf.Kin;
-            }
-        }
-
-        /// <summary>
-        /// 在原版「恋爱……」按钮区域内绘制「指定配偶……」。
-        /// </summary>
         public static void DrawAssignSpouseButton(Rect buttonRect, Pawn pawn)
         {
             Color previousColor = GUI.color;
             bool previousEnabled = GUI.enabled;
             try
             {
-                // 社交面板其他区域可能留下灰色 GUI.color；本按钮始终使用正常可用样式。
                 GUI.color = Color.white;
                 GUI.enabled = true;
                 if (Widgets.ButtonText(
@@ -292,9 +192,6 @@ namespace MAP_MechanoidMechanitor
                 historical: false);
         }
 
-        /// <summary>
-        /// 点击时收集当前地图上的成年自由殖民者；不按性别/取向/意识形态过滤。
-        /// </summary>
         private static List<Pawn> CollectSpouseCandidates(Pawn lover)
         {
             SpouseCandidateTmp.Clear();
@@ -356,9 +253,6 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        /// <summary>
-        /// 直接遍历 DirectRelations 复制旧配偶列表；禁止使用带 IsFlesh 门槛的 GetSpouses 等扩展。
-        /// </summary>
         private static void CollectCurrentSpousesExcluding(Pawn lover, Pawn exclude, List<Pawn> into)
         {
             into.Clear();
@@ -386,10 +280,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        /// <summary>
-        /// 恋人与单个旧配偶的受控离婚：仅关系、定向新婚记忆清理、离婚心情、信封与故事。
-        /// 不添加 DivorcedMe 社交评价减益；不改姓、不处理婚床、不记录意识形态事件。
-        /// </summary>
         private static void DivorceLoverFromOldSpouse(Pawn lover, Pawn oldSpouse)
         {
             if (lover.relations == null || oldSpouse.relations == null)
@@ -410,17 +300,11 @@ namespace MAP_MechanoidMechanitor
             }
 
             RemovePairMarriageMemories(lover, oldSpouse);
-
-            // 只添加原版 DivorcedMeMood（心情 −20），不添加 DivorcedMe 社交记忆（好感 −70）。
             TryGainDivorcedMoodOnly(oldSpouse, lover);
-
             TaleRecorder.RecordTale(TaleDefOf.Breakup, lover, oldSpouse);
             SendBreakupLetter(lover, oldSpouse);
         }
 
-        /// <summary>
-        /// 通过 DivorcedMe.thoughtToMake 取得原版 DivorcedMeMood 并单独写入。
-        /// </summary>
         private static void TryGainDivorcedMoodOnly(Pawn oldSpouse, Pawn lover)
         {
             MemoryThoughtHandler? memories = oldSpouse.needs?.mood?.thoughts?.memories;
@@ -440,7 +324,6 @@ namespace MAP_MechanoidMechanitor
 
         private static void RemovePairMarriageMemories(Pawn lover, Pawn oldSpouse)
         {
-            // 必须按 otherPawn 定向删除，禁止 RemoveMemoriesOfDef(GotMarried)，以免误删与他人的新婚记忆。
             MemoryThoughtHandler? loverMemories = lover.needs?.mood?.thoughts?.memories;
             if (loverMemories != null)
             {
@@ -470,26 +353,15 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 清理此前测试存档可能残留的 DivorcedMe 社交记忆；不负责全面迁移。
             memories.RemoveMemoriesOfDefWhereOtherPawnIs(ThoughtDefOf.DivorcedMe, otherPawn);
             memories.TryGainMemory(ThoughtDefOf.GotMarried, otherPawn);
             memories.TryGainMemory(ThoughtDefOf.HoneymoonPhase, otherPawn);
         }
 
-        /// <summary>
-        /// 新婚成功后关闭「与配偶爱爱」，并将生育方式重置为避孕；每名新配偶需玩家重新授权。
-        /// </summary>
-        private static void DisableLovinWithSpouseAfterSuccessfulAssignment(Pawn lover)
+        private static void DisableLovinAndResetAfterAssignment(Pawn lover)
         {
-            CompExplicitSocialRelationUser? comp =
-                lover.GetComp<CompExplicitSocialRelationUser>();
-            if (comp == null)
-            {
-                return;
-            }
-
-            comp.DisableLovinWithSpouse();
-            comp.ResetPregnancyApproachToAvoid();
+            SyntheticCompanionStateUtility.DisableLovinWithSpouse(lover);
+            SyntheticCompanionStateUtility.ResetPregnancyApproachToAvoid(lover);
         }
 
         private static void SendBreakupLetter(Pawn lover, Pawn oldSpouse)
@@ -514,25 +386,6 @@ namespace MAP_MechanoidMechanitor
                 MarriageLetterTextKey.Translate(lover.Named("LOVER"), target.Named("TARGET")),
                 LetterDefOf.PositiveEvent,
                 new LookTargets(lover, target));
-        }
-
-        private static bool HasOtherPawnInDirectRelations(Pawn owner, Pawn other)
-        {
-            if (owner.relations == null)
-            {
-                return false;
-            }
-
-            List<DirectPawnRelation> relations = owner.relations.DirectRelations;
-            for (int i = 0; i < relations.Count; i++)
-            {
-                if (relations[i].otherPawn == other)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

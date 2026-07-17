@@ -45,22 +45,22 @@
   <MAP_Settings_EnableMechanoidMechanitorBrainImplants_Label>启用机械族机械师使用并安装脑部植入体</MAP_Settings_EnableMechanoidMechanitorBrainImplants_Label>
   <MAP_Settings_EnableMechanoidMechanitorBrainImplants_Description>开启后，机械族机械师可以右键选择人类脑部植入体并为自己安装。此功能会略微影响游戏启动时的加载速度。</MAP_Settings_EnableMechanoidMechanitorBrainImplants_Description>
   <MAP_Settings_EnableMechanoidMechanitorBrainImplants_RestartRequired>此设置将在重新启动游戏后生效。</MAP_Settings_EnableMechanoidMechanitorBrainImplants_RestartRequired>
-  <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButton>指定配偶……</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButton>
-  <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButtonDesc>选择一名殖民者成为当前恋人的配偶。更换配偶时会先与旧配偶离婚并触发离婚反馈。</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseButtonDesc>
-  <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseNoCandidate>当前没有可指定为配偶的殖民者。</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseNoCandidate>
-  <MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseFailed>无法指定该殖民者为配偶。</MAP_MechanoidMechanitor.ExplicitSocial.AssignSpouseFailed>
-  <MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterLabel>结婚</MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterLabel>
-  <MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterText>{LOVER_labelShort}与{TARGET_labelShort}已经结婚。{LOVER_labelShort}已成为{TARGET_labelShort}的妻子。</MAP_MechanoidMechanitor.ExplicitSocial.MarriageLetterText>
-  <MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggle>与配偶爱爱</MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggle>
-  <MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggleDesc>开启后，恋人将尝试在配偶允许时与配偶爱爱。</MAP_MechanoidMechanitor.ExplicitSocial.LovinWithSpouseToggleDesc>
-  <MAP_MechanoidMechanitor.LoverPregnancy.ApproachTitle>恋人生育方式</MAP_MechanoidMechanitor.LoverPregnancy.ApproachTitle>
-  <MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyMale>尝试生育（孕育男婴）</MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyMale>
-  <MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyFemale>尝试生育（孕育女婴）</MAP_MechanoidMechanitor.LoverPregnancy.TryForBabyFemale>
-  <MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterLabel>{0}怀孕</MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterLabel>
-  <MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterText>{0}正在使用仿生子宫孕育新生命！由{0}孕育的胚胎能更快成熟，并在出生后拥有更强的身体素质。</MAP_MechanoidMechanitor.LoverPregnancy.ConceivedLetterText>
-  <MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterLabel>{0}可以进行分娩</MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterLabel>
-  <MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterText>{0}孕育的婴儿已发育完成，可随时选中{0}为其下达分娩指令。\n\n在分娩完成前，婴儿的生理活动将暂时处于冻结状态。</MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterText>
-  <MAP_MechanoidMechanitor.LoverPregnancy.StartBirthGizmoDesc>命令{0}在原地执行分娩流程。请确保环境安全后再下达此命令。</MAP_MechanoidMechanitor.LoverPregnancy.StartBirthGizmoDesc>
-  <MAP_Settings_LoverOffspringInheritXenogenes_Label>通过恋人孕育的子嗣继承异种基因</MAP_Settings_LoverOffspringInheritXenogenes_Label>
-  <MAP_Settings_LoverOffspringInheritXenogenes_Description>开启后，恋人孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_Settings_LoverOffspringInheritXenogenes_Description>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButton>指定配偶……</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButton>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButtonDesc>选择一名殖民者成为当前授权机械体的配偶。更换配偶时会先与旧配偶离婚并触发离婚反馈。</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButtonDesc>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseNoCandidate>当前没有可指定为配偶的殖民者。</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseNoCandidate>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseFailed>无法指定该殖民者为配偶。</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseFailed>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterLabel>结婚</MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterLabel>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterText>{LOVER_labelShort}与{TARGET_labelShort}已经结婚。{LOVER_labelShort}已成为{TARGET_labelShort}的配偶。</MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterText>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggle>与配偶爱爱</MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggle>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggleDesc>开启后，授权机械体将尝试在配偶允许时与配偶爱爱。</MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggleDesc>
+  <MAP_MechanoidMechanitor.SyntheticPregnancy.ApproachTitle>仿生生育方式</MAP_MechanoidMechanitor.SyntheticPregnancy.ApproachTitle>
+  <MAP_MechanoidMechanitor.SyntheticPregnancy.TryForBabyMale>尝试生育（孕育男婴）</MAP_MechanoidMechanitor.SyntheticPregnancy.TryForBabyMale>
+  <MAP_MechanoidMechanitor.SyntheticPregnancy.TryForBabyFemale>尝试生育（孕育女婴）</MAP_MechanoidMechanitor.SyntheticPregnancy.TryForBabyFemale>
+  <MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterLabel>{0}怀孕</MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterLabel>
+  <MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterText>{0}正在使用仿生子宫孕育新生命！由{0}孕育的胚胎能更快成熟，并在出生后拥有更强的身体素质。</MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterText>
+  <MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterLabel>{0}可以进行分娩</MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterLabel>
+  <MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterText>{0}孕育的婴儿已发育完成，可随时选中{0}为其下达分娩指令。\n\n在分娩完成前，婴儿的生理活动将暂时处于冻结状态。</MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterText>
+  <MAP_MechanoidMechanitor.SyntheticPregnancy.StartBirthGizmoDesc>命令{0}在原地执行分娩流程。请确保环境安全后再下达此命令。</MAP_MechanoidMechanitor.SyntheticPregnancy.StartBirthGizmoDesc>
+  <MAP_Settings_LoverOffspringInheritXenogenes_Label>通过仿生孕育的子嗣继承异种基因</MAP_Settings_LoverOffspringInheritXenogenes_Label>
+  <MAP_Settings_LoverOffspringInheritXenogenes_Description>开启后，具备仿生孕育能力的机械体孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_Settings_LoverOffspringInheritXenogenes_Description>
 </LanguageData>

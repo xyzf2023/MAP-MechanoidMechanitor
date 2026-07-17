@@ -8,13 +8,13 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 恋人专用孕期。所有胎儿来源在受孕时快照，不依赖生产时的当前配偶。
+    /// 仿生孕期。所有胎儿来源在受孕时快照，不依赖生产时的当前配偶。
     /// 达到 100% 后不再自动生产，改由玩家通过「开始分娩」指令主动触发产程。
     /// </summary>
-    public sealed class Hediff_LoverPregnant : HediffWithComps
+    public sealed class Hediff_SyntheticPregnant : HediffWithComps
     {
         private const float TicksPerDay = 60000f;
-        private const string LogPrefix = "[MAP-机械族机械师] LoverPregnancy：";
+        private const string LogPrefix = "[MAP-机械族机械师] SyntheticPregnancy：";
 
         private static Texture2D? cachedBirthIcon;
 
@@ -29,15 +29,12 @@ namespace MAP_MechanoidMechanitor
         public Pawn? GeneticParent => geneticParent;
         public PawnKindDef? ChildKindDef => childKindDef;
         public IReadOnlyList<GeneDef> EndogeneSnapshot =>
-            endogeneSnapshot ?? (IReadOnlyList<GeneDef>)System.Array.Empty<GeneDef>();
+            endogeneSnapshot ?? (IReadOnlyList<GeneDef>)Array.Empty<GeneDef>();
         public IReadOnlyList<GeneDef> XenogeneSnapshot =>
-            xenogeneSnapshot ?? (IReadOnlyList<GeneDef>)System.Array.Empty<GeneDef>();
+            xenogeneSnapshot ?? (IReadOnlyList<GeneDef>)Array.Empty<GeneDef>();
         public bool InheritXenogenes => inheritXenogenes;
         public Gender? FixedGender => fixedGender >= 0 ? (Gender?)fixedGender : null;
 
-        /// <summary>
-        /// 孕期是否已足月（100%）。足月后不再自动生产，仅等待玩家下达分娩指令。
-        /// </summary>
         public bool ReadyForBirth => Severity >= 1f;
 
         private static Texture2D BirthIcon =>
@@ -72,9 +69,9 @@ namespace MAP_MechanoidMechanitor
             if (Severity < 1f)
             {
                 float gestationDays =
-                    def.GetModExtension<HediffDefExtension_LoverPregnancy>()
+                    def.GetModExtension<HediffDefExtension_SyntheticPregnancy>()
                         ?.ResolveGestationDays()
-                    ?? HediffDefExtension_LoverPregnancy.DefaultGestationDays;
+                    ?? HediffDefExtension_SyntheticPregnancy.DefaultGestationDays;
                 Severity += delta / (gestationDays * TicksPerDay);
                 if (Severity > 1f)
                 {
@@ -86,7 +83,6 @@ namespace MAP_MechanoidMechanitor
                 Severity = 1f;
             }
 
-            // 足月信件必须在「保持 100% 并返回」之前处理，覆盖自然到达与开发者工具拉满。
             TrySendReadyForBirthLetter();
         }
 
@@ -97,15 +93,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 先标记，确保每个孕期只尝试一次，避免发送失败时每 Tick 刷信。
             readyForBirthLetterSent = true;
             try
             {
                 string name = pawn.LabelShortCap;
                 Find.LetterStack.ReceiveLetter(
-                    "MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterLabel"
+                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterLabel"
                         .Translate(name),
-                    "MAP_MechanoidMechanitor.LoverPregnancy.ReadyForBirthLetterText"
+                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterText"
                         .Translate(name),
                     LetterDefOf.PositiveEvent,
                     pawn);
@@ -135,7 +130,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = "开始分娩",
                 defaultDesc =
-                    "MAP_MechanoidMechanitor.LoverPregnancy.StartBirthGizmoDesc"
+                    "MAP_MechanoidMechanitor.SyntheticPregnancy.StartBirthGizmoDesc"
                         .Translate(pawn.LabelShortCap),
                 icon = BirthIcon,
                 action = StartBirthJob,
@@ -154,47 +149,47 @@ namespace MAP_MechanoidMechanitor
         {
             if (pawn == null)
             {
-                return "恋人无效。";
+                return "授权机械体无效。";
             }
 
             if (!pawn.Spawned)
             {
-                return "恋人当前不在地图上。";
+                return "授权机械体当前不在地图上。";
             }
 
             if (pawn.Dead)
             {
-                return "恋人已死亡。";
+                return "授权机械体已死亡。";
             }
 
             if (pawn.Downed)
             {
-                return "恋人已倒地。";
+                return "授权机械体已倒地。";
             }
 
             if (pawn.Drafted)
             {
-                return "恋人已被征召。";
+                return "授权机械体已被征召。";
             }
 
             if (pawn.InMentalState)
             {
-                return "恋人正处于精神状态。";
+                return "授权机械体正处于精神状态。";
             }
 
             if (pawn.IsBurning())
             {
-                return "恋人正在燃烧。";
+                return "授权机械体正在燃烧。";
             }
 
             if (pawn.jobs == null)
             {
-                return "恋人无法执行工作。";
+                return "授权机械体无法执行工作。";
             }
 
-            if (pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_LoverGiveBirth)
+            if (pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_SyntheticGiveBirth)
             {
-                return "恋人正在分娩。";
+                return "授权机械体正在分娩。";
             }
 
             return null;
@@ -207,8 +202,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            Job job = JobMaker.MakeJob(MAPMechanitor_JobDefOf.MAP_LoverGiveBirth);
-            // 产程时长在下达指令时随机决定一次，之后随 Job 存档。
+            Job job = JobMaker.MakeJob(MAPMechanitor_JobDefOf.MAP_SyntheticGiveBirth);
             job.count = Rand.Range(1250, 2501);
             pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
         }
