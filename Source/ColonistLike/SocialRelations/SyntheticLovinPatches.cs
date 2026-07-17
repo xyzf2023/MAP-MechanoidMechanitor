@@ -33,7 +33,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Pawn? partner =
-                    SyntheticLovinUtility.TryFindEnabledLoverPartnerForRemoteLovin(pawn);
+                    SyntheticLovinUtility.TryFindEnabledSyntheticCompanionForRemoteLovin(pawn);
                 if (partner != null)
                 {
                     __result = partner;
@@ -53,7 +53,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Pawn? partner = LovePartnerRelationUtility.GetPartnerInMyBed(pawn);
-                if (!SyntheticLovinUtility.IsFrequencyBoostRemoteEnabledLoverPartner(
+                if (!SyntheticLovinUtility.IsFrequencyBoostRemoteEnabledSyntheticCompanion(
                         pawn,
                         partner))
                 {
@@ -108,7 +108,7 @@ namespace MAP_MechanoidMechanitor
                     return true;
                 }
 
-                if (!SyntheticLovinUtility.TryComputeOptedInLoverLovinMtbSinglePawnFactor(
+                if (!SyntheticLovinUtility.TryComputeSyntheticCompanionLovinMtbSinglePawnFactor(
                         pawn,
                         out float computed))
                 {
@@ -152,16 +152,16 @@ namespace MAP_MechanoidMechanitor
                     yield break;
                 }
 
-                bool isLoverCompanion =
-                    SyntheticLovinUtility.IsRemoteLoverCompanionLovinJob(actor, partner, bed);
-                if (isLoverCompanion)
+                bool isSyntheticCompanion =
+                    SyntheticLovinUtility.IsRemoteSyntheticCompanionLovinJob(actor, partner, bed);
+                if (isSyntheticCompanion)
                 {
                     Pawn humanSpouse = partner;
                     Building_Bed sharedBed = bed;
-                    Pawn lover = actor;
+                    Pawn syntheticCompanion = actor;
                     driver.AddFailCondition(
-                        () => SyntheticLovinUtility.ShouldFailRemoteLoverCompanionLovin(
-                            lover,
+                        () => SyntheticLovinUtility.ShouldFailRemoteSyntheticCompanionLovin(
+                            syntheticCompanion,
                             humanSpouse,
                             sharedBed));
 
@@ -186,7 +186,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Pawn conceptionSpouse = actor;
-                Pawn conceptionLover = partner;
+                Pawn conceptionCompanion = partner;
                 driver.AddFinishAction(
                     condition =>
                     {
@@ -194,7 +194,7 @@ namespace MAP_MechanoidMechanitor
                         {
                             SyntheticPregnancyUtility.TryConceiveAfterSuccessfulLovin(
                                 conceptionSpouse,
-                                conceptionLover);
+                                conceptionCompanion);
                         }
                     });
 
@@ -219,12 +219,13 @@ namespace MAP_MechanoidMechanitor
                     yield break;
                 }
 
-                Toil waitForLover = CreateWaitForRemoteLoverInBedToil(driver, actor, partner, bed);
+                Toil waitForCompanion = CreateWaitForRemoteSyntheticCompanionInBedToil(
+                    driver, actor, partner, bed);
                 for (int i = 0; i < toils.Count; i++)
                 {
                     if (i == insertIndex)
                     {
-                        yield return waitForLover;
+                        yield return waitForCompanion;
                     }
 
                     yield return toils[i];
@@ -245,10 +246,10 @@ namespace MAP_MechanoidMechanitor
                 return -1;
             }
 
-            private static Toil CreateWaitForRemoteLoverInBedToil(
+            private static Toil CreateWaitForRemoteSyntheticCompanionInBedToil(
                 JobDriver_Lovin driver,
                 Pawn humanSpouse,
-                Pawn lover,
+                Pawn syntheticCompanion,
                 Building_Bed bed)
             {
                 Toil wait = Toils_LayDown.LayDown(
@@ -259,16 +260,16 @@ namespace MAP_MechanoidMechanitor
                     gainRestAndHealth: false);
                 wait.socialMode = RandomSocialMode.Off;
                 wait.FailOn(
-                    () => !SyntheticLovinUtility.IsRemoteLoverStillBoundForHumanWait(
+                    () => !SyntheticLovinUtility.IsRemoteSyntheticCompanionStillBoundForHumanWait(
                         humanSpouse,
-                        lover,
+                        syntheticCompanion,
                         bed));
                 wait.AddPreTickIntervalAction(
                     delegate(int _)
                     {
-                        if (SyntheticLovinUtility.IsRemoteLoverPhysicallyReadyInBed(
+                        if (SyntheticLovinUtility.IsRemoteSyntheticCompanionPhysicallyReadyInBed(
                             humanSpouse,
-                            lover,
+                            syntheticCompanion,
                             bed))
                         {
                             driver.ReadyForNextToil();
@@ -318,7 +319,7 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                if (!SyntheticLovinUtility.IsBoundHumanLoverSpouseLovinDriver(__instance))
+                if (!SyntheticLovinUtility.IsBoundHumanSyntheticCompanionSpouseLovinDriver(__instance))
                 {
                     return;
                 }

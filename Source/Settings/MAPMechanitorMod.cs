@@ -48,9 +48,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             listing.CheckboxLabeled(
-                "MAP_Settings_LoverOffspringInheritXenogenes_Label".Translate(),
-                ref Settings.loverOffspringInheritXenogenes,
-                "MAP_Settings_LoverOffspringInheritXenogenes_Description".Translate());
+                "MAP_Settings_SyntheticOffspringInheritXenogenes_Label".Translate(),
+                ref Settings.syntheticOffspringInheritXenogenes,
+                "MAP_Settings_SyntheticOffspringInheritXenogenes_Description".Translate());
 
             listing.End();
         }

@@ -50,14 +50,14 @@ namespace MAP_MechanoidMechanitor
             return ShouldUseHumanlikeBedLovinRender(pawn, isPortrait: false);
         }
 
-        public const float LovinEffectiveAgeYearsForOptedInLover = 18f;
+        public const float LovinEffectiveAgeYearsForSyntheticCompanion = 18f;
 
         public static float EvaluateLovinAgeFlatHill(float ageYears)
         {
             return GenMath.FlatHill(0f, 14f, 16f, 25f, 80f, 0.2f, ageYears);
         }
 
-        public static bool TryComputeOptedInLoverLovinMtbSinglePawnFactor(
+        public static bool TryComputeSyntheticCompanionLovinMtbSinglePawnFactor(
             Pawn? pawn,
             out float result)
         {
@@ -74,7 +74,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             float effectiveAgeFactor =
-                EvaluateLovinAgeFlatHill(LovinEffectiveAgeYearsForOptedInLover);
+                EvaluateLovinAgeFlatHill(LovinEffectiveAgeYearsForSyntheticCompanion);
             if (effectiveAgeFactor <= 0f
                 || float.IsNaN(effectiveAgeFactor)
                 || float.IsInfinity(effectiveAgeFactor))
@@ -118,7 +118,7 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        public static bool IsRemoteLoverCompanionLovinJob(Pawn? actor, Pawn? partner, Building_Bed? bed)
+        public static bool IsRemoteSyntheticCompanionLovinJob(Pawn? actor, Pawn? partner, Building_Bed? bed)
         {
             if (actor == null || partner == null || bed == null || bed.Destroyed)
             {
@@ -141,7 +141,7 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        public static bool IsFrequencyBoostRemoteEnabledLoverPartner(
+        public static bool IsFrequencyBoostRemoteEnabledSyntheticCompanion(
             Pawn? initiator,
             Pawn? partner)
         {
@@ -182,7 +182,7 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        public static bool IsBoundHumanLoverSpouseLovinDriver(JobDriver? driver)
+        public static bool IsBoundHumanSyntheticCompanionSpouseLovinDriver(JobDriver? driver)
         {
             if (driver?.pawn == null || driver.job == null || driver.job.def != JobDefOf.Lovin)
             {
@@ -198,29 +198,29 @@ namespace MAP_MechanoidMechanitor
 
             Pawn actor = driver.pawn;
             Pawn? human;
-            Pawn? lover;
-            if (IsRemoteLoverCompanionLovinJob(actor, partner, bed))
+            Pawn? syntheticCompanion;
+            if (IsRemoteSyntheticCompanionLovinJob(actor, partner, bed))
             {
-                lover = actor;
+                syntheticCompanion = actor;
                 human = partner;
             }
             else if (IsRemoteHumanSpouseLovinJob(actor, partner, bed))
             {
                 human = actor;
-                lover = partner;
+                syntheticCompanion = partner;
             }
             else
             {
                 return false;
             }
 
-            if (human.relations == null || lover.relations == null)
+            if (human.relations == null || syntheticCompanion.relations == null)
             {
                 return false;
             }
 
-            return human.relations.DirectRelationExists(PawnRelationDefOf.Spouse, lover)
-                && lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, human);
+            return human.relations.DirectRelationExists(PawnRelationDefOf.Spouse, syntheticCompanion)
+                && syntheticCompanion.relations.DirectRelationExists(PawnRelationDefOf.Spouse, human);
         }
 
         public static bool TryGetLovinPartnerAndBed(
@@ -240,12 +240,12 @@ namespace MAP_MechanoidMechanitor
             return partner != null && bed != null;
         }
 
-        public static bool IsRemoteLoverStillBoundForHumanWait(
+        public static bool IsRemoteSyntheticCompanionStillBoundForHumanWait(
             Pawn humanSpouse,
-            Pawn? lover,
+            Pawn? syntheticCompanion,
             Building_Bed bed)
         {
-            if (!IsLivingSpawnedPawn(lover) || lover!.Map != humanSpouse.Map)
+            if (!IsLivingSpawnedPawn(syntheticCompanion) || syntheticCompanion!.Map != humanSpouse.Map)
             {
                 return false;
             }
@@ -255,52 +255,52 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (lover.CurJobDef != JobDefOf.Lovin || lover.CurJob == null)
+            if (syntheticCompanion.CurJobDef != JobDefOf.Lovin || syntheticCompanion.CurJob == null)
             {
                 return false;
             }
 
-            Job loverJob = lover.CurJob;
-            if (loverJob.GetTarget(TargetIndex.A).Thing != humanSpouse)
+            Job companionJob = syntheticCompanion.CurJob;
+            if (companionJob.GetTarget(TargetIndex.A).Thing != humanSpouse)
             {
                 return false;
             }
 
-            return loverJob.GetTarget(TargetIndex.B).Thing == bed;
+            return companionJob.GetTarget(TargetIndex.B).Thing == bed;
         }
 
-        public static bool IsRemoteLoverPhysicallyReadyInBed(
+        public static bool IsRemoteSyntheticCompanionPhysicallyReadyInBed(
             Pawn humanSpouse,
-            Pawn? lover,
+            Pawn? syntheticCompanion,
             Building_Bed bed)
         {
-            if (!IsRemoteLoverStillBoundForHumanWait(humanSpouse, lover, bed))
+            if (!IsRemoteSyntheticCompanionStillBoundForHumanWait(humanSpouse, syntheticCompanion, bed))
             {
                 return false;
             }
 
-            if (!lover!.GetPosture().InBed())
+            if (!syntheticCompanion!.GetPosture().InBed())
             {
                 return false;
             }
 
-            return lover.CurrentBed() == bed;
+            return syntheticCompanion.CurrentBed() == bed;
         }
 
-        public static bool ShouldFailRemoteLoverCompanionLovin(
-            Pawn lover,
+        public static bool ShouldFailRemoteSyntheticCompanionLovin(
+            Pawn syntheticCompanion,
             Pawn? humanSpouse,
             Building_Bed? bed)
         {
-            return !IsRemoteHumanStillBoundForLoverCompanion(lover, humanSpouse, bed);
+            return !IsRemoteHumanStillBoundForSyntheticCompanion(syntheticCompanion, humanSpouse, bed);
         }
 
-        public static bool IsRemoteHumanStillBoundForLoverCompanion(
-            Pawn lover,
+        public static bool IsRemoteHumanStillBoundForSyntheticCompanion(
+            Pawn syntheticCompanion,
             Pawn? humanSpouse,
             Building_Bed? bed)
         {
-            if (!IsLivingSpawnedPawn(humanSpouse) || humanSpouse!.Map != lover.Map)
+            if (!IsLivingSpawnedPawn(humanSpouse) || humanSpouse!.Map != syntheticCompanion.Map)
             {
                 return false;
             }
@@ -316,7 +316,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             Job humanJob = humanSpouse.CurJob;
-            if (humanJob.GetTarget(TargetIndex.A).Thing != lover)
+            if (humanJob.GetTarget(TargetIndex.A).Thing != syntheticCompanion)
             {
                 return false;
             }
@@ -329,7 +329,7 @@ namespace MAP_MechanoidMechanitor
             return pawn != null && !pawn.Destroyed && !pawn.Dead && pawn.Spawned;
         }
 
-        public static Pawn? TryFindEnabledLoverPartnerForRemoteLovin(Pawn? humanSpouse)
+        public static Pawn? TryFindEnabledSyntheticCompanionForRemoteLovin(Pawn? humanSpouse)
         {
             if (humanSpouse == null || !IsValidHumanSpouseInitiator(humanSpouse))
             {
@@ -358,15 +358,15 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                Pawn? lover = relation.otherPawn;
-                if (!IsValidEnabledLoverForRemoteLovin(humanSpouse, lover, bed))
+                Pawn? syntheticCompanion = relation.otherPawn;
+                if (!IsValidEnabledSyntheticCompanionForRemoteLovin(humanSpouse, syntheticCompanion, bed))
                 {
                     continue;
                 }
 
-                if (best == null || lover!.thingIDNumber < best.thingIDNumber)
+                if (best == null || syntheticCompanion!.thingIDNumber < best.thingIDNumber)
                 {
-                    best = lover;
+                    best = syntheticCompanion;
                 }
             }
 
@@ -419,7 +419,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        public static Pawn? SelectPreferredLoverByThingId(List<Pawn> candidates)
+        public static Pawn? SelectPreferredSyntheticCompanionByThingId(List<Pawn> candidates)
         {
             if (candidates == null || candidates.Count == 0)
             {
@@ -622,17 +622,17 @@ namespace MAP_MechanoidMechanitor
             return collecting ? (failures!.Count > 0 ? first : null) : first;
         }
 
-        private static bool IsValidEnabledLoverForRemoteLovin(
+        private static bool IsValidEnabledSyntheticCompanionForRemoteLovin(
             Pawn humanSpouse,
-            Pawn? lover,
+            Pawn? syntheticCompanion,
             Building_Bed bed)
         {
-            return EvaluateEnabledLoverForRemoteLovin(humanSpouse, lover, bed, null) == null;
+            return EvaluateEnabledSyntheticCompanionForRemoteLovin(humanSpouse, syntheticCompanion, bed, null) == null;
         }
 
-        public static string? EvaluateEnabledLoverForRemoteLovin(
+        public static string? EvaluateEnabledSyntheticCompanionForRemoteLovin(
             Pawn humanSpouse,
-            Pawn? lover,
+            Pawn? syntheticCompanion,
             Building_Bed? bed,
             List<string>? failures)
         {
@@ -645,13 +645,13 @@ namespace MAP_MechanoidMechanitor
                 failures?.Add(reason);
             }
 
-            if (lover == null)
+            if (syntheticCompanion == null)
             {
                 Fail("仿生伴侣引用为空。");
                 return first;
             }
 
-            if (lover == humanSpouse)
+            if (syntheticCompanion == humanSpouse)
             {
                 Fail("仿生伴侣与发起者是同一 Pawn。");
                 if (!collecting)
@@ -661,7 +661,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                lover, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+                syntheticCompanion, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
             {
                 Fail("授权机械体不具备 SyntheticSpouseInteraction 能力。");
                 if (!collecting)
@@ -669,7 +669,7 @@ namespace MAP_MechanoidMechanitor
                     return first;
                 }
             }
-            else if (!SyntheticCompanionStateUtility.IsLovinWithSpouseEnabled(lover))
+            else if (!SyntheticCompanionStateUtility.IsLovinWithSpouseEnabled(syntheticCompanion))
             {
                 Fail("「与配偶爱爱」开关未开启。");
                 if (!collecting)
@@ -678,7 +678,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.Destroyed)
+            if (syntheticCompanion.Destroyed)
             {
                 Fail("授权机械体已销毁。");
                 if (!collecting)
@@ -687,7 +687,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.Dead)
+            if (syntheticCompanion.Dead)
             {
                 Fail("授权机械体已死亡。");
                 if (!collecting)
@@ -696,7 +696,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (!lover.Spawned)
+            if (!syntheticCompanion.Spawned)
             {
                 Fail("授权机械体未在地图上生成。");
                 if (!collecting)
@@ -705,7 +705,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.Map != humanSpouse.Map)
+            if (syntheticCompanion.Map != humanSpouse.Map)
             {
                 Fail("授权机械体与发起者不在同一地图。");
                 if (!collecting)
@@ -714,7 +714,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.Faction != Faction.OfPlayer)
+            if (syntheticCompanion.Faction != Faction.OfPlayer)
             {
                 Fail("授权机械体不属于玩家阵营。");
                 if (!collecting)
@@ -723,7 +723,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.relations == null)
+            if (syntheticCompanion.relations == null)
             {
                 Fail("授权机械体缺少 relations Tracker。");
                 if (!collecting)
@@ -732,7 +732,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.health == null)
+            if (syntheticCompanion.health == null)
             {
                 Fail("授权机械体缺少 health Tracker。");
                 if (!collecting)
@@ -741,7 +741,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.jobs == null)
+            if (syntheticCompanion.jobs == null)
             {
                 Fail("授权机械体缺少 jobs Tracker。");
                 if (!collecting)
@@ -750,7 +750,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.mindState == null)
+            if (syntheticCompanion.mindState == null)
             {
                 Fail("授权机械体缺少 mindState Tracker。");
                 if (!collecting)
@@ -759,8 +759,8 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.relations == null
-                || !lover.relations.DirectRelationExists(PawnRelationDefOf.Spouse, humanSpouse))
+            if (syntheticCompanion.relations == null
+                || !syntheticCompanion.relations.DirectRelationExists(PawnRelationDefOf.Spouse, humanSpouse))
             {
                 Fail("授权机械体对发起者不存在直接 Spouse 关系。");
                 if (!collecting)
@@ -772,12 +772,12 @@ namespace MAP_MechanoidMechanitor
                 && (humanSpouse.relations == null
                     || !humanSpouse.relations.DirectRelationExists(
                         PawnRelationDefOf.Spouse,
-                        lover)))
+                        syntheticCompanion)))
             {
                 Fail("发起者对授权机械体不存在直接 Spouse 关系（双方关系不一致）。");
             }
 
-            if (lover.health != null && !lover.health.capacities.CanBeAwake)
+            if (syntheticCompanion.health != null && !syntheticCompanion.health.capacities.CanBeAwake)
             {
                 Fail("授权机械体不具备 CanBeAwake。");
                 if (!collecting)
@@ -786,7 +786,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.Downed)
+            if (syntheticCompanion.Downed)
             {
                 Fail("授权机械体处于倒地状态。");
                 if (!collecting)
@@ -795,7 +795,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.Drafted)
+            if (syntheticCompanion.Drafted)
             {
                 Fail("授权机械体已被征召。");
                 if (!collecting)
@@ -804,7 +804,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.InMentalState)
+            if (syntheticCompanion.InMentalState)
             {
                 Fail("授权机械体处于精神状态。");
                 if (!collecting)
@@ -813,7 +813,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.IsBurning())
+            if (syntheticCompanion.IsBurning())
             {
                 Fail("授权机械体正在着火。");
                 if (!collecting)
@@ -822,7 +822,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            string? interruptFail = EvaluateCurrentJobInterruptible(lover, failures);
+            string? interruptFail = EvaluateCurrentJobInterruptible(syntheticCompanion, failures);
             if (interruptFail != null && !collecting)
             {
                 return first ?? interruptFail;
@@ -843,7 +843,7 @@ namespace MAP_MechanoidMechanitor
             }
             else
             {
-                if (!lover.CanReach(bed, PathEndMode.OnCell, Danger.Some))
+                if (!syntheticCompanion.CanReach(bed, PathEndMode.OnCell, Danger.Some))
                 {
                     Fail("授权机械体以 Danger.Some 无法到达床铺。");
                     if (!collecting)
@@ -852,9 +852,9 @@ namespace MAP_MechanoidMechanitor
                     }
                 }
 
-                string? bedFail = EvaluateCanLoverUseBedForRemoteLovin(
+                string? bedFail = EvaluateCanSyntheticCompanionUseBedForRemoteLovin(
                     humanSpouse,
-                    lover,
+                    syntheticCompanion,
                     bed,
                     failures);
                 if (bedFail != null && !collecting)
@@ -862,7 +862,7 @@ namespace MAP_MechanoidMechanitor
                     return first ?? bedFail;
                 }
 
-                if (!lover.CanReserve(bed, bed.SleepingSlotsCount, 0))
+                if (!syntheticCompanion.CanReserve(bed, bed.SleepingSlotsCount, 0))
                 {
                     Fail("授权机械体无法预约该床铺。");
                     if (!collecting)
@@ -872,7 +872,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (!humanSpouse.CanReserve(lover) || !lover.CanReserve(humanSpouse))
+            if (!humanSpouse.CanReserve(syntheticCompanion) || !syntheticCompanion.CanReserve(humanSpouse))
             {
                 Fail("双方无法互相预约。");
                 if (!collecting)
@@ -884,9 +884,9 @@ namespace MAP_MechanoidMechanitor
             return collecting ? (failures!.Count > 0 ? (first ?? failures[0]) : null) : first;
         }
 
-        public static string? EvaluateCanLoverUseBedForRemoteLovin(
+        public static string? EvaluateCanSyntheticCompanionUseBedForRemoteLovin(
             Pawn humanSpouse,
-            Pawn lover,
+            Pawn syntheticCompanion,
             Building_Bed bed,
             List<string>? failures)
         {
@@ -918,7 +918,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             Map? map = humanSpouse.Map;
-            if (map == null || bed.Map != map || lover.Map != map)
+            if (map == null || bed.Map != map || syntheticCompanion.Map != map)
             {
                 Fail("床铺与双方不在同一地图。");
                 if (!collecting)
@@ -983,10 +983,10 @@ namespace MAP_MechanoidMechanitor
                     }
                 }
 
-                if (lover.BodySize > bedDef.building.bed_maxBodySize)
+                if (syntheticCompanion.BodySize > bedDef.building.bed_maxBodySize)
                 {
                     Fail(
-                        $"授权机械体体型 {lover.BodySize} 超过床铺 bed_maxBodySize "
+                        $"授权机械体体型 {syntheticCompanion.BodySize} 超过床铺 bed_maxBodySize "
                         + $"{bedDef.building.bed_maxBodySize}。");
                     if (!collecting)
                     {
@@ -995,7 +995,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (map != null && lover.HarmedByVacuum && bed.Position.GetVacuum(map) >= 0.5f)
+            if (map != null && syntheticCompanion.HarmedByVacuum && bed.Position.GetVacuum(map) >= 0.5f)
             {
                 Fail("真空环境会伤害授权机械体。");
                 if (!collecting)
@@ -1013,7 +1013,7 @@ namespace MAP_MechanoidMechanitor
                     return first;
                 }
             }
-            else if (assignable.IdeoligionForbids(lover))
+            else if (assignable.IdeoligionForbids(syntheticCompanion))
             {
                 Fail("IdeoligionForbids 阻止授权机械体使用该床。");
                 if (!collecting)
@@ -1022,7 +1022,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            GuestStatus? guestStatus = lover.GuestStatus;
+            GuestStatus? guestStatus = syntheticCompanion.GuestStatus;
             bool forPrisoner = guestStatus == GuestStatus.Prisoner;
             bool forSlave = guestStatus == GuestStatus.Slave;
             if (bed.ForPrisoners != forPrisoner)
@@ -1056,7 +1056,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (!lover.Downed && bed.IsForbidden(lover))
+            if (!syntheticCompanion.Downed && bed.IsForbidden(syntheticCompanion))
             {
                 Fail("床铺对授权机械体 Forbidden。");
                 if (!collecting)
@@ -1065,8 +1065,8 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            bool isOwner = bed.IsOwner(lover, out _);
-            if (!isOwner && !RestUtility.BedOwnerWillShare(bed, lover, null))
+            bool isOwner = bed.IsOwner(syntheticCompanion, out _);
+            if (!isOwner && !RestUtility.BedOwnerWillShare(bed, syntheticCompanion, null))
             {
                 Fail("授权机械体不是床主，且 RestUtility.BedOwnerWillShare 不允许共享。");
             }
@@ -1074,7 +1074,7 @@ namespace MAP_MechanoidMechanitor
             return collecting ? (failures!.Count > 0 ? first : null) : first;
         }
 
-        public static string? EvaluateCurrentJobInterruptible(Pawn lover, List<string>? failures)
+        public static string? EvaluateCurrentJobInterruptible(Pawn syntheticCompanion, List<string>? failures)
         {
             bool collecting = failures != null;
             string? first = null;
@@ -1085,7 +1085,7 @@ namespace MAP_MechanoidMechanitor
                 failures?.Add(reason);
             }
 
-            Job? curJob = lover.CurJob;
+            Job? curJob = syntheticCompanion.CurJob;
             if (curJob == null)
             {
                 return null;
@@ -1120,7 +1120,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (lover.jobs != null && !lover.jobs.IsCurrentJobPlayerInterruptible())
+            if (syntheticCompanion.jobs != null && !syntheticCompanion.jobs.IsCurrentJobPlayerInterruptible())
             {
                 Fail(
                     $"IsCurrentJobPlayerInterruptible 不允许中断（JobDef="

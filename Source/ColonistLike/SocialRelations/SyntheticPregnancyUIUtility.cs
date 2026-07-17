@@ -7,9 +7,9 @@ namespace MAP_MechanoidMechanitor
 {
     public static class SyntheticPregnancyUIUtility
     {
-        public static void DrawApproachButton(Rect rect, Pawn lover, Pawn spouse)
+        public static void DrawApproachButton(Rect rect, Pawn syntheticCompanion, Pawn spouse)
         {
-            if (!SyntheticCompanionStateUtility.TryGetState(lover, out ISyntheticCompanionState? state)
+            if (!SyntheticCompanionStateUtility.TryGetState(syntheticCompanion, out ISyntheticCompanionState? state)
                 || state == null)
             {
                 return;

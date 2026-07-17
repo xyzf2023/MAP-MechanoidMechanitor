@@ -50,7 +50,7 @@
   <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseNoCandidate>当前没有可指定为配偶的殖民者。</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseNoCandidate>
   <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseFailed>无法指定该殖民者为配偶。</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseFailed>
   <MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterLabel>结婚</MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterLabel>
-  <MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterText>{LOVER_labelShort}与{TARGET_labelShort}已经结婚。{LOVER_labelShort}已成为{TARGET_labelShort}的配偶。</MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterText>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterText>{COMPANION_labelShort}与{TARGET_labelShort}已经结婚。{COMPANION_labelShort}已成为{TARGET_labelShort}的配偶。</MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterText>
   <MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggle>与配偶爱爱</MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggle>
   <MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggleDesc>开启后，授权机械体将尝试在配偶允许时与配偶爱爱。</MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggleDesc>
   <MAP_MechanoidMechanitor.SyntheticPregnancy.ApproachTitle>仿生生育方式</MAP_MechanoidMechanitor.SyntheticPregnancy.ApproachTitle>
@@ -61,6 +61,6 @@
   <MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterLabel>{0}可以进行分娩</MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterLabel>
   <MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterText>{0}孕育的婴儿已发育完成，可随时选中{0}为其下达分娩指令。\n\n在分娩完成前，婴儿的生理活动将暂时处于冻结状态。</MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterText>
   <MAP_MechanoidMechanitor.SyntheticPregnancy.StartBirthGizmoDesc>命令{0}在原地执行分娩流程。请确保环境安全后再下达此命令。</MAP_MechanoidMechanitor.SyntheticPregnancy.StartBirthGizmoDesc>
-  <MAP_Settings_LoverOffspringInheritXenogenes_Label>通过仿生孕育的子嗣继承异种基因</MAP_Settings_LoverOffspringInheritXenogenes_Label>
-  <MAP_Settings_LoverOffspringInheritXenogenes_Description>开启后，具备仿生孕育能力的机械体孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_Settings_LoverOffspringInheritXenogenes_Description>
+  <MAP_Settings_SyntheticOffspringInheritXenogenes_Label>通过仿生孕育的子嗣继承异种基因</MAP_Settings_SyntheticOffspringInheritXenogenes_Label>
+  <MAP_Settings_SyntheticOffspringInheritXenogenes_Description>开启后，具备仿生孕育能力的机械体孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_Settings_SyntheticOffspringInheritXenogenes_Description>
 </LanguageData>
