@@ -58,5 +58,67 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return false;
             }
         }
+
+        public static bool TryGetEffectiveLockedTarget(
+            GameComponent_MechanoidMechanitorStoryState storyState,
+            out FactionRelationKind relationKind,
+            out bool hostileOnHarmByPlayer)
+        {
+            relationKind = FactionRelationKind.Neutral;
+            hostileOnHarmByPlayer = false;
+            if (storyState == null)
+            {
+                return false;
+            }
+
+            if (storyState.PurgeDirectiveFinalPenaltyTriggered)
+            {
+                relationKind = FactionRelationKind.Hostile;
+                hostileOnHarmByPlayer = false;
+                return true;
+            }
+
+            if (!storyState.TryGetMechHiveRelationMode(
+                    out MechanoidMechanitorMechHiveRelationMode mode))
+            {
+                return false;
+            }
+
+            if (!TryGetLockedTarget(mode, out relationKind))
+            {
+                return false;
+            }
+
+            hostileOnHarmByPlayer = false;
+            return true;
+        }
+
+        public static bool TryGetEffectiveInitialTarget(
+            GameComponent_MechanoidMechanitorStoryState storyState,
+            out FactionRelationKind relationKind,
+            out bool hostileOnHarmByPlayer)
+        {
+            relationKind = FactionRelationKind.Neutral;
+            hostileOnHarmByPlayer = false;
+            if (storyState == null)
+            {
+                return false;
+            }
+
+            if (storyState.PurgeDirectiveFinalPenaltyTriggered)
+            {
+                relationKind = FactionRelationKind.Hostile;
+                hostileOnHarmByPlayer = false;
+                return true;
+            }
+
+            if (!storyState.TryGetMechHiveRelationMode(
+                    out MechanoidMechanitorMechHiveRelationMode mode))
+            {
+                return false;
+            }
+
+            return TryGetInitialTarget(mode, out relationKind, out hostileOnHarmByPlayer);
+        }
     }
 }

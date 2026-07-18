@@ -20,6 +20,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private Faction? cachedMechHive;
 
+        private MechanoidMechanitorPurgeDirectiveRuntimeState? purgeDirectiveRuntimeState;
+
         private readonly Dictionary<Faction, MechanoidMechanitorFactionRelationOption>
             customFactionOptionCache =
                 new Dictionary<Faction, MechanoidMechanitorFactionRelationOption>();
@@ -30,10 +32,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public Faction? CachedMechHive => cachedMechHive;
 
+        public MechanoidMechanitorPurgeDirectiveRuntimeState? PurgeDirectiveRuntimeState =>
+            purgeDirectiveRuntimeState;
+
         public bool InitialOrdinaryFactionRelationsApplied =>
             initialOrdinaryFactionRelationsApplied;
 
         public bool InitialMechHiveRelationApplied => initialMechHiveRelationApplied;
+
+        public bool PurgeDirectiveEnabled =>
+            activeConfiguration != null && activeConfiguration.purgeDirectiveEnabled;
+
+        public bool PurgeDirectiveFinalPenaltyTriggered =>
+            purgeDirectiveRuntimeState != null
+            && purgeDirectiveRuntimeState.FinalPenaltyTriggered;
+
+        public int PurgeDirectiveRewardPoints =>
+            purgeDirectiveRuntimeState?.RewardPoints ?? 0;
 
         public static MechanoidMechanitorStoryStyleDef? CurrentStoryStyle
         {
@@ -128,6 +143,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public static bool IsPurgeDirectiveActive
+        {
+            get
+            {
+                if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+                {
+                    return false;
+                }
+
+                GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+                return component != null && component.PurgeDirectiveEnabled;
+            }
+        }
+
         private static GameComponent_MechanoidMechanitorStoryState? CurrentComponent
         {
             get
@@ -153,7 +182,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
             activeConfiguration = configuration.CreateCopy();
             initialOrdinaryFactionRelationsApplied = false;
             initialMechHiveRelationApplied = false;
+            purgeDirectiveRuntimeState = new MechanoidMechanitorPurgeDirectiveRuntimeState();
+            purgeDirectiveRuntimeState.InitializeForNewGame(
+                activeConfiguration.purgeDirectiveEnabled);
             RebuildRuntimeCaches();
+        }
+
+        public static bool TryAddPurgeDirectiveRewardPoints(int amount)
+        {
+            if (amount <= 0 || !IsPurgeDirectiveActive)
+            {
+                return false;
+            }
+
+            GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+            if (component?.purgeDirectiveRuntimeState == null)
+            {
+                return false;
+            }
+
+            component.purgeDirectiveRuntimeState.AddRewardPoints(amount);
+            return true;
         }
 
         public void MarkInitialOrdinaryFactionRelationsApplied()
@@ -372,9 +421,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (!MechanoidMechanitorMechHiveRelationPolicy.TryGetLockedTarget(
-                    component.activeConfiguration.mechHiveRelationMode,
-                    out relationKind))
+            if (!MechanoidMechanitorMechHiveRelationPolicy.TryGetEffectiveLockedTarget(
+                    component,
+                    out relationKind,
+                    out _))
             {
                 return false;
             }
@@ -471,6 +521,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public override void GameComponentTick()
+        {
+            base.GameComponentTick();
+            MechanoidMechanitorPurgeDirectiveUtility.Tick(this);
+        }
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -488,10 +544,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref initialMechHiveRelationApplied,
                 "initialMechHiveRelationApplied",
                 false);
+            Scribe_Deep.Look(
+                ref purgeDirectiveRuntimeState,
+                "purgeDirectiveRuntimeState");
 
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && activeConfiguration != null)
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
-                if (Find.FactionManager != null)
+                if (purgeDirectiveRuntimeState == null)
+                {
+                    purgeDirectiveRuntimeState =
+                        new MechanoidMechanitorPurgeDirectiveRuntimeState();
+                }
+
+                purgeDirectiveRuntimeState.CleanupTrackedPawns();
+
+                if (activeConfiguration != null && Find.FactionManager != null)
                 {
                     MechanoidMechanitorStoryConfigurationContext context =
                         MechanoidMechanitorStoryConfigurationContext.Create(activeConfiguration);
@@ -606,6 +673,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (cachedMechHive == null || activeConfiguration == null)
             {
                 return false;
+            }
+
+            if (PurgeDirectiveFinalPenaltyTriggered)
+            {
+                return true;
             }
 
             return MechanoidMechanitorMechHiveRelationPolicy.IsLockedMode(

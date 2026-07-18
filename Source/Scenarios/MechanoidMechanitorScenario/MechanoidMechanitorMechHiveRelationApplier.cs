@@ -243,16 +243,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Faction? mechHive = storyState.CachedMechHive;
-            if (mechHive == null
-                || !storyState.TryGetMechHiveRelationMode(
-                    out MechanoidMechanitorMechHiveRelationMode mode))
+            if (mechHive == null)
             {
                 return;
             }
 
-            if (!MechanoidMechanitorMechHiveRelationPolicy.TryGetLockedTarget(
-                    mode,
-                    out FactionRelationKind relationKind))
+            if (!MechanoidMechanitorMechHiveRelationPolicy.TryGetEffectiveLockedTarget(
+                    storyState,
+                    out FactionRelationKind relationKind,
+                    out bool hostileOnHarmByPlayer))
             {
                 return;
             }
@@ -260,7 +259,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!ApplyExactMechHiveRelation(
                     mechHive,
                     relationKind,
-                    hostileOnHarmByPlayer: false))
+                    hostileOnHarmByPlayer))
             {
                 Log.Error(
                     "[MAP-机械族机械师] 机械巢永久关系校准失败。");
@@ -280,15 +279,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
             if (storyState == null
                 || !storyState.InitialMechHiveRelationApplied
-                || !storyState.IsCurrentMechHive(faction)
-                || !storyState.TryGetMechHiveRelationMode(
-                    out MechanoidMechanitorMechHiveRelationMode mode))
+                || !storyState.IsCurrentMechHive(faction))
             {
                 return;
             }
 
-            if (!MechanoidMechanitorMechHiveRelationPolicy.TryGetInitialTarget(
-                    mode,
+            if (!MechanoidMechanitorMechHiveRelationPolicy.TryGetEffectiveInitialTarget(
+                    storyState,
                     out FactionRelationKind relationKind,
                     out bool hostileOnHarmByPlayer))
             {
