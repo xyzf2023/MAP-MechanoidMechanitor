@@ -19,7 +19,7 @@
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
     <defName>MAP_StoryComponent_PurgeDirective</defName>
     <label>路线：肃清指令</label>
-    <description>是否启用肃清指令流程。本阶段仅保存选项，不会产生实际剧情效果。</description>
+    <description>启用后执行机械巢肃清协议：隐藏囚犯招募与奴役选项，定期检测并要求清除血肉殖民者，类人死亡积累肃清奖励计数；多次违令后机械巢将转为敌对并发动袭击。</description>
     <displayOrder>300</displayOrder>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_PurgeDirective</workerClass>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>

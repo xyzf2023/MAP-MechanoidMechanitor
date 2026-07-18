@@ -45,7 +45,15 @@
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>开始游戏</MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>
   <MAP_MechanoidMechanitor.Story.Component.OrdinaryFactionRelations.Description>设置本局与普通派系的关系总模式。选择“自定义”后可为每个派系单独配置。</MAP_MechanoidMechanitor.Story.Component.OrdinaryFactionRelations.Description>
   <MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description>设置本局与机械巢的关系模式。本阶段仅保存选项，不会修改实际派系关系。</MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description>
-  <MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>是否启用“肃清指令”路线。本阶段仅保存开关，不会触发任何任务或事件。</MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>
+  <MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>启用后执行机械巢肃清协议：隐藏囚犯招募与奴役选项，定期检测并要求清除血肉殖民者，类人死亡积累肃清奖励计数；多次违令后机械巢将转为敌对并发动袭击。</MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Label>检测到非机械智慧生物</MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Text>检测到非法血肉智慧生命。目标已标记。\n\n指令：下一次协议校验前完成肃清。</MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Text>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Label>肃清指令未完成</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Text>非法血肉智慧生命仍存活。\n\n指令：序列1//清理污染生物。</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Text>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Label>检测到执行偏差</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Text>本地执行单元已多次违背肃清指令。节点可靠性正在重新评估。\n\n&lt;b&gt;这是最后一次警告。&lt;/b&gt;</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Text>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Label>异常节点确认</MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Text>本地执行单元已确认偏离//失效//污染。\n\n授权已撤销。节点已重新分类为敌对异常单元。\n\n机械巢已启动追踪//回收//净化程序。\n\n&lt;b&gt;杀戮//致残//肢解&lt;/b&gt;</MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Text>
   <MAP_MechanoidMechanitor.Story.Component.GainTrustRoute.Description>是否启用“获取信任”路线。本阶段仅保存开关，不会触发任何任务或事件。</MAP_MechanoidMechanitor.Story.Component.GainTrustRoute.Description>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>默认</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>全部敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>
