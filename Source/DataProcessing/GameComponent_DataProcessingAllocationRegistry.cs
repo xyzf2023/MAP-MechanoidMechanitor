@@ -990,8 +990,20 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 分配与顶置均为空时，无需清理或读取机械师注册表。
+            if (records.Count == 0 && pinRecords.Count == 0)
+            {
+                return;
+            }
+
             // 全表清理每轮只执行一次；即使没有机械师也要清理无效记录。
             CleanupInvalidRecords();
+
+            // 清理后已无分配记录：顶置可能仍在，但意识保护只依赖分配档数。
+            if (records.Count == 0)
+            {
+                return;
+            }
 
             IReadOnlyList<Pawn> mechanitors =
                 GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;

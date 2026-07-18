@@ -57,13 +57,11 @@ namespace MAP_MechanoidMechanitor
                 ref bool showBody,
                 ref Vector3 __result)
             {
-                if (!SyntheticLovinUtility.ShouldUseHumanlikeBedLovinRender(___pawn))
-                {
-                    return true;
-                }
-
-                Building_Bed? bed = ___pawn.CurrentBed();
-                if (bed?.def?.building == null
+                if (!SyntheticLovinUtility.TryGetSyntheticLovinBed(
+                        ___pawn,
+                        isPortrait: false,
+                        out Building_Bed? bed)
+                    || bed?.def?.building == null
                     || ___pawn.story?.bodyType == null)
                 {
                     return true;
@@ -103,13 +101,11 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Pawn ___pawn, PawnRenderFlags flags, ref float __result)
             {
-                if (!SyntheticLovinUtility.ShouldUseHumanlikeBedLovinRender(___pawn, flags))
-                {
-                    return true;
-                }
-
-                Building_Bed? bed = ___pawn.CurrentBed();
-                if (bed == null)
+                if (!SyntheticLovinUtility.TryGetSyntheticLovinBed(
+                        ___pawn,
+                        flags.FlagSet(PawnRenderFlags.Portrait),
+                        out Building_Bed? bed)
+                    || bed == null)
                 {
                     return true;
                 }
@@ -127,7 +123,11 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Pawn ___pawn, ref Rot4 __result)
             {
-                if (!SyntheticLovinUtility.ShouldUseHumanlikeBedLovinRender(___pawn))
+                if (!SyntheticLovinUtility.TryGetSyntheticLovinBed(
+                        ___pawn,
+                        isPortrait: false,
+                        out Building_Bed? bed)
+                    || bed == null)
                 {
                     return true;
                 }
@@ -146,7 +146,7 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
-                if (posture.FaceUp() && ___pawn.CurrentBed() != null)
+                if (posture.FaceUp())
                 {
                     __result = Rot4.South;
                     return false;
@@ -182,31 +182,32 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 if (parms.Portrait
+                    || parms.flags.FlagSet(PawnRenderFlags.Portrait)
                     || parms.flags.FlagSet(PawnRenderFlags.NoBody)
                     || parms.posture == PawnPosture.Standing)
                 {
                     return;
                 }
 
-                if (!SyntheticLovinUtility.ShouldUseHumanlikeBedLovinRender(
-                        parms.pawn,
-                        parms.flags))
+                Pawn? pawn = parms.pawn;
+                Building_Bed? bed = parms.bed;
+                // 与 TryGetSyntheticLovinBed 同序廉价淘汰；直接复用 parms.bed，不重复 CurrentBed。
+                if (pawn == null
+                    || pawn.CurJobDef != JobDefOf.Lovin
+                    || !parms.posture.InBed()
+                    || bed?.def?.building == null
+                    || !SyntheticCompanionStateUtility.IsSyntheticCompanion(pawn))
                 {
                     return;
                 }
 
-                Pawn_MindState? mindState = parms.pawn.mindState;
+                Pawn_MindState? mindState = pawn.mindState;
                 if (mindState != null && mindState.duty?.def?.drawBodyOverride.HasValue == true)
                 {
                     return;
                 }
 
-                if (parms.bed?.def?.building == null)
-                {
-                    return;
-                }
-
-                __result = parms.bed.def.building.bed_showSleeperBody;
+                __result = bed.def.building.bed_showSleeperBody;
             }
         }
     }

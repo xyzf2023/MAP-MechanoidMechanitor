@@ -193,6 +193,16 @@ namespace MAP_MechanoidMechanitor
         public override void GameComponentUpdate()
         {
             base.GameComponentUpdate();
+
+            // 廉价空闲判断：无待处理任务且未到安全检查时刻时，跳过完整环境探测。
+            bool hasPendingWork = pendingForcedSync
+                || pendingPawnSyncs.Count > 0
+                || pendingDynamicConsciousnessRefresh;
+            if (!hasPendingWork && !IsUnlockStateSafetyCheckDue())
+            {
+                return;
+            }
+
             if (!IsSyncEnvironmentSafe())
             {
                 return;
@@ -207,6 +217,20 @@ namespace MAP_MechanoidMechanitor
             ProcessPendingPawnSyncs();
             ProcessPendingDynamicConsciousnessRefresh();
             TryRunUnlockStateSafetyCheck();
+        }
+
+        /// <summary>
+        /// TickManager 不可用时不计为到期，避免安全检查被提前执行或永久跳过排程。
+        /// </summary>
+        private bool IsUnlockStateSafetyCheckDue()
+        {
+            TickManager? tickManager = Find.TickManager;
+            if (tickManager == null)
+            {
+                return false;
+            }
+
+            return tickManager.TicksGame >= nextUnlockStateSafetyCheckTick;
         }
 
         private void TryProcessPendingForcedSync()

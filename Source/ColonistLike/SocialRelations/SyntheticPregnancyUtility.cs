@@ -19,12 +19,8 @@ namespace MAP_MechanoidMechanitor
             if (spouse == null
                 || pregnantCompanion == null
                 || spouse == pregnantCompanion
-                || !MechanoidMechanitorCapabilityUtility.HasCapability(
-                    pregnantCompanion, MechanoidMechanitorCapability.SyntheticPregnancy)
-                || !MechanoidMechanitorCapabilityUtility.HasCapability(
-                    pregnantCompanion, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
-                || MechanoidMechanitorCapabilityUtility.HasCapability(
-                    spouse, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+                || !SyntheticCompanionStateUtility.IsSyntheticCompanion(pregnantCompanion)
+                || SyntheticCompanionStateUtility.IsSyntheticCompanion(spouse))
             {
                 return;
             }

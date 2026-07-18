@@ -22,6 +22,25 @@ namespace MAP_MechanoidMechanitor
 
     public static class SyntheticCompanionStateUtility
     {
+        /// <summary>
+        /// 窄范围仿生伴侣身份查询：静态 Comp「恋人」或动态授权注册表。
+        /// 不走完整能力汇总，供高频路径使用。
+        /// </summary>
+        public static bool IsSyntheticCompanion(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (pawn.GetComp<CompSyntheticCompanionUser>() != null)
+            {
+                return true;
+            }
+
+            return GameComponent_SyntheticCompanionRegistry.IsAuthorized(pawn);
+        }
+
         public static bool TryGetState(
             Pawn? pawn,
             out ISyntheticCompanionState? state)
@@ -45,7 +64,7 @@ namespace MAP_MechanoidMechanitor
 
         public static bool HasState(Pawn? pawn)
         {
-            return TryGetState(pawn, out _);
+            return IsSyntheticCompanion(pawn);
         }
 
         public static bool IsLovinWithSpouseEnabled(Pawn? pawn)

@@ -14,6 +14,13 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            // 仿生伴侣能力仅来自静态 Comp / 动态授权注册表，避免完整能力汇总。
+            if (capability == MechanoidMechanitorCapability.SyntheticSpouseInteraction
+                || capability == MechanoidMechanitorCapability.SyntheticPregnancy)
+            {
+                return SyntheticCompanionStateUtility.IsSyntheticCompanion(pawn);
+            }
+
             return (GetCapabilities(pawn) & capability) == capability;
         }
 
