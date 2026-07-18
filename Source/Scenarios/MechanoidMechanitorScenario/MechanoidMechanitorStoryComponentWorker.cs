@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
@@ -11,11 +12,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         protected const float SectionGap = 8f;
 
-        protected const float OptionRowHeight = 28f;
-
         protected const float FactionRowHeight = 30f;
 
-        protected const float DropdownButtonWidth = 180f;
+        protected const float DropdownButtonWidth = 200f;
+
+        protected const float DropdownButtonHeight = 30f;
+
+        protected const float TitleButtonGap = 12f;
+
+        protected const float TitleDescriptionGap = 4f;
+
+        protected const float SeparatorTopGap = 8f;
+
+        protected const float SeparatorBottomGap = 10f;
+
+        protected const float FactionListIndent = 20f;
 
         public virtual bool ShouldShow(MechanoidMechanitorStoryConfigurationContext context)
         {
@@ -49,52 +60,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
             context.Configuration.Normalize(freshContext);
         }
 
-        protected float DrawHeaderAndDescription(Rect rect, float width)
-        {
-            MeasureHeaderAndDescriptionHeights(
-                width,
-                out float titleHeight,
-                out float descriptionHeight);
-
-            GameFont previousFont = Text.Font;
-            float y = rect.y;
-
-            Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(rect.x, y, width, titleHeight), def.LabelCap);
-            y += titleHeight + 2f;
-
-            Text.Font = GameFont.Small;
-            TaggedString description = GetDescription();
-            Widgets.Label(new Rect(rect.x, y, width, descriptionHeight), description);
-            y += descriptionHeight + SectionGap;
-
-            Text.Font = previousFont;
-            return y;
-        }
-
         protected virtual TaggedString GetDescription()
         {
             return def.description;
         }
 
-        protected float MeasureHeaderAndDescription(float width)
+        protected float MeasureDropdownSectionHeight(float width, bool includeSeparator = true)
         {
-            MeasureHeaderAndDescriptionHeights(
-                width,
-                out float titleHeight,
-                out float descriptionHeight);
-            return titleHeight + 2f + descriptionHeight + SectionGap;
+            MeasureDropdownSectionHeights(width, out float titleRowHeight, out float descriptionHeight);
+            float height = titleRowHeight + TitleDescriptionGap + descriptionHeight;
+            if (includeSeparator)
+            {
+                height += SeparatorTopGap + SeparatorBottomGap;
+            }
+
+            return height;
         }
 
-        protected void MeasureHeaderAndDescriptionHeights(
+        protected void MeasureDropdownSectionHeights(
             float width,
-            out float titleHeight,
+            out float titleRowHeight,
             out float descriptionHeight)
         {
+            float titleWidth = Mathf.Max(0f, width - DropdownButtonWidth - TitleButtonGap);
             GameFont previousFont = Text.Font;
 
             Text.Font = GameFont.Medium;
-            titleHeight = Text.CalcHeight(def.LabelCap, width);
+            float titleHeight = Text.CalcHeight(def.LabelCap, titleWidth);
+            titleRowHeight = Mathf.Max(titleHeight, DropdownButtonHeight);
 
             Text.Font = GameFont.Small;
             descriptionHeight = Text.CalcHeight(GetDescription(), width);
@@ -102,20 +95,83 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Text.Font = previousFont;
         }
 
-        protected bool DrawRadioOption(
+        protected float DrawDropdownSection<T>(
             Rect rect,
-            string label,
-            bool active,
+            MechanoidMechanitorStoryConfigurationContext context,
+            string currentLabel,
             bool enabled,
-            out Rect drawnRect)
+            IEnumerable<T> options,
+            Func<T, string> labelGetter,
+            Action<T> onSelected,
+            bool includeSeparator = true)
         {
-            drawnRect = new Rect(rect.x, rect.y, rect.width, OptionRowHeight);
-            bool clicked = Widgets.RadioButtonLabeled(
-                drawnRect,
-                label,
-                active,
-                disabled: !enabled);
-            return enabled && clicked && !active;
+            MeasureDropdownSectionHeights(
+                rect.width,
+                out float titleRowHeight,
+                out float descriptionHeight);
+
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            float y = rect.y;
+            float titleWidth = Mathf.Max(0f, rect.width - DropdownButtonWidth - TitleButtonGap);
+
+            Rect buttonRect = new Rect(
+                rect.xMax - DropdownButtonWidth,
+                y + Mathf.Max(0f, (titleRowHeight - DropdownButtonHeight) / 2f),
+                DropdownButtonWidth,
+                DropdownButtonHeight);
+
+            Text.Font = GameFont.Medium;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Widgets.Label(new Rect(rect.x, y, titleWidth, titleRowHeight), def.LabelCap);
+            Text.Anchor = previousAnchor;
+            Text.Font = previousFont;
+
+            DrawDropdownButton(
+                buttonRect,
+                currentLabel,
+                enabled,
+                options,
+                labelGetter,
+                onSelected);
+
+            if (!enabled)
+            {
+                DrawDisabledTip(
+                    new Rect(rect.x, y, rect.width, titleRowHeight + TitleDescriptionGap + descriptionHeight),
+                    context);
+            }
+
+            y += titleRowHeight + TitleDescriptionGap;
+
+            Text.Font = GameFont.Small;
+            Widgets.Label(new Rect(rect.x, y, rect.width, descriptionHeight), GetDescription());
+            Text.Font = previousFont;
+            y += descriptionHeight;
+
+            if (includeSeparator)
+            {
+                DrawSectionSeparator(rect, ref y);
+            }
+
+            return y;
+        }
+
+        protected void DrawSectionSeparator(Rect rect, ref float y)
+        {
+            y += SeparatorTopGap;
+            Color previousColor = GUI.color;
+            try
+            {
+                GUI.color = new Color(1f, 1f, 1f, 0.2f);
+                Widgets.DrawLineHorizontal(rect.x, y, rect.width);
+            }
+            finally
+            {
+                GUI.color = previousColor;
+            }
+
+            y += SeparatorBottomGap;
         }
 
         protected void DrawDropdownButton<T>(
@@ -123,8 +179,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             string currentLabel,
             bool enabled,
             IEnumerable<T> options,
-            System.Func<T, string> labelGetter,
-            System.Action<T> onSelected)
+            Func<T, string> labelGetter,
+            Action<T> onSelected)
         {
             bool previousEnabled = GUI.enabled;
             if (!enabled)
@@ -132,8 +188,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 GUI.enabled = false;
             }
 
-            if (Widgets.ButtonText(buttonRect, currentLabel) && enabled)
+            try
             {
+                if (!Widgets.ButtonText(buttonRect, currentLabel) || !enabled)
+                {
+                    return;
+                }
+
                 List<FloatMenuOption> menuOptions = new List<FloatMenuOption>();
                 foreach (T option in options)
                 {
@@ -144,10 +205,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                             () => onSelected(local)));
                 }
 
+                if (menuOptions.Count == 0)
+                {
+                    return;
+                }
+
                 Find.WindowStack.Add(new FloatMenu(menuOptions));
             }
-
-            GUI.enabled = previousEnabled;
+            finally
+            {
+                GUI.enabled = previousEnabled;
+            }
         }
 
         protected void DrawDisabledTip(

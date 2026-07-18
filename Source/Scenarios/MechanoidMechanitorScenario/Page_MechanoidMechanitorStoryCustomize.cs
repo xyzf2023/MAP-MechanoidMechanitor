@@ -54,7 +54,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<MechanoidMechanitorStoryComponentDef> components =
                 GetVisibleComponentsSorted(context);
 
-            float width = scrollOutRect.width - 16f;
+            const float horizontalPadding = 8f;
+            float width = scrollOutRect.width - 16f - horizontalPadding * 2f;
             float contentHeight = 0f;
             for (int i = 0; i < components.Count; i++)
             {
@@ -62,7 +63,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             viewHeight = Mathf.Max(contentHeight, scrollOutRect.height);
-            Rect scrollViewRect = new Rect(0f, 0f, width, viewHeight);
+            Rect scrollViewRect = new Rect(0f, 0f, width + horizontalPadding * 2f, viewHeight);
             Widgets.BeginScrollView(scrollOutRect, ref scrollPosition, scrollViewRect);
 
             float y = 0f;
@@ -70,7 +71,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 MechanoidMechanitorStoryComponentWorker worker = components[i].Worker;
                 float height = worker.GetHeight(context, width);
-                worker.Draw(new Rect(0f, y, width, height), context);
+                worker.Draw(new Rect(horizontalPadding, y, width, height), context);
                 y += height;
             }
 

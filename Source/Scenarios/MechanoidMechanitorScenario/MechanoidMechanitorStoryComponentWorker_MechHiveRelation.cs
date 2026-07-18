@@ -29,9 +29,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context,
             float width)
         {
-            return MeasureHeaderAndDescription(width)
-                + Modes.Length * OptionRowHeight
-                + SectionGap;
+            return MeasureDropdownSectionHeight(width);
         }
 
         public override void Draw(
@@ -39,26 +37,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context)
         {
             MechanoidMechanitorStoryConfiguration configuration = context.Configuration;
-            float width = rect.width;
-            float y = DrawHeaderAndDescription(rect, width);
-
-            for (int i = 0; i < Modes.Length; i++)
-            {
-                MechanoidMechanitorMechHiveRelationMode mode = Modes[i];
-                Rect optionRect = new Rect(rect.x, y, width, OptionRowHeight);
-                if (DrawRadioOption(
-                    optionRect,
-                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(mode),
-                    configuration.mechHiveRelationMode == mode,
-                    enabled: true,
-                    out _))
+            DrawDropdownSection(
+                rect,
+                context,
+                MechanoidMechanitorStoryConfigurationLabels.LabelFor(
+                    configuration.mechHiveRelationMode),
+                enabled: true,
+                Modes,
+                MechanoidMechanitorStoryConfigurationLabels.LabelFor,
+                mode =>
                 {
+                    if (configuration.mechHiveRelationMode == mode)
+                    {
+                        return;
+                    }
+
                     configuration.mechHiveRelationMode = mode;
                     NormalizeAfterChange(context);
-                }
-
-                y += OptionRowHeight;
-            }
+                });
         }
     }
 }
