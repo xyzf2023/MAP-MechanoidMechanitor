@@ -9,6 +9,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed class Page_MechanoidMechanitorStoryCustomize : Page
     {
+        private const float TwoColumnMinWidth = 820f;
+        private const float ColumnGap = 16f;
+        private const float LeftColumnRatio = 0.62f;
+        private const float TitleToDescriptionGap = 6f;
+        private const float DescriptionBottomGap = 8f;
+        private const float AccentLineWidth = 110f;
+        private const float AccentLineHeight = 2f;
+        private const float AccentToContentGap = 14f;
+        private const float HorizontalPadding = 8f;
+
+        private static readonly Color DescriptionColor = new Color(0.72f, 0.72f, 0.72f, 1f);
+        private static readonly Color AccentLineColor = new Color(0.62f, 0.48f, 0.30f, 0.75f);
+
         private readonly MechanoidMechanitorStoryConfiguration configurationDraft;
 
         private Vector2 scrollPosition;
@@ -38,41 +51,153 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect mainRect = GetMainRect(inRect);
             TaggedString description =
                 "MAP_MechanoidMechanitor.Scenario.CustomizePage.Text".Translate();
-            float descriptionHeight = Text.CalcHeight(description, mainRect.width);
-            Widgets.Label(
-                new Rect(mainRect.x, mainRect.y, mainRect.width, descriptionHeight),
-                description);
+
+            GameFont previousFont = Text.Font;
+            Color previousColor = GUI.color;
+            bool previousWordWrap = Text.WordWrap;
+            float descriptionHeight;
+            float descriptionY = mainRect.y + TitleToDescriptionGap;
+            try
+            {
+                Text.Font = GameFont.Small;
+                Text.WordWrap = true;
+                descriptionHeight = Text.CalcHeight(description, mainRect.width);
+                GUI.color = DescriptionColor;
+                Widgets.Label(
+                    new Rect(mainRect.x, descriptionY, mainRect.width, descriptionHeight),
+                    description);
+            }
+            finally
+            {
+                Text.Font = previousFont;
+                GUI.color = previousColor;
+                Text.WordWrap = previousWordWrap;
+            }
+
+            float accentY = descriptionY + descriptionHeight + DescriptionBottomGap;
+            Widgets.DrawBoxSolid(
+                new Rect(mainRect.x, accentY, AccentLineWidth, AccentLineHeight),
+                AccentLineColor);
 
             Rect scrollOutRect = new Rect(
                 mainRect.x,
-                mainRect.y + descriptionHeight + 10f,
+                accentY + AccentLineHeight + AccentToContentGap,
                 mainRect.width,
-                mainRect.height - descriptionHeight - 10f);
+                mainRect.height - (accentY - mainRect.y) - AccentLineHeight - AccentToContentGap);
 
             MechanoidMechanitorStoryConfigurationContext context =
                 MechanoidMechanitorStoryConfigurationContext.Create(configurationDraft);
             List<MechanoidMechanitorStoryComponentDef> components =
                 GetVisibleComponentsSorted(context);
 
-            const float horizontalPadding = 8f;
-            float width = scrollOutRect.width - 16f - horizontalPadding * 2f;
-            float contentHeight = 0f;
-            for (int i = 0; i < components.Count; i++)
+            float availableWidth = scrollOutRect.width - 16f - HorizontalPadding * 2f;
+            bool useTwoColumns = availableWidth >= TwoColumnMinWidth;
+
+            float contentHeight;
+            if (useTwoColumns)
             {
-                contentHeight += components[i].Worker.GetHeight(context, width);
+                float leftWidth = availableWidth * LeftColumnRatio;
+                float rightWidth = availableWidth - leftWidth - ColumnGap;
+                float leftHeight = 0f;
+                float rightHeight = 0f;
+                for (int i = 0; i < components.Count; i++)
+                {
+                    MechanoidMechanitorStoryComponentWorker worker = components[i].Worker;
+                    if (worker.DrawInRightColumn)
+                    {
+                        if (rightHeight > 0f)
+                        {
+                            rightHeight += MechanoidMechanitorStoryComponentWorker.CardGap;
+                        }
+
+                        rightHeight += worker.GetHeight(context, rightWidth);
+                    }
+                    else
+                    {
+                        if (leftHeight > 0f)
+                        {
+                            leftHeight += MechanoidMechanitorStoryComponentWorker.CardGap;
+                        }
+
+                        leftHeight += worker.GetHeight(context, leftWidth);
+                    }
+                }
+
+                contentHeight = Mathf.Max(leftHeight, rightHeight);
+            }
+            else
+            {
+                contentHeight = 0f;
+                for (int i = 0; i < components.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        contentHeight += MechanoidMechanitorStoryComponentWorker.CardGap;
+                    }
+
+                    contentHeight += components[i].Worker.GetHeight(context, availableWidth);
+                }
             }
 
             viewHeight = Mathf.Max(contentHeight, scrollOutRect.height);
-            Rect scrollViewRect = new Rect(0f, 0f, width + horizontalPadding * 2f, viewHeight);
+            Rect scrollViewRect = new Rect(
+                0f,
+                0f,
+                availableWidth + HorizontalPadding * 2f,
+                viewHeight);
             Widgets.BeginScrollView(scrollOutRect, ref scrollPosition, scrollViewRect);
 
-            float y = 0f;
-            for (int i = 0; i < components.Count; i++)
+            if (useTwoColumns)
             {
-                MechanoidMechanitorStoryComponentWorker worker = components[i].Worker;
-                float height = worker.GetHeight(context, width);
-                worker.Draw(new Rect(horizontalPadding, y, width, height), context);
-                y += height;
+                float leftWidth = availableWidth * LeftColumnRatio;
+                float rightWidth = availableWidth - leftWidth - ColumnGap;
+                float leftX = HorizontalPadding;
+                float rightX = HorizontalPadding + leftWidth + ColumnGap;
+                float leftY = 0f;
+                float rightY = 0f;
+
+                for (int i = 0; i < components.Count; i++)
+                {
+                    MechanoidMechanitorStoryComponentWorker worker = components[i].Worker;
+                    if (worker.DrawInRightColumn)
+                    {
+                        if (rightY > 0f)
+                        {
+                            rightY += MechanoidMechanitorStoryComponentWorker.CardGap;
+                        }
+
+                        float height = worker.GetHeight(context, rightWidth);
+                        worker.Draw(new Rect(rightX, rightY, rightWidth, height), context);
+                        rightY += height;
+                    }
+                    else
+                    {
+                        if (leftY > 0f)
+                        {
+                            leftY += MechanoidMechanitorStoryComponentWorker.CardGap;
+                        }
+
+                        float height = worker.GetHeight(context, leftWidth);
+                        worker.Draw(new Rect(leftX, leftY, leftWidth, height), context);
+                        leftY += height;
+                    }
+                }
+            }
+            else
+            {
+                float y = 0f;
+                for (int i = 0; i < components.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        y += MechanoidMechanitorStoryComponentWorker.CardGap;
+                    }
+
+                    MechanoidMechanitorStoryComponentWorker worker = components[i].Worker;
+                    float height = worker.GetHeight(context, availableWidth);
+                    worker.Draw(new Rect(HorizontalPadding, y, availableWidth, height), context);
+                    y += height;
+                }
             }
 
             Widgets.EndScrollView();

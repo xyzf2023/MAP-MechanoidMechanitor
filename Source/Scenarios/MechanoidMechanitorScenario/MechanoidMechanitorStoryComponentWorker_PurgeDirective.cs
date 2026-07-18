@@ -8,6 +8,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         private static readonly bool[] BooleanOptions = { false, true };
 
+        public override bool DrawInRightColumn => true;
+
         public override bool ShouldShow(MechanoidMechanitorStoryConfigurationContext context)
         {
             return context.HasMechHive;
@@ -40,7 +42,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context,
             float width)
         {
-            return MeasureDropdownSectionHeight(width);
+            return MeasureCardHeight(context, width);
         }
 
         public override void Draw(
@@ -53,23 +55,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ? MechanoidMechanitorStoryConfigurationLabels.EnabledLabel
                 : MechanoidMechanitorStoryConfigurationLabels.DisabledLabel;
 
-            DrawDropdownSection(
+            DrawCardHeaderAndDropdown(
                 rect,
                 context,
                 currentLabel,
                 canInteract,
-                BooleanOptions,
-                LabelForBoolean,
-                value =>
-                {
-                    if (configuration.purgeDirectiveEnabled == value)
+                () => OpenDropdownMenu(
+                    BooleanOptions,
+                    LabelForBoolean,
+                    value =>
                     {
-                        return;
-                    }
+                        if (configuration.purgeDirectiveEnabled == value)
+                        {
+                            return;
+                        }
 
-                    configuration.purgeDirectiveEnabled = value;
-                    NormalizeAfterChange(context);
-                });
+                        configuration.purgeDirectiveEnabled = value;
+                        NormalizeAfterChange(context);
+                    }));
         }
 
         private static string LabelForBoolean(bool value)
