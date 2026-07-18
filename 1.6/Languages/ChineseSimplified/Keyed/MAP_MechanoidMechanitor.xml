@@ -45,7 +45,7 @@
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>开始游戏</MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>
   <MAP_MechanoidMechanitor.Story.Component.OrdinaryFactionRelations.Description>设置本局与普通派系的关系总模式。选择“自定义”后可为每个派系单独配置。</MAP_MechanoidMechanitor.Story.Component.OrdinaryFactionRelations.Description>
   <MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description>设置本局与机械巢的关系模式。本阶段仅保存选项，不会修改实际派系关系。</MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description>
-  <MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>是否启用“肃清指令”流程。本阶段仅保存开关，不会触发任何任务或事件。</MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>
+  <MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>是否启用“肃清指令”路线。本阶段仅保存开关，不会触发任何任务或事件。</MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>
   <MAP_MechanoidMechanitor.Story.Component.GainTrustRoute.Description>是否启用“获取信任”路线。本阶段仅保存开关，不会触发任何任务或事件。</MAP_MechanoidMechanitor.Story.Component.GainTrustRoute.Description>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>默认</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>全部敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>
