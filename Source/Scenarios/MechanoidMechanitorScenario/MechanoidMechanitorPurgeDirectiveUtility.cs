@@ -6,12 +6,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public static class MechanoidMechanitorPurgeDirectiveUtility
     {
-        public static bool IsPurgeDirectiveActive =>
-            GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive;
+        private static string? lastFinalizationFailureReason;
 
         public static void Tick(GameComponent_MechanoidMechanitorStoryState storyState)
         {
-            if (storyState == null || !IsPurgeDirectiveActive)
+            if (storyState == null || !storyState.PurgeDirectiveEnabled)
             {
                 return;
             }
@@ -24,23 +23,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             int ticksGame = Find.TickManager.TicksGame;
+
+            if (runtime.FinalPenaltyTriggered)
+            {
+                if (runtime.RaidQueued)
+                {
+                    return;
+                }
+
+                if (ticksGame < runtime.NextFinalizationRetryTick)
+                {
+                    return;
+                }
+
+                if (!TryCompleteFinalRaidQueue(storyState, runtime))
+                {
+                    runtime.ScheduleFinalizationRetryFromNow();
+                }
+
+                return;
+            }
+
             if (ticksGame < runtime.NextCheckTick)
             {
                 return;
             }
 
             runtime.ScheduleNextCheckFromNow();
-
-            if (runtime.FinalPenaltyTriggered)
-            {
-                if (!runtime.RaidQueued)
-                {
-                    TryQueueFinalRaid(storyState, runtime, runtime.TrackedPawns);
-                }
-
-                return;
-            }
-
             RunProtocolCheck(storyState, runtime);
         }
 
@@ -203,15 +212,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             runtime.MarkFinalPenaltyTriggered();
             storyState.RebuildRuntimeCaches();
-
-            Faction? mechHive = storyState.CachedMechHive;
-            if (mechHive != null)
-            {
-                MechanoidMechanitorMechHiveRelationApplier.ApplyExactMechHiveRelation(
-                    mechHive,
-                    FactionRelationKind.Hostile,
-                    hostileOnHarmByPlayer: false);
-            }
+            runtime.RetainAliveTrackedPawns(aliveTracked);
 
             SendLetter(
                 "MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Label",
@@ -219,36 +220,132 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 LetterDefOf.ThreatBig,
                 aliveTracked);
 
-            TryQueueFinalRaid(storyState, runtime, aliveTracked);
-            runtime.ClearTrackedPawns();
+            if (!TryCompleteFinalRaidQueue(storyState, runtime))
+            {
+                runtime.ScheduleFinalizationRetryFromNow();
+            }
         }
 
-        private static void TryQueueFinalRaid(
+        private static bool TryCompleteFinalRaidQueue(
+            GameComponent_MechanoidMechanitorStoryState storyState,
+            MechanoidMechanitorPurgeDirectiveRuntimeState runtime)
+        {
+            if (runtime.RaidQueued)
+            {
+                return true;
+            }
+
+            if (!TryApplyAndVerifyFinalMechHiveHostile(storyState, out Faction mechHive))
+            {
+                return false;
+            }
+
+            if (!TryQueueFinalRaid(storyState, runtime, mechHive, runtime.TrackedPawns))
+            {
+                return false;
+            }
+
+            runtime.ClearFinalizationRetryTick();
+            runtime.ClearTrackedPawns();
+            lastFinalizationFailureReason = null;
+            return true;
+        }
+
+        private static bool TryApplyAndVerifyFinalMechHiveHostile(
+            GameComponent_MechanoidMechanitorStoryState storyState,
+            out Faction mechHive)
+        {
+            mechHive = null!;
+            storyState.RebuildRuntimeCaches();
+
+            Faction? cachedMechHive = storyState.CachedMechHive;
+            if (cachedMechHive == null)
+            {
+                NotifyFinalizationFailureOnce("missingMechHive");
+                return false;
+            }
+
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null)
+            {
+                NotifyFinalizationFailureOnce("missingPlayerFaction");
+                return false;
+            }
+
+            if (!ArePlayerAndMechHiveHostile(player, cachedMechHive))
+            {
+                if (!MechanoidMechanitorMechHiveRelationApplier.ApplyExactMechHiveRelation(
+                        cachedMechHive,
+                        FactionRelationKind.Hostile,
+                        hostileOnHarmByPlayer: false))
+                {
+                    NotifyFinalizationFailureOnce("applyHostileFailed");
+                    return false;
+                }
+
+                if (!ArePlayerAndMechHiveHostile(player, cachedMechHive))
+                {
+                    NotifyFinalizationFailureOnce("hostileVerificationFailed");
+                    return false;
+                }
+            }
+
+            mechHive = cachedMechHive;
+            return true;
+        }
+
+        private static bool ArePlayerAndMechHiveHostile(Faction player, Faction mechHive)
+        {
+            FactionRelation? playerRelation = player.RelationWith(mechHive, allowNull: true);
+            FactionRelation? mechRelation = mechHive.RelationWith(player, allowNull: true);
+            return playerRelation != null
+                && mechRelation != null
+                && playerRelation.kind == FactionRelationKind.Hostile
+                && mechRelation.kind == FactionRelationKind.Hostile;
+        }
+
+        private static bool TryQueueFinalRaid(
             GameComponent_MechanoidMechanitorStoryState storyState,
             MechanoidMechanitorPurgeDirectiveRuntimeState runtime,
+            Faction mechHive,
             List<Pawn>? preferredTargetPawns)
         {
             if (runtime.RaidQueued)
             {
-                return;
+                return true;
+            }
+
+            if (mechHive == null || !storyState.IsCurrentMechHive(mechHive))
+            {
+                NotifyFinalizationFailureOnce("missingMechHive");
+                return false;
+            }
+
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null)
+            {
+                NotifyFinalizationFailureOnce("missingPlayerFaction");
+                return false;
+            }
+
+            if (!ArePlayerAndMechHiveHostile(player, mechHive))
+            {
+                NotifyFinalizationFailureOnce("hostileVerificationFailed");
+                return false;
             }
 
             Map? targetMap = ResolveRaidTargetMap(preferredTargetPawns);
             if (targetMap == null)
             {
-                return;
-            }
-
-            Faction? mechHive = storyState.CachedMechHive;
-            if (mechHive == null)
-            {
-                return;
+                NotifyFinalizationFailureOnce("missingPlayerHomeMap");
+                return false;
             }
 
             Storyteller? storyteller = Find.Storyteller;
             if (storyteller?.incidentQueue == null)
             {
-                return;
+                NotifyFinalizationFailureOnce("missingIncidentQueue");
+                return false;
             }
 
             IncidentParms parms = new IncidentParms
@@ -265,10 +362,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         + MechanoidMechanitorPurgeDirectiveRuntimeState.FinalRaidDelayTicks,
                     parms))
             {
-                return;
+                NotifyFinalizationFailureOnce("incidentQueueAddFailed");
+                return false;
             }
 
             runtime.MarkRaidQueued();
+            return true;
         }
 
         private static Map? ResolveRaidTargetMap(List<Pawn>? preferredTargetPawns)
@@ -292,6 +391,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return Find.AnyPlayerHomeMap;
+        }
+
+        private static void NotifyFinalizationFailureOnce(string reason)
+        {
+            if (lastFinalizationFailureReason == reason)
+            {
+                return;
+            }
+
+            lastFinalizationFailureReason = reason;
+            Log.Warning(
+                "[MAP-机械族机械师] 肃清指令最终机械巢袭击尚未入队："
+                + DescribeFinalizationFailure(reason)
+                + "。将按低频重试，不会改用其他敌对派系。");
+        }
+
+        private static string DescribeFinalizationFailure(string reason)
+        {
+            return reason switch
+            {
+                "missingMechHive" => "当前没有可用的机械巢缓存",
+                "missingPlayerFaction" => "玩家派系不存在",
+                "applyHostileFailed" => "机械巢敌对关系写入失败",
+                "hostileVerificationFailed" => "机械巢敌对关系验证失败",
+                "missingPlayerHomeMap" => "当前没有有效的玩家殖民地地图",
+                "missingIncidentQueue" => "故事叙述者袭击队列不可用",
+                "incidentQueueAddFailed" => "袭击事件未能加入队列",
+                _ => reason
+            };
         }
 
         private static void SendLetter(
