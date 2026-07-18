@@ -1,15 +1,20 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
+    [StaticConstructorOnStartup]
     [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.GetMechGizmos))]
     public static class Patch_MechanitorUtility_GetMechGizmos_DataProcessingAllocation
     {
         private const string LabelKey = "MAP_DataProcessingAllocation_Label";
         private const string DescriptionKey = "MAP_DataProcessingAllocation_Desc";
+
+        private static readonly Texture2D DataProcessingAllocationIcon =
+            ContentFinder<Texture2D>.Get("UI/MM_DataProcessingAllocation");
 
         [HarmonyPostfix]
         public static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Pawn mech)
@@ -48,7 +53,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = LabelKey.Translate(),
                 defaultDesc = DescriptionKey.Translate(),
-                icon = TexCommand.Install,
+                icon = DataProcessingAllocationIcon,
                 action = delegate
                 {
                     Find.WindowStack.Add(new Dialog_DataProcessingAllocation(localOverseer));
