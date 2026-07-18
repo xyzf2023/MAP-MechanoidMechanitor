@@ -18,7 +18,7 @@
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
     <defName>MAP_StoryComponent_PurgeDirective</defName>
-    <label>流程：肃清指令</label>
+    <label>路线：肃清指令</label>
     <description>是否启用肃清指令流程。本阶段仅保存选项，不会产生实际剧情效果。</description>
     <displayOrder>300</displayOrder>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_PurgeDirective</workerClass>
