@@ -50,7 +50,6 @@
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>默认</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>全部敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>全部永久敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>
-  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllNeutral>全部中立</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllNeutral>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentNeutral>全部永久中立</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentNeutral>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllAlly>全部盟友</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllAlly>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentAlly>全部永久盟友</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentAlly>
@@ -58,7 +57,6 @@
   <MAP_MechanoidMechanitor.Story.FactionRelationOption.Default>默认</MAP_MechanoidMechanitor.Story.FactionRelationOption.Default>
   <MAP_MechanoidMechanitor.Story.FactionRelationOption.Hostile>敌对</MAP_MechanoidMechanitor.Story.FactionRelationOption.Hostile>
   <MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentHostile>永久敌对</MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentHostile>
-  <MAP_MechanoidMechanitor.Story.FactionRelationOption.Neutral>中立</MAP_MechanoidMechanitor.Story.FactionRelationOption.Neutral>
   <MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentNeutral>永久中立</MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentNeutral>
   <MAP_MechanoidMechanitor.Story.FactionRelationOption.Ally>盟友</MAP_MechanoidMechanitor.Story.FactionRelationOption.Ally>
   <MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentAlly>永久盟友</MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentAlly>

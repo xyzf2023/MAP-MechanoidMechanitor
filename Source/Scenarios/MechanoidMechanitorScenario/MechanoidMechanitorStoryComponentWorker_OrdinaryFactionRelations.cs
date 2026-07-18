@@ -12,7 +12,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorOrdinaryFactionRelationsMode.Default,
             MechanoidMechanitorOrdinaryFactionRelationsMode.AllHostile,
             MechanoidMechanitorOrdinaryFactionRelationsMode.AllPermanentHostile,
-            MechanoidMechanitorOrdinaryFactionRelationsMode.AllNeutral,
             MechanoidMechanitorOrdinaryFactionRelationsMode.AllPermanentNeutral,
             MechanoidMechanitorOrdinaryFactionRelationsMode.AllAlly,
             MechanoidMechanitorOrdinaryFactionRelationsMode.AllPermanentAlly,
@@ -24,7 +23,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorFactionRelationOption.Default,
             MechanoidMechanitorFactionRelationOption.Hostile,
             MechanoidMechanitorFactionRelationOption.PermanentHostile,
-            MechanoidMechanitorFactionRelationOption.Neutral,
             MechanoidMechanitorFactionRelationOption.PermanentNeutral,
             MechanoidMechanitorFactionRelationOption.Ally,
             MechanoidMechanitorFactionRelationOption.PermanentAlly
@@ -63,6 +61,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context)
         {
             MechanoidMechanitorStoryConfiguration configuration = context.Configuration;
+            bool drawFactionListThisFrame = configuration.ordinaryFactionRelationsMode
+                == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom;
             float width = rect.width;
             float y = DrawHeaderAndDescription(rect, width);
 
@@ -94,8 +94,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 y += OptionRowHeight;
             }
 
-            if (configuration.ordinaryFactionRelationsMode
-                != MechanoidMechanitorOrdinaryFactionRelationsMode.Custom)
+            if (!drawFactionListThisFrame)
             {
                 return;
             }
