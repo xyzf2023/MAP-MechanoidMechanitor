@@ -52,6 +52,7 @@ namespace MAP_MechanoidMechanitor
 
             if (workType == MechanicalChildcareUtility.ChildcareWorkType)
             {
+                // 已授权保育：仅走白名单，不得被 canBeDoneByMechs 绕过。
                 if (MechanicalChildcareUtility.IsAuthorized(pawn))
                 {
                     return workGiver != null
@@ -62,8 +63,13 @@ namespace MAP_MechanoidMechanitor
                     || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
             }
 
-            return canBeDoneByMechs
-                || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
+            // 其他工作：原版已允许机械族时立即放行，避免额外身份/组件查询。
+            if (canBeDoneByMechs)
+            {
+                return true;
+            }
+
+            return MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
                 || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
         }
 

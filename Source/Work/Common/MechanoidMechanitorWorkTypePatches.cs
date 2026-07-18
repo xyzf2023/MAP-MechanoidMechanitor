@@ -22,27 +22,44 @@ namespace MAP_MechanoidMechanitor
             WorkTypeDef? warden = WardenWorkUtility.WardenWorkType;
             WorkTypeDef? handling = AnimalHandlingWorkUtility.HandlingWorkType;
             WorkTypeDef? childcare = MechanicalChildcareUtility.ChildcareWorkType;
-            bool isAcquiredMechanitor =
-                MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(__instance);
+            bool acquiredMechanitorChecked = false;
+            bool isAcquiredMechanitor = false;
 
             for (int i = __result.Count - 1; i >= 0; i--)
             {
                 WorkTypeDef workType = __result[i];
-                bool authorizedWarden =
-                    warden != null
-                    && workType == warden
-                    && WardenWorkUtility.IsAuthorized(__instance);
-                bool authorizedHandling =
-                    handling != null
-                    && workType == handling
-                    && AnimalHandlingWorkUtility.IsAuthorized(__instance);
-                bool authorizedChildcare =
-                    childcare != null
-                    && workType == childcare
-                    && MechanicalChildcareUtility.IsAuthorized(__instance);
-                bool acquiredRoleWorkType =
-                    isAcquiredMechanitor
-                    && MechanoidMechanitorRoleUtility.IsRoleWorkType(workType);
+
+                bool authorizedWarden = false;
+                if (warden != null && workType == warden)
+                {
+                    authorizedWarden = WardenWorkUtility.IsAuthorized(__instance);
+                }
+
+                bool authorizedHandling = false;
+                if (handling != null && workType == handling)
+                {
+                    authorizedHandling = AnimalHandlingWorkUtility.IsAuthorized(__instance);
+                }
+
+                bool authorizedChildcare = false;
+                if (childcare != null && workType == childcare)
+                {
+                    authorizedChildcare = MechanicalChildcareUtility.IsAuthorized(__instance);
+                }
+
+                bool acquiredRoleWorkType = false;
+                if (MechanoidMechanitorRoleUtility.IsRoleWorkType(workType))
+                {
+                    if (!acquiredMechanitorChecked)
+                    {
+                        isAcquiredMechanitor =
+                            MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(
+                                __instance);
+                        acquiredMechanitorChecked = true;
+                    }
+
+                    acquiredRoleWorkType = isAcquiredMechanitor;
+                }
 
                 if (!authorizedWarden
                     && !authorizedHandling

@@ -22,8 +22,9 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (MapHasVisibleMapNode(currentMap.mapPawns.SpawnedPawnsInFaction(Faction.OfPlayer))
-                || MapHasVisibleMapNode(currentMap.mapPawns.PawnsInFaction(Faction.OfPlayer)))
+            // PawnsInFaction = AllPawns 中该派系成员（含已生成与容器内未生成），
+            // 是 SpawnedPawnsInFaction 的超集；单次扫描不会漏掉有效机械师节点。
+            if (MapHasVisibleMapNode(currentMap.mapPawns.PawnsInFaction(Faction.OfPlayer)))
             {
                 __result = false;
             }

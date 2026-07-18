@@ -39,13 +39,12 @@ namespace MAP_MechanoidMechanitor
             return MechanoidMechanitorRoleUtility.AllowsWorkTab(pawn);
         }
 
+        /// <summary>
+        /// 仅为已确认可显示于工作面板的 Pawn 补齐 guest/workSettings。
+        /// 调用方须先通过 <see cref="PawnCanShowInWorkTab"/>；本方法不再重复资格查询。
+        /// </summary>
         public static void EnsureWorkSettingsForWorkTab(Pawn pawn)
         {
-            if (!PawnCanShowInWorkTab(pawn))
-            {
-                return;
-            }
-
             if (pawn.guest == null)
             {
                 pawn.guest = new Pawn_GuestTracker(pawn);
@@ -60,17 +59,25 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            bool createdOrInitializedWorkSettings = false;
+
             if (pawn.workSettings == null)
             {
                 pawn.workSettings = new Pawn_WorkSettings(pawn);
+                createdOrInitializedWorkSettings = true;
             }
 
             if (!pawn.workSettings.Initialized)
             {
                 pawn.workSettings.EnableAndInitialize();
+                createdOrInitializedWorkSettings = true;
             }
 
-            MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
+            // 仅在新建或首次初始化工作设置时限制可用类型，避免刷新面板时重置玩家优先级。
+            if (createdOrInitializedWorkSettings)
+            {
+                MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
+            }
         }
     }
 }
