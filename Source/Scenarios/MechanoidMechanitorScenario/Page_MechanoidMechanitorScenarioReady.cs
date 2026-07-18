@@ -178,7 +178,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 style.LabelCap);
             Text.Anchor = previousAnchor;
 
-            if (style.iconThingDef != null)
+            Texture2D? customIcon = style.IconTexture;
+            if (customIcon != null)
+            {
+                Rect iconRect = new Rect(
+                    rect.x + (rect.width - StoryStyleIconSize) / 2f,
+                    rect.y + Text.LineHeight + IdeoBoxMargin,
+                    StoryStyleIconSize,
+                    StoryStyleIconSize);
+                Widgets.DrawTextureFitted(iconRect, customIcon, 1f);
+            }
+            else if (style.iconThingDef != null)
             {
                 Rect iconRect = new Rect(
                     rect.x + (rect.width - StoryStyleIconSize) / 2f,
