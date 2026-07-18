@@ -38,7 +38,8 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 当前游戏中已注册机械族机械师的只读缓存；无游戏或注册表时返回空列表。
+        /// 当前游戏中已注册且活跃的机械族机械师只读缓存（排除 Dead/Destroyed）。
+        /// 无游戏或注册表时返回空列表。调试窗口应改用 GetPersistentRecordSnapshot()。
         /// </summary>
         public static IReadOnlyList<Pawn> CurrentRegisteredMechanitors
         {
@@ -130,6 +131,181 @@ namespace MAP_MechanoidMechanitor
             }
 
             record = candidate;
+            return true;
+        }
+
+        /// <summary>
+        /// 是否存在持久化机械师记录（含死亡/尸体中/离图；不含 Discarded）。
+        /// </summary>
+        public static bool HasPersistentRecord(Pawn? pawn)
+        {
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (registry == null || pawn == null || pawn.Discarded)
+            {
+                return false;
+            }
+
+            return registry.FindRecordForPawn(pawn) != null;
+        }
+
+        /// <summary>
+        /// 持久化记录快照：供调试窗口读取真实存档记录，而非活跃缓存。
+        /// 包含死亡、尸体中、远行队、未生成与暂时离图；排除空记录与 Discarded。
+        /// </summary>
+        public static IReadOnlyList<MechanoidMechanitorRegistrySnapshotEntry>
+            GetPersistentRecordSnapshot()
+        {
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (registry == null)
+            {
+                return Array.Empty<MechanoidMechanitorRegistrySnapshotEntry>();
+            }
+
+            List<MechanoidMechanitorRegistrySnapshotEntry> snapshot =
+                new List<MechanoidMechanitorRegistrySnapshotEntry>();
+            List<MechanoidMechanitorRecord> records = registry.mechanitorRecords;
+            for (int i = 0; i < records.Count; i++)
+            {
+                MechanoidMechanitorRecord? record = records[i];
+                Pawn? pawn = record?.Pawn;
+                if (record == null || pawn == null || pawn.Discarded)
+                {
+                    continue;
+                }
+
+                snapshot.Add(new MechanoidMechanitorRegistrySnapshotEntry(
+                    pawn,
+                    record.Origin,
+                    ReferenceEquals(registry.mechanicalConsciousnessHost, pawn)));
+            }
+
+            return snapshot;
+        }
+
+        /// <summary>
+        /// 开发者模式统一注册入口。同步由注册表与现有权威升格流程负责。
+        /// </summary>
+        public static bool TryRegisterFromDebug(Pawn? pawn)
+        {
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (registry == null
+                || pawn == null
+                || pawn.Dead
+                || pawn.Destroyed
+                || pawn.Discarded
+                || pawn.RaceProps == null
+                || !pawn.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            if (registry.FindRecordForPawn(pawn) != null)
+            {
+                return false;
+            }
+
+            if (MechanoidMechanitorRoleUtility.HasNativeMechanitorMarker(pawn))
+            {
+                if (!EnsureNativeMechanitorRecord(pawn))
+                {
+                    return false;
+                }
+
+                try
+                {
+                    MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
+                    NotifyScenarioColonistDisplaysIfNeeded();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 调试注册原生机械族机械师后状态同步失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                    return false;
+                }
+
+                return true;
+            }
+
+            return MechanoidMechanitorRoleUtility.PromoteToAcquiredMechanoidMechanitor(pawn);
+        }
+
+        /// <summary>
+        /// 开发者模式统一删除入口。由注册表删除记录并收尾身份健康状态与派生同步。
+        /// </summary>
+        public static bool TryUnregisterFromDebug(Pawn? pawn)
+        {
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (registry == null || pawn == null)
+            {
+                return false;
+            }
+
+            MechanoidMechanitorRecord? record = registry.FindRecordForPawn(pawn);
+            if (record == null)
+            {
+                return false;
+            }
+
+            MechanoidMechanitorOrigin origin = record.Origin;
+            bool wasHost = ReferenceEquals(registry.mechanicalConsciousnessHost, pawn);
+
+            registry.RemoveRecordForPawnInternal(pawn);
+            registry.pendingMechanitorInitializations.Remove(pawn);
+
+            if (wasHost)
+            {
+                registry.mechanicalConsciousnessHost = null;
+            }
+
+            try
+            {
+                HediffDef? consciousnessDef = GetMechanicalConsciousnessHediffDef();
+                if (consciousnessDef != null)
+                {
+                    RemoveAllHediffsFromPawn(pawn, consciousnessDef, "机械意识");
+                }
+
+                if (origin == MechanoidMechanitorOrigin.Acquired)
+                {
+                    HediffDef? acquiredDef =
+                        MechanoidMechanitorRoleUtility.GetAcquiredIdentityDef();
+                    if (acquiredDef != null)
+                    {
+                        RemoveAllHediffsFromPawn(pawn, acquiredDef, "机械族机械师");
+                    }
+                }
+                else if (origin == MechanoidMechanitorOrigin.Native)
+                {
+                    HediffDef? nativeDef = GetNativeMechanitorHediffDef();
+                    if (nativeDef != null)
+                    {
+                        RemoveAllHediffsFromPawn(pawn, nativeDef, "先天机械族机械师");
+                    }
+                }
+
+                registry.SynchronizeMechanicalConsciousnessHediff();
+
+                // 尸体 InnerPawn 为 Destroyed，业务同步跳过；健康状态已在上方按 Origin 清理。
+                if (!pawn.Destroyed && !pawn.Discarded)
+                {
+                    MechanoidMechanitorSelfWorkModeUtility.SyncSelfWorkModeEffects(pawn);
+                    pawn.Notify_DisabledWorkTypesChanged();
+                    PawnComponentsUtility.AddAndRemoveDynamicComponents(
+                        pawn,
+                        actAsIfSpawned: true);
+                    pawn.mechanitor?.Notify_BandwidthChanged();
+                }
+
+                NotifyScenarioColonistDisplaysIfNeeded();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 调试删除机械族机械师记录后状态同步失败：" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+            }
+
             return true;
         }
 
@@ -496,6 +672,12 @@ namespace MAP_MechanoidMechanitor
         public override void ExposeData()
         {
             base.ExposeData();
+            if (Scribe.mode == LoadSaveMode.Saving)
+            {
+                // 仅清理永久 Discarded；不得因 Destroyed/Dead 误删可复活尸体中的记录。
+                CleanupRecords();
+            }
+
             Scribe_Collections.Look(
                 ref mechanitorRecords,
                 "mechanitorRecords",
@@ -624,6 +806,12 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        /// <summary>
+        /// 移除空记录、空 Pawn 引用，以及已经永久 Discarded 的 Pawn。
+        /// 死亡、位于尸体中、未生成、远行队中或暂时离图的 Pawn 仍保留记录。
+        /// 不可用 Destroyed 判断：尸体中的 InnerPawn 同样处于 Destroyed，但仍可复活。
+        /// 永久清理应使用 Discarded。
+        /// </summary>
         private void CleanupRecords()
         {
             mechanitorRecords ??= new List<MechanoidMechanitorRecord>();
@@ -632,7 +820,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = mechanitorRecords.Count - 1; i >= 0; i--)
             {
                 MechanoidMechanitorRecord record = mechanitorRecords[i];
-                if (record == null || record.Pawn == null || record.Pawn.Destroyed)
+                if (record == null || record.Pawn == null || record.Pawn.Discarded)
                 {
                     mechanitorRecords.RemoveAt(i);
                 }
@@ -672,7 +860,8 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanoidMechanitorRecord record = mechanitorRecords[i];
                 Pawn? pawn = record.Pawn;
-                if (pawn != null && !pawn.Destroyed)
+                // 排除永久 Discarded；尸体中的死亡 Pawn（Destroyed 但仍可复活）保留索引。
+                if (pawn != null && !pawn.Discarded)
                 {
                     recordByPawn[pawn] = record;
                 }
@@ -710,6 +899,10 @@ namespace MAP_MechanoidMechanitor
             registeredMechanitorsReadOnlyCache = null;
         }
 
+        /// <summary>
+        /// 活跃机械师缓存：排除 Dead / Destroyed（含尸体 InnerPawn）。
+        /// 调试管理窗口必须改读持久化记录快照，不得仅依赖本缓存。
+        /// </summary>
         private void EnsureRegisteredMechanitorsCache()
         {
             if (registeredMechanitorsReadOnlyCache != null)
@@ -721,7 +914,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < mechanitorRecords.Count; i++)
             {
                 Pawn? pawn = mechanitorRecords[i].Pawn;
-                if (pawn != null && !pawn.Destroyed)
+                if (pawn != null && !pawn.Dead && !pawn.Destroyed)
                 {
                     registeredMechanitorsCache.Add(pawn);
                 }
@@ -767,9 +960,13 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < mechanitorRecords.Count; i++)
             {
                 MechanoidMechanitorRecord candidate = mechanitorRecords[i];
-                if (ReferenceEquals(candidate.Pawn, pawn))
+                if (candidate != null && ReferenceEquals(candidate.Pawn, pawn))
                 {
-                    recordByPawn[pawn] = candidate;
+                    if (!pawn.Discarded)
+                    {
+                        recordByPawn[pawn] = candidate;
+                    }
+
                     return candidate;
                 }
             }
