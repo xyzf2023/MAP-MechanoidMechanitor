@@ -251,11 +251,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             goodwill = 0;
             relationKind = FactionRelationKind.Neutral;
 
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
-            {
-                return false;
-            }
-
             GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
             if (component == null
                 || !component.initialOrdinaryFactionRelationsApplied
@@ -493,7 +488,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             for (int i = 0; i < settings.Count; i++)
             {
                 MechanoidMechanitorFactionRelationSetting? setting = settings[i];
-                if (setting == null)
+                if (setting?.faction == null
+                    || !ordinaryFactionCache.Contains(setting.faction))
                 {
                     continue;
                 }
