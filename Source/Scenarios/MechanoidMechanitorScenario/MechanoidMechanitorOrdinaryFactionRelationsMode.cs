@@ -5,10 +5,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         Default = 0,
         AllHostile = 1,
         AllPermanentHostile = 2,
-        AllNeutral = 3,
-        AllPermanentNeutral = 4,
-        AllAlly = 5,
-        AllPermanentAlly = 6,
-        Custom = 7
+        AllPermanentNeutral = 3,
+        AllAlly = 4,
+        AllPermanentAlly = 5,
+        Custom = 6
     }
 }

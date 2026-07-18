@@ -51,16 +51,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         protected float DrawHeaderAndDescription(Rect rect, float width)
         {
-            float y = rect.y;
-            Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(rect.x, y, width, Text.LineHeight), def.LabelCap);
-            y += Text.LineHeight + 2f;
-            Text.Font = GameFont.Small;
+            MeasureHeaderAndDescriptionHeights(
+                width,
+                out float titleHeight,
+                out float descriptionHeight);
 
+            GameFont previousFont = Text.Font;
+            float y = rect.y;
+
+            Text.Font = GameFont.Medium;
+            Widgets.Label(new Rect(rect.x, y, width, titleHeight), def.LabelCap);
+            y += titleHeight + 2f;
+
+            Text.Font = GameFont.Small;
             TaggedString description = GetDescription();
-            float descriptionHeight = Text.CalcHeight(description, width);
             Widgets.Label(new Rect(rect.x, y, width, descriptionHeight), description);
             y += descriptionHeight + SectionGap;
+
+            Text.Font = previousFont;
             return y;
         }
 
@@ -71,10 +79,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         protected float MeasureHeaderAndDescription(float width)
         {
-            float height = Text.LineHeight + 2f;
-            height += Text.CalcHeight(GetDescription(), width);
-            height += SectionGap;
-            return height;
+            MeasureHeaderAndDescriptionHeights(
+                width,
+                out float titleHeight,
+                out float descriptionHeight);
+            return titleHeight + 2f + descriptionHeight + SectionGap;
+        }
+
+        protected void MeasureHeaderAndDescriptionHeights(
+            float width,
+            out float titleHeight,
+            out float descriptionHeight)
+        {
+            GameFont previousFont = Text.Font;
+
+            Text.Font = GameFont.Medium;
+            titleHeight = Text.CalcHeight(def.LabelCap, width);
+
+            Text.Font = GameFont.Small;
+            descriptionHeight = Text.CalcHeight(GetDescription(), width);
+
+            Text.Font = previousFont;
         }
 
         protected bool DrawRadioOption(

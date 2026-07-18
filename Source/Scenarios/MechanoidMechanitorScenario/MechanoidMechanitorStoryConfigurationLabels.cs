@@ -18,9 +18,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidMechanitorOrdinaryFactionRelationsMode.AllPermanentHostile =>
                     "MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile"
                         .Translate(),
-                MechanoidMechanitorOrdinaryFactionRelationsMode.AllNeutral =>
-                    "MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllNeutral"
-                        .Translate(),
                 MechanoidMechanitorOrdinaryFactionRelationsMode.AllPermanentNeutral =>
                     "MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentNeutral"
                         .Translate(),
@@ -48,8 +45,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidMechanitorFactionRelationOption.PermanentHostile =>
                     "MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentHostile"
                         .Translate(),
-                MechanoidMechanitorFactionRelationOption.Neutral =>
-                    "MAP_MechanoidMechanitor.Story.FactionRelationOption.Neutral".Translate(),
                 MechanoidMechanitorFactionRelationOption.PermanentNeutral =>
                     "MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentNeutral"
                         .Translate(),

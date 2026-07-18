@@ -89,7 +89,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfiguration configuration)
         {
             selectedStoryStyle = storyStyle;
-            activeConfiguration = configuration;
+            activeConfiguration = configuration.CreateCopy();
         }
 
         public static bool IsStoryStyleActive(MechanoidMechanitorStoryStyleDef? storyStyle)

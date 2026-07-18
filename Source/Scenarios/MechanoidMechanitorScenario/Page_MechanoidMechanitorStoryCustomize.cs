@@ -149,7 +149,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            component.SetStoryStyleForNewGame(customStyle, configurationDraft.CreateCopy());
+            component.SetStoryStyleForNewGame(customStyle, configurationDraft);
             return true;
         }
 

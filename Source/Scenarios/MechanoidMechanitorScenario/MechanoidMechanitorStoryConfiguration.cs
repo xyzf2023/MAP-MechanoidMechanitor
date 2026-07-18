@@ -138,7 +138,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 case MechanoidMechanitorOrdinaryFactionRelationsMode.Default:
                 case MechanoidMechanitorOrdinaryFactionRelationsMode.AllHostile:
-                case MechanoidMechanitorOrdinaryFactionRelationsMode.AllNeutral:
                     return true;
 
                 case MechanoidMechanitorOrdinaryFactionRelationsMode.AllPermanentHostile:
@@ -226,8 +225,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorFactionRelationOption option)
         {
             return option == MechanoidMechanitorFactionRelationOption.Default
-                || option == MechanoidMechanitorFactionRelationOption.Hostile
-                || option == MechanoidMechanitorFactionRelationOption.Neutral;
+                || option == MechanoidMechanitorFactionRelationOption.Hostile;
         }
     }
 }
