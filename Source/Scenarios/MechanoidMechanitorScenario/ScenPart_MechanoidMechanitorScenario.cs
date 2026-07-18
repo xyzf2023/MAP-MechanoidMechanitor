@@ -47,18 +47,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             GameComponent_MechanoidMechanitorStoryState? storyState =
                 Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
-            if (storyState == null || !GameComponent_MechanoidMechanitorStoryState.HasActiveConfiguration)
+            if (storyState == null
+                || !GameComponent_MechanoidMechanitorStoryState.HasActiveConfiguration)
             {
                 return;
             }
 
-            if (storyState.InitialOrdinaryFactionRelationsApplied)
+            if (!storyState.InitialOrdinaryFactionRelationsApplied)
             {
-                return;
+                MechanoidMechanitorOrdinaryFactionRelationApplier
+                    .ApplyInitialOrdinaryFactionRelations(storyState);
             }
 
-            MechanoidMechanitorOrdinaryFactionRelationApplier
-                .ApplyInitialOrdinaryFactionRelations(storyState);
+            if (!storyState.InitialMechHiveRelationApplied)
+            {
+                MechanoidMechanitorMechHiveRelationApplier
+                    .ApplyInitialMechHiveRelation(storyState);
+            }
         }
 
         public override string Summary(Scenario scen)
