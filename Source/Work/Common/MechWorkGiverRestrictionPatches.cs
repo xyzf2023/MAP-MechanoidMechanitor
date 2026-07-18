@@ -52,11 +52,10 @@ namespace MAP_MechanoidMechanitor
 
             if (workType == MechanicalChildcareUtility.ChildcareWorkType)
             {
-                // 已授权保育：仅走白名单，不得被 canBeDoneByMechs 绕过。
+                // 已授权保育：仅走白名单，不得被 canBeDoneByMechs 绕过；授权只查一次。
                 if (MechanicalChildcareUtility.IsAuthorized(pawn))
                 {
-                    return workGiver != null
-                        && MechanicalChildcareUtility.AllowsWorkGiver(pawn, workGiver.def);
+                    return MechanicalChildcareUtility.IsAllowedWorkGiver(workGiver?.def);
                 }
 
                 return canBeDoneByMechs

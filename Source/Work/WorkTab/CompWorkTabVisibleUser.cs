@@ -50,6 +50,12 @@ namespace MAP_MechanoidMechanitor
                 pawn.guest = new Pawn_GuestTracker(pawn);
             }
 
+            // 已初始化：刷新面板时不查询后天机械师身份或 WorkTab 组件。
+            if (pawn.workSettings?.Initialized == true)
+            {
+                return;
+            }
+
             CompWorkTabVisibleUser? comp = pawn.GetComp<CompWorkTabVisibleUser>();
             bool shouldEnsureWorkSettings =
                 MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn)
