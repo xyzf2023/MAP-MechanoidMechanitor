@@ -9,11 +9,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public const int FinalRaidDelayTicks = 2500;
 
+        public const int FinalizationRetryIntervalTicks = 250;
+
         public const int HumanlikeDeathRewardPoints = 15;
 
         private int purgeDirectiveRewardPoints;
 
         private int nextPurgeDirectiveCheckTick;
+
+        private int nextPurgeDirectiveFinalizationRetryTick;
 
         private List<Pawn> purgeDirectiveTrackedPawns = new List<Pawn>();
 
@@ -26,6 +30,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int RewardPoints => purgeDirectiveRewardPoints;
 
         public int NextCheckTick => nextPurgeDirectiveCheckTick;
+
+        public int NextFinalizationRetryTick => nextPurgeDirectiveFinalizationRetryTick;
 
         public List<Pawn> TrackedPawns => purgeDirectiveTrackedPawns;
 
@@ -42,6 +48,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             purgeDirectiveOrangeWarningsSent = 0;
             purgeDirectiveFinalPenaltyTriggered = false;
             purgeDirectiveRaidQueued = false;
+            nextPurgeDirectiveFinalizationRetryTick = 0;
             nextPurgeDirectiveCheckTick = purgeDirectiveEnabled
                 ? Find.TickManager.TicksGame + ProtocolCheckIntervalTicks
                 : 0;
@@ -118,6 +125,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Find.TickManager.TicksGame + ProtocolCheckIntervalTicks;
         }
 
+        public void ScheduleFinalizationRetryFromNow()
+        {
+            nextPurgeDirectiveFinalizationRetryTick =
+                Find.TickManager.TicksGame + FinalizationRetryIntervalTicks;
+        }
+
+        public void ClearFinalizationRetryTick()
+        {
+            nextPurgeDirectiveFinalizationRetryTick = 0;
+        }
+
         public void CleanupTrackedPawns()
         {
             if (purgeDirectiveTrackedPawns == null)
@@ -146,6 +164,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(
                 ref nextPurgeDirectiveCheckTick,
                 "nextPurgeDirectiveCheckTick",
+                0);
+            Scribe_Values.Look(
+                ref nextPurgeDirectiveFinalizationRetryTick,
+                "nextPurgeDirectiveFinalizationRetryTick",
                 0);
             Scribe_Collections.Look(
                 ref purgeDirectiveTrackedPawns,

@@ -190,13 +190,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool TryAddPurgeDirectiveRewardPoints(int amount)
         {
-            if (amount <= 0 || !IsPurgeDirectiveActive)
+            if (amount <= 0
+                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
             {
                 return false;
             }
 
             GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
-            if (component?.purgeDirectiveRuntimeState == null)
+            if (component == null
+                || !component.PurgeDirectiveEnabled
+                || component.purgeDirectiveRuntimeState == null)
             {
                 return false;
             }
