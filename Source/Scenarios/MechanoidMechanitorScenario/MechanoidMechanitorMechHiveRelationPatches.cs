@@ -1,4 +1,3 @@
-using System;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -55,23 +54,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 mechHive,
                 relationKind,
                 hostileOnHarmByPlayer: false);
-        }
-    }
-
-    [HarmonyPatch(typeof(FactionManager), "Remove", new Type[] { typeof(Faction) })]
-    public static class MechanoidMechanitorMechHiveRelation_FactionManagerRemove_Patch
-    {
-        [HarmonyPostfix]
-        public static void Postfix(Faction faction)
-        {
-            if (Current.Game == null)
-            {
-                return;
-            }
-
-            GameComponent_MechanoidMechanitorStoryState? storyState =
-                Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
-            storyState?.RebuildRuntimeCaches();
         }
     }
 }
