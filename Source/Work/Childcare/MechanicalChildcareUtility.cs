@@ -33,6 +33,19 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            return IsAllowedWorkGiver(workGiver);
+        }
+
+        /// <summary>
+        /// 纯白名单检查。调用方须已确认保育授权，本方法不再查询注册表。
+        /// </summary>
+        internal static bool IsAllowedWorkGiver(WorkGiverDef? workGiver)
+        {
+            if (workGiver == null)
+            {
+                return false;
+            }
+
             EnsureAllowedWorkGiversInitialized();
             return allowedWorkGivers!.Contains(workGiver);
         }
