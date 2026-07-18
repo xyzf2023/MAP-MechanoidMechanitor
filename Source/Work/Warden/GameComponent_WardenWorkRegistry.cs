@@ -52,7 +52,7 @@ namespace MAP_MechanoidMechanitor
         public static void Revoke(Pawn? pawn)
         {
             GameComponent_WardenWorkRegistry? registry = CurrentRegistry;
-            if (registry == null || pawn == null || pawn.Destroyed)
+            if (registry == null || pawn == null || pawn.Discarded)
             {
                 return;
             }
@@ -63,6 +63,12 @@ namespace MAP_MechanoidMechanitor
             }
 
             registry.RemoveRecordForPawn(pawn);
+
+            // 死亡/尸体中等 Destroyed 但未 Discarded：只清理持久记录，不碰 workSettings。
+            if (pawn.Dead || pawn.Destroyed)
+            {
+                return;
+            }
 
             if (WardenWorkUtility.IsAuthorized(pawn))
             {
