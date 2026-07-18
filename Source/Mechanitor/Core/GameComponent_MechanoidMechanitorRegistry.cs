@@ -206,25 +206,49 @@ namespace MAP_MechanoidMechanitor
 
             if (MechanoidMechanitorRoleUtility.HasNativeMechanitorMarker(pawn))
             {
-                if (!EnsureNativeMechanitorRecord(pawn))
+                if (!EnsureNativeMechanitorRecord(pawn) || !HasPersistentRecord(pawn))
                 {
                     return false;
+                }
+
+                // 注册表已提交：后续同步异常只记日志，仍返回成功，避免“失败但已有记录”。
+                try
+                {
+                    MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 调试注册原生机械族机械师后状态同步失败：" +
+                        $"phase=GrantAndEnsureInfrastructure，" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
                 }
 
                 try
                 {
                     MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 调试注册原生机械族机械师后状态同步失败：" +
+                        $"phase=EnsureRoleState，" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                }
+
+                try
+                {
                     NotifyScenarioColonistDisplaysIfNeeded();
                 }
                 catch (Exception ex)
                 {
                     Log.Error(
                         "[MAP-机械族机械师] 调试注册原生机械族机械师后状态同步失败：" +
+                        $"phase=NotifyScenarioColonistDisplays，" +
                         $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
-                    return false;
                 }
 
-                return true;
+                return HasPersistentRecord(pawn);
             }
 
             return MechanoidMechanitorRoleUtility.PromoteToAcquiredMechanoidMechanitor(pawn);
@@ -249,6 +273,18 @@ namespace MAP_MechanoidMechanitor
 
             MechanoidMechanitorOrigin origin = record.Origin;
             bool wasHost = ReferenceEquals(registry.mechanicalConsciousnessHost, pawn);
+
+            // 原生/后天均撤销附属动态工作授权；单个注册表失败不阻止主记录删除。
+            try
+            {
+                MechanoidMechanitorWorkAuthorizationUtility.RevokeGrantedAuthorizations(pawn);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 调试删除机械族机械师时撤销工作授权异常：" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+            }
 
             registry.RemoveRecordForPawnInternal(pawn);
             registry.pendingMechanitorInitializations.Remove(pawn);

@@ -19,6 +19,8 @@ namespace MAP_MechanoidMechanitor
         }
 
         private const float TitleHeight = 32f;
+        private const float RefreshButtonWidth = 72f;
+        private const float RefreshButtonHeight = 28f;
         private const float RowHeight = 52f;
         private const float DeleteButtonWidth = 64f;
 
@@ -55,10 +57,27 @@ namespace MAP_MechanoidMechanitor
                 contentRect.yMax -= CloseButSize.y + 8f;
 
                 Text.Font = GameFont.Medium;
-                Text.Anchor = TextAnchor.UpperLeft;
+                Text.Anchor = TextAnchor.MiddleLeft;
                 Widgets.Label(
-                    new Rect(contentRect.x, contentRect.y, contentRect.width, TitleHeight),
+                    new Rect(
+                        contentRect.x,
+                        contentRect.y,
+                        contentRect.width - RefreshButtonWidth - 8f,
+                        TitleHeight),
                     "角色注册表");
+
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.UpperLeft;
+                Rect refreshRect = new Rect(
+                    contentRect.xMax - RefreshButtonWidth,
+                    contentRect.y + (TitleHeight - RefreshButtonHeight) / 2f,
+                    RefreshButtonWidth,
+                    RefreshButtonHeight);
+                if (Widgets.ButtonText(refreshRect, "刷新"))
+                {
+                    scrollPosition = Vector2.zero;
+                    RefreshSnapshots();
+                }
 
                 // TabDrawer 会把分页绘制在 sectionRect 上方 32px。
                 float curY = contentRect.y + TitleHeight + 4f + TabDrawer.TabHeight;
