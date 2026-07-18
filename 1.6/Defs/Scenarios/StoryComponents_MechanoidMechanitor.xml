@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+    <defName>MAP_StoryComponent_OrdinaryFactionRelations</defName>
+    <label>普通派系关系</label>
+    <description>配置本局与普通派系的初始关系模式。</description>
+    <displayOrder>100</displayOrder>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_OrdinaryFactionRelations</workerClass>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+    <defName>MAP_StoryComponent_MechHiveRelation</defName>
+    <label>与机械巢关系</label>
+    <description>配置本局与机械巢的关系模式。</description>
+    <displayOrder>200</displayOrder>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_MechHiveRelation</workerClass>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+    <defName>MAP_StoryComponent_PurgeDirective</defName>
+    <label>流程：肃清指令</label>
+    <description>是否启用肃清指令流程。本阶段仅保存选项，不会产生实际剧情效果。</description>
+    <displayOrder>300</displayOrder>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_PurgeDirective</workerClass>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+    <defName>MAP_StoryComponent_GainTrustRoute</defName>
+    <label>路线：获取信任</label>
+    <description>是否启用获取信任路线。本阶段仅保存选项，不会产生实际剧情效果。</description>
+    <displayOrder>400</displayOrder>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_GainTrustRoute</workerClass>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+</Defs>

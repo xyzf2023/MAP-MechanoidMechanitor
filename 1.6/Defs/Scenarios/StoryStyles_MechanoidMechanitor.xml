@@ -6,6 +6,12 @@
     <description>经典的游戏体验。不启用任何额外故事线，体验完全自由的机械族殖民地。</description>
     <displayOrder>100</displayOrder>
     <iconPath>UI/Classic</iconPath>
+    <presetConfiguration>
+      <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
+      <mechHiveRelationMode>Default</mechHiveRelationMode>
+      <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
+      <gainTrustRouteEnabled>false</gainTrustRouteEnabled>
+    </presetConfiguration>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
@@ -14,5 +20,25 @@
     <description>敬请期待</description>
     <displayOrder>200</displayOrder>
     <iconThingDef>Wastepack</iconThingDef>
+    <presetConfiguration>
+      <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
+      <mechHiveRelationMode>Default</mechHiveRelationMode>
+      <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
+      <gainTrustRouteEnabled>false</gainTrustRouteEnabled>
+    </presetConfiguration>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
+
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
+    <defName>MAP_StoryStyle_Custom</defName>
+    <label>自定义</label>
+    <description>自由组合本局启用的剧情组件。</description>
+    <displayOrder>300</displayOrder>
+    <opensCustomizePage>true</opensCustomizePage>
+    <presetConfiguration>
+      <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
+      <mechHiveRelationMode>Default</mechHiveRelationMode>
+      <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
+      <gainTrustRouteEnabled>false</gainTrustRouteEnabled>
+    </presetConfiguration>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
 </Defs>

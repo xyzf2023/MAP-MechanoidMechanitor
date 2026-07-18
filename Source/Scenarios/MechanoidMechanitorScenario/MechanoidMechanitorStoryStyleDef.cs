@@ -12,6 +12,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [NoTranslate]
         public string? iconPath;
 
+        public bool opensCustomizePage;
+
+        public MechanoidMechanitorStoryConfigurationPreset? presetConfiguration;
+
         [Unsaved(false)]
         private Texture2D? cachedIconTexture;
 
@@ -35,6 +39,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 return cachedIconTexture;
             }
+        }
+
+        public MechanoidMechanitorStoryConfiguration CreateConfigurationSnapshot()
+        {
+            if (presetConfiguration != null)
+            {
+                return presetConfiguration.CreateRuntimeConfiguration();
+            }
+
+            return MechanoidMechanitorStoryConfiguration.CreateDefault();
         }
     }
 }

@@ -18,6 +18,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private MechanoidMechanitorStoryStyleDef? selectedStoryStyle;
         private bool loggedNoStylesAvailable;
+        private readonly MechanoidMechanitorStoryConfiguration customConfigurationDraft =
+            MechanoidMechanitorStoryConfiguration.CreateDefault();
 
         public Page_MechanoidMechanitorScenarioReady()
         {
@@ -88,6 +90,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            if (selectedStoryStyle.opensCustomizePage)
+            {
+                OpenCustomizePage();
+                return;
+            }
+
+            if (!TryCommitPresetConfiguration(selectedStoryStyle))
+            {
+                return;
+            }
+
+            base.DoNext();
+        }
+
+        private void OpenCustomizePage()
+        {
+            selectedStoryStyle = MechanoidMechanitorStoryStyleDefOf.MAP_StoryStyle_Custom
+                ?? selectedStoryStyle;
+
+            MechanoidMechanitorStoryConfigurationContext context =
+                MechanoidMechanitorStoryConfigurationContext.Create(customConfigurationDraft);
+            customConfigurationDraft.SyncOrdinaryFactionEntries(context);
+            customConfigurationDraft.Normalize(context);
+
+            Page_MechanoidMechanitorStoryCustomize customizePage =
+                new Page_MechanoidMechanitorStoryCustomize(customConfigurationDraft)
+                {
+                    prev = this,
+                    next = next,
+                    nextAct = nextAct
+                };
+
+            Find.WindowStack.Add(customizePage);
+            Close();
+        }
+
+        private bool TryCommitPresetConfiguration(MechanoidMechanitorStoryStyleDef storyStyle)
+        {
             if (Current.Game == null)
             {
                 Log.Error(
@@ -96,7 +136,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed".Translate(),
                     MessageTypeDefOf.RejectInput,
                     historical: false);
-                return;
+                return false;
             }
 
             GameComponent_MechanoidMechanitorStoryState? component =
@@ -109,11 +149,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed".Translate(),
                     MessageTypeDefOf.RejectInput,
                     historical: false);
-                return;
+                return false;
             }
 
-            component.SetStoryStyleForNewGame(selectedStoryStyle);
-            base.DoNext();
+            MechanoidMechanitorStoryConfiguration snapshot =
+                storyStyle.CreateConfigurationSnapshot();
+            MechanoidMechanitorStoryConfigurationContext context =
+                MechanoidMechanitorStoryConfigurationContext.Create(snapshot);
+            snapshot.Normalize(context);
+            component.SetStoryStyleForNewGame(storyStyle, snapshot);
+            return true;
         }
 
         private void DrawStoryStyleCards(Rect area)
@@ -208,6 +253,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 selectedStoryStyle = style;
                 SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
+                if (style.opensCustomizePage)
+                {
+                    OpenCustomizePage();
+                }
             }
         }
 
