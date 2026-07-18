@@ -194,11 +194,15 @@ namespace MAP_MechanoidMechanitor
         {
             base.GameComponentUpdate();
 
-            // 廉价空闲判断：无待处理任务且未到安全检查时刻时，跳过完整环境探测。
-            bool hasPendingWork = pendingForcedSync
-                || pendingPawnSyncs.Count > 0
-                || pendingDynamicConsciousnessRefresh;
-            if (!hasPendingWork && !IsUnlockStateSafetyCheckDue())
+            TickManager? tickManager = Find.TickManager;
+            if (tickManager == null)
+            {
+                // TickManager 暂不可用：不执行同步/安全检查，不清除 pending，不改失败与排程。
+                return;
+            }
+
+            // 仅在存在已到期任务时才做完整环境检查；退避等待期间快速返回。
+            if (!HasDueWork(tickManager))
             {
                 return;
             }
@@ -220,17 +224,30 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// TickManager 不可用时不计为到期，避免安全检查被提前执行或永久跳过排程。
+        /// 是否存在本帧可尝试执行的到期任务。pendingForcedSync 优先：未到期时阻塞其他任务。
         /// </summary>
-        private bool IsUnlockStateSafetyCheckDue()
+        private bool HasDueWork(TickManager tickManager)
         {
-            TickManager? tickManager = Find.TickManager;
-            if (tickManager == null)
+            int ticksGame = tickManager.TicksGame;
+
+            if (pendingForcedSync)
             {
-                return false;
+                return ticksGame >= nextForcedSyncAttemptTick;
             }
 
-            return tickManager.TicksGame >= nextUnlockStateSafetyCheckTick;
+            if (pendingPawnSyncs.Count > 0
+                && ticksGame >= nextPendingPawnSyncAttemptTick)
+            {
+                return true;
+            }
+
+            if (pendingDynamicConsciousnessRefresh
+                && ticksGame >= nextDynamicConsciousnessRefreshAttemptTick)
+            {
+                return true;
+            }
+
+            return ticksGame >= nextUnlockStateSafetyCheckTick;
         }
 
         private void TryProcessPendingForcedSync()
