@@ -11,27 +11,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static void Postfix(Faction __instance, Faction other, ref bool __result)
         {
             if (!__result
-                || MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying
-                || !GameComponent_MechanoidMechanitorStoryState
-                    .HasAppliedInitialOrdinaryFactionRelations
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+                || MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying)
             {
                 return;
             }
 
-            if (!GameComponent_MechanoidMechanitorStoryState
-                    .TryGetEffectiveOrdinaryFactionRelationOption(
-                        __instance,
-                        other,
-                        out MechanoidMechanitorFactionRelationOption option))
+            if (!GameComponent_MechanoidMechanitorStoryState.TryGetLockedOrdinaryFactionRelation(
+                    __instance,
+                    other,
+                    out _,
+                    out _))
             {
                 return;
             }
 
-            if (MechanoidMechanitorOrdinaryFactionRelationPolicy.IsLockedOption(option))
-            {
-                __result = false;
-            }
+            __result = false;
         }
     }
 
@@ -41,10 +35,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [HarmonyPostfix]
         public static void Postfix(Faction __instance, Faction other, ref int __result)
         {
-            if (MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying
-                || !GameComponent_MechanoidMechanitorStoryState
-                    .HasAppliedInitialOrdinaryFactionRelations
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying)
             {
                 return;
             }
@@ -69,10 +60,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static void Postfix(Faction __instance, FactionRelation relation)
         {
             if (MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying
-                || relation?.other == null
-                || !GameComponent_MechanoidMechanitorStoryState
-                    .HasAppliedInitialOrdinaryFactionRelations
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+                || relation?.other == null)
             {
                 return;
             }
@@ -80,17 +68,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!GameComponent_MechanoidMechanitorStoryState.TryGetLockedOrdinaryFactionRelation(
                     __instance,
                     relation.other,
+                    out Faction ordinary,
                     out int goodwill,
                     out FactionRelationKind relationKind))
-            {
-                return;
-            }
-
-            if (!MechanoidMechanitorOrdinaryFactionUtility.TryGetPlayerAndOrdinary(
-                    __instance,
-                    relation.other,
-                    out _,
-                    out Faction ordinary))
             {
                 return;
             }
@@ -108,11 +88,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [HarmonyPostfix]
         public static void Postfix(Faction faction)
         {
-            if (MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying)
+            if (faction == null
+                || MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying
+                || Current.Game == null)
             {
                 return;
             }
 
+            GameComponent_MechanoidMechanitorStoryState? storyState =
+                Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
+            if (storyState == null)
+            {
+                return;
+            }
+
+            storyState.NotifyFactionAdded(faction);
             MechanoidMechanitorOrdinaryFactionRelationApplier
                 .ApplyPolicyToNewOrdinaryFaction(faction);
         }
