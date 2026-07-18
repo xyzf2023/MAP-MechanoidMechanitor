@@ -6,8 +6,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public static class MechanoidMechanitorPurgeDirectiveUtility
     {
-        private static string? lastFinalizationFailureReason;
-
         public static void Tick(GameComponent_MechanoidMechanitorStoryState storyState)
         {
             if (storyState == null || !storyState.PurgeDirectiveEnabled)
@@ -45,6 +43,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             if (ticksGame < runtime.NextCheckTick)
+            {
+                return;
+            }
+
+            ForceProtocolCheckNow(storyState);
+        }
+
+        public static void ForceProtocolCheckNow()
+        {
+            if (Current.Game == null)
+            {
+                return;
+            }
+
+            ForceProtocolCheckNow(
+                Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>());
+        }
+
+        public static void ForceProtocolCheckNow(
+            GameComponent_MechanoidMechanitorStoryState? storyState)
+        {
+            if (storyState == null || !storyState.PurgeDirectiveEnabled)
+            {
+                return;
+            }
+
+            MechanoidMechanitorPurgeDirectiveRuntimeState? runtime =
+                storyState.PurgeDirectiveRuntimeState;
+            if (runtime == null || runtime.FinalPenaltyTriggered)
             {
                 return;
             }
@@ -235,7 +262,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return true;
             }
 
-            if (!TryApplyAndVerifyFinalMechHiveHostile(storyState, out Faction mechHive))
+            if (!TryApplyAndVerifyFinalMechHiveHostile(
+                    storyState,
+                    runtime,
+                    out Faction mechHive))
             {
                 return false;
             }
@@ -247,12 +277,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             runtime.ClearFinalizationRetryTick();
             runtime.ClearTrackedPawns();
-            lastFinalizationFailureReason = null;
+            runtime.ClearFinalizationFailureReason();
             return true;
         }
 
         private static bool TryApplyAndVerifyFinalMechHiveHostile(
             GameComponent_MechanoidMechanitorStoryState storyState,
+            MechanoidMechanitorPurgeDirectiveRuntimeState runtime,
             out Faction mechHive)
         {
             mechHive = null!;
@@ -261,47 +292,45 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Faction? cachedMechHive = storyState.CachedMechHive;
             if (cachedMechHive == null)
             {
-                NotifyFinalizationFailureOnce("missingMechHive");
+                NotifyFinalizationFailureOnce(runtime, "missingMechHive");
                 return false;
             }
 
             Faction? player = Faction.OfPlayerSilentFail;
             if (player == null)
             {
-                NotifyFinalizationFailureOnce("missingPlayerFaction");
+                NotifyFinalizationFailureOnce(runtime, "missingPlayerFaction");
                 return false;
             }
 
-            if (!ArePlayerAndMechHiveHostile(player, cachedMechHive))
+            if (!MechanoidMechanitorMechHiveRelationApplier.ApplyExactMechHiveRelation(
+                    cachedMechHive,
+                    FactionRelationKind.Hostile,
+                    hostileOnHarmByPlayer: false))
             {
-                if (!MechanoidMechanitorMechHiveRelationApplier.ApplyExactMechHiveRelation(
-                        cachedMechHive,
-                        FactionRelationKind.Hostile,
-                        hostileOnHarmByPlayer: false))
-                {
-                    NotifyFinalizationFailureOnce("applyHostileFailed");
-                    return false;
-                }
+                NotifyFinalizationFailureOnce(runtime, "applyHostileFailed");
+                return false;
+            }
 
-                if (!ArePlayerAndMechHiveHostile(player, cachedMechHive))
-                {
-                    NotifyFinalizationFailureOnce("hostileVerificationFailed");
-                    return false;
-                }
+            if (!HasFinalMechHiveHostileLockState(player, cachedMechHive))
+            {
+                NotifyFinalizationFailureOnce(runtime, "hostileVerificationFailed");
+                return false;
             }
 
             mechHive = cachedMechHive;
             return true;
         }
 
-        private static bool ArePlayerAndMechHiveHostile(Faction player, Faction mechHive)
+        private static bool HasFinalMechHiveHostileLockState(Faction player, Faction mechHive)
         {
             FactionRelation? playerRelation = player.RelationWith(mechHive, allowNull: true);
             FactionRelation? mechRelation = mechHive.RelationWith(player, allowNull: true);
             return playerRelation != null
                 && mechRelation != null
                 && playerRelation.kind == FactionRelationKind.Hostile
-                && mechRelation.kind == FactionRelationKind.Hostile;
+                && mechRelation.kind == FactionRelationKind.Hostile
+                && !mechHive.factionHostileOnHarmByPlayer;
         }
 
         private static bool TryQueueFinalRaid(
@@ -317,34 +346,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (mechHive == null || !storyState.IsCurrentMechHive(mechHive))
             {
-                NotifyFinalizationFailureOnce("missingMechHive");
+                NotifyFinalizationFailureOnce(runtime, "missingMechHive");
                 return false;
             }
 
             Faction? player = Faction.OfPlayerSilentFail;
             if (player == null)
             {
-                NotifyFinalizationFailureOnce("missingPlayerFaction");
+                NotifyFinalizationFailureOnce(runtime, "missingPlayerFaction");
                 return false;
             }
 
-            if (!ArePlayerAndMechHiveHostile(player, mechHive))
+            if (!HasFinalMechHiveHostileLockState(player, mechHive))
             {
-                NotifyFinalizationFailureOnce("hostileVerificationFailed");
+                NotifyFinalizationFailureOnce(runtime, "hostileVerificationFailed");
                 return false;
             }
 
             Map? targetMap = ResolveRaidTargetMap(preferredTargetPawns);
             if (targetMap == null)
             {
-                NotifyFinalizationFailureOnce("missingPlayerHomeMap");
+                NotifyFinalizationFailureOnce(runtime, "missingPlayerHomeMap");
                 return false;
             }
 
             Storyteller? storyteller = Find.Storyteller;
             if (storyteller?.incidentQueue == null)
             {
-                NotifyFinalizationFailureOnce("missingIncidentQueue");
+                NotifyFinalizationFailureOnce(runtime, "missingIncidentQueue");
                 return false;
             }
 
@@ -362,7 +391,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         + MechanoidMechanitorPurgeDirectiveRuntimeState.FinalRaidDelayTicks,
                     parms))
             {
-                NotifyFinalizationFailureOnce("incidentQueueAddFailed");
+                NotifyFinalizationFailureOnce(runtime, "incidentQueueAddFailed");
                 return false;
             }
 
@@ -393,14 +422,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return Find.AnyPlayerHomeMap;
         }
 
-        private static void NotifyFinalizationFailureOnce(string reason)
+        private static void NotifyFinalizationFailureOnce(
+            MechanoidMechanitorPurgeDirectiveRuntimeState runtime,
+            string reason)
         {
-            if (lastFinalizationFailureReason == reason)
+            if (runtime == null || !runtime.TryNoteNewFinalizationFailureReason(reason))
             {
                 return;
             }
 
-            lastFinalizationFailureReason = reason;
             Log.Warning(
                 "[MAP-机械族机械师] 肃清指令最终机械巢袭击尚未入队："
                 + DescribeFinalizationFailure(reason)

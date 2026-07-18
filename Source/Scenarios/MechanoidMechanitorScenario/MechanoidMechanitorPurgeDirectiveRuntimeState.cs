@@ -27,6 +27,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool purgeDirectiveRaidQueued;
 
+        private string? lastFinalizationFailureReason;
+
         public int RewardPoints => purgeDirectiveRewardPoints;
 
         public int NextCheckTick => nextPurgeDirectiveCheckTick;
@@ -49,9 +51,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
             purgeDirectiveFinalPenaltyTriggered = false;
             purgeDirectiveRaidQueued = false;
             nextPurgeDirectiveFinalizationRetryTick = 0;
+            lastFinalizationFailureReason = null;
             nextPurgeDirectiveCheckTick = purgeDirectiveEnabled
                 ? Find.TickManager.TicksGame + ProtocolCheckIntervalTicks
                 : 0;
+        }
+
+        public bool TryNoteNewFinalizationFailureReason(string reason)
+        {
+            if (lastFinalizationFailureReason == reason)
+            {
+                return false;
+            }
+
+            lastFinalizationFailureReason = reason;
+            return true;
+        }
+
+        public void ClearFinalizationFailureReason()
+        {
+            lastFinalizationFailureReason = null;
         }
 
         public void AddRewardPoints(int amount)
