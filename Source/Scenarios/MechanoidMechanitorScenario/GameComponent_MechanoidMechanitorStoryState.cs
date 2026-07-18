@@ -28,8 +28,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public MechanoidMechanitorStoryStyleDef? SelectedStoryStyle => selectedStoryStyle;
 
-        public MechanoidMechanitorStoryConfiguration? ActiveConfiguration => activeConfiguration;
-
         public Faction? CachedMechHive => cachedMechHive;
 
         public bool InitialOrdinaryFactionRelationsApplied =>
@@ -188,6 +186,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool IsCurrentMechHive(Faction? faction)
         {
             return faction != null && cachedMechHive != null && faction == cachedMechHive;
+        }
+
+        public bool TryGetMechHiveRelationMode(
+            out MechanoidMechanitorMechHiveRelationMode mode)
+        {
+            if (activeConfiguration == null)
+            {
+                mode = MechanoidMechanitorMechHiveRelationMode.Default;
+                return false;
+            }
+
+            mode = activeConfiguration.mechHiveRelationMode;
+            return true;
         }
 
         public bool TryGetPlayerAndCachedOrdinary(

@@ -55,28 +55,80 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 FactionRelation? playerRelation = player.RelationWith(mechHive, allowNull: true);
                 FactionRelation? mechRelation = mechHive.RelationWith(player, allowNull: true);
-                if (playerRelation != null
-                    && mechRelation != null
-                    && playerRelation.kind == relationKind
-                    && mechRelation.kind == relationKind
-                    && mechHive.factionHostileOnHarmByPlayer == hostileOnHarmByPlayer)
+                if (playerRelation == null || mechRelation == null)
                 {
-                    return true;
+                    Log.Error(
+                        "[MAP-机械族机械师] 无法写入机械巢关系：缺少与玩家的双向关系记录。");
+                    return false;
                 }
 
                 mechHive.factionHostileOnHarmByPlayer = hostileOnHarmByPlayer;
-                player.SetRelationDirect(
+
+                if (playerRelation.kind != relationKind)
+                {
+                    player.SetRelationDirect(
+                        mechHive,
+                        relationKind,
+                        canSendHostilityLetter: false,
+                        reason: null,
+                        lookTarget: GlobalTargetInfo.Invalid);
+                }
+                else if (mechRelation.kind != relationKind)
+                {
+                    mechHive.SetRelationDirect(
+                        player,
+                        relationKind,
+                        canSendHostilityLetter: false,
+                        reason: null,
+                        lookTarget: GlobalTargetInfo.Invalid);
+                }
+
+                return ValidateAppliedMechHiveRelation(
+                    player,
                     mechHive,
                     relationKind,
-                    canSendHostilityLetter: false,
-                    reason: null,
-                    lookTarget: GlobalTargetInfo.Invalid);
-                return true;
+                    hostileOnHarmByPlayer);
             }
             finally
             {
                 applying = false;
             }
+        }
+
+        private static bool ValidateAppliedMechHiveRelation(
+            Faction player,
+            Faction mechHive,
+            FactionRelationKind relationKind,
+            bool hostileOnHarmByPlayer)
+        {
+            FactionRelation? playerRelation = player.RelationWith(mechHive, allowNull: true);
+            FactionRelation? mechRelation = mechHive.RelationWith(player, allowNull: true);
+            if (playerRelation != null
+                && mechRelation != null
+                && playerRelation.kind == relationKind
+                && mechRelation.kind == relationKind
+                && mechHive.factionHostileOnHarmByPlayer == hostileOnHarmByPlayer)
+            {
+                return true;
+            }
+
+            string playerKind = playerRelation?.kind.ToString() ?? "null";
+            string mechKind = mechRelation?.kind.ToString() ?? "null";
+            Log.Error(
+                "[MAP-机械族机械师] 机械巢关系写入后状态不一致：机械巢="
+                + mechHive.Name
+                + "，目标="
+                + relationKind
+                + "，玩家侧="
+                + playerKind
+                + "，机械巢侧="
+                + mechKind
+                + "，hostileOnHarmByPlayer目标="
+                + hostileOnHarmByPlayer
+                + "，实际="
+                + mechHive.factionHostileOnHarmByPlayer
+                + "。");
+            return false;
         }
 
         private static bool TryEnsureBidirectionalRelations(Faction player, Faction mechHive)
@@ -141,16 +193,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             storyState.RebuildRuntimeCaches();
-            MechanoidMechanitorStoryConfiguration? configuration =
-                storyState.ActiveConfiguration;
-            if (configuration == null)
+            if (!storyState.TryGetMechHiveRelationMode(
+                    out MechanoidMechanitorMechHiveRelationMode mode))
             {
                 Log.Error(
                     "[MAP-机械族机械师] 机械巢初始关系应用失败：活动配置不存在。");
                 return;
             }
 
-            MechanoidMechanitorMechHiveRelationMode mode = configuration.mechHiveRelationMode;
             if (mode == MechanoidMechanitorMechHiveRelationMode.Default)
             {
                 storyState.MarkInitialMechHiveRelationApplied();
@@ -192,16 +242,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            MechanoidMechanitorStoryConfiguration? configuration =
-                storyState.ActiveConfiguration;
             Faction? mechHive = storyState.CachedMechHive;
-            if (configuration == null || mechHive == null)
+            if (mechHive == null
+                || !storyState.TryGetMechHiveRelationMode(
+                    out MechanoidMechanitorMechHiveRelationMode mode))
             {
                 return;
             }
 
             if (!MechanoidMechanitorMechHiveRelationPolicy.TryGetLockedTarget(
-                    configuration.mechHiveRelationMode,
+                    mode,
                     out FactionRelationKind relationKind))
             {
                 return;
@@ -230,20 +280,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
             if (storyState == null
                 || !storyState.InitialMechHiveRelationApplied
-                || !storyState.IsCurrentMechHive(faction))
-            {
-                return;
-            }
-
-            MechanoidMechanitorStoryConfiguration? configuration =
-                storyState.ActiveConfiguration;
-            if (configuration == null)
+                || !storyState.IsCurrentMechHive(faction)
+                || !storyState.TryGetMechHiveRelationMode(
+                    out MechanoidMechanitorMechHiveRelationMode mode))
             {
                 return;
             }
 
             if (!MechanoidMechanitorMechHiveRelationPolicy.TryGetInitialTarget(
-                    configuration.mechHiveRelationMode,
+                    mode,
                     out FactionRelationKind relationKind,
                     out bool hostileOnHarmByPlayer))
             {
