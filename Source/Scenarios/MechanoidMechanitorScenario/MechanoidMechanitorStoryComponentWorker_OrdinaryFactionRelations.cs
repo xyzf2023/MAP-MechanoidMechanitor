@@ -43,8 +43,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context,
             float width)
         {
-            float height = MeasureHeaderAndDescription(width);
-            height += GlobalModes.Length * OptionRowHeight;
+            float height = MeasureDropdownSectionHeight(width, includeSeparator: false);
             if (context.Configuration.ordinaryFactionRelationsMode
                 == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom)
             {
@@ -52,7 +51,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 height += context.OrdinaryFactions.Count * FactionRowHeight;
             }
 
-            height += SectionGap;
+            height += SeparatorTopGap + SeparatorBottomGap;
             return height;
         }
 
@@ -63,20 +62,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfiguration configuration = context.Configuration;
             bool drawFactionListThisFrame = configuration.ordinaryFactionRelationsMode
                 == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom;
-            float width = rect.width;
-            float y = DrawHeaderAndDescription(rect, width);
 
-            for (int i = 0; i < GlobalModes.Length; i++)
-            {
-                MechanoidMechanitorOrdinaryFactionRelationsMode mode = GlobalModes[i];
-                Rect optionRect = new Rect(rect.x, y, width, OptionRowHeight);
-                if (DrawRadioOption(
-                    optionRect,
-                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(mode),
-                    configuration.ordinaryFactionRelationsMode == mode,
-                    enabled: true,
-                    out _))
+            float y = DrawDropdownSection(
+                rect,
+                context,
+                MechanoidMechanitorStoryConfigurationLabels.LabelFor(
+                    configuration.ordinaryFactionRelationsMode),
+                enabled: true,
+                GlobalModes,
+                MechanoidMechanitorStoryConfigurationLabels.LabelFor,
+                mode =>
                 {
+                    if (configuration.ordinaryFactionRelationsMode == mode)
+                    {
+                        return;
+                    }
+
                     bool switchedToCustom =
                         mode == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom
                         && configuration.ordinaryFactionRelationsMode
@@ -89,51 +90,79 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
 
                     NormalizeAfterChange(context);
+                },
+                includeSeparator: false);
+
+            if (drawFactionListThisFrame)
+            {
+                y += SectionGap;
+                float listWidth = Mathf.Max(0f, rect.width - FactionListIndent);
+                for (int i = 0; i < context.OrdinaryFactions.Count; i++)
+                {
+                    Faction faction = context.OrdinaryFactions[i];
+                    Rect rowRect = new Rect(
+                        rect.x + FactionListIndent,
+                        y,
+                        listWidth,
+                        FactionRowHeight);
+                    DrawFactionRow(rowRect, faction, configuration, context);
+                    y += FactionRowHeight;
                 }
-
-                y += OptionRowHeight;
             }
 
-            if (!drawFactionListThisFrame)
+            DrawSectionSeparator(rect, ref y);
+        }
+
+        private void DrawFactionRow(
+            Rect rowRect,
+            Faction faction,
+            MechanoidMechanitorStoryConfiguration configuration,
+            MechanoidMechanitorStoryConfigurationContext context)
+        {
+            float labelWidth = Mathf.Max(0f, rowRect.width - DropdownButtonWidth - TitleButtonGap);
+            Rect labelRect = new Rect(rowRect.x, rowRect.y, labelWidth, rowRect.height);
+            Rect buttonRect = new Rect(
+                rowRect.xMax - DropdownButtonWidth,
+                rowRect.y + 1f,
+                DropdownButtonWidth,
+                rowRect.height - 2f);
+
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            bool previousWordWrap = Text.WordWrap;
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Text.WordWrap = false;
+            string factionName = faction.Name;
+            bool needsNameTip = Text.CalcSize(factionName).x > labelRect.width;
+            Widgets.Label(labelRect, factionName.Truncate(labelRect.width));
+            Text.WordWrap = previousWordWrap;
+            Text.Anchor = previousAnchor;
+            Text.Font = previousFont;
+
+            if (needsNameTip)
             {
-                return;
+                TooltipHandler.TipRegion(labelRect, factionName);
             }
 
-            y += SectionGap;
-            for (int i = 0; i < context.OrdinaryFactions.Count; i++)
-            {
-                Faction faction = context.OrdinaryFactions[i];
-                Rect rowRect = new Rect(rect.x, y, width, FactionRowHeight);
-                Widgets.Label(
-                    new Rect(
-                        rowRect.x,
-                        rowRect.y,
-                        rowRect.width - DropdownButtonWidth - 8f,
-                        rowRect.height),
-                    faction.Name);
-
-                MechanoidMechanitorFactionRelationOption currentOption =
-                    configuration.GetRelationOptionFor(faction);
-                Rect buttonRect = new Rect(
-                    rowRect.xMax - DropdownButtonWidth,
-                    rowRect.y + 1f,
-                    DropdownButtonWidth,
-                    rowRect.height - 2f);
-
-                DrawDropdownButton(
-                    buttonRect,
-                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(currentOption),
-                    enabled: true,
-                    FactionOptions,
-                    MechanoidMechanitorStoryConfigurationLabels.LabelFor,
-                    option =>
+            MechanoidMechanitorFactionRelationOption currentOption =
+                configuration.GetRelationOptionFor(faction);
+            DrawDropdownButton(
+                buttonRect,
+                MechanoidMechanitorStoryConfigurationLabels.LabelFor(currentOption),
+                enabled: true,
+                FactionOptions,
+                MechanoidMechanitorStoryConfigurationLabels.LabelFor,
+                option =>
+                {
+                    if (configuration.GetRelationOptionFor(faction) == option)
                     {
-                        configuration.SetRelationOptionFor(faction, option);
-                        NormalizeAfterChange(context);
-                    });
+                        return;
+                    }
 
-                y += FactionRowHeight;
-            }
+                    configuration.SetRelationOptionFor(faction, option);
+                    NormalizeAfterChange(context);
+                });
         }
     }
 }

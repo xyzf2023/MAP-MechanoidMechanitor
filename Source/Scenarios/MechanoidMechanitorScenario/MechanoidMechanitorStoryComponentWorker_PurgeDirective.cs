@@ -6,6 +6,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public sealed class MechanoidMechanitorStoryComponentWorker_PurgeDirective
         : MechanoidMechanitorStoryComponentWorker
     {
+        private static readonly bool[] BooleanOptions = { false, true };
+
         public override bool ShouldShow(MechanoidMechanitorStoryConfigurationContext context)
         {
             return context.HasMechHive;
@@ -38,9 +40,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context,
             float width)
         {
-            return MeasureHeaderAndDescription(width)
-                + OptionRowHeight * 2f
-                + SectionGap;
+            return MeasureDropdownSectionHeight(width);
         }
 
         public override void Draw(
@@ -49,34 +49,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             MechanoidMechanitorStoryConfiguration configuration = context.Configuration;
             bool canInteract = CanInteract(context);
-            float width = rect.width;
-            float y = DrawHeaderAndDescription(rect, width);
-            Rect optionsRect = new Rect(rect.x, y, width, OptionRowHeight * 2f);
+            string currentLabel = configuration.purgeDirectiveEnabled
+                ? MechanoidMechanitorStoryConfigurationLabels.EnabledLabel
+                : MechanoidMechanitorStoryConfigurationLabels.DisabledLabel;
 
-            if (DrawRadioOption(
-                new Rect(rect.x, y, width, OptionRowHeight),
-                MechanoidMechanitorStoryConfigurationLabels.DisabledLabel,
-                !configuration.purgeDirectiveEnabled,
+            DrawDropdownSection(
+                rect,
+                context,
+                currentLabel,
                 canInteract,
-                out _))
-            {
-                configuration.purgeDirectiveEnabled = false;
-                NormalizeAfterChange(context);
-            }
+                BooleanOptions,
+                LabelForBoolean,
+                value =>
+                {
+                    if (configuration.purgeDirectiveEnabled == value)
+                    {
+                        return;
+                    }
 
-            y += OptionRowHeight;
-            if (DrawRadioOption(
-                new Rect(rect.x, y, width, OptionRowHeight),
-                MechanoidMechanitorStoryConfigurationLabels.EnabledLabel,
-                configuration.purgeDirectiveEnabled,
-                canInteract,
-                out _))
-            {
-                configuration.purgeDirectiveEnabled = true;
-                NormalizeAfterChange(context);
-            }
+                    configuration.purgeDirectiveEnabled = value;
+                    NormalizeAfterChange(context);
+                });
+        }
 
-            DrawDisabledTip(optionsRect, context);
+        private static string LabelForBoolean(bool value)
+        {
+            return value
+                ? MechanoidMechanitorStoryConfigurationLabels.EnabledLabel
+                : MechanoidMechanitorStoryConfigurationLabels.DisabledLabel;
         }
     }
 }
