@@ -102,8 +102,7 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Pawn pawn, ref float __result)
             {
-                if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                    pawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+                if (!SyntheticCompanionStateUtility.IsSyntheticCompanion(pawn))
                 {
                     return true;
                 }
@@ -335,9 +334,8 @@ namespace MAP_MechanoidMechanitor
             public static bool Prefix(Pawn p, ThingDef bedDef, ref bool __result)
             {
                 if (p == null
-                    || !MechanoidMechanitorCapabilityUtility.HasCapability(
-                        p, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
-                    || p.CurJobDef != JobDefOf.Lovin)
+                    || p.CurJobDef != JobDefOf.Lovin
+                    || !SyntheticCompanionStateUtility.IsSyntheticCompanion(p))
                 {
                     return true;
                 }
@@ -381,10 +379,8 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Pawn woman, Pawn man, ref float __result)
             {
-                if (MechanoidMechanitorCapabilityUtility.HasCapability(
-                        woman, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
-                    || MechanoidMechanitorCapabilityUtility.HasCapability(
-                        man, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+                if (SyntheticCompanionStateUtility.IsSyntheticCompanion(woman)
+                    || SyntheticCompanionStateUtility.IsSyntheticCompanion(man))
                 {
                     __result = 0f;
                     return false;

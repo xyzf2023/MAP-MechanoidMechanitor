@@ -16,13 +16,27 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static bool ShouldUseHumanlikeBedLovinRender(Pawn? pawn, bool isPortrait = false)
         {
-            if (isPortrait || pawn == null)
-            {
-                return false;
-            }
+            return TryGetSyntheticLovinBed(pawn, isPortrait, out _);
+        }
 
-            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                pawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+        public static bool ShouldUseHumanlikeBedLovinRender(Pawn? pawn, PawnRenderFlags flags)
+        {
+            return TryGetSyntheticLovinBed(
+                pawn,
+                flags.FlagSet(PawnRenderFlags.Portrait),
+                out _);
+        }
+
+        /// <summary>
+        /// 廉价淘汰优先：确认床上 Lovin 渲染条件，并一次性返回有效床位。不跨帧缓存。
+        /// </summary>
+        public static bool TryGetSyntheticLovinBed(
+            Pawn? pawn,
+            bool isPortrait,
+            out Building_Bed? bed)
+        {
+            bed = null;
+            if (pawn == null || isPortrait)
             {
                 return false;
             }
@@ -37,17 +51,19 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return pawn.CurrentBed() != null;
-        }
-
-        public static bool ShouldUseHumanlikeBedLovinRender(Pawn? pawn, PawnRenderFlags flags)
-        {
-            if (flags.FlagSet(PawnRenderFlags.Portrait))
+            bed = pawn.CurrentBed();
+            if (bed == null)
             {
                 return false;
             }
 
-            return ShouldUseHumanlikeBedLovinRender(pawn, isPortrait: false);
+            if (!SyntheticCompanionStateUtility.IsSyntheticCompanion(pawn))
+            {
+                bed = null;
+                return false;
+            }
+
+            return true;
         }
 
         public const float LovinEffectiveAgeYearsForSyntheticCompanion = 18f;
@@ -62,8 +78,7 @@ namespace MAP_MechanoidMechanitor
             out float result)
         {
             result = 0f;
-            if (pawn == null || !MechanoidMechanitorCapabilityUtility.HasCapability(
-                pawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+            if (pawn == null || !SyntheticCompanionStateUtility.IsSyntheticCompanion(pawn))
             {
                 return false;
             }
@@ -102,10 +117,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (MechanoidMechanitorCapabilityUtility.HasCapability(
-                    actor, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
-                || !MechanoidMechanitorCapabilityUtility.HasCapability(
-                    partner, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+            if (SyntheticCompanionStateUtility.IsSyntheticCompanion(actor)
+                || !SyntheticCompanionStateUtility.IsSyntheticCompanion(partner))
             {
                 return false;
             }
@@ -125,10 +138,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                    actor, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
-                || MechanoidMechanitorCapabilityUtility.HasCapability(
-                    partner, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+            if (!SyntheticCompanionStateUtility.IsSyntheticCompanion(actor)
+                || SyntheticCompanionStateUtility.IsSyntheticCompanion(partner))
             {
                 return false;
             }
@@ -150,10 +161,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (MechanoidMechanitorCapabilityUtility.HasCapability(
-                    initiator, MechanoidMechanitorCapability.SyntheticSpouseInteraction)
-                || !MechanoidMechanitorCapabilityUtility.HasCapability(
-                    partner, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+            if (SyntheticCompanionStateUtility.IsSyntheticCompanion(initiator)
+                || !SyntheticCompanionStateUtility.IsSyntheticCompanion(partner))
             {
                 return false;
             }
@@ -460,8 +469,7 @@ namespace MAP_MechanoidMechanitor
                 return first;
             }
 
-            if (MechanoidMechanitorCapabilityUtility.HasCapability(
-                pawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+            if (SyntheticCompanionStateUtility.IsSyntheticCompanion(pawn))
             {
                 Fail("发起者错误地是授权机械体本人（必须由人类配偶发起）。");
                 if (!collecting)
@@ -660,8 +668,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                syntheticCompanion, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+            if (!SyntheticCompanionStateUtility.IsSyntheticCompanion(syntheticCompanion))
             {
                 Fail("授权机械体不具备 SyntheticSpouseInteraction 能力。");
                 if (!collecting)
