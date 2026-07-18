@@ -5,7 +5,7 @@
     <label>经典</label>
     <description>经典的游戏体验。不启用任何额外故事线，体验完全自由的机械族殖民地。</description>
     <displayOrder>100</displayOrder>
-    <iconThingDef>Mechlink</iconThingDef>
+    <iconPath>UI/Classic</iconPath>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
