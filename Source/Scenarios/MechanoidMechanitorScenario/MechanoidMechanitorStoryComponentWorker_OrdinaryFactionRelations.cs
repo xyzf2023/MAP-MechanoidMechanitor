@@ -7,6 +7,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public sealed class MechanoidMechanitorStoryComponentWorker_OrdinaryFactionRelations
         : MechanoidMechanitorStoryComponentWorker
     {
+        private const float SubPanelInset = 10f;
+        private const float SubPanelTopGap = 10f;
+        private const float SubPanelPaddingY = 7f;
+        private const float FactionRowHeight = 35f;
+        private const float FactionDropdownWidth = 135f;
+        private const float FactionNameButtonGap = 8f;
+
+        private static readonly Color SubPanelBgColor = new Color(0.11f, 0.11f, 0.11f, 1f);
+        private static readonly Color SubPanelOutlineColor = new Color(0.40f, 0.34f, 0.26f, 0.40f);
+        private static readonly Color FactionRowAltColor = new Color(1f, 1f, 1f, 0.03f);
+
         private static readonly MechanoidMechanitorOrdinaryFactionRelationsMode[] GlobalModes =
         {
             MechanoidMechanitorOrdinaryFactionRelationsMode.Default,
@@ -43,16 +54,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context,
             float width)
         {
-            float height = MeasureDropdownSectionHeight(width, includeSeparator: false);
+            float extra = 0f;
             if (context.Configuration.ordinaryFactionRelationsMode
                 == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom)
             {
-                height += SectionGap;
-                height += context.OrdinaryFactions.Count * FactionRowHeight;
+                extra = MeasureFactionSubPanelHeight(context.OrdinaryFactions.Count);
             }
 
-            height += SeparatorTopGap + SeparatorBottomGap;
-            return height;
+            return MeasureCardHeight(context, width, extra);
         }
 
         public override void Draw(
@@ -63,106 +72,148 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool drawFactionListThisFrame = configuration.ordinaryFactionRelationsMode
                 == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom;
 
-            float y = DrawDropdownSection(
+            float contentY = DrawCardHeaderAndDropdown(
                 rect,
                 context,
                 MechanoidMechanitorStoryConfigurationLabels.LabelFor(
                     configuration.ordinaryFactionRelationsMode),
                 enabled: true,
-                GlobalModes,
-                MechanoidMechanitorStoryConfigurationLabels.LabelFor,
-                mode =>
-                {
-                    if (configuration.ordinaryFactionRelationsMode == mode)
+                () => OpenDropdownMenu(
+                    GlobalModes,
+                    MechanoidMechanitorStoryConfigurationLabels.LabelFor,
+                    mode =>
                     {
-                        return;
-                    }
+                        if (configuration.ordinaryFactionRelationsMode == mode)
+                        {
+                            return;
+                        }
 
-                    bool switchedToCustom =
-                        mode == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom
-                        && configuration.ordinaryFactionRelationsMode
-                            != MechanoidMechanitorOrdinaryFactionRelationsMode.Custom;
+                        bool switchedToCustom =
+                            mode == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom
+                            && configuration.ordinaryFactionRelationsMode
+                                != MechanoidMechanitorOrdinaryFactionRelationsMode.Custom;
 
-                    configuration.ordinaryFactionRelationsMode = mode;
-                    if (switchedToCustom)
-                    {
-                        configuration.SyncOrdinaryFactionEntries(context);
-                    }
+                        configuration.ordinaryFactionRelationsMode = mode;
+                        if (switchedToCustom)
+                        {
+                            configuration.SyncOrdinaryFactionEntries(context);
+                        }
 
-                    NormalizeAfterChange(context);
-                },
-                includeSeparator: false);
+                        NormalizeAfterChange(context);
+                    }));
 
             if (drawFactionListThisFrame)
             {
-                y += SectionGap;
-                float listWidth = Mathf.Max(0f, rect.width - FactionListIndent);
-                for (int i = 0; i < context.OrdinaryFactions.Count; i++)
-                {
-                    Faction faction = context.OrdinaryFactions[i];
-                    Rect rowRect = new Rect(
-                        rect.x + FactionListIndent,
-                        y,
-                        listWidth,
-                        FactionRowHeight);
-                    DrawFactionRow(rowRect, faction, configuration, context);
-                    y += FactionRowHeight;
-                }
+                DrawFactionSubPanel(rect, contentY, context, configuration);
             }
+        }
 
-            DrawSectionSeparator(rect, ref y);
+        private static float MeasureFactionSubPanelHeight(int factionCount)
+        {
+            return SubPanelTopGap
+                + SubPanelPaddingY
+                + factionCount * FactionRowHeight
+                + SubPanelPaddingY;
+        }
+
+        private void DrawFactionSubPanel(
+            Rect cardRect,
+            float contentY,
+            MechanoidMechanitorStoryConfigurationContext context,
+            MechanoidMechanitorStoryConfiguration configuration)
+        {
+            Rect inner = cardRect.ContractedBy(CardPadding);
+            float panelHeight = SubPanelPaddingY
+                + context.OrdinaryFactions.Count * FactionRowHeight
+                + SubPanelPaddingY;
+            Rect panelRect = new Rect(
+                inner.x + SubPanelInset,
+                contentY + SubPanelTopGap,
+                Mathf.Max(1f, inner.width - SubPanelInset * 2f),
+                panelHeight);
+
+            Widgets.DrawBoxSolidWithOutline(panelRect, SubPanelBgColor, SubPanelOutlineColor);
+
+            float y = panelRect.y + SubPanelPaddingY;
+            for (int i = 0; i < context.OrdinaryFactions.Count; i++)
+            {
+                Faction faction = context.OrdinaryFactions[i];
+                Rect rowRect = new Rect(panelRect.x, y, panelRect.width, FactionRowHeight);
+                DrawFactionRow(rowRect, i, faction, configuration, context);
+                y += FactionRowHeight;
+            }
         }
 
         private void DrawFactionRow(
             Rect rowRect,
+            int rowIndex,
             Faction faction,
             MechanoidMechanitorStoryConfiguration configuration,
             MechanoidMechanitorStoryConfigurationContext context)
         {
-            float labelWidth = Mathf.Max(0f, rowRect.width - DropdownButtonWidth - TitleButtonGap);
-            Rect labelRect = new Rect(rowRect.x, rowRect.y, labelWidth, rowRect.height);
+            if ((rowIndex & 1) == 1)
+            {
+                Widgets.DrawBoxSolid(rowRect, FactionRowAltColor);
+            }
+
+            Widgets.DrawHighlightIfMouseover(rowRect);
+
+            float dropdownWidth = Mathf.Clamp(FactionDropdownWidth, 125f, 145f);
+            float labelWidth = Mathf.Max(1f, rowRect.width - dropdownWidth - FactionNameButtonGap);
+            Rect labelRect = new Rect(rowRect.x + 8f, rowRect.y, labelWidth - 8f, rowRect.height);
             Rect buttonRect = new Rect(
-                rowRect.xMax - DropdownButtonWidth,
-                rowRect.y + 1f,
-                DropdownButtonWidth,
-                rowRect.height - 2f);
+                rowRect.xMax - dropdownWidth - 6f,
+                rowRect.y + (rowRect.height - DropdownHeight) * 0.5f,
+                dropdownWidth,
+                DropdownHeight);
 
             GameFont previousFont = Text.Font;
             TextAnchor previousAnchor = Text.Anchor;
             bool previousWordWrap = Text.WordWrap;
-            Text.Font = GameFont.Small;
-            Text.Anchor = TextAnchor.MiddleLeft;
-            Text.WordWrap = false;
-            string factionName = faction.Name;
-            bool needsNameTip = Text.CalcSize(factionName).x > labelRect.width;
-            Widgets.Label(labelRect, factionName.Truncate(labelRect.width));
-            Text.WordWrap = previousWordWrap;
-            Text.Anchor = previousAnchor;
-            Text.Font = previousFont;
-
-            if (needsNameTip)
+            Color previousColor = GUI.color;
+            try
             {
-                TooltipHandler.TipRegion(labelRect, factionName);
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                Text.WordWrap = false;
+                GUI.color = Color.white;
+                string factionName = faction.Name;
+                bool needsNameTip = Text.CalcSize(factionName).x > labelRect.width;
+                Widgets.Label(labelRect, factionName.Truncate(labelRect.width));
+                if (needsNameTip)
+                {
+                    TooltipHandler.TipRegion(labelRect, factionName);
+                }
+            }
+            finally
+            {
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
+                GUI.color = previousColor;
             }
 
             MechanoidMechanitorFactionRelationOption currentOption =
                 configuration.GetRelationOptionFor(faction);
-            DrawDropdownButton(
+            if (DrawFlatDropdownButton(
                 buttonRect,
                 MechanoidMechanitorStoryConfigurationLabels.LabelFor(currentOption),
-                enabled: true,
-                FactionOptions,
-                MechanoidMechanitorStoryConfigurationLabels.LabelFor,
-                option =>
-                {
-                    if (configuration.GetRelationOptionFor(faction) == option)
+                enabled: true))
+            {
+                OpenDropdownMenu(
+                    FactionOptions,
+                    MechanoidMechanitorStoryConfigurationLabels.LabelFor,
+                    option =>
                     {
-                        return;
-                    }
+                        if (configuration.GetRelationOptionFor(faction) == option)
+                        {
+                            return;
+                        }
 
-                    configuration.SetRelationOptionFor(faction, option);
-                    NormalizeAfterChange(context);
-                });
+                        configuration.SetRelationOptionFor(faction, option);
+                        NormalizeAfterChange(context);
+                    });
+            }
         }
     }
 }

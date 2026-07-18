@@ -29,7 +29,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context,
             float width)
         {
-            return MeasureDropdownSectionHeight(width);
+            return MeasureCardHeight(context, width);
         }
 
         public override void Draw(
@@ -37,24 +37,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context)
         {
             MechanoidMechanitorStoryConfiguration configuration = context.Configuration;
-            DrawDropdownSection(
+            DrawCardHeaderAndDropdown(
                 rect,
                 context,
                 MechanoidMechanitorStoryConfigurationLabels.LabelFor(
                     configuration.mechHiveRelationMode),
                 enabled: true,
-                Modes,
-                MechanoidMechanitorStoryConfigurationLabels.LabelFor,
-                mode =>
-                {
-                    if (configuration.mechHiveRelationMode == mode)
+                () => OpenDropdownMenu(
+                    Modes,
+                    MechanoidMechanitorStoryConfigurationLabels.LabelFor,
+                    mode =>
                     {
-                        return;
-                    }
+                        if (configuration.mechHiveRelationMode == mode)
+                        {
+                            return;
+                        }
 
-                    configuration.mechHiveRelationMode = mode;
-                    NormalizeAfterChange(context);
-                });
+                        configuration.mechHiveRelationMode = mode;
+                        NormalizeAfterChange(context);
+                    }));
         }
     }
 }

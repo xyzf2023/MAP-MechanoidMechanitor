@@ -8,6 +8,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         private static readonly bool[] BooleanOptions = { false, true };
 
+        public override bool DrawInRightColumn => true;
+
         public override bool ShouldShow(MechanoidMechanitorStoryConfigurationContext context)
         {
             return context.HasOrdinaryFactions;
@@ -39,7 +41,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context,
             float width)
         {
-            return MeasureDropdownSectionHeight(width);
+            return MeasureCardHeight(context, width);
         }
 
         public override void Draw(
@@ -52,23 +54,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ? MechanoidMechanitorStoryConfigurationLabels.EnabledLabel
                 : MechanoidMechanitorStoryConfigurationLabels.DisabledLabel;
 
-            DrawDropdownSection(
+            DrawCardHeaderAndDropdown(
                 rect,
                 context,
                 currentLabel,
                 canInteract,
-                BooleanOptions,
-                LabelForBoolean,
-                value =>
-                {
-                    if (configuration.gainTrustRouteEnabled == value)
+                () => OpenDropdownMenu(
+                    BooleanOptions,
+                    LabelForBoolean,
+                    value =>
                     {
-                        return;
-                    }
+                        if (configuration.gainTrustRouteEnabled == value)
+                        {
+                            return;
+                        }
 
-                    configuration.gainTrustRouteEnabled = value;
-                    NormalizeAfterChange(context);
-                });
+                        configuration.gainTrustRouteEnabled = value;
+                        NormalizeAfterChange(context);
+                    }));
         }
 
         private static string LabelForBoolean(bool value)

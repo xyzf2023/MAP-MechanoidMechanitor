@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -8,25 +7,38 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public abstract class MechanoidMechanitorStoryComponentWorker
     {
+        protected const float CardPadding = 13f;
+        public const float CardGap = 11f;
+        protected const float HeaderRowHeight = 32f;
+        protected const float DropdownHeight = 29f;
+        protected const float DropdownMinWidth = 130f;
+        protected const float DropdownMaxWidth = 170f;
+        protected const float DropdownWidthRatio = 0.36f;
+        protected const float TitleDropdownGap = 10f;
+        protected const float DescriptionTopGap = 4f;
+        protected const float DisabledReasonTopGap = 5f;
+
+        private static readonly Color CardBgColor = new Color(0.16f, 0.16f, 0.16f, 1f);
+        private static readonly Color CardBgDisabledColor = new Color(0.12f, 0.12f, 0.12f, 1f);
+        private static readonly Color CardOutlineColor = new Color(0.48f, 0.40f, 0.28f, 0.45f);
+        private static readonly Color CardOutlineDisabledColor = new Color(0.35f, 0.32f, 0.28f, 0.35f);
+        private static readonly Color DropdownBgColor = new Color(0.18f, 0.16f, 0.14f, 1f);
+        private static readonly Color DropdownBgHoverColor = new Color(0.24f, 0.21f, 0.17f, 1f);
+        private static readonly Color DropdownBgDisabledColor = new Color(0.13f, 0.12f, 0.11f, 1f);
+        private static readonly Color DropdownOutlineColor = new Color(0.58f, 0.46f, 0.30f, 0.70f);
+        private static readonly Color DropdownOutlineHoverColor = new Color(0.70f, 0.56f, 0.36f, 0.85f);
+        private static readonly Color DropdownOutlineDisabledColor = new Color(0.40f, 0.36f, 0.30f, 0.40f);
+        private static readonly Color DescriptionColor = new Color(0.78f, 0.78f, 0.78f, 1f);
+        private static readonly Color DescriptionDisabledColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+        private static readonly Color TitleDisabledColor = new Color(0.62f, 0.62f, 0.62f, 1f);
+        private static readonly Color DisabledReasonColor = new Color(0.85f, 0.68f, 0.38f, 1f);
+
         public MechanoidMechanitorStoryComponentDef def = null!;
 
-        protected const float SectionGap = 8f;
-
-        protected const float FactionRowHeight = 30f;
-
-        protected const float DropdownButtonWidth = 200f;
-
-        protected const float DropdownButtonHeight = 30f;
-
-        protected const float TitleButtonGap = 12f;
-
-        protected const float TitleDescriptionGap = 4f;
-
-        protected const float SeparatorTopGap = 8f;
-
-        protected const float SeparatorBottomGap = 10f;
-
-        protected const float FactionListIndent = 20f;
+        /// <summary>
+        /// 双栏布局归属。默认左栏；右栏 Worker 覆写为 true。
+        /// </summary>
+        public virtual bool DrawInRightColumn => false;
 
         public virtual bool ShouldShow(MechanoidMechanitorStoryConfigurationContext context)
         {
@@ -52,186 +64,266 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect rect,
             MechanoidMechanitorStoryConfigurationContext context);
 
-        protected virtual void NormalizeAfterChange(
+        protected abstract TaggedString GetDescription();
+
+        protected static void NormalizeAfterChange(
             MechanoidMechanitorStoryConfigurationContext context)
         {
-            MechanoidMechanitorStoryConfigurationContext freshContext =
-                MechanoidMechanitorStoryConfigurationContext.Create(context.Configuration);
-            context.Configuration.Normalize(freshContext);
+            context.Configuration.Normalize(context);
         }
 
-        protected virtual TaggedString GetDescription()
+        protected float MeasureCardHeight(
+            MechanoidMechanitorStoryConfigurationContext context,
+            float width,
+            float extraContentHeight = 0f)
         {
-            return def.description;
-        }
-
-        protected float MeasureDropdownSectionHeight(float width, bool includeSeparator = true)
-        {
-            MeasureDropdownSectionHeights(width, out float titleRowHeight, out float descriptionHeight);
-            float height = titleRowHeight + TitleDescriptionGap + descriptionHeight;
-            if (includeSeparator)
+            float innerWidth = Mathf.Max(1f, width - CardPadding * 2f);
+            float headerHeight = MeasureCardHeaderHeight();
+            float descriptionHeight = MeasureDescriptionHeight(innerWidth);
+            float disabledReasonHeight = MeasureDisabledReasonHeight(context, innerWidth);
+            float height = CardPadding
+                + headerHeight
+                + DescriptionTopGap
+                + descriptionHeight
+                + disabledReasonHeight
+                + CardPadding;
+            if (extraContentHeight > 0f)
             {
-                height += SeparatorTopGap + SeparatorBottomGap;
+                height += extraContentHeight;
             }
 
             return height;
         }
 
-        protected void MeasureDropdownSectionHeights(
-            float width,
-            out float titleRowHeight,
-            out float descriptionHeight)
+        protected float MeasureCardHeaderHeight()
         {
-            float titleWidth = Mathf.Max(0f, width - DropdownButtonWidth - TitleButtonGap);
-            GameFont previousFont = Text.Font;
-
-            Text.Font = GameFont.Medium;
-            float titleHeight = Text.CalcHeight(def.LabelCap, titleWidth);
-            titleRowHeight = Mathf.Max(titleHeight, DropdownButtonHeight);
-
-            Text.Font = GameFont.Small;
-            descriptionHeight = Text.CalcHeight(GetDescription(), width);
-
-            Text.Font = previousFont;
+            return Mathf.Max(HeaderRowHeight, DropdownHeight);
         }
 
-        protected float DrawDropdownSection<T>(
-            Rect rect,
+        protected float MeasureDescriptionHeight(float innerWidth)
+        {
+            GameFont previousFont = Text.Font;
+            bool previousWordWrap = Text.WordWrap;
+            try
+            {
+                Text.Font = GameFont.Small;
+                Text.WordWrap = true;
+                return Text.CalcHeight(GetDescription(), innerWidth);
+            }
+            finally
+            {
+                Text.Font = previousFont;
+                Text.WordWrap = previousWordWrap;
+            }
+        }
+
+        protected float MeasureDisabledReasonHeight(
+            MechanoidMechanitorStoryConfigurationContext context,
+            float innerWidth)
+        {
+            if (CanInteract(context))
+            {
+                return 0f;
+            }
+
+            string? reason = GetDisabledReason(context);
+            if (reason.NullOrEmpty())
+            {
+                return 0f;
+            }
+
+            GameFont previousFont = Text.Font;
+            bool previousWordWrap = Text.WordWrap;
+            try
+            {
+                Text.Font = GameFont.Small;
+                Text.WordWrap = true;
+                return DisabledReasonTopGap + Text.CalcHeight(reason, innerWidth);
+            }
+            finally
+            {
+                Text.Font = previousFont;
+                Text.WordWrap = previousWordWrap;
+            }
+        }
+
+        protected static float CalcDropdownWidth(float innerWidth)
+        {
+            return Mathf.Clamp(innerWidth * DropdownWidthRatio, DropdownMinWidth, DropdownMaxWidth);
+        }
+
+        protected void DrawCardBackground(Rect rect, bool interactive)
+        {
+            Color bg = interactive ? CardBgColor : CardBgDisabledColor;
+            Color outline = interactive ? CardOutlineColor : CardOutlineDisabledColor;
+            Widgets.DrawBoxSolidWithOutline(rect, bg, outline);
+            Widgets.DrawHighlightIfMouseover(rect);
+        }
+
+        protected float DrawCardHeaderAndDropdown(
+            Rect cardRect,
             MechanoidMechanitorStoryConfigurationContext context,
             string currentLabel,
             bool enabled,
-            IEnumerable<T> options,
-            Func<T, string> labelGetter,
-            Action<T> onSelected,
-            bool includeSeparator = true)
+            Action onDropdownClicked)
         {
-            MeasureDropdownSectionHeights(
-                rect.width,
-                out float titleRowHeight,
-                out float descriptionHeight);
+            DrawCardBackground(cardRect, enabled);
 
+            string? disabledReason = enabled ? null : GetDisabledReason(context);
+            if (!disabledReason.NullOrEmpty())
+            {
+                TooltipHandler.TipRegion(cardRect, disabledReason);
+            }
+
+            Rect inner = cardRect.ContractedBy(CardPadding);
+            float dropdownWidth = CalcDropdownWidth(inner.width);
+            float headerHeight = MeasureCardHeaderHeight();
+
+            Rect titleRect = new Rect(
+                inner.x,
+                inner.y,
+                Mathf.Max(1f, inner.width - dropdownWidth - TitleDropdownGap),
+                headerHeight);
+            Rect dropdownRect = new Rect(
+                inner.xMax - dropdownWidth,
+                inner.y + (headerHeight - DropdownHeight) * 0.5f,
+                dropdownWidth,
+                DropdownHeight);
+
+            Color previousColor = GUI.color;
             GameFont previousFont = Text.Font;
             TextAnchor previousAnchor = Text.Anchor;
-            float y = rect.y;
-            float titleWidth = Mathf.Max(0f, rect.width - DropdownButtonWidth - TitleButtonGap);
-
-            Rect buttonRect = new Rect(
-                rect.xMax - DropdownButtonWidth,
-                y + Mathf.Max(0f, (titleRowHeight - DropdownButtonHeight) / 2f),
-                DropdownButtonWidth,
-                DropdownButtonHeight);
-
-            Text.Font = GameFont.Medium;
-            Text.Anchor = TextAnchor.MiddleLeft;
-            Widgets.Label(new Rect(rect.x, y, titleWidth, titleRowHeight), def.LabelCap);
-            Text.Anchor = previousAnchor;
-            Text.Font = previousFont;
-
-            DrawDropdownButton(
-                buttonRect,
-                currentLabel,
-                enabled,
-                options,
-                labelGetter,
-                onSelected);
-
-            if (!enabled)
-            {
-                DrawDisabledTip(
-                    new Rect(rect.x, y, rect.width, titleRowHeight + TitleDescriptionGap + descriptionHeight),
-                    context);
-            }
-
-            y += titleRowHeight + TitleDescriptionGap;
-
-            Text.Font = GameFont.Small;
-            Widgets.Label(new Rect(rect.x, y, rect.width, descriptionHeight), GetDescription());
-            Text.Font = previousFont;
-            y += descriptionHeight;
-
-            if (includeSeparator)
-            {
-                DrawSectionSeparator(rect, ref y);
-            }
-
-            return y;
-        }
-
-        protected void DrawSectionSeparator(Rect rect, ref float y)
-        {
-            y += SeparatorTopGap;
-            Color previousColor = GUI.color;
+            bool previousWordWrap = Text.WordWrap;
             try
             {
-                GUI.color = new Color(1f, 1f, 1f, 0.2f);
-                Widgets.DrawLineHorizontal(rect.x, y, rect.width);
+                Text.Font = GameFont.Medium;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                Text.WordWrap = false;
+                GUI.color = enabled ? Color.white : TitleDisabledColor;
+                Widgets.Label(titleRect, def.LabelCap);
+
+                if (DrawFlatDropdownButton(dropdownRect, currentLabel, enabled))
+                {
+                    onDropdownClicked();
+                }
+
+                float y = inner.y + headerHeight + DescriptionTopGap;
+                float descriptionHeight = MeasureDescriptionHeight(inner.width);
+                Rect descriptionRect = new Rect(inner.x, y, inner.width, descriptionHeight);
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.UpperLeft;
+                Text.WordWrap = true;
+                GUI.color = enabled ? DescriptionColor : DescriptionDisabledColor;
+                Widgets.Label(descriptionRect, GetDescription());
+                y += descriptionHeight;
+
+                if (!enabled)
+                {
+                    y += DrawDisabledReason(inner.x, y, inner.width, disabledReason);
+                }
+
+                return y;
             }
             finally
             {
                 GUI.color = previousColor;
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
             }
-
-            y += SeparatorBottomGap;
         }
 
-        protected void DrawDropdownButton<T>(
-            Rect buttonRect,
-            string currentLabel,
-            bool enabled,
-            IEnumerable<T> options,
-            Func<T, string> labelGetter,
-            Action<T> onSelected)
+        protected float DrawDisabledReason(float x, float y, float width, string? reason)
         {
-            bool previousEnabled = GUI.enabled;
-            if (!enabled)
+            if (reason.NullOrEmpty())
             {
-                GUI.enabled = false;
+                return 0f;
             }
 
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            bool previousWordWrap = Text.WordWrap;
+            Color previousColor = GUI.color;
             try
             {
-                if (!Widgets.ButtonText(buttonRect, currentLabel) || !enabled)
-                {
-                    return;
-                }
-
-                List<FloatMenuOption> menuOptions = new List<FloatMenuOption>();
-                foreach (T option in options)
-                {
-                    T local = option;
-                    menuOptions.Add(
-                        new FloatMenuOption(
-                            labelGetter(local),
-                            () => onSelected(local)));
-                }
-
-                if (menuOptions.Count == 0)
-                {
-                    return;
-                }
-
-                Find.WindowStack.Add(new FloatMenu(menuOptions));
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.UpperLeft;
+                Text.WordWrap = true;
+                float height = Text.CalcHeight(reason, width);
+                Rect reasonRect = new Rect(x, y + DisabledReasonTopGap, width, height);
+                GUI.color = DisabledReasonColor;
+                Widgets.Label(reasonRect, reason);
+                return DisabledReasonTopGap + height;
             }
             finally
             {
-                GUI.enabled = previousEnabled;
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
+                GUI.color = previousColor;
             }
         }
 
-        protected void DrawDisabledTip(
-            Rect rect,
-            MechanoidMechanitorStoryConfigurationContext context)
+        protected bool DrawFlatDropdownButton(Rect rect, string label, bool enabled)
         {
-            if (CanInteract(context))
+            Color previousColor = GUI.color;
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            bool previousWordWrap = Text.WordWrap;
+            try
             {
-                return;
+                Color bg = enabled ? DropdownBgColor : DropdownBgDisabledColor;
+                Color outline = enabled ? DropdownOutlineColor : DropdownOutlineDisabledColor;
+                if (enabled && Mouse.IsOver(rect))
+                {
+                    bg = DropdownBgHoverColor;
+                    outline = DropdownOutlineHoverColor;
+                }
+
+                Widgets.DrawBoxSolidWithOutline(rect, bg, outline);
+
+                Text.Font = GameFont.Small;
+                Text.WordWrap = false;
+                GUI.color = enabled ? Color.white : new Color(1f, 1f, 1f, 0.40f);
+
+                Rect labelRect = new Rect(rect.x + 8f, rect.y, Mathf.Max(1f, rect.width - 26f), rect.height);
+                Text.Anchor = TextAnchor.MiddleLeft;
+                Widgets.Label(labelRect, label.Truncate(labelRect.width));
+
+                Rect arrowRect = new Rect(rect.xMax - 18f, rect.y, 14f, rect.height);
+                Text.Anchor = TextAnchor.MiddleCenter;
+                Widgets.Label(arrowRect, "▼");
+
+                if (!enabled)
+                {
+                    return false;
+                }
+
+                return Widgets.ButtonInvisible(rect, doMouseoverSound: true);
+            }
+            finally
+            {
+                GUI.color = previousColor;
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
+            }
+        }
+
+        protected void OpenDropdownMenu<T>(
+            T[] options,
+            Func<T, string> getLabel,
+            Action<T> onSelected)
+        {
+            List<FloatMenuOption> menuOptions = new List<FloatMenuOption>(options.Length);
+            for (int i = 0; i < options.Length; i++)
+            {
+                T option = options[i];
+                string label = getLabel(option);
+                menuOptions.Add(new FloatMenuOption(label, () => onSelected(option)));
             }
 
-            string? reason = GetDisabledReason(context);
-            if (!reason.NullOrEmpty())
-            {
-                TooltipHandler.TipRegion(rect, reason);
-            }
+            Find.WindowStack.Add(new FloatMenu(menuOptions));
         }
     }
 }
