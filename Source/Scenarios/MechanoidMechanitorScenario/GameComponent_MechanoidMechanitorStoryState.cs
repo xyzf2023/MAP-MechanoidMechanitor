@@ -12,9 +12,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool initialOrdinaryFactionRelationsApplied;
 
+        private bool hasLockedOrdinaryFactionRelations;
+
         private readonly Dictionary<Faction, MechanoidMechanitorFactionRelationOption>
             customFactionOptionCache =
                 new Dictionary<Faction, MechanoidMechanitorFactionRelationOption>();
+
+        private readonly HashSet<Faction> ordinaryFactionCache = new HashSet<Faction>();
 
         public MechanoidMechanitorStoryStyleDef? SelectedStoryStyle => selectedStoryStyle;
 
@@ -87,6 +91,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public static bool HasLockedOrdinaryFactionRelations
+        {
+            get
+            {
+                GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+                return component != null && component.hasLockedOrdinaryFactionRelations;
+            }
+        }
+
         private static GameComponent_MechanoidMechanitorStoryState? CurrentComponent
         {
             get
@@ -111,13 +124,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             selectedStoryStyle = storyStyle;
             activeConfiguration = configuration.CreateCopy();
             initialOrdinaryFactionRelationsApplied = false;
-            RebuildCustomFactionOptionCache();
+            RebuildRuntimeCaches();
         }
 
         public void MarkInitialOrdinaryFactionRelationsApplied()
         {
             initialOrdinaryFactionRelationsApplied = true;
-            RebuildCustomFactionOptionCache();
+            RebuildRuntimeCaches();
         }
 
         public static bool IsStoryStyleActive(MechanoidMechanitorStoryStyleDef? storyStyle)
@@ -128,6 +141,41 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return CurrentStoryStyle == storyStyle;
+        }
+
+        public bool IsCachedOrdinaryFaction(Faction? faction)
+        {
+            return faction != null && ordinaryFactionCache.Contains(faction);
+        }
+
+        public bool TryGetPlayerAndCachedOrdinary(
+            Faction a,
+            Faction b,
+            out Faction player,
+            out Faction ordinary)
+        {
+            player = null!;
+            ordinary = null!;
+            if (a == null || b == null || a == b)
+            {
+                return false;
+            }
+
+            if (a.IsPlayer && !b.IsPlayer)
+            {
+                player = a;
+                ordinary = b;
+                return ordinaryFactionCache.Contains(ordinary);
+            }
+
+            if (b.IsPlayer && !a.IsPlayer)
+            {
+                player = b;
+                ordinary = a;
+                return ordinaryFactionCache.Contains(ordinary);
+            }
+
+            return false;
         }
 
         public static bool TryGetEffectiveOrdinaryFactionRelationOption(
@@ -147,11 +195,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (!MechanoidMechanitorOrdinaryFactionUtility.TryGetPlayerAndOrdinary(
-                    a,
-                    b,
-                    out _,
-                    out Faction ordinary))
+            if (!component.TryGetPlayerAndCachedOrdinary(a, b, out _, out Faction ordinary))
             {
                 return false;
             }
@@ -188,16 +232,46 @@ namespace MAP_MechanoidMechanitor.Scenarios
             out int goodwill,
             out FactionRelationKind relationKind)
         {
+            return TryGetLockedOrdinaryFactionRelation(
+                a,
+                b,
+                out _,
+                out goodwill,
+                out relationKind);
+        }
+
+        public static bool TryGetLockedOrdinaryFactionRelation(
+            Faction a,
+            Faction b,
+            out Faction ordinary,
+            out int goodwill,
+            out FactionRelationKind relationKind)
+        {
+            ordinary = null!;
             goodwill = 0;
             relationKind = FactionRelationKind.Neutral;
-            if (!HasAppliedInitialOrdinaryFactionRelations)
+
+            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
             {
                 return false;
             }
 
-            if (!TryGetEffectiveOrdinaryFactionRelationOption(
-                    a,
-                    b,
+            GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+            if (component == null
+                || !component.initialOrdinaryFactionRelationsApplied
+                || !component.hasLockedOrdinaryFactionRelations
+                || component.activeConfiguration == null)
+            {
+                return false;
+            }
+
+            if (!component.TryGetPlayerAndCachedOrdinary(a, b, out _, out ordinary))
+            {
+                return false;
+            }
+
+            if (!component.TryResolveEffectiveOrdinaryFactionRelationOption(
+                    ordinary,
                     out MechanoidMechanitorFactionRelationOption option))
             {
                 return false;
@@ -215,7 +289,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             option = MechanoidMechanitorFactionRelationOption.Default;
             if (activeConfiguration == null
-                || !MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(ordinaryFaction))
+                || ordinaryFaction == null
+                || !ordinaryFactionCache.Contains(ordinaryFaction))
             {
                 return false;
             }
@@ -238,6 +313,39 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
+        public void NotifyFactionAdded(Faction faction)
+        {
+            if (faction == null)
+            {
+                return;
+            }
+
+            FactionManager? factionManager = Find.FactionManager;
+            if (factionManager == null)
+            {
+                return;
+            }
+
+            if (faction.def == FactionDefOf.Mechanoid
+                || factionManager.OfMechanoids == faction)
+            {
+                RebuildRuntimeCaches();
+                return;
+            }
+
+            List<Faction> currentFactions = factionManager.AllFactionsListForReading;
+            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive(
+                factionManager,
+                currentFactions);
+            if (MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(
+                    faction,
+                    currentFactions,
+                    mechHive))
+            {
+                ordinaryFactionCache.Add(faction);
+            }
+        }
+
         public override void LoadedGame()
         {
             base.LoadedGame();
@@ -246,7 +354,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            RebuildCustomFactionOptionCache();
+            RebuildRuntimeCaches();
             if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
             {
                 return;
@@ -282,14 +390,49 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     MechanoidMechanitorStoryConfigurationContext context =
                         MechanoidMechanitorStoryConfigurationContext.Create(activeConfiguration);
                     activeConfiguration.Normalize(context);
-                    RebuildCustomFactionOptionCache();
+                    RebuildRuntimeCaches();
+                }
+            }
+        }
+
+        public void RebuildRuntimeCaches()
+        {
+            customFactionOptionCache.Clear();
+            ordinaryFactionCache.Clear();
+            hasLockedOrdinaryFactionRelations = false;
+
+            RebuildOrdinaryFactionCache();
+            RebuildCustomFactionOptionCache();
+            hasLockedOrdinaryFactionRelations = ComputeHasLockedOrdinaryFactionRelations();
+        }
+
+        private void RebuildOrdinaryFactionCache()
+        {
+            FactionManager? factionManager = Find.FactionManager;
+            if (factionManager == null)
+            {
+                return;
+            }
+
+            List<Faction> currentFactions = factionManager.AllFactionsListForReading;
+            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive(
+                factionManager,
+                currentFactions);
+            for (int i = 0; i < currentFactions.Count; i++)
+            {
+                Faction faction = currentFactions[i];
+                if (MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(
+                        faction,
+                        currentFactions,
+                        mechHive))
+                {
+                    ordinaryFactionCache.Add(faction);
                 }
             }
         }
 
         private void RebuildCustomFactionOptionCache()
         {
-            customFactionOptionCache.Clear();
             if (activeConfiguration == null
                 || activeConfiguration.ordinaryFactionRelationsMode
                     != MechanoidMechanitorOrdinaryFactionRelationsMode.Custom)
@@ -314,6 +457,55 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 customFactionOptionCache[setting.faction] = setting.relationOption;
             }
+        }
+
+        private bool ComputeHasLockedOrdinaryFactionRelations()
+        {
+            if (activeConfiguration == null)
+            {
+                return false;
+            }
+
+            switch (activeConfiguration.ordinaryFactionRelationsMode)
+            {
+                case MechanoidMechanitorOrdinaryFactionRelationsMode.AllPermanentHostile:
+                case MechanoidMechanitorOrdinaryFactionRelationsMode.AllPermanentNeutral:
+                case MechanoidMechanitorOrdinaryFactionRelationsMode.AllPermanentAlly:
+                    return true;
+
+                case MechanoidMechanitorOrdinaryFactionRelationsMode.Custom:
+                    return CustomSettingsContainLockedOption();
+
+                default:
+                    return false;
+            }
+        }
+
+        private bool CustomSettingsContainLockedOption()
+        {
+            List<MechanoidMechanitorFactionRelationSetting> settings =
+                activeConfiguration!.ordinaryFactionRelationSettings;
+            if (settings == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < settings.Count; i++)
+            {
+                MechanoidMechanitorFactionRelationSetting? setting = settings[i];
+                if (setting == null)
+                {
+                    continue;
+                }
+
+                if (MechanoidMechanitorOrdinaryFactionRelationPolicy.IsLockedOption(
+                        setting.relationOption))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

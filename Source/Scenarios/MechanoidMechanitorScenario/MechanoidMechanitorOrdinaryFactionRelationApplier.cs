@@ -41,7 +41,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (!MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(target))
+            GameComponent_MechanoidMechanitorStoryState? storyState =
+                Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
+            if (storyState != null)
+            {
+                if (!storyState.IsCachedOrdinaryFaction(target)
+                    && !MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(target))
+                {
+                    return false;
+                }
+            }
+            else if (!MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(target))
             {
                 return false;
             }
@@ -49,21 +59,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             applying = true;
             try
             {
-                FactionRelation? playerRelation = player.RelationWith(target, allowNull: true);
-                FactionRelation? targetRelation = target.RelationWith(player, allowNull: true);
-                if (playerRelation == null || targetRelation == null)
+                if (!TryEnsureBidirectionalRelations(
+                        player,
+                        target,
+                        out FactionRelation playerRelation,
+                        out FactionRelation targetRelation))
                 {
-                    player.TryMakeInitialRelationsWith(target);
-                    playerRelation = player.RelationWith(target, allowNull: true);
-                    targetRelation = target.RelationWith(player, allowNull: true);
-                    if (playerRelation == null || targetRelation == null)
-                    {
-                        Log.Error(
-                            "[MAP-机械族机械师] 无法写入普通派系关系：派系 "
-                            + target.Name
-                            + " 缺少与玩家的双向关系记录。");
-                        return false;
-                    }
+                    return false;
                 }
 
                 if (playerRelation.baseGoodwill == goodwill
@@ -147,22 +149,40 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            MechanoidMechanitorOrdinaryFactionUtility.CollectOrdinaryFactions(
-                temporaryOrdinaryFactions);
-            for (int i = 0; i < temporaryOrdinaryFactions.Count; i++)
+            storyState.RebuildRuntimeCaches();
+            bool allSucceeded = true;
+            try
             {
-                Faction faction = temporaryOrdinaryFactions[i];
-                if (!storyState.TryResolveEffectiveOrdinaryFactionRelationOption(
-                        faction,
-                        out MechanoidMechanitorFactionRelationOption option))
+                MechanoidMechanitorOrdinaryFactionUtility.CollectOrdinaryFactions(
+                    temporaryOrdinaryFactions);
+                for (int i = 0; i < temporaryOrdinaryFactions.Count; i++)
                 {
-                    continue;
-                }
+                    Faction faction = temporaryOrdinaryFactions[i];
+                    if (!storyState.TryResolveEffectiveOrdinaryFactionRelationOption(
+                            faction,
+                            out MechanoidMechanitorFactionRelationOption option))
+                    {
+                        continue;
+                    }
 
-                TryApplyOption(faction, option);
+                    if (!TryApplyOption(faction, option))
+                    {
+                        allSucceeded = false;
+                    }
+                }
+            }
+            finally
+            {
+                temporaryOrdinaryFactions.Clear();
             }
 
-            temporaryOrdinaryFactions.Clear();
+            if (!allSucceeded)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 普通派系初始关系未全部成功写入，已保持未初始化状态。");
+                return;
+            }
+
             storyState.MarkInitialOrdinaryFactionRelationsApplied();
         }
 
@@ -175,52 +195,124 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            MechanoidMechanitorOrdinaryFactionUtility.CollectOrdinaryFactions(
-                temporaryOrdinaryFactions);
-            for (int i = 0; i < temporaryOrdinaryFactions.Count; i++)
+            try
             {
-                Faction faction = temporaryOrdinaryFactions[i];
-                if (!storyState.TryResolveEffectiveOrdinaryFactionRelationOption(
-                        faction,
-                        out MechanoidMechanitorFactionRelationOption option))
+                MechanoidMechanitorOrdinaryFactionUtility.CollectOrdinaryFactions(
+                    temporaryOrdinaryFactions);
+                for (int i = 0; i < temporaryOrdinaryFactions.Count; i++)
                 {
-                    continue;
-                }
+                    Faction faction = temporaryOrdinaryFactions[i];
+                    if (!storyState.TryResolveEffectiveOrdinaryFactionRelationOption(
+                            faction,
+                            out MechanoidMechanitorFactionRelationOption option))
+                    {
+                        continue;
+                    }
 
-                if (!MechanoidMechanitorOrdinaryFactionRelationPolicy.TryGetLockedRelationTarget(
-                        option,
-                        out int goodwill,
-                        out FactionRelationKind relationKind))
-                {
-                    continue;
-                }
+                    if (!MechanoidMechanitorOrdinaryFactionRelationPolicy.TryGetLockedRelationTarget(
+                            option,
+                            out int goodwill,
+                            out FactionRelationKind relationKind))
+                    {
+                        continue;
+                    }
 
-                ApplyExactPlayerRelation(faction, goodwill, relationKind);
+                    ApplyExactPlayerRelation(faction, goodwill, relationKind);
+                }
             }
-
-            temporaryOrdinaryFactions.Clear();
+            finally
+            {
+                temporaryOrdinaryFactions.Clear();
+            }
         }
 
         public static void ApplyPolicyToNewOrdinaryFaction(Faction faction)
         {
             if (faction == null
+                || applying
                 || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled
-                || !GameComponent_MechanoidMechanitorStoryState
-                    .HasAppliedInitialOrdinaryFactionRelations
-                || !MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(faction))
+                || Current.Game == null)
             {
                 return;
             }
 
-            if (!GameComponent_MechanoidMechanitorStoryState
-                    .TryGetEffectiveOrdinaryFactionRelationOptionFor(
-                        faction,
-                        out MechanoidMechanitorFactionRelationOption option))
+            GameComponent_MechanoidMechanitorStoryState? storyState =
+                Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
+            if (storyState == null
+                || !storyState.InitialOrdinaryFactionRelationsApplied
+                || !storyState.IsCachedOrdinaryFaction(faction))
+            {
+                return;
+            }
+
+            if (!storyState.TryResolveEffectiveOrdinaryFactionRelationOption(
+                    faction,
+                    out MechanoidMechanitorFactionRelationOption option))
             {
                 return;
             }
 
             TryApplyOption(faction, option);
+        }
+
+        private static bool TryEnsureBidirectionalRelations(
+            Faction player,
+            Faction target,
+            out FactionRelation playerRelation,
+            out FactionRelation targetRelation)
+        {
+            playerRelation = null!;
+            targetRelation = null!;
+
+            FactionRelation? playerSide = player.RelationWith(target, allowNull: true);
+            FactionRelation? targetSide = target.RelationWith(player, allowNull: true);
+
+            if (playerSide != null && targetSide != null)
+            {
+                playerRelation = playerSide;
+                targetRelation = targetSide;
+                return true;
+            }
+
+            if (playerSide == null && targetSide == null)
+            {
+                player.TryMakeInitialRelationsWith(target);
+            }
+            else if (playerSide != null)
+            {
+                FactionRelation rebuild = new FactionRelation
+                {
+                    other = target,
+                    baseGoodwill = playerSide.baseGoodwill,
+                    kind = playerSide.kind
+                };
+                player.SetRelation(rebuild);
+            }
+            else
+            {
+                FactionRelation rebuild = new FactionRelation
+                {
+                    other = player,
+                    baseGoodwill = targetSide!.baseGoodwill,
+                    kind = targetSide.kind
+                };
+                target.SetRelation(rebuild);
+            }
+
+            playerSide = player.RelationWith(target, allowNull: true);
+            targetSide = target.RelationWith(player, allowNull: true);
+            if (playerSide == null || targetSide == null)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 无法写入普通派系关系：派系 "
+                    + target.Name
+                    + " 缺少与玩家的双向关系记录。");
+                return false;
+            }
+
+            playerRelation = playerSide;
+            targetRelation = targetSide;
+            return true;
         }
     }
 }
