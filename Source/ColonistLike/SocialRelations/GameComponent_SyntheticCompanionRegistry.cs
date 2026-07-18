@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Verse;
 
@@ -8,6 +9,10 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public sealed class GameComponent_SyntheticCompanionRegistry : GameComponent
     {
+        private static readonly IReadOnlyList<SyntheticCompanionAuthorizationRecord>
+            EmptyAuthorizationSnapshot =
+                Array.Empty<SyntheticCompanionAuthorizationRecord>();
+
         private List<SyntheticCompanionAuthorizationRecord> authorizationRecords =
             new List<SyntheticCompanionAuthorizationRecord>();
 
@@ -56,6 +61,53 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
+        /// 是否存在动态授权记录（含死亡/尸体中/离图；不含 Discarded）。
+        /// </summary>
+        public static bool HasAuthorizationRecord(Pawn? pawn)
+        {
+            GameComponent_SyntheticCompanionRegistry? registry = CurrentRegistry;
+            if (registry == null || pawn == null || pawn.Discarded)
+            {
+                return false;
+            }
+
+            return registry.FindRecordForPawn(pawn) != null;
+        }
+
+        /// <summary>
+        /// 动态授权记录快照：新集合，不暴露内部可变列表。
+        /// 包含死亡、尸体中、远行队、未生成与暂时离图；排除空记录与 Discarded。
+        /// 原生「恋人」静态 Comp 不出现于此快照，除非另有动态授权记录。
+        /// </summary>
+        public static IReadOnlyList<SyntheticCompanionAuthorizationRecord>
+            GetAuthorizationRecordSnapshot()
+        {
+            GameComponent_SyntheticCompanionRegistry? registry = CurrentRegistry;
+            if (registry == null)
+            {
+                return EmptyAuthorizationSnapshot;
+            }
+
+            List<SyntheticCompanionAuthorizationRecord> snapshot =
+                new List<SyntheticCompanionAuthorizationRecord>();
+            List<SyntheticCompanionAuthorizationRecord> records =
+                registry.authorizationRecords;
+            for (int i = 0; i < records.Count; i++)
+            {
+                SyntheticCompanionAuthorizationRecord? record = records[i];
+                Pawn? pawn = record?.Pawn;
+                if (record == null || pawn == null || pawn.Discarded)
+                {
+                    continue;
+                }
+
+                snapshot.Add(record);
+            }
+
+            return snapshot;
+        }
+
+        /// <summary>
         /// 为有效机械体创建默认仿生伴侣授权。已授权时返回 false。
         /// </summary>
         public static bool TryAuthorize(Pawn? pawn)
@@ -80,6 +132,35 @@ namespace MAP_MechanoidMechanitor
             registry.AddRecord(record);
             ColonistLikeSocialTrackerUtility.EnsureTrackers(pawn);
             return true;
+        }
+
+        /// <summary>
+        /// 撤销动态授权：删除全部对应记录与索引。不销毁 tracker、关系、床位、子女或孕期。
+        /// 不修改原生「恋人」静态 Comp。
+        /// </summary>
+        public static bool TryRevokeAuthorization(Pawn? pawn)
+        {
+            GameComponent_SyntheticCompanionRegistry? registry = CurrentRegistry;
+            if (registry == null || pawn == null)
+            {
+                return false;
+            }
+
+            bool removed = false;
+            List<SyntheticCompanionAuthorizationRecord> records =
+                registry.authorizationRecords;
+            for (int i = records.Count - 1; i >= 0; i--)
+            {
+                SyntheticCompanionAuthorizationRecord? record = records[i];
+                if (record != null && ReferenceEquals(record.Pawn, pawn))
+                {
+                    records.RemoveAt(i);
+                    removed = true;
+                }
+            }
+
+            bool removedFromIndex = registry.recordByPawn.Remove(pawn);
+            return removed || removedFromIndex;
         }
 
         public override void ExposeData()

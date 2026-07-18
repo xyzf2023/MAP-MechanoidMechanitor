@@ -1,0 +1,164 @@
+using System.Collections.Generic;
+using LudeonTK;
+using RimWorld;
+using Verse;
+
+namespace MAP_MechanoidMechanitor
+{
+    /// <summary>
+    /// 角色注册表开发者指令：打开管理窗口，以及地图点击注册机械族。
+    /// </summary>
+    public static class RoleRegistryDebugActions
+    {
+        [DebugAction(
+            "MAP-机械族机械师",
+            "查看角色注册表",
+            false,
+            false,
+            false,
+            false,
+            false,
+            0,
+            false,
+            actionType = DebugActionType.Action,
+            allowedGameStates = AllowedGameStates.Playing)]
+        private static void OpenRoleRegistryDialog()
+        {
+            if (Current.Game == null)
+            {
+                Messages.Message(
+                    "无法打开角色注册表：当前没有有效游戏。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                return;
+            }
+
+            if (Current.Game.GetComponent<GameComponent_MechanoidMechanitorRegistry>() == null
+                || Current.Game.GetComponent<GameComponent_SyntheticCompanionRegistry>() == null)
+            {
+                Messages.Message(
+                    "无法打开角色注册表：注册表组件不可用。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                return;
+            }
+
+            Find.WindowStack.Add(new Dialog_RoleRegistryDebug());
+        }
+
+        [DebugAction(
+            "MAP-机械族机械师",
+            "添加机械族到角色注册表...",
+            false,
+            false,
+            false,
+            false,
+            false,
+            0,
+            false,
+            actionType = DebugActionType.ToolMapForPawns,
+            allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void AddMechanoidToRoleRegistry(Pawn clickedPawn)
+        {
+            if (clickedPawn == null
+                || clickedPawn.RaceProps == null
+                || !clickedPawn.RaceProps.IsMechanoid)
+            {
+                Messages.Message(
+                    "拒绝添加：目标不是有效机械族。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                return;
+            }
+
+            if (clickedPawn.Dead || clickedPawn.Destroyed || clickedPawn.Discarded)
+            {
+                Messages.Message(
+                    "拒绝添加：目标已死亡、已销毁或已永久丢弃。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                return;
+            }
+
+            List<FloatMenuOption> options = new List<FloatMenuOption>();
+
+            bool hasMechanitorRecord =
+                GameComponent_MechanoidMechanitorRegistry.HasPersistentRecord(clickedPawn);
+            if (hasMechanitorRecord)
+            {
+                options.Add(new FloatMenuOption(
+                    "加入机械族机械师注册表（已经注册）",
+                    null));
+            }
+            else
+            {
+                Pawn localPawn = clickedPawn;
+                options.Add(new FloatMenuOption(
+                    "加入机械族机械师注册表",
+                    () => TryRegisterMechanitor(localPawn)));
+            }
+
+            bool hasCompanionRecord =
+                GameComponent_SyntheticCompanionRegistry.HasAuthorizationRecord(clickedPawn);
+            bool hasStaticCompanionComp =
+                clickedPawn.GetComp<CompSyntheticCompanionUser>() != null;
+            if (hasCompanionRecord)
+            {
+                options.Add(new FloatMenuOption(
+                    "加入仿生伴侣注册表（已经注册）",
+                    null));
+            }
+            else if (hasStaticCompanionComp)
+            {
+                options.Add(new FloatMenuOption(
+                    "加入仿生伴侣注册表（已拥有静态仿生伴侣能力，无需加入动态注册表）",
+                    null));
+            }
+            else
+            {
+                Pawn localPawn = clickedPawn;
+                options.Add(new FloatMenuOption(
+                    "加入仿生伴侣注册表",
+                    () => TryAuthorizeCompanion(localPawn)));
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options, clickedPawn.LabelShortCap));
+        }
+
+        private static void TryRegisterMechanitor(Pawn pawn)
+        {
+            if (GameComponent_MechanoidMechanitorRegistry.TryRegisterFromDebug(pawn))
+            {
+                Messages.Message(
+                    "已加入机械族机械师注册表：" + pawn.LabelShortCap + "。",
+                    MessageTypeDefOf.TaskCompletion,
+                    historical: false);
+            }
+            else
+            {
+                Messages.Message(
+                    "加入机械族机械师注册表失败：" + pawn.LabelShortCap + "。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+            }
+        }
+
+        private static void TryAuthorizeCompanion(Pawn pawn)
+        {
+            if (GameComponent_SyntheticCompanionRegistry.TryAuthorize(pawn))
+            {
+                Messages.Message(
+                    "已加入仿生伴侣注册表：" + pawn.LabelShortCap + "。",
+                    MessageTypeDefOf.TaskCompletion,
+                    historical: false);
+            }
+            else
+            {
+                Messages.Message(
+                    "加入仿生伴侣注册表失败：" + pawn.LabelShortCap + "。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+            }
+        }
+    }
+}
