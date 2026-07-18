@@ -9,6 +9,8 @@ namespace MAP_MechanoidMechanitor
     {
         private const int ReleaseRetryIntervalTicks = 60;
 
+        private const int IdleBillPollIntervalTicks = 60;
+
         private int remainingTicks = -1;
 
         private bool timerInitialized;
@@ -26,6 +28,12 @@ namespace MAP_MechanoidMechanitor
         private bool releaseFailureLogged;
 
         private bool releaseMissingLogged;
+
+        /// <summary>
+        /// 运行时空闲确认：最近完整检查时无 Forming/Formed/已提交结算/待释放需逐 Tick 处理。
+        /// 不序列化；读档后默认为 false，强制首 Tick 完整检查。
+        /// </summary>
+        private bool idleStateConfirmed;
 
         private Bill_ProductionMech? settlementBlockedForBill;
 
@@ -71,11 +79,19 @@ namespace MAP_MechanoidMechanitor
             // 第一优先级：已提交结算或待释放时，绝不二次结算。
             if (settlementCommitted || releasePending)
             {
+                idleStateConfirmed = false;
                 TickCommittedSettlement(gestator);
                 return;
             }
 
             if (completionInProgress)
+            {
+                idleStateConfirmed = false;
+                return;
+            }
+
+            // 已确认空闲：仅在哈希间隔轮询账单，避免每 Tick 读取 ActiveMechBill。
+            if (idleStateConfirmed && !gestator.IsHashIntervalTick(IdleBillPollIntervalTicks))
             {
                 return;
             }
@@ -86,6 +102,7 @@ namespace MAP_MechanoidMechanitor
             if (activeBill is Bill_ProductionMech formedBill
                 && formedBill.State == FormingState.Formed)
             {
+                idleStateConfirmed = false;
                 ResetTimer();
                 if (!ReferenceEquals(settlementBlockedForBill, formedBill))
                 {
@@ -104,6 +121,7 @@ namespace MAP_MechanoidMechanitor
             if (activeBill is Bill_ProductionMech productionBill
                 && productionBill.State == FormingState.Forming)
             {
+                idleStateConfirmed = false;
                 if (!ReferenceEquals(settlementBlockedForBill, productionBill))
                 {
                     TickForming(gestator, productionBill);
@@ -114,6 +132,12 @@ namespace MAP_MechanoidMechanitor
 
             // 第四优先级：其他状态。不清除仍有效的 settlementCommitted（已在第一优先级处理）。
             ResetTimer();
+
+            // 仅无结算受阻时确认空闲；存在 settlementBlockedForBill 时保持逐 Tick 检查。
+            if (settlementBlockedForBill == null)
+            {
+                idleStateConfirmed = true;
+            }
         }
 
         public override void PostExposeData()
@@ -146,6 +170,7 @@ namespace MAP_MechanoidMechanitor
             Pawn producer,
             bool updateResourceCountsOnRelease)
         {
+            idleStateConfirmed = false;
             settlementCommitted = true;
             releasePending = true;
             committedBill = bill;
@@ -164,6 +189,7 @@ namespace MAP_MechanoidMechanitor
 
         internal void NotifySettlementFullyCompleted()
         {
+            idleStateConfirmed = false;
             releasePending = false;
             settlementCommitted = false;
             committedBill = null;
@@ -175,6 +201,7 @@ namespace MAP_MechanoidMechanitor
 
         internal void ClearSettlementAndReleaseState()
         {
+            idleStateConfirmed = false;
             releasePending = false;
             settlementCommitted = false;
             committedBill = null;
@@ -187,6 +214,7 @@ namespace MAP_MechanoidMechanitor
 
         internal void NotifySettlementBlocked(Bill_ProductionMech bill)
         {
+            idleStateConfirmed = false;
             settlementBlockedForBill = bill;
         }
 
@@ -267,6 +295,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            idleStateConfirmed = false;
+
             if (!timerInitialized)
             {
                 remainingTicks = Building_MassProductionMechGestator.FixedFormingTicks;
@@ -297,6 +327,8 @@ namespace MAP_MechanoidMechanitor
             {
                 return;
             }
+
+            idleStateConfirmed = false;
 
             if (!timerInitialized)
             {
@@ -451,6 +483,11 @@ namespace MAP_MechanoidMechanitor
 
         private void ResetTimer()
         {
+            if (!timerInitialized && remainingTicks == -1)
+            {
+                return;
+            }
+
             timerInitialized = false;
             remainingTicks = -1;
         }
