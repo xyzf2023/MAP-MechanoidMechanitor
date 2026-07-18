@@ -32,6 +32,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
             GameComponent_MechanoidMechanitorScenarioState.EnableForCurrentGame();
         }
 
+        public override void PreMapGenerate()
+        {
+            base.PreMapGenerate();
+            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            {
+                return;
+            }
+
+            if (Current.Game == null)
+            {
+                return;
+            }
+
+            GameComponent_MechanoidMechanitorStoryState? storyState =
+                Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
+            if (storyState == null || !GameComponent_MechanoidMechanitorStoryState.HasActiveConfiguration)
+            {
+                return;
+            }
+
+            if (storyState.InitialOrdinaryFactionRelationsApplied)
+            {
+                return;
+            }
+
+            MechanoidMechanitorOrdinaryFactionRelationApplier
+                .ApplyInitialOrdinaryFactionRelations(storyState);
+        }
+
         public override string Summary(Scenario scen)
         {
             return def.description;
