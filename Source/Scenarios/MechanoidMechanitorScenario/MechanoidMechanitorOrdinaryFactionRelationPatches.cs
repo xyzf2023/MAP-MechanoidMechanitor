@@ -60,6 +60,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static void Postfix(Faction __instance, FactionRelation relation)
         {
             if (MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying
+                || MechanoidMechanitorMechHiveRelationApplier.IsApplying
                 || relation?.other == null)
             {
                 return;
@@ -90,6 +91,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (faction == null
                 || MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying
+                || MechanoidMechanitorMechHiveRelationApplier.IsApplying
                 || Current.Game == null)
             {
                 return;
@@ -105,6 +107,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             storyState.NotifyFactionAdded(faction);
             MechanoidMechanitorOrdinaryFactionRelationApplier
                 .ApplyPolicyToNewOrdinaryFaction(faction);
+            MechanoidMechanitorMechHiveRelationApplier.ApplyPolicyToNewMechHive(faction);
         }
     }
 }
+

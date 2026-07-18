@@ -12,7 +12,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool initialOrdinaryFactionRelationsApplied;
 
+        private bool initialMechHiveRelationApplied;
+
         private bool hasLockedOrdinaryFactionRelations;
+
+        private bool hasLockedMechHiveRelation;
+
+        private Faction? cachedMechHive;
 
         private readonly Dictionary<Faction, MechanoidMechanitorFactionRelationOption>
             customFactionOptionCache =
@@ -22,8 +28,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public MechanoidMechanitorStoryStyleDef? SelectedStoryStyle => selectedStoryStyle;
 
+        public MechanoidMechanitorStoryConfiguration? ActiveConfiguration => activeConfiguration;
+
+        public Faction? CachedMechHive => cachedMechHive;
+
         public bool InitialOrdinaryFactionRelationsApplied =>
             initialOrdinaryFactionRelationsApplied;
+
+        public bool InitialMechHiveRelationApplied => initialMechHiveRelationApplied;
 
         public static MechanoidMechanitorStoryStyleDef? CurrentStoryStyle
         {
@@ -91,12 +103,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public static bool HasAppliedInitialMechHiveRelation
+        {
+            get
+            {
+                GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+                return component != null && component.initialMechHiveRelationApplied;
+            }
+        }
+
         public static bool HasLockedOrdinaryFactionRelations
         {
             get
             {
                 GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
                 return component != null && component.hasLockedOrdinaryFactionRelations;
+            }
+        }
+
+        public static bool HasLockedMechHiveRelation
+        {
+            get
+            {
+                GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+                return component != null && component.hasLockedMechHiveRelation;
             }
         }
 
@@ -124,12 +154,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             selectedStoryStyle = storyStyle;
             activeConfiguration = configuration.CreateCopy();
             initialOrdinaryFactionRelationsApplied = false;
+            initialMechHiveRelationApplied = false;
             RebuildRuntimeCaches();
         }
 
         public void MarkInitialOrdinaryFactionRelationsApplied()
         {
             initialOrdinaryFactionRelationsApplied = true;
+            RebuildRuntimeCaches();
+        }
+
+        public void MarkInitialMechHiveRelationApplied()
+        {
+            initialMechHiveRelationApplied = true;
             RebuildRuntimeCaches();
         }
 
@@ -146,6 +183,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool IsCachedOrdinaryFaction(Faction? faction)
         {
             return faction != null && ordinaryFactionCache.Contains(faction);
+        }
+
+        public bool IsCurrentMechHive(Faction? faction)
+        {
+            return faction != null && cachedMechHive != null && faction == cachedMechHive;
         }
 
         public bool TryGetPlayerAndCachedOrdinary(
@@ -278,6 +320,58 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 out relationKind);
         }
 
+        public static bool TryGetLockedMechHiveRelation(
+            Faction a,
+            Faction b,
+            out Faction mechHive,
+            out FactionRelationKind relationKind)
+        {
+            mechHive = null!;
+            relationKind = FactionRelationKind.Neutral;
+
+            GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+            if (component == null
+                || !component.initialMechHiveRelationApplied
+                || !component.hasLockedMechHiveRelation
+                || component.activeConfiguration == null
+                || component.cachedMechHive == null
+                || a == null
+                || b == null
+                || a == b)
+            {
+                return false;
+            }
+
+            Faction other;
+            if (a.IsPlayer && !b.IsPlayer)
+            {
+                other = b;
+            }
+            else if (b.IsPlayer && !a.IsPlayer)
+            {
+                other = a;
+            }
+            else
+            {
+                return false;
+            }
+
+            if (other != component.cachedMechHive)
+            {
+                return false;
+            }
+
+            if (!MechanoidMechanitorMechHiveRelationPolicy.TryGetLockedTarget(
+                    component.activeConfiguration.mechHiveRelationMode,
+                    out relationKind))
+            {
+                return false;
+            }
+
+            mechHive = component.cachedMechHive;
+            return true;
+        }
+
         public bool TryResolveEffectiveOrdinaryFactionRelationOption(
             Faction ordinaryFaction,
             out MechanoidMechanitorFactionRelationOption option)
@@ -329,13 +423,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             List<Faction> currentFactions = factionManager.AllFactionsListForReading;
-            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive(
-                factionManager,
-                currentFactions);
             if (MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(
                     faction,
                     currentFactions,
-                    mechHive))
+                    cachedMechHive))
             {
                 ordinaryFactionCache.Add(faction);
             }
@@ -350,18 +441,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             RebuildRuntimeCaches();
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled
+                || activeConfiguration == null)
             {
                 return;
             }
 
-            if (!initialOrdinaryFactionRelationsApplied || activeConfiguration == null)
+            if (initialOrdinaryFactionRelationsApplied)
             {
-                return;
+                MechanoidMechanitorOrdinaryFactionRelationApplier
+                    .CalibrateLockedOrdinaryFactionRelations(this);
             }
 
-            MechanoidMechanitorOrdinaryFactionRelationApplier
-                .CalibrateLockedOrdinaryFactionRelations(this);
+            if (initialMechHiveRelationApplied)
+            {
+                MechanoidMechanitorMechHiveRelationApplier
+                    .CalibrateLockedMechHiveRelation(this);
+            }
         }
 
         public override void ExposeData()
@@ -376,6 +472,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(
                 ref initialOrdinaryFactionRelationsApplied,
                 "initialOrdinaryFactionRelationsApplied",
+                false);
+            Scribe_Values.Look(
+                ref initialMechHiveRelationApplied,
+                "initialMechHiveRelationApplied",
                 false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit && activeConfiguration != null)
@@ -394,11 +494,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             customFactionOptionCache.Clear();
             ordinaryFactionCache.Clear();
+            cachedMechHive = null;
             hasLockedOrdinaryFactionRelations = false;
+            hasLockedMechHiveRelation = false;
 
+            cachedMechHive = ResolveCachedMechHive();
             RebuildOrdinaryFactionCache();
             RebuildCustomFactionOptionCache();
             hasLockedOrdinaryFactionRelations = ComputeHasLockedOrdinaryFactionRelations();
+            hasLockedMechHiveRelation = ComputeHasLockedMechHiveRelation();
+        }
+
+        private static Faction? ResolveCachedMechHive()
+        {
+            FactionManager? factionManager = Find.FactionManager;
+            if (factionManager == null)
+            {
+                return null;
+            }
+
+            return MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive(
+                factionManager,
+                factionManager.AllFactionsListForReading);
         }
 
         private void RebuildOrdinaryFactionCache()
@@ -410,16 +527,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             List<Faction> currentFactions = factionManager.AllFactionsListForReading;
-            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive(
-                factionManager,
-                currentFactions);
             for (int i = 0; i < currentFactions.Count; i++)
             {
                 Faction faction = currentFactions[i];
                 if (MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(
                         faction,
                         currentFactions,
-                        mechHive))
+                        cachedMechHive))
                 {
                     ordinaryFactionCache.Add(faction);
                 }
@@ -474,6 +588,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 default:
                     return false;
             }
+        }
+
+        private bool ComputeHasLockedMechHiveRelation()
+        {
+            if (cachedMechHive == null || activeConfiguration == null)
+            {
+                return false;
+            }
+
+            return MechanoidMechanitorMechHiveRelationPolicy.IsLockedMode(
+                activeConfiguration.mechHiveRelationMode);
         }
 
         private bool CustomSettingsContainLockedOption()
