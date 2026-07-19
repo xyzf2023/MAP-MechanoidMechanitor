@@ -73,6 +73,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private int cachedDropTick = int.MinValue;
 
+        private bool devControlsEnabled;
+
         public override Vector2 InitialSize
         {
             get
@@ -229,6 +231,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(inner.x, y, inner.width, buttonHeight),
                 MechanoidOvermindPageKind.Chat,
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat".Translate());
+            y += buttonHeight;
 
             Rect disconnectRect = new Rect(
                 inner.x,
@@ -241,6 +244,130 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     selected: false))
             {
                 Close(doCloseSound: true);
+            }
+
+            if (!Prefs.DevMode)
+            {
+                devControlsEnabled = false;
+            }
+            else
+            {
+                float devTop = y + 8f;
+                float devBottom = disconnectRect.y - 4f;
+                if (devBottom > devTop)
+                {
+                    DrawDevControls(new Rect(inner.x, devTop, inner.width, devBottom - devTop));
+                }
+            }
+        }
+
+        private void DrawDevControls(Rect available)
+        {
+            const float toggleHeight = 22f;
+            const float itemGap = 3f;
+            const float minButtonHeight = 22f;
+            const float preferredButtonHeight = 24f;
+            const int buttonCount = 4;
+
+            if (available.height < toggleHeight)
+            {
+                return;
+            }
+
+            Rect toggleRect = new Rect(
+                available.x,
+                available.y,
+                available.width,
+                toggleHeight);
+            bool enabled = devControlsEnabled;
+            Widgets.CheckboxLabeled(
+                toggleRect,
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Toggle".Translate(),
+                ref enabled);
+            devControlsEnabled = enabled;
+
+            if (!devControlsEnabled)
+            {
+                return;
+            }
+
+            float remaining = available.yMax - (toggleRect.yMax + itemGap);
+            float gaps = itemGap * (buttonCount - 1);
+            float maxButtonHeight = (remaining - gaps) / buttonCount;
+            if (maxButtonHeight < minButtonHeight)
+            {
+                return;
+            }
+
+            float buttonHeight = Mathf.Min(preferredButtonHeight, maxButtonHeight);
+            float y = toggleRect.yMax + itemGap;
+            if (DrawDevCreditButton(
+                    new Rect(available.x, y, available.width, buttonHeight),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add1000"))
+            {
+                AdjustPurgeCreditsForDev(1000);
+            }
+
+            y += buttonHeight + itemGap;
+            if (DrawDevCreditButton(
+                    new Rect(available.x, y, available.width, buttonHeight),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Sub1000"))
+            {
+                AdjustPurgeCreditsForDev(-1000);
+            }
+
+            y += buttonHeight + itemGap;
+            if (DrawDevCreditButton(
+                    new Rect(available.x, y, available.width, buttonHeight),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add100"))
+            {
+                AdjustPurgeCreditsForDev(100);
+            }
+
+            y += buttonHeight + itemGap;
+            if (DrawDevCreditButton(
+                    new Rect(available.x, y, available.width, buttonHeight),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Sub100"))
+            {
+                AdjustPurgeCreditsForDev(-100);
+            }
+        }
+
+        private static bool DrawDevCreditButton(Rect rect, string labelKey)
+        {
+            return MechanoidOvermindUiStyle.DrawActionButton(rect, labelKey.Translate());
+        }
+
+        private static void AdjustPurgeCreditsForDev(int delta)
+        {
+            try
+            {
+                if (delta == 0)
+                {
+                    return;
+                }
+
+                if (delta > 0)
+                {
+                    // RefundCredits 使用 long 加法并拒绝溢出，避免 int 回绕。
+                    GameComponent_MechanoidMechanitorStoryState.RefundPurgeDirectiveCredits(
+                        delta);
+                    return;
+                }
+
+                int current =
+                    GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRewardPoints();
+                int spend = Mathf.Min(current, -delta);
+                if (spend <= 0)
+                {
+                    return;
+                }
+
+                GameComponent_MechanoidMechanitorStoryState.TrySpendPurgeDirectiveCredits(spend);
+            }
+            catch (System.Exception)
+            {
+                // DEV 调试失败时静默。
             }
         }
 
