@@ -37,22 +37,20 @@
         </li>
         <li Class="ScenPart_StartingResearch">
           <def>StartingResearch</def>
-          <project>Batteries</project>
+          <project>MAP_AutonomousDirectiveCore</project>
+        </li>
+        <li Class="ScenPart_StartingResearch">
+          <def>StartingResearch</def>
+          <project>MAP_MechanicalCommandProxy</project>
+        </li>
+        <li Class="ScenPart_StartingResearch">
+          <def>StartingResearch</def>
+          <project>MAP_BionicMechanicalStructure</project>
         </li>
 
         <li Class="MAP_MechanoidMechanitor.Scenarios.ScenPart_MechanoidMechanitor">
           <def>MAP_MechanoidMechanitorStart</def>
           <mechKind>MAP_Mech_Justice</mechKind>
-        </li>
-        <li Class="ScenPart_StartingMech">
-          <def>StartingMech</def>
-          <mechKind>Mech_Lifter</mechKind>
-          <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance>
-        </li>
-        <li Class="ScenPart_StartingMech">
-          <def>StartingMech</def>
-          <mechKind>Mech_Constructoid</mechKind>
-          <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance>
         </li>
         <li Class="ScenPart_StartingMech">
           <def>StartingMech</def>
@@ -67,23 +65,18 @@
 
         <li Class="ScenPart_StartingThing_Defined">
           <def>StartingThing_Defined</def>
-          <thingDef>Silver</thingDef>
-          <count>1000</count>
-        </li>
-        <li Class="ScenPart_StartingThing_Defined">
-          <def>StartingThing_Defined</def>
           <thingDef>ComponentIndustrial</thingDef>
-          <count>55</count>
+          <count>75</count>
         </li>
         <li Class="ScenPart_StartingThing_Defined">
           <def>StartingThing_Defined</def>
           <thingDef>Steel</thingDef>
-          <count>900</count>
+          <count>1200</count>
         </li>
         <li Class="ScenPart_StartingThing_Defined">
           <def>StartingThing_Defined</def>
           <thingDef>Plasteel</thingDef>
-          <count>100</count>
+          <count>300</count>
         </li>
         <li Class="ScenPart_StartingThing_Defined">
           <def>StartingThing_Defined</def>
