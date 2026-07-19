@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorPurgeTradeBlacklistDef>
+    <defName>MAP_PurgeTradeBlacklist_Core</defName>
+    <thingDefs>
+      <!-- 空黑名单：可用 li MayRequire="Package.Id" 追加禁售 ThingDef -->
+    </thingDefs>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorPurgeTradeBlacklistDef>
+</Defs>

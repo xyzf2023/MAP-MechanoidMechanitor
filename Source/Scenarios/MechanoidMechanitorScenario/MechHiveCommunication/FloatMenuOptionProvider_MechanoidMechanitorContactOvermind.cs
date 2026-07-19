@@ -25,7 +25,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Thing clickedThing,
             FloatMenuContext context)
         {
-            if (clickedThing is not Building_CommsConsole)
+            if (clickedThing is not Building_CommsConsole console)
             {
                 yield break;
             }
@@ -44,10 +44,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Pawn pawn = selectedPawn!;
+            Map? preferredMap = console.Map;
             yield return new FloatMenuOption(
                 MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindLabel,
                 () => MechanoidMechanitorMechHiveCommunicationUtility
-                    .TryOpenContactOvermindDialog(pawn),
+                    .TryOpenContactOvermindDialog(pawn, preferredMap),
                 MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindIcon,
                 MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindIconColor,
                 MenuOptionPriority.SummonThreat);

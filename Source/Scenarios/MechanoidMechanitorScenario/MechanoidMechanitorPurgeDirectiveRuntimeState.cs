@@ -83,6 +83,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
             purgeDirectiveRewardPoints += amount;
         }
 
+        public bool TrySpendCredits(int amount)
+        {
+            if (amount < 0 || purgeDirectiveRewardPoints < amount)
+            {
+                return false;
+            }
+
+            purgeDirectiveRewardPoints -= amount;
+            return true;
+        }
+
+        public bool RefundCredits(int amount)
+        {
+            if (amount < 0)
+            {
+                return false;
+            }
+
+            long next = (long)purgeDirectiveRewardPoints + amount;
+            if (next > int.MaxValue)
+            {
+                return false;
+            }
+
+            purgeDirectiveRewardPoints = (int)next;
+            return true;
+        }
+
         public void SetTrackedPawns(List<Pawn> pawns)
         {
             purgeDirectiveTrackedPawns.Clear();
