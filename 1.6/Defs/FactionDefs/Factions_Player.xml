@@ -32,10 +32,6 @@
 
     <factionIconPath>Faction/NewMechHive</factionIconPath>
 
-    <startingResearchTags>
-      <li>ClassicStart</li>
-    </startingResearchTags>
-
     <startingTechprintsResearchTags>
       <li>ClassicStart</li>
       <li>ClassicStartTechprints</li>
