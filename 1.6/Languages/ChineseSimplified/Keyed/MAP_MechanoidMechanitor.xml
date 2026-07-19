@@ -76,6 +76,80 @@
   <MAP_MechanoidMechanitor.Story.Option.Disabled>关闭</MAP_MechanoidMechanitor.Story.Option.Disabled>
   <MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>仅在与机械巢结盟时可用。</MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>
   <MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>联络机械主脑</MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Title>机械主脑通讯接口</MAP_MechanoidMechanitor.MechHiveCommunication.Title>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle>肃清协议资源调拨节点：██-07</MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Credits>肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Credits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.ConnectionStable>连接状态：稳定</MAP_MechanoidMechanitor.MechHiveCommunication.ConnectionStable>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission>节点权限：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission.EdgeExecUnit>边缘执行单元</MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission.EdgeExecUnit>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs>机械族调拨</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods>物资调拨</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>战场支援</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat>闲谈</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Disconnect>断开连接</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Disconnect>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Weight.All>全部</MAP_MechanoidMechanitor.MechHiveCommunication.Weight.All>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Light>轻型</MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Light>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Medium>中型</MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Medium>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Heavy>重型</MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Heavy>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Weight.UltraHeavy>超重型</MAP_MechanoidMechanitor.MechHiveCommunication.Weight.UltraHeavy>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.MechRowMeta>{0}　带宽 {1}　市价 {2}　肃清价格 {3}</MAP_MechanoidMechanitor.MechHiveCommunication.MechRowMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Add>加入</MAP_MechanoidMechanitor.MechHiveCommunication.Add>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Category.All>全部</MAP_MechanoidMechanitor.MechHiveCommunication.Category.All>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Weapon>武器</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Weapon>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Apparel>服装</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Apparel>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Food>食物</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Food>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Medicine>药品</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Medicine>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Material>材料</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Material>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Building>建筑</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Building>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Special>特殊物品</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Special>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Other>其他物品</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Other>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.Name>名称</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.Name>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueAsc>市价↑</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueAsc>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueDesc>市价↓</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueDesc>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowMeta>{0}　参考市价 {1}</MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Goods.SelectHint>选择物资以配置材质、品质与数量。</MAP_MechanoidMechanitor.MechHiveCommunication.Goods.SelectHint>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Stuff>材质：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Stuff>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Stuff.None>未选择</MAP_MechanoidMechanitor.MechHiveCommunication.Stuff.None>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Quality>品质：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Quality>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Goods.UnitValue>单件市场价值：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Goods.UnitValue>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Goods.Subtotal>当前小计：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Goods.Subtotal>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Goods.EstimatedCredits>预计消耗肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Goods.EstimatedCredits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Title>待执行调拨</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Title>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.LineMeta>数量 {0}　小计 {1}　材质 {2}　品质 {3}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.LineMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Remove>删除</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Remove>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.MechCost>机械族费用：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.MechCost>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingCost>物资费用：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingCost>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total>订单总计：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits>当前额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter>执行后余额：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear>清空订单</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm>确认调拨　{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting>正在接入机械巢通讯网络……</MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.Verifying>正在验证执行单元身份……</MAP_MechanoidMechanitor.MechHiveCommunication.Status.Verifying>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.SyncingCredits>正在同步肃清额度……</MAP_MechanoidMechanitor.MechHiveCommunication.Status.SyncingCredits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connected>连接完成。</MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connected>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput>等待输入</MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.Validating>正在校验调拨内容</MAP_MechanoidMechanitor.MechHiveCommunication.Status.Validating>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.CheckingPermission>正在确认节点权限</MAP_MechanoidMechanitor.MechHiveCommunication.Status.CheckingPermission>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.CreditsSpent>肃清额度已扣除</MAP_MechanoidMechanitor.MechHiveCommunication.Status.CreditsSpent>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.DropStarted>投送序列已启动</MAP_MechanoidMechanitor.MechHiveCommunication.Status.DropStarted>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.Accepted>调拨请求已接受</MAP_MechanoidMechanitor.MechHiveCommunication.Status.Accepted>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.MechHiveCommunication.Status.InsufficientCredits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.ConnectionLost>连接失效：肃清指令或机械巢盟友关系不可用</MAP_MechanoidMechanitor.MechHiveCommunication.Error.ConnectionLost>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoMap>没有可用地图</MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoMap>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoDropSpot>无法取得合法贸易空投落点</MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoDropSpot>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.InvalidOrder>订单规格或价格校验失败</MAP_MechanoidMechanitor.MechHiveCommunication.Error.InvalidOrder>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.MechHiveCommunication.Error.InsufficientCredits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.GenerationFailed>生成或装载失败，未扣额度</MAP_MechanoidMechanitor.MechHiveCommunication.Error.GenerationFailed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.ChargeFailed>扣费失败，未执行投送</MAP_MechanoidMechanitor.MechHiveCommunication.Error.ChargeFailed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.DropFailed>投送失败</MAP_MechanoidMechanitor.MechHiveCommunication.Error.DropFailed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Title>战场支援模块</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Title>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Body>协议模块尚未部署。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Body>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Todo>功能／权限／执行序列：TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Todo>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Request>请求战场支援</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Request>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Title>非必要通讯</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Title>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>正在建立低优先级通讯通道……</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.DialogTodo>对话内容：TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.DialogTodo>
   <MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>当前普通派系关系设置下，已不存在获取信任的空间。</MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>
   <MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>当前世界中没有可配置的普通派系。</MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>
   <MAP_MechanoidMechanitor.Story.NoMechHive>当前世界中没有机械巢派系。</MAP_MechanoidMechanitor.Story.NoMechHive>

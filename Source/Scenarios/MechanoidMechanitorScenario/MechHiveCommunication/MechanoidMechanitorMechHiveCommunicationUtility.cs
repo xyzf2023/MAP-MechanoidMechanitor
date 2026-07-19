@@ -96,7 +96,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        public static void TryOpenContactOvermindDialog(Pawn? pawn)
+        public static void TryOpenContactOvermindDialog(Pawn? pawn, Map? preferredMap = null)
         {
             if (!IsValidContactPawn(pawn))
             {
@@ -108,7 +108,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Find.WindowStack.Add(new Dialog_MechanoidOvermindCommunication(mechHive));
+            Find.WindowStack.Add(
+                new Dialog_MechanoidOvermindCommunication(mechHive, preferredMap));
         }
 
         private static bool AreMutualAllies(Faction player, Faction mechHive)

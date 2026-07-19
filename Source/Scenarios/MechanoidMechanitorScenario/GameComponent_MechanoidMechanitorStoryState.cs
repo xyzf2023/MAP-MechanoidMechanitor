@@ -50,6 +50,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int PurgeDirectiveRewardPoints =>
             purgeDirectiveRuntimeState?.RewardPoints ?? 0;
 
+        public static int GetPurgeDirectiveRewardPoints()
+        {
+            return CurrentComponent?.PurgeDirectiveRewardPoints ?? 0;
+        }
+
         public static MechanoidMechanitorStoryStyleDef? CurrentStoryStyle
         {
             get
@@ -206,6 +211,50 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             component.purgeDirectiveRuntimeState.AddRewardPoints(amount);
             return true;
+        }
+
+        public bool TrySpendPurgeDirectiveCredits(int amount)
+        {
+            if (amount < 0
+                || !PurgeDirectiveEnabled
+                || purgeDirectiveRuntimeState == null)
+            {
+                return false;
+            }
+
+            return purgeDirectiveRuntimeState.TrySpendCredits(amount);
+        }
+
+        public bool RefundPurgeDirectiveCredits(int amount)
+        {
+            if (amount < 0 || purgeDirectiveRuntimeState == null)
+            {
+                return false;
+            }
+
+            return purgeDirectiveRuntimeState.RefundCredits(amount);
+        }
+
+        public static bool TrySpendPurgeDirectiveCredits(int amount, bool forCurrentSave = true)
+        {
+            if (!forCurrentSave
+                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            {
+                return false;
+            }
+
+            return CurrentComponent?.TrySpendPurgeDirectiveCredits(amount) ?? false;
+        }
+
+        public static bool RefundPurgeDirectiveCredits(int amount, bool forCurrentSave = true)
+        {
+            if (!forCurrentSave
+                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            {
+                return false;
+            }
+
+            return CurrentComponent?.RefundPurgeDirectiveCredits(amount) ?? false;
         }
 
         public void MarkInitialOrdinaryFactionRelationsApplied()
