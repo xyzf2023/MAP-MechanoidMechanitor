@@ -50,6 +50,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public static bool IsValidContactPawn(Pawn? pawn)
+        {
+            return pawn != null
+                && !pawn.Dead
+                && !pawn.Destroyed
+                && pawn.Faction != null
+                && pawn.Faction.IsPlayerSafe();
+        }
+
         public static bool TryGetContactableMechHive(out Faction mechHive)
         {
             mechHive = null!;
@@ -87,8 +96,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        public static void TryOpenContactOvermindDialog()
+        public static void TryOpenContactOvermindDialog(Pawn? pawn)
         {
+            if (!IsValidContactPawn(pawn))
+            {
+                return;
+            }
+
             if (!TryGetContactableMechHive(out Faction mechHive))
             {
                 return;
