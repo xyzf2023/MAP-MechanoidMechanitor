@@ -75,6 +75,7 @@
   <MAP_MechanoidMechanitor.Story.Option.Enabled>开启</MAP_MechanoidMechanitor.Story.Option.Enabled>
   <MAP_MechanoidMechanitor.Story.Option.Disabled>关闭</MAP_MechanoidMechanitor.Story.Option.Disabled>
   <MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>仅在与机械巢结盟时可用。</MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>联络机械主脑</MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>
   <MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>当前普通派系关系设置下，已不存在获取信任的空间。</MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>
   <MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>当前世界中没有可配置的普通派系。</MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>
   <MAP_MechanoidMechanitor.Story.NoMechHive>当前世界中没有机械巢派系。</MAP_MechanoidMechanitor.Story.NoMechHive>
