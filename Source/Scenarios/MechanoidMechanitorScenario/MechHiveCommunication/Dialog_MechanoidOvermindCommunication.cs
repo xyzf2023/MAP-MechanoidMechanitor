@@ -288,7 +288,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .GetPurgeDirectiveRewardPoints();
             RefreshDropSpotCache(force: false);
 
-            const float footerHeight = 120f;
+            // 结算50 + 状态18 + 间距6 + 清空24 + 间距4 + 确认26 = 128；另含列表与footer间距6。
+            const float footerHeight = 134f;
             Rect listRect = new Rect(
                 inner.x,
                 inner.y + 28f,
@@ -419,6 +420,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int totalCost,
             int credits)
         {
+            // 固定布局（自上而下，互不交叠，按钮位置不随错误状态跳动）：
+            // [0,50) 结算信息 | [50,68) 状态行 | 间距6 | 清空24 | 间距4 | 确认26
+            const float summaryHeight = 50f;
+            const float statusHeight = 18f;
+            const float statusToClearGap = 6f;
+            const float clearHeight = 24f;
+            const float clearToConfirmGap = 4f;
+            const float confirmHeight = 26f;
+
             bool connected = MechanoidMechanitorMechHiveCommunicationUtility
                 .TryGetContactableMechHive(out _);
             bool canConfirm = costsOk
@@ -449,10 +459,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     ? MechanoidOvermindUiStyle.Error
                     : MechanoidOvermindUiStyle.TextSecondary);
 
+            Rect statusRect = new Rect(
+                rect.x,
+                rect.y + summaryHeight,
+                rect.width,
+                statusHeight);
             if (!cachedDropValid)
             {
                 MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(rect.x, rect.y + 50f, rect.width, 16f),
+                    statusRect,
                     (cachedDropMap == null
                         ? "MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoMap"
                         : "MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoDropSpot")
@@ -464,26 +479,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
             else if (!connected)
             {
                 MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(rect.x, rect.y + 50f, rect.width, 16f),
+                    statusRect,
                     MechanoidOvermindDeliveryService.ErrorConnection.Translate(),
                     GameFont.Tiny,
                     TextAnchor.MiddleLeft,
                     MechanoidOvermindUiStyle.Error);
             }
 
+            float clearY = statusRect.yMax + statusToClearGap;
             if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(rect.x, rect.yMax - 56f, rect.width, 24f),
+                    new Rect(rect.x, clearY, rect.width, clearHeight),
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear".Translate()))
             {
                 order.Clear();
                 statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
             }
 
+            float confirmY = clearY + clearHeight + clearToConfirmGap;
             string confirmLabel =
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm".Translate(
                     costsOk ? totalCost : 0);
             if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(rect.x, rect.yMax - 28f, rect.width, 26f),
+                    new Rect(rect.x, confirmY, rect.width, confirmHeight),
                     confirmLabel,
                     enabled: canConfirm))
             {

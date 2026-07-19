@@ -333,12 +333,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 IconSize);
             Widgets.DefIcon(iconRect, entry.Def);
 
+            float textX = iconRect.xMax + 8f;
+            float textRight = rowRect.xMax - 4f;
+            float textWidth = Mathf.Max(0f, textRight - textX);
+
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(iconRect.xMax + 8f, rowRect.y + 2f, rowRect.width - 20f, 18f),
+                new Rect(textX, rowRect.y + 2f, textWidth, 18f),
                 entry.Def.LabelCap);
 
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(iconRect.xMax + 8f, rowRect.y + 20f, rowRect.width - 20f, 16f),
+                new Rect(textX, rowRect.y + 20f, textWidth, 16f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowCategory".Translate(
                     GetCategoryLabel(entry.Category)));
 
