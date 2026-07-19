@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
 using Verse;
-using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -22,7 +21,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float IconSize = 32f;
 
-        private const float SpecPanelHeight = 150f;
+        private const float SpecPanelHeight = 120f;
 
         private string search = string.Empty;
 
@@ -49,13 +48,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private QualityCategory selectedQuality = QualityCategory.Normal;
 
-        private int selectedCount = 1;
+        private int selectedCount;
+
+        private string countEditBuffer = "0";
+
+        private int syncedOrderRevision = int.MinValue;
 
         private MechanoidOvermindThingSpec? pricedSpec;
 
         private float cachedUnitMarketValue;
 
         private int cachedEstimatedCredits;
+
+        private int cachedPricedCount = int.MinValue;
 
         private bool priceDirty = true;
 
@@ -65,6 +70,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 MechanoidOvermindUiStyle.DrawPanel(inRect);
                 Rect inner = inRect.ContractedBy(8f);
+
+                SyncFromOrderRevisionIfNeeded(order);
 
                 float y = inner.y;
                 DrawCategoryRow(new Rect(inner.x, y, inner.width, FilterRowHeight));
@@ -91,12 +98,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     80f,
                     inner.yMax - y - SpecPanelHeight - 8f);
                 Rect listRect = new Rect(inner.x, y, inner.width, listHeight);
-                DrawList(listRect);
+                DrawList(listRect, order);
                 y = listRect.yMax + 8f;
 
                 Rect specRect = new Rect(inner.x, y, inner.width, SpecPanelHeight);
                 DrawSpecPanel(specRect, order);
             }
+        }
+
+        private void SyncFromOrderRevisionIfNeeded(MechanoidOvermindOrder order)
+        {
+            if (syncedOrderRevision == order.Revision)
+            {
+                return;
+            }
+
+            syncedOrderRevision = order.Revision;
+            SyncSelectedCountFromOrder(order);
+        }
+
+        private void SyncSelectedCountFromOrder(MechanoidOvermindOrder order)
+        {
+            MechanoidOvermindThingSpec? spec = selected != null
+                ? BuildCurrentSpec(selected)
+                : null;
+            selectedCount = order.GetThingCount(spec);
+            countEditBuffer = selectedCount.ToString();
+            priceDirty = true;
         }
 
         private void DrawCategoryRow(Rect rect)
@@ -259,28 +287,37 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return string.CompareOrdinal(a.Def.defName, b.Def.defName);
         }
 
-        private void DrawList(Rect listRect)
+        private void DrawList(Rect listRect, MechanoidOvermindOrder order)
         {
             MechanoidOvermindUiStyle.DrawPanel(listRect, alt: true, cornerMarks: false);
+            float rowStride = RowHeight + 2f;
             Rect viewRect = new Rect(
                 0f,
                 0f,
                 listRect.width - 16f,
-                Mathf.Max(listRect.height, filtered.Count * (RowHeight + 2f)));
+                Mathf.Max(listRect.height, filtered.Count * rowStride));
             Widgets.BeginScrollView(listRect, ref listScroll, viewRect);
 
-            float y = 0f;
-            for (int i = 0; i < filtered.Count; i++)
+            if (filtered.Count > 0)
             {
-                Rect rowRect = new Rect(4f, y, viewRect.width - 8f, RowHeight);
-                DrawRow(rowRect, filtered[i]);
-                y += RowHeight + 2f;
+                int first = Mathf.Max(0, Mathf.FloorToInt(listScroll.y / rowStride) - 1);
+                int last = Mathf.Min(
+                    filtered.Count - 1,
+                    Mathf.CeilToInt((listScroll.y + listRect.height) / rowStride) + 1);
+                for (int i = first; i <= last; i++)
+                {
+                    Rect rowRect = new Rect(4f, i * rowStride, viewRect.width - 8f, RowHeight);
+                    DrawRow(rowRect, filtered[i], order);
+                }
             }
 
             Widgets.EndScrollView();
         }
 
-        private void DrawRow(Rect rowRect, MechanoidOvermindThingCatalogEntry entry)
+        private void DrawRow(
+            Rect rowRect,
+            MechanoidOvermindThingCatalogEntry entry,
+            MechanoidOvermindOrder order)
         {
             bool isSelected = selected != null && selected.Def == entry.Def;
             Widgets.DrawBoxSolid(
@@ -297,29 +334,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Widgets.DefIcon(iconRect, entry.Def);
 
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(iconRect.xMax + 8f, rowRect.y + 2f, rowRect.width - 160f, 18f),
+                new Rect(iconRect.xMax + 8f, rowRect.y + 2f, rowRect.width - 20f, 18f),
                 entry.Def.LabelCap);
 
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(iconRect.xMax + 8f, rowRect.y + 20f, rowRect.width - 160f, 16f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowMeta".Translate(
-                    GetCategoryLabel(entry.Category),
-                    entry.DefaultReferenceMarketValue.ToStringMoney()));
+                new Rect(iconRect.xMax + 8f, rowRect.y + 20f, rowRect.width - 20f, 16f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowCategory".Translate(
+                    GetCategoryLabel(entry.Category)));
 
             if (Widgets.ButtonInvisible(rowRect))
             {
-                SelectEntry(entry);
+                SelectEntry(entry, order);
             }
         }
 
-        private void SelectEntry(MechanoidOvermindThingCatalogEntry entry)
+        private void SelectEntry(
+            MechanoidOvermindThingCatalogEntry entry,
+            MechanoidOvermindOrder order)
         {
             selected = entry;
             selectedStuff = entry.MadeFromStuff
                 ? GenStuff.DefaultStuffFor(entry.Def)
                 : null;
             selectedQuality = QualityCategory.Normal;
-            selectedCount = 1;
+            SyncSelectedCountFromOrder(order);
+            syncedOrderRevision = order.Revision;
             priceDirty = true;
         }
 
@@ -356,7 +395,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         "MAP_MechanoidMechanitor.MechHiveCommunication.Stuff".Translate(
                             stuffLabel)))
                 {
-                    OpenStuffMenu(entry.Def);
+                    OpenStuffMenu(entry.Def, order);
                 }
 
                 x += 230f;
@@ -370,53 +409,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         "MAP_MechanoidMechanitor.MechHiveCommunication.Quality".Translate(
                             selectedQuality.GetLabel())))
                 {
-                    OpenQualityMenu();
+                    OpenQualityMenu(order);
                 }
 
                 x += 190f;
             }
 
             Rect countRect = new Rect(x, y, 56f, 28f);
-            string countText = Widgets.TextField(countRect, selectedCount.ToString());
-            if (int.TryParse(countText, out int parsed))
-            {
-                int clamped = Mathf.Clamp(parsed, 1, MechanoidOvermindOrder.MaxCount);
-                if (clamped != selectedCount)
-                {
-                    selectedCount = clamped;
-                    priceDirty = true;
-                }
-            }
+            DrawCountField(countRect, order, entry);
 
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(countRect.xMax + 4f, y, 24f, 28f),
                     "-"))
             {
-                selectedCount = Mathf.Max(1, selectedCount - 1);
-                priceDirty = true;
+                ApplyThingCount(order, entry, selectedCount - 1);
             }
 
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(countRect.xMax + 32f, y, 24f, 28f),
                     "+"))
             {
-                selectedCount = Mathf.Min(MechanoidOvermindOrder.MaxCount, selectedCount + 1);
-                priceDirty = true;
+                ApplyThingCount(order, entry, selectedCount + 1);
             }
 
             RefreshPriceIfNeeded(entry);
 
             float infoY = y + 36f;
-            MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(inner.x, infoY, inner.width, 18f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Goods.UnitValue".Translate(
-                    cachedUnitMarketValue.ToStringMoney()));
-            MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(inner.x, infoY + 18f, inner.width, 18f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Goods.Subtotal".Translate(
-                    (cachedUnitMarketValue * selectedCount).ToStringMoney()));
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(inner.x, infoY + 38f, inner.width * 0.6f, 22f),
+                new Rect(inner.x, infoY, inner.width * 0.6f, 22f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Goods.EstimatedCredits".Translate(
                     cachedEstimatedCredits),
                 GameFont.Small,
@@ -425,14 +445,62 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(inner.xMax - 140f, inner.yMax - 34f, 140f, 30f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Add".Translate()))
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.ClearItem".Translate()))
             {
-                MechanoidOvermindThingSpec? spec = BuildCurrentSpec(entry);
-                if (spec != null && order.TryAddThing(spec, selectedCount))
+                ApplyThingCount(order, entry, 0);
+            }
+        }
+
+        private void DrawCountField(
+            Rect countRect,
+            MechanoidOvermindOrder order,
+            MechanoidOvermindThingCatalogEntry entry)
+        {
+            string orderText = selectedCount.ToString();
+            const string controlName = "MAP_OvermindThingCount";
+            GUI.SetNextControlName(controlName);
+            string next = GUI.TextField(countRect, countEditBuffer, Text.CurTextFieldStyle);
+            bool focused = GUI.GetNameOfFocusedControl() == controlName;
+
+            if (focused)
+            {
+                countEditBuffer = next ?? string.Empty;
+                if (int.TryParse(next, out int parsed)
+                    && parsed >= 0
+                    && parsed <= MechanoidOvermindOrder.MaxCount)
                 {
-                    SoundDefOf.Click.PlayOneShotOnCamera();
+                    MechanoidOvermindThingSpec? spec = BuildCurrentSpec(entry);
+                    if (spec != null)
+                    {
+                        order.SetThingCount(spec, parsed);
+                        selectedCount = order.GetThingCount(spec);
+                        syncedOrderRevision = order.Revision;
+                        priceDirty = true;
+                    }
                 }
             }
+            else
+            {
+                countEditBuffer = orderText;
+            }
+        }
+
+        private void ApplyThingCount(
+            MechanoidOvermindOrder order,
+            MechanoidOvermindThingCatalogEntry entry,
+            int count)
+        {
+            MechanoidOvermindThingSpec? spec = BuildCurrentSpec(entry);
+            if (spec == null)
+            {
+                return;
+            }
+
+            order.SetThingCount(spec, count);
+            selectedCount = order.GetThingCount(spec);
+            countEditBuffer = selectedCount.ToString();
+            syncedOrderRevision = order.Revision;
+            priceDirty = true;
         }
 
         private void RefreshPriceIfNeeded(MechanoidOvermindThingCatalogEntry entry)
@@ -445,13 +513,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (!priceDirty && pricedSpec != null && pricedSpec.Equals(spec))
+            if (!priceDirty
+                && pricedSpec != null
+                && pricedSpec.Equals(spec)
+                && cachedPricedCount == selectedCount)
             {
                 return;
             }
 
             pricedSpec = spec;
+            cachedPricedCount = selectedCount;
             priceDirty = false;
+            if (selectedCount <= 0)
+            {
+                cachedEstimatedCredits = 0;
+                if (!MechanoidOvermindPricingService.TryGetThingUnitMarketValue(
+                        spec,
+                        out cachedUnitMarketValue))
+                {
+                    cachedUnitMarketValue = 0f;
+                }
+
+                return;
+            }
+
             if (!MechanoidOvermindPricingService.TryGetThingUnitMarketValue(
                     spec,
                     out cachedUnitMarketValue))
@@ -463,12 +548,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             double sum = (double)cachedUnitMarketValue * selectedCount;
             int credits = (int)Math.Ceiling(sum / 5d);
-            if (credits < 1)
-            {
-                credits = 1;
-            }
-
-            cachedEstimatedCredits = credits;
+            cachedEstimatedCredits = credits < 1 ? 1 : credits;
         }
 
         private MechanoidOvermindThingSpec? BuildCurrentSpec(
@@ -486,7 +566,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 entry.HasQuality ? selectedQuality : QualityCategory.Normal);
         }
 
-        private void OpenStuffMenu(ThingDef def)
+        private void OpenStuffMenu(ThingDef def, MechanoidOvermindOrder order)
         {
             List<FloatMenuOption> options = new List<FloatMenuOption>();
             IReadOnlyList<ThingDef> stuffs =
@@ -500,6 +580,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         () =>
                         {
                             selectedStuff = stuff;
+                            SyncSelectedCountFromOrder(order);
+                            syncedOrderRevision = order.Revision;
                             priceDirty = true;
                         }));
             }
@@ -510,7 +592,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private void OpenQualityMenu()
+        private void OpenQualityMenu(MechanoidOvermindOrder order)
         {
             List<FloatMenuOption> options = new List<FloatMenuOption>();
             foreach (QualityCategory quality in (QualityCategory[])Enum.GetValues(
@@ -523,6 +605,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         () =>
                         {
                             selectedQuality = local;
+                            SyncSelectedCountFromOrder(order);
+                            syncedOrderRevision = order.Revision;
                             priceDirty = true;
                         }));
             }

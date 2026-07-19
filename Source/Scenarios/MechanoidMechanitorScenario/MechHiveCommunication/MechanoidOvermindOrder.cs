@@ -13,20 +13,46 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private readonly List<MechanoidOvermindOrderLine_Thing> thingLines =
             new List<MechanoidOvermindOrderLine_Thing>();
 
+        private int revision;
+
         public IReadOnlyList<MechanoidOvermindOrderLine_Mech> MechLines => mechLines;
 
         public IReadOnlyList<MechanoidOvermindOrderLine_Thing> ThingLines => thingLines;
 
         public bool IsEmpty => mechLines.Count == 0 && thingLines.Count == 0;
 
-        public bool TryAddMech(PawnKindDef kind, int count)
+        public int Revision => revision;
+
+        public int GetMechCount(PawnKindDef? kind)
         {
-            if (kind == null || count <= 0)
+            if (kind == null)
+            {
+                return 0;
+            }
+
+            for (int i = 0; i < mechLines.Count; i++)
+            {
+                if (mechLines[i].Kind == kind)
+                {
+                    return mechLines[i].Count;
+                }
+            }
+
+            return 0;
+        }
+
+        public bool SetMechCount(PawnKindDef? kind, int count)
+        {
+            if (kind == null)
             {
                 return false;
             }
 
-            if (count > MaxCount)
+            if (count < 0)
+            {
+                count = 0;
+            }
+            else if (count > MaxCount)
             {
                 count = MaxCount;
             }
@@ -39,28 +65,63 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                long merged = (long)line.Count + count;
-                if (merged > MaxCount)
+                if (count <= 0)
                 {
-                    merged = MaxCount;
+                    mechLines.RemoveAt(i);
+                    revision++;
+                    return true;
                 }
 
-                line.SetCount((int)merged);
+                if (line.Count == count)
+                {
+                    return false;
+                }
+
+                line.SetCount(count);
+                revision++;
                 return true;
             }
 
-            mechLines.Add(new MechanoidOvermindOrderLine_Mech(kind, count));
-            return true;
-        }
-
-        public bool TryAddThing(MechanoidOvermindThingSpec spec, int count)
-        {
-            if (spec?.Def == null || count <= 0)
+            if (count <= 0)
             {
                 return false;
             }
 
-            if (count > MaxCount)
+            mechLines.Add(new MechanoidOvermindOrderLine_Mech(kind, count));
+            revision++;
+            return true;
+        }
+
+        public int GetThingCount(MechanoidOvermindThingSpec? spec)
+        {
+            if (spec?.Def == null)
+            {
+                return 0;
+            }
+
+            for (int i = 0; i < thingLines.Count; i++)
+            {
+                if (thingLines[i].Spec.Equals(spec))
+                {
+                    return thingLines[i].Count;
+                }
+            }
+
+            return 0;
+        }
+
+        public bool SetThingCount(MechanoidOvermindThingSpec? spec, int count)
+        {
+            if (spec?.Def == null)
+            {
+                return false;
+            }
+
+            if (count < 0)
+            {
+                count = 0;
+            }
+            else if (count > MaxCount)
             {
                 count = MaxCount;
             }
@@ -73,17 +134,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                long merged = (long)line.Count + count;
-                if (merged > MaxCount)
+                if (count <= 0)
                 {
-                    merged = MaxCount;
+                    thingLines.RemoveAt(i);
+                    revision++;
+                    return true;
                 }
 
-                line.SetCount((int)merged);
+                if (line.Count == count)
+                {
+                    return false;
+                }
+
+                line.SetCount(count);
+                revision++;
                 return true;
             }
 
+            if (count <= 0)
+            {
+                return false;
+            }
+
             thingLines.Add(new MechanoidOvermindOrderLine_Thing(spec, count));
+            revision++;
             return true;
         }
 
@@ -95,6 +169,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             mechLines.RemoveAt(index);
+            revision++;
             return true;
         }
 
@@ -106,13 +181,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             thingLines.RemoveAt(index);
+            revision++;
             return true;
         }
 
         public void Clear()
         {
+            if (mechLines.Count == 0 && thingLines.Count == 0)
+            {
+                return;
+            }
+
             mechLines.Clear();
             thingLines.Clear();
+            revision++;
         }
 
         public bool TryGetCosts(out int mechCost, out int thingCost, out int totalCost)

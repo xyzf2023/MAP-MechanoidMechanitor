@@ -57,6 +57,42 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public const string ErrorDropFailed =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Error.DropFailed";
 
+        private static int lastDropResolveErrorTick = int.MinValue;
+
+        private static string? lastDropResolveErrorKey;
+
+        public static bool TryResolveTradeDropTarget(
+            Map? preferredMap,
+            out Map? map,
+            out IntVec3 cell)
+        {
+            map = null;
+            cell = IntVec3.Invalid;
+            try
+            {
+                Map? resolved = ResolvePlayerDeliveryMap(preferredMap);
+                if (resolved == null)
+                {
+                    return false;
+                }
+
+                map = resolved;
+                IntVec3 spot = DropCellFinder.TradeDropSpot(resolved);
+                if (!spot.IsValid)
+                {
+                    return false;
+                }
+
+                cell = spot;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogDropResolveErrorOnce(ErrorNoDropSpot, ex);
+                return false;
+            }
+        }
+
         public static MechanoidOvermindDeliveryResult TryDeliver(
             MechanoidOvermindOrder order,
             Map? preferredMap)
@@ -71,14 +107,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return MechanoidOvermindDeliveryResult.Failed(ErrorConnection);
             }
 
-            Map? map = ResolveDeliveryMap(preferredMap);
-            if (map == null)
+            Map? map;
+            IntVec3 dropCell;
+            try
             {
-                return MechanoidOvermindDeliveryResult.Failed(ErrorNoMap);
-            }
+                if (!TryResolveTradeDropTarget(preferredMap, out map, out dropCell)
+                    || map == null
+                    || !dropCell.IsValid)
+                {
+                    if (map == null)
+                    {
+                        return MechanoidOvermindDeliveryResult.Failed(ErrorNoMap);
+                    }
 
-            IntVec3 dropCell = DropCellFinder.TradeDropSpot(map);
-            if (!dropCell.IsValid)
+                    return MechanoidOvermindDeliveryResult.Failed(ErrorNoDropSpot);
+                }
+            }
+            catch (Exception)
             {
                 return MechanoidOvermindDeliveryResult.Failed(ErrorNoDropSpot);
             }
@@ -102,7 +147,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             ActiveTransporterInfo? info = null;
             bool spent = false;
-            bool delivered = false;
             try
             {
                 info = new ActiveTransporterInfo
@@ -129,55 +173,54 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (!MechanoidMechanitorMechHiveCommunicationUtility.TryGetContactableMechHive(
                         out _))
                 {
-                    GameComponent_MechanoidMechanitorStoryState.RefundPurgeDirectiveCredits(
-                        totalCost);
+                    SafeRefund(totalCost);
                     spent = false;
                     CleanupUndelivered(info);
                     return MechanoidOvermindDeliveryResult.Failed(ErrorConnection);
                 }
 
+                // MakeDropPodAt 正常返回即视为投送已提交（Contents 已挂到 ActiveTransporter）。
                 DropPodUtility.MakeDropPodAt(dropCell, map, info);
-                delivered = true;
                 return MechanoidOvermindDeliveryResult.Succeeded(totalCost);
             }
             catch (Exception ex)
             {
                 Log.Error(
                     "[MAP] MechanoidOvermindDeliveryService.TryDeliver failed: " + ex);
-                if (delivered)
+
+                if (IsDropCommitted(info))
                 {
-                    // MakeDropPodAt 已接管容器，不得退款或清理空投内容。
+                    // 投送对象已进入地图持有链：不退款、不清理内容。
                     return MechanoidOvermindDeliveryResult.Succeeded(totalCost);
                 }
 
+                AbortUncommittedDrop(info);
                 if (spent)
                 {
-                    GameComponent_MechanoidMechanitorStoryState.RefundPurgeDirectiveCredits(
-                        totalCost);
+                    SafeRefund(totalCost);
                 }
 
-                CleanupUndelivered(info);
                 return MechanoidOvermindDeliveryResult.Failed(
                     spent ? ErrorDropFailed : ErrorGenerationFailed);
             }
         }
 
-        private static Map? ResolveDeliveryMap(Map? preferredMap)
+        public static Map? ResolvePlayerDeliveryMap(Map? preferredMap)
         {
-            if (IsUsableMap(preferredMap))
+            if (IsPlayerOwnedMap(preferredMap))
             {
                 return preferredMap;
             }
 
-            if (IsUsableMap(Find.CurrentMap))
-            {
-                return Find.CurrentMap;
-            }
-
             Map? homeMap = Find.AnyPlayerHomeMap;
-            if (IsUsableMap(homeMap))
+            if (IsPlayerOwnedMap(homeMap))
             {
                 return homeMap;
+            }
+
+            if (IsPlayerOwnedMap(Find.CurrentMap))
+            {
+                return Find.CurrentMap;
             }
 
             List<Map> maps = Find.Maps;
@@ -188,19 +231,164 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             for (int i = 0; i < maps.Count; i++)
             {
-                Map map = maps[i];
-                if (IsUsableMap(map) && map.ParentFaction != null && map.ParentFaction.IsPlayer)
+                Map candidate = maps[i];
+                if (IsPlayerOwnedMap(candidate))
                 {
-                    return map;
+                    return candidate;
                 }
             }
 
             return null;
         }
 
-        private static bool IsUsableMap(Map? map)
+        public static bool IsPlayerOwnedMap(Map? map)
         {
-            return map != null && !map.Disposed;
+            if (map == null || map.Disposed)
+            {
+                return false;
+            }
+
+            if (map.IsPlayerHome)
+            {
+                return true;
+            }
+
+            Faction? parentFaction = map.ParentFaction;
+            return parentFaction != null && parentFaction.IsPlayer;
+        }
+
+        private static bool IsDropCommitted(ActiveTransporterInfo? info)
+        {
+            if (info?.parent is not ActiveTransporter transporter)
+            {
+                return false;
+            }
+
+            try
+            {
+                if (transporter.Destroyed)
+                {
+                    return false;
+                }
+
+                if (transporter.SpawnedOrAnyParentSpawned)
+                {
+                    return true;
+                }
+
+                // 已挂到 Skyfaller 且该 Skyfaller 已在地图上，同样视为已提交。
+                if (transporter.ParentHolder is Skyfaller skyfaller
+                    && skyfaller.SpawnedOrAnyParentSpawned)
+                {
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                // 持有链查询异常时保守视为未提交，走清理退款。
+            }
+
+            return false;
+        }
+
+        private static void AbortUncommittedDrop(ActiveTransporterInfo? info)
+        {
+            if (info == null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (info.parent is ActiveTransporter transporter
+                    && !transporter.Destroyed
+                    && !transporter.SpawnedOrAnyParentSpawned)
+                {
+                    Thing? holderThing = transporter.ParentHolder as Thing;
+
+                    try
+                    {
+                        transporter.Contents = null;
+                    }
+                    catch (Exception)
+                    {
+                        // ignore
+                    }
+
+                    if (holderThing is Skyfaller skyfaller
+                        && !skyfaller.Destroyed
+                        && !skyfaller.SpawnedOrAnyParentSpawned)
+                    {
+                        try
+                        {
+                            skyfaller.innerContainer.Remove(transporter);
+                        }
+                        catch (Exception)
+                        {
+                            // ignore
+                        }
+
+                        try
+                        {
+                            if (!skyfaller.Destroyed)
+                            {
+                                skyfaller.Destroy(DestroyMode.Vanish);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // ignore
+                        }
+                    }
+
+                    try
+                    {
+                        if (!transporter.Destroyed)
+                        {
+                            transporter.Destroy(DestroyMode.Vanish);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // ignore
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
+
+            CleanupUndelivered(info);
+        }
+
+        private static void SafeRefund(int amount)
+        {
+            try
+            {
+                GameComponent_MechanoidMechanitorStoryState.RefundPurgeDirectiveCredits(amount);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP] MechanoidOvermindDeliveryService refund failed: " + ex);
+            }
+        }
+
+        private static void LogDropResolveErrorOnce(string errorKey, Exception ex)
+        {
+            int tick = Find.TickManager != null ? Find.TickManager.TicksGame : 0;
+            if (lastDropResolveErrorKey == errorKey
+                && tick - lastDropResolveErrorTick < 300)
+            {
+                return;
+            }
+
+            lastDropResolveErrorKey = errorKey;
+            lastDropResolveErrorTick = tick;
+            Log.Warning(
+                "[MAP] MechanoidOvermindDeliveryService.TryResolveTradeDropTarget failed: "
+                + ex);
         }
 
         private static bool TryFillTransporter(
@@ -436,12 +624,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static void CleanupUndelivered(ActiveTransporterInfo? info)
         {
-            if (info?.innerContainer == null || !info.innerContainer.Any)
+            try
             {
-                return;
-            }
+                if (info?.innerContainer == null || !info.innerContainer.Any)
+                {
+                    return;
+                }
 
-            info.innerContainer.ClearAndDestroyContents(DestroyMode.Vanish);
+                info.innerContainer.ClearAndDestroyContents(DestroyMode.Vanish);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(
+                    "[MAP] MechanoidOvermindDeliveryService.CleanupUndelivered failed: " + ex);
+            }
         }
     }
 }

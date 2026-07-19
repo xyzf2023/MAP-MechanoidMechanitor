@@ -92,8 +92,8 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Medium>中型</MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Medium>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Heavy>重型</MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Heavy>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Weight.UltraHeavy>超重型</MAP_MechanoidMechanitor.MechHiveCommunication.Weight.UltraHeavy>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.MechRowMeta>{0}　带宽 {1}　市价 {2}　肃清价格 {3}</MAP_MechanoidMechanitor.MechHiveCommunication.MechRowMeta>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Add>加入</MAP_MechanoidMechanitor.MechHiveCommunication.Add>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.MechRowMeta>{0}　带宽 {1}　点数 {2}</MAP_MechanoidMechanitor.MechHiveCommunication.MechRowMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.ClearItem>清空</MAP_MechanoidMechanitor.MechHiveCommunication.ClearItem>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Category.All>全部</MAP_MechanoidMechanitor.MechHiveCommunication.Category.All>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Weapon>武器</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Weapon>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Apparel>服装</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Apparel>
@@ -106,19 +106,19 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.Name>名称</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.Name>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueAsc>市价↑</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueAsc>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueDesc>市价↓</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueDesc>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowMeta>{0}　参考市价 {1}</MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowCategory>{0}</MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowCategory>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Goods.SelectHint>选择物资以配置材质、品质与数量。</MAP_MechanoidMechanitor.MechHiveCommunication.Goods.SelectHint>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Stuff>材质：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Stuff>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Stuff.None>未选择</MAP_MechanoidMechanitor.MechHiveCommunication.Stuff.None>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Quality>品质：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Quality>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Goods.UnitValue>单件市场价值：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Goods.UnitValue>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Goods.Subtotal>当前小计：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Goods.Subtotal>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Goods.EstimatedCredits>预计消耗肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Goods.EstimatedCredits>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Title>待执行调拨</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Title>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.LineMeta>数量 {0}　小计 {1}　材质 {2}　品质 {3}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.LineMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.MechLineMeta>数量 {0}　点数 {1}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.MechLineMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMeta>数量 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMetaStuff>数量 {0}　材质 {1}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMetaStuff>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMetaQuality>数量 {0}　品质 {1}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMetaQuality>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMetaStuffQuality>数量 {0}　材质 {1}　品质 {2}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMetaStuffQuality>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Remove>删除</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Remove>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.MechCost>机械族费用：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.MechCost>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingCost>物资费用：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingCost>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total>订单总计：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits>当前额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter>执行后余额：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter>

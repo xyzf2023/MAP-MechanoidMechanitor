@@ -12,11 +12,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static readonly Color PanelAlt = new Color(0.16f, 0.17f, 0.19f);
 
-        public static readonly Color Border = new Color(0.30f, 0.32f, 0.34f);
+        public static readonly Color Border = new Color(0.24f, 0.34f, 0.44f);
 
-        public static readonly Color Accent = new Color(0.70f, 0.40f, 0.16f);
+        public static readonly Color Accent = new Color(0.20f, 0.42f, 0.66f);
 
-        public static readonly Color AccentBright = new Color(0.92f, 0.58f, 0.22f);
+        public static readonly Color AccentBright = new Color(0.32f, 0.68f, 0.96f);
 
         public static readonly Color TextPrimary = new Color(0.88f, 0.90f, 0.92f);
 
@@ -28,7 +28,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static readonly Color Disabled = new Color(0.34f, 0.35f, 0.38f);
 
-        public static readonly Color NavSelectedFill = new Color(0.18f, 0.16f, 0.13f);
+        public static readonly Color NavSelectedFill = new Color(0.10f, 0.16f, 0.22f);
 
         public const float CornerMarkLength = 8f;
 
