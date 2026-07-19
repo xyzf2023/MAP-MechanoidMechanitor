@@ -27,6 +27,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float BootDuration = 0.5f;
 
+        private const float OrderRowHeight = 50f;
+
+        private const float OrderRowStride = 52f;
+
+        private const float DropCacheRealtimeSeconds = 1f;
+
+        private const int DropCacheTickInterval = 60;
+
         private readonly Faction mechHive;
 
         private readonly Map? preferredDeliveryMap;
@@ -59,17 +67,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool cachedDropValid;
 
-        private int cachedOrderSignature = int.MinValue;
+        private int cachedDropRevision = int.MinValue;
+
+        private float cachedDropRealtime = -999f;
+
+        private int cachedDropTick = int.MinValue;
 
         public override Vector2 InitialSize
         {
             get
             {
-                float width = Mathf.Min(IdealWidth, UI.screenWidth - 36f);
-                float height = Mathf.Min(IdealHeight, UI.screenHeight - 36f);
+                float availW = Mathf.Max(0f, UI.screenWidth - 36f);
+                float availH = Mathf.Max(0f, UI.screenHeight - 36f);
                 return new Vector2(
-                    Mathf.Max(720f, width),
-                    Mathf.Max(480f, height));
+                    Mathf.Min(IdealWidth, availW),
+                    Mathf.Min(IdealHeight, availH));
             }
         }
 
@@ -271,15 +283,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Title".Translate(),
                 GameFont.Small);
 
-            bool costsOk = order.TryGetCosts(
-                out int mechCost,
-                out int thingCost,
-                out int totalCost);
+            bool costsOk = order.TryGetCosts(out _, out _, out int totalCost);
             int credits = GameComponent_MechanoidMechanitorStoryState
                 .GetPurgeDirectiveRewardPoints();
             RefreshDropSpotCache(force: false);
 
-            float footerHeight = 168f;
+            const float footerHeight = 120f;
             Rect listRect = new Rect(
                 inner.x,
                 inner.y + 28f,
@@ -292,101 +301,109 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 listRect.yMax + 6f,
                 inner.width,
                 footerHeight - 6f);
-            DrawOrderFooter(footer, costsOk, mechCost, thingCost, totalCost, credits);
+            DrawOrderFooter(footer, costsOk, totalCost, credits);
         }
 
         private void DrawOrderLines(Rect listRect, bool costsOk)
         {
             MechanoidOvermindUiStyle.DrawPanel(listRect, alt: true, cornerMarks: false);
             int lineCount = order.MechLines.Count + order.ThingLines.Count;
-            float viewHeight = Mathf.Max(listRect.height, lineCount * 54f + 4f);
+            float viewHeight = Mathf.Max(listRect.height, lineCount * OrderRowStride + 4f);
             Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, viewHeight);
             Widgets.BeginScrollView(listRect, ref orderScroll, viewRect);
 
-            float y = 2f;
-            for (int i = 0; i < order.MechLines.Count; i++)
+            if (lineCount > 0)
             {
-                MechanoidOvermindOrderLine_Mech line = order.MechLines[i];
-                int subtotal = 0;
-                if (costsOk
-                    && MechanoidOvermindPricingService.TryGetMechUnitPrice(
-                        line.Kind,
-                        out int unit))
+                int first = Mathf.Max(0, Mathf.FloorToInt(orderScroll.y / OrderRowStride) - 1);
+                int last = Mathf.Min(
+                    lineCount - 1,
+                    Mathf.CeilToInt((orderScroll.y + listRect.height) / OrderRowStride) + 1);
+                for (int i = first; i <= last; i++)
                 {
-                    subtotal = unit * line.Count;
+                    float y = 2f + i * OrderRowStride;
+                    Rect rowRect = new Rect(4f, y, viewRect.width - 8f, OrderRowHeight);
+                    if (i < order.MechLines.Count)
+                    {
+                        MechanoidOvermindOrderLine_Mech mechLine = order.MechLines[i];
+                        if (DrawMechOrderLine(rowRect, mechLine, costsOk))
+                        {
+                            order.SetMechCount(mechLine.Kind, 0);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        int thingIndex = i - order.MechLines.Count;
+                        MechanoidOvermindOrderLine_Thing line = order.ThingLines[thingIndex];
+                        if (DrawThingOrderLine(rowRect, line))
+                        {
+                            order.SetThingCount(line.Spec, 0);
+                            break;
+                        }
+                    }
                 }
-
-                if (DrawOrderLine(
-                        new Rect(4f, y, viewRect.width - 8f, 50f),
-                        line.Kind.LabelCap,
-                        null,
-                        null,
-                        line.Count,
-                        subtotal))
-                {
-                    order.RemoveMechAt(i);
-                    InvalidateDropSpotSignature();
-                    break;
-                }
-
-                y += 52f;
-            }
-
-            for (int i = 0; i < order.ThingLines.Count; i++)
-            {
-                MechanoidOvermindOrderLine_Thing line = order.ThingLines[i];
-                string? stuffLabel = line.Spec.Stuff != null
-                    ? line.Spec.Stuff.LabelCap
-                    : null;
-                string? qualityLabel = line.Spec.HasQuality
-                    ? line.Spec.Quality.GetLabel().CapitalizeFirst()
-                    : null;
-                int subtotal = 0;
-                if (costsOk
-                    && MechanoidOvermindPricingService.TryGetThingUnitMarketValue(
-                        line.Spec,
-                        out float mv))
-                {
-                    subtotal = Mathf.RoundToInt(mv * line.Count);
-                }
-
-                if (DrawOrderLine(
-                        new Rect(4f, y, viewRect.width - 8f, 50f),
-                        line.Spec.Def.LabelCap,
-                        stuffLabel,
-                        qualityLabel,
-                        line.Count,
-                        subtotal))
-                {
-                    order.RemoveThingAt(i);
-                    InvalidateDropSpotSignature();
-                    break;
-                }
-
-                y += 52f;
             }
 
             Widgets.EndScrollView();
         }
 
-        private bool DrawOrderLine(
+        private bool DrawMechOrderLine(
             Rect rect,
-            string name,
-            string? stuff,
-            string? quality,
-            int count,
-            int subtotal)
+            MechanoidOvermindOrderLine_Mech line,
+            bool costsOk)
+        {
+            int pointsSubtotal = 0;
+            if (costsOk
+                && MechanoidOvermindPricingService.TryGetMechUnitPrice(line.Kind, out int unit))
+            {
+                pointsSubtotal = unit * line.Count;
+            }
+
+            string meta = "MAP_MechanoidMechanitor.MechHiveCommunication.Order.MechLineMeta"
+                .Translate(line.Count, pointsSubtotal);
+            return DrawOrderLine(rect, line.Kind.LabelCap, meta);
+        }
+
+        private bool DrawThingOrderLine(Rect rect, MechanoidOvermindOrderLine_Thing line)
+        {
+            bool hasStuff = line.Spec.Stuff != null;
+            bool hasQuality = line.Spec.HasQuality;
+            string meta;
+            if (hasStuff && hasQuality)
+            {
+                meta = "MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMetaStuffQuality"
+                    .Translate(
+                        line.Count,
+                        line.Spec.Stuff!.LabelCap,
+                        line.Spec.Quality.GetLabel().CapitalizeFirst());
+            }
+            else if (hasStuff)
+            {
+                meta = "MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMetaStuff"
+                    .Translate(line.Count, line.Spec.Stuff!.LabelCap);
+            }
+            else if (hasQuality)
+            {
+                meta = "MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMetaQuality"
+                    .Translate(
+                        line.Count,
+                        line.Spec.Quality.GetLabel().CapitalizeFirst());
+            }
+            else
+            {
+                meta = "MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingLineMeta"
+                    .Translate(line.Count);
+            }
+
+            return DrawOrderLine(rect, line.Spec.Def.LabelCap, meta);
+        }
+
+        private bool DrawOrderLine(Rect rect, string name, string meta)
         {
             Widgets.DrawBoxSolid(rect, MechanoidOvermindUiStyle.Panel);
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(rect.x + 6f, rect.y + 4f, rect.width - 70f, 18f),
                 name);
-            string meta = "MAP_MechanoidMechanitor.MechHiveCommunication.Order.LineMeta"
-                .Translate(
-                    count,
-                    subtotal,
-                    stuff ?? "-",
-                    quality ?? "-");
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(rect.x + 6f, rect.y + 24f, rect.width - 70f, 20f),
                 meta);
@@ -399,43 +416,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void DrawOrderFooter(
             Rect rect,
             bool costsOk,
-            int mechCost,
-            int thingCost,
             int totalCost,
             int credits)
         {
             bool connected = MechanoidMechanitorMechHiveCommunicationUtility
                 .TryGetContactableMechHive(out _);
-            bool hasMap = ResolvePreferredOrFallbackMap() != null;
             bool canConfirm = costsOk
                 && !order.IsEmpty
                 && connected
-                && hasMap
                 && cachedDropValid
                 && credits >= totalCost;
 
-            MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(rect.x, rect.y, rect.width, 18f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Order.MechCost".Translate(
-                    costsOk ? mechCost : 0));
-            MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(rect.x, rect.y + 18f, rect.width, 18f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Order.ThingCost".Translate(
-                    costsOk ? thingCost : 0));
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x, rect.y + 38f, rect.width, 20f),
+                new Rect(rect.x, rect.y, rect.width, 18f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total".Translate(
                     costsOk ? totalCost : 0),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.AccentBright);
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(rect.x, rect.y + 58f, rect.width, 18f),
+                new Rect(rect.x, rect.y + 18f, rect.width, 16f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits".Translate(
                     credits));
             int balance = costsOk ? credits - totalCost : credits;
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x, rect.y + 76f, rect.width, 18f),
+                new Rect(rect.x, rect.y + 34f, rect.width, 16f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter".Translate(
                     balance),
                 GameFont.Tiny,
@@ -444,11 +449,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     ? MechanoidOvermindUiStyle.Error
                     : MechanoidOvermindUiStyle.TextSecondary);
 
-            if (!cachedDropValid || !hasMap)
+            if (!cachedDropValid)
             {
                 MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(rect.x, rect.y + 96f, rect.width, 18f),
-                    (!hasMap
+                    new Rect(rect.x, rect.y + 50f, rect.width, 16f),
+                    (cachedDropMap == null
                         ? "MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoMap"
                         : "MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoDropSpot")
                     .Translate(),
@@ -459,7 +464,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             else if (!connected)
             {
                 MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(rect.x, rect.y + 96f, rect.width, 18f),
+                    new Rect(rect.x, rect.y + 50f, rect.width, 16f),
                     MechanoidOvermindDeliveryService.ErrorConnection.Translate(),
                     GameFont.Tiny,
                     TextAnchor.MiddleLeft,
@@ -467,11 +472,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(rect.x, rect.yMax - 64f, rect.width, 28f),
+                    new Rect(rect.x, rect.yMax - 56f, rect.width, 24f),
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear".Translate()))
             {
                 order.Clear();
-                InvalidateDropSpotSignature();
                 statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
             }
 
@@ -479,7 +483,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm".Translate(
                     costsOk ? totalCost : 0);
             if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(rect.x, rect.yMax - 30f, rect.width, 28f),
+                    new Rect(rect.x, rect.yMax - 28f, rect.width, 26f),
                     confirmLabel,
                     enabled: canConfirm))
             {
@@ -529,7 +533,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (result.Success)
             {
                 order.Clear();
-                InvalidateDropSpotSignature();
                 // 最终状态：额度扣除与投送已在交付服务中完成。
                 statusKey =
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Accepted";
@@ -593,72 +596,74 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void RefreshDropSpotCache(bool force)
         {
-            int signature = ComputeOrderSignature();
-            Map? map = ResolvePreferredOrFallbackMap();
+            int revision = order.Revision;
+            bool timeStale = Time.realtimeSinceStartup - cachedDropRealtime
+                    >= DropCacheRealtimeSeconds
+                || (Find.TickManager != null
+                    && Find.TickManager.TicksGame - cachedDropTick >= DropCacheTickInterval);
+
+            bool mapUsable = cachedDropMap != null && !cachedDropMap.Disposed;
+            Map? expectedMap = null;
+            try
+            {
+                expectedMap = MechanoidOvermindDeliveryService.ResolvePlayerDeliveryMap(
+                    preferredDeliveryMap);
+            }
+            catch (System.Exception)
+            {
+                expectedMap = null;
+            }
+
+            bool mapChanged = expectedMap != cachedDropMap;
+
             if (!force
-                && cachedDropMap == map
-                && cachedOrderSignature == signature)
+                && cachedDropRevision == revision
+                && !timeStale
+                && !mapChanged
+                && cachedDropValid
+                && mapUsable)
             {
                 return;
             }
 
-            cachedOrderSignature = signature;
-            cachedDropMap = map;
+            // 不可用时仍按时间窗重试；revision / 地图变化则立即重检。
+            if (!force
+                && cachedDropRevision == revision
+                && !timeStale
+                && !mapChanged
+                && !cachedDropValid)
+            {
+                return;
+            }
+
+            cachedDropRevision = revision;
+            cachedDropRealtime = Time.realtimeSinceStartup;
+            cachedDropTick = Find.TickManager != null
+                ? Find.TickManager.TicksGame
+                : 0;
+            cachedDropMap = null;
             cachedDropCell = IntVec3.Invalid;
             cachedDropValid = false;
-            if (map == null)
+
+            try
             {
-                return;
-            }
-
-            IntVec3 cell = DropCellFinder.TradeDropSpot(map);
-            cachedDropCell = cell;
-            cachedDropValid = cell.IsValid;
-        }
-
-        private void InvalidateDropSpotSignature()
-        {
-            cachedOrderSignature = int.MinValue;
-        }
-
-        private int ComputeOrderSignature()
-        {
-            unchecked
-            {
-                int hash = order.MechLines.Count * 397 ^ order.ThingLines.Count;
-                for (int i = 0; i < order.MechLines.Count; i++)
+                if (!MechanoidOvermindDeliveryService.TryResolveTradeDropTarget(
+                        preferredDeliveryMap,
+                        out Map? map,
+                        out IntVec3 cell))
                 {
-                    MechanoidOvermindOrderLine_Mech line = order.MechLines[i];
-                    hash = (hash * 31)
-                        ^ (line.Kind?.shortHash ?? 0)
-                        ^ (line.Count << 8);
+                    cachedDropMap = map;
+                    return;
                 }
 
-                for (int i = 0; i < order.ThingLines.Count; i++)
-                {
-                    MechanoidOvermindOrderLine_Thing line = order.ThingLines[i];
-                    hash = (hash * 31) ^ line.Spec.GetHashCode() ^ (line.Count << 8);
-                }
-
-                Map? map = preferredDeliveryMap;
-                hash = (hash * 31) ^ (map != null ? map.uniqueID : 0);
-                return hash;
+                cachedDropMap = map;
+                cachedDropCell = cell;
+                cachedDropValid = map != null && !map.Disposed && cell.IsValid;
             }
-        }
-
-        private Map? ResolvePreferredOrFallbackMap()
-        {
-            if (preferredDeliveryMap != null && !preferredDeliveryMap.Disposed)
+            catch (System.Exception)
             {
-                return preferredDeliveryMap;
+                cachedDropValid = false;
             }
-
-            if (Find.CurrentMap != null && !Find.CurrentMap.Disposed)
-            {
-                return Find.CurrentMap;
-            }
-
-            return Find.AnyPlayerHomeMap;
         }
 
         private static string GetNodePermissionLabel()

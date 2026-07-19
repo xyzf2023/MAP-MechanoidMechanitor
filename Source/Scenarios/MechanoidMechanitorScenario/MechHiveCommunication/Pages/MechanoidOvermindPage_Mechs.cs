@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
 using Verse;
-using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -38,8 +37,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private readonly List<MechanoidOvermindMechCatalogEntry> filtered =
             new List<MechanoidOvermindMechCatalogEntry>();
 
-        private readonly Dictionary<PawnKindDef, int> pendingCounts =
-            new Dictionary<PawnKindDef, int>();
+        private readonly Dictionary<PawnKindDef, string> countEditBuffers =
+            new Dictionary<PawnKindDef, string>();
+
+        private int syncedOrderRevision = int.MinValue;
 
         public void Draw(Rect inRect, MechanoidOvermindOrder order)
         {
@@ -47,6 +48,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 MechanoidOvermindUiStyle.DrawPanel(inRect);
                 Rect inner = inRect.ContractedBy(8f);
+                SyncBuffersFromOrderIfNeeded(order);
 
                 Rect searchRect = new Rect(inner.x, inner.y, inner.width, ToolbarHeight);
                 string nextSearch = Widgets.TextField(searchRect, search);
@@ -172,19 +174,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void DrawList(Rect listRect, MechanoidOvermindOrder order)
         {
             MechanoidOvermindUiStyle.DrawPanel(listRect, alt: true, cornerMarks: false);
+            float rowStride = RowHeight + 2f;
             Rect viewRect = new Rect(
                 0f,
                 0f,
                 listRect.width - 16f,
-                Mathf.Max(listRect.height, filtered.Count * (RowHeight + 2f)));
+                Mathf.Max(listRect.height, filtered.Count * rowStride));
             Widgets.BeginScrollView(listRect, ref scrollPosition, viewRect);
 
-            float y = 0f;
-            for (int i = 0; i < filtered.Count; i++)
+            if (filtered.Count > 0)
             {
-                Rect rowRect = new Rect(4f, y, viewRect.width - 8f, RowHeight);
-                DrawRow(rowRect, filtered[i], order);
-                y += RowHeight + 2f;
+                int first = Mathf.Max(0, Mathf.FloorToInt(scrollPosition.y / rowStride) - 1);
+                int last = Mathf.Min(
+                    filtered.Count - 1,
+                    Mathf.CeilToInt((scrollPosition.y + listRect.height) / rowStride) + 1);
+                for (int i = first; i <= last; i++)
+                {
+                    Rect rowRect = new Rect(4f, i * rowStride, viewRect.width - 8f, RowHeight);
+                    DrawRow(rowRect, filtered[i], order);
+                }
             }
 
             Widgets.EndScrollView();
@@ -218,56 +226,84 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.MechHiveCommunication.MechRowMeta".Translate(
                     weightLabel,
                     entry.BandwidthCost.ToString("0.##"),
-                    entry.MarketValue.ToStringMoney(),
                     entry.PurgePrice));
 
-            int count = GetPendingCount(entry.Kind);
+            int orderCount = order.GetMechCount(entry.Kind);
             Rect countRect = new Rect(rowRect.xMax - 168f, rowRect.y + 12f, 48f, 28f);
-            string countText = Widgets.TextField(countRect, count.ToString());
-            if (int.TryParse(countText, out int parsed))
-            {
-                SetPendingCount(entry.Kind, parsed);
-                count = GetPendingCount(entry.Kind);
-            }
+            DrawCountField(countRect, entry.Kind, order, orderCount);
 
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(rowRect.xMax - 112f, rowRect.y + 12f, 24f, 28f),
                     "-"))
             {
-                SetPendingCount(entry.Kind, count - 1);
+                ApplyMechCount(order, entry.Kind, orderCount - 1);
             }
 
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(rowRect.xMax - 84f, rowRect.y + 12f, 24f, 28f),
                     "+"))
             {
-                SetPendingCount(entry.Kind, count + 1);
+                ApplyMechCount(order, entry.Kind, orderCount + 1);
             }
 
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(rowRect.xMax - 56f, rowRect.y + 12f, 52f, 28f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Add".Translate()))
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.ClearItem".Translate()))
             {
-                if (order.TryAddMech(entry.Kind, GetPendingCount(entry.Kind)))
+                ApplyMechCount(order, entry.Kind, 0);
+            }
+        }
+
+        private void DrawCountField(
+            Rect countRect,
+            PawnKindDef kind,
+            MechanoidOvermindOrder order,
+            int orderCount)
+        {
+            string orderText = orderCount.ToString();
+            if (!countEditBuffers.TryGetValue(kind, out string buffer))
+            {
+                buffer = orderText;
+            }
+
+            string controlName = "MAP_OvermindMechCount_" + kind.defName;
+            GUI.SetNextControlName(controlName);
+            string next = GUI.TextField(countRect, buffer, Text.CurTextFieldStyle);
+            bool focused = GUI.GetNameOfFocusedControl() == controlName;
+
+            if (focused)
+            {
+                countEditBuffers[kind] = next ?? string.Empty;
+                if (int.TryParse(next, out int parsed)
+                    && parsed >= 0
+                    && parsed <= MechanoidOvermindOrder.MaxCount)
                 {
-                    SoundDefOf.Click.PlayOneShotOnCamera();
+                    order.SetMechCount(kind, parsed);
+                    syncedOrderRevision = order.Revision;
                 }
             }
+            else
+            {
+                countEditBuffers[kind] = orderText;
+            }
         }
 
-        private int GetPendingCount(PawnKindDef kind)
+        private void ApplyMechCount(MechanoidOvermindOrder order, PawnKindDef kind, int count)
         {
-            if (!pendingCounts.TryGetValue(kind, out int count) || count <= 0)
+            order.SetMechCount(kind, count);
+            countEditBuffers[kind] = order.GetMechCount(kind).ToString();
+            syncedOrderRevision = order.Revision;
+        }
+
+        private void SyncBuffersFromOrderIfNeeded(MechanoidOvermindOrder order)
+        {
+            if (syncedOrderRevision == order.Revision)
             {
-                return 1;
+                return;
             }
 
-            return Mathf.Clamp(count, 1, MechanoidOvermindOrder.MaxCount);
-        }
-
-        private void SetPendingCount(PawnKindDef kind, int count)
-        {
-            pendingCounts[kind] = Mathf.Clamp(count, 1, MechanoidOvermindOrder.MaxCount);
+            syncedOrderRevision = order.Revision;
+            countEditBuffers.Clear();
         }
     }
 }
