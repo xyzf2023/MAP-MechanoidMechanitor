@@ -17,7 +17,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         protected override bool AppliesInt(FloatMenuContext context)
         {
-            return context.FirstSelectedPawn != null;
+            return MechanoidMechanitorMechHiveCommunicationUtility.IsValidContactPawn(
+                context.FirstSelectedPawn);
         }
 
         public override IEnumerable<FloatMenuOption> GetOptionsFor(
@@ -29,15 +30,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 yield break;
             }
 
+            Pawn? selectedPawn = context.FirstSelectedPawn;
+            if (!MechanoidMechanitorMechHiveCommunicationUtility.IsValidContactPawn(
+                    selectedPawn))
+            {
+                yield break;
+            }
+
             if (!MechanoidMechanitorMechHiveCommunicationUtility.TryGetContactableMechHive(
                     out _))
             {
                 yield break;
             }
 
+            Pawn pawn = selectedPawn!;
             yield return new FloatMenuOption(
                 MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindLabel,
-                MechanoidMechanitorMechHiveCommunicationUtility.TryOpenContactOvermindDialog,
+                () => MechanoidMechanitorMechHiveCommunicationUtility
+                    .TryOpenContactOvermindDialog(pawn),
                 MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindIcon,
                 MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindIconColor,
                 MenuOptionPriority.SummonThreat);
