@@ -40,6 +40,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private readonly Dictionary<PawnKindDef, string> countEditBuffers =
             new Dictionary<PawnKindDef, string>();
 
+        private MechanoidOvermindOrder? syncedOrder;
+
         private int syncedOrderRevision = int.MinValue;
 
         public void Draw(Rect inRect, MechanoidOvermindOrder order)
@@ -297,11 +299,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void SyncBuffersFromOrderIfNeeded(MechanoidOvermindOrder order)
         {
-            if (syncedOrderRevision == order.Revision)
+            if (ReferenceEquals(syncedOrder, order)
+                && syncedOrderRevision == order.Revision)
             {
                 return;
             }
 
+            syncedOrder = order;
             syncedOrderRevision = order.Revision;
             countEditBuffers.Clear();
         }

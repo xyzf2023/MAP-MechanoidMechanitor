@@ -30,6 +30,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static readonly Color NavSelectedFill = new Color(0.10f, 0.16f, 0.22f);
 
+        public static readonly Color CoreGraphite = new Color(0.06f, 0.07f, 0.08f);
+
+        public static readonly Color CoreArmorBorder = new Color(0.42f, 0.50f, 0.40f);
+
+        public static readonly Color CoreIdentify = new Color(0.62f, 0.72f, 0.58f);
+
+        public static readonly Color CoreStatus = new Color(0.55f, 0.12f, 0.12f);
+
         public const float CornerMarkLength = 8f;
 
         public const float NavAccentWidth = 3f;
@@ -196,6 +204,95 @@ namespace MAP_MechanoidMechanitor.Scenarios
             TextAnchor anchor = TextAnchor.MiddleLeft)
         {
             DrawLabel(rect, text, GameFont.Tiny, anchor, TextSecondary);
+        }
+
+        public static void DrawCoreFrame(Rect rect)
+        {
+            Color previous = GUI.color;
+            Widgets.DrawBoxSolid(rect, CoreGraphite);
+
+            GUI.color = CoreArmorBorder;
+            Widgets.DrawBox(rect, 1);
+            Rect inset = rect.ContractedBy(3f);
+            GUI.color = CoreIdentify;
+            Widgets.DrawBox(inset, 1);
+
+            GUI.color = CoreStatus;
+            Widgets.DrawBoxSolid(new Rect(rect.x + 8f, rect.y + 6f, 18f, 3f), CoreStatus);
+            Widgets.DrawBoxSolid(new Rect(rect.xMax - 26f, rect.y + 6f, 18f, 3f), CoreStatus);
+            Widgets.DrawBoxSolid(new Rect(rect.x + 8f, rect.yMax - 9f, 18f, 3f), CoreStatus);
+
+            DrawCoreGrid(rect.ContractedBy(10f));
+            DrawCornerMarks(rect);
+            GUI.color = previous;
+        }
+
+        private static void DrawCoreGrid(Rect rect)
+        {
+            if (rect.width < 20f || rect.height < 20f)
+            {
+                return;
+            }
+
+            Color previous = GUI.color;
+            GUI.color = new Color(CoreIdentify.r, CoreIdentify.g, CoreIdentify.b, 0.12f);
+            float stepX = Mathf.Max(18f, rect.width / 8f);
+            float stepY = Mathf.Max(18f, rect.height / 8f);
+            for (float x = rect.x; x <= rect.xMax; x += stepX)
+            {
+                Widgets.DrawLineVertical(x, rect.y, rect.height);
+            }
+
+            for (float y = rect.y; y <= rect.yMax; y += stepY)
+            {
+                Widgets.DrawLineHorizontal(rect.x, y, rect.width);
+            }
+
+            GUI.color = new Color(CoreIdentify.r, CoreIdentify.g, CoreIdentify.b, 0.18f);
+            float scanY = rect.y + (rect.height * 0.5f);
+            Widgets.DrawLineHorizontal(rect.x, scanY, rect.width);
+            GUI.color = previous;
+        }
+
+        public static bool DrawMenuCard(
+            Rect rect,
+            string nodeLabel,
+            string title,
+            bool enabled)
+        {
+            using (Push())
+            {
+                Widgets.DrawBoxSolid(rect, Panel);
+                Color previous = GUI.color;
+                GUI.color = enabled ? Accent : Disabled;
+                Widgets.DrawBox(rect, 1);
+                GUI.color = CoreIdentify;
+                Widgets.DrawLineHorizontal(rect.x + 10f, rect.y + 8f, Mathf.Min(48f, rect.width - 20f));
+                GUI.color = previous;
+
+                if (Mouse.IsOver(rect) && enabled)
+                {
+                    Widgets.DrawBoxSolid(rect, new Color(AccentBright.r, AccentBright.g, AccentBright.b, 0.08f));
+                }
+
+                Text.Font = GameFont.Tiny;
+                Text.Anchor = TextAnchor.UpperLeft;
+                Text.WordWrap = false;
+                GUI.color = TextSecondary;
+                Widgets.Label(new Rect(rect.x + 12f, rect.y + 12f, rect.width - 24f, 18f), nodeLabel);
+
+                Text.Font = GameFont.Medium;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                GUI.color = enabled ? TextPrimary : Disabled;
+                Widgets.Label(new Rect(rect.x + 12f, rect.y + 28f, rect.width - 24f, rect.height - 40f), title);
+
+                if (!enabled)
+                {
+                    return false;
+                }
+
+                return Widgets.ButtonInvisible(rect);
+            }
         }
     }
 }

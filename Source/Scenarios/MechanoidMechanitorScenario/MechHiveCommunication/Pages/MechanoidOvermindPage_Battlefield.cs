@@ -13,12 +13,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Rect inner = inRect.ContractedBy(16f);
 
                 MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(inner.x, inner.y, inner.width, 28f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Title".Translate(),
-                    GameFont.Medium);
-
-                MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(inner.x, inner.y + 40f, inner.width, 24f),
+                    new Rect(inner.x, inner.y, inner.width, 24f),
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Body".Translate(),
                     GameFont.Small,
                     TextAnchor.UpperLeft,
@@ -26,7 +21,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     wordWrap: true);
 
                 MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(inner.x, inner.y + 88f, inner.width, 24f),
+                    new Rect(inner.x, inner.y + 40f, inner.width, 48f),
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Todo".Translate(),
                     GameFont.Small,
                     TextAnchor.UpperLeft,
