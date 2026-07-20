@@ -74,7 +74,8 @@ namespace MAP_MechanoidMechanitor
                 && targetPawn.Map == caster.Map
                 && targetPawn.RaceProps.IsMechanoid
                 && targetPawn.Faction != Faction.OfPlayer
-                && targetPawn.OverseerSubject != null;
+                && targetPawn.OverseerSubject != null
+                && !JusticePawnUtility.IsBossJustice(targetPawn);
         }
 
         public override void Apply(LocalTargetInfo target, LocalTargetInfo dest)

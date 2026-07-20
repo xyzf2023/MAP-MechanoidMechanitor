@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <BossDef>
+    <defName>MAP_JusticeBoss</defName>
+    <kindDef>MAP_Mech_JusticeBOSS</kindDef>
+    <appearAfterTicks>0</appearAfterTicks>
+  </BossDef>
+
+  <BossgroupDef>
+    <defName>MAP_JusticeBossGroup</defName>
+    <label>「正义」-重装指挥单元</label>
+    <boss>MAP_JusticeBoss</boss>
+    <workerClass>MAP_MechanoidMechanitor.BossgroupWorker_Justice</workerClass>
+    <repeatWaveStartIndex>0</repeatWaveStartIndex>
+    <quest>MAP_JusticeBossGroupQuest</quest>
+    <leaderDescription>重装指挥单元「正义」</leaderDescription>
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorBossgroupExtension">
+        <source>Other</source>
+      </li>
+    </modExtensions>
+    <waves>
+      <li>
+        <bossCount>1</bossCount>
+      </li>
+    </waves>
+  </BossgroupDef>
+
+  <QuestScriptDef>
+    <defName>MAP_JusticeBossGroupQuest</defName>
+    <autoAccept>true</autoAccept>
+    <defaultHidden>true</defaultHidden>
+    <root Class="MAP_MechanoidMechanitor.QuestNode_Root_JusticeBossGroup" />
+  </QuestScriptDef>
+
+</Defs>

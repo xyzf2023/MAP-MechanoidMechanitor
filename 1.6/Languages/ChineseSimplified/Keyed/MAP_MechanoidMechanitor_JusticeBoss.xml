@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.GizmoLabel>呼叫「正义」-重装指挥单元</MAP_MechanoidMechanitor.JusticeBoss.Call.GizmoLabel>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.GizmoDesc>向机械巢发送定向挑战信号，呼叫由「正义」-重装指挥单元率领的机械族部队。目标将在当前地图抵达。</MAP_MechanoidMechanitor.JusticeBoss.Call.GizmoDesc>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.DisabledNoPower>通讯台未通电。</MAP_MechanoidMechanitor.JusticeBoss.Call.DisabledNoPower>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.DisabledAlreadyCalled>「正义」-重装指挥单元已经收到呼叫。</MAP_MechanoidMechanitor.JusticeBoss.Call.DisabledAlreadyCalled>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmTitle>确认呼叫「正义」-重装指挥单元？</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmTitle>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmText>这将引来一支由重装指挥单元率领的机械族部队。目标将在当前地图抵达，确认后无法取消。</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmText>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.SuccessMessage>已向机械巢发送挑战信号。「正义」-重装指挥单元正在前来。</MAP_MechanoidMechanitor.JusticeBoss.Call.SuccessMessage>
+  <MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedLabel>「正义」-重装指挥单元抵达</MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedLabel>
+  <MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedText>机械族重装指挥单元「正义」已在地图边缘落点部署。它将固守落点、构筑火力节点，并持续向前线调拨作战机械体。</MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedText>
+  <MAP_MechanoidMechanitor.JusticeBoss.Message.Retreating>「正义」-重装指挥单元开始撤退。</MAP_MechanoidMechanitor.JusticeBoss.Message.Retreating>
+  <MAP_MechanoidMechanitor.JusticeBoss.Message.Exited>「正义」-重装指挥单元已撤离地图。</MAP_MechanoidMechanitor.JusticeBoss.Message.Exited>
+  <MAP_MechanoidMechanitor.JusticeBoss.Message.Defeated>「正义」-重装指挥单元已被摧毁。</MAP_MechanoidMechanitor.JusticeBoss.Message.Defeated>
+
+</LanguageData>
