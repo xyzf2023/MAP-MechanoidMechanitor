@@ -98,33 +98,73 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 连接进度条：深灰底槽、Accent 填充、前端 AccentBright 窄高亮。
+        /// 连接进度条：底槽、连续填充、填充内扫光、低透明刻度，最后重绘边框。
         /// </summary>
-        public static void DrawAccentProgressBar(Rect rect, float fill01)
+        public static void DrawAccentProgressBar(
+            Rect rect,
+            float fill01,
+            double realtime,
+            bool confirmPhase)
         {
             fill01 = Mathf.Clamp01(fill01);
             Widgets.DrawBoxSolid(rect, Background);
-            DrawBorder(rect);
 
             float fillWidth = rect.width * fill01;
-            if (fillWidth <= 0.5f)
+            if (fillWidth > 0.5f)
             {
-                return;
+                Rect fillRect = new Rect(rect.x, rect.y, fillWidth, rect.height);
+                Widgets.DrawBoxSolid(fillRect, Accent);
+
+                double sweepPeriod = confirmPhase ? 0.55d : 1.15d;
+                double cycle = realtime % sweepPeriod;
+                if (cycle < 0d)
+                {
+                    cycle += sweepPeriod;
+                }
+
+                float sweepCenter = (float)(cycle / sweepPeriod) * fillWidth;
+                float sweepHalf = Mathf.Min(8f, fillWidth * 0.5f);
+                float sweepLeft = Mathf.Max(fillRect.x, fillRect.x + sweepCenter - sweepHalf);
+                float sweepRight = Mathf.Min(fillRect.xMax, fillRect.x + sweepCenter + sweepHalf);
+                if (sweepRight > sweepLeft)
+                {
+                    Color sweep = new Color(
+                        AccentBright.r,
+                        AccentBright.g,
+                        AccentBright.b,
+                        confirmPhase ? 0.32f : 0.16f);
+                    Widgets.DrawBoxSolid(
+                        new Rect(sweepLeft, rect.y, sweepRight - sweepLeft, rect.height),
+                        sweep);
+                }
+
+                float edgeWidth = Mathf.Min(3f, fillWidth);
+                Widgets.DrawBoxSolid(
+                    new Rect(fillRect.xMax - edgeWidth, rect.y, edgeWidth, rect.height),
+                    AccentBright);
             }
 
-            Rect fillRect = new Rect(rect.x, rect.y, fillWidth, rect.height);
-            Widgets.DrawBoxSolid(fillRect, Accent);
+            Color previous = GUI.color;
+            GUI.color = new Color(TextSecondary.r, TextSecondary.g, TextSecondary.b, 0.18f);
+            const float tickStep = 8f;
+            for (float x = rect.x + tickStep; x < rect.xMax - 1f; x += tickStep)
+            {
+                Widgets.DrawLineVertical(x, rect.y + 2f, Mathf.Max(1f, rect.height - 4f));
+            }
 
-            float edgeWidth = Mathf.Min(3f, fillWidth);
-            Widgets.DrawBoxSolid(
-                new Rect(fillRect.xMax - edgeWidth, rect.y, edgeWidth, rect.height),
-                AccentBright);
+            GUI.color = previous;
+            DrawBorder(rect);
         }
 
         public static void DrawCornerMarks(Rect rect)
         {
+            DrawCornerMarks(rect, Accent);
+        }
+
+        public static void DrawCornerMarks(Rect rect, Color color)
+        {
             Color previous = GUI.color;
-            GUI.color = Accent;
+            GUI.color = color;
             float len = CornerMarkLength;
             Widgets.DrawLineHorizontal(rect.x, rect.y, len);
             Widgets.DrawLineVertical(rect.x, rect.y, len);
