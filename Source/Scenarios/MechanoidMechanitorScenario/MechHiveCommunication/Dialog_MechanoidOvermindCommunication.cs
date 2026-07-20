@@ -91,11 +91,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private Vector2 dialogueScroll;
 
-        private readonly double bootStartRealtime;
+        private readonly System.Random bootRandom = new System.Random();
 
-        private readonly float bootDurationSeconds;
+        private double bootStartRealtime;
+
+        private float bootDurationSeconds;
 
         private bool bootComplete;
+
+        private bool bootLoopTestEnabled;
 
         private string statusKey =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting";
@@ -158,11 +162,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             absorbInputAroundWindow = false;
             closeOnClickedOutside = false;
 
-            // 独立随机，不触碰 Verse.Rand / 对话选择器；总时长 1～2 秒（含末尾 0.1 秒确认）。
-            var bootRandom = new System.Random();
-            bootDurationSeconds = bootRandom.Next(1000, 2001) / 1000f;
-            bootStartRealtime = Time.realtimeSinceStartupAsDouble;
-            bootComplete = false;
+            StartBootSequence();
         }
 
         public override void PreClose()
@@ -183,6 +183,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (!TryFinishBootSequence())
                     {
                         DrawConnectionBootPage(inRect);
+                        Rect bootBottom = new Rect(
+                            inRect.x,
+                            inRect.yMax - BottomBarHeight,
+                            inRect.width,
+                            BottomBarHeight);
+                        DrawBottomBar(bootBottom, bootPage: true);
                         return;
                     }
                 }
@@ -205,6 +211,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        private void StartBootSequence()
+        {
+            // 独立随机，不触碰 Verse.Rand；总时长 2～4 秒（含末尾 0.1 秒确认）。
+            bootDurationSeconds = bootRandom.Next(2000, 4001) / 1000f;
+            bootStartRealtime = Time.realtimeSinceStartupAsDouble;
+            bootComplete = false;
+        }
+
+        private bool IsBootLoopTestActive =>
+            Prefs.DevMode && devControlsEnabled && bootLoopTestEnabled;
+
         private bool TryFinishBootSequence()
         {
             if (bootComplete)
@@ -218,6 +235,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            if (IsBootLoopTestActive)
+            {
+                StartBootSequence();
+                return false;
+            }
+
             bootComplete = true;
             statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
             PlayDialogueFromPool("MAP_OvermindDialogue_HomeOpen");
@@ -227,35 +250,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void DrawConnectionBootPage(Rect inRect)
         {
             double now = Time.realtimeSinceStartupAsDouble;
-            double elapsed = now - bootStartRealtime;
-            float fillDuration = Mathf.Max(0.01f, bootDurationSeconds - BootConfirmSeconds);
-            bool confirmPhase = elapsed >= fillDuration;
-            float fillRawT = confirmPhase
-                ? 1f
-                : Mathf.Clamp01((float)(elapsed / fillDuration));
-            float visualT = confirmPhase
-                ? 1f
-                : 1f - (1f - fillRawT) * (1f - fillRawT);
-            int activeStage = GetBootActiveStageIndex(fillRawT, confirmPhase);
-            int percent = confirmPhase
-                ? 100
-                : Mathf.Clamp(Mathf.FloorToInt(visualT * 100f + 0.0001f), 0, 100);
+            GetBootTiming(
+                out bool confirmPhase,
+                out float fillRawT,
+                out float visualT,
+                out int activeStage,
+                out int percent);
 
-            DrawBootTerminalGrid(inRect);
-            DrawBootScanline(inRect, now, confirmPhase);
+            // 主体避开底栏，避免低分辨率下与 DEV 控件重叠。
+            Rect contentRect = new Rect(
+                inRect.x,
+                inRect.y,
+                inRect.width,
+                Mathf.Max(0f, inRect.height - BottomBarHeight));
 
-            float panelWidth = Mathf.Clamp(inRect.width * 0.72f, 420f, 860f);
-            panelWidth = Mathf.Min(panelWidth, Mathf.Max(0f, inRect.width - 32f));
-            float panelHeight = Mathf.Clamp(inRect.height * 0.55f, 280f, 390f);
-            panelHeight = Mathf.Min(panelHeight, Mathf.Max(0f, inRect.height - 32f));
+            DrawBootTerminalGrid(contentRect);
+            DrawBootScanline(contentRect, now, confirmPhase);
+
+            float panelWidth = Mathf.Clamp(contentRect.width * 0.72f, 420f, 860f);
+            panelWidth = Mathf.Min(panelWidth, Mathf.Max(0f, contentRect.width - 32f));
+            float panelHeight = Mathf.Clamp(contentRect.height * 0.55f, 280f, 390f);
+            panelHeight = Mathf.Min(panelHeight, Mathf.Max(0f, contentRect.height - 32f));
             if (panelWidth < 8f || panelHeight < 8f)
             {
                 return;
             }
 
             Rect panel = new Rect(
-                inRect.x + (inRect.width - panelWidth) * 0.5f,
-                inRect.y + (inRect.height - panelHeight) * 0.5f,
+                contentRect.x + (contentRect.width - panelWidth) * 0.5f,
+                contentRect.y + (contentRect.height - panelHeight) * 0.5f,
                 panelWidth,
                 panelHeight);
             MechanoidOvermindUiStyle.DrawPanel(panel);
@@ -285,6 +308,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
             DrawBootHeader(headerRect, activeStage, confirmPhase);
             DrawBootBody(bodyRect, activeStage, confirmPhase, now);
             DrawBootFooter(footerRect, visualT, percent, activeStage, confirmPhase, now);
+        }
+
+        private void GetBootTiming(
+            out bool confirmPhase,
+            out float fillRawT,
+            out float visualT,
+            out int activeStage,
+            out int percent)
+        {
+            double elapsed = Time.realtimeSinceStartupAsDouble - bootStartRealtime;
+            float fillDuration = Mathf.Max(0.01f, bootDurationSeconds - BootConfirmSeconds);
+            confirmPhase = elapsed >= fillDuration;
+            fillRawT = confirmPhase
+                ? 1f
+                : Mathf.Clamp01((float)(elapsed / fillDuration));
+            visualT = confirmPhase
+                ? 1f
+                : 1f - (1f - fillRawT) * (1f - fillRawT);
+            activeStage = GetBootActiveStageIndex(fillRawT, confirmPhase);
+            percent = confirmPhase
+                ? 100
+                : Mathf.Clamp(Mathf.FloorToInt(visualT * 100f + 0.0001f), 0, 100);
         }
 
         private void DrawBootTerminalGrid(Rect inRect)
@@ -401,70 +446,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Widgets.DrawLineVertical(leftRect.xMax + gap * 0.5f, rect.y + 4f, rect.height - 8f);
             GUI.color = previous;
 
-            DrawBootNodeDiagram(leftRect, activeStage, confirmPhase, now);
+            DrawBootNodeDiagram(leftRect, confirmPhase, now);
             DrawBootStageList(rightRect, activeStage, confirmPhase, now);
         }
 
-        private void DrawBootNodeDiagram(
-            Rect rect,
-            int activeStage,
-            bool confirmPhase,
-            double now)
+        private void DrawBootNodeDiagram(Rect rect, bool confirmPhase, double now)
         {
             float breath = GetBootBreath01(now);
-            float centerSize = Mathf.Clamp(Mathf.Min(rect.width, rect.height) * 0.38f, 56f, 110f);
-            float satellite = Mathf.Clamp(centerSize * 0.42f, 28f, 44f);
-            float maxReachX = Mathf.Max(0f, (rect.width - satellite) * 0.5f - 2f);
-            float maxReachY = Mathf.Max(0f, (rect.height - satellite) * 0.5f - 2f);
-            float reach = Mathf.Min(
-                Mathf.Min(
-                    (rect.width - centerSize) * 0.5f - 4f,
-                    (rect.height - centerSize) * 0.5f - 4f),
-                Mathf.Min(maxReachX, maxReachY));
-            reach = Mathf.Max(reach, 8f);
+            float side = Mathf.Min(rect.width, rect.height);
+            float centerSize = Mathf.Clamp(side * 0.62f, 110f, 165f);
+            centerSize = Mathf.Min(centerSize, Mathf.Max(0f, side - 8f));
+            if (centerSize < 8f)
+            {
+                return;
+            }
 
-            Vector2 center = new Vector2(rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f);
             Rect centerRect = new Rect(
-                center.x - centerSize * 0.5f,
-                center.y - centerSize * 0.5f,
+                rect.x + (rect.width - centerSize) * 0.5f,
+                rect.y + (rect.height - centerSize) * 0.5f,
                 centerSize,
                 centerSize);
-
-            Vector2[] satCenters =
-            {
-                new Vector2(center.x, Mathf.Clamp(center.y - reach, rect.y + satellite * 0.5f, rect.yMax - satellite * 0.5f)),
-                new Vector2(Mathf.Clamp(center.x + reach, rect.x + satellite * 0.5f, rect.xMax - satellite * 0.5f), center.y),
-                new Vector2(center.x, Mathf.Clamp(center.y + reach, rect.y + satellite * 0.5f, rect.yMax - satellite * 0.5f)),
-                new Vector2(Mathf.Clamp(center.x - reach, rect.x + satellite * 0.5f, rect.xMax - satellite * 0.5f), center.y)
-            };
-
-            for (int i = 0; i < 4; i++)
-            {
-                Color lineColor = GetBootNodeColor(i, activeStage, confirmPhase, breath, link: true);
-                Widgets.DrawLine(satCenters[i], center, lineColor, 1.5f);
-            }
-
-            for (int i = 0; i < 4; i++)
-            {
-                Rect satRect = new Rect(
-                    satCenters[i].x - satellite * 0.5f,
-                    satCenters[i].y - satellite * 0.5f,
-                    satellite,
-                    satellite);
-                Color nodeColor = GetBootNodeColor(i, activeStage, confirmPhase, breath, link: false);
-                Widgets.DrawBoxSolid(satRect, MechanoidOvermindUiStyle.PanelAlt);
-                Color previous = GUI.color;
-                GUI.color = nodeColor;
-                Widgets.DrawBox(satRect, 1);
-                GUI.color = previous;
-                MechanoidOvermindUiStyle.DrawLabel(
-                    satRect,
-                    GetBootStageShortLabel(i),
-                    GameFont.Tiny,
-                    TextAnchor.MiddleCenter,
-                    nodeColor,
-                    wordWrap: true);
-            }
 
             Widgets.DrawBoxSolid(centerRect, MechanoidOvermindUiStyle.Panel);
             Color coreBorder = confirmPhase
@@ -476,21 +477,42 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Color previousCore = GUI.color;
             GUI.color = coreBorder;
             Widgets.DrawBox(centerRect, 2);
-            Rect inset = centerRect.ContractedBy(4f);
+            Rect inset = centerRect.ContractedBy(5f);
             GUI.color = Color.Lerp(MechanoidOvermindUiStyle.Border, coreBorder, 0.7f);
             Widgets.DrawBox(inset, 1);
             GUI.color = previousCore;
 
+            // 极淡内部分隔，保持机械终端层次。
+            Color previous = GUI.color;
+            GUI.color = new Color(
+                MechanoidOvermindUiStyle.Border.r,
+                MechanoidOvermindUiStyle.Border.g,
+                MechanoidOvermindUiStyle.Border.b,
+                0.35f);
+            float midY = centerRect.y + centerSize * 0.52f;
+            Widgets.DrawLineHorizontal(inset.x + 8f, midY, Mathf.Max(0f, inset.width - 16f));
+            Widgets.DrawBoxSolid(
+                new Rect(centerRect.x + centerSize * 0.5f - 10f, inset.y + 8f, 20f, 2f),
+                Color.Lerp(
+                    MechanoidOvermindUiStyle.Accent,
+                    MechanoidOvermindUiStyle.AccentBright,
+                    confirmPhase ? 1f : breath));
+            GUI.color = previous;
+
+            float titleH = 20f;
+            float codeH = 18f;
+            float titleY = centerRect.y + centerSize * 0.30f;
+            float codeY = centerRect.y + centerSize * 0.58f;
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(centerRect.x + 4f, centerRect.y + centerSize * 0.28f, centerSize - 8f, 18f),
+                new Rect(centerRect.x + 8f, titleY, centerSize - 16f, titleH),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Boot.RemoteCoreNode".Translate(),
-                GameFont.Tiny,
+                GameFont.Small,
                 TextAnchor.MiddleCenter,
                 MechanoidOvermindUiStyle.TextPrimary);
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(centerRect.x + 4f, centerRect.y + centerSize * 0.52f, centerSize - 8f, 16f),
+                new Rect(centerRect.x + 8f, codeY, centerSize - 16f, codeH),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Boot.NodeCode".Translate(),
-                GameFont.Tiny,
+                GameFont.Small,
                 TextAnchor.MiddleCenter,
                 MechanoidOvermindUiStyle.AccentBright);
         }
@@ -612,29 +634,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 + 0.5f * (float)System.Math.Sin(cycle * (System.Math.PI * 2d / BootBreathPeriod));
         }
 
-        private static Color GetBootNodeColor(
-            int stageIndex,
-            int activeStage,
-            bool confirmPhase,
-            float breath,
-            bool link)
-        {
-            if (confirmPhase || stageIndex < activeStage)
-            {
-                return MechanoidOvermindUiStyle.Accent;
-            }
-
-            if (stageIndex == activeStage)
-            {
-                return Color.Lerp(
-                    MechanoidOvermindUiStyle.Accent,
-                    MechanoidOvermindUiStyle.AccentBright,
-                    link ? 0.35f + 0.45f * breath : breath);
-            }
-
-            return MechanoidOvermindUiStyle.Disabled;
-        }
-
         private static int GetBootActiveStageIndex(float fillRawT, bool confirmPhase)
         {
             if (confirmPhase || fillRawT >= 1f)
@@ -676,7 +675,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case 2:
                     return "MAP_MechanoidMechanitor.MechHiveCommunication.Status.SyncingCredits";
                 default:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connected";
+                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Status.JoiningNode";
             }
         }
 
@@ -699,11 +698,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static string GetBootStageShortLabel(int stageIndex)
-        {
-            return (stageIndex + 1).ToString("00");
-        }
-
         private void DrawLayout(Rect inRect)
         {
             Rect topRect = new Rect(inRect.x, inRect.y, inRect.width, TopBarHeight);
@@ -714,7 +708,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 inRect.yMax - BottomBarHeight,
                 inRect.width,
                 BottomBarHeight);
-            DrawBottomBar(bottomRect);
+            DrawBottomBar(bottomRect, bootPage: false);
 
             float bodyY = topRect.yMax + Gap;
             float bodyHeight = Mathf.Max(0f, bottomRect.y - Gap - bodyY);
@@ -995,38 +989,41 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindUiStyle.TextSecondary);
         }
 
-        private void DrawBottomBar(Rect rect)
+        private void DrawBottomBar(Rect rect, bool bootPage)
         {
             MechanoidOvermindUiStyle.DrawPanel(rect, cornerMarks: false);
-            Color color = MechanoidOvermindUiStyle.TextSecondary;
-            if (statusKey.IndexOf("Error", StringComparison.Ordinal) >= 0
-                || statusKey.IndexOf("Insufficient", StringComparison.Ordinal) >= 0)
-            {
-                color = MechanoidOvermindUiStyle.Error;
-            }
-            else if (statusKey.IndexOf("Accepted", StringComparison.Ordinal) >= 0
-                || statusKey.IndexOf("DropStarted", StringComparison.Ordinal) >= 0
-                || statusKey.IndexOf("CreditsSpent", StringComparison.Ordinal) >= 0
-                || statusKey.IndexOf("Connected", StringComparison.Ordinal) >= 0)
-            {
-                color = MechanoidOvermindUiStyle.AccentBright;
-            }
 
             if (!Prefs.DevMode)
             {
                 devControlsEnabled = false;
+                bootLoopTestEnabled = false;
+            }
+
+            if (!bootPage)
+            {
+                bootLoopTestEnabled = false;
+            }
+
+            if (!devControlsEnabled)
+            {
+                bootLoopTestEnabled = false;
             }
 
             const float edgePad = 8f;
             const float itemGap = 4f;
             const float disconnectW = 110f;
             const float devToggleW = 54f;
-            // 按 MinVirtualWidth=1100 预留中文标签宽度，避免与状态文字重叠。
+            const float loopTestW = 86f;
             const float creditWideW = 102f;
             const float creditNarrowW = 92f;
 
             bool showDevToggle = Prefs.DevMode;
             bool showCreditButtons = showDevToggle && devControlsEnabled;
+            bool showLoopTest = bootPage && showDevToggle && devControlsEnabled;
+            // 启动页不属于 transitioning，DEV / 额度 / 循环测试均可操作。
+            bool freezeDev = !bootPage && transitioning;
+            bool creditEnabled = bootPage || !transitioning;
+
             float creditClusterW = showCreditButtons
                 ? creditWideW + itemGap + creditWideW + itemGap + creditNarrowW + itemGap
                     + creditNarrowW
@@ -1038,9 +1035,42 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 rightClusterW += itemGap + devToggleW;
             }
 
+            if (showLoopTest)
+            {
+                rightClusterW += itemGap + loopTestW;
+            }
+
             if (showCreditButtons)
             {
                 rightClusterW += itemGap + creditClusterW;
+            }
+
+            string statusText;
+            Color color = MechanoidOvermindUiStyle.TextSecondary;
+            if (bootPage)
+            {
+                GetBootTiming(out bool confirmPhase, out _, out _, out int activeStage, out _);
+                string phaseKey = GetBootStageStatusKey(activeStage, confirmPhase);
+                statusText = phaseKey.Translate();
+                color = confirmPhase
+                    ? MechanoidOvermindUiStyle.AccentBright
+                    : MechanoidOvermindUiStyle.Accent;
+            }
+            else
+            {
+                statusText = statusKey.Translate();
+                if (statusKey.IndexOf("Error", StringComparison.Ordinal) >= 0
+                    || statusKey.IndexOf("Insufficient", StringComparison.Ordinal) >= 0)
+                {
+                    color = MechanoidOvermindUiStyle.Error;
+                }
+                else if (statusKey.IndexOf("Accepted", StringComparison.Ordinal) >= 0
+                    || statusKey.IndexOf("DropStarted", StringComparison.Ordinal) >= 0
+                    || statusKey.IndexOf("CreditsSpent", StringComparison.Ordinal) >= 0
+                    || statusKey.IndexOf("Connected", StringComparison.Ordinal) >= 0)
+                {
+                    color = MechanoidOvermindUiStyle.AccentBright;
+                }
             }
 
             float statusWidth = Mathf.Max(
@@ -1048,7 +1078,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 rect.width - edgePad * 2f - rightClusterW - itemGap);
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(rect.x + edgePad, rect.y + 4f, statusWidth, rect.height - 8f),
-                statusKey.Translate(),
+                statusText,
                 GameFont.Tiny,
                 TextAnchor.MiddleLeft,
                 color);
@@ -1069,7 +1099,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 cursorX -= itemGap + devToggleW;
                 Rect toggleRect = new Rect(cursorX, rect.y + 6f, devToggleW, rect.height - 12f);
-                if (transitioning)
+                if (freezeDev)
                 {
                     bool frozen = devControlsEnabled;
                     Widgets.CheckboxLabeled(
@@ -1085,12 +1115,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Toggle".Translate(),
                         ref enabled);
                     devControlsEnabled = enabled;
+                    if (!devControlsEnabled)
+                    {
+                        bootLoopTestEnabled = false;
+                    }
                 }
             }
 
-            if (showCreditButtons)
+            if (showLoopTest && devControlsEnabled)
             {
-                bool creditEnabled = !transitioning;
+                cursorX -= itemGap + loopTestW;
+                Rect loopRect = new Rect(cursorX, rect.y + 6f, loopTestW, rect.height - 12f);
+                bool loopEnabled = bootLoopTestEnabled;
+                Widgets.CheckboxLabeled(
+                    loopRect,
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.LoopTest".Translate(),
+                    ref loopEnabled);
+                bootLoopTestEnabled = loopEnabled;
+            }
+
+            if (showCreditButtons && devControlsEnabled)
+            {
                 // 从右向左放置，保证左→右顺序为：+1000、-1000、+100、-100。
                 cursorX -= itemGap + creditNarrowW;
                 if (DrawDevCreditButton(
