@@ -82,6 +82,15 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.ConnectionStable>连接状态：稳定</MAP_MechanoidMechanitor.MechHiveCommunication.ConnectionStable>
   <MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission>节点权限：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission>
   <MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission.EdgeExecUnit>边缘执行单元</MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission.EdgeExecUnit>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.AccessPermission>接入权限：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.AccessPermission>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.LinkStatus>链路状态：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.LinkStatus>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.RemoteCoreNode>远程主脑节点</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.RemoteCoreNode>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.NodeCode>██-07</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.NodeCode>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.Link>建立通讯链路</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.Link>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.Verify>验证肃清协议权限</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.Verify>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.SyncCredits>同步肃清额度</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.SyncCredits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.JoinNode>接入远程节点</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.JoinNode>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Complete>完成</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Complete>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs>机械族调拨</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods>物资调拨</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>战场支援</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>
