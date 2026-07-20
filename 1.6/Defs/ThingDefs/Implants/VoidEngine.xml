@@ -6,13 +6,21 @@
     <description>一种能引导机械族从虚空泡中汲取能量、实现反应堆自供能的超凡机械师植入体。</description>
     <costList>
       <PowerfocusChip>2</PowerfocusChip>
-      <ComponentSpacer>5</ComponentSpacer>
+      <NanostructuringChip>1</NanostructuringChip>
+      <ComponentSpacer>6</ComponentSpacer>
+      <Uranium>75</Uranium>
       <Gold>50</Gold>
     </costList>
     <statBases>
       <MaxInstallCount>1</MaxInstallCount>
       <MarketValue>1500</MarketValue>
+      <WorkToMake>18000</WorkToMake>
     </statBases>
+    <recipeMaker>
+      <skillRequirements Inherit="False">
+        <Crafting>12</Crafting>
+      </skillRequirements>
+    </recipeMaker>
     <comps>
       <li Class="CompProperties_Usable">
         <compClass>CompUsableImplant</compClass>

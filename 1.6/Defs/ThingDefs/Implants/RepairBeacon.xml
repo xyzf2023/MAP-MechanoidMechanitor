@@ -5,17 +5,24 @@
     <label>修复信标</label>
     <description>利用超凡技术制作的远程调控模块，植入后能引导受监管机械族进行自我修复。</description>
     <costList>
-      <PowerfocusChip>5</PowerfocusChip>
-      <SignalChip>5</SignalChip>
-      <NanostructuringChip>5</NanostructuringChip>
-      <Plasteel>200</Plasteel>
-      <Gold>20</Gold>
+      <PowerfocusChip>1</PowerfocusChip>
+      <SignalChip>1</SignalChip>
+      <NanostructuringChip>2</NanostructuringChip>
+      <Plasteel>20</Plasteel>
+      <Gold>300</Gold>
+      <Uranium>5</Uranium>
       <ComponentSpacer>10</ComponentSpacer>
     </costList>
     <statBases>
       <MaxInstallCount>1</MaxInstallCount>
       <MarketValue>3000</MarketValue>
+      <WorkToMake>24000</WorkToMake>
     </statBases>
+    <recipeMaker>
+      <skillRequirements Inherit="False">
+        <Crafting>12</Crafting>
+      </skillRequirements>
+    </recipeMaker>
     <comps>
       <li Class="CompProperties_Usable">
         <compClass>CompUsableImplant</compClass>
