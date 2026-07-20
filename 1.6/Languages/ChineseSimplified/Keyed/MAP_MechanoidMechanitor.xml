@@ -92,10 +92,10 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.JoinNode>接入远程节点</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.JoinNode>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Status.JoiningNode>正在接入远程节点……</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Status.JoiningNode>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Complete>完成</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Complete>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs>机械族调拨</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods>物资调拨</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>战场支援</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat>闲谈</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs>机体申领</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods>物资请求</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>特殊协议</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat>数据问询</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Disconnect>断开连接</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Disconnect>
   <MAP_MechanoidMechanitor.MechHiveCommunication.BackToHome>返回主菜单</MAP_MechanoidMechanitor.MechHiveCommunication.BackToHome>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node>节点 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node>
@@ -112,9 +112,9 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.01>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.02>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.03>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.01>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.02>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.01>-执行单元调拨接口：[[PAUSE]]开放\n-可用机体序列：[[PAUSE]]已载入\n指定所需机型与数量。肃清额度将在投送序列启动前结算。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.02>肃清成果已记录。\n对应资源调用权限已开放。\n选择所需执行单元。物资投送单元将在完成额度校验后执行投送。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.03>-本地节点权限：[[PAUSE]]有效\n-机体申领通道：[[PAUSE]]就绪\n提交所需执行单元序列。资源分配上限取决于当前肃清额度。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.03>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.01>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.02>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.03>
@@ -144,8 +144,8 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Special>特殊物品</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Special>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Category.Other>其他物品</MAP_MechanoidMechanitor.MechHiveCommunication.Category.Other>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.Name>名称</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.Name>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueAsc>市价↑</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueAsc>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueDesc>市价↓</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueDesc>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueAsc>价值↑</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueAsc>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueDesc>价值↓</MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueDesc>
   <MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowCategory>{0}</MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowCategory>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Goods.SelectHint>选择物资以配置材质、品质与数量。</MAP_MechanoidMechanitor.MechHiveCommunication.Goods.SelectHint>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Stuff>材质：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Stuff>
