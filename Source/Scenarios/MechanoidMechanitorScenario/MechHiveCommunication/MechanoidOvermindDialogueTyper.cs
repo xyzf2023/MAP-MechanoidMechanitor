@@ -21,13 +21,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private readonly StringBuilder visible = new StringBuilder();
 
+        private string visibleCache = string.Empty;
+
         private int parseIndex;
 
         private float nextOutputRealtime;
 
         private bool isComplete = true;
 
-        public string VisibleText => visible.ToString();
+        public string VisibleText => visibleCache;
 
         public bool IsComplete => isComplete;
 
@@ -35,6 +37,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             source = fullText ?? string.Empty;
             visible.Length = 0;
+            visibleCache = string.Empty;
             parseIndex = 0;
             isComplete = false;
             nextOutputRealtime = Time.realtimeSinceStartup;
@@ -49,6 +52,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             source = string.Empty;
             visible.Length = 0;
+            visibleCache = string.Empty;
             parseIndex = 0;
             isComplete = true;
             nextOutputRealtime = Time.realtimeSinceStartup;
@@ -62,21 +66,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             float now = Time.realtimeSinceStartup;
-            while (!isComplete && now >= nextOutputRealtime)
+            if (now < nextOutputRealtime)
             {
-                if (!TryAdvanceOneUnit())
-                {
-                    break;
-                }
+                return;
             }
+
+            TryAdvanceOneUnit(now);
         }
 
-        private bool TryAdvanceOneUnit()
+        private void TryAdvanceOneUnit(float now)
         {
             if (parseIndex >= source.Length)
             {
                 isComplete = true;
-                return false;
+                return;
             }
 
             if (MatchesAt(parseIndex, PauseMarker))
@@ -86,42 +89,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     // 尾部控制字段：消耗后立即完成，避免无意义等待。
                     isComplete = true;
-                    return false;
+                    return;
                 }
 
-                nextOutputRealtime += PauseMarkerSeconds;
-                return true;
+                nextOutputRealtime = now + PauseMarkerSeconds;
+                return;
             }
 
             if (TryConsumeNewline(out int newlineLength))
             {
                 visible.Append('\n');
                 parseIndex += newlineLength;
-                nextOutputRealtime += NewlinePauseSeconds;
+                RefreshVisibleCache();
+                nextOutputRealtime = now + NewlinePauseSeconds;
                 if (parseIndex >= source.Length)
                 {
                     isComplete = true;
                 }
 
-                return true;
+                return;
             }
 
             string element = StringInfo.GetNextTextElement(source, parseIndex);
             if (string.IsNullOrEmpty(element))
             {
                 isComplete = true;
-                return false;
+                return;
             }
 
             visible.Append(element);
             parseIndex += element.Length;
-            nextOutputRealtime += CharIntervalSeconds;
+            RefreshVisibleCache();
+            nextOutputRealtime = now + CharIntervalSeconds;
             if (parseIndex >= source.Length)
             {
                 isComplete = true;
             }
+        }
 
-            return true;
+        private void RefreshVisibleCache()
+        {
+            visibleCache = visible.ToString();
         }
 
         private bool TryConsumeNewline(out int consumed)
