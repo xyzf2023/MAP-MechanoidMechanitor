@@ -87,6 +87,20 @@
   </ResearchProjectDef>
 
   <ResearchProjectDef>
+    <defName>MAP_ConsciousnessStructureCopy</defName>
+    <label>意识结构拷贝</label>
+    <description>通过对机械族意识载体的深入研究，我们掌握了将成品次生核心中的完整数据复制至空白次生核心的技术。</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_DataStreamReorganization</li>
+    </prerequisites>
+    <researchViewX>4.00</researchViewX>
+    <researchViewY>1.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
     <defName>MAP_DataProcessingAllocation</defName>
     <label>数据处理分配</label>
     <description>开发定向数据分配协议，使机械族机械师能够将部分数据处理能力用于关注下属机械体。尽管这会削弱自身的处理效率，却能提升对目标机械体的指令精度，进而强化其各项性能。\n\n研究此科技以解锁机械族机械师功能“数据处理分配”。</description>
