@@ -34,7 +34,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const int DropCacheTickInterval = 60;
 
-        private const float MinOrderPanelHeight = 224f;
+        private const float MinOrderPanelHeight = 200f;
 
         private const float TransitionDuration = 0.35f;
 
@@ -45,8 +45,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const float CoreSmallHeight = 130f;
 
         private const float DialogueHomeRatio = 0.42f;
-
-        private const float DialogueSubHeight = 118f;
 
         private const float FloatPeriodSeconds = 3.2f;
 
@@ -67,6 +65,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private readonly string contactPawnDisplayName;
 
         private readonly string contactLocalTimeText;
+
+        private readonly string overmindDisplayName;
 
         private MechanoidOvermindOrder? activeOrder;
 
@@ -92,8 +92,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private Vector2 windowScroll;
 
         private Vector2 orderScroll;
-
-        private Vector2 dialogueScroll;
 
         private readonly System.Random bootRandom = new System.Random();
 
@@ -166,6 +164,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     contactPawn);
             contactLocalTimeText =
                 MechanoidMechanitorMechHiveCommunicationUtility.ResolveContactLocalTimeText();
+            overmindDisplayName =
+                GameComponent_MechanoidMechanitorStoryState.GetOrCreateMechanoidOvermindName();
             forcePause = false;
             doCloseX = true;
             doCloseButton = false;
@@ -397,7 +397,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 GameFont.Medium);
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(rect.x, rect.y + 26f, leftW, 18f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle".Translate(),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle".Translate(
+                    overmindDisplayName),
                 GameFont.Tiny,
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.TextSecondary);
@@ -521,7 +522,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindUiStyle.TextPrimary);
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(centerRect.x + 8f, codeY, centerSize - 16f, codeH),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Boot.NodeCode".Translate(),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Boot.NodeCode".Translate(
+                    overmindDisplayName),
                 GameFont.Small,
                 TextAnchor.MiddleCenter,
                 MechanoidOvermindUiStyle.AccentBright);
@@ -815,10 +817,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             bool showOrder = ShowsOrderPanel(currentPage);
             float dialogueH;
+            float preferredDialogueH = GetPreferredDialogueSubHeight();
             if (showOrder)
             {
                 float orderBudget = sideRect.height - subCore.height - Gap * 2f - MinOrderPanelHeight;
-                dialogueH = Mathf.Clamp(DialogueSubHeight, 80f, Mathf.Max(80f, orderBudget));
+                dialogueH = Mathf.Clamp(preferredDialogueH, 80f, Mathf.Max(80f, orderBudget));
                 if (sideRect.height - subCore.height - Gap * 2f - dialogueH < MinOrderPanelHeight)
                 {
                     dialogueH = Mathf.Max(
@@ -973,7 +976,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(inner.x, inner.y + 28f, inner.width * 0.55f, 22f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle".Translate());
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle".Translate(
+                    overmindDisplayName));
 
             int credits = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRewardPoints();
             float rightWidth = inner.width * 0.42f;
@@ -1226,7 +1230,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void DrawDialoguePanel(Rect rect)
         {
-            bool wasTyping = !dialogueTyper.IsComplete;
             dialogueTyper.Tick();
 
             MechanoidOvermindUiStyle.DrawPanel(rect);
@@ -1247,37 +1250,57 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect contentRect = bodyRect.ContractedBy(8f);
             string visibleText = dialogueTyper.VisibleText;
 
-            float contentWidth = Mathf.Max(1f, contentRect.width - 16f);
+            float contentWidth = Mathf.Max(1f, contentRect.width);
+            float lineHeight;
             float textHeight;
             using (MechanoidOvermindUiStyle.Push())
             {
                 Text.Font = GameFont.Small;
                 Text.WordWrap = true;
+                lineHeight = Text.LineHeight;
                 textHeight = string.IsNullOrEmpty(visibleText)
-                    ? contentRect.height
-                    : Mathf.Max(contentRect.height, Text.CalcHeight(visibleText, contentWidth));
+                    ? 0f
+                    : Text.CalcHeight(visibleText, contentWidth);
             }
 
-            float maxScroll = Mathf.Max(0f, textHeight - contentRect.height);
-            if (wasTyping && textHeight > contentRect.height)
+            // 终端式淘汰：按完整行高向上偏移，裁剪可见区，不截断富文本字符串。
+            float offsetY = 0f;
+            if (textHeight > contentRect.height && lineHeight > 0.01f)
             {
-                dialogueScroll.y = maxScroll;
-            }
-            else
-            {
-                dialogueScroll.y = Mathf.Clamp(dialogueScroll.y, 0f, maxScroll);
+                float excess = textHeight - contentRect.height;
+                int linesUp = Mathf.CeilToInt(excess / lineHeight);
+                offsetY = linesUp * lineHeight;
             }
 
-            Rect viewRect = new Rect(0f, 0f, contentWidth, textHeight);
-            Widgets.BeginScrollView(contentRect, ref dialogueScroll, viewRect);
-            MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(0f, 0f, contentWidth, textHeight),
-                visibleText,
-                GameFont.Small,
-                TextAnchor.UpperLeft,
-                MechanoidOvermindUiStyle.TextPrimary,
-                wordWrap: true);
-            Widgets.EndScrollView();
+            GUI.BeginGroup(contentRect);
+            if (!string.IsNullOrEmpty(visibleText))
+            {
+                MechanoidOvermindUiStyle.DrawLabel(
+                    new Rect(0f, -offsetY, contentWidth, Mathf.Max(textHeight, lineHeight)),
+                    visibleText,
+                    GameFont.Small,
+                    TextAnchor.UpperLeft,
+                    MechanoidOvermindUiStyle.TextPrimary,
+                    wordWrap: true);
+            }
+
+            GUI.EndGroup();
+        }
+
+        private static float GetPreferredDialogueSubHeight()
+        {
+            float smallLineHeight;
+            using (MechanoidOvermindUiStyle.Push())
+            {
+                Text.Font = GameFont.Small;
+                smallLineHeight = Text.LineHeight;
+            }
+
+            // 外框内边距 8×2 + 标题区 26 + 正文区内边距 8×2 + 至少五行 Small 正文。
+            const float outerPad = 16f;
+            const float titleBlock = 26f;
+            const float bodyPad = 16f;
+            return outerPad + titleBlock + bodyPad + smallLineHeight * 5f;
         }
 
         private void DrawOrderPanel(Rect rect, MechanoidOvermindOrder order)
@@ -1295,7 +1318,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .GetPurgeDirectiveRewardPoints();
             RefreshDropSpotCache(order, force: false);
 
-            const float footerHeight = 134f;
+            const float footerHeight = 116f;
             Rect listRect = new Rect(
                 inner.x,
                 inner.y + 28f,
@@ -1427,12 +1450,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int totalCost,
             int credits)
         {
-            const float summaryHeight = 50f;
+            float smallLineHeight;
+            float tinyLineHeight;
+            using (MechanoidOvermindUiStyle.Push())
+            {
+                Text.Font = GameFont.Small;
+                smallLineHeight = Text.LineHeight;
+                Text.Font = GameFont.Tiny;
+                tinyLineHeight = Text.LineHeight;
+            }
+
+            const float summaryRowGap = 2f;
+            float summaryHeight = smallLineHeight + tinyLineHeight + tinyLineHeight
+                + summaryRowGap * 2f;
             const float statusHeight = 18f;
-            const float statusToClearGap = 6f;
-            const float clearHeight = 24f;
-            const float clearToConfirmGap = 4f;
-            const float confirmHeight = 26f;
+            const float statusToButtonsGap = 6f;
+            const float buttonWidth = 94f;
+            const float buttonHeight = 26f;
+            const float buttonGap = 8f;
 
             bool connected = MechanoidMechanitorMechHiveCommunicationUtility
                 .TryGetContactableMechHive(out _);
@@ -1443,20 +1478,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && credits >= totalCost
                 && currentPage != MechanoidOvermindPageKind.BattlefieldSupport;
 
+            float summaryY = rect.y;
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x, rect.y, rect.width, 18f),
+                new Rect(rect.x, summaryY, rect.width, smallLineHeight),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total".Translate(
                     costsOk ? totalCost : 0),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.AccentBright);
+            summaryY += smallLineHeight + summaryRowGap;
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(rect.x, rect.y + 18f, rect.width, 16f),
+                new Rect(rect.x, summaryY, rect.width, tinyLineHeight),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits".Translate(
                     credits));
+            summaryY += tinyLineHeight + summaryRowGap;
             int balance = costsOk ? credits - totalCost : credits;
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x, rect.y + 34f, rect.width, 16f),
+                new Rect(rect.x, summaryY, rect.width, tinyLineHeight),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter".Translate(
                     balance),
                 GameFont.Tiny,
@@ -1492,22 +1530,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     MechanoidOvermindUiStyle.Error);
             }
 
-            float clearY = statusRect.yMax + statusToClearGap;
+            float buttonsY = statusRect.yMax + statusToButtonsGap;
+            float buttonsGroupWidth = buttonWidth * 2f + buttonGap;
+            float buttonsX = rect.x + (rect.width - buttonsGroupWidth) * 0.5f;
             if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(rect.x, clearY, rect.width, clearHeight),
+                    new Rect(buttonsX, buttonsY, buttonWidth, buttonHeight),
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear".Translate()))
             {
                 order.Clear();
                 statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
             }
 
-            float confirmY = clearY + clearHeight + clearToConfirmGap;
-            string confirmLabel =
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm".Translate(
-                    costsOk ? totalCost : 0);
             if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(rect.x, confirmY, rect.width, confirmHeight),
-                    confirmLabel,
+                    new Rect(
+                        buttonsX + buttonWidth + buttonGap,
+                        buttonsY,
+                        buttonWidth,
+                        buttonHeight),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm".Translate(),
                     enabled: canConfirm))
             {
                 TryConfirmDelivery(order);
@@ -1572,7 +1612,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             transitionFromRect = lastHomeCoreRect;
             transitionToRect = lastSubCoreRect;
             dialogueTyper.Clear();
-            dialogueScroll = Vector2.zero;
             statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
         }
 
@@ -1596,7 +1635,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             transitionFromRect = lastSubCoreRect;
             transitionToRect = lastHomeCoreRect;
             dialogueTyper.Clear();
-            dialogueScroll = Vector2.zero;
             statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
         }
 
@@ -1710,7 +1748,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void PlayDialogueText(string text)
         {
             dialogueTyper.Clear();
-            dialogueScroll = Vector2.zero;
             dialogueTyper.Start(text);
         }
 
