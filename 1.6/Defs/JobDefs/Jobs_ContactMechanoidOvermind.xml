@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>MAP_ContactMechanoidOvermind</defName>
+    <label>联络机械主脑</label>
+    <driverClass>MAP_MechanoidMechanitor.Scenarios.JobDriver_ContactMechanoidOvermind</driverClass>
+    <reportString>正在联络机械主脑。</reportString>
+  </JobDef>
+</Defs>

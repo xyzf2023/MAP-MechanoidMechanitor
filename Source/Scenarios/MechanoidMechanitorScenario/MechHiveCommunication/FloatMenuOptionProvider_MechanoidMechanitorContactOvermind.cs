@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -44,14 +45,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Pawn pawn = selectedPawn!;
-            Map? preferredMap = console.Map;
-            yield return new FloatMenuOption(
+            if (!pawn.CanReach(console, PathEndMode.InteractionCell, Danger.Some))
+            {
+                yield return new FloatMenuOption("CannotUseNoPath".Translate(), null);
+                yield break;
+            }
+
+            if (console.Spawned
+                && console.Map != null
+                && console.Map.gameConditionManager.ElectricityDisabled(console.Map))
+            {
+                yield return new FloatMenuOption("CannotUseSolarFlare".Translate(), null);
+                yield break;
+            }
+
+            if (!console.CanUseCommsNow)
+            {
+                yield return new FloatMenuOption("CannotUseNoPower".Translate(), null);
+                yield break;
+            }
+
+            FloatMenuOption option = new FloatMenuOption(
                 MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindLabel,
                 () => MechanoidMechanitorMechHiveCommunicationUtility
-                    .TryOpenContactOvermindDialog(pawn, preferredMap),
+                    .TryOrderContactOvermindJob(pawn, console),
                 MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindIcon,
                 MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindIconColor,
                 MenuOptionPriority.SummonThreat);
+            yield return FloatMenuUtility.DecoratePrioritizedTask(option, pawn, console);
         }
     }
 }

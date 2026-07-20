@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using UnityEngine;
@@ -5,7 +7,7 @@ using UnityEngine;
 namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
-    /// 窗口实例级打字机：解析最终翻译文本，按绝对实时时钟逐字输出。
+    /// 窗口实例级打字机：解析最终翻译文本，按绝对实时时钟逐字输出；支持安全富文本标签。
     /// </summary>
     public sealed class MechanoidOvermindDialogueTyper
     {
@@ -17,13 +19,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const string PauseMarker = "[[PAUSE]]";
 
-        private string source = string.Empty;
+        private enum UnitKind : byte
+        {
+            Text,
+            Newline,
+            Pause,
+            OpenTag,
+            CloseTag
+        }
+
+        private sealed class Unit
+        {
+            public UnitKind Kind;
+
+            public string Text = string.Empty;
+
+            public string TagRaw = string.Empty;
+
+            public string CloseRaw = string.Empty;
+        }
+
+        private readonly List<Unit> units = new List<Unit>();
+
+        private readonly List<string> openCloseStack = new List<string>();
 
         private readonly StringBuilder visible = new StringBuilder();
 
         private string visibleCache = string.Empty;
 
-        private int parseIndex;
+        private int unitIndex;
 
         private float nextOutputRealtime;
 
@@ -35,14 +59,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public void Start(string? fullText)
         {
-            source = fullText ?? string.Empty;
+            units.Clear();
+            openCloseStack.Clear();
             visible.Length = 0;
             visibleCache = string.Empty;
-            parseIndex = 0;
+            unitIndex = 0;
             isComplete = false;
             nextOutputRealtime = Time.realtimeSinceStartup;
 
+            string source = fullText ?? string.Empty;
             if (source.Length == 0)
+            {
+                isComplete = true;
+                return;
+            }
+
+            if (!TryBuildUnits(source, units))
+            {
+                units.Clear();
+                BuildPlainUnits(StripAngleMarkup(source), units);
+            }
+
+            if (units.Count == 0)
             {
                 isComplete = true;
             }
@@ -50,10 +88,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public void Clear()
         {
-            source = string.Empty;
+            units.Clear();
+            openCloseStack.Clear();
             visible.Length = 0;
             visibleCache = string.Empty;
-            parseIndex = 0;
+            unitIndex = 0;
             isComplete = true;
             nextOutputRealtime = Time.realtimeSinceStartup;
         }
@@ -71,73 +110,380 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            TryAdvanceOneUnit(now);
+            // 连续零耗时标签在同一次 Tick 内推进。
+            while (!isComplete && now >= nextOutputRealtime)
+            {
+                if (!TryAdvanceOneUnit(now, out bool consumedTime))
+                {
+                    break;
+                }
+
+                if (consumedTime)
+                {
+                    break;
+                }
+            }
         }
 
-        private void TryAdvanceOneUnit(float now)
+        private bool TryAdvanceOneUnit(float now, out bool consumedTime)
         {
-            if (parseIndex >= source.Length)
+            consumedTime = false;
+            if (unitIndex >= units.Count)
             {
                 isComplete = true;
-                return;
+                return false;
             }
 
-            if (MatchesAt(parseIndex, PauseMarker))
+            Unit unit = units[unitIndex++];
+            switch (unit.Kind)
             {
-                parseIndex += PauseMarker.Length;
-                if (parseIndex >= source.Length)
-                {
-                    // 尾部控制字段：消耗后立即完成，避免无意义等待。
-                    isComplete = true;
-                    return;
-                }
+                case UnitKind.OpenTag:
+                    visible.Append(unit.TagRaw);
+                    openCloseStack.Add(unit.CloseRaw);
+                    RefreshVisibleCache();
+                    if (unitIndex >= units.Count)
+                    {
+                        isComplete = true;
+                    }
 
-                nextOutputRealtime = now + PauseMarkerSeconds;
-                return;
-            }
+                    return true;
 
-            if (TryConsumeNewline(out int newlineLength))
-            {
-                visible.Append('\n');
-                parseIndex += newlineLength;
-                RefreshVisibleCache();
-                nextOutputRealtime = now + NewlinePauseSeconds;
-                if (parseIndex >= source.Length)
-                {
-                    isComplete = true;
-                }
+                case UnitKind.CloseTag:
+                    visible.Append(unit.TagRaw);
+                    if (openCloseStack.Count > 0)
+                    {
+                        openCloseStack.RemoveAt(openCloseStack.Count - 1);
+                    }
 
-                return;
-            }
+                    RefreshVisibleCache();
+                    if (unitIndex >= units.Count)
+                    {
+                        isComplete = true;
+                    }
 
-            string element = StringInfo.GetNextTextElement(source, parseIndex);
-            if (string.IsNullOrEmpty(element))
-            {
-                isComplete = true;
-                return;
-            }
+                    return true;
 
-            visible.Append(element);
-            parseIndex += element.Length;
-            RefreshVisibleCache();
-            nextOutputRealtime = now + CharIntervalSeconds;
-            if (parseIndex >= source.Length)
-            {
-                isComplete = true;
+                case UnitKind.Pause:
+                    if (unitIndex >= units.Count)
+                    {
+                        // 尾部控制字段：消耗后立即完成，避免无意义等待。
+                        isComplete = true;
+                        return true;
+                    }
+
+                    nextOutputRealtime = now + PauseMarkerSeconds;
+                    consumedTime = true;
+                    return true;
+
+                case UnitKind.Newline:
+                    visible.Append('\n');
+                    RefreshVisibleCache();
+                    nextOutputRealtime = now + NewlinePauseSeconds;
+                    consumedTime = true;
+                    if (unitIndex >= units.Count)
+                    {
+                        isComplete = true;
+                    }
+
+                    return true;
+
+                default:
+                    visible.Append(unit.Text);
+                    RefreshVisibleCache();
+                    nextOutputRealtime = now + CharIntervalSeconds;
+                    consumedTime = true;
+                    if (unitIndex >= units.Count)
+                    {
+                        isComplete = true;
+                    }
+
+                    return true;
             }
         }
 
         private void RefreshVisibleCache()
         {
-            visibleCache = visible.ToString();
+            if (openCloseStack.Count == 0)
+            {
+                visibleCache = visible.ToString();
+                return;
+            }
+
+            StringBuilder sb = new StringBuilder(visible.Length + openCloseStack.Count * 8);
+            sb.Append(visible);
+            for (int i = openCloseStack.Count - 1; i >= 0; i--)
+            {
+                sb.Append(openCloseStack[i]);
+            }
+
+            visibleCache = sb.ToString();
         }
 
-        private bool TryConsumeNewline(out int consumed)
+        private static bool TryBuildUnits(string source, List<Unit> destination)
         {
-            char c = source[parseIndex];
+            List<string> nest = new List<string>();
+            int index = 0;
+            while (index < source.Length)
+            {
+                if (MatchesAt(source, index, PauseMarker))
+                {
+                    destination.Add(new Unit { Kind = UnitKind.Pause });
+                    index += PauseMarker.Length;
+                    continue;
+                }
+
+                if (TryReadNewline(source, index, out int newlineLength))
+                {
+                    destination.Add(new Unit { Kind = UnitKind.Newline });
+                    index += newlineLength;
+                    continue;
+                }
+
+                if (source[index] == '<')
+                {
+                    if (!TryReadTag(source, index, out int tagLength, out bool isClose, out string tagName, out string? colorValue, out string raw))
+                    {
+                        return false;
+                    }
+
+                    if (isClose)
+                    {
+                        if (nest.Count == 0 || !string.Equals(nest[nest.Count - 1], tagName, StringComparison.Ordinal))
+                        {
+                            return false;
+                        }
+
+                        nest.RemoveAt(nest.Count - 1);
+                        destination.Add(
+                            new Unit
+                            {
+                                Kind = UnitKind.CloseTag,
+                                TagRaw = raw
+                            });
+                    }
+                    else
+                    {
+                        string closeRaw = tagName == "color" ? "</color>" : ("</" + tagName + ">");
+                        if (tagName == "color" && colorValue == null)
+                        {
+                            return false;
+                        }
+
+                        nest.Add(tagName);
+                        destination.Add(
+                            new Unit
+                            {
+                                Kind = UnitKind.OpenTag,
+                                TagRaw = raw,
+                                CloseRaw = closeRaw
+                            });
+                    }
+
+                    index += tagLength;
+                    continue;
+                }
+
+                string element = StringInfo.GetNextTextElement(source, index);
+                if (string.IsNullOrEmpty(element))
+                {
+                    break;
+                }
+
+                destination.Add(
+                    new Unit
+                    {
+                        Kind = UnitKind.Text,
+                        Text = element
+                    });
+                index += element.Length;
+            }
+
+            return nest.Count == 0;
+        }
+
+        private static void BuildPlainUnits(string source, List<Unit> destination)
+        {
+            int index = 0;
+            while (index < source.Length)
+            {
+                if (MatchesAt(source, index, PauseMarker))
+                {
+                    destination.Add(new Unit { Kind = UnitKind.Pause });
+                    index += PauseMarker.Length;
+                    continue;
+                }
+
+                if (TryReadNewline(source, index, out int newlineLength))
+                {
+                    destination.Add(new Unit { Kind = UnitKind.Newline });
+                    index += newlineLength;
+                    continue;
+                }
+
+                string element = StringInfo.GetNextTextElement(source, index);
+                if (string.IsNullOrEmpty(element))
+                {
+                    break;
+                }
+
+                destination.Add(
+                    new Unit
+                    {
+                        Kind = UnitKind.Text,
+                        Text = element
+                    });
+                index += element.Length;
+            }
+        }
+
+        private static string StripAngleMarkup(string source)
+        {
+            StringBuilder sb = new StringBuilder(source.Length);
+            int index = 0;
+            while (index < source.Length)
+            {
+                if (source[index] == '<')
+                {
+                    int close = source.IndexOf('>', index + 1);
+                    if (close < 0)
+                    {
+                        // 无闭合的尖括号按普通文本保留剩余内容。
+                        sb.Append(source, index, source.Length - index);
+                        break;
+                    }
+
+                    index = close + 1;
+                    continue;
+                }
+
+                sb.Append(source[index]);
+                index++;
+            }
+
+            return sb.ToString();
+        }
+
+        private static bool TryReadTag(
+            string source,
+            int index,
+            out int length,
+            out bool isClose,
+            out string tagName,
+            out string? colorValue,
+            out string raw)
+        {
+            length = 0;
+            isClose = false;
+            tagName = string.Empty;
+            colorValue = null;
+            raw = string.Empty;
+            if (index >= source.Length || source[index] != '<')
+            {
+                return false;
+            }
+
+            int close = source.IndexOf('>', index + 1);
+            if (close < 0)
+            {
+                return false;
+            }
+
+            raw = source.Substring(index, close - index + 1);
+            length = raw.Length;
+            string inner = source.Substring(index + 1, close - index - 1).Trim();
+            if (inner.Length == 0)
+            {
+                return false;
+            }
+
+            if (inner[0] == '/')
+            {
+                isClose = true;
+                string name = inner.Substring(1).Trim();
+                if (!IsSupportedSimpleTag(name))
+                {
+                    return false;
+                }
+
+                tagName = name.ToLowerInvariant();
+                return true;
+            }
+
+            int eq = inner.IndexOf('=');
+            if (eq < 0)
+            {
+                if (string.Equals(inner, "color", StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                if (!IsSupportedSimpleTag(inner))
+                {
+                    return false;
+                }
+
+                tagName = inner.ToLowerInvariant();
+                return true;
+            }
+
+            string left = inner.Substring(0, eq).Trim();
+            string right = inner.Substring(eq + 1).Trim();
+            if (!string.Equals(left, "color", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (!IsValidColorValue(right))
+            {
+                return false;
+            }
+
+            tagName = "color";
+            colorValue = right;
+            return true;
+        }
+
+        private static bool IsSupportedSimpleTag(string name)
+        {
+            return string.Equals(name, "b", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(name, "i", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(name, "color", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsValidColorValue(string value)
+        {
+            if (string.IsNullOrEmpty(value) || value[0] != '#')
+            {
+                return false;
+            }
+
+            int hexLen = value.Length - 1;
+            if (hexLen != 6 && hexLen != 8)
+            {
+                return false;
+            }
+
+            for (int i = 1; i < value.Length; i++)
+            {
+                char c = value[i];
+                bool hex = (c >= '0' && c <= '9')
+                    || (c >= 'a' && c <= 'f')
+                    || (c >= 'A' && c <= 'F');
+                if (!hex)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool TryReadNewline(string source, int index, out int consumed)
+        {
+            char c = source[index];
             if (c == '\r')
             {
-                if (parseIndex + 1 < source.Length && source[parseIndex + 1] == '\n')
+                if (index + 1 < source.Length && source[index + 1] == '\n')
                 {
                     consumed = 2;
                     return true;
@@ -153,10 +499,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return true;
             }
 
-            // 翻译文本中的字面 "\n"（反斜杠 + n）
             if (c == '\\'
-                && parseIndex + 1 < source.Length
-                && source[parseIndex + 1] == 'n')
+                && index + 1 < source.Length
+                && source[index + 1] == 'n')
             {
                 consumed = 2;
                 return true;
@@ -166,7 +511,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return false;
         }
 
-        private bool MatchesAt(int index, string marker)
+        private static bool MatchesAt(string source, int index, string marker)
         {
             int markerLength = marker.Length;
             if (index + markerLength > source.Length)
