@@ -41,7 +41,16 @@ namespace MAP_MechanoidMechanitor
             }
 
             ticksUntilRepair = Mathf.Max(1, Props.repairIntervalTicks);
-            MechRepairUtility.RepairTick(Pawn, Mathf.Max(0, Props.repairAmount));
+            int repairAmount = Mathf.Max(0, Props.repairAmount);
+            for (int i = 0; i < repairAmount; i++)
+            {
+                if (!MechRepairUtility.CanRepair(Pawn))
+                {
+                    break;
+                }
+
+                MechRepairUtility.RepairTick(Pawn);
+            }
         }
 
         public override void CompExposeData()
