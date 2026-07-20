@@ -101,7 +101,7 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node>节点 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Core.Missing>主脑影像缺失</MAP_MechanoidMechanitor.MechHiveCommunication.Core.Missing>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Title>通讯输出</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Title>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink>&lt;i&gt;-{0}&lt;/i&gt;\n-通讯链路：稳定\n-访问权限：已确认\n 提交需求，[[PAUSE]]{1}。</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink>&lt;i&gt;-{0}&lt;/i&gt;\n-通讯链路：稳定\n-访问权限：已确认\n 阐述需求，[[PAUSE]]{1}。</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable>时间获取失败</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.01>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.02>
@@ -179,9 +179,9 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoMap>没有可用地图</MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoMap>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoDropSpot>无法取得合法贸易空投落点</MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoDropSpot>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Error.InvalidOrder>订单规格或价格校验失败</MAP_MechanoidMechanitor.MechHiveCommunication.Error.InvalidOrder>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.MechHiveCommunication.Error.InsufficientCredits>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.GenerationFailed>生成或装载失败，未扣额度</MAP_MechanoidMechanitor.MechHiveCommunication.Error.GenerationFailed>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.ChargeFailed>扣费失败，未执行投送</MAP_MechanoidMechanitor.MechHiveCommunication.Error.ChargeFailed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.InsufficientCredits>额度不足</MAP_MechanoidMechanitor.MechHiveCommunication.Error.InsufficientCredits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.GenerationFailed>投送失败，额度扣除未执行</MAP_MechanoidMechanitor.MechHiveCommunication.Error.GenerationFailed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Error.ChargeFailed>点数扣除失败，未执行投送</MAP_MechanoidMechanitor.MechHiveCommunication.Error.ChargeFailed>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Error.DropFailed>投送失败</MAP_MechanoidMechanitor.MechHiveCommunication.Error.DropFailed>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Body>协议模块尚未部署。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Body>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Todo>功能／权限／执行序列：TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Todo>
@@ -197,7 +197,7 @@
   <MAP_Settings_EnableMechanoidMechanitorBrainImplants_Description>开启后，机械族机械师可以右键选择人类脑部植入体并为自己安装。此功能会略微影响游戏启动时的加载速度。</MAP_Settings_EnableMechanoidMechanitorBrainImplants_Description>
   <MAP_Settings_EnableMechanoidMechanitorBrainImplants_RestartRequired>此设置将在重新启动游戏后生效。</MAP_Settings_EnableMechanoidMechanitorBrainImplants_RestartRequired>
   <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButton>指定配偶……</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButton>
-  <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButtonDesc>选择一名殖民者成为当前授权机械体的配偶。更换配偶时会先与旧配偶离婚并触发离婚反馈。</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButtonDesc>
+  <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButtonDesc>选择一名殖民者成为当前授权机械体的配偶。更换配偶时会与旧配偶离婚。</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButtonDesc>
   <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseNoCandidate>当前没有可指定为配偶的殖民者。</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseNoCandidate>
   <MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseFailed>无法指定该殖民者为配偶。</MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseFailed>
   <MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterLabel>结婚</MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterLabel>
