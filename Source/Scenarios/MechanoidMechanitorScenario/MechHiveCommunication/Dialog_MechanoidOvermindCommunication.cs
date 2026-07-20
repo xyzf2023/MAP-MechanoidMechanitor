@@ -23,6 +23,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float OrderWidth = 300f;
 
+        private const float DialoguePanelHeight = 170f;
+
+        // 订单区下限：内边距16 + 标题28 + 列表下限40 + 间距6 + footer134
+        private const float MinOrderPanelHeight = 224f;
+
         private const float Gap = 8f;
 
         private const float BootDuration = 0.5f;
@@ -41,6 +46,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private readonly MechanoidOvermindOrder order = new MechanoidOvermindOrder();
 
+        private readonly MechanoidOvermindPage_Home homePage = new MechanoidOvermindPage_Home();
+
         private readonly MechanoidOvermindPage_Mechs mechsPage = new MechanoidOvermindPage_Mechs();
 
         private readonly MechanoidOvermindPage_Goods goodsPage = new MechanoidOvermindPage_Goods();
@@ -50,11 +57,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private readonly MechanoidOvermindPage_Chat chatPage = new MechanoidOvermindPage_Chat();
 
-        private MechanoidOvermindPageKind currentPage = MechanoidOvermindPageKind.Mechs;
+        private readonly MechanoidOvermindDialogueTyper dialogueTyper =
+            new MechanoidOvermindDialogueTyper();
+
+        private MechanoidOvermindPageKind currentPage = MechanoidOvermindPageKind.Home;
 
         private Vector2 windowScroll;
 
         private Vector2 orderScroll;
+
+        private Vector2 dialogueScroll;
 
         private readonly float openedRealtime;
 
@@ -100,6 +112,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             closeOnClickedOutside = false;
             openedRealtime = Time.realtimeSinceStartup;
             RefreshDropSpotCache(force: true);
+            StartPageDialogue(MechanoidOvermindPageKind.Home);
         }
 
         public override void PreClose()
@@ -149,17 +162,37 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect navRect = new Rect(inRect.x, bodyY, NavWidth, bodyHeight);
             DrawNavigation(navRect);
 
-            Rect orderRect = new Rect(
+            Rect rightColumn = new Rect(
                 inRect.xMax - OrderWidth,
                 bodyY,
                 OrderWidth,
                 bodyHeight);
+
+            float dialogueHeight = DialoguePanelHeight;
+            float orderHeightBudget = rightColumn.height - Gap - MinOrderPanelHeight;
+            if (orderHeightBudget < dialogueHeight)
+            {
+                dialogueHeight = Mathf.Max(80f, orderHeightBudget);
+            }
+
+            Rect dialogueRect = new Rect(
+                rightColumn.x,
+                rightColumn.y,
+                rightColumn.width,
+                dialogueHeight);
+            DrawDialoguePanel(dialogueRect);
+
+            Rect orderRect = new Rect(
+                rightColumn.x,
+                dialogueRect.yMax + Gap,
+                rightColumn.width,
+                Mathf.Max(0f, rightColumn.yMax - (dialogueRect.yMax + Gap)));
             DrawOrderPanel(orderRect);
 
             Rect centerRect = new Rect(
                 navRect.xMax + Gap,
                 bodyY,
-                Mathf.Max(0f, orderRect.x - Gap - (navRect.xMax + Gap)),
+                Mathf.Max(0f, rightColumn.x - Gap - (navRect.xMax + Gap)),
                 bodyHeight);
             DrawCenterPage(centerRect);
         }
@@ -211,6 +244,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             DrawNavItem(
                 new Rect(inner.x, y, inner.width, buttonHeight),
+                MechanoidOvermindPageKind.Chat,
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat".Translate());
+            y += buttonHeight + 6f;
+
+            DrawNavItem(
+                new Rect(inner.x, y, inner.width, buttonHeight),
                 MechanoidOvermindPageKind.Mechs,
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs".Translate());
             y += buttonHeight + 6f;
@@ -225,12 +264,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(inner.x, y, inner.width, buttonHeight),
                 MechanoidOvermindPageKind.BattlefieldSupport,
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield".Translate());
-            y += buttonHeight + 6f;
-
-            DrawNavItem(
-                new Rect(inner.x, y, inner.width, buttonHeight),
-                MechanoidOvermindPageKind.Chat,
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat".Translate());
             y += buttonHeight;
 
             Rect disconnectRect = new Rect(
@@ -374,10 +407,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void DrawNavItem(Rect rect, MechanoidOvermindPageKind page, string label)
         {
             bool selected = currentPage == page;
-            if (MechanoidOvermindUiStyle.DrawNavButton(rect, label, selected) && !selected)
+            if (MechanoidOvermindUiStyle.DrawNavButton(rect, label, selected))
             {
                 currentPage = page;
                 statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
+                StartPageDialogue(page);
             }
         }
 
@@ -385,6 +419,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             switch (currentPage)
             {
+                case MechanoidOvermindPageKind.Home:
+                    homePage.Draw(rect);
+                    break;
                 case MechanoidOvermindPageKind.Mechs:
                     mechsPage.Draw(rect, order);
                     break;
@@ -397,6 +434,82 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case MechanoidOvermindPageKind.Chat:
                     chatPage.Draw(rect);
                     break;
+            }
+        }
+
+        private void DrawDialoguePanel(Rect rect)
+        {
+            dialogueTyper.Tick();
+
+            MechanoidOvermindUiStyle.DrawPanel(rect);
+            Rect inner = rect.ContractedBy(8f);
+
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, inner.y, inner.width, 22f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Title".Translate(),
+                GameFont.Small);
+
+            Rect bodyRect = new Rect(
+                inner.x,
+                inner.y + 26f,
+                inner.width,
+                Mathf.Max(0f, inner.height - 26f));
+            MechanoidOvermindUiStyle.DrawPanel(bodyRect, alt: true, cornerMarks: false);
+
+            Rect contentRect = bodyRect.ContractedBy(8f);
+            string visibleText = dialogueTyper.VisibleText;
+
+            float contentWidth = Mathf.Max(1f, contentRect.width - 16f);
+            float textHeight;
+            using (MechanoidOvermindUiStyle.Push())
+            {
+                Text.Font = GameFont.Small;
+                Text.WordWrap = true;
+                textHeight = string.IsNullOrEmpty(visibleText)
+                    ? contentRect.height
+                    : Mathf.Max(contentRect.height, Text.CalcHeight(visibleText, contentWidth));
+            }
+
+            if (!dialogueTyper.IsComplete && textHeight > contentRect.height)
+            {
+                dialogueScroll.y = textHeight - contentRect.height;
+            }
+
+            Rect viewRect = new Rect(0f, 0f, contentWidth, textHeight);
+            Widgets.BeginScrollView(contentRect, ref dialogueScroll, viewRect);
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(0f, 0f, contentWidth, textHeight),
+                visibleText,
+                GameFont.Small,
+                TextAnchor.UpperLeft,
+                MechanoidOvermindUiStyle.TextPrimary,
+                wordWrap: true);
+            Widgets.EndScrollView();
+        }
+
+        private void StartPageDialogue(MechanoidOvermindPageKind page)
+        {
+            dialogueTyper.Clear();
+            dialogueScroll = Vector2.zero;
+            dialogueTyper.Start(GetDialogueKey(page).Translate());
+        }
+
+        private static string GetDialogueKey(MechanoidOvermindPageKind page)
+        {
+            switch (page)
+            {
+                case MechanoidOvermindPageKind.Home:
+                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Home";
+                case MechanoidOvermindPageKind.Chat:
+                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Chat";
+                case MechanoidOvermindPageKind.Mechs:
+                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Mechs";
+                case MechanoidOvermindPageKind.Goods:
+                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Goods";
+                case MechanoidOvermindPageKind.BattlefieldSupport:
+                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Battlefield";
+                default:
+                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Home";
             }
         }
 
