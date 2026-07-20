@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <ThingDef ParentName="MechCentipede">
+    <defName>MAP_Mech_JusticeBOSS</defName>
+    <label>「正义」-重装指挥单元</label>
+    <description>隶属于机械族的重甲指挥单元。「正义」以自身作为战区控制节点，在目标区域快速部署自动火力设施，并持续向前线调拨作战机械体。其自我意识被限制在可控范围内，行动协议以建立机械据点、消耗敌方防御并保存指挥核心为优先目标。</description>
+    <statBases>
+      <MarketValue>8000</MarketValue>
+      <MoveSpeed>4.2</MoveSpeed>
+      <EnergyShieldRechargeRate>0.25</EnergyShieldRechargeRate>
+      <EnergyShieldEnergyMax>1.5</EnergyShieldEnergyMax>
+      <MechEnergyLossPerHP>0.15</MechEnergyLossPerHP>
+      <EMPResistance>1.0</EMPResistance>
+      <ArmorRating_Blunt>2.0</ArmorRating_Blunt>
+      <ArmorRating_Sharp>2.0</ArmorRating_Sharp>
+      <PsychicSensitivity>1.0</PsychicSensitivity>
+    </statBases>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_JusticeBossController" />
+    </comps>
+    <race>
+      <body>MAP_Body_Justice</body>
+      <lifeStageAges Inherit="False">
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>0</minAge>
+          <soundWounded>Pawn_Mech_Militor_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Militor_Death</soundDeath>
+          <soundCall>Pawn_Mech_Militor_Call</soundCall>
+        </li>
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>100</minAge>
+          <soundWounded>Pawn_Mech_Militor_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Militor_Death</soundDeath>
+          <soundCall>Pawn_Mech_Militor_Call</soundCall>
+        </li>
+      </lifeStageAges>
+      <baseHealthScale>2.5</baseHealthScale>
+    </race>
+  </ThingDef>
+
+  <PawnKindDef ParentName="MechCentipedeBase">
+    <defName>MAP_Mech_JusticeBOSS</defName>
+    <label>「正义」-重装指挥单元</label>
+    <race>MAP_Mech_JusticeBOSS</race>
+    <fixedGender>None</fixedGender>
+    <defaultFactionDef>Mechanoid</defaultFactionDef>
+    <destroyGearOnDrop>true</destroyGearOnDrop>
+    <combatPower>600</combatPower>
+    <isBoss>true</isBoss>
+    <allowInMechClusters>false</allowInMechClusters>
+    <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
+    <weaponMoney>9999~9999</weaponMoney>
+    <weaponTags>
+      <li>MechanoidGunToxicNeedle</li>
+    </weaponTags>
+    <lifeStages Inherit="False">
+      <li>
+        <bodyGraphicData>
+          <texPath>Justice/Justice</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>2</drawSize>
+          <shadowData>
+            <volume>(0.3, 0.4, 0.3)</volume>
+            <offset>(0,0,-0.25)</offset>
+          </shadowData>
+        </bodyGraphicData>
+      </li>
+      <li>
+        <bodyGraphicData>
+          <texPath>Justice/Justice</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>2</drawSize>
+          <shadowData>
+            <volume>(0.3, 0.4, 0.3)</volume>
+            <offset>(0,0,-0.25)</offset>
+          </shadowData>
+        </bodyGraphicData>
+      </li>
+    </lifeStages>
+  </PawnKindDef>
+
+</Defs>

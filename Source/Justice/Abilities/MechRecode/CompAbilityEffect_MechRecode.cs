@@ -51,7 +51,8 @@ namespace MAP_MechanoidMechanitor
             return innerPawn != null
                 && innerPawn.Dead
                 && innerPawn.RaceProps.IsMechanoid
-                && innerPawn.Faction != Faction.OfPlayer;
+                && innerPawn.Faction != Faction.OfPlayer
+                && !JusticePawnUtility.IsBossJustice(innerPawn);
         }
 
         public override void Apply(LocalTargetInfo target, LocalTargetInfo dest)
