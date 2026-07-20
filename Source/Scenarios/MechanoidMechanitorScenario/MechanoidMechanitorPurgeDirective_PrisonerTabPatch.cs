@@ -29,7 +29,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [HarmonyPrefix]
         public static void Prefix()
         {
-            if (!ShouldRestrictPrisonerInteractions())
+            if (!MechanoidMechanitorPurgeDirectiveRelationUtility
+                    .ShouldApplyNonHostileMechHiveRestrictions())
             {
                 return;
             }
@@ -92,7 +93,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static void FilterPrisonerInteractionModes(
             List<PrisonerInteractionModeDef> modes)
         {
-            if (modes == null || !ShouldRestrictPrisonerInteractions())
+            if (modes == null
+                || !MechanoidMechanitorPurgeDirectiveRelationUtility
+                    .ShouldApplyNonHostileMechHiveRestrictions())
             {
                 return;
             }
@@ -112,34 +115,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     modes.RemoveAt(i);
                 }
             }
-        }
-
-        private static bool ShouldRestrictPrisonerInteractions()
-        {
-            if (!GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive)
-            {
-                return false;
-            }
-
-            Game? game = Current.Game;
-            if (game == null)
-            {
-                return false;
-            }
-
-            GameComponent_MechanoidMechanitorStoryState? storyState =
-                game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
-            Faction? mechHive = storyState?.CachedMechHive;
-            Faction? player = Faction.OfPlayerSilentFail;
-            if (mechHive == null || player == null)
-            {
-                return true;
-            }
-
-            FactionRelation? playerRelation = player.RelationWith(mechHive, allowNull: true);
-            FactionRelation? mechHiveRelation = mechHive.RelationWith(player, allowNull: true);
-            return playerRelation?.kind != FactionRelationKind.Hostile
-                && mechHiveRelation?.kind != FactionRelationKind.Hostile;
         }
 
         private static void SanitizeHiddenPrisonerInteractionMode(Pawn? pawn)
