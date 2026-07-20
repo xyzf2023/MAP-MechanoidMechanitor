@@ -439,6 +439,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void DrawDialoguePanel(Rect rect)
         {
+            bool wasTyping = !dialogueTyper.IsComplete;
             dialogueTyper.Tick();
 
             MechanoidOvermindUiStyle.DrawPanel(rect);
@@ -470,7 +471,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     : Mathf.Max(contentRect.height, Text.CalcHeight(visibleText, contentWidth));
             }
 
-            if (!dialogueTyper.IsComplete && textHeight > contentRect.height)
+            // 播放期间（含本次 Tick 刚好播完最后一字）溢出时跟随底部；完成后不再覆盖。
+            if (wasTyping && textHeight > contentRect.height)
             {
                 dialogueScroll.y = textHeight - contentRect.height;
             }
