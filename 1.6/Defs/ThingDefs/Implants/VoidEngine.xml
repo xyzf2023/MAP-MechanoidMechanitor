@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_VoidEngine</defName>
+    <label>虚空引擎</label>
+    <description>一种能引导机械族从虚空泡中汲取能量、实现反应堆自供能的超凡机械师植入体。</description>
+    <costList>
+      <PowerfocusChip>2</PowerfocusChip>
+      <ComponentSpacer>5</ComponentSpacer>
+      <Gold>50</Gold>
+    </costList>
+    <statBases>
+      <MaxInstallCount>1</MaxInstallCount>
+      <MarketValue>1500</MarketValue>
+    </statBases>
+    <comps>
+      <li Class="CompProperties_Usable">
+        <compClass>CompUsableImplant</compClass>
+        <useJob>UseItem</useJob>
+        <useLabel>植入虚空引擎</useLabel>
+        <userMustHaveHediff>MechlinkImplant</userMustHaveHediff>
+      </li>
+      <li Class="CompProperties_UseEffectInstallImplant">
+        <hediffDef>MAP_VoidEngine</hediffDef>
+        <bodyPart>Brain</bodyPart>
+        <canUpgrade>false</canUpgrade>
+        <requiresExistingHediff>false</requiresExistingHediff>
+        <maxSeverity>1</maxSeverity>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>

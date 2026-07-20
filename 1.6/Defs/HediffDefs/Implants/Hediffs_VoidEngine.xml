@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <HediffDef MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_VoidEngine</defName>
+    <hediffClass>HediffWithComps</hediffClass>
+    <descriptionHyperlinks>
+      <ThingDef>MAP_VoidEngine</ThingDef>
+    </descriptionHyperlinks>
+    <label>虚空引擎</label>
+    <description>一种能引导机械族从虚空泡中汲取能量、实现反应堆自供能的超凡机械师植入体。</description>
+    <descriptionShort>一种能让机械族从虚空泡获取能量的装置。</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>true</priceImpact>
+    <initialSeverity>1</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>1</maxSeverity>
+    <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
+    <levelIsQuantity>false</levelIsQuantity>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_VoidEngine"/>
+    </comps>
+    <stages>
+      <li>
+        <minSeverity>1</minSeverity>
+        <statFactors>
+          <MechEnergyUsageFactor>0</MechEnergyUsageFactor>
+          <MechEnergyLossPerHP>0</MechEnergyLossPerHP>
+        </statFactors>
+      </li>
+    </stages>
+    <duplicationAllowed>false</duplicationAllowed>
+  </HediffDef>
+
+  <HediffDef MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_ReactorSelfPowering</defName>
+    <hediffClass>HediffWithComps</hediffClass>
+    <label>反应堆自供能</label>
+    <description>虚空引擎正在引导机械族从虚空泡中汲取能量。</description>
+    <descriptionShort>机械族反应堆自供能系统。</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>false</priceImpact>
+    <initialSeverity>1</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>1</maxSeverity>
+    <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
+    <levelIsQuantity>false</levelIsQuantity>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_PeriodicEnergyRestore">
+        <intervalTicks>300</intervalTicks>
+        <restoreFraction>0.01</restoreFraction>
+      </li>
+    </comps>
+    <stages>
+      <li>
+        <minSeverity>1</minSeverity>
+        <statFactors>
+          <MechEnergyUsageFactor>0</MechEnergyUsageFactor>
+          <MechEnergyLossPerHP>0</MechEnergyLossPerHP>
+        </statFactors>
+      </li>
+    </stages>
+    <duplicationAllowed>false</duplicationAllowed>
+  </HediffDef>
+</Defs>

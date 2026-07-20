@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_ProductivityCore</defName>
+    <label>效能核心</label>
+    <description>一种用于提升机械族工作效率的超凡机械师植入体。每个植入等级为该机械师监管的机械族提供+1制作物品品质偏移，并按照MOD设置提供工作速度偏移。最多可植入5个。</description>
+    <costList>
+      <PowerfocusChip>1</PowerfocusChip>
+      <ComponentSpacer>3</ComponentSpacer>
+    </costList>
+    <statBases>
+      <MaxInstallCount>5</MaxInstallCount>
+      <MarketValue>2000</MarketValue>
+    </statBases>
+    <comps>
+      <li Class="CompProperties_Usable">
+        <compClass>CompUsableImplant</compClass>
+        <useJob>UseItem</useJob>
+        <useLabel>植入效能核心</useLabel>
+        <userMustHaveHediff>MechlinkImplant</userMustHaveHediff>
+      </li>
+      <li Class="CompProperties_UseEffectInstallImplant">
+        <hediffDef>MAP_ProductivityCore</hediffDef>
+        <bodyPart>Brain</bodyPart>
+        <canUpgrade>true</canUpgrade>
+        <requiresExistingHediff>false</requiresExistingHediff>
+        <maxSeverity>5</maxSeverity>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>

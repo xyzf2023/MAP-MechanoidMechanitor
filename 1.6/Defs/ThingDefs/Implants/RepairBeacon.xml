@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_RepairBeacon</defName>
+    <label>修复信标</label>
+    <description>利用超凡技术制作的远程调控模块，植入后能引导受监管机械族进行自我修复。</description>
+    <costList>
+      <PowerfocusChip>5</PowerfocusChip>
+      <SignalChip>5</SignalChip>
+      <NanostructuringChip>5</NanostructuringChip>
+      <Plasteel>200</Plasteel>
+      <Gold>20</Gold>
+      <ComponentSpacer>10</ComponentSpacer>
+    </costList>
+    <statBases>
+      <MaxInstallCount>1</MaxInstallCount>
+      <MarketValue>3000</MarketValue>
+    </statBases>
+    <comps>
+      <li Class="CompProperties_Usable">
+        <compClass>CompUsableImplant</compClass>
+        <useJob>UseItem</useJob>
+        <useLabel>植入修复信标</useLabel>
+        <userMustHaveHediff>MechlinkImplant</userMustHaveHediff>
+      </li>
+      <li Class="CompProperties_UseEffectInstallImplant">
+        <hediffDef>MAP_RepairBeacon</hediffDef>
+        <bodyPart>Brain</bodyPart>
+        <canUpgrade>false</canUpgrade>
+        <requiresExistingHediff>false</requiresExistingHediff>
+        <maxSeverity>1</maxSeverity>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>
