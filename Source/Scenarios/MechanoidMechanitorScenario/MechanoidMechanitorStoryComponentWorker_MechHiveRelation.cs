@@ -19,6 +19,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return context.HasMechHive;
         }
 
+        public override bool CanInteract(MechanoidMechanitorStoryConfigurationContext context)
+        {
+            return !context.HasPursuingMechanoidsScenarioPart;
+        }
+
+        public override string? GetDisabledReason(
+            MechanoidMechanitorStoryConfigurationContext context)
+        {
+            if (CanInteract(context))
+            {
+                return null;
+            }
+
+            return "MAP_MechanoidMechanitor.Story.MechHiveRelation.PursuingMechanoidsDisabledReason"
+                .Translate();
+        }
+
         protected override TaggedString GetDescription()
         {
             return "MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description"
@@ -37,12 +54,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationContext context)
         {
             MechanoidMechanitorStoryConfiguration configuration = context.Configuration;
+            bool canInteract = CanInteract(context);
             DrawCardHeaderAndDropdown(
                 rect,
                 context,
                 MechanoidMechanitorStoryConfigurationLabels.LabelFor(
                     configuration.mechHiveRelationMode),
-                enabled: true,
+                canInteract,
                 () => OpenDropdownMenu(
                     Modes,
                     MechanoidMechanitorStoryConfigurationLabels.LabelFor,
