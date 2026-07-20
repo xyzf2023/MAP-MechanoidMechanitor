@@ -34,8 +34,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const int DropCacheTickInterval = 60;
 
-        private const float MinOrderPanelHeight = 200f;
-
         private const float TransitionDuration = 0.35f;
 
         private const float CoreLargeWidth = 460f;
@@ -820,13 +818,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             float preferredDialogueH = GetPreferredDialogueSubHeight();
             if (showOrder)
             {
-                float orderBudget = sideRect.height - subCore.height - Gap * 2f - MinOrderPanelHeight;
-                dialogueH = Mathf.Clamp(preferredDialogueH, 80f, Mathf.Max(80f, orderBudget));
-                if (sideRect.height - subCore.height - Gap * 2f - dialogueH < MinOrderPanelHeight)
+                float minOrderH = GetMinOrderPanelHeight();
+                float available =
+                    sideRect.height - subCore.height - Gap * 2f;
+                if (available >= preferredDialogueH + minOrderH)
                 {
-                    dialogueH = Mathf.Max(
-                        80f,
-                        sideRect.height - subCore.height - Gap * 2f - MinOrderPanelHeight);
+                    dialogueH = preferredDialogueH;
+                }
+                else
+                {
+                    // 低分辨率下优先保证订单区最小完整高度，必要时压缩通讯输出。
+                    dialogueH = Mathf.Max(0f, available - minOrderH);
                 }
             }
             else
@@ -1303,6 +1305,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return outerPad + titleBlock + bodyPad + smallLineHeight * 5f;
         }
 
+        private static void GetOrderFooterLineHeights(
+            out float smallLineHeight,
+            out float tinyLineHeight)
+        {
+            using (MechanoidOvermindUiStyle.Push())
+            {
+                Text.Font = GameFont.Small;
+                smallLineHeight = Text.LineHeight;
+                Text.Font = GameFont.Tiny;
+                tinyLineHeight = Text.LineHeight;
+            }
+        }
+
+        private static float GetOrderFooterRequiredHeight()
+        {
+            GetOrderFooterLineHeights(out float smallLineHeight, out float tinyLineHeight);
+            const float summaryRowGap = 2f;
+            const float statusToButtonsGap = 6f;
+            const float buttonHeight = 26f;
+            return smallLineHeight
+                + tinyLineHeight
+                + tinyLineHeight
+                + summaryRowGap * 2f
+                + tinyLineHeight
+                + statusToButtonsGap
+                + buttonHeight;
+        }
+
+        private static float GetMinOrderPanelHeight()
+        {
+            const float outerPad = 16f;
+            const float titleBlock = 28f;
+            const float minListHeight = 40f;
+            const float listFooterGap = 6f;
+            return outerPad
+                + titleBlock
+                + minListHeight
+                + listFooterGap
+                + GetOrderFooterRequiredHeight();
+        }
+
         private void DrawOrderPanel(Rect rect, MechanoidOvermindOrder order)
         {
             MechanoidOvermindUiStyle.DrawPanel(rect);
@@ -1318,19 +1361,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .GetPurgeDirectiveRewardPoints();
             RefreshDropSpotCache(order, force: false);
 
-            const float footerHeight = 116f;
+            const float titleBlock = 28f;
+            const float listFooterGap = 6f;
+            float footerHeight = GetOrderFooterRequiredHeight();
+            float listHeight = inner.height - titleBlock - listFooterGap - footerHeight;
+            if (listHeight < 0f)
+            {
+                listHeight = 0f;
+                footerHeight = Mathf.Max(0f, inner.height - titleBlock - listFooterGap);
+            }
+
             Rect listRect = new Rect(
                 inner.x,
-                inner.y + 28f,
+                inner.y + titleBlock,
                 inner.width,
-                Mathf.Max(40f, inner.height - footerHeight - 28f));
+                listHeight);
             DrawOrderLines(listRect, order, costsOk);
 
             Rect footer = new Rect(
                 inner.x,
-                listRect.yMax + 6f,
+                inner.yMax - footerHeight,
                 inner.width,
-                footerHeight - 6f);
+                footerHeight);
             DrawOrderFooter(footer, order, costsOk, totalCost, credits);
         }
 
@@ -1450,20 +1502,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int totalCost,
             int credits)
         {
-            float smallLineHeight;
-            float tinyLineHeight;
-            using (MechanoidOvermindUiStyle.Push())
-            {
-                Text.Font = GameFont.Small;
-                smallLineHeight = Text.LineHeight;
-                Text.Font = GameFont.Tiny;
-                tinyLineHeight = Text.LineHeight;
-            }
+            GetOrderFooterLineHeights(out float smallLineHeight, out float tinyLineHeight);
 
             const float summaryRowGap = 2f;
             float summaryHeight = smallLineHeight + tinyLineHeight + tinyLineHeight
                 + summaryRowGap * 2f;
-            const float statusHeight = 18f;
+            float statusHeight = tinyLineHeight;
             const float statusToButtonsGap = 6f;
             const float buttonWidth = 94f;
             const float buttonHeight = 26f;
@@ -1478,9 +1522,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && credits >= totalCost
                 && currentPage != MechanoidOvermindPageKind.BattlefieldSupport;
 
-            float summaryY = rect.y;
+            GUI.BeginGroup(rect);
+
+            float summaryY = 0f;
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x, summaryY, rect.width, smallLineHeight),
+                new Rect(0f, summaryY, rect.width, smallLineHeight),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total".Translate(
                     costsOk ? totalCost : 0),
                 GameFont.Small,
@@ -1488,13 +1534,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindUiStyle.AccentBright);
             summaryY += smallLineHeight + summaryRowGap;
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(rect.x, summaryY, rect.width, tinyLineHeight),
+                new Rect(0f, summaryY, rect.width, tinyLineHeight),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits".Translate(
                     credits));
             summaryY += tinyLineHeight + summaryRowGap;
             int balance = costsOk ? credits - totalCost : credits;
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x, summaryY, rect.width, tinyLineHeight),
+                new Rect(0f, summaryY, rect.width, tinyLineHeight),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter".Translate(
                     balance),
                 GameFont.Tiny,
@@ -1503,11 +1549,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     ? MechanoidOvermindUiStyle.Error
                     : MechanoidOvermindUiStyle.TextSecondary);
 
-            Rect statusRect = new Rect(
-                rect.x,
-                rect.y + summaryHeight,
-                rect.width,
-                statusHeight);
+            Rect statusRect = new Rect(0f, summaryHeight, rect.width, statusHeight);
             if (!cachedDropValid)
             {
                 MechanoidOvermindUiStyle.DrawLabel(
@@ -1532,7 +1574,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             float buttonsY = statusRect.yMax + statusToButtonsGap;
             float buttonsGroupWidth = buttonWidth * 2f + buttonGap;
-            float buttonsX = rect.x + (rect.width - buttonsGroupWidth) * 0.5f;
+            float buttonsX = (rect.width - buttonsGroupWidth) * 0.5f;
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(buttonsX, buttonsY, buttonWidth, buttonHeight),
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear".Translate()))
@@ -1552,6 +1594,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 TryConfirmDelivery(order);
             }
+
+            GUI.EndGroup();
         }
 
         private void TryConfirmDelivery(MechanoidOvermindOrder order)
