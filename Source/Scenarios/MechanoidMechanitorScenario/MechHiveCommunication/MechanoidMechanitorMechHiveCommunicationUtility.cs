@@ -1,6 +1,10 @@
+using System;
+using System.Globalization;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -96,6 +100,37 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
+        public static void TryOrderContactOvermindJob(Pawn? pawn, Building_CommsConsole? console)
+        {
+            if (!IsValidContactPawn(pawn) || console == null || !console.Spawned)
+            {
+                return;
+            }
+
+            if (pawn!.Map == null || console.Map == null || pawn.Map != console.Map)
+            {
+                return;
+            }
+
+            if (!console.CanUseCommsNow)
+            {
+                return;
+            }
+
+            if (!TryGetContactableMechHive(out _))
+            {
+                return;
+            }
+
+            Job job = JobMaker.MakeJob(
+                MAPMechanitor_JobDefOf.MAP_ContactMechanoidOvermind,
+                console);
+            pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+            PlayerKnowledgeDatabase.KnowledgeDemonstrated(
+                ConceptDefOf.OpeningComms,
+                KnowledgeAmount.Total);
+        }
+
         public static void TryOpenContactOvermindDialog(Pawn? pawn, Map? preferredMap = null)
         {
             if (!IsValidContactPawn(pawn))
@@ -109,7 +144,46 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Find.WindowStack.Add(
-                new Dialog_MechanoidOvermindCommunication(mechHive, preferredMap));
+                new Dialog_MechanoidOvermindCommunication(mechHive, preferredMap, pawn));
+        }
+
+        public static string ResolveContactPawnDisplayName(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return "?";
+            }
+
+            string label = pawn.LabelShortCap;
+            if (!string.IsNullOrEmpty(label))
+            {
+                return label;
+            }
+
+            label = pawn.LabelCap;
+            if (!string.IsNullOrEmpty(label))
+            {
+                return label;
+            }
+
+            return pawn.def?.label?.CapitalizeFirst() ?? "?";
+        }
+
+        public static string ResolveContactLocalTimeText()
+        {
+            try
+            {
+                return DateTime.Now.ToString(
+                    "yyyy-MM-dd HH:mm:ss",
+                    CultureInfo.InvariantCulture);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(
+                    "[MAP] Failed to read local time for mechanoid overmind dialogue: " + ex);
+                return "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable"
+                    .Translate();
+            }
         }
 
         private static bool AreMutualAllies(Faction player, Faction mechHive)

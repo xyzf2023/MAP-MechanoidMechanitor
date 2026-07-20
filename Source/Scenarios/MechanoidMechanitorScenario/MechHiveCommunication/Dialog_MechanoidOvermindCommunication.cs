@@ -64,6 +64,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private readonly Map? preferredDeliveryMap;
 
+        private readonly string contactPawnDisplayName;
+
+        private readonly string contactLocalTimeText;
+
         private MechanoidOvermindOrder? activeOrder;
 
         private readonly MechanoidOvermindPage_Home homePage = new MechanoidOvermindPage_Home();
@@ -152,10 +156,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public Dialog_MechanoidOvermindCommunication(
             Faction mechHive,
-            Map? preferredDeliveryMap)
+            Map? preferredDeliveryMap,
+            Pawn? contactPawn)
         {
             this.mechHive = mechHive;
             this.preferredDeliveryMap = preferredDeliveryMap;
+            contactPawnDisplayName =
+                MechanoidMechanitorMechHiveCommunicationUtility.ResolveContactPawnDisplayName(
+                    contactPawn);
+            contactLocalTimeText =
+                MechanoidMechanitorMechHiveCommunicationUtility.ResolveContactLocalTimeText();
             forcePause = false;
             doCloseX = true;
             doCloseButton = false;
@@ -243,7 +253,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             bootComplete = true;
             statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
-            PlayDialogueFromPool("MAP_OvermindDialogue_HomeOpen");
+            PlayHomeOpenDialogue();
             return true;
         }
 
@@ -1679,11 +1689,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
             cachedDropTick = int.MinValue;
         }
 
+        private void PlayHomeOpenDialogue()
+        {
+            string text =
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink".Translate(
+                    contactLocalTimeText,
+                    contactPawnDisplayName);
+            PlayDialogueText(text);
+        }
+
         private void PlayDialogueFromPool(string poolDefName)
         {
             MechanoidOvermindDialoguePoolDef? pool =
                 DefDatabase<MechanoidOvermindDialoguePoolDef>.GetNamedSilentFail(poolDefName);
             string text = dialogueSelector.PickTranslatedText(pool);
+            PlayDialogueText(text);
+        }
+
+        private void PlayDialogueText(string text)
+        {
             dialogueTyper.Clear();
             dialogueScroll = Vector2.zero;
             dialogueTyper.Start(text);
