@@ -1691,11 +1691,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void PlayHomeOpenDialogue()
         {
-            string text =
+            // 必须用 RawText，避免 TaggedString→string 隐式转换触发 StripTags。
+            TaggedString translated =
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink".Translate(
                     contactLocalTimeText,
                     contactPawnDisplayName);
-            PlayDialogueText(text);
+            PlayDialogueText(translated.RawText);
         }
 
         private void PlayDialogueFromPool(string poolDefName)
