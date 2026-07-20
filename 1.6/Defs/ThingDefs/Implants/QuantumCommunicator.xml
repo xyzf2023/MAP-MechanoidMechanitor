@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_QuantumCommunicator</defName>
+    <label>量子通讯器</label>
+    <description>利用量子效应实现超距通信的超凡通讯装置，植入后控制机械族不再受距离限制。</description>
+    <costList>
+      <PowerfocusChip>5</PowerfocusChip>
+      <SignalChip>5</SignalChip>
+      <NanostructuringChip>5</NanostructuringChip>
+      <Gold>100</Gold>
+      <ComponentSpacer>10</ComponentSpacer>
+    </costList>
+    <statBases>
+      <MarketValue>2000</MarketValue>
+      <Mass>0.01</Mass>
+    </statBases>
+    <comps>
+      <li Class="CompProperties_Usable">
+        <compClass>CompUsableImplant</compClass>
+        <useJob>UseItem</useJob>
+        <useLabel>植入量子通讯器</useLabel>
+        <userMustHaveHediff>MechlinkImplant</userMustHaveHediff>
+      </li>
+      <li Class="CompProperties_UseEffectInstallImplant">
+        <hediffDef>MAP_QuantumCommunicator</hediffDef>
+        <bodyPart>Brain</bodyPart>
+        <canUpgrade>false</canUpgrade>
+        <requiresExistingHediff>false</requiresExistingHediff>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>

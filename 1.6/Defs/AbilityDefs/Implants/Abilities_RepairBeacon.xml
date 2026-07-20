@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <AbilityDef MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_BattlefieldRepairProtocol</defName>
+    <label>战地修复协议</label>
+    <description>激活战地修复协议，超负荷引导机械族自我修复，为全部受监管机械族提供强力的自我修复效果。作为分心引导的代价，机械师的意识会降低。</description>
+    <iconPath>UI/Abilities/MechResurrection</iconPath>
+    <hotKey>Misc12</hotKey>
+    <cooldownTicksRange>30000~30000</cooldownTicksRange>
+    <jobDef>CastAbilityOnThingWithoutWeapon</jobDef>
+    <targetRequired>false</targetRequired>
+    <canUseAoeToGetTargets>false</canUseAoeToGetTargets>
+    <displayGizmoWhileUndrafted>true</displayGizmoWhileUndrafted>
+    <disableGizmoWhileUndrafted>false</disableGizmoWhileUndrafted>
+    <verbProperties>
+      <verbClass>Verb_CastAbility</verbClass>
+      <warmupTime>0</warmupTime>
+      <range>-1</range>
+      <drawAimPie>false</drawAimPie>
+      <onlyManualCast>true</onlyManualCast>
+      <targetParams>
+        <canTargetSelf>true</canTargetSelf>
+      </targetParams>
+    </verbProperties>
+    <comps>
+      <li Class="CompProperties_AbilityEffect">
+        <compClass>MAP_MechanoidMechanitor.CompAbilityEffect_BattlefieldRepairProtocol</compClass>
+      </li>
+    </comps>
+  </AbilityDef>
+</Defs>
