@@ -1,5 +1,4 @@
 using HarmonyLib;
-using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -19,6 +18,12 @@ namespace MAP_MechanoidMechanitor
             if (mech.Faction == null || !mech.Faction.IsPlayerSafe())
             {
                 return true;
+            }
+
+            if (QuantumCommunicatorUtility.GrantsCommandRangeBypass(mech))
+            {
+                __result = true;
+                return false;
             }
 
             if (DataProcessingAllocationUtility.HasCommandRangeBypass(mech))

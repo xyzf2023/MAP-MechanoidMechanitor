@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <HediffDef MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_ProductivityCore</defName>
+    <hediffClass>Hediff_Level</hediffClass>
+    <descriptionHyperlinks>
+      <ThingDef>MAP_ProductivityCore</ThingDef>
+    </descriptionHyperlinks>
+    <label>效能核心</label>
+    <description>一种用于提升机械族工作效率的超凡机械师植入体。每个植入等级为该机械师监管的机械族提供+1制作物品品质偏移，并按照MOD设置提供工作速度偏移。</description>
+    <descriptionShort>每级提供+1制作物品品质偏移和可配置的工作速度偏移。</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>true</priceImpact>
+    <initialSeverity>1</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>5</maxSeverity>
+    <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
+    <levelIsQuantity>true</levelIsQuantity>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ProductivityCore"/>
+    </comps>
+    <stages>
+      <li>
+        <minSeverity>1</minSeverity>
+      </li>
+    </stages>
+    <duplicationAllowed>false</duplicationAllowed>
+  </HediffDef>
+
+  <HediffDef MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_ProductivityCoreActive</defName>
+    <hediffClass>HediffWithComps</hediffClass>
+    <label>效能核心生效中</label>
+    <description>TODO</description>
+    <descriptionShort>TODO</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>false</priceImpact>
+    <initialSeverity>1</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>1</maxSeverity>
+    <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
+    <levelIsQuantity>false</levelIsQuantity>
+    <stages>
+      <li>
+        <minSeverity>1</minSeverity>
+      </li>
+    </stages>
+    <duplicationAllowed>false</duplicationAllowed>
+  </HediffDef>
+</Defs>

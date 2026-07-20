@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationConditional">
+    <xpath>Defs/StatDef[defName="WorkSpeedGlobalOffsetMech"]/parts</xpath>
+    <match Class="PatchOperationAdd">
+      <xpath>Defs/StatDef[defName="WorkSpeedGlobalOffsetMech"]/parts</xpath>
+      <value>
+        <li Class="MAP_MechanoidMechanitor.StatPart_ProductivityCoreWorkSpeedOffset"/>
+      </value>
+    </match>
+    <nomatch Class="PatchOperationAdd">
+      <xpath>Defs/StatDef[defName="WorkSpeedGlobalOffsetMech"]</xpath>
+      <value>
+        <parts>
+          <li Class="MAP_MechanoidMechanitor.StatPart_ProductivityCoreWorkSpeedOffset"/>
+        </parts>
+      </value>
+    </nomatch>
+  </Operation>
+</Patch>
