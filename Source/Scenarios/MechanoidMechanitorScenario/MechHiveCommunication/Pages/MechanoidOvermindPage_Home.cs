@@ -5,34 +5,64 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed class MechanoidOvermindPage_Home
     {
-        public void Draw(Rect inRect)
+        public MechanoidOvermindPageKind? Draw(Rect inRect, bool inputEnabled)
         {
             using (MechanoidOvermindUiStyle.Push())
             {
-                MechanoidOvermindUiStyle.DrawPanel(inRect);
-                Rect inner = inRect.ContractedBy(16f);
+                float gap = 8f;
+                float cardW = (inRect.width - gap) * 0.5f;
+                float cardH = (inRect.height - gap) * 0.5f;
 
-                MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(inner.x, inner.y, inner.width, 28f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Home.Title".Translate(),
-                    GameFont.Medium);
+                MechanoidOvermindPageKind? selected = null;
+                if (DrawCard(
+                        new Rect(inRect.x, inRect.y, cardW, cardH),
+                        "01",
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat".Translate(),
+                        inputEnabled))
+                {
+                    selected = MechanoidOvermindPageKind.Chat;
+                }
 
-                MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(inner.x, inner.y + 40f, inner.width, 24f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Home.Body".Translate(),
-                    GameFont.Small,
-                    TextAnchor.UpperLeft,
-                    MechanoidOvermindUiStyle.TextSecondary,
-                    wordWrap: true);
+                if (DrawCard(
+                        new Rect(inRect.x + cardW + gap, inRect.y, cardW, cardH),
+                        "02",
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs".Translate(),
+                        inputEnabled))
+                {
+                    selected = MechanoidOvermindPageKind.Mechs;
+                }
 
-                MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(inner.x, inner.y + 88f, inner.width, Mathf.Max(24f, inner.height - 100f)),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Home.Todo".Translate(),
-                    GameFont.Small,
-                    TextAnchor.UpperLeft,
-                    MechanoidOvermindUiStyle.Warning,
-                    wordWrap: true);
+                if (DrawCard(
+                        new Rect(inRect.x, inRect.y + cardH + gap, cardW, cardH),
+                        "03",
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods".Translate(),
+                        inputEnabled))
+                {
+                    selected = MechanoidOvermindPageKind.Goods;
+                }
+
+                if (DrawCard(
+                        new Rect(inRect.x + cardW + gap, inRect.y + cardH + gap, cardW, cardH),
+                        "04",
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield".Translate(),
+                        inputEnabled))
+                {
+                    selected = MechanoidOvermindPageKind.BattlefieldSupport;
+                }
+
+                return selected;
             }
+        }
+
+        private static bool DrawCard(
+            Rect rect,
+            string node,
+            string title,
+            bool inputEnabled)
+        {
+            string nodeLabel =
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node".Translate(node);
+            return MechanoidOvermindUiStyle.DrawMenuCard(rect, nodeLabel, title, inputEnabled);
         }
     }
 }

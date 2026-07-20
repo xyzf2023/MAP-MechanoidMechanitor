@@ -87,15 +87,28 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>战场支援</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat>闲谈</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Disconnect>断开连接</MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Disconnect>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.BackToHome>返回主菜单</MAP_MechanoidMechanitor.MechHiveCommunication.BackToHome>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node>节点 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Core.Missing>主脑影像缺失</MAP_MechanoidMechanitor.MechHiveCommunication.Core.Missing>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Title>通讯输出</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Title>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Home>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Home>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Chat>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Chat>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Mechs>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Mechs>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Goods>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Goods>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Battlefield>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Battlefield>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Home.Title>主节点</MAP_MechanoidMechanitor.MechHiveCommunication.Home.Title>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Home.Body>机械巢通讯链路已建立。</MAP_MechanoidMechanitor.MechHiveCommunication.Home.Body>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Home.Todo>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Home.Todo>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.03>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Toggle>DEV</MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Toggle>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add1000>增加1000点数</MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add1000>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Sub1000>减少1000点数</MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Sub1000>
@@ -157,11 +170,9 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Error.GenerationFailed>生成或装载失败，未扣额度</MAP_MechanoidMechanitor.MechHiveCommunication.Error.GenerationFailed>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Error.ChargeFailed>扣费失败，未执行投送</MAP_MechanoidMechanitor.MechHiveCommunication.Error.ChargeFailed>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Error.DropFailed>投送失败</MAP_MechanoidMechanitor.MechHiveCommunication.Error.DropFailed>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Title>战场支援模块</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Title>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Body>协议模块尚未部署。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Body>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Todo>功能／权限／执行序列：TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Todo>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Request>请求战场支援</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Request>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Title>非必要通讯</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Title>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>正在建立低优先级通讯通道……</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Todo>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Todo>
   <MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>当前普通派系关系设置下，已不存在获取信任的空间。</MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>

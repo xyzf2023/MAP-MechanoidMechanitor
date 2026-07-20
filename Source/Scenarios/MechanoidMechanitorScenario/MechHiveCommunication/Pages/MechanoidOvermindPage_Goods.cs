@@ -52,6 +52,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private string countEditBuffer = "0";
 
+        private MechanoidOvermindOrder? syncedOrder;
+
         private int syncedOrderRevision = int.MinValue;
 
         private MechanoidOvermindThingSpec? pricedSpec;
@@ -108,11 +110,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void SyncFromOrderRevisionIfNeeded(MechanoidOvermindOrder order)
         {
-            if (syncedOrderRevision == order.Revision)
+            if (ReferenceEquals(syncedOrder, order)
+                && syncedOrderRevision == order.Revision)
             {
                 return;
             }
 
+            syncedOrder = order;
             syncedOrderRevision = order.Revision;
             SyncSelectedCountFromOrder(order);
         }
