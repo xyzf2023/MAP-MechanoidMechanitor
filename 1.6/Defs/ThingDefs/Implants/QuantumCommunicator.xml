@@ -5,16 +5,20 @@
     <label>量子通讯器</label>
     <description>利用量子效应实现超距通信的超凡通讯装置，植入后控制机械族不再受距离限制。</description>
     <costList>
-      <PowerfocusChip>5</PowerfocusChip>
-      <SignalChip>5</SignalChip>
-      <NanostructuringChip>5</NanostructuringChip>
-      <Gold>100</Gold>
-      <ComponentSpacer>10</ComponentSpacer>
+      <SignalChip>2</SignalChip>
+      <Gold>150</Gold>
+      <ComponentSpacer>6</ComponentSpacer>
     </costList>
     <statBases>
       <MarketValue>2000</MarketValue>
       <Mass>0.01</Mass>
+      <WorkToMake>15000</WorkToMake>
     </statBases>
+    <recipeMaker>
+      <skillRequirements Inherit="False">
+        <Crafting>12</Crafting>
+      </skillRequirements>
+    </recipeMaker>
     <comps>
       <li Class="CompProperties_Usable">
         <compClass>CompUsableImplant</compClass>
