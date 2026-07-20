@@ -26,8 +26,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float Gap = 8f;
 
-        private const float BootDuration = 0.5f;
-
         private const float OrderRowHeight = 50f;
 
         private const float OrderRowStride = 52f;
@@ -87,7 +85,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private Vector2 dialogueScroll;
 
-        private readonly float openedRealtime;
+        private readonly double bootStartRealtime;
+
+        private readonly float bootDurationSeconds;
+
+        private bool bootComplete;
 
         private string statusKey =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting";
@@ -149,8 +151,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             doCloseButton = false;
             absorbInputAroundWindow = false;
             closeOnClickedOutside = false;
-            openedRealtime = Time.realtimeSinceStartup;
-            PlayDialogueFromPool("MAP_OvermindDialogue_HomeOpen");
+
+            // 独立随机，不触碰 Verse.Rand / 对话选择器。
+            var bootRandom = new System.Random();
+            bootDurationSeconds = bootRandom.Next(500, 1001) / 1000f;
+            bootStartRealtime = Time.realtimeSinceStartupAsDouble;
+            bootComplete = false;
         }
 
         public override void PreClose()
@@ -164,9 +170,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             using (MechanoidOvermindUiStyle.Push())
             {
-                UpdateBootStatus();
-                UpdateTransition();
                 MechanoidOvermindUiStyle.DrawBackground(inRect);
+
+                if (!bootComplete)
+                {
+                    if (!TryFinishBootSequence())
+                    {
+                        DrawConnectionBootPage(inRect);
+                        return;
+                    }
+                }
+
+                UpdateTransition();
 
                 bool needsVirtualScroll = inRect.width < MinVirtualWidth
                     || inRect.height < MinVirtualHeight;
@@ -182,6 +197,132 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     DrawLayout(inRect);
                 }
             }
+        }
+
+        private bool TryFinishBootSequence()
+        {
+            if (bootComplete)
+            {
+                return true;
+            }
+
+            double elapsed = Time.realtimeSinceStartupAsDouble - bootStartRealtime;
+            if (elapsed < bootDurationSeconds)
+            {
+                return false;
+            }
+
+            bootComplete = true;
+            statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
+            PlayDialogueFromPool("MAP_OvermindDialogue_HomeOpen");
+            return true;
+        }
+
+        private void DrawConnectionBootPage(Rect inRect)
+        {
+            float rawT = GetBootRawProgress01();
+            float visualT = 1f - (1f - rawT) * (1f - rawT);
+            int percent = Mathf.Clamp(Mathf.FloorToInt(visualT * 100f + 0.0001f), 0, 100);
+            if (rawT >= 1f)
+            {
+                percent = 100;
+            }
+
+            float panelWidth = Mathf.Clamp(inRect.width * 0.70f, 280f, 640f);
+            panelWidth = Mathf.Min(panelWidth, Mathf.Max(0f, inRect.width - 32f));
+            float panelHeight = Mathf.Min(220f, Mathf.Max(0f, inRect.height - 32f));
+            if (panelWidth < 8f || panelHeight < 8f)
+            {
+                return;
+            }
+
+            Rect panel = new Rect(
+                inRect.x + (inRect.width - panelWidth) * 0.5f,
+                inRect.y + (inRect.height - panelHeight) * 0.5f,
+                panelWidth,
+                panelHeight);
+            MechanoidOvermindUiStyle.DrawPanel(panel);
+
+            Rect inner = panel.ContractedBy(18f);
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, inner.y, inner.width, 28f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Title".Translate(),
+                GameFont.Medium,
+                TextAnchor.MiddleCenter);
+
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, inner.y + 34f, inner.width, 22f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle".Translate(),
+                GameFont.Small,
+                TextAnchor.MiddleCenter,
+                MechanoidOvermindUiStyle.TextSecondary);
+
+            string phaseKey = GetBootPhaseStatusKey(rawT);
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, inner.y + 70f, inner.width, 22f),
+                phaseKey.Translate(),
+                GameFont.Small,
+                TextAnchor.MiddleCenter,
+                MechanoidOvermindUiStyle.AccentBright);
+
+            float barWidth = Mathf.Min(inner.width, 420f);
+            float barHeight = 18f;
+            float barY = Mathf.Min(inner.y + 110f, inner.yMax - barHeight - 34f);
+            Rect barRect = new Rect(
+                inner.x + (inner.width - barWidth) * 0.5f,
+                barY,
+                barWidth,
+                barHeight);
+            MechanoidOvermindUiStyle.DrawAccentProgressBar(barRect, visualT);
+
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, barRect.yMax + 10f, inner.width, 20f),
+                percent + "%",
+                GameFont.Small,
+                TextAnchor.MiddleCenter,
+                MechanoidOvermindUiStyle.TextPrimary);
+        }
+
+        private float GetBootRawProgress01()
+        {
+            if (bootDurationSeconds <= 0f)
+            {
+                return 1f;
+            }
+
+            double elapsed = Time.realtimeSinceStartupAsDouble - bootStartRealtime;
+            double raw = elapsed / bootDurationSeconds;
+            if (raw <= 0d)
+            {
+                return 0f;
+            }
+
+            if (raw >= 1d)
+            {
+                return 1f;
+            }
+
+            return (float)raw;
+        }
+
+        private static string GetBootPhaseStatusKey(float rawT01)
+        {
+            if (rawT01 < 0.25f)
+            {
+                return "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting";
+            }
+
+            if (rawT01 < 0.5f)
+            {
+                return "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Verifying";
+            }
+
+            if (rawT01 < 0.75f)
+            {
+                return "MAP_MechanoidMechanitor.MechHiveCommunication.Status.SyncingCredits";
+            }
+
+            return "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connected";
         }
 
         private void DrawLayout(Rect inRect)
@@ -1163,49 +1304,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         .Translate();
                 default:
                     return string.Empty;
-            }
-        }
-
-        private void UpdateBootStatus()
-        {
-            float elapsed = Time.realtimeSinceStartup - openedRealtime;
-            if (elapsed >= BootDuration)
-            {
-                if (statusKey.StartsWith(
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting")
-                    || statusKey.StartsWith(
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Verifying")
-                    || statusKey.StartsWith(
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Status.SyncingCredits")
-                    || statusKey
-                        == "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connected")
-                {
-                    statusKey =
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
-                }
-
-                return;
-            }
-
-            if (elapsed < BootDuration * 0.25f)
-            {
-                statusKey =
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting";
-            }
-            else if (elapsed < BootDuration * 0.5f)
-            {
-                statusKey =
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Verifying";
-            }
-            else if (elapsed < BootDuration * 0.75f)
-            {
-                statusKey =
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Status.SyncingCredits";
-            }
-            else
-            {
-                statusKey =
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connected";
             }
         }
 

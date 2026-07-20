@@ -97,6 +97,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
             GUI.color = previous;
         }
 
+        /// <summary>
+        /// 连接进度条：深灰底槽、Accent 填充、前端 AccentBright 窄高亮。
+        /// </summary>
+        public static void DrawAccentProgressBar(Rect rect, float fill01)
+        {
+            fill01 = Mathf.Clamp01(fill01);
+            Widgets.DrawBoxSolid(rect, Background);
+            DrawBorder(rect);
+
+            float fillWidth = rect.width * fill01;
+            if (fillWidth <= 0.5f)
+            {
+                return;
+            }
+
+            Rect fillRect = new Rect(rect.x, rect.y, fillWidth, rect.height);
+            Widgets.DrawBoxSolid(fillRect, Accent);
+
+            float edgeWidth = Mathf.Min(3f, fillWidth);
+            Widgets.DrawBoxSolid(
+                new Rect(fillRect.xMax - edgeWidth, rect.y, edgeWidth, rect.height),
+                AccentBright);
+        }
+
         public static void DrawCornerMarks(Rect rect)
         {
             Color previous = GUI.color;
