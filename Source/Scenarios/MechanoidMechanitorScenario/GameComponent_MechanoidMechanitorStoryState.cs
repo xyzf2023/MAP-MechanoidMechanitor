@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -6,6 +7,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed class GameComponent_MechanoidMechanitorStoryState : GameComponent
     {
+        private static readonly string[] MechanoidOvermindGreekPrefixes =
+        {
+            "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta",
+            "Iota", "Kappa", "Lambda", "Mu", "Nu", "Xi", "Omicron", "Pi",
+            "Rho", "Sigma", "Tau", "Upsilon", "Phi", "Chi", "Psi", "Omega",
+        };
+
         private MechanoidMechanitorStoryStyleDef? selectedStoryStyle;
 
         private MechanoidMechanitorStoryConfiguration? activeConfiguration;
@@ -21,6 +29,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private Faction? cachedMechHive;
 
         private MechanoidMechanitorPurgeDirectiveRuntimeState? purgeDirectiveRuntimeState;
+
+        private string? mechanoidOvermindName;
 
         private readonly Dictionary<Faction, MechanoidMechanitorFactionRelationOption>
             customFactionOptionCache =
@@ -53,6 +63,38 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static int GetPurgeDirectiveRewardPoints()
         {
             return CurrentComponent?.PurgeDirectiveRewardPoints ?? 0;
+        }
+
+        public static string GetOrCreateMechanoidOvermindName()
+        {
+            GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+            if (component == null)
+            {
+                return GenerateMechanoidOvermindName();
+            }
+
+            return component.GetOrCreateMechanoidOvermindNameInstance();
+        }
+
+        private string GetOrCreateMechanoidOvermindNameInstance()
+        {
+            if (!string.IsNullOrEmpty(mechanoidOvermindName))
+            {
+                return mechanoidOvermindName!;
+            }
+
+            mechanoidOvermindName = GenerateMechanoidOvermindName();
+            return mechanoidOvermindName;
+        }
+
+        private static string GenerateMechanoidOvermindName()
+        {
+            // 独立随机源，不触碰 Verse.Rand 全局序列。
+            var rng = new Random();
+            string prefix = MechanoidOvermindGreekPrefixes[
+                rng.Next(MechanoidOvermindGreekPrefixes.Length)];
+            int number = rng.Next(1, 10000);
+            return prefix + "-" + number.ToString("D4");
         }
 
         public static MechanoidMechanitorStoryStyleDef? CurrentStoryStyle
@@ -599,6 +641,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Deep.Look(
                 ref purgeDirectiveRuntimeState,
                 "purgeDirectiveRuntimeState");
+            Scribe_Values.Look(ref mechanoidOvermindName, "mechanoidOvermindName");
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {

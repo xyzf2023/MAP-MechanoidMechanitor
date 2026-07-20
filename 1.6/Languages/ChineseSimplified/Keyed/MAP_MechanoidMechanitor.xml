@@ -77,7 +77,7 @@
   <MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>仅在与机械巢结盟时可用。</MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>
   <MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>联络机械主脑</MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Title>机械主脑通讯接口</MAP_MechanoidMechanitor.MechHiveCommunication.Title>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle>肃清协议资源调拨节点：██-07</MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle>主脑：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Credits>肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Credits>
   <MAP_MechanoidMechanitor.MechHiveCommunication.ConnectionStable>连接状态：稳定</MAP_MechanoidMechanitor.MechHiveCommunication.ConnectionStable>
   <MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission>节点权限：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.NodePermission>
@@ -85,7 +85,7 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.AccessPermission>接入权限：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.AccessPermission>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.LinkStatus>链路状态：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.LinkStatus>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.RemoteCoreNode>远程主脑节点</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.RemoteCoreNode>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.NodeCode>██-07</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.NodeCode>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.NodeCode>{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.NodeCode>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.Link>建立通讯链路</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.Link>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.Verify>验证肃清协议权限</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.Verify>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.SyncCredits>同步肃清额度</MAP_MechanoidMechanitor.MechHiveCommunication.Boot.Stage.SyncCredits>
@@ -162,8 +162,8 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total>订单总计：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits>当前额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter>执行后余额：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear>清空订单</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm>确认调拨　{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear>重置</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm>确认</MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting>正在接入机械巢通讯网络……</MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Status.Verifying>正在验证执行单元身份……</MAP_MechanoidMechanitor.MechHiveCommunication.Status.Verifying>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Status.SyncingCredits>正在同步肃清额度……</MAP_MechanoidMechanitor.MechHiveCommunication.Status.SyncingCredits>
