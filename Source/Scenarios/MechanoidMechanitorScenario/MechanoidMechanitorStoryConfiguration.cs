@@ -159,7 +159,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RemoveInvalidOrdinaryFactionEntries(context);
             EnsureMissingOrdinaryFactionEntries(context);
 
-            if (!context.HasMechHive)
+            if (!context.HasMechHive || context.HasPursuingMechanoidsScenarioPart)
             {
                 mechHiveRelationMode = MechanoidMechanitorMechHiveRelationMode.Default;
                 purgeDirectiveEnabled = false;
