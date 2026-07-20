@@ -322,7 +322,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect rect,
             string nodeLabel,
             string title,
-            bool enabled)
+            bool enabled,
+            bool compactLayout = false)
         {
             using (Push())
             {
@@ -330,25 +331,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Color previous = GUI.color;
                 GUI.color = enabled ? Accent : Disabled;
                 Widgets.DrawBox(rect, 1);
-                GUI.color = CoreIdentify;
-                Widgets.DrawLineHorizontal(rect.x + 10f, rect.y + 8f, Mathf.Min(48f, rect.width - 20f));
                 GUI.color = previous;
 
                 if (Mouse.IsOver(rect) && enabled)
                 {
-                    Widgets.DrawBoxSolid(rect, new Color(AccentBright.r, AccentBright.g, AccentBright.b, 0.08f));
+                    Widgets.DrawBoxSolid(
+                        rect,
+                        new Color(AccentBright.r, AccentBright.g, AccentBright.b, 0.08f));
                 }
 
-                Text.Font = GameFont.Tiny;
-                Text.Anchor = TextAnchor.UpperLeft;
-                Text.WordWrap = false;
-                GUI.color = TextSecondary;
-                Widgets.Label(new Rect(rect.x + 12f, rect.y + 12f, rect.width - 24f, 18f), nodeLabel);
-
-                Text.Font = GameFont.Medium;
-                Text.Anchor = TextAnchor.MiddleLeft;
-                GUI.color = enabled ? TextPrimary : Disabled;
-                Widgets.Label(new Rect(rect.x + 12f, rect.y + 28f, rect.width - 24f, rect.height - 40f), title);
+                if (compactLayout)
+                {
+                    DrawMenuCardCompactContent(rect, nodeLabel, title, enabled);
+                }
+                else
+                {
+                    DrawMenuCardTallContent(rect, nodeLabel, title, enabled);
+                }
 
                 if (!enabled)
                 {
@@ -357,6 +356,64 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 return Widgets.ButtonInvisible(rect);
             }
+        }
+
+        private static void DrawMenuCardTallContent(
+            Rect rect,
+            string nodeLabel,
+            string title,
+            bool enabled)
+        {
+            Color previous = GUI.color;
+            GUI.color = CoreIdentify;
+            Widgets.DrawLineHorizontal(rect.x + 10f, rect.y + 8f, Mathf.Min(48f, rect.width - 20f));
+            GUI.color = previous;
+
+            Text.Font = GameFont.Tiny;
+            Text.Anchor = TextAnchor.UpperLeft;
+            Text.WordWrap = false;
+            GUI.color = TextSecondary;
+            Widgets.Label(new Rect(rect.x + 12f, rect.y + 12f, rect.width - 24f, 18f), nodeLabel);
+
+            Text.Font = GameFont.Medium;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            GUI.color = enabled ? TextPrimary : Disabled;
+            Widgets.Label(
+                new Rect(rect.x + 12f, rect.y + 28f, rect.width - 24f, rect.height - 40f),
+                title);
+        }
+
+        private static void DrawMenuCardCompactContent(
+            Rect rect,
+            string nodeLabel,
+            string title,
+            bool enabled)
+        {
+            float nodeW = Mathf.Clamp(rect.width * 0.22f, 72f, 82f);
+            nodeW = Mathf.Min(nodeW, Mathf.Max(24f, rect.width - 48f));
+
+            Color previous = GUI.color;
+            GUI.color = enabled ? Accent : Disabled;
+            Widgets.DrawBoxSolid(new Rect(rect.x, rect.y + 4f, 3f, Mathf.Max(1f, rect.height - 8f)), GUI.color);
+            GUI.color = previous;
+
+            Text.Font = GameFont.Tiny;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            Text.WordWrap = false;
+            GUI.color = TextSecondary;
+            Widgets.Label(new Rect(rect.x + 6f, rect.y, nodeW - 6f, rect.height), nodeLabel);
+
+            float dividerX = rect.x + nodeW;
+            GUI.color = new Color(Border.r, Border.g, Border.b, 0.7f);
+            Widgets.DrawLineVertical(dividerX, rect.y + 8f, Mathf.Max(1f, rect.height - 16f));
+            GUI.color = previous;
+
+            float titleX = dividerX + 12f;
+            float titleW = Mathf.Max(0f, rect.xMax - titleX - 12f);
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            GUI.color = enabled ? TextPrimary : Disabled;
+            Widgets.Label(new Rect(titleX, rect.y, titleW, rect.height), title);
         }
     }
 }
