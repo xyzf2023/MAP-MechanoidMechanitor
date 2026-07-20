@@ -13,8 +13,14 @@ namespace MAP_MechanoidMechanitor
 
         private static bool loggedAnySkip;
 
-        public static void DeployInfrastructure(Pawn justice, IntVec3 anchorCell, out Lord? guardLord)
+        public static void DeployInfrastructure(
+            Pawn justice,
+            IntVec3 anchorCell,
+            int justiceEventId,
+            out List<Thing> deployedInfrastructure,
+            out Lord? guardLord)
         {
+            deployedInfrastructure = new List<Thing>();
             guardLord = null;
             Map? map = justice?.Map;
             Faction? faction = justice?.Faction;
@@ -36,7 +42,8 @@ namespace MAP_MechanoidMechanitor
                 minRadius: 7f,
                 maxRadius: 13f,
                 requireOutwardFacing: false,
-                occupied);
+                occupied,
+                deployedInfrastructure);
 
             DeployBuildings(
                 map,
@@ -47,7 +54,8 @@ namespace MAP_MechanoidMechanitor
                 minRadius: 10f,
                 maxRadius: 18f,
                 requireOutwardFacing: true,
-                occupied);
+                occupied,
+                deployedInfrastructure);
 
             DeployBuildings(
                 map,
@@ -58,68 +66,49 @@ namespace MAP_MechanoidMechanitor
                 minRadius: 10f,
                 maxRadius: 18f,
                 requireOutwardFacing: true,
-                occupied);
+                occupied,
+                deployedInfrastructure);
 
             if (ModsConfig.RoyaltyActive)
             {
-                ThingDef? mortarShield = ThingDefOf.ShieldGeneratorMortar;
-                ThingDef? bulletShield = ThingDefOf.ShieldGeneratorBullets;
                 DeployBuildings(
                     map,
                     faction,
                     anchorCell,
-                    mortarShield,
+                    ThingDefOf.ShieldGeneratorMortar,
                     1,
                     minRadius: 3f,
                     maxRadius: 7f,
                     requireOutwardFacing: false,
-                    occupied);
+                    occupied,
+                    deployedInfrastructure);
                 DeployBuildings(
                     map,
                     faction,
                     anchorCell,
-                    bulletShield,
+                    ThingDefOf.ShieldGeneratorBullets,
                     1,
                     minRadius: 3f,
                     maxRadius: 7f,
                     requireOutwardFacing: false,
-                    occupied);
+                    occupied,
+                    deployedInfrastructure);
             }
             else
             {
-                JusticeBossSpawnUtility.SpawnGuardsNear(map, faction, anchorCell, 5, out guardLord);
-            }
-        }
-
-        public static void ActivateFactionBuildingsNear(Map map, Faction faction, IntVec3 anchor, float radius)
-        {
-            if (map == null || faction == null)
-            {
-                return;
-            }
-
-            foreach (IntVec3 cell in GenRadial.RadialCellsAround(anchor, radius, useCenter: true))
-            {
-                if (!cell.InBounds(map))
-                {
-                    continue;
-                }
-
-                List<Thing> things = cell.GetThingList(map);
-                for (int i = 0; i < things.Count; i++)
-                {
-                    Thing thing = things[i];
-                    if (thing is Building && thing.Faction == faction)
-                    {
-                        ActivateDeployedThing(thing);
-                    }
-                }
+                JusticeBossSpawnUtility.LaunchGuardDropPodsNear(
+                    map,
+                    faction,
+                    anchorCell,
+                    justiceEventId,
+                    5,
+                    out guardLord);
             }
         }
 
         public static void ActivateDeployedThing(Thing thing)
         {
-            if (thing == null || thing.Destroyed)
+            if (thing == null || thing.Destroyed || !thing.Spawned)
             {
                 return;
             }
@@ -143,7 +132,8 @@ namespace MAP_MechanoidMechanitor
             float minRadius,
             float maxRadius,
             bool requireOutwardFacing,
-            List<IntVec3> occupied)
+            List<IntVec3> occupied,
+            List<Thing> deployedInfrastructure)
         {
             if (def == null)
             {
@@ -175,7 +165,12 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                SpawnBuildingViaDropPod(map, faction, def, cell, rot);
+                Thing? building = SpawnBuildingViaDropPod(map, faction, def, cell, rot);
+                if (building != null)
+                {
+                    deployedInfrastructure.Add(building);
+                }
+
                 foreach (IntVec3 c in GenAdj.OccupiedRect(cell, rot, def.size))
                 {
                     occupied.Add(c);
@@ -221,7 +216,13 @@ namespace MAP_MechanoidMechanitor
                         ? Rot4.FromAngleFlat((candidate - anchor).AngleFlat)
                         : Rot4.Random;
                     Rot4[] tryRots = requireOutwardFacing
-                        ? new[] { preferredRot, preferredRot.Rotated(RotationDirection.Clockwise), preferredRot.Rotated(RotationDirection.Counterclockwise), Rot4.Random }
+                        ? new[]
+                        {
+                            preferredRot,
+                            preferredRot.Rotated(RotationDirection.Clockwise),
+                            preferredRot.Rotated(RotationDirection.Counterclockwise),
+                            Rot4.Random,
+                        }
                         : Rot4.AllRotations.ToArray();
 
                     for (int r = 0; r < tryRots.Length; r++)
@@ -312,18 +313,20 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        private static void SpawnBuildingViaDropPod(
+        private static Thing? SpawnBuildingViaDropPod(
             Map map,
             Faction faction,
             ThingDef def,
             IntVec3 cell,
             Rot4 rot)
         {
+            // 对齐原版 SketchThing.TransportPod：spawnWipeMode=null + moveItemsAside。
             Thing building = ThingMaker.MakeThing(def);
-            building.SetFaction(faction);
-            if (building.def.rotatable)
+            building.Position = cell;
+            building.Rotation = rot;
+            if (faction != null && building.def.CanHaveFaction)
             {
-                building.Rotation = rot;
+                building.SetFactionDirect(faction);
             }
 
             CompInitiatable? initiatable = building.TryGetComp<CompInitiatable>();
@@ -337,8 +340,11 @@ namespace MAP_MechanoidMechanitor
             info.openDelay = 60;
             info.leaveSlag = false;
             info.despawnPodBeforeSpawningThing = true;
-            info.spawnWipeMode = WipeMode.Vanish;
+            info.spawnWipeMode = null;
+            info.moveItemsAsideBeforeSpawning = true;
+            info.setRotation = rot;
             DropPodUtility.MakeDropPodAt(cell, map, info, faction);
+            return building;
         }
     }
 }

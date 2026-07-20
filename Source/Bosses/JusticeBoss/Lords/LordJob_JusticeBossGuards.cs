@@ -14,14 +14,22 @@ namespace MAP_MechanoidMechanitor
 
         private float wanderRadius = 12f;
 
+        private int justiceEventId;
+
+        public int JusticeEventId => justiceEventId;
+
         public LordJob_JusticeBossGuards()
         {
         }
 
-        public LordJob_JusticeBossGuards(Faction? faction, IntVec3 defendPoint)
+        public LordJob_JusticeBossGuards(
+            Faction? faction,
+            IntVec3 defendPoint,
+            int justiceEventId)
         {
             this.faction = faction;
             this.defendPoint = defendPoint;
+            this.justiceEventId = justiceEventId;
         }
 
         public override StateGraph CreateGraph()
@@ -40,6 +48,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref defendPoint, "defendPoint");
             Scribe_Values.Look(ref defendRadius, "defendRadius", 18f);
             Scribe_Values.Look(ref wanderRadius, "wanderRadius", 12f);
+            Scribe_Values.Look(ref justiceEventId, "justiceEventId", 0);
         }
     }
 }

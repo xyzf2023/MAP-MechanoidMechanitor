@@ -15,6 +15,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         public MechanoidMechanitorBossgroupSource source =
             MechanoidMechanitorBossgroupSource.Auto;
+
+        public bool hideFromVanillaBossgroupCommand;
     }
 
     public static class MechanoidMechanitorBossgroupUtility
@@ -23,6 +25,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
             "MAP_MechanoidMechanitor.PurgeDirective.Bossgroup.DisabledReason";
 
         public static string DisabledReason => DisabledReasonKey.Translate();
+
+        public static bool ShouldHideFromVanillaBossgroupCommand(BossgroupDef? bossgroupDef)
+        {
+            if (bossgroupDef == null)
+            {
+                return false;
+            }
+
+            MechanoidMechanitorBossgroupExtension? extension =
+                bossgroupDef.GetModExtension<MechanoidMechanitorBossgroupExtension>();
+            return extension != null && extension.hideFromVanillaBossgroupCommand;
+        }
 
         public static bool ShouldBlockPlayerSummon(BossgroupDef? bossgroupDef)
         {

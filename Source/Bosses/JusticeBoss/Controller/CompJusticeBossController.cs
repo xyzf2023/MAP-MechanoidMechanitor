@@ -25,6 +25,10 @@ namespace MAP_MechanoidMechanitor
 
         public const int RetreatDelayAfterFinalWaveTicks = 2500;
 
+        public const int ActivationStartDelayTicks = 90;
+
+        public const int ActivationMaxWaitTicks = 600;
+
         private bool initialized;
 
         private IntVec3 anchorCell = IntVec3.Invalid;
@@ -47,7 +51,17 @@ namespace MAP_MechanoidMechanitor
 
         private int bossReplacementCount;
 
-        private int activationSweepTick = -1;
+        private int justiceEventId;
+
+        private List<Thing> deployedInfrastructure = new List<Thing>();
+
+        private int activationStartTick = -1;
+
+        private int activationDeadlineTick = -1;
+
+        private bool activationFinished;
+
+        private bool loggedActivationTimeout;
 
         private bool stopped;
 
@@ -62,6 +76,33 @@ namespace MAP_MechanoidMechanitor
         public bool RetreatOrdered => retreatOrdered;
 
         public IntVec3 AnchorCell => anchorCell;
+
+        public int JusticeEventId => justiceEventId;
+
+        public int DeployedInfrastructureCount => deployedInfrastructure.Count;
+
+        public int PendingActivationCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < deployedInfrastructure.Count; i++)
+                {
+                    Thing? thing = deployedInfrastructure[i];
+                    if (thing == null || thing.Destroyed)
+                    {
+                        continue;
+                    }
+
+                    if (!thing.Spawned)
+                    {
+                        count++;
+                    }
+                }
+
+                return count;
+            }
+        }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
@@ -81,6 +122,7 @@ namespace MAP_MechanoidMechanitor
 
             initialized = true;
             stopped = false;
+            justiceEventId = Pawn.thingIDNumber;
             anchorCell = Pawn.Position;
             arrivalTick = Find.TickManager.TicksGame;
             infrastructureDeployed = false;
@@ -90,7 +132,11 @@ namespace MAP_MechanoidMechanitor
             retreatOrdered = false;
             attackerLord = null;
             guardLord = null;
-            activationSweepTick = -1;
+            deployedInfrastructure = new List<Thing>();
+            activationStartTick = -1;
+            activationDeadlineTick = -1;
+            activationFinished = false;
+            loggedActivationTimeout = false;
 
             GameComponent_JusticeBossCallTracker.Current?.MarkActive();
             GameComponent_JusticeBossCallTracker.Current?.SetJusticePawn(Pawn);
@@ -99,13 +145,14 @@ namespace MAP_MechanoidMechanitor
         public override void CompTick()
         {
             base.CompTick();
-            if (stopped || !initialized || Pawn.Dead || Pawn.Destroyed)
+            if (stopped || !initialized)
             {
-                if (Pawn.Dead || Pawn.Destroyed)
-                {
-                    stopped = true;
-                }
+                return;
+            }
 
+            if (Pawn.Dead || Pawn.Destroyed)
+            {
+                stopped = true;
                 return;
             }
 
@@ -121,14 +168,9 @@ namespace MAP_MechanoidMechanitor
                 TryDeployInfrastructure();
             }
 
-            if (activationSweepTick > 0 && now >= activationSweepTick)
+            if (!activationFinished)
             {
-                JusticeBossDeploymentUtility.ActivateFactionBuildingsNear(
-                    Pawn.Map,
-                    Pawn.Faction,
-                    anchorCell,
-                    34f);
-                activationSweepTick = -1;
+                TryActivateDeployedInfrastructure(now);
             }
 
             if (waveCount < TotalWaves && nextWaveTick > 0 && now >= nextWaveTick)
@@ -153,6 +195,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             infrastructureDeployed = false;
+            deployedInfrastructure.Clear();
+            activationFinished = false;
             TryDeployInfrastructure();
         }
 
@@ -203,9 +247,69 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            JusticeBossDeploymentUtility.DeployInfrastructure(Pawn, anchorCell, out guardLord);
+            JusticeBossDeploymentUtility.DeployInfrastructure(
+                Pawn,
+                anchorCell,
+                justiceEventId,
+                out deployedInfrastructure,
+                out guardLord);
             infrastructureDeployed = true;
-            activationSweepTick = Find.TickManager.TicksGame + 90;
+            int now = Find.TickManager.TicksGame;
+            activationStartTick = now + ActivationStartDelayTicks;
+            activationDeadlineTick = activationStartTick + ActivationMaxWaitTicks;
+            activationFinished = false;
+            loggedActivationTimeout = false;
+        }
+
+        private void TryActivateDeployedInfrastructure(int now)
+        {
+            if (activationStartTick < 0 || now < activationStartTick)
+            {
+                return;
+            }
+
+            bool anyStillPending = false;
+            for (int i = deployedInfrastructure.Count - 1; i >= 0; i--)
+            {
+                Thing? thing = deployedInfrastructure[i];
+                if (thing == null || thing.Destroyed)
+                {
+                    deployedInfrastructure.RemoveAt(i);
+                    continue;
+                }
+
+                if (thing.Spawned && thing.Map == Pawn.Map)
+                {
+                    JusticeBossDeploymentUtility.ActivateDeployedThing(thing);
+                    continue;
+                }
+
+                if (thing.ParentHolder is IThingHolder)
+                {
+                    anyStillPending = true;
+                    continue;
+                }
+
+                deployedInfrastructure.RemoveAt(i);
+            }
+
+            if (!anyStillPending)
+            {
+                activationFinished = true;
+                return;
+            }
+
+            if (now >= activationDeadlineTick)
+            {
+                if (!loggedActivationTimeout)
+                {
+                    loggedActivationTimeout = true;
+                    Log.Warning(
+                        "[MAP JusticeBoss] Timed out waiting for some infrastructure pods to open.");
+                }
+
+                activationFinished = true;
+            }
         }
 
         private void TrySpawnWave(bool forceBossReplace)
@@ -231,22 +335,18 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 若强制替换失败生成，回退普通池单位。
-            List<PawnKindDef> safe = new List<PawnKindDef>(composition.Count);
-            for (int i = 0; i < composition.Count; i++)
-            {
-                PawnKindDef kind = composition[i];
-                safe.Add(kind);
-            }
-
-            JusticeBossSpawnUtility.SpawnWaveNear(
+            int replacements = JusticeBossSpawnUtility.LaunchWaveDropPodsNear(
                 Pawn,
                 anchorCell,
-                safe,
-                ref attackerLord,
-                out int replacements);
-            bossReplacementCount += replacements;
+                justiceEventId,
+                composition,
+                out Lord? assaultLord);
+            if (assaultLord != null)
+            {
+                attackerLord = assaultLord;
+            }
 
+            bossReplacementCount += replacements;
             waveCount++;
             ScheduleAfterWave();
         }
@@ -296,7 +396,19 @@ namespace MAP_MechanoidMechanitor
 
         public string GetDebugStatus()
         {
-            return $"init={initialized} waves={waveCount}/{TotalWaves} infra={infrastructureDeployed} "
+            int pendingDrops = 0;
+            int landed = 0;
+            if (Pawn.Map != null)
+            {
+                MapComponent_JusticeBossDropTracker dropTracker =
+                    MapComponent_JusticeBossDropTracker.For(Pawn.Map);
+                pendingDrops = dropTracker.PendingCount;
+                landed = dropTracker.LandedAndAssignedCount;
+            }
+
+            return $"eventId={justiceEventId} init={initialized} waves={waveCount}/{TotalWaves} "
+                + $"infra={infrastructureDeployed} pendingInfra={PendingActivationCount} "
+                + $"pendingDrops={pendingDrops} landedAssigned={landed} "
                 + $"nextWave={nextWaveTick} retreat={retreatTick} ordered={retreatOrdered} "
                 + $"bossRepl={bossReplacementCount} stopped={stopped} anchor={anchorCell}";
         }
@@ -315,8 +427,26 @@ namespace MAP_MechanoidMechanitor
             Scribe_References.Look(ref attackerLord, "justiceBossAttackerLord");
             Scribe_References.Look(ref guardLord, "justiceBossGuardLord");
             Scribe_Values.Look(ref bossReplacementCount, "justiceBossReplacementCount", 0);
-            Scribe_Values.Look(ref activationSweepTick, "justiceBossActivationSweepTick", -1);
+            Scribe_Values.Look(ref justiceEventId, "justiceBossEventId", 0);
+            Scribe_Collections.Look(
+                ref deployedInfrastructure,
+                "justiceBossDeployedInfrastructure",
+                LookMode.Reference);
+            Scribe_Values.Look(ref activationStartTick, "justiceBossActivationStartTick", -1);
+            Scribe_Values.Look(ref activationDeadlineTick, "justiceBossActivationDeadlineTick", -1);
+            Scribe_Values.Look(ref activationFinished, "justiceBossActivationFinished", false);
+            Scribe_Values.Look(ref loggedActivationTimeout, "justiceBossLoggedActivationTimeout", false);
             Scribe_Values.Look(ref stopped, "justiceBossStopped", false);
+
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                deployedInfrastructure ??= new List<Thing>();
+                deployedInfrastructure.RemoveAll(t => t == null);
+                if (justiceEventId == 0 && initialized && Pawn != null)
+                {
+                    justiceEventId = Pawn.thingIDNumber;
+                }
+            }
         }
     }
 }

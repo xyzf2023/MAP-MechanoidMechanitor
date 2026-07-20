@@ -60,10 +60,6 @@ namespace MAP_MechanoidMechanitor
             GameComponent_JusticeBossCallTracker? tracker =
                 GameComponent_JusticeBossCallTracker.Current;
             tracker?.SetJusticePawn(justice);
-            if (tracker != null && map.Parent != null)
-            {
-                tracker.BeginPending(map.Parent, quest.id);
-            }
 
             slate.Set("mapParent", map.Parent);
             slate.Set("justiceBoss", justice);

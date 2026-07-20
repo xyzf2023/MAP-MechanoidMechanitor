@@ -94,6 +94,28 @@ namespace MAP_MechanoidMechanitor
             return HasMobileCombatFlag(pawn);
         }
 
+        public static void EnsureMobileCombatHediff(Pawn? pawn)
+        {
+            if (pawn?.health?.hediffSet == null || JusticePawnUtility.IsBossJustice(pawn))
+            {
+                return;
+            }
+
+            HediffDef? mobileDef = GetMobileCombatDef();
+            if (mobileDef == null)
+            {
+                Log.ErrorOnce(
+                    "[MAP] MAP_MechanoidMechanitor_WorkMode_MobileCombat HediffDef missing.",
+                    87422031);
+                return;
+            }
+
+            if (pawn.health.hediffSet.GetFirstHediffOfDef(mobileDef) == null)
+            {
+                pawn.health.AddHediff(mobileDef);
+            }
+        }
+
         public static void ApplyWorkModeHediff(Pawn pawn, MechWorkModeDef workMode)
         {
             if (pawn?.health?.hediffSet == null)
