@@ -33,7 +33,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int validCount = 0;
             for (int i = 0; i < pool.textKeys.Count; i++)
             {
-                if (!string.IsNullOrEmpty(pool.textKeys[i]))
+                if (IsSelectableKey(pool.textKeys[i]))
                 {
                     validCount++;
                 }
@@ -70,15 +70,52 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             lastPool = pool;
             lastIndex = sourceIndex;
+            return TranslateOrFallback(pool.textKeys[sourceIndex]);
+        }
+
+        private static string TranslateOrFallback(string? key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return FallbackText;
+            }
 
             try
             {
-                string translated = pool.textKeys[sourceIndex].Translate();
-                return string.IsNullOrEmpty(translated) ? FallbackText : translated;
+                // 原版 Translate 在键缺失时会回退为键名本身；必须先用 CanTranslate 判定。
+                if (!key.CanTranslate())
+                {
+                    return FallbackText;
+                }
+
+                string translated = key.Translate();
+                if (string.IsNullOrEmpty(translated) || translated == key)
+                {
+                    return FallbackText;
+                }
+
+                return translated;
             }
             catch (Exception)
             {
                 return FallbackText;
+            }
+        }
+
+        private static bool IsSelectableKey(string? key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return false;
+            }
+
+            try
+            {
+                return key.CanTranslate();
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 
@@ -87,7 +124,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int ordinal = 0;
             for (int i = 0; i < pool.textKeys.Count; i++)
             {
-                if (string.IsNullOrEmpty(pool.textKeys[i]))
+                if (!IsSelectableKey(pool.textKeys[i]))
                 {
                     continue;
                 }
@@ -108,7 +145,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int seen = 0;
             for (int i = 0; i < pool.textKeys.Count; i++)
             {
-                if (string.IsNullOrEmpty(pool.textKeys[i]))
+                if (!IsSelectableKey(pool.textKeys[i]))
                 {
                     continue;
                 }

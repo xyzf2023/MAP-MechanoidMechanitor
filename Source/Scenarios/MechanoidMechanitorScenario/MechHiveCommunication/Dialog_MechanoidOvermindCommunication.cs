@@ -50,11 +50,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float DialogueSubHeight = 118f;
 
-        private const float FloatPeriodSeconds = 3.5f;
+        private const float FloatPeriodSeconds = 3.2f;
 
-        private const float FloatAmpLarge = 5.5f;
+        private const float FloatAmpLarge = 7.5f;
 
-        private const float FloatAmpSmall = 2.5f;
+        private const float FloatAmpSmall = 3.5f;
 
         private readonly Faction mechHive;
 
@@ -388,19 +388,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             float sizeFactor = Mathf.InverseLerp(CoreSmallHeight, CoreLargeHeight, frameRect.height);
             float amplitude = Mathf.Lerp(FloatAmpSmall, FloatAmpLarge, Mathf.Clamp01(sizeFactor));
-            float margin = Mathf.Max(amplitude + 6f, frameRect.height * 0.04f);
+            // 留白至少覆盖振幅，确保贴图在极值处仍不触碰边框。
+            float margin = Mathf.Max(amplitude + 8f, frameRect.height * 0.05f);
             Rect inner = frameRect.ContractedBy(margin);
             if (inner.width <= 1f || inner.height <= 1f)
             {
                 return;
             }
 
-            float phase = Time.realtimeSinceStartup * (Mathf.PI * 2f / FloatPeriodSeconds);
-            float offsetY = Mathf.Sin(phase) * amplitude;
+            double period = FloatPeriodSeconds;
+            double cycleTime = Time.realtimeSinceStartupAsDouble % period;
+            if (cycleTime < 0d)
+            {
+                cycleTime += period;
+            }
+
+            double phase = cycleTime * (System.Math.PI * 2d / period);
+            float offsetY = (float)(System.Math.Sin(phase) * amplitude);
             float texSize = Mathf.Min(inner.width, inner.height - amplitude * 2f);
             if (texSize < 8f)
             {
-                texSize = Mathf.Min(inner.width, inner.height);
+                return;
             }
 
             Rect texRect = new Rect(
@@ -484,29 +492,63 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 color = MechanoidOvermindUiStyle.AccentBright;
             }
 
-            const float disconnectW = 110f;
-            const float devToggleW = 54f;
-            float rightReserve = disconnectW + 8f;
-            if (Prefs.DevMode)
+            if (!Prefs.DevMode)
             {
-                rightReserve += devToggleW + 6f;
+                devControlsEnabled = false;
             }
 
+            const float edgePad = 8f;
+            const float itemGap = 4f;
+            const float disconnectW = 110f;
+            const float devToggleW = 54f;
+            // 按 MinVirtualWidth=1100 预留中文标签宽度，避免与状态文字重叠。
+            const float creditWideW = 102f;
+            const float creditNarrowW = 92f;
+
+            bool showDevToggle = Prefs.DevMode;
+            bool showCreditButtons = showDevToggle && devControlsEnabled;
+            float creditClusterW = showCreditButtons
+                ? creditWideW + itemGap + creditWideW + itemGap + creditNarrowW + itemGap
+                    + creditNarrowW
+                : 0f;
+
+            float rightClusterW = disconnectW;
+            if (showDevToggle)
+            {
+                rightClusterW += itemGap + devToggleW;
+            }
+
+            if (showCreditButtons)
+            {
+                rightClusterW += itemGap + creditClusterW;
+            }
+
+            float statusWidth = Mathf.Max(
+                40f,
+                rect.width - edgePad * 2f - rightClusterW - itemGap);
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x + 8f, rect.y + 4f, Mathf.Max(40f, rect.width - rightReserve - 16f), rect.height - 8f),
+                new Rect(rect.x + edgePad, rect.y + 4f, statusWidth, rect.height - 8f),
                 statusKey.Translate(),
                 GameFont.Tiny,
                 TextAnchor.MiddleLeft,
                 color);
 
-            float disconnectX = rect.xMax - 8f - disconnectW;
-            if (Prefs.DevMode)
+            float cursorX = rect.xMax - edgePad;
+            float buttonY = rect.y + 4f;
+            float buttonH = rect.height - 8f;
+
+            cursorX -= disconnectW;
+            if (MechanoidOvermindUiStyle.DrawActionButton(
+                    new Rect(cursorX, buttonY, disconnectW, buttonH),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Disconnect".Translate()))
             {
-                Rect toggleRect = new Rect(
-                    disconnectX - 6f - devToggleW,
-                    rect.y + 6f,
-                    devToggleW,
-                    rect.height - 12f);
+                Close(doCloseSound: true);
+            }
+
+            if (showDevToggle)
+            {
+                cursorX -= itemGap + devToggleW;
+                Rect toggleRect = new Rect(cursorX, rect.y + 6f, devToggleW, rect.height - 12f);
                 if (transitioning)
                 {
                     bool frozen = devControlsEnabled;
@@ -525,73 +567,55 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     devControlsEnabled = enabled;
                 }
             }
-            else
-            {
-                devControlsEnabled = false;
-            }
 
-            if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(disconnectX, rect.y + 4f, disconnectW, rect.height - 8f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Disconnect".Translate()))
+            if (showCreditButtons)
             {
-                Close(doCloseSound: true);
-            }
+                bool creditEnabled = !transitioning;
+                // 从右向左放置，保证左→右顺序为：+1000、-1000、+100、-100。
+                cursorX -= itemGap + creditNarrowW;
+                if (DrawDevCreditButton(
+                        new Rect(cursorX, buttonY, creditNarrowW, buttonH),
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Sub100",
+                        creditEnabled))
+                {
+                    AdjustPurgeCreditsForDev(-100);
+                }
 
-            if (Prefs.DevMode && devControlsEnabled && !transitioning)
-            {
-                DrawDevFloatingPanel(rect);
-            }
-        }
+                cursorX -= itemGap + creditNarrowW;
+                if (DrawDevCreditButton(
+                        new Rect(cursorX, buttonY, creditNarrowW, buttonH),
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add100",
+                        creditEnabled))
+                {
+                    AdjustPurgeCreditsForDev(100);
+                }
 
-        private void DrawDevFloatingPanel(Rect bottomBar)
-        {
-            const float panelW = 150f;
-            const float panelH = 118f;
-            // 靠左上方浮层，避开右侧断开连接 / 订单确认与左侧返回按钮。
-            Rect panel = new Rect(
-                bottomBar.x + 8f,
-                bottomBar.y - Gap - panelH,
-                panelW,
-                panelH);
-            MechanoidOvermindUiStyle.DrawPanel(panel);
-            Rect inner = panel.ContractedBy(6f);
-            float buttonH = 24f;
-            float y = inner.y;
-            if (DrawDevCreditButton(
-                    new Rect(inner.x, y, inner.width, buttonH),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add1000"))
-            {
-                AdjustPurgeCreditsForDev(1000);
-            }
+                cursorX -= itemGap + creditWideW;
+                if (DrawDevCreditButton(
+                        new Rect(cursorX, buttonY, creditWideW, buttonH),
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Sub1000",
+                        creditEnabled))
+                {
+                    AdjustPurgeCreditsForDev(-1000);
+                }
 
-            y += buttonH + 3f;
-            if (DrawDevCreditButton(
-                    new Rect(inner.x, y, inner.width, buttonH),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Sub1000"))
-            {
-                AdjustPurgeCreditsForDev(-1000);
-            }
-
-            y += buttonH + 3f;
-            if (DrawDevCreditButton(
-                    new Rect(inner.x, y, inner.width, buttonH),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add100"))
-            {
-                AdjustPurgeCreditsForDev(100);
-            }
-
-            y += buttonH + 3f;
-            if (DrawDevCreditButton(
-                    new Rect(inner.x, y, inner.width, buttonH),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Sub100"))
-            {
-                AdjustPurgeCreditsForDev(-100);
+                cursorX -= itemGap + creditWideW;
+                if (DrawDevCreditButton(
+                        new Rect(cursorX, buttonY, creditWideW, buttonH),
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add1000",
+                        creditEnabled))
+                {
+                    AdjustPurgeCreditsForDev(1000);
+                }
             }
         }
 
-        private static bool DrawDevCreditButton(Rect rect, string labelKey)
+        private static bool DrawDevCreditButton(Rect rect, string labelKey, bool enabled)
         {
-            return MechanoidOvermindUiStyle.DrawActionButton(rect, labelKey.Translate());
+            return MechanoidOvermindUiStyle.DrawActionButton(
+                rect,
+                labelKey.Translate(),
+                enabled);
         }
 
         private static void AdjustPurgeCreditsForDev(int delta)
