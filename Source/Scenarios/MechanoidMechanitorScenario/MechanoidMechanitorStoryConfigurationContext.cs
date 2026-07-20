@@ -18,14 +18,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool HasMechHive => MechHive != null;
 
+        public bool HasPursuingMechanoidsScenarioPart { get; }
+
         private MechanoidMechanitorStoryConfigurationContext(
             MechanoidMechanitorStoryConfiguration configuration,
             List<Faction> ordinaryFactions,
-            Faction? mechHive)
+            Faction? mechHive,
+            bool hasPursuingMechanoidsScenarioPart)
         {
             Configuration = configuration;
             this.ordinaryFactions = ordinaryFactions;
             MechHive = mechHive;
+            HasPursuingMechanoidsScenarioPart = hasPursuingMechanoidsScenarioPart;
         }
 
         public static MechanoidMechanitorStoryConfigurationContext Create(
@@ -36,7 +40,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return new MechanoidMechanitorStoryConfigurationContext(
                 configuration,
                 ordinaryFactions,
-                MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive());
+                MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive(),
+                DetectPursuingMechanoidsScenarioPart());
         }
 
         public static List<Faction> GetOrdinaryFactionsSorted()
@@ -52,6 +57,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool IsOrdinaryFaction(Faction? faction)
         {
             return MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(faction);
+        }
+
+        private static bool DetectPursuingMechanoidsScenarioPart()
+        {
+            if (!ModsConfig.OdysseyActive)
+            {
+                return false;
+            }
+
+            Scenario? scenario = Find.Scenario;
+            if (scenario == null)
+            {
+                return false;
+            }
+
+            foreach (ScenPart part in scenario.AllParts)
+            {
+                if (part is ScenPart_PursuingMechanoids)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
