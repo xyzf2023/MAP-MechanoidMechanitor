@@ -18,6 +18,7 @@
     <modExtensions>
       <li Class="MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorBossgroupExtension">
         <source>Other</source>
+        <hideFromVanillaBossgroupCommand>true</hideFromVanillaBossgroupCommand>
       </li>
     </modExtensions>
     <waves>

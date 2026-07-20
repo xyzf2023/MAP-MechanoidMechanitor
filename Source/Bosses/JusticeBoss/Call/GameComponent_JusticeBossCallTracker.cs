@@ -40,11 +40,21 @@ namespace MAP_MechanoidMechanitor
         public static GameComponent_JusticeBossCallTracker? Current =>
             Verse.Current.Game?.GetComponent<GameComponent_JusticeBossCallTracker>();
 
-        public void BeginPending(MapParent mapParent, int newQuestId)
+        public void BeginPending(MapParent mapParent)
         {
+            Clear();
             state = JusticeBossCallState.Pending;
             targetMapParent = mapParent;
-            justicePawn = null;
+            questId = -1;
+        }
+
+        public void UpdatePendingQuestId(int newQuestId)
+        {
+            if (state != JusticeBossCallState.Pending)
+            {
+                return;
+            }
+
             questId = newQuestId;
         }
 

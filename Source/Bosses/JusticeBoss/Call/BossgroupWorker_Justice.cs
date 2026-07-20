@@ -38,7 +38,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            tracker.BeginPending(map.Parent, -1);
+            tracker.BeginPending(map.Parent);
 
             Slate slate = new Slate();
             slate.Set("bossgroup", def);
@@ -64,7 +64,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            tracker.BeginPending(map.Parent, quest.id);
+            tracker.UpdatePendingQuestId(quest.id);
             Messages.Message(
                 "MAP_MechanoidMechanitor.JusticeBoss.Call.SuccessMessage".Translate(),
                 MessageTypeDefOf.NeutralEvent);
