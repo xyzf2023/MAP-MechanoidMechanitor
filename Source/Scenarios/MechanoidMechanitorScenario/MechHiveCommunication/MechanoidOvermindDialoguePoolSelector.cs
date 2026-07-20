@@ -88,7 +88,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return FallbackText;
                 }
 
-                string translated = key.Translate();
+                // 必须用 RawText，避免 TaggedString→string 隐式转换触发 StripTags。
+                TaggedString translatedTagged = key.Translate();
+                string translated = translatedTagged.RawText;
                 if (string.IsNullOrEmpty(translated) || translated == key)
                 {
                     return FallbackText;
