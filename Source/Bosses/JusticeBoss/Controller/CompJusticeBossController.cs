@@ -29,6 +29,10 @@ namespace MAP_MechanoidMechanitor
 
         public const int ActivationMaxWaitTicks = 600;
 
+        public const int DropRetryDelayTicks = 250;
+
+        public const int MaxDropRetryAttempts = 20;
+
         private bool initialized;
 
         private IntVec3 anchorCell = IntVec3.Invalid;
@@ -63,6 +67,22 @@ namespace MAP_MechanoidMechanitor
 
         private bool loggedActivationTimeout;
 
+        private List<PawnKindDef> pendingWaveKinds = new List<PawnKindDef>();
+
+        private int pendingWaveBossReplacementCount;
+
+        private int waveDropRetryCount;
+
+        private bool loggedWaveDropFailure;
+
+        private List<PawnKindDef> pendingGuardKinds = new List<PawnKindDef>();
+
+        private int nextGuardRetryTick = -1;
+
+        private int guardDropRetryCount;
+
+        private bool loggedGuardDropFailure;
+
         private bool stopped;
 
         private Pawn Pawn => (Pawn)parent;
@@ -80,6 +100,10 @@ namespace MAP_MechanoidMechanitor
         public int JusticeEventId => justiceEventId;
 
         public int DeployedInfrastructureCount => deployedInfrastructure.Count;
+
+        public int PendingWaveDropCount => pendingWaveKinds.Count;
+
+        public int PendingGuardDropCount => pendingGuardKinds.Count;
 
         public int PendingActivationCount
         {
@@ -137,6 +161,14 @@ namespace MAP_MechanoidMechanitor
             activationDeadlineTick = -1;
             activationFinished = false;
             loggedActivationTimeout = false;
+            pendingWaveKinds = new List<PawnKindDef>();
+            pendingWaveBossReplacementCount = 0;
+            waveDropRetryCount = 0;
+            loggedWaveDropFailure = false;
+            pendingGuardKinds = new List<PawnKindDef>();
+            nextGuardRetryTick = -1;
+            guardDropRetryCount = 0;
+            loggedGuardDropFailure = false;
 
             GameComponent_JusticeBossCallTracker.Current?.MarkActive();
             GameComponent_JusticeBossCallTracker.Current?.SetJusticePawn(Pawn);
@@ -173,6 +205,13 @@ namespace MAP_MechanoidMechanitor
                 TryActivateDeployedInfrastructure(now);
             }
 
+            if (pendingGuardKinds.Count > 0
+                && nextGuardRetryTick > 0
+                && now >= nextGuardRetryTick)
+            {
+                TryRetryGuardDrops(now);
+            }
+
             if (waveCount < TotalWaves && nextWaveTick > 0 && now >= nextWaveTick)
             {
                 TrySpawnWave(forceBossReplace: false);
@@ -197,6 +236,10 @@ namespace MAP_MechanoidMechanitor
             infrastructureDeployed = false;
             deployedInfrastructure.Clear();
             activationFinished = false;
+            pendingGuardKinds.Clear();
+            nextGuardRetryTick = -1;
+            guardDropRetryCount = 0;
+            loggedGuardDropFailure = false;
             TryDeployInfrastructure();
         }
 
@@ -252,6 +295,7 @@ namespace MAP_MechanoidMechanitor
                 anchorCell,
                 justiceEventId,
                 out deployedInfrastructure,
+                out pendingGuardKinds,
                 out guardLord);
             infrastructureDeployed = true;
             int now = Find.TickManager.TicksGame;
@@ -259,6 +303,11 @@ namespace MAP_MechanoidMechanitor
             activationDeadlineTick = activationStartTick + ActivationMaxWaitTicks;
             activationFinished = false;
             loggedActivationTimeout = false;
+            nextGuardRetryTick = pendingGuardKinds.Count > 0
+                ? now + DropRetryDelayTicks
+                : -1;
+            guardDropRetryCount = 0;
+            loggedGuardDropFailure = false;
         }
 
         private void TryActivateDeployedInfrastructure(int now)
@@ -312,6 +361,68 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        private void TryRetryGuardDrops(int now)
+        {
+            Map? map = Pawn.Map;
+            Faction? faction = Pawn.Faction;
+            if (map == null || faction == null || pendingGuardKinds.Count == 0)
+            {
+                nextGuardRetryTick = -1;
+                return;
+            }
+
+            JusticeBossDropLaunchResult result =
+                JusticeBossSpawnUtility.LaunchGuardDropPodsNear(
+                    map,
+                    faction,
+                    anchorCell,
+                    justiceEventId,
+                    pendingGuardKinds,
+                    out Lord? retryGuardLord);
+            if (retryGuardLord != null)
+            {
+                guardLord = retryGuardLord;
+            }
+
+            pendingGuardKinds = new List<PawnKindDef>(result.FailedKinds);
+            if (result.FatalFailure)
+            {
+                if (!loggedGuardDropFailure)
+                {
+                    loggedGuardDropFailure = true;
+                    Log.Error(
+                        "[MAP JusticeBoss] Guard drop retries stopped because of a fatal launch failure.");
+                }
+
+                nextGuardRetryTick = -1;
+                return;
+            }
+
+            if (pendingGuardKinds.Count == 0)
+            {
+                nextGuardRetryTick = -1;
+                guardDropRetryCount = 0;
+                loggedGuardDropFailure = false;
+                return;
+            }
+
+            guardDropRetryCount++;
+            if (guardDropRetryCount >= MaxDropRetryAttempts)
+            {
+                if (!loggedGuardDropFailure)
+                {
+                    loggedGuardDropFailure = true;
+                    Log.Error(
+                        "[MAP JusticeBoss] Guard drop retries exhausted; missing guards were not launched.");
+                }
+
+                nextGuardRetryTick = -1;
+                return;
+            }
+
+            nextGuardRetryTick = now + DropRetryDelayTicks;
+        }
+
         private void TrySpawnWave(bool forceBossReplace)
         {
             if (Pawn.Map == null || waveCount >= TotalWaves)
@@ -319,36 +430,86 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            int waveIndex = waveCount + 1;
-            List<PawnKindDef> composition = forceBossReplace
-                ? JusticeBossSpawnUtility.BuildWaveComposition(waveIndex, applyBossReplace: false)
-                : JusticeBossSpawnUtility.BuildWaveComposition(waveIndex, applyBossReplace: true);
-            if (forceBossReplace)
+            if (pendingWaveKinds.Count == 0)
             {
-                JusticeBossSpawnUtility.TryApplyBossReplacement(composition, force: true);
+                int waveIndex = waveCount + 1;
+                List<PawnKindDef> composition = forceBossReplace
+                    ? JusticeBossSpawnUtility.BuildWaveComposition(waveIndex, applyBossReplace: false)
+                    : JusticeBossSpawnUtility.BuildWaveComposition(waveIndex, applyBossReplace: true);
+                if (forceBossReplace)
+                {
+                    JusticeBossSpawnUtility.TryApplyBossReplacement(composition, force: true);
+                }
+
+                if (composition.Count == 0)
+                {
+                    Log.ErrorOnce(
+                        "[MAP JusticeBoss] Cannot build the next summoned mechanoid wave.",
+                        Pawn.thingIDNumber ^ waveIndex ^ 0x681A);
+                    nextWaveTick = -1;
+                    return;
+                }
+
+                pendingWaveKinds = composition;
+                pendingWaveBossReplacementCount = 0;
+                waveDropRetryCount = 0;
+                loggedWaveDropFailure = false;
             }
 
-            if (composition.Count == 0)
-            {
-                waveCount++;
-                ScheduleAfterWave();
-                return;
-            }
-
-            int replacements = JusticeBossSpawnUtility.LaunchWaveDropPodsNear(
-                Pawn,
-                anchorCell,
-                justiceEventId,
-                composition,
-                out Lord? assaultLord);
+            JusticeBossDropLaunchResult result =
+                JusticeBossSpawnUtility.LaunchWaveDropPodsNear(
+                    Pawn,
+                    anchorCell,
+                    justiceEventId,
+                    pendingWaveKinds,
+                    out Lord? assaultLord);
             if (assaultLord != null)
             {
                 attackerLord = assaultLord;
             }
 
-            bossReplacementCount += replacements;
-            waveCount++;
-            ScheduleAfterWave();
+            pendingWaveBossReplacementCount += result.BossReplacementCount;
+            pendingWaveKinds = new List<PawnKindDef>(result.FailedKinds);
+
+            if (result.FatalFailure)
+            {
+                if (!loggedWaveDropFailure)
+                {
+                    loggedWaveDropFailure = true;
+                    Log.Error(
+                        "[MAP JusticeBoss] Wave drop retries stopped because of a fatal launch failure.");
+                }
+
+                nextWaveTick = -1;
+                return;
+            }
+
+            if (pendingWaveKinds.Count == 0)
+            {
+                bossReplacementCount += pendingWaveBossReplacementCount;
+                pendingWaveBossReplacementCount = 0;
+                waveDropRetryCount = 0;
+                loggedWaveDropFailure = false;
+                waveCount++;
+                ScheduleAfterWave();
+                return;
+            }
+
+            waveDropRetryCount++;
+            if (waveDropRetryCount >= MaxDropRetryAttempts)
+            {
+                if (!loggedWaveDropFailure)
+                {
+                    loggedWaveDropFailure = true;
+                    Log.Error(
+                        "[MAP JusticeBoss] Wave drop retries exhausted; the wave remains incomplete.");
+                }
+
+                nextWaveTick = -1;
+                return;
+            }
+
+            nextWaveTick = Find.TickManager.TicksGame + DropRetryDelayTicks;
         }
 
         private void ScheduleAfterWave()
@@ -408,6 +569,8 @@ namespace MAP_MechanoidMechanitor
 
             return $"eventId={justiceEventId} init={initialized} waves={waveCount}/{TotalWaves} "
                 + $"infra={infrastructureDeployed} pendingInfra={PendingActivationCount} "
+                + $"pendingWave={pendingWaveKinds.Count} waveRetries={waveDropRetryCount} "
+                + $"pendingGuards={pendingGuardKinds.Count} guardRetries={guardDropRetryCount} "
                 + $"pendingDrops={pendingDrops} landedAssigned={landed} "
                 + $"nextWave={nextWaveTick} retreat={retreatTick} ordered={retreatOrdered} "
                 + $"bossRepl={bossReplacementCount} stopped={stopped} anchor={anchorCell}";
@@ -436,12 +599,33 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref activationDeadlineTick, "justiceBossActivationDeadlineTick", -1);
             Scribe_Values.Look(ref activationFinished, "justiceBossActivationFinished", false);
             Scribe_Values.Look(ref loggedActivationTimeout, "justiceBossLoggedActivationTimeout", false);
+            Scribe_Collections.Look(
+                ref pendingWaveKinds,
+                "justiceBossPendingWaveKinds",
+                LookMode.Def);
+            Scribe_Values.Look(
+                ref pendingWaveBossReplacementCount,
+                "justiceBossPendingWaveBossReplacementCount",
+                0);
+            Scribe_Values.Look(ref waveDropRetryCount, "justiceBossWaveDropRetryCount", 0);
+            Scribe_Values.Look(ref loggedWaveDropFailure, "justiceBossLoggedWaveDropFailure", false);
+            Scribe_Collections.Look(
+                ref pendingGuardKinds,
+                "justiceBossPendingGuardKinds",
+                LookMode.Def);
+            Scribe_Values.Look(ref nextGuardRetryTick, "justiceBossNextGuardRetryTick", -1);
+            Scribe_Values.Look(ref guardDropRetryCount, "justiceBossGuardDropRetryCount", 0);
+            Scribe_Values.Look(ref loggedGuardDropFailure, "justiceBossLoggedGuardDropFailure", false);
             Scribe_Values.Look(ref stopped, "justiceBossStopped", false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 deployedInfrastructure ??= new List<Thing>();
                 deployedInfrastructure.RemoveAll(t => t == null);
+                pendingWaveKinds ??= new List<PawnKindDef>();
+                pendingWaveKinds.RemoveAll(k => k == null);
+                pendingGuardKinds ??= new List<PawnKindDef>();
+                pendingGuardKinds.RemoveAll(k => k == null);
                 if (justiceEventId == 0 && initialized && Pawn != null)
                 {
                     justiceEventId = Pawn.thingIDNumber;
