@@ -68,6 +68,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private MechanoidOvermindOrder? activeOrder;
 
+        private MechClusterDeploymentOrder? activeProtocolOrder;
+
+        private MechClusterDeploymentSession? preparedClusterSession;
+
         private readonly MechanoidOvermindPage_Home homePage = new MechanoidOvermindPage_Home();
 
         private readonly MechanoidOvermindPage_Mechs mechsPage = new MechanoidOvermindPage_Mechs();
@@ -121,6 +125,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool devControlsEnabled;
 
         private bool transitioning;
+
+        private bool suspendingForMapTargeting;
 
         private MechanoidOvermindPageKind transitionFromPage = MechanoidOvermindPageKind.Home;
 
@@ -176,6 +182,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public override void PreClose()
         {
             base.PreClose();
+            if (suspendingForMapTargeting)
+            {
+                return;
+            }
+
             DiscardActiveOrder();
             MechanoidOvermindPricingService.ClearThingMarketValueCache();
         }
@@ -843,14 +854,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 dialogueH);
             DrawDialoguePanel(dialogueRect);
 
-            if (showOrder && activeOrder != null)
+            if (showOrder)
             {
                 Rect orderRect = new Rect(
                     sideRect.x,
                     dialogueRect.yMax + Gap,
                     sideRect.width,
                     Mathf.Max(0f, sideRect.yMax - (dialogueRect.yMax + Gap)));
-                DrawOrderPanel(orderRect, activeOrder);
+                if (currentPage == MechanoidOvermindPageKind.BattlefieldSupport
+                    && activeProtocolOrder != null)
+                {
+                    DrawSpecialProtocolOrderPanel(orderRect, activeProtocolOrder);
+                }
+                else if (activeOrder != null)
+                {
+                    DrawOrderPanel(orderRect, activeOrder);
+                }
             }
         }
 
@@ -903,7 +922,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                     break;
                 case MechanoidOvermindPageKind.BattlefieldSupport:
-                    battlefieldPage.Draw(contentRect);
+                    if (activeProtocolOrder != null)
+                    {
+                        int previousRevision = activeProtocolOrder.Revision;
+                        battlefieldPage.Draw(
+                            contentRect,
+                            activeProtocolOrder,
+                            preferredDeliveryMap);
+                        if (activeProtocolOrder.Revision != previousRevision)
+                        {
+                            preparedClusterSession = null;
+                        }
+                    }
+
                     break;
                 case MechanoidOvermindPageKind.Chat:
                     chatPage.Draw(contentRect);
@@ -1598,6 +1629,284 @@ namespace MAP_MechanoidMechanitor.Scenarios
             GUI.EndGroup();
         }
 
+
+        private void DrawSpecialProtocolOrderPanel(
+            Rect rect,
+            MechClusterDeploymentOrder order)
+        {
+            MechanoidOvermindUiStyle.DrawPanel(rect);
+            Rect inner = rect.ContractedBy(8f);
+
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, inner.y, inner.width, 24f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Title".Translate(),
+                GameFont.Small);
+
+            const float titleBlock = 28f;
+            const float listFooterGap = 6f;
+            float footerHeight = GetOrderFooterRequiredHeight();
+            float listHeight = inner.height - titleBlock - listFooterGap - footerHeight;
+            if (listHeight < 0f)
+            {
+                listHeight = 0f;
+                footerHeight = Mathf.Max(0f, inner.height - titleBlock - listFooterGap);
+            }
+
+            Rect listRect = new Rect(
+                inner.x,
+                inner.y + titleBlock,
+                inner.width,
+                listHeight);
+            DrawSpecialProtocolOrderLine(listRect, order);
+
+            Rect footer = new Rect(
+                inner.x,
+                inner.yMax - footerHeight,
+                inner.width,
+                footerHeight);
+            DrawSpecialProtocolOrderFooter(footer, order);
+        }
+
+        private static void DrawSpecialProtocolOrderLine(
+            Rect rect,
+            MechClusterDeploymentOrder order)
+        {
+            MechanoidOvermindUiStyle.DrawPanel(rect, alt: true, cornerMarks: false);
+            if (!order.Selected || rect.height <= 2f)
+            {
+                return;
+            }
+
+            string conditionLabel = order.ConditionCauser?.LabelCap
+                ?? "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.NoConditionCauser"
+                    .Translate();
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(rect.x + 8f, rect.y + 4f, rect.width - 16f, 20f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title"
+                    .Translate(),
+                GameFont.Small,
+                TextAnchor.MiddleLeft,
+                MechanoidOvermindUiStyle.TextPrimary);
+            MechanoidOvermindUiStyle.DrawSecondaryLabel(
+                new Rect(rect.x + 8f, rect.y + 25f, rect.width - 16f, 20f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderMeta"
+                    .Translate(conditionLabel));
+        }
+
+        private void DrawSpecialProtocolOrderFooter(
+            Rect rect,
+            MechClusterDeploymentOrder order)
+        {
+            GetOrderFooterLineHeights(out float smallLineHeight, out float tinyLineHeight);
+
+            const float summaryRowGap = 2f;
+            float summaryHeight = smallLineHeight + tinyLineHeight + tinyLineHeight
+                + summaryRowGap * 2f;
+            float statusHeight = tinyLineHeight;
+            const float statusToButtonsGap = 6f;
+            const float buttonWidth = 94f;
+            const float buttonHeight = 26f;
+            const float buttonGap = 8f;
+
+            int totalCost = order.Cost;
+            int credits = GameComponent_MechanoidMechanitorStoryState
+                .GetPurgeDirectiveRewardPoints();
+            bool available = MechClusterDeploymentService.TryResolveAvailableMap(
+                preferredDeliveryMap,
+                out _);
+            bool validCondition = order.ConditionCauser == null
+                || MechClusterDeploymentService.IsConditionCauser(
+                    order.ConditionCauser);
+            bool canConfirm = order.Selected
+                && available
+                && validCondition
+                && credits >= totalCost
+                && !transitioning;
+
+            GUI.BeginGroup(rect);
+
+            float summaryY = 0f;
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(0f, summaryY, rect.width, smallLineHeight),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Total".Translate(
+                    totalCost),
+                GameFont.Small,
+                TextAnchor.MiddleLeft,
+                MechanoidOvermindUiStyle.AccentBright);
+            summaryY += smallLineHeight + summaryRowGap;
+            MechanoidOvermindUiStyle.DrawSecondaryLabel(
+                new Rect(0f, summaryY, rect.width, tinyLineHeight),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Order.CurrentCredits".Translate(
+                    credits));
+            summaryY += tinyLineHeight + summaryRowGap;
+            int balance = credits - totalCost;
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(0f, summaryY, rect.width, tinyLineHeight),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Order.BalanceAfter".Translate(
+                    balance),
+                GameFont.Tiny,
+                TextAnchor.MiddleLeft,
+                balance < 0
+                    ? MechanoidOvermindUiStyle.Error
+                    : MechanoidOvermindUiStyle.TextSecondary);
+
+            Rect statusRect = new Rect(0f, summaryHeight, rect.width, statusHeight);
+            if (!available)
+            {
+                MechanoidOvermindUiStyle.DrawLabel(
+                    statusRect,
+                    MechClusterDeploymentService.ErrorUnavailable.Translate(),
+                    GameFont.Tiny,
+                    TextAnchor.MiddleLeft,
+                    MechanoidOvermindUiStyle.Error);
+            }
+            else if (order.Selected && credits < totalCost)
+            {
+                MechanoidOvermindUiStyle.DrawLabel(
+                    statusRect,
+                    MechClusterDeploymentService.ErrorInsufficientCredits.Translate(),
+                    GameFont.Tiny,
+                    TextAnchor.MiddleLeft,
+                    MechanoidOvermindUiStyle.Error);
+            }
+
+            float buttonsY = statusRect.yMax + statusToButtonsGap;
+            float buttonsGroupWidth = buttonWidth * 2f + buttonGap;
+            float buttonsX = (rect.width - buttonsGroupWidth) * 0.5f;
+            if (MechanoidOvermindUiStyle.DrawActionButton(
+                    new Rect(buttonsX, buttonsY, buttonWidth, buttonHeight),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear".Translate()))
+            {
+                order.Clear();
+                preparedClusterSession = null;
+                statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
+            }
+
+            if (MechanoidOvermindUiStyle.DrawActionButton(
+                    new Rect(
+                        buttonsX + buttonWidth + buttonGap,
+                        buttonsY,
+                        buttonWidth,
+                        buttonHeight),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Confirm".Translate(),
+                    enabled: canConfirm))
+            {
+                TryBeginMechClusterDeployment(order);
+            }
+
+            GUI.EndGroup();
+        }
+
+        private void TryBeginMechClusterDeployment(
+            MechClusterDeploymentOrder order)
+        {
+            statusKey =
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Validating";
+
+            if (preparedClusterSession == null
+                || preparedClusterSession.OrderRevision != order.Revision
+                || preparedClusterSession.Map.Disposed)
+            {
+                if (!MechClusterDeploymentService.TryPrepare(
+                        order,
+                        preferredDeliveryMap,
+                        out MechClusterDeploymentSession? prepared,
+                        out string errorKey)
+                    || prepared == null)
+                {
+                    statusKey = errorKey;
+                    return;
+                }
+
+                preparedClusterSession = prepared;
+            }
+
+            MechClusterDeploymentSession session = preparedClusterSession;
+            statusKey =
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Status.SelectingClusterLocation";
+
+            CameraJumper.TryJump(
+                session.Map.Center,
+                session.Map,
+                CameraJumper.MovementMode.Pan);
+
+            bool actionAttempted = false;
+            suspendingForMapTargeting = true;
+            Close(doCloseSound: false);
+
+            Find.Targeter.BeginTargeting(
+                TargetingParameters.ForCell(),
+                target =>
+                {
+                    actionAttempted = true;
+                    MechClusterDeploymentResult result =
+                        MechClusterDeploymentService.TryDeploy(session, target.Cell);
+                    if (result.Success)
+                    {
+                        order.Clear();
+                        preparedClusterSession = null;
+                        statusKey =
+                            "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Accepted";
+                        SoundDefOf.Click.PlayOneShotOnCamera();
+                    }
+                    else
+                    {
+                        statusKey = result.ErrorKey
+                            ?? MechClusterDeploymentService.ErrorGenerationFailed;
+                    }
+                },
+                target =>
+                {
+                    if (target.IsValid)
+                    {
+                        MechClusterDeploymentService.DrawPlacementGhost(
+                            session,
+                            target.Cell);
+                    }
+                },
+                target => target.IsValid
+                    && MechClusterDeploymentService
+                        .ValidatePlacement(session, target.Cell)
+                        .Accepted,
+                caster: null,
+                actionWhenFinished: () =>
+                {
+                    suspendingForMapTargeting = false;
+                    if (!actionAttempted)
+                    {
+                        statusKey =
+                            "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
+                    }
+
+                    if (!IsOpen && Current.Game != null)
+                    {
+                        Find.WindowStack.Add(this);
+                    }
+                },
+                mouseAttachment:
+                    MechanoidMechanitorMechHiveCommunicationUtility.ContactOvermindIcon,
+                playSoundOnAction: true,
+                onGuiAction: target =>
+                {
+                    AcceptanceReport report = target.IsValid
+                        ? MechClusterDeploymentService.ValidatePlacement(
+                            session,
+                            target.Cell)
+                        : MechClusterDeploymentService.ErrorInvalidRequest.Translate();
+                    string label = report.Accepted
+                        ? "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.TargetingHint"
+                            .Translate()
+                        : report.Reason;
+                    Widgets.MouseAttachedLabel(
+                        label,
+                        0f,
+                        0f,
+                        report.Accepted
+                            ? MechanoidOvermindUiStyle.TextPrimary
+                            : ColorLibrary.RedReadable);
+                });
+        }
+
         private void TryConfirmDelivery(MechanoidOvermindOrder order)
         {
             if (currentPage == MechanoidOvermindPageKind.BattlefieldSupport)
@@ -1735,8 +2044,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (ShowsOrderPanel(transitionTargetPage))
+            if (transitionTargetPage == MechanoidOvermindPageKind.BattlefieldSupport)
             {
+                DiscardActiveOrder();
+                activeProtocolOrder = new MechClusterDeploymentOrder();
+            }
+            else if (ShowsOrderPanel(transitionTargetPage))
+            {
+                DiscardActiveOrder();
                 activeOrder = new MechanoidOvermindOrder();
                 InvalidateDropSpotCache();
                 orderScroll = Vector2.zero;
@@ -1757,6 +2072,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 activeOrder = null;
             }
 
+            if (activeProtocolOrder != null)
+            {
+                activeProtocolOrder.Clear();
+                activeProtocolOrder = null;
+            }
+
+            preparedClusterSession = null;
             InvalidateDropSpotCache();
         }
 
