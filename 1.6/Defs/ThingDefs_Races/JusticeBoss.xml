@@ -38,15 +38,12 @@
         </li>
       </lifeStageAges>
       <baseHealthScale>2.5</baseHealthScale>
-      
-      <killedLeavingsPlayerHostile Inherit="False">
-        <li>
-          <thingDef>MAP_QuantumComputingChip</thingDef>
-          <count>1</count>
-        </li>
-      </killedLeavingsPlayerHostile>
-
     </race>
+          
+  <killedLeavingsPlayerHostile Inherit="False">
+    <MAP_QuantumComputingChip>1</MAP_QuantumComputingChip>
+  </killedLeavingsPlayerHostile>
+
   </ThingDef>
 
   <PawnKindDef ParentName="MechCentipedeBase">
