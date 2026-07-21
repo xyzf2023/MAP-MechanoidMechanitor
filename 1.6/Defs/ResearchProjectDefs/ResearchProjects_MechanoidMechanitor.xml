@@ -22,8 +22,25 @@
     <baseCost>1000</baseCost>
     <techLevel>Industrial</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_QuantumMechtech</li>
+    </prerequisites>
     <researchViewX>1.00</researchViewX>
     <researchViewY>1.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_QuantumVacuumExtraction</defName>
+    <label>量子真空汲取</label>
+    <description>利用量子运算预测并稳定转瞬即逝的虚空泡，从量子真空的涨落中持续提取可用能量，再经由机械师的监管链路将其输送至受监管机械族。研究完成后可制造虚空引擎。</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_QuantumMechtech</li>
+    </prerequisites>
+    <researchViewX>1.00</researchViewX>
+    <researchViewY>2.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -37,18 +54,21 @@
       <li>MAP_QuantumMechtech</li>
     </prerequisites>
     <researchViewX>1.00</researchViewX>
-    <researchViewY>2.00</researchViewY>
+    <researchViewY>3.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
-    <defName>MAP_QuantumVacuumExtraction</defName>
-    <label>量子真空汲取</label>
-    <description>利用量子运算预测并稳定转瞬即逝的虚空泡，从量子真空的涨落中持续提取可用能量，再经由机械师的监管链路将其输送至受监管机械族。研究完成后可制造虚空引擎。</description>
+    <defName>MAP_QuantumTaskComputation</defName>
+    <label>量子作业演算</label>
+    <description>利用量子运算同时处理大量作业变量，为机械族计算更高效、更精确的执行方案。研究完成后可制造效能核心。</description>
     <baseCost>1000</baseCost>
     <techLevel>Industrial</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_QuantumMechtech</li>
+    </prerequisites>
     <researchViewX>1.00</researchViewX>
-    <researchViewY>3.00</researchViewY>
+    <researchViewY>4.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -75,67 +95,10 @@
     <techLevel>Industrial</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
-      <li>MAP_AutonomousDirectiveOptimization</li>
+      <li>MAP_AutonomousDirectiveCore</li>
     </prerequisites>
-    <researchViewX>3.00</researchViewX>
-    <researchViewY>2.00</researchViewY>
-  </ResearchProjectDef>
-
-  <ResearchProjectDef>
-    <defName>MAP_MechanitorPrinciples</defName>
-    <label>机控原理研究</label>
-    <description>系统解析机控中枢、机械意识与机械体控制网络之间的运行关系，从而掌握人工制造机控中枢的方法。</description>
-    <baseCost>1000</baseCost>
-    <techLevel>Industrial</techLevel>
-    <tab>MAP_MechanoidMechanitorResearch</tab>
-    <prerequisites>
-      <li>UltraMechtech</li>
-    </prerequisites>
-    <researchViewX>3.00</researchViewX>
-    <researchViewY>0.50</researchViewY>
-  </ResearchProjectDef>
-
-  <ResearchProjectDef>
-    <defName>MAP_DataStreamReorganization</defName>
-    <label>数据流重整</label>
-    <description>重新规划机械族机械师内部的数据流向与处理次序，减少冗余运算和指令冲突，释放更多数据处理能力。\n\n研究此科技以提高“机械族机械师”健康状态所提供的数据处理能力。\n在“机械族机械师”剧本中，还将提高“机械意识”健康状态所提供的数据处理能力。</description>
-    <baseCost>1000</baseCost>
-    <techLevel>Industrial</techLevel>
-    <tab>MAP_MechanoidMechanitorResearch</tab>
-    <prerequisites>
-      <li>MAP_MechanicalConsciousnessTransfer</li>
-      <li>MAP_MechanitorPrinciples</li>
-    </prerequisites>
-    <researchViewX>4.00</researchViewX>
-    <researchViewY>2.00</researchViewY>
-  </ResearchProjectDef>
-
-  <ResearchProjectDef>
-    <defName>MAP_ParallelThoughtMatrix</defName>
-    <label>并行思维矩阵</label>
-    <description>将机械意识划分为多个可同时运行的思维进程，并以统一矩阵协调其运作，使机械族机械师能够同时处理更加复杂的意识活动与指令任务。\n\n研究此科技以进一步提高“机械族机械师”健康状态所提供的数据处理能力。若存在多个机械族机械师，该加成还会随其数量进一步提升。\n在“机械族机械师”剧本中，还将进一步提高“机械意识”健康状态所提供的数据处理能力。</description>
-    <baseCost>1000</baseCost>
-    <techLevel>Industrial</techLevel>
-    <tab>MAP_MechanoidMechanitorResearch</tab>
-    <prerequisites>
-      <li>MAP_DataStreamReorganization</li>
-    </prerequisites>
-    <researchViewX>5.00</researchViewX>
-    <researchViewY>2.00</researchViewY>
-  </ResearchProjectDef>
-
-  <ResearchProjectDef>
-    <defName>MAP_ConsciousnessStructureCopy</defName>
-    <label>意识结构拷贝</label>
-    <description>通过对机械族意识载体的深入研究，我们掌握了将成品次生核心中的完整数据复制至空白次生核心的技术。</description>
-    <baseCost>1000</baseCost>
-    <techLevel>Industrial</techLevel>
-    <tab>MAP_MechanoidMechanitorResearch</tab>
-    <prerequisites>
-      <li>MAP_DataStreamReorganization</li>
-    </prerequisites>
-    <researchViewX>5.00</researchViewX>
-    <researchViewY>1.00</researchViewY>
+    <researchViewX>2.00</researchViewX>
+    <researchViewY>3.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -153,6 +116,35 @@
   </ResearchProjectDef>
 
   <ResearchProjectDef>
+    <defName>MAP_MechanitorPrinciples</defName>
+    <label>机控原理研究</label>
+    <description>系统解析机控中枢、机械意识与机械体控制网络之间的运行关系，从而掌握人工制造机控中枢的方法。</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>UltraMechtech</li>
+      <li>MAP_MechanicalConsciousnessTransfer</li>
+    </prerequisites>
+    <researchViewX>3.00</researchViewX>
+    <researchViewY>3.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_DataStreamReorganization</defName>
+    <label>数据流重整</label>
+    <description>重新规划机械族机械师内部的数据流向与处理次序，减少冗余运算和指令冲突，释放更多数据处理能力。\n\n研究此科技以提高“机械族机械师”健康状态所提供的数据处理能力。\n在“机械族机械师”剧本中，还将提高“机械意识”健康状态所提供的数据处理能力。</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_AutonomousDirectiveOptimization</li>
+    </prerequisites>
+    <researchViewX>3.00</researchViewX>
+    <researchViewY>2.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
     <defName>MAP_SelfDirectiveFocus</defName>
     <label>自我指令聚焦</label>
     <description>改进数据处理分配协议，使机械族机械师能够将分配出的处理能力重新聚焦于自身，通过更加精细的自我指令强化机体性能。\n\n研究完成后，机械族机械师可以将自身设为数据处理分配的目标。该分配仍会降低自身的数据处理能力，但损失仅为向下属机械体分配时的一半。</description>
@@ -167,6 +159,34 @@
   </ResearchProjectDef>
 
   <ResearchProjectDef>
+    <defName>MAP_ConsciousnessStructureCopy</defName>
+    <label>意识结构拷贝</label>
+    <description>通过对机械族意识载体的深入研究，我们掌握了将成品次生核心中的完整数据复制至空白次生核心的技术。</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_DataStreamReorganization</li>
+    </prerequisites>
+    <researchViewX>4.00</researchViewX>
+    <researchViewY>1.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_ParallelThoughtMatrix</defName>
+    <label>并行思维矩阵</label>
+    <description>将机械意识划分为多个可同时运行的思维进程，并以统一矩阵协调其运作，使机械族机械师能够同时处理更加复杂的意识活动与指令任务。\n\n研究此科技以进一步提高“机械族机械师”健康状态所提供的数据处理能力。若存在多个机械族机械师，该加成还会随其数量进一步提升。\n在“机械族机械师”剧本中，还将进一步提高“机械意识”健康状态所提供的数据处理能力。</description>
+    <baseCost>1000</baseCost>
+    <techLevel>Industrial</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_DataStreamReorganization</li>
+    </prerequisites>
+    <researchViewX>4.00</researchViewX>
+    <researchViewY>2.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
     <defName>MAP_MechanicalCommandProxy</defName>
     <label>机械指挥代理</label>
     <description>开发能够独立维持机控连接、处理基础决策并转发指令的机械指挥代理，使部分机械师职能能够由专用机械体承担。\n\n研究此科技以解锁机械族「隐者」的培育方式。「隐者」能够独立带领远行队，并胜任科研工作。</description>
@@ -174,7 +194,7 @@
     <techLevel>Industrial</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <researchViewX>1.00</researchViewX>
-    <researchViewY>5.00</researchViewY>
+    <researchViewY>5.50</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -185,7 +205,7 @@
     <techLevel>Industrial</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <researchViewX>2.00</researchViewX>
-    <researchViewY>5.00</researchViewY>
+    <researchViewY>5.50</researchViewY>
   </ResearchProjectDef>
 
 </Defs>
