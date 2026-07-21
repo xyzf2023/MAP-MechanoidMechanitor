@@ -18,9 +18,11 @@ namespace MAP_MechanoidMechanitor
             IntVec3 anchorCell,
             int justiceEventId,
             out List<Thing> deployedInfrastructure,
+            out List<PawnKindDef> failedGuardKinds,
             out Lord? guardLord)
         {
             deployedInfrastructure = new List<Thing>();
+            failedGuardKinds = new List<PawnKindDef>();
             guardLord = null;
             Map? map = justice?.Map;
             Faction? faction = justice?.Faction;
@@ -96,13 +98,15 @@ namespace MAP_MechanoidMechanitor
             }
             else
             {
-                JusticeBossSpawnUtility.LaunchGuardDropPodsNear(
-                    map,
-                    faction,
-                    anchorCell,
-                    justiceEventId,
-                    5,
-                    out guardLord);
+                JusticeBossDropLaunchResult guardResult =
+                    JusticeBossSpawnUtility.LaunchGuardDropPodsNear(
+                        map,
+                        faction,
+                        anchorCell,
+                        justiceEventId,
+                        5,
+                        out guardLord);
+                failedGuardKinds.AddRange(guardResult.FailedKinds);
             }
         }
 
