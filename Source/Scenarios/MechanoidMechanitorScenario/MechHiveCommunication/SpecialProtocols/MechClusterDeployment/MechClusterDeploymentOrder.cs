@@ -80,6 +80,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
             revision++;
         }
 
+        /// <summary>
+        /// 特殊协议卡片通用展开/折叠：再次点击当前协议则折叠并重置请求。
+        /// </summary>
+        public void ToggleSelection()
+        {
+            if (selected)
+            {
+                Clear();
+                return;
+            }
+
+            Select();
+        }
+
         public void SetThreatPoints(int points)
         {
             int clamped = ClampThreatPoints(points);
@@ -139,6 +153,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
             selected = false;
             conditionCauser = null;
             threatPoints = DefaultThreatPoints;
+            revision++;
+        }
+
+        public void SanitizeConditionCauser()
+        {
+            if (conditionCauser == null
+                || MechClusterDeploymentService.IsConditionCauser(conditionCauser, threatPoints))
+            {
+                return;
+            }
+
+            conditionCauser = null;
             revision++;
         }
 

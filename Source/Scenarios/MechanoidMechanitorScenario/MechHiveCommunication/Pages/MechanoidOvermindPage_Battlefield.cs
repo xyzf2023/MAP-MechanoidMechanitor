@@ -7,10 +7,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed class MechanoidOvermindPage_Battlefield
     {
-        public void Draw(
-            Rect inRect,
-            MechClusterDeploymentOrder order,
-            Map? preferredMap)
+        public void Draw(Rect inRect, MechClusterDeploymentOrder order)
         {
             using (MechanoidOvermindUiStyle.Push())
             {
@@ -29,9 +26,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Description"
                         .Translate());
 
-                if (!MechClusterDeploymentService.TryResolveAvailableMap(
-                        preferredMap,
-                        out Map? map)
+                if (!MechClusterDeploymentService.TryResolveAvailableMap(out Map? map)
                     || map == null)
                 {
                     MechanoidOvermindUiStyle.DrawPanel(
@@ -58,13 +53,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 if (!order.Selected)
                 {
-                    MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                        new Rect(inner.x, cardRect.yMax + 14f, inner.width, 36f),
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.SelectHint"
-                            .Translate(),
-                        TextAnchor.UpperLeft);
                     return;
                 }
+
+                order.SanitizeConditionCauser();
 
                 Rect configRect = new Rect(
                     inner.x,
@@ -127,7 +119,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (Widgets.ButtonInvisible(rect))
             {
-                order.Select();
+                order.ToggleSelection();
             }
         }
 
@@ -147,15 +139,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.AccentBright);
 
-            float columnW = Mathf.Max(100f, (inner.width - 12f) * 0.5f);
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(inner.x + columnW + 12f, inner.y + 28f, columnW, 20f),
+                new Rect(inner.x, inner.y + 28f, inner.width, 20f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Map"
                     .Translate(map.Parent.LabelCap));
-            MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(inner.x, inner.y + 28f, columnW, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Behavior"
-                    .Translate());
 
             Rect threatSelectorRect = new Rect(
                 inner.x,

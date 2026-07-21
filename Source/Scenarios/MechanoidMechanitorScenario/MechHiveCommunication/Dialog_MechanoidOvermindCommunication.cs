@@ -825,6 +825,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             DrawCoreDisplay(subCore);
 
             bool showOrder = ShowsOrderPanel(currentPage);
+            if (currentPage == MechanoidOvermindPageKind.BattlefieldSupport)
+            {
+                showOrder = activeProtocolOrder != null && activeProtocolOrder.Selected;
+            }
+
             float dialogueH;
             float preferredDialogueH = GetPreferredDialogueSubHeight();
             if (showOrder)
@@ -925,10 +930,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (activeProtocolOrder != null)
                     {
                         int previousRevision = activeProtocolOrder.Revision;
-                        battlefieldPage.Draw(
-                            contentRect,
-                            activeProtocolOrder,
-                            preferredDeliveryMap);
+                        battlefieldPage.Draw(contentRect, activeProtocolOrder);
                         if (activeProtocolOrder.Revision != previousRevision)
                         {
                             preparedClusterSession = null;
@@ -1715,9 +1717,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int totalCost = order.Cost;
             int credits = GameComponent_MechanoidMechanitorStoryState
                 .GetPurgeDirectiveRewardPoints();
-            bool available = MechClusterDeploymentService.TryResolveAvailableMap(
-                preferredDeliveryMap,
-                out _);
+            bool available = MechClusterDeploymentService.TryResolveAvailableMap(out _);
             bool validCondition = order.ConditionCauser == null
                 || MechClusterDeploymentService.IsConditionCauser(
                     order.ConditionCauser,
@@ -1814,7 +1814,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (!MechClusterDeploymentService.TryPrepare(
                         order,
-                        preferredDeliveryMap,
                         out MechClusterDeploymentSession? prepared,
                         out string errorKey)
                     || prepared == null)
@@ -1837,6 +1836,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 CameraJumper.MovementMode.Pan);
 
             bool actionAttempted = false;
+            bool closeWithoutReopen = false;
             suspendingForMapTargeting = true;
             Close(doCloseSound: false);
 
@@ -1849,10 +1849,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         MechClusterDeploymentService.TryDeploy(session, target.Cell);
                     if (result.Success)
                     {
+                        closeWithoutReopen = true;
                         order.Clear();
                         preparedClusterSession = null;
-                        statusKey =
-                            "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Accepted";
                         SoundDefOf.Click.PlayOneShotOnCamera();
                     }
                     else
@@ -1878,6 +1877,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 actionWhenFinished: () =>
                 {
                     suspendingForMapTargeting = false;
+                    if (closeWithoutReopen)
+                    {
+                        DiscardActiveOrder();
+                        return;
+                    }
+
                     if (!actionAttempted)
                     {
                         statusKey =
@@ -1894,6 +1899,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 playSoundOnAction: true,
                 onGuiAction: target =>
                 {
+                    MechClusterDeploymentService.TryHandlePlacementRotation(session);
+
                     AcceptanceReport report = target.IsValid
                         ? MechClusterDeploymentService.ValidatePlacement(
                             session,
