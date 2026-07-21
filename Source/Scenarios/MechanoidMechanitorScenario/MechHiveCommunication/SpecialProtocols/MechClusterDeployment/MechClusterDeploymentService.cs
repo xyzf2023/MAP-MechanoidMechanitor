@@ -5,6 +5,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.AI.Group;
+using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -22,6 +23,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public readonly int OrderRevision;
 
+        private Rot4 placementRotation = Rot4.North;
+
+        public Rot4 PlacementRotation => placementRotation;
+
         public MechClusterDeploymentSession(
             Map map,
             MechClusterSketch sketch,
@@ -36,6 +41,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ThreatPoints = threatPoints;
             Cost = cost;
             OrderRevision = orderRevision;
+            placementRotation = Rot4.North;
+        }
+
+        public void Rotate(RotationDirection direction)
+        {
+            if (direction == RotationDirection.None
+                || Sketch?.buildingsSketch == null
+                || Sketch.pawns == null)
+            {
+                return;
+            }
+
+            Rot4 next = placementRotation.Rotated(direction);
+            RotationDirection relative = Rot4.GetRelativeRotation(placementRotation, next);
+            // 复用原版 Sketch.Rotate，含非正方形/偶尺寸偏移修正。
+            Sketch.buildingsSketch.Rotate(next);
+
+            List<MechClusterSketch.Mech> pawns = Sketch.pawns;
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                MechClusterSketch.Mech mech = pawns[i];
+                mech.position = mech.position.RotatedBy(relative);
+                pawns[i] = mech;
+            }
+
+            placementRotation = next;
         }
     }
 
@@ -94,6 +125,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const string ProblemCauserTag = "MechClusterProblemCauser";
 
+        // 原版机械集群自动迫击炮；仅从玩家可选状态建筑中排除。
+        private const string ExcludedAutoMortarDefName = "Turret_AutoMortar";
+
         private const float InitiationChance = 0.6f;
 
         private static readonly FloatRange InitiationDelay = new FloatRange(0.1f, 15f);
@@ -103,7 +137,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static readonly List<IntVec3> PlacementEdgeCells = new List<IntVec3>();
 
-        public static bool TryResolveAvailableMap(Map? preferredMap, out Map? map)
+        public static Map? ResolveFirstPlayerHomeColonyMap()
+        {
+            List<Map> maps = Find.Maps;
+            if (maps == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < maps.Count; i++)
+            {
+                Map candidate = maps[i];
+                if (candidate != null && !candidate.Disposed && candidate.IsPlayerHome)
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        public static bool IsDeploymentTargetMapValid(Map? map)
+        {
+            return map != null && !map.Disposed && map.IsPlayerHome;
+        }
+
+        public static bool TryResolveAvailableMap(out Map? map)
         {
             map = null;
             if (!ModsConfig.RoyaltyActive
@@ -113,7 +172,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            map = MechanoidOvermindDeliveryService.ResolvePlayerDeliveryMap(preferredMap);
+            map = ResolveFirstPlayerHomeColonyMap();
             return map != null;
         }
 
@@ -141,7 +200,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || def.category != ThingCategory.Building
                 || def.thingClass == null
                 || !typeof(Building).IsAssignableFrom(def.thingClass)
-                || def.building.minMechClusterPoints > threatPoints)
+                || def.building.minMechClusterPoints > threatPoints
+                || IsExcludedConditionCauser(def))
             {
                 return false;
             }
@@ -152,7 +212,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool TryPrepare(
             MechClusterDeploymentOrder? order,
-            Map? preferredMap,
             out MechClusterDeploymentSession? session,
             out string errorKey)
         {
@@ -163,7 +222,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (!TryResolveAvailableMap(preferredMap, out Map? map) || map == null)
+            if (!TryResolveAvailableMap(out Map? map) || map == null)
             {
                 errorKey = ErrorUnavailable;
                 return false;
@@ -236,8 +295,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && session.ThreatPoints == order.ThreatPoints
                 && session.Cost == order.Cost
                 && session.ConditionCauser == order.ConditionCauser
-                && session.Map != null
-                && !session.Map.Disposed;
+                && IsDeploymentTargetMapValid(session.Map);
+        }
+
+        public static bool TryHandlePlacementRotation(MechClusterDeploymentSession session)
+        {
+            RotationDirection direction = RotationDirection.None;
+            if (KeyBindingDefOf.Designator_RotateRight.KeyDownEvent)
+            {
+                direction = RotationDirection.Clockwise;
+            }
+            else if (KeyBindingDefOf.Designator_RotateLeft.KeyDownEvent)
+            {
+                direction = RotationDirection.Counterclockwise;
+            }
+
+            if (direction == RotationDirection.None)
+            {
+                return false;
+            }
+
+            session.Rotate(direction);
+            SoundDefOf.DragSlider.PlayOneShotOnCamera();
+            Event.current.Use();
+            return true;
         }
 
         public static AcceptanceReport ValidatePlacement(
@@ -246,9 +327,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (session == null
                 || !center.IsValid
-                || session.Map == null
-                || session.Map.Disposed
-                || !MechanoidOvermindDeliveryService.IsPlayerOwnedMap(session.Map))
+                || !IsDeploymentTargetMapValid(session.Map))
             {
                 return ErrorUnavailable.Translate();
             }
@@ -325,14 +404,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             IntVec3 center)
         {
             if (session == null
-                || !TryResolveAvailableMap(session.Map, out Map? map)
-                || map != session.Map
+                || !IsDeploymentTargetMapValid(session.Map)
                 || (session.ConditionCauser != null
                     && !IsConditionCauser(session.ConditionCauser, session.ThreatPoints)))
             {
                 return MechClusterDeploymentResult.Failed(ErrorUnavailable);
             }
 
+            Map map = session.Map;
             AcceptanceReport placement = ValidatePlacement(session, center);
             if (!placement.Accepted)
             {
@@ -364,7 +443,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             try
             {
                 // 扣款后进入生成；异常记为已提交失败，避免部分生成后白嫖。
-                spawned = SpawnRequestedCluster(center, map!, session);
+                spawned = SpawnRequestedCluster(center, map, session);
             }
             catch (Exception ex)
             {
@@ -611,13 +690,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
+        private static bool IsExcludedConditionCauser(ThingDef def)
+        {
+            return def.defName == ExcludedAutoMortarDefName;
+        }
+
         private static void RemoveGeneratedProblemCausers(Sketch sketch)
         {
             List<SketchThing> things = sketch.Things;
             for (int i = things.Count - 1; i >= 0; i--)
             {
                 SketchThing thing = things[i];
-                if (IsConditionCauser(thing.def, MechClusterDeploymentOrder.MaxThreatPoints))
+                // 清理草图内随机生成的状态建筑；排除规则仅作用于玩家可选列表。
+                if (thing.def?.building?.buildingTags != null
+                    && thing.def.building.buildingTags.Contains(MemberTag)
+                    && thing.def.building.buildingTags.Contains(ProblemCauserTag))
                 {
                     sketch.Remove(thing);
                 }

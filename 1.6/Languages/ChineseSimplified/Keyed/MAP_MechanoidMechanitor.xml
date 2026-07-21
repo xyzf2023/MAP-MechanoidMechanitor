@@ -188,21 +188,19 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Description>当前通讯链路允许调用的特殊执行序列。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Description>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Empty>当前没有满足执行条件的特殊协议。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Empty>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title>集群部署</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>请求机械巢向指定位置投送一座可配置规模的机械集群。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>请求机械巢向殖民地投送一座机械集群。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>目标地图：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.SelectHint>选择协议后，可配置集群点数，并可选附加一座地图状态设施。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.SelectHint>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Configuration>部署参数</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Configuration>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat>集群点数：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>{0} 点（基础 {1} 额度）</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>{0} 点（ {1} 额度）</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Map>部署地图：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Map>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Behavior>行为协议：沿用原版机械集群休眠与防守逻辑</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Behavior>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ConditionCauser>状态设施：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ConditionCauser>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.NoConditionCauser>不部署状态设施</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.NoConditionCauser>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Cost>所需肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Cost>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote>状态设施会动态读取当前点数允许的原版及模组候选；内部参数仍由原版逻辑随机初始化，落地后立即生效。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote>状态设施会在集群部署后立即生效。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderMeta>集群点数 {0}　状态设施 {1}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderMeta>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderCost>肃清额度 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderCost>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.TargetingHint>左键确认部署中心；右键取消</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.TargetingHint>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.TargetingHint>左键确认部署位置；Q/E旋转；右键取消</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.TargetingHint>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.LetterLabel>机械集群</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.LetterLabel>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.LetterText>一个来自机械巢的机械集群已部署至殖民地附近。\n\n它们将协助你抵御外敌。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.LetterText>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Unavailable>当前部署条件不满足</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Unavailable>
