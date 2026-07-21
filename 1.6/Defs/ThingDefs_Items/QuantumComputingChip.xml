@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <ThingDef ParentName="MechResourceBase">
+    <defName>MAP_QuantumComputingChip</defName>
+    <label>量子运算芯片</label>
+    <description>一些用于生产某些先进装备和机械族的微型高性能处理机械部件。\n\n机械师可通过分析这种芯片以解锁更高级别的机械科技研究项目。</description>
+    <graphicData>
+      <texPath>Things/QuantumComputingChip</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+    <statBases>
+      <MarketValue>2000</MarketValue>
+    </statBases>
+    <comps>
+      <li Class="CompProperties_CompAnalyzableUnlockResearch">
+        <analysisID>571936284</analysisID>
+        <requiresMechanitor>true</requiresMechanitor>
+        <analysisDurationHours>0.5</analysisDurationHours>
+        <destroyedOnAnalyzed>false</destroyedOnAnalyzed>
+        <completedLetterLabel>已分析量子运算芯片：已解锁{RESEARCH}</completedLetterLabel>
+        <completedLetter>通过分析量子运算芯片，{PAWN_labelShort}获得了开展{RESEARCH}所需的关键数据。\n\n研究人员现在可以在研究台开始研究相关技术。</completedLetter>
+        <completedLetterDef>PositiveEvent</completedLetterDef>
+        <activateTexPath>UI/Icons/Study</activateTexPath>
+        <activateLabelString>分析……</activateLabelString>
+        <activateDescString>分析量子运算芯片，以获取量子机械科技所需的数据。</activateDescString>
+        <jobString>正在分析量子运算芯片</jobString>
+        <guiLabelString>选择执行分析的机械师</guiLabelString>
+        <inspectString>可由机械师进行分析。</inspectString>
+        <targetingParameters>
+          <canTargetBuildings>false</canTargetBuildings>
+          <canTargetAnimals>false</canTargetAnimals>
+          <canTargetMechs>false</canTargetMechs>
+          <onlyTargetControlledPawns>true</onlyTargetControlledPawns>
+        </targetingParameters>
+      </li>
+    </comps>
+  </ThingDef>
+
+</Defs>
