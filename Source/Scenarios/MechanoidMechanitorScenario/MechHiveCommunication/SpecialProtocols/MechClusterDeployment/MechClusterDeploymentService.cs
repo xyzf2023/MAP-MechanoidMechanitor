@@ -53,7 +53,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Rot4 next = placementRotation.Rotated(direction);
+            ApplyAbsoluteRotation(placementRotation.Rotated(direction));
+        }
+
+        public void ResetPlacementRotationToNorth()
+        {
+            ApplyAbsoluteRotation(Rot4.North);
+        }
+
+        private void ApplyAbsoluteRotation(Rot4 next)
+        {
+            if (Sketch?.buildingsSketch == null || Sketch.pawns == null)
+            {
+                return;
+            }
+
+            if (placementRotation == next)
+            {
+                return;
+            }
+
             RotationDirection relative = Rot4.GetRelativeRotation(placementRotation, next);
             // 复用原版 Sketch.Rotate，含非正方形/偶尺寸偏移修正。
             Sketch.buildingsSketch.Rotate(next);
@@ -217,7 +236,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             session = null;
             errorKey = ErrorInvalidRequest;
-            if (order == null || !order.Selected)
+            if (order == null)
             {
                 return false;
             }
@@ -286,7 +305,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechClusterDeploymentSession? session,
             MechClusterDeploymentOrder order)
         {
-            if (session == null || order == null || !order.Selected)
+            if (session == null || order == null)
             {
                 return false;
             }

@@ -827,7 +827,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool showOrder = ShowsOrderPanel(currentPage);
             if (currentPage == MechanoidOvermindPageKind.BattlefieldSupport)
             {
-                showOrder = activeProtocolOrder != null && activeProtocolOrder.Selected;
+                showOrder = activeProtocolOrder != null
+                    && battlefieldPage.ExpandedProtocol
+                        == SpecialProtocolKind.MechClusterDeployment;
             }
 
             float dialogueH;
@@ -929,9 +931,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case MechanoidOvermindPageKind.BattlefieldSupport:
                     if (activeProtocolOrder != null)
                     {
+                        SpecialProtocolKind previousExpanded =
+                            battlefieldPage.ExpandedProtocol;
                         int previousRevision = activeProtocolOrder.Revision;
                         battlefieldPage.Draw(contentRect, activeProtocolOrder);
-                        if (activeProtocolOrder.Revision != previousRevision)
+                        if (battlefieldPage.ExpandedProtocol != previousExpanded
+                            || activeProtocolOrder.Revision != previousRevision)
                         {
                             preparedClusterSession = null;
                         }
@@ -1674,7 +1679,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechClusterDeploymentOrder order)
         {
             MechanoidOvermindUiStyle.DrawPanel(rect, alt: true, cornerMarks: false);
-            if (!order.Selected || rect.height <= 2f)
+            if (rect.height <= 2f)
             {
                 return;
             }
@@ -1722,8 +1727,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || MechClusterDeploymentService.IsConditionCauser(
                     order.ConditionCauser,
                     order.ThreatPoints);
-            bool canConfirm = order.Selected
-                && available
+            bool canConfirm = available
                 && validCondition
                 && credits >= totalCost
                 && !transitioning;
@@ -1765,7 +1769,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     TextAnchor.MiddleLeft,
                     MechanoidOvermindUiStyle.Error);
             }
-            else if (order.Selected && credits < totalCost)
+            else if (credits < totalCost)
             {
                 MechanoidOvermindUiStyle.DrawLabel(
                     statusRect,
@@ -1782,7 +1786,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     new Rect(buttonsX, buttonsY, buttonWidth, buttonHeight),
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear".Translate()))
             {
-                order.Clear();
+                battlefieldPage.CollapseExpandedProtocol(order);
                 preparedClusterSession = null;
                 statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
             }
@@ -1827,6 +1831,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             MechClusterDeploymentSession session = preparedClusterSession!;
+            // 每次重新进入选点前恢复默认朝向，保留同一份草图内容。
+            session.ResetPlacementRotationToNorth();
             statusKey =
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Status.SelectingClusterLocation";
 
@@ -2060,6 +2066,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (transitionTargetPage == MechanoidOvermindPageKind.BattlefieldSupport)
             {
                 DiscardActiveOrder();
+                battlefieldPage.ResetExpansionState();
                 activeProtocolOrder = new MechClusterDeploymentOrder();
             }
             else if (ShowsOrderPanel(transitionTargetPage))
@@ -2091,6 +2098,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 activeProtocolOrder = null;
             }
 
+            battlefieldPage.ResetExpansionState();
             preparedClusterSession = null;
             InvalidateDropSpotCache();
         }

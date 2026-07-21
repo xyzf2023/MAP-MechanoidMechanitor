@@ -16,15 +16,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public const int ConditionCauserSurcharge = 375;
 
-        private bool selected;
-
         private ThingDef? conditionCauser;
 
         private int threatPoints = DefaultThreatPoints;
 
         private int revision;
-
-        public bool Selected => selected;
 
         public ThingDef? ConditionCauser => conditionCauser;
 
@@ -32,9 +28,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public int Revision => revision;
 
-        public int Cost => !selected
-            ? 0
-            : ComputeCost(threatPoints, conditionCauser != null);
+        public int Cost => ComputeCost(threatPoints, conditionCauser != null);
 
         public static int ComputeCost(int points, bool withConditionCauser)
         {
@@ -69,38 +63,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return steps * ThreatPointsStep;
         }
 
-        public void Select()
-        {
-            if (selected)
-            {
-                return;
-            }
-
-            selected = true;
-            revision++;
-        }
-
-        /// <summary>
-        /// 特殊协议卡片通用展开/折叠：再次点击当前协议则折叠并重置请求。
-        /// </summary>
-        public void ToggleSelection()
-        {
-            if (selected)
-            {
-                Clear();
-                return;
-            }
-
-            Select();
-        }
-
         public void SetThreatPoints(int points)
         {
             int clamped = ClampThreatPoints(points);
-            if (!selected)
-            {
-                selected = true;
-            }
 
             ThingDef? previousCauser = conditionCauser;
             if (threatPoints == clamped)
@@ -121,11 +86,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public void SetConditionCauser(ThingDef? def)
         {
-            if (!selected)
-            {
-                selected = true;
-            }
-
             if (def != null
                 && !MechClusterDeploymentService.IsConditionCauser(def, threatPoints))
             {
@@ -143,14 +103,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public void Clear()
         {
-            if (!selected
-                && conditionCauser == null
-                && threatPoints == DefaultThreatPoints)
+            if (conditionCauser == null && threatPoints == DefaultThreatPoints)
             {
                 return;
             }
 
-            selected = false;
             conditionCauser = null;
             threatPoints = DefaultThreatPoints;
             revision++;
