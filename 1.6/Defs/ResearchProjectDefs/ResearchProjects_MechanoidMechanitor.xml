@@ -22,6 +22,9 @@
     <baseCost>1000</baseCost>
     <techLevel>Industrial</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_QuantumMechtech</li>
+    </prerequisites>
     <researchViewX>1.00</researchViewX>
     <researchViewY>2.00</researchViewY>
   </ResearchProjectDef>
