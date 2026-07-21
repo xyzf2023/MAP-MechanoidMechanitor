@@ -3,7 +3,7 @@
   <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_ProductivityCore</defName>
     <label>效能核心</label>
-    <description>一种用于提升机械族工作效率的超凡机械师植入体。每个植入等级为该机械师监管的机械族提供+1制作物品品质偏移，并按照MOD设置提供工作速度偏移。最多可植入5个。</description>
+    <description>一种搭载量子运算阵列的机械师植入体。它能为受监管机械族实时计算最优作业方案，大幅提高其工作速度与制作品质。最多可植入5个。</description>
     <costList>
       <PowerfocusChip>1</PowerfocusChip>
       <ComponentSpacer>5</ComponentSpacer>
@@ -16,6 +16,7 @@
       <WorkToMake>12000</WorkToMake>
     </statBases>
     <recipeMaker>
+      <researchPrerequisite>MAP_QuantumTaskComputation</researchPrerequisite>
       <skillRequirements Inherit="False">
         <Crafting>12</Crafting>
       </skillRequirements>
