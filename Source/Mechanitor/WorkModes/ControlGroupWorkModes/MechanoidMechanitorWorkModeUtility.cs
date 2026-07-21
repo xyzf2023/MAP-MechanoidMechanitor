@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using RimWorld;
 using Verse;
 
@@ -6,7 +7,13 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MechanoidMechanitorWorkModeUtility
     {
-        private static readonly HashSet<int> mobileCombatPawnIds = new HashSet<int>();
+        private sealed class MobileCombatMarker
+        {
+        }
+
+        private static readonly ConditionalWeakTable<Pawn, MobileCombatMarker> mobileCombatPawns =
+            new ConditionalWeakTable<Pawn, MobileCombatMarker>();
+
         private static readonly HashSet<string> mechanoidMechanitorWorkModeDefNames = new HashSet<string>
         {
             "MAP_WorkMode_EfficientExecution",
@@ -63,30 +70,16 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            int id = pawn.thingIDNumber;
-            if (id <= 0)
-            {
-                return;
-            }
-
+            mobileCombatPawns.Remove(pawn);
             if (active)
             {
-                mobileCombatPawnIds.Add(id);
-            }
-            else
-            {
-                mobileCombatPawnIds.Remove(id);
+                mobileCombatPawns.Add(pawn, new MobileCombatMarker());
             }
         }
 
         public static bool HasMobileCombatFlag(Pawn pawn)
         {
-            if (pawn == null)
-            {
-                return false;
-            }
-
-            return mobileCombatPawnIds.Contains(pawn.thingIDNumber);
+            return pawn != null && mobileCombatPawns.TryGetValue(pawn, out _);
         }
 
         public static bool IsMobileCombat(Pawn pawn)
