@@ -192,7 +192,7 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>目标地图：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Configuration>部署参数</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Configuration>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat>集群点数：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>{0} 点（ {1} 额度）</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>{0} 点（{1} 额度）</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Map>部署地图：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Map>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ConditionCauser>状态设施：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ConditionCauser>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.NoConditionCauser>不部署状态设施</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.NoConditionCauser>

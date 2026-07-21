@@ -5,8 +5,37 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
+    /// <summary>
+    /// 特殊协议页面级展开标识；以后新增协议时在此扩展即可。
+    /// </summary>
+    public enum SpecialProtocolKind
+    {
+        None = 0,
+        MechClusterDeployment = 1,
+    }
+
     public sealed class MechanoidOvermindPage_Battlefield
     {
+        private SpecialProtocolKind expandedProtocol = SpecialProtocolKind.None;
+
+        public SpecialProtocolKind ExpandedProtocol => expandedProtocol;
+
+        public void ResetExpansionState()
+        {
+            expandedProtocol = SpecialProtocolKind.None;
+        }
+
+        public void CollapseExpandedProtocol(MechClusterDeploymentOrder order)
+        {
+            if (expandedProtocol == SpecialProtocolKind.None)
+            {
+                return;
+            }
+
+            expandedProtocol = SpecialProtocolKind.None;
+            order.Clear();
+        }
+
         public void Draw(Rect inRect, MechClusterDeploymentOrder order)
         {
             using (MechanoidOvermindUiStyle.Push())
@@ -49,9 +78,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     inner.y + 58f,
                     inner.width,
                     Mathf.Min(118f, Mathf.Max(88f, inner.height * 0.22f)));
-                DrawClusterCard(cardRect, order, map);
+                bool clusterExpanded =
+                    expandedProtocol == SpecialProtocolKind.MechClusterDeployment;
+                DrawClusterCard(cardRect, order, map, clusterExpanded);
 
-                if (!order.Selected)
+                if (!clusterExpanded)
                 {
                     return;
                 }
@@ -67,20 +98,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static void DrawClusterCard(
+        private void DrawClusterCard(
             Rect rect,
             MechClusterDeploymentOrder order,
-            Map map)
+            Map map,
+            bool expanded)
         {
             Widgets.DrawBoxSolid(
                 rect,
-                order.Selected
+                expanded
                     ? MechanoidOvermindUiStyle.NavSelectedFill
                     : MechanoidOvermindUiStyle.PanelAlt);
             MechanoidOvermindUiStyle.DrawBorder(rect);
             Widgets.DrawBoxSolid(
                 new Rect(rect.x, rect.y + 4f, 4f, rect.height - 8f),
-                order.Selected
+                expanded
                     ? MechanoidOvermindUiStyle.AccentBright
                     : MechanoidOvermindUiStyle.Accent);
 
@@ -90,7 +122,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     .Translate(),
                 GameFont.Medium,
                 TextAnchor.MiddleLeft,
-                order.Selected
+                expanded
                     ? MechanoidOvermindUiStyle.AccentBright
                     : MechanoidOvermindUiStyle.TextPrimary);
             MechanoidOvermindUiStyle.DrawLabel(
@@ -119,8 +151,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (Widgets.ButtonInvisible(rect))
             {
-                order.ToggleSelection();
+                ToggleProtocol(SpecialProtocolKind.MechClusterDeployment, order);
             }
+        }
+
+        private void ToggleProtocol(
+            SpecialProtocolKind kind,
+            MechClusterDeploymentOrder order)
+        {
+            if (expandedProtocol == kind)
+            {
+                expandedProtocol = SpecialProtocolKind.None;
+                order.Clear();
+                return;
+            }
+
+            if (expandedProtocol != SpecialProtocolKind.None)
+            {
+                // 切换协议时先清理当前协议临时状态；目前仅有集群部署。
+                order.Clear();
+            }
+
+            expandedProtocol = kind;
         }
 
         private static void DrawClusterConfiguration(
