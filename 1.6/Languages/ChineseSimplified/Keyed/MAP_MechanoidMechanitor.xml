@@ -171,6 +171,8 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput>等待输入</MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Status.Validating>正在校验调拨内容</MAP_MechanoidMechanitor.MechHiveCommunication.Status.Validating>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Status.SelectingClusterLocation>请选择机械集群部署中心</MAP_MechanoidMechanitor.MechHiveCommunication.Status.SelectingClusterLocation>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.SelectingForceSupportMap>请选择部队支援目标地图</MAP_MechanoidMechanitor.MechHiveCommunication.Status.SelectingForceSupportMap>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Status.SelectingForceSupportLocation>请选择部队支援部署位置</MAP_MechanoidMechanitor.MechHiveCommunication.Status.SelectingForceSupportLocation>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Status.CheckingPermission>正在确认节点权限</MAP_MechanoidMechanitor.MechHiveCommunication.Status.CheckingPermission>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Status.CreditsSpent>肃清额度已扣除</MAP_MechanoidMechanitor.MechHiveCommunication.Status.CreditsSpent>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Status.DropStarted>投送序列已启动</MAP_MechanoidMechanitor.MechHiveCommunication.Status.DropStarted>
@@ -187,6 +189,7 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Body>特殊协议</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Body>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Description>当前通讯链路允许调用的特殊执行序列。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Description>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Empty>当前没有满足执行条件的特殊协议。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Empty>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ProtocolUnavailable>当前不可用</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ProtocolUnavailable>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title>集群部署</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>请求机械巢向殖民地投送一座机械集群。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>目标地图：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>
@@ -214,6 +217,27 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.OutOfBounds>集群占地范围超出地图边界</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.OutOfBounds>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked>地面承载条件不足或不适合机械族降落</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Roofed>集群无法部署在有屋顶的位置</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Roofed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Title>部队支援</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Title>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Description>请求机械巢向指定地图部署一支机械族部队。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Description>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.CardMeta>目标：任意已加载地图</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.CardMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Configuration>支援参数</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Configuration>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Points>点数：</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Points>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Cost>所需肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Cost>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Footnote>每点消耗0.05肃清额度，费用向上取整。确认后选择一个已加载地图及部署位置。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Footnote>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderMeta>点数 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderCost>肃清额度 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderCost>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.LargeRequestWarning>过大的点数会生成大量单位，有可能导致游戏卡顿。\n\n确定执行？</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.LargeRequestWarning>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.WorldTargetValid>选择已加载地图：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.WorldTargetValid>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.WorldTargetInvalid>只能选择地图已加载的地块</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.WorldTargetInvalid>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.TargetingHint>左键确认部署位置；右键取消</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.TargetingHint>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.LetterLabel>机械族支援</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.LetterLabel>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.LetterText>一支来自机械族的部队已部署至指定位置。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.LetterText>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.Unavailable>当前部队支援条件不满足</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.Unavailable>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.InvalidRequest>部队支援请求或位置已失效</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.InvalidRequest>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.GenerationFailed>无法按指定点数生成机械族部队</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.GenerationFailed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.InsufficientCredits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.ChargeFailed>额度扣除失败，未执行部署</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.ChargeFailed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.CommittedFailure>部署流程发生异常，额度已提交</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.CommittedFailure>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>正在建立低优先级通讯通道……</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Todo>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Todo>
   <MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>当前普通派系关系设置下，已不存在获取信任的空间。</MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>

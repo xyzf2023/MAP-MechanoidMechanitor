@@ -12,6 +12,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         None = 0,
         MechClusterDeployment = 1,
+        MechForceSupport = 2,
     }
 
     public sealed class MechanoidOvermindPage_Battlefield
@@ -25,18 +26,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             expandedProtocol = SpecialProtocolKind.None;
         }
 
-        public void CollapseExpandedProtocol(MechClusterDeploymentOrder order)
+        public void CollapseExpandedProtocol(
+            MechClusterDeploymentOrder? clusterOrder,
+            MechForceSupportOrder? forceSupportOrder)
         {
             if (expandedProtocol == SpecialProtocolKind.None)
             {
                 return;
             }
 
+            ClearProtocolOrder(expandedProtocol, clusterOrder, forceSupportOrder);
             expandedProtocol = SpecialProtocolKind.None;
-            order.Clear();
         }
 
-        public void Draw(Rect inRect, MechClusterDeploymentOrder order)
+        public void Draw(
+            Rect inRect,
+            MechClusterDeploymentOrder clusterOrder,
+            MechForceSupportOrder forceSupportOrder)
         {
             using (MechanoidOvermindUiStyle.Push())
             {
@@ -55,55 +61,127 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Description"
                         .Translate());
 
-                if (!MechClusterDeploymentService.TryResolveAvailableMap(out Map? map)
-                    || map == null)
+                bool clusterAvailable =
+                    MechClusterDeploymentService.TryResolveAvailableMap(out Map? clusterMap)
+                    && clusterMap != null;
+                bool forceSupportAvailable = MechForceSupportService.HasAvailableMap();
+
+                if (expandedProtocol == SpecialProtocolKind.MechClusterDeployment
+                    && !clusterAvailable)
                 {
-                    MechanoidOvermindUiStyle.DrawPanel(
-                        new Rect(inner.x, inner.y + 60f, inner.width, 72f),
-                        alt: true,
-                        cornerMarks: false);
-                    MechanoidOvermindUiStyle.DrawLabel(
-                        new Rect(inner.x + 12f, inner.y + 68f, inner.width - 24f, 56f),
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Empty"
-                            .Translate(),
-                        GameFont.Small,
-                        TextAnchor.MiddleLeft,
-                        MechanoidOvermindUiStyle.TextSecondary,
-                        wordWrap: true);
+                    ClearProtocolOrder(
+                        expandedProtocol,
+                        clusterOrder,
+                        forceSupportOrder);
+                    expandedProtocol = SpecialProtocolKind.None;
+                }
+                else if (expandedProtocol == SpecialProtocolKind.MechForceSupport
+                    && !forceSupportAvailable)
+                {
+                    ClearProtocolOrder(
+                        expandedProtocol,
+                        clusterOrder,
+                        forceSupportOrder);
+                    expandedProtocol = SpecialProtocolKind.None;
+                }
+
+                if (!clusterAvailable && !forceSupportAvailable)
+                {
+                    DrawEmptyState(inner);
                     return;
                 }
 
-                Rect cardRect = new Rect(
+                float cardsHeight = Mathf.Min(
+                    202f,
+                    Mathf.Max(190f, inner.height * 0.38f));
+                float cardHeight = (cardsHeight - 8f) * 0.5f;
+                Rect clusterCardRect = new Rect(
                     inner.x,
                     inner.y + 58f,
                     inner.width,
-                    Mathf.Min(118f, Mathf.Max(88f, inner.height * 0.22f)));
-                bool clusterExpanded =
-                    expandedProtocol == SpecialProtocolKind.MechClusterDeployment;
-                DrawClusterCard(cardRect, order, map, clusterExpanded);
+                    cardHeight);
+                Rect forceSupportCardRect = new Rect(
+                    inner.x,
+                    clusterCardRect.yMax + 8f,
+                    inner.width,
+                    cardHeight);
 
-                if (!clusterExpanded)
+                string clusterMeta = clusterMap != null
+                    ? "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta"
+                        .Translate(clusterMap.Parent.LabelCap)
+                    : "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ProtocolUnavailable"
+                        .Translate();
+                DrawProtocolCard(
+                    clusterCardRect,
+                    SpecialProtocolKind.MechClusterDeployment,
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title",
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description",
+                    clusterMeta,
+                    clusterAvailable,
+                    clusterOrder,
+                    forceSupportOrder);
+
+                DrawProtocolCard(
+                    forceSupportCardRect,
+                    SpecialProtocolKind.MechForceSupport,
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Title",
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Description",
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.CardMeta"
+                        .Translate(),
+                    forceSupportAvailable,
+                    clusterOrder,
+                    forceSupportOrder);
+
+                if (expandedProtocol == SpecialProtocolKind.None)
                 {
                     return;
                 }
 
-                order.SanitizeConditionCauser();
-
                 Rect configRect = new Rect(
                     inner.x,
-                    cardRect.yMax + 12f,
+                    forceSupportCardRect.yMax + 12f,
                     inner.width,
-                    Mathf.Max(120f, inner.yMax - cardRect.yMax - 12f));
-                DrawClusterConfiguration(configRect, order, map);
+                    Mathf.Max(96f, inner.yMax - forceSupportCardRect.yMax - 12f));
+                if (expandedProtocol == SpecialProtocolKind.MechClusterDeployment
+                    && clusterMap != null)
+                {
+                    clusterOrder.SanitizeConditionCauser();
+                    DrawClusterConfiguration(configRect, clusterOrder, clusterMap);
+                }
+                else if (expandedProtocol == SpecialProtocolKind.MechForceSupport)
+                {
+                    DrawForceSupportConfiguration(configRect, forceSupportOrder);
+                }
             }
         }
 
-        private void DrawClusterCard(
-            Rect rect,
-            MechClusterDeploymentOrder order,
-            Map map,
-            bool expanded)
+        private static void DrawEmptyState(Rect inner)
         {
+            MechanoidOvermindUiStyle.DrawPanel(
+                new Rect(inner.x, inner.y + 60f, inner.width, 72f),
+                alt: true,
+                cornerMarks: false);
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x + 12f, inner.y + 68f, inner.width - 24f, 56f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Empty"
+                    .Translate(),
+                GameFont.Small,
+                TextAnchor.MiddleLeft,
+                MechanoidOvermindUiStyle.TextSecondary,
+                wordWrap: true);
+        }
+
+        private void DrawProtocolCard(
+            Rect rect,
+            SpecialProtocolKind kind,
+            string titleKey,
+            string descriptionKey,
+            string meta,
+            bool enabled,
+            MechClusterDeploymentOrder clusterOrder,
+            MechForceSupportOrder forceSupportOrder)
+        {
+            bool expanded = expandedProtocol == kind;
             Widgets.DrawBoxSolid(
                 rect,
                 expanded
@@ -116,29 +194,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     ? MechanoidOvermindUiStyle.AccentBright
                     : MechanoidOvermindUiStyle.Accent);
 
-            MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x + 14f, rect.y + 10f, rect.width - 28f, 24f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title"
-                    .Translate(),
-                GameFont.Medium,
-                TextAnchor.MiddleLeft,
-                expanded
+            Color titleColor = !enabled
+                ? MechanoidOvermindUiStyle.TextSecondary
+                : expanded
                     ? MechanoidOvermindUiStyle.AccentBright
-                    : MechanoidOvermindUiStyle.TextPrimary);
+                    : MechanoidOvermindUiStyle.TextPrimary;
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x + 14f, rect.y + 38f, rect.width - 28f, 38f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description"
-                    .Translate(),
+                new Rect(rect.x + 14f, rect.y + 7f, rect.width - 28f, 22f),
+                titleKey.Translate(),
                 GameFont.Small,
+                TextAnchor.MiddleLeft,
+                titleColor);
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(rect.x + 14f, rect.y + 30f, rect.width - 28f, 32f),
+                descriptionKey.Translate(),
+                GameFont.Tiny,
                 TextAnchor.UpperLeft,
                 MechanoidOvermindUiStyle.TextSecondary,
                 wordWrap: true);
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(rect.x + 14f, rect.yMax - 27f, rect.width - 28f, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta"
-                    .Translate(map.Parent.LabelCap));
+                new Rect(rect.x + 14f, rect.yMax - 23f, rect.width - 28f, 18f),
+                meta);
 
-            if (Mouse.IsOver(rect))
+            if (enabled && Mouse.IsOver(rect))
             {
                 Widgets.DrawBoxSolid(
                     rect,
@@ -149,30 +227,41 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         0.06f));
             }
 
-            if (Widgets.ButtonInvisible(rect))
+            if (enabled && Widgets.ButtonInvisible(rect))
             {
-                ToggleProtocol(SpecialProtocolKind.MechClusterDeployment, order);
+                ToggleProtocol(kind, clusterOrder, forceSupportOrder);
             }
         }
 
         private void ToggleProtocol(
             SpecialProtocolKind kind,
-            MechClusterDeploymentOrder order)
+            MechClusterDeploymentOrder clusterOrder,
+            MechForceSupportOrder forceSupportOrder)
         {
             if (expandedProtocol == kind)
             {
+                ClearProtocolOrder(kind, clusterOrder, forceSupportOrder);
                 expandedProtocol = SpecialProtocolKind.None;
-                order.Clear();
                 return;
             }
 
-            if (expandedProtocol != SpecialProtocolKind.None)
-            {
-                // 切换协议时先清理当前协议临时状态；目前仅有集群部署。
-                order.Clear();
-            }
-
+            ClearProtocolOrder(expandedProtocol, clusterOrder, forceSupportOrder);
             expandedProtocol = kind;
+        }
+
+        private static void ClearProtocolOrder(
+            SpecialProtocolKind kind,
+            MechClusterDeploymentOrder? clusterOrder,
+            MechForceSupportOrder? forceSupportOrder)
+        {
+            if (kind == SpecialProtocolKind.MechClusterDeployment)
+            {
+                clusterOrder?.Clear();
+            }
+            else if (kind == SpecialProtocolKind.MechForceSupport)
+            {
+                forceSupportOrder?.Clear();
+            }
         }
 
         private static void DrawClusterConfiguration(
@@ -244,6 +333,64 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     inner.width,
                     Mathf.Max(20f, inner.yMax - selectorRect.yMax - 8f)),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote"
+                    .Translate(),
+                TextAnchor.UpperLeft);
+        }
+
+        private static void DrawForceSupportConfiguration(
+            Rect rect,
+            MechForceSupportOrder order)
+        {
+            MechanoidOvermindUiStyle.DrawPanel(rect, alt: true, cornerMarks: false);
+            Rect inner = rect.ContractedBy(12f);
+
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, inner.y, inner.width, 22f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Configuration"
+                    .Translate(),
+                GameFont.Small,
+                TextAnchor.MiddleLeft,
+                MechanoidOvermindUiStyle.AccentBright);
+
+            Rect pointsLabelRect = new Rect(
+                inner.x,
+                inner.y + 34f,
+                78f,
+                30f);
+            MechanoidOvermindUiStyle.DrawLabel(
+                pointsLabelRect,
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Points"
+                    .Translate(),
+                GameFont.Small,
+                TextAnchor.MiddleLeft,
+                MechanoidOvermindUiStyle.TextPrimary);
+
+            Rect pointsFieldRect = new Rect(
+                pointsLabelRect.xMax + 8f,
+                pointsLabelRect.y,
+                Mathf.Min(240f, Mathf.Max(80f, inner.width * 0.34f)),
+                pointsLabelRect.height);
+            order.DrawThreatPointsField(pointsFieldRect);
+
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(
+                    pointsFieldRect.xMax + 12f,
+                    pointsFieldRect.y,
+                    Mathf.Max(0f, inner.xMax - pointsFieldRect.xMax - 12f),
+                    pointsFieldRect.height),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Cost"
+                    .Translate(order.Cost),
+                GameFont.Small,
+                TextAnchor.MiddleRight,
+                MechanoidOvermindUiStyle.AccentBright);
+
+            MechanoidOvermindUiStyle.DrawSecondaryLabel(
+                new Rect(
+                    inner.x,
+                    pointsFieldRect.yMax + 10f,
+                    inner.width,
+                    Mathf.Max(20f, inner.yMax - pointsFieldRect.yMax - 10f)),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Footnote"
                     .Translate(),
                 TextAnchor.UpperLeft);
         }
