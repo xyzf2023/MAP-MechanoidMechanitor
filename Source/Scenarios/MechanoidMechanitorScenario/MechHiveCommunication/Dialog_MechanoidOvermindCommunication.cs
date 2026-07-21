@@ -1690,7 +1690,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(rect.x + 8f, rect.y + 25f, rect.width - 16f, 20f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderMeta"
-                    .Translate(conditionLabel));
+                    .Translate(order.ThreatPoints, conditionLabel));
+            MechanoidOvermindUiStyle.DrawSecondaryLabel(
+                new Rect(rect.x + 8f, rect.y + 46f, rect.width - 16f, 20f),
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderCost"
+                    .Translate(order.Cost));
         }
 
         private void DrawSpecialProtocolOrderFooter(
@@ -1716,7 +1720,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 out _);
             bool validCondition = order.ConditionCauser == null
                 || MechClusterDeploymentService.IsConditionCauser(
-                    order.ConditionCauser);
+                    order.ConditionCauser,
+                    order.ThreatPoints);
             bool canConfirm = order.Selected
                 && available
                 && validCondition
@@ -1803,9 +1808,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             statusKey =
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Validating";
 
-            if (preparedClusterSession == null
-                || preparedClusterSession.OrderRevision != order.Revision
-                || preparedClusterSession.Map.Disposed)
+            if (!MechClusterDeploymentService.IsSessionValidForOrder(
+                    preparedClusterSession,
+                    order))
             {
                 if (!MechClusterDeploymentService.TryPrepare(
                         order,
@@ -1814,6 +1819,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         out string errorKey)
                     || prepared == null)
                 {
+                    preparedClusterSession = null;
                     statusKey = errorKey;
                     return;
                 }
@@ -1821,7 +1827,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 preparedClusterSession = prepared;
             }
 
-            MechClusterDeploymentSession session = preparedClusterSession;
+            MechClusterDeploymentSession session = preparedClusterSession!;
             statusKey =
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Status.SelectingClusterLocation";
 
@@ -1859,7 +1865,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     if (target.IsValid)
                     {
-                        MechClusterDeploymentService.DrawPlacementGhost(
+                        MechClusterDeploymentService.DrawPlacementBounds(
                             session,
                             target.Cell);
                     }

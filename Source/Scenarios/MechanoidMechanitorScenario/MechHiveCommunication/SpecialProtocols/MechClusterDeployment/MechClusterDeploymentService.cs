@@ -4,6 +4,7 @@ using System.Linq;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.AI.Group;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -15,6 +16,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public readonly ThingDef? ConditionCauser;
 
+        public readonly int ThreatPoints;
+
         public readonly int Cost;
 
         public readonly int OrderRevision;
@@ -23,12 +26,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map,
             MechClusterSketch sketch,
             ThingDef? conditionCauser,
+            int threatPoints,
             int cost,
             int orderRevision)
         {
             Map = map;
             Sketch = sketch;
             ConditionCauser = conditionCauser;
+            ThreatPoints = threatPoints;
             Cost = cost;
             OrderRevision = orderRevision;
         }
@@ -61,7 +66,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
     public static class MechClusterDeploymentService
     {
-        public const float ThreatPoints = 10000f;
+        public const int DefaultThreatPoints =
+            MechClusterDeploymentOrder.DefaultThreatPoints;
 
         public const string ErrorUnavailable =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Unavailable";
@@ -88,6 +94,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const string ProblemCauserTag = "MechClusterProblemCauser";
 
+        private const float InitiationChance = 0.6f;
+
+        private static readonly FloatRange InitiationDelay = new FloatRange(0.1f, 15f);
+
+        private static readonly FloatRange MechAssemblerInitialDelayDays =
+            new FloatRange(0.5f, 1.5f);
+
+        private static readonly List<IntVec3> PlacementEdgeCells = new List<IntVec3>();
+
         public static bool TryResolveAvailableMap(Map? preferredMap, out Map? map)
         {
             map = null;
@@ -102,14 +117,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return map != null;
         }
 
-        public static List<ThingDef> GetConditionCausers()
+        public static List<ThingDef> GetConditionCausers(int threatPoints)
         {
             List<ThingDef> result = new List<ThingDef>();
             List<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading;
             for (int i = 0; i < defs.Count; i++)
             {
                 ThingDef def = defs[i];
-                if (IsConditionCauser(def))
+                if (IsConditionCauser(def, threatPoints))
                 {
                     result.Add(def);
                 }
@@ -120,13 +135,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return result;
         }
 
-        public static bool IsConditionCauser(ThingDef? def)
+        public static bool IsConditionCauser(ThingDef? def, int threatPoints)
         {
             if (def?.building?.buildingTags == null
                 || def.category != ThingCategory.Building
                 || def.thingClass == null
                 || !typeof(Building).IsAssignableFrom(def.thingClass)
-                || def.building.minMechClusterPoints > ThreatPoints)
+                || def.building.minMechClusterPoints > threatPoints)
             {
                 return false;
             }
@@ -154,9 +169,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            int threatPoints = MechClusterDeploymentOrder.ClampThreatPoints(order.ThreatPoints);
             ThingDef? selectedConditionCauser = order.ConditionCauser;
             if (selectedConditionCauser != null
-                && !IsConditionCauser(selectedConditionCauser))
+                && !IsConditionCauser(selectedConditionCauser, threatPoints))
+            {
+                return false;
+            }
+
+            int expectedCost = MechClusterDeploymentOrder.ComputeCost(
+                threatPoints,
+                selectedConditionCauser != null);
+            if (order.Cost != expectedCost)
             {
                 return false;
             }
@@ -164,7 +188,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             try
             {
                 MechClusterSketch sketch = MechClusterGenerator.GenerateClusterSketch(
-                    ThreatPoints,
+                    threatPoints,
                     map,
                     startDormant: true,
                     forceNoConditionCauser: true);
@@ -186,7 +210,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     map,
                     sketch,
                     selectedConditionCauser,
-                    order.Cost,
+                    threatPoints,
+                    expectedCost,
                     order.Revision);
                 return true;
             }
@@ -196,6 +221,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 errorKey = ErrorGenerationFailed;
                 return false;
             }
+        }
+
+        public static bool IsSessionValidForOrder(
+            MechClusterDeploymentSession? session,
+            MechClusterDeploymentOrder order)
+        {
+            if (session == null || order == null || !order.Selected)
+            {
+                return false;
+            }
+
+            return session.OrderRevision == order.Revision
+                && session.ThreatPoints == order.ThreatPoints
+                && session.Cost == order.Cost
+                && session.ConditionCauser == order.ConditionCauser
+                && session.Map != null
+                && !session.Map.Disposed;
         }
 
         public static AcceptanceReport ValidatePlacement(
@@ -225,18 +267,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     .Translate();
             }
 
-            if (buildings.IsSpawningBlocked(map, center, Faction.OfMechanoids))
-            {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked"
-                    .Translate();
-            }
-
             List<SketchEntity> entities = buildings.Entities;
             for (int i = 0; i < entities.Count; i++)
             {
-                foreach (IntVec3 cell in entities[i].OccupiedRect.MovedBy(center))
+                SketchEntity entity = entities[i];
+                IntVec3 at = entity.pos + center;
+                if (entity is SketchBuildable buildable)
                 {
-                    AcceptanceReport report = ValidateDropCell(map, cell, requireStandable: false);
+                    if (!buildable.CanBuildOnTerrain(at, map)
+                        || buildable.FirstPermanentBlockerAt(at, map) != null)
+                    {
+                        return "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked"
+                            .Translate();
+                    }
+                }
+
+                foreach (IntVec3 cell in entity.OccupiedRect.MovedBy(center))
+                {
+                    AcceptanceReport report = ValidateOccupiedCell(map, cell);
                     if (!report.Accepted)
                     {
                         return report;
@@ -247,10 +295,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<MechClusterSketch.Mech> pawns = session.Sketch.pawns;
             for (int i = 0; i < pawns.Count; i++)
             {
-                AcceptanceReport report = ValidateDropCell(
+                AcceptanceReport report = ValidateMechDropCell(
                     map,
-                    pawns[i].position + center,
-                    requireStandable: true);
+                    pawns[i].position + center);
                 if (!report.Accepted)
                 {
                     return report;
@@ -260,17 +307,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return AcceptanceReport.WasAccepted;
         }
 
-        public static void DrawPlacementGhost(
+        public static void DrawPlacementBounds(
             MechClusterDeploymentSession session,
             IntVec3 center)
         {
             AcceptanceReport report = ValidatePlacement(session, center);
-            session.Sketch.buildingsSketch.DrawGhost(
-                center,
-                Sketch.SpawnPosType.Unchanged,
-                placingMode: true,
-                thingToIgnore: null,
-                validator: (_, __, ___, ____) => report.Accepted);
+            CellRect bounds = GetPlacementBounds(session, center);
+            PlacementEdgeCells.Clear();
+            PlacementEdgeCells.AddRange(bounds.Cells);
+            GenDraw.DrawFieldEdges(
+                PlacementEdgeCells,
+                report.Accepted ? Color.green : Color.red);
         }
 
         public static MechClusterDeploymentResult TryDeploy(
@@ -281,13 +328,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || !TryResolveAvailableMap(session.Map, out Map? map)
                 || map != session.Map
                 || (session.ConditionCauser != null
-                    && !IsConditionCauser(session.ConditionCauser)))
+                    && !IsConditionCauser(session.ConditionCauser, session.ThreatPoints)))
             {
                 return MechClusterDeploymentResult.Failed(ErrorUnavailable);
             }
 
             AcceptanceReport placement = ValidatePlacement(session, center);
             if (!placement.Accepted)
+            {
+                return MechClusterDeploymentResult.Failed(ErrorInvalidRequest);
+            }
+
+            int expectedCost = MechClusterDeploymentOrder.ComputeCost(
+                session.ThreatPoints,
+                session.ConditionCauser != null);
+            if (session.Cost != expectedCost)
             {
                 return MechClusterDeploymentResult.Failed(ErrorInvalidRequest);
             }
@@ -308,14 +363,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Thing> spawned;
             try
             {
-                // 从进入原版生成流程起视为已提交；异常时不退款，避免部分生成后免费保留。
-                spawned = MechClusterUtility.SpawnCluster(
-                    center,
-                    map!,
-                    session.Sketch,
-                    dropInPods: true,
-                    canAssaultColony: false,
-                    questTag: null);
+                // 扣款后进入生成；异常记为已提交失败，避免部分生成后白嫖。
+                spawned = SpawnRequestedCluster(center, map!, session);
             }
             catch (Exception ex)
             {
@@ -335,13 +384,240 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return MechClusterDeploymentResult.Succeeded;
         }
 
+        private static CellRect GetPlacementBounds(
+            MechClusterDeploymentSession session,
+            IntVec3 center)
+        {
+            CellRect bounds = session.Sketch.buildingsSketch.OccupiedRect.MovedBy(center);
+            List<MechClusterSketch.Mech> pawns = session.Sketch.pawns;
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                bounds = bounds.Encapsulate(pawns[i].position + center);
+            }
+
+            return bounds;
+        }
+
+        private static List<Thing> SpawnRequestedCluster(
+            IntVec3 center,
+            Map map,
+            MechClusterDeploymentSession session)
+        {
+            List<Thing> spawnedThings = new List<Thing>();
+            MechClusterSketch sketch = session.Sketch;
+            if (Faction.OfMechanoids == null)
+            {
+                Log.Warning("[MAP] Could not spawn mech cluster, no world mech faction found.");
+                return spawnedThings;
+            }
+
+            // 与原版 MechClusterUtility.SpawnCluster 一致：仅在正式提交后清理蓝图。
+            foreach (IntVec3 item in sketch.buildingsSketch.OccupiedRect)
+            {
+                IntVec3 c = item + center;
+                if (!c.InBounds(map))
+                {
+                    continue;
+                }
+
+                List<Thing> thingList = c.GetThingList(map);
+                Thing? blueprint = null;
+                for (int i = 0; i < thingList.Count; i++)
+                {
+                    if (thingList[i].def.IsBlueprint)
+                    {
+                        blueprint = thingList[i];
+                        break;
+                    }
+                }
+
+                blueprint?.Destroy();
+            }
+
+            // wipeIfCollides:true → SketchThing.TransportPod 使用 WipeMode.VanishOrMoveAside。
+            Sketch.SpawnMode spawnMode = Sketch.SpawnMode.TransportPod;
+            sketch.buildingsSketch.Spawn(
+                map,
+                center,
+                Faction.OfMechanoids,
+                Sketch.SpawnPosType.Unchanged,
+                spawnMode,
+                wipeIfCollides: true,
+                forceTerrainAffordance: false,
+                clearEdificeWhereFloor: false,
+                spawnedThings,
+                sketch.startDormant,
+                buildRoofsInstantly: false,
+                canSpawnThing: null,
+                onFailedToSpawnThing: (IntVec3 spot, SketchEntity entity) =>
+                {
+                    if (entity is SketchThing sketchThing
+                        && sketchThing.def != ThingDefOf.Wall
+                        && sketchThing.def != ThingDefOf.Barricade)
+                    {
+                        entity.SpawnNear(
+                            spot,
+                            map,
+                            12f,
+                            Faction.OfMechanoids,
+                            spawnMode,
+                            wipeIfCollides: true,
+                            forceTerrainAffordance: false,
+                            spawnedThings,
+                            sketch.startDormant);
+                    }
+                });
+
+            float defendRadius = Mathf.Sqrt(
+                    sketch.buildingsSketch.OccupiedSize.x
+                        * sketch.buildingsSketch.OccupiedSize.x
+                        + sketch.buildingsSketch.OccupiedSize.z
+                            * sketch.buildingsSketch.OccupiedSize.z)
+                / 2f
+                + 6f;
+            LordJob_MechanoidDefendBase lordJob = sketch.startDormant
+                ? new LordJob_SleepThenMechanoidsDefend(
+                    spawnedThings,
+                    Faction.OfMechanoids,
+                    defendRadius,
+                    center,
+                    canAssaultColony: false,
+                    isMechCluster: true)
+                : new LordJob_MechanoidsDefend(
+                    spawnedThings,
+                    Faction.OfMechanoids,
+                    defendRadius,
+                    center,
+                    canAssaultColony: false,
+                    isMechCluster: true);
+            Lord lord = LordMaker.MakeNewLord(Faction.OfMechanoids, lordJob, map);
+
+            bool applyRandomInitiation = Rand.Chance(InitiationChance);
+            float randomInitiationDays = InitiationDelay.RandomInRange;
+            int assemblerDelay = (int)(MechAssemblerInitialDelayDays.RandomInRange * 60000f);
+            ThingDef? requestedConditionCauser = session.ConditionCauser;
+
+            for (int i = 0; i < spawnedThings.Count; i++)
+            {
+                Thing thing = spawnedThings[i];
+                thing.TryGetComp<CompSpawnerPawn>()?.CalculateNextPawnSpawnTick(assemblerDelay);
+                if (thing.TryGetComp<CompProjectileInterceptor>() != null)
+                {
+                    lordJob.AddThingToNotifyOnDefeat(thing);
+                }
+
+                CompInitiatable? initiatable = thing.TryGetComp<CompInitiatable>();
+                if (initiatable != null)
+                {
+                    if (requestedConditionCauser != null
+                        && thing.def == requestedConditionCauser)
+                    {
+                        // 落地后 1 tick 即视为初始化完成；不套用原版 0.1–15 天随机延迟。
+                        initiatable.initiationDelayTicksOverride = 1;
+                    }
+                    else if (applyRandomInitiation)
+                    {
+                        initiatable.initiationDelayTicksOverride =
+                            (int)(60000f * randomInitiationDays);
+                    }
+                }
+
+                if (thing is Building building && IsBuildingThreat(building))
+                {
+                    lord.AddBuilding(building);
+                }
+
+                thing.SetFaction(Faction.OfMechanoids);
+            }
+
+            if (!sketch.pawns.NullOrEmpty())
+            {
+                for (int i = 0; i < sketch.pawns.Count; i++)
+                {
+                    MechClusterSketch.Mech pawnSketch = sketch.pawns[i];
+                    IntVec3 result = pawnSketch.position + center;
+                    if (!result.Standable(map)
+                        && !CellFinder.TryFindRandomCellNear(
+                            result,
+                            map,
+                            12,
+                            x => x.Standable(map),
+                            out result))
+                    {
+                        continue;
+                    }
+
+                    Pawn pawn = PawnGenerator.GeneratePawn(
+                        pawnSketch.kindDef,
+                        Faction.OfMechanoids);
+                    CompCanBeDormant? dormant = pawn.TryGetComp<CompCanBeDormant>();
+                    if (dormant != null)
+                    {
+                        if (sketch.startDormant)
+                        {
+                            dormant.ToSleep();
+                        }
+                        else
+                        {
+                            dormant.WakeUp();
+                        }
+                    }
+
+                    lord.AddPawn(pawn);
+                    spawnedThings.Add(pawn);
+
+                    ActiveTransporterInfo info = new ActiveTransporterInfo();
+                    info.innerContainer.TryAdd(pawn, 1);
+                    info.openDelay = 60;
+                    info.leaveSlag = false;
+                    info.despawnPodBeforeSpawningThing = true;
+                    info.spawnWipeMode = WipeMode.Vanish;
+                    DropPodUtility.MakeDropPodAt(result, map, info, Faction.OfMechanoids);
+                }
+            }
+
+            if (!sketch.startDormant)
+            {
+                for (int i = 0; i < spawnedThings.Count; i++)
+                {
+                    spawnedThings[i]
+                        .TryGetComp<CompWakeUpDormant>()
+                        ?.Activate(null, sendSignal: true, silent: true);
+                }
+            }
+
+            return spawnedThings;
+        }
+
+        private static bool IsBuildingThreat(Thing b)
+        {
+            CompPawnSpawnOnWakeup? spawnOnWakeup = b.TryGetComp<CompPawnSpawnOnWakeup>();
+            if (spawnOnWakeup != null && spawnOnWakeup.CanSpawn)
+            {
+                return true;
+            }
+
+            CompSpawnerPawn? spawnerPawn = b.TryGetComp<CompSpawnerPawn>();
+            if (spawnerPawn != null && spawnerPawn.pawnsLeftToSpawn != 0)
+            {
+                return true;
+            }
+
+            if (!b.def.building.IsTurret)
+            {
+                return b.TryGetComp<CompCauseGameCondition>() != null;
+            }
+
+            return true;
+        }
+
         private static void RemoveGeneratedProblemCausers(Sketch sketch)
         {
             List<SketchThing> things = sketch.Things;
             for (int i = things.Count - 1; i >= 0; i--)
             {
                 SketchThing thing = things[i];
-                if (IsConditionCauser(thing.def))
+                if (IsConditionCauser(thing.def, MechClusterDeploymentOrder.MaxThreatPoints))
                 {
                     sketch.Remove(thing);
                 }
@@ -419,10 +695,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return dx * dx + dz * dz;
         }
 
-        private static AcceptanceReport ValidateDropCell(
-            Map map,
-            IntVec3 cell,
-            bool requireStandable)
+        private static AcceptanceReport ValidateOccupiedCell(Map map, IntVec3 cell)
         {
             if (!cell.InBounds(map))
             {
@@ -430,31 +703,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     .Translate();
             }
 
-            RoofDef roof = map.roofGrid.RoofAt(cell);
-            if (roof != null && roof.isThickRoof)
+            if (cell.Roofed(map))
             {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.ThickRoof"
+                return "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Roofed"
                     .Translate();
             }
 
-            if (requireStandable && !cell.Standable(map))
+            return AcceptanceReport.WasAccepted;
+        }
+
+        private static AcceptanceReport ValidateMechDropCell(Map map, IntVec3 cell)
+        {
+            AcceptanceReport baseReport = ValidateOccupiedCell(map, cell);
+            if (!baseReport.Accepted)
+            {
+                return baseReport;
+            }
+
+            // 只校验基础地形可通行性；建筑/物品由落地时 WipeMode.Vanish 处理，预览不拒绝。
+            TerrainDef terrain = cell.GetTerrain(map);
+            if (terrain == null || terrain.passability == Traversability.Impassable)
             {
                 return "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked"
                     .Translate();
-            }
-
-            List<Thing> things = cell.GetThingList(map);
-            for (int i = 0; i < things.Count; i++)
-            {
-                Thing thing = things[i];
-                if (thing is Building
-                    || thing.def.IsBlueprint
-                    || thing.def.IsFrame
-                    || thing.def.preventSkyfallersLandingOn)
-                {
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked"
-                        .Translate();
-                }
             }
 
             return AcceptanceReport.WasAccepted;

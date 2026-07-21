@@ -53,7 +53,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     inner.x,
                     inner.y + 58f,
                     inner.width,
-                    Mathf.Min(118f, Mathf.Max(88f, inner.height * 0.24f)));
+                    Mathf.Min(118f, Mathf.Max(88f, inner.height * 0.22f)));
                 DrawClusterCard(cardRect, order, map);
 
                 if (!order.Selected)
@@ -70,7 +70,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     inner.x,
                     cardRect.yMax + 12f,
                     inner.width,
-                    Mathf.Max(100f, inner.yMax - cardRect.yMax - 12f));
+                    Mathf.Max(120f, inner.yMax - cardRect.yMax - 12f));
                 DrawClusterConfiguration(configRect, order, map);
             }
         }
@@ -149,24 +149,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             float columnW = Mathf.Max(100f, (inner.width - 12f) * 0.5f);
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(inner.x, inner.y + 28f, columnW, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat"
-                    .Translate(MechClusterDeploymentService.ThreatPoints.ToString("F0")));
-            MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(inner.x + columnW + 12f, inner.y + 28f, columnW, 20f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Map"
                     .Translate(map.Parent.LabelCap));
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(inner.x, inner.y + 50f, inner.width, 20f),
+                new Rect(inner.x, inner.y + 28f, columnW, 20f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Behavior"
                     .Translate());
+
+            Rect threatSelectorRect = new Rect(
+                inner.x,
+                inner.y + 54f,
+                Mathf.Min(430f, inner.width),
+                30f);
+            if (MechanoidOvermindUiStyle.DrawActionButton(
+                    threatSelectorRect,
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat"
+                        .Translate(order.ThreatPoints)))
+            {
+                OpenThreatPointsMenu(order);
+            }
 
             string conditionLabel = order.ConditionCauser?.LabelCap
                 ?? "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.NoConditionCauser"
                     .Translate();
             Rect selectorRect = new Rect(
                 inner.x,
-                inner.y + 78f,
+                threatSelectorRect.yMax + 8f,
                 Mathf.Min(430f, inner.width),
                 30f);
             if (MechanoidOvermindUiStyle.DrawActionButton(
@@ -178,7 +187,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(selectorRect.xMax + 12f, selectorRect.y, inner.xMax - selectorRect.xMax - 12f, 30f),
+                new Rect(
+                    selectorRect.xMax + 12f,
+                    threatSelectorRect.y,
+                    inner.xMax - selectorRect.xMax - 12f,
+                    threatSelectorRect.height + 8f + selectorRect.height),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Cost"
                     .Translate(order.Cost),
                 GameFont.Small,
@@ -186,10 +199,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindUiStyle.AccentBright);
 
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(inner.x, selectorRect.yMax + 8f, inner.width, Mathf.Max(20f, inner.yMax - selectorRect.yMax - 8f)),
+                new Rect(
+                    inner.x,
+                    selectorRect.yMax + 8f,
+                    inner.width,
+                    Mathf.Max(20f, inner.yMax - selectorRect.yMax - 8f)),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote"
                     .Translate(),
                 TextAnchor.UpperLeft);
+        }
+
+        private static void OpenThreatPointsMenu(MechClusterDeploymentOrder order)
+        {
+            List<FloatMenuOption> options = new List<FloatMenuOption>();
+            for (int points = MechClusterDeploymentOrder.MinThreatPoints;
+                points <= MechClusterDeploymentOrder.MaxThreatPoints;
+                points += MechClusterDeploymentOrder.ThreatPointsStep)
+            {
+                int captured = points;
+                string label = (order.ThreatPoints == captured ? "● " : string.Empty)
+                    + "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption"
+                        .Translate(
+                            captured,
+                            MechClusterDeploymentOrder.ComputeCost(captured, false));
+                options.Add(new FloatMenuOption(
+                    label,
+                    () => order.SetThreatPoints(captured)));
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options));
         }
 
         private static void OpenConditionCauserMenu(MechClusterDeploymentOrder order)
@@ -203,7 +241,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     () => order.SetConditionCauser(null))
             };
 
-            List<ThingDef> defs = MechClusterDeploymentService.GetConditionCausers();
+            List<ThingDef> defs = MechClusterDeploymentService.GetConditionCausers(
+                order.ThreatPoints);
             for (int i = 0; i < defs.Count; i++)
             {
                 ThingDef def = defs[i];
