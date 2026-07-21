@@ -6,6 +6,31 @@ using Verse.AI.Group;
 
 namespace MAP_MechanoidMechanitor
 {
+    public sealed class JusticeBossDropLaunchResult
+    {
+        public JusticeBossDropLaunchResult(int requestedPawnCount)
+        {
+            RequestedPawnCount = requestedPawnCount;
+        }
+
+        public int RequestedPawnCount { get; }
+
+        public int LaunchedPawnCount { get; internal set; }
+
+        public int BossReplacementCount { get; internal set; }
+
+        public bool FatalFailure { get; internal set; }
+
+        public List<PawnKindDef> FailedKinds { get; } = new List<PawnKindDef>();
+
+        public bool AnyPodLaunched => LaunchedPawnCount > 0;
+
+        public bool FullyLaunched =>
+            !FatalFailure
+            && FailedKinds.Count == 0
+            && LaunchedPawnCount == RequestedPawnCount;
+    }
+
     public static class JusticeBossSpawnUtility
     {
         public const float BossReplaceChance = 0.02f;
@@ -77,7 +102,7 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        public static int LaunchWaveDropPodsNear(
+        public static JusticeBossDropLaunchResult LaunchWaveDropPodsNear(
             Pawn justice,
             IntVec3 fallbackAnchor,
             int justiceEventId,
@@ -85,11 +110,17 @@ namespace MAP_MechanoidMechanitor
             out Lord? assaultLordCache)
         {
             assaultLordCache = null;
-            int bossReplacements = 0;
+            JusticeBossDropLaunchResult result =
+                new JusticeBossDropLaunchResult(kinds?.Count ?? 0);
             Map? map = justice?.Map ?? justice?.MapHeld;
             if (justice == null || map == null || kinds == null || kinds.Count == 0)
             {
-                return 0;
+                if (kinds != null)
+                {
+                    result.FailedKinds.AddRange(kinds);
+                }
+
+                return result;
             }
 
             Faction? faction = justice.Faction ?? Faction.OfMechanoids;
@@ -105,6 +136,7 @@ namespace MAP_MechanoidMechanitor
                 justiceEventId);
 
             List<Pawn> pawns = new List<Pawn>();
+            Dictionary<Pawn, PawnKindDef> pawnKinds = new Dictionary<Pawn, PawnKindDef>();
             HashSet<Pawn> bossPawns = new HashSet<Pawn>();
             for (int i = 0; i < kinds.Count; i++)
             {
@@ -115,6 +147,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 bool wantBoss = kind.isBoss && !JusticePawnUtility.IsBossJustice(kind);
+                PawnKindDef launchKind = kind;
                 Pawn? pawn = TryGeneratePawn(kind, faction);
                 if (pawn == null && wantBoss)
                 {
@@ -123,6 +156,7 @@ namespace MAP_MechanoidMechanitor
                             JusticeBossMechPoolUtility.BuildCombatPool());
                     if (fallback != null)
                     {
+                        launchKind = fallback;
                         pawn = TryGeneratePawn(fallback, faction);
                     }
                 }
@@ -131,30 +165,34 @@ namespace MAP_MechanoidMechanitor
                     bossPawns.Add(pawn);
                 }
 
-                if (pawn != null)
+                if (pawn == null)
                 {
-                    pawns.Add(pawn);
+                    result.FailedKinds.Add(launchKind);
+                    continue;
                 }
+
+                pawns.Add(pawn);
+                pawnKinds[pawn] = launchKind;
             }
 
-            if (!LaunchPawnDropPods(
-                    map,
-                    faction,
-                    center,
-                    fallbackAnchor,
-                    justiceEventId,
-                    JusticeBossDropRole.Assault,
-                    pawns,
-                    bossPawns,
-                    out bossReplacements))
-            {
-                return 0;
-            }
-
-            return bossReplacements;
+            JusticeBossDropLaunchResult launchResult = LaunchPawnDropPods(
+                map,
+                faction,
+                center,
+                fallbackAnchor,
+                justiceEventId,
+                JusticeBossDropRole.Assault,
+                pawns,
+                pawnKinds,
+                bossPawns);
+            result.LaunchedPawnCount = launchResult.LaunchedPawnCount;
+            result.BossReplacementCount = launchResult.BossReplacementCount;
+            result.FatalFailure = launchResult.FatalFailure;
+            result.FailedKinds.AddRange(launchResult.FailedKinds);
+            return result;
         }
 
-        public static bool LaunchGuardDropPodsNear(
+        public static JusticeBossDropLaunchResult LaunchGuardDropPodsNear(
             Map map,
             Faction faction,
             IntVec3 anchor,
@@ -162,11 +200,58 @@ namespace MAP_MechanoidMechanitor
             int count,
             out Lord? guardLord)
         {
-            guardLord = null;
             List<PawnGenOption> combat = JusticeBossMechPoolUtility.BuildCombatPool();
             if (combat.Count == 0 || map == null || faction == null)
             {
-                return false;
+                guardLord = null;
+                JusticeBossDropLaunchResult failed = new JusticeBossDropLaunchResult(count)
+                {
+                    FatalFailure = true,
+                };
+                Log.ErrorOnce(
+                    "[MAP JusticeBoss] Cannot build the guard mechanoid pool.",
+                    map?.uniqueID ^ 0x2C91 ?? 0x2C91);
+                return failed;
+            }
+
+            List<PawnKindDef> kinds = new List<PawnKindDef>(count);
+            for (int i = 0; i < count; i++)
+            {
+                PawnKindDef? kind = JusticeBossMechPoolUtility.PickWeighted(combat);
+                if (kind != null)
+                {
+                    kinds.Add(kind);
+                }
+            }
+
+            return LaunchGuardDropPodsNear(
+                map,
+                faction,
+                anchor,
+                justiceEventId,
+                kinds,
+                out guardLord);
+        }
+
+        public static JusticeBossDropLaunchResult LaunchGuardDropPodsNear(
+            Map map,
+            Faction faction,
+            IntVec3 anchor,
+            int justiceEventId,
+            List<PawnKindDef> kinds,
+            out Lord? guardLord)
+        {
+            guardLord = null;
+            JusticeBossDropLaunchResult result =
+                new JusticeBossDropLaunchResult(kinds?.Count ?? 0);
+            if (map == null || faction == null || kinds == null || kinds.Count == 0)
+            {
+                if (kinds != null)
+                {
+                    result.FailedKinds.AddRange(kinds);
+                }
+
+                return result;
             }
 
             guardLord = JusticeBossLordUtility.EnsureGuardLord(
@@ -176,22 +261,22 @@ namespace MAP_MechanoidMechanitor
                 anchor);
 
             List<Pawn> pawns = new List<Pawn>();
-            for (int i = 0; i < count; i++)
+            Dictionary<Pawn, PawnKindDef> pawnKinds = new Dictionary<Pawn, PawnKindDef>();
+            for (int i = 0; i < kinds.Count; i++)
             {
-                PawnKindDef? kind = JusticeBossMechPoolUtility.PickWeighted(combat);
-                if (kind == null)
+                PawnKindDef kind = kinds[i];
+                Pawn? pawn = TryGeneratePawn(kind, faction);
+                if (pawn == null)
                 {
+                    result.FailedKinds.Add(kind);
                     continue;
                 }
 
-                Pawn? pawn = TryGeneratePawn(kind, faction);
-                if (pawn != null)
-                {
-                    pawns.Add(pawn);
-                }
+                pawns.Add(pawn);
+                pawnKinds[pawn] = kind;
             }
 
-            return LaunchPawnDropPods(
+            JusticeBossDropLaunchResult launchResult = LaunchPawnDropPods(
                 map,
                 faction,
                 anchor,
@@ -199,8 +284,12 @@ namespace MAP_MechanoidMechanitor
                 justiceEventId,
                 JusticeBossDropRole.Guard,
                 pawns,
-                bossPawns: null,
-                out _);
+                pawnKinds,
+                bossPawns: null);
+            result.LaunchedPawnCount = launchResult.LaunchedPawnCount;
+            result.FatalFailure = launchResult.FatalFailure;
+            result.FailedKinds.AddRange(launchResult.FailedKinds);
+            return result;
         }
 
         private static Pawn? TryGeneratePawn(PawnKindDef kind, Faction? faction)
@@ -215,11 +304,6 @@ namespace MAP_MechanoidMechanitor
                 Pawn pawn = PawnGenerator.GeneratePawn(request);
                 pawn.SetFaction(faction);
                 MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff(pawn);
-                if (!Find.WorldPawns.Contains(pawn))
-                {
-                    Find.WorldPawns.PassToWorld(pawn);
-                }
-
                 return pawn;
             }
             catch (Exception e)
@@ -230,7 +314,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool LaunchPawnDropPods(
+        private static JusticeBossDropLaunchResult LaunchPawnDropPods(
             Map map,
             Faction? faction,
             IntVec3 center,
@@ -238,13 +322,13 @@ namespace MAP_MechanoidMechanitor
             int justiceEventId,
             JusticeBossDropRole role,
             List<Pawn> pawns,
-            HashSet<Pawn>? bossPawns,
-            out int bossReplacementsLaunched)
+            Dictionary<Pawn, PawnKindDef> pawnKinds,
+            HashSet<Pawn>? bossPawns)
         {
-            bossReplacementsLaunched = 0;
+            JusticeBossDropLaunchResult result = new JusticeBossDropLaunchResult(pawns.Count);
             if (pawns.Count == 0)
             {
-                return true;
+                return result;
             }
 
             MapComponent_JusticeBossDropTracker tracker =
@@ -272,12 +356,12 @@ namespace MAP_MechanoidMechanitor
                     Log.ErrorOnce(
                         "[MAP JusticeBoss] No legal drop cells for summoned mechanoids; aborting launch.",
                         map.uniqueID ^ 0x5B0D);
+                    AddFailedKinds(result, pawns, pawnKinds);
                     DiscardPawns(pawns);
-                    return false;
+                    return result;
                 }
             }
 
-            int launchedPods = 0;
             for (int i = 0; i < podGroups.Count; i++)
             {
                 List<Pawn> group = podGroups[i];
@@ -303,25 +387,40 @@ namespace MAP_MechanoidMechanitor
                         tracker.Unregister(pawn);
                     }
 
+                    AddFailedKinds(result, group, pawnKinds);
                     DiscardPawns(group);
                     Log.Warning("[MAP JusticeBoss] Failed to create drop pod for summoned mechs.");
                     continue;
                 }
 
-                launchedPods++;
+                result.LaunchedPawnCount += group.Count;
                 if (bossPawns != null)
                 {
                     for (int p = 0; p < group.Count; p++)
                     {
                         if (bossPawns.Contains(group[p]))
                         {
-                            bossReplacementsLaunched++;
+                            result.BossReplacementCount++;
                         }
                     }
                 }
             }
 
-            return launchedPods > 0;
+            return result;
+        }
+
+        private static void AddFailedKinds(
+            JusticeBossDropLaunchResult result,
+            List<Pawn> pawns,
+            Dictionary<Pawn, PawnKindDef> pawnKinds)
+        {
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                if (pawnKinds.TryGetValue(pawns[i], out PawnKindDef kind) && kind != null)
+                {
+                    result.FailedKinds.Add(kind);
+                }
+            }
         }
 
         private static bool TryMakeDropPod(
@@ -335,7 +434,7 @@ namespace MAP_MechanoidMechanitor
                 ActiveTransporterInfo info = new ActiveTransporterInfo();
                 info.openDelay = DropOpenDelayTicks;
                 info.leaveSlag = false;
-                info.savePawnsWithReferenceMode = true;
+                info.savePawnsWithReferenceMode = false;
                 info.spawnWipeMode = null;
                 info.moveItemsAsideBeforeSpawning = true;
                 info.despawnPodBeforeSpawningThing = true;
@@ -377,7 +476,7 @@ namespace MAP_MechanoidMechanitor
                         radius,
                         allowIndoors: true,
                         size,
-                        mustBeReachableFromCenter: false)
+                        mustBeReachableFromCenter: true)
                     && DropCellFinder.SkyfallerCanLandAt(cell, map, size, faction)
                     && !reserved.Contains(cell)
                     && cell.GetRoof(map) != RoofDefOf.RoofRockThick)
