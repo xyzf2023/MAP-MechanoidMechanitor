@@ -7,7 +7,7 @@
       <ThingDef>MAP_RepairBeacon</ThingDef>
     </descriptionHyperlinks>
     <label>修复信标</label>
-    <description>植入后可引导受监管机械族进行自我修复。需要打开自动修复。</description>
+    <description>一种内置量子结构演算阵列的机械师植入体。它能持续解析受监管机械族的结构损伤，并通过监管链路下发精确的自我修复序列；必要时还可超负荷运行，启动战地修复协议。</description>
     <descriptionShort>引导受监管机械族进行自我修复。需要打开自动修复。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
