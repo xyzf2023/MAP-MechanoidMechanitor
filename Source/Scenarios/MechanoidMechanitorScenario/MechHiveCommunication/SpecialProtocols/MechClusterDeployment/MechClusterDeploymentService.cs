@@ -270,10 +270,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     map,
                     startDormant: true,
                     forceNoConditionCauser: true);
-                if (sketch?.buildingsSketch == null || sketch.pawns == null)
+                if (sketch?.buildingsSketch == null)
                 {
                     errorKey = ErrorGenerationFailed;
                     return false;
+                }
+
+                // 原版允许不生成额外机械族；null表示本次没有额外机械族，不是草图生成失败。
+                if (sketch.pawns == null)
+                {
+                    sketch.pawns = new List<MechClusterSketch.Mech>();
                 }
 
                 RemoveGeneratedProblemCausers(sketch.buildingsSketch);
