@@ -188,18 +188,20 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Description>当前通讯链路允许调用的特殊执行序列。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Description>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Empty>当前没有满足执行条件的特殊协议。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Empty>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title>集群部署</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>请求机械巢向指定位置投送一座最高规格的机械集群。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>目标地图：{0}　协议等级：极限</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.SelectHint>选择协议后，可配置是否附加一座地图状态设施。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.SelectHint>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>请求机械巢向指定位置投送一座可配置规模的机械集群。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Description>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>目标地图：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.CardMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.SelectHint>选择协议后，可配置集群点数，并可选附加一座地图状态设施。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.SelectHint>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Configuration>部署参数</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Configuration>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat>威胁规模：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat>集群点数：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Threat>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>{0} 点（基础 {1} 额度）</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ThreatOption>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Map>部署地图：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Map>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Behavior>行为协议：沿用原版机械集群休眠与防守逻辑</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Behavior>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ConditionCauser>状态设施：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.ConditionCauser>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.NoConditionCauser>不部署状态设施</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.NoConditionCauser>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Cost>所需肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Cost>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote>状态设施会动态读取所有符合原版机械集群状态建筑判定的已加载建筑；其内部参数由原版逻辑初始化。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderMeta>威胁规模 10000　状态设施 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote>状态设施会动态读取当前点数允许的原版及模组候选；内部参数仍由原版逻辑随机初始化，落地后立即生效。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Footnote>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderMeta>集群点数 {0}　状态设施 {1}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderCost>肃清额度 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderCost>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.TargetingHint>左键确认部署中心；右键取消</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.TargetingHint>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.LetterLabel>机械集群</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.LetterLabel>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.LetterText>一个来自机械巢的机械集群已部署至殖民地附近。\n\n它们将协助你抵御外敌。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.LetterText>
@@ -212,8 +214,8 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.CommittedFailure>部署流程发生异常，额度已提交</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.CommittedFailure>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.WrongMap>请在指定部署地图上选点</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.WrongMap>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.OutOfBounds>集群占地范围超出地图边界</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.OutOfBounds>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked>该位置与现有建筑或不可空投区域冲突</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.ThickRoof>集群无法部署在厚岩顶下方</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.ThickRoof>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked>地面承载条件不足或不适合机械族降落</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Blocked>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Roofed>集群无法部署在有屋顶的位置</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.Roofed>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>正在建立低优先级通讯通道……</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Todo>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Todo>
   <MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>当前普通派系关系设置下，已不存在获取信任的空间。</MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>
