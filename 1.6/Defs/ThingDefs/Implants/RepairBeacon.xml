@@ -3,7 +3,7 @@
   <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_RepairBeacon</defName>
     <label>修复信标</label>
-    <description>利用超凡技术制作的远程调控模块，植入后能引导受监管机械族进行自我修复。</description>
+    <description>一种内置量子结构演算阵列的机械师植入体。它能持续解析受监管机械族的结构损伤，并通过监管链路下发精确的自我修复序列；必要时还可超负荷运行，启动战地修复协议。</description>
     <costList>
       <PowerfocusChip>1</PowerfocusChip>
       <SignalChip>1</SignalChip>
@@ -19,6 +19,7 @@
       <WorkToMake>24000</WorkToMake>
     </statBases>
     <recipeMaker>
+      <researchPrerequisite>MAP_QuantumStructuralRestoration</researchPrerequisite>
       <skillRequirements Inherit="False">
         <Crafting>12</Crafting>
       </skillRequirements>
