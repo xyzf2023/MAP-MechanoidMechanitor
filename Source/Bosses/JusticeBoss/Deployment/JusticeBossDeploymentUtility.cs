@@ -43,7 +43,7 @@ namespace MAP_MechanoidMechanitor
                 3,
                 minRadius: 7f,
                 maxRadius: 13f,
-                fixedRotation: Rot4.South,
+                fixedRotation: Rot4.North,
                 occupied,
                 deployedInfrastructure);
 
@@ -55,7 +55,7 @@ namespace MAP_MechanoidMechanitor
                 3,
                 minRadius: 10f,
                 maxRadius: 18f,
-                fixedRotation: Rot4.South,
+                fixedRotation: Rot4.North,
                 occupied,
                 deployedInfrastructure);
 
@@ -67,7 +67,7 @@ namespace MAP_MechanoidMechanitor
                 3,
                 minRadius: 10f,
                 maxRadius: 18f,
-                fixedRotation: Rot4.South,
+                fixedRotation: Rot4.North,
                 occupied,
                 deployedInfrastructure);
 
