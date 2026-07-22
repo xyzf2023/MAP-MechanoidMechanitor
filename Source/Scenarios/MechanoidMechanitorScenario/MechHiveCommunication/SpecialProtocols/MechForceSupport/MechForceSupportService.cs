@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -46,6 +47,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public const string ErrorGenerationFailed =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.GenerationFailed";
 
+        public const string ErrorNoAvailableTemplate =
+            "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.NoAvailableTemplate";
+
         public const string ErrorInsufficientCredits =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.InsufficientCredits";
 
@@ -54,6 +58,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public const string ErrorCommittedFailure =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.CommittedFailure";
+
+        private const string BreachKindDefName = "Mech_Termite_Breach";
 
         public static bool HasAvailableMap()
         {
@@ -166,6 +172,115 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return AcceptanceReport.WasAccepted;
         }
 
+        public static List<PawnGroupMaker> GetAvailableCombatTemplates(
+            MechForceSupportOrder order,
+            Map? map)
+        {
+            List<PawnGroupMaker> result = new List<PawnGroupMaker>();
+            if (!TryBuildGroupParms(order, map, out _, out PawnGroupMakerParms? groupParms)
+                || groupParms?.faction?.def?.pawnGroupMakers == null)
+            {
+                return result;
+            }
+
+            List<PawnGroupMaker> makers = groupParms.faction.def.pawnGroupMakers;
+            for (int i = 0; i < makers.Count; i++)
+            {
+                PawnGroupMaker maker = makers[i];
+                if (maker == null
+                    || maker.kindDef != PawnGroupKindDefOf.Combat
+                    || ContainsBreachOption(maker)
+                    || !maker.CanGenerateFrom(groupParms))
+                {
+                    continue;
+                }
+
+                result.Add(maker);
+            }
+
+            return result;
+        }
+
+        public static void SanitizeSelectedTemplate(
+            MechForceSupportOrder order,
+            Map? map)
+        {
+            if (order.SelectedGroupMaker == null)
+            {
+                return;
+            }
+
+            List<PawnGroupMaker> available = GetAvailableCombatTemplates(order, map);
+            if (!available.Contains(order.SelectedGroupMaker))
+            {
+                order.SetSelectedGroupMaker(null);
+            }
+        }
+
+        public static string BuildTemplateDisplayName(PawnGroupMaker maker)
+        {
+            string composition = BuildTemplateCompositionLabel(maker);
+            if (composition.NullOrEmpty())
+            {
+                composition = "—";
+            }
+
+            return "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.TemplateNamed"
+                .Translate(composition);
+        }
+
+        public static List<(PawnGroupMaker? maker, string label, string fullLabel)>
+            BuildTemplateMenuEntries(MechForceSupportOrder order, Map? map)
+        {
+            List<(PawnGroupMaker? maker, string label, string fullLabel)> entries =
+                new List<(PawnGroupMaker?, string, string)>();
+            string randomLabel =
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.TemplateRandom"
+                    .Translate();
+            entries.Add((null, randomLabel, randomLabel));
+
+            List<PawnGroupMaker> makers = GetAvailableCombatTemplates(order, map);
+            List<string> baseNames = new List<string>(makers.Count);
+            Dictionary<string, int> nameCounts = new Dictionary<string, int>();
+            for (int i = 0; i < makers.Count; i++)
+            {
+                string baseName = BuildTemplateDisplayName(makers[i]);
+                baseNames.Add(baseName);
+                if (nameCounts.TryGetValue(baseName, out int count))
+                {
+                    nameCounts[baseName] = count + 1;
+                }
+                else
+                {
+                    nameCounts[baseName] = 1;
+                }
+            }
+
+            Dictionary<string, int> nameIndexes = new Dictionary<string, int>();
+            Text.Font = GameFont.Small;
+            for (int i = 0; i < makers.Count; i++)
+            {
+                string baseName = baseNames[i];
+                string fullLabel = baseName;
+                if (nameCounts[baseName] > 1)
+                {
+                    if (!nameIndexes.TryGetValue(baseName, out int index))
+                    {
+                        index = 0;
+                    }
+
+                    index++;
+                    nameIndexes[baseName] = index;
+                    fullLabel = baseName + " (" + index + ")";
+                }
+
+                string menuLabel = fullLabel.Truncate(280f);
+                entries.Add((makers[i], menuLabel, fullLabel));
+            }
+
+            return entries;
+        }
+
         public static MechForceSupportDeploymentResult TryDeploy(
             MechForceSupportOrder? order,
             Map? map,
@@ -184,10 +299,40 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     IsLoadedMap(map) ? ErrorInvalidRequest : ErrorUnavailable);
             }
 
-            if (!MechanoidMechanitorMechHiveCommunicationUtility
-                    .TryGetContactableMechHive(out Faction mechHive))
+            if (!TryBuildGroupParms(
+                    order,
+                    map,
+                    out Faction mechHive,
+                    out PawnGroupMakerParms? groupParms)
+                || groupParms == null)
             {
                 return MechForceSupportDeploymentResult.Failed(ErrorUnavailable);
+            }
+
+            List<PawnGroupMaker> available = GetAvailableCombatTemplates(order, map);
+            if (available.Count == 0)
+            {
+                return MechForceSupportDeploymentResult.Failed(ErrorNoAvailableTemplate);
+            }
+
+            PawnGroupMaker? selected = order.SelectedGroupMaker;
+            if (selected != null && !available.Contains(selected))
+            {
+                order.SetSelectedGroupMaker(null);
+                selected = null;
+            }
+
+            PawnGroupMaker maker;
+            if (selected != null)
+            {
+                maker = selected;
+            }
+            else if (!available.TryRandomElementByWeight(
+                         gm => gm.commonality,
+                         out maker)
+                     || maker == null)
+            {
+                return MechForceSupportDeploymentResult.Failed(ErrorNoAvailableTemplate);
             }
 
             int threatPoints = order.ThreatPoints;
@@ -214,14 +359,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Pawn> pawns = new List<Pawn>();
             try
             {
-                PawnGroupMakerParms groupParms =
-                    IncidentParmsUtility.GetDefaultPawnGroupMakerParms(
-                        PawnGroupKindDefOf.Combat,
-                        parms,
-                        ensureCanGenerateAtLeastOnePawn: true);
-                foreach (Pawn pawn in PawnGroupMakerUtility.GeneratePawns(
+                foreach (Pawn pawn in maker.GeneratePawns(
                     groupParms,
-                    warnOnZeroResults: false))
+                    errorOnZeroResults: false))
                 {
                     pawns.Add(pawn);
                 }
@@ -272,6 +412,124 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             SendSupportLetter(map, center, mechHive);
             return MechForceSupportDeploymentResult.Succeeded;
+        }
+
+        private static bool TryBuildGroupParms(
+            MechForceSupportOrder order,
+            Map? map,
+            out Faction faction,
+            out PawnGroupMakerParms? groupParms)
+        {
+            faction = null!;
+            groupParms = null;
+            if (!MechanoidMechanitorMechHiveCommunicationUtility
+                    .TryGetContactableMechHive(out Faction mechHive)
+                || mechHive == null)
+            {
+                return false;
+            }
+
+            faction = mechHive;
+            Map? parmsMap = map;
+            if (!IsLoadedMap(parmsMap))
+            {
+                List<Map> maps = Find.Maps;
+                if (maps != null)
+                {
+                    for (int i = 0; i < maps.Count; i++)
+                    {
+                        if (IsLoadedMap(maps[i]))
+                        {
+                            parmsMap = maps[i];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!IsLoadedMap(parmsMap))
+            {
+                return false;
+            }
+
+            IncidentParms incidentParms = new IncidentParms
+            {
+                target = parmsMap,
+                points = order.ThreatPoints,
+                faction = mechHive,
+                pawnGroupKind = PawnGroupKindDefOf.Combat,
+                raidStrategy = RaidStrategyDefOf.ImmediateAttack,
+                raidArrivalMode = PawnsArrivalModeDefOf.CenterDrop,
+                canKidnap = false,
+                canSteal = false,
+                canTimeoutOrFlee = true
+            };
+
+            groupParms = IncidentParmsUtility.GetDefaultPawnGroupMakerParms(
+                PawnGroupKindDefOf.Combat,
+                incidentParms,
+                ensureCanGenerateAtLeastOnePawn: true);
+            return groupParms != null;
+        }
+
+        private static bool ContainsBreachOption(PawnGroupMaker maker)
+        {
+            List<PawnGenOption>? options = maker.options;
+            if (options == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < options.Count; i++)
+            {
+                PawnKindDef? kind = options[i]?.kind;
+                if (kind != null && kind.defName == BreachKindDefName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string BuildTemplateCompositionLabel(PawnGroupMaker maker)
+        {
+            List<PawnGenOption>? options = maker.options;
+            if (options == null || options.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            List<string> labels = new List<string>();
+            HashSet<PawnKindDef> seen = new HashSet<PawnKindDef>();
+            for (int i = 0; i < options.Count; i++)
+            {
+                PawnKindDef? kind = options[i]?.kind;
+                if (kind == null || !seen.Add(kind))
+                {
+                    continue;
+                }
+
+                labels.Add(kind.LabelCap.Resolve());
+            }
+
+            if (labels.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < labels.Count; i++)
+            {
+                if (i > 0)
+                {
+                    sb.Append("、");
+                }
+
+                sb.Append(labels[i]);
+            }
+
+            return sb.ToString();
         }
 
         private static void DiscardGeneratedPawns(List<Pawn> pawns)

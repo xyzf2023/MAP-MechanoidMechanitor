@@ -222,9 +222,12 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.CardMeta>目标：任意已加载地图</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.CardMeta>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Configuration>支援参数</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Configuration>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Points>点数：</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Points>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Template>部队模板：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Template>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.TemplateRandom>随机</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.TemplateRandom>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.TemplateNamed>模板：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.TemplateNamed>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Cost>所需肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Cost>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Footnote>每点消耗0.05肃清额度，费用向上取整。确认后选择一个已加载地图及部署位置。</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Footnote>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderMeta>点数 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderMeta>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderMeta>点数 {0}　{1}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderMeta>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderCost>肃清额度 {0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderCost>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.LargeRequestWarning>过大的点数会生成大量单位，有可能导致游戏卡顿。\n\n确定执行？</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.LargeRequestWarning>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.WorldTargetValid>选择已加载地图：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.WorldTargetValid>
@@ -235,6 +238,7 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.Unavailable>当前部队支援条件不满足</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.Unavailable>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.InvalidRequest>部队支援请求或位置已失效</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.InvalidRequest>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.GenerationFailed>无法按指定点数生成机械族部队</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.GenerationFailed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.NoAvailableTemplate>当前条件下没有可用的机械族部队模板</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.NoAvailableTemplate>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.InsufficientCredits>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.ChargeFailed>额度扣除失败，未执行部署</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.ChargeFailed>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.CommittedFailure>部署流程发生异常，额度已提交</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.CommittedFailure>
