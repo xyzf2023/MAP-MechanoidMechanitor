@@ -13,6 +13,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public const int HumanlikeDeathRewardPoints = 15;
 
+        public const int OtherFactionBaseDestroyedRewardPoints = 200;
+
         private int purgeDirectiveRewardPoints;
 
         private int nextPurgeDirectiveCheckTick;
