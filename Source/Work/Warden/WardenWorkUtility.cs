@@ -18,12 +18,28 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            // 静态来源（如 Justice/Lover 的 CompWardenWorkUser）始终保留，
+            // 与意识形态文化档位无关。
             if (pawn.GetComp<CompWardenWorkUser>() != null)
             {
                 return true;
             }
 
-            return GameComponent_WardenWorkRegistry.IsAuthorized(pawn);
+            if (!GameComponent_WardenWorkRegistry.IsAuthorized(pawn))
+            {
+                return false;
+            }
+
+            // 由机械族机械师身份动态授予的 Warden 仅在 Full 文化模式下生效；
+            // Disabled/Basic/Partial 一律视为未授权，从而不进入工作白名单、
+            // 也不执行监管与囚犯教化。非机械族机械师的注册项保持原判定。
+            if (MechanoidMechanitorIdeologyAdaptationUtility.IsRegisteredMechanoidMechanitor(pawn))
+            {
+                return MechanoidMechanitorIdeologyAdaptationUtility
+                    .AllowsIdeologyFullParticipation(pawn);
+            }
+
+            return true;
         }
 
         public static void GrantAndEnsureInfrastructure(Pawn? pawn)

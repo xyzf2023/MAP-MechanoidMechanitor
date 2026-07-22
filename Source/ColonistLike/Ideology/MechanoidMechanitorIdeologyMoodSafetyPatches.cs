@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -9,7 +10,10 @@ using Verse.AI.Group;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 仪式/传教结果写入心情时的空引用安全处理。机械族仍保留在 totalPresence 中计入质量。
+    /// 仪式/传教结果写入心情时的空引用安全处理。
+    /// 作用范围严格收紧：仅当本 MOD 的 Full 模式正式机械族机械师实际参与当前仪式（或担任当前处理角色）
+    /// 且确实缺少 needs.mood 时，才接管对应原版方法并做安全重放；机械族仍保留在 totalPresence 中计入质量。
+    /// Disabled/Basic/Partial 以及第三方普通无心情 Pawn 不会触发这些安全补丁；普通 Pawn 的心情正常获得。
     /// </summary>
     public static class MechanoidMechanitorIdeologyMoodSafetyPatches
     {
@@ -36,6 +40,38 @@ namespace MAP_MechanoidMechanitor
 
         public static bool HasMood(Pawn? pawn) => pawn?.needs?.mood != null;
 
+        /// <summary>是否为 Full 模式正式机械族机械师且缺少心情 Tracker。</summary>
+        private static bool IsFullMechanitorWithoutMood(Pawn? pawn)
+        {
+            return pawn != null
+                && !HasMood(pawn)
+                && MechanoidMechanitorIdeologyAdaptationUtility
+                    .AllowsIdeologyFullParticipation(pawn);
+        }
+
+        /// <summary>
+        /// 集合中是否存在“Full 模式正式机械族机械师且无心情”的成员——只有这种情形才需要本 MOD 接管。
+        /// </summary>
+        public static bool InvolvesFullMechanitorWithoutMood(Dictionary<Pawn, int> pawns)
+        {
+            if (pawns == null
+                || !MechanoidMechanitorIdeologyAdaptationUtility.IsAtLeast(
+                    MechanoidMechanitorIdeologyAdaptationLevel.Full))
+            {
+                return false;
+            }
+
+            foreach (Pawn pawn in pawns.Keys)
+            {
+                if (IsFullMechanitorWithoutMood(pawn))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static void TryGainMemorySafe(Pawn? pawn, Thought_Memory? thought, Pawn? otherPawn = null)
         {
             if (!HasMood(pawn) || thought == null)
@@ -54,19 +90,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             pawn!.needs.mood.thoughts.memories.TryGainMemory(def, otherPawn);
-        }
-
-        public static bool ContainsPawnWithoutMood(Dictionary<Pawn, int> totalPresence)
-        {
-            foreach (Pawn pawn in totalPresence.Keys)
-            {
-                if (!HasMood(pawn))
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private static float InvokeGetQuality(
@@ -124,7 +147,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (!ModsConfig.IdeologyActive
                     || progress < 1f
-                    || !ContainsPawnWithoutMood(totalPresence))
+                    || !InvolvesFullMechanitorWithoutMood(totalPresence))
                 {
                     return true;
                 }
@@ -140,33 +163,9 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        [HarmonyPatch(
-            typeof(RitualOutcomeEffectWorker_GiveMemoryBelievers),
-            nameof(RitualOutcomeEffectWorker_GiveMemoryBelievers.Apply))]
-        public static class Patch_GiveMemoryBelievers
-        {
-            [HarmonyPrefix]
-            public static bool Prefix(
-                RitualOutcomeEffectWorker_GiveMemoryBelievers __instance,
-                LordJob_Ritual jobRitual)
-            {
-                if (!ModsConfig.IdeologyActive)
-                {
-                    return true;
-                }
-
-                foreach (Pawn pawn in
-                    PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive_Colonists)
-                {
-                    if (pawn.Ideo == jobRitual.Ritual.ideo)
-                    {
-                        TryGainMemorySafe(pawn, __instance.MakeMemory(pawn, jobRitual));
-                    }
-                }
-
-                return false;
-            }
-        }
+        // 说明：RitualOutcomeEffectWorker_GiveMemoryBelievers 原版遍历的是
+        // AllMapsCaravansAndTravellingTransporters_Alive_Colonists（自由殖民者，不含机械族机械师），
+        // 原版成员列表本就不会包含本 MOD 的机械族机械师，不存在无心情 NRE 风险，故不再 Patch。
 
         [HarmonyPatch(
             typeof(RitualOutcomeEffectWorker_Speech),
@@ -183,7 +182,8 @@ namespace MAP_MechanoidMechanitor
                 Dictionary<Pawn, int> totalPresence,
                 LordJob_Ritual jobRitual)
             {
-                if (!ModsConfig.IdeologyActive || !ContainsPawnWithoutMood(totalPresence))
+                if (!ModsConfig.IdeologyActive
+                    || !InvolvesFullMechanitorWithoutMood(totalPresence))
                 {
                     return true;
                 }
@@ -193,13 +193,17 @@ namespace MAP_MechanoidMechanitor
                 RitualOutcomePossibility outcome = __instance.GetOutcome(quality, jobRitual);
                 ThoughtDef? memory = outcome.memory;
                 LookTargets letterLookTargets = organizer;
-                InvokeApplyAttachableOutcome(
-                    __instance,
-                    totalPresence,
-                    jobRitual,
-                    outcome,
-                    out string? extraLetterText,
-                    ref letterLookTargets);
+                string? extraLetterText = null;
+                if (jobRitual.Ritual != null)
+                {
+                    InvokeApplyAttachableOutcome(
+                        __instance,
+                        totalPresence,
+                        jobRitual,
+                        outcome,
+                        out extraLetterText,
+                        ref letterLookTargets);
+                }
 
                 string inspired = string.Empty;
                 string converted = string.Empty;
@@ -244,6 +248,7 @@ namespace MAP_MechanoidMechanitor
                         }
                     }
 
+                    // 机械族机械师意识形态锁定 100%，不作为演讲转换对象，也不列入被转换名单。
                     if (key.Ideo != organizer.Ideo
                         && Rand.Chance(ConversionChance)
                         && !MechanoidMechanitorIdeologyAdaptationUtility
@@ -307,7 +312,7 @@ namespace MAP_MechanoidMechanitor
                 Find.LetterStack.ReceiveLetter(
                     "OutcomeLetterLabel".Translate(
                         outcome.label.Named("OUTCOMELABEL"),
-                        jobRitual.Ritual.Label.Named("RITUALLABEL")),
+                        jobRitual.Ritual!.Label.Named("RITUALLABEL")),
                     letterText,
                     positive
                         ? LetterDefOf.RitualOutcomePositive
@@ -342,15 +347,8 @@ namespace MAP_MechanoidMechanitor
                 Dictionary<Pawn, int> totalPresence,
                 LordJob_Ritual jobRitual)
             {
-                if (!ModsConfig.IdeologyActive)
-                {
-                    return true;
-                }
-
-                Pawn? convertee = jobRitual.PawnWithRole("convertee");
-                bool converteeIsMechanitor = MechanoidMechanitorIdeologyAdaptationUtility
-                    .AllowsIdeologyMembership(convertee);
-                if (!ContainsPawnWithoutMood(totalPresence) && !converteeIsMechanitor)
+                if (!ModsConfig.IdeologyActive
+                    || !InvolvesFullMechanitorWithoutMood(totalPresence))
                 {
                     return true;
                 }
@@ -358,19 +356,26 @@ namespace MAP_MechanoidMechanitor
                 float quality = InvokeGetQuality(__instance, jobRitual, progress);
                 RitualOutcomePossibility outcome = __instance.GetOutcome(quality, jobRitual);
                 LookTargets letterLookTargets = jobRitual.selectedTarget;
-                InvokeApplyAttachableOutcome(
-                    __instance,
-                    totalPresence,
-                    jobRitual,
-                    outcome,
-                    out string? extraLetterText,
-                    ref letterLookTargets);
+                string? extraLetterText = null;
+                if (jobRitual.Ritual != null)
+                {
+                    InvokeApplyAttachableOutcome(
+                        __instance,
+                        totalPresence,
+                        jobRitual,
+                        outcome,
+                        out extraLetterText,
+                        ref letterLookTargets);
+                }
 
                 Pawn? moralist = jobRitual.PawnWithRole("moralist");
-                if (moralist != null && convertee?.ideo != null && !converteeIsMechanitor)
+                Pawn? convertee = jobRitual.PawnWithRole("convertee");
+                // 转换目标的确定度/意识形态由确定度补丁统一保护：若目标是机械族机械师，
+                // SetIdeo/OffsetCertainty 会被拦截并强制 100%；普通目标按原版正常转换。
+                if (convertee?.ideo != null)
                 {
                     float offset = outcome.ideoCertaintyOffset;
-                    if (offset <= -1f)
+                    if (offset <= -1f && moralist != null)
                     {
                         convertee.ideo.SetIdeo(moralist.Ideo);
                     }
@@ -382,7 +387,8 @@ namespace MAP_MechanoidMechanitor
 
                 foreach (Pawn key in totalPresence.Keys)
                 {
-                    if (key == moralist || key == convertee || outcome.memory == null)
+                    if (key == moralist || key == convertee || outcome.memory == null
+                        || !HasMood(key))
                     {
                         continue;
                     }
@@ -395,7 +401,7 @@ namespace MAP_MechanoidMechanitor
                             outcome.memory));
                 }
 
-                TaggedString text = outcome.description.Formatted(jobRitual.Ritual.Label)
+                TaggedString text = outcome.description.Formatted(jobRitual.Ritual!.Label)
                     .CapitalizeFirst();
                 string moodBreakdown = __instance.def.OutcomeMoodBreakdown(outcome);
                 if (!moodBreakdown.NullOrEmpty())
@@ -452,7 +458,8 @@ namespace MAP_MechanoidMechanitor
 
                 Pawn? leader = jobRitual.PawnWithRole("leader");
                 Pawn? convict = jobRitual.PawnWithRole("convict");
-                if (HasMood(leader) && HasMood(convict))
+                if (!IsFullMechanitorWithoutMood(leader)
+                    && !IsFullMechanitorWithoutMood(convict))
                 {
                     return true;
                 }
@@ -460,13 +467,17 @@ namespace MAP_MechanoidMechanitor
                 float quality = InvokeGetQuality(__instance, jobRitual, progress);
                 RitualOutcomePossibility outcome = __instance.GetOutcome(quality, jobRitual);
                 LookTargets letterLookTargets = convict;
-                InvokeApplyAttachableOutcome(
-                    __instance,
-                    totalPresence,
-                    jobRitual,
-                    outcome,
-                    out string? extraLetterText,
-                    ref letterLookTargets);
+                string? extraLetterText = null;
+                if (jobRitual.Ritual != null)
+                {
+                    InvokeApplyAttachableOutcome(
+                        __instance,
+                        totalPresence,
+                        jobRitual,
+                        outcome,
+                        out extraLetterText,
+                        ref letterLookTargets);
+                }
 
                 string title = convict!.LabelShort + " " + outcome.label;
                 TaggedString body = outcome.description.Formatted(
@@ -523,13 +534,12 @@ namespace MAP_MechanoidMechanitor
                 Dictionary<Pawn, int> totalPresence,
                 LordJob_Ritual jobRitual)
             {
-                if (!ModsConfig.IdeologyActive || !ContainsPawnWithoutMood(totalPresence))
+                if (!ModsConfig.IdeologyActive
+                    || !InvolvesFullMechanitorWithoutMood(totalPresence))
                 {
                     return true;
                 }
 
-                // 仅替换会 NRE 的心情写入；其余通过临时跳过标志调用原版不可行。
-                // 这里完整安全重放：在心情循环处使用 TryGainMemorySafe，其余逻辑对齐原版。
                 LordJob_BestowingCeremony ceremony = (LordJob_BestowingCeremony)jobRitual;
                 Pawn target = ceremony.target;
                 Pawn bestower = ceremony.bestower;
@@ -537,13 +547,17 @@ namespace MAP_MechanoidMechanitor
                 float quality = InvokeGetQuality(__instance, jobRitual, progress);
                 RitualOutcomePossibility outcome = __instance.GetOutcome(quality, jobRitual);
                 LookTargets letterLookTargets = target;
-                InvokeApplyAttachableOutcome(
-                    __instance,
-                    totalPresence,
-                    jobRitual,
-                    outcome,
-                    out string? extraLetterText,
-                    ref letterLookTargets);
+                string? extraLetterText = null;
+                if (jobRitual.Ritual != null)
+                {
+                    InvokeApplyAttachableOutcome(
+                        __instance,
+                        totalPresence,
+                        jobRitual,
+                        outcome,
+                        out extraLetterText,
+                        ref letterLookTargets);
+                }
 
                 RoyalTitleDef? currentTitle = target.royalty.GetCurrentTitle(bestower.Faction);
                 RoyalTitleDef? titleAwardedWhenUpdating = target.royalty.GetTitleAwardedWhenUpdating(
@@ -676,7 +690,11 @@ namespace MAP_MechanoidMechanitor
                     return true;
                 }
 
-                if (doctor != patient && doctor.Ideo == patient.Ideo && !HasMood(patient))
+                // 仅当 patient 是 Full 模式机械族机械师且无心情时跳过心情写入；基类 Notify_Tended 为空实现，
+                // 跳过不丢失其他副作用。普通无心情 Pawn 交由原版处理。
+                if (doctor != patient
+                    && doctor.Ideo == patient.Ideo
+                    && IsFullMechanitorWithoutMood(patient))
                 {
                     return false;
                 }
@@ -704,7 +722,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Dictionary<Pawn, int>? presence = TotalPresenceTmpField(__instance);
-                if (presence == null || !ContainsPawnWithoutMood(presence))
+                if (presence == null || !InvolvesFullMechanitorWithoutMood(presence))
                 {
                     return true;
                 }
@@ -785,6 +803,7 @@ namespace MAP_MechanoidMechanitor
                     return true;
                 }
 
+                // 机械族机械师意识形态锁定 100%，不可作为被传教/转换目标。
                 if (MechanoidMechanitorIdeologyAdaptationUtility.AllowsIdeologyMembership(recipient))
                 {
                     return false;

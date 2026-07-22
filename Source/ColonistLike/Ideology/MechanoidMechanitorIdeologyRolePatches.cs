@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
-using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -13,6 +12,55 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class MechanoidMechanitorIdeologyRolePatches
     {
+        /// <summary>
+        /// 身份放宽辅助：原版自由殖民者继续通过，Full 模式正式机械族机械师也视为通过，其他 Pawn 保持
+        /// 原判定。供 Transpiler 替换原版 IsFreeNonSlaveColonist 调用后由原版控制流自然继续。
+        /// </summary>
+        public static bool IsFreeColonistOrFullMechanitor(Pawn pawn)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (pawn.IsFreeNonSlaveColonist)
+            {
+                return true;
+            }
+
+            return ModsConfig.IdeologyActive
+                && MechanoidMechanitorIdeologyAdaptationUtility
+                    .CanServeAsIdeologyRoleOrRitualParticipant(pawn);
+        }
+
+        private static IEnumerable<CodeInstruction> RelaxFirstIsFreeNonSlaveColonist(
+            IEnumerable<CodeInstruction> instructions)
+        {
+            MethodInfo original = AccessTools.PropertyGetter(
+                typeof(Pawn),
+                nameof(Pawn.IsFreeNonSlaveColonist));
+            MethodInfo replacement = AccessTools.Method(
+                typeof(MechanoidMechanitorIdeologyRolePatches),
+                nameof(IsFreeColonistOrFullMechanitor));
+
+            bool replaced = false;
+            foreach (CodeInstruction instruction in instructions)
+            {
+                if (!replaced && instruction.Calls(original))
+                {
+                    yield return new CodeInstruction(OpCodes.Call, replacement)
+                    {
+                        labels = instruction.labels,
+                        blocks = instruction.blocks
+                    };
+                    replaced = true;
+                    continue;
+                }
+
+                yield return instruction;
+            }
+        }
+
         [HarmonyPatch]
         public static class Patch_Precept_Role_ValidatePawn
         {
@@ -48,188 +96,37 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        /// <summary>
+        /// 仅放宽 DrawPawnRoleSelection 最前面的 IsFreeNonSlaveColonist 身份检查，随后交由完整原版
+        /// 方法执行，保留不可用角色、未满足条件说明、信徒不足提示、GetTip 工具提示与原版显示顺序。
+        /// </summary>
         [HarmonyPatch(
             typeof(SocialCardUtility),
             nameof(SocialCardUtility.DrawPawnRoleSelection))]
         public static class Patch_DrawPawnRoleSelection_AllowMechanitor
         {
-            [HarmonyPrefix]
-            public static bool Prefix(Pawn pawn, Rect rect)
+            [HarmonyTranspiler]
+            public static IEnumerable<CodeInstruction> Transpiler(
+                IEnumerable<CodeInstruction> instructions)
             {
-                if (!ModsConfig.IdeologyActive
-                    || !MechanoidMechanitorIdeologyAdaptationUtility
-                        .CanServeAsIdeologyRoleOrRitualParticipant(pawn)
-                    || pawn.IsFreeNonSlaveColonist)
-                {
-                    return true;
-                }
-
-                DrawRoleSelectionForFullMechanitor(pawn, rect);
-                return false;
-            }
-
-            private static void DrawRoleSelectionForFullMechanitor(Pawn pawn, Rect rect)
-            {
-                if (pawn.Ideo == null)
-                {
-                    return;
-                }
-
-                Precept_Role? currentRole = pawn.Ideo.GetRole(pawn);
-                Ideo? primaryIdeo = Faction.OfPlayer?.ideos?.PrimaryIdeo;
-                Precept_Ritual? roleChangeRitual =
-                    pawn.Ideo.GetPrecept(PreceptDefOf.RoleChange) as Precept_Ritual;
-                if (roleChangeRitual?.targetFilter == null)
-                {
-                    return;
-                }
-
-                TargetInfo ritualTarget = roleChangeRitual.targetFilter.BestTarget(
-                    pawn,
-                    TargetInfo.Invalid);
-                List<Precept_Role> roles = RitualUtility.AllRolesForPawn(pawn).ToList();
-                bool enabled = roles.Count > 0;
-                float y = rect.y + rect.height / 2f - 14f;
-                Rect buttonRect = new Rect(rect.width - 150f, y, 140f, 28f)
-                {
-                    xMax = rect.width - 26f - 4f
-                };
-
-                if (!Widgets.ButtonText(
-                        buttonRect,
-                        "ChooseRole".Translate() + "...",
-                        drawBackground: true,
-                        doMouseoverSound: true,
-                        enabled))
-                {
-                    return;
-                }
-
-                if (!ritualTarget.IsValid)
-                {
-                    Messages.Message(
-                        (Find.IdeoManager.classicMode
-                            ? "AbilityDisabledNoRitualSpot"
-                            : "AbilityDisabledNoAltarIdeogramOrRitualsSpot").Translate(),
-                        pawn,
-                        MessageTypeDefOf.RejectInput);
-                    return;
-                }
-
-                List<FloatMenuOption> options = new List<FloatMenuOption>();
-                if (currentRole != null)
-                {
-                    options.Add(new FloatMenuOption(
-                        "RemoveCurrentRole".Translate(),
-                        () =>
-                        {
-                            Dialog_BeginRitual dialog =
-                                (Dialog_BeginRitual)roleChangeRitual.GetRitualBeginWindow(
-                                    ritualTarget,
-                                    null,
-                                    null,
-                                    pawn,
-                                    new Dictionary<string, Pawn> { { "role_changer", pawn } });
-                            dialog.SetRoleToChangeTo(null);
-                            Find.WindowStack.Add(dialog);
-                        },
-                        Widgets.PlaceholderIconTex,
-                        Color.white));
-                }
-
-                for (int i = 0; i < roles.Count; i++)
-                {
-                    Precept_Role newRole = roles[i];
-                    if (newRole == currentRole
-                        || !newRole.Active
-                        || !newRole.RequirementsMet(pawn)
-                        || (newRole.def.leaderRole && pawn.Ideo != primaryIdeo))
-                    {
-                        continue;
-                    }
-
-                    string text = newRole.LabelForPawn(pawn).CapitalizeFirst();
-                    if (!pawn.Ideo.classicMode)
-                    {
-                        text = text + " (" + newRole.def.label + ")";
-                    }
-
-                    options.Add(new FloatMenuOption(
-                        text,
-                        () =>
-                        {
-                            Dialog_BeginRitual dialog =
-                                (Dialog_BeginRitual)roleChangeRitual.GetRitualBeginWindow(
-                                    ritualTarget,
-                                    null,
-                                    null,
-                                    pawn,
-                                    new Dictionary<string, Pawn> { { "role_changer", pawn } });
-                            dialog.SetRoleToChangeTo(newRole);
-                            Find.WindowStack.Add(dialog);
-                        },
-                        newRole.Icon,
-                        newRole.ideo.Color)
-                    {
-                        orderInPriority = newRole.def.displayOrderInImpact
-                    });
-                }
-
-                if (options.Count > 0)
-                {
-                    Find.WindowStack.Add(new FloatMenu(options));
-                }
+                return RelaxFirstIsFreeNonSlaveColonist(instructions);
             }
         }
 
+        /// <summary>
+        /// RitualRoleIdeoRoleChanger 只放宽 IsFreeNonSlaveColonist 身份检查，随后由原版继续执行
+        /// AppliesIfChild、可用角色（AllRolesForPawn/RequirementsMet）与玩家文化（ideos.Has）等检查。
+        /// </summary>
         [HarmonyPatch(
             typeof(RitualRoleIdeoRoleChanger),
             nameof(RitualRoleIdeoRoleChanger.AppliesToPawn))]
         public static class Patch_RitualRoleIdeoRoleChanger_AppliesToPawn
         {
-            [HarmonyPostfix]
-            public static void Postfix(
-                Pawn p,
-                ref bool __result,
-                ref string reason,
-                bool skipReason)
+            [HarmonyTranspiler]
+            public static IEnumerable<CodeInstruction> Transpiler(
+                IEnumerable<CodeInstruction> instructions)
             {
-                if (__result
-                    || !ModsConfig.IdeologyActive
-                    || !MechanoidMechanitorIdeologyAdaptationUtility
-                        .CanServeAsIdeologyRoleOrRitualParticipant(p))
-                {
-                    return;
-                }
-
-                if (p.Ideo == null)
-                {
-                    return;
-                }
-
-                if (p.Ideo.GetRole(p) == null
-                    && !RitualUtility.AllRolesForPawn(p).Any(r => r.RequirementsMet(p)))
-                {
-                    if (!skipReason)
-                    {
-                        reason = "MessageRitualNoRolesAvailable".Translate(p);
-                    }
-
-                    return;
-                }
-
-                if (Faction.OfPlayer?.ideos == null || !Faction.OfPlayer.ideos.Has(p.Ideo))
-                {
-                    if (!skipReason)
-                    {
-                        reason = "MessageRitualNotOfPlayerIdeo".Translate(p);
-                    }
-
-                    return;
-                }
-
-                __result = true;
-                reason = null!;
+                return RelaxFirstIsFreeNonSlaveColonist(instructions);
             }
         }
 
@@ -267,8 +164,13 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
+                // 仅当旧角色持有者是 Full 模式正式机械族机械师且确实没有心情 Tracker 时才跳过
+                // 原版 addThoughts；任意第三方无心情 Pawn 不改变原版行为。
                 Pawn? oldPawn = __instance.ChosenPawnValue;
-                if (oldPawn == null || oldPawn.needs?.mood != null)
+                if (oldPawn == null
+                    || oldPawn.needs?.mood != null
+                    || !MechanoidMechanitorIdeologyAdaptationUtility
+                        .AllowsIdeologyFullParticipation(oldPawn))
                 {
                     return;
                 }
@@ -307,22 +209,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        [HarmonyPatch(typeof(Precept_RoleMulti), nameof(Precept_RoleMulti.Unassign))]
-        public static class Patch_Precept_RoleMulti_Unassign
-        {
-            [HarmonyPrefix]
-            public static void Prefix(Pawn p, ref bool generateThoughts)
-            {
-                if (!ModsConfig.IdeologyActive
-                    || !generateThoughts
-                    || p == null
-                    || p.needs?.mood != null)
-                {
-                    return;
-                }
-
-                generateThoughts = false;
-            }
-        }
+        // 说明：Precept_RoleMulti.Unassign 原版已使用 needs?.mood?.thoughts?.memories? 的空值安全访问，
+        // 无需为其提供额外补丁，故不再 Patch。
     }
 }

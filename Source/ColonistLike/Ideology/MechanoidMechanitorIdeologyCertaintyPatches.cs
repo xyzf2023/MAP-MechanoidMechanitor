@@ -1,8 +1,9 @@
+using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
 using Verse;
-using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -159,75 +160,118 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        /// <summary>
+        /// 道德导师转换能力：机械族机械师本就无法作为转换目标（原版 Valid → ValidateMustBeHuman 拒绝，
+        /// 并显示原版拒绝提示，不会静默消耗能力），且确定度补丁已保护其确定度/意识形态。
+        /// 唯一需要处理的是发起者/接收者失败心情写入的空引用：用窄范围 Transpiler 把失败分支的两处
+        /// <c>needs.mood.thoughts.memories.TryGainMemory</c> 改走空心情安全的辅助方法，
+        /// 完整保留成功/失败消息、Convert_Success/Convert_Failure 互动记录、确定度变化、意识形态变化、
+        /// 声音与能力冷却等全部原版副作用。
+        /// </summary>
         [HarmonyPatch(typeof(CompAbilityEffect_Convert), nameof(CompAbilityEffect_Convert.Apply))]
         public static class Patch_CompAbilityEffect_Convert_Apply
         {
-            [HarmonyPrefix]
-            public static bool Prefix(CompAbilityEffect_Convert __instance, LocalTargetInfo target)
+            public static void SafeGainConvertMemory(
+                Pawn pawn,
+                ThoughtDef def,
+                Pawn otherPawn,
+                Precept sourcePrecept)
             {
-                if (!ModsConfig.IdeologyActive)
+                // 仅当 Pawn 拥有心情 Tracker 时写入：机械族机械师发起者无心情则跳过 failedThoughtInitiator；
+                // 普通接收者的 failedThoughtRecipient 照常写入。
+                if (pawn?.needs?.mood == null || def == null)
                 {
-                    return true;
+                    return;
                 }
 
-                Pawn? initiator = __instance.parent?.pawn;
-                Pawn? recipient = target.Pawn;
-                if (recipient != null
-                    && MechanoidMechanitorIdeologyAdaptationUtility.AllowsIdeologyMembership(recipient))
+                pawn.needs.mood.thoughts.memories.TryGainMemory(def, otherPawn, sourcePrecept);
+            }
+
+            private static bool IsMemberAccess(CodeInstruction instruction, string name)
+            {
+                if (instruction.opcode == OpCodes.Ldfld || instruction.opcode == OpCodes.Ldflda)
                 {
-                    return false;
+                    return instruction.operand is FieldInfo field && field.Name == name;
                 }
 
-                if (initiator == null
-                    || !MechanoidMechanitorIdeologyAdaptationUtility.AllowsIdeologyMembership(initiator)
-                    || recipient?.ideo == null
-                    || initiator.Ideo == null)
+                if (instruction.opcode == OpCodes.Call || instruction.opcode == OpCodes.Callvirt)
                 {
-                    return true;
-                }
-
-                float certaintyReduction =
-                    InteractionWorker_ConvertIdeoAttempt.CertaintyReduction(initiator, recipient)
-                    * __instance.Props.convertPowerFactor;
-                float certainty = recipient.ideo.Certainty;
-                if (recipient.ideo.IdeoConversionAttempt(certaintyReduction, initiator.Ideo))
-                {
-                    recipient.ideo.SetIdeo(initiator.Ideo);
-                    Messages.Message(
-                        __instance.Props.successMessage.Formatted(
-                            initiator.Named("INITIATOR"),
-                            recipient.Named("RECIPIENT"),
-                            initiator.Ideo.name.Named("IDEO")),
-                        new LookTargets(new Pawn[] { initiator, recipient }),
-                        MessageTypeDefOf.PositiveEvent);
-                }
-                else
-                {
-                    if (recipient.needs?.mood != null && __instance.Props.failedThoughtRecipient != null)
-                    {
-                        recipient.needs.mood.thoughts.memories.TryGainMemory(
-                            __instance.Props.failedThoughtRecipient,
-                            initiator);
-                    }
-
-                    Messages.Message(
-                        __instance.Props.failMessage.Formatted(
-                            initiator.Named("INITIATOR"),
-                            recipient.Named("RECIPIENT"),
-                            initiator.Ideo.name.Named("IDEO"),
-                            certainty.ToStringPercent().Named("CERTAINTYBEFORE"),
-                            recipient.ideo.Certainty.ToStringPercent().Named("CERTAINTYAFTER")),
-                        new LookTargets(new Pawn[] { initiator, recipient }),
-                        MessageTypeDefOf.NeutralEvent);
-                }
-
-                if (__instance.Props.sound != null)
-                {
-                    __instance.Props.sound.PlayOneShot(
-                        new TargetInfo(target.Cell, initiator.Map));
+                    return instruction.operand is MethodInfo method
+                        && method.Name == "get_" + name;
                 }
 
                 return false;
+            }
+
+            [HarmonyTranspiler]
+            public static IEnumerable<CodeInstruction> Transpiler(
+                IEnumerable<CodeInstruction> instructions)
+            {
+                MethodInfo replacement = AccessTools.Method(
+                    typeof(Patch_CompAbilityEffect_Convert_Apply),
+                    nameof(SafeGainConvertMemory));
+
+                List<CodeInstruction> code = new List<CodeInstruction>(instructions);
+                HashSet<int> removeIndices = new HashSet<int>();
+                HashSet<int> replaceIndices = new HashSet<int>();
+
+                for (int i = 0; i + 3 < code.Count; i++)
+                {
+                    if (!IsMemberAccess(code[i], "needs")
+                        || !IsMemberAccess(code[i + 1], "mood")
+                        || !IsMemberAccess(code[i + 2], "thoughts")
+                        || !IsMemberAccess(code[i + 3], "memories"))
+                    {
+                        continue;
+                    }
+
+                    removeIndices.Add(i);
+                    removeIndices.Add(i + 1);
+                    removeIndices.Add(i + 2);
+                    removeIndices.Add(i + 3);
+
+                    for (int j = i + 4; j < code.Count; j++)
+                    {
+                        if ((code[j].opcode == OpCodes.Call || code[j].opcode == OpCodes.Callvirt)
+                            && code[j].operand is MethodInfo method
+                            && method.Name == "TryGainMemory")
+                        {
+                            replaceIndices.Add(j);
+                            break;
+                        }
+                    }
+                }
+
+                List<Label> pendingLabels = new List<Label>();
+                for (int i = 0; i < code.Count; i++)
+                {
+                    CodeInstruction current = code[i];
+                    if (removeIndices.Contains(i))
+                    {
+                        pendingLabels.AddRange(current.labels);
+                        continue;
+                    }
+
+                    CodeInstruction emit = replaceIndices.Contains(i)
+                        ? new CodeInstruction(OpCodes.Call, replacement)
+                        {
+                            blocks = current.blocks
+                        }
+                        : current;
+
+                    if (pendingLabels.Count > 0)
+                    {
+                        emit.labels.AddRange(pendingLabels);
+                        pendingLabels.Clear();
+                    }
+
+                    if (replaceIndices.Contains(i))
+                    {
+                        emit.labels.AddRange(current.labels);
+                    }
+
+                    yield return emit;
+                }
             }
         }
     }
