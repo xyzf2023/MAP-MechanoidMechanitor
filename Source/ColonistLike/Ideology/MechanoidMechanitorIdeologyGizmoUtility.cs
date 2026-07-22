@@ -64,8 +64,7 @@ namespace MAP_MechanoidMechanitor
                         {
                             MechanoidMechanitorIdeologyAdaptationUtility.TrySetIdeo(
                                 pawn,
-                                ideo,
-                                refreshFactionCounts: true);
+                                ideo);
                         },
                     ideo.Icon,
                     ideo.Color);

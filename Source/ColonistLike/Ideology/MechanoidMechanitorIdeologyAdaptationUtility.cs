@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using HarmonyLib;
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
-using RimWorld.Planet;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -17,7 +16,7 @@ namespace MAP_MechanoidMechanitor
             AccessTools.FieldRefAccess<Pawn_IdeoTracker, float>("certaintyInt");
 
         [ThreadStatic]
-        private static bool allowIdeoMutation;
+        private static int ideoMutationDepth;
 
         public static MechanoidMechanitorIdeologyAdaptationLevel GetEffectiveLevel()
         {
@@ -89,15 +88,14 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsPresentInWorldPlayerScope(Pawn pawn)
         {
-            if (PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive.Contains(pawn))
+            if (pawn == null || pawn.Dead || pawn.Destroyed)
             {
-                return true;
+                return false;
             }
 
-            return pawn.Faction == Faction.OfPlayer
-                && !pawn.Dead
-                && !pawn.Destroyed
-                && (pawn.Spawned || pawn.IsWorldPawn());
+            // 仅计入已生成在玩家地图、玩家远行队、旅行中运输载具的成员。
+            // 不因 pawn.IsWorldPawn() 为 true（仅保存在世界 Pawn 池）就计入。
+            return PawnsFinder.AllMapsCaravansAndTravellingTransporters_Alive.Contains(pawn);
         }
 
         public static void EnsureIdeologyState(Pawn? pawn)
@@ -134,10 +132,7 @@ namespace MAP_MechanoidMechanitor
             pawn.ideo = new Pawn_IdeoTracker(pawn);
         }
 
-        public static bool TrySetIdeo(
-            Pawn? pawn,
-            Ideo? ideo,
-            bool refreshFactionCounts = true)
+        public static bool TrySetIdeo(Pawn? pawn, Ideo? ideo)
         {
             if (!ModsConfig.IdeologyActive
                 || pawn == null
@@ -154,27 +149,26 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            allowIdeoMutation = true;
+            // 计数式作用域：嵌套安全调用时内部调用不会提前关闭外层授权。
+            ideoMutationDepth++;
             try
             {
+                // SetIdeo 自身已完成 Notify_MemberLost/Gained、新旧意识形态的
+                // RecacheColonistBelieverCount、Notify_ColonistChangedIdeo 及关系/缓存刷新，
+                // 手动切换不触发 Notify_MemberGainedByConversion，也不奖励改革点数。
                 pawn.ideo.SetIdeo(ideo);
             }
             finally
             {
-                allowIdeoMutation = false;
+                ideoMutationDepth--;
             }
 
+            // SetIdeo 会把确定度设为随机初始值，这里仅需恢复为 100%。
             ForceCertaintyFull(pawn);
-            if (refreshFactionCounts)
-            {
-                Faction.OfPlayer?.ideos?.Notify_ColonistChangedIdeo();
-                ideo.RecacheColonistBelieverCount();
-            }
-
             return true;
         }
 
-        public static bool IsIdeoMutationAllowed => allowIdeoMutation;
+        public static bool IsIdeoMutationAllowed => ideoMutationDepth > 0;
 
         public static void ForceCertaintyFull(Pawn? pawn)
         {
@@ -220,7 +214,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            TrySetIdeo(pawn, primary, refreshFactionCounts: true);
+            TrySetIdeo(pawn, primary);
         }
     }
 }

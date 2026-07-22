@@ -710,6 +710,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return CurrentComponent?.ResolveLockedPrimaryIdeo();
         }
 
+        public static void NotifyPrimaryIdeoSetExternally(Ideo? ideo)
+        {
+            CurrentComponent?.NotifyPrimaryIdeoSetExternallyInstance(ideo);
+        }
+
+        private void NotifyPrimaryIdeoSetExternallyInstance(Ideo? ideo)
+        {
+            if (ideo == null
+                || !ModsConfig.IdeologyActive
+                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled
+                || activeConfiguration == null
+                || activeConfiguration.ideologyAdaptationLevel
+                    < MechanoidMechanitorIdeologyAdaptationLevel.Basic)
+            {
+                return;
+            }
+
+            // 外部显式改写主流文化：同步为新的锁定值，避免下一次自动人数重算恢复开局文化。
+            lockedPrimaryIdeo = ideo;
+            lockedPrimaryIdeoCaptured = true;
+        }
+
         private void TryCaptureLockedPrimaryIdeoOnce()
         {
             if (lockedPrimaryIdeoCaptured

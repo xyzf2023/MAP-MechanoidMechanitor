@@ -155,6 +155,41 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    /// <summary>
+    /// Basic：当外部代码/开发者工具/其他 MOD 显式调用 SetPrimary 时，把新意识形态同步为新的
+    /// 锁定值，使其不会在下一次自动人数重算时被恢复为开局文化。自动重算本身通过字段直写主流文化，
+    /// 不经过 SetPrimary，因此不会误更新锁定值。
+    /// </summary>
+    [HarmonyPatch(typeof(FactionIdeosTracker), nameof(FactionIdeosTracker.SetPrimary))]
+    public static class MechanoidMechanitorIdeology_FactionIdeosTracker_SetPrimary_Patch
+    {
+        private static readonly AccessTools.FieldRef<FactionIdeosTracker, Faction> FactionField =
+            AccessTools.FieldRefAccess<FactionIdeosTracker, Faction>("faction");
+
+        [HarmonyPostfix]
+        public static void Postfix(FactionIdeosTracker __instance, Ideo ideo)
+        {
+            if (!ModsConfig.IdeologyActive || ideo == null)
+            {
+                return;
+            }
+
+            if (MechanoidMechanitorIdeologyAdaptationUtility.GetEffectiveLevel()
+                != MechanoidMechanitorIdeologyAdaptationLevel.Basic)
+            {
+                return;
+            }
+
+            Faction faction = FactionField(__instance);
+            if (faction == null || !faction.IsPlayer)
+            {
+                return;
+            }
+
+            GameComponent_MechanoidMechanitorStoryState.NotifyPrimaryIdeoSetExternally(ideo);
+        }
+    }
+
     [HarmonyPatch(typeof(Ideo), nameof(Ideo.RecacheColonistBelieverCount))]
     public static class MechanoidMechanitorIdeology_Ideo_RecacheColonistBelieverCount_Patch
     {

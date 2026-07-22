@@ -16,7 +16,15 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechanoidBackstoryUtility.EnsureGenericBackstories(pawn);
-            WardenWorkUtility.GrantAndEnsureInfrastructure(pawn);
+
+            // Warden：静态 CompWardenWorkUser（如 Justice/Lover）始终保留；
+            // 由机械族机械师身份动态授予的 Warden 仅在 Full 文化模式下开放，
+            // 不永久加入通用工作白名单（Disabled/Basic/Partial 不授予）。
+            if (pawn.GetComp<CompWardenWorkUser>() != null
+                || MechanoidMechanitorIdeologyAdaptationUtility.AllowsIdeologyFullParticipation(pawn))
+            {
+                WardenWorkUtility.GrantAndEnsureInfrastructure(pawn);
+            }
 
             if (pawn.GetComp<CompAnimalHandlingWorkUser>() != null)
             {
