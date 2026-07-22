@@ -52,6 +52,7 @@
         <floatMenuFactionIcon>Mechanoid</floatMenuFactionIcon>
       </li>
       <li Class="CompProperties_Useable_CallBossgroup">
+        <compClass>MAP_MechanoidMechanitor.CompUseEffect_CallJusticeBossgroup</compClass>
         <bossgroupDef>MAP_JusticeBossGroup</bossgroupDef>
         <effecterDef>MechbandDishUsed</effecterDef>
         <prepareEffecterDef>MechBandDishPrepared</prepareEffecterDef>
