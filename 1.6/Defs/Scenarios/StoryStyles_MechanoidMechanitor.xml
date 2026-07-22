@@ -17,7 +17,7 @@
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
     <defName>MAP_StoryStyle_SymbiosisCovenant</defName>
     <label>共生盟约</label>
-    <description>与普通派系为敌，与机械巢保持中立，并启用“共生盟约”路线。</description>
+    <description>此剧本尚未完成，没有额外剧情体验，敬请期待。</description>
     <displayOrder>200</displayOrder>
     <iconPath>UI/SymbiosisCovenant</iconPath>
     <presetConfiguration>
@@ -31,7 +31,7 @@
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
     <defName>MAP_StoryStyle_PurgeDirective</defName>
     <label>肃清指令</label>
-    <description>与普通派系永久敌对，与机械巢结盟，并启用“肃清指令”路线。</description>
+    <description>扮演主脑部署的杀戮机器，无情的清理所有有机智慧生物；通过各种任务获取主脑信任，以获取来自机械巢的支持。</description>
     <displayOrder>300</displayOrder>
     <iconPath>UI/PurgeDirective</iconPath>
     <presetConfiguration>
