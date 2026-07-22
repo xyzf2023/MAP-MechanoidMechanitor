@@ -127,9 +127,9 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.01>机械巢资源索引已完成同步。\n标记所需物资。\n材质、[[PAUSE]]品质[[PAUSE]]与数量将被编译为标准补给清单。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.01>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.02>-远程储备节点：[[PAUSE]]可调用\n-物流投送路径：[[PAUSE]]已确认\n\n可构建补给清单。[[PAUSE]]非标准规格将消耗额外点数。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.02>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.03>允许传入资源缺口信息。\n选定所需物资及构成参数。\n需求确认后，投放序列将执行投放.</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.03>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.01>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.02>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.01>-协议执行序列连接：[[PAUSE]]稳定\n-授权校验结果：[[PAUSE]]通过\n可用特殊协议已列出。协议执行序列将在收到请求后行动。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.02>检测到特殊协议申请。\n-权限校验：[[PAUSE]]通过\n注意：[[PAUSE]]此类序列不属于常规调拨范围。提交前，[[PAUSE]]请确认协议参数与资源消耗。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.03>-协议执行序列连接：[[PAUSE]]稳定\n-授权校验结果：[[PAUSE]]通过\n可用特殊协议已列出。协议执行序列将在收到请求后行动。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.03>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Toggle>DEV</MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Toggle>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dev.LoopTest>循环测试</MAP_MechanoidMechanitor.MechHiveCommunication.Dev.LoopTest>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add1000>增加1000点数</MAP_MechanoidMechanitor.MechHiveCommunication.Dev.Add1000>
