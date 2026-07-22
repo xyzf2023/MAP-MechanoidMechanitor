@@ -1,3 +1,4 @@
+using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
@@ -130,7 +131,20 @@ namespace MAP_MechanoidMechanitor
             }
 
             capabilities |= MechanoidMechanitorCapability.ImplantInstallation
-                | MechanoidMechanitorCapability.ShuttlePilot;
+                | MechanoidMechanitorCapability.ShuttlePilot
+                | MechanoidMechanitorCapability.ColonistLikeSocialTab;
+
+            MechanoidMechanitorIdeologyAdaptationLevel ideologyLevel =
+                MechanoidMechanitorIdeologyAdaptationUtility.GetEffectiveLevel();
+            if (ideologyLevel >= MechanoidMechanitorIdeologyAdaptationLevel.Partial)
+            {
+                capabilities |= MechanoidMechanitorCapability.IdeologyMembership;
+            }
+
+            if (ideologyLevel >= MechanoidMechanitorIdeologyAdaptationLevel.Full)
+            {
+                capabilities |= MechanoidMechanitorCapability.IdeologyFullParticipation;
+            }
 
             if (!GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
                     pawn,

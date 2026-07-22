@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -32,6 +33,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private string? mechanoidOvermindName;
 
+        private Ideo? lockedPrimaryIdeo;
+
+        private bool lockedPrimaryIdeoCaptured;
+
         private readonly Dictionary<Faction, MechanoidMechanitorFactionRelationOption>
             customFactionOptionCache =
                 new Dictionary<Faction, MechanoidMechanitorFactionRelationOption>();
@@ -44,6 +49,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public MechanoidMechanitorPurgeDirectiveRuntimeState? PurgeDirectiveRuntimeState =>
             purgeDirectiveRuntimeState;
+
+        public Ideo? LockedPrimaryIdeo => ResolveLockedPrimaryIdeo();
+
+        public bool LockedPrimaryIdeoCaptured => lockedPrimaryIdeoCaptured;
 
         public bool InitialOrdinaryFactionRelationsApplied =>
             initialOrdinaryFactionRelationsApplied;
@@ -229,6 +238,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             activeConfiguration = configuration.CreateCopy();
             initialOrdinaryFactionRelationsApplied = false;
             initialMechHiveRelationApplied = false;
+            lockedPrimaryIdeo = null;
+            lockedPrimaryIdeoCaptured = false;
             purgeDirectiveRuntimeState = new MechanoidMechanitorPurgeDirectiveRuntimeState();
             purgeDirectiveRuntimeState.InitializeForNewGame(
                 activeConfiguration.purgeDirectiveEnabled);
@@ -602,6 +613,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            ValidateLockedPrimaryIdeoAfterLoad();
+            MechanoidMechanitorIdeologyAdaptationUtility.CalibrateAllRegisteredMechanitors();
+
             if (initialOrdinaryFactionRelationsApplied)
             {
                 MechanoidMechanitorOrdinaryFactionRelationApplier
@@ -619,6 +633,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.GameComponentTick();
             MechanoidMechanitorPurgeDirectiveUtility.Tick(this);
+            TryCaptureLockedPrimaryIdeoOnce();
+            if (Find.TickManager != null
+                && Find.TickManager.TicksGame % 2500 == 0)
+            {
+                MechanoidMechanitorIdeologyAdaptationUtility.CalibrateAllRegisteredMechanitors();
+            }
         }
 
         public override void ExposeData()
@@ -642,6 +662,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref purgeDirectiveRuntimeState,
                 "purgeDirectiveRuntimeState");
             Scribe_Values.Look(ref mechanoidOvermindName, "mechanoidOvermindName");
+            Scribe_References.Look(ref lockedPrimaryIdeo, "lockedPrimaryIdeo");
+            Scribe_Values.Look(
+                ref lockedPrimaryIdeoCaptured,
+                "lockedPrimaryIdeoCaptured",
+                false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -661,6 +686,96 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     RebuildRuntimeCaches();
                 }
             }
+        }
+
+        public static MechanoidMechanitorIdeologyAdaptationLevel GetConfiguredIdeologyAdaptationLevel()
+        {
+            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled
+                || Current.Game == null)
+            {
+                return MechanoidMechanitorIdeologyAdaptationLevel.Disabled;
+            }
+
+            GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+            if (component?.activeConfiguration == null)
+            {
+                return MechanoidMechanitorIdeologyAdaptationLevel.Disabled;
+            }
+
+            return component.activeConfiguration.ideologyAdaptationLevel;
+        }
+
+        public static Ideo? GetLockedPrimaryIdeo()
+        {
+            return CurrentComponent?.ResolveLockedPrimaryIdeo();
+        }
+
+        private void TryCaptureLockedPrimaryIdeoOnce()
+        {
+            if (lockedPrimaryIdeoCaptured
+                || !ModsConfig.IdeologyActive
+                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled
+                || activeConfiguration == null
+                || Current.ProgramState != ProgramState.Playing)
+            {
+                return;
+            }
+
+            if (activeConfiguration.ideologyAdaptationLevel
+                < MechanoidMechanitorIdeologyAdaptationLevel.Basic)
+            {
+                return;
+            }
+
+            Ideo? primary = Faction.OfPlayer?.ideos?.PrimaryIdeo;
+            if (primary == null)
+            {
+                return;
+            }
+
+            lockedPrimaryIdeo = primary;
+            lockedPrimaryIdeoCaptured = true;
+        }
+
+        private void ValidateLockedPrimaryIdeoAfterLoad()
+        {
+            if (!lockedPrimaryIdeoCaptured)
+            {
+                return;
+            }
+
+            if (ResolveLockedPrimaryIdeo() != null)
+            {
+                return;
+            }
+
+            lockedPrimaryIdeo = null;
+            lockedPrimaryIdeoCaptured = false;
+        }
+
+        private Ideo? ResolveLockedPrimaryIdeo()
+        {
+            if (!lockedPrimaryIdeoCaptured || lockedPrimaryIdeo == null)
+            {
+                return null;
+            }
+
+            IdeoManager? ideoManager = Find.IdeoManager;
+            if (ideoManager == null)
+            {
+                return null;
+            }
+
+            List<Ideo> ideos = ideoManager.IdeosListForReading;
+            for (int i = 0; i < ideos.Count; i++)
+            {
+                if (ReferenceEquals(ideos[i], lockedPrimaryIdeo))
+                {
+                    return lockedPrimaryIdeo;
+                }
+            }
+
+            return null;
         }
 
         public void RebuildRuntimeCaches()

@@ -230,6 +230,8 @@ namespace MAP_MechanoidMechanitor
                 pawn,
                 actAsIfSpawned: true);
             MAPMechanitorInitializationUtility.FinalizeNow(pawn);
+            ColonistLikeSocialTrackerUtility.EnsureTrackers(pawn);
+            MechanoidMechanitorIdeologyAdaptationUtility.EnsureIdeologyState(pawn);
         }
 
         public static bool UsesVanillaControlPath(Pawn? pawn)
@@ -408,6 +410,16 @@ namespace MAP_MechanoidMechanitor
             MechanoidMechanitorCapabilityUtility.HasCapability(
                 pawn,
                 MechanoidMechanitorCapability.ShuttlePilot);
+
+        public static bool AllowsIdeologyMembership(Pawn? pawn) =>
+            MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.IdeologyMembership);
+
+        public static bool AllowsIdeologyFullParticipation(Pawn? pawn) =>
+            MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.IdeologyFullParticipation);
 
         public static bool IsRoleWorkType(WorkTypeDef? workType)
         {

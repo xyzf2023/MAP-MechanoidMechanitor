@@ -23,6 +23,9 @@ namespace MAP_MechanoidMechanitor
 
         ColonistLikeSocialTab = 1 << 12,
         SyntheticSpouseInteraction = 1 << 13,
-        SyntheticPregnancy = 1 << 14
+        SyntheticPregnancy = 1 << 14,
+
+        IdeologyMembership = 1 << 15,
+        IdeologyFullParticipation = 1 << 16
     }
 }

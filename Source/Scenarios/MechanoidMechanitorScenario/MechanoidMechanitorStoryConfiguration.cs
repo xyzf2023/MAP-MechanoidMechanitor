@@ -19,6 +19,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool gainTrustRouteEnabled;
 
+        public MechanoidMechanitorIdeologyAdaptationLevel ideologyAdaptationLevel =
+            MechanoidMechanitorIdeologyAdaptationLevel.Basic;
+
         public static MechanoidMechanitorStoryConfiguration CreateDefault()
         {
             return new MechanoidMechanitorStoryConfiguration();
@@ -31,7 +34,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ordinaryFactionRelationsMode = ordinaryFactionRelationsMode,
                 mechHiveRelationMode = mechHiveRelationMode,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
-                gainTrustRouteEnabled = gainTrustRouteEnabled
+                gainTrustRouteEnabled = gainTrustRouteEnabled,
+                ideologyAdaptationLevel = ideologyAdaptationLevel
             };
 
             for (int i = 0; i < ordinaryFactionRelationSettings.Count; i++)
@@ -197,6 +201,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidMechanitorMechHiveRelationMode.Default);
             Scribe_Values.Look(ref purgeDirectiveEnabled, "purgeDirectiveEnabled", false);
             Scribe_Values.Look(ref gainTrustRouteEnabled, "gainTrustRouteEnabled", false);
+            Scribe_Values.Look(
+                ref ideologyAdaptationLevel,
+                "ideologyAdaptationLevel",
+                MechanoidMechanitorIdeologyAdaptationLevel.Basic);
 
             if (Scribe.mode == LoadSaveMode.LoadingVars
                 && ordinaryFactionRelationSettings == null)
