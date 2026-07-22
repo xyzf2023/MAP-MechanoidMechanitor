@@ -343,6 +343,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             MechanoidOvermindUiStyle.DrawPanel(rect, alt: true, cornerMarks: false);
             Rect inner = rect.ContractedBy(12f);
+            MechForceSupportService.SanitizeSelectedTemplate(order, null);
 
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(inner.x, inner.y, inner.width, 22f),
@@ -384,15 +385,58 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 TextAnchor.MiddleRight,
                 MechanoidOvermindUiStyle.AccentBright);
 
+            Rect templateButtonRect = new Rect(
+                inner.x,
+                pointsFieldRect.yMax + 8f,
+                Mathf.Min(430f, inner.width),
+                30f);
+            string templateFullLabel =
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Template"
+                    .Translate(order.GetTemplateLabel());
+            Text.Font = GameFont.Small;
+            string templateButtonLabel = templateFullLabel.Truncate(
+                Mathf.Max(40f, templateButtonRect.width - 16f));
+            if (MechanoidOvermindUiStyle.DrawActionButton(
+                    templateButtonRect,
+                    templateButtonLabel))
+            {
+                OpenForceSupportTemplateMenu(order);
+            }
+
+            TooltipHandler.TipRegion(templateButtonRect, templateFullLabel);
+
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(
                     inner.x,
-                    pointsFieldRect.yMax + 10f,
+                    templateButtonRect.yMax + 8f,
                     inner.width,
-                    Mathf.Max(20f, inner.yMax - pointsFieldRect.yMax - 10f)),
+                    Mathf.Max(20f, inner.yMax - templateButtonRect.yMax - 8f)),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Footnote"
                     .Translate(),
                 TextAnchor.UpperLeft);
+        }
+
+        private static void OpenForceSupportTemplateMenu(MechForceSupportOrder order)
+        {
+            List<(PawnGroupMaker? maker, string label, string fullLabel)> entries =
+                MechForceSupportService.BuildTemplateMenuEntries(order, null);
+            List<FloatMenuOption> options = new List<FloatMenuOption>(entries.Count);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                PawnGroupMaker? maker = entries[i].maker;
+                string label = entries[i].label;
+                string fullLabel = entries[i].fullLabel;
+                bool selected = order.SelectedGroupMaker == maker;
+                FloatMenuOption option = new FloatMenuOption(
+                    (selected ? "● " : string.Empty) + label,
+                    () => order.SetSelectedGroupMaker(maker))
+                {
+                    tooltip = fullLabel
+                };
+                options.Add(option);
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options));
         }
 
         private static void OpenThreatPointsMenu(MechClusterDeploymentOrder order)

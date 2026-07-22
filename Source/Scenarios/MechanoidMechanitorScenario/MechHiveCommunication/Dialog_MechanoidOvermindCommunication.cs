@@ -1888,7 +1888,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(rect.x + 8f, rect.y + 25f, rect.width - 16f, 20f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderMeta"
-                    .Translate(order.ThreatPoints));
+                    .Translate(order.ThreatPoints, order.GetTemplateLabel()));
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(rect.x + 8f, rect.y + 46f, rect.width - 16f, 20f),
                 "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderCost"
@@ -2138,6 +2138,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 },
                 target =>
                 {
+                    if (target.IsValid
+                        && MechForceSupportService
+                            .ValidateTargetCell(map, target.Cell)
+                            .Accepted)
+                    {
+                        GenDraw.DrawTargetHighlight(target);
+                    }
                 },
                 target => target.IsValid
                     && MechForceSupportService
