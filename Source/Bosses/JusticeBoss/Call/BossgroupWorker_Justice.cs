@@ -38,11 +38,21 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (def.rewardDef == null)
+            {
+                Log.Error(
+                    "[MAP JusticeBoss] BossgroupDef "
+                    + def.defName
+                    + " has null rewardDef; aborting call.");
+                return;
+            }
+
             tracker.BeginPending(map.Parent);
 
             Slate slate = new Slate();
             slate.Set("bossgroup", def);
             slate.Set("map", map);
+            slate.Set("reward", def.rewardDef);
             slate.Set("wave", 0);
             slate.Set("bossKind", def.boss.kindDef);
 

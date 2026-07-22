@@ -14,6 +14,7 @@
     <workerClass>MAP_MechanoidMechanitor.BossgroupWorker_Justice</workerClass>
     <repeatWaveStartIndex>0</repeatWaveStartIndex>
     <quest>MAP_JusticeBossGroupQuest</quest>
+    <rewardDef>MAP_QuantumComputingChip</rewardDef>
     <leaderDescription>重装指挥单元「正义」</leaderDescription>
     <modExtensions>
       <li Class="MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorBossgroupExtension">
@@ -31,6 +32,16 @@
     <defName>MAP_JusticeBossGroupQuest</defName>
     <autoAccept>true</autoAccept>
     <defaultHidden>true</defaultHidden>
+    <questContentRules>
+      <rulesStrings>
+        <li>bossDefeatedLetterLabel->[escortees0_label]已被击败：[reward_label]</li>
+        <li>bossDefeatedStudyChipLetterText->[defeated][study][manufacture]</li>
+        <li>bossDefeatedLetterText->[defeated][manufacture]</li>
+        <li>defeated->敌对的[escortees0_label]已被摧毁，并掉落了一枚[reward_label]！</li>
+        <li>manufacture->\n\n该芯片可用于制造先进的机械装备。</li>
+        <li>study->\n\n你可以让机械师右键点击并分析这枚芯片。分析[reward_label]可以获取开展量子机械科技所需的关键数据。</li>
+      </rulesStrings>
+    </questContentRules>
     <root Class="MAP_MechanoidMechanitor.QuestNode_Root_JusticeBossGroup" />
   </QuestScriptDef>
 
