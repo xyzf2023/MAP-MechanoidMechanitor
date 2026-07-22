@@ -4,19 +4,21 @@
   <ThingDef ParentName="MechGestatorBase" MayRequire="Ludeon.RimWorld.Biotech">
     <defName>MAP_MassProductionMechGestator</defName>
     <label>量产型机械培育仓</label>
-    <description>使用超凡科技铸造而成的机械族培育仓，是主脑快速培育规模化机械部队的关键设施。\n\n该培育仓的培育时间固定为6小时，且培育完成后自动释放其中机械族。同时该培育仓可以培育所有已解锁配方的机械族。\n\n（现在这个建筑的贴图尚未完成，先使用原版贴图占位）</description>
+    <description>使用超凡科技铸造而成的机械族培育仓，是主脑快速培育规模化机械部队的关键设施。\n\n该培育仓的培育时间固定为6小时，且培育完成后自动释放其中机械族。同时该培育仓可以培育所有已解锁配方的机械族。</description>
     <thingClass>MAP_MechanoidMechanitor.Building_MassProductionMechGestator</thingClass>
     <graphicData>
       <texPath>Buildings/MassProductionMechGestator</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
-      <drawSize>(6,6)</drawSize>
+      <drawSize>(7,7)</drawSize>
       <shadowData>
-        <volume>(3, 2, 1.9)</volume>
+        <volume>(2.4, 2.2, 2.1)</volume>
       </shadowData>
+      <drawOffset>(0, 0.5, 1.0)</drawOffset>
     </graphicData>
     <uiIconPath>Buildings/MassProductionMechGestator_south</uiIconPath>
     <uiIconScale>1.85</uiIconScale>
-    <interactionCellOffset>(1,0,2)</interactionCellOffset>
+    <interactionCellOffset>(0,0,2)</interactionCellOffset>
+    <placeWorkers Inherit="False" />
     <recipes>
       <li>Militor</li>
       <li>Lifter</li>
@@ -72,16 +74,17 @@
         <li>(0, 0, 0.45)</li>
       </formingMechPerRotationOffset>
       <mechGestatorCylinderGraphic>
-        <texPath>Things/Building/Production/MechGestatorStandardGlass</texPath>
+        <texPath>Buildings/TransparentGestatorTop</texPath>
         <graphicClass>Graphic_Multi</graphicClass>
-        <drawSize>(5.6,4)</drawSize>
+        <drawSize>(1,1)</drawSize>
         <shaderType>Transparent</shaderType>
       </mechGestatorCylinderGraphic>
       <mechGestatorTopGraphic>
-        <texPath>Things/Building/Production/MechGestatorStandardTop</texPath>
+        <texPath>Buildings/TransparentGestatorTop</texPath>
         <graphicClass>Graphic_Multi</graphicClass>
-        <drawSize>(5.6,4)</drawSize>
-      </mechGestatorTopGraphic>
+        <drawSize>(1,1)</drawSize>
+        <shaderType>Transparent</shaderType>
+      </mechGestatorTopGraphic>      
       <gestatorFormingMote>
         <north>MechGestatorForming_North</north>
         <east>MechGestatorForming_East</east>
