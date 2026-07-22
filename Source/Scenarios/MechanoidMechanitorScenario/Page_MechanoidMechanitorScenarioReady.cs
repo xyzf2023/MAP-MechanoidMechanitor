@@ -30,6 +30,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const float IdeoButtonRowHeight = 32f;
         private const float IdeoButtonGap = 8f;
 
+        // 文化适配按钮 Tooltip 的稳定基础 ID，加上枚举值得到每个按钮独立且稳定的 ID。
+        // 与 ScenPart_MechanoidMechanitor.TooltipId(684272) 等现有 ID 不冲突。
+        private const int AdaptationTooltipIdBase = 748120;
+
         private static readonly Color CardBgColor = new Color(0.14f, 0.14f, 0.14f, 0.85f);
         private static readonly Color CardBgSelectedColor = new Color(0.20f, 0.18f, 0.14f, 0.92f);
         private static readonly Color CardOutlineColor = new Color(0.42f, 0.37f, 0.30f, 0.40f);
@@ -248,24 +252,48 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             int count = styles.Count;
-            float widthForCards = area.width - StoryStyleCardGap * (count - 1);
+
+            // 每行在不低于最小宽度前提下最多容纳的卡片数（至少 1）；卡片总数较少时按实际数量。
+            int maxColumnsByWidth = Mathf.FloorToInt(
+                (area.width + StoryStyleCardGap)
+                / (StoryStyleCardMinWidth + StoryStyleCardGap));
+            int columns = Mathf.Clamp(maxColumnsByWidth, 1, count);
+            int rows = Mathf.CeilToInt((float)count / columns);
+
             float cardWidth = Mathf.Clamp(
-                widthForCards / count,
+                (area.width - StoryStyleCardGap * (columns - 1)) / columns,
                 StoryStyleCardMinWidth,
                 StoryStyleCardMaxWidth);
 
-            float cardHeight = GetStoryStyleCardHeight();
-            cardHeight = Mathf.Min(cardHeight, area.height);
+            // 行高按可用高度分配：单行时使用理想高度；多行或高度不足时压缩（说明区域随高度自适应）。
+            float preferredCardHeight = GetStoryStyleCardHeight();
+            float availableForRows = area.height - StoryStyleCardGap * (rows - 1);
+            float cardHeight = Mathf.Min(
+                preferredCardHeight,
+                Mathf.Max(1f, availableForRows / rows));
 
-            float totalWidth = cardWidth * count + StoryStyleCardGap * (count - 1);
-            float curX = area.x + Mathf.Max(0f, (area.width - totalWidth) / 2f);
-            float curY = area.y + Mathf.Max(0f, (area.height - cardHeight) / 2f);
+            float totalBlockHeight = cardHeight * rows + StoryStyleCardGap * (rows - 1);
+            float startY = area.y + Mathf.Max(0f, (area.height - totalBlockHeight) / 2f);
 
-            for (int i = 0; i < count; i++)
+            int index = 0;
+            for (int r = 0; r < rows && index < count; r++)
             {
-                Rect cardRect = new Rect(curX, curY, cardWidth, cardHeight);
-                DrawStoryStyle(cardRect, styles[i]);
-                curX += cardWidth + StoryStyleCardGap;
+                int itemsThisRow = Mathf.Min(columns, count - index);
+                float rowWidth =
+                    cardWidth * itemsThisRow + StoryStyleCardGap * (itemsThisRow - 1);
+                float rowX = area.x + Mathf.Max(0f, (area.width - rowWidth) / 2f);
+                float rowY = startY + r * (cardHeight + StoryStyleCardGap);
+
+                for (int c = 0; c < itemsThisRow; c++)
+                {
+                    Rect cardRect = new Rect(
+                        rowX + c * (cardWidth + StoryStyleCardGap),
+                        rowY,
+                        cardWidth,
+                        cardHeight);
+                    DrawStoryStyle(cardRect, styles[index]);
+                    index++;
+                }
             }
         }
 
@@ -319,16 +347,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Text.Anchor = TextAnchor.UpperCenter;
                 GUI.color = selected ? Color.white : new Color(0.88f, 0.88f, 0.88f, 1f);
                 float titleY = rect.y + StoryStyleCardPadding;
+                float titleHeight = Text.LineHeight;
                 Widgets.Label(
-                    new Rect(innerX, titleY, innerWidth, Text.LineHeight),
+                    new Rect(innerX, titleY, innerWidth, titleHeight),
                     style.LabelCap);
 
-                float iconY = titleY + Text.LineHeight + StoryStyleTitleIconGap;
+                float iconY = titleY + titleHeight + StoryStyleTitleIconGap;
+                // 卡片被压缩时自适应缩小图标，保证标题+图标始终落在卡片内、不溢出边界。
+                float iconSpace = rect.yMax - StoryStyleCardPadding - iconY;
+                float iconSize = Mathf.Clamp(iconSpace, 0f, StoryStyleIconSize);
                 Rect iconRect = new Rect(
-                    rect.x + (rect.width - StoryStyleIconSize) / 2f,
+                    rect.x + (rect.width - iconSize) / 2f,
                     iconY,
-                    StoryStyleIconSize,
-                    StoryStyleIconSize);
+                    iconSize,
+                    iconSize);
                 GUI.color = Color.white;
                 Texture2D? customIcon = style.IconTexture;
                 if (customIcon != null)
@@ -340,7 +372,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     Widgets.ThingIcon(iconRect, style.iconThingDef);
                 }
 
-                float descY = iconY + StoryStyleIconSize + StoryStyleIconDescGap;
+                float descY = iconY + iconSize + StoryStyleIconDescGap;
                 float descHeight = rect.yMax - StoryStyleCardPadding - descY;
                 if (descHeight > 0f && !style.description.NullOrEmpty())
                 {
@@ -492,6 +524,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         buttonRect,
                         MechanoidMechanitorStoryConfigurationLabels.LabelFor(level));
 
+                    // Tooltip 作用范围精确限制为当前按钮，使用稳定且互不冲突的 ID。
+                    TooltipHandler.TipRegion(
+                        buttonRect,
+                        new TipSignal(
+                            GetAdaptationTooltip(level),
+                            AdaptationTooltipIdBase + (int)level));
+
                     if (Widgets.ButtonInvisible(buttonRect, doMouseoverSound: true))
                     {
                         if (customConfigurationDraft.ideologyAdaptationLevel != level)
@@ -509,6 +548,36 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Text.WordWrap = previousWordWrap;
                 GUI.color = previousColor;
             }
+        }
+
+        private static string GetAdaptationTooltip(
+            MechanoidMechanitorIdeologyAdaptationLevel level)
+        {
+            string title = MechanoidMechanitorStoryConfigurationLabels.LabelFor(level);
+            return title.Colorize(ColoredText.TipSectionTitleColor)
+                + "\n\n"
+                + GetAdaptationTooltipBody(level);
+        }
+
+        private static string GetAdaptationTooltipBody(
+            MechanoidMechanitorIdeologyAdaptationLevel level)
+        {
+            return level switch
+            {
+                MechanoidMechanitorIdeologyAdaptationLevel.Disabled =>
+                    "MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Disabled"
+                        .Translate(),
+                MechanoidMechanitorIdeologyAdaptationLevel.Basic =>
+                    "MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Basic"
+                        .Translate(),
+                MechanoidMechanitorIdeologyAdaptationLevel.Partial =>
+                    "MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Partial"
+                        .Translate(),
+                MechanoidMechanitorIdeologyAdaptationLevel.Full =>
+                    "MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Full"
+                        .Translate(),
+                _ => string.Empty
+            };
         }
 
         private static TaggedString GetIdeologyAdaptationTitle()
