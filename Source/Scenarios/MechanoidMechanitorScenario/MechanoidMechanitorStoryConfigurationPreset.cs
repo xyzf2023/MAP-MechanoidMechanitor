@@ -12,9 +12,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool gainTrustRouteEnabled;
 
-        public MechanoidMechanitorIdeologyAdaptationLevel ideologyAdaptationLevel =
-            MechanoidMechanitorIdeologyAdaptationLevel.Basic;
-
         public MechanoidMechanitorStoryConfiguration CreateRuntimeConfiguration()
         {
             return new MechanoidMechanitorStoryConfiguration
@@ -22,8 +19,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ordinaryFactionRelationsMode = ordinaryFactionRelationsMode,
                 mechHiveRelationMode = mechHiveRelationMode,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
-                gainTrustRouteEnabled = gainTrustRouteEnabled,
-                ideologyAdaptationLevel = ideologyAdaptationLevel
+                gainTrustRouteEnabled = gainTrustRouteEnabled
             };
         }
     }

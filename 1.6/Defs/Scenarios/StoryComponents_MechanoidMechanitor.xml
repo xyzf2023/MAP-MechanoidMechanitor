@@ -17,14 +17,6 @@
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
-    <defName>MAP_StoryComponent_IdeologyAdaptation</defName>
-    <label>是否启用文化适配</label>
-    <description>决定文化DLC对本局游戏的影响。注意：开启后可能与某些MOD产生冲突。</description>
-    <displayOrder>250</displayOrder>
-    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_IdeologyAdaptation</workerClass>
-  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
-
-  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
     <defName>MAP_StoryComponent_PurgeDirective</defName>
     <label>路线：肃清指令</label>
     <description>启用后执行机械巢肃清协议：隐藏囚犯招募与奴役选项，定期检测并要求清除血肉殖民者，类人死亡积累肃清奖励计数；多次违令后机械巢将转为敌对并发动袭击。</description>
