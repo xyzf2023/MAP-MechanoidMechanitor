@@ -63,7 +63,7 @@
   <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Text>本地执行单元已多次违背肃清指令。节点可靠性正在重新评估。\n\n&lt;b&gt;这是最后一次警告。&lt;/b&gt;</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Text>
   <MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Label>异常节点确认</MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Label>
   <MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Text>本地执行单元已确认偏离//失效//污染。\n\n授权已撤销。节点已重新分类为敌对异常单元。\n\n机械巢已启动追踪//回收//净化程序。\n\n&lt;b&gt;杀戮//致残//肢解&lt;/b&gt;</MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Text>
-  <MAP_MechanoidMechanitor.Story.Component.GainTrustRoute.Description>是否启用“获取信任”路线。本阶段仅保存开关，不会触发任何任务或事件。</MAP_MechanoidMechanitor.Story.Component.GainTrustRoute.Description>
+  <MAP_MechanoidMechanitor.Story.Component.SymbiosisCovenant.Description>是否启用共生盟约路线。本阶段仅保存选项，不会产生实际剧情效果。</MAP_MechanoidMechanitor.Story.Component.SymbiosisCovenant.Description>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>默认</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>全部敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>全部永久敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>
@@ -260,7 +260,7 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.CommittedFailure>部署流程发生异常，额度已提交</MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.CommittedFailure>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>正在建立通讯通道……</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Todo>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Todo>
-  <MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>当前普通派系关系设置下，已不存在获取信任的空间。</MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason>
+  <MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason>当前普通派系关系设置下，不满足启用共生盟约路线的条件。</MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason>
   <MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>当前世界中没有可配置的普通派系。</MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>
   <MAP_MechanoidMechanitor.Story.NoMechHive>当前世界中没有机械巢派系。</MAP_MechanoidMechanitor.Story.NoMechHive>
   <MAP_Settings_EnablePortraitDisplayForAllSaves_Label>在所有存档中启用机械族"头像显示"</MAP_Settings_EnablePortraitDisplayForAllSaves_Label>

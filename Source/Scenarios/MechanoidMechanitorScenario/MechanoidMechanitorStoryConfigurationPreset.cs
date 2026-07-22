@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool purgeDirectiveEnabled;
 
-        public bool gainTrustRouteEnabled;
+        public bool symbiosisCovenantEnabled;
 
         public MechanoidMechanitorStoryConfiguration CreateRuntimeConfiguration()
         {
@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ordinaryFactionRelationsMode = ordinaryFactionRelationsMode,
                 mechHiveRelationMode = mechHiveRelationMode,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
-                gainTrustRouteEnabled = gainTrustRouteEnabled
+                symbiosisCovenantEnabled = symbiosisCovenantEnabled
             };
         }
     }

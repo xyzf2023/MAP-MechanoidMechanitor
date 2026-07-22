@@ -10,21 +10,35 @@
       <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
       <mechHiveRelationMode>Default</mechHiveRelationMode>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
-      <gainTrustRouteEnabled>false</gainTrustRouteEnabled>
+      <symbiosisCovenantEnabled>false</symbiosisCovenantEnabled>
     </presetConfiguration>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
-    <defName>MAP_StoryStyle_Disorder</defName>
-    <label>脱序</label>
-    <description>敬请期待</description>
+    <defName>MAP_StoryStyle_SymbiosisCovenant</defName>
+    <label>共生盟约</label>
+    <description>与普通派系为敌，与机械巢保持中立，并启用“共生盟约”路线。</description>
     <displayOrder>200</displayOrder>
-    <iconThingDef>Wastepack</iconThingDef>
+    <iconPath>UI/SymbiosisCovenant</iconPath>
     <presetConfiguration>
-      <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
-      <mechHiveRelationMode>Default</mechHiveRelationMode>
+      <ordinaryFactionRelationsMode>AllHostile</ordinaryFactionRelationsMode>
+      <mechHiveRelationMode>Neutral</mechHiveRelationMode>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
-      <gainTrustRouteEnabled>false</gainTrustRouteEnabled>
+      <symbiosisCovenantEnabled>true</symbiosisCovenantEnabled>
+    </presetConfiguration>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
+
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
+    <defName>MAP_StoryStyle_PurgeDirective</defName>
+    <label>肃清指令</label>
+    <description>与普通派系永久敌对，与机械巢结盟，并启用“肃清指令”路线。</description>
+    <displayOrder>300</displayOrder>
+    <iconPath>UI/PurgeDirective</iconPath>
+    <presetConfiguration>
+      <ordinaryFactionRelationsMode>AllPermanentHostile</ordinaryFactionRelationsMode>
+      <mechHiveRelationMode>Ally</mechHiveRelationMode>
+      <purgeDirectiveEnabled>true</purgeDirectiveEnabled>
+      <symbiosisCovenantEnabled>false</symbiosisCovenantEnabled>
     </presetConfiguration>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
 
@@ -32,13 +46,13 @@
     <defName>MAP_StoryStyle_Custom</defName>
     <label>自定义</label>
     <description>自由组合本局启用的剧情组件。</description>
-    <displayOrder>300</displayOrder>
+    <displayOrder>400</displayOrder>
     <opensCustomizePage>true</opensCustomizePage>
     <presetConfiguration>
       <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
       <mechHiveRelationMode>Default</mechHiveRelationMode>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
-      <gainTrustRouteEnabled>false</gainTrustRouteEnabled>
+      <symbiosisCovenantEnabled>false</symbiosisCovenantEnabled>
     </presetConfiguration>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
 </Defs>

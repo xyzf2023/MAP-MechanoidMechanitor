@@ -8,7 +8,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         public static MechanoidMechanitorStoryStyleDef MAP_StoryStyle_Classic = null!;
 
-        public static MechanoidMechanitorStoryStyleDef MAP_StoryStyle_Disorder = null!;
+        public static MechanoidMechanitorStoryStyleDef MAP_StoryStyle_SymbiosisCovenant = null!;
+
+        public static MechanoidMechanitorStoryStyleDef MAP_StoryStyle_PurgeDirective = null!;
 
         public static MechanoidMechanitorStoryStyleDef MAP_StoryStyle_Custom = null!;
 
