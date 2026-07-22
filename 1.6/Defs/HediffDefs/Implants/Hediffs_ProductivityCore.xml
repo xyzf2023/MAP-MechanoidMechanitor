@@ -4,10 +4,11 @@
     <defName>MAP_ProductivityCore</defName>
     <hediffClass>Hediff_Level</hediffClass>
     <descriptionHyperlinks>
-      <ThingDef>MAP_ProductivityCore</ThingDef>
+      <ThingDef>MAP_EfficiencyCoreQuantumComputingArray</ThingDef>
+      <ThingDef>MAP_EfficiencyCoreMemoryExpansion</ThingDef>
     </descriptionHyperlinks>
     <label>效能核心</label>
-    <description>一种搭载量子运算阵列的机械师植入体。它能为受监管机械族实时计算最优作业方案，大幅提高其工作速度与制作品质。最多可植入5个。</description>
+    <description>一套可植入机械师的微型量子运算阵列，能为受监管机械族实时计算最优作业方案。\n\n大幅提高该机械师监管机械族的工作速度与制作品质，移除机械族进行工作时的技能限制，阻止因烹饪等级造成的食物中毒，并使手术一定成功。可通过内存拓展模块提升至最高5级。</description>
     <descriptionShort>每级提供+1制作物品品质偏移和可配置的工作速度偏移。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>

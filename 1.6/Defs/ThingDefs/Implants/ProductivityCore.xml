@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
   <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
-    <defName>MAP_ProductivityCore</defName>
-    <label>效能核心</label>
-    <description>一种搭载量子运算阵列的机械师植入体。它能为受监管机械族实时计算最优作业方案，大幅提高其工作速度与制作品质。最多可植入5个。</description>
+    <defName>MAP_EfficiencyCoreQuantumComputingArray</defName>
+    <label>效能核心（量子运算阵列）</label>
+    <description>一套可植入机械师的微型量子运算阵列，能为受监管机械族实时计算最优作业方案。\n\n大幅提高该机械师监管机械族的工作速度与制作品质，移除机械族进行工作时的技能限制，阻止因烹饪等级造成的食物中毒，并使手术一定成功。只能安装一次。</description>
+    <descriptionHyperlinks>
+      <HediffDef>MAP_ProductivityCore</HediffDef>
+    </descriptionHyperlinks>
     <costList>
-      <PowerfocusChip>1</PowerfocusChip>
+      <MAP_QuantumComputingChip>1</MAP_QuantumComputingChip>
       <ComponentSpacer>5</ComponentSpacer>
       <Plasteel>75</Plasteel>
       <Gold>30</Gold>
     </costList>
     <statBases>
-      <MaxInstallCount>5</MaxInstallCount>
+      <MaxInstallCount>1</MaxInstallCount>
       <MarketValue>2000</MarketValue>
       <WorkToMake>12000</WorkToMake>
     </statBases>
@@ -25,7 +28,7 @@
       <li Class="CompProperties_Usable">
         <compClass>CompUsableImplant</compClass>
         <useJob>UseItem</useJob>
-        <useLabel>植入效能核心</useLabel>
+        <useLabel>植入效能核心（量子运算阵列）</useLabel>
         <userMustHaveHediff>MechlinkImplant</userMustHaveHediff>
       </li>
       <li Class="CompProperties_UseEffectInstallImplant">
@@ -33,6 +36,47 @@
         <bodyPart>Brain</bodyPart>
         <canUpgrade>true</canUpgrade>
         <requiresExistingHediff>false</requiresExistingHediff>
+        <maxSeverity>1</maxSeverity>
+      </li>
+    </comps>
+  </ThingDef>
+
+  <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_EfficiencyCoreMemoryExpansion</defName>
+    <label>效能核心（内存拓展）</label>
+    <description>用于扩展效能核心量子运算阵列的高密度内存模块，能扩大阵列可同时处理的数据规模。\n\n安装后能进一步提高受监管机械族的工作速度与物品制作品质。需要已安装量子运算阵列，最多安装四次。</description>
+    <descriptionHyperlinks>
+      <HediffDef>MAP_ProductivityCore</HediffDef>
+    </descriptionHyperlinks>
+    <costList>
+      <ComponentSpacer>1</ComponentSpacer>
+      <Gold>30</Gold>
+      <PowerfocusChip>1</PowerfocusChip>
+    </costList>
+    <statBases>
+      <MaxInstallCount>4</MaxInstallCount>
+      <MarketValue>2000</MarketValue>
+      <WorkToMake>12000</WorkToMake>
+    </statBases>
+    <recipeMaker>
+      <researchPrerequisite>MAP_QuantumTaskComputation</researchPrerequisite>
+      <skillRequirements Inherit="False">
+        <Crafting>12</Crafting>
+      </skillRequirements>
+    </recipeMaker>
+    <comps>
+      <li Class="CompProperties_Usable">
+        <compClass>CompUsableImplant</compClass>
+        <useJob>UseItem</useJob>
+        <useLabel>植入效能核心（内存拓展）</useLabel>
+        <userMustHaveHediff>MechlinkImplant</userMustHaveHediff>
+      </li>
+      <li Class="CompProperties_UseEffectInstallImplant">
+        <hediffDef>MAP_ProductivityCore</hediffDef>
+        <bodyPart>Brain</bodyPart>
+        <canUpgrade>true</canUpgrade>
+        <requiresExistingHediff>true</requiresExistingHediff>
+        <minSeverity>1</minSeverity>
         <maxSeverity>5</maxSeverity>
       </li>
     </comps>
