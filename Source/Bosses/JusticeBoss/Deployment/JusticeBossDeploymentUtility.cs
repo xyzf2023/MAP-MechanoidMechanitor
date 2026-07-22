@@ -43,7 +43,7 @@ namespace MAP_MechanoidMechanitor
                 3,
                 minRadius: 7f,
                 maxRadius: 13f,
-                requireOutwardFacing: false,
+                fixedRotation: Rot4.South,
                 occupied,
                 deployedInfrastructure);
 
@@ -55,7 +55,7 @@ namespace MAP_MechanoidMechanitor
                 3,
                 minRadius: 10f,
                 maxRadius: 18f,
-                requireOutwardFacing: true,
+                fixedRotation: Rot4.South,
                 occupied,
                 deployedInfrastructure);
 
@@ -67,7 +67,7 @@ namespace MAP_MechanoidMechanitor
                 3,
                 minRadius: 10f,
                 maxRadius: 18f,
-                requireOutwardFacing: true,
+                fixedRotation: Rot4.South,
                 occupied,
                 deployedInfrastructure);
 
@@ -81,7 +81,7 @@ namespace MAP_MechanoidMechanitor
                     1,
                     minRadius: 3f,
                     maxRadius: 7f,
-                    requireOutwardFacing: false,
+                    fixedRotation: null,
                     occupied,
                     deployedInfrastructure);
                 DeployBuildings(
@@ -92,7 +92,7 @@ namespace MAP_MechanoidMechanitor
                     1,
                     minRadius: 3f,
                     maxRadius: 7f,
-                    requireOutwardFacing: false,
+                    fixedRotation: null,
                     occupied,
                     deployedInfrastructure);
             }
@@ -135,7 +135,7 @@ namespace MAP_MechanoidMechanitor
             int count,
             float minRadius,
             float maxRadius,
-            bool requireOutwardFacing,
+            Rot4? fixedRotation,
             List<IntVec3> occupied,
             List<Thing> deployedInfrastructure)
         {
@@ -152,7 +152,7 @@ namespace MAP_MechanoidMechanitor
                         def,
                         minRadius,
                         maxRadius,
-                        requireOutwardFacing,
+                        fixedRotation,
                         occupied,
                         out IntVec3 cell,
                         out Rot4 rot))
@@ -188,7 +188,7 @@ namespace MAP_MechanoidMechanitor
             ThingDef def,
             float preferredMin,
             float preferredMax,
-            bool requireOutwardFacing,
+            Rot4? fixedRotation,
             List<IntVec3> occupied,
             out IntVec3 cell,
             out Rot4 rot)
@@ -203,6 +203,10 @@ namespace MAP_MechanoidMechanitor
                 new FloatRange(26f, 34f),
             };
 
+            Rot4[] tryRots = fixedRotation.HasValue
+                ? new[] { fixedRotation.Value }
+                : Rot4.AllRotations.ToArray();
+
             foreach (FloatRange ring in rings)
             {
                 for (int attempt = 0; attempt < MaxTriesPerBuilding; attempt++)
@@ -215,19 +219,6 @@ namespace MAP_MechanoidMechanitor
                     {
                         continue;
                     }
-
-                    Rot4 preferredRot = requireOutwardFacing
-                        ? Rot4.FromAngleFlat((candidate - anchor).AngleFlat)
-                        : Rot4.Random;
-                    Rot4[] tryRots = requireOutwardFacing
-                        ? new[]
-                        {
-                            preferredRot,
-                            preferredRot.Rotated(RotationDirection.Clockwise),
-                            preferredRot.Rotated(RotationDirection.Counterclockwise),
-                            Rot4.Random,
-                        }
-                        : Rot4.AllRotations.ToArray();
 
                     for (int r = 0; r < tryRots.Length; r++)
                     {
