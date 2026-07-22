@@ -65,9 +65,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             tracker.UpdatePendingQuestId(quest.id);
-            Messages.Message(
-                "MAP_MechanoidMechanitor.JusticeBoss.Call.SuccessMessage".Translate(),
-                MessageTypeDefOf.NeutralEvent);
         }
     }
 }

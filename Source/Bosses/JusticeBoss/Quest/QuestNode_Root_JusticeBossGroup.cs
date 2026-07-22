@@ -103,6 +103,14 @@ namespace MAP_MechanoidMechanitor
                 faction: faction);
 
             quest.Letter(
+                LetterDefOf.NeutralEvent,
+                null,
+                null,
+                label: "LetterLabelBossgroupSummoned".Translate(bossgroupDef.boss.kindDef.LabelCap),
+                text: "LetterBossgroupSummoned".Translate(faction.NameColored.ToString()).ToString(),
+                relatedFaction: faction);
+
+            quest.Letter(
                 LetterDefOf.Bossgroup,
                 label: "MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedLabel".Translate(),
                 inSignal: arriveSignal,
@@ -124,6 +132,15 @@ namespace MAP_MechanoidMechanitor
             part.pawns.Add(justice);
             part.bosses.Add(justice);
             quest.AddPart(part);
+
+            quest.Alert(
+                "AlertBossgroupIncoming".Translate(bossgroupDef.boss.kindDef.LabelCap),
+                "AlertBossgroupIncomingDesc".Translate(bossgroupDef.boss.kindDef.label),
+                null,
+                critical: true,
+                getLookTargetsFromSignal: false,
+                null,
+                arriveSignal);
 
             quest.End(
                 QuestEndOutcome.Unknown,
