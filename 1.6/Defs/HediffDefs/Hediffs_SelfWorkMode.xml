@@ -27,7 +27,7 @@
   <HediffDef>
     <defName>MAP_MechanoidMechanitor_SelfWorkMode_SelfRepair</defName>
     <label>自我修复</label>
-    <description>TODO</description>
+    <description>该机械族正处于休眠状态，其自我修复组件正在快速修复其受损部位。</description>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <hediffClass>HediffWithComps</hediffClass>
     <isBad>false</isBad>
