@@ -3,7 +3,7 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
-    public sealed class MechanoidMechanitorStoryComponentWorker_GainTrustRoute
+    public sealed class MechanoidMechanitorStoryComponentWorker_SymbiosisCovenant
         : MechanoidMechanitorStoryComponentWorker
     {
         private static readonly bool[] BooleanOptions = { false, true };
@@ -17,7 +17,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override bool CanInteract(MechanoidMechanitorStoryConfigurationContext context)
         {
-            return context.Configuration.IsGainTrustAvailable(context);
+            return context.Configuration.IsSymbiosisCovenantAvailable(context);
         }
 
         public override string? GetDisabledReason(
@@ -28,12 +28,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return null;
             }
 
-            return "MAP_MechanoidMechanitor.Story.GainTrustRoute.DisabledReason".Translate();
+            return "MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason".Translate();
         }
 
         protected override TaggedString GetDescription()
         {
-            return "MAP_MechanoidMechanitor.Story.Component.GainTrustRoute.Description"
+            return "MAP_MechanoidMechanitor.Story.Component.SymbiosisCovenant.Description"
                 .Translate();
         }
 
@@ -50,7 +50,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             MechanoidMechanitorStoryConfiguration configuration = context.Configuration;
             bool canInteract = CanInteract(context);
-            string currentLabel = configuration.gainTrustRouteEnabled
+            string currentLabel = configuration.symbiosisCovenantEnabled
                 ? MechanoidMechanitorStoryConfigurationLabels.EnabledLabel
                 : MechanoidMechanitorStoryConfigurationLabels.DisabledLabel;
 
@@ -64,12 +64,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     LabelForBoolean,
                     value =>
                     {
-                        if (configuration.gainTrustRouteEnabled == value)
+                        if (configuration.symbiosisCovenantEnabled == value)
                         {
                             return;
                         }
 
-                        configuration.gainTrustRouteEnabled = value;
+                        configuration.symbiosisCovenantEnabled = value;
                         NormalizeAfterChange(context);
                     }));
         }

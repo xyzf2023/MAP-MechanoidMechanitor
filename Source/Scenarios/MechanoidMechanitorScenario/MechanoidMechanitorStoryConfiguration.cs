@@ -17,7 +17,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool purgeDirectiveEnabled;
 
-        public bool gainTrustRouteEnabled;
+        public bool symbiosisCovenantEnabled;
 
         public MechanoidMechanitorIdeologyAdaptationLevel ideologyAdaptationLevel =
             MechanoidMechanitorIdeologyAdaptationLevel.Basic;
@@ -34,7 +34,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ordinaryFactionRelationsMode = ordinaryFactionRelationsMode,
                 mechHiveRelationMode = mechHiveRelationMode,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
-                gainTrustRouteEnabled = gainTrustRouteEnabled,
+                symbiosisCovenantEnabled = symbiosisCovenantEnabled,
                 ideologyAdaptationLevel = ideologyAdaptationLevel
             };
 
@@ -130,7 +130,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             setting.relationOption = option;
         }
 
-        public bool IsGainTrustAvailable(
+        public bool IsSymbiosisCovenantAvailable(
             MechanoidMechanitorStoryConfigurationContext context)
         {
             if (!context.HasOrdinaryFactions)
@@ -151,7 +151,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return false;
 
                 case MechanoidMechanitorOrdinaryFactionRelationsMode.Custom:
-                    return HasAnyGainTrustSpaceInCustomSettings(context);
+                    return HasAnySymbiosisCovenantSpaceInCustomSettings(context);
 
                 default:
                     return false;
@@ -177,11 +177,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 ordinaryFactionRelationsMode =
                     MechanoidMechanitorOrdinaryFactionRelationsMode.Default;
-                gainTrustRouteEnabled = false;
+                symbiosisCovenantEnabled = false;
             }
-            else if (!IsGainTrustAvailable(context))
+            else if (!IsSymbiosisCovenantAvailable(context))
             {
-                gainTrustRouteEnabled = false;
+                symbiosisCovenantEnabled = false;
             }
         }
 
@@ -200,7 +200,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "mechHiveRelationMode",
                 MechanoidMechanitorMechHiveRelationMode.Default);
             Scribe_Values.Look(ref purgeDirectiveEnabled, "purgeDirectiveEnabled", false);
-            Scribe_Values.Look(ref gainTrustRouteEnabled, "gainTrustRouteEnabled", false);
+            Scribe_Values.Look(ref symbiosisCovenantEnabled, "symbiosisCovenantEnabled", false);
             Scribe_Values.Look(
                 ref ideologyAdaptationLevel,
                 "ideologyAdaptationLevel",
@@ -214,13 +214,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private bool HasAnyGainTrustSpaceInCustomSettings(
+        private bool HasAnySymbiosisCovenantSpaceInCustomSettings(
             MechanoidMechanitorStoryConfigurationContext context)
         {
             IReadOnlyList<Faction> ordinaryFactions = context.OrdinaryFactions;
             for (int i = 0; i < ordinaryFactions.Count; i++)
             {
-                if (AllowsGainTrustSpace(GetRelationOptionFor(ordinaryFactions[i])))
+                if (AllowsSymbiosisCovenantSpace(GetRelationOptionFor(ordinaryFactions[i])))
                 {
                     return true;
                 }
@@ -229,7 +229,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return false;
         }
 
-        private static bool AllowsGainTrustSpace(
+        private static bool AllowsSymbiosisCovenantSpace(
             MechanoidMechanitorFactionRelationOption option)
         {
             return option == MechanoidMechanitorFactionRelationOption.Default

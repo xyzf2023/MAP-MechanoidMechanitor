@@ -19,16 +19,16 @@
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
     <defName>MAP_StoryComponent_PurgeDirective</defName>
     <label>路线：肃清指令</label>
-    <description>启用后执行机械巢肃清协议：隐藏囚犯招募与奴役选项，定期检测并要求清除血肉殖民者，类人死亡积累肃清奖励计数；多次违令后机械巢将转为敌对并发动袭击。</description>
+    <description>启用后体验机械巢肃清协议：扮演主脑部署的杀戮机器，无情的清理所有有机智慧生物；通过各种任务获取主脑信任，以获取来自机械巢的支持。</description>
     <displayOrder>300</displayOrder>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_PurgeDirective</workerClass>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
-    <defName>MAP_StoryComponent_GainTrustRoute</defName>
-    <label>路线：获取信任</label>
-    <description>是否启用获取信任路线。本阶段仅保存选项，不会产生实际剧情效果。</description>
+    <defName>MAP_StoryComponent_SymbiosisCovenant</defName>
+    <label>路线：共生盟约</label>
+    <description>是否启用共生盟约路线。本阶段仅保存选项，不会产生实际剧情效果。</description>
     <displayOrder>400</displayOrder>
-    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_GainTrustRoute</workerClass>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_SymbiosisCovenant</workerClass>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
 </Defs>
