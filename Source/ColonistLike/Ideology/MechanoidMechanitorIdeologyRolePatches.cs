@@ -92,6 +92,18 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
+                // 意识形态一致性：原版 ValidatePawn 本身不校验意识形态，靠调用方（界面/分配链）
+                // 只列出自身文化的角色来约束。放宽身份检查后必须自行确认 Pawn 当前信仰的意识形态
+                // 就是该角色所属意识形态本身，避免把信仰 A 的机械族机械师直接分配到意识形态 B 的角色。
+                // 不使用 PrimaryIdeo，也不只判断玩家派系是否拥有该意识形态；不一致则保持原版 false，
+                // 不自动改写 Pawn 意识形态、不自动解除/重分配其他角色。
+                Ideo? pawnIdeo = p.Ideo;
+                Ideo? roleIdeo = __instance.ideo;
+                if (pawnIdeo == null || roleIdeo == null || pawnIdeo != roleIdeo)
+                {
+                    return;
+                }
+
                 __result = __instance.RequirementsMet(p);
             }
         }
