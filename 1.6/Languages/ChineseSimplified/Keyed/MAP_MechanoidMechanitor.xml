@@ -46,8 +46,8 @@
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Title>是否启用文化适配</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Title>
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Description>决定文化DLC对本局游戏的影响。注意：开启后可能与某些MOD产生冲突。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Description>
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Disabled>不启用任何与文化有关的适配。此选项通常对游戏流程没有影响，如果担心某些文化会导致冲突，请选择此选项。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Disabled>
-  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Basic>仅锁定玩家派系的主流文化，避免它因殖民地成员构成变化而被自动替换。没有其他改动，也不会为机械族机械师添加所属文化。通常适用于想通过文化影响殖民地建筑风格，而不体验其他文化效果的玩家。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Basic>
-  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Partial>为机械族机械师添加文化属性并享受其中可以对于机械族生效的效果。机械族机械师的文化可以在社交面板手动切换。同时，机械族机械师会计入对应文化的信徒人数以影响主流文化。此选项不会让机械族机械师拥有担任文化职位、执行文化教化或作为完整参与者加入文化仪式的能力。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Partial>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Basic>仅锁定玩家派系的主流文化，避免它因殖民地成员构成变化而被自动替换。没有其他改动，也不会为机械族机械师添加所属文化。\n通常适用于想通过文化影响殖民地建筑风格，而不体验其他文化效果的玩家。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Basic>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Partial>为机械族机械师添加文化属性并享受其中可以对于机械族生效的效果。\n机械族机械师的文化可以在社交面板手动切换。同时，机械族机械师会计入对应文化的信徒人数以影响主流文化。\n此选项不会让机械族机械师拥有担任文化职位、执行文化教化或作为完整参与者加入文化仪式的能力。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Partial>
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Full>尽量完整的文化DLC体验。机械族机械师将可以担任文化职位，加入文化仪式，以及一些其他文化DLC允许机械族执行的效果。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Full>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>自定义机械族机械师剧情</MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>自由调整本局启用的剧情组件。部分选项会根据其他组件的设置自动禁用。</MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>
