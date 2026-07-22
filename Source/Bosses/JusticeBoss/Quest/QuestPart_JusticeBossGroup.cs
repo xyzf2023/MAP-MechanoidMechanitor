@@ -47,11 +47,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             bosses.Remove(pawn);
-            Messages.Message(
-                "MAP_MechanoidMechanitor.JusticeBoss.Message.Defeated".Translate(),
-                pawn,
-                MessageTypeDefOf.PositiveEvent);
-            EndEvent();
+            GameComponent_JusticeBossCallTracker.Current?.Clear();
         }
 
         public override void Notify_PawnDiscarded(Pawn pawn)

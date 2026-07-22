@@ -10,7 +10,9 @@ namespace MAP_MechanoidMechanitor
     {
         protected override bool TestRunInt(Slate slate)
         {
-            return slate.Exists("bossgroup") && slate.Exists("map");
+            return slate.Exists("bossgroup")
+                && slate.Exists("map")
+                && slate.Exists("reward");
         }
 
         protected override void RunInt()
@@ -19,7 +21,10 @@ namespace MAP_MechanoidMechanitor
             Quest quest = QuestGen.quest;
             Map map = slate.Get<Map>("map");
             BossgroupDef bossgroupDef = slate.Get<BossgroupDef>("bossgroup");
-            if (map == null || bossgroupDef?.boss?.kindDef == null)
+            ThingDef rewardDef = slate.Get<ThingDef>("reward");
+            if (map == null
+                || bossgroupDef?.boss?.kindDef == null
+                || rewardDef == null)
             {
                 GameComponent_JusticeBossCallTracker.Current?.Clear();
                 return;
@@ -141,6 +146,53 @@ namespace MAP_MechanoidMechanitor
                 getLookTargetsFromSignal: false,
                 null,
                 arriveSignal);
+
+            string killedLeavingsSignal =
+                QuestGenUtility.HardcodedSignalWithQuestID("escortees.KilledLeavingsLeft");
+            quest.ThingAnalyzed(
+                rewardDef,
+                delegate
+                {
+                    quest.Letter(
+                        LetterDefOf.PositiveEvent,
+                        null,
+                        null,
+                        null,
+                        null,
+                        useColonistsFromCaravanArg: false,
+                        QuestPart.SignalListenMode.OngoingOnly,
+                        null,
+                        filterDeadPawnsFromLookTargets: false,
+                        "[bossDefeatedLetterText]",
+                        null,
+                        "[bossDefeatedLetterLabel]");
+                },
+                delegate
+                {
+                    quest.Letter(
+                        LetterDefOf.PositiveEvent,
+                        null,
+                        null,
+                        null,
+                        null,
+                        useColonistsFromCaravanArg: false,
+                        QuestPart.SignalListenMode.OngoingOnly,
+                        null,
+                        filterDeadPawnsFromLookTargets: false,
+                        "[bossDefeatedStudyChipLetterText]",
+                        null,
+                        "[bossDefeatedLetterLabel]");
+                },
+                killedLeavingsSignal);
+
+            quest.AnyPawnAlive(
+                bosses,
+                null,
+                delegate
+                {
+                    QuestGen_End.End(quest, QuestEndOutcome.Unknown);
+                },
+                QuestGenUtility.HardcodedSignalWithQuestID("escortees.Killed"));
 
             quest.End(
                 QuestEndOutcome.Unknown,
