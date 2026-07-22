@@ -148,6 +148,41 @@ namespace MAP_MechanoidMechanitor
             ApplyUnlockedModeHediffs(pawn, mode, autonomousHediff, selfRepairHediff);
         }
 
+        /// <summary>
+        /// 征召状态实际发生变化时的通知入口。
+        /// 进行廉价的提前过滤后，交由 <see cref="SyncSelfWorkModeEffects"/> 统一决定
+        /// “自我修复”的添加或移除；本方法不直接增删任何 Hediff。
+        /// </summary>
+        public static void NotifyDraftedStateChanged(Pawn? pawn)
+        {
+            // 1. Pawn 不为空，且未死亡、未 Destroyed。
+            if (pawn == null || pawn.Dead || pawn.Destroyed)
+            {
+                return;
+            }
+
+            // 2. 必须为已注册的机械族机械师（单 Pawn 查询，不扫描地图）。
+            if (!GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _))
+            {
+                return;
+            }
+
+            // 3. “自律指令优化”科研必须已完成。
+            if (!ResearchFeatureUnlockUtility.IsAutonomousDirectiveOptimizationUnlocked())
+            {
+                return;
+            }
+
+            // 4. 当前本体工作模式必须为休眠（SelfShutdown）。
+            if (!IsSelfShutdown(pawn))
+            {
+                return;
+            }
+
+            // 5. 交由统一规则决定最终状态。
+            SyncSelfWorkModeEffects(pawn);
+        }
+
         public static bool TryGetCurrentMode(Pawn? pawn, out MechWorkModeDef? mode)
         {
             mode = null;
@@ -304,7 +339,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 休眠：仅保留自我修复 Hediff
+            // 休眠：始终移除自律指令；仅在未征召时保留自我修复 Hediff
             if (IsSelfShutdownMode(mode))
             {
                 if (autonomousHediff != null)
@@ -312,10 +347,18 @@ namespace MAP_MechanoidMechanitor
                     RemoveAllHediffsOfDef(pawn, autonomousHediff);
                 }
 
-                if (selfRepairHediff != null
-                    && pawn.health.hediffSet.GetFirstHediffOfDef(selfRepairHediff) == null)
+                if (selfRepairHediff != null)
                 {
-                    pawn.health.AddHediff(selfRepairHediff);
+                    // 已征召：必须移除全部自我修复 Hediff，不得保留
+                    if (pawn.Drafted)
+                    {
+                        RemoveAllHediffsOfDef(pawn, selfRepairHediff);
+                    }
+                    // 未征召：允许添加或保留自我修复 Hediff
+                    else if (pawn.health.hediffSet.GetFirstHediffOfDef(selfRepairHediff) == null)
+                    {
+                        pawn.health.AddHediff(selfRepairHediff);
+                    }
                 }
 
                 return;
