@@ -2,7 +2,11 @@
 <LanguageData>
 
   <MAP_MechanoidMechanitor.JusticeBoss.Call.DisabledAlreadyCalled>「正义」-重装指挥单元已经收到呼叫。</MAP_MechanoidMechanitor.JusticeBoss.Call.DisabledAlreadyCalled>
-  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmMessage>召唤「正义」-重装指挥单元会吸引以下敌对机械族：\n\n -「正义」-重装指挥单元 ×1\n\n 「正义」-重装指挥单元的作战方式有别于其他机械族指挥官。它到达战场后不会发起进攻，而是在到达地点徘徊，并召唤自动炮塔和护盾进行阵地防御。同时，它会间接性召唤机械族对殖民地发起进攻。当滞留时间过长时，它会尝试撤退。\n\n 若想击败「正义」-重装指挥单元，我们可能需要进行严峻的野外作战。这不会是一场轻松的战斗。\n\n「正义」-重装指挥单元将在未来几小时或几天后到达。你做好迎战的准备了吗？</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmMessage>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmIntro>召唤「正义」-重装指挥单元会吸引以下敌对机械族：</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmIntro>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmEnemy>- 「正义」-重装指挥单元 ×1</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmEnemy>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmTactics>「正义」-重装指挥单元的作战方式有别于其他机械族指挥官。它到达战场后不会发起进攻，而是在到达地点徘徊，并召唤自动炮塔和护盾进行阵地防御。同时，它会间接性召唤机械族对殖民地发起进攻。当滞留时间过长时，它会尝试撤退。</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmTactics>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmWarning>若想击败「正义」-重装指挥单元，我们可能需要进行严峻的野外作战。这不会是一场轻松的战斗。</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmWarning>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmArrival>「正义」-重装指挥单元将在未来几小时或几天后到达。你做好迎战的准备了吗？</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmArrival>
   <MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedLabel>「正义」-重装指挥单元抵达</MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedLabel>
   <MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedText>机械族重装指挥单元「正义」已在地图边缘落点部署。它将固守落点、构筑火力节点，并持续向前线调拨作战机械体。</MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedText>
   <MAP_MechanoidMechanitor.JusticeBoss.Message.Retreating>「正义」-重装指挥单元开始撤退。</MAP_MechanoidMechanitor.JusticeBoss.Message.Retreating>
