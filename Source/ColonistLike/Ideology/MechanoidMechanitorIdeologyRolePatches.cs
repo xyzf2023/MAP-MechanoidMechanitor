@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -111,6 +112,9 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         /// 仅放宽 DrawPawnRoleSelection 最前面的 IsFreeNonSlaveColonist 身份检查，随后交由完整原版
         /// 方法执行，保留不可用角色、未满足条件说明、信徒不足提示、GetTip 工具提示与原版显示顺序。
+        /// 追加最小 Postfix，在原版“分配职位……”按钮正下方绘制“切换意识形态”按钮：
+        /// Postfix 无论原版是否提前返回都会执行，因此 Partial 模式（无职位分配权限、原版提前返回）
+        /// 也能以与 Full 模式一致的位置绘制该按钮；显示条件由社交面板工具自身把关。
         /// </summary>
         [HarmonyPatch(
             typeof(SocialCardUtility),
@@ -122,6 +126,12 @@ namespace MAP_MechanoidMechanitor
                 IEnumerable<CodeInstruction> instructions)
             {
                 return RelaxFirstIsFreeNonSlaveColonist(instructions);
+            }
+
+            [HarmonyPostfix]
+            public static void Postfix(Pawn pawn, Rect rect)
+            {
+                MechanoidMechanitorIdeologySocialCardUtility.DrawChangeIdeoButton(pawn, rect);
             }
         }
 

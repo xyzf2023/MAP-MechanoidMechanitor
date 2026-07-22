@@ -41,6 +41,10 @@
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>你想体验怎样的机械族殖民地故事？这些剧情风格选项会影响本局的游戏体验。</MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>无法保存剧情风格选择，请重试或重新开始开局流程。</MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.NoStylesAvailable>未找到可用的剧情风格。请检查MOD配置或重新开始开局流程。</MAP_MechanoidMechanitor.Scenario.ReadyPage.NoStylesAvailable>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Continue>继续</MAP_MechanoidMechanitor.Scenario.ReadyPage.Continue>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.StartGame>开始游戏</MAP_MechanoidMechanitor.Scenario.ReadyPage.StartGame>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Title>是否启用文化适配</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Title>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Description>决定文化DLC对本局游戏的影响。注意：开启后可能与某些MOD产生冲突。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Description>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>自定义机械族机械师剧情</MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>自由调整本局启用的剧情组件。部分选项会根据其他组件的设置自动禁用。</MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>开始游戏</MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>
@@ -75,7 +79,6 @@
   <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Ally>盟友</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Ally>
   <MAP_MechanoidMechanitor.Story.Option.Enabled>开启</MAP_MechanoidMechanitor.Story.Option.Enabled>
   <MAP_MechanoidMechanitor.Story.Option.Disabled>关闭</MAP_MechanoidMechanitor.Story.Option.Disabled>
-  <MAP_MechanoidMechanitor.Story.Component.IdeologyAdaptation.Description>决定文化DLC对本局游戏的影响。注意：开启后可能与某些MOD产生冲突。</MAP_MechanoidMechanitor.Story.Component.IdeologyAdaptation.Description>
   <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Disabled>不启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Disabled>
   <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Basic>基础功能</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Basic>
   <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>部分启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>

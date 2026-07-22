@@ -11,7 +11,6 @@
       <mechHiveRelationMode>Default</mechHiveRelationMode>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
       <gainTrustRouteEnabled>false</gainTrustRouteEnabled>
-      <ideologyAdaptationLevel>Basic</ideologyAdaptationLevel>
     </presetConfiguration>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
 
@@ -26,7 +25,6 @@
       <mechHiveRelationMode>Default</mechHiveRelationMode>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
       <gainTrustRouteEnabled>false</gainTrustRouteEnabled>
-      <ideologyAdaptationLevel>Basic</ideologyAdaptationLevel>
     </presetConfiguration>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
 
@@ -41,7 +39,6 @@
       <mechHiveRelationMode>Default</mechHiveRelationMode>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
       <gainTrustRouteEnabled>false</gainTrustRouteEnabled>
-      <ideologyAdaptationLevel>Basic</ideologyAdaptationLevel>
     </presetConfiguration>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryStyleDef>
 </Defs>
