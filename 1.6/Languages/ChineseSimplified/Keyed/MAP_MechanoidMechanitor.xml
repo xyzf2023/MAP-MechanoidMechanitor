@@ -19,6 +19,7 @@
   <MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText>「正义」获得技能：{0}。</MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText>
   <MAP_MechanoidMechanitor.FeatureUnlockLetter.Title>特性：{0}</MAP_MechanoidMechanitor.FeatureUnlockLetter.Title>
   <MAP_MechanoidMechanitor.FeatureUnlockLetter.Text>已解锁机械族机械师特性：{0}。</MAP_MechanoidMechanitor.FeatureUnlockLetter.Text>
+  <MAP_MechanoidMechanitor.LetterMechsReclaimed>由于长时间缺乏机械师监管，以下机械族已重新连接至{0}的控制网络，并由机械巢重新接管。它们已脱离殖民地控制，并将离开当前区域。\n\n以下机械族受到影响：\n\n{1}</MAP_MechanoidMechanitor.LetterMechsReclaimed>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>意识转移</MAP_MechanoidMechanitor.ConsciousnessTransfer.Label>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>将当前机体的自主意识转移到其他能承载自主意识的机体中。</MAP_MechanoidMechanitor.ConsciousnessTransfer.Description>
   <MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>没有可承载意识的机体。</MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate>
