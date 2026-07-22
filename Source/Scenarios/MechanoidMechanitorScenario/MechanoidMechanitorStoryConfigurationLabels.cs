@@ -79,5 +79,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static string DisabledLabel =>
             "MAP_MechanoidMechanitor.Story.Option.Disabled".Translate();
+
+        public static string LabelFor(MechanoidMechanitorIdeologyAdaptationLevel level)
+        {
+            return level switch
+            {
+                MechanoidMechanitorIdeologyAdaptationLevel.Disabled =>
+                    "MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Disabled"
+                        .Translate(),
+                MechanoidMechanitorIdeologyAdaptationLevel.Basic =>
+                    "MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Basic"
+                        .Translate(),
+                MechanoidMechanitorIdeologyAdaptationLevel.Partial =>
+                    "MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial"
+                        .Translate(),
+                MechanoidMechanitorIdeologyAdaptationLevel.Full =>
+                    "MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Full"
+                        .Translate(),
+                _ => level.ToString()
+            };
+        }
     }
 }

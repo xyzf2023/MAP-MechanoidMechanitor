@@ -74,6 +74,14 @@
   <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Ally>盟友</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Ally>
   <MAP_MechanoidMechanitor.Story.Option.Enabled>开启</MAP_MechanoidMechanitor.Story.Option.Enabled>
   <MAP_MechanoidMechanitor.Story.Option.Disabled>关闭</MAP_MechanoidMechanitor.Story.Option.Disabled>
+  <MAP_MechanoidMechanitor.Story.Component.IdeologyAdaptation.Description>决定文化DLC对本局游戏的影响。注意：开启后可能与某些MOD产生冲突。</MAP_MechanoidMechanitor.Story.Component.IdeologyAdaptation.Description>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Disabled>不启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Disabled>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Basic>基础功能</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Basic>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>部分启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Full>全部启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Full>
+  <MAP_MechanoidMechanitor.Ideology.ChangeIdeo>切换意识形态</MAP_MechanoidMechanitor.Ideology.ChangeIdeo>
+  <MAP_MechanoidMechanitor.Ideology.ChangeIdeoDesc>手动切换该机械族机械师的意识形态。确定度将保持为100%，且不会触发传教成功或文化改革点数。</MAP_MechanoidMechanitor.Ideology.ChangeIdeoDesc>
+  <MAP_MechanoidMechanitor.Ideology.CurrentIdeoSuffix>（当前）</MAP_MechanoidMechanitor.Ideology.CurrentIdeoSuffix>
   <MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>仅在与机械巢结盟时可用。</MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>
   <MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>联络机械主脑</MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Title>机械主脑通讯接口</MAP_MechanoidMechanitor.MechHiveCommunication.Title>
