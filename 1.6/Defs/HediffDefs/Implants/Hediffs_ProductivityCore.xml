@@ -33,8 +33,8 @@
     <defName>MAP_ProductivityCoreActive</defName>
     <hediffClass>HediffWithComps</hediffClass>
     <label>效能核心生效中</label>
-    <description>TODO</description>
-    <descriptionShort>TODO</descriptionShort>
+    <description>由监管者的效能核心提供的状态，可以显著提升该机械族的工作效率，且效能核心每级都会为该机械族提供制作物品质量偏移+1的效果。同时，该机械族进行工作不会受到技能限制，其烹饪的食物不会因为厨艺不足而导致食物中毒，进行的手术也一定成功。</description>
+    <descriptionShort>效能核心正在提高该机械族的工作效率与工作质量。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <priceImpact>false</priceImpact>
