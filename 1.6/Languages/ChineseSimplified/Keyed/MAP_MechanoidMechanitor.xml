@@ -93,6 +93,8 @@
   <MAP_MechanoidMechanitor.Ideology.CurrentIdeoSuffix>（当前）</MAP_MechanoidMechanitor.Ideology.CurrentIdeoSuffix>
   <MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>仅在与机械巢结盟时可用。</MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason>
   <MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>联络机械主脑</MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.ContactUnlockedLetter.Label>可以联络机械主脑</MAP_MechanoidMechanitor.MechHiveCommunication.ContactUnlockedLetter.Label>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.ContactUnlockedLetter.Text>可以通过通讯台联络机械主脑。完成任务获取肃清额度，消耗额度以获取主脑的支援。</MAP_MechanoidMechanitor.MechHiveCommunication.ContactUnlockedLetter.Text>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Title>机械主脑通讯接口</MAP_MechanoidMechanitor.MechHiveCommunication.Title>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle>主脑：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Subtitle>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Credits>肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.Credits>
