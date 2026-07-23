@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-  <ThingDef ParentName="BaseMechanoidWalker">
+  <ThingDef ParentName="BaseMechanoid">
     <defName>MAP_Mech_Hermit</defName>
     <label>「隐者」</label>
     <description>「隐者」是一种装备了大功率信号中继装置的机械体，搭载了带宽信息处理模块，拥有独立带宽。该机械体可以精确接收机械师的指挥信号，进而脱离机械师范围行动，并能独立带领远征队。\n\n注意：「隐者」控制的机械体只能在其控制范围内被征召。</description>
@@ -77,12 +77,35 @@
     </comps>
     <race>
       <body>MAP_Body_Hermit</body>
+      <intelligence>ToolUser</intelligence>
+      <thinkTreeMain>Mechanoid</thinkTreeMain>
+      <baseBodySize>1.0</baseBodySize>
+      <baseHealthScale>1.32</baseHealthScale>
+      <mechWeightClass>Medium</mechWeightClass>
+      <lifeStageAges Inherit="False">
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>0</minAge>
+          <soundWounded>Pawn_Mech_Scyther_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Scyther_Death</soundDeath>
+          <soundCall>Pawn_Mech_Scyther_Call</soundCall>
+        </li>
+        <li MayRequire="Ludeon.RimWorld.Biotech">
+          <def>MechanoidFullyFormed</def>
+          <minAge>100</minAge>
+          <soundWounded>Pawn_Mech_Scyther_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Scyther_Death</soundDeath>
+          <soundCall>Pawn_Mech_Scyther_Call</soundCall>
+        </li>
+      </lifeStageAges>
       <mechFixedSkillLevel>10</mechFixedSkillLevel>
       <mechEnabledWorkTypes>
         <li>Research</li>
       </mechEnabledWorkTypes>
-      <baseHealthScale>1.32</baseHealthScale>
     </race>
+    <butcherProducts Inherit="False">
+      <Steel>15</Steel>
+    </butcherProducts>
   </ThingDef>
 
   <PawnKindDef ParentName="BaseMechanoidKind">
