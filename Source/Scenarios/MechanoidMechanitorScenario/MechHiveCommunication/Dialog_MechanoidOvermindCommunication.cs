@@ -88,6 +88,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private readonly MechanoidOvermindDialogueTyper dialogueTyper =
             new MechanoidOvermindDialogueTyper();
 
+        private MechanoidOvermindCommunicationQueryKind? activeCommunicationQuery;
+
         private readonly MechanoidOvermindDialoguePoolSelector dialogueSelector =
             new MechanoidOvermindDialoguePoolSelector();
 
@@ -969,7 +971,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                     break;
                 case MechanoidOvermindPageKind.Communication:
-                    communicationPage.Draw(contentRect);
+                    MechanoidOvermindCommunicationQueryKind? query =
+                        communicationPage.Draw(contentRect);
+                    if (query.HasValue)
+                    {
+                        PlayCommunicationQueryResponse(query.Value);
+                    }
+
                     break;
             }
         }
@@ -2567,8 +2575,39 @@ namespace MAP_MechanoidMechanitor.Scenarios
             PlayDialogueText(text);
         }
 
+        private void PlayCommunicationQueryResponse(
+            MechanoidOvermindCommunicationQueryKind query)
+        {
+            if (activeCommunicationQuery == query)
+            {
+                return;
+            }
+
+            switch (query)
+            {
+                case MechanoidOvermindCommunicationQueryKind.PurgeCredits:
+                    PlayPurgeCreditsQueryResponse();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(query), query, null);
+            }
+        }
+
+        private void PlayPurgeCreditsQueryResponse()
+        {
+            // 必须用 RawText，避免 TaggedString→string 隐式转换触发 StripTags。
+            TaggedString translated =
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Response.PurgeCredits"
+                    .Translate();
+            PlayDialogueText(translated.RawText);
+            activeCommunicationQuery =
+                MechanoidOvermindCommunicationQueryKind.PurgeCredits;
+        }
+
         private void PlayDialogueText(string text)
         {
+            activeCommunicationQuery = null;
+
             if (ShouldPlayMojibakeEasterEgg())
             {
                 // 必须用 RawText，保留血红色加粗标签。
