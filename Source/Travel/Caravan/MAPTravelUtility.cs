@@ -32,5 +32,21 @@ namespace MAP_MechanoidMechanitor
 
             return false;
         }
+
+        public static bool IsEligibleRegisteredMechanoidMechanitor(Pawn? pawn)
+        {
+            return pawn != null
+                && pawn.Faction == Faction.OfPlayer
+                && !pawn.Dead
+                && !pawn.Destroyed
+                && pawn.Spawned
+                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
+        }
+
+        public static bool IsColonistOrEligibleMechanoidMechanitor(Pawn? pawn)
+        {
+            return pawn != null
+                && (pawn.IsColonist || IsEligibleRegisteredMechanoidMechanitor(pawn));
+        }
     }
 }
