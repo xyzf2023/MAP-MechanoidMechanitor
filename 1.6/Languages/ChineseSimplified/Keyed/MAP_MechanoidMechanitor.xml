@@ -317,5 +317,8 @@
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.NodeUnavailable>目标机械巢节点已不可进攻。</MAP_MechanoidMechanitor.MechHiveNode.Attack.NodeUnavailable>
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>当前与机械巢的关系不允许进攻该节点。</MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>无法将机械巢转为敌对，进攻已取消。</MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>
+  <MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed>机械巢节点防御设施初始化失败，本次进入已取消。</MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>机械巢节点已肃清</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>该机械巢节点的威胁已被消灭。待人员撤离后，节点将从世界地图上移除。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>
   <MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled>当前未允许机械巢节点自然生成。</MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled>
 </LanguageData>

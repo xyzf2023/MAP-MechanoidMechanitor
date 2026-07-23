@@ -8,6 +8,14 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
+    /// <summary>完整节点地图内容初始化结果。</summary>
+    public enum MechHiveNodeMapInitState : byte
+    {
+        None = 0,
+        Succeeded = 1,
+        Failed = 2
+    }
+
     /// <summary>
     /// 机械巢节点世界对象。继承原版 <see cref="Site"/>，同一个对象在“建设中/建设完成”两个阶段间
     /// 原地切换（保留 WorldObject ID），并保存节点生命周期的全部运行状态。
@@ -36,6 +44,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>完整节点守军威胁点数。</summary>
         public const int CompletedGarrisonThreatPoints = 10000;
 
+        /// <summary>地图加载期间威胁清空检查间隔（tick）。</summary>
+        private const int ThreatClearCheckIntervalTicks = 250;
+
         private MechanoidMechanitorMechHiveNodePhase phase =
             MechanoidMechanitorMechHiveNodePhase.Building;
 
@@ -59,6 +70,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool completionLetterSent;
 
+        private bool cleanedLetterSent;
+
+        private MechHiveNodeMapInitState mapInitState = MechHiveNodeMapInitState.None;
+
         public MechanoidMechanitorMechHiveNodePhase Phase => phase;
 
         public bool IsBuilding => phase == MechanoidMechanitorMechHiveNodePhase.Building;
@@ -74,6 +89,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public ThingDef? DemandMaterialDef => demandMaterialDef;
 
         public int InitialDemandCount => initialDemandCount;
+
+        public MechHiveNodeMapInitState MapInitState => mapInitState;
+
+        /// <summary>地图内容已成功初始化，允许商队/运输舱进入。</summary>
+        public bool IsMapContentReady =>
+            mapInitState == MechHiveNodeMapInitState.Succeeded
+            || (mapInitState == MechHiveNodeMapInitState.None && base.HasMap);
+
+        /// <summary>完整节点地图初始化明确失败。</summary>
+        public bool IsMapContentFailed => mapInitState == MechHiveNodeMapInitState.Failed;
 
         /// <summary>守军威胁点数：建设中 2000，完整 10000。建筑布局不占用该预算。</summary>
         public int GarrisonThreatPoints =>
@@ -153,6 +178,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             this.initialDemandCount = Mathf.Max(0, initialDemandCount);
             this.cleaned = false;
             this.completionLetterSent = false;
+            this.cleanedLetterSent = false;
+            this.mapInitState = MechHiveNodeMapInitState.None;
+        }
+
+        public void NotifyMapContentInitStarted()
+        {
+            mapInitState = MechHiveNodeMapInitState.None;
+        }
+
+        public void NotifyMapContentInitSucceeded()
+        {
+            mapInitState = MechHiveNodeMapInitState.Succeeded;
+        }
+
+        public void NotifyMapContentInitFailed()
+        {
+            mapInitState = MechHiveNodeMapInitState.Failed;
         }
 
         /// <summary>
@@ -175,6 +217,77 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.Tick();
             TryHandleUpgradeTiming();
+            TryPeriodicThreatClearCheck();
+        }
+
+        /// <summary>
+        /// 地图加载期间按固定间隔检查威胁；玩家仍在地图上时也必须能完成清理结算。
+        /// </summary>
+        private void TryPeriodicThreatClearCheck()
+        {
+            if (cleaned || !base.HasMap)
+            {
+                return;
+            }
+
+            if (Find.TickManager.TicksGame % ThreatClearCheckIntervalTicks != 0)
+            {
+                return;
+            }
+
+            TryMarkCleanedIfNoThreats();
+        }
+
+        /// <summary>
+        /// 若当前地图已无有效节点威胁，则立即且仅一次标记为 Cleaned 并发送提示。
+        /// 不依赖玩家是否仍在地图上，也不卸载地图。
+        /// </summary>
+        public bool TryMarkCleanedIfNoThreats()
+        {
+            if (cleaned)
+            {
+                return false;
+            }
+
+            Map map = base.Map;
+            if (map == null || map.Disposed)
+            {
+                return false;
+            }
+
+            if (MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(map))
+            {
+                return false;
+            }
+
+            MarkCleaned();
+            return true;
+        }
+
+        /// <summary>幂等清理状态转换：标记 Cleaned，停止参与未清理节点逻辑，并发送一次提示。</summary>
+        private void MarkCleaned()
+        {
+            if (cleaned)
+            {
+                return;
+            }
+
+            cleaned = true;
+            if (!cleanedLetterSent)
+            {
+                cleanedLetterSent = true;
+                SendCleanedLetter();
+            }
+        }
+
+        private void SendCleanedLetter()
+        {
+            Find.LetterStack.ReceiveLetter(
+                "MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label".Translate(),
+                "MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text".Translate(),
+                LetterDefOf.PositiveEvent,
+                new LookTargets(this),
+                MechHiveNodeRelationUtility.GetMechHive());
         }
 
         /// <summary>
@@ -218,6 +331,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             phase = MechanoidMechanitorMechHiveNodePhase.Completed;
             naturalTimerStopped = true;
             acceleratedCompletionTick = -1;
+            mapInitState = MechHiveNodeMapInitState.None;
 
             // 切换主 SitePart（标签、说明、地图生成配置随之切换）。
             parts.Clear();
@@ -287,6 +401,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            // 威胁清空与地图卸载拆分：先判定战斗完成（不受玩家 Pawn 阻挡）。
+            TryMarkCleanedIfNoThreats();
+
             // 与原版 Site.ShouldRemoveMapNow 对齐：地图内阻止卸载的 Pawn。
             if (map.mapPawns.AnyPawnBlockingMapRemoval)
             {
@@ -320,15 +437,81 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            // 本 MOD：无任何有效机械巢威胁 → 视为已清理，一并移除世界对象。
-            if (!MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(map))
+            // Cleaned：玩家离开后移除世界对象；未清理（撤退）：仅卸载地图，保留节点。
+            alsoRemoveWorldObject = cleaned;
+            return true;
+        }
+
+        /// <summary>
+        /// 在确认没有任何玩家 Pawn / 运输舱内容进入后，安全卸载失败的空地图。
+        /// 保留节点世界对象，供以后重新尝试；不标记 Cleaned。
+        /// </summary>
+        public void TryUnloadFailedEmptyMap()
+        {
+            if (!IsMapContentFailed || !base.HasMap)
             {
-                cleaned = true;
-                alsoRemoveWorldObject = true;
+                return;
             }
 
-            // 仍有威胁而玩家撤退：保留世界对象，卸载地图（不持久化局部杀伤）。
+            Map map = base.Map;
+            if (map == null || map.Disposed)
+            {
+                return;
+            }
+
+            if (!IsFailedMapSafeToUnload(map))
+            {
+                return;
+            }
+
+            Current.Game.DeinitAndRemoveMap(map, notifyPlayer: false);
+            mapInitState = MechHiveNodeMapInitState.None;
+        }
+
+        private static bool IsFailedMapSafeToUnload(Map map)
+        {
+            if (map.mapPawns.AnyPawnBlockingMapRemoval)
+            {
+                return false;
+            }
+
+            if (map.AnyBuildingBlockingMapRemoval)
+            {
+                return false;
+            }
+
+            if (TransporterUtility.IncomingTransporterPreventingMapRemoval(map))
+            {
+                return false;
+            }
+
+            IReadOnlyList<Pawn> pawns = map.mapPawns.AllPawnsSpawned;
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                Pawn pawn = pawns[i];
+                if (pawn == null || pawn.Destroyed)
+                {
+                    continue;
+                }
+
+                if (pawn.Faction == Faction.OfPlayer
+                    || pawn.HostFaction == Faction.OfPlayer)
+                {
+                    return false;
+                }
+            }
+
             return true;
+        }
+
+        public override void Notify_MyMapRemoved(Map map)
+        {
+            base.Notify_MyMapRemoved(map);
+            // 地图卸载后，失败状态可重置以便下次重新生成；成功状态同样清零。
+            if (!cleaned)
+            {
+                mapInitState = MechHiveNodeMapInitState.None;
+            }
         }
 
         public override string GetInspectString()
@@ -394,6 +577,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref initialDemandCount, "MAP_initialDemandCount", 0);
             Scribe_Values.Look(ref cleaned, "MAP_cleaned", false);
             Scribe_Values.Look(ref completionLetterSent, "MAP_completionLetterSent", false);
+            Scribe_Values.Look(ref cleanedLetterSent, "MAP_cleanedLetterSent", false);
+            Scribe_Values.Look(ref mapInitState, "MAP_mapInitState", MechHiveNodeMapInitState.None);
         }
     }
 }

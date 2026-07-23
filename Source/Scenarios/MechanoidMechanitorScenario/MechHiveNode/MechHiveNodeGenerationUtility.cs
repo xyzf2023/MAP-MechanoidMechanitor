@@ -9,7 +9,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 机械巢节点的生成、位置选择与统计查询。
-    /// 选址时先预计算各殖民地 20 格范围，再在候选搜索回调中只读缓存，避免嵌套 FloodFill。
+    /// 选址：每座殖民地仅一次有界 20 格预计算（记录实际可通行距离），再从缓存筛选候选，
+    /// 绝不调用 TryFindPassableTileWithTraversalDistance，候选验证也不启动世界寻路。
     /// </summary>
     public static class MechHiveNodeGenerationUtility
     {
@@ -31,13 +32,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const int MaxDemandSilverValue = 10000;
 
+        /// <summary>六边形网格距离 d 内理论格数 3d(d+1)+1，再留余量作为 FloodFill 安全上限。</summary>
+        private static int MaxTilesForProximitySearch =>
+            3 * ColonyProximityTiles * (ColonyProximityTiles + 1) + 1 + 64;
+
         private sealed class ColonyProximityCache
         {
             public PlanetTile ColonyTile;
 
-            public HashSet<PlanetTile> TilesWithin20 = new HashSet<PlanetTile>();
+            /// <summary>殖民地 20 格可通行范围内的地块 → 相对该殖民地的实际可通行距离。</summary>
+            public Dictionary<PlanetTile, int> TileDistances = new Dictionary<PlanetTile, int>();
 
-            public int ExistingNodeCount;
+            public int ExistingUncleanedNodeCount;
         }
 
         public static void GetAllNodes(List<MAPMechHiveNode> dest)
@@ -60,7 +66,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int count = 0;
             for (int i = 0; i < nodes.Count; i++)
             {
-                if (IsWithinTraversal(colonyTile, nodes[i].Tile, ColonyProximityTiles))
+                if (!nodes[i].Cleaned
+                    && IsWithinTraversal(colonyTile, nodes[i].Tile, ColonyProximityTiles))
                 {
                     count++;
                 }
@@ -107,18 +114,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 List<MAPMechHiveNode> existing = new List<MAPMechHiveNode>();
                 GetAllNodes(existing);
 
-                // 预计算必须在候选搜索之前完成；每座殖民地单独 FloodFill，串行执行。
+                // 预计算必须在候选筛选之前完成；每座殖民地单独有界 FloodFill，串行执行。
                 List<ColonyProximityCache> caches = BuildColonyProximityCaches(colonies, existing);
 
                 Settlement colony = colonies.RandomElement();
                 PlanetTile colonyTile = colony.Tile;
                 ColonyProximityCache? targetCache = FindCache(caches, colonyTile);
-                if (targetCache == null || targetCache.ExistingNodeCount >= MaxNodesPerColony)
+                if (targetCache == null
+                    || targetCache.ExistingUncleanedNodeCount >= MaxNodesPerColony)
                 {
                     return false;
                 }
 
-                if (!TryFindNodeTile(colonyTile, existing, caches, out PlanetTile tile))
+                if (!TryFindNodeTile(targetCache, existing, caches, out PlanetTile tile))
                 {
                     return false;
                 }
@@ -151,18 +159,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     ColonyTile = colony.Tile
                 };
-                CollectTilesWithinTraversal(colony.Tile, ColonyProximityTiles, cache.TilesWithin20);
+                CollectTilesWithinTraversal(colony.Tile, ColonyProximityTiles, cache.TileDistances);
 
                 int count = 0;
                 for (int n = 0; n < existing.Count; n++)
                 {
-                    if (cache.TilesWithin20.Contains(existing[n].Tile))
+                    MAPMechHiveNode node = existing[n];
+                    if (node == null || node.Cleaned)
+                    {
+                        continue;
+                    }
+
+                    if (cache.TileDistances.ContainsKey(node.Tile))
                     {
                         count++;
                     }
                 }
 
-                cache.ExistingNodeCount = count;
+                cache.ExistingUncleanedNodeCount = count;
                 caches.Add(cache);
             }
 
@@ -170,12 +184,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 单次世界 FloodFill，收集 maxDist 内可通行地块。不得在另一 FloodFill 进行中调用。
+        /// 单次有界世界 FloodFill：只收集 maxDist 内可通行地块并记录距离。
+        /// 超出 maxDist 立即结束，不向更远扩展；不得在另一 FloodFill 进行中调用。
         /// </summary>
         private static void CollectTilesWithinTraversal(
             PlanetTile root,
             int maxDist,
-            HashSet<PlanetTile> dest)
+            Dictionary<PlanetTile, int> dest)
         {
             dest.Clear();
             if (!root.Valid || root.Layer?.Filler == null)
@@ -190,13 +205,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     if (traversalDistance > maxDist)
                     {
-                        // BFS：首次超出距离时，更近地块已收集完毕，结束本次填充。
+                        // BFS：所有 ≤maxDist 的地块已处理完毕，结束本次填充，禁止继续扩展。
                         return true;
                     }
 
-                    dest.Add(tile);
+                    dest[tile] = traversalDistance;
                     return false;
-                });
+                },
+                MaxTilesForProximitySearch);
         }
 
         private static ColonyProximityCache? FindCache(
@@ -214,41 +230,69 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return null;
         }
 
+        /// <summary>
+        /// 从目标殖民地缓存筛选：优先 6～16，全部无合法候选时才用 1～5。
+        /// </summary>
         private static bool TryFindNodeTile(
-            PlanetTile colonyTile,
+            ColonyProximityCache targetCache,
             List<MAPMechHiveNode> existing,
             List<ColonyProximityCache> caches,
             out PlanetTile tile)
         {
-            // 首选 6～16；仅当完全没有合法候选时才搜索 1～5。
-            if (TileFinder.TryFindPassableTileWithTraversalDistance(
-                    colonyTile,
+            if (TryPickTileFromCache(
+                    targetCache,
                     PreferredMinDistTiles,
                     PreferredMaxDistTiles,
-                    out tile,
-                    t => ValidateNodeTile(t, existing, caches),
-                    ignoreFirstTilePassability: false,
-                    TileFinderMode.Random,
-                    canTraverseImpassable: false,
-                    exitOnFirstTileFound: false))
+                    existing,
+                    caches,
+                    out tile))
             {
                 return true;
             }
 
-            return TileFinder.TryFindPassableTileWithTraversalDistance(
-                colonyTile,
+            return TryPickTileFromCache(
+                targetCache,
                 FallbackMinDistTiles,
                 FallbackMaxDistTiles,
-                out tile,
-                t => ValidateNodeTile(t, existing, caches),
-                ignoreFirstTilePassability: false,
-                TileFinderMode.Random,
-                canTraverseImpassable: false,
-                exitOnFirstTileFound: false);
+                existing,
+                caches,
+                out tile);
+        }
+
+        private static bool TryPickTileFromCache(
+            ColonyProximityCache targetCache,
+            int minDist,
+            int maxDist,
+            List<MAPMechHiveNode> existing,
+            List<ColonyProximityCache> caches,
+            out PlanetTile tile)
+        {
+            tile = PlanetTile.Invalid;
+            List<PlanetTile> candidates = new List<PlanetTile>();
+            foreach (KeyValuePair<PlanetTile, int> pair in targetCache.TileDistances)
+            {
+                if (pair.Value < minDist || pair.Value > maxDist)
+                {
+                    continue;
+                }
+
+                if (ValidateNodeTile(pair.Key, existing, caches))
+                {
+                    candidates.Add(pair.Key);
+                }
+            }
+
+            if (candidates.Count == 0)
+            {
+                return false;
+            }
+
+            tile = candidates.RandomElement();
+            return true;
         }
 
         /// <summary>
-        /// 候选验证：仅读取预计算结果与廉价检查，严禁启动任何世界 FloodFill。
+        /// 候选验证：仅读取预计算结果与廉价检查，严禁启动任何世界 FloodFill / 寻路。
         /// </summary>
         private static bool ValidateNodeTile(
             PlanetTile tile,
@@ -267,22 +311,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             for (int i = 0; i < existing.Count; i++)
             {
+                // ApproxDistanceInTiles 为廉价近似距离，不启动世界寻路。
                 if (Find.WorldGrid.ApproxDistanceInTiles(tile, existing[i].Tile) < MinNodeSpacingTiles)
                 {
                     return false;
                 }
             }
 
-            // 重叠范围分别检查：候选属于某殖民地 20 格缓存时，该殖民地 +1 不得超过上限。
+            // 重叠范围分别检查：候选属于某殖民地 20 格缓存时，该殖民地未清理节点 +1 不得超过上限。
             for (int i = 0; i < caches.Count; i++)
             {
                 ColonyProximityCache cache = caches[i];
-                if (!cache.TilesWithin20.Contains(tile))
+                if (!cache.TileDistances.ContainsKey(tile))
                 {
                     continue;
                 }
 
-                if (cache.ExistingNodeCount + 1 > MaxNodesPerColony)
+                if (cache.ExistingUncleanedNodeCount + 1 > MaxNodesPerColony)
                 {
                     return false;
                 }
