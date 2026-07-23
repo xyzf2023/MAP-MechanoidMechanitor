@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
+using Verse.AI.Group;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -230,28 +231,56 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             for (int i = 0; i < pawns.Count; i++)
             {
-                Pawn pawn = pawns[i];
-                if (pawn == null || pawn.Spawned)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    if (Find.WorldPawns.Contains(pawn))
-                    {
-                        Find.WorldPawns.RemovePawn(pawn);
-                    }
-
-                    Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.Discard);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning("[MAP] 丢弃未使用机械巢 Pawn 失败: " + ex);
-                }
+                SafelyDiscardPawn(pawns[i]);
             }
 
             pawns.Clear();
+        }
+
+        /// <summary>
+        /// 安全丢弃 Pawn（含已 Spawn）：使用 Vanish/DeSpawn，不走 KillFinalize，
+        /// 避免死亡奖励与击杀结算；随后从 WorldPawns 丢弃。
+        /// </summary>
+        public static void SafelyDiscardPawn(Pawn? pawn)
+        {
+            if (pawn == null || pawn.Destroyed)
+            {
+                return;
+            }
+
+            try
+            {
+                Lord? lord = pawn.GetLord();
+                if (lord != null)
+                {
+                    try
+                    {
+                        lord.RemovePawn(pawn);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning("[MAP] 从 Lord 移除机械巢 Pawn 失败: " + ex);
+                    }
+                }
+
+                if (pawn.Spawned)
+                {
+                    pawn.DeSpawn(DestroyMode.Vanish);
+                }
+
+                if (Find.WorldPawns.Contains(pawn))
+                {
+                    Find.WorldPawns.RemoveAndDiscardPawnViaGC(pawn);
+                }
+                else if (!pawn.Destroyed)
+                {
+                    Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.Discard);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("[MAP] 安全丢弃机械巢 Pawn 失败: " + ex);
+            }
         }
 
         private static bool ContainsBreachOption(PawnGroupMaker maker)

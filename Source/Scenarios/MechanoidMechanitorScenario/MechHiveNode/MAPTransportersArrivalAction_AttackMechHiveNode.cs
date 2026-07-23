@@ -62,7 +62,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         .CapitalizeFirst(),
                     new GlobalTargetInfo(tile),
                     MessageTypeDefOf.NegativeEvent);
-                // 转敌失败：回退为在此地组建远行队，避免舱内内容丢失。
+                new TransportersArrivalAction_FormCaravan("MessageTransportPodsArrived")
+                    .Arrived(transporters, tile);
+                return;
+            }
+
+            // 与远行队共用：先清理/卸载 Failed 地图，禁止复用。
+            if (!node.TryPrepareCompletedMapForEntry(out failMessage))
+            {
+                Messages.Message(
+                    (failMessage
+                        ?? "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate())
+                        .CapitalizeFirst(),
+                    new GlobalTargetInfo(tile),
+                    MessageTypeDefOf.NegativeEvent);
                 new TransportersArrivalAction_FormCaravan("MessageTransportPodsArrived")
                     .Arrived(transporters, tile);
                 return;
@@ -72,17 +85,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool newMap = !node.HasMap;
             Map map = GetOrGenerateMapUtility.GetOrGenerateMap(node.Tile, node.PreferredMapSize, null);
 
-            // GetOrGenerateMap 完成后、生成玩家内容之前检查；失败则组建远行队并卸载空地图。
-            if (map == null
-                || (node.IsCompleted && (node.IsMapContentFailed || !node.IsMapContentReady)))
+            if (map == null || !node.TryValidateCompletedMapReadyForEntry(out failMessage))
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
+                    (failMessage
+                        ?? "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate())
+                        .CapitalizeFirst(),
                     new GlobalTargetInfo(tile),
                     MessageTypeDefOf.NegativeEvent);
                 new TransportersArrivalAction_FormCaravan("MessageTransportPodsArrived")
                     .Arrived(transporters, tile);
-                node.TryUnloadFailedEmptyMap();
                 return;
             }
 
