@@ -51,16 +51,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        /// <summary>
+        /// 进攻合法性统一入口：目标菜单、进攻确认后的抵达动作、抵达前 StillValid 共同使用。
+        /// 校验节点存在/未清理、进入冷却、派系关系（含永久中立/永久盟友禁止）。
+        /// </summary>
         public static FloatMenuAcceptanceReport CanAttack(MAPMechHiveNode node)
         {
             if (node == null || !node.Spawned || node.Cleaned)
             {
-                return false;
+                return FloatMenuAcceptanceReport.WithFailMessage(
+                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.NodeUnavailable".Translate());
             }
 
             if (!MechHiveNodeRelationUtility.CanPlayerAttack())
             {
-                return false;
+                return FloatMenuAcceptanceReport.WithFailMessage(
+                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked".Translate());
             }
 
             if (node.EnterCooldownBlocksEntering())
@@ -207,7 +213,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "ConfirmAttackFriendlyFaction".Translate(node.LabelCap, factionName),
                     delegate
                     {
-                        MechHiveNodeRelationUtility.TryTurnHostileForAttack();
+                        if (!MechHiveNodeRelationUtility.TryTurnHostileForAttack())
+                        {
+                            Messages.Message(
+                                "MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed"
+                                    .Translate(),
+                                MessageTypeDefOf.RejectInput,
+                                historical: false);
+                            return;
+                        }
+
+                        // 转敌成功后再次确认当前仍可进攻，再设置抵达行为。
+                        if (!(bool)CanAttack(node))
+                        {
+                            return;
+                        }
+
                         action();
                     }));
             };

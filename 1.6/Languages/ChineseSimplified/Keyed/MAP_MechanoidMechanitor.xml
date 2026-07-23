@@ -313,4 +313,9 @@
   <MAP_MechanoidMechanitor.MechHiveNode.Transport.InsufficientConfirm>当前所交付的材料无法满足节点建设需求，因此只会按其价值的0.2折算为肃清额度，不会为节点建设提供进度。\n\n仍要发射？</MAP_MechanoidMechanitor.MechHiveNode.Transport.InsufficientConfirm>
   <MAP_MechanoidMechanitor.MechHiveNode.Transport.DeliveredMessage>运输舱已向机械巢节点交付材料，其建设将会加快。</MAP_MechanoidMechanitor.MechHiveNode.Transport.DeliveredMessage>
   <MAP_MechanoidMechanitor.MechHiveNode.Transport.QuotaMessage>运输舱内容已按价值折算为肃清额度。</MAP_MechanoidMechanitor.MechHiveNode.Transport.QuotaMessage>
+  <!-- 机械巢节点：进攻限制与开发者指令 -->
+  <MAP_MechanoidMechanitor.MechHiveNode.Attack.NodeUnavailable>目标机械巢节点已不可进攻。</MAP_MechanoidMechanitor.MechHiveNode.Attack.NodeUnavailable>
+  <MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>当前与机械巢的关系不允许进攻该节点。</MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>
+  <MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>无法将机械巢转为敌对，进攻已取消。</MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>
+  <MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled>当前未允许机械巢节点自然生成。</MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled>
 </LanguageData>

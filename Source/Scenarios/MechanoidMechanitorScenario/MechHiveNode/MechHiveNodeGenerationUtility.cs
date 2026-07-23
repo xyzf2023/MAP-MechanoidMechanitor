@@ -163,7 +163,43 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
+            // 候选地块确定后：对所有 20 格可通行范围内的玩家地表殖民地分别检查上限。
+            // 加入该候选后若会使任意殖民地附近超过 8 个本 MOD 节点，则拒绝。
+            if (WouldExceedAnyColonyNodeCap(tile))
+            {
+                return false;
+            }
+
             return true;
+        }
+
+        /// <summary>
+        /// 若在候选地块放置新节点，是否会使任意相关殖民地 20 格范围内的本 MOD 节点数超过上限。
+        /// 不可达路径不按 0 距离处理；只统计本 MOD 机械巢节点。
+        /// </summary>
+        private static bool WouldExceedAnyColonyNodeCap(PlanetTile candidateTile)
+        {
+            List<Settlement> colonies = GetPlayerSurfaceColonies();
+            for (int i = 0; i < colonies.Count; i++)
+            {
+                Settlement colony = colonies[i];
+                if (colony == null || !colony.Tile.Valid)
+                {
+                    continue;
+                }
+
+                if (!IsWithinTraversal(candidateTile, colony.Tile, ColonyProximityTiles))
+                {
+                    continue;
+                }
+
+                if (CountNodesNearColony(colony.Tile) + 1 > MaxNodesPerColony)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static MAPMechHiveNode CreateNode(PlanetTile tile, Faction mechHive)

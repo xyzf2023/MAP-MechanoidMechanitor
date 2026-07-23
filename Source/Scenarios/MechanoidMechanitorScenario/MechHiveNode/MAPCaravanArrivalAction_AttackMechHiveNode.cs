@@ -5,8 +5,8 @@ using Verse;
 namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
-    /// 远行队进攻机械巢节点的抵达动作：生成/进入节点战斗地图。进攻前的关系确认与转敌
-    /// 在世界地图菜单点击时完成，此处只负责进入地图。
+    /// 远行队进攻机械巢节点的抵达动作：生成/进入节点战斗地图。
+    /// 抵达前通过统一入口重新校验进攻限制；失效时安全取消且不生成地图。
     /// </summary>
     public class MAPCaravanArrivalAction_AttackMechHiveNode : CaravanArrivalAction
     {
@@ -40,11 +40,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            return !node.Cleaned;
+            return MechHiveNodeCaravanInteraction.CanAttack(node);
         }
 
         public override void Arrived(Caravan caravan)
         {
+            FloatMenuAcceptanceReport report = MechHiveNodeCaravanInteraction.CanAttack(node);
+            if (!report)
+            {
+                string fail = report.FailMessage;
+                Messages.Message(
+                    "MessageCaravanArrivalActionNoLongerValid".Translate(caravan.Name).CapitalizeFirst()
+                        + (fail != null ? (" " + fail) : ""),
+                    caravan,
+                    MessageTypeDefOf.NegativeEvent);
+                return;
+            }
+
             if (!node.HasMap)
             {
                 LongEventHandler.QueueLongEvent(
@@ -61,6 +73,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void DoEnter(Caravan caravan)
         {
+            // 长事件开始前再次校验，避免途中关系变化后仍生成地图。
+            if (!(bool)MechHiveNodeCaravanInteraction.CanAttack(node))
+            {
+                Messages.Message(
+                    "MessageCaravanArrivalActionNoLongerValid".Translate(caravan.Name).CapitalizeFirst(),
+                    caravan,
+                    MessageTypeDefOf.NegativeEvent);
+                return;
+            }
+
             bool newMap = !node.HasMap;
             Map map = GetOrGenerateMapUtility.GetOrGenerateMap(node.Tile, node.PreferredMapSize, null);
             if (newMap)

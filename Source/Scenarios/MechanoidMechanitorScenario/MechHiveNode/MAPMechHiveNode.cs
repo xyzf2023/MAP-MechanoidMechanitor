@@ -21,8 +21,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>材料交付后的加速完成延迟：3 个游戏小时。</summary>
         public const int AcceleratedCompletionDelayTicks = 7500;
 
-        /// <summary>材料需求线性衰减时长：12 个游戏日（第 13 日归零）。</summary>
+        /// <summary>材料需求按完整游戏日阶梯衰减：12 个完整日后归零（720000 tick）。</summary>
         public const int DemandDecayDurationTicks = 720000;
+
+        /// <summary>每个完整游戏日的 tick 数。</summary>
+        public const int TicksPerDay = 60000;
+
+        /// <summary>材料需求衰减所跨越的完整游戏日数。</summary>
+        public const int DemandDecayFullDays = 12;
 
         /// <summary>建设中节点守军威胁点数。</summary>
         public const int BuildingGarrisonThreatPoints = 2000;
@@ -48,8 +54,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private ThingDef? demandMaterialDef;
 
         private int initialDemandCount;
-
-        private int lastDemandUpdateTick = -1;
 
         private bool cleaned;
 
@@ -80,8 +84,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             createdTick < 0 ? 0 : Mathf.Max(0, Find.TickManager.TicksGame - createdTick);
 
         /// <summary>
-        /// 当前材料需求量。按节点年龄线性衰减；已交付、已清理、非建设阶段或超过 12 天时为 0。
-        /// 数据始终计算，但是否显示/允许交付另由关系与阶段决定。
+        /// 当前材料需求量。按已度过的完整游戏日阶梯变化（整数除法 age/60000），
+        /// 公式：Ceil(初始量 × max(0, 1 - 完整天数/12))。
+        /// 第 0 个完整日内保持初始量；720000 tick 时准确归零。
+        /// 已交付、已清理、非建设阶段不会重新产生需求。
         /// </summary>
         public int CurrentDemandCount
         {
@@ -96,13 +102,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return 0;
                 }
 
-                int age = AgeTicks;
-                if (age >= DemandDecayDurationTicks)
+                int fullDays = AgeTicks / TicksPerDay;
+                if (fullDays >= DemandDecayFullDays)
                 {
                     return 0;
                 }
 
-                float factor = Mathf.Max(0f, 1f - (float)age / DemandDecayDurationTicks);
+                float factor = Mathf.Max(0f, 1f - (float)fullDays / DemandDecayFullDays);
                 return Mathf.CeilToInt(initialDemandCount * factor);
             }
         }
@@ -145,7 +151,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             this.layoutSeed = layoutSeed;
             this.demandMaterialDef = demandMaterialDef;
             this.initialDemandCount = Mathf.Max(0, initialDemandCount);
-            this.lastDemandUpdateTick = createdTick;
             this.cleaned = false;
             this.completionLetterSent = false;
         }
@@ -164,7 +169,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             materialDelivered = true;
             naturalTimerStopped = true;
             acceleratedCompletionTick = Find.TickManager.TicksGame + AcceleratedCompletionDelayTicks;
-            lastDemandUpdateTick = Find.TickManager.TicksGame;
         }
 
         protected override void Tick()
@@ -283,8 +287,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            // 玩家在场或有关键 Pawn 时不卸载。
+            // 与原版 Site.ShouldRemoveMapNow 对齐：地图内阻止卸载的 Pawn。
             if (map.mapPawns.AnyPawnBlockingMapRemoval)
+            {
+                return false;
+            }
+
+            // 以当前地图为来源的口袋地图中，仍有阻止卸载的 Pawn（对齐原版 Site）。
+            List<PocketMapParent> pocketMaps = Find.World.pocketMaps;
+            if (pocketMaps != null)
+            {
+                for (int i = 0; i < pocketMaps.Count; i++)
+                {
+                    PocketMapParent pocket = pocketMaps[i];
+                    if (pocket != null
+                        && pocket.sourceMap == map
+                        && pocket.Map != null
+                        && pocket.Map.mapPawns.AnyPawnBlockingMapRemoval)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            if (map.AnyBuildingBlockingMapRemoval)
             {
                 return false;
             }
@@ -294,7 +320,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            // 无任何有效机械巢威胁 → 视为已清理，移除世界对象。
+            // 本 MOD：无任何有效机械巢威胁 → 视为已清理，一并移除世界对象。
             if (!MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(map))
             {
                 cleaned = true;
@@ -366,7 +392,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref layoutSeed, "MAP_layoutSeed", 0);
             Scribe_Defs.Look(ref demandMaterialDef, "MAP_demandMaterialDef");
             Scribe_Values.Look(ref initialDemandCount, "MAP_initialDemandCount", 0);
-            Scribe_Values.Look(ref lastDemandUpdateTick, "MAP_lastDemandUpdateTick", -1);
             Scribe_Values.Look(ref cleaned, "MAP_cleaned", false);
             Scribe_Values.Look(ref completionLetterSent, "MAP_completionLetterSent", false);
         }
