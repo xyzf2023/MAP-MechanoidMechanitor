@@ -23,7 +23,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const float StoryStyleTitleIconGap = 4f;
         private const float StoryStyleIconDescGap = 6f;
         private const int StoryStyleDescLines = 3;
-        private const float StoryStyleDescScrollSpeed = 15f;
+        private const float StoryStyleDescScrollSpeed = 10f;
+        private const float StoryStyleDescScrollTopPause = 1f;
         private const float StoryStyleDescScrollBottomPause = 1.5f;
 
         // 文化适配横向卡片
@@ -430,13 +431,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 float overflowHeight = fullTextHeight - rect.height;
                 float travelDuration = overflowHeight / StoryStyleDescScrollSpeed;
-                float cycleDuration = travelDuration + StoryStyleDescScrollBottomPause;
+                float cycleDuration = StoryStyleDescScrollTopPause
+                    + travelDuration
+                    + StoryStyleDescScrollBottomPause;
                 float elapsedInCycle =
                     (Time.realtimeSinceStartup - descriptionScrollStartRealTime)
                     % cycleDuration;
-                float offset = elapsedInCycle < travelDuration
-                    ? elapsedInCycle * StoryStyleDescScrollSpeed
-                    : overflowHeight;
+                float offset;
+                if (elapsedInCycle < StoryStyleDescScrollTopPause)
+                {
+                    offset = 0f;
+                }
+                else if (elapsedInCycle < StoryStyleDescScrollTopPause + travelDuration)
+                {
+                    offset = (elapsedInCycle - StoryStyleDescScrollTopPause)
+                        * StoryStyleDescScrollSpeed;
+                }
+                else
+                {
+                    offset = overflowHeight;
+                }
 
                 Widgets.BeginGroup(rect);
                 try
