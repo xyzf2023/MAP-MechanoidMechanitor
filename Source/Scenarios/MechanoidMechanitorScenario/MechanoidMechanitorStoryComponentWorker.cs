@@ -56,6 +56,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return null;
         }
 
+        /// <summary>
+        /// 取得该组件在指定配置中的本地化摘要显示值。
+        /// 默认返回 null，表示不参与剧情风格预设的悬浮摘要。
+        /// </summary>
+        public virtual string? GetSummaryValue(
+            MechanoidMechanitorStoryConfiguration configuration)
+        {
+            return null;
+        }
+
         public abstract float GetHeight(
             MechanoidMechanitorStoryConfigurationContext context,
             float width);

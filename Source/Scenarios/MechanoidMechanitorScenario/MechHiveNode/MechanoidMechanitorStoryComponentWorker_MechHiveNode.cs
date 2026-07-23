@@ -27,6 +27,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return "MAP_MechanoidMechanitor.Story.Component.MechHiveNode.Description".Translate();
         }
 
+        public override string? GetSummaryValue(
+            MechanoidMechanitorStoryConfiguration configuration)
+        {
+            return MechanoidMechanitorStoryConfigurationLabels.LabelFor(
+                configuration.mechHiveNodeFrequency);
+        }
+
         public override float GetHeight(
             MechanoidMechanitorStoryConfigurationContext context,
             float width)
