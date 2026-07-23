@@ -37,11 +37,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool CleanupFullyCompleted => cleanupFullyCompleted;
 
-        public bool HasPendingCleanup =>
-            !cleanupFullyCompleted
-            && (trackedLordLoadId >= 0
-                || (trackedPawns != null && trackedPawns.Count > 0)
-                || (trackedThings != null && trackedThings.Count > 0));
+        /// <summary>回滚是否仍未完成；唯一完成依据是 <see cref="CleanupFullyCompleted"/>。</summary>
+        public bool HasPendingCleanup => !cleanupFullyCompleted;
+
+        /// <summary>当前是否仍登记有精确对象（不代替 CleanupFullyCompleted）。</summary>
+        public bool HasTrackedObjects =>
+            trackedLordLoadId >= 0
+            || (trackedPawns != null && trackedPawns.Count > 0)
+            || (trackedThings != null && trackedThings.Count > 0);
 
         /// <summary>供草图 Spawn 直接写入的同一列表，保证落地即登记。</summary>
         public List<Thing> ThingsListForRegistration => trackedThings;
@@ -171,23 +174,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 try
                 {
-                    // 未落地且未入世界：先挂入世界，保证存档可引用，再安全丢弃。
-                    if (pawn != null
-                        && !pawn.Destroyed
-                        && !pawn.Spawned
-                        && !Find.WorldPawns.Contains(pawn))
+                    if (pawn != null)
                     {
-                        try
+                        WorldPawns? worldPawns = Find.WorldPawns;
+                        bool containedByWorldPawns =
+                            worldPawns != null && worldPawns.Contains(pawn);
+
+                        if (!pawn.Spawned && !containedByWorldPawns)
                         {
-                            Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.Decide);
+                            if (worldPawns != null)
+                            {
+                                worldPawns.PassToWorld(
+                                    pawn,
+                                    PawnDiscardDecideMode.Discard);
+                            }
                         }
-                        catch (Exception)
+                        else
                         {
-                            // 保留记录重试
+                            MechHiveCombatPawnUtility.SafelyDiscardPawn(pawn);
                         }
                     }
-
-                    MechHiveCombatPawnUtility.SafelyDiscardPawn(pawn);
                 }
                 catch (Exception ex)
                 {
@@ -235,14 +241,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return cleanupFullyCompleted;
         }
 
+        /// <summary>
+        /// 仅当 null，或已同时完成 Destroyed+Discarded 且未 Spawn、不在 WorldPawns 时视为清理完成。
+        /// “未 Spawn 且不在 WorldPawns”本身是 PawnGroupMaker 刚生成未落地的正常状态，不得单独当作完成。
+        /// </summary>
         private static bool IsPawnFullyDiscarded(Pawn? pawn)
         {
-            if (pawn == null || pawn.Destroyed)
+            if (pawn == null)
             {
                 return true;
             }
 
-            return !pawn.Spawned && !Find.WorldPawns.Contains(pawn);
+            bool containedByWorldPawns =
+                Find.WorldPawns != null && Find.WorldPawns.Contains(pawn);
+
+            return pawn.Destroyed
+                && pawn.Discarded
+                && !pawn.Spawned
+                && !containedByWorldPawns;
         }
 
         private static Lord? FindLordByLoadId(Map map, int loadId)
@@ -288,19 +304,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 for (int i = trackedPawns.Count - 1; i >= 0; i--)
                 {
-                    if (trackedPawns[i] == null || trackedPawns[i].Destroyed)
+                    if (IsPawnFullyDiscarded(trackedPawns[i]))
                     {
                         trackedPawns.RemoveAt(i);
                     }
                 }
 
-                if (!cleanupFullyCompleted
-                    && trackedLordLoadId < 0
-                    && trackedThings.Count == 0
-                    && trackedPawns.Count == 0)
-                {
-                    cleanupFullyCompleted = true;
-                }
+                // 不在此推断 cleanupFullyCompleted；须由 TryCleanupRegisteredContent 明确写入。
             }
         }
     }
