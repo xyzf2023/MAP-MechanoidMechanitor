@@ -2,7 +2,7 @@
 <Defs>
   <PawnColumnDef>
     <defName>MAP_ColonistBarPortrait</defName>
-    <label>portrait display</label>
+    <label>显示头像</label>
     <paintable>true</paintable>
     <workerClass>MAP_MechanoidMechanitor.PawnColumnWorker_ColonistBarPortrait</workerClass>
   </PawnColumnDef>
