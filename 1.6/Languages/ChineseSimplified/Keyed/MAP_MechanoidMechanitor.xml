@@ -122,9 +122,6 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Title>通讯输出</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Title>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink>&lt;i&gt;-{0}&lt;/i&gt;\n-通讯链路：稳定\n-访问权限：已确认\n 阐述需求，[[PAUSE]]{1}。</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable>时间获取失败</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.01>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.02>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.03>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>
