@@ -4,6 +4,7 @@ using System.Linq;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -14,6 +15,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const float LeftColumnRatio = 0.62f;
         private const float TitleToDescriptionGap = 6f;
         private const float DescriptionBottomGap = 8f;
+        private const float LoadPresetButtonWidth = 170f;
+        private const float LoadPresetButtonHeight = 29f;
+        private const float LoadPresetButtonToAccentGap = 8f;
         private const float AccentLineWidth = 110f;
         private const float AccentLineHeight = 2f;
         private const float AccentToContentGap = 14f;
@@ -21,6 +25,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static readonly Color DescriptionColor = new Color(0.72f, 0.72f, 0.72f, 1f);
         private static readonly Color AccentLineColor = new Color(0.62f, 0.48f, 0.30f, 0.75f);
+        private static readonly Color LoadPresetButtonBgColor = new Color(0.18f, 0.16f, 0.14f, 1f);
+        private static readonly Color LoadPresetButtonBgHoverColor = new Color(0.24f, 0.21f, 0.17f, 1f);
+        private static readonly Color LoadPresetButtonOutlineColor = new Color(0.58f, 0.46f, 0.30f, 0.70f);
+        private static readonly Color LoadPresetButtonOutlineHoverColor =
+            new Color(0.70f, 0.56f, 0.36f, 0.85f);
 
         private readonly MechanoidMechanitorStoryConfiguration configurationDraft;
 
@@ -74,7 +83,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Text.WordWrap = previousWordWrap;
             }
 
-            float accentY = descriptionY + descriptionHeight + DescriptionBottomGap;
+            float loadPresetButtonY = descriptionY + descriptionHeight + DescriptionBottomGap;
+            DrawLoadPresetButton(
+                new Rect(
+                    mainRect.xMax - LoadPresetButtonWidth,
+                    loadPresetButtonY,
+                    LoadPresetButtonWidth,
+                    LoadPresetButtonHeight));
+
+            float accentY =
+                loadPresetButtonY + LoadPresetButtonHeight + LoadPresetButtonToAccentGap;
             Widgets.DrawBoxSolid(
                 new Rect(mainRect.x, accentY, AccentLineWidth, AccentLineHeight),
                 AccentLineColor);
@@ -229,6 +247,103 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidMechanitorStoryConfigurationContext.Create(configurationDraft);
             configurationDraft.SyncOrdinaryFactionEntries(context);
             configurationDraft.Normalize(context);
+        }
+
+        private void DrawLoadPresetButton(Rect rect)
+        {
+            Color previousColor = GUI.color;
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            bool previousWordWrap = Text.WordWrap;
+            try
+            {
+                Color bg = LoadPresetButtonBgColor;
+                Color outline = LoadPresetButtonOutlineColor;
+                if (Mouse.IsOver(rect))
+                {
+                    bg = LoadPresetButtonBgHoverColor;
+                    outline = LoadPresetButtonOutlineHoverColor;
+                }
+
+                Widgets.DrawBoxSolidWithOutline(rect, bg, outline);
+
+                Text.Font = GameFont.Small;
+                Text.WordWrap = false;
+                Text.Anchor = TextAnchor.MiddleCenter;
+                GUI.color = Color.white;
+                Widgets.Label(
+                    rect,
+                    "MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset".Translate());
+
+                if (Widgets.ButtonInvisible(rect, doMouseoverSound: true))
+                {
+                    OpenPresetFloatMenu();
+                }
+            }
+            finally
+            {
+                GUI.color = previousColor;
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
+            }
+        }
+
+        private void OpenPresetFloatMenu()
+        {
+            List<MechanoidMechanitorStoryStyleDef> presets = GetLoadablePresetsSorted();
+            if (presets.Count == 0)
+            {
+                return;
+            }
+
+            List<FloatMenuOption> options = new List<FloatMenuOption>(presets.Count);
+            for (int i = 0; i < presets.Count; i++)
+            {
+                MechanoidMechanitorStoryStyleDef preset = presets[i];
+                options.Add(
+                    new FloatMenuOption(
+                        preset.LabelCap,
+                        () => ApplyPresetToDraft(preset)));
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        private static List<MechanoidMechanitorStoryStyleDef> GetLoadablePresetsSorted()
+        {
+            return DefDatabase<MechanoidMechanitorStoryStyleDef>
+                .AllDefsListForReading
+                .Where(def => !def.opensCustomizePage && def.presetConfiguration != null)
+                .OrderBy(def => def.displayOrder)
+                .ThenBy(def => def.defName, StringComparer.Ordinal)
+                .ToList();
+        }
+
+        private void ApplyPresetToDraft(MechanoidMechanitorStoryStyleDef style)
+        {
+            MechanoidMechanitorStoryConfiguration snapshot =
+                style.CreateConfigurationSnapshot();
+            MechanoidMechanitorIdeologyAdaptationLevel preservedIdeologyAdaptationLevel =
+                configurationDraft.ideologyAdaptationLevel;
+
+            configurationDraft.ordinaryFactionRelationsMode =
+                snapshot.ordinaryFactionRelationsMode;
+            configurationDraft.mechHiveRelationMode = snapshot.mechHiveRelationMode;
+            configurationDraft.mechHiveNodeFrequency = snapshot.mechHiveNodeFrequency;
+            configurationDraft.purgeDirectiveEnabled = snapshot.purgeDirectiveEnabled;
+            configurationDraft.symbiosisCovenantEnabled = snapshot.symbiosisCovenantEnabled;
+            configurationDraft.ideologyAdaptationLevel = preservedIdeologyAdaptationLevel;
+
+            configurationDraft.ordinaryFactionRelationSettings.Clear();
+
+            MechanoidMechanitorStoryConfigurationContext context =
+                MechanoidMechanitorStoryConfigurationContext.Create(configurationDraft);
+            configurationDraft.SyncOrdinaryFactionEntries(context);
+            configurationDraft.Normalize(context);
+
+            scrollPosition = Vector2.zero;
+            SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
         }
 
         private bool TryCommitConfigurationAndStart()
