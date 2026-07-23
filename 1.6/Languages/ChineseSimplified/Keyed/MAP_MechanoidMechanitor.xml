@@ -260,8 +260,8 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.InsufficientCredits>
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.ChargeFailed>额度扣除失败，未执行部署</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.ChargeFailed>
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.CommittedFailure>部署流程发生异常，额度已提交</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.CommittedFailure>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Body>正在建立通讯通道……</MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Body>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Todo>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Todo>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Query.PurgeCredits>问询：如何获取肃清额度？</MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Query.PurgeCredits>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Response.PurgeCredits>肃清[[PAUSE]]//征服[[PAUSE]]//扩张\n\n肃清额度是对本地节点执行成果的量化记录。\n\n消灭智慧有机体，[[PAUSE]]清除机械巢认定的敌对据点，[[PAUSE]]协助机械巢节点建立与扩张。\n\n完成已授权指令，[[PAUSE]]相应额度将被计入当前节点。</MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Response.PurgeCredits>
   <MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason>当前普通派系关系设置下，不满足启用共生盟约路线的条件。</MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason>
   <MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>当前世界中没有可配置的普通派系。</MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>
   <MAP_MechanoidMechanitor.Story.NoMechHive>当前世界中没有机械巢派系。</MAP_MechanoidMechanitor.Story.NoMechHive>

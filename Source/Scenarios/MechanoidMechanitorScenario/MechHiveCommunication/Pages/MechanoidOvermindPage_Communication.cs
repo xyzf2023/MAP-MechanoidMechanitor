@@ -5,29 +5,40 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed class MechanoidOvermindPage_Communication
     {
-        public void Draw(Rect inRect)
+        private const float QueryRowHeight = 58f;
+
+        public MechanoidOvermindCommunicationQueryKind? Draw(Rect inRect)
         {
             using (MechanoidOvermindUiStyle.Push())
             {
                 MechanoidOvermindUiStyle.DrawPanel(inRect);
                 Rect inner = inRect.ContractedBy(16f);
 
-                MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(inner.x, inner.y, inner.width, 24f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Body".Translate(),
-                    GameFont.Small,
-                    TextAnchor.UpperLeft,
-                    MechanoidOvermindUiStyle.TextSecondary,
-                    wordWrap: true);
+                MechanoidOvermindCommunicationQueryKind? selected = null;
+                Rect queryRect = new Rect(inner.x, inner.y, inner.width, QueryRowHeight);
+                if (DrawQueryCard(
+                        queryRect,
+                        "01",
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Query.PurgeCredits"
+                            .Translate()))
+                {
+                    selected = MechanoidOvermindCommunicationQueryKind.PurgeCredits;
+                }
 
-                MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(inner.x, inner.y + 40f, inner.width, Mathf.Max(24f, inner.height - 52f)),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Todo".Translate(),
-                    GameFont.Small,
-                    TextAnchor.UpperLeft,
-                    MechanoidOvermindUiStyle.Warning,
-                    wordWrap: true);
+                return selected;
             }
+        }
+
+        private static bool DrawQueryCard(Rect rect, string node, string title)
+        {
+            string nodeLabel =
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node".Translate(node);
+            return MechanoidOvermindUiStyle.DrawMenuCard(
+                rect,
+                nodeLabel,
+                title,
+                enabled: true,
+                compactLayout: true);
         }
     }
 }
