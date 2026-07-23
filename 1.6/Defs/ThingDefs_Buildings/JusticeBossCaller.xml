@@ -56,6 +56,8 @@
         <bossgroupDef>MAP_JusticeBossGroup</bossgroupDef>
         <effecterDef>MechbandDishUsed</effecterDef>
         <prepareEffecterDef>MechBandDishPrepared</prepareEffecterDef>
+        <unlockedLetterLabelKey>LetterLabelBossgroupCallerUnlocked</unlockedLetterLabelKey>
+        <unlockedLetterTextKey>LetterBossgroupCallerUnlocked</unlockedLetterTextKey>
         <delayTicks>120</delayTicks>
       </li>
       <li Class="CompProperties_UseEffectDestroySelf">
