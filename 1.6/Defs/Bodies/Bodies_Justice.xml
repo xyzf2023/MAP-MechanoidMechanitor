@@ -136,6 +136,10 @@
                   <customLabel>左手</customLabel>
                   <coverage>0.20</coverage>
                   <height>Bottom</height>
+                  <groups>
+                    <li>Hands</li>
+                    <li>LeftHand</li>
+                  </groups>
                 </li>
 
               </parts>
@@ -175,6 +179,10 @@
                   <customLabel>右手</customLabel>
                   <coverage>0.20</coverage>
                   <height>Bottom</height>
+                  <groups>
+                    <li>Hands</li>
+                    <li>RightHand</li>
+                  </groups>
                 </li>
 
               </parts>
@@ -213,6 +221,9 @@
                   <def>MechanicalFoot</def>
                   <customLabel>左足</customLabel>
                   <coverage>0.20</coverage>
+                  <groups>
+                    <li>Feet</li>
+                  </groups>
                 </li>
 
               </parts>
@@ -251,6 +262,9 @@
                   <def>MechanicalFoot</def>
                   <customLabel>右足</customLabel>
                   <coverage>0.20</coverage>
+                  <groups>
+                    <li>Feet</li>
+                  </groups>
                 </li>
 
               </parts>
