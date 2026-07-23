@@ -107,6 +107,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool bootLoopTestEnabled;
 
+        private bool forceMojibakeDialogue;
+
         private string statusKey =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Status.Connecting";
 
@@ -1074,6 +1076,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 devControlsEnabled = false;
                 bootLoopTestEnabled = false;
+                forceMojibakeDialogue = false;
             }
 
             if (!bootPage)
@@ -1084,6 +1087,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!devControlsEnabled)
             {
                 bootLoopTestEnabled = false;
+                forceMojibakeDialogue = false;
             }
 
             const float edgePad = 8f;
@@ -1091,12 +1095,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             const float disconnectW = 110f;
             const float devToggleW = 54f;
             const float loopTestW = 86f;
+            const float forceMojibakeW = 118f;
             const float creditWideW = 102f;
             const float creditNarrowW = 92f;
 
             bool showDevToggle = Prefs.DevMode;
             bool showCreditButtons = showDevToggle && devControlsEnabled;
             bool showLoopTest = bootPage && showDevToggle && devControlsEnabled;
+            bool showForceMojibake = showDevToggle && devControlsEnabled;
             // 启动页不属于 transitioning，DEV / 额度 / 循环测试均可操作。
             bool freezeDev = !bootPage && transitioning;
             bool creditEnabled = bootPage || !transitioning;
@@ -1110,6 +1116,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (showDevToggle)
             {
                 rightClusterW += itemGap + devToggleW;
+            }
+
+            if (showForceMojibake)
+            {
+                rightClusterW += itemGap + forceMojibakeW;
             }
 
             if (showLoopTest)
@@ -1195,7 +1206,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (!devControlsEnabled)
                     {
                         bootLoopTestEnabled = false;
+                        forceMojibakeDialogue = false;
                     }
+                }
+            }
+
+            if (showForceMojibake && devControlsEnabled)
+            {
+                cursorX -= itemGap + forceMojibakeW;
+                Rect forceRect = new Rect(cursorX, rect.y + 6f, forceMojibakeW, rect.height - 12f);
+                if (freezeDev)
+                {
+                    bool frozen = forceMojibakeDialogue;
+                    Widgets.CheckboxLabeled(
+                        forceRect,
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.ForceMojibake"
+                            .Translate(),
+                        ref frozen);
+                }
+                else
+                {
+                    bool forceEnabled = forceMojibakeDialogue;
+                    Widgets.CheckboxLabeled(
+                        forceRect,
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Dev.ForceMojibake"
+                            .Translate(),
+                        ref forceEnabled);
+                    forceMojibakeDialogue = forceEnabled;
                 }
             }
 
@@ -2532,8 +2569,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void PlayDialogueText(string text)
         {
+            if (ShouldPlayMojibakeEasterEgg())
+            {
+                // 必须用 RawText，保留血红色加粗标签。
+                text = "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.MojibakeEasterEgg"
+                    .Translate()
+                    .RawText;
+            }
+
             dialogueTyper.Clear();
             dialogueTyper.Start(text);
+        }
+
+        private bool ShouldPlayMojibakeEasterEgg()
+        {
+            if (Prefs.DevMode && forceMojibakeDialogue)
+            {
+                return true;
+            }
+
+            // 独立随机，不触碰 Verse.Rand。
+            return bootRandom.NextDouble() < 0.05d;
         }
 
         private static bool ShowsOrderPanel(MechanoidOvermindPageKind page)
