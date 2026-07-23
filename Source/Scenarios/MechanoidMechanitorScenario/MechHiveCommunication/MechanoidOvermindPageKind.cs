@@ -5,7 +5,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         Home,
         Mechs,
         Goods,
-        BattlefieldSupport,
-        Chat
+        SpecialProtocols,
+        Communication
     }
 }

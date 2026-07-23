@@ -20,11 +20,11 @@
   </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
-    <defName>MAP_OvermindDialogue_EnterChat</defName>
+    <defName>MAP_OvermindDialogue_EnterCommunication</defName>
     <textKeys>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.01</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.02</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterChat.03</li>
+      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.01</li>
+      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.02</li>
+      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.03</li>
     </textKeys>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
 
@@ -47,11 +47,11 @@
   </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
-    <defName>MAP_OvermindDialogue_EnterBattlefield</defName>
+    <defName>MAP_OvermindDialogue_EnterSpecialProtocols</defName>
     <textKeys>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.01</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.02</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterBattlefield.03</li>
+      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterSpecialProtocols.01</li>
+      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterSpecialProtocols.02</li>
+      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterSpecialProtocols.03</li>
     </textKeys>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
 

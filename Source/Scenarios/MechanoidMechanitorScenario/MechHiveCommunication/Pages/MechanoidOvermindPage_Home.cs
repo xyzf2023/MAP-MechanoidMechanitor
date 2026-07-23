@@ -30,10 +30,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (DrawCard(
                         new Rect(inRect.x, y, inRect.width, rowH),
                         "01",
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat".Translate(),
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Communication".Translate(),
                         inputEnabled))
                 {
-                    selected = MechanoidOvermindPageKind.Chat;
+                    selected = MechanoidOvermindPageKind.Communication;
                 }
 
                 y += rowH + RowGap;
@@ -60,10 +60,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (DrawCard(
                         new Rect(inRect.x, y, inRect.width, rowH),
                         "04",
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield".Translate(),
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.SpecialProtocols".Translate(),
                         inputEnabled))
                 {
-                    selected = MechanoidOvermindPageKind.BattlefieldSupport;
+                    selected = MechanoidOvermindPageKind.SpecialProtocols;
                 }
 
                 return selected;
