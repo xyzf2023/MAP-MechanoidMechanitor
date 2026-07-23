@@ -44,12 +44,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return context.HasOrdinaryFactions;
         }
 
-        protected override TaggedString GetDescription()
-        {
-            return "MAP_MechanoidMechanitor.Story.Component.OrdinaryFactionRelations.Description"
-                .Translate();
-        }
-
         public override string? GetSummaryValue(
             MechanoidMechanitorStoryConfiguration configuration)
         {

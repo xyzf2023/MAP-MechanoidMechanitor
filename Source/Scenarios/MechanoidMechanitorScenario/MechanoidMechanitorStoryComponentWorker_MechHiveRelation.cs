@@ -36,12 +36,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .Translate();
         }
 
-        protected override TaggedString GetDescription()
-        {
-            return "MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description"
-                .Translate();
-        }
-
         public override string? GetSummaryValue(
             MechanoidMechanitorStoryConfiguration configuration)
         {

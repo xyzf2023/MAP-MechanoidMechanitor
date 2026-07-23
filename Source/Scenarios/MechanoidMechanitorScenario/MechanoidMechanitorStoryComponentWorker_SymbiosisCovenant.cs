@@ -31,12 +31,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return "MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason".Translate();
         }
 
-        protected override TaggedString GetDescription()
-        {
-            return "MAP_MechanoidMechanitor.Story.Component.SymbiosisCovenant.Description"
-                .Translate();
-        }
-
         public override string? GetSummaryValue(
             MechanoidMechanitorStoryConfiguration configuration)
         {

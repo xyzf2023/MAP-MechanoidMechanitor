@@ -32,12 +32,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return "MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason".Translate();
         }
 
-        protected override TaggedString GetDescription()
-        {
-            return "MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description"
-                .Translate();
-        }
-
         public override string? GetSummaryValue(
             MechanoidMechanitorStoryConfiguration configuration)
         {

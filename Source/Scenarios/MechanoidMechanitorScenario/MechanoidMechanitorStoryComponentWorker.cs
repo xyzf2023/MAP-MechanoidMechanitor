@@ -74,7 +74,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect rect,
             MechanoidMechanitorStoryConfigurationContext context);
 
-        protected abstract TaggedString GetDescription();
+        protected TaggedString GetDescription()
+        {
+            return def.description;
+        }
 
         protected static void NormalizeAfterChange(
             MechanoidMechanitorStoryConfigurationContext context)

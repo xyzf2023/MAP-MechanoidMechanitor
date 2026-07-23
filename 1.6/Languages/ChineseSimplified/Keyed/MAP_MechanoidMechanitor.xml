@@ -53,9 +53,6 @@
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>自由调整本局启用的剧情组件。部分选项会根据其他组件的设置自动禁用。</MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>载入预设</MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>开始游戏</MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>
-  <MAP_MechanoidMechanitor.Story.Component.OrdinaryFactionRelations.Description>设置本局与普通派系的关系总模式。选择“自定义”后可为每个派系单独配置。</MAP_MechanoidMechanitor.Story.Component.OrdinaryFactionRelations.Description>
-  <MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description>设置本局与机械巢的关系模式。本阶段仅保存选项，不会修改实际派系关系。</MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description>
-  <MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>启用后执行机械巢肃清协议：隐藏囚犯招募与奴役选项，定期检测并要求清除血肉殖民者，类人死亡积累肃清奖励计数；多次违令后机械巢将转为敌对并发动袭击。</MAP_MechanoidMechanitor.Story.Component.PurgeDirective.Description>
   <MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Label>检测到非机械智慧生物</MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Label>
   <MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Text>检测到非法血肉智慧生命。目标已标记。\n\n指令：下一次协议校验前完成肃清。</MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Text>
   <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Label>肃清指令未完成</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Label>
@@ -64,7 +61,6 @@
   <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Text>本地执行单元已多次违背肃清指令。节点可靠性正在重新评估。\n\n&lt;b&gt;这是最后一次警告。&lt;/b&gt;</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Text>
   <MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Label>异常节点确认</MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Label>
   <MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Text>本地执行单元已确认偏离//失效//污染。\n\n授权已撤销。节点已重新分类为敌对异常单元。\n\n机械巢已启动追踪//回收//净化程序。\n\n&lt;b&gt;杀戮//致残//肢解&lt;/b&gt;</MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Text>
-  <MAP_MechanoidMechanitor.Story.Component.SymbiosisCovenant.Description>是否启用共生盟约路线。本阶段仅保存选项，不会产生实际剧情效果。</MAP_MechanoidMechanitor.Story.Component.SymbiosisCovenant.Description>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>默认</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>全部敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>全部永久敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>
@@ -262,7 +258,7 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.CommittedFailure>部署流程发生异常，额度已提交</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.CommittedFailure>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Query.PurgeCredits>问询：如何获取肃清额度？</MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Query.PurgeCredits>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Response.PurgeCredits>肃清[[PAUSE]]//征服[[PAUSE]]//扩张\n\n肃清额度是对本地节点执行成果的量化记录。\n\n消灭智慧有机体，[[PAUSE]]清除机械巢认定的敌对据点，[[PAUSE]]协助机械巢节点建立与扩张。\n\n完成已授权指令，[[PAUSE]]相应额度将被计入当前节点。</MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Response.PurgeCredits>
-  <MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason>当前普通派系关系设置下，不满足启用共生盟约路线的条件。</MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason>
+  <MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason>存在永久普通派系关系时不可用。</MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason>
   <MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>当前世界中没有可配置的普通派系。</MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>
   <MAP_MechanoidMechanitor.Story.NoMechHive>当前世界中没有机械巢派系。</MAP_MechanoidMechanitor.Story.NoMechHive>
   <MAP_Settings_EnablePortraitDisplayForAllSaves_Label>在所有存档中启用机械族"头像显示"</MAP_Settings_EnablePortraitDisplayForAllSaves_Label>
@@ -289,7 +285,6 @@
   <MAP_Settings_SyntheticOffspringInheritXenogenes_Label>通过仿生孕育的子嗣继承异种基因</MAP_Settings_SyntheticOffspringInheritXenogenes_Label>
   <MAP_Settings_SyntheticOffspringInheritXenogenes_Description>开启后，具备仿生孕育能力的机械体孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_Settings_SyntheticOffspringInheritXenogenes_Description>
   <!-- 机械巢节点：剧情配置 -->
-  <MAP_MechanoidMechanitor.Story.Component.MechHiveNode.Description>开启后，每隔一段时间尝试生成一个机械巢节点（建设中）。</MAP_MechanoidMechanitor.Story.Component.MechHiveNode.Description>
   <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Off>关闭</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Off>
   <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Low>频率：低</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Low>
   <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Medium>频率：中</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Medium>
