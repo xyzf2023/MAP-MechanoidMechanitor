@@ -11,7 +11,7 @@
 尽管其主要职责在于协调与指挥，「正义」仍保留了基础的作战能力，能够自如使用人类武器，并具备相当可靠的社交与制造逻辑。这使它在机械体体系中不仅是战时的调度中枢，也能在非战斗阶段承担协调与维护角色。曾有殖民地记录指出，只要「正义」仍在运行，机械体集群的行动便会显得异常克制而高效，仿佛整个系统始终处于被持续校准的状态。</description>
     <statBases>
       <WorkSpeedGlobal>1</WorkSpeedGlobal>
-      <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">0</BandwidthCost>
+      <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">30</BandwidthCost>
       <PilotingAbility MayRequire="Ludeon.RimWorld.Odyssey">2</PilotingAbility>
       <ControlTakingTime>10</ControlTakingTime>
     </statBases>
