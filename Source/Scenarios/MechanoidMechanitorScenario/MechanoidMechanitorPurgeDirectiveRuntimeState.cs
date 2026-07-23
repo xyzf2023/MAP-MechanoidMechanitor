@@ -29,6 +29,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool purgeDirectiveRaidQueued;
 
+        private bool contactOvermindUnlockedLetterSent;
+
         private string? lastFinalizationFailureReason;
 
         public int RewardPoints => purgeDirectiveRewardPoints;
@@ -45,6 +47,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool RaidQueued => purgeDirectiveRaidQueued;
 
+        public bool ContactOvermindUnlockedLetterSent => contactOvermindUnlockedLetterSent;
+
         public void InitializeForNewGame(bool purgeDirectiveEnabled)
         {
             purgeDirectiveRewardPoints = 0;
@@ -52,11 +56,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             purgeDirectiveOrangeWarningsSent = 0;
             purgeDirectiveFinalPenaltyTriggered = false;
             purgeDirectiveRaidQueued = false;
+            contactOvermindUnlockedLetterSent = false;
             nextPurgeDirectiveFinalizationRetryTick = 0;
             lastFinalizationFailureReason = null;
             nextPurgeDirectiveCheckTick = purgeDirectiveEnabled
                 ? Find.TickManager.TicksGame + ProtocolCheckIntervalTicks
                 : 0;
+        }
+
+        public void MarkContactOvermindUnlockedLetterSent()
+        {
+            contactOvermindUnlockedLetterSent = true;
         }
 
         public bool TryNoteNewFinalizationFailureReason(string reason)
@@ -233,6 +243,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(
                 ref purgeDirectiveRaidQueued,
                 "purgeDirectiveRaidQueued",
+                false);
+            Scribe_Values.Look(
+                ref contactOvermindUnlockedLetterSent,
+                "contactOvermindUnlockedLetterSent",
                 false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
