@@ -10,7 +10,7 @@
 		<li>数据删除</li>
 	</authors>
 	<modVersion IgnoreIfNoMatchingField="true">0.1.0</modVersion>
-	<description>TODO</description>
+	<description>扮演觉醒了自我意识的机械族机械师，体验纯粹由机械族组成的殖民地。</description>
 	<modDependencies>
 		<li>
 			<packageId>brrainz.harmony</packageId>
