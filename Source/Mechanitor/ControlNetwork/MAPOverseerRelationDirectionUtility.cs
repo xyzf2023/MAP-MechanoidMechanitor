@@ -84,6 +84,44 @@ namespace MAP_MechanoidMechanitor
             return IsActualOverseerOf(viewer, other);
         }
 
+        /// <summary>
+        /// 收集 subject 的全部实际监管者（控制组包含 subject 的 Overseer 对端）。
+        /// 写入前不清空 into；调用方应自行准备空列表。不调用 GetFirstDirectRelationPawn。
+        /// </summary>
+        public static void CollectActualOverseers(Pawn? subject, List<Pawn> into)
+        {
+            if (subject?.relations == null || into == null || !ModsConfig.BiotechActive)
+            {
+                return;
+            }
+
+            List<DirectPawnRelation> relations = subject.relations.DirectRelations;
+            for (int i = 0; i < relations.Count; i++)
+            {
+                DirectPawnRelation relation = relations[i];
+                if (relation.def != PawnRelationDefOf.Overseer)
+                {
+                    continue;
+                }
+
+                Pawn? candidate = relation.otherPawn;
+                if (candidate == null)
+                {
+                    continue;
+                }
+
+                if (!IsActualOverseerOf(candidate, subject))
+                {
+                    continue;
+                }
+
+                if (!into.Contains(candidate))
+                {
+                    into.Add(candidate);
+                }
+            }
+        }
+
         private static bool HasOverseerRelation(Pawn a, Pawn b)
         {
             if (a.relations != null
