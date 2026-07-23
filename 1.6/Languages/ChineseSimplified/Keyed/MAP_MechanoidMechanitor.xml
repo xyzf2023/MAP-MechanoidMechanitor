@@ -286,4 +286,31 @@
   <MAP_MechanoidMechanitor.SyntheticPregnancy.StartBirthGizmoDesc>命令{0}在原地执行分娩流程。请确保环境安全后再下达此命令。</MAP_MechanoidMechanitor.SyntheticPregnancy.StartBirthGizmoDesc>
   <MAP_Settings_SyntheticOffspringInheritXenogenes_Label>通过仿生孕育的子嗣继承异种基因</MAP_Settings_SyntheticOffspringInheritXenogenes_Label>
   <MAP_Settings_SyntheticOffspringInheritXenogenes_Description>开启后，具备仿生孕育能力的机械体孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_Settings_SyntheticOffspringInheritXenogenes_Description>
+  <!-- 机械巢节点：剧情配置 -->
+  <MAP_MechanoidMechanitor.Story.Component.MechHiveNode.Description>开启后，每隔一段时间尝试生成一个机械巢节点（建设中）。</MAP_MechanoidMechanitor.Story.Component.MechHiveNode.Description>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Off>关闭</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Off>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Low>频率：低</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Low>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Medium>频率：中</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Medium>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.High>频率：高</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.High>
+  <!-- 机械巢节点：信件与世界地图信息 -->
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Created.Label>正在建设中的机械巢节点</MAP_MechanoidMechanitor.MechHiveNode.Letter.Created.Label>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Created.Text>殖民地附近出现了一个正在建设中的机械巢节点。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Created.Text>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Label>机械巢节点建设完毕</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Label>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Ally>附近一个机械巢节点的建设已经完毕。当我们遇到袭击时，有概率获取该机械巢节点的支持。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Ally>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>附近一个机械巢节点的建设已经完毕。我们有可能遭遇来自该机械巢的额外袭击。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>附近一个机械巢节点的建设已经完毕。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>
+  <MAP_MechanoidMechanitor.MechHiveNode.MaterialDemand>材料需求：{0} ×{1}</MAP_MechanoidMechanitor.MechHiveNode.MaterialDemand>
+  <!-- 机械巢节点：远行队交付 -->
+  <MAP_MechanoidMechanitor.MechHiveNode.Caravan.GoDeliver>前往交付材料：{0}</MAP_MechanoidMechanitor.MechHiveNode.Caravan.GoDeliver>
+  <MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Label>提供材料</MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Label>
+  <MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Desc>向该节点提供所需材料，以加快其建设。</MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Desc>
+  <MAP_MechanoidMechanitor.MechHiveNode.Caravan.Insufficient>远行队携带的目标材料不足以满足当前需求。</MAP_MechanoidMechanitor.MechHiveNode.Caravan.Insufficient>
+  <MAP_MechanoidMechanitor.MechHiveNode.Caravan.Delivered>已向机械巢节点提供材料，其建设将会加快。</MAP_MechanoidMechanitor.MechHiveNode.Caravan.Delivered>
+  <!-- 机械巢节点：运输舱 -->
+  <MAP_MechanoidMechanitor.MechHiveNode.Transport.Deliver>空投交付材料</MAP_MechanoidMechanitor.MechHiveNode.Transport.Deliver>
+  <MAP_MechanoidMechanitor.MechHiveNode.Transport.ConvertQuota>空投并折算为肃清额度</MAP_MechanoidMechanitor.MechHiveNode.Transport.ConvertQuota>
+  <MAP_MechanoidMechanitor.MechHiveNode.Transport.DumpLost>空投（物资将失踪）</MAP_MechanoidMechanitor.MechHiveNode.Transport.DumpLost>
+  <MAP_MechanoidMechanitor.MechHiveNode.Transport.InsufficientConfirm>当前所交付的材料无法满足节点建设需求，因此只会按其价值的0.2折算为肃清额度，不会为节点建设提供进度。\n\n仍要发射？</MAP_MechanoidMechanitor.MechHiveNode.Transport.InsufficientConfirm>
+  <MAP_MechanoidMechanitor.MechHiveNode.Transport.DeliveredMessage>运输舱已向机械巢节点交付材料，其建设将会加快。</MAP_MechanoidMechanitor.MechHiveNode.Transport.DeliveredMessage>
+  <MAP_MechanoidMechanitor.MechHiveNode.Transport.QuotaMessage>运输舱内容已按价值折算为肃清额度。</MAP_MechanoidMechanitor.MechHiveNode.Transport.QuotaMessage>
 </LanguageData>

@@ -342,6 +342,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return faction != null && cachedMechHive != null && faction == cachedMechHive;
         }
 
+        /// <summary>
+        /// 玩家主动进攻普通中立/普通盟友的机械巢节点时，通过统一关系接口把机械巢转为敌对。
+        /// 永久（锁定）关系不允许此操作，直接返回 false，由调用方在更早阶段拦截。
+        /// </summary>
+        public bool TryTurnMechHiveHostileFromPlayerAttack()
+        {
+            if (activeConfiguration == null || cachedMechHive == null)
+            {
+                return false;
+            }
+
+            if (hasLockedMechHiveRelation)
+            {
+                return false;
+            }
+
+            activeConfiguration.mechHiveRelationMode =
+                MechanoidMechanitorMechHiveRelationMode.Default;
+            bool applied = MechanoidMechanitorMechHiveRelationApplier.ApplyExactMechHiveRelation(
+                cachedMechHive,
+                FactionRelationKind.Hostile,
+                hostileOnHarmByPlayer: false);
+            RebuildRuntimeCaches();
+            return applied;
+        }
+
         public bool TryGetMechHiveRelationMode(
             out MechanoidMechanitorMechHiveRelationMode mode)
         {

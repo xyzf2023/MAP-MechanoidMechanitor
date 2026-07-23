@@ -8,6 +8,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public MechanoidMechanitorMechHiveRelationMode mechHiveRelationMode =
             MechanoidMechanitorMechHiveRelationMode.Default;
 
+        public MechanoidMechanitorMechHiveNodeFrequency mechHiveNodeFrequency =
+            MechanoidMechanitorMechHiveNodeFrequency.Off;
+
         public bool purgeDirectiveEnabled;
 
         public bool symbiosisCovenantEnabled;
@@ -18,6 +21,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 ordinaryFactionRelationsMode = ordinaryFactionRelationsMode,
                 mechHiveRelationMode = mechHiveRelationMode,
+                mechHiveNodeFrequency = mechHiveNodeFrequency,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
                 symbiosisCovenantEnabled = symbiosisCovenantEnabled
             };

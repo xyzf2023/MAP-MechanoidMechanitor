@@ -140,13 +140,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public const string ErrorCommittedFailure =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.CommittedFailure";
 
-        private const string MemberTag = "MechClusterMember";
-
-        private const string ProblemCauserTag = "MechClusterProblemCauser";
-
-        // 原版机械集群自动迫击炮；仅从玩家可选状态建筑中排除。
-        private const string ExcludedAutoMortarDefName = "Turret_AutoMortar";
-
         private const float InitiationChance = 0.6f;
 
         private static readonly FloatRange InitiationDelay = new FloatRange(0.1f, 15f);
@@ -197,36 +190,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static List<ThingDef> GetConditionCausers(int threatPoints)
         {
-            List<ThingDef> result = new List<ThingDef>();
-            List<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading;
-            for (int i = 0; i < defs.Count; i++)
-            {
-                ThingDef def = defs[i];
-                if (IsConditionCauser(def, threatPoints))
-                {
-                    result.Add(def);
-                }
-            }
-
-            result.Sort((a, b) =>
-                string.Compare(a.LabelCap, b.LabelCap, StringComparison.CurrentCulture));
-            return result;
+            return MechClusterBuildingUtility.GetConditionCausers(threatPoints);
         }
 
         public static bool IsConditionCauser(ThingDef? def, int threatPoints)
         {
-            if (def?.building?.buildingTags == null
-                || def.category != ThingCategory.Building
-                || def.thingClass == null
-                || !typeof(Building).IsAssignableFrom(def.thingClass)
-                || def.building.minMechClusterPoints > threatPoints
-                || IsExcludedConditionCauser(def))
-            {
-                return false;
-            }
-
-            List<string> tags = def.building.buildingTags;
-            return tags.Contains(MemberTag) && tags.Contains(ProblemCauserTag);
+            return MechClusterBuildingUtility.IsConditionCauser(def, threatPoints);
         }
 
         public static bool TryPrepare(
@@ -282,9 +251,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     sketch.pawns = new List<MechClusterSketch.Mech>();
                 }
 
-                RemoveGeneratedProblemCausers(sketch.buildingsSketch);
+                MechClusterBuildingUtility.RemoveGeneratedProblemCausers(sketch.buildingsSketch);
                 if (selectedConditionCauser != null
-                    && !TryAddConditionCauser(sketch, selectedConditionCauser))
+                    && !MechClusterBuildingUtility.TryAddConditionCauser(
+                        sketch,
+                        selectedConditionCauser))
                 {
                     errorKey = ErrorConditionCauserPlacement;
                     return false;
@@ -626,7 +597,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                 }
 
-                if (thing is Building building && IsBuildingThreat(building))
+                if (thing is Building building
+                    && MechClusterBuildingUtility.IsBuildingThreat(building))
                 {
                     lord.AddBuilding(building);
                 }
@@ -691,120 +663,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return spawnedThings;
-        }
-
-        private static bool IsBuildingThreat(Thing b)
-        {
-            CompPawnSpawnOnWakeup? spawnOnWakeup = b.TryGetComp<CompPawnSpawnOnWakeup>();
-            if (spawnOnWakeup != null && spawnOnWakeup.CanSpawn)
-            {
-                return true;
-            }
-
-            CompSpawnerPawn? spawnerPawn = b.TryGetComp<CompSpawnerPawn>();
-            if (spawnerPawn != null && spawnerPawn.pawnsLeftToSpawn != 0)
-            {
-                return true;
-            }
-
-            if (!b.def.building.IsTurret)
-            {
-                return b.TryGetComp<CompCauseGameCondition>() != null;
-            }
-
-            return true;
-        }
-
-        private static bool IsExcludedConditionCauser(ThingDef def)
-        {
-            return def.defName == ExcludedAutoMortarDefName;
-        }
-
-        private static void RemoveGeneratedProblemCausers(Sketch sketch)
-        {
-            List<SketchThing> things = sketch.Things;
-            for (int i = things.Count - 1; i >= 0; i--)
-            {
-                SketchThing thing = things[i];
-                // 清理草图内随机生成的状态建筑；排除规则仅作用于玩家可选列表。
-                if (thing.def?.building?.buildingTags != null
-                    && thing.def.building.buildingTags.Contains(MemberTag)
-                    && thing.def.building.buildingTags.Contains(ProblemCauserTag))
-                {
-                    sketch.Remove(thing);
-                }
-            }
-        }
-
-        private static bool TryAddConditionCauser(
-            MechClusterSketch cluster,
-            ThingDef conditionCauser)
-        {
-            Sketch sketch = cluster.buildingsSketch;
-            CellRect searchRect = sketch.OccupiedRect.ExpandedBy(6);
-            List<IntVec3> cells = searchRect.Cells.ToList();
-            IntVec3 center = searchRect.CenterCell;
-            cells.Sort((a, b) =>
-                DistanceSquared(a, center).CompareTo(DistanceSquared(b, center)));
-
-            for (int i = 0; i < cells.Count; i++)
-            {
-                IntVec3 cell = cells[i];
-                if (sketch.WouldCollide(conditionCauser, cell, Rot4.North)
-                    || OverlapsMechSpawn(cluster, conditionCauser, cell))
-                {
-                    continue;
-                }
-
-                ThingDef? stuff = null;
-                try
-                {
-                    stuff = GenStuff.RandomStuffByCommonalityFor(conditionCauser);
-                }
-                catch (Exception)
-                {
-                    if (conditionCauser.MadeFromStuff)
-                    {
-                        continue;
-                    }
-                }
-
-                if (sketch.AddThing(
-                        conditionCauser,
-                        cell,
-                        Rot4.North,
-                        stuff,
-                        wipeIfCollides: false))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool OverlapsMechSpawn(
-            MechClusterSketch cluster,
-            ThingDef def,
-            IntVec3 position)
-        {
-            CellRect occupied = GenAdj.OccupiedRect(position, Rot4.North, def.Size);
-            for (int i = 0; i < cluster.pawns.Count; i++)
-            {
-                if (occupied.Contains(cluster.pawns[i].position))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static int DistanceSquared(IntVec3 a, IntVec3 b)
-        {
-            int dx = a.x - b.x;
-            int dz = a.z - b.z;
-            return dx * dx + dz * dz;
         }
 
         private static AcceptanceReport ValidateOccupiedCell(Map map, IntVec3 cell)

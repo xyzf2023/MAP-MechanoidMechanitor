@@ -74,6 +74,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             };
         }
 
+        public static string LabelFor(MechanoidMechanitorMechHiveNodeFrequency frequency)
+        {
+            return frequency switch
+            {
+                MechanoidMechanitorMechHiveNodeFrequency.Off =>
+                    "MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Off".Translate(),
+                MechanoidMechanitorMechHiveNodeFrequency.Low =>
+                    "MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Low".Translate(),
+                MechanoidMechanitorMechHiveNodeFrequency.Medium =>
+                    "MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Medium".Translate(),
+                MechanoidMechanitorMechHiveNodeFrequency.High =>
+                    "MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.High".Translate(),
+                _ => frequency.ToString()
+            };
+        }
+
         public static string EnabledLabel =>
             "MAP_MechanoidMechanitor.Story.Option.Enabled".Translate();
 

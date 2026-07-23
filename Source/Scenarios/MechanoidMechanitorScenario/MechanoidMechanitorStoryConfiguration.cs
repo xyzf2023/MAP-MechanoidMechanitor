@@ -15,6 +15,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public MechanoidMechanitorMechHiveRelationMode mechHiveRelationMode =
             MechanoidMechanitorMechHiveRelationMode.Default;
 
+        public MechanoidMechanitorMechHiveNodeFrequency mechHiveNodeFrequency =
+            MechanoidMechanitorMechHiveNodeFrequency.Off;
+
         public bool purgeDirectiveEnabled;
 
         public bool symbiosisCovenantEnabled;
@@ -33,6 +36,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 ordinaryFactionRelationsMode = ordinaryFactionRelationsMode,
                 mechHiveRelationMode = mechHiveRelationMode,
+                mechHiveNodeFrequency = mechHiveNodeFrequency,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
                 symbiosisCovenantEnabled = symbiosisCovenantEnabled,
                 ideologyAdaptationLevel = ideologyAdaptationLevel
@@ -168,6 +172,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 mechHiveRelationMode = MechanoidMechanitorMechHiveRelationMode.Default;
                 purgeDirectiveEnabled = false;
             }
+
+            if (!context.HasMechHive)
+            {
+                mechHiveNodeFrequency = MechanoidMechanitorMechHiveNodeFrequency.Off;
+            }
             else if (mechHiveRelationMode != MechanoidMechanitorMechHiveRelationMode.Ally)
             {
                 purgeDirectiveEnabled = false;
@@ -199,6 +208,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref mechHiveRelationMode,
                 "mechHiveRelationMode",
                 MechanoidMechanitorMechHiveRelationMode.Default);
+            Scribe_Values.Look(
+                ref mechHiveNodeFrequency,
+                "mechHiveNodeFrequency",
+                MechanoidMechanitorMechHiveNodeFrequency.Off);
             Scribe_Values.Look(ref purgeDirectiveEnabled, "purgeDirectiveEnabled", false);
             Scribe_Values.Look(ref symbiosisCovenantEnabled, "symbiosisCovenantEnabled", false);
             Scribe_Values.Look(

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- 机械巢节点世界对象。建设中/建设完成两个阶段共用同一个世界对象，仅切换主 SitePart。 -->
+  <WorldObjectDef>
+    <defName>MAP_MechHiveNode</defName>
+    <label>机械巢节点</label>
+    <worldObjectClass>MAP_MechanoidMechanitor.Scenarios.MAPMechHiveNode</worldObjectClass>
+    <canHaveFaction>true</canHaveFaction>
+    <expandingIcon>true</expandingIcon>
+    <expandingIconPriority>70</expandingIconPriority>
+    <selectable>true</selectable>
+    <IncidentTargetTags>
+      <li>Map_Misc</li>
+    </IncidentTargetTags>
+    <inspectorTabs>
+      <li>WITab_Terrain</li>
+      <li>WITab_Planet</li>
+    </inspectorTabs>
+  </WorldObjectDef>
+
+  <!-- 主 SitePart：建设中。 -->
+  <SitePartDef>
+    <defName>MAP_MechHiveNode_Building</defName>
+    <label>机械巢节点（建设中）</label>
+    <description>一个正在建设中的机械巢节点。其中的机械族与防御设施尚未完全部署，但仍具备一定的防御力量。</description>
+    <siteTexture>World/WorldObjects/Sites/GenericSite</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/SleepingPawns</expandingIconTexture>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_MechHiveNode</workerClass>
+    <wantsThreatPoints>false</wantsThreatPoints>
+    <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
+    <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
+    <showFactionInInspectString>true</showFactionInInspectString>
+  </SitePartDef>
+
+  <!-- 主 SitePart：建设完成。 -->
+  <SitePartDef>
+    <defName>MAP_MechHiveNode_Completed</defName>
+    <label>机械巢节点</label>
+    <description>一个建设完毕的机械巢节点，部署了大量休眠的机械族守军与重型防御设施。</description>
+    <siteTexture>World/WorldObjects/Sites/GenericSite</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/SleepingPawns</expandingIconTexture>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_MechHiveNode</workerClass>
+    <wantsThreatPoints>false</wantsThreatPoints>
+    <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
+    <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
+    <showFactionInInspectString>true</showFactionInInspectString>
+  </SitePartDef>
+
+</Defs>
