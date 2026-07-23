@@ -2,15 +2,6 @@
 <Defs>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
-    <defName>MAP_OvermindDialogue_HomeOpen</defName>
-    <textKeys>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.01</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.02</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeOpen.03</li>
-    </textKeys>
-  </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
-
-  <MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
     <defName>MAP_OvermindDialogue_HomeReturn</defName>
     <textKeys>
       <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01</li>

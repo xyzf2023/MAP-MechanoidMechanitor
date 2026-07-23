@@ -2555,7 +2555,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case MechanoidOvermindPageKind.SpecialProtocols:
                     return "MAP_OvermindDialogue_EnterSpecialProtocols";
                 default:
-                    return "MAP_OvermindDialogue_HomeOpen";
+                    throw new ArgumentOutOfRangeException(nameof(page), page, null);
             }
         }
 
