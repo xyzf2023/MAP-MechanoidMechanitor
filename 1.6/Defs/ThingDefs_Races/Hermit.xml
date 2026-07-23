@@ -24,7 +24,8 @@
           <li>Blunt</li>
         </capacities>
         <power>9</power>
-        <cooldownTime>1</cooldownTime>
+        <armorPenetration>0.16</armorPenetration>
+        <cooldownTime>1.6</cooldownTime>
         <linkedBodyPartsGroup>HeadAttackTool</linkedBodyPartsGroup>
         <ensureLinkedBodyPartsGroupAlwaysUsable>true</ensureLinkedBodyPartsGroupAlwaysUsable>
         <chanceFactor>0.2</chanceFactor>
@@ -86,18 +87,21 @@
         <li>
           <def>MechanoidFullyFormed</def>
           <minAge>0</minAge>
-          <soundWounded>Pawn_Mech_Scyther_Wounded</soundWounded>
-          <soundDeath>Pawn_Mech_Scyther_Death</soundDeath>
-          <soundCall>Pawn_Mech_Scyther_Call</soundCall>
+          <soundWounded>Pawn_Mech_Militor_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Militor_Death</soundDeath>
+          <soundCall>Pawn_Mech_Militor_Call</soundCall>
         </li>
         <li MayRequire="Ludeon.RimWorld.Biotech">
           <def>MechanoidFullyFormed</def>
           <minAge>100</minAge>
-          <soundWounded>Pawn_Mech_Scyther_Wounded</soundWounded>
-          <soundDeath>Pawn_Mech_Scyther_Death</soundDeath>
-          <soundCall>Pawn_Mech_Scyther_Call</soundCall>
+          <soundWounded>Pawn_Mech_Militor_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Militor_Death</soundDeath>
+          <soundCall>Pawn_Mech_Militor_Call</soundCall>
         </li>
       </lifeStageAges>
+      <soundMeleeHitPawn>Pawn_Melee_MechanoidBash_HitPawn</soundMeleeHitPawn>
+      <soundMeleeHitBuilding>Pawn_Melee_MechanoidBash_HitBuilding</soundMeleeHitBuilding>
+      <soundMeleeMiss>Pawn_Melee_MechanoidBash_Miss</soundMeleeMiss>
       <mechFixedSkillLevel>10</mechFixedSkillLevel>
       <mechEnabledWorkTypes>
         <li>Research</li>
@@ -113,6 +117,7 @@
     <label>「隐者」</label>
     <race>MAP_Mech_Hermit</race>
     <defaultFactionDef>PlayerColony</defaultFactionDef>
+    <destroyGearOnDrop>false</destroyGearOnDrop>
     <combatPower>150</combatPower>
     <allowInMechClusters>false</allowInMechClusters>
     <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
