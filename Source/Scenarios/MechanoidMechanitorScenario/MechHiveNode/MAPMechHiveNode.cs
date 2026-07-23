@@ -209,6 +209,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>开始新一轮完整节点初始化登记（立即绑定到本节点）。</summary>
         public MechHiveNodeInitAttemptRecord BeginCompletedInitAttempt()
         {
+            if (initAttemptRecord != null
+                && !initAttemptRecord.CleanupFullyCompleted)
+            {
+                throw new InvalidOperationException(
+                    "[MAP] 上一轮完整节点初始化回滚尚未完成，禁止覆盖精确清理记录。");
+            }
+
             initAttemptRecord ??= new MechHiveNodeInitAttemptRecord();
             initAttemptRecord.ResetForNewAttempt();
             return initAttemptRecord;
@@ -243,7 +250,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 继续精确清理本轮登记对象；全部完成后才可卸载失败地图。
+        /// 继续精确清理本轮登记对象；无地图时也会用 null 继续处理 WorldPawn。
         /// </summary>
         public bool TryContinueFailedInitCleanup()
         {
@@ -253,17 +260,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return true;
             }
 
-            if (initAttemptRecord == null || initAttemptRecord.CleanupFullyCompleted)
+            if (initAttemptRecord == null)
             {
                 return true;
             }
 
-            return initAttemptRecord.TryCleanupRegisteredContent(base.HasMap ? base.Map : null);
+            if (initAttemptRecord.CleanupFullyCompleted)
+            {
+                return true;
+            }
+
+            Map? cleanupMap = base.HasMap ? base.Map : null;
+            return initAttemptRecord.TryCleanupRegisteredContent(cleanupMap);
         }
 
         /// <summary>
-        /// 完整节点进入前准备：若存在非成功地图，先清理残留并尝试卸载，禁止复用 Failed 地图。
-        /// 返回 false 表示仍无法进入（地图仍在且未 Succeeded）。
+        /// 完整节点进入前准备：若存在未完成失败记录或非成功地图，先清理，禁止复用。
         /// </summary>
         public bool TryPrepareCompletedMapForEntry(out string? failMessage)
         {
@@ -271,6 +283,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!IsCompleted)
             {
                 return true;
+            }
+
+            if (initAttemptRecord != null
+                && !initAttemptRecord.CleanupFullyCompleted)
+            {
+                mapInitState = MechHiveNodeMapInitState.Failed;
+                TryContinueFailedInitCleanup();
+
+                if (initAttemptRecord != null
+                    && !initAttemptRecord.CleanupFullyCompleted)
+                {
+                    failMessage =
+                        "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate();
+                    return false;
+                }
+
+                if (!base.HasMap)
+                {
+                    ClearFailedInitRecord();
+                    mapInitState = MechHiveNodeMapInitState.None;
+                }
             }
 
             if (base.HasMap && mapInitState == MechHiveNodeMapInitState.Succeeded)
@@ -349,11 +382,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// Failed 地图：按精确登记继续清理，全部完成后再尝试卸载。
+        /// Failed：按精确登记继续清理（无论地图是否仍存在），全部完成后再尝试卸载。
         /// </summary>
         private void TryPeriodicFailedMapRecovery()
         {
-            if (!IsCompleted || cleaned || !base.HasMap)
+            if (!IsCompleted || cleaned)
             {
                 return;
             }
@@ -560,6 +593,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            // 精确回滚未完成时硬阻止卸载。
+            if (mapInitState == MechHiveNodeMapInitState.Failed
+                || mapInitState == MechHiveNodeMapInitState.Generating)
+            {
+                TryContinueFailedInitCleanup();
+
+                if (initAttemptRecord != null
+                    && !initAttemptRecord.CleanupFullyCompleted)
+                {
+                    return false;
+                }
+            }
+
             // 威胁清空与地图卸载拆分：先判定战斗完成（不受玩家 Pawn 阻挡）。
             TryMarkCleanedIfNoThreats();
 
@@ -603,7 +649,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 在确认没有任何玩家 Pawn / 运输舱内容进入后，安全卸载非成功的空地图。
-        /// 仅在确认地图已卸载后将状态重置为 None，允许下次重新生成。
+        /// 仅在 CleanupFullyCompleted 明确成立后将状态重置为 None。
         /// </summary>
         public void TryUnloadFailedEmptyMap()
         {
@@ -614,17 +660,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (!base.HasMap)
             {
-                // 无地图且无待清理对象时，才允许重置为可重试。
-                if ((mapInitState == MechHiveNodeMapInitState.Failed
-                        || mapInitState == MechHiveNodeMapInitState.Generating)
-                    && (initAttemptRecord == null
-                        || initAttemptRecord.CleanupFullyCompleted
-                        || !initAttemptRecord.HasPendingCleanup))
+                if (mapInitState != MechHiveNodeMapInitState.Failed
+                    && mapInitState != MechHiveNodeMapInitState.Generating)
                 {
-                    ClearFailedInitRecord();
-                    mapInitState = MechHiveNodeMapInitState.None;
+                    return;
                 }
 
+                if (initAttemptRecord != null
+                    && !initAttemptRecord.CleanupFullyCompleted)
+                {
+                    mapInitState = MechHiveNodeMapInitState.Failed;
+                    initAttemptRecord.TryCleanupRegisteredContent(null);
+
+                    if (!initAttemptRecord.CleanupFullyCompleted)
+                    {
+                        return;
+                    }
+                }
+
+                ClearFailedInitRecord();
+                mapInitState = MechHiveNodeMapInitState.None;
                 return;
             }
 
@@ -634,10 +689,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             // 仍有精确待清理对象：不得卸载、不得重置为 None。
-            if (initAttemptRecord != null && initAttemptRecord.HasPendingCleanup)
+            if (initAttemptRecord != null && !initAttemptRecord.CleanupFullyCompleted)
             {
                 TryContinueFailedInitCleanup();
-                if (initAttemptRecord.HasPendingCleanup)
+                if (initAttemptRecord != null
+                    && !initAttemptRecord.CleanupFullyCompleted)
                 {
                     return;
                 }
@@ -646,6 +702,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map = base.Map;
             if (map == null || map.Disposed)
             {
+                mapInitState = MechHiveNodeMapInitState.Failed;
+
+                if (initAttemptRecord != null
+                    && !initAttemptRecord.CleanupFullyCompleted)
+                {
+                    initAttemptRecord.TryCleanupRegisteredContent(null);
+                    if (!initAttemptRecord.CleanupFullyCompleted)
+                    {
+                        return;
+                    }
+                }
+
                 ClearFailedInitRecord();
                 mapInitState = MechHiveNodeMapInitState.None;
                 return;
@@ -661,6 +729,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 只有确认节点不再持有地图后，才清除记录并重置为可重试。
             if (!base.HasMap)
             {
+                if (initAttemptRecord != null
+                    && !initAttemptRecord.CleanupFullyCompleted)
+                {
+                    mapInitState = MechHiveNodeMapInitState.Failed;
+                    initAttemptRecord.TryCleanupRegisteredContent(null);
+                    if (!initAttemptRecord.CleanupFullyCompleted)
+                    {
+                        return;
+                    }
+                }
+
                 ClearFailedInitRecord();
                 mapInitState = MechHiveNodeMapInitState.None;
             }
@@ -714,17 +793,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public override void Notify_MyMapRemoved(Map map)
         {
             base.Notify_MyMapRemoved(map);
+
             if (cleaned)
             {
                 return;
             }
 
-            // 地图已卸：再尝试清理仍挂在 WorldPawns 的已登记守军，然后清记录并允许重试。
-            if (initAttemptRecord != null && !initAttemptRecord.CleanupFullyCompleted)
+            if (mapInitState == MechHiveNodeMapInitState.Failed
+                || mapInitState == MechHiveNodeMapInitState.Generating)
             {
-                initAttemptRecord.TryCleanupRegisteredContent(null);
+                mapInitState = MechHiveNodeMapInitState.Failed;
+
+                if (initAttemptRecord != null
+                    && !initAttemptRecord.CleanupFullyCompleted)
+                {
+                    initAttemptRecord.TryCleanupRegisteredContent(null);
+                }
+
+                if (initAttemptRecord != null
+                    && !initAttemptRecord.CleanupFullyCompleted)
+                {
+                    return;
+                }
+
+                ClearFailedInitRecord();
+                mapInitState = MechHiveNodeMapInitState.None;
+                return;
             }
 
+            // 正常 Succeeded 地图在玩家撤退后卸载：保持原有可重新生成行为。
             ClearFailedInitRecord();
             mapInitState = MechHiveNodeMapInitState.None;
         }
