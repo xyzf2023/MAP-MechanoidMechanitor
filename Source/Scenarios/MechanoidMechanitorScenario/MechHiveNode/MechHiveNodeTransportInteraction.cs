@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// <summary>
     /// 机械巢节点的运输舱目标菜单与抵达结算。所有分支互斥、不重复结算：
     /// 存在可带队 Pawn 时仅原版“在此组建远行队”；无可带队 Pawn 时按阶段/关系/需求/肃清指令
-    /// 结算材料交付、肃清额度或内容丢失；不能带队的 Pawn 一律安全失踪，物品结算后消失。
+    /// 结算材料交付、肃清额度或内容丢失；不能带队的 Pawn 一律安全失踪，物品按分支处理。
     /// </summary>
     public static class MechHiveNodeTransportInteraction
     {
@@ -92,8 +92,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 抵达结算：按当前实际状态在“材料足量交付 / 肃清额度折算 / 内容丢失”三种互斥分支中择一，
-        /// 随后不能带队的 Pawn 一律安全失踪、物品全部消失。
+        /// 抵达结算：按当前实际状态在“材料足量交付 / 肃清额度折算 / 内容丢失”三种互斥分支中择一。
         /// </summary>
         public static void SettleArrival(
             MAPMechHiveNode node,
@@ -196,7 +195,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     MechHiveNodeDeliveryUtility.ExcessQuotaMultiplier);
             }
 
-            FinalizePawnsAndItems(transporters, tile);
+            // 节点消费内容：不发送遗弃通知。
+            FinalizeConsumedContents(transporters, tile);
             Messages.Message(
                 "MAP_MechanoidMechanitor.MechHiveNode.Transport.DeliveredMessage".Translate(),
                 new GlobalTargetInfo(tile),
@@ -226,7 +226,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 totalValue,
                 MechHiveNodeDeliveryUtility.ExcessQuotaMultiplier);
 
-            FinalizePawnsAndItems(transporters, tile);
+            // 节点消费内容：不发送遗弃通知。
+            FinalizeConsumedContents(transporters, tile);
             Messages.Message(
                 "MAP_MechanoidMechanitor.MechHiveNode.Transport.QuotaMessage".Translate(),
                 new GlobalTargetInfo(tile),
@@ -236,7 +237,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static void SettleContentLost(List<ActiveTransporterInfo> transporters, PlanetTile tile)
         {
-            FinalizePawnsAndItems(transporters, tile);
+            // 明确走原版“内容将失踪或被遗弃”分支：先放逐玩家相关 Pawn，再 Notify_AbandonedAtTile，最后清空。
+            FinalizeAbandonedContents(transporters, tile);
             Messages.Message(
                 "MessageTransportPodsArrivedAndLost".Translate(),
                 new GlobalTargetInfo(tile),
@@ -245,26 +247,66 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 不能带队的 Pawn 一律安全失踪（玩家方 Pawn 走原版放逐流程），随后物品全部消失。
-        /// 复用原版运输舱内容丢失路径：Banish + ClearAndDestroyContentsOrPassToWorld。
+        /// 主动交付/肃清额度兑换：Pawn 安全失踪，物品被消费销毁；不发送 Notify_AbandonedAtTile。
         /// </summary>
-        private static void FinalizePawnsAndItems(List<ActiveTransporterInfo> transporters, PlanetTile tile)
+        private static void FinalizeConsumedContents(
+            List<ActiveTransporterInfo> transporters,
+            PlanetTile tile)
+        {
+            BanishPlayerRelatedPawns(transporters, tile);
+            ClearContainersOnce(transporters);
+        }
+
+        /// <summary>
+        /// 原版内容丢失分支：与 TravellingTransporters 无抵达动作时一致。
+        /// </summary>
+        private static void FinalizeAbandonedContents(
+            List<ActiveTransporterInfo> transporters,
+            PlanetTile tile)
+        {
+            BanishPlayerRelatedPawns(transporters, tile);
+
+            for (int i = 0; i < transporters.Count; i++)
+            {
+                ThingOwner container = transporters[i].innerContainer;
+                for (int j = 0; j < container.Count; j++)
+                {
+                    container[j].Notify_AbandonedAtTile(tile);
+                }
+            }
+
+            ClearContainersOnce(transporters);
+        }
+
+        private static void BanishPlayerRelatedPawns(
+            List<ActiveTransporterInfo> transporters,
+            PlanetTile tile)
         {
             Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < transporters.Count; i++)
             {
                 ThingOwner container = transporters[i].innerContainer;
                 for (int j = container.Count - 1; j >= 0; j--)
                 {
                     if (container[j] is Pawn pawn
-                        && player != null
                         && (pawn.Faction == player || pawn.HostFaction == player))
                     {
                         PawnBanishUtility.Banish(pawn, tile);
                     }
                 }
+            }
+        }
 
-                container.ClearAndDestroyContentsOrPassToWorld();
+        private static void ClearContainersOnce(List<ActiveTransporterInfo> transporters)
+        {
+            for (int i = 0; i < transporters.Count; i++)
+            {
+                transporters[i].innerContainer.ClearAndDestroyContentsOrPassToWorld();
             }
         }
 

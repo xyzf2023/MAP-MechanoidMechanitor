@@ -9,15 +9,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 机械巢节点地图内容生成。由 <see cref="SitePartWorker_MechHiveNode"/> 在地图生成后调用。
-    /// 建筑布局与守军点数分别生成：布局使用机械族专用炮塔与结构；守军按节点威胁点数从
-    /// 机械巢 Combat 模板生成，全部休眠，纳入同一休眠/唤醒 Lord。
-    /// 布局使用节点保存的随机种子，保证撤退后重新进入时同类型布局与完整守军可复现。
+    /// 建设中节点使用简陋未完工布局；完整节点使用真正的机械集群式建筑草图。
+    /// 建筑布局与守军点数分别生成：守军按节点威胁点数从机械巢 Combat 模板生成，
+    /// 全部休眠，纳入同一休眠/唤醒 Lord。建筑预算不扣减守军预算。
     /// 高低角护盾与地图状态建筑仅在 Royalty 启用时生成；Royalty 关闭时不查找相关 Def。
     /// </summary>
     public static class MechHiveNodeMapGenerator
     {
-        private const int MaxPlacementAttempts = 40;
-
         public static void Generate(Map map, MAPMechHiveNode node)
         {
             if (map == null || node == null)
@@ -32,13 +30,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            bool completed = node.IsCompleted;
-
             // 使用节点布局种子保证可复现。独立 Rand 状态，不污染全局序列。
             Rand.PushState(Gen.HashCombineInt(node.LayoutSeed, 0x1B3F7));
             try
             {
-                GenerateInternal(map, node, mechHive, completed);
+                if (node.IsCompleted)
+                {
+                    GenerateCompleted(map, node, mechHive);
+                }
+                else
+                {
+                    GenerateBuilding(map, node, mechHive);
+                }
             }
             catch (Exception ex)
             {
@@ -50,20 +53,128 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static void GenerateInternal(
-            Map map,
-            MAPMechHiveNode node,
-            Faction mechHive,
-            bool completed)
+        /// <summary>完整节点：真正的机械集群式建筑草图 + 独立守军预算。</summary>
+        private static void GenerateCompleted(Map map, MAPMechHiveNode node, Faction mechHive)
         {
             IntVec3 center = ResolveCenter(map);
-            float layoutRadius = completed ? 16f : 9f;
+            if (!MechClusterBuildingUtility.TryGenerateCompletedNodeBuildingSketch(
+                    map,
+                    MechClusterBuildingUtility.CompletedNodeBuildingPoints,
+                    out MechClusterSketch sketch)
+                || sketch?.buildingsSketch == null)
+            {
+                Log.Warning("[MAP] 完整机械巢节点未能生成集群草图，跳过建筑布局。");
+                SpawnGarrisonAndLord(map, node, mechHive, center, 18f, new List<Thing>(), new List<Thing>(), new List<Thing>());
+                return;
+            }
+
+            List<Thing> spawnedThings = new List<Thing>();
+            sketch.buildingsSketch.Spawn(
+                map,
+                center,
+                mechHive,
+                Sketch.SpawnPosType.Unchanged,
+                Sketch.SpawnMode.Normal,
+                wipeIfCollides: true,
+                forceTerrainAffordance: false,
+                clearEdificeWhereFloor: false,
+                spawnedThings,
+                sketch.startDormant,
+                buildRoofsInstantly: false,
+                canSpawnThing: null,
+                onFailedToSpawnThing: (IntVec3 spot, SketchEntity entity) =>
+                {
+                    if (entity is SketchThing sketchThing
+                        && sketchThing.def != ThingDefOf.Wall
+                        && sketchThing.def != ThingDefOf.Barricade)
+                    {
+                        entity.SpawnNear(
+                            spot,
+                            map,
+                            12f,
+                            mechHive,
+                            Sketch.SpawnMode.Normal,
+                            wipeIfCollides: true,
+                            forceTerrainAffordance: false,
+                            spawnedThings,
+                            sketch.startDormant);
+                    }
+                });
+
+            List<Thing> allBuildings = new List<Thing>();
+            List<Thing> threatBuildings = new List<Thing>();
+            List<Thing> shields = new List<Thing>();
+            Thing? requiredConditionCauser = null;
+
+            for (int i = 0; i < spawnedThings.Count; i++)
+            {
+                Thing thing = spawnedThings[i];
+                if (thing == null || thing.Destroyed)
+                {
+                    continue;
+                }
+
+                if (thing.def.CanHaveFaction)
+                {
+                    thing.SetFaction(mechHive);
+                }
+
+                allBuildings.Add(thing);
+                MechClusterBuildingUtility.ApplyDormantSleep(thing);
+
+                if (MechClusterBuildingUtility.IsShield(thing))
+                {
+                    shields.Add(thing);
+                }
+
+                if (MechClusterBuildingUtility.IsBuildingThreat(thing))
+                {
+                    threatBuildings.Add(thing);
+                }
+
+                if (ModsConfig.RoyaltyActive
+                    && MechClusterBuildingUtility.IsConditionCauser(
+                        thing.def,
+                        Mathf.RoundToInt(MechClusterBuildingUtility.CompletedNodeBuildingPoints)))
+                {
+                    requiredConditionCauser = thing;
+                }
+            }
+
+            // Royalty：确保至少一种状态建筑已正确初始化并立即生效。
+            if (ModsConfig.RoyaltyActive && requiredConditionCauser != null)
+            {
+                MechClusterBuildingUtility.ApplyImmediateInitiation(requiredConditionCauser);
+            }
+
+            float layoutRadius = Mathf.Max(
+                12f,
+                Mathf.Sqrt(
+                    sketch.buildingsSketch.OccupiedSize.x * sketch.buildingsSketch.OccupiedSize.x
+                    + sketch.buildingsSketch.OccupiedSize.z * sketch.buildingsSketch.OccupiedSize.z)
+                    / 2f);
+
+            SpawnGarrisonAndLord(
+                map,
+                node,
+                mechHive,
+                center,
+                layoutRadius,
+                allBuildings,
+                threatBuildings,
+                shields);
+        }
+
+        /// <summary>建设中节点：保留简陋、未完工布局。</summary>
+        private static void GenerateBuilding(Map map, MAPMechHiveNode node, Faction mechHive)
+        {
+            IntVec3 center = ResolveCenter(map);
+            float layoutRadius = 9f;
 
             List<Thing> allBuildings = new List<Thing>();
             List<Thing> threatBuildings = new List<Thing>();
             List<Thing> shields = new List<Thing>();
 
-            // 1) 机械族专用炮塔（建设中 2~4，完整 6~10）。
             List<ThingDef> turretPalette = MechClusterBuildingUtility.GetMechTurretDefs();
             if (turretPalette.Count == 0)
             {
@@ -78,9 +189,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
-            int turretCount = completed
-                ? Rand.RangeInclusive(6, 10)
-                : Rand.RangeInclusive(2, 4);
+            int turretCount = Rand.RangeInclusive(2, 4);
             for (int i = 0; i < turretCount && turretPalette.Count > 0; i++)
             {
                 ThingDef turretDef = turretPalette.RandomElement();
@@ -91,41 +200,43 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
-            // 2) “正在建设/防御环”结构：短墙 + 路障（非蓝图、非施工框架）。
-            SpawnStructures(map, center, layoutRadius, mechHive, completed, allBuildings);
+            SpawnStructures(map, center, layoutRadius, mechHive, allBuildings);
 
-            // 3) 护盾与地图状态建筑（仅 Royalty）。
-            if (completed && ModsConfig.RoyaltyActive)
-            {
-                SpawnShields(map, center, layoutRadius, mechHive, allBuildings, threatBuildings, shields);
-                SpawnConditionCauser(
-                    map,
-                    center,
-                    layoutRadius,
-                    mechHive,
-                    node.GarrisonThreatPoints,
-                    allBuildings,
-                    threatBuildings);
-            }
-
-            // 4) 建筑休眠初始化。
             for (int i = 0; i < allBuildings.Count; i++)
             {
-                allBuildings[i].TryGetComp<CompCanBeDormant>()?.ToSleep();
+                MechClusterBuildingUtility.ApplyDormantSleep(allBuildings[i]);
             }
 
-            // 至少保证一个建筑，供 Lord 的唤醒触发与信号使用。
-            if (allBuildings.Count == 0)
+            SpawnGarrisonAndLord(
+                map,
+                node,
+                mechHive,
+                center,
+                layoutRadius,
+                allBuildings,
+                threatBuildings,
+                shields);
+        }
+
+        private static void SpawnGarrisonAndLord(
+            Map map,
+            MAPMechHiveNode node,
+            Faction mechHive,
+            IntVec3 center,
+            float layoutRadius,
+            List<Thing> allBuildings,
+            List<Thing> threatBuildings,
+            List<Thing> shields)
+        {
+            List<Pawn> generated =
+                MechHiveCombatPawnUtility.GenerateCombatPawns(mechHive, map, node.GarrisonThreatPoints);
+            List<Pawn> spawnedPawns = PlacePawns(map, center, layoutRadius + 4f, generated);
+
+            if (allBuildings.Count == 0 && spawnedPawns.Count == 0)
             {
                 return;
             }
 
-            // 5) 守军：按节点威胁点数从 Combat 模板生成，落地后休眠。
-            List<Pawn> generated =
-                MechHiveNodeCombatPawnGenerator.GenerateCombatPawns(mechHive, node.GarrisonThreatPoints, map);
-            List<Pawn> spawnedPawns = PlacePawns(map, center, layoutRadius + 4f, generated);
-
-            // 6) 休眠防御 Lord：isMechCluster=false，胜负仅由本 MOD 威胁清理判定。
             float defendRadius = layoutRadius + 6f;
             LordJob_SleepThenMechanoidsDefend lordJob = new LordJob_SleepThenMechanoidsDefend(
                 allBuildings,
@@ -181,11 +292,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             IntVec3 center,
             float radius,
             Faction mechHive,
-            bool completed,
             List<Thing> allBuildings)
         {
-            // 短墙段（带缺口，不闭合）。
-            int wallSegments = completed ? Rand.RangeInclusive(3, 5) : Rand.RangeInclusive(1, 2);
+            int wallSegments = Rand.RangeInclusive(1, 2);
             for (int i = 0; i < wallSegments; i++)
             {
                 if (!CellFinder.TryFindRandomCellNear(
@@ -199,12 +308,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 Rot4 dir = Rand.Bool ? Rot4.East : Rot4.North;
-                int segLen = completed ? Rand.RangeInclusive(3, 5) : Rand.RangeInclusive(2, 3);
+                int segLen = Rand.RangeInclusive(2, 3);
                 IntVec3 cursor = start;
                 for (int j = 0; j < segLen; j++)
                 {
                     if (CanPlaceBuilding(map, ThingDefOf.Wall, cursor)
-                        && TrySpawnAt(map, cursor, ThingDefOf.Wall, GenStuff.DefaultStuffFor(ThingDefOf.Wall), mechHive, out Thing wall))
+                        && TrySpawnAt(
+                            map,
+                            cursor,
+                            ThingDefOf.Wall,
+                            GenStuff.DefaultStuffFor(ThingDefOf.Wall),
+                            mechHive,
+                            out Thing wall))
                     {
                         allBuildings.Add(wall);
                     }
@@ -213,8 +328,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
-            // 零散路障。
-            int barricades = completed ? Rand.RangeInclusive(8, 12) : Rand.RangeInclusive(3, 5);
+            int barricades = Rand.RangeInclusive(3, 5);
             ThingDef barricadeDef = ThingDefOf.Barricade;
             for (int i = 0; i < barricades; i++)
             {
@@ -224,68 +338,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         Mathf.CeilToInt(radius),
                         c => CanPlaceBuilding(map, barricadeDef, c),
                         out IntVec3 cell)
-                    && TrySpawnAt(map, cell, barricadeDef, GenStuff.DefaultStuffFor(barricadeDef), mechHive, out Thing barricade))
+                    && TrySpawnAt(
+                        map,
+                        cell,
+                        barricadeDef,
+                        GenStuff.DefaultStuffFor(barricadeDef),
+                        mechHive,
+                        out Thing barricade))
                 {
                     allBuildings.Add(barricade);
                 }
-            }
-        }
-
-        private static void SpawnShields(
-            Map map,
-            IntVec3 center,
-            float radius,
-            Faction mechHive,
-            List<Thing> allBuildings,
-            List<Thing> threatBuildings,
-            List<Thing> shields)
-        {
-            if (MechClusterBuildingUtility.TryGetLowAngleShieldDef(out ThingDef lowShield)
-                && TrySpawnBuilding(map, center, radius, lowShield, mechHive, out Thing low))
-            {
-                allBuildings.Add(low);
-                threatBuildings.Add(low);
-                shields.Add(low);
-            }
-
-            if (MechClusterBuildingUtility.TryGetHighAngleShieldDef(out ThingDef highShield)
-                && TrySpawnBuilding(map, center, radius, highShield, mechHive, out Thing high))
-            {
-                allBuildings.Add(high);
-                threatBuildings.Add(high);
-                shields.Add(high);
-            }
-        }
-
-        private static void SpawnConditionCauser(
-            Map map,
-            IntVec3 center,
-            float radius,
-            Faction mechHive,
-            int threatPoints,
-            List<Thing> allBuildings,
-            List<Thing> threatBuildings)
-        {
-            List<ThingDef> causers = MechClusterBuildingUtility.GetConditionCausers(threatPoints);
-            if (causers.Count == 0)
-            {
-                return;
-            }
-
-            ThingDef causerDef = causers.RandomElement();
-            if (!TrySpawnBuilding(map, center, radius, causerDef, mechHive, out Thing causer))
-            {
-                return;
-            }
-
-            allBuildings.Add(causer);
-            threatBuildings.Add(causer);
-
-            // 状态建筑进入地图即视为已初始化生效（复用集群部署的初始化方式）。
-            CompInitiatable? initiatable = causer.TryGetComp<CompInitiatable>();
-            if (initiatable != null)
-            {
-                initiatable.initiationDelayTicksOverride = 1;
             }
         }
 
@@ -322,12 +384,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 GenSpawn.Spawn(pawn, cell, map, Rot4.Random);
-                pawn.TryGetComp<CompCanBeDormant>()?.ToSleep();
+                MechClusterBuildingUtility.ApplyDormantSleep(pawn);
                 spawned.Add(pawn);
             }
 
-            // 未能落地的 Pawn 安全丢弃，避免残留世界 Pawn。
-            MechHiveNodeCombatPawnGenerator.DiscardPawns(unused);
+            MechHiveCombatPawnUtility.DiscardPawns(unused);
             return spawned;
         }
 
@@ -343,7 +404,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            // 不堵门。
             Building_Door? door = c.GetDoor(map);
             if (door != null)
             {
@@ -362,7 +422,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             out Thing spawned)
         {
             spawned = null!;
-            if (def == null)
+            if (def == null || MechClusterBuildingUtility.IsExcludedFromNodeCluster(def))
             {
                 return false;
             }

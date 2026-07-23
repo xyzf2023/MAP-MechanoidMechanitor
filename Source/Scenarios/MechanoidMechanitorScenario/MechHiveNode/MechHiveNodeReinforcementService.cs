@@ -7,7 +7,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
-    /// 完整机械巢节点在玩家遭遇敌对袭击时提供的机械族盟军。复用机械巢 Combat 模板生成部队，
+    /// 完整机械巢节点在玩家遭遇敌对袭击时提供的机械族盟军。复用公共 Combat 模板生成工具，
     /// 派系为机械巢、不属于玩家、不占带宽、不消耗肃清额度、不可被机械师征召，
     /// 直接以正常敌对袭击链路的到达与编队方式加入战斗。不调用会拒绝隐藏派系的原版 RaidFriendly。
     /// </summary>
@@ -97,7 +97,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            List<Pawn> pawns = MechHiveNodeCombatPawnGenerator.GenerateCombatPawns(mechHive, points, map);
+            List<Pawn> pawns = MechHiveCombatPawnUtility.GenerateCombatPawns(mechHive, map, points);
             if (pawns.Count == 0)
             {
                 return false;
@@ -118,7 +118,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (!parms.raidArrivalMode.Worker.TryResolveRaidSpawnCenter(parms))
             {
-                MechHiveNodeCombatPawnGenerator.DiscardPawns(pawns);
+                MechHiveCombatPawnUtility.DiscardPawns(pawns);
                 return false;
             }
 

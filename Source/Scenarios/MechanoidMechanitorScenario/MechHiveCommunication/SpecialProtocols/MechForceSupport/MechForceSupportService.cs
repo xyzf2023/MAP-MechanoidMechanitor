@@ -59,8 +59,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public const string ErrorCommittedFailure =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Error.CommittedFailure";
 
-        private const string BreachKindDefName = "Mech_Termite_Breach";
-
         private static readonly HashSet<PawnGroupMaker> warnedAbnormalMakers =
             new HashSet<PawnGroupMaker>();
 
@@ -384,17 +382,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Pawn> pawns = new List<Pawn>();
             try
             {
-                foreach (Pawn pawn in maker.GeneratePawns(
-                    groupParms,
-                    errorOnZeroResults: false))
-                {
-                    pawns.Add(pawn);
-                }
+                // 与节点守军/自动盟军共用 Combat 模板生成工具。
+                pawns = MechHiveCombatPawnUtility.GenerateFromMaker(maker, groupParms);
 
                 if (pawns.Count == 0
                     || !parms.raidArrivalMode.Worker.TryResolveRaidSpawnCenter(parms))
                 {
-                    DiscardGeneratedPawns(pawns);
+                    MechHiveCombatPawnUtility.DiscardPawns(pawns);
                     return MechForceSupportDeploymentResult.Failed(
                         ErrorGenerationFailed);
                 }
@@ -403,7 +397,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 Log.Error(
                     "[MAP] 部队支援生成部队时发生异常，已终止部署且未扣款: " + ex);
-                DiscardGeneratedPawns(pawns);
+                MechHiveCombatPawnUtility.DiscardPawns(pawns);
                 return MechForceSupportDeploymentResult.Failed(
                     ErrorGenerationFailed);
             }
@@ -412,7 +406,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .GetPurgeDirectiveRewardPoints();
             if (credits < expectedCost)
             {
-                DiscardGeneratedPawns(pawns);
+                MechHiveCombatPawnUtility.DiscardPawns(pawns);
                 return MechForceSupportDeploymentResult.Failed(
                     ErrorInsufficientCredits);
             }
@@ -420,7 +414,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!GameComponent_MechanoidMechanitorStoryState
                     .TrySpendPurgeDirectiveCredits(expectedCost))
             {
-                DiscardGeneratedPawns(pawns);
+                MechHiveCombatPawnUtility.DiscardPawns(pawns);
                 return MechForceSupportDeploymentResult.Failed(ErrorChargeFailed);
             }
 
@@ -500,6 +494,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 单个模板的安全筛选入口；异常只跳过该模板，不影响候选列表构建。
+        /// 规则与节点守军/盟军共用 <see cref="MechHiveCombatPawnUtility"/>。
         /// </summary>
         private static bool TryAcceptCombatTemplate(
             PawnGroupMaker? maker,
@@ -513,47 +508,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             try
             {
-                if (maker.kindDef != PawnGroupKindDefOf.Combat
-                    || ContainsBreachOption(maker)
-                    || !maker.CanGenerateFrom(groupParms))
-                {
-                    return false;
-                }
-
-                return true;
+                return MechHiveCombatPawnUtility.MatchesCombatTemplateRules(maker, groupParms);
             }
             catch (Exception ex)
             {
                 LogSkippedAbnormalMakerOnce(maker, faction, ex);
                 return false;
             }
-        }
-
-        private static bool ContainsBreachOption(PawnGroupMaker maker)
-        {
-            List<PawnGenOption>? options = maker.options;
-            if (options == null || options.Count == 0)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < options.Count; i++)
-            {
-                PawnGenOption? option = options[i];
-                PawnKindDef? kind = option?.kind;
-                if (kind == null)
-                {
-                    continue;
-                }
-
-                string? defName = kind.defName;
-                if (!defName.NullOrEmpty() && defName == BreachKindDefName)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         private static string BuildTemplateCompositionLabel(PawnGroupMaker? maker)
@@ -688,36 +649,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 return "?";
             }
-        }
-
-        private static void DiscardGeneratedPawns(List<Pawn> pawns)
-        {
-            for (int i = 0; i < pawns.Count; i++)
-            {
-                Pawn pawn = pawns[i];
-                if (pawn == null || pawn.Spawned)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    if (Find.WorldPawns.Contains(pawn))
-                    {
-                        Find.WorldPawns.RemovePawn(pawn);
-                    }
-
-                    Find.WorldPawns.PassToWorld(
-                        pawn,
-                        PawnDiscardDecideMode.Discard);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning("[MAP] Failed to discard unused support pawn: " + ex);
-                }
-            }
-
-            pawns.Clear();
         }
 
         private static void SendSupportLetter(

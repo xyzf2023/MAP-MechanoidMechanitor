@@ -1,3 +1,4 @@
+using RimWorld;
 using RimWorld.Planet;
 using Verse;
 
@@ -56,6 +57,37 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 nextDailyCheckTick = now + MechanoidMechanitorMechHiveNodeFrequencyExtensions.TicksPerDay;
                 MechHiveNodeRaidUtility.RunDailyExtraRaidCheck();
             }
+        }
+
+        /// <summary>
+        /// 开发者控制台入口：复用自然生成到期时的同一套流程与合法性检查，并重置下一次生成计时。
+        /// 不临时修改设置或强制开启节点生成。
+        /// </summary>
+        public void DevTryNaturalGenerationAttempt()
+        {
+            if (Current.Game == null || Find.World == null || Find.TickManager == null)
+            {
+                return;
+            }
+
+            MechanoidMechanitorMechHiveNodeFrequency frequency = CurrentFrequency();
+            if (!frequency.IsEnabled())
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled"
+                        .Translate(),
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+            }
+            else
+            {
+                // 与计时到期相同：完整合法性检查；无机械巢派系/无殖民地时安全失败。
+                MechHiveNodeGenerationUtility.TryRunGenerationAttempt();
+            }
+
+            // 无论开关状态、成功或失败，均重新计算并重置下一次生成计时。
+            int now = Find.TickManager.TicksGame;
+            nextGenerationAttemptTick = now + ScheduleIntervalTicks();
         }
 
         private static MechanoidMechanitorMechHiveNodeFrequency CurrentFrequency()
