@@ -120,9 +120,10 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
-                __result = ColonistLikeSocialTabUtility.HasExplicitDirectRelation(
-                    pawn,
-                    selPawnForSocialInfo);
+                // selPawnForSocialInfo = viewer；pawn = other。控制者侧 Overseer 不显示。
+                __result = ColonistLikeSocialTabUtility.ShouldShowExplicitSocialRelation(
+                    selPawnForSocialInfo,
+                    pawn);
                 return false;
             }
         }

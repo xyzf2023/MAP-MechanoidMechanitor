@@ -5,7 +5,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 殖民者式社交面板基础能力：显式关系判定和绕过 IsFlesh 的关系枚举。
+    /// 殖民者式社交面板基础能力：带查看者视角的显式关系判定，以及绕过 IsFlesh 的关系枚举。
     /// 所有入口仅检查 ColonistLikeSocialTab 能力。
     /// </summary>
     public static class ColonistLikeSocialTabUtility
@@ -18,19 +18,24 @@ namespace MAP_MechanoidMechanitor
             MechanoidMechanitorCapabilityUtility.HasCapability(
                 pawn, MechanoidMechanitorCapability.ColonistLikeSocialTab);
 
-        public static bool HasExplicitDirectRelation(Pawn? a, Pawn? b)
+        /// <summary>
+        /// 从 viewer 视角判断是否应在社交面板显示与 other 的行。
+        /// 控制者一侧的 Overseer 不计入；若仅剩该隐藏关系则整行不显示。
+        /// </summary>
+        public static bool ShouldShowExplicitSocialRelation(Pawn? viewer, Pawn? other)
         {
-            if (a == null || b == null || a == b)
+            if (viewer == null || other == null || viewer == other)
             {
                 return false;
             }
 
-            if (HasOtherPawnInDirectRelations(a, b) || HasOtherPawnInDirectRelations(b, a))
+            if (viewer.relations == null || other.relations == null)
             {
-                return true;
+                return false;
             }
 
-            return false;
+            return HasDisplayableDirectRelationOn(viewer, other, viewer, other)
+                || HasDisplayableDirectRelationOn(other, viewer, viewer, other);
         }
 
         public static IEnumerable<PawnRelationDef> EnumerateRelationsWithoutFleshRequirement(
@@ -47,7 +52,7 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            if (!HasExplicitDirectRelation(me, other))
+            if (!ShouldShowExplicitSocialRelation(me, other))
             {
                 yield break;
             }
@@ -68,6 +73,11 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (ShouldHideOverseerForViewer(me, other, pawnRelationDef))
+                {
+                    continue;
+                }
+
                 if (pawnRelationDef.familyByBloodRelation)
                 {
                     anyNonKinFamilyByBloodRelation = true;
@@ -83,7 +93,20 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool HasOtherPawnInDirectRelations(Pawn owner, Pawn other)
+        private static bool ShouldHideOverseerForViewer(
+            Pawn viewer,
+            Pawn other,
+            PawnRelationDef def)
+        {
+            return def == PawnRelationDefOf.Overseer
+                && MAPOverseerRelationDirectionUtility.IsViewerOnOverseerSide(viewer, other);
+        }
+
+        private static bool HasDisplayableDirectRelationOn(
+            Pawn owner,
+            Pawn counterpart,
+            Pawn viewer,
+            Pawn other)
         {
             if (owner.relations == null)
             {
@@ -93,10 +116,18 @@ namespace MAP_MechanoidMechanitor
             List<DirectPawnRelation> relations = owner.relations.DirectRelations;
             for (int i = 0; i < relations.Count; i++)
             {
-                if (relations[i].otherPawn == other)
+                DirectPawnRelation relation = relations[i];
+                if (relation.otherPawn != counterpart)
                 {
-                    return true;
+                    continue;
                 }
+
+                if (ShouldHideOverseerForViewer(viewer, other, relation.def))
+                {
+                    continue;
+                }
+
+                return true;
             }
 
             return false;

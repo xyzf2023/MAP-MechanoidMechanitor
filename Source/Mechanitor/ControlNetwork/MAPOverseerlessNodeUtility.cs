@@ -25,18 +25,15 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            Pawn overseer = pawn.GetOverseer();
-            if (overseer == null || overseer.relations == null)
+            // 不可用 pawn.GetOverseer()：无需外部监管者的节点经查询补丁后恒为 null。
+            // 用控制组方向工具扫描，只移除“本节点作为被控制对象”的外部监管关系。
+            Pawn? overseer = MAPOverseerRelationDirectionUtility.FindActualOverseer(pawn);
+            if (overseer?.relations == null)
             {
                 return;
             }
 
-            if (pawn.mechanitor?.ControlledPawns.Contains(overseer) == true)
-            {
-                return;
-            }
-
-            overseer.relations.RemoveDirectRelation(PawnRelationDefOf.Overseer, pawn);
+            overseer.relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, pawn);
         }
     }
 }
