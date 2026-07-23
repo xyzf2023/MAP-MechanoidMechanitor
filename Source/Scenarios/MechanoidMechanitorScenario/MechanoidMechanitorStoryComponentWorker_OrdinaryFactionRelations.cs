@@ -50,6 +50,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .Translate();
         }
 
+        public override string? GetSummaryValue(
+            MechanoidMechanitorStoryConfiguration configuration)
+        {
+            return MechanoidMechanitorStoryConfigurationLabels.LabelFor(
+                configuration.ordinaryFactionRelationsMode);
+        }
+
         public override float GetHeight(
             MechanoidMechanitorStoryConfigurationContext context,
             float width)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -22,6 +23,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const float StoryStyleTitleIconGap = 4f;
         private const float StoryStyleIconDescGap = 6f;
         private const int StoryStyleDescLines = 3;
+        private const float StoryStyleDescScrollSpeed = 15f;
+        private const float StoryStyleDescScrollBottomPause = 1.5f;
 
         // 文化适配横向卡片
         private const float IdeoCardPadding = 12f;
@@ -60,12 +63,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private MechanoidMechanitorStoryStyleDef? selectedStoryStyle;
         private bool loggedNoStylesAvailable;
 
+        // 页面打开时刻的现实时间锚点；描述滚动用 realtimeSinceStartup，不受暂停与游戏速度影响。
+        private readonly float descriptionScrollStartRealTime;
+
         // 该草稿同时是本页“文化适配等级”的唯一选择状态，往返自定义页面时保持不变。
         private readonly MechanoidMechanitorStoryConfiguration customConfigurationDraft =
             MechanoidMechanitorStoryConfiguration.CreateDefault();
 
         public Page_MechanoidMechanitorScenarioReady()
         {
+            descriptionScrollStartRealTime = Time.realtimeSinceStartup;
             EnsureValidSelectedStoryStyle(GetAvailableStoryStylesSorted());
         }
 
@@ -376,10 +383,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 float descHeight = rect.yMax - StoryStyleCardPadding - descY;
                 if (descHeight > 0f && !style.description.NullOrEmpty())
                 {
-                    Text.WordWrap = true;
-                    Text.Anchor = TextAnchor.UpperCenter;
-                    GUI.color = CardDescriptionColor;
-                    Widgets.Label(
+                    DrawAutoScrollingDescription(
                         new Rect(innerX, descY, innerWidth, descHeight),
                         style.description);
                 }
@@ -392,11 +396,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Text.WordWrap = previousWordWrap;
             }
 
-            string tooltip =
-                style.LabelCap.Colorize(ColoredText.TipSectionTitleColor)
-                + "\n\n"
-                + style.description;
-            TooltipHandler.TipRegion(rect, tooltip);
+            TooltipHandler.TipRegion(rect, GetStoryStyleTooltip(style));
 
             if (Widgets.ButtonInvisible(rect))
             {
@@ -406,6 +406,122 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     SoundDefOf.Checkbox_TurnedOn.PlayOneShotOnCamera();
                 }
             }
+        }
+
+        private void DrawAutoScrollingDescription(Rect rect, string description)
+        {
+            Color previousColor = GUI.color;
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            bool previousWordWrap = Text.WordWrap;
+            try
+            {
+                Text.Font = GameFont.Small;
+                Text.WordWrap = true;
+                Text.Anchor = TextAnchor.UpperCenter;
+                GUI.color = CardDescriptionColor;
+
+                float fullTextHeight = Text.CalcHeight(description, rect.width);
+                if (fullTextHeight <= rect.height)
+                {
+                    Widgets.Label(rect, description);
+                    return;
+                }
+
+                float overflowHeight = fullTextHeight - rect.height;
+                float travelDuration = overflowHeight / StoryStyleDescScrollSpeed;
+                float cycleDuration = travelDuration + StoryStyleDescScrollBottomPause;
+                float elapsedInCycle =
+                    (Time.realtimeSinceStartup - descriptionScrollStartRealTime)
+                    % cycleDuration;
+                float offset = elapsedInCycle < travelDuration
+                    ? elapsedInCycle * StoryStyleDescScrollSpeed
+                    : overflowHeight;
+
+                Widgets.BeginGroup(rect);
+                try
+                {
+                    Widgets.Label(
+                        new Rect(0f, -offset, rect.width, fullTextHeight),
+                        description);
+                }
+                finally
+                {
+                    Widgets.EndGroup();
+                }
+            }
+            finally
+            {
+                GUI.color = previousColor;
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
+            }
+        }
+
+        private static string GetStoryStyleTooltip(MechanoidMechanitorStoryStyleDef style)
+        {
+            if (style.opensCustomizePage || style.presetConfiguration == null)
+            {
+                return BuildNameDescriptionTooltip(style);
+            }
+
+            MechanoidMechanitorStoryConfiguration snapshot =
+                style.CreateConfigurationSnapshot();
+            string? summary = BuildPresetConfigurationSummary(snapshot);
+            if (summary.NullOrEmpty())
+            {
+                return BuildNameDescriptionTooltip(style);
+            }
+
+            return style.LabelCap.Colorize(ColoredText.TipSectionTitleColor)
+                + "\n\n"
+                + summary;
+        }
+
+        private static string BuildNameDescriptionTooltip(
+            MechanoidMechanitorStoryStyleDef style)
+        {
+            return style.LabelCap.Colorize(ColoredText.TipSectionTitleColor)
+                + "\n\n"
+                + style.description;
+        }
+
+        private static string? BuildPresetConfigurationSummary(
+            MechanoidMechanitorStoryConfiguration configuration)
+        {
+            List<MechanoidMechanitorStoryComponentDef> components =
+                DefDatabase<MechanoidMechanitorStoryComponentDef>
+                    .AllDefsListForReading
+                    .OrderBy(def => def.displayOrder)
+                    .ThenBy(def => def.defName, StringComparer.Ordinal)
+                    .ToList();
+
+            StringBuilder? builder = null;
+            for (int i = 0; i < components.Count; i++)
+            {
+                MechanoidMechanitorStoryComponentDef component = components[i];
+                string? value = component.Worker.GetSummaryValue(configuration);
+                if (value.NullOrEmpty())
+                {
+                    continue;
+                }
+
+                if (builder == null)
+                {
+                    builder = new StringBuilder();
+                }
+                else
+                {
+                    builder.AppendLine();
+                }
+
+                builder.Append(component.LabelCap);
+                builder.Append('：');
+                builder.Append(value);
+            }
+
+            return builder?.ToString();
         }
 
         private float GetIdeologyAdaptationAreaHeight(float width)
