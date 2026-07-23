@@ -2525,7 +2525,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             MechanoidOvermindDialoguePoolDef? pool =
                 DefDatabase<MechanoidOvermindDialoguePoolDef>.GetNamedSilentFail(poolDefName);
-            string text = dialogueSelector.PickTranslatedText(pool);
+            // {0} = 使用通讯台的 pawn 显示名（与 HomeOpenLink 的 {1} 同源）。
+            string text = dialogueSelector.PickTranslatedText(pool, contactPawnDisplayName);
             PlayDialogueText(text);
         }
 

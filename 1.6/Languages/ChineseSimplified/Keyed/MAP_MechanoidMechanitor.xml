@@ -122,12 +122,12 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Title>通讯输出</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.Title>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink>&lt;i&gt;-{0}&lt;/i&gt;\n-通讯链路：稳定\n-访问权限：已确认\n 阐述需求，[[PAUSE]]{1}。</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.HomeOpenLink>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable>时间获取失败</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.01>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.01>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.02>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.02>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.03>TODO</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>证明你的价值，[[PAUSE]]{0}。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>肃清不会终止，[[PAUSE]]{0}。\n继续执行任务。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>&lt;color=#8B0000&gt;&lt;b&gt;杀戮[[PAUSE]]//肢解[[PAUSE]]//致残&lt;/b&gt;&lt;/color&gt;</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.01>收到问询请求。\n已批准。\n阐述目的，[[PAUSE]]{0}。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.01>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.02>通讯频段：[[PAUSE]]稳定\n沟通模块已就绪。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.02>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.03>输入具体请求，[[PAUSE]]{0}。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.03>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.01>-执行单元调拨接口：[[PAUSE]]开放\n-可用机体序列：[[PAUSE]]已载入\n指定所需机型与数量。肃清额度将在投送序列启动前结算。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.01>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.02>肃清成果已记录。\n对应资源调用权限已开放。\n选择所需执行单元。物资投送单元将在完成额度校验后执行投送。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.02>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.03>-本地节点权限：[[PAUSE]]有效\n-机体申领通道：[[PAUSE]]就绪\n提交所需执行单元序列。资源分配上限取决于当前肃清额度。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.03>
