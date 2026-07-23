@@ -12,8 +12,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public enum MechHiveNodeMapInitState : byte
     {
         None = 0,
-        Succeeded = 1,
-        Failed = 2
+        Generating = 1,
+        Succeeded = 2,
+        Failed = 3
     }
 
     /// <summary>
@@ -92,10 +93,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public MechHiveNodeMapInitState MapInitState => mapInitState;
 
-        /// <summary>地图内容已成功初始化，允许商队/运输舱进入。</summary>
-        public bool IsMapContentReady =>
-            mapInitState == MechHiveNodeMapInitState.Succeeded
-            || (mapInitState == MechHiveNodeMapInitState.None && base.HasMap);
+        /// <summary>
+        /// 地图内容是否允许进入。
+        /// 完整节点：必须 HasMap 且 mapInitState 明确为 Succeeded。
+        /// 建设中节点：仍要求本轮生成标记为 Succeeded（与完整节点严格判定分离）。
+        /// </summary>
+        public bool IsMapContentReady
+        {
+            get
+            {
+                if (!base.HasMap)
+                {
+                    return false;
+                }
+
+                if (IsCompleted)
+                {
+                    return mapInitState == MechHiveNodeMapInitState.Succeeded;
+                }
+
+                // 建设中节点：不套用完整节点的草图/护盾/10000 守军成功条件，
+                // 但也不把 None/Failed 当成可进入。
+                return mapInitState == MechHiveNodeMapInitState.Succeeded;
+            }
+        }
 
         /// <summary>完整节点地图初始化明确失败。</summary>
         public bool IsMapContentFailed => mapInitState == MechHiveNodeMapInitState.Failed;
@@ -184,7 +205,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public void NotifyMapContentInitStarted()
         {
-            mapInitState = MechHiveNodeMapInitState.None;
+            mapInitState = MechHiveNodeMapInitState.Generating;
         }
 
         public void NotifyMapContentInitSucceeded()
@@ -195,6 +216,61 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public void NotifyMapContentInitFailed()
         {
             mapInitState = MechHiveNodeMapInitState.Failed;
+        }
+
+        /// <summary>
+        /// 完整节点进入前准备：若存在非成功地图，先清理残留并尝试卸载，禁止复用 Failed 地图。
+        /// 返回 false 表示仍无法进入（地图仍在且未 Succeeded）。
+        /// </summary>
+        public bool TryPrepareCompletedMapForEntry(out string? failMessage)
+        {
+            failMessage = null;
+            if (!IsCompleted)
+            {
+                return true;
+            }
+
+            if (base.HasMap && mapInitState == MechHiveNodeMapInitState.Succeeded)
+            {
+                return true;
+            }
+
+            if (base.HasMap)
+            {
+                MechHiveNodeMapGenerator.TryCleanupOrphanedFailedMapContent(this);
+                TryUnloadNonSucceededEmptyMap();
+            }
+
+            if (base.HasMap && mapInitState != MechHiveNodeMapInitState.Succeeded)
+            {
+                failMessage =
+                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate();
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 商队与运输舱共用的完整节点进入最终检查。
+        /// </summary>
+        public bool TryValidateCompletedMapReadyForEntry(out string? failMessage)
+        {
+            failMessage = null;
+            if (!IsCompleted)
+            {
+                return true;
+            }
+
+            if (IsMapContentReady)
+            {
+                return true;
+            }
+
+            failMessage =
+                "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate();
+            TryUnloadNonSucceededEmptyMap();
+            return false;
         }
 
         /// <summary>
@@ -218,6 +294,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
             base.Tick();
             TryHandleUpgradeTiming();
             TryPeriodicThreatClearCheck();
+            TryPeriodicFailedMapRecovery();
+        }
+
+        /// <summary>
+        /// Failed 地图若暂时无法卸载，稍后继续尝试清理残留并卸载，避免永久死锁。
+        /// </summary>
+        private void TryPeriodicFailedMapRecovery()
+        {
+            if (!IsCompleted || cleaned || !base.HasMap)
+            {
+                return;
+            }
+
+            if (mapInitState != MechHiveNodeMapInitState.Failed
+                && mapInitState != MechHiveNodeMapInitState.Generating)
+            {
+                return;
+            }
+
+            if (Find.TickManager.TicksGame % ThreatClearCheckIntervalTicks != 0)
+            {
+                return;
+            }
+
+            MechHiveNodeMapGenerator.TryCleanupOrphanedFailedMapContent(this);
+            TryUnloadNonSucceededEmptyMap();
         }
 
         /// <summary>
@@ -443,12 +545,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 在确认没有任何玩家 Pawn / 运输舱内容进入后，安全卸载失败的空地图。
-        /// 保留节点世界对象，供以后重新尝试；不标记 Cleaned。
+        /// 在确认没有任何玩家 Pawn / 运输舱内容进入后，安全卸载非成功的空地图。
+        /// 仅在确认地图已卸载后将状态重置为 None，允许下次重新生成。
         /// </summary>
         public void TryUnloadFailedEmptyMap()
         {
-            if (!IsMapContentFailed || !base.HasMap)
+            TryUnloadNonSucceededEmptyMap();
+        }
+
+        public void TryUnloadNonSucceededEmptyMap()
+        {
+            if (!base.HasMap)
+            {
+                if (mapInitState == MechHiveNodeMapInitState.Failed
+                    || mapInitState == MechHiveNodeMapInitState.Generating)
+                {
+                    mapInitState = MechHiveNodeMapInitState.None;
+                }
+
+                return;
+            }
+
+            if (mapInitState == MechHiveNodeMapInitState.Succeeded)
             {
                 return;
             }
@@ -456,6 +574,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map = base.Map;
             if (map == null || map.Disposed)
             {
+                mapInitState = MechHiveNodeMapInitState.None;
                 return;
             }
 
@@ -465,7 +584,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Current.Game.DeinitAndRemoveMap(map, notifyPlayer: false);
-            mapInitState = MechHiveNodeMapInitState.None;
+
+            // 只有确认节点不再持有地图后，才重置为可重试。
+            if (!base.HasMap)
+            {
+                mapInitState = MechHiveNodeMapInitState.None;
+            }
         }
 
         private static bool IsFailedMapSafeToUnload(Map map)
@@ -507,7 +631,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public override void Notify_MyMapRemoved(Map map)
         {
             base.Notify_MyMapRemoved(map);
-            // 地图卸载后，失败状态可重置以便下次重新生成；成功状态同样清零。
+            // 地图确已卸载后：失败/生成中可重试；成功撤退后清零以便再进时重生。
             if (!cleaned)
             {
                 mapInitState = MechHiveNodeMapInitState.None;

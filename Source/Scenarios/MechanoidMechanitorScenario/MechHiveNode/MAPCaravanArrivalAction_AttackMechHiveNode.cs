@@ -56,6 +56,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 完整节点：先清理/卸载上次 Failed 地图，禁止复用。
+            if (!node.TryPrepareCompletedMapForEntry(out failMessage))
+            {
+                Messages.Message(
+                    failMessage
+                        ?? "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
+                    caravan,
+                    MessageTypeDefOf.NegativeEvent);
+                return;
+            }
+
             if (!node.HasMap)
             {
                 LongEventHandler.QueueLongEvent(
@@ -82,27 +93,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            bool newMap = !node.HasMap;
-            Map map = GetOrGenerateMapUtility.GetOrGenerateMap(node.Tile, node.PreferredMapSize, null);
-
-            // GetOrGenerateMap 完成后、转移玩家 Pawn 之前检查完整节点初始化结果。
-            if (node.IsCompleted && node.IsMapContentFailed)
+            if (!node.TryPrepareCompletedMapForEntry(out failMessage))
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
+                    failMessage
+                        ?? "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
                     caravan,
                     MessageTypeDefOf.NegativeEvent);
-                node.TryUnloadFailedEmptyMap();
                 return;
             }
 
-            if (node.IsCompleted && !node.IsMapContentReady)
+            bool newMap = !node.HasMap;
+            Map map = GetOrGenerateMapUtility.GetOrGenerateMap(node.Tile, node.PreferredMapSize, null);
+
+            // GetOrGenerateMap 完成后、转移玩家 Pawn 之前：完整节点必须明确 Succeeded。
+            if (!node.TryValidateCompletedMapReadyForEntry(out failMessage))
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
+                    failMessage
+                        ?? "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
                     caravan,
                     MessageTypeDefOf.NegativeEvent);
-                node.TryUnloadFailedEmptyMap();
                 return;
             }
 
