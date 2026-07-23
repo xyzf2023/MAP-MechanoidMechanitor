@@ -133,7 +133,7 @@
 
     </race>
 
-    <butcherProducts>
+    <butcherProducts Inherit="False">
       <Steel>20</Steel>
       <Plasteel>10</Plasteel>
     </butcherProducts>
@@ -230,9 +230,6 @@
     <weaponTags>
       <li>Gun</li>
     </weaponTags> -->
-
-    <techHediffsChance>1</techHediffsChance>
-    <techHediffsMoney>500~1000</techHediffsMoney>
 
     <controlGroupPortraitZoom>1.2</controlGroupPortraitZoom>
     <destroyGearOnDrop>false</destroyGearOnDrop>
