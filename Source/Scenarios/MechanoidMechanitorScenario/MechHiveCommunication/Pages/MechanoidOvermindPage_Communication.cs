@@ -3,7 +3,7 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
-    public sealed class MechanoidOvermindPage_Chat
+    public sealed class MechanoidOvermindPage_Communication
     {
         public void Draw(Rect inRect)
         {
@@ -14,7 +14,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 MechanoidOvermindUiStyle.DrawLabel(
                     new Rect(inner.x, inner.y, inner.width, 24f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Body".Translate(),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Body".Translate(),
                     GameFont.Small,
                     TextAnchor.UpperLeft,
                     MechanoidOvermindUiStyle.TextSecondary,
@@ -22,7 +22,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 MechanoidOvermindUiStyle.DrawLabel(
                     new Rect(inner.x, inner.y + 40f, inner.width, Mathf.Max(24f, inner.height - 52f)),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Chat.Todo".Translate(),
+                    "MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Todo".Translate(),
                     GameFont.Small,
                     TextAnchor.UpperLeft,
                     MechanoidOvermindUiStyle.Warning,

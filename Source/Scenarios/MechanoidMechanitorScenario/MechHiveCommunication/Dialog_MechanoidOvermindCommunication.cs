@@ -80,10 +80,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private readonly MechanoidOvermindPage_Goods goodsPage = new MechanoidOvermindPage_Goods();
 
-        private readonly MechanoidOvermindPage_Battlefield battlefieldPage =
-            new MechanoidOvermindPage_Battlefield();
+        private readonly MechanoidOvermindPage_SpecialProtocols specialProtocolsPage =
+            new MechanoidOvermindPage_SpecialProtocols();
 
-        private readonly MechanoidOvermindPage_Chat chatPage = new MechanoidOvermindPage_Chat();
+        private readonly MechanoidOvermindPage_Communication communicationPage = new MechanoidOvermindPage_Communication();
 
         private readonly MechanoidOvermindDialogueTyper dialogueTyper =
             new MechanoidOvermindDialogueTyper();
@@ -827,13 +827,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             DrawCoreDisplay(subCore);
 
             bool showOrder = ShowsOrderPanel(currentPage);
-            if (currentPage == MechanoidOvermindPageKind.BattlefieldSupport)
+            if (currentPage == MechanoidOvermindPageKind.SpecialProtocols)
             {
                 showOrder =
-                    (battlefieldPage.ExpandedProtocol
+                    (specialProtocolsPage.ExpandedProtocol
                             == SpecialProtocolKind.MechClusterDeployment
                         && activeProtocolOrder != null)
-                    || (battlefieldPage.ExpandedProtocol
+                    || (specialProtocolsPage.ExpandedProtocol
                             == SpecialProtocolKind.MechForceSupport
                         && activeForceSupportOrder != null);
             }
@@ -874,15 +874,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     dialogueRect.yMax + Gap,
                     sideRect.width,
                     Mathf.Max(0f, sideRect.yMax - (dialogueRect.yMax + Gap)));
-                if (currentPage == MechanoidOvermindPageKind.BattlefieldSupport)
+                if (currentPage == MechanoidOvermindPageKind.SpecialProtocols)
                 {
-                    if (battlefieldPage.ExpandedProtocol
+                    if (specialProtocolsPage.ExpandedProtocol
                             == SpecialProtocolKind.MechClusterDeployment
                         && activeProtocolOrder != null)
                     {
                         DrawSpecialProtocolOrderPanel(orderRect, activeProtocolOrder);
                     }
-                    else if (battlefieldPage.ExpandedProtocol
+                    else if (specialProtocolsPage.ExpandedProtocol
                             == SpecialProtocolKind.MechForceSupport
                         && activeForceSupportOrder != null)
                     {
@@ -946,18 +946,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
 
                     break;
-                case MechanoidOvermindPageKind.BattlefieldSupport:
+                case MechanoidOvermindPageKind.SpecialProtocols:
                     if (activeProtocolOrder != null
                         && activeForceSupportOrder != null)
                     {
                         SpecialProtocolKind previousExpanded =
-                            battlefieldPage.ExpandedProtocol;
+                            specialProtocolsPage.ExpandedProtocol;
                         int previousClusterRevision = activeProtocolOrder.Revision;
-                        battlefieldPage.Draw(
+                        specialProtocolsPage.Draw(
                             contentRect,
                             activeProtocolOrder,
                             activeForceSupportOrder);
-                        if (battlefieldPage.ExpandedProtocol != previousExpanded
+                        if (specialProtocolsPage.ExpandedProtocol != previousExpanded
                             || activeProtocolOrder.Revision
                                 != previousClusterRevision)
                         {
@@ -966,8 +966,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
 
                     break;
-                case MechanoidOvermindPageKind.Chat:
-                    chatPage.Draw(contentRect);
+                case MechanoidOvermindPageKind.Communication:
+                    communicationPage.Draw(contentRect);
                     break;
             }
         }
@@ -1581,7 +1581,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && connected
                 && cachedDropValid
                 && credits >= totalCost
-                && currentPage != MechanoidOvermindPageKind.BattlefieldSupport;
+                && currentPage != MechanoidOvermindPageKind.SpecialProtocols;
 
             GUI.BeginGroup(rect);
 
@@ -1708,22 +1708,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             string conditionLabel = order.ConditionCauser?.LabelCap
-                ?? "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.NoConditionCauser"
+                ?? "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.NoConditionCauser"
                     .Translate();
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(rect.x + 8f, rect.y + 4f, rect.width - 16f, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Title"
+                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Title"
                     .Translate(),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.TextPrimary);
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(rect.x + 8f, rect.y + 25f, rect.width - 16f, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderMeta"
+                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.OrderMeta"
                     .Translate(order.ThreatPoints, conditionLabel));
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(rect.x + 8f, rect.y + 46f, rect.width - 16f, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.OrderCost"
+                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.OrderCost"
                     .Translate(order.Cost));
         }
 
@@ -1809,7 +1809,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     new Rect(buttonsX, buttonsY, buttonWidth, buttonHeight),
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear".Translate()))
             {
-                battlefieldPage.CollapseExpandedProtocol(
+                specialProtocolsPage.CollapseExpandedProtocol(
                     order,
                     activeForceSupportOrder);
                 preparedClusterSession = null;
@@ -1880,18 +1880,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(rect.x + 8f, rect.y + 4f, rect.width - 16f, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.Title"
+                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Title"
                     .Translate(),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.TextPrimary);
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(rect.x + 8f, rect.y + 25f, rect.width - 16f, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderMeta"
+                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.OrderMeta"
                     .Translate(order.ThreatPoints, order.GetTemplateLabel()));
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(rect.x + 8f, rect.y + 46f, rect.width - 16f, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.OrderCost"
+                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.OrderCost"
                     .Translate(order.Cost));
         }
 
@@ -1978,7 +1978,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     new Rect(buttonsX, buttonsY, buttonWidth, buttonHeight),
                     "MAP_MechanoidMechanitor.MechHiveCommunication.Order.Clear".Translate()))
             {
-                battlefieldPage.CollapseExpandedProtocol(
+                specialProtocolsPage.CollapseExpandedProtocol(
                     activeProtocolOrder,
                     order);
                 preparedClusterSession = null;
@@ -2026,7 +2026,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 Find.WindowStack.Add(
                     Dialog_MessageBox.CreateConfirmation(
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.LargeRequestWarning"
+                        "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.LargeRequestWarning"
                             .Translate(),
                         () => BeginMechForceSupportWorldTargeting(order)));
                 return;
@@ -2183,7 +2183,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                             target.Cell)
                         : MechForceSupportService.ErrorInvalidRequest.Translate();
                     string label = report.Accepted
-                        ? "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.ForceSupport.TargetingHint"
+                        ? "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TargetingHint"
                             .Translate()
                         : report.Reason;
                     Widgets.MouseAttachedLabel(
@@ -2303,7 +2303,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                             target.Cell)
                         : MechClusterDeploymentService.ErrorInvalidRequest.Translate();
                     string label = report.Accepted
-                        ? "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.TargetingHint"
+                        ? "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.TargetingHint"
                             .Translate()
                         : report.Reason;
                     Widgets.MouseAttachedLabel(
@@ -2318,7 +2318,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void TryConfirmDelivery(MechanoidOvermindOrder order)
         {
-            if (currentPage == MechanoidOvermindPageKind.BattlefieldSupport)
+            if (currentPage == MechanoidOvermindPageKind.SpecialProtocols)
             {
                 return;
             }
@@ -2453,10 +2453,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (transitionTargetPage == MechanoidOvermindPageKind.BattlefieldSupport)
+            if (transitionTargetPage == MechanoidOvermindPageKind.SpecialProtocols)
             {
                 DiscardActiveOrder();
-                battlefieldPage.ResetExpansionState();
+                specialProtocolsPage.ResetExpansionState();
                 activeProtocolOrder = new MechClusterDeploymentOrder();
                 activeForceSupportOrder = new MechForceSupportOrder();
             }
@@ -2495,7 +2495,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 activeForceSupportOrder = null;
             }
 
-            battlefieldPage.ResetExpansionState();
+            specialProtocolsPage.ResetExpansionState();
             preparedClusterSession = null;
             InvalidateDropSpotCache();
         }
@@ -2539,21 +2539,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             return page == MechanoidOvermindPageKind.Mechs
                 || page == MechanoidOvermindPageKind.Goods
-                || page == MechanoidOvermindPageKind.BattlefieldSupport;
+                || page == MechanoidOvermindPageKind.SpecialProtocols;
         }
 
         private static string GetEnterPoolDefName(MechanoidOvermindPageKind page)
         {
             switch (page)
             {
-                case MechanoidOvermindPageKind.Chat:
-                    return "MAP_OvermindDialogue_EnterChat";
+                case MechanoidOvermindPageKind.Communication:
+                    return "MAP_OvermindDialogue_EnterCommunication";
                 case MechanoidOvermindPageKind.Mechs:
                     return "MAP_OvermindDialogue_EnterMechs";
                 case MechanoidOvermindPageKind.Goods:
                     return "MAP_OvermindDialogue_EnterGoods";
-                case MechanoidOvermindPageKind.BattlefieldSupport:
-                    return "MAP_OvermindDialogue_EnterBattlefield";
+                case MechanoidOvermindPageKind.SpecialProtocols:
+                    return "MAP_OvermindDialogue_EnterSpecialProtocols";
                 default:
                     return "MAP_OvermindDialogue_HomeOpen";
             }
@@ -2563,14 +2563,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             switch (page)
             {
-                case MechanoidOvermindPageKind.Chat:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Chat".Translate();
+                case MechanoidOvermindPageKind.Communication:
+                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Communication".Translate();
                 case MechanoidOvermindPageKind.Mechs:
                     return "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs".Translate();
                 case MechanoidOvermindPageKind.Goods:
                     return "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods".Translate();
-                case MechanoidOvermindPageKind.BattlefieldSupport:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Battlefield"
+                case MechanoidOvermindPageKind.SpecialProtocols:
+                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.SpecialProtocols"
                         .Translate();
                 default:
                     return string.Empty;
