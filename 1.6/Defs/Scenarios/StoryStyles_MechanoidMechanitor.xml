@@ -23,6 +23,7 @@
     <presetConfiguration>
       <ordinaryFactionRelationsMode>AllHostile</ordinaryFactionRelationsMode>
       <mechHiveRelationMode>Neutral</mechHiveRelationMode>
+      <mechHiveNodeFrequency>Medium</mechHiveNodeFrequency>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
       <symbiosisCovenantEnabled>true</symbiosisCovenantEnabled>
     </presetConfiguration>
@@ -37,6 +38,7 @@
     <presetConfiguration>
       <ordinaryFactionRelationsMode>AllPermanentHostile</ordinaryFactionRelationsMode>
       <mechHiveRelationMode>Ally</mechHiveRelationMode>
+      <mechHiveNodeFrequency>Medium</mechHiveNodeFrequency>
       <purgeDirectiveEnabled>true</purgeDirectiveEnabled>
       <symbiosisCovenantEnabled>false</symbiosisCovenantEnabled>
     </presetConfiguration>

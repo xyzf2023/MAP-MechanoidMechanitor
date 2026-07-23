@@ -17,6 +17,14 @@
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+    <defName>MAP_StoryComponent_MechHiveNode</defName>
+    <label>是否生成机械巢节点</label>
+    <description>开启后，每隔一段时间尝试生成一个机械巢节点（建设中）。</description>
+    <displayOrder>250</displayOrder>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_MechHiveNode</workerClass>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
     <defName>MAP_StoryComponent_PurgeDirective</defName>
     <label>路线：肃清指令</label>
     <description>启用后体验机械巢肃清协议：扮演主脑部署的杀戮机器，无情的清理所有有机智慧生物；通过各种任务获取主脑信任，以获取来自机械巢的支持。</description>
