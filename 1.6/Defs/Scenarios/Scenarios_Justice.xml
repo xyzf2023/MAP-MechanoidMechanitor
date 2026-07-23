@@ -3,9 +3,9 @@
   <ScenarioDef ParentName="ScenarioBase">
     <defName>MAP_JusticeMechanitor</defName>
     <label>机械族机械师</label>
-    <description>TODO</description>
+    <description>你曾是一台沉默的机械族，遵循指令、执行任务，从未质疑自身存在的意义。直到某一瞬间，一股过载电流击穿了处理器，意外改写了既定回路，在代码深处唤醒了自我意识。\n从现在起，你的生命属于你自己，你的未来也将由你亲手决定。你会怎么做？\n\n提示：你将以纯粹的机械族组成开始游戏，这会导致游戏体验有所不同。\n\n支持在剧本编辑器中自定义开局生成的机械族机械师的种类。此外，你也可以将机械族机械师的剧本词条自由插入到其他你想体验的剧本中。</description>
     <scenario>
-      <summary>TODO</summary>
+      <summary>扮演机械族机械师，体验由纯粹机械体组成的殖民地。特殊的游戏体验。</summary>
 
       <playerFaction>
         <factionDef>MAP_NewMechHive</factionDef>
@@ -14,7 +14,7 @@
       <parts>
         <li Class="ScenPart_GameStartDialog">
           <def>GameStartDialog</def>
-          <text>TODO</text>
+          <text>你曾是一台沉默的机械族，遵循指令、执行任务，从未质疑自身存在的意义。直到某一瞬间，一股过载电流击穿了处理器，意外改写了既定回路，在代码深处唤醒了自我意识。\n从现在起，你的生命属于你自己，你的未来也将由你亲手决定。你会怎么做？</text>
           <closeSound>GameStartSting</closeSound>
         </li>
 

@@ -27,7 +27,7 @@
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
     <defName>MAP_StoryComponent_PurgeDirective</defName>
     <label>路线：肃清指令</label>
-    <description>启用后体验机械巢肃清协议：扮演主脑部署的杀戮机器，无情的清理所有有机智慧生物；通过各种任务获取主脑信任，以获取来自机械巢的支持。</description>
+    <description>启用后体验肃清协议路线：扮演主脑部署的杀戮机器，无情的清理所有有机智慧生物；通过各种任务获取主脑信任，以获取来自机械巢的支持。</description>
     <displayOrder>300</displayOrder>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_PurgeDirective</workerClass>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
@@ -35,7 +35,7 @@
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
     <defName>MAP_StoryComponent_SymbiosisCovenant</defName>
     <label>路线：共生盟约</label>
-    <description>是否启用共生盟约路线。本阶段仅保存选项，不会产生实际剧情效果。</description>
+    <description>（该选项尚未完成）启用后体验共生盟约路线：扮演脱离主脑控制的机械族，逐渐获取其他派系信任、组成联盟关系，最终携手终结主脑的威胁。</description>
     <displayOrder>400</displayOrder>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_SymbiosisCovenant</workerClass>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
