@@ -6,7 +6,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 远行队进攻机械巢节点的抵达动作：生成/进入节点战斗地图。
-    /// 抵达前通过统一入口重新校验进攻限制；失效时安全取消且不生成地图。
+    /// 生成地图前执行最终关系复查；普通中立/盟友会重新尝试转敌。
     /// </summary>
     public class MAPCaravanArrivalAction_AttackMechHiveNode : CaravanArrivalAction
     {
@@ -45,13 +45,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override void Arrived(Caravan caravan)
         {
-            FloatMenuAcceptanceReport report = MechHiveNodeCaravanInteraction.CanAttack(node);
-            if (!report)
+            if (!MechHiveNodeCaravanInteraction.TryFinalizeAttackEntry(node, out string? failMessage))
             {
-                string fail = report.FailMessage;
                 Messages.Message(
                     "MessageCaravanArrivalActionNoLongerValid".Translate(caravan.Name).CapitalizeFirst()
-                        + (fail != null ? (" " + fail) : ""),
+                        + (failMessage != null ? (" " + failMessage) : ""),
                     caravan,
                     MessageTypeDefOf.NegativeEvent);
                 return;
@@ -73,11 +71,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void DoEnter(Caravan caravan)
         {
-            // 长事件开始前再次校验，避免途中关系变化后仍生成地图。
-            if (!(bool)MechHiveNodeCaravanInteraction.CanAttack(node))
+            if (!MechHiveNodeCaravanInteraction.TryFinalizeAttackEntry(node, out string? failMessage))
             {
                 Messages.Message(
-                    "MessageCaravanArrivalActionNoLongerValid".Translate(caravan.Name).CapitalizeFirst(),
+                    "MessageCaravanArrivalActionNoLongerValid".Translate(caravan.Name).CapitalizeFirst()
+                        + (failMessage != null ? (" " + failMessage) : ""),
                     caravan,
                     MessageTypeDefOf.NegativeEvent);
                 return;

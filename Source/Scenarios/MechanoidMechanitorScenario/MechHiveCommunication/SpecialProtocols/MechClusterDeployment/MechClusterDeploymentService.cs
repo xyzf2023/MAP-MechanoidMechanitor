@@ -140,13 +140,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public const string ErrorCommittedFailure =
             "MAP_MechanoidMechanitor.MechHiveCommunication.Battlefield.Cluster.Error.CommittedFailure";
 
-        private const float InitiationChance = 0.6f;
-
-        private static readonly FloatRange InitiationDelay = new FloatRange(0.1f, 15f);
-
-        private static readonly FloatRange MechAssemblerInitialDelayDays =
-            new FloatRange(0.5f, 1.5f);
-
         private static readonly List<IntVec3> PlacementEdgeCells = new List<IntVec3>();
 
         public static Map? ResolveFirstPlayerHomeColonyMap()
@@ -567,44 +560,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     isMechCluster: true);
             Lord lord = LordMaker.MakeNewLord(Faction.OfMechanoids, lordJob, map);
 
-            bool applyRandomInitiation = Rand.Chance(InitiationChance);
-            float randomInitiationDays = InitiationDelay.RandomInRange;
-            int assemblerDelay = (int)(MechAssemblerInitialDelayDays.RandomInRange * 60000f);
-            ThingDef? requestedConditionCauser = session.ConditionCauser;
-
-            for (int i = 0; i < spawnedThings.Count; i++)
-            {
-                Thing thing = spawnedThings[i];
-                thing.TryGetComp<CompSpawnerPawn>()?.CalculateNextPawnSpawnTick(assemblerDelay);
-                if (thing.TryGetComp<CompProjectileInterceptor>() != null)
-                {
-                    lordJob.AddThingToNotifyOnDefeat(thing);
-                }
-
-                CompInitiatable? initiatable = thing.TryGetComp<CompInitiatable>();
-                if (initiatable != null)
-                {
-                    if (requestedConditionCauser != null
-                        && thing.def == requestedConditionCauser)
-                    {
-                        // 落地后 1 tick 即视为初始化完成；不套用原版 0.1–15 天随机延迟。
-                        initiatable.initiationDelayTicksOverride = 1;
-                    }
-                    else if (applyRandomInitiation)
-                    {
-                        initiatable.initiationDelayTicksOverride =
-                            (int)(60000f * randomInitiationDays);
-                    }
-                }
-
-                if (thing is Building building
-                    && MechClusterBuildingUtility.IsBuildingThreat(building))
-                {
-                    lord.AddBuilding(building);
-                }
-
-                thing.SetFaction(Faction.OfMechanoids);
-            }
+            // 建筑初始化与完整节点共用；机械族 Pawn 另行落地，避免被建筑初始化重复处理。
+            List<Thing> buildingsOnly = new List<Thing>(spawnedThings);
+            MechClusterBuildingInitUtility.InitializeSpawnedBuildings(
+                buildingsOnly,
+                Faction.OfMechanoids,
+                lordJob,
+                lord,
+                MechClusterBuildingInitUtility.InitOptions.ForClusterDeployment(
+                    session.ConditionCauser,
+                    sketch.startDormant));
 
             if (!sketch.pawns.NullOrEmpty())
             {
@@ -652,13 +617,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
+            // 非休眠时：建筑已由公共初始化唤醒；此处仅唤醒草图额外机械族（若尚未唤醒）。
             if (!sketch.startDormant)
             {
                 for (int i = 0; i < spawnedThings.Count; i++)
                 {
-                    spawnedThings[i]
-                        .TryGetComp<CompWakeUpDormant>()
-                        ?.Activate(null, sendSignal: true, silent: true);
+                    if (spawnedThings[i] is Pawn)
+                    {
+                        spawnedThings[i]
+                            .TryGetComp<CompWakeUpDormant>()
+                            ?.Activate(null, sendSignal: true, silent: true);
+                    }
                 }
             }
 

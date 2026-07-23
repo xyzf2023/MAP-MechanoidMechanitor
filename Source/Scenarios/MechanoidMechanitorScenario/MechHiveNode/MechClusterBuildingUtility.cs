@@ -173,13 +173,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>向草图安全追加一座建筑。</summary>
         public static bool TryAddBuildingToSketch(MechClusterSketch? cluster, ThingDef? def)
         {
+            return TryAddBuildingToSketch(cluster, def, expandBy: 6);
+        }
+
+        /// <summary>向草图安全追加一座建筑；expandBy 控制搜索外扩格数。</summary>
+        public static bool TryAddBuildingToSketch(
+            MechClusterSketch? cluster,
+            ThingDef? def,
+            int expandBy)
+        {
             if (cluster?.buildingsSketch == null || def == null || IsExcludedFromNodeCluster(def))
             {
                 return false;
             }
 
             Sketch sketch = cluster.buildingsSketch;
-            CellRect searchRect = sketch.OccupiedRect.ExpandedBy(6);
+            CellRect searchRect = sketch.OccupiedRect.ExpandedBy(Mathf.Max(0, expandBy));
             if (searchRect.Area <= 0)
             {
                 searchRect = new CellRect(0, 0, 12, 12);
@@ -224,6 +233,58 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return false;
+        }
+
+        /// <summary>Royalty 启用时草图是否已具备低角护盾、高角护盾与状态建筑。</summary>
+        public static bool SketchHasRequiredRoyaltyBuildings(
+            MechClusterSketch? sketch,
+            float buildingPoints)
+        {
+            if (!ModsConfig.RoyaltyActive || sketch?.buildingsSketch == null)
+            {
+                return !ModsConfig.RoyaltyActive;
+            }
+
+            return EvaluateSketchRoyaltyRequirements(
+                sketch,
+                buildingPoints,
+                out _,
+                out _,
+                out _);
+        }
+
+        private static bool EvaluateSketchRoyaltyRequirements(
+            MechClusterSketch sketch,
+            float buildingPoints,
+            out bool hasLow,
+            out bool hasHigh,
+            out bool hasCauser)
+        {
+            hasLow = false;
+            hasHigh = false;
+            hasCauser = false;
+            List<SketchThing> things = sketch.buildingsSketch.Things;
+            int points = Mathf.RoundToInt(buildingPoints);
+            for (int i = 0; i < things.Count; i++)
+            {
+                ThingDef? def = things[i].def;
+                if (IsLowAngleShieldDef(def))
+                {
+                    hasLow = true;
+                }
+
+                if (IsHighAngleShieldDef(def))
+                {
+                    hasHigh = true;
+                }
+
+                if (def != null && IsConditionCauser(def, points))
+                {
+                    hasCauser = true;
+                }
+            }
+
+            return hasLow && hasHigh && hasCauser;
         }
 
         /// <summary>
@@ -429,12 +490,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 RemoveExcludedNodeClusterBuildings(sketch.buildingsSketch);
                 RemoveGeneratedProblemCausers(sketch.buildingsSketch);
 
+                RemoveExcludedNodeClusterBuildings(sketch.buildingsSketch);
+
                 if (ModsConfig.RoyaltyActive)
                 {
-                    EnsureRoyaltyRequiredBuildings(sketch, buildingPoints);
+                    if (!EnsureRoyaltyRequiredBuildings(sketch, buildingPoints))
+                    {
+                        Log.Error(
+                            "[MAP] 完整机械巢节点草图在补充后仍缺少必需的低角护盾、高角护盾或地图状态建筑，终止该节点布局生成。");
+                        return false;
+                    }
                 }
 
-                RemoveExcludedNodeClusterBuildings(sketch.buildingsSketch);
                 return HasAnySketchContent(sketch.buildingsSketch);
             }
             catch (Exception ex)
@@ -453,10 +520,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
 
                     RemoveExcludedNodeClusterBuildings(sketch.buildingsSketch);
-                    if (ModsConfig.RoyaltyActive)
+                    if (ModsConfig.RoyaltyActive
+                        && !EnsureRoyaltyRequiredBuildings(sketch, buildingPoints))
                     {
-                        EnsureRoyaltyRequiredBuildings(sketch, buildingPoints);
-                        RemoveExcludedNodeClusterBuildings(sketch.buildingsSketch);
+                        Log.Error(
+                            "[MAP] 完整机械巢节点回退草图仍缺少必需的 Royalty 建筑，终止该节点布局生成。");
+                        return false;
                     }
 
                     return HasAnySketchContent(sketch.buildingsSketch);
@@ -485,54 +554,65 @@ namespace MAP_MechanoidMechanitor.Scenarios
             thing?.TryGetComp<CompCanBeDormant>()?.ToSleep();
         }
 
-        private static void EnsureRoyaltyRequiredBuildings(MechClusterSketch sketch, float buildingPoints)
+        private const int MaxSketchSupplementRounds = 4;
+
+        /// <summary>
+        /// 补充并复查草图必需建筑。任一类补充失败或复查未齐则返回 false。
+        /// </summary>
+        private static bool EnsureRoyaltyRequiredBuildings(
+            MechClusterSketch sketch,
+            float buildingPoints)
         {
             if (!ModsConfig.RoyaltyActive || sketch?.buildingsSketch == null)
             {
-                return;
+                return !ModsConfig.RoyaltyActive;
             }
 
-            bool hasLow = false;
-            bool hasHigh = false;
-            bool hasCauser = false;
-            List<SketchThing> things = sketch.buildingsSketch.Things;
-            for (int i = 0; i < things.Count; i++)
+            for (int round = 0; round < MaxSketchSupplementRounds; round++)
             {
-                ThingDef? def = things[i].def;
-                if (IsLowAngleShieldDef(def))
+                EvaluateSketchRoyaltyRequirements(
+                    sketch,
+                    buildingPoints,
+                    out bool hasLow,
+                    out bool hasHigh,
+                    out bool hasCauser);
+
+                if (hasLow && hasHigh && hasCauser)
                 {
-                    hasLow = true;
+                    return true;
                 }
 
-                if (IsHighAngleShieldDef(def))
+                int expandBy = 6 + round * 4;
+                if (!hasLow)
                 {
-                    hasHigh = true;
+                    if (!TryGetLowAngleShieldDef(out ThingDef low)
+                        || !TryAddBuildingToSketch(sketch, low, expandBy))
+                    {
+                        return false;
+                    }
                 }
 
-                if (def != null && IsConditionCauser(def, Mathf.RoundToInt(buildingPoints)))
+                if (!hasHigh)
                 {
-                    hasCauser = true;
+                    if (!TryGetHighAngleShieldDef(out ThingDef high)
+                        || !TryAddBuildingToSketch(sketch, high, expandBy))
+                    {
+                        return false;
+                    }
+                }
+
+                if (!hasCauser)
+                {
+                    List<ThingDef> causers = GetConditionCausers(Mathf.RoundToInt(buildingPoints));
+                    if (causers.Count == 0
+                        || !TryAddBuildingToSketch(sketch, causers.RandomElement(), expandBy))
+                    {
+                        return false;
+                    }
                 }
             }
 
-            if (!hasLow && TryGetLowAngleShieldDef(out ThingDef low))
-            {
-                TryAddBuildingToSketch(sketch, low);
-            }
-
-            if (!hasHigh && TryGetHighAngleShieldDef(out ThingDef high))
-            {
-                TryAddBuildingToSketch(sketch, high);
-            }
-
-            if (!hasCauser)
-            {
-                List<ThingDef> causers = GetConditionCausers(Mathf.RoundToInt(buildingPoints));
-                if (causers.Count > 0)
-                {
-                    TryAddBuildingToSketch(sketch, causers.RandomElement());
-                }
-            }
+            return SketchHasRequiredRoyaltyBuildings(sketch, buildingPoints);
         }
 
         private static MechClusterSketch GenerateCombatThreatClusterSketch(float points, Map map)
