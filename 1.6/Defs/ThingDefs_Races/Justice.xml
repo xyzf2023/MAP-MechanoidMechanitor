@@ -136,6 +136,7 @@
     <race>
       <body>MAP_Body_Justice</body>
       <mechFixedSkillLevel>12</mechFixedSkillLevel>
+      <detritusLeavings Inherit="False" />
       <mechEnabledWorkTypes>
         <li>Firefighter</li> <!-- 灭火 -->
         <li>Patient</li> <!-- 病患 -->

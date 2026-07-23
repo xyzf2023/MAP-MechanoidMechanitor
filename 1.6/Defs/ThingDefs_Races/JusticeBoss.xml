@@ -4,7 +4,7 @@
   <ThingDef ParentName="MechCentipede">
     <defName>MAP_Mech_JusticeBOSS</defName>
     <label>「正义」-重装指挥单元</label>
-    <description>隶属于机械族的重甲指挥单元。「正义」以自身作为战区控制节点，在目标区域快速部署自动火力设施，并持续向前线调拨作战机械体。其自我意识被限制在可控范围内，行动协议以建立机械据点、消耗敌方防御并保存指挥核心为优先目标。</description>
+    <description>隶属于机械巢的重甲指挥单元。「正义」以自身作为战区控制节点，在目标区域快速部署自动火力设施，并持续向前线调拨作战机械体。其自我意识被限制在可控范围内，行动协议以建立机械据点、消耗敌方防御并保存指挥核心为优先目标。</description>
     <statBases>
       <MarketValue>8000</MarketValue>
       <MoveSpeed>4.2</MoveSpeed>
@@ -15,12 +15,15 @@
       <ArmorRating_Blunt>2.0</ArmorRating_Blunt>
       <ArmorRating_Sharp>2.0</ArmorRating_Sharp>
       <PsychicSensitivity>1.0</PsychicSensitivity>
+      <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">9999</BandwidthCost>
+
     </statBases>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_JusticeBossController" />
     </comps>
     <race>
       <body>MAP_Body_Justice</body>
+      <detritusLeavings Inherit="False" />
       <lifeStageAges Inherit="False">
         <li>
           <def>MechanoidFullyFormed</def>
