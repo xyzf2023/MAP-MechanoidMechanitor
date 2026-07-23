@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanoidMechanitor.Scenario.EditorTooltip>机械族机械师剧本：扮演一个觉醒了自我意识的机械族进行游戏。加入此词条后，当前剧本原定的殖民者将会被选定的机械族机械师替换，且存档会启用一系列机械族机械师殖民地专属效果。\n注意：可能与某些MOD剧本发生冲突。</MAP_MechanoidMechanitor.Scenario.EditorTooltip>
   <MAP_MechanoidMechanitor.Scenario.MechanitorEditorTooltip>选择一个任意机械族以作为开局的机械族机械师。</MAP_MechanoidMechanitor.Scenario.MechanitorEditorTooltip>
@@ -51,6 +51,7 @@
   <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Full>尽量完整的文化DLC体验。机械族机械师将可以担任文化职位，加入文化仪式，以及一些其他文化DLC允许机械族执行的效果。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Full>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>自定义机械族机械师剧情</MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>自由调整本局启用的剧情组件。部分选项会根据其他组件的设置自动禁用。</MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>载入预设</MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>开始游戏</MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>
   <MAP_MechanoidMechanitor.Story.Component.OrdinaryFactionRelations.Description>设置本局与普通派系的关系总模式。选择“自定义”后可为每个派系单独配置。</MAP_MechanoidMechanitor.Story.Component.OrdinaryFactionRelations.Description>
   <MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description>设置本局与机械巢的关系模式。本阶段仅保存选项，不会修改实际派系关系。</MAP_MechanoidMechanitor.Story.Component.MechHiveRelation.Description>
