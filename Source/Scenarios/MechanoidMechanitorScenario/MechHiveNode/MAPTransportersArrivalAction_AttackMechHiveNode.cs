@@ -7,6 +7,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 运输舱进攻机械巢节点：生成/进入战斗地图。抵达时执行与远行队相同的最终关系复查。
+    /// 初始化失败检查发生在 TravellingTransportersArrived 之前，确保舱内内容可回退为远行队。
     /// </summary>
     public class MAPTransportersArrivalAction_AttackMechHiveNode : TransportersArrivalAction
     {
@@ -70,6 +71,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Thing lookTarget = TransportersArrivalActionUtility.GetLookTarget(transporters);
             bool newMap = !node.HasMap;
             Map map = GetOrGenerateMapUtility.GetOrGenerateMap(node.Tile, node.PreferredMapSize, null);
+
+            // GetOrGenerateMap 完成后、生成玩家内容之前检查；失败则组建远行队并卸载空地图。
+            if (map == null
+                || (node.IsCompleted && (node.IsMapContentFailed || !node.IsMapContentReady)))
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
+                    new GlobalTargetInfo(tile),
+                    MessageTypeDefOf.NegativeEvent);
+                new TransportersArrivalAction_FormCaravan("MessageTransportPodsArrived")
+                    .Arrived(transporters, tile);
+                node.TryUnloadFailedEmptyMap();
+                return;
+            }
+
             if (newMap)
             {
                 Find.TickManager.Notify_GeneratedPotentiallyHostileMap();

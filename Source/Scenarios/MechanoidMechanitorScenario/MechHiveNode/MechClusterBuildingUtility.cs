@@ -162,6 +162,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 向机械集群草图中放置一个指定的地图状态建筑，避免与建筑/守军重叠。
+        /// 集群部署路径：保持随机 Stuff。
         /// </summary>
         public static bool TryAddConditionCauser(
             MechClusterSketch cluster,
@@ -170,10 +171,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return TryAddBuildingToSketch(cluster, conditionCauser);
         }
 
-        /// <summary>向草图安全追加一座建筑。</summary>
+        /// <summary>向草图安全追加一座建筑（集群部署等：随机 Stuff）。</summary>
         public static bool TryAddBuildingToSketch(MechClusterSketch? cluster, ThingDef? def)
         {
-            return TryAddBuildingToSketch(cluster, def, expandBy: 6);
+            return TryAddBuildingToSketch(cluster, def, expandBy: 6, forceSteelStuff: false);
         }
 
         /// <summary>向草图安全追加一座建筑；expandBy 控制搜索外扩格数。</summary>
@@ -182,7 +183,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ThingDef? def,
             int expandBy)
         {
+            return TryAddBuildingToSketch(cluster, def, expandBy, forceSteelStuff: false);
+        }
+
+        /// <summary>
+        /// 向草图安全追加一座建筑。
+        /// forceSteelStuff=true 时仅用于机械巢节点：需要 Stuff 的建筑必须使用钢铁。
+        /// </summary>
+        public static bool TryAddBuildingToSketch(
+            MechClusterSketch? cluster,
+            ThingDef? def,
+            int expandBy,
+            bool forceSteelStuff)
+        {
             if (cluster?.buildingsSketch == null || def == null || IsExcludedFromNodeCluster(def))
+            {
+                return false;
+            }
+
+            if (!TryResolveBuildingStuff(def, forceSteelStuff, out ThingDef? stuff))
             {
                 return false;
             }
@@ -199,26 +218,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             cells.Sort((a, b) =>
                 DistanceSquared(a, center).CompareTo(DistanceSquared(b, center)));
 
-            for (int i = 0; i < cells.Count; i++)
+            int maxCells = Mathf.Min(cells.Count, MaxSketchCellSearchPerBuilding);
+            for (int i = 0; i < maxCells; i++)
             {
                 IntVec3 cell = cells[i];
                 if (sketch.WouldCollide(def, cell, Rot4.North)
                     || OverlapsMechSpawn(cluster, def, cell))
                 {
                     continue;
-                }
-
-                ThingDef? stuff = null;
-                try
-                {
-                    stuff = GenStuff.RandomStuffByCommonalityFor(def);
-                }
-                catch (Exception)
-                {
-                    if (def.MadeFromStuff)
-                    {
-                        continue;
-                    }
                 }
 
                 if (sketch.AddThing(
@@ -233,6 +240,186 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 解析建筑 Stuff。节点强制钢铁；不允许钢铁的 MadeFromStuff 建筑返回 false。
+        /// 非节点路径保持随机 Stuff（与集群部署一致）。
+        /// </summary>
+        public static bool TryResolveBuildingStuff(
+            ThingDef def,
+            bool forceSteelStuff,
+            out ThingDef? stuff)
+        {
+            stuff = null;
+            if (def == null)
+            {
+                return false;
+            }
+
+            if (!def.MadeFromStuff)
+            {
+                return true;
+            }
+
+            if (forceSteelStuff)
+            {
+                if (ThingDefOf.Steel?.stuffProps != null
+                    && ThingDefOf.Steel.stuffProps.CanMake(def))
+                {
+                    stuff = ThingDefOf.Steel;
+                    return true;
+                }
+
+                return false;
+            }
+
+            try
+            {
+                stuff = GenStuff.RandomStuffByCommonalityFor(def);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 节点草图落地前：统一 Stuff 为钢铁；不允许钢铁的可选建筑从草图移除。
+        /// </summary>
+        public static void NormalizeSketchStuffToSteelForNode(Sketch? sketch)
+        {
+            if (sketch == null)
+            {
+                return;
+            }
+
+            List<SketchThing> things = sketch.Things;
+            for (int i = things.Count - 1; i >= 0; i--)
+            {
+                SketchThing thing = things[i];
+                ThingDef? def = thing.def;
+                if (def == null || !def.MadeFromStuff)
+                {
+                    continue;
+                }
+
+                if (ThingDefOf.Steel?.stuffProps != null
+                    && ThingDefOf.Steel.stuffProps.CanMake(def))
+                {
+                    thing.stuff = ThingDefOf.Steel;
+                }
+                else
+                {
+                    sketch.Remove(thing);
+                }
+            }
+        }
+
+        /// <summary>草图中是否仍存在非钢铁 Stuff 的 MadeFromStuff 建筑。</summary>
+        public static bool SketchHasNonSteelMadeFromStuff(Sketch? sketch)
+        {
+            if (sketch == null)
+            {
+                return false;
+            }
+
+            List<SketchThing> things = sketch.Things;
+            for (int i = 0; i < things.Count; i++)
+            {
+                SketchThing thing = things[i];
+                if (thing.def != null
+                    && thing.def.MadeFromStuff
+                    && thing.stuff != ThingDefOf.Steel)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 节点专用：打乱全部合法状态建筑候选后逐个尝试写入草图；全部失败才返回 false。
+        /// </summary>
+        public static bool TryAddAnyConditionCauserForNode(
+            MechClusterSketch sketch,
+            float buildingPoints,
+            int expandBy)
+        {
+            if (sketch?.buildingsSketch == null || !ModsConfig.RoyaltyActive)
+            {
+                return false;
+            }
+
+            List<ThingDef> causers = GetConditionCausersForNode(Mathf.RoundToInt(buildingPoints));
+            if (causers.Count == 0)
+            {
+                return false;
+            }
+
+            ShuffleInPlace(causers);
+            for (int i = 0; i < causers.Count; i++)
+            {
+                if (TryAddBuildingToSketch(sketch, causers[i], expandBy, forceSteelStuff: true)
+                    && SketchContainsConditionCauser(sketch, buildingPoints))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>节点可用的状态建筑：合法候选且允许钢铁（或不需要 Stuff）。</summary>
+        public static List<ThingDef> GetConditionCausersForNode(int threatPoints)
+        {
+            List<ThingDef> raw = GetConditionCausers(threatPoints);
+            List<ThingDef> result = new List<ThingDef>(raw.Count);
+            for (int i = 0; i < raw.Count; i++)
+            {
+                ThingDef def = raw[i];
+                if (TryResolveBuildingStuff(def, forceSteelStuff: true, out _))
+                {
+                    result.Add(def);
+                }
+            }
+
+            return result;
+        }
+
+        public static bool SketchContainsConditionCauser(
+            MechClusterSketch? sketch,
+            float buildingPoints)
+        {
+            if (sketch?.buildingsSketch == null)
+            {
+                return false;
+            }
+
+            int points = Mathf.RoundToInt(buildingPoints);
+            List<SketchThing> things = sketch.buildingsSketch.Things;
+            for (int i = 0; i < things.Count; i++)
+            {
+                if (things[i].def != null && IsConditionCauser(things[i].def, points))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void ShuffleInPlace(List<ThingDef> list)
+        {
+            for (int i = list.Count - 1; i > 0; i--)
+            {
+                int j = Rand.Range(0, i + 1);
+                ThingDef tmp = list[i];
+                list[i] = list[j];
+                list[j] = tmp;
+            }
         }
 
         /// <summary>Royalty 启用时草图是否已具备低角护盾、高角护盾与状态建筑。</summary>
@@ -445,97 +632,97 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             buildingPoints = Mathf.Clamp(buildingPoints, 400f, MechClusterGenerator.MaxPoints);
 
-            try
+            for (int attempt = 0; attempt < MaxSketchGenerationAttempts; attempt++)
             {
-                if (ModsConfig.RoyaltyActive)
-                {
-                    // 直接生成建筑草图，不走 GenerateClusterSketch 的机械族点数分流，
-                    // 保证建筑预算与守军预算完全分离。
-                    Sketch buildingsSketch = RimWorld.SketchGen.SketchGen.Generate(
-                        SketchResolverDefOf.MechCluster,
-                        new SketchResolveParams
-                        {
-                            points = buildingPoints,
-                            totalPoints = buildingPoints,
-                            mechClusterDormant = true,
-                            sketch = new Sketch(),
-                            mechClusterForMap = map,
-                            forceNoConditionCauser = true
-                        });
-                    sketch = new MechClusterSketch(
-                        buildingsSketch ?? new Sketch(),
-                        new List<MechClusterSketch.Mech>(),
-                        startDormant: true);
-                }
-                else
-                {
-                    sketch = GenerateCombatThreatClusterSketch(buildingPoints, map);
-                }
-
-                if (sketch?.buildingsSketch == null || !HasAnySketchContent(sketch.buildingsSketch))
-                {
-                    sketch = GenerateCombatThreatClusterSketch(buildingPoints, map);
-                }
-
-                if (sketch.pawns == null)
-                {
-                    sketch.pawns = new List<MechClusterSketch.Mech>();
-                }
-                else
-                {
-                    // 守军另由 Combat 模板生成，建筑草图不携带集群机械族。
-                    sketch.pawns.Clear();
-                }
-
-                RemoveExcludedNodeClusterBuildings(sketch.buildingsSketch);
-                RemoveGeneratedProblemCausers(sketch.buildingsSketch);
-
-                RemoveExcludedNodeClusterBuildings(sketch.buildingsSketch);
-
-                if (ModsConfig.RoyaltyActive)
-                {
-                    if (!EnsureRoyaltyRequiredBuildings(sketch, buildingPoints))
-                    {
-                        Log.Error(
-                            "[MAP] 完整机械巢节点草图在补充后仍缺少必需的低角护盾、高角护盾或地图状态建筑，终止该节点布局生成。");
-                        return false;
-                    }
-                }
-
-                return HasAnySketchContent(sketch.buildingsSketch);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("[MAP] 完整机械巢节点集群草图生成失败，尝试回退战斗威胁草图: " + ex);
                 try
                 {
-                    sketch = GenerateCombatThreatClusterSketch(buildingPoints, map);
-                    if (sketch.pawns == null)
+                    if (TryGenerateCompletedNodeBuildingSketchOnce(
+                            map,
+                            buildingPoints,
+                            out sketch)
+                        && sketch?.buildingsSketch != null
+                        && HasAnySketchContent(sketch.buildingsSketch)
+                        && !SketchHasNonSteelMadeFromStuff(sketch.buildingsSketch))
                     {
-                        sketch.pawns = new List<MechClusterSketch.Mech>();
+                        return true;
                     }
-                    else
-                    {
-                        sketch.pawns.Clear();
-                    }
-
-                    RemoveExcludedNodeClusterBuildings(sketch.buildingsSketch);
-                    if (ModsConfig.RoyaltyActive
-                        && !EnsureRoyaltyRequiredBuildings(sketch, buildingPoints))
-                    {
-                        Log.Error(
-                            "[MAP] 完整机械巢节点回退草图仍缺少必需的 Royalty 建筑，终止该节点布局生成。");
-                        return false;
-                    }
-
-                    return HasAnySketchContent(sketch.buildingsSketch);
                 }
-                catch (Exception ex2)
+                catch (Exception ex)
                 {
-                    Log.Error("[MAP] 完整机械巢节点战斗威胁草图回退也失败: " + ex2);
-                    return false;
+                    Log.Warning(
+                        "[MAP] 完整机械巢节点集群草图生成第 "
+                            + (attempt + 1)
+                            + " 次失败: "
+                            + ex);
                 }
             }
+
+            sketch = null!;
+            Log.Error("[MAP] 完整机械巢节点在有限次数内未能生成合法集群草图，终止该节点布局生成。");
+            return false;
+        }
+
+        private static bool TryGenerateCompletedNodeBuildingSketchOnce(
+            Map map,
+            float buildingPoints,
+            out MechClusterSketch sketch)
+        {
+            sketch = null!;
+            if (ModsConfig.RoyaltyActive)
+            {
+                // 直接生成建筑草图，不走 GenerateClusterSketch 的机械族点数分流，
+                // 保证建筑预算与守军预算完全分离。
+                Sketch buildingsSketch = RimWorld.SketchGen.SketchGen.Generate(
+                    SketchResolverDefOf.MechCluster,
+                    new SketchResolveParams
+                    {
+                        points = buildingPoints,
+                        totalPoints = buildingPoints,
+                        mechClusterDormant = true,
+                        sketch = new Sketch(),
+                        mechClusterForMap = map,
+                        forceNoConditionCauser = true
+                    });
+                sketch = new MechClusterSketch(
+                    buildingsSketch ?? new Sketch(),
+                    new List<MechClusterSketch.Mech>(),
+                    startDormant: true);
+            }
+            else
+            {
+                sketch = GenerateCombatThreatClusterSketch(buildingPoints, map);
+            }
+
+            if (sketch?.buildingsSketch == null || !HasAnySketchContent(sketch.buildingsSketch))
+            {
+                sketch = GenerateCombatThreatClusterSketch(buildingPoints, map);
+            }
+
+            if (sketch.pawns == null)
+            {
+                sketch.pawns = new List<MechClusterSketch.Mech>();
+            }
+            else
+            {
+                // 守军另由 Combat 模板生成，建筑草图不携带集群机械族。
+                sketch.pawns.Clear();
+            }
+
+            RemoveExcludedNodeClusterBuildings(sketch.buildingsSketch);
+            RemoveGeneratedProblemCausers(sketch.buildingsSketch);
+            NormalizeSketchStuffToSteelForNode(sketch.buildingsSketch);
+
+            if (ModsConfig.RoyaltyActive
+                && !EnsureRoyaltyRequiredBuildings(sketch, buildingPoints))
+            {
+                Log.Error(
+                    "[MAP] 完整机械巢节点草图在补充后仍缺少必需的低角护盾、高角护盾或地图状态建筑，终止该次布局尝试。");
+                return false;
+            }
+
+            NormalizeSketchStuffToSteelForNode(sketch.buildingsSketch);
+            return HasAnySketchContent(sketch.buildingsSketch)
+                && !SketchHasNonSteelMadeFromStuff(sketch.buildingsSketch);
         }
 
         /// <summary>状态建筑落地后立即生效（1 tick 初始化）。</summary>
@@ -556,8 +743,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const int MaxSketchSupplementRounds = 4;
 
+        private const int MaxSketchCellSearchPerBuilding = 256;
+
+        private const int MaxSketchGenerationAttempts = 3;
+
         /// <summary>
         /// 补充并复查草图必需建筑。任一类补充失败或复查未齐则返回 false。
+        /// 状态建筑会打乱后逐个尝试全部合法候选。
         /// </summary>
         private static bool EnsureRoyaltyRequiredBuildings(
             MechClusterSketch sketch,
@@ -583,36 +775,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 int expandBy = 6 + round * 4;
-                if (!hasLow)
+                if (!hasLow
+                    && TryGetLowAngleShieldDef(out ThingDef low)
+                    && TryResolveBuildingStuff(low, forceSteelStuff: true, out _))
                 {
-                    if (!TryGetLowAngleShieldDef(out ThingDef low)
-                        || !TryAddBuildingToSketch(sketch, low, expandBy))
-                    {
-                        return false;
-                    }
+                    TryAddBuildingToSketch(sketch, low, expandBy, forceSteelStuff: true);
                 }
 
-                if (!hasHigh)
+                if (!hasHigh
+                    && TryGetHighAngleShieldDef(out ThingDef high)
+                    && TryResolveBuildingStuff(high, forceSteelStuff: true, out _))
                 {
-                    if (!TryGetHighAngleShieldDef(out ThingDef high)
-                        || !TryAddBuildingToSketch(sketch, high, expandBy))
-                    {
-                        return false;
-                    }
+                    TryAddBuildingToSketch(sketch, high, expandBy, forceSteelStuff: true);
                 }
 
                 if (!hasCauser)
                 {
-                    List<ThingDef> causers = GetConditionCausers(Mathf.RoundToInt(buildingPoints));
-                    if (causers.Count == 0
-                        || !TryAddBuildingToSketch(sketch, causers.RandomElement(), expandBy))
-                    {
-                        return false;
-                    }
+                    TryAddAnyConditionCauserForNode(sketch, buildingPoints, expandBy);
                 }
             }
 
-            return SketchHasRequiredRoyaltyBuildings(sketch, buildingPoints);
+            NormalizeSketchStuffToSteelForNode(sketch.buildingsSketch);
+            return SketchHasRequiredRoyaltyBuildings(sketch, buildingPoints)
+                && !SketchHasNonSteelMadeFromStuff(sketch.buildingsSketch);
         }
 
         private static MechClusterSketch GenerateCombatThreatClusterSketch(float points, Map map)
@@ -739,28 +924,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ThingDef def,
             ThingDef? stuffOverride = null)
         {
+            // 战斗威胁草图仅用于节点回退：MadeFromStuff 统一钢铁。
+            if (!TryResolveBuildingStuff(def, forceSteelStuff: true, out ThingDef? resolvedStuff))
+            {
+                return false;
+            }
+
+            ThingDef? stuff = stuffOverride ?? resolvedStuff;
+            if (def.MadeFromStuff)
+            {
+                if (ThingDefOf.Steel?.stuffProps == null
+                    || !ThingDefOf.Steel.stuffProps.CanMake(def))
+                {
+                    return false;
+                }
+
+                stuff = ThingDefOf.Steel;
+            }
+
             for (int attempt = 0; attempt < 80; attempt++)
             {
                 IntVec3 cell = new IntVec3(Rand.Range(0, size.x), 0, Rand.Range(0, size.z));
                 if (sketch.WouldCollide(def, cell, Rot4.North))
                 {
                     continue;
-                }
-
-                ThingDef? stuff = stuffOverride;
-                if (stuff == null)
-                {
-                    try
-                    {
-                        stuff = GenStuff.RandomStuffByCommonalityFor(def);
-                    }
-                    catch
-                    {
-                        if (def.MadeFromStuff)
-                        {
-                            continue;
-                        }
-                    }
                 }
 
                 if (sketch.AddThing(def, cell, Rot4.North, stuff, wipeIfCollides: false))

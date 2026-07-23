@@ -11,10 +11,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// 机械巢节点地图内容生成。由 <see cref="SitePartWorker_MechHiveNode"/> 在地图生成后调用。
     /// 建设中节点使用简陋未完工布局；完整节点使用真正的机械集群式建筑草图。
     /// 建筑布局与守军点数分别生成：守军按节点威胁点数从机械巢 Combat 模板生成。
+    /// MadeFromStuff 建筑统一使用钢铁；完整节点初始化成败写入节点状态供抵达流程检查。
     /// </summary>
     public static class MechHiveNodeMapGenerator
     {
         private const int MaxRequiredBuildingPlaceAttempts = 48;
+
+        private const int MaxMapSupplementRounds = 4;
 
         public static void Generate(Map map, MAPMechHiveNode node)
         {
@@ -23,10 +26,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            node.NotifyMapContentInitStarted();
+
             Faction? mechHive = MechHiveNodeRelationUtility.GetMechHive();
             if (mechHive == null)
             {
                 Log.Warning("[MAP] 机械巢派系不存在，机械巢节点地图不生成守军与建筑。");
+                if (node.IsCompleted)
+                {
+                    node.NotifyMapContentInitFailed();
+                }
+                else
+                {
+                    node.NotifyMapContentInitSucceeded();
+                }
+
                 return;
             }
 
@@ -35,16 +49,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (node.IsCompleted)
                 {
-                    GenerateCompleted(map, node, mechHive);
+                    if (GenerateCompleted(map, node, mechHive))
+                    {
+                        node.NotifyMapContentInitSucceeded();
+                    }
+                    else
+                    {
+                        node.NotifyMapContentInitFailed();
+                    }
                 }
                 else
                 {
                     GenerateBuilding(map, node, mechHive);
+                    node.NotifyMapContentInitSucceeded();
                 }
             }
             catch (Exception ex)
             {
                 Log.Error("[MAP] 机械巢节点地图生成异常: " + ex);
+                if (node.IsCompleted)
+                {
+                    node.NotifyMapContentInitFailed();
+                }
+                else if (node.MapInitState == MechHiveNodeMapInitState.None)
+                {
+                    // 建设中节点尽力生成；异常时若已有地图仍允许进入。
+                    node.NotifyMapContentInitSucceeded();
+                }
             }
             finally
             {
@@ -52,7 +83,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static void GenerateCompleted(Map map, MAPMechHiveNode node, Faction mechHive)
+        private static bool GenerateCompleted(Map map, MAPMechHiveNode node, Faction mechHive)
         {
             IntVec3 center = ResolveCenter(map);
             if (!MechClusterBuildingUtility.TryGenerateCompletedNodeBuildingSketch(
@@ -62,7 +93,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || sketch?.buildingsSketch == null)
             {
                 Log.Error("[MAP] 完整机械巢节点未能生成合法集群草图，终止该节点初始化。");
-                return;
+                return false;
+            }
+
+            MechClusterBuildingUtility.NormalizeSketchStuffToSteelForNode(sketch.buildingsSketch);
+            if (MechClusterBuildingUtility.SketchHasNonSteelMadeFromStuff(sketch.buildingsSketch))
+            {
+                Log.Error("[MAP] 完整机械巢节点草图仍含非钢铁 MadeFromStuff 建筑，终止该节点初始化。");
+                return false;
             }
 
             List<Thing> spawnedThings = new List<Thing>();
@@ -98,6 +136,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                 });
 
+            EnforceSteelStuffOnSpawnedThings(spawnedThings);
+
             float layoutRadius = Mathf.Max(
                 12f,
                 Mathf.Sqrt(
@@ -116,7 +156,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Log.Error(
                     "[MAP] 完整机械巢节点落地后仍缺少必需的低角护盾、高角护盾或地图状态建筑，终止该节点初始化。");
                 DestroySpawnedThings(spawnedThings);
-                return;
+                return false;
+            }
+
+            if (HasNonSteelMadeFromStuff(spawnedThings))
+            {
+                Log.Error("[MAP] 完整机械巢节点落地后仍存在非钢铁 MadeFromStuff 建筑，终止该节点初始化。");
+                DestroySpawnedThings(spawnedThings);
+                return false;
             }
 
             float defendRadius = layoutRadius + 6f;
@@ -138,11 +185,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             List<Pawn> generated =
                 MechHiveCombatPawnUtility.GenerateCombatPawns(mechHive, map, node.GarrisonThreatPoints);
+            if (generated == null || generated.Count == 0)
+            {
+                Log.Error("[MAP] 完整机械巢节点未能生成守军，终止该节点初始化。");
+                DestroySpawnedThings(spawnedThings);
+                return false;
+            }
+
             List<Pawn> spawnedPawns = PlacePawns(map, center, layoutRadius + 4f, generated);
+            if (spawnedPawns.Count == 0)
+            {
+                Log.Error("[MAP] 完整机械巢节点守军未能落地，终止该节点初始化。");
+                DestroySpawnedThings(spawnedThings);
+                return false;
+            }
+
             for (int i = 0; i < spawnedPawns.Count; i++)
             {
                 lord.AddPawn(spawnedPawns[i]);
             }
+
+            return true;
         }
 
         private static bool EnsureRequiredRoyaltyBuildingsOnMap(
@@ -158,66 +221,132 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             int points = Mathf.RoundToInt(MechClusterBuildingUtility.CompletedNodeBuildingPoints);
-            EvaluateSpawnedRoyaltyRequirements(
-                spawnedThings,
-                points,
-                out bool hasLow,
-                out bool hasHigh,
-                out bool hasCauser);
-
-            if (!hasLow)
+            for (int round = 0; round < MaxMapSupplementRounds; round++)
             {
-                if (!MechClusterBuildingUtility.TryGetLowAngleShieldDef(out ThingDef low)
-                    || !TryPlaceRequiredBuilding(
+                EvaluateSpawnedRoyaltyRequirements(
+                    spawnedThings,
+                    points,
+                    out bool hasLow,
+                    out bool hasHigh,
+                    out bool hasCauser);
+
+                if (hasLow && hasHigh && hasCauser)
+                {
+                    return true;
+                }
+
+                if (!hasLow
+                    && MechClusterBuildingUtility.TryGetLowAngleShieldDef(out ThingDef low)
+                    && MechClusterBuildingUtility.TryResolveBuildingStuff(
+                        low,
+                        forceSteelStuff: true,
+                        out _))
+                {
+                    TryPlaceRequiredBuilding(
                         map,
                         center,
                         layoutRadius,
                         low,
                         mechHive,
-                        spawnedThings))
-                {
-                    return false;
+                        spawnedThings);
                 }
-            }
 
-            if (!hasHigh)
-            {
-                if (!MechClusterBuildingUtility.TryGetHighAngleShieldDef(out ThingDef high)
-                    || !TryPlaceRequiredBuilding(
+                if (!hasHigh
+                    && MechClusterBuildingUtility.TryGetHighAngleShieldDef(out ThingDef high)
+                    && MechClusterBuildingUtility.TryResolveBuildingStuff(
+                        high,
+                        forceSteelStuff: true,
+                        out _))
+                {
+                    TryPlaceRequiredBuilding(
                         map,
                         center,
                         layoutRadius,
                         high,
                         mechHive,
-                        spawnedThings))
-                {
-                    return false;
+                        spawnedThings);
                 }
-            }
 
-            if (!hasCauser)
-            {
-                List<ThingDef> causers = MechClusterBuildingUtility.GetConditionCausers(points);
-                if (causers.Count == 0
-                    || !TryPlaceRequiredBuilding(
+                if (!hasCauser)
+                {
+                    TryPlaceAnyConditionCauserOnMap(
                         map,
                         center,
                         layoutRadius,
-                        causers.RandomElement(),
+                        points,
                         mechHive,
-                        spawnedThings))
-                {
-                    return false;
+                        spawnedThings);
                 }
             }
 
             EvaluateSpawnedRoyaltyRequirements(
                 spawnedThings,
                 points,
-                out hasLow,
-                out hasHigh,
-                out hasCauser);
-            return hasLow && hasHigh && hasCauser;
+                out bool finalLow,
+                out bool finalHigh,
+                out bool finalCauser);
+            return finalLow && finalHigh && finalCauser;
+        }
+
+        private static bool TryPlaceAnyConditionCauserOnMap(
+            Map map,
+            IntVec3 center,
+            float layoutRadius,
+            int points,
+            Faction mechHive,
+            List<Thing> spawnedThings)
+        {
+            List<ThingDef> causers = MechClusterBuildingUtility.GetConditionCausersForNode(points);
+            if (causers.Count == 0)
+            {
+                return false;
+            }
+
+            ShuffleInPlace(causers);
+            for (int i = 0; i < causers.Count; i++)
+            {
+                ThingDef def = causers[i];
+                if (TryPlaceRequiredBuilding(
+                        map,
+                        center,
+                        layoutRadius,
+                        def,
+                        mechHive,
+                        spawnedThings)
+                    && HasSpawnedConditionCauser(spawnedThings, points))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void ShuffleInPlace(List<ThingDef> list)
+        {
+            for (int i = list.Count - 1; i > 0; i--)
+            {
+                int j = Rand.Range(0, i + 1);
+                ThingDef tmp = list[i];
+                list[i] = list[j];
+                list[j] = tmp;
+            }
+        }
+
+        private static bool HasSpawnedConditionCauser(List<Thing> spawnedThings, int points)
+        {
+            for (int i = 0; i < spawnedThings.Count; i++)
+            {
+                Thing thing = spawnedThings[i];
+                if (thing != null
+                    && !thing.Destroyed
+                    && MechClusterBuildingUtility.IsConditionCauser(thing.def, points))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void EvaluateSpawnedRoyaltyRequirements(
@@ -263,6 +392,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Faction mechHive,
             List<Thing> spawnedThings)
         {
+            if (!MechClusterBuildingUtility.TryResolveBuildingStuff(
+                    def,
+                    forceSteelStuff: true,
+                    out ThingDef? stuff))
+            {
+                return false;
+            }
+
             int maxRadius = Mathf.CeilToInt(layoutRadius) + 12;
             for (int attempt = 0; attempt < MaxRequiredBuildingPlaceAttempts; attempt++)
             {
@@ -277,7 +414,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                ThingDef? stuff = def.MadeFromStuff ? GenStuff.DefaultStuffFor(def) : null;
                 if (!TrySpawnAt(map, cell, def, stuff, mechHive, out Thing spawned))
                 {
                     continue;
@@ -302,6 +438,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             spawnedThings.Clear();
+        }
+
+        private static void EnforceSteelStuffOnSpawnedThings(List<Thing> spawnedThings)
+        {
+            for (int i = spawnedThings.Count - 1; i >= 0; i--)
+            {
+                Thing thing = spawnedThings[i];
+                if (thing == null || thing.Destroyed || !thing.def.MadeFromStuff)
+                {
+                    continue;
+                }
+
+                if (thing.Stuff == ThingDefOf.Steel)
+                {
+                    continue;
+                }
+
+                // 不允许保留非钢铁 Stuff：销毁后由补充流程按需重建必需类别。
+                thing.Destroy(DestroyMode.Vanish);
+                spawnedThings.RemoveAt(i);
+            }
+        }
+
+        private static bool HasNonSteelMadeFromStuff(List<Thing> spawnedThings)
+        {
+            for (int i = 0; i < spawnedThings.Count; i++)
+            {
+                Thing thing = spawnedThings[i];
+                if (thing != null
+                    && !thing.Destroyed
+                    && thing.def.MadeFromStuff
+                    && thing.Stuff != ThingDefOf.Steel)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void GenerateBuilding(Map map, MAPMechHiveNode node, Faction mechHive)
@@ -336,6 +510,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             SpawnStructures(map, center, layoutRadius, mechHive, allBuildings);
+            EnforceSteelStuffOnSpawnedThings(allBuildings);
 
             float defendRadius = layoutRadius + 6f;
             LordJob_SleepThenMechanoidsDefend lordJob = new LordJob_SleepThenMechanoidsDefend(
@@ -423,7 +598,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                             map,
                             cursor,
                             ThingDefOf.Wall,
-                            GenStuff.DefaultStuffFor(ThingDefOf.Wall),
+                            ThingDefOf.Steel,
                             mechHive,
                             out Thing wall))
                     {
@@ -448,7 +623,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         map,
                         cell,
                         barricadeDef,
-                        GenStuff.DefaultStuffFor(barricadeDef),
+                        ThingDefOf.Steel,
                         mechHive,
                         out Thing barricade))
                 {
@@ -533,6 +708,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            if (!MechClusterBuildingUtility.TryResolveBuildingStuff(
+                    def,
+                    forceSteelStuff: true,
+                    out ThingDef? stuff))
+            {
+                return false;
+            }
+
             if (!CellFinder.TryFindRandomCellNear(
                     center,
                     map,
@@ -543,7 +726,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            ThingDef? stuff = def.MadeFromStuff ? GenStuff.DefaultStuffFor(def) : null;
             return TrySpawnAt(map, cell, def, stuff, mechHive, out spawned);
         }
 
@@ -558,6 +740,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             spawned = null!;
             try
             {
+                if (def.MadeFromStuff)
+                {
+                    if (ThingDefOf.Steel?.stuffProps == null
+                        || !ThingDefOf.Steel.stuffProps.CanMake(def))
+                    {
+                        return false;
+                    }
+
+                    stuff = ThingDefOf.Steel;
+                }
+                else
+                {
+                    stuff = null;
+                }
+
                 Thing thing = ThingMaker.MakeThing(def, stuff);
                 GenSpawn.Spawn(thing, cell, map, Rot4.North, WipeMode.Vanish);
                 if (thing.def.CanHaveFaction)

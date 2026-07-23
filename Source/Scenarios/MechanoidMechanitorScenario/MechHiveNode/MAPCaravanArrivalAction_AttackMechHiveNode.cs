@@ -7,6 +7,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// <summary>
     /// 远行队进攻机械巢节点的抵达动作：生成/进入节点战斗地图。
     /// 生成地图前执行最终关系复查；普通中立/盟友会重新尝试转敌。
+    /// 完整节点初始化失败时取消进入并安全卸载空地图，远行队保留在世界层。
     /// </summary>
     public class MAPCaravanArrivalAction_AttackMechHiveNode : CaravanArrivalAction
     {
@@ -83,6 +84,37 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             bool newMap = !node.HasMap;
             Map map = GetOrGenerateMapUtility.GetOrGenerateMap(node.Tile, node.PreferredMapSize, null);
+
+            // GetOrGenerateMap 完成后、转移玩家 Pawn 之前检查完整节点初始化结果。
+            if (node.IsCompleted && node.IsMapContentFailed)
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
+                    caravan,
+                    MessageTypeDefOf.NegativeEvent);
+                node.TryUnloadFailedEmptyMap();
+                return;
+            }
+
+            if (node.IsCompleted && !node.IsMapContentReady)
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
+                    caravan,
+                    MessageTypeDefOf.NegativeEvent);
+                node.TryUnloadFailedEmptyMap();
+                return;
+            }
+
+            if (map == null)
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed".Translate(),
+                    caravan,
+                    MessageTypeDefOf.NegativeEvent);
+                return;
+            }
+
             if (newMap)
             {
                 Find.TickManager.Notify_GeneratedPotentiallyHostileMap();
