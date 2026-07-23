@@ -26,7 +26,40 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Faction player = Faction.OfPlayer;
             PlanetTile tile = node.Tile;
 
-            // 1) 存在可带队 Pawn：仅提供原版“在此组建远行队”，不做交付/额度结算。
+            // 0) 进攻入口：与远行队相同的关系/冷却限制；抵达时再做最终转敌复查。
+            if (MechHiveNodeRelationUtility.CanPlayerAttack()
+                && TransportersArrivalActionUtility.AnyNonDownedColonist(pods))
+            {
+                Action<Action>? attackConfirm =
+                    MechHiveNodeCaravanInteraction.GetAttackConfirmProxy(node);
+                foreach (FloatMenuOption option in TransportersArrivalActionUtility.GetFloatMenuOptions(
+                    () => MAPTransportersArrivalAction_AttackMechHiveNode.CanAttack(pods, node),
+                    () => new MAPTransportersArrivalAction_AttackMechHiveNode(
+                        node,
+                        PawnsArrivalModeDefOf.EdgeDrop),
+                    "AttackAndDropAtEdge".Translate(node.Label),
+                    launchAction,
+                    tile,
+                    attackConfirm))
+                {
+                    yield return option;
+                }
+
+                foreach (FloatMenuOption option in TransportersArrivalActionUtility.GetFloatMenuOptions(
+                    () => MAPTransportersArrivalAction_AttackMechHiveNode.CanAttack(pods, node),
+                    () => new MAPTransportersArrivalAction_AttackMechHiveNode(
+                        node,
+                        PawnsArrivalModeDefOf.CenterDrop),
+                    "AttackAndDropInCenter".Translate(node.Label),
+                    launchAction,
+                    tile,
+                    attackConfirm))
+                {
+                    yield return option;
+                }
+            }
+
+            // 1) 存在可带队 Pawn：提供原版“在此组建远行队”，不做交付/额度结算。
             if (player != null && TransportersArrivalActionUtility.AnyPotentialCaravanOwner(pods, player))
             {
                 foreach (FloatMenuOption option in TransportersArrivalActionUtility.GetFloatMenuOptions(

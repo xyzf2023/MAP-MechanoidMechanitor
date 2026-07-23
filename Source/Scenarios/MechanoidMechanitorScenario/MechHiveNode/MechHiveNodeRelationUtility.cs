@@ -112,5 +112,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             return storyState.TryTurnMechHiveHostileFromPlayerAttack();
         }
+
+        /// <summary>
+        /// 真正生成/进入节点地图前的最终关系复查。
+        /// 已敌对则直接通过；普通中立/盟友重新 TryTurnHostileForAttack，
+        /// 仅当成功且当前确实敌对时才允许继续。
+        /// </summary>
+        public static bool TryEnsureHostileForAttackEntry(out string? failMessage)
+        {
+            failMessage = null;
+            if (!CanPlayerAttack())
+            {
+                failMessage =
+                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked".Translate();
+                return false;
+            }
+
+            if (IsHostile())
+            {
+                return true;
+            }
+
+            if (!TryTurnHostileForAttack() || !IsHostile())
+            {
+                failMessage =
+                    "MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed".Translate();
+                return false;
+            }
+
+            return true;
+        }
     }
 }

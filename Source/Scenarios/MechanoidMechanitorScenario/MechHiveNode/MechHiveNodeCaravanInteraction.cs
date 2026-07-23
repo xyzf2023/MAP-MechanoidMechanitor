@@ -79,6 +79,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
+        /// <summary>
+        /// 真正进入/生成节点地图前的最终检查：节点与冷却限制 + 关系复查（必要时重新转敌）。
+        /// </summary>
+        public static bool TryFinalizeAttackEntry(MAPMechHiveNode node, out string? failMessage)
+        {
+            failMessage = null;
+            FloatMenuAcceptanceReport can = CanAttack(node);
+            if (!can)
+            {
+                failMessage = can.FailMessage;
+                return false;
+            }
+
+            if (!MechHiveNodeRelationUtility.TryEnsureHostileForAttackEntry(out string? relationFail))
+            {
+                failMessage = relationFail;
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>非敌对进攻确认代理；供远行队与运输舱共用。</summary>
+        public static Action<Action>? GetAttackConfirmProxy(MAPMechHiveNode node)
+        {
+            return BuildAttackConfirmProxy(node);
+        }
+
         public static FloatMenuAcceptanceReport CanDeliver(MAPMechHiveNode node)
         {
             if (node == null || !node.Spawned)

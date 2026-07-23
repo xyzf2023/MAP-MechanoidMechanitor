@@ -10,12 +10,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// <summary>
     /// 机械巢节点地图内容生成。由 <see cref="SitePartWorker_MechHiveNode"/> 在地图生成后调用。
     /// 建设中节点使用简陋未完工布局；完整节点使用真正的机械集群式建筑草图。
-    /// 建筑布局与守军点数分别生成：守军按节点威胁点数从机械巢 Combat 模板生成，
-    /// 全部休眠，纳入同一休眠/唤醒 Lord。建筑预算不扣减守军预算。
-    /// 高低角护盾与地图状态建筑仅在 Royalty 启用时生成；Royalty 关闭时不查找相关 Def。
+    /// 建筑布局与守军点数分别生成：守军按节点威胁点数从机械巢 Combat 模板生成。
     /// </summary>
     public static class MechHiveNodeMapGenerator
     {
+        private const int MaxRequiredBuildingPlaceAttempts = 48;
+
         public static void Generate(Map map, MAPMechHiveNode node)
         {
             if (map == null || node == null)
@@ -30,7 +30,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            // 使用节点布局种子保证可复现。独立 Rand 状态，不污染全局序列。
             Rand.PushState(Gen.HashCombineInt(node.LayoutSeed, 0x1B3F7));
             try
             {
@@ -53,7 +52,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        /// <summary>完整节点：真正的机械集群式建筑草图 + 独立守军预算。</summary>
         private static void GenerateCompleted(Map map, MAPMechHiveNode node, Faction mechHive)
         {
             IntVec3 center = ResolveCenter(map);
@@ -63,8 +61,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     out MechClusterSketch sketch)
                 || sketch?.buildingsSketch == null)
             {
-                Log.Warning("[MAP] 完整机械巢节点未能生成集群草图，跳过建筑布局。");
-                SpawnGarrisonAndLord(map, node, mechHive, center, 18f, new List<Thing>(), new List<Thing>(), new List<Thing>());
+                Log.Error("[MAP] 完整机械巢节点未能生成合法集群草图，终止该节点初始化。");
                 return;
             }
 
@@ -101,11 +98,138 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                 });
 
-            List<Thing> allBuildings = new List<Thing>();
-            List<Thing> threatBuildings = new List<Thing>();
-            List<Thing> shields = new List<Thing>();
-            Thing? requiredConditionCauser = null;
+            float layoutRadius = Mathf.Max(
+                12f,
+                Mathf.Sqrt(
+                    sketch.buildingsSketch.OccupiedSize.x * sketch.buildingsSketch.OccupiedSize.x
+                    + sketch.buildingsSketch.OccupiedSize.z * sketch.buildingsSketch.OccupiedSize.z)
+                    / 2f);
 
+            if (ModsConfig.RoyaltyActive
+                && !EnsureRequiredRoyaltyBuildingsOnMap(
+                    map,
+                    center,
+                    layoutRadius,
+                    mechHive,
+                    spawnedThings))
+            {
+                Log.Error(
+                    "[MAP] 完整机械巢节点落地后仍缺少必需的低角护盾、高角护盾或地图状态建筑，终止该节点初始化。");
+                DestroySpawnedThings(spawnedThings);
+                return;
+            }
+
+            float defendRadius = layoutRadius + 6f;
+            LordJob_SleepThenMechanoidsDefend lordJob = new LordJob_SleepThenMechanoidsDefend(
+                spawnedThings,
+                mechHive,
+                defendRadius,
+                center,
+                canAssaultColony: false,
+                isMechCluster: false);
+            Lord lord = LordMaker.MakeNewLord(mechHive, lordJob, map);
+
+            MechClusterBuildingInitUtility.InitializeSpawnedBuildings(
+                spawnedThings,
+                mechHive,
+                lordJob,
+                lord,
+                MechClusterBuildingInitUtility.InitOptions.ForCompletedNode());
+
+            List<Pawn> generated =
+                MechHiveCombatPawnUtility.GenerateCombatPawns(mechHive, map, node.GarrisonThreatPoints);
+            List<Pawn> spawnedPawns = PlacePawns(map, center, layoutRadius + 4f, generated);
+            for (int i = 0; i < spawnedPawns.Count; i++)
+            {
+                lord.AddPawn(spawnedPawns[i]);
+            }
+        }
+
+        private static bool EnsureRequiredRoyaltyBuildingsOnMap(
+            Map map,
+            IntVec3 center,
+            float layoutRadius,
+            Faction mechHive,
+            List<Thing> spawnedThings)
+        {
+            if (!ModsConfig.RoyaltyActive)
+            {
+                return true;
+            }
+
+            int points = Mathf.RoundToInt(MechClusterBuildingUtility.CompletedNodeBuildingPoints);
+            EvaluateSpawnedRoyaltyRequirements(
+                spawnedThings,
+                points,
+                out bool hasLow,
+                out bool hasHigh,
+                out bool hasCauser);
+
+            if (!hasLow)
+            {
+                if (!MechClusterBuildingUtility.TryGetLowAngleShieldDef(out ThingDef low)
+                    || !TryPlaceRequiredBuilding(
+                        map,
+                        center,
+                        layoutRadius,
+                        low,
+                        mechHive,
+                        spawnedThings))
+                {
+                    return false;
+                }
+            }
+
+            if (!hasHigh)
+            {
+                if (!MechClusterBuildingUtility.TryGetHighAngleShieldDef(out ThingDef high)
+                    || !TryPlaceRequiredBuilding(
+                        map,
+                        center,
+                        layoutRadius,
+                        high,
+                        mechHive,
+                        spawnedThings))
+                {
+                    return false;
+                }
+            }
+
+            if (!hasCauser)
+            {
+                List<ThingDef> causers = MechClusterBuildingUtility.GetConditionCausers(points);
+                if (causers.Count == 0
+                    || !TryPlaceRequiredBuilding(
+                        map,
+                        center,
+                        layoutRadius,
+                        causers.RandomElement(),
+                        mechHive,
+                        spawnedThings))
+                {
+                    return false;
+                }
+            }
+
+            EvaluateSpawnedRoyaltyRequirements(
+                spawnedThings,
+                points,
+                out hasLow,
+                out hasHigh,
+                out hasCauser);
+            return hasLow && hasHigh && hasCauser;
+        }
+
+        private static void EvaluateSpawnedRoyaltyRequirements(
+            List<Thing> spawnedThings,
+            int points,
+            out bool hasLow,
+            out bool hasHigh,
+            out bool hasCauser)
+        {
+            hasLow = false;
+            hasHigh = false;
+            hasCauser = false;
             for (int i = 0; i < spawnedThings.Count; i++)
             {
                 Thing thing = spawnedThings[i];
@@ -114,66 +238,78 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                if (thing.def.CanHaveFaction)
+                if (MechClusterBuildingUtility.IsLowAngleShieldDef(thing.def))
                 {
-                    thing.SetFaction(mechHive);
+                    hasLow = true;
                 }
 
-                allBuildings.Add(thing);
-                MechClusterBuildingUtility.ApplyDormantSleep(thing);
-
-                if (MechClusterBuildingUtility.IsShield(thing))
+                if (MechClusterBuildingUtility.IsHighAngleShieldDef(thing.def))
                 {
-                    shields.Add(thing);
+                    hasHigh = true;
                 }
 
-                if (MechClusterBuildingUtility.IsBuildingThreat(thing))
+                if (MechClusterBuildingUtility.IsConditionCauser(thing.def, points))
                 {
-                    threatBuildings.Add(thing);
-                }
-
-                if (ModsConfig.RoyaltyActive
-                    && MechClusterBuildingUtility.IsConditionCauser(
-                        thing.def,
-                        Mathf.RoundToInt(MechClusterBuildingUtility.CompletedNodeBuildingPoints)))
-                {
-                    requiredConditionCauser = thing;
+                    hasCauser = true;
                 }
             }
-
-            // Royalty：确保至少一种状态建筑已正确初始化并立即生效。
-            if (ModsConfig.RoyaltyActive && requiredConditionCauser != null)
-            {
-                MechClusterBuildingUtility.ApplyImmediateInitiation(requiredConditionCauser);
-            }
-
-            float layoutRadius = Mathf.Max(
-                12f,
-                Mathf.Sqrt(
-                    sketch.buildingsSketch.OccupiedSize.x * sketch.buildingsSketch.OccupiedSize.x
-                    + sketch.buildingsSketch.OccupiedSize.z * sketch.buildingsSketch.OccupiedSize.z)
-                    / 2f);
-
-            SpawnGarrisonAndLord(
-                map,
-                node,
-                mechHive,
-                center,
-                layoutRadius,
-                allBuildings,
-                threatBuildings,
-                shields);
         }
 
-        /// <summary>建设中节点：保留简陋、未完工布局。</summary>
+        private static bool TryPlaceRequiredBuilding(
+            Map map,
+            IntVec3 center,
+            float layoutRadius,
+            ThingDef def,
+            Faction mechHive,
+            List<Thing> spawnedThings)
+        {
+            int maxRadius = Mathf.CeilToInt(layoutRadius) + 12;
+            for (int attempt = 0; attempt < MaxRequiredBuildingPlaceAttempts; attempt++)
+            {
+                int radius = Mathf.Min(maxRadius, Mathf.CeilToInt(layoutRadius) + attempt / 4);
+                if (!CellFinder.TryFindRandomCellNear(
+                        center,
+                        map,
+                        radius,
+                        c => CanPlaceBuilding(map, def, c),
+                        out IntVec3 cell))
+                {
+                    continue;
+                }
+
+                ThingDef? stuff = def.MadeFromStuff ? GenStuff.DefaultStuffFor(def) : null;
+                if (!TrySpawnAt(map, cell, def, stuff, mechHive, out Thing spawned))
+                {
+                    continue;
+                }
+
+                spawnedThings.Add(spawned);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static void DestroySpawnedThings(List<Thing> spawnedThings)
+        {
+            for (int i = 0; i < spawnedThings.Count; i++)
+            {
+                Thing thing = spawnedThings[i];
+                if (thing != null && !thing.Destroyed)
+                {
+                    thing.Destroy(DestroyMode.Vanish);
+                }
+            }
+
+            spawnedThings.Clear();
+        }
+
         private static void GenerateBuilding(Map map, MAPMechHiveNode node, Faction mechHive)
         {
             IntVec3 center = ResolveCenter(map);
             float layoutRadius = 9f;
 
             List<Thing> allBuildings = new List<Thing>();
-            List<Thing> threatBuildings = new List<Thing>();
-            List<Thing> shields = new List<Thing>();
 
             List<ThingDef> turretPalette = MechClusterBuildingUtility.GetMechTurretDefs();
             if (turretPalette.Count == 0)
@@ -196,46 +332,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (TrySpawnBuilding(map, center, layoutRadius, turretDef, mechHive, out Thing turret))
                 {
                     allBuildings.Add(turret);
-                    threatBuildings.Add(turret);
                 }
             }
 
             SpawnStructures(map, center, layoutRadius, mechHive, allBuildings);
-
-            for (int i = 0; i < allBuildings.Count; i++)
-            {
-                MechClusterBuildingUtility.ApplyDormantSleep(allBuildings[i]);
-            }
-
-            SpawnGarrisonAndLord(
-                map,
-                node,
-                mechHive,
-                center,
-                layoutRadius,
-                allBuildings,
-                threatBuildings,
-                shields);
-        }
-
-        private static void SpawnGarrisonAndLord(
-            Map map,
-            MAPMechHiveNode node,
-            Faction mechHive,
-            IntVec3 center,
-            float layoutRadius,
-            List<Thing> allBuildings,
-            List<Thing> threatBuildings,
-            List<Thing> shields)
-        {
-            List<Pawn> generated =
-                MechHiveCombatPawnUtility.GenerateCombatPawns(mechHive, map, node.GarrisonThreatPoints);
-            List<Pawn> spawnedPawns = PlacePawns(map, center, layoutRadius + 4f, generated);
-
-            if (allBuildings.Count == 0 && spawnedPawns.Count == 0)
-            {
-                return;
-            }
 
             float defendRadius = layoutRadius + 6f;
             LordJob_SleepThenMechanoidsDefend lordJob = new LordJob_SleepThenMechanoidsDefend(
@@ -247,19 +347,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 isMechCluster: false);
             Lord lord = LordMaker.MakeNewLord(mechHive, lordJob, map);
 
-            for (int i = 0; i < shields.Count; i++)
-            {
-                lordJob.AddThingToNotifyOnDefeat(shields[i]);
-            }
+            // 建设中节点：复用同一初始化链路（休眠 + CompSpawnerPawn 首次生成时间），无 Royalty 必需建筑。
+            MechClusterBuildingInitUtility.InitializeSpawnedBuildings(
+                allBuildings,
+                mechHive,
+                lordJob,
+                lord,
+                new MechClusterBuildingInitUtility.InitOptions(
+                    startDormant: true,
+                    immediateAllConditionCausers: false,
+                    immediateConditionCauserDef: null,
+                    applyRandomInitiation: false,
+                    randomInitiationDays: 0f,
+                    assemblerDelayTicks: (int)(
+                        MechClusterBuildingInitUtility.MechAssemblerInitialDelayDays.RandomInRange
+                        * 60000f)));
 
-            for (int i = 0; i < threatBuildings.Count; i++)
-            {
-                if (threatBuildings[i] is Building building)
-                {
-                    lord.AddBuilding(building);
-                }
-            }
-
+            List<Pawn> generated =
+                MechHiveCombatPawnUtility.GenerateCombatPawns(mechHive, map, node.GarrisonThreatPoints);
+            List<Pawn> spawnedPawns = PlacePawns(map, center, layoutRadius + 4f, generated);
             for (int i = 0; i < spawnedPawns.Count; i++)
             {
                 lord.AddPawn(spawnedPawns[i]);
@@ -384,7 +490,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 GenSpawn.Spawn(pawn, cell, map, Rot4.Random);
-                MechClusterBuildingUtility.ApplyDormantSleep(pawn);
+                pawn.TryGetComp<CompCanBeDormant>()?.ToSleep();
                 spawned.Add(pawn);
             }
 
