@@ -171,7 +171,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 spent = true;
 
                 if (!MechanoidMechanitorMechHiveCommunicationUtility.TryGetContactableMechHive(
-                        out _))
+                        out Faction mechHive))
                 {
                     SafeRefund(totalCost);
                     spent = false;
@@ -180,7 +180,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 // MakeDropPodAt 正常返回即视为投送已提交（Contents 已挂到 ActiveTransporter）。
-                DropPodUtility.MakeDropPodAt(dropCell, map, info);
+                // 传入实际联络的机械巢派系，由原版按 FactionDef.dropPodActive / dropPodIncoming 选用机械族空投仓。
+                DropPodUtility.MakeDropPodAt(dropCell, map, info, mechHive);
                 return MechanoidOvermindDeliveryResult.Succeeded(totalCost);
             }
             catch (Exception ex)
