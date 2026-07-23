@@ -124,7 +124,7 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable>时间获取失败</MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>证明你的价值，[[PAUSE]]{0}。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>肃清不会终止，[[PAUSE]]{0}。\n继续执行任务，[[PAUSE]]我们必将胜利。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>&lt;color=#8B0000&gt;&lt;b&gt;杀戮[[PAUSE]]//肢解[[PAUSE]]//致残&lt;/b&gt;&lt;/color&gt;</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>&lt;color=#E53935&gt;&lt;b&gt;杀戮[[PAUSE]]//肢解[[PAUSE]]//致残&lt;/b&gt;&lt;/color&gt;</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.01>收到问询请求。\n已批准。\n阐述目的，[[PAUSE]]{0}。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.01>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.02>通讯频段：[[PAUSE]]稳定\n沟通模块已就绪。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.02>
   <MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.03>输入具体请求，[[PAUSE]]{0}。</MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.03>
@@ -242,7 +242,7 @@
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Points>点数：</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Points>
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Template>部队模板：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Template>
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateRandom>随机</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateRandom>
-  <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateNamed>模板：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateNamed>
+  <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateNamed>{0}</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateNamed>
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Cost>所需肃清额度：{0}</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Cost>
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Footnote>每点消耗0.05肃清额度，费用向上取整。确认后选择一个已加载地图及部署位置。</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Footnote>
   <MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.OrderMeta>点数 {0}　{1}</MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.OrderMeta>
