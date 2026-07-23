@@ -21,7 +21,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             random = new Random();
         }
 
-        public string PickTranslatedText(MechanoidOvermindDialoguePoolDef? pool)
+        public string PickTranslatedText(
+            MechanoidOvermindDialoguePoolDef? pool,
+            params NamedArgument[] args)
         {
             if (pool?.textKeys == null || pool.textKeys.Count == 0)
             {
@@ -70,10 +72,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             lastPool = pool;
             lastIndex = sourceIndex;
-            return TranslateOrFallback(pool.textKeys[sourceIndex]);
+            return TranslateOrFallback(pool.textKeys[sourceIndex], args);
         }
 
-        private static string TranslateOrFallback(string? key)
+        private static string TranslateOrFallback(string? key, NamedArgument[] args)
         {
             if (string.IsNullOrEmpty(key))
             {
@@ -89,7 +91,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 // 必须用 RawText，避免 TaggedString→string 隐式转换触发 StripTags。
-                TaggedString translatedTagged = key.Translate();
+                TaggedString translatedTagged = args != null && args.Length > 0
+                    ? key.Translate(args)
+                    : key.Translate();
                 string translated = translatedTagged.RawText;
                 if (string.IsNullOrEmpty(translated) || translated == key)
                 {
