@@ -33,7 +33,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             public readonly Faction MechHive;
 
-            public readonly List<Thing> SpawnedThings = new List<Thing>();
+            public readonly MechHiveNodeInitAttemptRecord Record;
+
+            public List<Thing> SpawnedThings => Record.ThingsListForRegistration;
 
             public readonly List<Pawn> ExpectedPawns = new List<Pawn>();
 
@@ -41,38 +43,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             public Lord? Lord;
 
-            public bool RolledBack;
-
-            public bool FailureLogged;
+            public bool FailureHandled;
 
             public string? FailureStage;
 
-            public CompletedInitSession(MAPMechHiveNode node, Map map, Faction mechHive)
+            public CompletedInitSession(
+                MAPMechHiveNode node,
+                Map map,
+                Faction mechHive,
+                MechHiveNodeInitAttemptRecord record)
             {
                 Node = node;
                 Map = map;
                 MechHive = mechHive;
-            }
-
-            public void TrackThing(Thing? thing)
-            {
-                if (thing != null && !thing.Destroyed && !SpawnedThings.Contains(thing))
-                {
-                    SpawnedThings.Add(thing);
-                }
-            }
-
-            public void TrackThings(List<Thing> things)
-            {
-                if (things == null)
-                {
-                    return;
-                }
-
-                for (int i = 0; i < things.Count; i++)
-                {
-                    TrackThing(things[i]);
-                }
+                Record = record;
             }
         }
 
@@ -120,8 +104,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Log.Error("[MAP] 机械巢节点地图生成异常: " + ex);
                 if (node.IsCompleted)
                 {
-                    TryCleanupOrphanedFailedMapContent(node);
                     node.NotifyMapContentInitFailed();
+                    node.TryContinueFailedInitCleanup();
                 }
                 else if (node.MapInitState != MechHiveNodeMapInitState.Succeeded)
                 {
@@ -134,44 +118,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        /// <summary>
-        /// Failed/Generating 残留地图的机会清理：仅移除机械巢派系内容，不触及玩家/其他派系。
-        /// </summary>
-        public static void TryCleanupOrphanedFailedMapContent(MAPMechHiveNode node)
-        {
-            if (node == null || !node.HasMap || node.Cleaned)
-            {
-                return;
-            }
-
-            if (node.MapInitState != MechHiveNodeMapInitState.Failed
-                && node.MapInitState != MechHiveNodeMapInitState.Generating)
-            {
-                return;
-            }
-
-            Map map = node.Map;
-            Faction? mechHive = MechHiveNodeRelationUtility.GetMechHive();
-            if (map == null || map.Disposed || mechHive == null)
-            {
-                return;
-            }
-
-            try
-            {
-                ClearMechHiveLords(map, mechHive);
-                ClearMechHivePawns(map, mechHive);
-                ClearMechHiveBuildings(map, mechHive);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("[MAP] 清理失败完整节点残留内容时异常: " + ex);
-            }
-        }
-
         private static void GenerateCompleted(Map map, MAPMechHiveNode node, Faction mechHive)
         {
-            CompletedInitSession session = new CompletedInitSession(node, map, mechHive);
+            MechHiveNodeInitAttemptRecord record = node.BeginCompletedInitAttempt();
+            CompletedInitSession session = new CompletedInitSession(node, map, mechHive, record);
             try
             {
                 TryGenerateCompletedCore(session);
@@ -187,6 +137,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MAPMechHiveNode node = session.Node;
             Map map = session.Map;
             Faction mechHive = session.MechHive;
+            MechHiveNodeInitAttemptRecord record = session.Record;
 
             session.FailureStage = "草图生成";
             IntVec3 center = ResolveCenter(map);
@@ -240,6 +191,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 });
 
             EnforceSteelStuffOnSpawnedThings(spawnedThings);
+            record.RegisterThingsFromList(spawnedThings);
 
             float layoutRadius = Mathf.Max(
                 12f,
@@ -257,11 +209,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     mechHive,
                     spawnedThings))
             {
+                record.RegisterThingsFromList(spawnedThings);
                 return FailCompletedInit(
                     session,
                     "必需建筑补充",
                     "落地后缺少低角护盾、高角护盾或地图状态建筑");
             }
+
+            record.RegisterThingsFromList(spawnedThings);
 
             session.FailureStage = "钢铁材料复查";
             if (HasNonSteelMadeFromStuff(spawnedThings))
@@ -285,6 +240,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             session.Lord = lord;
+            record.RegisterLord(lord);
 
             MechClusterBuildingInitUtility.InitializeSpawnedBuildings(
                 spawnedThings,
@@ -306,6 +262,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (pawn != null && !pawn.Destroyed)
                     {
                         expected.Add(pawn);
+                        record.RegisterPawn(pawn);
                     }
                 }
             }
@@ -405,7 +362,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        /// <summary>统一失败出口：幂等回滚本轮创建内容，标记 Failed，不 Cleaned、不发攻克信。</summary>
+        /// <summary>统一失败出口：精确登记并清理本轮创建内容，标记 Failed，不 Cleaned、不发攻克信。</summary>
         private static bool FailCompletedInit(
             CompletedInitSession session,
             string stage,
@@ -416,10 +373,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            MechHiveNodeInitAttemptRecord record = session.Record;
             session.FailureStage = stage;
-            if (!session.FailureLogged)
+            if (!record.FailureLogged)
             {
-                session.FailureLogged = true;
+                record.FailureLogged = true;
                 Log.Error(
                     "[MAP] 完整机械巢节点初始化失败（阶段："
                         + stage
@@ -428,10 +386,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         + "。已回滚本轮内容并拒绝进入。");
             }
 
-            if (!session.RolledBack)
+            if (!session.FailureHandled)
             {
-                session.RolledBack = true;
-                RollbackCompletedInit(session);
+                session.FailureHandled = true;
+                if (session.Lord != null)
+                {
+                    record.RegisterLord(session.Lord);
+                }
+
+                record.RegisterThingsFromList(session.SpawnedThings);
+                for (int i = 0; i < session.ExpectedPawns.Count; i++)
+                {
+                    record.RegisterPawn(session.ExpectedPawns[i]);
+                }
+
+                for (int i = 0; i < session.PlacedPawns.Count; i++)
+                {
+                    record.RegisterPawn(session.PlacedPawns[i]);
+                }
+
+                record.TryCleanupRegisteredContent(session.Map);
             }
 
             if (session.Node != null && !session.Node.Cleaned)
@@ -440,159 +414,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return false;
-        }
-
-        private static void RollbackCompletedInit(CompletedInitSession session)
-        {
-            // 顺序：Lord → 守军 → 建筑；单项失败不中断其余清理。
-            try
-            {
-                if (session.Lord != null && session.Map != null && !session.Map.Disposed)
-                {
-                    try
-                    {
-                        session.Map.lordManager.RemoveLord(session.Lord);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Warning("[MAP] 回滚时移除 Lord 失败: " + ex);
-                    }
-
-                    session.Lord = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("[MAP] 回滚 Lord 阶段异常: " + ex);
-            }
-
-            try
-            {
-                MechHiveCombatPawnUtility.DiscardPawns(session.PlacedPawns);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("[MAP] 回滚已落地守军异常: " + ex);
-            }
-
-            try
-            {
-                MechHiveCombatPawnUtility.DiscardPawns(session.ExpectedPawns);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("[MAP] 回滚预期守军异常: " + ex);
-            }
-
-            try
-            {
-                DestroySpawnedThingsSafe(session.SpawnedThings);
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("[MAP] 回滚建筑异常: " + ex);
-            }
-
-            session.PlacedPawns.Clear();
-            session.ExpectedPawns.Clear();
-            session.SpawnedThings.Clear();
-        }
-
-        private static void DestroySpawnedThingsSafe(List<Thing> spawnedThings)
-        {
-            if (spawnedThings == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < spawnedThings.Count; i++)
-            {
-                Thing thing = spawnedThings[i];
-                if (thing == null || thing.Destroyed)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    thing.Destroy(DestroyMode.Vanish);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning("[MAP] 回滚销毁建筑失败（" + thing.def?.defName + "）: " + ex);
-                }
-            }
-
-            spawnedThings.Clear();
-        }
-
-        private static void ClearMechHiveLords(Map map, Faction mechHive)
-        {
-            List<Lord> lords = map.lordManager.lords;
-            for (int i = lords.Count - 1; i >= 0; i--)
-            {
-                Lord lord = lords[i];
-                if (lord == null || lord.faction != mechHive)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    map.lordManager.RemoveLord(lord);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning("[MAP] 清理机械巢 Lord 失败: " + ex);
-                }
-            }
-        }
-
-        private static void ClearMechHivePawns(Map map, Faction mechHive)
-        {
-            List<Pawn> toRemove = new List<Pawn>();
-            IReadOnlyList<Pawn> pawns = map.mapPawns.AllPawnsSpawned;
-            for (int i = 0; i < pawns.Count; i++)
-            {
-                Pawn pawn = pawns[i];
-                if (pawn == null || pawn.Destroyed)
-                {
-                    continue;
-                }
-
-                if (pawn.Faction == Faction.OfPlayer || pawn.HostFaction == Faction.OfPlayer)
-                {
-                    continue;
-                }
-
-                if (pawn.Faction == mechHive)
-                {
-                    toRemove.Add(pawn);
-                }
-            }
-
-            MechHiveCombatPawnUtility.DiscardPawns(toRemove);
-        }
-
-        private static void ClearMechHiveBuildings(Map map, Faction mechHive)
-        {
-            List<Thing> toDestroy = new List<Thing>();
-            List<Building> buildings = map.listerBuildings.allBuildingsNonColonist;
-            for (int i = 0; i < buildings.Count; i++)
-            {
-                Building building = buildings[i];
-                if (building == null || building.Destroyed)
-                {
-                    continue;
-                }
-
-                if (building.Faction == mechHive)
-                {
-                    toDestroy.Add(building);
-                }
-            }
-
-            DestroySpawnedThingsSafe(toDestroy);
         }
 
         /// <summary>
