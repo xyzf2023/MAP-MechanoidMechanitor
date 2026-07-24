@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RimWorld;
+using RimWorld.Planet;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
@@ -240,6 +241,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return;
                 }
 
+                Faction? newMechHivePlayerFaction = Faction.OfPlayerSilentFail;
+                if (newMechHivePlayerFaction == null
+                    || newMechHivePlayerFaction.def != NewMechHiveFactionDefOf.MAP_NewMechHive)
+                {
+                    FinishFactionNamingRoutine();
+                    return;
+                }
+
                 nextFactionNamingCheckTick = Find.TickManager.TicksGame;
             }
 
@@ -264,8 +273,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (waitingForFactionNameCompletion)
             {
-                if (Find.WindowStack != null
-                    && Find.WindowStack.IsOpen<Dialog_NameMechanoidMechanitorFaction>())
+                if (IsNewMechHiveNamingWindowOpen())
                 {
                     return;
                 }
@@ -334,8 +342,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Find.WindowStack.Add(
-                new Dialog_NameMechanoidMechanitorFaction());
+            Settlement? namingSettlement = TryGetEligibleNamingSettlement(namingHomeMap);
+            if (namingSettlement != null)
+            {
+                Find.WindowStack.Add(
+                    new Dialog_NameNewMechHiveFactionAndSettlement(namingSettlement));
+            }
+            else
+            {
+                Find.WindowStack.Add(
+                    new Dialog_NameNewMechHiveFaction());
+            }
+
             waitingForFactionNameCompletion = true;
         }
 
@@ -354,6 +372,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 nextFactionNamingCheckTick =
                     Find.TickManager.TicksGame + GenDate.TicksPerHour;
             }
+        }
+
+        private bool IsNewMechHiveNamingWindowOpen()
+        {
+            if (Find.WindowStack == null)
+            {
+                return false;
+            }
+
+            return Find.WindowStack.IsOpen<Dialog_NameNewMechHiveFaction>()
+                || Find.WindowStack.IsOpen<Dialog_NameNewMechHiveFactionAndSettlement>();
+        }
+
+        private Settlement? TryGetEligibleNamingSettlement(Map homeMap)
+        {
+            if (homeMap == null)
+            {
+                return null;
+            }
+
+            if (homeMap.dangerWatcher != null
+                && homeMap.dangerWatcher.DangerRating == StoryDanger.High)
+            {
+                return null;
+            }
+
+            foreach (Settlement settlement in Find.WorldObjects.Settlements)
+            {
+                if (settlement == null
+                    || settlement.Faction != Faction.OfPlayer
+                    || settlement.namedByPlayer
+                    || !settlement.HasMap
+                    || settlement.Map != homeMap)
+                {
+                    continue;
+                }
+
+                return settlement;
+            }
+
+            return null;
         }
     }
 }

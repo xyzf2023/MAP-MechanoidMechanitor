@@ -318,4 +318,22 @@
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>机械巢节点已肃清</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>该机械巢节点的威胁已被消灭。待人员撤离后，节点将从世界地图上移除。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>
   <MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled>当前未允许机械巢节点自然生成。</MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled>
+  <!-- 新机械巢：派系随机名称希腊字母前缀 -->
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Alpha>阿尔法</MAP_MechanoidMechanitor.NewMechHive.Greek.Alpha>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Beta>贝塔</MAP_MechanoidMechanitor.NewMechHive.Greek.Beta>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Gamma>伽马</MAP_MechanoidMechanitor.NewMechHive.Greek.Gamma>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Delta>德尔塔</MAP_MechanoidMechanitor.NewMechHive.Greek.Delta>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Epsilon>艾普西隆</MAP_MechanoidMechanitor.NewMechHive.Greek.Epsilon>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Zeta>泽塔</MAP_MechanoidMechanitor.NewMechHive.Greek.Zeta>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Eta>伊塔</MAP_MechanoidMechanitor.NewMechHive.Greek.Eta>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Theta>西塔</MAP_MechanoidMechanitor.NewMechHive.Greek.Theta>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Iota>约塔</MAP_MechanoidMechanitor.NewMechHive.Greek.Iota>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Kappa>卡帕</MAP_MechanoidMechanitor.NewMechHive.Greek.Kappa>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Lambda>拉姆达</MAP_MechanoidMechanitor.NewMechHive.Greek.Lambda>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Xi>克西</MAP_MechanoidMechanitor.NewMechHive.Greek.Xi>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Omicron>奥密克戎</MAP_MechanoidMechanitor.NewMechHive.Greek.Omicron>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Sigma>西格玛</MAP_MechanoidMechanitor.NewMechHive.Greek.Sigma>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Upsilon>宇普西隆</MAP_MechanoidMechanitor.NewMechHive.Greek.Upsilon>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Psi>普西</MAP_MechanoidMechanitor.NewMechHive.Greek.Psi>
+  <MAP_MechanoidMechanitor.NewMechHive.Greek.Omega>欧米伽</MAP_MechanoidMechanitor.NewMechHive.Greek.Omega>
 </LanguageData>
