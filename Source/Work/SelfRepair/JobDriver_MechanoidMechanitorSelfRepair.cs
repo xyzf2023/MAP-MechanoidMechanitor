@@ -76,7 +76,7 @@ namespace MAP_MechanoidMechanitor
                     if (pawn.needs != null && pawn.needs.energy != null)
                     {
                         pawn.needs.energy.CurLevel
-                            -= pawn.GetStatValue(StatDefOf.MechEnergyLossPerHP) * delta;
+                            -= pawn.GetStatValue(StatDefOf.MechEnergyLossPerHP);
                     }
 
                     MechRepairUtility.RepairTick(pawn);
