@@ -72,12 +72,15 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            Job job = JobMaker.MakeJob(
-                MAPMechanitor_JobDefOf.MAP_MechanoidMechanitorSelfRepair,
-                pawn);
             yield return new FloatMenuOption(
                 "进行自我修复",
-                () => pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc));
+                () =>
+                {
+                    Job job = JobMaker.MakeJob(
+                        MAPMechanitor_JobDefOf.MAP_MechanoidMechanitorSelfRepair,
+                        pawn);
+                    pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                });
         }
     }
 }
