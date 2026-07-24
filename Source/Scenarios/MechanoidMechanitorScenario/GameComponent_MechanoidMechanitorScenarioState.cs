@@ -265,7 +265,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (waitingForFactionNameCompletion)
             {
                 if (Find.WindowStack != null
-                    && Find.WindowStack.IsOpen<Dialog_NamePlayerFaction>())
+                    && Find.WindowStack.IsOpen<Dialog_NameMechanoidMechanitorFaction>())
                 {
                     return;
                 }
@@ -334,7 +334,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Find.WindowStack.Add(new Dialog_NamePlayerFaction());
+            Find.WindowStack.Add(
+                new Dialog_NameMechanoidMechanitorFaction());
             waitingForFactionNameCompletion = true;
         }
 
