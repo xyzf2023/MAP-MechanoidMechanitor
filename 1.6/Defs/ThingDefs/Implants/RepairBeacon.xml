@@ -5,11 +5,9 @@
     <label>修复信标</label>
     <description>一种内置量子结构演算阵列的机械师植入体。它能持续解析受监管机械族的结构损伤，并通过监管链路下发精确的自我修复序列；必要时还可超负荷运行，启动战地修复协议。</description>
     <costList>
-      <PowerfocusChip>1</PowerfocusChip>
-      <SignalChip>1</SignalChip>
-      <NanostructuringChip>2</NanostructuringChip>
+      <MAP_QuantumComputingChip>1</MAP_QuantumComputingChip>
       <Plasteel>20</Plasteel>
-      <Gold>300</Gold>
+      <Gold>30</Gold>
       <Uranium>5</Uranium>
       <ComponentSpacer>10</ComponentSpacer>
     </costList>

@@ -6,7 +6,7 @@
     <description>利用量子效应实现超距通信的超凡通讯装置，植入后控制机械族不再受距离限制。</description>
     <costList>
       <MAP_QuantumComputingChip>1</MAP_QuantumComputingChip>
-      <Gold>150</Gold>
+      <Gold>15</Gold>
       <ComponentSpacer>6</ComponentSpacer>
     </costList>
     <statBases>

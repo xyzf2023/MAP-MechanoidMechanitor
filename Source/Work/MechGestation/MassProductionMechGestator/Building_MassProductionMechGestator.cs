@@ -60,5 +60,42 @@ namespace MAP_MechanoidMechanitor
                 "GestatingInspect".Translate(),
                 Mathf.CeilToInt(comp.RemainingTicks).ToStringTicksToPeriod());
         }
+
+        // 培育期不播放原版 Tick 特效：跳过 Building_MechGestator.Tick 中的 gestator*Mote 与环境音
+        // (MechGestator_Ambience)。直接复制 ThingWithComps.Tick（仅 ticks comps）+
+        // Building_WorkTableAutonomous.Tick（推进 activeBill）+ 原功率逻辑，省略 Mote/持续音分支。
+        protected override void Tick()
+        {
+            if (AllComps != null)
+            {
+                for (int i = 0; i < AllComps.Count; i++)
+                {
+                    AllComps[i].CompTick();
+                }
+            }
+
+            if (activeBill != null && CanWork())
+            {
+                activeBill.BillTick();
+            }
+
+            if (this.IsHashIntervalTick(250))
+            {
+                if (activeBill != null && activeBill.State == FormingState.Forming)
+                {
+                    Power.PowerOutput = 0f - Power.Props.PowerConsumption;
+                }
+                else
+                {
+                    Power.PowerOutput = 0f - Power.Props.idlePowerDraw;
+                }
+            }
+        }
+
+        // 仅绘制建筑本体；不绘制正在成形的机械族贴图，也不绘制透明缸体/顶盖分层。
+        protected override void DrawAt(Vector3 drawLoc, bool flip = false)
+        {
+            this.Graphic.Draw(drawLoc, Rotation, this);
+        }
     }
 }

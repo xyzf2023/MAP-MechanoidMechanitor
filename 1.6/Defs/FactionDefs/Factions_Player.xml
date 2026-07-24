@@ -36,6 +36,9 @@
       <li>ClassicStart</li>
       <li>ClassicStartTechprints</li>
     </startingTechprintsResearchTags>
+    <startingResearchTags>
+      <li>MAP_MechHive</li>
+    </startingResearchTags>
 
     <apparelStuffFilter>
       <thingDefs>

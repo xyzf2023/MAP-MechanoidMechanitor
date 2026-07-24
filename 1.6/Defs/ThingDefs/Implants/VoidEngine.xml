@@ -5,11 +5,10 @@
     <label>虚空引擎</label>
     <description>一种能够稳定微型虚空泡，并从量子真空中持续汲取能量的机械师植入体。它会通过监管链路为受监管机械族的反应堆供能，使其停止日常能量消耗、避免因机体受损而损失能量，并缓慢恢复能量储备。</description>
     <costList>
-      <PowerfocusChip>2</PowerfocusChip>
-      <NanostructuringChip>1</NanostructuringChip>
+      <MAP_QuantumComputingChip>1</MAP_QuantumComputingChip>
       <ComponentSpacer>6</ComponentSpacer>
       <Uranium>75</Uranium>
-      <Gold>50</Gold>
+      <Gold>5</Gold>
     </costList>
     <statBases>
       <MaxInstallCount>1</MaxInstallCount>

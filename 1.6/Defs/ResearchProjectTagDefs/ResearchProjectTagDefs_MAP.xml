@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ResearchProjectTagDef>
+    <defName>MAP_MechHive</defName>
+    <label>新机械巢起始科技</label>
+    <description>“新机械巢”玩家派系开局时的科技。</description>
+  </ResearchProjectTagDef>
+</Defs>

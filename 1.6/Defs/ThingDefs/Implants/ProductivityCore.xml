@@ -11,7 +11,7 @@
       <MAP_QuantumComputingChip>1</MAP_QuantumComputingChip>
       <ComponentSpacer>5</ComponentSpacer>
       <Plasteel>75</Plasteel>
-      <Gold>30</Gold>
+      <Gold>3</Gold>
     </costList>
     <statBases>
       <MaxInstallCount>1</MaxInstallCount>
