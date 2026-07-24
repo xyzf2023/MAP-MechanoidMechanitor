@@ -10,10 +10,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public Dialog_NameNewMechHiveFactionAndSettlement(Settlement settlement)
             : base(settlement)
         {
-            nameGenerator = () => NewMechHiveNameUtility.GenerateFactionName(IsValidName);
+            nameGenerator = () => NewMechHiveNameUtility.GenerateFactionName(IsValidName, curName);
             curName = nameGenerator();
             secondNameGenerator =
-                () => NewMechHiveNameUtility.GenerateSettlementName(IsValidSecondName);
+                () => NewMechHiveNameUtility.GenerateSettlementName(IsValidSecondName, curSecondName);
             curSecondName = secondNameGenerator();
         }
     }
