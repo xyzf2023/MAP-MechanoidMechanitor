@@ -13,7 +13,10 @@
       <shadowData>
         <volume>(2.4, 2.2, 2.1)</volume>
       </shadowData>
-      <drawOffset>(0, 0.5, 1.0)</drawOffset>
+      <drawOffsetNorth>(0, 0.01, 1.0)</drawOffsetNorth>
+      <drawOffsetEast>(0, 0.3, 1.0)</drawOffsetEast>
+      <drawOffsetSouth>(0, 0.3, 1.0)</drawOffsetSouth>
+      <drawOffsetWest>(0, 0.3, 1.0)</drawOffsetWest>
     </graphicData>
     <uiIconPath>Buildings/MassProductionMechGestator_south</uiIconPath>
     <uiIconScale>1.85</uiIconScale>
@@ -37,29 +40,30 @@
     </statBases>
     <size>(3,3)</size>
     <costList>
-      <Steel>150</Steel>
-      <ComponentIndustrial>3</ComponentIndustrial>
+      <Steel>500</Steel>
+      <ComponentIndustrial>10</ComponentIndustrial>
+      <ComponentSpacer>5</ComponentSpacer>
     </costList>
     <researchPrerequisites>
-      <li>BasicMechtech</li>
+      <li>UltraMechtech</li>
     </researchPrerequisites>
     <building>
       <barDrawData>
         <north>
           <preRotationOffset>(-1.06, 0.91)</preRotationOffset>
-          <size>(0.7, 0.13)</size>
+          <size>(0, 0)</size>
         </north>
         <south>
           <preRotationOffset>(-1.06, 0.82)</preRotationOffset>
-          <size>(0.7, 0.13)</size>
+          <size>(0, 0)</size>
         </south>
         <east>
           <preRotationOffset>(1.06, -0.97)</preRotationOffset>
-          <size>(0.7, 0.13)</size>
+          <size>(0, 0)</size>
         </east>
         <west>
           <preRotationOffset>(-1.06, -0.97)</preRotationOffset>
-          <size>(0.7, 0.13)</size>
+          <size>(0, 0)</size>
         </west>
       </barDrawData>
       <formingGraphicData>
@@ -73,36 +77,6 @@
         <li>(0, 0, 0.45)</li>
         <li>(0, 0, 0.45)</li>
       </formingMechPerRotationOffset>
-      <mechGestatorCylinderGraphic>
-        <texPath>Buildings/TransparentGestatorTop</texPath>
-        <graphicClass>Graphic_Multi</graphicClass>
-        <drawSize>(1,1)</drawSize>
-        <shaderType>Transparent</shaderType>
-      </mechGestatorCylinderGraphic>
-      <mechGestatorTopGraphic>
-        <texPath>Buildings/TransparentGestatorTop</texPath>
-        <graphicClass>Graphic_Multi</graphicClass>
-        <drawSize>(1,1)</drawSize>
-        <shaderType>Transparent</shaderType>
-      </mechGestatorTopGraphic>      
-      <gestatorFormingMote>
-        <north>MechGestatorForming_North</north>
-        <east>MechGestatorForming_East</east>
-        <west>MechGestatorForming_East</west>
-        <south>MechGestatorForming_South</south>
-      </gestatorFormingMote>
-      <gestatorCycleCompleteMote>
-        <north>MechGestatorCycleComplete_North</north>
-        <east>MechGestatorCycleComplete_East</east>
-        <west>MechGestatorCycleComplete_East</west>
-        <south>MechGestatorCycleComplete_South</south>
-      </gestatorCycleCompleteMote>
-      <gestatorFormedMote>
-        <north>MechGestatorFormed_North</north>
-        <east>MechGestatorFormed_East</east>
-        <west>MechGestatorFormed_East</west>
-        <south>MechGestatorFormed_South</south>
-      </gestatorFormedMote>
     </building>
     <comps>
       <li Class="CompProperties_Power">

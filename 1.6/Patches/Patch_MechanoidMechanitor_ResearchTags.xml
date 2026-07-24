@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- 为原版科技追加 MAP_MechHive 标签，使其被“新机械巢”玩家派系开局自动解锁 -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ResearchProjectDef[defName="ComplexFurniture"]/tags</xpath>
+    <value><li>MAP_MechHive</li></value>
+  </Operation>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ResearchProjectDef[defName="Stonecutting"]/tags</xpath>
+    <value><li>MAP_MechHive</li></value>
+  </Operation>
+  <!-- 微电子基础(MicroelectronicsBasics) 原版无 tags 节点，此处直接新增整个 tags 节点 -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ResearchProjectDef[defName="MicroelectronicsBasics"]</xpath>
+    <value><tags><li>MAP_MechHive</li></tags></value>
+  </Operation>
+  <!-- 机械加工(Machining) 原版无 tags 节点，此处直接新增整个 tags 节点 -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ResearchProjectDef[defName="Machining"]</xpath>
+    <value><tags><li>MAP_MechHive</li></tags></value>
+  </Operation>
+  <!-- 基础机械科技(BasicMechtech, 生物科技DLC机械师科技树) 无 tags 节点，此处直接新增整个 tags 节点 -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ResearchProjectDef[defName="BasicMechtech"]</xpath>
+    <value><tags><li>MAP_MechHive</li></tags></value>
+  </Operation>
+</Patch>

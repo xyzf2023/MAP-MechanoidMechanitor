@@ -14,6 +14,7 @@
       <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">30</BandwidthCost>
       <PilotingAbility MayRequire="Ludeon.RimWorld.Odyssey">2</PilotingAbility>
       <ControlTakingTime>10</ControlTakingTime>
+      <WastepacksPerRecharge MayRequire="Ludeon.RimWorld.Biotech">0</WastepacksPerRecharge>
     </statBases>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_WardenWorkUser">

@@ -8,6 +8,7 @@ namespace MAP_MechanoidMechanitor
         private const string SignalChipDefName = "SignalChip";
         private const string PowerfocusChipDefName = "PowerfocusChip";
         private const string NanostructuringChipDefName = "NanostructuringChip";
+        private const string QuantumComputingChipDefName = "MAP_QuantumComputingChip";
 
         public static bool TryGetBandwidthPerChip(ThingDef def, out int bandwidth)
         {
@@ -19,14 +20,17 @@ namespace MAP_MechanoidMechanitor
 
             switch (def.defName)
             {
-                case SignalChipDefName:
+                case SignalChipDefName: //同步信号芯片
                     bandwidth = 5;
                     return true;
-                case PowerfocusChipDefName:
+                case PowerfocusChipDefName: //能量汇聚芯片
                     bandwidth = 10;
                     return true;
-                case NanostructuringChipDefName:
+                case NanostructuringChipDefName: //纳米结构芯片
                     bandwidth = 15;
+                    return true;
+                case QuantumComputingChipDefName: //量子运算芯片
+                    bandwidth = 30;   
                     return true;
                 default:
                     return false;
