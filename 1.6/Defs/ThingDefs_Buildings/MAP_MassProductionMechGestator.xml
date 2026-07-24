@@ -77,6 +77,18 @@
         <li>(0, 0, 0.45)</li>
         <li>(0, 0, 0.45)</li>
       </formingMechPerRotationOffset>
+      <mechGestatorCylinderGraphic>
+        <texPath>Buildings/TransparentGestatorTop</texPath>
+        <graphicClass>Graphic_Multi</graphicClass>
+        <drawSize>(1,1)</drawSize>
+        <shaderType>Transparent</shaderType>
+      </mechGestatorCylinderGraphic>
+      <mechGestatorTopGraphic>
+        <texPath>Buildings/TransparentGestatorTop</texPath>
+        <graphicClass>Graphic_Multi</graphicClass>
+        <drawSize>(1,1)</drawSize>
+        <shaderType>Transparent</shaderType>
+      </mechGestatorTopGraphic>
     </building>
     <comps>
       <li Class="CompProperties_Power">
