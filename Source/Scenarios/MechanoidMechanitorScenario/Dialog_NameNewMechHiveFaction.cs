@@ -8,7 +8,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         public Dialog_NameNewMechHiveFaction()
         {
-            nameGenerator = () => NewMechHiveNameUtility.GenerateFactionName(IsValidName);
+            nameGenerator = () => NewMechHiveNameUtility.GenerateFactionName(IsValidName, curName);
             curName = nameGenerator();
         }
     }
