@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -305,6 +307,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Map namingHomeMap = Find.AnyPlayerHomeMap;
+
+            if (!IsNamingHomeMapSafe(namingHomeMap))
+            {
+                RetryFactionNamingLater();
+                return;
+            }
+
             List<Pawn> freeColonistsSpawned = namingHomeMap.mapPawns.FreeColonistsSpawned;
             bool foundEligibleHost = false;
 
@@ -385,15 +394,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || Find.WindowStack.IsOpen<Dialog_NameNewMechHiveFactionAndSettlement>();
         }
 
+        private static bool IsNamingHomeMapSafe(Map homeMap)
+        {
+            if (homeMap.dangerWatcher != null
+                && homeMap.dangerWatcher.DangerRating == StoryDanger.High)
+            {
+                return false;
+            }
+
+            if (homeMap.attackTargetsCache.TargetsHostileToColony.Any(
+                    target => GenHostility.IsActiveThreatToPlayer(target)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private Settlement? TryGetEligibleNamingSettlement(Map homeMap)
         {
             if (homeMap == null)
-            {
-                return null;
-            }
-
-            if (homeMap.dangerWatcher != null
-                && homeMap.dangerWatcher.DangerRating == StoryDanger.High)
             {
                 return null;
             }
