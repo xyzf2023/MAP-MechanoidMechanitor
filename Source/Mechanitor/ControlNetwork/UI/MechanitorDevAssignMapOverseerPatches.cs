@@ -120,9 +120,9 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                target.GetOverseer()?.relations.RemoveDirectRelation(PawnRelationDefOf.Overseer, target);
+                // 旧监管者移除交由统一工具处理，避免用 target.GetOverseer() 得到错误方向。
                 target.SetFaction(Faction.OfPlayer);
-                localPawn.relations.AddDirectRelation(PawnRelationDefOf.Overseer, target);
+                MAPOverseerAssignmentUtility.TryAssignActualOverseer(localPawn, target);
             }
         }
     }

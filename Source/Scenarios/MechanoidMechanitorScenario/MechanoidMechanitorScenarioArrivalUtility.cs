@@ -100,6 +100,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             PlayerPawnsArriveMethod arrivalMethod)
         {
             mechanitor.relations ??= new Pawn_RelationsTracker(mechanitor);
+            MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(mechanitor);
 
             foreach (Thing item in items)
             {
@@ -108,32 +109,45 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                Pawn? existingOverseer = mech.GetOverseer();
-                if (existingOverseer == mechanitor)
+                // 已分配给本机械师则跳过（避免重复处理）。
+                if (MAPOverseerRelationDirectionUtility.IsActualOverseerOf(mechanitor, mech)
+                    || mech.GetOverseer() == mechanitor)
                 {
                     continue;
                 }
 
-                if (!mechanitor.mechanitor.CanOverseeSubject(mech))
+                if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(mechanitor, mech))
                 {
                     Log.Warning(
                         "[MAP-机械族机械师] 机械族机械师剧本" +
                         GetArrivalLabel(arrivalMethod) +
-                        "：无法为 " +
+                        "：无法为起始机械体 " +
                         $"{mech.LabelShort}（{mech.kindDef?.defName ?? "unknown"}）" +
-                        "分配监管者：带宽不足或主体不兼容。");
+                        "分配监管者。");
+                }
+            }
+
+            // 全部起始机械体循环结束后统一刷新一次，确保监管关系与控制名单最终同步。
+            mechanitor.mechanitor?.Notify_BandwidthChanged();
+
+            // 只读校验：不重复添加关系。
+            foreach (Thing item in items)
+            {
+                if (item is not Pawn mech || !IsOverseeCandidate(mech, mechanitor))
+                {
                     continue;
                 }
 
-                if (existingOverseer?.relations != null)
+                if (!MAPOverseerRelationDirectionUtility.IsActualOverseerOf(mechanitor, mech)
+                    && mechanitor.mechanitor?.GetControlGroup(mech) == null)
                 {
-                    existingOverseer.relations.TryRemoveDirectRelation(
-                        PawnRelationDefOf.Overseer,
-                        mech);
+                    Log.Warning(
+                        "[MAP-机械族机械师] 机械族机械师剧本" +
+                        GetArrivalLabel(arrivalMethod) +
+                        "：起始机械体 " +
+                        $"{mech.LabelShort}（{mech.kindDef?.defName ?? "unknown"}）" +
+                        "监管关系最终校验未通过。");
                 }
-
-                mech.relations ??= new Pawn_RelationsTracker(mech);
-                mechanitor.relations.AddDirectRelation(PawnRelationDefOf.Overseer, mech);
             }
         }
 

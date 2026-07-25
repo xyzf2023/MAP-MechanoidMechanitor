@@ -421,7 +421,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 RemoveOverseerRelationIfPresent(sourceRelations, source, mech);
-                AddOverseerRelationIfAbsent(targetRelations, target, mech);
+                AddOverseerRelationIfAbsent(target, mech);
             }
         }
 
@@ -454,18 +454,15 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void AddOverseerRelationIfAbsent(
-            Pawn_RelationsTracker overseerRelations,
-            Pawn overseer,
-            Pawn subject)
+        private static void AddOverseerRelationIfAbsent(Pawn overseer, Pawn subject)
         {
-            if (ReferenceEquals(overseer, subject)
-                || overseerRelations.DirectRelationExists(PawnRelationDefOf.Overseer, subject))
+            if (ReferenceEquals(overseer, subject))
             {
                 return;
             }
 
-            overseerRelations.AddDirectRelation(PawnRelationDefOf.Overseer, subject);
+            // 统一工具负责关系写入、控制组分配与带宽刷新，避免只 AddDirectRelation 不刷新。
+            MAPOverseerAssignmentUtility.TryAssignActualOverseer(overseer, subject);
         }
 
         private static void RollbackTransferBestEffort(
