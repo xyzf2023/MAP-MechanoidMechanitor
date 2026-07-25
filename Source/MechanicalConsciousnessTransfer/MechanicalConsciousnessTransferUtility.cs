@@ -461,8 +461,17 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 统一工具负责关系写入、控制组分配与带宽刷新，避免只 AddDirectRelation 不刷新。
-            MAPOverseerAssignmentUtility.TryAssignActualOverseer(overseer, subject);
+            // 统一工具负责关系写入、控制组分配与带宽刷新。必须传播其失败：
+            // 返回 false 表示 target 未能成功接管监管，抛出异常交由主事务 catch 触发回滚，
+            // 不得忽略返回值或只记录日志后继续。
+            if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(overseer, subject))
+            {
+                throw new InvalidOperationException(
+                    "[MAP-机械族机械师] 机械意识转移监管关系迁移失败：" +
+                    $"targetOverseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}），" +
+                    "TryAssignActualOverseer 返回 false。");
+            }
         }
 
         private static void RollbackTransferBestEffort(
@@ -687,23 +696,32 @@ namespace MAP_MechanoidMechanitor
                         $"directionValid={directionValid}。");
                 }
             }
-            else if (hasRelation)
+            else
             {
-                relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
-                overseer.mechanitor?.UnassignPawnFromAnyControlGroup(subject);
-                overseer.mechanitor?.Notify_BandwidthChanged();
+                Pawn_MechanitorTracker? tracker = overseer.mechanitor;
+
+                if (hasRelation)
+                {
+                    relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
+                }
+
+                // 即使关系已不存在，仍必须显式清除可能残留的控制组（防御性），
+                // 不能依赖 OnRelationRemoved 一定清除。
+                tracker?.UnassignPawnFromAnyControlGroup(subject);
+                tracker?.Notify_BandwidthChanged();
 
                 bool relationExists = relations.DirectRelationExists(PawnRelationDefOf.Overseer, subject);
-                bool controlGroupExists = overseer.mechanitor?.GetControlGroup(subject) != null;
+                bool controlGroupExists = tracker?.GetControlGroup(subject) != null;
                 bool directionValid = MAPOverseerRelationDirectionUtility.IsActualOverseerOf(overseer, subject);
 
                 if (relationExists || controlGroupExists || directionValid)
                 {
                     throw new InvalidOperationException(
-                        $"[MAP-机械族机械师] 意识转移回滚失败：shouldHaveRelation=false，" +
-                        "但关系/控制组/方向未完全清除，" +
+                        "[MAP-机械族机械师] 意识转移回滚失败：" +
+                        "shouldHaveRelation=false，但监管状态未完全清除，" +
                         $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
                         $"subject={subject.LabelShort}（{subject.ThingID}），" +
+                        $"hasRelationBefore={hasRelation}，" +
                         $"relationExists={relationExists}，controlGroupExists={controlGroupExists}，" +
                         $"directionValid={directionValid}。");
                 }
