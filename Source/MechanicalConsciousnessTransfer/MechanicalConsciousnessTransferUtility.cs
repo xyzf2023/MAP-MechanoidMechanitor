@@ -609,37 +609,104 @@ namespace MAP_MechanoidMechanitor
             bool hasRelation = relations.DirectRelationExists(
                 PawnRelationDefOf.Overseer,
                 subject);
+
             if (shouldHaveRelation)
             {
+                bool relationAddedByThisCall = false;
+                bool controlGroupExisted = overseer.mechanitor?.GetControlGroup(subject) != null;
+
                 if (!hasRelation)
                 {
                     relations.AddDirectRelation(PawnRelationDefOf.Overseer, subject);
+                    relationAddedByThisCall = true;
                 }
 
-                // AddDirectRelation 的 PawnRelationWorker_Overseer.OnRelationCreated 会自动调用
-                // AssignPawnControlGroup，但 OnRelationCreated 可能因单体带宽成本不通过而未分配控制组。
-                // 这里显式确保控制组存在并刷新实际控制名单，避免“关系存在但控制组不存在”的半完成状态。
-                Pawn_MechanitorTracker? overseerTracker = overseer.mechanitor;
-                if (overseerTracker != null
-                    && overseerTracker.GetControlGroup(subject) == null)
+                Pawn_MechanitorTracker? tracker = overseer.mechanitor;
+                if (tracker == null)
                 {
-                    if (overseerTracker.CanOverseeSubject(subject))
+                    if (relationAddedByThisCall)
                     {
-                        overseerTracker.AssignPawnControlGroup(subject);
+                        relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
                     }
-                    else
-                    {
-                        Log.Warning(
-                            $"[MAP-机械族机械师] 意识转移回滚：{overseer.LabelShortCap} 对 {subject.LabelShortCap} 的监管关系已恢复，但无法分配控制组（单体带宽成本不通过）。");
-                    }
+
+                    throw new InvalidOperationException(
+                        $"[MAP-机械族机械师] 意识转移回滚失败：shouldHaveRelation=true，" +
+                        $"overseer={overseer.LabelShort}（{overseer.ThingID}）缺少 mechanitor Tracker，" +
+                        $"subject={subject.LabelShort}（{subject.ThingID}），" +
+                        "relationExists=false，controlGroupExists=false，directionValid=false。");
                 }
 
-                overseer.mechanitor?.Notify_BandwidthChanged();
+                // 原版 RelationWorker 可能在 OnRelationCreated 中已分配控制组；
+                // 仅当仍为空时显式分配。AssignPawnControlGroup 无返回值，必须随后验证。
+                if (tracker.GetControlGroup(subject) == null && tracker.CanOverseeSubject(subject))
+                {
+                    tracker.AssignPawnControlGroup(subject);
+                }
+
+                if (tracker.GetControlGroup(subject) == null)
+                {
+                    if (relationAddedByThisCall)
+                    {
+                        relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
+                    }
+
+                    tracker.UnassignPawnFromAnyControlGroup(subject);
+                    tracker.Notify_BandwidthChanged();
+                    throw new InvalidOperationException(
+                        $"[MAP-机械族机械师] 意识转移回滚失败：shouldHaveRelation=true，控制组分配失败，" +
+                        $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                        $"subject={subject.LabelShort}（{subject.ThingID}），" +
+                        $"relationExists={relations.DirectRelationExists(PawnRelationDefOf.Overseer, subject)}，" +
+                        "controlGroupExists=false，directionValid=false。");
+                }
+
+                tracker.Notify_BandwidthChanged();
+
+                bool relationExists = relations.DirectRelationExists(PawnRelationDefOf.Overseer, subject);
+                bool controlGroupExists = tracker.GetControlGroup(subject) != null;
+                bool directionValid = MAPOverseerRelationDirectionUtility.IsActualOverseerOf(overseer, subject);
+
+                if (!relationExists || !controlGroupExists || !directionValid)
+                {
+                    if (relationAddedByThisCall)
+                    {
+                        relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
+                    }
+
+                    if (!controlGroupExisted)
+                    {
+                        tracker.UnassignPawnFromAnyControlGroup(subject);
+                    }
+
+                    tracker.Notify_BandwidthChanged();
+                    throw new InvalidOperationException(
+                        $"[MAP-机械族机械师] 意识转移回滚失败：shouldHaveRelation=true，最终验证失败，" +
+                        $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                        $"subject={subject.LabelShort}（{subject.ThingID}），" +
+                        $"relationExists={relationExists}，controlGroupExists={controlGroupExists}，" +
+                        $"directionValid={directionValid}。");
+                }
             }
             else if (hasRelation)
             {
                 relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
+                overseer.mechanitor?.UnassignPawnFromAnyControlGroup(subject);
                 overseer.mechanitor?.Notify_BandwidthChanged();
+
+                bool relationExists = relations.DirectRelationExists(PawnRelationDefOf.Overseer, subject);
+                bool controlGroupExists = overseer.mechanitor?.GetControlGroup(subject) != null;
+                bool directionValid = MAPOverseerRelationDirectionUtility.IsActualOverseerOf(overseer, subject);
+
+                if (relationExists || controlGroupExists || directionValid)
+                {
+                    throw new InvalidOperationException(
+                        $"[MAP-机械族机械师] 意识转移回滚失败：shouldHaveRelation=false，" +
+                        "但关系/控制组/方向未完全清除，" +
+                        $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                        $"subject={subject.LabelShort}（{subject.ThingID}），" +
+                        $"relationExists={relationExists}，controlGroupExists={controlGroupExists}，" +
+                        $"directionValid={directionValid}。");
+                }
             }
         }
 

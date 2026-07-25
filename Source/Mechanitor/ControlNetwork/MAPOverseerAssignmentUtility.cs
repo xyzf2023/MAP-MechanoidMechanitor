@@ -80,12 +80,21 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 原版控制组刷新逻辑：当控制组数量为 0 时，AssignPawnControlGroup 内部会触发
-            // Notify_ControlGroupAmountMayChanged 重新填充。这里在写入前预填充容量，
-            // 确保后续分配步骤能拿到有效控制组。
-            if (tracker.controlGroups.Count == 0)
+            // 循环监管预检查：在任何状态写入前拒绝直接双向控制（A 控制 B 时拒绝 B 控制 A）。
+            Pawn_MechanitorTracker? subjectTracker = subject.mechanitor;
+            bool subjectControlsOverseer =
+                subjectTracker?.GetControlGroup(overseer) != null
+                || MAPOverseerRelationDirectionUtility.IsActualOverseerOf(
+                    subject,
+                    overseer);
+            if (subjectControlsOverseer)
             {
-                EnsureControlGroupsCapacity(tracker);
+                Log.Error(
+                    "[MAP-机械族机械师] 拒绝建立循环监管关系：" +
+                    $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}），" +
+                    "subjectControlsOverseer=true。");
+                return false;
             }
 
             subject.relations ??= new Pawn_RelationsTracker(subject);
@@ -184,67 +193,190 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 按原版逻辑刷新控制组容量（等价于 Pawn_MechanitorTracker.Notify_ControlGroupAmountMayChanged）。
-        /// 当控制组列表为空时调用，确保后续 AssignPawnControlGroup 能拿到有效组。
-        /// </summary>
-        private static void EnsureControlGroupsCapacity(Pawn_MechanitorTracker? tracker)
-        {
-            if (tracker == null || tracker.controlGroups == null)
-            {
-                return;
-            }
-
-            int total = tracker.TotalAvailableControlGroups;
-            while (tracker.controlGroups.Count < total)
-            {
-                tracker.controlGroups.Add(new MechanitorControlGroup(tracker));
-            }
-        }
-
-        /// <summary>
         /// 低层写入：确保 overseer 与 subject 之间存在 Overseer 关系且 subject 被分配到
         /// overseer 的控制组，并刷新带宽。不删除 subject 的其他实际监管者。
         /// 用于回滚恢复旧监管者，避免递归调用 TryAssignActualOverseer。
+        /// 返回 true 表示关系与控制组均已成功建立且方向校验通过；false 时 failureReason 给出具体原因。
         /// </summary>
-        private static void EnsureOverseerRelationAndGroup(Pawn? overseer, Pawn? subject)
+        private static bool TryEnsureOverseerRelationAndGroup(
+            Pawn? overseer,
+            Pawn? subject,
+            out string failureReason)
         {
-            if (overseer == null || subject == null)
+            failureReason = string.Empty;
+
+            if (overseer == null || subject == null || ReferenceEquals(overseer, subject))
             {
-                return;
+                failureReason = "overseer 或 subject 为空或与自身相等。";
+                return false;
             }
 
-            overseer.relations ??= new Pawn_RelationsTracker(overseer);
-
-            if (!overseer.relations.DirectRelationExists(PawnRelationDefOf.Overseer, subject))
+            if (overseer.Dead || overseer.Destroyed || overseer.Discarded
+                || subject.Dead || subject.Destroyed || subject.Discarded)
             {
-                overseer.relations.AddDirectRelation(PawnRelationDefOf.Overseer, subject);
+                failureReason =
+                    $"overseer 或 subject 已死亡/销毁：" +
+                    $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}）。";
+                return false;
+            }
+
+            if (!subject.RaceProps.IsMechanoid || subject.OverseerSubject == null)
+            {
+                failureReason =
+                    $"subject 不是有效机械体（需机械族且有 OverseerSubject）：" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}）。";
+                return false;
+            }
+
+            // 无需外部监管者的 MAP 节点（如正义）不应获得外部监管者。
+            if (MAPMechanitorNodeUtility.HasNode(subject)
+                && !MAPMechanitorNodeUtility.RequiresExternalOverseer(subject))
+            {
+                failureReason =
+                    $"subject 不需要外部监管者：" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}）。";
+                return false;
+            }
+
+            // 合法 MAP 机械师节点控制者先补全 Tracker；普通人类机械师不无条件初始化。
+            if (MAPMechanitorNodeUtility.IsMechanitorNodeController(overseer))
+            {
+                MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(overseer);
+            }
+
+            if (!MechanitorUtility.IsMechanitor(overseer))
+            {
+                failureReason =
+                    $"overseer 不是有效机械师：" +
+                    $"overseer={overseer.LabelShort}（{overseer.ThingID}）。";
+                return false;
             }
 
             Pawn_MechanitorTracker? tracker = overseer.mechanitor;
-            if (tracker != null && tracker.GetControlGroup(subject) == null)
+            if (tracker == null)
             {
-                if (tracker.CanOverseeSubject(subject))
-                {
-                    tracker.AssignPawnControlGroup(subject);
-                }
-
-                // AssignPawnControlGroup 无返回值，原版在控制组不足时可能只记录警告并直接返回。
-                // 这里立即验证是否真的分配成功；若仍为空，记录实际失败（不抛异常覆盖原始失败）。
-                if (tracker.GetControlGroup(subject) == null)
-                {
-                    Log.Warning(
-                        "[MAP-机械族机械师] 恢复旧监管者 " +
-                        $"{overseer.LabelShort}（{overseer.ThingID}）对 " +
-                        $"{subject.LabelShort}（{subject.ThingID}）的关系已恢复，但控制组分配失败" +
-                        "（可能单体带宽成本不通过）。");
-                }
+                failureReason =
+                    $"overseer 缺少 mechanitor Tracker：" +
+                    $"overseer={overseer.LabelShort}（{overseer.ThingID}）。";
+                return false;
             }
 
-            tracker?.Notify_BandwidthChanged();
+            if (tracker.controlGroups == null)
+            {
+                failureReason =
+                    $"overseer 控制组列表为 null：" +
+                    $"overseer={overseer.LabelShort}（{overseer.ThingID}）。";
+                return false;
+            }
+
+            // 循环监管预检查（直接双向）：subject 不能反过来控制 overseer。
+            if (subject.mechanitor?.GetControlGroup(overseer) != null
+                || MAPOverseerRelationDirectionUtility.IsActualOverseerOf(subject, overseer))
+            {
+                failureReason =
+                    $"拒绝建立循环监管关系：" +
+                    $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}），" +
+                    "subjectControlsOverseer=true。";
+                return false;
+            }
+
+            if (!tracker.CanOverseeSubject(subject))
+            {
+                failureReason =
+                    $"overseer 无法承担 subject 单体带宽成本：" +
+                    $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}）。";
+                return false;
+            }
+
+            // 执行前快照。
+            bool relationExisted =
+                overseer.relations?.DirectRelationExists(
+                    PawnRelationDefOf.Overseer, subject) == true;
+            bool controlGroupExisted = tracker.GetControlGroup(subject) != null;
+
+            overseer.relations ??= new Pawn_RelationsTracker(overseer);
+            subject.relations ??= new Pawn_RelationsTracker(subject);
+
+            bool relationAddedByThisCall = false;
+            if (!relationExisted)
+            {
+                overseer.relations.AddDirectRelation(PawnRelationDefOf.Overseer, subject);
+                relationAddedByThisCall = true;
+            }
+
+            // 原版 RelationWorker 可能在 OnRelationCreated 中已分配控制组；
+            // 仅当仍为空时显式分配。AssignPawnControlGroup 无返回值，必须随后验证。
+            if (tracker.GetControlGroup(subject) == null && tracker.CanOverseeSubject(subject))
+            {
+                tracker.AssignPawnControlGroup(subject);
+            }
+
+            MechanitorControlGroup? group = tracker.GetControlGroup(subject);
+            if (group == null)
+            {
+                // 控制组分配失败：清理本次新增关系（及控制组），返回失败。
+                if (relationAddedByThisCall)
+                {
+                    overseer.relations.TryRemoveDirectRelation(
+                        PawnRelationDefOf.Overseer, subject);
+                }
+
+                tracker.UnassignPawnFromAnyControlGroup(subject);
+                tracker.Notify_BandwidthChanged();
+                failureReason =
+                    $"控制组分配失败（原版无控制组可分配）：" +
+                    $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}）。";
+                return false;
+            }
+
+            // 最终验证：关系存在、控制组存在、方向有效。不要求 ControlledPawns 包含 subject。
+            tracker.Notify_BandwidthChanged();
+
+            bool relationExists =
+                overseer.relations.DirectRelationExists(
+                    PawnRelationDefOf.Overseer, subject);
+            bool controlGroupExists = tracker.GetControlGroup(subject) != null;
+            bool directionValid =
+                MAPOverseerRelationDirectionUtility.IsActualOverseerOf(overseer, subject);
+
+            if (!relationExists || !controlGroupExists || !directionValid)
+            {
+                if (relationAddedByThisCall)
+                {
+                    overseer.relations.TryRemoveDirectRelation(
+                        PawnRelationDefOf.Overseer, subject);
+                }
+
+                if (!controlGroupExisted)
+                {
+                    tracker.UnassignPawnFromAnyControlGroup(subject);
+                }
+
+                tracker.Notify_BandwidthChanged();
+
+                List<Pawn>? controlledPawns = tracker.ControlledPawns;
+                failureReason =
+                    $"最终验证失败：overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}），" +
+                    $"relationExists={relationExists}，" +
+                    $"controlGroupExists={controlGroupExists}，" +
+                    $"directionValid={directionValid}，" +
+                    $"controlledPawnsContainsSubject={controlledPawns != null && controlledPawns.Contains(subject)}，" +
+                    $"totalBandwidth={tracker.TotalBandwidth}，" +
+                    $"usedBandwidth={tracker.UsedBandwidth}。";
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
-        /// 回滚时尽力恢复旧监管者，不抛出异常覆盖原始失败原因。
+        /// 回滚时尽力恢复旧监管者。依据 TryEnsureOverseerRelationAndGroup 的 bool 返回值判断
+        /// 恢复是否成功；返回 false 视为恢复失败并记录 failureReason。异常仅作为最后兜底。
         /// </summary>
         private static void RestoreOldOverseersBestEffort(Pawn? subject, List<Pawn> oldOverseers)
         {
@@ -263,14 +395,18 @@ namespace MAP_MechanoidMechanitor
 
                 try
                 {
-                    EnsureOverseerRelationAndGroup(old, subject);
+                    if (!TryEnsureOverseerRelationAndGroup(old, subject, out string failureReason))
+                    {
+                        Log.Error(
+                            "[MAP-机械族机械师] 回滚恢复旧监管者失败：" + failureReason);
+                    }
                 }
                 catch (Exception ex)
                 {
                     Log.Error(
-                        "[MAP-机械族机械师] 回滚恢复旧监管者 " +
-                        $"{old.LabelShort}（{old.ThingID}）对 " +
-                        $"{subject.LabelShort}（{subject.ThingID}）失败：{ex}");
+                        "[MAP-机械族机械师] 回滚恢复旧监管者异常：" +
+                        $"old={old.LabelShort}（{old.ThingID}），" +
+                        $"subject={subject.LabelShort}（{subject.ThingID}）：{ex}");
                 }
             }
         }
@@ -290,34 +426,83 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 1. 删除本次新增的新关系。
-            if (relationAddedByThisCall
-                && newOverseer.relations != null
-                && newOverseer.relations.DirectRelationExists(
-                    PawnRelationDefOf.Overseer, subject))
-            {
-                newOverseer.relations.TryRemoveDirectRelation(
-                    PawnRelationDefOf.Overseer, subject);
-            }
-
-            // 2. 移除本次新增的新控制组归属，避免留下“关系存在但控制组不存在”的半完成状态。
             Pawn_MechanitorTracker? newTracker = newOverseer.mechanitor;
-            if (controlGroupAddedByThisCall && newTracker != null)
+
+            // 1+2. 删除本次新增的新关系；无论关系删除是否自动移除控制组，
+            //       只要本次新增过控制组，都显式移除，避免留下“关系存在但控制组不存在”的半完成状态。
+            if (relationAddedByThisCall)
             {
-                if (newTracker.GetControlGroup(subject) != null)
+                try
                 {
-                    newTracker.UnassignPawnFromAnyControlGroup(subject);
+                    if (newOverseer.relations != null
+                        && newOverseer.relations.DirectRelationExists(
+                            PawnRelationDefOf.Overseer, subject))
+                    {
+                        newOverseer.relations.TryRemoveDirectRelation(
+                            PawnRelationDefOf.Overseer, subject);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 回滚删除新关系异常：" +
+                        $"overseer={newOverseer.LabelShort}（{newOverseer.ThingID}），" +
+                        $"subject={subject.LabelShort}（{subject.ThingID}）：{ex}");
                 }
             }
 
-            // 3. 恢复此前删除的旧监管者。
-            RestoreOldOverseersBestEffort(subject, removedOldOverseers);
+            if (controlGroupAddedByThisCall && newTracker != null)
+            {
+                try
+                {
+                    newTracker.UnassignPawnFromAnyControlGroup(subject);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 回滚移除新控制组异常：" +
+                        $"overseer={newOverseer.LabelShort}（{newOverseer.ThingID}），" +
+                        $"subject={subject.LabelShort}（{subject.ThingID}）：{ex}");
+                }
+            }
+
+            // 3. 恢复此前删除的旧监管者（内部已按 bool 结果判断并记录失败）。
+            try
+            {
+                RestoreOldOverseersBestEffort(subject, removedOldOverseers);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 回滚恢复旧监管者异常：" +
+                    $"subject={subject.LabelShort}（{subject.ThingID}）：{ex}");
+            }
 
             // 4. 刷新新旧监管者带宽。
-            newTracker?.Notify_BandwidthChanged();
+            try
+            {
+                newTracker?.Notify_BandwidthChanged();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 回滚刷新新监管者带宽异常：" +
+                    $"overseer={newOverseer.LabelShort}（{newOverseer.ThingID}）：{ex}");
+            }
+
             for (int i = 0; i < removedOldOverseers.Count; i++)
             {
-                removedOldOverseers[i].mechanitor?.Notify_BandwidthChanged();
+                Pawn? old = removedOldOverseers[i];
+                try
+                {
+                    old?.mechanitor?.Notify_BandwidthChanged();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 回滚刷新旧监管者带宽异常：" +
+                        $"old={old?.LabelShort}（{old?.ThingID}）：{ex}");
+                }
             }
         }
 

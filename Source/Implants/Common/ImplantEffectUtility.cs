@@ -20,17 +20,35 @@ namespace MAP_MechanoidMechanitor
             if (mechanitor != null)
             {
                 List<Pawn>? controlledPawns = mechanitor.ControlledPawns;
-                if (controlledPawns == null)
+                if (controlledPawns != null)
                 {
-                    controlledPawns = new List<Pawn>();
-                }
-                for (int i = 0; i < controlledPawns.Count; i++)
-                {
-                    Pawn controlledPawn = controlledPawns[i];
-                    if (IsValidMechRecipient(controlledPawn)
-                        && controlledPawn.GetOverseer() == provider)
+                    for (int i = 0; i < controlledPawns.Count; i++)
                     {
-                        result.Add(controlledPawn);
+                        Pawn controlledPawn = controlledPawns[i];
+                        if (!IsValidMechRecipient(controlledPawn))
+                        {
+                            continue;
+                        }
+
+                        bool isActuallyControlledByProvider;
+                        if (MAPMechanitorNodeUtility.HasNode(controlledPawn)
+                            && MAPMechanitorNodeUtility.UsesVanillaControlPath(controlledPawn))
+                        {
+                            isActuallyControlledByProvider =
+                                MAPOverseerRelationDirectionUtility.IsActualOverseerOf(
+                                    provider,
+                                    controlledPawn);
+                        }
+                        else
+                        {
+                            isActuallyControlledByProvider =
+                                controlledPawn.GetOverseer() == provider;
+                        }
+
+                        if (isActuallyControlledByProvider)
+                        {
+                            result.Add(controlledPawn);
+                        }
                     }
                 }
             }
