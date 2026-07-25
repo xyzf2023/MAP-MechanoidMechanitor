@@ -198,7 +198,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             Faction? hackedFaction = originalFaction;
-            Pawn? oldOverseer = targetPawn.GetOverseer();
+            Pawn? oldOverseer = MAPOverseerRelationDirectionUtility.FindActualOverseer(targetPawn);
 
             MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
 
@@ -213,13 +213,19 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            oldOverseer?.relations?.RemoveDirectRelation(
-                PawnRelationDefOf.Overseer,
-                targetPawn);
-
             targetPawn.SetFaction(Faction.OfPlayer);
-            pawn.relations.AddDirectRelation(PawnRelationDefOf.Overseer, targetPawn);
-            pawn.mechanitor.Notify_BandwidthChanged();
+
+            // 由统一工具负责旧监管者清理、关系写入、控制组分配与带宽刷新。
+            if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(pawn, targetPawn))
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 骇入监管者分配失败：" +
+                    $"{targetPawn.LabelShort}（{targetPawn.kindDef?.defName ?? "unknown"}），正在回滚。");
+
+                RollbackFailedHack(targetPawn, hackedFaction, oldOverseer);
+                EndJobWith(JobCondition.Incompletable);
+                return;
+            }
 
             if (!VerifyHackSucceeded(targetPawn))
             {
@@ -246,6 +252,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 撤销本正义新建立的监管关系（工具已负责旧监管者清理）。
             pawn.relations?.TryRemoveDirectRelation(
                 PawnRelationDefOf.Overseer,
                 targetPawn);
@@ -254,11 +261,11 @@ namespace MAP_MechanoidMechanitor
 
             if (oldOverseer != null
                 && !oldOverseer.Dead
-                && oldOverseer.relations != null)
+                && !oldOverseer.Destroyed
+                && oldOverseer.relations != null
+                && oldOverseer.relations.DirectRelationExists(PawnRelationDefOf.Overseer, targetPawn) == false)
             {
-                oldOverseer.relations.AddDirectRelation(
-                    PawnRelationDefOf.Overseer,
-                    targetPawn);
+                MAPOverseerAssignmentUtility.TryAssignActualOverseer(oldOverseer, targetPawn);
             }
 
             pawn.mechanitor?.Notify_BandwidthChanged();

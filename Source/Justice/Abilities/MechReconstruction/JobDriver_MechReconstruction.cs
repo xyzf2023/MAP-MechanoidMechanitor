@@ -199,24 +199,9 @@ namespace MAP_MechanoidMechanitor
                 reconstructedMech.SetFaction(Faction.OfPlayer, null);
             }
 
-            Pawn? existingOverseer = reconstructedMech.GetOverseer();
-            if (existingOverseer == pawn)
-            {
-                pawn.mechanitor?.Notify_BandwidthChanged();
-                return;
-            }
-
-            if (existingOverseer?.relations != null)
-            {
-                existingOverseer.relations.TryRemoveDirectRelation(
-                    PawnRelationDefOf.Overseer,
-                    reconstructedMech);
-            }
-
             if (pawn.mechanitor == null
                 || pawn.relations == null
-                || reconstructedMech.OverseerSubject == null
-                || !pawn.mechanitor.CanOverseeSubject(reconstructedMech))
+                || reconstructedMech.OverseerSubject == null)
             {
                 Log.Warning(
                     "[MAP-机械族机械师] 机械重构成功，但正义无法监管 " +
@@ -224,8 +209,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            pawn.relations.AddDirectRelation(PawnRelationDefOf.Overseer, reconstructedMech);
-            pawn.mechanitor.Notify_BandwidthChanged();
+            // 由统一工具负责旧监管者清理、关系写入、控制组分配与带宽刷新。
+            // 若本正义已是其监管者，工具为幂等操作（不会重复添加关系）。
+            if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(pawn, reconstructedMech))
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 机械重构成功，但分配监管者失败 " +
+                    $"{reconstructedMech.LabelShort}（{reconstructedMech.kindDef?.defName ?? "unknown"}）。");
+            }
         }
 
         private void RejectAndEnd()

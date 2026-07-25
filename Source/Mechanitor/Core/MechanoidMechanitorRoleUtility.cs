@@ -491,7 +491,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            previousOverseer.relations.AddDirectRelation(PawnRelationDefOf.Overseer, pawn);
+            MAPOverseerAssignmentUtility.TryAssignActualOverseer(previousOverseer, pawn);
         }
 
         private static int GetBaseIntrinsicBandwidth(
