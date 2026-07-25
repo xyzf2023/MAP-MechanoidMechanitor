@@ -20,7 +20,13 @@ namespace MAP_MechanoidMechanitor
 
         public static bool PawnCanUseColonistLikeFloatMenu(Pawn? pawn)
         {
-            if (pawn == null || pawn.Dead)
+            if (pawn == null
+                || pawn.Destroyed
+                || pawn.Dead
+                || pawn.Downed
+                || pawn.Deathresting
+                || pawn.IsSelfShutdown()
+                || pawn.jobs == null)
             {
                 return false;
             }
