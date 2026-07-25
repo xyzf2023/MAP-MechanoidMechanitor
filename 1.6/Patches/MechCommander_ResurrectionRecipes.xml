@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+  <!-- 将「恋人」与「隐者」加入原版中型机械族复活配方 -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/RecipeDef[defName="ResurrectMediumMech"]/fixedIngredientFilter/thingDefs</xpath>
+    <value>
+      <li>Corpse_MAP_Mech_Lover</li>
+      <li>Corpse_MAP_Mech_Hermit</li>
+    </value>
+  </Operation>
+
+  <!-- 将「正义」加入原版超重型机械族复活配方 -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/RecipeDef[defName="ResurrectUltraheavyMech"]/fixedIngredientFilter/thingDefs</xpath>
+    <value>
+      <li>Corpse_MAP_Mech_Justice</li>
+    </value>
+  </Operation>
+
+</Patch>
