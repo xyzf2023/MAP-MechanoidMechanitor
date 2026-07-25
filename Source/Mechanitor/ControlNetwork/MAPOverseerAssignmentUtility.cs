@@ -227,6 +227,17 @@ namespace MAP_MechanoidMechanitor
                 {
                     tracker.AssignPawnControlGroup(subject);
                 }
+
+                // AssignPawnControlGroup 无返回值，原版在控制组不足时可能只记录警告并直接返回。
+                // 这里立即验证是否真的分配成功；若仍为空，记录实际失败（不抛异常覆盖原始失败）。
+                if (tracker.GetControlGroup(subject) == null)
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 恢复旧监管者 " +
+                        $"{overseer.LabelShort}（{overseer.ThingID}）对 " +
+                        $"{subject.LabelShort}（{subject.ThingID}）的关系已恢复，但控制组分配失败" +
+                        "（可能单体带宽成本不通过）。");
+                }
             }
 
             tracker?.Notify_BandwidthChanged();

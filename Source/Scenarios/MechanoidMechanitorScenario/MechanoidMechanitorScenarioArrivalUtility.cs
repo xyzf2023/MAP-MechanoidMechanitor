@@ -146,9 +146,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         && mechanitor.relations.DirectRelationExists(
                             PawnRelationDefOf.Overseer, mech);
                     bool controlGroupExists = arrivalTracker?.GetControlGroup(mech) != null;
+                    List<Pawn>? arrivalControlledPawns = arrivalTracker?.ControlledPawns;
                     bool controlledPawnsContainsSubject =
-                        arrivalTracker?.ControlledPawns != null
-                        && arrivalTracker.ControlledPawns.Contains(mech);
+                        arrivalControlledPawns != null
+                        && arrivalControlledPawns.Contains(mech);
 
                     Log.Warning(
                         "[MAP-机械族机械师] 机械族机械师剧本" +
