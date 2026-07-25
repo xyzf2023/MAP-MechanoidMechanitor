@@ -61,11 +61,10 @@ namespace MAP_MechanoidMechanitor
                 tracker.controlGroups = new List<MechanitorControlGroup>();
             }
 
-            List<Pawn>? controlled = ControlledPawnsField(tracker);
+            ref List<Pawn> controlled = ref ControlledPawnsField(tracker);
             if (controlled == null)
             {
-                AccessTools.Field(typeof(Pawn_MechanitorTracker), "controlledPawns")
-                    .SetValue(tracker, new List<Pawn>());
+                controlled = new List<Pawn>();
             }
         }
     }

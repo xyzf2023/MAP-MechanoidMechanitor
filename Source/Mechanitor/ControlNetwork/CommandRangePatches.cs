@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -44,9 +45,13 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            Pawn overseer = mech.GetOverseer();
-            if (overseer?.mechanitor == null
-                || !overseer.mechanitor.ControlledPawns.Contains(mech))
+            // 只解析一次实际监管者，避免依赖 GetOverseer 的方向补丁。
+            Pawn? overseer =
+                MAPOverseerRelationDirectionUtility.FindActualOverseer(mech);
+            Pawn_MechanitorTracker? tracker = overseer?.mechanitor;
+            List<Pawn>? controlledPawns = tracker?.ControlledPawns;
+
+            if (controlledPawns == null || !controlledPawns.Contains(mech))
             {
                 return true;
             }

@@ -615,10 +615,31 @@ namespace MAP_MechanoidMechanitor
                 {
                     relations.AddDirectRelation(PawnRelationDefOf.Overseer, subject);
                 }
+
+                // AddDirectRelation 的 PawnRelationWorker_Overseer.OnRelationCreated 会自动调用
+                // AssignPawnControlGroup，但 OnRelationCreated 可能因单体带宽成本不通过而未分配控制组。
+                // 这里显式确保控制组存在并刷新实际控制名单，避免“关系存在但控制组不存在”的半完成状态。
+                Pawn_MechanitorTracker? overseerTracker = overseer.mechanitor;
+                if (overseerTracker != null
+                    && overseerTracker.GetControlGroup(subject) == null)
+                {
+                    if (overseerTracker.CanOverseeSubject(subject))
+                    {
+                        overseerTracker.AssignPawnControlGroup(subject);
+                    }
+                    else
+                    {
+                        Log.Warning(
+                            $"[MAP-机械族机械师] 意识转移回滚：{overseer.LabelShortCap} 对 {subject.LabelShortCap} 的监管关系已恢复，但无法分配控制组（单体带宽成本不通过）。");
+                    }
+                }
+
+                overseer.mechanitor?.Notify_BandwidthChanged();
             }
             else if (hasRelation)
             {
                 relations.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, subject);
+                overseer.mechanitor?.Notify_BandwidthChanged();
             }
         }
 

@@ -19,7 +19,11 @@ namespace MAP_MechanoidMechanitor
             Pawn_MechanitorTracker? mechanitor = provider!.mechanitor;
             if (mechanitor != null)
             {
-                List<Pawn> controlledPawns = mechanitor.ControlledPawns;
+                List<Pawn>? controlledPawns = mechanitor.ControlledPawns;
+                if (controlledPawns == null)
+                {
+                    controlledPawns = new List<Pawn>();
+                }
                 for (int i = 0; i < controlledPawns.Count; i++)
                 {
                     Pawn controlledPawn = controlledPawns[i];

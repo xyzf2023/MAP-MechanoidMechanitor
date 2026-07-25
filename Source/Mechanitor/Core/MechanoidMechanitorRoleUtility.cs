@@ -461,7 +461,9 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (pawn.mechanitor?.ControlledPawns.Contains(previousOverseer) == true)
+            List<Pawn>? controlledPawns = pawn.mechanitor?.ControlledPawns;
+            if (controlledPawns != null
+                && controlledPawns.Contains(previousOverseer))
             {
                 return;
             }

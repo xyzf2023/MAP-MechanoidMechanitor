@@ -110,8 +110,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 // 已分配给本机械师则跳过（避免重复处理）。
-                if (MAPOverseerRelationDirectionUtility.IsActualOverseerOf(mechanitor, mech)
-                    || mech.GetOverseer() == mechanitor)
+                // MAP 节点不应依赖可能由 reflexive 关系返回错误方向的 GetOverseer 来跳过必要初始化；
+                // 统一以方向工具作为权威依据（普通原版机械体同样由方向工具正确判定）。
+                if (MAPOverseerRelationDirectionUtility.IsActualOverseerOf(mechanitor, mech))
                 {
                     continue;
                 }
@@ -138,15 +139,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                if (!MAPOverseerRelationDirectionUtility.IsActualOverseerOf(mechanitor, mech)
-                    && mechanitor.mechanitor?.GetControlGroup(mech) == null)
+                if (!MAPOverseerRelationDirectionUtility.IsActualOverseerOf(mechanitor, mech))
                 {
+                    Pawn_MechanitorTracker? arrivalTracker = mechanitor.mechanitor;
+                    bool relationExists = mechanitor.relations != null
+                        && mechanitor.relations.DirectRelationExists(
+                            PawnRelationDefOf.Overseer, mech);
+                    bool controlGroupExists = arrivalTracker?.GetControlGroup(mech) != null;
+                    bool controlledPawnsContainsSubject =
+                        arrivalTracker?.ControlledPawns != null
+                        && arrivalTracker.ControlledPawns.Contains(mech);
+
                     Log.Warning(
                         "[MAP-机械族机械师] 机械族机械师剧本" +
                         GetArrivalLabel(arrivalMethod) +
                         "：起始机械体 " +
                         $"{mech.LabelShort}（{mech.kindDef?.defName ?? "unknown"}）" +
-                        "监管关系最终校验未通过。");
+                        "监管关系最终校验未通过。" +
+                        $" relationExists={relationExists};" +
+                        $" controlGroupExists={controlGroupExists};" +
+                        " controlledPawnsContainsSubject=" +
+                        $"{controlledPawnsContainsSubject}（若为 false 可能仅为带宽不足，不一定是写入失败）。");
                 }
             }
         }
