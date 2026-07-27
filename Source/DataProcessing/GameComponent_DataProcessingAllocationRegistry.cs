@@ -324,28 +324,33 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!recordsByOverseer.TryGetValue(overseer, out List<DataProcessingAllocationRecord>? overseerRecords))
+            if (recordsByOverseer.TryGetValue(
+                    overseer,
+                    out List<DataProcessingAllocationRecord>? overseerRecords))
             {
-                RemoveHediff(overseer, DataProcessingAllocationUtility.DataStreamDistributionDef);
-                RemoveSpecializationRecordsForOverseer(overseer);
-                return;
-            }
+                List<DataProcessingAllocationRecord> toRemove =
+                    new List<DataProcessingAllocationRecord>(overseerRecords);
 
-            List<DataProcessingAllocationRecord> toRemove =
-                new List<DataProcessingAllocationRecord>(overseerRecords);
-            for (int i = 0; i < toRemove.Count; i++)
-            {
-                DataProcessingAllocationRecord record = toRemove[i];
-                Pawn? target = record.target;
-                RemoveRecord(record);
-                if (target != null && !target.Destroyed)
+                for (int i = 0; i < toRemove.Count; i++)
                 {
-                    RemoveAllCommandFocusHediffs(target);
-                    RemoveSpecializationRecordsForTarget(target);
+                    DataProcessingAllocationRecord record = toRemove[i];
+                    Pawn? target = record.target;
+
+                    RemoveRecord(record);
+
+                    if (target != null && !target.Destroyed)
+                    {
+                        RemoveAllCommandFocusHediffs(target);
+                    }
                 }
             }
 
-            RemoveHediff(overseer, DataProcessingAllocationUtility.DataStreamDistributionDef);
+            RemoveHediff(
+                overseer,
+                DataProcessingAllocationUtility.DataStreamDistributionDef);
+
+            // 无论是否存在正数分配，都统一清理该监管者的全部特化配置（含 0% 预选）。
+            RemoveSpecializationRecordsForOverseer(overseer);
         }
 
         public bool IsPinned(Pawn? overseer, Pawn? target)
@@ -464,6 +469,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             CleanupInvalidPinRecords();
+            CleanupInvalidSpecializationRecords();
         }
 
         public void SyncHediffsForOverseer(Pawn? overseer)
@@ -710,6 +716,9 @@ namespace MAP_MechanoidMechanitor
                         $"（{record.target?.ThingID ?? "null"}）：{ex}");
                 }
             }
+
+            // 无论当前是否存在正数自我分配，都清除 0% 与正数的自我特化配置。
+            RemoveSelfSpecializationRecords();
 
             CollectOverseersNeedingDataStreamResync(affected);
             foreach (Pawn pawn in affected)
@@ -1034,7 +1043,24 @@ namespace MAP_MechanoidMechanitor
                 && existing != null)
             {
                 replacedOverseer = existing.overseer;
+
+                bool overseerChanged =
+                    replacedOverseer != null
+                    && record.overseer != null
+                    && !ReferenceEquals(replacedOverseer, record.overseer);
+
                 RemoveRecord(existing);
+
+                if (overseerChanged)
+                {
+                    // 仅删除旧监管者与目标之间的特化配置，保留新监管者已保存的预选。
+                    RemoveSpecializationRecordsForOverseerTarget(
+                        replacedOverseer!,
+                        record.target);
+
+                    // 移除目标身上的旧特化健康状态，后续 SyncHediffForTarget 会按新特化首次创建。
+                    RemoveAllCommandFocusHediffs(record.target);
+                }
             }
 
             records.Add(record);
@@ -1302,6 +1328,74 @@ namespace MAP_MechanoidMechanitor
             }
 
             RebuildSpecializationCaches();
+        }
+
+        /// <summary>
+        /// 仅删除指定 overseer 与 target 组合的特化配置，不动其他监管者已保存的配置。
+        /// 用于监管者替换时精确清理旧关系。
+        /// </summary>
+        private void RemoveSpecializationRecordsForOverseerTarget(
+            Pawn overseer,
+            Pawn target)
+        {
+            if (overseer == null
+                || target == null
+                || specializationRecords == null)
+            {
+                return;
+            }
+
+            bool changed = false;
+            for (int i = specializationRecords.Count - 1; i >= 0; i--)
+            {
+                DataProcessingSpecializationRecord? record =
+                    specializationRecords[i];
+
+                if (record != null
+                    && ReferenceEquals(record.overseer, overseer)
+                    && ReferenceEquals(record.target, target))
+                {
+                    specializationRecords.RemoveAt(i);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                RebuildSpecializationCaches();
+            }
+        }
+
+        /// <summary>
+        /// 清除所有 overseer == target 的自我特化配置，包括 0% 预选配置。
+        /// 不依赖 records（其仅保存正数分配）。
+        /// </summary>
+        private void RemoveSelfSpecializationRecords()
+        {
+            if (specializationRecords == null)
+            {
+                return;
+            }
+
+            bool changed = false;
+            for (int i = specializationRecords.Count - 1; i >= 0; i--)
+            {
+                DataProcessingSpecializationRecord? record =
+                    specializationRecords[i];
+
+                if (record != null
+                    && record.overseer != null
+                    && ReferenceEquals(record.overseer, record.target))
+                {
+                    specializationRecords.RemoveAt(i);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                RebuildSpecializationCaches();
+            }
         }
 
         private void CleanupInvalidSpecializationRecords()
