@@ -34,7 +34,8 @@ namespace MAP_MechanoidMechanitor
             this.FailOnIncapable(PawnCapacityDefOf.Manipulation);
 
             AddFailCondition(
-                () => !LoverImplantUtility.IsLover(pawn));
+                () => !LoverImplantFeatureState.EnabledForSession
+                    || !LoverImplantUtility.IsLover(pawn));
 
             yield return Toils_Goto.GotoThing(
                 TargetIndex.A,

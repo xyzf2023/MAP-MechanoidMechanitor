@@ -25,6 +25,11 @@ namespace MAP_MechanoidMechanitor
 
         public static void Register()
         {
+            if (!LoverImplantFeatureState.EnabledForSession)
+            {
+                return;
+            }
+
             if (initialized)
             {
                 return;
@@ -89,6 +94,11 @@ namespace MAP_MechanoidMechanitor
         public static bool TryGetRecipe(ThingDef itemDef, out RecipeDef recipe)
         {
             recipe = null!;
+
+            if (!LoverImplantFeatureState.EnabledForSession)
+            {
+                return false;
+            }
 
             if (itemDef != null
                 && !ambiguousItems.Contains(itemDef)
@@ -213,7 +223,9 @@ namespace MAP_MechanoidMechanitor
                     ThingDef? candidate = ingredient.filter.AnyAllowedDef;
 
                     // 备用成分候选，即使是附着型，也必须额外要求 candidate.isTechHediff == true，
-                    // 否则木腿之类用普通木材作原料的配方会把所有木材识别为义体。
+                    // 且所有候选都必须归入 BodyParts 分类（见 IsCandidate）。
+                    // 注意：原版 WoodLog 的 isTechHediff 也是 true，因此不能只靠 isTechHediff
+                    // 排除木材，必须由 BodyParts 分类限制通用材料。
                     if (!IsCandidate(recipe, candidate, true))
                     {
                         continue;
@@ -240,6 +252,7 @@ namespace MAP_MechanoidMechanitor
         {
             return candidate != null
                 && candidate.category == ThingCategory.Item
+                && candidate.IsWithinCategory(ThingCategoryDefOf.BodyParts)
                 && (!requireTechHediff || candidate.isTechHediff)
                 && recipe.IsIngredient(candidate);
         }

@@ -8,7 +8,9 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 恋人专用右键菜单：选中恋人后右键符合条件的植入体物品，出现安装选项。
-    /// 不依赖机械族机械师脑部植入体设置，也不向物品添加任何 Comp。
+    /// 不向物品添加任何 Comp。
+    /// 受独立的“恋人植入体”设置（LoverImplantFeatureState）控制，
+    /// 不受机械族机械师脑部植入体设置影响。
     /// </summary>
     public class FloatMenuOptionProvider_LoverInstallImplant : FloatMenuOptionProvider
     {
@@ -19,8 +21,9 @@ namespace MAP_MechanoidMechanitor
 
         protected override bool AppliesInt(FloatMenuContext context)
         {
-            return LoverImplantUtility.IsLover(
-                context.FirstSelectedPawn);
+            return LoverImplantFeatureState.EnabledForSession
+                && LoverImplantUtility.IsLover(
+                    context.FirstSelectedPawn);
         }
 
         public override IEnumerable<FloatMenuOption> GetOptionsFor(
@@ -28,6 +31,11 @@ namespace MAP_MechanoidMechanitor
             FloatMenuContext context)
         {
             if (clickedThing == null)
+            {
+                yield break;
+            }
+
+            if (!LoverImplantFeatureState.EnabledForSession)
             {
                 yield break;
             }

@@ -8,6 +8,7 @@ namespace MAP_MechanoidMechanitor
         public bool addMechanoidMechanitorsToWorkTab = false;
         public bool enablePortraitDisplayForAllSaves = false;
         public bool enableMechanoidMechanitorBrainImplants = false;
+        public bool enableLoverImplants = false;
 
         /// <summary>
         /// 每级效能核心提供的机械族全局工作速度偏移百分比。
@@ -34,6 +35,10 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref enableMechanoidMechanitorBrainImplants,
                 "enableMechanoidMechanitorBrainImplants",
+                false);
+            Scribe_Values.Look(
+                ref enableLoverImplants,
+                "enableLoverImplants",
                 false);
             Scribe_Values.Look(
                 ref productivityCoreWorkSpeedOffsetPercentPerLevel,
