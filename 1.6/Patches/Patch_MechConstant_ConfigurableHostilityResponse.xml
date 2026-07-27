@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/ThinkTreeDef[defName="MechConstant"]/thinkRoot/subNodes/li[@Class="ThinkNode_ConditionalPlayerMech" and not(invert)]/subNodes</xpath>
+    <value>
+      <li Class="ThinkNode_ConditionalCanDoConstantThinkTreeJobNow">
+        <subNodes>
+          <li Class="JobGiver_ConfigurableHostilityResponse" />
+        </subNodes>
+      </li>
+    </value>
+  </Operation>
+</Patch>
