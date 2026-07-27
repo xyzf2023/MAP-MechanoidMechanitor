@@ -27,4 +27,60 @@
     <minSeverity>0</minSeverity>
     <maxSeverity>1</maxSeverity>
   </HediffDef>
+
+  <HediffDef>
+    <defName>MAP_CommandFocus_GeneralTuning</defName>
+    <label>指令聚焦：通用调谐</label>
+    <description>监管者分配的数据处理能力被用于目标机械体的通用性能调谐，同时改善作业、机动、攻击时序、防御与抑止恢复。</description>
+    <descriptionShort>监管者正在向该机械族分配额外算力以进行通用性能调谐。</descriptionShort>
+    <defaultLabelColor>(0.55, 0.85, 1.00)</defaultLabelColor>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_CommandFocus</hediffClass>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <initialSeverity>0.05</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>100</maxSeverity>
+  </HediffDef>
+
+  <HediffDef>
+    <defName>MAP_CommandFocus_ProductionCoordination</defName>
+    <label>指令聚焦：生产统筹</label>
+    <description>监管者分配的数据处理能力被用于生产流程统筹，提高目标机械体的作业速度、移动效率与机械能利用率。</description>
+    <descriptionShort>监管者正在向该机械族分配额外算力以统筹生产流程。</descriptionShort>
+    <defaultLabelColor>(1.00, 0.80, 0.35)</defaultLabelColor>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_CommandFocus</hediffClass>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <initialSeverity>0.05</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>100</maxSeverity>
+  </HediffDef>
+
+  <HediffDef>
+    <defName>MAP_CommandFocus_FireControlCalculation</defName>
+    <label>指令聚焦：火控演算</label>
+    <description>监管者分配的数据处理能力被集中用于远程火控演算，大幅缩短目标机械体的瞄准时间与远程攻击冷却。</description>
+    <descriptionShort>监管者正在向该机械族分配额外算力以进行远程火控演算。</descriptionShort>
+    <defaultLabelColor>(1.00, 0.40, 0.35)</defaultLabelColor>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_CommandFocus</hediffClass>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <initialSeverity>0.05</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>100</maxSeverity>
+  </HediffDef>
+
+  <HediffDef>
+    <defName>MAP_CommandFocus_AssaultProtocol</defName>
+    <label>指令聚焦：强袭协议</label>
+    <description>监管者分配的数据处理能力被用于前线强袭协议，提高目标机械体的近战循环、机动、防护与抗抑止能力。</description>
+    <descriptionShort>监管者正在向该机械族分配额外算力以执行前线强袭协议。</descriptionShort>
+    <defaultLabelColor>(0.80, 0.40, 1.00)</defaultLabelColor>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_CommandFocus</hediffClass>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <initialSeverity>0.05</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>100</maxSeverity>
+  </HediffDef>
 </Defs>
