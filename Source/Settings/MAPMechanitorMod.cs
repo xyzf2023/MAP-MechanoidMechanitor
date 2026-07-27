@@ -54,6 +54,16 @@ namespace MAP_MechanoidMechanitor
                         .Translate());
             }
 
+            listing.CheckboxLabeled(
+                "MAP_Settings_EnableLoverImplants_Label".Translate(),
+                ref Settings!.enableLoverImplants,
+                "MAP_Settings_EnableLoverImplants_Description".Translate());
+            if (LoverImplantFeatureState.RestartRequired)
+            {
+                listing.Label(
+                    "MAP_Settings_EnableLoverImplants_RestartRequired".Translate());
+            }
+
             DrawProductivityCoreWorkSpeedSetting(listing);
 
             listing.CheckboxLabeled(

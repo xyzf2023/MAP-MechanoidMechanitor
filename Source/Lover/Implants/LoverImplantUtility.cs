@@ -35,7 +35,8 @@ namespace MAP_MechanoidMechanitor
         {
             List<BodyPartRecord> result = new List<BodyPartRecord>();
 
-            if (!IsLover(pawn)
+            if (!LoverImplantFeatureState.EnabledForSession
+                || !IsLover(pawn)
                 || recipe == null
                 || recipe.Worker == null)
             {
@@ -81,6 +82,12 @@ namespace MAP_MechanoidMechanitor
             out string? failureReason)
         {
             failureReason = null;
+
+            if (!LoverImplantFeatureState.EnabledForSession)
+            {
+                failureReason = "MAP_LoverImplant.InstallFailed".Translate();
+                return false;
+            }
 
             if (!IsLover(pawn))
             {
@@ -216,7 +223,9 @@ namespace MAP_MechanoidMechanitor
 
                 if (hediff.Part != null
                     && affectedParts.Contains(hediff.Part)
-                    && hediff.def?.spawnThingOnRemoved != null)
+                    && hediff.def != null
+                    && !hediff.def.keepOnBodyPartRestoration
+                    && hediff.def.spawnThingOnRemoved != null)
                 {
                     result.Add(hediff.def.spawnThingOnRemoved);
                 }
