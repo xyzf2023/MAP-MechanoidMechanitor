@@ -13,6 +13,7 @@ namespace MAP_MechanoidMechanitor
         private const float PinButtonSize = 28f;
         private const float ActionButtonWidth = 52f;
         private const float PercentWidth = 52f;
+        private const float SpecializationButtonWidth = 112f;
         private const float ActionGap = 4f;
         private const float RowGap = 4f;
         private const float RowPadding = 6f;
@@ -31,7 +32,7 @@ namespace MAP_MechanoidMechanitor
         private bool displayOrderInitialized;
         private Vector2 scrollPosition;
 
-        public override Vector2 InitialSize => new Vector2(680f, 520f);
+        public override Vector2 InitialSize => new Vector2(760f, 520f);
 
         public Dialog_DataProcessingAllocation(Pawn overseer)
         {
@@ -212,7 +213,9 @@ namespace MAP_MechanoidMechanitor
             leftX = portraitRect.xMax + LeftColumnGap;
 
             float actionBlockWidth =
-                PinButtonSize
+                SpecializationButtonWidth
+                + ActionGap
+                + PinButtonSize
                 + ActionGap
                 + ActionButtonWidth
                 + ActionGap
@@ -246,7 +249,12 @@ namespace MAP_MechanoidMechanitor
             float adjustY = actionRect.y + (actionRect.height - (Text.LineHeight + 4f)) / 2f;
             float adjustHeight = Text.LineHeight + 4f;
 
-            Rect pinRect = new Rect(actionRect.x, buttonY, PinButtonSize, PinButtonSize);
+            Rect specRect = new Rect(actionRect.x, adjustY, SpecializationButtonWidth, adjustHeight);
+            Rect pinRect = new Rect(
+                specRect.xMax + ActionGap,
+                buttonY,
+                PinButtonSize,
+                PinButtonSize);
             Rect removeRect = new Rect(
                 pinRect.xMax + ActionGap,
                 adjustY,
@@ -262,6 +270,8 @@ namespace MAP_MechanoidMechanitor
                 adjustY,
                 ActionButtonWidth,
                 adjustHeight);
+
+            DrawSpecializationButton(specRect, row, registry);
 
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.MiddleCenter;
@@ -318,6 +328,86 @@ namespace MAP_MechanoidMechanitor
                         MessageTypeDefOf.RejectInput,
                         historical: false);
                 }
+            }
+        }
+
+        private void DrawSpecializationButton(
+            Rect rect,
+            SubjectRowData row,
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            string label = DataProcessingAllocationUtility.GetSpecializationLabel(row.specialization);
+            string tip = GetSpecializationTip(row.specialization);
+
+            bool enabled = registry != null
+                && DataProcessingAllocationUtility.IsValidAllocationPair(overseer, row.target);
+            if (!tip.NullOrEmpty())
+            {
+                TooltipHandler.TipRegion(rect, tip);
+            }
+
+            if (!DrawActionButton(rect, label, enabled) || registry == null)
+            {
+                return;
+            }
+
+            List<FloatMenuOption> options = new List<FloatMenuOption>();
+            DataProcessingSpecialization[] allSpecializations =
+            {
+                DataProcessingSpecialization.GeneralTuning,
+                DataProcessingSpecialization.ProductionCoordination,
+                DataProcessingSpecialization.FireControlCalculation,
+                DataProcessingSpecialization.AssaultProtocol
+            };
+
+            for (int i = 0; i < allSpecializations.Length; i++)
+            {
+                DataProcessingSpecialization selected = allSpecializations[i];
+                bool isCurrent = selected == row.specialization;
+                string optionLabel = (isCurrent ? "✓ " : string.Empty)
+                    + DataProcessingAllocationUtility.GetSpecializationLabel(selected);
+
+                if (isCurrent)
+                {
+                    options.Add(new FloatMenuOption(optionLabel, null));
+                    continue;
+                }
+
+                DataProcessingSpecialization captured = selected;
+                options.Add(new FloatMenuOption(
+                    optionLabel,
+                    () =>
+                    {
+                        if (!registry.TrySetSpecialization(overseer, row.target, captured)
+                            && overseer != null)
+                        {
+                            Messages.Message(
+                                "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
+                                overseer,
+                                MessageTypeDefOf.RejectInput,
+                                historical: false);
+                        }
+                    }));
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        private static string GetSpecializationTip(DataProcessingSpecialization specialization)
+        {
+            specialization = DataProcessingAllocationUtility.NormalizeSpecialization(specialization);
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return "MAP_DataProcessingAllocation_Specialization_GeneralTuningTip".Translate();
+                case DataProcessingSpecialization.ProductionCoordination:
+                    return "MAP_DataProcessingAllocation_Specialization_ProductionCoordinationTip".Translate();
+                case DataProcessingSpecialization.FireControlCalculation:
+                    return "MAP_DataProcessingAllocation_Specialization_FireControlCalculationTip".Translate();
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return "MAP_DataProcessingAllocation_Specialization_AssaultProtocolTip".Translate();
+                default:
+                    return "MAP_DataProcessingAllocation_Specialization_GeneralTuningTip".Translate();
             }
         }
 
@@ -658,10 +748,13 @@ namespace MAP_MechanoidMechanitor
                 ? registry!.GetPinOrder(overseer, target)
                 : int.MaxValue;
             int controlGroupIndex = target.GetMechControlGroup()?.Index ?? int.MaxValue;
+            DataProcessingSpecialization specialization =
+                registry?.GetSpecializationForOverseerTarget(overseer, target)
+                ?? DataProcessingSpecialization.GeneralTuning;
 
             List<string> effectLabels = new List<string>();
             List<string> effectTips = new List<string>();
-            BuildEffectTexts(steps, effectLabels, effectTips);
+            BuildEffectTexts(steps, specialization, effectLabels, effectTips);
 
             return new SubjectRowData(
                 target,
@@ -670,6 +763,7 @@ namespace MAP_MechanoidMechanitor
                 isPinned,
                 pinOrder,
                 controlGroupIndex,
+                specialization,
                 effectLabels,
                 effectTips,
                 CalculateRowHeight(effectLabels.Count));
@@ -829,9 +923,12 @@ namespace MAP_MechanoidMechanitor
 
         private static void BuildEffectTexts(
             int steps,
+            DataProcessingSpecialization specialization,
             List<string> effectLabels,
             List<string> effectTips)
         {
+            specialization = DataProcessingAllocationUtility.NormalizeSpecialization(specialization);
+
             if (steps < DataProcessingAllocationUtility.CommandRangeThresholdSteps)
             {
                 effectLabels.Add("MAP_DataProcessingAllocation_EffectNone".Translate());
@@ -839,24 +936,9 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            float workSpeedOffset = DataProcessingAllocationUtility.GetWorkSpeedOffset(steps);
-            effectLabels.Add(
-                "MAP_DataProcessingAllocation_EffectWorkSpeed".Translate(
-                    workSpeedOffset.ToStringPercent()));
-            effectTips.Add(string.Empty);
-
+            // 通用功能权限（脱离指挥范围、带远行队、驾驶穿梭机）始终按真实档数显示。
             effectLabels.Add("MAP_DataProcessingAllocation_EffectCommandRange".Translate());
             effectTips.Add("MAP_DataProcessingAllocation_EffectCommandRangeTip".Translate());
-
-            float attackTimingFactor =
-                DataProcessingAllocationUtility.GetAttackTimingFactor(steps);
-            if (attackTimingFactor < 1f)
-            {
-                effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectAttackTiming".Translate(
-                        attackTimingFactor.ToStringPercent()));
-                effectTips.Add(string.Empty);
-            }
 
             if (steps >= DataProcessingAllocationUtility.TravelNodeThresholdSteps)
             {
@@ -871,7 +953,52 @@ namespace MAP_MechanoidMechanitor
                 effectTips.Add("MAP_DataProcessingAllocation_EffectShuttlePilotTip".Translate());
             }
 
-            float moveSpeedOffset = DataProcessingAllocationUtility.GetMoveSpeedOffset(steps);
+            // 仅显示当前特化实际提供的数值属性。
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    AddGeneralTuningEffects(steps, effectLabels, effectTips);
+                    break;
+                case DataProcessingSpecialization.ProductionCoordination:
+                    AddProductionCoordinationEffects(steps, effectLabels, effectTips);
+                    break;
+                case DataProcessingSpecialization.FireControlCalculation:
+                    AddFireControlEffects(steps, effectLabels, effectTips);
+                    break;
+                case DataProcessingSpecialization.AssaultProtocol:
+                    AddAssaultEffects(steps, effectLabels, effectTips);
+                    break;
+                default:
+                    AddGeneralTuningEffects(steps, effectLabels, effectTips);
+                    break;
+            }
+        }
+
+        private static void AddGeneralTuningEffects(
+            int steps,
+            List<string> effectLabels,
+            List<string> effectTips)
+        {
+            float workSpeedOffset = DataProcessingAllocationUtility.GetWorkSpeedOffset(
+                steps, DataProcessingSpecialization.GeneralTuning);
+            effectLabels.Add(
+                "MAP_DataProcessingAllocation_EffectWorkSpeed".Translate(
+                    workSpeedOffset.ToStringPercent()));
+            effectTips.Add(string.Empty);
+
+            // 通用调谐下瞄准、射击冷却与近战冷却倍率相同，使用组合文本。
+            float timingFactor = DataProcessingAllocationUtility.GetAimingDelayFactor(
+                steps, DataProcessingSpecialization.GeneralTuning);
+            if (timingFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectAttackTiming".Translate(
+                        timingFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
+            }
+
+            float moveSpeedOffset = DataProcessingAllocationUtility.GetMoveSpeedOffset(
+                steps, DataProcessingSpecialization.GeneralTuning);
             if (moveSpeedOffset > 0f)
             {
                 effectLabels.Add(
@@ -880,8 +1007,8 @@ namespace MAP_MechanoidMechanitor
                 effectTips.Add(string.Empty);
             }
 
-            float staggerDurationFactor =
-                DataProcessingAllocationUtility.GetStaggerDurationFactor(steps);
+            float staggerDurationFactor = DataProcessingAllocationUtility.GetStaggerDurationFactor(
+                steps, DataProcessingSpecialization.GeneralTuning);
             if (staggerDurationFactor < 1f)
             {
                 effectLabels.Add(
@@ -890,8 +1017,113 @@ namespace MAP_MechanoidMechanitor
                 effectTips.Add(string.Empty);
             }
 
-            float incomingDamageFactor =
-                DataProcessingAllocationUtility.GetIncomingDamageFactor(steps);
+            float incomingDamageFactor = DataProcessingAllocationUtility.GetIncomingDamageFactor(
+                steps, DataProcessingSpecialization.GeneralTuning);
+            if (incomingDamageFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectIncomingDamage".Translate(
+                        incomingDamageFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
+            }
+        }
+
+        private static void AddProductionCoordinationEffects(
+            int steps,
+            List<string> effectLabels,
+            List<string> effectTips)
+        {
+            float workSpeedOffset = DataProcessingAllocationUtility.GetWorkSpeedOffset(
+                steps, DataProcessingSpecialization.ProductionCoordination);
+            effectLabels.Add(
+                "MAP_DataProcessingAllocation_EffectWorkSpeed".Translate(
+                    workSpeedOffset.ToStringPercent()));
+            effectTips.Add(string.Empty);
+
+            float moveSpeedOffset = DataProcessingAllocationUtility.GetMoveSpeedOffset(
+                steps, DataProcessingSpecialization.ProductionCoordination);
+            if (moveSpeedOffset > 0f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(
+                        moveSpeedOffset.ToString("F2")));
+                effectTips.Add(string.Empty);
+            }
+
+            float mechEnergyUsageFactor = DataProcessingAllocationUtility.GetMechEnergyUsageFactor(
+                steps, DataProcessingSpecialization.ProductionCoordination);
+            if (mechEnergyUsageFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectMechEnergyUsage".Translate(
+                        mechEnergyUsageFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
+            }
+        }
+
+        private static void AddFireControlEffects(
+            int steps,
+            List<string> effectLabels,
+            List<string> effectTips)
+        {
+            float aimingDelayFactor = DataProcessingAllocationUtility.GetAimingDelayFactor(
+                steps, DataProcessingSpecialization.FireControlCalculation);
+            if (aimingDelayFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectAimingDelay".Translate(
+                        aimingDelayFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
+            }
+
+            float rangedCooldownFactor = DataProcessingAllocationUtility.GetRangedCooldownFactor(
+                steps, DataProcessingSpecialization.FireControlCalculation);
+            if (rangedCooldownFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectRangedCooldown".Translate(
+                        rangedCooldownFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
+            }
+        }
+
+        private static void AddAssaultEffects(
+            int steps,
+            List<string> effectLabels,
+            List<string> effectTips)
+        {
+            float meleeCooldownFactor = DataProcessingAllocationUtility.GetMeleeCooldownFactor(
+                steps, DataProcessingSpecialization.AssaultProtocol);
+            if (meleeCooldownFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectMeleeCooldown".Translate(
+                        meleeCooldownFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
+            }
+
+            float moveSpeedOffset = DataProcessingAllocationUtility.GetMoveSpeedOffset(
+                steps, DataProcessingSpecialization.AssaultProtocol);
+            if (moveSpeedOffset > 0f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(
+                        moveSpeedOffset.ToString("F2")));
+                effectTips.Add(string.Empty);
+            }
+
+            float staggerDurationFactor = DataProcessingAllocationUtility.GetStaggerDurationFactor(
+                steps, DataProcessingSpecialization.AssaultProtocol);
+            if (staggerDurationFactor < 1f)
+            {
+                effectLabels.Add(
+                    "MAP_DataProcessingAllocation_EffectStaggerDuration".Translate(
+                        staggerDurationFactor.ToStringPercent()));
+                effectTips.Add(string.Empty);
+            }
+
+            float incomingDamageFactor = DataProcessingAllocationUtility.GetIncomingDamageFactor(
+                steps, DataProcessingSpecialization.AssaultProtocol);
             if (incomingDamageFactor < 1f)
             {
                 effectLabels.Add(
@@ -1041,6 +1273,7 @@ namespace MAP_MechanoidMechanitor
             public readonly bool isPinned;
             public readonly int pinOrder;
             public readonly int controlGroupIndex;
+            public readonly DataProcessingSpecialization specialization;
             public readonly List<string> effectLabels;
             public readonly List<string> effectTips;
             public readonly float rowHeight;
@@ -1052,6 +1285,7 @@ namespace MAP_MechanoidMechanitor
                 bool isPinned,
                 int pinOrder,
                 int controlGroupIndex,
+                DataProcessingSpecialization specialization,
                 List<string> effectLabels,
                 List<string> effectTips,
                 float rowHeight)
@@ -1062,6 +1296,7 @@ namespace MAP_MechanoidMechanitor
                 this.isPinned = isPinned;
                 this.pinOrder = pinOrder;
                 this.controlGroupIndex = controlGroupIndex;
+                this.specialization = specialization;
                 this.effectLabels = effectLabels;
                 this.effectTips = effectTips;
                 this.rowHeight = rowHeight;

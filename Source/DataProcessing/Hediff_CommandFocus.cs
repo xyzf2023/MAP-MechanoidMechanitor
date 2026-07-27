@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -35,79 +36,104 @@ namespace MAP_MechanoidMechanitor
 
         protected override void ConfigureAdditionalStage(HediffStage stage, int steps)
         {
+            DataProcessingSpecialization specialization =
+                DataProcessingAllocationUtility.GetSpecializationForHediffDef(def);
+
             List<StatModifier>? offsets = null;
             List<StatModifier>? factors = null;
 
-            float workSpeedOffset = DataProcessingAllocationUtility.GetWorkSpeedOffset(steps);
-            if (workSpeedOffset > 0f)
+            float workSpeedOffset = DataProcessingAllocationUtility.GetWorkSpeedOffset(
+                steps,
+                specialization);
+            if (!Mathf.Approximately(workSpeedOffset, 0f))
             {
-                offsets ??= new List<StatModifier>();
-                offsets.Add(new StatModifier
-                {
-                    stat = StatDefOf.WorkSpeedGlobal,
-                    value = workSpeedOffset
-                });
+                AddOffset(ref offsets, StatDefOf.WorkSpeedGlobal, workSpeedOffset);
             }
 
-            float moveSpeedOffset = DataProcessingAllocationUtility.GetMoveSpeedOffset(steps);
-            if (moveSpeedOffset > 0f)
+            float moveSpeedOffset = DataProcessingAllocationUtility.GetMoveSpeedOffset(
+                steps,
+                specialization);
+            if (!Mathf.Approximately(moveSpeedOffset, 0f))
             {
-                offsets ??= new List<StatModifier>();
-                offsets.Add(new StatModifier
-                {
-                    stat = StatDefOf.MoveSpeed,
-                    value = moveSpeedOffset
-                });
+                AddOffset(ref offsets, StatDefOf.MoveSpeed, moveSpeedOffset);
             }
 
-            float attackTimingFactor =
-                DataProcessingAllocationUtility.GetAttackTimingFactor(steps);
-            if (attackTimingFactor < 1f)
+            float aimingDelayFactor = DataProcessingAllocationUtility.GetAimingDelayFactor(
+                steps,
+                specialization);
+            if (!Mathf.Approximately(aimingDelayFactor, 1f))
             {
-                factors ??= new List<StatModifier>();
-                factors.Add(new StatModifier
-                {
-                    stat = StatDefOf.AimingDelayFactor,
-                    value = attackTimingFactor
-                });
-                factors.Add(new StatModifier
-                {
-                    stat = StatDefOf.RangedCooldownFactor,
-                    value = attackTimingFactor
-                });
-                factors.Add(new StatModifier
-                {
-                    stat = StatDefOf.MeleeCooldownFactor,
-                    value = attackTimingFactor
-                });
+                AddFactor(ref factors, StatDefOf.AimingDelayFactor, aimingDelayFactor);
             }
 
-            float staggerDurationFactor =
-                DataProcessingAllocationUtility.GetStaggerDurationFactor(steps);
-            if (staggerDurationFactor < 1f)
+            float rangedCooldownFactor = DataProcessingAllocationUtility.GetRangedCooldownFactor(
+                steps,
+                specialization);
+            if (!Mathf.Approximately(rangedCooldownFactor, 1f))
             {
-                factors ??= new List<StatModifier>();
-                factors.Add(new StatModifier
-                {
-                    stat = StatDefOf.StaggerDurationFactor,
-                    value = staggerDurationFactor
-                });
+                AddFactor(ref factors, StatDefOf.RangedCooldownFactor, rangedCooldownFactor);
             }
 
-            float incomingDamageFactor =
-                DataProcessingAllocationUtility.GetIncomingDamageFactor(steps);
-            if (incomingDamageFactor < 1f)
+            float meleeCooldownFactor = DataProcessingAllocationUtility.GetMeleeCooldownFactor(
+                steps,
+                specialization);
+            if (!Mathf.Approximately(meleeCooldownFactor, 1f))
             {
-                factors ??= new List<StatModifier>();
-                factors.Add(new StatModifier
-                {
-                    stat = StatDefOf.IncomingDamageFactor,
-                    value = incomingDamageFactor
-                });
+                AddFactor(ref factors, StatDefOf.MeleeCooldownFactor, meleeCooldownFactor);
+            }
+
+            float incomingDamageFactor = DataProcessingAllocationUtility.GetIncomingDamageFactor(
+                steps,
+                specialization);
+            if (!Mathf.Approximately(incomingDamageFactor, 1f))
+            {
+                AddFactor(ref factors, StatDefOf.IncomingDamageFactor, incomingDamageFactor);
+            }
+
+            float staggerDurationFactor = DataProcessingAllocationUtility.GetStaggerDurationFactor(
+                steps,
+                specialization);
+            if (!Mathf.Approximately(staggerDurationFactor, 1f))
+            {
+                AddFactor(ref factors, StatDefOf.StaggerDurationFactor, staggerDurationFactor);
+            }
+
+            float mechEnergyUsageFactor = DataProcessingAllocationUtility.GetMechEnergyUsageFactor(
+                steps,
+                specialization);
+            if (!Mathf.Approximately(mechEnergyUsageFactor, 1f))
+            {
+                AddFactor(ref factors, StatDefOf.MechEnergyUsageFactor, mechEnergyUsageFactor);
             }
 
             stage.statOffsets = offsets;
             stage.statFactors = factors;
+        }
+
+        private static void AddOffset(
+            ref List<StatModifier>? offsets,
+            StatDef stat,
+            float value)
+        {
+            offsets ??= new List<StatModifier>();
+            offsets.Add(new StatModifier
+            {
+                stat = stat,
+                value = value
+            });
+        }
+
+        private static void AddFactor(
+            ref List<StatModifier>? factors,
+            StatDef stat,
+            float value)
+        {
+            factors ??= new List<StatModifier>();
+            factors.Add(new StatModifier
+            {
+                stat = stat,
+                value = value
+            });
         }
 
         public override string LabelInBrackets

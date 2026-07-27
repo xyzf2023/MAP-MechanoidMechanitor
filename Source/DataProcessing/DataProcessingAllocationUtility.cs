@@ -20,36 +20,47 @@ namespace MAP_MechanoidMechanitor
         /// <summary>15%：穿梭机驾驶资格。</summary>
         public const int ShuttlePilotThresholdSteps = 3;
 
-        /// <summary>特殊数值效果最多按 100%（20 档）计算；意识加成不受此限制。</summary>
-        public const int MaxSpecialEffectSteps = 20;
-
-        public const float WorkSpeedOffsetPerStep = 0.15f;
-        public const float AttackTimingFactorReductionPerTenPercentTier = 0.05f;
-        public const float MoveSpeedOffsetPerTenPercentTier = 0.5f;
-        public const float IncomingDamageReductionPerTenPercentTier = 0.05f;
-        public const float StaggerFactorReductionPerStep = 0.10f;
-        public const int MoveSpeedMinEffectSteps = 4;
-        public const int IncomingDamageMinEffectSteps = 6;
-
-        /// <summary>20%：开始缩短抑止时间。</summary>
-        public const int StaggerMinEffectSteps = 4;
-
-        /// <summary>50%：完全免疫原版抑止。</summary>
-        public const int StaggerImmunitySteps = 10;
+        /// <summary>特化数值效果最多按 200%（40 档）计算；意识加成不受此限制。</summary>
+        public const int MaxSpecializationEffectSteps = 40;
 
         private const string DataStreamDistributionDefName = "MAP_DataStreamDistribution";
-        private const string CommandFocusDefName = "MAP_CommandFocus";
+        private const string LegacyCommandFocusDefName = "MAP_CommandFocus";
+        private const string GeneralTuningDefName = "MAP_CommandFocus_GeneralTuning";
+        private const string ProductionCoordinationDefName = "MAP_CommandFocus_ProductionCoordination";
+        private const string FireControlCalculationDefName = "MAP_CommandFocus_FireControlCalculation";
+        private const string AssaultProtocolDefName = "MAP_CommandFocus_AssaultProtocol";
 
         private static HediffDef? dataStreamDistributionDef;
-        private static HediffDef? commandFocusDef;
+        private static HediffDef? legacyCommandFocusDef;
+        private static HediffDef? generalTuningDef;
+        private static HediffDef? productionCoordinationDef;
+        private static HediffDef? fireControlCalculationDef;
+        private static HediffDef? assaultProtocolDef;
 
         public static HediffDef? DataStreamDistributionDef =>
             dataStreamDistributionDef ??=
                 DefDatabase<HediffDef>.GetNamedSilentFail(DataStreamDistributionDefName);
 
-        public static HediffDef? CommandFocusDef =>
-            commandFocusDef ??=
-                DefDatabase<HediffDef>.GetNamedSilentFail(CommandFocusDefName);
+        /// <summary>旧 MAP_CommandFocus 仅用于旧存档载入兼容与清理，载入后应转为通用调谐。</summary>
+        public static HediffDef? LegacyCommandFocusDef =>
+            legacyCommandFocusDef ??=
+                DefDatabase<HediffDef>.GetNamedSilentFail(LegacyCommandFocusDefName);
+
+        public static HediffDef? GeneralTuningDef =>
+            generalTuningDef ??=
+                DefDatabase<HediffDef>.GetNamedSilentFail(GeneralTuningDefName);
+
+        public static HediffDef? ProductionCoordinationDef =>
+            productionCoordinationDef ??=
+                DefDatabase<HediffDef>.GetNamedSilentFail(ProductionCoordinationDefName);
+
+        public static HediffDef? FireControlCalculationDef =>
+            fireControlCalculationDef ??=
+                DefDatabase<HediffDef>.GetNamedSilentFail(FireControlCalculationDefName);
+
+        public static HediffDef? AssaultProtocolDef =>
+            assaultProtocolDef ??=
+                DefDatabase<HediffDef>.GetNamedSilentFail(AssaultProtocolDefName);
 
         public static float StepsToPercent(int steps)
         {
@@ -89,56 +100,287 @@ namespace MAP_MechanoidMechanitor
                 && ReferenceEquals(overseer, target);
         }
 
-        public static int GetSpecialEffectSteps(int steps)
+        /// <summary>
+        /// 将任意枚举值规范化为已知特化；无效值统一回退为 GeneralTuning。
+        /// </summary>
+        public static DataProcessingSpecialization NormalizeSpecialization(
+            DataProcessingSpecialization specialization)
         {
-            return Mathf.Clamp(steps, 0, MaxSpecialEffectSteps);
-        }
-
-        public static float GetWorkSpeedOffset(int steps)
-        {
-            return GetSpecialEffectSteps(steps) * WorkSpeedOffsetPerStep;
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                case DataProcessingSpecialization.ProductionCoordination:
+                case DataProcessingSpecialization.FireControlCalculation:
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return specialization;
+                default:
+                    return DataProcessingSpecialization.GeneralTuning;
+            }
         }
 
         /// <summary>
-        /// 瞄准时间、远程冷却与近战冷却共用的时间系数。
+        /// 特化成长比例：0~200%（0~40 档）线性，超过封顶为 1。
         /// </summary>
-        public static float GetAttackTimingFactor(int steps)
+        public static float GetSpecializationProgress(int steps)
         {
-            int effectSteps = GetSpecialEffectSteps(steps);
-            return 1f
-                - effectSteps / 2 * AttackTimingFactorReductionPerTenPercentTier;
+            int effectiveSteps = Mathf.Clamp(steps, 0, MaxSpecializationEffectSteps);
+            return effectiveSteps / (float)MaxSpecializationEffectSteps;
         }
 
-        public static float GetMoveSpeedOffset(int steps)
+        public static float GetWorkSpeedOffset(
+            int steps,
+            DataProcessingSpecialization specialization)
         {
-            int effectSteps = GetSpecialEffectSteps(steps);
-            return effectSteps >= MoveSpeedMinEffectSteps
-                ? effectSteps / 2 * MoveSpeedOffsetPerTenPercentTier
-                : 0f;
+            float progress = GetSpecializationProgress(steps);
+            specialization = NormalizeSpecialization(specialization);
+
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return GeneralMaxWorkSpeedOffset * progress;
+                case DataProcessingSpecialization.ProductionCoordination:
+                    return ProductionMaxWorkSpeedOffset * progress;
+                default:
+                    return 0f;
+            }
         }
 
-        public static float GetIncomingDamageFactor(int steps)
+        public static float GetMoveSpeedOffset(
+            int steps,
+            DataProcessingSpecialization specialization)
         {
-            int effectSteps = GetSpecialEffectSteps(steps);
-            return effectSteps >= IncomingDamageMinEffectSteps
-                ? 1f - effectSteps / 2 * IncomingDamageReductionPerTenPercentTier
-                : 1f;
+            float progress = GetSpecializationProgress(steps);
+            specialization = NormalizeSpecialization(specialization);
+
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return GeneralMaxMoveSpeedOffset * progress;
+                case DataProcessingSpecialization.ProductionCoordination:
+                    return ProductionMaxMoveSpeedOffset * progress;
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return AssaultMaxMoveSpeedOffset * progress;
+                default:
+                    return 0f;
+            }
         }
 
-        /// <summary>
-        /// 抑止持续时间倍率。20% 起效时直接为 ×60%，50% 起为 ×0%。
-        /// 与攻击时序系数相互独立。
-        /// </summary>
-        public static float GetStaggerDurationFactor(int steps)
+        public static float GetAimingDelayFactor(
+            int steps,
+            DataProcessingSpecialization specialization)
         {
-            int normalizedSteps = Mathf.Max(0, steps);
-            if (normalizedSteps < StaggerMinEffectSteps)
+            float progress = GetSpecializationProgress(steps);
+            specialization = NormalizeSpecialization(specialization);
+
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return Mathf.Lerp(1f, GeneralMinAimingDelayFactor, progress);
+                case DataProcessingSpecialization.FireControlCalculation:
+                    return Mathf.Lerp(1f, FireControlMinAimingDelayFactor, progress);
+                default:
+                    return 1f;
+            }
+        }
+
+        public static float GetRangedCooldownFactor(
+            int steps,
+            DataProcessingSpecialization specialization)
+        {
+            float progress = GetSpecializationProgress(steps);
+            specialization = NormalizeSpecialization(specialization);
+
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return Mathf.Lerp(1f, GeneralMinRangedCooldownFactor, progress);
+                case DataProcessingSpecialization.FireControlCalculation:
+                    return Mathf.Lerp(1f, FireControlMinRangedCooldownFactor, progress);
+                default:
+                    return 1f;
+            }
+        }
+
+        public static float GetMeleeCooldownFactor(
+            int steps,
+            DataProcessingSpecialization specialization)
+        {
+            float progress = GetSpecializationProgress(steps);
+            specialization = NormalizeSpecialization(specialization);
+
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return Mathf.Lerp(1f, GeneralMinMeleeCooldownFactor, progress);
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return Mathf.Lerp(1f, AssaultMinMeleeCooldownFactor, progress);
+                default:
+                    return 1f;
+            }
+        }
+
+        public static float GetIncomingDamageFactor(
+            int steps,
+            DataProcessingSpecialization specialization)
+        {
+            float progress = GetSpecializationProgress(steps);
+            specialization = NormalizeSpecialization(specialization);
+
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return Mathf.Lerp(1f, GeneralMinIncomingDamageFactor, progress);
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return Mathf.Lerp(1f, AssaultMinIncomingDamageFactor, progress);
+                default:
+                    return 1f;
+            }
+        }
+
+        public static float GetStaggerDurationFactor(
+            int steps,
+            DataProcessingSpecialization specialization)
+        {
+            float progress = GetSpecializationProgress(steps);
+            specialization = NormalizeSpecialization(specialization);
+
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return Mathf.Lerp(1f, GeneralMinStaggerDurationFactor, progress);
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return Mathf.Lerp(1f, AssaultMinStaggerDurationFactor, progress);
+                default:
+                    return 1f;
+            }
+        }
+
+        public static float GetMechEnergyUsageFactor(
+            int steps,
+            DataProcessingSpecialization specialization)
+        {
+            float progress = GetSpecializationProgress(steps);
+            specialization = NormalizeSpecialization(specialization);
+
+            if (specialization != DataProcessingSpecialization.ProductionCoordination)
             {
                 return 1f;
             }
 
-            int effectiveSteps = Mathf.Min(normalizedSteps, StaggerImmunitySteps);
-            return Mathf.Max(0f, 1f - effectiveSteps * StaggerFactorReductionPerStep);
+            return Mathf.Lerp(1f, ProductionMinMechEnergyUsageFactor, progress);
+        }
+
+        // 通用调谐上限常量。
+        public const float GeneralMaxWorkSpeedOffset = 1.50f;
+        public const float GeneralMaxMoveSpeedOffset = 2.50f;
+        public const float GeneralMinAimingDelayFactor = 0.75f;
+        public const float GeneralMinRangedCooldownFactor = 0.75f;
+        public const float GeneralMinMeleeCooldownFactor = 0.75f;
+        public const float GeneralMinIncomingDamageFactor = 0.75f;
+        public const float GeneralMinStaggerDurationFactor = 0f;
+
+        // 生产统筹上限常量。
+        public const float ProductionMaxWorkSpeedOffset = 3.00f;
+        public const float ProductionMaxMoveSpeedOffset = 5.00f;
+        public const float ProductionMinMechEnergyUsageFactor = 0.50f;
+
+        // 火控演算上限常量。
+        public const float FireControlMinAimingDelayFactor = 0.25f;
+        public const float FireControlMinRangedCooldownFactor = 0.25f;
+
+        // 强袭协议上限常量。
+        public const float AssaultMinMeleeCooldownFactor = 0.25f;
+        public const float AssaultMaxMoveSpeedOffset = 5.00f;
+        public const float AssaultMinIncomingDamageFactor = 0.25f;
+        public const float AssaultMinStaggerDurationFactor = 0f;
+
+        /// <summary>
+        /// 返回指定特化对应的指令聚焦 HediffDef；未知特化回退通用调谐。
+        /// </summary>
+        public static HediffDef? GetCommandFocusDef(DataProcessingSpecialization specialization)
+        {
+            specialization = NormalizeSpecialization(specialization);
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return GeneralTuningDef;
+                case DataProcessingSpecialization.ProductionCoordination:
+                    return ProductionCoordinationDef;
+                case DataProcessingSpecialization.FireControlCalculation:
+                    return FireControlCalculationDef;
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return AssaultProtocolDef;
+                default:
+                    return GeneralTuningDef;
+            }
+        }
+
+        /// <summary>
+        /// 由 HediffDef 反推特化；旧 MAP_CommandFocus 视为通用调谐。
+        /// </summary>
+        public static DataProcessingSpecialization GetSpecializationForHediffDef(HediffDef? def)
+        {
+            if (def == null)
+            {
+                return DataProcessingSpecialization.GeneralTuning;
+            }
+
+            switch (def.defName)
+            {
+                case GeneralTuningDefName:
+                    return DataProcessingSpecialization.GeneralTuning;
+                case ProductionCoordinationDefName:
+                    return DataProcessingSpecialization.ProductionCoordination;
+                case FireControlCalculationDefName:
+                    return DataProcessingSpecialization.FireControlCalculation;
+                case AssaultProtocolDefName:
+                    return DataProcessingSpecialization.AssaultProtocol;
+                case LegacyCommandFocusDefName:
+                    return DataProcessingSpecialization.GeneralTuning;
+                default:
+                    return DataProcessingSpecialization.GeneralTuning;
+            }
+        }
+
+        /// <summary>
+        /// 是否为任意指令聚焦类 HediffDef（旧 Def 或四种新特化 Def）。
+        /// </summary>
+        public static bool IsAnyCommandFocusDef(HediffDef? def)
+        {
+            if (def == null)
+            {
+                return false;
+            }
+
+            switch (def.defName)
+            {
+                case LegacyCommandFocusDefName:
+                case GeneralTuningDefName:
+                case ProductionCoordinationDefName:
+                case FireControlCalculationDefName:
+                case AssaultProtocolDefName:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static string GetSpecializationLabel(DataProcessingSpecialization specialization)
+        {
+            specialization = NormalizeSpecialization(specialization);
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return "MAP_DataProcessingAllocation_Specialization_GeneralTuning".Translate();
+                case DataProcessingSpecialization.ProductionCoordination:
+                    return "MAP_DataProcessingAllocation_Specialization_ProductionCoordination".Translate();
+                case DataProcessingSpecialization.FireControlCalculation:
+                    return "MAP_DataProcessingAllocation_Specialization_FireControlCalculation".Translate();
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return "MAP_DataProcessingAllocation_Specialization_AssaultProtocol".Translate();
+                default:
+                    return "MAP_DataProcessingAllocation_Specialization_GeneralTuning".Translate();
+            }
         }
 
         public static float GetCurrentConsciousness(Pawn? pawn)
