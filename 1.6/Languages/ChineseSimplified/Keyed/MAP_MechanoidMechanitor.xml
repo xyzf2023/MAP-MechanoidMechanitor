@@ -33,6 +33,12 @@
   <MAP_MechanoidMechanitor.BrainImplant.InstallLabel>安装 {0_label}</MAP_MechanoidMechanitor.BrainImplant.InstallLabel>
   <MAP_MechanoidMechanitor.BrainImplant.FeatureDisabled>脑部植入体安装功能未在本次游戏启动时启用</MAP_MechanoidMechanitor.BrainImplant.FeatureDisabled>
   <MAP_MechanoidMechanitor.BrainImplant.MissingCapability>该角色不具备植入体安装能力</MAP_MechanoidMechanitor.BrainImplant.MissingCapability>
+  <MAP_LoverImplant.Install>安装{0}</MAP_LoverImplant.Install>
+  <MAP_LoverImplant.InstallToPart>安装{0}：{1}</MAP_LoverImplant.InstallToPart>
+  <MAP_LoverImplant.NoValidPart>没有可安装的身体部位</MAP_LoverImplant.NoValidPart>
+  <MAP_LoverImplant.InvalidSelection>选定的身体部位已无法安装该植入体</MAP_LoverImplant.InvalidSelection>
+  <MAP_LoverImplant.InstallFailed>植入体安装失败</MAP_LoverImplant.InstallFailed>
+  <MAP_LoverImplant.InstallSucceeded>{0}已将{1}安装至{2}。</MAP_LoverImplant.InstallSucceeded>
   <MAP_MechanoidMechanitor.BrainImplant.InvalidRecipe>无法识别该植入体对应的安装配方</MAP_MechanoidMechanitor.BrainImplant.InvalidRecipe>
   <MAP_MechanoidMechanitor.BrainImplant.NoConsciousnessSource>未找到可用于安装植入体的意识相关部位</MAP_MechanoidMechanitor.BrainImplant.NoConsciousnessSource>
   <MAP_MechanoidMechanitor.BrainImplant.PartReplaced>意识相关部位或其上级部位已被替换</MAP_MechanoidMechanitor.BrainImplant.PartReplaced>

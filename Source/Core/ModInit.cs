@@ -15,6 +15,7 @@ namespace MAP_MechanoidMechanitor
         {
             new Harmony(HarmonyId).PatchAll();
             MechanoidMechanitorBrainImplantFeatureState.InitializeFromSettings();
+            LoverRecipeImplantRegistrar.Register();
 
             if (Prefs.DevMode)
             {
