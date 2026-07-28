@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <HediffDef MayRequire="Ludeon.RimWorld.Odyssey">
+    <defName>MAP_CerebrexBandwidthInterference</defName>
+    <label>主脑带宽干扰</label>
+    <description>主脑正在向该机械体的控制链路注入冗余指令，使其占用的监管带宽暂时翻倍。</description>
+    <descriptionShort>带宽占用暂时翻倍</descriptionShort>
+    <defaultLabelColor>(1.0, 0.25, 0.25)</defaultLabelColor>
+    <isBad>true</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <stages>
+      <li>
+        <statFactors>
+          <BandwidthCost>2</BandwidthCost>
+        </statFactors>
+      </li>
+    </stages>
+  </HediffDef>
+
+  <HediffDef MayRequire="Ludeon.RimWorld.Odyssey">
+    <defName>MAP_CerebrexBandwidthBerserkMarker</defName>
+    <label>主脑狂暴标记</label>
+    <description>仅供主脑带宽干扰逻辑识别由本技能造成的狂暴。</description>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_CerebrexBerserkMarker</hediffClass>
+    <isBad>true</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+  </HediffDef>
+</Defs>
