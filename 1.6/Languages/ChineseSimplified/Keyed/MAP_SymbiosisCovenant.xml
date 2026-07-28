@@ -21,9 +21,12 @@
   <MAP_MechanoidMechanitor.Symbiosis.Disconnect>断开连接</MAP_MechanoidMechanitor.Symbiosis.Disconnect>
   <MAP_MechanoidMechanitor.Symbiosis.ConnectionLost>多方通讯链路不可用。</MAP_MechanoidMechanitor.Symbiosis.ConnectionLost>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.Rejected>拒绝接入</MAP_MechanoidMechanitor.Symbiosis.Stage.Rejected>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation>戒备观察</MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact>秘密接触</MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.Ceasefire>停火观察</MAP_MechanoidMechanitor.Symbiosis.Stage.Ceasefire>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.CommonDefense>共同防卫</MAP_MechanoidMechanitor.Symbiosis.Stage.CommonDefense>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.StrategicCooperation>战略协作</MAP_MechanoidMechanitor.Symbiosis.Stage.StrategicCooperation>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.ReadyToSign>盟约候选</MAP_MechanoidMechanitor.Symbiosis.Stage.ReadyToSign>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.Member>盟约成员</MAP_MechanoidMechanitor.Symbiosis.Stage.Member>
   <MAP_MechanoidMechanitor.Symbiosis.Option.Execute>执行</MAP_MechanoidMechanitor.Symbiosis.Option.Execute>
   <MAP_MechanoidMechanitor.Symbiosis.Option.NoFaction>请先选择一个有效派系。</MAP_MechanoidMechanitor.Symbiosis.Option.NoFaction>
@@ -38,6 +41,7 @@
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.DestroyedSettlement>摧毁该派系据点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.DestroyedSettlement>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>摧毁机械巢节点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>清除共同敌人据点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev>DEV 信任测试</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev>
   <MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Label>脱离声明已公开</MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Label>
   <MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Text>本地节点已向所有可接入派系广播自主声明。各派系将继续观察玩家的实际行动，并分别记录信任进度。</MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Text>
   <MAP_MechanoidMechanitor.Symbiosis.Milestone.Letter.Label>{0}：信任阶段更新</MAP_MechanoidMechanitor.Symbiosis.Milestone.Letter.Label>
@@ -46,4 +50,14 @@
   <MAP_MechanoidMechanitor.Symbiosis.Signed.Letter.Text>{0}已确认玩家机械节点具备独立意志，并正式取得共生盟约席位。当前正式席位：{1}/{2}。</MAP_MechanoidMechanitor.Symbiosis.Signed.Letter.Text>
   <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label>机械主脑侦测到叛离联盟</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label>
   <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>玩家与有机派系建立的公开共同防卫关系已被机械主脑识别。机械巢已将本地节点重新分类为敌对异常单元；此后双方关系将永久保持敌对。</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.Title>DEV // 共生盟约测试</MAP_MechanoidMechanitor.Symbiosis.Dev.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord>当前没有可测试的派系信任记录。</MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.Adjust>增减当前信任</MAP_MechanoidMechanitor.Symbiosis.Dev.Adjust>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.Set>直接设置关键阶段</MAP_MechanoidMechanitor.Symbiosis.Dev.Set>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.Utilities>测试工具</MAP_MechanoidMechanitor.Symbiosis.Dev.Utilities>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.ResetLimits>重置周期限制</MAP_MechanoidMechanitor.Symbiosis.Dev.ResetLimits>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.ReplayMilestone>重放当前里程碑</MAP_MechanoidMechanitor.Symbiosis.Dev.ReplayMilestone>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.RecreateRecord>重建当前记录</MAP_MechanoidMechanitor.Symbiosis.Dev.RecreateRecord>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.State>内部状态</MAP_MechanoidMechanitor.Symbiosis.Dev.State>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.NoMilestone>当前信任尚未达到可重放的里程碑。</MAP_MechanoidMechanitor.Symbiosis.Dev.NoMilestone>
 </LanguageData>
