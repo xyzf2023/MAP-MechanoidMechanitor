@@ -341,7 +341,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(inner.x, y, inner.width, 18f),
                 "MAP_MechanoidMechanitor.Symbiosis.Trust".Translate(
                     record.Trust,
-                    GameComponent_SymbiosisCovenantState.GetStageLabel(record.Trust)),
+                    record.CovenantMember
+                        ? "MAP_MechanoidMechanitor.Symbiosis.Stage.Member".Translate()
+                        : GameComponent_SymbiosisCovenantState.GetStageLabel(record.Trust)),
                 GameFont.Tiny,
                 Color.white);
             y += 20f;
@@ -510,6 +512,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Close();
             }
 
+            if (Prefs.DevMode)
+            {
+                Rect devRect = new Rect(rect.xMax - 230f, rect.y + 4f, 70f, 30f);
+                if (Widgets.ButtonText(devRect, "DEV"))
+                {
+                    Find.WindowStack.Add(
+                        new Dialog_SymbiosisCovenantDev(selectedFaction));
+                }
+            }
+
             if (pageCount > 1)
             {
                 Rect previousRect = new Rect(rect.x, rect.y + 4f, 88f, 30f);
@@ -583,21 +595,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static void DrawTrustBar(Rect rect, int trust)
         {
             Widgets.DrawBoxSolid(rect, new Color(0.025f, 0.035f, 0.04f, 1f));
-            float width = rect.width * Mathf.Clamp01(trust / 100f);
-            if (width > 0f)
+            float zeroX = rect.x
+                + rect.width
+                * (-GameComponent_SymbiosisCovenantState.MinimumTrust)
+                / (GameComponent_SymbiosisCovenantState.MaximumTrust
+                    - GameComponent_SymbiosisCovenantState.MinimumTrust);
+            if (trust < 0)
             {
-                Color color = trust >= 75
-                    ? new Color(0.20f, 0.85f, 0.52f, 1f)
-                    : trust >= 50
-                        ? TealColor
-                        : trust >= 25
-                            ? new Color(0.87f, 0.70f, 0.25f, 1f)
-                            : new Color(0.65f, 0.26f, 0.23f, 1f);
+                float negativeFraction = Mathf.Clamp01(
+                    (float)-trust
+                    / -GameComponent_SymbiosisCovenantState.MinimumTrust);
+                float width = (zeroX - rect.x) * negativeFraction;
                 Widgets.DrawBoxSolid(
-                    new Rect(rect.x, rect.y, width, rect.height),
+                    new Rect(zeroX - width, rect.y, width, rect.height),
+                    trust >= -50
+                        ? new Color(0.80f, 0.48f, 0.22f, 1f)
+                        : new Color(0.65f, 0.26f, 0.23f, 1f));
+            }
+            else if (trust > 0)
+            {
+                float positiveFraction = Mathf.Clamp01(
+                    (float)trust
+                    / GameComponent_SymbiosisCovenantState.MaximumTrust);
+                float width = (rect.xMax - zeroX) * positiveFraction;
+                Color color = trust >= 150
+                    ? new Color(0.20f, 0.85f, 0.52f, 1f)
+                    : trust >= 100
+                        ? new Color(0.24f, 0.75f, 0.68f, 1f)
+                        : trust >= 50
+                            ? TealColor
+                            : new Color(0.87f, 0.70f, 0.25f, 1f);
+                Widgets.DrawBoxSolid(
+                    new Rect(zeroX, rect.y, width, rect.height),
                     color);
             }
 
+            Widgets.DrawBoxSolid(
+                new Rect(zeroX - 1f, rect.y, 2f, rect.height),
+                new Color(0.74f, 0.82f, 0.80f, 0.8f));
             DrawOutline(rect, 1, new Color(0.25f, 0.42f, 0.41f, 0.9f));
         }
 
@@ -692,6 +727,242 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 GUI.color = previousColor;
             }
+        }
+    }
+
+    public sealed class Dialog_SymbiosisCovenantDev : Window
+    {
+        private readonly Faction? faction;
+
+        public override Vector2 InitialSize => new Vector2(760f, 610f);
+
+        public Dialog_SymbiosisCovenantDev(Faction? faction)
+        {
+            this.faction = faction;
+            doCloseX = true;
+            absorbInputAroundWindow = true;
+            forcePause = false;
+            closeOnAccept = false;
+            closeOnCancel = true;
+        }
+
+        public override void DoWindowContents(Rect inRect)
+        {
+            if (!Prefs.DevMode)
+            {
+                Close();
+                return;
+            }
+
+            GameComponent_SymbiosisCovenantState? state =
+                GameComponent_SymbiosisCovenantState.CurrentComponent;
+            SymbiosisCovenantFactionRecord? record = state?.GetRecord(faction);
+
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            bool previousWordWrap = Text.WordWrap;
+            try
+            {
+                Text.Font = GameFont.Medium;
+                Text.Anchor = TextAnchor.UpperLeft;
+                Widgets.Label(
+                    new Rect(inRect.x, inRect.y, inRect.width, 32f),
+                    "MAP_MechanoidMechanitor.Symbiosis.Dev.Title".Translate());
+
+                Text.Font = GameFont.Small;
+                Widgets.Label(
+                    new Rect(inRect.x, inRect.y + 38f, inRect.width, 26f),
+                    record?.Faction?.Name
+                    ?? "MAP_MechanoidMechanitor.Symbiosis.NoFactionSelected"
+                        .Translate()
+                        .ToString());
+
+                if (state == null || record?.Faction == null)
+                {
+                    Text.Font = GameFont.Tiny;
+                    Widgets.Label(
+                        new Rect(inRect.x, inRect.y + 75f, inRect.width, 50f),
+                        "MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord".Translate());
+                    return;
+                }
+
+                float y = inRect.y + 75f;
+                DrawSectionLabel(
+                    new Rect(inRect.x, y, inRect.width, 24f),
+                    "MAP_MechanoidMechanitor.Symbiosis.Dev.Adjust".Translate());
+                y += 28f;
+                DrawButtonRow(
+                    new Rect(inRect.x, y, inRect.width, 34f),
+                    new[] { "-25", "-1", "+1", "+25" },
+                    new Action[]
+                    {
+                        () => Adjust(state, -25),
+                        () => Adjust(state, -1),
+                        () => Adjust(state, 1),
+                        () => Adjust(state, 25)
+                    });
+
+                y += 46f;
+                DrawSectionLabel(
+                    new Rect(inRect.x, y, inRect.width, 24f),
+                    "MAP_MechanoidMechanitor.Symbiosis.Dev.Set".Translate());
+                y += 28f;
+                DrawButtonRow(
+                    new Rect(inRect.x, y, inRect.width, 34f),
+                    new[] { "-100", "-50", "0", "1" },
+                    new Action[]
+                    {
+                        () => SetTrust(state, -100),
+                        () => SetTrust(state, -50),
+                        () => SetTrust(state, 0),
+                        () => SetTrust(state, 1)
+                    });
+                y += 38f;
+                DrawButtonRow(
+                    new Rect(inRect.x, y, inRect.width, 34f),
+                    new[] { "50", "100", "150", "200" },
+                    new Action[]
+                    {
+                        () => SetTrust(state, 50),
+                        () => SetTrust(state, 100),
+                        () => SetTrust(state, 150),
+                        () => SetTrust(state, 200)
+                    });
+
+                y += 48f;
+                DrawSectionLabel(
+                    new Rect(inRect.x, y, inRect.width, 24f),
+                    "MAP_MechanoidMechanitor.Symbiosis.Dev.Utilities".Translate());
+                y += 28f;
+                DrawButtonRow(
+                    new Rect(inRect.x, y, inRect.width, 34f),
+                    new string[]
+                    {
+                        "MAP_MechanoidMechanitor.Symbiosis.Dev.ResetLimits"
+                            .Translate()
+                            .ToString(),
+                        "MAP_MechanoidMechanitor.Symbiosis.Dev.ReplayMilestone"
+                            .Translate()
+                            .ToString(),
+                        "MAP_MechanoidMechanitor.Symbiosis.Dev.RecreateRecord"
+                            .Translate()
+                            .ToString()
+                    },
+                    new Action[]
+                    {
+                        () => state.DevResetSourceLimits(faction),
+                        () => ReplayMilestone(state),
+                        () => state.DevRecreateRecord(faction)
+                    });
+
+                record = state.GetRecord(faction);
+                y += 50f;
+                DrawSectionLabel(
+                    new Rect(inRect.x, y, inRect.width, 24f),
+                    "MAP_MechanoidMechanitor.Symbiosis.Dev.State".Translate());
+                y += 28f;
+                Text.Font = GameFont.Tiny;
+                Text.WordWrap = true;
+                Widgets.DrawBoxSolid(
+                    new Rect(inRect.x, y, inRect.width, inRect.yMax - y),
+                    new Color(0.06f, 0.08f, 0.085f, 0.96f));
+                Widgets.Label(
+                    new Rect(
+                        inRect.x + 10f,
+                        y + 8f,
+                        inRect.width - 20f,
+                        inRect.yMax - y - 16f),
+                    BuildStateText(state, record));
+            }
+            finally
+            {
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
+            }
+        }
+
+        private void Adjust(
+            GameComponent_SymbiosisCovenantState state,
+            int amount)
+        {
+            state.DevAdjustTrust(
+                faction,
+                amount,
+                "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev".Translate());
+        }
+
+        private void SetTrust(
+            GameComponent_SymbiosisCovenantState state,
+            int value)
+        {
+            state.DevSetTrust(
+                faction,
+                value,
+                "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev".Translate());
+        }
+
+        private void ReplayMilestone(GameComponent_SymbiosisCovenantState state)
+        {
+            if (!state.DevReplayCurrentMilestone(faction))
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.Symbiosis.Dev.NoMilestone".Translate(),
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+            }
+        }
+
+        private static void DrawSectionLabel(Rect rect, string label)
+        {
+            Text.Font = GameFont.Small;
+            Widgets.Label(rect, label);
+        }
+
+        private static void DrawButtonRow(
+            Rect rect,
+            string[] labels,
+            Action[] actions)
+        {
+            const float gap = 8f;
+            float width = (rect.width - gap * (labels.Length - 1)) / labels.Length;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                Rect buttonRect = new Rect(
+                    rect.x + i * (width + gap),
+                    rect.y,
+                    width,
+                    rect.height);
+                if (Widgets.ButtonText(buttonRect, labels[i]))
+                {
+                    actions[i]();
+                }
+            }
+        }
+
+        private static string BuildStateText(
+            GameComponent_SymbiosisCovenantState state,
+            SymbiosisCovenantFactionRecord? record)
+        {
+            if (record == null)
+            {
+                return "MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord".Translate();
+            }
+
+            return
+                "Trust = " + record.Trust
+                + "\nStage = "
+                + GameComponent_SymbiosisCovenantState.GetStageLabel(record.Trust)
+                + "\nHighestReachedMilestone = " + record.HighestReachedMilestone
+                + "\nHighestAppliedMilestone = " + record.HighestAppliedMilestone
+                + "\nCovenantMember = " + record.CovenantMember
+                + "\nGoodwillWindow = " + record.GoodwillWindowStartTick
+                + " / " + record.GoodwillTrustGainedInWindow
+                + "\nTradeWindow = " + record.TradeWindowStartTick
+                + " / " + record.TradeTrustGainedInWindow
+                + "\nLastBetrayalTick = " + record.LastBetrayalTick
+                + "\nPublicDeclaration = " + state.PublicDeclarationBroadcast
+                + "\nMechHiveRetaliation = " + state.MechHiveRetaliationTriggered;
         }
     }
 }
