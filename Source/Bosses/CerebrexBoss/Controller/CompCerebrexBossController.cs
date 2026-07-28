@@ -163,14 +163,19 @@ namespace MAP_MechanoidMechanitor
 
             if (bandwidthInterferenceActive)
             {
-                bool valid = bandwidthTarget != null
-                    && !bandwidthTarget.Dead
-                    && !bandwidthTarget.Destroyed
-                    && !bandwidthTarget.Discarded
-                    && bandwidthOverseer != null
-                    && bandwidthOverseer.mechanitor != null
-                    && ModsConfig.OdysseyActive;
-                if (!valid)
+                // 基础状态损坏：无法恢复的有效技能状态（如未启用 DLC、主脑停止/销毁、
+                // 目标或监管者引用永久失效、核心翻倍健康状态丢失）。这些必须立即完整清理。
+                // 目标死亡/倒地/被摧毁/离开地图本身不属于基础损坏，交由共享结束判断处理。
+                bool baseBroken = !ModsConfig.OdysseyActive
+                    || stopped
+                    || !parent.Spawned
+                    || parent.Destroyed
+                    || bandwidthTarget == null
+                    || bandwidthTarget.Discarded
+                    || bandwidthOverseer == null
+                    || bandwidthOverseer.mechanitor == null;
+
+                if (baseBroken)
                 {
                     EndBandwidthInterference(startCooldown: false, reason: "loadfix");
                 }
@@ -179,6 +184,12 @@ namespace MAP_MechanoidMechanitor
                     HediffDef? def = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
                     if (def != null && bandwidthTarget!.health.hediffSet.GetFirstHediffOfDef(def) == null)
                     {
+                        // 核心翻倍健康状态无故丢失 -> 损坏，完整清理。
+                        EndBandwidthInterference(startCooldown: false, reason: "loadfix");
+                    }
+                    else if (ShouldEndBandwidthInterferenceForPawnState())
+                    {
+                        // 战斗结束条件（目标 / 本轮狂暴者行动能力）已满足 -> 正常结束。
                         EndBandwidthInterference(startCooldown: false, reason: "loadfix");
                     }
                 }
@@ -892,6 +903,36 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
+        // 无副作用的辅助方法：正常 tick 与读档校验共用，仅判断“目标 / 本轮狂暴者”的
+        // 行动能力结束条件（不含主脑停止、派系、监管者引用损坏、结束时间等基础状态）。
+        // 目标属于本轮狂暴名单时，仅当所有本轮狂暴者均失去行动能力才结束整轮；
+        // 目标不属于本轮狂暴名单时，目标本人失去行动能力即结束整轮。
+        private bool ShouldEndBandwidthInterferenceForPawnState()
+        {
+            if (bandwidthTarget == null)
+            {
+                return true;
+            }
+
+            bool targetIsBerserker = bandwidthBerserkPawns.Contains(bandwidthTarget);
+            if (targetIsBerserker)
+            {
+                // 目标本人作为本轮狂暴者：只要还有任意本轮狂暴者仍能行动就不结束。
+                foreach (Pawn p in bandwidthBerserkPawns)
+                {
+                    if (!IsBandwidthBerserkPawnIncapacitated(p))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            // 目标本人未进入本轮狂暴名单：其本人失去行动能力即可结束整轮。
+            return IsBandwidthBerserkPawnIncapacitated(bandwidthTarget);
+        }
+
         private void TickBandwidthInterference()
         {
             int now = Find.TickManager.TicksGame;
@@ -929,32 +970,10 @@ namespace MAP_MechanoidMechanitor
                 CleanupDownedBerserkMarkers();
             }
 
-            // 3. 情况一：带宽目标本人未进入本轮狂暴名单，其倒地/死亡/摧毁/离开地图 -> 结束整轮。
-            bool targetIsBerserker = bandwidthTarget != null && bandwidthBerserkPawns.Contains(bandwidthTarget);
-            if (!shouldEnd && !targetIsBerserker && bandwidthTarget != null
-                && IsBandwidthBerserkPawnIncapacitated(bandwidthTarget))
+            // 3/4. 目标与本轮狂暴者的行动能力判断（与读档校验共用，无副作用）。
+            if (!shouldEnd && ShouldEndBandwidthInterferenceForPawnState())
             {
                 shouldEnd = true;
-            }
-
-            // 4. 情况二：本轮曾经产生狂暴者，仅当所有本轮狂暴者均失去行动能力时才结束整轮。
-            //    目标本人作为狂暴者倒地/死亡，不强制恢复其他仍在行动的狂暴者。
-            if (!shouldEnd && bandwidthBerserkPawns.Count > 0)
-            {
-                bool allIncapacitated = true;
-                foreach (Pawn p in bandwidthBerserkPawns)
-                {
-                    if (!IsBandwidthBerserkPawnIncapacitated(p))
-                    {
-                        allIncapacitated = false;
-                        break;
-                    }
-                }
-
-                if (allIncapacitated)
-                {
-                    shouldEnd = true;
-                }
             }
 
             // 5. 某个本轮狂暴者本人重新出现在原监管者的受控列表中 -> 结束整轮（逐 Pawn 匹配）。
