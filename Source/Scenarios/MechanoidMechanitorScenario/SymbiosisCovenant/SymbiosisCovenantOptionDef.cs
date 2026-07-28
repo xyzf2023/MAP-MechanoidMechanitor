@@ -44,9 +44,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 yield return defName + " 的 workerClass 必须继承 SymbiosisCovenantOptionWorker。";
             }
 
-            if (minimumTrust < 0 || minimumTrust > 100)
+            if (minimumTrust < GameComponent_SymbiosisCovenantState.MinimumTrust
+                || minimumTrust > GameComponent_SymbiosisCovenantState.MaximumTrust)
             {
-                yield return defName + " 的 minimumTrust 必须位于 0 到 100 之间。";
+                yield return defName
+                    + " 的 minimumTrust 必须位于 "
+                    + GameComponent_SymbiosisCovenantState.MinimumTrust
+                    + " 到 "
+                    + GameComponent_SymbiosisCovenantState.MaximumTrust
+                    + " 之间。";
             }
         }
     }
@@ -74,7 +80,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (record != null && record.Trust < def.minimumTrust)
+            if (def.requiresFaction
+                && record != null
+                && record.Trust < def.minimumTrust)
             {
                 disabledReason =
                     "MAP_MechanoidMechanitor.Symbiosis.Option.TrustRequired".Translate(

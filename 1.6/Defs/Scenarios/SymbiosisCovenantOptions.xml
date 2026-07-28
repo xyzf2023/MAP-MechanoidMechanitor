@@ -5,7 +5,7 @@
     <label>公开脱离声明</label>
     <description>向所有可接入派系公开广播：本地机械节点已脱离主脑控制，并愿意接受持续观察。</description>
     <displayOrder>100</displayOrder>
-    <minimumTrust>0</minimumTrust>
+    <minimumTrust>-100</minimumTrust>
     <requiresFaction>false</requiresFaction>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantOptionWorker_PublicDeclaration</workerClass>
   </MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantOptionDef>
@@ -15,7 +15,7 @@
     <label>签署共生盟约</label>
     <description>邀请当前派系正式加入共生盟约，并取得多方协调链路中的常设席位。</description>
     <displayOrder>200</displayOrder>
-    <minimumTrust>100</minimumTrust>
+    <minimumTrust>200</minimumTrust>
     <requiresFaction>true</requiresFaction>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantOptionWorker_SignCovenant</workerClass>
   </MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantOptionDef>

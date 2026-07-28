@@ -83,6 +83,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public IReadOnlyList<SymbiosisCovenantTrustChange> RecentChanges => recentChanges;
 
+        public int GoodwillWindowStartTick => goodwillWindowStartTick;
+
+        public int GoodwillTrustGainedInWindow => goodwillTrustGainedInWindow;
+
+        public int TradeWindowStartTick => tradeWindowStartTick;
+
+        public int TradeTrustGainedInWindow => tradeTrustGainedInWindow;
+
+        public int LastBetrayalTick => lastBetrayalTick;
+
         public SymbiosisCovenantFactionRecord()
         {
         }
@@ -90,7 +100,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public SymbiosisCovenantFactionRecord(Faction faction, int initialTrust)
         {
             this.faction = faction;
-            trust = Math.Max(0, Math.Min(100, initialTrust));
+            trust = GameComponent_SymbiosisCovenantState.ClampTrust(initialTrust);
             highestReachedMilestone =
                 GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust);
             highestAppliedMilestone = highestReachedMilestone;
@@ -114,7 +124,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             int previousTrust = trust;
-            trust = Math.Max(0, Math.Min(100, trust + amount));
+            trust = GameComponent_SymbiosisCovenantState.ClampTrust(trust + amount);
             int actualAmount = trust - previousTrust;
             if (actualAmount == 0)
             {
@@ -140,7 +150,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public void SetTrustDirect(int value, string reason, int now)
         {
-            int clamped = Math.Max(0, Math.Min(100, value));
+            int clamped = GameComponent_SymbiosisCovenantState.ClampTrust(value);
             int delta = clamped - trust;
             if (delta == 0)
             {
@@ -160,6 +170,51 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     highestReachedMilestone,
                     GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust));
             }
+        }
+
+        public void DevSetTrust(int value, string reason, int now)
+        {
+            int clamped = GameComponent_SymbiosisCovenantState.ClampTrust(value);
+            int delta = clamped - trust;
+            trust = clamped;
+            highestReachedMilestone =
+                GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust);
+            highestAppliedMilestone =
+                GameComponent_SymbiosisCovenantState.GetPreviousMilestone(
+                    highestReachedMilestone);
+            if (delta != 0)
+            {
+                recentChanges.Add(
+                    new SymbiosisCovenantTrustChange(now, delta, reason));
+                while (recentChanges.Count > 8)
+                {
+                    recentChanges.RemoveAt(0);
+                }
+            }
+        }
+
+        public void DevResetSourceLimits()
+        {
+            goodwillWindowStartTick = -1;
+            goodwillTrustGainedInWindow = 0;
+            tradeWindowStartTick = -1;
+            tradeTrustGainedInWindow = 0;
+            lastBetrayalTick = -1;
+        }
+
+        public bool DevPrepareCurrentMilestoneReplay()
+        {
+            int milestone =
+                GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust);
+            if (milestone < GameComponent_SymbiosisCovenantState.FirstMilestone)
+            {
+                return false;
+            }
+
+            highestReachedMilestone = milestone;
+            highestAppliedMilestone =
+                GameComponent_SymbiosisCovenantState.GetPreviousMilestone(milestone);
+            return true;
         }
 
         private int ApplySourceLimit(
@@ -235,15 +290,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public void ExposeData()
         {
             Scribe_References.Look(ref faction, "faction");
-            Scribe_Values.Look(ref trust, "trust", 0);
+            Scribe_Values.Look(
+                ref trust,
+                "trust",
+                GameComponent_SymbiosisCovenantState.MinimumTrust);
             Scribe_Values.Look(
                 ref highestReachedMilestone,
                 "highestReachedMilestone",
-                0);
+                GameComponent_SymbiosisCovenantState.MinimumTrust - 1);
             Scribe_Values.Look(
                 ref highestAppliedMilestone,
                 "highestAppliedMilestone",
-                0);
+                GameComponent_SymbiosisCovenantState.MinimumTrust - 1);
             Scribe_Values.Look(ref covenantMember, "covenantMember", false);
             Scribe_Values.Look(
                 ref goodwillWindowStartTick,
@@ -270,7 +328,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 recentChanges ??= new List<SymbiosisCovenantTrustChange>();
-                trust = Math.Max(0, Math.Min(100, trust));
+                trust = GameComponent_SymbiosisCovenantState.ClampTrust(trust);
                 highestReachedMilestone = Math.Max(
                     highestReachedMilestone,
                     GetInitialMilestoneFallback());
@@ -285,12 +343,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
     public sealed class GameComponent_SymbiosisCovenantState : GameComponent
     {
+        public const int MinimumTrust = -100;
+        public const int MaximumTrust = 200;
+        public const int FirstMilestone = -50;
         public const int SourceWindowTicks = 900000;
         public const int GoodwillTrustPerWindow = 15;
         public const int TradeTrustPerWindow = 5;
         public const int BetrayalCooldownTicks = 600;
 
         private const int SynchronizeIntervalTicks = 2500;
+        private static readonly int[] TrustMilestones =
+        {
+            -50,
+            1,
+            50,
+            100,
+            150,
+            200
+        };
 
         private bool initialized;
         private bool contactUnlockedLetterSent;
@@ -487,7 +557,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (!IsActive
                 || record?.Faction == null
-                || record.Trust < 100
+                || record.Trust < MaximumTrust
                 || record.CovenantMember)
             {
                 return false;
@@ -526,8 +596,107 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            record.SetTrustDirect(0, reason, CurrentTick);
+            record.SetTrustDirect(MinimumTrust, reason, CurrentTick);
             record.CovenantMember = false;
+        }
+
+        public bool DevAdjustTrust(
+            Faction? faction,
+            int amount,
+            string reason)
+        {
+            if (!Prefs.DevMode || faction == null || amount == 0)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null)
+            {
+                return false;
+            }
+
+            int previousTrust = record.Trust;
+            record.SetTrustDirect(previousTrust + amount, reason, CurrentTick);
+            if (record.Trust > previousTrust)
+            {
+                TryApplyReachedMilestone(record);
+            }
+
+            return record.Trust != previousTrust;
+        }
+
+        public bool DevSetTrust(Faction? faction, int value, string reason)
+        {
+            if (!Prefs.DevMode || faction == null)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null)
+            {
+                return false;
+            }
+
+            record.DevSetTrust(value, reason, CurrentTick);
+            if (record.Trust < MaximumTrust)
+            {
+                record.CovenantMember = false;
+            }
+
+            TryApplyReachedMilestone(record);
+            return true;
+        }
+
+        public bool DevResetSourceLimits(Faction? faction)
+        {
+            if (!Prefs.DevMode)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null)
+            {
+                return false;
+            }
+
+            record.DevResetSourceLimits();
+            return true;
+        }
+
+        public bool DevRecreateRecord(Faction? faction)
+        {
+            if (!Prefs.DevMode || faction == null || !IsEligibleFaction(faction))
+            {
+                return false;
+            }
+
+            factionRecords.RemoveAll(record => record.Faction == faction);
+            factionRecords.Add(
+                new SymbiosisCovenantFactionRecord(
+                    faction,
+                    GetInitialTrust(faction)));
+            return true;
+        }
+
+        public bool DevReplayCurrentMilestone(Faction? faction)
+        {
+            if (!Prefs.DevMode)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null || !record.DevPrepareCurrentMilestoneReplay())
+            {
+                return false;
+            }
+
+            TryApplyReachedMilestone(record);
+            return record.HighestAppliedMilestone
+                == GetMilestoneForTrust(record.Trust);
         }
 
         private bool AdjustTrustInternal(
@@ -592,7 +761,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             if (!mechHiveRetaliationTriggered
-                && factionRecords.Any(record => record.Trust >= 75))
+                && factionRecords.Any(record => record.Trust >= 100))
             {
                 TriggerMechHiveRetaliation();
             }
@@ -642,11 +811,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             switch (relation?.kind ?? FactionRelationKind.Hostile)
             {
                 case FactionRelationKind.Ally:
-                    return 75;
+                    return 100;
                 case FactionRelationKind.Neutral:
-                    return 50;
-                default:
                     return 0;
+                default:
+                    return -100;
             }
         }
 
@@ -671,10 +840,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            int[] milestones = { 25, 50, 75, 100 };
-            for (int i = 0; i < milestones.Length; i++)
+            for (int i = 0; i < TrustMilestones.Length; i++)
             {
-                int milestone = milestones[i];
+                int milestone = TrustMilestones[i];
                 if (milestone <= record.HighestAppliedMilestone
                     || milestone > record.HighestReachedMilestone)
                 {
@@ -688,7 +856,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 record.HighestAppliedMilestone = milestone;
                 SendMilestoneLetter(faction, milestone);
-                if (milestone >= 75)
+                if (milestone >= 100)
                 {
                     TriggerMechHiveRetaliation();
                 }
@@ -755,14 +923,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             out int goodwill,
             out FactionRelationKind relationKind)
         {
-            if (milestone >= 100)
+            if (milestone >= 200)
             {
                 goodwill = 100;
                 relationKind = FactionRelationKind.Ally;
                 return true;
             }
 
-            if (milestone >= 75)
+            if (milestone >= 150)
+            {
+                goodwill = 100;
+                relationKind = FactionRelationKind.Ally;
+                return true;
+            }
+
+            if (milestone >= 100)
             {
                 goodwill = 75;
                 relationKind = FactionRelationKind.Ally;
@@ -776,7 +951,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return true;
             }
 
-            if (milestone >= 25)
+            if (milestone >= 1)
+            {
+                goodwill = -25;
+                relationKind = FactionRelationKind.Hostile;
+                return true;
+            }
+
+            if (milestone >= -50)
             {
                 goodwill = -50;
                 relationKind = FactionRelationKind.Hostile;
@@ -797,7 +979,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     faction.Name,
                     milestone,
                     GetStageLabel(milestone)),
-                milestone >= 75 ? LetterDefOf.PositiveEvent : LetterDefOf.NeutralEvent,
+                milestone >= 100 ? LetterDefOf.PositiveEvent : LetterDefOf.NeutralEvent,
                 null,
                 faction);
         }
@@ -856,14 +1038,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static int GetMilestoneForTrust(int trust)
         {
+            if (trust >= 200)
+            {
+                return 200;
+            }
+
+            if (trust >= 150)
+            {
+                return 150;
+            }
+
             if (trust >= 100)
             {
                 return 100;
-            }
-
-            if (trust >= 75)
-            {
-                return 75;
             }
 
             if (trust >= 50)
@@ -871,19 +1058,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return 50;
             }
 
-            return trust >= 25 ? 25 : 0;
+            if (trust >= 1)
+            {
+                return 1;
+            }
+
+            return trust >= -50 ? -50 : MinimumTrust - 1;
         }
 
         public static string GetStageLabel(int trust)
         {
-            if (trust >= 100)
+            if (trust >= 200)
             {
-                return "MAP_MechanoidMechanitor.Symbiosis.Stage.Member".Translate();
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.ReadyToSign"
+                    .Translate();
             }
 
-            if (trust >= 75)
+            if (trust >= 150)
             {
-                return "MAP_MechanoidMechanitor.Symbiosis.Stage.CommonDefense".Translate();
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.StrategicCooperation"
+                    .Translate();
+            }
+
+            if (trust >= 100)
+            {
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.CommonDefense"
+                    .Translate();
             }
 
             if (trust >= 50)
@@ -891,12 +1091,39 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return "MAP_MechanoidMechanitor.Symbiosis.Stage.Ceasefire".Translate();
             }
 
-            if (trust >= 25)
+            if (trust >= 1)
             {
                 return "MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact".Translate();
             }
 
+            if (trust >= -50)
+            {
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation"
+                    .Translate();
+            }
+
             return "MAP_MechanoidMechanitor.Symbiosis.Stage.Rejected".Translate();
+        }
+
+        public static int ClampTrust(int trust)
+        {
+            return Math.Max(MinimumTrust, Math.Min(MaximumTrust, trust));
+        }
+
+        public static int GetPreviousMilestone(int milestone)
+        {
+            int previous = MinimumTrust - 1;
+            for (int i = 0; i < TrustMilestones.Length; i++)
+            {
+                if (TrustMilestones[i] >= milestone)
+                {
+                    break;
+                }
+
+                previous = TrustMilestones[i];
+            }
+
+            return previous;
         }
 
         private static int CurrentTick => Find.TickManager?.TicksGame ?? 0;
