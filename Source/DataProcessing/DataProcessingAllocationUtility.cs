@@ -241,15 +241,27 @@ namespace MAP_MechanoidMechanitor
             int steps,
             DataProcessingSpecialization specialization)
         {
-            float progress = GetSpecializationProgress(steps);
             specialization = NormalizeSpecialization(specialization);
 
             switch (specialization)
             {
                 case DataProcessingSpecialization.GeneralTuning:
+                {
+                    float progress = GetSpecializationProgress(steps);
                     return Mathf.Lerp(1f, GeneralMinStaggerDurationFactor, progress);
+                }
+
                 case DataProcessingSpecialization.AssaultProtocol:
-                    return Mathf.Lerp(1f, AssaultMinStaggerDurationFactor, progress);
+                {
+                    int effectiveSteps = Mathf.Clamp(
+                        steps,
+                        0,
+                        AssaultStaggerImmunitySteps);
+
+                    float factor = 1f - effectiveSteps * 0.05f;
+                    return Mathf.Max(AssaultMinStaggerDurationFactor, factor);
+                }
+
                 default:
                     return 1f;
             }
@@ -270,28 +282,31 @@ namespace MAP_MechanoidMechanitor
             return Mathf.Lerp(1f, ProductionMinMechEnergyUsageFactor, progress);
         }
 
-        // 通用调谐上限常量。
-        public const float GeneralMaxWorkSpeedOffset = 1.50f;
-        public const float GeneralMaxMoveSpeedOffset = 2.50f;
-        public const float GeneralMinAimingDelayFactor = 0.75f;
-        public const float GeneralMinRangedCooldownFactor = 0.75f;
-        public const float GeneralMinMeleeCooldownFactor = 0.75f;
-        public const float GeneralMinIncomingDamageFactor = 0.75f;
-        public const float GeneralMinStaggerDurationFactor = 0f;
+        // 通用调谐：40档，即200%时达到最终上限。
+        public const float GeneralMaxWorkSpeedOffset = 2.00f;
+        public const float GeneralMaxMoveSpeedOffset = 4.00f;
+        public const float GeneralMinAimingDelayFactor = 0.60f;
+        public const float GeneralMinRangedCooldownFactor = 0.60f;
+        public const float GeneralMinMeleeCooldownFactor = 0.60f;
+        public const float GeneralMinIncomingDamageFactor = 0.60f;
+        public const float GeneralMinStaggerDurationFactor = 0.60f;
 
-        // 生产统筹上限常量。
-        public const float ProductionMaxWorkSpeedOffset = 3.00f;
-        public const float ProductionMaxMoveSpeedOffset = 5.00f;
-        public const float ProductionMinMechEnergyUsageFactor = 0.50f;
+        // 生产统筹：40档，即200%时达到最终上限。
+        public const float ProductionMaxWorkSpeedOffset = 4.00f;
+        public const float ProductionMaxMoveSpeedOffset = 4.00f;
+        public const float ProductionMinMechEnergyUsageFactor = 0.60f;
 
-        // 火控演算上限常量。
-        public const float FireControlMinAimingDelayFactor = 0.25f;
-        public const float FireControlMinRangedCooldownFactor = 0.25f;
+        // 火控演算：40档，即200%时达到最终上限。
+        public const float FireControlMinAimingDelayFactor = 0.20f;
+        public const float FireControlMinRangedCooldownFactor = 0.20f;
 
-        // 强袭协议上限常量。
-        public const float AssaultMinMeleeCooldownFactor = 0.25f;
-        public const float AssaultMaxMoveSpeedOffset = 5.00f;
-        public const float AssaultMinIncomingDamageFactor = 0.25f;
+        // 强袭协议的普通属性：40档，即200%时达到最终上限。
+        public const float AssaultMinMeleeCooldownFactor = 0.20f;
+        public const float AssaultMaxMoveSpeedOffset = 4.00f;
+        public const float AssaultMinIncomingDamageFactor = 0.20f;
+
+        // 强袭协议的抑止时间：20档，即100%时达到完全免疫。
+        public const int AssaultStaggerImmunitySteps = 20;
         public const float AssaultMinStaggerDurationFactor = 0f;
 
         /// <summary>

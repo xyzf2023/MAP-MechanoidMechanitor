@@ -1003,7 +1003,7 @@ namespace MAP_MechanoidMechanitor
             {
                 effectLabels.Add(
                     "MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(
-                        moveSpeedOffset.ToString("F2")));
+                        moveSpeedOffset.ToString("F1")));
                 effectTips.Add(string.Empty);
             }
 
@@ -1046,7 +1046,7 @@ namespace MAP_MechanoidMechanitor
             {
                 effectLabels.Add(
                     "MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(
-                        moveSpeedOffset.ToString("F2")));
+                        moveSpeedOffset.ToString("F1")));
                 effectTips.Add(string.Empty);
             }
 
@@ -1108,7 +1108,7 @@ namespace MAP_MechanoidMechanitor
             {
                 effectLabels.Add(
                     "MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(
-                        moveSpeedOffset.ToString("F2")));
+                        moveSpeedOffset.ToString("F1")));
                 effectTips.Add(string.Empty);
             }
 
