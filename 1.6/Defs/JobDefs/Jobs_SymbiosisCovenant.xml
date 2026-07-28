@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>MAP_AccessSymbiosisCovenant</defName>
+    <label>接入共生盟约</label>
+    <driverClass>MAP_MechanoidMechanitor.Scenarios.JobDriver_AccessSymbiosisCovenant</driverClass>
+    <reportString>正在建立多方通讯链路。</reportString>
+  </JobDef>
+</Defs>
