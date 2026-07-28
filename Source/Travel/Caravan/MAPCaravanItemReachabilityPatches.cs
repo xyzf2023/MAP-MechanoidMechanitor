@@ -11,7 +11,8 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 在 CheckForErrors 调用期间建立 ThreadStatic 作用域，
-    /// 使物资可达性 Lambda 在重组且存在独立领队时扩展机械搬运者资格。
+    /// 使物资可达性 Lambda 在选中机械搬运者时扩展搬运资格。
+    /// 同时覆盖首次组建远行队和临时地图重组远行队。
     /// </summary>
     [HarmonyPatch(
         typeof(Dialog_FormCaravan),
@@ -22,25 +23,20 @@ namespace MAP_MechanoidMechanitor
         private const string LogPrefix =
             "[MAP-机械族机械师] MAPCaravanItemReachabilityPatches：";
 
-        private const int ErrorKeyReformFieldMissing = 879346001;
-
         [ThreadStatic]
         private static Stack<bool>? collectorEnabledStack;
 
-        private static FieldInfo? reformField;
-        private static bool reformFieldResolved;
-
         [HarmonyPrefix]
         public static void Prefix(
-            Dialog_FormCaravan __instance,
             List<Pawn> pawns,
             out bool __state)
         {
             __state = false;
             bool enabled = false;
+
             try
             {
-                enabled = ShouldEnableCollectorExpansion(__instance, pawns);
+                enabled = ShouldEnableCollectorExpansion(pawns);
             }
             catch (Exception ex)
             {
@@ -54,7 +50,9 @@ namespace MAP_MechanoidMechanitor
         }
 
         [HarmonyFinalizer]
-        public static Exception? Finalizer(Exception? __exception, bool __state)
+        public static Exception? Finalizer(
+            Exception? __exception,
+            bool __state)
         {
             if (__state)
             {
@@ -70,6 +68,7 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 替换原版物资可达性 Lambda 中的 Pawn.IsColonist 判断。
+        /// 未启用机械搬运者作用域时完全保留原版 IsColonist 语义。
         /// </summary>
         public static bool IsCollectorForCurrentCheck(Pawn? pawn)
         {
@@ -89,7 +88,9 @@ namespace MAP_MechanoidMechanitor
         private static bool IsCollectorScopeEnabled()
         {
             Stack<bool>? stack = collectorEnabledStack;
-            return stack != null && stack.Count > 0 && stack.Peek();
+            return stack != null
+                && stack.Count > 0
+                && stack.Peek();
         }
 
         private static Stack<bool> GetCollectorEnabledStack()
@@ -98,15 +99,9 @@ namespace MAP_MechanoidMechanitor
         }
 
         private static bool ShouldEnableCollectorExpansion(
-            Dialog_FormCaravan? dialog,
             List<Pawn>? pawns)
         {
-            if (dialog == null || pawns == null || pawns.Count == 0)
-            {
-                return false;
-            }
-
-            if (!TryGetReform(dialog, out bool reform) || !reform)
+            if (pawns == null || pawns.Count == 0)
             {
                 return false;
             }
@@ -115,58 +110,14 @@ namespace MAP_MechanoidMechanitor
             {
                 Pawn? pawn = pawns[i];
                 if (pawn != null
-                    && MAPTravelUtility.CanActAsIndependentCaravanOwner(pawn))
+                    && !pawn.IsColonist
+                    && MAPTravelUtility.CanActAsCaravanCollector(pawn))
                 {
                     return true;
                 }
             }
 
             return false;
-        }
-
-        private static bool TryGetReform(Dialog_FormCaravan dialog, out bool reform)
-        {
-            reform = false;
-            FieldInfo? field = GetReformField();
-            if (field == null)
-            {
-                return false;
-            }
-
-            try
-            {
-                object? value = field.GetValue(dialog);
-                if (value is bool typed)
-                {
-                    reform = typed;
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"{LogPrefix}读取 Dialog_FormCaravan.reform 失败：{ex}");
-            }
-
-            return false;
-        }
-
-        private static FieldInfo? GetReformField()
-        {
-            if (reformFieldResolved)
-            {
-                return reformField;
-            }
-
-            reformFieldResolved = true;
-            reformField = AccessTools.Field(typeof(Dialog_FormCaravan), "reform");
-            if (reformField == null)
-            {
-                Log.ErrorOnce(
-                    $"{LogPrefix}未找到 Dialog_FormCaravan.reform 字段，机械搬运者扩展未启用。",
-                    ErrorKeyReformFieldMissing);
-            }
-
-            return reformField;
         }
     }
 

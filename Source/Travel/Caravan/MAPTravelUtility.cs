@@ -15,6 +15,18 @@ namespace MAP_MechanoidMechanitor
             return MAPMechanitorTravelUtility.CanCollectCaravanItems(pawn);
         }
 
+        public static bool ShouldCheckCaravanExitReachability(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            return pawn.IsColonist
+                || CanActAsIndependentCaravanOwner(pawn)
+                || CanActAsCaravanCollector(pawn);
+        }
+
         public static bool MapHasIndependentCaravanOwner(Map map)
         {
             if (map == null)
