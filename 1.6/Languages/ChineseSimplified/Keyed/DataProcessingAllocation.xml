@@ -43,4 +43,8 @@
   <MAP_DataProcessingAllocation_EffectRangedCooldown>远程攻击冷却 ×{0}</MAP_DataProcessingAllocation_EffectRangedCooldown>
   <MAP_DataProcessingAllocation_EffectMeleeCooldown>近战攻击冷却 ×{0}</MAP_DataProcessingAllocation_EffectMeleeCooldown>
   <MAP_DataProcessingAllocation_EffectMechEnergyUsage>机械能消耗 ×{0}</MAP_DataProcessingAllocation_EffectMechEnergyUsage>
+  <MAP_DataProcessingAllocation_DynamicAllocation>动态分配</MAP_DataProcessingAllocation_DynamicAllocation>
+  <MAP_DataProcessingAllocation_DynamicAllocationTip>开启后，按机械体类型自动选择特化（不占用额外数据处理、不改变分配档数），并每轮校正。关闭后恢复手动选择。</MAP_DataProcessingAllocation_DynamicAllocationTip>
+  <MAP_DataProcessingAllocation_DynamicAllocationManualDisabled>已开启动态分配，特化由机械体类型自动决定，无法手动切换。</MAP_DataProcessingAllocation_DynamicAllocationManualDisabled>
+  <MAP_DataProcessingAllocation_DynamicAllocationFailed>无法切换动态分配状态。</MAP_DataProcessingAllocation_DynamicAllocationFailed>
 </LanguageData>

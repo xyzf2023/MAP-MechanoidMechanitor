@@ -25,6 +25,14 @@ namespace MAP_MechanoidMechanitor
         private Dictionary<Pawn, DataProcessingSpecializationRecord> specializationRecordByTarget =
             new Dictionary<Pawn, DataProcessingSpecializationRecord>();
 
+        // 动态分配开关独立于分配档数与特化；开启后按机械体类型自动校正特化（不改档数）。
+        private List<DataProcessingDynamicAllocationRecord> dynamicAllocationRecords =
+            new List<DataProcessingDynamicAllocationRecord>();
+        private Dictionary<Pawn, DataProcessingDynamicAllocationRecord> dynamicAllocationRecordByOverseer =
+            new Dictionary<Pawn, DataProcessingDynamicAllocationRecord>();
+
+        private const int DynamicAllocationLogKeyBase = 0x4D415044; // "MAPD"
+
         private int protectionTickCounter;
 
         public static GameComponent_DataProcessingAllocationRegistry? CurrentRegistry
@@ -195,7 +203,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            // 仅手动切换时替换目标 Hediff。
+            // 显式切换特化时替换目标 Hediff，包括玩家手动切换与动态分配校正。
             ReplaceCommandFocusHediffForTarget(target!, specialization);
             return true;
         }
@@ -351,6 +359,245 @@ namespace MAP_MechanoidMechanitor
 
             // 无论是否存在正数分配，都统一清理该监管者的全部特化配置（含 0% 预选）。
             RemoveSpecializationRecordsForOverseer(overseer);
+
+            // 监管者被移除时一并清理其动态分配开关。
+            RemoveDynamicAllocationRecordForOverseer(overseer);
+        }
+
+        public bool IsDynamicAllocationEnabled(Pawn? overseer)
+        {
+            DataProcessingDynamicAllocationRecord? record = FindDynamicAllocationRecord(overseer);
+            return record != null && record.enabled;
+        }
+
+        public bool TrySetDynamicAllocationEnabled(Pawn? overseer, bool enabled)
+        {
+            if (overseer == null
+                || !ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked()
+                || !IsDynamicAllocationOverseerValid(overseer)
+                || overseer.mechanitor == null)
+            {
+                return false;
+            }
+
+            DataProcessingDynamicAllocationRecord? existing = FindDynamicAllocationRecord(overseer);
+            if (existing != null)
+            {
+                if (existing.enabled == enabled)
+                {
+                    return true;
+                }
+
+                existing.enabled = enabled;
+            }
+            else
+            {
+                dynamicAllocationRecords.Add(
+                    new DataProcessingDynamicAllocationRecord(overseer, enabled));
+            }
+
+            RebuildDynamicAllocationCaches();
+
+            if (enabled)
+            {
+                // 开启后立即对该监管者执行一次动态分配，覆盖当前各目标的手动特化。
+                RunDynamicAllocationForOverseer(overseer);
+            }
+
+            return true;
+        }
+
+        public bool IsDynamicAllocationOverseerValid(Pawn? overseer)
+        {
+            return overseer != null
+                && !overseer.Dead
+                && !overseer.Destroyed
+                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(overseer)
+                && overseer.mechanitor != null
+                && overseer.Faction != null
+                && overseer.Faction.IsPlayerSafe();
+        }
+
+        public void RunDynamicAllocation()
+        {
+            if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
+            {
+                return;
+            }
+
+            if (dynamicAllocationRecords == null)
+            {
+                return;
+            }
+
+            for (int i = dynamicAllocationRecords.Count - 1; i >= 0; i--)
+            {
+                DataProcessingDynamicAllocationRecord? record = dynamicAllocationRecords[i];
+                if (record == null)
+                {
+                    dynamicAllocationRecords.RemoveAt(i);
+                    continue;
+                }
+
+                Pawn? overseer = record.overseer;
+                if (overseer == null || overseer.Destroyed || !record.enabled)
+                {
+                    continue;
+                }
+
+                RunDynamicAllocationForOverseer(overseer);
+            }
+        }
+
+        private void RunDynamicAllocationForOverseer(Pawn overseer)
+        {
+            if (overseer == null || overseer.Destroyed || !IsDynamicAllocationOverseerValid(overseer))
+            {
+                return;
+            }
+
+            if (!IsDynamicAllocationEnabled(overseer))
+            {
+                return;
+            }
+
+            List<Pawn> targets = new List<Pawn>();
+            CollectDynamicAllocationTargets(overseer, targets);
+            for (int i = 0; i < targets.Count; i++)
+            {
+                Pawn? target = targets[i];
+                if (target == null || target.Destroyed)
+                {
+                    continue;
+                }
+
+                DataProcessingSpecialization desired =
+                    DataProcessingDynamicAllocationUtility.DetermineBaseSpecialization(target);
+                if (GetSpecializationForOverseerTarget(overseer, target) == desired)
+                {
+                    continue;
+                }
+
+                // 动态分配校正：按机械体类型刷新特化并替换目标 Hediff。
+                if (!TrySetSpecialization(overseer, target, desired))
+                {
+                    Log.ErrorOnce(
+                        "[MAP-机械族机械师] 动态分配校正特化失败：" +
+                        $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
+                        $"target={target.LabelShort}（{target.ThingID}）。",
+                        BuildDynamicAllocationLogKey(overseer));
+                }
+            }
+        }
+
+        private static int BuildDynamicAllocationLogKey(Pawn overseer)
+        {
+            return unchecked(DynamicAllocationLogKeyBase + overseer.thingIDNumber);
+        }
+
+        private void CollectDynamicAllocationTargets(Pawn overseer, List<Pawn> outTargets)
+        {
+            outTargets.Clear();
+            if (DataProcessingAllocationUtility.IsValidAllocationPair(overseer, overseer))
+            {
+                outTargets.Add(overseer);
+            }
+
+            if (overseer.mechanitor == null)
+            {
+                return;
+            }
+
+            List<Pawn> overseen = overseer.mechanitor.OverseenPawns;
+            for (int i = 0; i < overseen.Count; i++)
+            {
+                Pawn target = overseen[i];
+                if (!ReferenceEquals(target, overseer)
+                    && DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target))
+                {
+                    outTargets.Add(target);
+                }
+            }
+        }
+
+        private DataProcessingDynamicAllocationRecord? FindDynamicAllocationRecord(Pawn? overseer)
+        {
+            if (overseer == null || dynamicAllocationRecords == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < dynamicAllocationRecords.Count; i++)
+            {
+                DataProcessingDynamicAllocationRecord? record = dynamicAllocationRecords[i];
+                if (record != null && ReferenceEquals(record.overseer, overseer))
+                {
+                    return record;
+                }
+            }
+
+            return null;
+        }
+
+        private void RebuildDynamicAllocationCaches()
+        {
+            dynamicAllocationRecordByOverseer =
+                new Dictionary<Pawn, DataProcessingDynamicAllocationRecord>();
+            if (dynamicAllocationRecords == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < dynamicAllocationRecords.Count; i++)
+            {
+                DataProcessingDynamicAllocationRecord? record = dynamicAllocationRecords[i];
+                if (record?.overseer != null)
+                {
+                    dynamicAllocationRecordByOverseer[record.overseer] = record;
+                }
+            }
+        }
+
+        private void CleanupInvalidDynamicAllocationRecords()
+        {
+            dynamicAllocationRecords ??= new List<DataProcessingDynamicAllocationRecord>();
+
+            for (int i = dynamicAllocationRecords.Count - 1; i >= 0; i--)
+            {
+                DataProcessingDynamicAllocationRecord? record = dynamicAllocationRecords[i];
+                if (record == null
+                    || record.overseer == null
+                    || record.overseer.Dead
+                    || record.overseer.Destroyed
+                    || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(record.overseer)
+                    || record.overseer.mechanitor == null
+                    || record.overseer.Faction == null
+                    || !record.overseer.Faction.IsPlayerSafe())
+                {
+                    dynamicAllocationRecords.RemoveAt(i);
+                }
+            }
+
+            RebuildDynamicAllocationCaches();
+        }
+
+        private void RemoveDynamicAllocationRecordForOverseer(Pawn? overseer)
+        {
+            if (overseer == null || dynamicAllocationRecords == null)
+            {
+                return;
+            }
+
+            for (int i = dynamicAllocationRecords.Count - 1; i >= 0; i--)
+            {
+                DataProcessingDynamicAllocationRecord? record = dynamicAllocationRecords[i];
+                if (record != null && ReferenceEquals(record.overseer, overseer))
+                {
+                    dynamicAllocationRecords.RemoveAt(i);
+                }
+            }
+
+            RebuildDynamicAllocationCaches();
         }
 
         public bool IsPinned(Pawn? overseer, Pawn? target)
@@ -470,6 +717,7 @@ namespace MAP_MechanoidMechanitor
 
             CleanupInvalidPinRecords();
             CleanupInvalidSpecializationRecords();
+            CleanupInvalidDynamicAllocationRecords();
         }
 
         public void SyncHediffsForOverseer(Pawn? overseer)
@@ -615,6 +863,8 @@ namespace MAP_MechanoidMechanitor
             nextPinOrder = 0;
             specializationRecords.Clear();
             specializationRecordByTarget.Clear();
+            dynamicAllocationRecords.Clear();
+            dynamicAllocationRecordByOverseer.Clear();
 
             bool allSucceeded = true;
 
@@ -907,17 +1157,24 @@ namespace MAP_MechanoidMechanitor
                 ref specializationRecords,
                 "specializationRecords",
                 LookMode.Deep);
+            Scribe_Collections.Look(
+                ref dynamicAllocationRecords,
+                "dynamicAllocationRecords",
+                LookMode.Deep);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 records ??= new List<DataProcessingAllocationRecord>();
                 pinRecords ??= new List<DataProcessingAllocationPinRecord>();
                 specializationRecords ??= new List<DataProcessingSpecializationRecord>();
+                dynamicAllocationRecords ??= new List<DataProcessingDynamicAllocationRecord>();
                 records.RemoveAll(record => record == null || record.steps <= 0);
                 specializationRecords.RemoveAll(record => record == null);
+                dynamicAllocationRecords.RemoveAll(record => record == null);
                 RebuildCaches();
                 CleanupInvalidRecords();
                 CleanupInvalidSpecializationRecords();
+                CleanupInvalidDynamicAllocationRecords();
             }
         }
 
@@ -932,6 +1189,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             protectionTickCounter = 0;
+            RunDynamicAllocation();
             RunConsciousnessProtection();
         }
 
@@ -942,6 +1200,7 @@ namespace MAP_MechanoidMechanitor
             CleanupInvalidSpecializationRecords();
             RebuildCaches();
             RestoreCommandFocusHediffsAfterLoad();
+            RunDynamicAllocation();
         }
 
         /// <summary>
@@ -1149,6 +1408,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             RebuildSpecializationCaches();
+            RebuildDynamicAllocationCaches();
         }
 
         private void RebuildSpecializationCaches()

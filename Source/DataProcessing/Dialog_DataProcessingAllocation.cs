@@ -60,7 +60,7 @@ namespace MAP_MechanoidMechanitor
 
                 float curY = contentRect.y;
                 DrawTitle(contentRect, ref curY);
-                DrawSummary(contentRect, ref curY);
+                DrawSummary(contentRect, ref curY, registry);
                 DrawListHeader(contentRect, ref curY);
 
                 Rect listRect = new Rect(
@@ -107,7 +107,10 @@ namespace MAP_MechanoidMechanitor
             curY += TitleHeight + 4f;
         }
 
-        private void DrawSummary(Rect contentRect, ref float curY)
+        private void DrawSummary(
+            Rect contentRect,
+            ref float curY,
+            GameComponent_DataProcessingAllocationRegistry? registry)
         {
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.UpperLeft;
@@ -136,6 +139,55 @@ namespace MAP_MechanoidMechanitor
             Widgets.Label(new Rect(contentRect.x, curY, contentRect.width, hintHeight), hint);
             GUI.color = Color.white;
             curY += hintHeight + SectionGap;
+
+            DrawDynamicAllocationToggle(contentRect, ref curY, registry);
+        }
+
+        private void DrawDynamicAllocationToggle(
+            Rect contentRect,
+            ref float curY,
+            GameComponent_DataProcessingAllocationRegistry? registry)
+        {
+            if (registry == null || !IsOverseerCapable())
+            {
+                return;
+            }
+
+            bool enabled = registry.IsDynamicAllocationEnabled(overseer);
+            string label = "MAP_DataProcessingAllocation_DynamicAllocation".Translate();
+
+            float checkboxSize = 22f;
+            Rect checkboxRect = new Rect(contentRect.x, curY, checkboxSize, checkboxSize);
+            Widgets.Checkbox(checkboxRect.x, checkboxRect.y, ref enabled, checkboxSize, false);
+            TooltipHandler.TipRegion(
+                checkboxRect,
+                "MAP_DataProcessingAllocation_DynamicAllocationTip".Translate());
+
+            Rect labelRect = new Rect(
+                checkboxRect.xMax + 4f,
+                curY,
+                Mathf.Max(0f, contentRect.width - checkboxRect.width - 4f),
+                Text.LineHeight);
+            Widgets.Label(labelRect, label);
+
+            bool stored = registry.IsDynamicAllocationEnabled(overseer);
+            if (enabled != stored)
+            {
+                if (registry.TrySetDynamicAllocationEnabled(overseer, enabled))
+                {
+                    SoundDefOf.Click.PlayOneShotOnCamera();
+                }
+                else
+                {
+                    Messages.Message(
+                        "MAP_DataProcessingAllocation_DynamicAllocationFailed".Translate(),
+                        overseer,
+                        MessageTypeDefOf.RejectInput,
+                        historical: false);
+                }
+            }
+
+            curY += Text.LineHeight + SectionGap;
         }
 
         private void DrawListHeader(Rect contentRect, ref float curY)
@@ -339,9 +391,19 @@ namespace MAP_MechanoidMechanitor
             string label = DataProcessingAllocationUtility.GetSpecializationLabel(row.specialization);
             string tip = GetSpecializationTip(row.specialization);
 
+            bool dynamicLocked = registry != null
+                && registry.IsDynamicAllocationEnabled(overseer);
             bool enabled = registry != null
+                && !dynamicLocked
                 && DataProcessingAllocationUtility.IsValidAllocationPair(overseer, row.target);
-            if (!tip.NullOrEmpty())
+
+            if (dynamicLocked)
+            {
+                TooltipHandler.TipRegion(
+                    rect,
+                    "MAP_DataProcessingAllocation_DynamicAllocationManualDisabled".Translate());
+            }
+            else if (!tip.NullOrEmpty())
             {
                 TooltipHandler.TipRegion(rect, tip);
             }
