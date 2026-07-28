@@ -43,6 +43,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private readonly HashSet<Faction> ordinaryFactionCache = new HashSet<Faction>();
 
+        // 运行期通知队列：仅在单次游戏运行期间使用，不通过 Scribe 序列化。
+        private readonly List<MechanoidMechanitorPendingFactionRelationNotification>
+            pendingFactionRelationNotifications =
+                new List<MechanoidMechanitorPendingFactionRelationNotification>();
+
         public MechanoidMechanitorStoryStyleDef? SelectedStoryStyle => selectedStoryStyle;
 
         public Faction? CachedMechHive => cachedMechHive;
@@ -238,6 +243,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             activeConfiguration = configuration.CreateCopy();
             initialOrdinaryFactionRelationsApplied = false;
             initialMechHiveRelationApplied = false;
+            pendingFactionRelationNotifications.Clear();
             lockedPrimaryIdeo = null;
             lockedPrimaryIdeoCaptured = false;
             purgeDirectiveRuntimeState = new MechanoidMechanitorPurgeDirectiveRuntimeState();
@@ -320,6 +326,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             initialMechHiveRelationApplied = true;
             RebuildRuntimeCaches();
+        }
+
+        internal void QueueFactionRelationNotification(
+            Faction subject,
+            Faction other,
+            FactionRelationKind previousKind,
+            FactionRelationKind expectedCurrentKind,
+            string context)
+        {
+            if (subject == null
+                || other == null
+                || subject == other
+                || previousKind == expectedCurrentKind)
+            {
+                return;
+            }
+
+            for (int i = 0; i < pendingFactionRelationNotifications.Count; i++)
+            {
+                MechanoidMechanitorPendingFactionRelationNotification existing =
+                    pendingFactionRelationNotifications[i];
+
+                if (ReferenceEquals(existing.Subject, subject)
+                    && ReferenceEquals(existing.Other, other)
+                    && existing.PreviousKind == previousKind
+                    && existing.ExpectedCurrentKind == expectedCurrentKind)
+                {
+                    return;
+                }
+            }
+
+            pendingFactionRelationNotifications.Add(
+                new MechanoidMechanitorPendingFactionRelationNotification(
+                    subject,
+                    other,
+                    previousKind,
+                    expectedCurrentKind,
+                    context));
         }
 
         public static bool IsStoryStyleActive(MechanoidMechanitorStoryStyleDef? storyStyle)
@@ -642,22 +686,91 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ValidateLockedPrimaryIdeoAfterLoad();
             MechanoidMechanitorIdeologyAdaptationUtility.CalibrateAllRegisteredMechanitors();
 
-            if (initialOrdinaryFactionRelationsApplied)
+            try
             {
-                MechanoidMechanitorOrdinaryFactionRelationApplier
-                    .CalibrateLockedOrdinaryFactionRelations(this);
+                if (!initialMechHiveRelationApplied)
+                {
+                    MechanoidMechanitorMechHiveRelationApplier
+                        .ApplyInitialMechHiveRelation(
+                            this,
+                            MechanoidMechanitorFactionRelationNotificationMode.Deferred);
+                }
+                else
+                {
+                    MechanoidMechanitorMechHiveRelationApplier
+                        .CalibrateLockedMechHiveRelation(
+                            this,
+                            MechanoidMechanitorFactionRelationNotificationMode.Deferred);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 加载存档时恢复或校准机械巢关系失败。\n"
+                    + ex);
             }
 
-            if (initialMechHiveRelationApplied)
+            try
             {
-                MechanoidMechanitorMechHiveRelationApplier
-                    .CalibrateLockedMechHiveRelation(this);
+                if (!initialOrdinaryFactionRelationsApplied)
+                {
+                    MechanoidMechanitorOrdinaryFactionRelationApplier
+                        .ApplyInitialOrdinaryFactionRelations(
+                            this,
+                            MechanoidMechanitorFactionRelationNotificationMode.Deferred);
+                }
+                else
+                {
+                    MechanoidMechanitorOrdinaryFactionRelationApplier
+                        .CalibrateLockedOrdinaryFactionRelations(
+                            this,
+                            MechanoidMechanitorFactionRelationNotificationMode.Deferred);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 加载存档时恢复或校准普通派系关系失败。\n"
+                    + ex);
+            }
+        }
+
+        private void ProcessPendingFactionRelationNotifications()
+        {
+            if (pendingFactionRelationNotifications.Count == 0
+                || Current.ProgramState != ProgramState.Playing
+                || Find.TickManager == null
+                || Find.FactionManager == null)
+            {
+                return;
+            }
+
+            List<MechanoidMechanitorPendingFactionRelationNotification> processing =
+                new List<MechanoidMechanitorPendingFactionRelationNotification>(
+                    pendingFactionRelationNotifications);
+
+            pendingFactionRelationNotifications.Clear();
+
+            for (int i = 0; i < processing.Count; i++)
+            {
+                MechanoidMechanitorPendingFactionRelationNotification notification =
+                    processing[i];
+
+                MechanoidMechanitorFactionRelationNotificationUtility.NotifySafely(
+                    notification.Subject,
+                    notification.Other,
+                    notification.PreviousKind,
+                    notification.ExpectedCurrentKind,
+                    notification.Context);
             }
         }
 
         public override void GameComponentTick()
         {
             base.GameComponentTick();
+
+            ProcessPendingFactionRelationNotifications();
+
             MechanoidMechanitorPurgeDirectiveUtility.Tick(this);
             TryCaptureLockedPrimaryIdeoOnce();
             if (Find.TickManager != null

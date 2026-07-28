@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using RimWorld.Planet;
@@ -16,7 +17,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool ApplyExactPlayerRelation(
             Faction target,
             int goodwill,
-            FactionRelationKind relationKind)
+            FactionRelationKind relationKind,
+            MechanoidMechanitorFactionRelationNotificationMode notificationMode =
+                MechanoidMechanitorFactionRelationNotificationMode.Immediate)
         {
             if (applying)
             {
@@ -84,29 +87,53 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 targetRelation.baseGoodwill = goodwill;
                 targetRelation.kind = relationKind;
 
+                if (!ValidateAppliedPlayerRelation(
+                        player,
+                        target,
+                        goodwill,
+                        relationKind))
+                {
+                    return false;
+                }
+
                 if (previousPlayerKind != relationKind)
                 {
-                    player.Notify_RelationKindChanged(
+                    MechanoidMechanitorFactionRelationNotificationUtility.Dispatch(
+                        storyState,
+                        notificationMode,
+                        player,
                         target,
                         previousPlayerKind,
-                        canSendLetter: false,
-                        reason: null,
-                        GlobalTargetInfo.Invalid,
-                        out _);
+                        relationKind,
+                        "普通派系关系：玩家侧");
                 }
 
                 if (previousTargetKind != relationKind)
                 {
-                    target.Notify_RelationKindChanged(
+                    MechanoidMechanitorFactionRelationNotificationUtility.Dispatch(
+                        storyState,
+                        notificationMode,
+                        target,
                         player,
                         previousTargetKind,
-                        canSendLetter: false,
-                        reason: null,
-                        GlobalTargetInfo.Invalid,
-                        out _);
+                        relationKind,
+                        "普通派系关系：目标派系侧");
                 }
 
                 return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 写入普通派系关系时发生异常。目标派系="
+                    + target.Name
+                    + "，目标好感="
+                    + goodwill
+                    + "，目标关系="
+                    + relationKind
+                    + "\n"
+                    + ex);
+                return false;
             }
             finally
             {
@@ -116,7 +143,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool TryApplyOption(
             Faction target,
-            MechanoidMechanitorFactionRelationOption option)
+            MechanoidMechanitorFactionRelationOption option,
+            MechanoidMechanitorFactionRelationNotificationMode notificationMode =
+                MechanoidMechanitorFactionRelationNotificationMode.Immediate)
         {
             if (option == MechanoidMechanitorFactionRelationOption.Default)
             {
@@ -131,11 +160,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return true;
             }
 
-            return ApplyExactPlayerRelation(target, goodwill, relationKind);
+            return ApplyExactPlayerRelation(
+                target,
+                goodwill,
+                relationKind,
+                notificationMode);
         }
 
         public static void ApplyInitialOrdinaryFactionRelations(
-            GameComponent_MechanoidMechanitorStoryState storyState)
+            GameComponent_MechanoidMechanitorStoryState storyState,
+            MechanoidMechanitorFactionRelationNotificationMode notificationMode =
+                MechanoidMechanitorFactionRelationNotificationMode.Deferred)
         {
             if (storyState == null)
             {
@@ -165,9 +200,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         continue;
                     }
 
-                    if (!TryApplyOption(faction, option))
+                    try
+                    {
+                        if (!TryApplyOption(faction, option, notificationMode))
+                        {
+                            allSucceeded = false;
+                        }
+                    }
+                    catch (Exception ex)
                     {
                         allSucceeded = false;
+                        Log.Error(
+                            "[MAP-机械族机械师] 应用普通派系初始关系时发生异常，"
+                            + "已继续处理其他派系。目标派系="
+                            + faction.Name
+                            + "\n"
+                            + ex);
                     }
                 }
             }
@@ -187,7 +235,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         public static void CalibrateLockedOrdinaryFactionRelations(
-            GameComponent_MechanoidMechanitorStoryState storyState)
+            GameComponent_MechanoidMechanitorStoryState storyState,
+            MechanoidMechanitorFactionRelationNotificationMode notificationMode =
+                MechanoidMechanitorFactionRelationNotificationMode.Immediate)
         {
             if (storyState == null
                 || !storyState.InitialOrdinaryFactionRelationsApplied)
@@ -217,7 +267,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         continue;
                     }
 
-                    ApplyExactPlayerRelation(faction, goodwill, relationKind);
+                    try
+                    {
+                        ApplyExactPlayerRelation(
+                            faction,
+                            goodwill,
+                            relationKind,
+                            notificationMode);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(
+                            "[MAP-机械族机械师] 校准普通派系永久关系时发生异常，"
+                            + "已继续处理其他派系。当前处于永久关系校准阶段。目标派系="
+                            + faction.Name
+                            + "，目标好感="
+                            + goodwill
+                            + "，目标关系="
+                            + relationKind
+                            + "\n"
+                            + ex);
+                    }
                 }
             }
             finally
@@ -253,6 +323,46 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             TryApplyOption(faction, option);
+        }
+
+        private static bool ValidateAppliedPlayerRelation(
+            Faction player,
+            Faction target,
+            int goodwill,
+            FactionRelationKind relationKind)
+        {
+            FactionRelation? playerRelation =
+                player.RelationWith(target, allowNull: true);
+            FactionRelation? targetRelation =
+                target.RelationWith(player, allowNull: true);
+
+            if (playerRelation != null
+                && targetRelation != null
+                && playerRelation.baseGoodwill == goodwill
+                && targetRelation.baseGoodwill == goodwill
+                && playerRelation.kind == relationKind
+                && targetRelation.kind == relationKind)
+            {
+                return true;
+            }
+
+            Log.Error(
+                "[MAP-机械族机械师] 普通派系关系写入后状态不一致。目标派系="
+                + target.Name
+                + "，目标好感="
+                + goodwill
+                + "，目标关系="
+                + relationKind
+                + "，玩家侧好感="
+                + (playerRelation?.baseGoodwill.ToString() ?? "null")
+                + "，玩家侧关系="
+                + (playerRelation?.kind.ToString() ?? "null")
+                + "，目标侧好感="
+                + (targetRelation?.baseGoodwill.ToString() ?? "null")
+                + "，目标侧关系="
+                + (targetRelation?.kind.ToString() ?? "null"));
+
+            return false;
         }
 
         private static bool TryEnsureBidirectionalRelations(

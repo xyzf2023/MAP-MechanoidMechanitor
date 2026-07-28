@@ -1,3 +1,4 @@
+using System;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -13,7 +14,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool ApplyExactMechHiveRelation(
             Faction mechHive,
             FactionRelationKind relationKind,
-            bool hostileOnHarmByPlayer)
+            bool hostileOnHarmByPlayer,
+            MechanoidMechanitorFactionRelationNotificationMode notificationMode =
+                MechanoidMechanitorFactionRelationNotificationMode.Immediate)
         {
             if (applying)
             {
@@ -62,32 +65,60 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return false;
                 }
 
+                FactionRelationKind previousPlayerKind = playerRelation.kind;
+                FactionRelationKind previousMechKind = mechRelation.kind;
+
+                playerRelation.kind = relationKind;
+                mechRelation.kind = relationKind;
                 mechHive.factionHostileOnHarmByPlayer = hostileOnHarmByPlayer;
 
-                if (playerRelation.kind != relationKind)
-                {
-                    player.SetRelationDirect(
+                if (!ValidateAppliedMechHiveRelation(
+                        player,
                         mechHive,
                         relationKind,
-                        canSendHostilityLetter: false,
-                        reason: null,
-                        lookTarget: GlobalTargetInfo.Invalid);
-                }
-                else if (mechRelation.kind != relationKind)
+                        hostileOnHarmByPlayer))
                 {
-                    mechHive.SetRelationDirect(
-                        player,
-                        relationKind,
-                        canSendHostilityLetter: false,
-                        reason: null,
-                        lookTarget: GlobalTargetInfo.Invalid);
+                    return false;
                 }
 
-                return ValidateAppliedMechHiveRelation(
-                    player,
-                    mechHive,
-                    relationKind,
-                    hostileOnHarmByPlayer);
+                if (previousPlayerKind != relationKind)
+                {
+                    MechanoidMechanitorFactionRelationNotificationUtility.Dispatch(
+                        storyState,
+                        notificationMode,
+                        player,
+                        mechHive,
+                        previousPlayerKind,
+                        relationKind,
+                        "机械巢关系：玩家侧");
+                }
+
+                if (previousMechKind != relationKind)
+                {
+                    MechanoidMechanitorFactionRelationNotificationUtility.Dispatch(
+                        storyState,
+                        notificationMode,
+                        mechHive,
+                        player,
+                        previousMechKind,
+                        relationKind,
+                        "机械巢关系：机械巢侧");
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 写入机械巢关系时发生异常。机械巢="
+                    + mechHive.Name
+                    + "，目标关系="
+                    + relationKind
+                    + "，hostileOnHarmByPlayer="
+                    + hostileOnHarmByPlayer
+                    + "\n"
+                    + ex);
+                return false;
             }
             finally
             {
@@ -178,7 +209,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         public static void ApplyInitialMechHiveRelation(
-            GameComponent_MechanoidMechanitorStoryState storyState)
+            GameComponent_MechanoidMechanitorStoryState storyState,
+            MechanoidMechanitorFactionRelationNotificationMode notificationMode =
+                MechanoidMechanitorFactionRelationNotificationMode.Deferred)
         {
             if (storyState == null)
             {
@@ -223,7 +256,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (!ApplyExactMechHiveRelation(mechHive, relationKind, hostileOnHarmByPlayer))
+            if (!ApplyExactMechHiveRelation(
+                    mechHive,
+                    relationKind,
+                    hostileOnHarmByPlayer,
+                    notificationMode))
             {
                 Log.Error(
                     "[MAP-机械族机械师] 机械巢初始关系未成功写入，已保持未初始化状态。");
@@ -234,7 +271,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         public static void CalibrateLockedMechHiveRelation(
-            GameComponent_MechanoidMechanitorStoryState storyState)
+            GameComponent_MechanoidMechanitorStoryState storyState,
+            MechanoidMechanitorFactionRelationNotificationMode notificationMode =
+                MechanoidMechanitorFactionRelationNotificationMode.Immediate)
         {
             if (storyState == null
                 || !storyState.InitialMechHiveRelationApplied)
@@ -259,7 +298,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!ApplyExactMechHiveRelation(
                     mechHive,
                     relationKind,
-                    hostileOnHarmByPlayer))
+                    hostileOnHarmByPlayer,
+                    notificationMode))
             {
                 Log.Error(
                     "[MAP-机械族机械师] 机械巢永久关系校准失败。");

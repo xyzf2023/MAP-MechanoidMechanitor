@@ -1,3 +1,4 @@
+using System;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -53,16 +54,40 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (!storyState.InitialOrdinaryFactionRelationsApplied)
+            try
             {
-                MechanoidMechanitorOrdinaryFactionRelationApplier
-                    .ApplyInitialOrdinaryFactionRelations(storyState);
+                if (!storyState.InitialMechHiveRelationApplied)
+                {
+                    MechanoidMechanitorMechHiveRelationApplier
+                        .ApplyInitialMechHiveRelation(
+                            storyState,
+                            MechanoidMechanitorFactionRelationNotificationMode.Deferred);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] PreMapGenerate 阶段应用机械巢初始关系失败。"
+                    + "已继续执行其他剧本关系初始化。\n"
+                    + ex);
             }
 
-            if (!storyState.InitialMechHiveRelationApplied)
+            try
             {
-                MechanoidMechanitorMechHiveRelationApplier
-                    .ApplyInitialMechHiveRelation(storyState);
+                if (!storyState.InitialOrdinaryFactionRelationsApplied)
+                {
+                    MechanoidMechanitorOrdinaryFactionRelationApplier
+                        .ApplyInitialOrdinaryFactionRelations(
+                            storyState,
+                            MechanoidMechanitorFactionRelationNotificationMode.Deferred);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] PreMapGenerate 阶段应用普通派系初始关系失败。"
+                    + "已阻止异常继续中断地图生成。\n"
+                    + ex);
             }
         }
 
