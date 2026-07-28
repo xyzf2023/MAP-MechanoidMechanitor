@@ -14,7 +14,7 @@ namespace MAP_MechanoidMechanitor
         /// 并登记到空投追踪组件；失败的 PawnKind 通过 controller.RegisterPendingSummonKind 记录以便重试。
         /// 彻底失败（无任何合法落点）的 Pawn 会被安全销毁，不遗留 WorldPawn 或 ThingHolder 引用。
         /// </summary>
-        public static void SpawnSummonWave(
+        public static int SpawnSummonWave(
             Map map,
             List<PawnKindDef> kinds,
             List<Pawn> existingList,
@@ -24,12 +24,13 @@ namespace MAP_MechanoidMechanitor
         {
             if (map == null || kinds == null || kinds.Count == 0 || faction == null || controller == null)
             {
-                return;
+                return 0;
             }
 
             MapComponent_CerebrexBossDropTracker tracker = MapComponent_CerebrexBossDropTracker.For(map);
             int coreThingId = controller.parent.thingIDNumber;
             List<IntVec3> reserved = new List<IntVec3>();
+            int success = 0;
 
             foreach (PawnKindDef kind in kinds)
             {
@@ -63,7 +64,10 @@ namespace MAP_MechanoidMechanitor
 
                 existingList.Add(pawn);
                 tracker.RegisterDrop(pawn, coreThingId, faction);
+                success++;
             }
+
+            return success;
         }
 
         private static Pawn? TryGeneratePawn(PawnKindDef kind, Faction faction)
@@ -94,7 +98,7 @@ namespace MAP_MechanoidMechanitor
                 ActiveTransporterInfo info = new ActiveTransporterInfo();
                 info.openDelay = DropOpenDelayTicks;
                 info.leaveSlag = false;
-                info.savePawnsWithReferenceMode = true;
+                info.savePawnsWithReferenceMode = false;
                 info.moveItemsAsideBeforeSpawning = true;
                 info.despawnPodBeforeSpawningThing = true;
 

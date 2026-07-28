@@ -126,9 +126,12 @@ namespace MAP_MechanoidMechanitor
             bandwidthTargetsUsedThisBattle ??= new List<Pawn>();
             disabledPowerBuildings ??= new Dictionary<Thing, int>();
 
+            // 注意：bandwidthBerserkPawns / bandwidthTargetsUsedThisBattle 不得因 Pawn
+            // 死亡、倒地或离开地图而在此处删除（死亡 Pawn 可能复活，目标死亡后
+            // 仍属于“本场战斗已选择过”记录）。仅移除明确为 null 或永久 Discarded 的引用。
             summonedMechs.RemoveAll(p => p == null || p.Dead || p.Destroyed || p.Discarded);
-            bandwidthBerserkPawns.RemoveAll(p => p == null || p.Dead || p.Destroyed || p.Discarded);
-            bandwidthTargetsUsedThisBattle.RemoveAll(p => p == null || p.Dead || p.Destroyed || p.Discarded);
+            bandwidthBerserkPawns.RemoveAll(p => p == null || p.Discarded);
+            bandwidthTargetsUsedThisBattle.RemoveAll(p => p == null || p.Discarded);
             pendingEmpHits.RemoveAll(h => h == null || h.target == null || h.target.Destroyed || h.target.Discarded);
 
             int nowTicks = Find.TickManager.TicksGame;
@@ -179,6 +182,18 @@ namespace MAP_MechanoidMechanitor
                         EndBandwidthInterference(startCooldown: false, reason: "loadfix");
                     }
                 }
+            }
+
+            // 带宽干扰已不在运行时，本轮临时狂暴名单应保持为空（死亡/复活等残留引用清理掉）。
+            if (!bandwidthInterferenceActive)
+            {
+                bandwidthBerserkPawns.Clear();
+            }
+
+            // 读档后发现没有待重试单位但重试计数残留，重置以免新一波继承旧计数。
+            if (pendingSummonKinds.Count == 0 && summonDropRetryCount != 0)
+            {
+                summonDropRetryCount = 0;
             }
 
             if (summonedMechs.Count > 0 && assaultLord == null && parent.Spawned && parent.Map != null && CanRunAutomatically())
@@ -243,7 +258,11 @@ namespace MAP_MechanoidMechanitor
             // 9. 若没有正在进行的带宽干扰，检查带宽干扰计时。
             if (!bandwidthInterferenceActive && now >= nextBandwidthTick)
             {
-                TryStartBandwidthInterference(force: false);
+                // 自动尝试失败（如无合法目标）仅延迟 60 tick 再次尝试，不进入完整冷却。
+                if (!TryStartBandwidthInterference(force: false))
+                {
+                    nextBandwidthTick = now + 60;
+                }
             }
         }
 
@@ -304,28 +323,28 @@ namespace MAP_MechanoidMechanitor
 
         public void RegisterPendingSummonKind(PawnKindDef kind)
         {
-            if (kind != null && !pendingSummonKinds.Contains(kind))
+            if (kind != null)
             {
                 pendingSummonKinds.Add(kind);
             }
         }
 
-        private void TrySummonWave(bool force)
+        private int TrySummonWave(bool force)
         {
             if (parent.Map == null)
             {
-                return;
+                return 0;
             }
 
             Faction? mechFaction = Faction.OfMechanoids;
             if (mechFaction == null)
             {
-                return;
+                return 0;
             }
 
             int now = Find.TickManager.TicksGame;
 
-            // 先处理失败空投的重试。
+            // 先处理失败空投的重试（同一批次共用重试轮数；允许重复 PawnKind）。
             if (pendingSummonKinds.Count > 0)
             {
                 if (summonDropRetryCount >= MaxDropRetryAttempts)
@@ -333,7 +352,7 @@ namespace MAP_MechanoidMechanitor
                     pendingSummonKinds.Clear();
                     summonDropRetryCount = 0;
                     nextSummonTick = now + SummonIntervalTicks;
-                    return;
+                    return 0;
                 }
 
                 EnsureAssaultLord();
@@ -343,18 +362,38 @@ namespace MAP_MechanoidMechanitor
                 {
                     summonDropRetryCount++;
                     nextSummonTick = now + DropRetryDelayTicks;
-                    return;
+                    return 0;
                 }
 
-                List<PawnKindDef> toRetry = pendingSummonKinds.Take(avail).ToList();
+                // 复制当前待重试列表，清空原列表，再逐项重试；失败的条目逐项重新加入。
+                // 超过可用空位的条目本轮不重试，但保留在 pendingSummonKinds 等待下次。
+                List<PawnKindDef> retryKinds = new List<PawnKindDef>(pendingSummonKinds);
                 pendingSummonKinds.Clear();
-                CerebrexBossSpawnUtility.SpawnSummonWave(parent.Map, toRetry, summonedMechs, parent.Position, mechFaction, this);
+
+                int toRetryCount = Mathf.Min(avail, retryKinds.Count);
+                List<PawnKindDef> toRetry = retryKinds.GetRange(0, toRetryCount);
+                for (int i = toRetryCount; i < retryKinds.Count; i++)
+                {
+                    pendingSummonKinds.Add(retryKinds[i]);
+                }
+
+                int spawned = CerebrexBossSpawnUtility.SpawnSummonWave(parent.Map, toRetry, summonedMechs, parent.Position, mechFaction, this);
                 summonDropRetryCount++;
+
+                // 当前批次全部成功或彻底放弃后，重置本批次重试计数，下一波拥有完整20次机会。
+                if (pendingSummonKinds.Count == 0)
+                {
+                    summonDropRetryCount = 0;
+                }
+
                 nextSummonTick = pendingSummonKinds.Count > 0
                     ? now + DropRetryDelayTicks
                     : now + SummonIntervalTicks;
-                return;
+                return spawned;
             }
+
+            // 没有待重试单位：开始一批新的正常召唤，重置本批次重试计数。
+            summonDropRetryCount = 0;
 
             int livingCount = CountLivingSummonedMechs();
             int availableSlots = MaxLivingSummonedMechs - livingCount;
@@ -362,12 +401,7 @@ namespace MAP_MechanoidMechanitor
             if (count <= 0)
             {
                 nextSummonTick = now + SummonIntervalTicks;
-                if (force)
-                {
-                    Messages.Message("机械族增援已达上限（32）。", MessageTypeDefOf.RejectInput);
-                }
-
-                return;
+                return 0;
             }
 
             List<PawnGenOption> pool = JusticeBossMechPoolUtility.BuildCombatPool();
@@ -384,15 +418,16 @@ namespace MAP_MechanoidMechanitor
             if (chosen.Count == 0)
             {
                 nextSummonTick = now + SummonIntervalTicks;
-                return;
+                return 0;
             }
 
             EnsureAssaultLord();
-            CerebrexBossSpawnUtility.SpawnSummonWave(parent.Map, chosen, summonedMechs, parent.Position, mechFaction, this);
+            int spawnedNormal = CerebrexBossSpawnUtility.SpawnSummonWave(parent.Map, chosen, summonedMechs, parent.Position, mechFaction, this);
 
             nextSummonTick = pendingSummonKinds.Count > 0
                 ? now + DropRetryDelayTicks
                 : now + SummonIntervalTicks;
+            return spawnedNormal;
         }
 
         private void EnsureAssaultLord()
@@ -840,11 +875,29 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        // 本轮狂暴 Pawn 是否“失去行动能力”。仅包括：null、倒地、死亡、摧毁、离开当前地图。
+        // EMP 眩晕/睡眠/短暂不能移动但未倒地，不算失去行动能力。
+        private bool IsBandwidthBerserkPawnIncapacitated(Pawn? pawn)
+        {
+            if (pawn == null || pawn.Dead || pawn.Destroyed || pawn.Discarded)
+            {
+                return true;
+            }
+
+            if (parent.Map == null || !pawn.Spawned || pawn.Map != parent.Map || pawn.Downed)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         private void TickBandwidthInterference()
         {
             int now = Find.TickManager.TicksGame;
             bool shouldEnd = false;
 
+            // 1. 无条件结束原因：主脑停止/失效、关系非敌对、监管者失效、目标引用损坏、翻倍健康状态丢失。
             if (stopped || !parent.Spawned || parent.Destroyed)
             {
                 shouldEnd = true;
@@ -857,11 +910,7 @@ namespace MAP_MechanoidMechanitor
             {
                 shouldEnd = true;
             }
-            else if (bandwidthTarget == null || bandwidthTarget.Dead || bandwidthTarget.Destroyed || bandwidthTarget.Discarded)
-            {
-                shouldEnd = true;
-            }
-            else if (bandwidthTarget.Map != parent.Map)
+            else if (bandwidthTarget == null || bandwidthTarget.Discarded)
             {
                 shouldEnd = true;
             }
@@ -874,30 +923,41 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
+            // 2. 清除已经倒地或已结束狂暴的 Pawn 身上的隐藏标记（不从列表删除，死亡/倒地 Pawn 可能复活）。
+            if (!shouldEnd)
+            {
+                CleanupDownedBerserkMarkers();
+            }
+
+            // 3. 情况一：带宽目标本人未进入本轮狂暴名单，其倒地/死亡/摧毁/离开地图 -> 结束整轮。
+            bool targetIsBerserker = bandwidthTarget != null && bandwidthBerserkPawns.Contains(bandwidthTarget);
+            if (!shouldEnd && !targetIsBerserker && bandwidthTarget != null
+                && IsBandwidthBerserkPawnIncapacitated(bandwidthTarget))
+            {
+                shouldEnd = true;
+            }
+
+            // 4. 情况二：本轮曾经产生狂暴者，仅当所有本轮狂暴者均失去行动能力时才结束整轮。
+            //    目标本人作为狂暴者倒地/死亡，不强制恢复其他仍在行动的狂暴者。
             if (!shouldEnd && bandwidthBerserkPawns.Count > 0)
             {
-                bool allInactive = true;
+                bool allIncapacitated = true;
                 foreach (Pawn p in bandwidthBerserkPawns)
                 {
-                    if (p == null || p.Dead || p.Destroyed || p.Discarded)
+                    if (!IsBandwidthBerserkPawnIncapacitated(p))
                     {
-                        continue;
-                    }
-
-                    if (p.Spawned && p.Map == parent.Map && !p.Downed)
-                    {
-                        allInactive = false;
+                        allIncapacitated = false;
                         break;
                     }
                 }
 
-                if (allInactive)
+                if (allIncapacitated)
                 {
                     shouldEnd = true;
                 }
             }
 
-            // 某个本轮狂暴者本人重新出现在原监管者的受控列表中 -> 结束整轮。
+            // 5. 某个本轮狂暴者本人重新出现在原监管者的受控列表中 -> 结束整轮（逐 Pawn 匹配）。
             if (!shouldEnd && bandwidthBerserkPawns.Count > 0 && bandwidthOverseer != null)
             {
                 var tracker = bandwidthOverseer.mechanitor;
@@ -919,15 +979,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            // 目标未进入本轮狂暴名单，且目标倒地/死亡 -> 结束整轮。
-            if (!shouldEnd && bandwidthTarget != null && !bandwidthBerserkPawns.Contains(bandwidthTarget))
-            {
-                if (bandwidthTarget.Downed || bandwidthTarget.Dead)
-                {
-                    shouldEnd = true;
-                }
-            }
-
+            // 6. 达到持续时间。
             if (!shouldEnd && now >= bandwidthInterferenceEndTick)
             {
                 shouldEnd = true;
@@ -943,6 +995,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        // 仅移除隐藏狂暴标记；绝不可因此把 Pawn 从 bandwidthBerserkPawns 删除。
         private void CleanupDownedBerserkMarkers()
         {
             for (int i = bandwidthBerserkPawns.Count - 1; i >= 0; i--)
@@ -951,14 +1004,13 @@ namespace MAP_MechanoidMechanitor
                 if (p == null || p.Dead || p.Destroyed || p.Discarded || p.Downed)
                 {
                     RemoveBerserkMarker(p);
-                    bandwidthBerserkPawns.RemoveAt(i);
                 }
             }
         }
 
         private void RemoveBerserkMarker(Pawn? p)
         {
-            if (p == null)
+            if (p == null || p.Destroyed)
             {
                 return;
             }
@@ -1120,7 +1172,22 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            TrySummonWave(force: true);
+            int beforePending = pendingSummonKinds.Count;
+            int spawned = TrySummonWave(force: true);
+            int failed = pendingSummonKinds.Count - beforePending;
+
+            if (spawned <= 0 && failed <= 0)
+            {
+                Messages.Message("已经达到主脑召唤机械族上限。", MessageTypeDefOf.RejectInput);
+            }
+            else if (spawned <= 0 && failed > 0)
+            {
+                Messages.Message("没有找到合法空投位置，已进入重试。", MessageTypeDefOf.RejectInput);
+            }
+            else if (spawned > 0 && failed > 0)
+            {
+                Messages.Message("部分单位空投未找到位置，剩余单位将继续重试。", MessageTypeDefOf.RejectInput);
+            }
         }
 
         private void DevBandwidth()
