@@ -189,8 +189,9 @@ namespace MAP_MechanoidMechanitor
                     }
                     else if (ShouldEndBandwidthInterferenceForPawnState())
                     {
-                        // 战斗结束条件（目标 / 本轮狂暴者行动能力）已满足 -> 正常结束。
-                        EndBandwidthInterference(startCooldown: false, reason: "loadfix");
+                        // 基础状态有效但战斗结束条件（目标 / 本轮狂暴者行动能力）已满足
+                        // -> 属于正常战斗结束，启动正常冷却，避免下一 tick 立刻重新发动。
+                        EndBandwidthInterference(startCooldown: true, reason: "loadfix");
                     }
                 }
             }
@@ -905,8 +906,11 @@ namespace MAP_MechanoidMechanitor
 
         // 无副作用的辅助方法：正常 tick 与读档校验共用，仅判断“目标 / 本轮狂暴者”的
         // 行动能力结束条件（不含主脑停止、派系、监管者引用损坏、结束时间等基础状态）。
-        // 目标属于本轮狂暴名单时，仅当所有本轮狂暴者均失去行动能力才结束整轮；
-        // 目标不属于本轮狂暴名单时，目标本人失去行动能力即结束整轮。
+        // 规则：
+        //  - 本轮产生过至少一个狂暴者时，只要名单中还有能行动的狂暴者就不结束；
+        //    全部失能则结束（与目标是否属于狂暴名单无关）。
+        //  - 目标属于狂暴名单且仍有其他狂暴者能行动时，不结束（目标本人死亡/倒地不连累他人）。
+        //  - 目标不属于狂暴名单时，目标本人失能即结束整轮。
         private bool ShouldEndBandwidthInterferenceForPawnState()
         {
             if (bandwidthTarget == null)
@@ -914,22 +918,30 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            bool targetIsBerserker = bandwidthBerserkPawns.Contains(bandwidthTarget);
-            if (targetIsBerserker)
-            {
-                // 目标本人作为本轮狂暴者：只要还有任意本轮狂暴者仍能行动就不结束。
-                foreach (Pawn p in bandwidthBerserkPawns)
-                {
-                    if (!IsBandwidthBerserkPawnIncapacitated(p))
-                    {
-                        return false;
-                    }
-                }
+            // 第二步：本轮是否曾经产生过狂暴者（死亡/倒地/离图记录仍保留在名单中）。
+            bool hasBerserkPawnRecords = bandwidthBerserkPawns != null
+                && bandwidthBerserkPawns.Count > 0;
 
-                return true;
+            // 第三步：只要曾经产生过狂暴者，就独立检查是否仍有能行动的狂暴者。
+            if (hasBerserkPawnRecords)
+            {
+                bool hasActiveBerserkPawn = bandwidthBerserkPawns.Any(
+                    pawn => !IsBandwidthBerserkPawnIncapacitated(pawn));
+                if (!hasActiveBerserkPawn)
+                {
+                    return true;
+                }
             }
 
-            // 目标本人未进入本轮狂暴名单：其本人失去行动能力即可结束整轮。
+            // 第四步：目标本人属于本轮狂暴名单，且仍有狂暴者能行动 -> 不结束。
+            bool targetIsBerserkPawn = bandwidthBerserkPawns != null
+                && bandwidthBerserkPawns.Contains(bandwidthTarget);
+            if (targetIsBerserkPawn)
+            {
+                return false;
+            }
+
+            // 第五步：目标不属于狂暴名单时，目标本人失能即结束；否则继续。
             return IsBandwidthBerserkPawnIncapacitated(bandwidthTarget);
         }
 
