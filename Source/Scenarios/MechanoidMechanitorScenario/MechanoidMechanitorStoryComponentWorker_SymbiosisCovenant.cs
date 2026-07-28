@@ -70,6 +70,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         }
 
                         configuration.symbiosisCovenantEnabled = value;
+                        if (value)
+                        {
+                            configuration.purgeDirectiveEnabled = false;
+                        }
+
                         NormalizeAfterChange(context);
                     }));
         }
