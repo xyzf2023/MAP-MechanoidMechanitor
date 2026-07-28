@@ -42,7 +42,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             out GoodwillChangeState __state)
         {
             __state = default;
-            if (GameComponent_SymbiosisCovenantState.IsRetaliatingMechHivePair(
+            if (GameComponent_SymbiosisCovenantState.IsMechHiveHostileLocked(
                     __instance,
                     other)
                 && !MechanoidMechanitorMechHiveRelationApplier.IsApplying)
@@ -79,6 +79,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 return;
             }
+
+            // 由自然好感目标逐步推动的好感变化不能再增加信任，避免自我循环。
+            if (reason == HistoryEventDefOf.ReachNaturalGoodwill)
+            {
+                return;
+            }
+
+            // 在处理信任变化前，确保关系恶化时声明前信任锁定能够立即收紧。
+            GameComponent_SymbiosisCovenantState.CurrentComponent
+                ?.NotifyGoodwillChangedRelationMayHaveShifted(__state.ordinaryFaction);
 
             Faction? player = Faction.OfPlayerSilentFail;
             if (player == null)
@@ -325,7 +335,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool Prefix(Faction __instance, Faction other)
         {
             return MechanoidMechanitorMechHiveRelationApplier.IsApplying
-                || !GameComponent_SymbiosisCovenantState.IsRetaliatingMechHivePair(
+                || !GameComponent_SymbiosisCovenantState.IsMechHiveHostileLocked(
                     __instance,
                     other);
         }
@@ -342,7 +352,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ref FactionRelationKind relationKind,
             ref bool hostileOnHarmByPlayer)
         {
-            if (!GameComponent_SymbiosisCovenantState.IsRetaliatingMechHivePair(
+            if (!GameComponent_SymbiosisCovenantState.IsMechHiveHostileLocked(
                     Faction.OfPlayerSilentFail,
                     mechHive))
             {
@@ -362,7 +372,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (MechanoidMechanitorMechHiveRelationApplier.IsApplying
                 || relation?.other == null
-                || !GameComponent_SymbiosisCovenantState.IsRetaliatingMechHivePair(
+                || !GameComponent_SymbiosisCovenantState.IsMechHiveHostileLocked(
                     __instance,
                     relation.other))
             {
@@ -376,6 +386,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     mechHive,
                     FactionRelationKind.Hostile,
                     hostileOnHarmByPlayer: false);
+            }
+        }
+    }
+
+    [HarmonyPatch(
+        typeof(FactionDialogMaker),
+        nameof(FactionDialogMaker.FactionDialogFor))]
+    public static class SymbiosisCovenant_FactionDialogSecretContact_Patch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(
+            Pawn negotiator,
+            Faction faction,
+            DiaNode __result)
+        {
+            if (__result == null)
+            {
+                return;
+            }
+
+            if (!SymbiosisCovenantDiplomacyUtility.ShouldShowSecretContact(faction))
+            {
+                return;
+            }
+
+            DiaOption option = SymbiosisCovenantDiplomacyUtility.CreateSecretContactOption(
+                negotiator,
+                faction);
+
+            // 插入在原版“断开连接”选项之前。
+            int insertIndex = __result.options.FindLastIndex(o => o.resolveTree);
+            if (insertIndex >= 0)
+            {
+                __result.options.Insert(insertIndex, option);
+            }
+            else
+            {
+                __result.options.Add(option);
             }
         }
     }

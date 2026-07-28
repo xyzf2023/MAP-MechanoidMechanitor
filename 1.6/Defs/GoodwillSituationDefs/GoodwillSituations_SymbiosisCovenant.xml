@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <GoodwillSituationDef>
+    <defName>MAP_SymbiosisTrust</defName>
+    <label>该派系对我们逐渐信任</label>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.GoodwillSituationWorker_SymbiosisTrust</workerClass>
+    <naturalGoodwillOffset>10</naturalGoodwillOffset>
+  </GoodwillSituationDef>
+
+  <GoodwillSituationDef>
+    <defName>MAP_SymbiosisMember</defName>
+    <label>盟友</label>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.GoodwillSituationWorker_SymbiosisMember</workerClass>
+    <naturalGoodwillOffset>10</naturalGoodwillOffset>
+  </GoodwillSituationDef>
+</Defs>

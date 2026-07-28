@@ -6,4 +6,11 @@
     <driverClass>MAP_MechanoidMechanitor.Scenarios.JobDriver_AccessSymbiosisCovenant</driverClass>
     <reportString>正在建立多方通讯链路。</reportString>
   </JobDef>
+
+  <JobDef>
+    <defName>MAP_BroadcastSymbiosisDeclaration</defName>
+    <label>公开脱离声明</label>
+    <driverClass>MAP_MechanoidMechanitor.Scenarios.JobDriver_BroadcastSymbiosisDeclaration</driverClass>
+    <reportString>正在向全球广播脱离声明。</reportString>
+  </JobDef>
 </Defs>

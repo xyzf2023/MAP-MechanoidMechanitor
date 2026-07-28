@@ -2,10 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
+using RimWorld.Planet;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
+    public enum SymbiosisPreDeclarationTrustLock : byte
+    {
+        None = 0,
+        Neutral = 1,
+        Hostile = 2
+    }
+
     public enum SymbiosisCovenantTrustSource : byte
     {
         Other = 0,
@@ -52,9 +61,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         private Faction? faction;
         private int trust;
-        private int highestReachedMilestone;
-        private int highestAppliedMilestone;
+        private SymbiosisPreDeclarationTrustLock preDeclarationLock;
         private bool covenantMember;
+        private int proposalResolutionTick = -1;
+        private int invitationFailureCount;
+        private int nextInvitationTick = -1;
+        private int covenantExitCount;
         private int goodwillWindowStartTick = -1;
         private int goodwillTrustGainedInWindow;
         private int tradeWindowStartTick = -1;
@@ -67,19 +79,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public int Trust => trust;
 
-        public int HighestReachedMilestone => highestReachedMilestone;
-
-        public int HighestAppliedMilestone
-        {
-            get => highestAppliedMilestone;
-            set => highestAppliedMilestone = value;
-        }
+        public SymbiosisPreDeclarationTrustLock PreDeclarationLock => preDeclarationLock;
 
         public bool CovenantMember
         {
             get => covenantMember;
             set => covenantMember = value;
         }
+
+        public int ProposalResolutionTick => proposalResolutionTick;
+
+        public bool ProposalPending => proposalResolutionTick >= 0;
+
+        public int InvitationFailureCount => invitationFailureCount;
+
+        public int NextInvitationTick => nextInvitationTick;
+
+        public int CovenantExitCount => covenantExitCount;
+
+        public bool PermanentlyRefusesInvitation => covenantExitCount >= 2;
 
         public IReadOnlyList<SymbiosisCovenantTrustChange> RecentChanges => recentChanges;
 
@@ -97,13 +115,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
         }
 
-        public SymbiosisCovenantFactionRecord(Faction faction, int initialTrust)
+        public SymbiosisCovenantFactionRecord(
+            Faction faction,
+            int initialTrust,
+            SymbiosisPreDeclarationTrustLock initialLock)
         {
             this.faction = faction;
             trust = GameComponent_SymbiosisCovenantState.ClampTrust(initialTrust);
-            highestReachedMilestone =
-                GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust);
-            highestAppliedMilestone = highestReachedMilestone;
+            preDeclarationLock = initialLock;
         }
 
         public int AdjustTrust(
@@ -138,13 +157,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 recentChanges.RemoveAt(0);
             }
 
-            if (actualAmount > 0)
-            {
-                highestReachedMilestone = Math.Max(
-                    highestReachedMilestone,
-                    GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust));
-            }
-
             return actualAmount;
         }
 
@@ -163,13 +175,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 recentChanges.RemoveAt(0);
             }
-
-            if (delta > 0)
-            {
-                highestReachedMilestone = Math.Max(
-                    highestReachedMilestone,
-                    GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust));
-            }
         }
 
         public void DevSetTrust(int value, string reason, int now)
@@ -177,11 +182,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int clamped = GameComponent_SymbiosisCovenantState.ClampTrust(value);
             int delta = clamped - trust;
             trust = clamped;
-            highestReachedMilestone =
-                GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust);
-            highestAppliedMilestone =
-                GameComponent_SymbiosisCovenantState.GetPreviousMilestone(
-                    highestReachedMilestone);
             if (delta != 0)
             {
                 recentChanges.Add(
@@ -202,19 +202,49 @@ namespace MAP_MechanoidMechanitor.Scenarios
             lastBetrayalTick = -1;
         }
 
-        public bool DevPrepareCurrentMilestoneReplay()
+        public void SetPreDeclarationLock(SymbiosisPreDeclarationTrustLock value)
         {
-            int milestone =
-                GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust);
-            if (milestone < GameComponent_SymbiosisCovenantState.FirstMilestone)
-            {
-                return false;
-            }
+            preDeclarationLock = value;
+        }
 
-            highestReachedMilestone = milestone;
-            highestAppliedMilestone =
-                GameComponent_SymbiosisCovenantState.GetPreviousMilestone(milestone);
-            return true;
+        public void SetProposalResolutionTick(int value)
+        {
+            proposalResolutionTick = value;
+        }
+
+        public void IncrementInvitationFailureCount()
+        {
+            invitationFailureCount++;
+        }
+
+        public void SetNextInvitationTick(int value)
+        {
+            nextInvitationTick = value;
+        }
+
+        public void IncrementCovenantExitCount()
+        {
+            covenantExitCount++;
+        }
+
+        public void ClearProposal()
+        {
+            proposalResolutionTick = -1;
+        }
+
+        public void ClearInvitationCooldown()
+        {
+            nextInvitationTick = -1;
+        }
+
+        public void DevSetInvitationFailureCount(int value)
+        {
+            invitationFailureCount = Math.Max(0, value);
+        }
+
+        public void DevSetCovenantExitCount(int value)
+        {
+            covenantExitCount = Math.Max(0, value);
         }
 
         private int ApplySourceLimit(
@@ -295,14 +325,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "trust",
                 GameComponent_SymbiosisCovenantState.MinimumTrust);
             Scribe_Values.Look(
-                ref highestReachedMilestone,
-                "highestReachedMilestone",
-                GameComponent_SymbiosisCovenantState.MinimumTrust - 1);
-            Scribe_Values.Look(
-                ref highestAppliedMilestone,
-                "highestAppliedMilestone",
-                GameComponent_SymbiosisCovenantState.MinimumTrust - 1);
+                ref preDeclarationLock,
+                "preDeclarationLock",
+                SymbiosisPreDeclarationTrustLock.None);
             Scribe_Values.Look(ref covenantMember, "covenantMember", false);
+            Scribe_Values.Look(
+                ref proposalResolutionTick,
+                "proposalResolutionTick",
+                -1);
+            Scribe_Values.Look(
+                ref invitationFailureCount,
+                "invitationFailureCount",
+                0);
+            Scribe_Values.Look(ref nextInvitationTick, "nextInvitationTick", -1);
+            Scribe_Values.Look(ref covenantExitCount, "covenantExitCount", 0);
             Scribe_Values.Look(
                 ref goodwillWindowStartTick,
                 "goodwillWindowStartTick",
@@ -329,15 +365,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 recentChanges ??= new List<SymbiosisCovenantTrustChange>();
                 trust = GameComponent_SymbiosisCovenantState.ClampTrust(trust);
-                highestReachedMilestone = Math.Max(
-                    highestReachedMilestone,
-                    GetInitialMilestoneFallback());
-            }
-        }
+                if (invitationFailureCount < 0)
+                {
+                    invitationFailureCount = 0;
+                }
 
-        private int GetInitialMilestoneFallback()
-        {
-            return GameComponent_SymbiosisCovenantState.GetMilestoneForTrust(trust);
+                if (covenantExitCount < 0)
+                {
+                    covenantExitCount = 0;
+                }
+
+                if (proposalResolutionTick < 0)
+                {
+                    proposalResolutionTick = -1;
+                }
+            }
         }
     }
 
@@ -345,28 +387,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         public const int MinimumTrust = -100;
         public const int MaximumTrust = 200;
-        public const int FirstMilestone = -50;
         public const int SourceWindowTicks = 900000;
         public const int GoodwillTrustPerWindow = 15;
         public const int TradeTrustPerWindow = 5;
         public const int BetrayalCooldownTicks = 600;
 
         private const int SynchronizeIntervalTicks = 2500;
-        private static readonly int[] TrustMilestones =
-        {
-            -50,
-            1,
-            50,
-            100,
-            150,
-            200
-        };
+        private const int ProposalMinTicks = 60000;
+        private const int ProposalMaxTicks = 180000;
+        private const int InvitationCooldownTicks = 1800000;
+        private const int UnityUpdateIntervalTicks = 60000;
+        private const int UnityMax = 1000;
+        private const int CovenantLevelMax = 5;
+        private const int CovenantExitUnityPenalty = 100;
+        private const int MemberJoinTrust = 0;
+        private const int MemberRejoinTrust = -25;
 
         private bool initialized;
         private bool contactUnlockedLetterSent;
         private bool publicDeclarationBroadcast;
-        private bool mechHiveRetaliationTriggered;
-        private int targetMemberCount;
+        private float unity;
+        private int covenantLevel;
+        private int highestCovenantLevel;
+        private int lastUnityUpdateTick = -1;
         private List<SymbiosisCovenantFactionRecord> factionRecords =
             new List<SymbiosisCovenantFactionRecord>();
 
@@ -374,9 +417,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool PublicDeclarationBroadcast => publicDeclarationBroadcast;
 
-        public bool MechHiveRetaliationTriggered => mechHiveRetaliationTriggered;
+        public float Unity => unity;
 
-        public int TargetMemberCount => targetMemberCount;
+        public int CovenantLevel => covenantLevel;
+
+        public int HighestCovenantLevel => highestCovenantLevel;
 
         public int CovenantMemberCount =>
             factionRecords.Count(record => record.CovenantMember);
@@ -419,7 +464,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.LoadedGame();
             TryInitializeOrSynchronize();
-            CalibrateMechHiveRetaliation();
+            RecalculateGoodwillSituations();
         }
 
         public override void GameComponentTick()
@@ -432,14 +477,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             TryInitializeOrSynchronize();
-            RetryPendingMilestones();
-            CalibrateMechHiveRetaliation();
+            CalibrateMechHiveHostility();
         }
 
         public void SynchronizeNow()
         {
             TryInitializeOrSynchronize();
-            RetryPendingMilestones();
         }
 
         public IReadOnlyList<SymbiosisCovenantFactionRecord> GetRecordsSorted()
@@ -541,39 +584,53 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             publicDeclarationBroadcast = true;
-            TryAdjustTrustForAll(
-                10,
-                "MAP_MechanoidMechanitor.Symbiosis.TrustReason.PublicDeclaration"
-                    .Translate(),
-                SymbiosisCovenantTrustSource.PublicDeclaration);
+
+            // 解除所有派系的声明前信任锁定，保留解除瞬间的实际信任值。
+            for (int i = 0; i < factionRecords.Count; i++)
+            {
+                factionRecords[i].SetPreDeclarationLock(
+                    SymbiosisPreDeclarationTrustLock.None);
+            }
+
+            // 机械巢敌对只由公开脱离声明触发。
+            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive();
+            if (mechHive != null)
+            {
+                MechanoidMechanitorMechHiveRelationApplier.ApplyExactMechHiveRelation(
+                    mechHive,
+                    FactionRelationKind.Hostile,
+                    hostileOnHarmByPlayer: false);
+            }
+
             Find.LetterStack.ReceiveLetter(
-                "MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Label".Translate(),
-                "MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Text".Translate(),
-                LetterDefOf.NeutralEvent);
+                "MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label".Translate(),
+                "MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text".Translate(),
+                LetterDefOf.ThreatBig,
+                null,
+                mechHive);
+
             return true;
         }
 
-        public bool TrySignCovenant(SymbiosisCovenantFactionRecord? record)
+        public bool TryBeginCovenantProposal(Faction? faction)
         {
-            if (!IsActive
-                || record?.Faction == null
-                || record.Trust < MaximumTrust
-                || record.CovenantMember)
+            if (!IsActive || !initialized || !publicDeclarationBroadcast)
             {
                 return false;
             }
 
-            record.CovenantMember = true;
-            Find.LetterStack.ReceiveLetter(
-                "MAP_MechanoidMechanitor.Symbiosis.Signed.Letter.Label".Translate(
-                    record.Faction.Name),
-                "MAP_MechanoidMechanitor.Symbiosis.Signed.Letter.Text".Translate(
-                    record.Faction.Name,
-                    CovenantMemberCount,
-                    targetMemberCount),
-                LetterDefOf.PositiveEvent,
-                null,
-                record.Faction);
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null
+                || record.CovenantMember
+                || record.ProposalPending
+                || record.PermanentlyRefusesInvitation
+                || record.NextInvitationTick > CurrentTick)
+            {
+                return false;
+            }
+
+            record.SetProposalResolutionTick(
+                CurrentTick + Rand.RangeInclusive(ProposalMinTicks, ProposalMaxTicks));
             return true;
         }
 
@@ -596,14 +653,64 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            int previousTrust = record.Trust;
             record.SetTrustDirect(MinimumTrust, reason, CurrentTick);
-            record.CovenantMember = false;
+            HandleTrustChangeForRecord(record, previousTrust);
         }
 
-        public bool DevAdjustTrust(
-            Faction? faction,
-            int amount,
-            string reason)
+        public void NotifyGoodwillChangedRelationMayHaveShifted(Faction? ordinaryFaction)
+        {
+            if (!IsActive || publicDeclarationBroadcast)
+            {
+                return;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(ordinaryFaction);
+            if (record != null)
+            {
+                SynchronizePreDeclarationLock(record);
+            }
+        }
+
+        public static bool IsMechHiveHostileLocked(Faction? a, Faction? b)
+        {
+            GameComponent_SymbiosisCovenantState? state = CurrentComponent;
+            if (!IsActive
+                || state == null
+                || !state.publicDeclarationBroadcast
+                || a == null
+                || b == null
+                || a == b)
+            {
+                return false;
+            }
+
+            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive();
+            return mechHive != null
+                && ((a.IsPlayer && b == mechHive)
+                    || (b.IsPlayer && a == mechHive));
+        }
+
+        public int GetInvitationSuccessChance(SymbiosisCovenantFactionRecord? record)
+        {
+            if (record == null)
+            {
+                return 0;
+            }
+
+            int currentGoodwill = Faction.OfPlayerSilentFail != null
+                && record.Faction != null
+                    ? Faction.OfPlayerSilentFail.GoodwillWith(record.Faction)
+                    : 0;
+            int baseChance = Math.Max(
+                0,
+                75 - 25 * record.InvitationFailureCount);
+            return Mathf.Clamp(baseChance + currentGoodwill, 0, 100);
+        }
+
+        // ===== DEV 方法 =====
+
+        public bool DevAdjustTrust(Faction? faction, int amount, string reason)
         {
             if (!Prefs.DevMode || faction == null || amount == 0)
             {
@@ -616,13 +723,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            // DEV 直接设置可以绕过声明前锁定入口，但下一次周期同步会按锁定规则恢复。
             int previousTrust = record.Trust;
             record.SetTrustDirect(previousTrust + amount, reason, CurrentTick);
-            if (record.Trust > previousTrust)
-            {
-                TryApplyReachedMilestone(record);
-            }
-
+            HandleTrustChangeForRecord(record, previousTrust);
             return record.Trust != previousTrust;
         }
 
@@ -639,13 +743,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            int previousTrust = record.Trust;
             record.DevSetTrust(value, reason, CurrentTick);
-            if (record.Trust < MaximumTrust)
-            {
-                record.CovenantMember = false;
-            }
-
-            TryApplyReachedMilestone(record);
+            HandleTrustChangeForRecord(record, previousTrust);
             return true;
         }
 
@@ -674,14 +774,39 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             factionRecords.RemoveAll(record => record.Faction == faction);
+            GetInitialState(
+                faction,
+                !publicDeclarationBroadcast,
+                out int trust,
+                out SymbiosisPreDeclarationTrustLock lockState);
             factionRecords.Add(
-                new SymbiosisCovenantFactionRecord(
-                    faction,
-                    GetInitialTrust(faction)));
+                new SymbiosisCovenantFactionRecord(faction, trust, lockState));
             return true;
         }
 
-        public bool DevReplayCurrentMilestone(Faction? faction)
+        public bool DevBroadcastDeclaration()
+        {
+            if (!Prefs.DevMode)
+            {
+                return false;
+            }
+
+            return TryBroadcastPublicDeclaration();
+        }
+
+        public bool DevBeginProposal(Faction? faction)
+        {
+            if (!Prefs.DevMode)
+            {
+                return false;
+            }
+
+            return TryBeginCovenantProposal(faction);
+        }
+
+        public bool DevResolveProposal(
+            Faction? faction,
+            bool? forceOutcome)
         {
             if (!Prefs.DevMode)
             {
@@ -689,15 +814,148 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             SymbiosisCovenantFactionRecord? record = GetRecord(faction);
-            if (record == null || !record.DevPrepareCurrentMilestoneReplay())
+            if (record == null || !record.ProposalPending)
             {
                 return false;
             }
 
-            TryApplyReachedMilestone(record);
-            return record.HighestAppliedMilestone
-                == GetMilestoneForTrust(record.Trust);
+            ResolveProposal(record, forceOutcome);
+            return true;
         }
+
+        public bool DevClearInvitationCooldown(Faction? faction)
+        {
+            if (!Prefs.DevMode)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null)
+            {
+                return false;
+            }
+
+            record.ClearInvitationCooldown();
+            return true;
+        }
+
+        public bool DevSetInvitationFailureCount(Faction? faction, int value)
+        {
+            if (!Prefs.DevMode)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null)
+            {
+                return false;
+            }
+
+            record.DevSetInvitationFailureCount(value);
+            return true;
+        }
+
+        public bool DevSetCovenantExitCount(Faction? faction, int value)
+        {
+            if (!Prefs.DevMode)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null)
+            {
+                return false;
+            }
+
+            record.DevSetCovenantExitCount(value);
+            return true;
+        }
+
+        public bool DevForceJoinCovenant(Faction? faction)
+        {
+            if (!Prefs.DevMode)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null || record.CovenantMember)
+            {
+                return false;
+            }
+
+            JoinCovenant(record);
+            return true;
+        }
+
+        public bool DevForceLeaveCovenant(Faction? faction)
+        {
+            if (!Prefs.DevMode)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = GetRecord(faction);
+            if (record == null || !record.CovenantMember)
+            {
+                return false;
+            }
+
+            LeaveCovenant(
+                record,
+                "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev".Translate());
+            return true;
+        }
+
+        public void DevChangeUnity(float delta)
+        {
+            if (!Prefs.DevMode)
+            {
+                return;
+            }
+
+            unity = Mathf.Clamp(unity + delta, 0f, UnityMax);
+            lastUnityUpdateTick = CurrentTick;
+            RecalculateCovenantLevel();
+        }
+
+        public void DevSetUnity(float value)
+        {
+            if (!Prefs.DevMode)
+            {
+                return;
+            }
+
+            unity = Mathf.Clamp(value, 0f, UnityMax);
+            lastUnityUpdateTick = CurrentTick;
+            RecalculateCovenantLevel();
+        }
+
+        public void DevUpdateUnityDaily()
+        {
+            if (!Prefs.DevMode)
+            {
+                return;
+            }
+
+            ApplyDailyUnityDelta();
+            lastUnityUpdateTick = CurrentTick;
+        }
+
+        public void DevRecalculateCovenantLevel()
+        {
+            if (!Prefs.DevMode)
+            {
+                return;
+            }
+
+            RecalculateCovenantLevel();
+        }
+
+        // ===== 内部逻辑 =====
 
         private bool AdjustTrustInternal(
             Faction? faction,
@@ -711,6 +969,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            // 声明前锁定期间不接受任何普通信任变化。
+            if (!publicDeclarationBroadcast
+                && record.PreDeclarationLock != SymbiosisPreDeclarationTrustLock.None)
+            {
+                return false;
+            }
+
+            int previousTrust = record.Trust;
             int actual = record.AdjustTrust(
                 amount,
                 reason,
@@ -721,12 +987,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (actual > 0)
+            HandleTrustChangeForRecord(record, previousTrust);
+            return true;
+        }
+
+        private void HandleTrustChangeForRecord(
+            SymbiosisCovenantFactionRecord record,
+            int previousTrust)
+        {
+            if (record.CovenantMember && record.Trust < -50)
             {
-                TryApplyReachedMilestone(record);
+                LeaveCovenant(
+                    record,
+                    "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Betrayal".Translate());
             }
 
-            return true;
+            bool crossedFifty =
+                (previousTrust >= 50) != (record.Trust >= 50);
+            if (crossedFifty)
+            {
+                RecalculateGoodwillSituations();
+            }
         }
 
         private void TryInitializeOrSynchronize()
@@ -747,23 +1028,459 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Faction faction = ordinaryFactions[i];
                 if (GetRecord(faction) == null && IsEligibleFaction(faction))
                 {
+                    GetInitialState(
+                        faction,
+                        !publicDeclarationBroadcast,
+                        out int trust,
+                        out SymbiosisPreDeclarationTrustLock lockState);
                     factionRecords.Add(
-                        new SymbiosisCovenantFactionRecord(
-                            faction,
-                            GetInitialTrust(faction)));
+                        new SymbiosisCovenantFactionRecord(faction, trust, lockState));
                 }
             }
 
             if (!initialized)
             {
                 initialized = true;
-                targetMemberCount = Math.Min(3, factionRecords.Count);
             }
 
-            if (!mechHiveRetaliationTriggered
-                && factionRecords.Any(record => record.Trust >= 100))
+            if (!publicDeclarationBroadcast)
             {
-                TriggerMechHiveRetaliation();
+                for (int i = 0; i < factionRecords.Count; i++)
+                {
+                    SynchronizePreDeclarationLock(factionRecords[i]);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < factionRecords.Count; i++)
+                {
+                    factionRecords[i].SetPreDeclarationLock(
+                        SymbiosisPreDeclarationTrustLock.None);
+                }
+
+                CalibrateMechHiveHostility();
+            }
+
+            ResolveDueProposals();
+
+            for (int i = 0; i < factionRecords.Count; i++)
+            {
+                SymbiosisCovenantFactionRecord record = factionRecords[i];
+                if (record.CovenantMember && record.Trust < -50)
+                {
+                    LeaveCovenant(
+                        record,
+                        "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Betrayal"
+                            .Translate());
+                }
+            }
+
+            EnsureNeutralAmongMembers();
+            UpdateUnityIfDue();
+
+            if (CovenantMemberCount == 0)
+            {
+                unity = 0f;
+                covenantLevel = 0;
+            }
+
+            RecalculateCovenantLevel();
+        }
+
+        private void ResolveDueProposals()
+        {
+            for (int i = 0; i < factionRecords.Count; i++)
+            {
+                SymbiosisCovenantFactionRecord record = factionRecords[i];
+                if (record.ProposalPending && record.ProposalResolutionTick <= CurrentTick)
+                {
+                    ResolveProposal(record, null);
+                }
+            }
+        }
+
+        private void ResolveProposal(
+            SymbiosisCovenantFactionRecord record,
+            bool? forceOutcome)
+        {
+            if (!record.ProposalPending)
+            {
+                return;
+            }
+
+            // 先清除结算时间，避免信件或后续代码异常时重复结算。
+            record.ClearProposal();
+
+            int currentGoodwill = 0;
+            if (Faction.OfPlayerSilentFail != null && record.Faction != null)
+            {
+                currentGoodwill =
+                    Faction.OfPlayerSilentFail.GoodwillWith(record.Faction);
+            }
+
+            int baseChance = Math.Max(
+                0,
+                75 - 25 * record.InvitationFailureCount);
+            int successChance = Mathf.Clamp(baseChance + currentGoodwill, 0, 100);
+
+            bool success = forceOutcome.HasValue
+                ? forceOutcome.Value
+                : Rand.Chance(successChance / 100f);
+
+            if (success)
+            {
+                JoinCovenant(record);
+            }
+            else
+            {
+                FailProposal(record);
+            }
+        }
+
+        private void JoinCovenant(SymbiosisCovenantFactionRecord record)
+        {
+            if (record.CovenantMember)
+            {
+                return;
+            }
+
+            record.CovenantMember = true;
+            record.SetTrustDirect(
+                record.CovenantExitCount > 0 ? MemberRejoinTrust : MemberJoinTrust,
+                "MAP_MechanoidMechanitor.Symbiosis.TrustReason.JoinCovenant".Translate(),
+                CurrentTick);
+            record.ClearProposal();
+            record.ClearInvitationCooldown();
+
+            RecalculateGoodwillSituations();
+            EnsureNeutralAmongMembers();
+            RecalculateCovenantLevel();
+
+            if (record.Faction != null)
+            {
+                Find.LetterStack.ReceiveLetter(
+                    "MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Label"
+                        .Translate(record.Faction.Name),
+                    "MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Text"
+                        .Translate(record.Faction.Name),
+                    LetterDefOf.PositiveEvent,
+                    null,
+                    record.Faction);
+            }
+        }
+
+        private void FailProposal(SymbiosisCovenantFactionRecord record)
+        {
+            record.IncrementInvitationFailureCount();
+            record.SetNextInvitationTick(CurrentTick + InvitationCooldownTicks);
+
+            if (record.Faction != null)
+            {
+                Find.LetterStack.ReceiveLetter(
+                    "MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Label"
+                        .Translate(record.Faction.Name),
+                    "MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Text"
+                        .Translate(record.Faction.Name),
+                    LetterDefOf.NegativeEvent,
+                    null,
+                    record.Faction);
+            }
+        }
+
+        private void LeaveCovenant(
+            SymbiosisCovenantFactionRecord record,
+            string reason)
+        {
+            if (!record.CovenantMember)
+            {
+                return;
+            }
+
+            record.CovenantMember = false;
+            record.IncrementCovenantExitCount();
+            record.SetNextInvitationTick(CurrentTick + InvitationCooldownTicks);
+
+            unity = Mathf.Max(0f, unity - CovenantExitUnityPenalty);
+            RecalculateGoodwillSituations();
+
+            int memberCount = CovenantMemberCount;
+            RecalculateCovenantLevel();
+
+            if (record.Faction != null)
+            {
+                Find.LetterStack.ReceiveLetter(
+                    "MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Label"
+                        .Translate(record.Faction.Name),
+                    "MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Text"
+                        .Translate(record.Faction.Name),
+                    LetterDefOf.NegativeEvent,
+                    null,
+                    record.Faction);
+            }
+
+            if (memberCount == 0)
+            {
+                unity = 0f;
+                covenantLevel = 0;
+                Find.LetterStack.ReceiveLetter(
+                    "MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Label"
+                        .Translate(),
+                    "MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Text"
+                        .Translate(),
+                    LetterDefOf.NegativeEvent);
+            }
+        }
+
+        private void EnsureNeutralAmongMembers()
+        {
+            List<Faction> members = factionRecords
+                .Where(record => record.CovenantMember && record.Faction != null)
+                .Select(record => record.Faction)
+                .Cast<Faction>()
+                .ToList();
+            for (int i = 0; i < members.Count; i++)
+            {
+                for (int j = i + 1; j < members.Count; j++)
+                {
+                    EnsureNeutralBetweenCovenantMembers(members[i], members[j]);
+                }
+            }
+        }
+
+        private static bool EnsureNeutralBetweenCovenantMembers(
+            Faction first,
+            Faction second)
+        {
+            if (first == null || second == null || first == second)
+            {
+                return false;
+            }
+
+            FactionRelation? firstRelation = first.RelationWith(second, allowNull: true);
+            FactionRelation? secondRelation = second.RelationWith(first, allowNull: true);
+            if (firstRelation == null || secondRelation == null)
+            {
+                first.TryMakeInitialRelationsWith(second);
+                firstRelation = first.RelationWith(second, allowNull: true);
+                secondRelation = second.RelationWith(first, allowNull: true);
+                if (firstRelation == null || secondRelation == null)
+                {
+                    return false;
+                }
+            }
+
+            FactionRelationKind firstPrevious = firstRelation.kind;
+            FactionRelationKind secondPrevious = secondRelation.kind;
+
+            int requiredGoodwill = Math.Max(
+                0,
+                Math.Max(firstRelation.baseGoodwill, secondRelation.baseGoodwill));
+            firstRelation.baseGoodwill = requiredGoodwill;
+            secondRelation.baseGoodwill = requiredGoodwill;
+
+            FactionRelationKind firstTarget = firstRelation.kind == FactionRelationKind.Hostile
+                ? FactionRelationKind.Neutral
+                : firstRelation.kind;
+            FactionRelationKind secondTarget = secondRelation.kind == FactionRelationKind.Hostile
+                ? FactionRelationKind.Neutral
+                : secondRelation.kind;
+            firstRelation.kind = firstTarget;
+            secondRelation.kind = secondTarget;
+
+            if (firstPrevious != firstTarget)
+            {
+                first.Notify_RelationKindChanged(
+                    second,
+                    firstPrevious,
+                    canSendLetter: false,
+                    reason: null,
+                    GlobalTargetInfo.Invalid,
+                    out _);
+            }
+
+            if (secondPrevious != secondTarget)
+            {
+                second.Notify_RelationKindChanged(
+                    first,
+                    secondPrevious,
+                    canSendLetter: false,
+                    reason: null,
+                    GlobalTargetInfo.Invalid,
+                    out _);
+            }
+
+            return true;
+        }
+
+        private void UpdateUnityIfDue()
+        {
+            if (lastUnityUpdateTick < 0)
+            {
+                lastUnityUpdateTick = CurrentTick;
+                return;
+            }
+
+            if (CurrentTick - lastUnityUpdateTick >= UnityUpdateIntervalTicks)
+            {
+                lastUnityUpdateTick = CurrentTick;
+                ApplyDailyUnityDelta();
+            }
+        }
+
+        private void ApplyDailyUnityDelta()
+        {
+            float delta = 0f;
+            for (int i = 0; i < factionRecords.Count; i++)
+            {
+                SymbiosisCovenantFactionRecord record = factionRecords[i];
+                if (!record.CovenantMember)
+                {
+                    continue;
+                }
+
+                int trust = record.Trust;
+                if (trust > 50)
+                {
+                    delta += (trust - 50) / 10f;
+                }
+                else if (trust < 0)
+                {
+                    delta -= (-trust) / 5f;
+                }
+            }
+
+            unity = Mathf.Clamp(unity + delta, 0f, UnityMax);
+            RecalculateCovenantLevel();
+        }
+
+        private void RecalculateCovenantLevel()
+        {
+            int previousLevel = covenantLevel;
+            int memberCount = CovenantMemberCount;
+
+            int level = 0;
+            if (memberCount > 0)
+            {
+                level = 1;
+                if (unity >= 700) level = 5;
+                else if (unity >= 450) level = 4;
+                else if (unity >= 250) level = 3;
+                else if (unity >= 100) level = 2;
+            }
+
+            covenantLevel = level;
+            highestCovenantLevel = Math.Max(highestCovenantLevel, level);
+            if (previousLevel != level)
+            {
+                NotifyCovenantLevelChanged(previousLevel, level);
+            }
+        }
+
+        private void NotifyCovenantLevelChanged(int previousLevel, int newLevel)
+        {
+            // 本次不实现具体等级奖励，仅保留未来扩展入口。
+        }
+
+        private void RecalculateGoodwillSituations()
+        {
+            if (Current.Game == null || Find.GoodwillSituationManager == null)
+            {
+                return;
+            }
+
+            Find.GoodwillSituationManager.RecalculateAll(
+                canSendHostilityChangedLetter: false);
+        }
+
+        private void CalibrateMechHiveHostility()
+        {
+            if (!IsActive || !publicDeclarationBroadcast)
+            {
+                return;
+            }
+
+            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive();
+            if (mechHive != null)
+            {
+                MechanoidMechanitorMechHiveRelationApplier.ApplyExactMechHiveRelation(
+                    mechHive,
+                    FactionRelationKind.Hostile,
+                    hostileOnHarmByPlayer: false);
+            }
+        }
+
+        private void SynchronizePreDeclarationLock(
+            SymbiosisCovenantFactionRecord record)
+        {
+            if (record.PreDeclarationLock == SymbiosisPreDeclarationTrustLock.None)
+            {
+                return;
+            }
+
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null || record.Faction == null)
+            {
+                return;
+            }
+
+            FactionRelation? relation = player.RelationWith(record.Faction, allowNull: true);
+            SymbiosisPreDeclarationTrustLock current = relation?.kind switch
+            {
+                FactionRelationKind.Ally => SymbiosisPreDeclarationTrustLock.None,
+                FactionRelationKind.Neutral => SymbiosisPreDeclarationTrustLock.Neutral,
+                _ => SymbiosisPreDeclarationTrustLock.Hostile
+            };
+
+            TightenPreDeclarationLock(record, current);
+        }
+
+        private void TightenPreDeclarationLock(
+            SymbiosisCovenantFactionRecord record,
+            SymbiosisPreDeclarationTrustLock targetLock)
+        {
+            if (LockSeverity(targetLock) <= LockSeverity(record.PreDeclarationLock))
+            {
+                return;
+            }
+
+            SymbiosisPreDeclarationTrustLock strictest =
+                LockSeverity(targetLock) == 2
+                    ? SymbiosisPreDeclarationTrustLock.Hostile
+                    : SymbiosisPreDeclarationTrustLock.Neutral;
+
+            int previousTrust = record.Trust;
+            record.SetPreDeclarationLock(strictest);
+            record.SetTrustDirect(
+                GetLockedTrustValue(strictest),
+                "MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock"
+                    .Translate(),
+                CurrentTick);
+            HandleTrustChangeForRecord(record, previousTrust);
+        }
+
+        private static int GetLockedTrustValue(SymbiosisPreDeclarationTrustLock trustLock)
+        {
+            switch (trustLock)
+            {
+                case SymbiosisPreDeclarationTrustLock.Hostile:
+                    return MinimumTrust;
+                case SymbiosisPreDeclarationTrustLock.Neutral:
+                    return -25;
+                default:
+                    return 0;
+            }
+        }
+
+        private static int LockSeverity(SymbiosisPreDeclarationTrustLock value)
+        {
+            switch (value)
+            {
+                case SymbiosisPreDeclarationTrustLock.Hostile:
+                    return 2;
+                case SymbiosisPreDeclarationTrustLock.Neutral:
+                    return 1;
+                default:
+                    return 0;
             }
         }
 
@@ -799,271 +1516,45 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || option == MechanoidMechanitorFactionRelationOption.Ally;
         }
 
-        private static int GetInitialTrust(Faction faction)
+        private static void GetInitialState(
+            Faction faction,
+            bool preDeclaration,
+            out int trust,
+            out SymbiosisPreDeclarationTrustLock lockState)
         {
             Faction? player = Faction.OfPlayerSilentFail;
-            if (player == null)
-            {
-                return 0;
-            }
+            FactionRelation? relation = player?.RelationWith(faction, allowNull: true);
+            FactionRelationKind kind = relation?.kind ?? FactionRelationKind.Hostile;
 
-            FactionRelation? relation = player.RelationWith(faction, allowNull: true);
-            switch (relation?.kind ?? FactionRelationKind.Hostile)
+            switch (kind)
             {
                 case FactionRelationKind.Ally:
-                    return 100;
+                    trust = 50;
+                    break;
                 case FactionRelationKind.Neutral:
-                    return 0;
+                    trust = preDeclaration ? -25 : 0;
+                    break;
                 default:
-                    return -100;
+                    trust = MinimumTrust;
+                    break;
             }
-        }
 
-        private void RetryPendingMilestones()
-        {
-            if (!IsActive || !initialized)
+            if (!preDeclaration)
             {
-                return;
+                lockState = SymbiosisPreDeclarationTrustLock.None;
             }
-
-            for (int i = 0; i < factionRecords.Count; i++)
+            else if (kind == FactionRelationKind.Ally)
             {
-                TryApplyReachedMilestone(factionRecords[i]);
+                lockState = SymbiosisPreDeclarationTrustLock.None;
             }
-        }
-
-        private void TryApplyReachedMilestone(SymbiosisCovenantFactionRecord record)
-        {
-            Faction? faction = record.Faction;
-            if (faction == null)
+            else if (kind == FactionRelationKind.Neutral)
             {
-                return;
+                lockState = SymbiosisPreDeclarationTrustLock.Neutral;
             }
-
-            for (int i = 0; i < TrustMilestones.Length; i++)
+            else
             {
-                int milestone = TrustMilestones[i];
-                if (milestone <= record.HighestAppliedMilestone
-                    || milestone > record.HighestReachedMilestone)
-                {
-                    continue;
-                }
-
-                if (!TryApplyMilestoneRelation(faction, milestone))
-                {
-                    return;
-                }
-
-                record.HighestAppliedMilestone = milestone;
-                SendMilestoneLetter(faction, milestone);
-                if (milestone >= 100)
-                {
-                    TriggerMechHiveRetaliation();
-                }
+                lockState = SymbiosisPreDeclarationTrustLock.Hostile;
             }
-        }
-
-        private static bool TryApplyMilestoneRelation(Faction faction, int milestone)
-        {
-            if (!TryGetMilestoneRelation(
-                    milestone,
-                    out int goodwill,
-                    out FactionRelationKind relationKind))
-            {
-                return false;
-            }
-
-            Faction? player = Faction.OfPlayerSilentFail;
-            if (player == null)
-            {
-                return false;
-            }
-
-            FactionRelation? currentRelation =
-                player.RelationWith(faction, allowNull: true);
-            int currentGoodwill = currentRelation?.baseGoodwill ?? -100;
-            int targetGoodwill = Math.Max(currentGoodwill, goodwill);
-            bool needsGoodwill = currentGoodwill < goodwill;
-            bool needsRelationKind =
-                currentRelation == null
-                || GetRelationRank(currentRelation.kind)
-                    < GetRelationRank(relationKind);
-            if (!needsGoodwill && !needsRelationKind)
-            {
-                return true;
-            }
-
-            if (needsGoodwill
-                && !player.CanChangeGoodwillFor(
-                    faction,
-                    targetGoodwill - currentGoodwill))
-            {
-                return false;
-            }
-
-            return MechanoidMechanitorOrdinaryFactionRelationApplier
-                .ApplyExactPlayerRelation(faction, targetGoodwill, relationKind);
-        }
-
-        private static int GetRelationRank(FactionRelationKind relationKind)
-        {
-            switch (relationKind)
-            {
-                case FactionRelationKind.Ally:
-                    return 2;
-                case FactionRelationKind.Neutral:
-                    return 1;
-                default:
-                    return 0;
-            }
-        }
-
-        private static bool TryGetMilestoneRelation(
-            int milestone,
-            out int goodwill,
-            out FactionRelationKind relationKind)
-        {
-            if (milestone >= 200)
-            {
-                goodwill = 100;
-                relationKind = FactionRelationKind.Ally;
-                return true;
-            }
-
-            if (milestone >= 150)
-            {
-                goodwill = 100;
-                relationKind = FactionRelationKind.Ally;
-                return true;
-            }
-
-            if (milestone >= 100)
-            {
-                goodwill = 75;
-                relationKind = FactionRelationKind.Ally;
-                return true;
-            }
-
-            if (milestone >= 50)
-            {
-                goodwill = 0;
-                relationKind = FactionRelationKind.Neutral;
-                return true;
-            }
-
-            if (milestone >= 1)
-            {
-                goodwill = -25;
-                relationKind = FactionRelationKind.Hostile;
-                return true;
-            }
-
-            if (milestone >= -50)
-            {
-                goodwill = -50;
-                relationKind = FactionRelationKind.Hostile;
-                return true;
-            }
-
-            goodwill = 0;
-            relationKind = FactionRelationKind.Neutral;
-            return false;
-        }
-
-        private static void SendMilestoneLetter(Faction faction, int milestone)
-        {
-            Find.LetterStack.ReceiveLetter(
-                "MAP_MechanoidMechanitor.Symbiosis.Milestone.Letter.Label".Translate(
-                    faction.Name),
-                "MAP_MechanoidMechanitor.Symbiosis.Milestone.Letter.Text".Translate(
-                    faction.Name,
-                    milestone,
-                    GetStageLabel(milestone)),
-                milestone >= 100 ? LetterDefOf.PositiveEvent : LetterDefOf.NeutralEvent,
-                null,
-                faction);
-        }
-
-        private void TriggerMechHiveRetaliation()
-        {
-            if (mechHiveRetaliationTriggered)
-            {
-                return;
-            }
-
-            mechHiveRetaliationTriggered = true;
-            CalibrateMechHiveRetaliation();
-            Find.LetterStack.ReceiveLetter(
-                "MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label".Translate(),
-                "MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text".Translate(),
-                LetterDefOf.ThreatBig,
-                null,
-                MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive());
-        }
-
-        private void CalibrateMechHiveRetaliation()
-        {
-            if (!IsActive || !mechHiveRetaliationTriggered)
-            {
-                return;
-            }
-
-            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive();
-            if (mechHive != null)
-            {
-                MechanoidMechanitorMechHiveRelationApplier.ApplyExactMechHiveRelation(
-                    mechHive,
-                    FactionRelationKind.Hostile,
-                    hostileOnHarmByPlayer: false);
-            }
-        }
-
-        public static bool IsRetaliatingMechHivePair(Faction? a, Faction? b)
-        {
-            GameComponent_SymbiosisCovenantState? state = CurrentComponent;
-            if (!IsActive
-                || state == null
-                || !state.mechHiveRetaliationTriggered
-                || a == null
-                || b == null
-                || a == b)
-            {
-                return false;
-            }
-
-            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive();
-            return mechHive != null
-                && ((a.IsPlayer && b == mechHive) || (b.IsPlayer && a == mechHive));
-        }
-
-        public static int GetMilestoneForTrust(int trust)
-        {
-            if (trust >= 200)
-            {
-                return 200;
-            }
-
-            if (trust >= 150)
-            {
-                return 150;
-            }
-
-            if (trust >= 100)
-            {
-                return 100;
-            }
-
-            if (trust >= 50)
-            {
-                return 50;
-            }
-
-            if (trust >= 1)
-            {
-                return 1;
-            }
-
-            return trust >= -50 ? -50 : MinimumTrust - 1;
         }
 
         public static string GetStageLabel(int trust)
@@ -1093,7 +1584,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (trust >= 1)
             {
-                return "MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact".Translate();
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact"
+                    .Translate();
             }
 
             if (trust >= -50)
@@ -1110,22 +1602,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return Math.Max(MinimumTrust, Math.Min(MaximumTrust, trust));
         }
 
-        public static int GetPreviousMilestone(int milestone)
-        {
-            int previous = MinimumTrust - 1;
-            for (int i = 0; i < TrustMilestones.Length; i++)
-            {
-                if (TrustMilestones[i] >= milestone)
-                {
-                    break;
-                }
-
-                previous = TrustMilestones[i];
-            }
-
-            return previous;
-        }
-
         private static int CurrentTick => Find.TickManager?.TicksGame ?? 0;
 
         public override void ExposeData()
@@ -1140,11 +1616,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref publicDeclarationBroadcast,
                 "publicDeclarationBroadcast",
                 false);
-            Scribe_Values.Look(
-                ref mechHiveRetaliationTriggered,
-                "mechHiveRetaliationTriggered",
-                false);
-            Scribe_Values.Look(ref targetMemberCount, "targetMemberCount", 0);
+            Scribe_Values.Look(ref unity, "unity", 0f);
+            Scribe_Values.Look(ref covenantLevel, "covenantLevel", 0);
+            Scribe_Values.Look(ref highestCovenantLevel, "highestCovenantLevel", 0);
+            Scribe_Values.Look(ref lastUnityUpdateTick, "lastUnityUpdateTick", -1);
             Scribe_Collections.Look(
                 ref factionRecords,
                 "factionRecords",
@@ -1154,6 +1629,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 factionRecords ??= new List<SymbiosisCovenantFactionRecord>();
                 factionRecords.RemoveAll(record => record == null);
+                unity = Mathf.Clamp(unity, 0f, UnityMax);
+                covenantLevel = Mathf.Clamp(covenantLevel, 0, CovenantLevelMax);
+                highestCovenantLevel = Mathf.Clamp(
+                    highestCovenantLevel,
+                    0,
+                    CovenantLevelMax);
+                if (lastUnityUpdateTick < 0)
+                {
+                    lastUnityUpdateTick = -1;
+                }
             }
         }
     }

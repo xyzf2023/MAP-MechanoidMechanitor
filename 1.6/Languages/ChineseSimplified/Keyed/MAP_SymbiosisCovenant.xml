@@ -1,25 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanoidMechanitor.Symbiosis.Access>接入共生盟约</MAP_MechanoidMechanitor.Symbiosis.Access>
+  <MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>公开脱离声明</MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>
   <MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Label>可以建立多方通讯链路</MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Label>
   <MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Text>可以通过通讯台接入共生盟约。与其他派系建立信任、改善关系并邀请他们共同反抗机械主脑。</MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Text>
   <MAP_MechanoidMechanitor.Symbiosis.Title>共生盟约 // 多方协调链路</MAP_MechanoidMechanitor.Symbiosis.Title>
-  <MAP_MechanoidMechanitor.Symbiosis.Subtitle>对等节点已上线。选择通讯席位以查看当前信任、外交状态与可执行协议。</MAP_MechanoidMechanitor.Symbiosis.Subtitle>
-  <MAP_MechanoidMechanitor.Symbiosis.Seats>正式席位：{0} / {1}</MAP_MechanoidMechanitor.Symbiosis.Seats>
-  <MAP_MechanoidMechanitor.Symbiosis.OvermindDetected>主脑威胁：已侦测 // 敌对追踪中</MAP_MechanoidMechanitor.Symbiosis.OvermindDetected>
-  <MAP_MechanoidMechanitor.Symbiosis.OvermindUndetected>主脑威胁：尚未侦测到本地联盟</MAP_MechanoidMechanitor.Symbiosis.OvermindUndetected>
+  <MAP_MechanoidMechanitor.Symbiosis.Subtitle>共生盟约已上线。查看盟约成员、团结度与脱离声明状态。</MAP_MechanoidMechanitor.Symbiosis.Subtitle>
   <MAP_MechanoidMechanitor.Symbiosis.NoLeader>NO DATA // LEADER UNAVAILABLE</MAP_MechanoidMechanitor.Symbiosis.NoLeader>
-  <MAP_MechanoidMechanitor.Symbiosis.EmptyChannel>NO DATA // CHANNEL EMPTY</MAP_MechanoidMechanitor.Symbiosis.EmptyChannel>
-  <MAP_MechanoidMechanitor.Symbiosis.NoFactionSelected>NO DATA // 未选择通讯席位</MAP_MechanoidMechanitor.Symbiosis.NoFactionSelected>
-  <MAP_MechanoidMechanitor.Symbiosis.MemberBadge>盟约席位</MAP_MechanoidMechanitor.Symbiosis.MemberBadge>
-  <MAP_MechanoidMechanitor.Symbiosis.Leader>派系领袖：{0}</MAP_MechanoidMechanitor.Symbiosis.Leader>
-  <MAP_MechanoidMechanitor.Symbiosis.Trust>信任值：{0} // {1}</MAP_MechanoidMechanitor.Symbiosis.Trust>
-  <MAP_MechanoidMechanitor.Symbiosis.Goodwill>当前好感：{0} // {1}</MAP_MechanoidMechanitor.Symbiosis.Goodwill>
-  <MAP_MechanoidMechanitor.Symbiosis.RecentChanges>近期信任记录</MAP_MechanoidMechanitor.Symbiosis.RecentChanges>
-  <MAP_MechanoidMechanitor.Symbiosis.NoChanges>尚无信任变化记录。</MAP_MechanoidMechanitor.Symbiosis.NoChanges>
-  <MAP_MechanoidMechanitor.Symbiosis.Options>可执行协议</MAP_MechanoidMechanitor.Symbiosis.Options>
+  <MAP_MechanoidMechanitor.Symbiosis.NoMembers>当前没有盟约成员。</MAP_MechanoidMechanitor.Symbiosis.NoMembers>
+  <MAP_MechanoidMechanitor.Symbiosis.MemberBadge>盟约成员</MAP_MechanoidMechanitor.Symbiosis.MemberBadge>
   <MAP_MechanoidMechanitor.Symbiosis.Disconnect>断开连接</MAP_MechanoidMechanitor.Symbiosis.Disconnect>
   <MAP_MechanoidMechanitor.Symbiosis.ConnectionLost>多方通讯链路不可用。</MAP_MechanoidMechanitor.Symbiosis.ConnectionLost>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantLevel>盟约等级：{0} / {1}</MAP_MechanoidMechanitor.Symbiosis.CovenantLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.MemberCount>盟约成员：{0}</MAP_MechanoidMechanitor.Symbiosis.MemberCount>
+  <MAP_MechanoidMechanitor.Symbiosis.UnityNext>团结度：{0} / 下一等级 {1}</MAP_MechanoidMechanitor.Symbiosis.UnityNext>
+  <MAP_MechanoidMechanitor.Symbiosis.UnityMax>团结度：{0}（已达最高等级）</MAP_MechanoidMechanitor.Symbiosis.UnityMax>
+  <MAP_MechanoidMechanitor.Symbiosis.HighestLevel>历史最高等级：{0}</MAP_MechanoidMechanitor.Symbiosis.HighestLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Done>已公开脱离机械主脑</MAP_MechanoidMechanitor.Symbiosis.Declaration.Done>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.NotDone>尚未公开脱离机械主脑</MAP_MechanoidMechanitor.Symbiosis.Declaration.NotDone>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive>信任档案</MAP_MechanoidMechanitor.Symbiosis.Archive>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Title>信任档案</MAP_MechanoidMechanitor.Symbiosis.Archive.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.GoodwillTrust>原版好感 {0} // 阶段 {1} // 信任 {2}</MAP_MechanoidMechanitor.Symbiosis.Archive.GoodwillTrust>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.LockStatus>声明前锁定：{0}</MAP_MechanoidMechanitor.Symbiosis.Archive.LockStatus>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.CovenantStatus>盟约状态：{0}</MAP_MechanoidMechanitor.Symbiosis.Archive.CovenantStatus>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Counters>邀请失败 {0} // 退出 {1} // {2}</MAP_MechanoidMechanitor.Symbiosis.Archive.Counters>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Recent>近期变化：</MAP_MechanoidMechanitor.Symbiosis.Archive.Recent>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.LockHostile>敌对（-100）</MAP_MechanoidMechanitor.Symbiosis.Archive.LockHostile>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.LockNeutral>中立（-25）</MAP_MechanoidMechanitor.Symbiosis.Archive.LockNeutral>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.LockNone>无</MAP_MechanoidMechanitor.Symbiosis.Archive.LockNone>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Member>盟约成员</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Member>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.LockedHostile>声明前锁定：敌对</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.LockedHostile>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.LockedNeutral>声明前锁定：中立</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.LockedNeutral>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.PermanentRefuse>已永久拒绝再次加入</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.PermanentRefuse>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Pending>正在审议</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Pending>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Cooling>邀请冷却中</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Cooling>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.CanContact>可以秘密接触</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.CanContact>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.NotEligible>尚未满足秘密接触条件</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.NotEligible>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.TimingProposal>审议剩余 {0}</MAP_MechanoidMechanitor.Symbiosis.Archive.TimingProposal>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.TimingCooldown>冷却剩余 {0}</MAP_MechanoidMechanitor.Symbiosis.Archive.TimingCooldown>
+  <MAP_MechanoidMechanitor.Symbiosis.Archive.TimingNone>无</MAP_MechanoidMechanitor.Symbiosis.Archive.TimingNone>
+  <MAP_MechanoidMechanitor.Symbiosis.Relation.Ally>盟友</MAP_MechanoidMechanitor.Symbiosis.Relation.Ally>
+  <MAP_MechanoidMechanitor.Symbiosis.Relation.Neutral>中立</MAP_MechanoidMechanitor.Symbiosis.Relation.Neutral>
+  <MAP_MechanoidMechanitor.Symbiosis.Relation.Hostile>敌对</MAP_MechanoidMechanitor.Symbiosis.Relation.Hostile>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.Rejected>拒绝接入</MAP_MechanoidMechanitor.Symbiosis.Stage.Rejected>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation>戒备观察</MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact>秘密接触</MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact>
@@ -27,12 +49,6 @@
   <MAP_MechanoidMechanitor.Symbiosis.Stage.CommonDefense>共同防卫</MAP_MechanoidMechanitor.Symbiosis.Stage.CommonDefense>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.StrategicCooperation>战略协作</MAP_MechanoidMechanitor.Symbiosis.Stage.StrategicCooperation>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.ReadyToSign>盟约候选</MAP_MechanoidMechanitor.Symbiosis.Stage.ReadyToSign>
-  <MAP_MechanoidMechanitor.Symbiosis.Stage.Member>盟约成员</MAP_MechanoidMechanitor.Symbiosis.Stage.Member>
-  <MAP_MechanoidMechanitor.Symbiosis.Option.Execute>执行</MAP_MechanoidMechanitor.Symbiosis.Option.Execute>
-  <MAP_MechanoidMechanitor.Symbiosis.Option.NoFaction>请先选择一个有效派系。</MAP_MechanoidMechanitor.Symbiosis.Option.NoFaction>
-  <MAP_MechanoidMechanitor.Symbiosis.Option.TrustRequired>需要至少 {0} 点信任。</MAP_MechanoidMechanitor.Symbiosis.Option.TrustRequired>
-  <MAP_MechanoidMechanitor.Symbiosis.Option.AlreadyExecuted>该协议已经执行。</MAP_MechanoidMechanitor.Symbiosis.Option.AlreadyExecuted>
-  <MAP_MechanoidMechanitor.Symbiosis.Option.Unavailable>该协议当前不可用。</MAP_MechanoidMechanitor.Symbiosis.Option.Unavailable>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.PublicDeclaration>公开脱离声明</MAP_MechanoidMechanitor.Symbiosis.TrustReason.PublicDeclaration>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Goodwill>积极外交行动</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Goodwill>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Trade>完成互惠贸易</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Trade>
@@ -42,22 +58,61 @@
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>摧毁机械巢节点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>清除共同敌人据点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev>DEV 信任测试</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev>
-  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Label>脱离声明已公开</MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Label>
-  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Text>本地节点已向所有可接入派系广播自主声明。各派系将继续观察玩家的实际行动，并分别记录信任进度。</MAP_MechanoidMechanitor.Symbiosis.Declaration.Letter.Text>
-  <MAP_MechanoidMechanitor.Symbiosis.Milestone.Letter.Label>{0}：信任阶段更新</MAP_MechanoidMechanitor.Symbiosis.Milestone.Letter.Label>
-  <MAP_MechanoidMechanitor.Symbiosis.Milestone.Letter.Text>{0}对玩家的信任已达到 {1}。双方关系进入“{2}”阶段，相应外交关系已开放。</MAP_MechanoidMechanitor.Symbiosis.Milestone.Letter.Text>
-  <MAP_MechanoidMechanitor.Symbiosis.Signed.Letter.Label>{0}签署共生盟约</MAP_MechanoidMechanitor.Symbiosis.Signed.Letter.Label>
-  <MAP_MechanoidMechanitor.Symbiosis.Signed.Letter.Text>{0}已确认玩家机械节点具备独立意志，并正式取得共生盟约席位。当前正式席位：{1}/{2}。</MAP_MechanoidMechanitor.Symbiosis.Signed.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock>声明前锁定收紧</MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.JoinCovenant>加入共生盟约</MAP_MechanoidMechanitor.Symbiosis.TrustReason.JoinCovenant>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact>秘密接触</MAP_MechanoidMechanitor.Symbiosis.SecretContact>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node1>对方已接入加密通讯链路。他们正在等待我们说明联络目的。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node1>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Explain>说明我们的立场</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Explain>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.End>结束秘密接触</MAP_MechanoidMechanitor.Symbiosis.SecretContact.End>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2>我们已公开脱离机械主脑的控制，并准备与失控机械族抗争。我们希望与有机派系建立长期的合作关系。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Propose>提议成立共生盟约</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Propose>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Decline>暂不提出邀请</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Decline>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3>一旦正式发出邀请，对方将对我们的行为、当前关系和合作价值进行评估。审议通常需要一至三日。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Issue>正式发出邀请</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Issue>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Back>返回</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Back>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Unavailable>当前不满足秘密接触条件。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Unavailable>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Pending>该派系正在审议我们的邀请。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Pending>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.PermanentRefuse>该派系已永久拒绝再次加入共生盟约。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.PermanentRefuse>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Cooling>该派系仍在冷却期（剩余 {0}）。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Cooling>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Title>公开脱离声明</MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Text>我们即将向全球广播脱离声明，告知其他派系我们已脱离机械巢的控制，并决心与机械巢抗争到底。机械巢也会接收到这条消息，并将我们标记为异常脱序单元。
+
+我们要继续吗？</MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Continue>继续</MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Continue>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Cancel>取消</MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Cancel>
   <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label>机械主脑侦测到叛离联盟</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label>
-  <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>玩家与有机派系建立的公开共同防卫关系已被机械主脑识别。机械巢已将本地节点重新分类为敌对异常单元；此后双方关系将永久保持敌对。</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>机械主脑已侦测到本地节点向全球广播的脱离声明。我们已被重新分类为敌对异常单元，机械巢将不再接受任何关系修复请求。</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Label>{0}同意加入共生盟约</MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Text>{0}同意加入共生盟约。我们将携手对抗失控机械族的威胁。</MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Label>{0}拒绝加入共生盟约</MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Text>{0}拒绝了加入共生盟约的邀请，他们称这项决定仍需要评估。</MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Label>{0}退出盟约</MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Text>我们的所作所属让{0}对我们不再信任。{0}已退出共生盟约。</MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Label>共生盟约已解散</MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Text>随着最后一个派系的退出，共生盟约的愿景彻底化为泡影。</MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.NoChanges>尚无信任变化记录。</MAP_MechanoidMechanitor.Symbiosis.NoChanges>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.Title>DEV // 共生盟约测试</MAP_MechanoidMechanitor.Symbiosis.Dev.Title>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord>当前没有可测试的派系信任记录。</MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.SelectFaction>选择测试派系</MAP_MechanoidMechanitor.Symbiosis.Dev.SelectFaction>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.Adjust>增减当前信任</MAP_MechanoidMechanitor.Symbiosis.Dev.Adjust>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.Set>直接设置关键阶段</MAP_MechanoidMechanitor.Symbiosis.Dev.Set>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.Utilities>测试工具</MAP_MechanoidMechanitor.Symbiosis.Dev.Utilities>
-  <MAP_MechanoidMechanitor.Symbiosis.Dev.ResetLimits>重置周期限制</MAP_MechanoidMechanitor.Symbiosis.Dev.ResetLimits>
-  <MAP_MechanoidMechanitor.Symbiosis.Dev.ReplayMilestone>重放当前里程碑</MAP_MechanoidMechanitor.Symbiosis.Dev.ReplayMilestone>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.RecreateRecord>重建当前记录</MAP_MechanoidMechanitor.Symbiosis.Dev.RecreateRecord>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.ResetLimits>重置周期限制</MAP_MechanoidMechanitor.Symbiosis.Dev.ResetLimits>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.State>内部状态</MAP_MechanoidMechanitor.Symbiosis.Dev.State>
-  <MAP_MechanoidMechanitor.Symbiosis.Dev.NoMilestone>当前信任尚未达到可重放的里程碑。</MAP_MechanoidMechanitor.Symbiosis.Dev.NoMilestone>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.Declaration>公开脱离声明</MAP_MechanoidMechanitor.Symbiosis.Dev.Declaration>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.BroadcastDeclaration>立即完成公开脱离声明</MAP_MechanoidMechanitor.Symbiosis.Dev.BroadcastDeclaration>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.Proposal>盟约邀请提议</MAP_MechanoidMechanitor.Symbiosis.Dev.Proposal>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.BeginProposal>开始一次提议</MAP_MechanoidMechanitor.Symbiosis.Dev.BeginProposal>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.ResolveProposal>按正常公式结算</MAP_MechanoidMechanitor.Symbiosis.Dev.ResolveProposal>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.ForceProposalSuccess>强制成功</MAP_MechanoidMechanitor.Symbiosis.Dev.ForceProposalSuccess>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.ForceProposalFailure>强制失败</MAP_MechanoidMechanitor.Symbiosis.Dev.ForceProposalFailure>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.ClearCooldown>清除邀请冷却</MAP_MechanoidMechanitor.Symbiosis.Dev.ClearCooldown>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.Counters>计数设置</MAP_MechanoidMechanitor.Symbiosis.Dev.Counters>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.Covenant>盟约成员</MAP_MechanoidMechanitor.Symbiosis.Dev.Covenant>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.ForceJoin>强制加入盟约</MAP_MechanoidMechanitor.Symbiosis.Dev.ForceJoin>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.ForceLeave>强制退出盟约（正常逻辑）</MAP_MechanoidMechanitor.Symbiosis.Dev.ForceLeave>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.Unity>团结度</MAP_MechanoidMechanitor.Symbiosis.Dev.Unity>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.UpdateUnityDaily>执行每日结算</MAP_MechanoidMechanitor.Symbiosis.Dev.UpdateUnityDaily>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.RecalcLevel>重新计算等级</MAP_MechanoidMechanitor.Symbiosis.Dev.RecalcLevel>
 </LanguageData>
