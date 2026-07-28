@@ -251,7 +251,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect rect,
             GameComponent_SymbiosisCovenantState state)
         {
-            DrawMembers(rect, state);
+            Rect headerRect = new Rect(
+                rect.x,
+                rect.y,
+                rect.width,
+                HeaderHeight);
+
+            Rect membersRect = new Rect(
+                rect.x,
+                headerRect.yMax + MainGap,
+                rect.width,
+                Mathf.Max(
+                    0f,
+                    rect.yMax - headerRect.yMax - MainGap));
+
+            DrawHeader(headerRect, state);
+            DrawMembers(membersRect, state);
         }
 
         private void DrawRelationsPage(
@@ -288,7 +303,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            float viewHeight = records.Count * (RelationCardHeight + RelationCardGap);
+            float viewHeight = records.Count > 0
+                ? records.Count * RelationCardHeight
+                    + (records.Count - 1) * RelationCardGap
+                : 0f;
             Rect viewRect = new Rect(0f, 0f, listRect.width - 18f, viewHeight);
             Widgets.BeginScrollView(listRect, ref relationsScrollPosition, viewRect);
             try
