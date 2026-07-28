@@ -71,7 +71,159 @@ namespace MAP_MechanoidMechanitor
                 ref Settings.syntheticOffspringInheritXenogenes,
                 "MAP_Settings_SyntheticOffspringInheritXenogenes_Description".Translate());
 
+            DrawJusticeBossDifficultySettings(listing);
+
             listing.End();
+        }
+
+        private static void DrawJusticeBossDifficultySettings(
+            Listing_Standard listing)
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            MAPMechanitorModSettings settings = Settings;
+
+            listing.GapLine();
+            listing.Label(
+                "MAP_Settings_JusticeBossDifficulty_Section".Translate());
+
+            listing.Label(
+                "MAP_Settings_JusticeBossDifficulty_Description".Translate());
+
+            if (ModsConfig.RoyaltyActive)
+            {
+                listing.CheckboxLabeled(
+                    "MAP_Settings_JusticeBossDifficulty_MortarShield_Label"
+                        .Translate(),
+                    ref settings.justiceBossEnableMortarShield,
+                    "MAP_Settings_JusticeBossDifficulty_MortarShield_Description"
+                        .Translate());
+
+                listing.CheckboxLabeled(
+                    "MAP_Settings_JusticeBossDifficulty_BulletShield_Label"
+                        .Translate(),
+                    ref settings.justiceBossEnableBulletShield,
+                    "MAP_Settings_JusticeBossDifficulty_BulletShield_Description"
+                        .Translate());
+            }
+
+            settings.justiceBossAutoMortarCount =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_Settings_JusticeBossDifficulty_AutoMortar_Label",
+                    "MAP_Settings_JusticeBossDifficulty_AutoMortar_Description",
+                    settings.justiceBossAutoMortarCount,
+                    JusticeBossDifficultyValues.MinTurretCount,
+                    JusticeBossDifficultyValues.MaxTurretCount);
+
+            settings.justiceBossAutoChargeBlasterCount =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_Settings_JusticeBossDifficulty_AutoChargeBlaster_Label",
+                    "MAP_Settings_JusticeBossDifficulty_AutoChargeBlaster_Description",
+                    settings.justiceBossAutoChargeBlasterCount,
+                    JusticeBossDifficultyValues.MinTurretCount,
+                    JusticeBossDifficultyValues.MaxTurretCount);
+
+            settings.justiceBossAutoInfernoCount =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_Settings_JusticeBossDifficulty_AutoInferno_Label",
+                    "MAP_Settings_JusticeBossDifficulty_AutoInferno_Description",
+                    settings.justiceBossAutoInfernoCount,
+                    JusticeBossDifficultyValues.MinTurretCount,
+                    JusticeBossDifficultyValues.MaxTurretCount);
+
+            settings.justiceBossTotalWaves =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_Settings_JusticeBossDifficulty_TotalWaves_Label",
+                    "MAP_Settings_JusticeBossDifficulty_TotalWaves_Description",
+                    settings.justiceBossTotalWaves,
+                    JusticeBossDifficultyValues.MinTotalWaves,
+                    JusticeBossDifficultyValues.MaxTotalWaves);
+
+            settings.justiceBossWaveIntervalTicks =
+                DrawTickIntervalSliderSetting(
+                    listing,
+                    settings.justiceBossWaveIntervalTicks);
+
+            settings.justiceBossMechsPerWave =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_Settings_JusticeBossDifficulty_MechsPerWave_Label",
+                    "MAP_Settings_JusticeBossDifficulty_MechsPerWave_Description",
+                    settings.justiceBossMechsPerWave,
+                    JusticeBossDifficultyValues.MinMechsPerWave,
+                    JusticeBossDifficultyValues.MaxMechsPerWave);
+
+            listing.CheckboxLabeled(
+                "MAP_Settings_JusticeBossDifficulty_AllowBossReplacement_Label"
+                    .Translate(),
+                ref settings.justiceBossAllowBossReplacement,
+                "MAP_Settings_JusticeBossDifficulty_AllowBossReplacement_Description"
+                    .Translate());
+        }
+
+        private static int DrawIntSliderSetting(
+            Listing_Standard listing,
+            string labelKey,
+            string descriptionKey,
+            int value,
+            int min,
+            int max)
+        {
+            int clamped = Mathf.Clamp(value, min, max);
+
+            float sliderValue = listing.SliderLabeled(
+                labelKey.Translate(clamped).ToString(),
+                clamped,
+                min,
+                max,
+                0.62f,
+                descriptionKey.Translate().ToString());
+
+            return Mathf.Clamp(
+                Mathf.RoundToInt(sliderValue),
+                min,
+                max);
+        }
+
+        private static int DrawTickIntervalSliderSetting(
+            Listing_Standard listing,
+            int value)
+        {
+            int clamped =
+                JusticeBossDifficultyValues.ClampWaveIntervalTicks(value);
+
+            string secondsText =
+                (clamped / 60f).ToString(
+                    "0.##",
+                    CultureInfo.CurrentCulture);
+
+            float sliderValue = listing.SliderLabeled(
+                "MAP_Settings_JusticeBossDifficulty_WaveInterval_Label"
+                    .Translate(secondsText)
+                    .ToString(),
+                clamped,
+                JusticeBossDifficultyValues.MinWaveIntervalTicks,
+                JusticeBossDifficultyValues.MaxWaveIntervalTicks,
+                0.62f,
+                "MAP_Settings_JusticeBossDifficulty_WaveInterval_Description"
+                    .Translate()
+                    .ToString());
+
+            int stepped =
+                Mathf.RoundToInt(
+                    sliderValue
+                    / JusticeBossDifficultyValues.WaveIntervalStepTicks)
+                * JusticeBossDifficultyValues.WaveIntervalStepTicks;
+
+            return JusticeBossDifficultyValues.ClampWaveIntervalTicks(
+                stepped);
         }
 
         public override void WriteSettings()

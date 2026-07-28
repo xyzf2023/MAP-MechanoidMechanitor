@@ -41,18 +41,43 @@ namespace MAP_MechanoidMechanitor
             int waveIndex,
             bool applyBossReplace = true)
         {
-            int total = waveIndex <= 1 ? 10 : 5;
-            int heavySlots = waveIndex <= 1 ? 4 : 2;
+            return BuildWaveComposition(
+                waveIndex,
+                JusticeBossDifficultyValues.DefaultMechsPerWave,
+                applyBossReplace);
+        }
+
+        public static List<PawnKindDef> BuildWaveComposition(
+            int waveIndex,
+            int mechsPerWave,
+            bool applyBossReplace = true)
+        {
+            int baseCount =
+                JusticeBossDifficultyValues.ClampMechsPerWave(
+                    mechsPerWave);
+
+            int total = waveIndex <= 1
+                ? baseCount * 2
+                : baseCount;
+
+            int heavySlots = total * 2 / 5;
             int normalSlots = total - heavySlots;
 
-            List<PawnGenOption> combat = JusticeBossMechPoolUtility.BuildCombatPool();
-            List<PawnGenOption> heavy = JusticeBossMechPoolUtility.BuildHeavyPool(combat);
-            List<PawnKindDef> result = new List<PawnKindDef>(total);
+            List<PawnGenOption> combat =
+                JusticeBossMechPoolUtility.BuildCombatPool();
+
+            List<PawnGenOption> heavy =
+                JusticeBossMechPoolUtility.BuildHeavyPool(combat);
+
+            List<PawnKindDef> result =
+                new List<PawnKindDef>(total);
 
             for (int i = 0; i < heavySlots; i++)
             {
-                PawnKindDef? kind = JusticeBossMechPoolUtility.PickWeighted(heavy)
+                PawnKindDef? kind =
+                    JusticeBossMechPoolUtility.PickWeighted(heavy)
                     ?? JusticeBossMechPoolUtility.PickWeighted(combat);
+
                 if (kind != null)
                 {
                     result.Add(kind);
@@ -61,7 +86,9 @@ namespace MAP_MechanoidMechanitor
 
             for (int i = 0; i < normalSlots; i++)
             {
-                PawnKindDef? kind = JusticeBossMechPoolUtility.PickWeighted(combat);
+                PawnKindDef? kind =
+                    JusticeBossMechPoolUtility.PickWeighted(combat);
+
                 if (kind != null)
                 {
                     result.Add(kind);

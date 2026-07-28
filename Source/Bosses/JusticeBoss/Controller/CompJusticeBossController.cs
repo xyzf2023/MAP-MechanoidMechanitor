@@ -19,10 +19,6 @@ namespace MAP_MechanoidMechanitor
 
         public const int FirstWaveDelayTicks = 1200;
 
-        public const int WaveIntervalTicks = 1250;
-
-        public const int TotalWaves = 11;
-
         public const int RetreatDelayAfterFinalWaveTicks = 2500;
 
         public const int ActivationStartDelayTicks = 90;
@@ -85,6 +81,35 @@ namespace MAP_MechanoidMechanitor
 
         private bool stopped;
 
+        private bool bossDifficultyCaptured;
+
+        private bool difficultyEnableMortarShield =
+            JusticeBossDifficultyValues.DefaultEnableMortarShield;
+
+        private bool difficultyEnableBulletShield =
+            JusticeBossDifficultyValues.DefaultEnableBulletShield;
+
+        private int difficultyAutoMortarCount =
+            JusticeBossDifficultyValues.DefaultAutoMortarCount;
+
+        private int difficultyAutoChargeBlasterCount =
+            JusticeBossDifficultyValues.DefaultAutoChargeBlasterCount;
+
+        private int difficultyAutoInfernoCount =
+            JusticeBossDifficultyValues.DefaultAutoInfernoCount;
+
+        private int difficultyTotalWaves =
+            JusticeBossDifficultyValues.DefaultTotalWaves;
+
+        private int difficultyWaveIntervalTicks =
+            JusticeBossDifficultyValues.DefaultWaveIntervalTicks;
+
+        private int difficultyMechsPerWave =
+            JusticeBossDifficultyValues.DefaultMechsPerWave;
+
+        private bool difficultyAllowBossReplacement =
+            JusticeBossDifficultyValues.DefaultAllowBossReplacement;
+
         private Pawn Pawn => (Pawn)parent;
 
         public int WaveCount => waveCount;
@@ -144,6 +169,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            CaptureDifficultySnapshot();
+
             initialized = true;
             stopped = false;
             justiceEventId = Pawn.thingIDNumber;
@@ -172,6 +199,112 @@ namespace MAP_MechanoidMechanitor
 
             GameComponent_JusticeBossCallTracker.Current?.MarkActive();
             GameComponent_JusticeBossCallTracker.Current?.SetJusticePawn(Pawn);
+        }
+
+        private void CaptureDifficultySnapshot()
+        {
+            MAPMechanitorModSettings? settings =
+                MAPMechanitorMod.Settings;
+
+            if (settings == null)
+            {
+                ApplyDefaultDifficultySnapshot();
+                return;
+            }
+
+            difficultyEnableMortarShield =
+                settings.justiceBossEnableMortarShield;
+
+            difficultyEnableBulletShield =
+                settings.justiceBossEnableBulletShield;
+
+            difficultyAutoMortarCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    settings.justiceBossAutoMortarCount);
+
+            difficultyAutoChargeBlasterCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    settings.justiceBossAutoChargeBlasterCount);
+
+            difficultyAutoInfernoCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    settings.justiceBossAutoInfernoCount);
+
+            difficultyTotalWaves =
+                JusticeBossDifficultyValues.ClampTotalWaves(
+                    settings.justiceBossTotalWaves);
+
+            difficultyWaveIntervalTicks =
+                JusticeBossDifficultyValues.ClampWaveIntervalTicks(
+                    settings.justiceBossWaveIntervalTicks);
+
+            difficultyMechsPerWave =
+                JusticeBossDifficultyValues.ClampMechsPerWave(
+                    settings.justiceBossMechsPerWave);
+
+            difficultyAllowBossReplacement =
+                settings.justiceBossAllowBossReplacement;
+
+            bossDifficultyCaptured = true;
+        }
+
+        private void ApplyDefaultDifficultySnapshot()
+        {
+            difficultyEnableMortarShield =
+                JusticeBossDifficultyValues.DefaultEnableMortarShield;
+
+            difficultyEnableBulletShield =
+                JusticeBossDifficultyValues.DefaultEnableBulletShield;
+
+            difficultyAutoMortarCount =
+                JusticeBossDifficultyValues.DefaultAutoMortarCount;
+
+            difficultyAutoChargeBlasterCount =
+                JusticeBossDifficultyValues.DefaultAutoChargeBlasterCount;
+
+            difficultyAutoInfernoCount =
+                JusticeBossDifficultyValues.DefaultAutoInfernoCount;
+
+            difficultyTotalWaves =
+                JusticeBossDifficultyValues.DefaultTotalWaves;
+
+            difficultyWaveIntervalTicks =
+                JusticeBossDifficultyValues.DefaultWaveIntervalTicks;
+
+            difficultyMechsPerWave =
+                JusticeBossDifficultyValues.DefaultMechsPerWave;
+
+            difficultyAllowBossReplacement =
+                JusticeBossDifficultyValues.DefaultAllowBossReplacement;
+
+            bossDifficultyCaptured = true;
+        }
+
+        private void ClampDifficultySnapshot()
+        {
+            difficultyAutoMortarCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    difficultyAutoMortarCount);
+
+            difficultyAutoChargeBlasterCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    difficultyAutoChargeBlasterCount);
+
+            difficultyAutoInfernoCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    difficultyAutoInfernoCount);
+
+            difficultyTotalWaves =
+                JusticeBossDifficultyValues.ClampTotalWaves(
+                    difficultyTotalWaves);
+
+            difficultyWaveIntervalTicks =
+                JusticeBossDifficultyValues.ClampWaveIntervalTicks(
+                    difficultyWaveIntervalTicks);
+
+            difficultyMechsPerWave =
+                JusticeBossDifficultyValues.ClampMechsPerWave(
+                    difficultyMechsPerWave);
         }
 
         public override void CompTick()
@@ -212,12 +345,14 @@ namespace MAP_MechanoidMechanitor
                 TryRetryGuardDrops(now);
             }
 
-            if (waveCount < TotalWaves && nextWaveTick > 0 && now >= nextWaveTick)
+            if (waveCount < difficultyTotalWaves
+                && nextWaveTick > 0
+                && now >= nextWaveTick)
             {
                 TrySpawnWave(forceBossReplace: false);
             }
 
-            if (waveCount >= TotalWaves
+            if (waveCount >= difficultyTotalWaves
                 && retreatTick > 0
                 && !retreatOrdered
                 && now >= retreatTick)
@@ -250,7 +385,7 @@ namespace MAP_MechanoidMechanitor
                 InitializeOnArrival();
             }
 
-            if (waveCount >= TotalWaves)
+            if (waveCount >= difficultyTotalWaves)
             {
                 return;
             }
@@ -265,7 +400,7 @@ namespace MAP_MechanoidMechanitor
                 InitializeOnArrival();
             }
 
-            waveCount = TotalWaves;
+            waveCount = difficultyTotalWaves;
             nextWaveTick = -1;
             retreatTick = Find.TickManager.TicksGame + RetreatDelayAfterFinalWaveTicks;
         }
@@ -277,7 +412,7 @@ namespace MAP_MechanoidMechanitor
                 InitializeOnArrival();
             }
 
-            waveCount = TotalWaves;
+            waveCount = difficultyTotalWaves;
             retreatTick = Find.TickManager.TicksGame;
             retreatOrdered = false;
             TryOrderRetreat();
@@ -294,6 +429,11 @@ namespace MAP_MechanoidMechanitor
                 Pawn,
                 anchorCell,
                 justiceEventId,
+                difficultyAutoMortarCount,
+                difficultyAutoChargeBlasterCount,
+                difficultyAutoInfernoCount,
+                difficultyEnableMortarShield,
+                difficultyEnableBulletShield,
                 out deployedInfrastructure,
                 out pendingGuardKinds,
                 out guardLord);
@@ -425,7 +565,7 @@ namespace MAP_MechanoidMechanitor
 
         private void TrySpawnWave(bool forceBossReplace)
         {
-            if (Pawn.Map == null || waveCount >= TotalWaves)
+            if (Pawn.Map == null || waveCount >= difficultyTotalWaves)
             {
                 return;
             }
@@ -433,12 +573,22 @@ namespace MAP_MechanoidMechanitor
             if (pendingWaveKinds.Count == 0)
             {
                 int waveIndex = waveCount + 1;
-                List<PawnKindDef> composition = forceBossReplace
-                    ? JusticeBossSpawnUtility.BuildWaveComposition(waveIndex, applyBossReplace: false)
-                    : JusticeBossSpawnUtility.BuildWaveComposition(waveIndex, applyBossReplace: true);
+
+                bool applyBossReplace =
+                    !forceBossReplace
+                    && difficultyAllowBossReplacement;
+
+                List<PawnKindDef> composition =
+                    JusticeBossSpawnUtility.BuildWaveComposition(
+                        waveIndex,
+                        difficultyMechsPerWave,
+                        applyBossReplace);
+
                 if (forceBossReplace)
                 {
-                    JusticeBossSpawnUtility.TryApplyBossReplacement(composition, force: true);
+                    JusticeBossSpawnUtility.TryApplyBossReplacement(
+                        composition,
+                        force: true);
                 }
 
                 if (composition.Count == 0)
@@ -514,14 +664,16 @@ namespace MAP_MechanoidMechanitor
 
         private void ScheduleAfterWave()
         {
-            if (waveCount >= TotalWaves)
+            if (waveCount >= difficultyTotalWaves)
             {
                 nextWaveTick = -1;
                 retreatTick = Find.TickManager.TicksGame + RetreatDelayAfterFinalWaveTicks;
             }
             else
             {
-                nextWaveTick = Find.TickManager.TicksGame + WaveIntervalTicks;
+                nextWaveTick =
+                    Find.TickManager.TicksGame
+                    + difficultyWaveIntervalTicks;
             }
         }
 
@@ -567,13 +719,23 @@ namespace MAP_MechanoidMechanitor
                 landed = dropTracker.LandedAndAssignedCount;
             }
 
-            return $"eventId={justiceEventId} init={initialized} waves={waveCount}/{TotalWaves} "
+            return $"eventId={justiceEventId} init={initialized} waves={waveCount}/{difficultyTotalWaves} "
                 + $"infra={infrastructureDeployed} pendingInfra={PendingActivationCount} "
                 + $"pendingWave={pendingWaveKinds.Count} waveRetries={waveDropRetryCount} "
                 + $"pendingGuards={pendingGuardKinds.Count} guardRetries={guardDropRetryCount} "
                 + $"pendingDrops={pendingDrops} landedAssigned={landed} "
                 + $"nextWave={nextWaveTick} retreat={retreatTick} ordered={retreatOrdered} "
-                + $"bossRepl={bossReplacementCount} stopped={stopped} anchor={anchorCell}";
+                + $"bossRepl={bossReplacementCount} stopped={stopped} anchor={anchorCell}"
+                + $" difficultyCaptured={bossDifficultyCaptured}"
+                + $" difficulty=["
+                + $"mortar={difficultyAutoMortarCount} "
+                + $"charge={difficultyAutoChargeBlasterCount} "
+                + $"inferno={difficultyAutoInfernoCount} "
+                + $"mortarShield={difficultyEnableMortarShield} "
+                + $"bulletShield={difficultyEnableBulletShield} "
+                + $"interval={difficultyWaveIntervalTicks} "
+                + $"mechsPerWave={difficultyMechsPerWave} "
+                + $"allowBoss={difficultyAllowBossReplacement}]";
         }
 
         public override void PostExposeData()
@@ -618,6 +780,56 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref loggedGuardDropFailure, "justiceBossLoggedGuardDropFailure", false);
             Scribe_Values.Look(ref stopped, "justiceBossStopped", false);
 
+            Scribe_Values.Look(
+                ref bossDifficultyCaptured,
+                "justiceBossDifficultyCaptured",
+                false);
+
+            Scribe_Values.Look(
+                ref difficultyEnableMortarShield,
+                "justiceBossDifficultyEnableMortarShield",
+                JusticeBossDifficultyValues.DefaultEnableMortarShield);
+
+            Scribe_Values.Look(
+                ref difficultyEnableBulletShield,
+                "justiceBossDifficultyEnableBulletShield",
+                JusticeBossDifficultyValues.DefaultEnableBulletShield);
+
+            Scribe_Values.Look(
+                ref difficultyAutoMortarCount,
+                "justiceBossDifficultyAutoMortarCount",
+                JusticeBossDifficultyValues.DefaultAutoMortarCount);
+
+            Scribe_Values.Look(
+                ref difficultyAutoChargeBlasterCount,
+                "justiceBossDifficultyAutoChargeBlasterCount",
+                JusticeBossDifficultyValues.DefaultAutoChargeBlasterCount);
+
+            Scribe_Values.Look(
+                ref difficultyAutoInfernoCount,
+                "justiceBossDifficultyAutoInfernoCount",
+                JusticeBossDifficultyValues.DefaultAutoInfernoCount);
+
+            Scribe_Values.Look(
+                ref difficultyTotalWaves,
+                "justiceBossDifficultyTotalWaves",
+                JusticeBossDifficultyValues.DefaultTotalWaves);
+
+            Scribe_Values.Look(
+                ref difficultyWaveIntervalTicks,
+                "justiceBossDifficultyWaveIntervalTicks",
+                JusticeBossDifficultyValues.DefaultWaveIntervalTicks);
+
+            Scribe_Values.Look(
+                ref difficultyMechsPerWave,
+                "justiceBossDifficultyMechsPerWave",
+                JusticeBossDifficultyValues.DefaultMechsPerWave);
+
+            Scribe_Values.Look(
+                ref difficultyAllowBossReplacement,
+                "justiceBossDifficultyAllowBossReplacement",
+                JusticeBossDifficultyValues.DefaultAllowBossReplacement);
+
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 deployedInfrastructure ??= new List<Thing>();
@@ -629,6 +841,15 @@ namespace MAP_MechanoidMechanitor
                 if (justiceEventId == 0 && initialized && Pawn != null)
                 {
                     justiceEventId = Pawn.thingIDNumber;
+                }
+
+                if (!bossDifficultyCaptured)
+                {
+                    ApplyDefaultDifficultySnapshot();
+                }
+                else
+                {
+                    ClampDifficultySnapshot();
                 }
             }
         }
