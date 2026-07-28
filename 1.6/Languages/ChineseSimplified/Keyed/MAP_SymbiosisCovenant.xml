@@ -49,7 +49,6 @@
   <MAP_MechanoidMechanitor.Symbiosis.Stage.CommonDefense>共同防卫</MAP_MechanoidMechanitor.Symbiosis.Stage.CommonDefense>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.StrategicCooperation>战略协作</MAP_MechanoidMechanitor.Symbiosis.Stage.StrategicCooperation>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.ReadyToSign>盟约候选</MAP_MechanoidMechanitor.Symbiosis.Stage.ReadyToSign>
-  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.PublicDeclaration>公开脱离声明</MAP_MechanoidMechanitor.Symbiosis.TrustReason.PublicDeclaration>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Goodwill>积极外交行动</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Goodwill>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Trade>完成互惠贸易</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Trade>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Quest>完成派系委托</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Quest>
@@ -115,4 +114,7 @@
   <MAP_MechanoidMechanitor.Symbiosis.Dev.Unity>团结度</MAP_MechanoidMechanitor.Symbiosis.Dev.Unity>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.UpdateUnityDaily>执行每日结算</MAP_MechanoidMechanitor.Symbiosis.Dev.UpdateUnityDaily>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.RecalcLevel>重新计算等级</MAP_MechanoidMechanitor.Symbiosis.Dev.RecalcLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.UnityMinus100>团结度-100</MAP_MechanoidMechanitor.Symbiosis.Dev.UnityMinus100>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.UnityPlus100>团结度+100</MAP_MechanoidMechanitor.Symbiosis.Dev.UnityPlus100>
+  <MAP_MechanoidMechanitor.Symbiosis.Dev.MechHiveNone>(无机械巢)</MAP_MechanoidMechanitor.Symbiosis.Dev.MechHiveNone>
 </LanguageData>

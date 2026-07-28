@@ -401,6 +401,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public sealed class Dialog_SymbiosisCovenantDev : Window
     {
         private Faction? selectedFaction;
+        private Vector2 scrollPosition = Vector2.zero;
 
         public override Vector2 InitialSize => new Vector2(780f, 640f);
 
@@ -458,17 +459,39 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 bool hasRecord = record != null && selectedFaction != null;
                 float bodyY = inRect.y + 74f;
 
-                if (!hasRecord)
-                {
-                    Text.Font = GameFont.Tiny;
-                    Widgets.Label(
-                        new Rect(inRect.x, bodyY, inRect.width, 40f),
-                        "MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord".Translate());
-                    DrawGlobalState(state, inRect, bodyY + 46f);
-                    return;
-                }
+                // 派系选择按钮以下的所有内容放入滚动区域。
+                Rect scrollOutRect = new Rect(
+                    inRect.x,
+                    bodyY,
+                    inRect.width,
+                    inRect.yMax - bodyY);
+                float contentHeight = hasRecord ? 1240f : 360f;
+                Rect viewRect = new Rect(
+                    0f,
+                    0f,
+                    scrollOutRect.width - 16f,
+                    contentHeight);
 
-                DrawRecordControls(state, record!, inRect, bodyY);
+                Widgets.BeginScrollView(scrollOutRect, ref scrollPosition, viewRect);
+                try
+                {
+                    if (hasRecord)
+                    {
+                        DrawRecordControls(state, record!, viewRect, 0f);
+                    }
+                    else
+                    {
+                        Widgets.Label(
+                            new Rect(0f, 0f, viewRect.width, 40f),
+                            "MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord"
+                                .Translate());
+                        DrawGlobalState(state, viewRect, 46f);
+                    }
+                }
+                finally
+                {
+                    Widgets.EndScrollView();
+                }
             }
             finally
             {
@@ -495,7 +518,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 options.Add(
                     new FloatMenuOption(
                         faction.Name,
-                        () => selectedFaction = localFaction));
+                        () =>
+                        {
+                            selectedFaction = localFaction;
+                            scrollPosition = Vector2.zero;
+                        }));
             }
 
             if (options.Count == 0)
@@ -683,7 +710,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             y += 26f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
-                new[] { "团结度-100", "团结度+100" },
+                new[]
+                {
+                    "MAP_MechanoidMechanitor.Symbiosis.Dev.UnityMinus100"
+                        .Translate().ToString(),
+                    "MAP_MechanoidMechanitor.Symbiosis.Dev.UnityPlus100"
+                        .Translate().ToString()
+                },
                 new Action[]
                 {
                     () => state.DevChangeUnity(-100f),
@@ -785,7 +818,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             else
             {
-                builder.AppendLine("MechHiveRelation = (无机械巢)");
+                builder.AppendLine(
+                    "MechHiveRelation = "
+                    + "MAP_MechanoidMechanitor.Symbiosis.Dev.MechHiveNone"
+                        .Translate());
             }
 
             if (record == null)

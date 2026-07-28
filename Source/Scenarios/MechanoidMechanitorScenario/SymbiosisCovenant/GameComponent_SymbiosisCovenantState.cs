@@ -1412,11 +1412,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void SynchronizePreDeclarationLock(
             SymbiosisCovenantFactionRecord record)
         {
-            if (record.PreDeclarationLock == SymbiosisPreDeclarationTrustLock.None)
-            {
-                return;
-            }
-
             Faction? player = Faction.OfPlayerSilentFail;
             if (player == null || record.Faction == null)
             {
@@ -1438,20 +1433,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
             SymbiosisCovenantFactionRecord record,
             SymbiosisPreDeclarationTrustLock targetLock)
         {
-            if (LockSeverity(targetLock) <= LockSeverity(record.PreDeclarationLock))
+            SymbiosisPreDeclarationTrustLock strictest =
+                LockSeverity(targetLock) > LockSeverity(record.PreDeclarationLock)
+                    ? targetLock
+                    : record.PreDeclarationLock;
+
+            if (strictest == SymbiosisPreDeclarationTrustLock.None)
             {
                 return;
             }
 
-            SymbiosisPreDeclarationTrustLock strictest =
-                LockSeverity(targetLock) == 2
-                    ? SymbiosisPreDeclarationTrustLock.Hostile
-                    : SymbiosisPreDeclarationTrustLock.Neutral;
+            if (record.PreDeclarationLock != strictest)
+            {
+                record.SetPreDeclarationLock(strictest);
+            }
+
+            int lockedTrust = GetLockedTrustValue(strictest);
+            if (record.Trust == lockedTrust)
+            {
+                return;
+            }
 
             int previousTrust = record.Trust;
-            record.SetPreDeclarationLock(strictest);
             record.SetTrustDirect(
-                GetLockedTrustValue(strictest),
+                lockedTrust,
                 "MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock"
                     .Translate(),
                 CurrentTick);
@@ -1498,22 +1503,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static bool IsEligibleFaction(Faction faction)
         {
-            if (!MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(faction))
-            {
-                return false;
-            }
-
-            if (!GameComponent_MechanoidMechanitorStoryState
-                    .TryGetEffectiveOrdinaryFactionRelationOptionFor(
-                        faction,
-                        out MechanoidMechanitorFactionRelationOption option))
-            {
-                return false;
-            }
-
-            return option == MechanoidMechanitorFactionRelationOption.Default
-                || option == MechanoidMechanitorFactionRelationOption.Hostile
-                || option == MechanoidMechanitorFactionRelationOption.Ally;
+            return MechanoidMechanitorOrdinaryFactionUtility
+                .IsOrdinaryFaction(faction);
         }
 
         private static void GetInitialState(

@@ -80,15 +80,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 在处理信任变化前，确保关系恶化时声明前信任锁定能够立即收紧；
+            // 即使本次好感变化来自自然好感目标，其导致的关系类别变化也应立即同步。
+            GameComponent_SymbiosisCovenantState.CurrentComponent
+                ?.NotifyGoodwillChangedRelationMayHaveShifted(__state.ordinaryFaction);
+
             // 由自然好感目标逐步推动的好感变化不能再增加信任，避免自我循环。
             if (reason == HistoryEventDefOf.ReachNaturalGoodwill)
             {
                 return;
             }
-
-            // 在处理信任变化前，确保关系恶化时声明前信任锁定能够立即收紧。
-            GameComponent_SymbiosisCovenantState.CurrentComponent
-                ?.NotifyGoodwillChangedRelationMayHaveShifted(__state.ordinaryFaction);
 
             Faction? player = Faction.OfPlayerSilentFail;
             if (player == null)
