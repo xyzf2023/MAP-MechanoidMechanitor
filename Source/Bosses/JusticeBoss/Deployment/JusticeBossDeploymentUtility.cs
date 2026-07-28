@@ -17,6 +17,11 @@ namespace MAP_MechanoidMechanitor
             Pawn justice,
             IntVec3 anchorCell,
             int justiceEventId,
+            int autoMortarCount,
+            int autoChargeBlasterCount,
+            int autoInfernoCount,
+            bool enableMortarShield,
+            bool enableBulletShield,
             out List<Thing> deployedInfrastructure,
             out List<PawnKindDef> failedGuardKinds,
             out Lord? guardLord)
@@ -31,6 +36,18 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            autoMortarCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    autoMortarCount);
+
+            autoChargeBlasterCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    autoChargeBlasterCount);
+
+            autoInfernoCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    autoInfernoCount);
+
             loggedAnySkip = false;
             List<IntVec3> occupied = new List<IntVec3>();
 
@@ -40,7 +57,7 @@ namespace MAP_MechanoidMechanitor
                 faction,
                 anchorCell,
                 autoMortar,
-                3,
+                autoMortarCount,
                 minRadius: 7f,
                 maxRadius: 13f,
                 fixedRotation: Rot4.North,
@@ -52,7 +69,7 @@ namespace MAP_MechanoidMechanitor
                 faction,
                 anchorCell,
                 ThingDefOf.Turret_AutoChargeBlaster,
-                3,
+                autoChargeBlasterCount,
                 minRadius: 10f,
                 maxRadius: 18f,
                 fixedRotation: Rot4.North,
@@ -64,7 +81,7 @@ namespace MAP_MechanoidMechanitor
                 faction,
                 anchorCell,
                 ThingDefOf.Turret_AutoInferno,
-                3,
+                autoInfernoCount,
                 minRadius: 10f,
                 maxRadius: 18f,
                 fixedRotation: Rot4.North,
@@ -73,28 +90,35 @@ namespace MAP_MechanoidMechanitor
 
             if (ModsConfig.RoyaltyActive)
             {
-                DeployBuildings(
-                    map,
-                    faction,
-                    anchorCell,
-                    ThingDefOf.ShieldGeneratorMortar,
-                    1,
-                    minRadius: 3f,
-                    maxRadius: 7f,
-                    fixedRotation: null,
-                    occupied,
-                    deployedInfrastructure);
-                DeployBuildings(
-                    map,
-                    faction,
-                    anchorCell,
-                    ThingDefOf.ShieldGeneratorBullets,
-                    1,
-                    minRadius: 3f,
-                    maxRadius: 7f,
-                    fixedRotation: null,
-                    occupied,
-                    deployedInfrastructure);
+                if (enableMortarShield)
+                {
+                    DeployBuildings(
+                        map,
+                        faction,
+                        anchorCell,
+                        ThingDefOf.ShieldGeneratorMortar,
+                        1,
+                        minRadius: 3f,
+                        maxRadius: 7f,
+                        fixedRotation: null,
+                        occupied,
+                        deployedInfrastructure);
+                }
+
+                if (enableBulletShield)
+                {
+                    DeployBuildings(
+                        map,
+                        faction,
+                        anchorCell,
+                        ThingDefOf.ShieldGeneratorBullets,
+                        1,
+                        minRadius: 3f,
+                        maxRadius: 7f,
+                        fixedRotation: null,
+                        occupied,
+                        deployedInfrastructure);
+                }
             }
             else
             {
