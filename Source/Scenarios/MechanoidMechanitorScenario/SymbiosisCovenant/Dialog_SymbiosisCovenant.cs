@@ -21,6 +21,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const float MemberCardWidth = 120f;
         private const float MemberCardHeight = 150f;
         private const float MemberCardGap = 10f;
+        private const float RelationCardHeight = 150f;
+        private const float RelationCardGap = 10f;
+        private const float PageTabWidth = 150f;
+        private const float PageTabHeight = 36f;
+        private const float FooterGap = 6f;
 
         private static readonly Color BackgroundColor =
             new Color(0.045f, 0.065f, 0.07f, 0.98f);
@@ -63,32 +68,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             state.SynchronizeNow();
 
-            Rect headerRect = new Rect(inRect.x, inRect.y, inRect.width, HeaderHeight);
             Rect footerRect = new Rect(
                 inRect.x,
                 inRect.yMax - FooterHeight,
                 inRect.width,
                 FooterHeight);
-            const float TabHeight = 34f;
-            Rect tabRect = new Rect(inRect.x, headerRect.yMax, inRect.width, TabHeight);
-            Rect bodyRect = new Rect(
+
+            Rect pageRect = new Rect(
                 inRect.x,
-                tabRect.yMax,
+                inRect.y,
                 inRect.width,
-                footerRect.y - tabRect.yMax);
+                footerRect.y - inRect.y);
 
-            DrawHeader(headerRect, state);
-            DrawPageTabs(tabRect);
-            if (currentPage == SymbiosisCovenantPage.Communication)
+            switch (currentPage)
             {
-                DrawCommunicationPage(bodyRect, state);
-            }
-            else
-            {
-                DrawRelationsPage(bodyRect, state);
+                case SymbiosisCovenantPage.Relations:
+                    DrawRelationsPage(pageRect, state);
+                    break;
+
+                default:
+                    DrawCommunicationPage(pageRect, state);
+                    break;
             }
 
-            DrawFooter(footerRect, state);
+            DrawFooter(footerRect);
         }
 
         private static int GetNextLevelThreshold(int level)
@@ -285,9 +288,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            const float CardHeight = 150f;
-            const float CardGap = 10f;
-            float viewHeight = records.Count * (CardHeight + CardGap);
+            float viewHeight = records.Count * (RelationCardHeight + RelationCardGap);
             Rect viewRect = new Rect(0f, 0f, listRect.width - 18f, viewHeight);
             Widgets.BeginScrollView(listRect, ref relationsScrollPosition, viewRect);
             try
@@ -296,9 +297,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     Rect cardRect = new Rect(
                         0f,
-                        i * (CardHeight + CardGap),
+                        i * (RelationCardHeight + RelationCardGap),
                         listRect.width - 18f,
-                        CardHeight);
+                        RelationCardHeight);
                     DrawRelationCard(cardRect, records[i], player);
                 }
             }
@@ -319,91 +320,152 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Widgets.DrawBoxSolid(rect, new Color(0.065f, 0.085f, 0.09f, 1f));
-            DrawOutline(rect, 1, TealColor);
-
-            Rect inner = rect.ContractedBy(10f);
-
-            Rect iconRect = new Rect(
-                inner.x,
-                inner.y + (inner.height - 64f) / 2f,
-                64f,
-                64f);
-            Texture2D? icon = faction.def?.FactionIcon;
-            if (icon != null)
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            Color previousColor = GUI.color;
+            try
             {
-                Color previousColor = GUI.color;
-                GUI.color = faction.Color;
-                GUI.DrawTexture(iconRect, icon);
+                Widgets.DrawBoxSolid(rect, new Color(0.065f, 0.085f, 0.09f, 1f));
+                DrawOutline(rect, 1, TealColor);
+
+                Rect iconRect = new Rect(
+                    rect.x + 22f,
+                    rect.y + (rect.height - 72f) / 2f,
+                    72f,
+                    72f);
+                Texture2D? icon = faction.def?.FactionIcon;
+                if (icon != null)
+                {
+                    Color previousIconColor = GUI.color;
+                    try
+                    {
+                        GUI.color = faction.Color;
+                        GUI.DrawTexture(
+                            iconRect,
+                            icon,
+                            ScaleMode.ScaleToFit,
+                            true);
+                    }
+                    finally
+                    {
+                        GUI.color = previousIconColor;
+                    }
+                }
+
+                float textX = iconRect.xMax + 24f;
+                float textWidth = rect.xMax - 22f - textX;
+
+                Rect nameRect = new Rect(textX, rect.y + 20f, textWidth, 38f);
+                Text.Font = GameFont.Medium;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                GUI.color = Color.white;
+                Widgets.LabelFit(nameRect, faction.Name);
+
+                int goodwill = player != null ? player.GoodwillWith(faction) : 0;
+                Rect goodwillRect = new Rect(textX, rect.y + 70f, textWidth, 28f);
+                Text.Font = GameFont.Small;
+                GUI.color = MutedTextColor;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                Widgets.Label(
+                    goodwillRect,
+                    "MAP_MechanoidMechanitor.Symbiosis.Relations.Goodwill".Translate(
+                        goodwill));
+
+                Rect trustRect = new Rect(textX, rect.y + 106f, textWidth, 28f);
+                Widgets.Label(
+                    trustRect,
+                    "MAP_MechanoidMechanitor.Symbiosis.Relations.Trust".Translate(
+                        record.Trust));
+            }
+            finally
+            {
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
                 GUI.color = previousColor;
             }
-
-            Rect nameRect = new Rect(inner.x + 76f, inner.y + 8f, inner.width - 86f, 26f);
-            DrawLabel(nameRect, faction.Name, GameFont.Small, Color.white, TextAnchor.UpperLeft);
-
-            int goodwill = player != null ? player.GoodwillWith(faction) : 0;
-            Rect goodwillRect = new Rect(
-                inner.x + 76f,
-                inner.y + 40f,
-                inner.width - 86f,
-                22f);
-            DrawLabel(
-                goodwillRect,
-                "MAP_MechanoidMechanitor.Symbiosis.Relations.Goodwill".Translate(
-                    goodwill),
-                GameFont.Small,
-                MutedTextColor,
-                TextAnchor.UpperLeft);
-
-            Rect trustRect = new Rect(
-                inner.x + 76f,
-                inner.y + 66f,
-                inner.width - 86f,
-                22f);
-            DrawLabel(
-                trustRect,
-                "MAP_MechanoidMechanitor.Symbiosis.Relations.Trust".Translate(
-                    record.Trust),
-                GameFont.Small,
-                MutedTextColor,
-                TextAnchor.UpperLeft);
-        }
-
-        private void DrawPageTabs(Rect rect)
-        {
-            const float TabWidth = 160f;
-            float tabHeight = rect.height - 4f;
-            float y = rect.y + 2f;
-            Rect communicationRect = new Rect(rect.x + 10f, y, TabWidth, tabHeight);
-            Rect relationsRect = new Rect(
-                communicationRect.xMax + 6f,
-                y,
-                TabWidth,
-                tabHeight);
-            DrawPageTab(
-                communicationRect,
-                SymbiosisCovenantPage.Communication,
-                "MAP_MechanoidMechanitor.Symbiosis.Page.Communication".Translate());
-            DrawPageTab(
-                relationsRect,
-                SymbiosisCovenantPage.Relations,
-                "MAP_MechanoidMechanitor.Symbiosis.Page.Relations".Translate());
         }
 
         private void DrawPageTab(Rect rect, SymbiosisCovenantPage page, string label)
         {
             bool selected = currentPage == page;
-            Color background = selected
-                ? new Color(0.10f, 0.30f, 0.27f, 1f)
-                : new Color(0.06f, 0.10f, 0.11f, 1f);
+            bool hovered = Mouse.IsOver(rect);
+
+            Color background;
+            if (selected)
+            {
+                background = new Color(0.10f, 0.30f, 0.27f, 1f);
+            }
+            else if (hovered)
+            {
+                background = Color.Lerp(
+                    new Color(0.06f, 0.10f, 0.11f, 1f),
+                    TealColor,
+                    0.14f);
+            }
+            else
+            {
+                background = new Color(0.06f, 0.10f, 0.11f, 1f);
+            }
+
+            Color borderColor;
+            if (selected)
+            {
+                borderColor = TealColor;
+            }
+            else if (hovered)
+            {
+                borderColor = Color.Lerp(PanelOutlineColor, TealColor, 0.5f);
+            }
+            else
+            {
+                borderColor = PanelOutlineColor;
+            }
+
+            Color textColor;
+            if (selected)
+            {
+                textColor = TealColor;
+            }
+            else if (hovered)
+            {
+                textColor = Color.white;
+            }
+            else
+            {
+                textColor = MutedTextColor;
+            }
+
             Widgets.DrawBoxSolid(rect, background);
-            DrawOutline(rect, 1, selected ? TealColor : PanelOutlineColor);
-            DrawCenteredLabel(
-                rect,
-                label,
-                GameFont.Small,
-                selected ? TealColor : MutedTextColor);
-            if (Widgets.ButtonInvisible(rect, false))
+            DrawOutline(rect, 1, borderColor);
+
+            if (selected)
+            {
+                Rect accentRect = new Rect(
+                    rect.x + 2f,
+                    rect.yMax - 3f,
+                    rect.width - 4f,
+                    3f);
+                Widgets.DrawBoxSolid(accentRect, TealColor);
+            }
+
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            Color previousColor = GUI.color;
+            try
+            {
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.MiddleCenter;
+                GUI.color = textColor;
+                Widgets.Label(rect, label);
+            }
+            finally
+            {
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                GUI.color = previousColor;
+            }
+
+            if (Widgets.ButtonInvisible(rect))
             {
                 currentPage = page;
             }
@@ -477,11 +539,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 TealColor);
         }
 
-        private void DrawFooter(
-            Rect rect,
-            GameComponent_SymbiosisCovenantState state)
+        private void DrawFooter(Rect rect)
         {
-            Rect closeRect = new Rect(rect.xMax - 150f, rect.y + 4f, 150f, 30f);
+            Rect communicationTabRect = new Rect(
+                rect.x,
+                rect.y,
+                PageTabWidth,
+                PageTabHeight);
+            Rect relationsTabRect = new Rect(
+                communicationTabRect.xMax + FooterGap,
+                rect.y,
+                PageTabWidth,
+                PageTabHeight);
+
+            DrawPageTab(
+                communicationTabRect,
+                SymbiosisCovenantPage.Communication,
+                "MAP_MechanoidMechanitor.Symbiosis.Page.Communication".Translate());
+            DrawPageTab(
+                relationsTabRect,
+                SymbiosisCovenantPage.Relations,
+                "MAP_MechanoidMechanitor.Symbiosis.Page.Relations".Translate());
+
+            Rect closeRect = new Rect(rect.xMax - 150f, rect.y + 6f, 150f, 30f);
             if (Widgets.ButtonText(
                     closeRect,
                     "MAP_MechanoidMechanitor.Symbiosis.Disconnect".Translate()))
@@ -491,7 +571,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (Prefs.DevMode)
             {
-                Rect devRect = new Rect(rect.xMax - 230f, rect.y + 4f, 70f, 30f);
+                Rect devRect = new Rect(rect.xMax - 228f, rect.y + 6f, 70f, 30f);
                 if (Widgets.ButtonText(devRect, "DEV"))
                 {
                     Find.WindowStack.Add(new Dialog_SymbiosisCovenantDev(null));
@@ -620,48 +700,52 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     new Rect(inRect.x, inRect.y, inRect.width, 32f),
                     "MAP_MechanoidMechanitor.Symbiosis.Dev.Title".Translate());
 
-                // 顶部派系选择
-                Text.Font = GameFont.Small;
-                string factionLabel = selectedFaction?.Name
-                    ?? "MAP_MechanoidMechanitor.Symbiosis.Dev.SelectFaction"
-                        .Translate();
-                Rect selectRect = new Rect(inRect.x, inRect.y + 38f, 320f, 28f);
-                if (Widgets.ButtonText(selectRect, factionLabel))
-                {
-                    OpenFactionSelector(state);
-                }
+                // 标题下方建立滚动区域；派系选择按钮及其状态一并放入滚动视图。
+                Rect outRect = new Rect(
+                    inRect.x,
+                    inRect.y + 40f,
+                    inRect.width,
+                    inRect.yMax - (inRect.y + 40f));
 
                 SymbiosisCovenantFactionRecord? record = state.GetRecord(selectedFaction);
                 bool hasRecord = record != null && selectedFaction != null;
-                float bodyY = inRect.y + 74f;
-
-                // 派系选择按钮以下的所有内容放入滚动区域。
-                Rect scrollOutRect = new Rect(
-                    inRect.x,
-                    bodyY,
-                    inRect.width,
-                    inRect.yMax - bodyY);
-                float contentHeight = hasRecord ? 1240f : 360f;
+                float contentHeight = hasRecord ? 1320f : 420f;
                 Rect viewRect = new Rect(
                     0f,
                     0f,
-                    scrollOutRect.width - 16f,
-                    contentHeight);
+                    outRect.width - 18f,
+                    Mathf.Max(outRect.height, contentHeight));
 
-                Widgets.BeginScrollView(scrollOutRect, ref scrollPosition, viewRect);
+                Widgets.BeginScrollView(outRect, ref scrollPosition, viewRect);
                 try
                 {
+                    float y = 0f;
+
+                    // 选择测试派系按钮（位于滚动视图内）。
+                    Text.Font = GameFont.Small;
+                    Text.Anchor = TextAnchor.UpperLeft;
+                    string factionLabel = selectedFaction?.Name
+                        ?? "MAP_MechanoidMechanitor.Symbiosis.Dev.SelectFaction"
+                            .Translate();
+                    Rect selectRect = new Rect(0f, y, 320f, 28f);
+                    if (Widgets.ButtonText(selectRect, factionLabel))
+                    {
+                        OpenFactionSelector(state);
+                    }
+
+                    y += 34f;
+
                     if (hasRecord)
                     {
-                        DrawRecordControls(state, record!, viewRect, 0f);
+                        DrawRecordControls(state, record!, viewRect, y);
                     }
                     else
                     {
                         Widgets.Label(
-                            new Rect(0f, 0f, viewRect.width, 40f),
+                            new Rect(0f, y, viewRect.width, 40f),
                             "MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord"
                                 .Translate());
-                        DrawGlobalState(state, viewRect, 46f);
+                        DrawGlobalState(state, viewRect, y + 46f);
                     }
                 }
                 finally
