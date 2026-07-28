@@ -345,4 +345,6 @@
   <MAP_MechanoidMechanitor.NewMechHive.Greek.Upsilon>宇普西隆</MAP_MechanoidMechanitor.NewMechHive.Greek.Upsilon>
   <MAP_MechanoidMechanitor.NewMechHive.Greek.Psi>普西</MAP_MechanoidMechanitor.NewMechHive.Greek.Psi>
   <MAP_MechanoidMechanitor.NewMechHive.Greek.Omega>欧米伽</MAP_MechanoidMechanitor.NewMechHive.Greek.Omega>
+  <MAP_Settings_EnablePurgeDirectiveUiLoadingScreen_Label>启用肃清指令UI加载界面</MAP_Settings_EnablePurgeDirectiveUiLoadingScreen_Label>
+  <MAP_Settings_EnablePurgeDirectiveUiLoadingScreen_Description>开启后，每次打开肃清指令UI时都会先显示通讯连接与进度条界面。关闭后，将跳过加载界面并直接进入主界面。</MAP_Settings_EnablePurgeDirectiveUiLoadingScreen_Description>
 </LanguageData>

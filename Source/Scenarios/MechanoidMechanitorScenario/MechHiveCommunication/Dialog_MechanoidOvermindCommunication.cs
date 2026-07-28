@@ -1,4 +1,5 @@
 using System;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -182,7 +183,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             absorbInputAroundWindow = false;
             closeOnClickedOutside = false;
 
-            StartBootSequence();
+            bool loadingScreenEnabled =
+                MAPMechanitorMod.Settings?.enablePurgeDirectiveUiLoadingScreen ?? true;
+
+            if (loadingScreenEnabled)
+            {
+                StartBootSequence();
+            }
+            else
+            {
+                CompleteBootSequence();
+            }
+        }
+
+        public override void PreOpen()
+        {
+            base.PreOpen();
+            Find.TickManager?.Pause();
         }
 
         public override void PreClose()
@@ -244,6 +261,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bootComplete = false;
         }
 
+        private void CompleteBootSequence()
+        {
+            bootComplete = true;
+            statusKey =
+                "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
+            PlayHomeOpenDialogue();
+        }
+
         private bool IsBootLoopTestActive =>
             Prefs.DevMode && devControlsEnabled && bootLoopTestEnabled;
 
@@ -266,9 +291,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            bootComplete = true;
-            statusKey = "MAP_MechanoidMechanitor.MechHiveCommunication.Status.WaitingInput";
-            PlayHomeOpenDialogue();
+            CompleteBootSequence();
             return true;
         }
 

@@ -11,6 +11,12 @@ namespace MAP_MechanoidMechanitor
         public bool enableLoverImplants = false;
 
         /// <summary>
+        /// 是否在打开肃清指令机械主脑通讯 UI 时显示连接加载界面。
+        /// 默认开启。
+        /// </summary>
+        public bool enablePurgeDirectiveUiLoadingScreen = true;
+
+        /// <summary>
         /// 每级效能核心提供的机械族全局工作速度偏移百分比。
         /// </summary>
         public float productivityCoreWorkSpeedOffsetPercentPerLevel =
@@ -67,6 +73,10 @@ namespace MAP_MechanoidMechanitor
                 ref enableLoverImplants,
                 "enableLoverImplants",
                 false);
+            Scribe_Values.Look(
+                ref enablePurgeDirectiveUiLoadingScreen,
+                "enablePurgeDirectiveUiLoadingScreen",
+                true);
             Scribe_Values.Look(
                 ref productivityCoreWorkSpeedOffsetPercentPerLevel,
                 "productivityCoreWorkSpeedOffsetPercentPerLevel",

@@ -71,6 +71,11 @@ namespace MAP_MechanoidMechanitor
                 ref Settings.syntheticOffspringInheritXenogenes,
                 "MAP_Settings_SyntheticOffspringInheritXenogenes_Description".Translate());
 
+            listing.CheckboxLabeled(
+                "MAP_Settings_EnablePurgeDirectiveUiLoadingScreen_Label".Translate(),
+                ref Settings.enablePurgeDirectiveUiLoadingScreen,
+                "MAP_Settings_EnablePurgeDirectiveUiLoadingScreen_Description".Translate());
+
             DrawJusticeBossDifficultySettings(listing);
 
             listing.End();
