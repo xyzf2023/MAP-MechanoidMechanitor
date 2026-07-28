@@ -399,9 +399,17 @@ namespace MAP_MechanoidMechanitor
 
             if (dynamicLocked)
             {
+                string lockTip =
+                    "MAP_DataProcessingAllocation_DynamicAllocationManualDisabled"
+                        .Translate();
+
+                string combinedTip = tip.NullOrEmpty()
+                    ? lockTip
+                    : tip + "\n\n" + lockTip;
+
                 TooltipHandler.TipRegion(
                     rect,
-                    "MAP_DataProcessingAllocation_DynamicAllocationManualDisabled".Translate());
+                    combinedTip);
             }
             else if (!tip.NullOrEmpty())
             {

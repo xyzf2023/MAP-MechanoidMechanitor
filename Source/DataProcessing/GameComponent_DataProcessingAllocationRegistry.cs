@@ -420,79 +420,134 @@ namespace MAP_MechanoidMechanitor
 
         public void RunDynamicAllocation()
         {
-            if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked())
+            if (!ResearchFeatureUnlockUtility
+                    .IsDataProcessingAllocationUnlocked())
             {
                 return;
             }
 
-            if (dynamicAllocationRecords == null)
+            CleanupInvalidDynamicAllocationRecords();
+
+            if (dynamicAllocationRecords == null
+                || dynamicAllocationRecords.Count == 0)
             {
                 return;
             }
 
-            for (int i = dynamicAllocationRecords.Count - 1; i >= 0; i--)
+            List<DataProcessingDynamicAllocationRecord> snapshot =
+                new List<DataProcessingDynamicAllocationRecord>(
+                    dynamicAllocationRecords);
+
+            for (int i = 0;
+                 i < snapshot.Count;
+                 i++)
             {
-                DataProcessingDynamicAllocationRecord? record = dynamicAllocationRecords[i];
-                if (record == null)
-                {
-                    dynamicAllocationRecords.RemoveAt(i);
-                    continue;
-                }
+                DataProcessingDynamicAllocationRecord? record =
+                    snapshot[i];
 
-                Pawn? overseer = record.overseer;
-                if (overseer == null || overseer.Destroyed || !record.enabled)
+                if (record?.enabled != true
+                    || record.overseer == null)
                 {
                     continue;
                 }
 
-                RunDynamicAllocationForOverseer(overseer);
+                try
+                {
+                    RunDynamicAllocationForOverseer(
+                        record.overseer);
+                }
+                catch (Exception ex)
+                {
+                    Log.ErrorOnce(
+                        "[MAP-机械族机械师] 执行监管者动态分配失败：" +
+                        $"overseer={record.overseer.LabelShort}" +
+                        $"（{record.overseer.ThingID}）：{ex}",
+                        unchecked(
+                            DynamicAllocationLogKeyBase
+                            + record.overseer.thingIDNumber));
+                }
             }
         }
 
         private void RunDynamicAllocationForOverseer(Pawn overseer)
         {
-            if (overseer == null || overseer.Destroyed || !IsDynamicAllocationOverseerValid(overseer))
-            {
-                return;
-            }
-
-            if (!IsDynamicAllocationEnabled(overseer))
+            if (overseer == null
+                || overseer.Destroyed
+                || !IsDynamicAllocationOverseerValid(overseer)
+                || !IsDynamicAllocationEnabled(overseer))
             {
                 return;
             }
 
             List<Pawn> targets = new List<Pawn>();
-            CollectDynamicAllocationTargets(overseer, targets);
+            CollectDynamicAllocationTargets(
+                overseer,
+                targets);
+
             for (int i = 0; i < targets.Count; i++)
             {
                 Pawn? target = targets[i];
-                if (target == null || target.Destroyed)
+                if (target == null
+                    || target.Destroyed)
                 {
                     continue;
                 }
 
-                DataProcessingSpecialization desired =
-                    DataProcessingDynamicAllocationUtility.DetermineBaseSpecialization(target);
-                if (GetSpecializationForOverseerTarget(overseer, target) == desired)
+                try
                 {
-                    continue;
-                }
+                    DataProcessingSpecialization desired =
+                        DataProcessingDynamicAllocationUtility
+                            .DetermineBaseSpecialization(target);
 
-                // 动态分配校正：按机械体类型刷新特化并替换目标 Hediff。
-                if (!TrySetSpecialization(overseer, target, desired))
+                    DataProcessingSpecialization current =
+                        GetSpecializationForOverseerTarget(
+                            overseer,
+                            target);
+
+                    if (current == desired)
+                    {
+                        continue;
+                    }
+
+                    if (!TrySetSpecialization(
+                            overseer,
+                            target,
+                            desired))
+                    {
+                        Log.ErrorOnce(
+                            "[MAP-机械族机械师] 动态分配校正特化失败：" +
+                            $"overseer={overseer.LabelShort}" +
+                            $"（{overseer.ThingID}），" +
+                            $"target={target.LabelShort}" +
+                            $"（{target.ThingID}）。",
+                            BuildDynamicAllocationLogKey(
+                                overseer,
+                                target));
+                    }
+                }
+                catch (Exception ex)
                 {
                     Log.ErrorOnce(
-                        "[MAP-机械族机械师] 动态分配校正特化失败：" +
-                        $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
-                        $"target={target.LabelShort}（{target.ThingID}）。",
-                        BuildDynamicAllocationLogKey(overseer));
+                        "[MAP-机械族机械师] 动态分配目标分类异常：" +
+                        $"overseer={overseer.LabelShort}" +
+                        $"（{overseer.ThingID}），" +
+                        $"target={target.LabelShort}" +
+                        $"（{target.ThingID}）：{ex}",
+                        BuildDynamicAllocationLogKey(
+                            overseer,
+                            target));
                 }
             }
         }
 
-        private static int BuildDynamicAllocationLogKey(Pawn overseer)
+        private static int BuildDynamicAllocationLogKey(
+            Pawn overseer,
+            Pawn target)
         {
-            return unchecked(DynamicAllocationLogKeyBase + overseer.thingIDNumber);
+            return unchecked(
+                DynamicAllocationLogKeyBase
+                + overseer.thingIDNumber * 397
+                + target.thingIDNumber);
         }
 
         private void CollectDynamicAllocationTargets(Pawn overseer, List<Pawn> outTargets)
@@ -560,19 +615,24 @@ namespace MAP_MechanoidMechanitor
 
         private void CleanupInvalidDynamicAllocationRecords()
         {
-            dynamicAllocationRecords ??= new List<DataProcessingDynamicAllocationRecord>();
+            dynamicAllocationRecords ??=
+                new List<DataProcessingDynamicAllocationRecord>();
 
-            for (int i = dynamicAllocationRecords.Count - 1; i >= 0; i--)
+            HashSet<Pawn> seen =
+                new HashSet<Pawn>();
+
+            for (int i = dynamicAllocationRecords.Count - 1;
+                 i >= 0;
+                 i--)
             {
-                DataProcessingDynamicAllocationRecord? record = dynamicAllocationRecords[i];
+                DataProcessingDynamicAllocationRecord? record =
+                    dynamicAllocationRecords[i];
+
                 if (record == null
                     || record.overseer == null
-                    || record.overseer.Dead
-                    || record.overseer.Destroyed
-                    || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(record.overseer)
-                    || record.overseer.mechanitor == null
-                    || record.overseer.Faction == null
-                    || !record.overseer.Faction.IsPlayerSafe())
+                    || !IsDynamicAllocationOverseerValid(
+                        record.overseer)
+                    || !seen.Add(record.overseer))
                 {
                     dynamicAllocationRecords.RemoveAt(i);
                 }

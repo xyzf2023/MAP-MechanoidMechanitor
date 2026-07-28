@@ -44,7 +44,7 @@
   <MAP_DataProcessingAllocation_EffectMeleeCooldown>近战攻击冷却 ×{0}</MAP_DataProcessingAllocation_EffectMeleeCooldown>
   <MAP_DataProcessingAllocation_EffectMechEnergyUsage>机械能消耗 ×{0}</MAP_DataProcessingAllocation_EffectMechEnergyUsage>
   <MAP_DataProcessingAllocation_DynamicAllocation>动态分配</MAP_DataProcessingAllocation_DynamicAllocation>
-  <MAP_DataProcessingAllocation_DynamicAllocationTip>开启后，按机械体类型自动选择特化（不占用额外数据处理、不改变分配档数），并每轮校正。关闭后恢复手动选择。</MAP_DataProcessingAllocation_DynamicAllocationTip>
+  <MAP_DataProcessingAllocation_DynamicAllocationTip>开启后，系统将根据机械族的基础类型自动选择特化。工作类机械族使用生产统筹，远程战斗机械族使用火控演算，近战战斗机械族使用强袭协议；正义、隐者、恋人、机械族机械师及无法判断类型的机械族使用通用调谐。动态分配不会改变当前分配比例。关闭后将保留当前已有特化，并恢复手动选择。</MAP_DataProcessingAllocation_DynamicAllocationTip>
   <MAP_DataProcessingAllocation_DynamicAllocationManualDisabled>已开启动态分配，特化由机械体类型自动决定，无法手动切换。</MAP_DataProcessingAllocation_DynamicAllocationManualDisabled>
   <MAP_DataProcessingAllocation_DynamicAllocationFailed>无法切换动态分配状态。</MAP_DataProcessingAllocation_DynamicAllocationFailed>
 </LanguageData>

@@ -109,6 +109,7 @@ namespace MAP_MechanoidMechanitor
                 if (verb == null
                     || verb.verbProps == null
                     || !verb.verbProps.violent
+                    || !verb.verbProps.ai_IsWeapon
                     || verb.IsMeleeAttack)
                 {
                     continue;
@@ -125,10 +126,12 @@ namespace MAP_MechanoidMechanitor
 
         private static bool IsMeleeCombatMech(Pawn target)
         {
-            if (target.kindDef != null
-                && (target.kindDef.canMeleeAttack || target.kindDef.isFighter))
+            PawnKindDef? kindDef = target.kindDef;
+            if (kindDef == null
+                || !kindDef.isFighter
+                || !kindDef.canMeleeAttack)
             {
-                return true;
+                return false;
             }
 
             if (HasMeleeAttackVerb(target.verbTracker?.AllVerbs))
@@ -136,13 +139,9 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (target.equipment != null
-                && HasMeleeAttackVerb(target.equipment.AllEquipmentVerbs))
-            {
-                return true;
-            }
-
-            return false;
+            return target.equipment != null
+                && HasMeleeAttackVerb(
+                    target.equipment.AllEquipmentVerbs);
         }
 
         private static bool HasMeleeAttackVerb(IEnumerable<Verb>? verbs)
@@ -157,6 +156,7 @@ namespace MAP_MechanoidMechanitor
                 if (verb != null
                     && verb.verbProps != null
                     && verb.verbProps.violent
+                    && verb.verbProps.ai_IsWeapon
                     && verb.IsMeleeAttack)
                 {
                     return true;
