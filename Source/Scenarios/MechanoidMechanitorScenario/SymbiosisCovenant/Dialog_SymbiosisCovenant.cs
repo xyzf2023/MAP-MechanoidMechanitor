@@ -7,10 +7,16 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
+    public enum SymbiosisCovenantPage
+    {
+        Communication,
+        Relations
+    }
+
     public sealed class Dialog_SymbiosisCovenant : Window
     {
         private const float HeaderHeight = 132f;
-        private const float FooterHeight = 38f;
+        private const float FooterHeight = 48f;
         private const float MainGap = 14f;
         private const float MemberCardWidth = 120f;
         private const float MemberCardHeight = 150f;
@@ -27,7 +33,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static readonly Color MutedTextColor =
             new Color(0.63f, 0.72f, 0.71f, 1f);
 
-        public override Vector2 InitialSize => new Vector2(1000f, 700f);
+        private SymbiosisCovenantPage currentPage = SymbiosisCovenantPage.Communication;
+        private Vector2 memberScrollPosition = Vector2.zero;
+        private Vector2 relationsScrollPosition = Vector2.zero;
+
+        public override Vector2 InitialSize => new Vector2(1180f, 720f);
 
         public Dialog_SymbiosisCovenant()
         {
@@ -59,14 +69,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 inRect.yMax - FooterHeight,
                 inRect.width,
                 FooterHeight);
+            const float TabHeight = 34f;
+            Rect tabRect = new Rect(inRect.x, headerRect.yMax, inRect.width, TabHeight);
             Rect bodyRect = new Rect(
                 inRect.x,
-                headerRect.yMax + 8f,
+                tabRect.yMax,
                 inRect.width,
-                footerRect.y - headerRect.yMax - 16f);
+                footerRect.y - tabRect.yMax);
 
             DrawHeader(headerRect, state);
-            DrawMembers(bodyRect, state);
+            DrawPageTabs(tabRect);
+            if (currentPage == SymbiosisCovenantPage.Communication)
+            {
+                DrawCommunicationPage(bodyRect, state);
+            }
+            else
+            {
+                DrawRelationsPage(bodyRect, state);
+            }
+
             DrawFooter(footerRect, state);
         }
 
@@ -170,7 +191,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static void DrawMembers(
+        private void DrawMembers(
             Rect rect,
             GameComponent_SymbiosisCovenantState state)
         {
@@ -202,7 +223,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 0f,
                 inner.width,
                 Mathf.CeilToInt((float)members.Count / columns) * rowHeight);
-            Widgets.BeginScrollView(inner, ref _memberScroll, viewRect);
+            Widgets.BeginScrollView(inner, ref memberScrollPosition, viewRect);
             try
             {
                 for (int i = 0; i < members.Count; i++)
@@ -223,7 +244,170 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static Vector2 _memberScroll;
+        private void DrawCommunicationPage(
+            Rect rect,
+            GameComponent_SymbiosisCovenantState state)
+        {
+            DrawMembers(rect, state);
+        }
+
+        private void DrawRelationsPage(
+            Rect rect,
+            GameComponent_SymbiosisCovenantState state)
+        {
+            Widgets.DrawBoxSolid(rect, PanelColor);
+            DrawOutline(rect, 1, PanelOutlineColor);
+
+            Faction? player = Faction.OfPlayerSilentFail;
+            List<SymbiosisCovenantFactionRecord> records =
+                state.GetRecordsSorted().Where(r => r.Faction != null).ToList();
+
+            Rect inner = rect.ContractedBy(12f);
+            DrawLabel(
+                new Rect(inner.x, inner.y, inner.width, 24f),
+                "MAP_MechanoidMechanitor.Symbiosis.Relations.Title".Translate(),
+                GameFont.Small,
+                Color.white,
+                TextAnchor.UpperLeft);
+
+            Rect listRect = new Rect(
+                inner.x,
+                inner.y + 30f,
+                inner.width,
+                inner.yMax - inner.y - 30f);
+
+            if (records.Count == 0)
+            {
+                DrawNoData(
+                    listRect.ContractedBy(12f),
+                    "MAP_MechanoidMechanitor.Symbiosis.Relations.NoFactions"
+                        .Translate());
+                return;
+            }
+
+            const float CardHeight = 150f;
+            const float CardGap = 10f;
+            float viewHeight = records.Count * (CardHeight + CardGap);
+            Rect viewRect = new Rect(0f, 0f, listRect.width - 18f, viewHeight);
+            Widgets.BeginScrollView(listRect, ref relationsScrollPosition, viewRect);
+            try
+            {
+                for (int i = 0; i < records.Count; i++)
+                {
+                    Rect cardRect = new Rect(
+                        0f,
+                        i * (CardHeight + CardGap),
+                        listRect.width - 18f,
+                        CardHeight);
+                    DrawRelationCard(cardRect, records[i], player);
+                }
+            }
+            finally
+            {
+                Widgets.EndScrollView();
+            }
+        }
+
+        private void DrawRelationCard(
+            Rect rect,
+            SymbiosisCovenantFactionRecord record,
+            Faction? player)
+        {
+            Faction? faction = record.Faction;
+            if (faction == null)
+            {
+                return;
+            }
+
+            Widgets.DrawBoxSolid(rect, new Color(0.065f, 0.085f, 0.09f, 1f));
+            DrawOutline(rect, 1, TealColor);
+
+            Rect inner = rect.ContractedBy(10f);
+
+            Rect iconRect = new Rect(
+                inner.x,
+                inner.y + (inner.height - 64f) / 2f,
+                64f,
+                64f);
+            Texture2D? icon = faction.def?.FactionIcon;
+            if (icon != null)
+            {
+                Color previousColor = GUI.color;
+                GUI.color = faction.Color;
+                GUI.DrawTexture(iconRect, icon);
+                GUI.color = previousColor;
+            }
+
+            Rect nameRect = new Rect(inner.x + 76f, inner.y + 8f, inner.width - 86f, 26f);
+            DrawLabel(nameRect, faction.Name, GameFont.Small, Color.white, TextAnchor.UpperLeft);
+
+            int goodwill = player != null ? player.GoodwillWith(faction) : 0;
+            Rect goodwillRect = new Rect(
+                inner.x + 76f,
+                inner.y + 40f,
+                inner.width - 86f,
+                22f);
+            DrawLabel(
+                goodwillRect,
+                "MAP_MechanoidMechanitor.Symbiosis.Relations.Goodwill".Translate(
+                    goodwill),
+                GameFont.Small,
+                MutedTextColor,
+                TextAnchor.UpperLeft);
+
+            Rect trustRect = new Rect(
+                inner.x + 76f,
+                inner.y + 66f,
+                inner.width - 86f,
+                22f);
+            DrawLabel(
+                trustRect,
+                "MAP_MechanoidMechanitor.Symbiosis.Relations.Trust".Translate(
+                    record.Trust),
+                GameFont.Small,
+                MutedTextColor,
+                TextAnchor.UpperLeft);
+        }
+
+        private void DrawPageTabs(Rect rect)
+        {
+            const float TabWidth = 160f;
+            float tabHeight = rect.height - 4f;
+            float y = rect.y + 2f;
+            Rect communicationRect = new Rect(rect.x + 10f, y, TabWidth, tabHeight);
+            Rect relationsRect = new Rect(
+                communicationRect.xMax + 6f,
+                y,
+                TabWidth,
+                tabHeight);
+            DrawPageTab(
+                communicationRect,
+                SymbiosisCovenantPage.Communication,
+                "MAP_MechanoidMechanitor.Symbiosis.Page.Communication".Translate());
+            DrawPageTab(
+                relationsRect,
+                SymbiosisCovenantPage.Relations,
+                "MAP_MechanoidMechanitor.Symbiosis.Page.Relations".Translate());
+        }
+
+        private void DrawPageTab(Rect rect, SymbiosisCovenantPage page, string label)
+        {
+            bool selected = currentPage == page;
+            Color background = selected
+                ? new Color(0.10f, 0.30f, 0.27f, 1f)
+                : new Color(0.06f, 0.10f, 0.11f, 1f);
+            Widgets.DrawBoxSolid(rect, background);
+            DrawOutline(rect, 1, selected ? TealColor : PanelOutlineColor);
+            DrawCenteredLabel(
+                rect,
+                label,
+                GameFont.Small,
+                selected ? TealColor : MutedTextColor);
+            if (Widgets.ButtonInvisible(rect, false))
+            {
+                currentPage = page;
+            }
+        }
 
         private static void DrawMemberCard(
             Rect rect,
@@ -297,14 +481,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect rect,
             GameComponent_SymbiosisCovenantState state)
         {
-            Rect archiveRect = new Rect(rect.x, rect.y + 4f, 150f, 30f);
-            if (Widgets.ButtonText(
-                    archiveRect,
-                    "MAP_MechanoidMechanitor.Symbiosis.Archive".Translate()))
-            {
-                Find.WindowStack.Add(new Dialog_SymbiosisCovenantTrustArchive());
-            }
-
             Rect closeRect = new Rect(rect.xMax - 150f, rect.y + 4f, 150f, 30f);
             if (Widgets.ButtonText(
                     closeRect,

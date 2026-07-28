@@ -18,30 +18,16 @@
   <MAP_MechanoidMechanitor.Symbiosis.HighestLevel>历史最高等级：{0}</MAP_MechanoidMechanitor.Symbiosis.HighestLevel>
   <MAP_MechanoidMechanitor.Symbiosis.Declaration.Done>已公开脱离机械主脑</MAP_MechanoidMechanitor.Symbiosis.Declaration.Done>
   <MAP_MechanoidMechanitor.Symbiosis.Declaration.NotDone>尚未公开脱离机械主脑</MAP_MechanoidMechanitor.Symbiosis.Declaration.NotDone>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive>信任档案</MAP_MechanoidMechanitor.Symbiosis.Archive>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Title>信任档案</MAP_MechanoidMechanitor.Symbiosis.Archive.Title>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.GoodwillTrust>原版好感 {0} // 阶段 {1} // 信任 {2}</MAP_MechanoidMechanitor.Symbiosis.Archive.GoodwillTrust>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.LockStatus>声明前锁定：{0}</MAP_MechanoidMechanitor.Symbiosis.Archive.LockStatus>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.CovenantStatus>盟约状态：{0}</MAP_MechanoidMechanitor.Symbiosis.Archive.CovenantStatus>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Counters>邀请失败 {0} // 退出 {1} // {2}</MAP_MechanoidMechanitor.Symbiosis.Archive.Counters>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Recent>近期变化：</MAP_MechanoidMechanitor.Symbiosis.Archive.Recent>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.LockHostile>敌对（-100）</MAP_MechanoidMechanitor.Symbiosis.Archive.LockHostile>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.LockNeutral>中立（-25）</MAP_MechanoidMechanitor.Symbiosis.Archive.LockNeutral>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.LockNone>无</MAP_MechanoidMechanitor.Symbiosis.Archive.LockNone>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Member>盟约成员</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Member>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.LockedHostile>声明前锁定：敌对</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.LockedHostile>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.LockedNeutral>声明前锁定：中立</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.LockedNeutral>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.PermanentRefuse>已永久拒绝再次加入</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.PermanentRefuse>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Pending>正在审议</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Pending>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Cooling>邀请冷却中</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.Cooling>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.CanContact>可以秘密接触</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.CanContact>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.Status.NotEligible>尚未满足秘密接触条件</MAP_MechanoidMechanitor.Symbiosis.Archive.Status.NotEligible>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.TimingProposal>审议剩余 {0}</MAP_MechanoidMechanitor.Symbiosis.Archive.TimingProposal>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.TimingCooldown>冷却剩余 {0}</MAP_MechanoidMechanitor.Symbiosis.Archive.TimingCooldown>
-  <MAP_MechanoidMechanitor.Symbiosis.Archive.TimingNone>无</MAP_MechanoidMechanitor.Symbiosis.Archive.TimingNone>
+
   <MAP_MechanoidMechanitor.Symbiosis.Relation.Ally>盟友</MAP_MechanoidMechanitor.Symbiosis.Relation.Ally>
   <MAP_MechanoidMechanitor.Symbiosis.Relation.Neutral>中立</MAP_MechanoidMechanitor.Symbiosis.Relation.Neutral>
   <MAP_MechanoidMechanitor.Symbiosis.Relation.Hostile>敌对</MAP_MechanoidMechanitor.Symbiosis.Relation.Hostile>
+  <MAP_MechanoidMechanitor.Symbiosis.Page.Communication>通讯</MAP_MechanoidMechanitor.Symbiosis.Page.Communication>
+  <MAP_MechanoidMechanitor.Symbiosis.Page.Relations>关系</MAP_MechanoidMechanitor.Symbiosis.Page.Relations>
+  <MAP_MechanoidMechanitor.Symbiosis.Relations.Title>关系</MAP_MechanoidMechanitor.Symbiosis.Relations.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Relations.Goodwill>派系好感：{0}</MAP_MechanoidMechanitor.Symbiosis.Relations.Goodwill>
+  <MAP_MechanoidMechanitor.Symbiosis.Relations.Trust>信任：{0}</MAP_MechanoidMechanitor.Symbiosis.Relations.Trust>
+  <MAP_MechanoidMechanitor.Symbiosis.Relations.NoFactions>当前没有可显示的派系关系。</MAP_MechanoidMechanitor.Symbiosis.Relations.NoFactions>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.Rejected>拒绝接入</MAP_MechanoidMechanitor.Symbiosis.Stage.Rejected>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation>戒备观察</MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact>秘密接触</MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact>
@@ -89,7 +75,7 @@
   <MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Text>我们的所作所属让{0}对我们不再信任。{0}已退出共生盟约。</MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Text>
   <MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Label>共生盟约已解散</MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Label>
   <MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Text>随着最后一个派系的退出，共生盟约的愿景彻底化为泡影。</MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Text>
-  <MAP_MechanoidMechanitor.Symbiosis.NoChanges>尚无信任变化记录。</MAP_MechanoidMechanitor.Symbiosis.NoChanges>
+
   <MAP_MechanoidMechanitor.Symbiosis.Dev.Title>DEV // 共生盟约测试</MAP_MechanoidMechanitor.Symbiosis.Dev.Title>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord>当前没有可测试的派系信任记录。</MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.SelectFaction>选择测试派系</MAP_MechanoidMechanitor.Symbiosis.Dev.SelectFaction>

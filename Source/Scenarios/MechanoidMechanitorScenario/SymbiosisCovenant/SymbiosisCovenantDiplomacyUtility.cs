@@ -114,16 +114,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return option;
         }
 
+        // 统一构造秘密接触对话树。三个节点在构造时一次性创建，
+        // 通过已经创建好的节点引用互相 link，避免递归构造导致无限循环。
         public static DiaNode BuildSecretContactDialogue(
             Pawn negotiator,
             Faction faction)
         {
             DiaNode firstNode = new DiaNode(
                 "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node1".Translate());
+            DiaNode positionNode = new DiaNode(
+                "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2".Translate());
+            DiaNode proposalNode = new DiaNode(
+                "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3".Translate());
 
             DiaOption explainOption = new DiaOption(
                 "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Explain".Translate());
-            explainOption.link = BuildPositionNode(negotiator, faction);
+            explainOption.link = positionNode;
             DiaOption endOption = new DiaOption(
                 "MAP_MechanoidMechanitor.Symbiosis.SecretContact.End".Translate())
             {
@@ -132,33 +138,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             firstNode.options.Add(explainOption);
             firstNode.options.Add(endOption);
 
-            return firstNode;
-        }
-
-        private static DiaNode BuildPositionNode(Pawn negotiator, Faction faction)
-        {
-            DiaNode node = new DiaNode(
-                "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2".Translate());
-
             DiaOption proposeOption = new DiaOption(
                 "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Propose".Translate());
-            proposeOption.link = BuildProposalNode(negotiator, faction);
-
+            proposeOption.link = proposalNode;
             DiaOption declineOption = new DiaOption(
                 "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Decline".Translate())
             {
                 resolveTree = true
             };
-
-            node.options.Add(proposeOption);
-            node.options.Add(declineOption);
-            return node;
-        }
-
-        private static DiaNode BuildProposalNode(Pawn negotiator, Faction faction)
-        {
-            DiaNode node = new DiaNode(
-                "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3".Translate());
+            positionNode.options.Add(proposeOption);
+            positionNode.options.Add(declineOption);
 
             DiaOption issueOption = new DiaOption(
                 "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Issue".Translate());
@@ -166,14 +155,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 () => GameComponent_SymbiosisCovenantState.CurrentComponent
                     ?.TryBeginCovenantProposal(faction);
             issueOption.resolveTree = true;
-
             DiaOption backOption = new DiaOption(
                 "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Back".Translate());
-            backOption.link = BuildPositionNode(negotiator, faction);
+            backOption.link = positionNode;
+            proposalNode.options.Add(issueOption);
+            proposalNode.options.Add(backOption);
 
-            node.options.Add(issueOption);
-            node.options.Add(backOption);
-            return node;
+            return firstNode;
         }
 
         private static int CurrentTick => Find.TickManager?.TicksGame ?? 0;
