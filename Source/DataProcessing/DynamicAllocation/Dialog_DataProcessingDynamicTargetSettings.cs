@@ -12,6 +12,7 @@ namespace MAP_MechanoidMechanitor
     {
         private readonly Pawn overseer;
         private readonly Pawn target;
+        private Vector2 scrollPosition;
 
         private const float SectionGap = 8f;
         private const float RowGap = 4f;
@@ -35,120 +36,146 @@ namespace MAP_MechanoidMechanitor
             DataProcessingDynamicTargetRecord? config =
                 registry?.GetOrCreateDynamicTargetRecord(overseer, target);
 
-            Rect viewRect = new Rect(inRect.x, inRect.y, inRect.width, inRect.height - Window.CloseButSize.y - 8f);
-            float curY = viewRect.y;
+            Rect contentRect = inRect;
+            contentRect.yMax -= Window.CloseButSize.y + 8f;
 
+            // 标题始终可见，内容区可滚动。
             Text.Font = GameFont.Medium;
             Widgets.Label(
-                new Rect(viewRect.x, curY, viewRect.width, Text.LineHeight),
+                new Rect(contentRect.x, contentRect.y, contentRect.width, Text.LineHeight),
                 "MAP_DataProcessingAllocation_DynamicTargetSettingsTitle".Translate(target.LabelShortCap));
-            curY += Text.LineHeight + SectionGap;
+            float headerHeight = Text.LineHeight + SectionGap;
+            Rect listRect = new Rect(
+                contentRect.x,
+                contentRect.y + headerHeight,
+                contentRect.width,
+                Mathf.Max(0f, contentRect.yMax - contentRect.y - headerHeight));
 
             if (config == null || registry == null)
             {
                 return;
             }
 
+            // 先计算内容高度以支撑滚动。
             float labelWidth = 240f;
-            float fieldWidth = viewRect.width - labelWidth - 8f;
+            float fieldWidth = contentRect.width - labelWidth - 8f;
+            int dynamicLineCount = config.advancedMaxEnabled ? 4 : 0;
+            int ruleLineCount = 4;
+            float estimatedHeight = SectionGap
+                + 3 * (Text.LineHeight + RowGap)            // 只读三行
+                + SectionGap
+                + (2 + dynamicLineCount + 1 + ruleLineCount) * (Text.LineHeight + RowGap + 4f)
+                + SectionGap;
+            float viewHeight = Mathf.Max(estimatedHeight, listRect.height);
 
-            // 当前状态（只读）。
-            DrawReadOnlyLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicCurrentState".Translate(),
-                GetStateLabel(registry, config));
-            DrawReadOnlyLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicCurrentMode".Translate(),
-                DataProcessingAllocationUtility.GetSpecializationLabel(
-                    registry.GetSpecializationForOverseerTarget(overseer, target)));
-            DrawReadOnlyLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicCurrentActualSteps".Translate(),
-                DataProcessingAllocationUtility.StepsToPercent(
-                    registry.GetStepsForOverseerTarget(overseer, target)).ToStringPercent());
-            curY += SectionGap;
-
-            // 单体动态开关。
-            DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicTargetEnabled".Translate(),
-                config.enabled,
-                v => registry.SetDynamicAllocationEnabledForTarget(overseer, target, v));
-
-            // 默认模式。
-            DrawSpecializationLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicDefaultMode".Translate(),
-                config.defaultSpecialization,
-                s => registry.SetDynamicTargetDefaultSpecialization(overseer, target, s));
-
-            // 常态额度。
-            DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicNormalSteps".Translate(),
-                config.normalSteps,
-                v => registry.SetDynamicTargetNormalSteps(overseer, target, v));
-
-            // 统一最高额度。
-            DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicCommonMaxSteps".Translate(),
-                config.commonMaxSteps,
-                v => registry.SetDynamicTargetCommonMaxSteps(overseer, target, v));
-
-            // 高级最高额度开关。
-            DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicAdvancedMax".Translate(),
-                config.advancedMaxEnabled,
-                v => registry.SetDynamicTargetAdvancedMaxEnabled(overseer, target, v));
-
-            if (config.advancedMaxEnabled)
+            Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, viewHeight);
+            Widgets.BeginScrollView(listRect, ref scrollPosition, viewRect);
+            try
             {
+                float curY = viewRect.y;
+
+                // 当前状态（只读）。
+                DrawReadOnlyLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicCurrentState".Translate(),
+                    GetStateLabel(registry, config));
+                DrawReadOnlyLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicCurrentMode".Translate(),
+                    DataProcessingAllocationUtility.GetSpecializationLabel(
+                        registry.GetSpecializationForOverseerTarget(overseer, target)));
+                DrawReadOnlyLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicCurrentActualSteps".Translate(),
+                    DataProcessingAllocationUtility.StepsToPercent(
+                        registry.GetStepsForOverseerTarget(overseer, target)).ToStringPercent());
+                curY += SectionGap;
+
+                // 单体动态开关。
+                DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicTargetEnabled".Translate(),
+                    config.enabled,
+                    v => registry.SetDynamicAllocationEnabledForTarget(overseer, target, v));
+
+                // 默认模式。
+                DrawSpecializationLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicDefaultMode".Translate(),
+                    config.defaultSpecialization,
+                    s => registry.SetDynamicTargetDefaultSpecialization(overseer, target, s));
+
+                // 常态额度。
                 DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicGeneralMax".Translate(),
-                    config.generalMaxSteps,
-                    v => registry.SetDynamicTargetMaxStepsForSpecialization(
-                        overseer, target, DataProcessingSpecialization.GeneralTuning, v));
+                    "MAP_DataProcessingAllocation_DynamicNormalSteps".Translate(),
+                    config.normalSteps,
+                    v => registry.SetDynamicTargetNormalSteps(overseer, target, v));
+
+                // 统一最高额度。
                 DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicProductionMax".Translate(),
-                    config.productionMaxSteps,
-                    v => registry.SetDynamicTargetMaxStepsForSpecialization(
-                        overseer, target, DataProcessingSpecialization.ProductionCoordination, v));
-                DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicFireControlMax".Translate(),
-                    config.fireControlMaxSteps,
-                    v => registry.SetDynamicTargetMaxStepsForSpecialization(
-                        overseer, target, DataProcessingSpecialization.FireControlCalculation, v));
-                DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicAssaultMax".Translate(),
-                    config.assaultMaxSteps,
-                    v => registry.SetDynamicTargetMaxStepsForSpecialization(
-                        overseer, target, DataProcessingSpecialization.AssaultProtocol, v));
+                    "MAP_DataProcessingAllocation_DynamicCommonMaxSteps".Translate(),
+                    config.commonMaxSteps,
+                    v => registry.SetDynamicTargetCommonMaxSteps(overseer, target, v));
+
+                // 高级最高额度开关。
+                DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicAdvancedMax".Translate(),
+                    config.advancedMaxEnabled,
+                    v => registry.SetDynamicTargetAdvancedMaxEnabled(overseer, target, v));
+
+                if (config.advancedMaxEnabled)
+                {
+                    DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
+                        "MAP_DataProcessingAllocation_DynamicGeneralMax".Translate(),
+                        config.generalMaxSteps,
+                        v => registry.SetDynamicTargetMaxStepsForSpecialization(
+                            overseer, target, DataProcessingSpecialization.GeneralTuning, v));
+                    DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
+                        "MAP_DataProcessingAllocation_DynamicProductionMax".Translate(),
+                        config.productionMaxSteps,
+                        v => registry.SetDynamicTargetMaxStepsForSpecialization(
+                            overseer, target, DataProcessingSpecialization.ProductionCoordination, v));
+                    DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
+                        "MAP_DataProcessingAllocation_DynamicFireControlMax".Translate(),
+                        config.fireControlMaxSteps,
+                        v => registry.SetDynamicTargetMaxStepsForSpecialization(
+                            overseer, target, DataProcessingSpecialization.FireControlCalculation, v));
+                    DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
+                        "MAP_DataProcessingAllocation_DynamicAssaultMax".Translate(),
+                        config.assaultMaxSteps,
+                        v => registry.SetDynamicTargetMaxStepsForSpecialization(
+                            overseer, target, DataProcessingSpecialization.AssaultProtocol, v));
+                }
+
+                // 优先级。
+                DrawPriorityLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicPriority".Translate(),
+                    config.priority,
+                    v => registry.SetDynamicTargetPriority(overseer, target, v));
+
+                // 检查间隔（秒）。
+                DrawIntervalLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicCheckInterval".Translate(),
+                    config.checkIntervalTicks / 60,
+                    v => registry.SetDynamicTargetCheckInterval(overseer, target, v));
+
+                // 规则开关。
+                DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicRuleWork".Translate(),
+                    config.switchForWork,
+                    v => registry.SetDynamicTargetRule(overseer, target, "Work", v));
+                DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicRuleDraftedWeapon".Translate(),
+                    config.switchForDraftedWeapon,
+                    v => registry.SetDynamicTargetRule(overseer, target, "DraftedWeapon", v));
+                DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicRuleCloseMelee".Translate(),
+                    config.switchForCloseMelee,
+                    v => registry.SetDynamicTargetRule(overseer, target, "CloseMelee", v));
+                DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
+                    "MAP_DataProcessingAllocation_DynamicRuleUndraftedFallback".Translate(),
+                    config.applyUndraftedFallback,
+                    v => registry.SetDynamicTargetRule(overseer, target, "UndraftedFallback", v));
             }
-
-            // 优先级。
-            DrawPriorityLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicPriority".Translate(),
-                config.priority,
-                v => registry.SetDynamicTargetPriority(overseer, target, v));
-
-            // 检查间隔（秒）。
-            DrawIntervalLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicCheckInterval".Translate(),
-                config.checkIntervalTicks / 60,
-                v => registry.SetDynamicTargetCheckInterval(overseer, target, v));
-
-            // 规则开关。
-            DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicRuleWork".Translate(),
-                config.switchForWork,
-                v => registry.SetDynamicTargetRule(overseer, target, "Work", v));
-            DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicRuleDraftedWeapon".Translate(),
-                config.switchForDraftedWeapon,
-                v => registry.SetDynamicTargetRule(overseer, target, "DraftedWeapon", v));
-            DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicRuleCloseMelee".Translate(),
-                config.switchForCloseMelee,
-                v => registry.SetDynamicTargetRule(overseer, target, "CloseMelee", v));
-            DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                "MAP_DataProcessingAllocation_DynamicRuleUndraftedFallback".Translate(),
-                config.applyUndraftedFallback,
-                v => registry.SetDynamicTargetRule(overseer, target, "UndraftedFallback", v));
+            finally
+            {
+                Widgets.EndScrollView();
+            }
         }
 
         private string GetStateLabel(
@@ -160,33 +187,10 @@ namespace MAP_MechanoidMechanitor
                 return "MAP_DataProcessingAllocation_DynamicStateIdle".Translate();
             }
 
+            // 使用注册表缓存的运行时状态，避免与调度器评估不一致或重复计算。
             DataProcessingDynamicState state =
-                DataProcessingDynamicAllocationUtility.IsConfirmedCloseMeleeEngagement(target, config.checkIntervalTicks)
-                    && config.switchForCloseMelee
-                ? DataProcessingDynamicState.CloseMelee
-                : DataProcessingDynamicState.Idle;
-
-            if (target.Drafted && config.switchForDraftedWeapon)
-            {
-                Verb? verb = DataProcessingDynamicAllocationUtility.GetCurrentAttackVerb(target);
-                if (verb != null && verb.verbProps != null)
-                {
-                    if (verb.verbProps.IsMeleeAttack)
-                    {
-                        state = DataProcessingDynamicState.DraftedMelee;
-                    }
-                    else if (verb.verbProps.range > 1.42f && verb.verbProps.ai_IsWeapon)
-                    {
-                        state = DataProcessingDynamicState.DraftedRanged;
-                    }
-                }
-            }
-            else if (config.switchForWork && target.CurJob?.workGiverDef != null)
-            {
-                state = DataProcessingDynamicState.Working;
-            }
-
-            return ("MAP_DataProcessingAllocation_DynamicState_" +
+                registry.GetCachedDynamicStateForTarget(target);
+            return ("MAP_DataProcessingAllocation_DynamicState" +
                 state).Translate();
         }
 

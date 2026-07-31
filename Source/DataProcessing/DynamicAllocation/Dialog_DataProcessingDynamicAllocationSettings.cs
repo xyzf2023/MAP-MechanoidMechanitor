@@ -175,8 +175,10 @@ namespace MAP_MechanoidMechanitor
                 target.LabelShortCap);
 
             float infoX = textX + 168f;
+            string stateLabel = "MAP_DataProcessingAllocation_DynamicState" +
+                registry.GetCachedDynamicStateForTarget(target);
             string info = string.Format(
-                "{0}: {1} | {2}: {3} | {4}: {5} | {6}: {7}",
+                "{0}: {1} | {2}: {3} | {4}: {5} | {6}: {7} | {8}: {9}",
                 "MAP_DataProcessingAllocation_DynamicCurrentMode".Translate(),
                 DataProcessingAllocationUtility.GetSpecializationLabel(currentSpec),
                 "MAP_DataProcessingAllocation_DynamicCurrentActualSteps".Translate(),
@@ -184,8 +186,10 @@ namespace MAP_MechanoidMechanitor
                 "MAP_DataProcessingAllocation_DynamicNormalSteps".Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(normal).ToStringPercent(),
                 "MAP_DataProcessingAllocation_DynamicPriority".Translate(),
-                (config?.priority ?? 3).ToString());
-            Widgets.Label(new Rect(infoX, rowRect.y, 320f, rowRect.height), info);
+                (config?.priority ?? 3).ToString(),
+                "MAP_DataProcessingAllocation_DynamicCurrentState".Translate(),
+                stateLabel.Translate());
+            Widgets.Label(new Rect(infoX, rowRect.y, 460f, rowRect.height), info);
 
             float detailX = infoX + 328f;
             if (Widgets.ButtonText(

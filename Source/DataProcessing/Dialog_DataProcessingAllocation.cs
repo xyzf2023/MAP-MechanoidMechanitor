@@ -356,14 +356,9 @@ namespace MAP_MechanoidMechanitor
                 && registry.IsDynamicAllocationEnabledForTarget(overseer, row.target)
                 && normalSteps != actualSteps;
 
+            // 百分比列仅显示实际档数；差异信息仅在悬停 tooltip 中展示。
             string percentText = DataProcessingAllocationUtility.StepsToPercent(actualSteps)
                 .ToStringPercent();
-            if (differs)
-            {
-                percentText += " / " + DataProcessingAllocationUtility.StepsToPercent(normalSteps)
-                    .ToStringPercent();
-            }
-
             Widgets.Label(percentRect, percentText);
             Text.Anchor = TextAnchor.UpperLeft;
 
@@ -436,7 +431,8 @@ namespace MAP_MechanoidMechanitor
             string tip = GetSpecializationTip(row.specialization);
 
             bool dynamicLocked = registry != null
-                && registry.IsDynamicAllocationEnabled(overseer);
+                && registry.IsDynamicAllocationEnabled(overseer)
+                && registry.IsDynamicAllocationEnabledForTarget(overseer, row.target);
             bool enabled = registry != null
                 && !dynamicLocked
                 && DataProcessingAllocationUtility.IsValidAllocationPair(overseer, row.target);

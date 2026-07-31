@@ -7,8 +7,9 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 动态分配工具：依据机械体类型自动决定其应使用的“基础特化”。
-    /// 开启动态分配的监管者会按此结果覆盖其名下各目标的手动特化选择（不改变分配档数）。
+    /// 动态分配工具：提供运行时状态评估所需的判定（近战接战、当前攻击 Verb、
+    /// 远程/近战战斗能力、工作型机械体），以及首次创建单体配置时决定初始默认模式。
+    /// 仅用于状态识别与默认模式推断，不负责实际档数分配与特化覆盖（由注册表按计划管理）。
     /// </summary>
     public static class DataProcessingDynamicAllocationUtility
     {
@@ -279,7 +280,7 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static bool HasEnabledMechWorkTypes(Pawn target)
+        public static bool HasEnabledMechWorkTypes(Pawn target)
         {
             List<WorkTypeDef>? workTypes = target.RaceProps.mechEnabledWorkTypes;
             return workTypes != null && workTypes.Count > 0;
