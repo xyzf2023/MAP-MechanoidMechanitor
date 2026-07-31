@@ -17,19 +17,7 @@ namespace MAP_MechanoidMechanitor
         private const float SectionGap = 8f;
         private const float RowGap = 4f;
 
-        public override Vector2 InitialSize
-        {
-            get
-            {
-                // 启用高级最高额度时内容更多，抬高窗口以避免滚动区域被过分压缩。
-                bool advanced =
-                    GameComponent_DataProcessingAllocationRegistry.CurrentRegistry
-                        ?.GetOrCreateDynamicTargetRecord(overseer, target)
-                        ?.advancedMaxEnabled == true;
-                float height = advanced ? 760f : 640f;
-                return new Vector2(640f, height);
-            }
-        }
+        public override Vector2 InitialSize => new Vector2(640f, 620f);
 
         public Dialog_DataProcessingDynamicTargetSettings(Pawn overseer, Pawn target)
         {
@@ -68,17 +56,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 先计算内容高度以支撑滚动。
+            // 先计算内容高度以支撑滚动。使用保守高度，确保底部规则行始终可滚动到。
             float labelWidth = 240f;
             float fieldWidth = contentRect.width - labelWidth - 8f;
-            int dynamicLineCount = config.advancedMaxEnabled ? 4 : 0;
-            int ruleLineCount = 4;
-            float estimatedHeight = SectionGap
-                + 3 * (Text.LineHeight + RowGap)            // 只读三行
-                + SectionGap
-                + (2 + dynamicLineCount + 1 + ruleLineCount) * (Text.LineHeight + RowGap + 4f)
-                + SectionGap;
-            float viewHeight = Mathf.Max(estimatedHeight, listRect.height);
+            float viewHeight =
+                config.advancedMaxEnabled
+                    ? 760f
+                    : 620f;
+            viewHeight = Mathf.Max(viewHeight, listRect.height);
 
             Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, viewHeight);
             Widgets.BeginScrollView(listRect, ref scrollPosition, viewRect);

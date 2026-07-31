@@ -255,12 +255,9 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        /// <summary>
-        /// 以下单位不受动态分配自动归类影响，始终保留通用调谐：
-        /// 正义机械体、机械族机械师、隐者、恋人。
-        /// 该规则同时作用于初始默认模式（DetermineInitialDefaultSpecialization）
-        /// 与运行时节点的重新评估（EvaluateTarget 的 fallback 分支）。
-        /// </summary>
+        /// 仅用于首次创建动态配置时决定初始默认模式：
+        /// 正义、机械族机械师、隐者和恋人初始默认为通用调谐。
+        /// 玩家之后设置的默认模式不会被周期判断覆盖。
         private static bool ShouldForceGeneralTuning(Pawn target)
         {
             if (JusticePawnUtility.IsAnyJusticeVariant(target))
