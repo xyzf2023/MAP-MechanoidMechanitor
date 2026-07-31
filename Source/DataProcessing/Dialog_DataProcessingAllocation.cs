@@ -187,7 +187,27 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            curY += Text.LineHeight + SectionGap;
+            // 仅当全局动态分配开启时显示“动态分配设置”入口。
+            if (registry.IsDynamicAllocationEnabled(overseer))
+            {
+                curY += Text.LineHeight + 2f;
+                Rect settingsRect = new Rect(
+                    contentRect.x,
+                    curY,
+                    Mathf.Max(0f, contentRect.width),
+                    Text.LineHeight + 4f);
+                if (Widgets.ButtonText(
+                        settingsRect,
+                        "MAP_DataProcessingAllocation_DynamicSettingsButton".Translate()))
+                {
+                    Find.WindowStack.Add(
+                        new Dialog_DataProcessingDynamicAllocationSettings(overseer));
+                }
+
+                curY += Text.LineHeight + 4f;
+            }
+
+            curY += SectionGap;
         }
 
         private void DrawListHeader(Rect contentRect, ref float curY)
@@ -327,10 +347,34 @@ namespace MAP_MechanoidMechanitor
 
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.MiddleCenter;
-            Widgets.Label(
-                percentRect,
-                DataProcessingAllocationUtility.StepsToPercent(row.steps).ToStringPercent());
+            int actualSteps = row.steps;
+            int normalSteps = registry != null
+                ? registry.GetDynamicTargetNormalSteps(overseer, row.target)
+                : actualSteps;
+            bool differs = registry != null
+                && registry.IsDynamicAllocationEnabled(overseer)
+                && registry.IsDynamicAllocationEnabledForTarget(overseer, row.target)
+                && normalSteps != actualSteps;
+
+            string percentText = DataProcessingAllocationUtility.StepsToPercent(actualSteps)
+                .ToStringPercent();
+            if (differs)
+            {
+                percentText += " / " + DataProcessingAllocationUtility.StepsToPercent(normalSteps)
+                    .ToStringPercent();
+            }
+
+            Widgets.Label(percentRect, percentText);
             Text.Anchor = TextAnchor.UpperLeft;
+
+            if (differs)
+            {
+                TooltipHandler.TipRegion(
+                    percentRect,
+                    "MAP_DataProcessingAllocation_DynamicStepsTooltip".Translate(
+                        DataProcessingAllocationUtility.StepsToPercent(actualSteps).ToStringPercent(),
+                        DataProcessingAllocationUtility.StepsToPercent(normalSteps).ToStringPercent()));
+            }
 
             DrawPinButton(pinRect, row, registry);
 
@@ -400,7 +444,7 @@ namespace MAP_MechanoidMechanitor
             if (dynamicLocked)
             {
                 string lockTip =
-                    "MAP_DataProcessingAllocation_DynamicAllocationManualDisabled"
+                    "MAP_DataProcessingAllocation_DynamicLockedModeTip"
                         .Translate();
 
                 string combinedTip = tip.NullOrEmpty()

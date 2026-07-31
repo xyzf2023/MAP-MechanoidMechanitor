@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -17,10 +19,10 @@ namespace MAP_MechanoidMechanitor
         private const float MeleeRangeThreshold = 1.42f;
 
         /// <summary>
-        /// 依据机械体类型决定基础特化。
-        /// 优先级：强制通用调谐（正义/机械师/隐者/恋人）→ 具备作业能力 → 远程攻击 → 近战战斗 → 通用调谐。
+        /// 仅在“目标没有任何动态配置记录、首次创建单体配置”时调用，决定初始默认模式。
+        /// 不得在周期动态分配、LoadedGame 或开关动态分配时覆盖已有玩家选择。
         /// </summary>
-        public static DataProcessingSpecialization DetermineBaseSpecialization(Pawn? target)
+        public static DataProcessingSpecialization DetermineInitialDefaultSpecialization(Pawn? target)
         {
             if (target == null)
             {
@@ -48,6 +50,208 @@ namespace MAP_MechanoidMechanitor
             }
 
             return DataProcessingSpecialization.GeneralTuning;
+        }
+
+        /// <summary>
+        /// 当前实战使用的攻击 Verb（优先当前 Stance_Busy 实际 Verb → 当前 Job.verbToUse）。
+        /// 用于判断征召时远程/近战。
+        /// </summary>
+        public static Verb? GetCurrentAttackVerb(Pawn? target)
+        {
+            if (target == null || target.stances == null)
+            {
+                return null;
+            }
+
+            if (target.stances.curStance is Stance_Busy busy && busy.verb != null)
+            {
+                return busy.verb;
+            }
+
+            Job? curJob = target.CurJob;
+            if (curJob != null && curJob.verbToUse != null)
+            {
+                return curJob.verbToUse;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 是否正在执行近战接战。固定优先级最高的状态。
+        /// 仅使用原版已有状态，不做全图或大半径搜索。
+        /// </summary>
+        public static bool IsConfirmedCloseMeleeEngagement(
+            Pawn? target,
+            int checkIntervalTicks)
+        {
+            if (target == null || target.Dead || target.Destroyed)
+            {
+                return false;
+            }
+
+            if (IsPawnCurrentlyMakingMeleeAttack(target))
+            {
+                return true;
+            }
+
+            if (HasValidRecordedMeleeThreat(target, checkIntervalTicks))
+            {
+                return true;
+            }
+
+            return HasAdjacentEnemyActivelyMeleeAttackingTarget(target);
+        }
+
+        private static bool IsPawnCurrentlyMakingMeleeAttack(Pawn? target)
+        {
+            if (target == null || target.stances == null)
+            {
+                return false;
+            }
+
+            if (target.stances.curStance is Stance_Busy busy
+                && busy.verb != null
+                && busy.verb.verbProps != null
+                && busy.verb.verbProps.IsMeleeAttack)
+            {
+                return true;
+            }
+
+            if (target.jobs?.curDriver is JobDriver_AttackMelee)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool HasValidRecordedMeleeThreat(
+            Pawn? target,
+            int checkIntervalTicks)
+        {
+            if (target?.mindState == null)
+            {
+                return false;
+            }
+
+            Pawn? threat = target.mindState.meleeThreat;
+            if (threat == null)
+            {
+                return false;
+            }
+
+            int memoryTicks = Mathf.Max(400, checkIntervalTicks + 60);
+            if (Find.TickManager.TicksGame
+                > target.mindState.lastMeleeThreatHarmTick + memoryTicks)
+            {
+                return false;
+            }
+
+            if (threat.Dead || threat.Destroyed || threat.Downed)
+            {
+                return false;
+            }
+
+            if (target.Map != threat.Map || !target.Spawned || !threat.Spawned)
+            {
+                return false;
+            }
+
+            if (target.HostileTo(threat))
+            {
+                // 一个机械族误把友方记为威胁时应避免误判；原版 MeleeThreatStillThreat 已处理敌意。
+            }
+            else
+            {
+                return false;
+            }
+
+            if ((float)(target.Position - threat.Position).LengthHorizontalSquared > 9f)
+            {
+                return false;
+            }
+
+            if (!GenSight.LineOfSight(target.Position, threat.Position, target.Map))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool HasAdjacentEnemyActivelyMeleeAttackingTarget(Pawn? target)
+        {
+            if (target?.Map == null || !target.Spawned)
+            {
+                return false;
+            }
+
+            IntVec3 center = target.Position;
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dz = -1; dz <= 1; dz++)
+                {
+                    IntVec3 cell = center + new IntVec3(dx, 0, dz);
+                    if (!cell.InBounds(target.Map))
+                    {
+                        continue;
+                    }
+
+                    List<Thing> things = target.Map.thingGrid.ThingsListAtFast(cell);
+                    for (int i = 0; i < things.Count; i++)
+                    {
+                        if (things[i] is not Pawn enemy || enemy == target)
+                        {
+                            continue;
+                        }
+
+                        if (enemy.Dead || enemy.Destroyed || enemy.Downed)
+                        {
+                            continue;
+                        }
+
+                        if (!enemy.HostileTo(target))
+                        {
+                            continue;
+                        }
+
+                        if (IsPawnActivelyMeleeAttacking(enemy, target))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsPawnActivelyMeleeAttacking(Pawn? enemy, Pawn? focus)
+        {
+            if (enemy == null || focus == null || enemy.stances == null)
+            {
+                return false;
+            }
+
+            if (enemy.stances.curStance is Stance_Busy busy
+                && busy.verb != null
+                && busy.verb.verbProps != null
+                && busy.verb.verbProps.IsMeleeAttack)
+            {
+                if (busy.focusTarg.IsValid && busy.focusTarg.Thing == focus)
+                {
+                    return true;
+                }
+            }
+
+            if (enemy.jobs?.curDriver is JobDriver_AttackMelee attackMeleeDriver
+                && attackMeleeDriver.job?.targetA.Thing == focus)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -81,7 +285,7 @@ namespace MAP_MechanoidMechanitor
             return workTypes != null && workTypes.Count > 0;
         }
 
-        private static bool HasRangedAttackVerb(Pawn target)
+        public static bool HasRangedAttackVerb(Pawn target)
         {
             if (HasRangedAttackVerbIn(target.verbTracker?.AllVerbs))
             {
@@ -124,7 +328,7 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static bool IsMeleeCombatMech(Pawn target)
+        public static bool IsMeleeCombatMech(Pawn target)
         {
             PawnKindDef? kindDef = target.kindDef;
             if (kindDef == null
