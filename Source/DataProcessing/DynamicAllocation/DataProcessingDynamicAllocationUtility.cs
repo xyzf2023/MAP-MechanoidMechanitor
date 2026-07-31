@@ -258,6 +258,8 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         /// 以下单位不受动态分配自动归类影响，始终保留通用调谐：
         /// 正义机械体、机械族机械师、隐者、恋人。
+        /// 该规则同时作用于初始默认模式（DetermineInitialDefaultSpecialization）
+        /// 与运行时节点的重新评估（EvaluateTarget 的 fallback 分支）。
         /// </summary>
         private static bool ShouldForceGeneralTuning(Pawn target)
         {

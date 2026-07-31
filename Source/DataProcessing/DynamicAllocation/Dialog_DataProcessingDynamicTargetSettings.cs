@@ -17,7 +17,19 @@ namespace MAP_MechanoidMechanitor
         private const float SectionGap = 8f;
         private const float RowGap = 4f;
 
-        public override Vector2 InitialSize => new Vector2(640f, 600f);
+        public override Vector2 InitialSize
+        {
+            get
+            {
+                // 启用高级最高额度时内容更多，抬高窗口以避免滚动区域被过分压缩。
+                bool advanced =
+                    GameComponent_DataProcessingAllocationRegistry.CurrentRegistry
+                        ?.GetOrCreateDynamicTargetRecord(overseer, target)
+                        ?.advancedMaxEnabled == true;
+                float height = advanced ? 760f : 640f;
+                return new Vector2(640f, height);
+            }
+        }
 
         public Dialog_DataProcessingDynamicTargetSettings(Pawn overseer, Pawn target)
         {
@@ -187,11 +199,8 @@ namespace MAP_MechanoidMechanitor
                 return "MAP_DataProcessingAllocation_DynamicStateIdle".Translate();
             }
 
-            // 使用注册表缓存的运行时状态，避免与调度器评估不一致或重复计算。
-            DataProcessingDynamicState state =
-                registry.GetCachedDynamicStateForTarget(target);
-            return ("MAP_DataProcessingAllocation_DynamicState" +
-                state).Translate();
+            // 统一通过注册表入口获取运行时状态标签，避免与调度器评估不一致或重复拼接翻译键。
+            return registry.GetCachedDynamicStateLabelForUI(target);
         }
 
         private void DrawReadOnlyLine(
@@ -335,7 +344,7 @@ namespace MAP_MechanoidMechanitor
                     Text.LineHeight + 4f);
                 bool active = p == priority;
                 if (Widgets.ButtonText(buttonRect,
-                        "MAP_DataProcessingAllocation_DynamicPriority" + p + "Short".Translate(),
+                        ("MAP_DataProcessingAllocation_DynamicPriority" + p + "Short").Translate(),
                         active,
                         active,
                         true)

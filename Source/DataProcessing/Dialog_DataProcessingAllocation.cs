@@ -373,7 +373,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawPinButton(pinRect, row, registry);
 
-            AllocationAdjustBlockReason removeReason = GetRemoveBlockReason(row);
+            AllocationAdjustBlockReason removeReason = GetRemoveBlockReason(row, registry);
             bool canRemove = removeReason == AllocationAdjustBlockReason.None;
             string removeTip = GetRemoveTip(removeReason);
             if (!removeTip.NullOrEmpty())
@@ -488,7 +488,7 @@ namespace MAP_MechanoidMechanitor
                     optionLabel,
                     () =>
                     {
-                        if (!registry.TrySetSpecialization(overseer, row.target, captured)
+                        if (!registry.TrySetManualSpecialization(overseer, row.target, captured)
                             && overseer != null)
                         {
                             Messages.Message(
@@ -1272,29 +1272,41 @@ namespace MAP_MechanoidMechanitor
                 : "???";
         }
 
-        private AllocationAdjustBlockReason GetRemoveBlockReason(SubjectRowData row)
+        private AllocationAdjustBlockReason GetRemoveBlockReason(
+            SubjectRowData row,
+            GameComponent_DataProcessingAllocationRegistry? registry)
         {
             if (!IsOverseerCapable())
             {
                 return AllocationAdjustBlockReason.OverseerInvalid;
             }
 
-            if (row.target == null || row.target.Dead || row.target.Destroyed)
+            if (row.target == null
+                || row.target.Dead
+                || row.target.Destroyed
+                || !DataProcessingAllocationUtility
+                    .IsValidAllocationPair(
+                        overseer,
+                        row.target))
             {
                 return AllocationAdjustBlockReason.TargetInvalid;
             }
 
-            if (!DataProcessingAllocationUtility.IsValidAllocationPair(overseer, row.target))
-            {
-                return AllocationAdjustBlockReason.TargetInvalid;
-            }
+            bool dynamicManaged =
+                registry != null
+                && registry.IsDynamicAllocationEnabledForTarget(
+                    overseer,
+                    row.target);
 
-            if (row.steps <= 0)
-            {
-                return AllocationAdjustBlockReason.NothingToRemove;
-            }
+            int removableSteps = dynamicManaged
+                ? registry!.GetDynamicTargetNormalSteps(
+                    overseer,
+                    row.target)
+                : row.steps;
 
-            return AllocationAdjustBlockReason.None;
+            return removableSteps > 0
+                ? AllocationAdjustBlockReason.None
+                : AllocationAdjustBlockReason.NothingToRemove;
         }
 
         private AllocationAdjustBlockReason GetAddBlockReason(
@@ -1321,6 +1333,18 @@ namespace MAP_MechanoidMechanitor
                 return AllocationAdjustBlockReason.TargetInvalid;
             }
 
+            // 动态托管目标只检查科研、监管关系与目标合法性；
+            // 不阻止玩家提高其常态额度请求（动态预算内会自行约束）。
+            bool dynamicManaged =
+                registry.IsDynamicAllocationEnabledForTarget(
+                    overseer,
+                    row.target);
+            if (dynamicManaged)
+            {
+                return AllocationAdjustBlockReason.None;
+            }
+
+            // 非动态目标继续使用 55% 绝对安全限制。
             if (!DataProcessingAllocationUtility.CanAddStep(overseer))
             {
                 return AllocationAdjustBlockReason.NotEnoughProcessing;

@@ -174,26 +174,42 @@ namespace MAP_MechanoidMechanitor
                 new Rect(textX, rowRect.y, 160f, rowRect.height),
                 target.LabelShortCap);
 
+            // 详情按钮固定在行尾右侧，避免与信息文本重叠。
+            float detailWidth = 90f;
+            float detailX = rowRect.xMax - detailWidth;
+            Rect detailRect = new Rect(detailX, rowRect.y, detailWidth, rowRect.height);
+
             float infoX = textX + 168f;
-            string stateLabel = "MAP_DataProcessingAllocation_DynamicState" +
-                registry.GetCachedDynamicStateForTarget(target);
+            // 信息文本宽度限制到详情按钮左侧，避免重叠。
+            float infoWidth = Mathf.Max(0f, detailRect.x - infoX - 8f);
+            Rect infoRect = new Rect(infoX, rowRect.y, infoWidth, rowRect.height);
+
+            // 统一通过注册表入口获取运行时状态标签，避免重复拼接翻译键。
+            string stateLabel = registry.GetCachedDynamicStateLabelForUI(target);
             string info = string.Format(
-                "{0}: {1} | {2}: {3} | {4}: {5} | {6}: {7} | {8}: {9}",
+                "{0}: {1} | {2}: {3} | {4}: {5}",
                 "MAP_DataProcessingAllocation_DynamicCurrentMode".Translate(),
                 DataProcessingAllocationUtility.GetSpecializationLabel(currentSpec),
                 "MAP_DataProcessingAllocation_DynamicCurrentActualSteps".Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(actual).ToStringPercent(),
                 "MAP_DataProcessingAllocation_DynamicNormalSteps".Translate(),
-                DataProcessingAllocationUtility.StepsToPercent(normal).ToStringPercent(),
+                DataProcessingAllocationUtility.StepsToPercent(normal).ToStringPercent());
+            Widgets.Label(infoRect, info);
+
+            // 完整信息（含状态与优先级）放入悬停提示，避免一行过长重叠。
+            string fullInfo = string.Format(
+                "{0}\n{1}: {2}\n{3}: {4}\n{5}: {6}",
+                info,
+                "MAP_DataProcessingAllocation_DynamicCurrentState".Translate(),
+                stateLabel,
                 "MAP_DataProcessingAllocation_DynamicPriority".Translate(),
                 (config?.priority ?? 3).ToString(),
-                "MAP_DataProcessingAllocation_DynamicCurrentState".Translate(),
-                stateLabel.Translate());
-            Widgets.Label(new Rect(infoX, rowRect.y, 460f, rowRect.height), info);
+                "MAP_DataProcessingAllocation_DynamicCurrentActualSteps".Translate(),
+                DataProcessingAllocationUtility.StepsToPercent(actual).ToStringPercent());
+            TooltipHandler.TipRegion(infoRect, fullInfo);
 
-            float detailX = infoX + 328f;
             if (Widgets.ButtonText(
-                    new Rect(detailX, rowRect.y, 90f, rowRect.height),
+                    detailRect,
                     "MAP_DataProcessingAllocation_DynamicDetailButton".Translate()))
             {
                 Find.WindowStack.Add(

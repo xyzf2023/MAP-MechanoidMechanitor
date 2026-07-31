@@ -44,7 +44,7 @@
   <MAP_DataProcessingAllocation_EffectMeleeCooldown>近战攻击冷却 ×{0}</MAP_DataProcessingAllocation_EffectMeleeCooldown>
   <MAP_DataProcessingAllocation_EffectMechEnergyUsage>机械能消耗 ×{0}</MAP_DataProcessingAllocation_EffectMechEnergyUsage>
   <MAP_DataProcessingAllocation_DynamicAllocation>动态分配</MAP_DataProcessingAllocation_DynamicAllocation>
-  <MAP_DataProcessingAllocation_DynamicAllocationTip>开启后，系统根据每个机械族的实时状态（近战接战／征召武器／工作／闲置回落）自动切换特化，并依据预算与优先级自动分配实际额度；正义、隐者、恋人、机械族机械师及无法判断类型者始终保留通用调谐。可在各机械族的详细设置中单独关闭动态分配、调整常态额度、默认模式、最高额度、优先级（1最高→4最低）与检查间隔。关闭某个机械族的动态分配后，其实际额度固定为常态额度、模式恢复默认；全局关闭后保留所有手动选择。</MAP_DataProcessingAllocation_DynamicAllocationTip>
+  <MAP_DataProcessingAllocation_DynamicAllocationTip>开启后，系统根据每个机械族的实时状态（近战接战／征召武器／工作／闲置回落）自动切换特化，并依据预算与优先级自动分配实际额度；正义、隐者、恋人、机械族机械师及无法判断类型者始终保留通用调谐。常态额度是希望保持的目标档数请求，由动态计划在预算内尽量满足（受最高额度与监管者最低意识限制），并非立即生效的硬分配；动态托管目标加减档不受55%绝对保留限制。可在各机械族的详细设置中单独关闭动态分配、调整常态额度、默认模式、最高额度、优先级（1最高→4最低）与检查间隔。关闭某个机械族的动态分配后，其实际额度固定为常态额度、模式恢复默认；全局关闭后保留所有手动选择。</MAP_DataProcessingAllocation_DynamicAllocationTip>
   <MAP_DataProcessingAllocation_DynamicAllocationManualDisabled>已开启动态分配，特化由机械体类型自动决定，无法手动切换。</MAP_DataProcessingAllocation_DynamicAllocationManualDisabled>
   <MAP_DataProcessingAllocation_DynamicAllocationFailed>无法切换动态分配状态。</MAP_DataProcessingAllocation_DynamicAllocationFailed>
   <MAP_DataProcessingAllocation_DynamicSettingsButton>动态分配设置</MAP_DataProcessingAllocation_DynamicSettingsButton>
