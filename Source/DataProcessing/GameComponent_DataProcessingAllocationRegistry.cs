@@ -57,6 +57,11 @@ namespace MAP_MechanoidMechanitor
         private bool pendingPostLoadDynamicReconciliation;
         private int postLoadReconciliationEarliestTick;
 
+        // 全局开关切换（开启/关闭）失败后的重试队列（不写存档），按引用比较避免误判。
+        private HashSet<Pawn> pendingGlobalTransitionOverseers =
+            new HashSet<Pawn>(new ReferencePawnEqualityComparer());
+        private int globalTransitionRetryEarliestTick;
+
         public static GameComponent_DataProcessingAllocationRegistry? CurrentRegistry
         {
             get
@@ -631,26 +636,92 @@ namespace MAP_MechanoidMechanitor
 
             if (enabled)
             {
-                // 开启后立即对所有目标执行一次完整动态计划（含特化校正与额度计算）。
-                RunDynamicPlanForOverseer(overseer);
+                // 开启后清空该监管者运行时缓存，立即对所有目标执行一次完整动态评估与计划。
+                ForceEvaluateAllDynamicTargets(overseer);
             }
             else
             {
                 // 关闭全局动态：所有目标实际额度恢复 normalSteps，特化安全恢复默认模式。
-                // 失败时保留开关状态并返回 true，但记录失败并安排重试（下一 tick 调度器会重算）。
+                // 失败时保留开关状态并返回 true，清空运行时状态并安排后续周期重试。
                 if (!RestoreDefaultsForOverseer(overseer))
                 {
-                    Log.WarningOnce(
-                        "[MAP-机械族机械师] 关闭全局动态分配后恢复默认失败，将在后续周期重试：" +
-                        $"overseer={overseer.LabelShort}（{overseer.ThingID}）。",
-                        unchecked(
-                            DynamicAllocationLogKeyBase
-                            + overseer.thingIDNumber
-                            + 0x200000));
+                    ClearDynamicRuntimeStateForOverseer(overseer);
+                    QueueGlobalTransitionRetry(overseer);
                 }
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 清空指定监管者所有目标的动态运行时评估缓存与下次检查时间（不触碰 Hediff/记录）。
+        /// 用于全局开关关闭失败时放弃本轮部分状态，待重试重新评估。
+        /// </summary>
+        private void ClearDynamicRuntimeStateForOverseer(Pawn overseer)
+        {
+            if (overseer == null || dynamicTargetRecords == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < dynamicTargetRecords.Count; i++)
+            {
+                Pawn? target = dynamicTargetRecords[i]?.target;
+                if (target != null
+                    && FindDynamicTargetRecord(overseer, target) != null)
+                {
+                    cachedDynamicEvaluationByTarget.Remove(target);
+                    nextDynamicCheckTickByTarget.Remove(target);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 排队全局开关切换失败的重试（关闭失败需重跑默认恢复，开启失败需重跑动态计划）。
+        /// </summary>
+        private void QueueGlobalTransitionRetry(Pawn overseer)
+        {
+            if (overseer == null)
+            {
+                return;
+            }
+
+            pendingGlobalTransitionOverseers.Add(overseer);
+            globalTransitionRetryEarliestTick =
+                Mathf.Min(
+                    globalTransitionRetryEarliestTick == 0
+                        ? int.MaxValue
+                        : globalTransitionRetryEarliestTick,
+                    Find.TickManager.TicksGame + 60);
+        }
+
+        /// <summary>
+        /// 清空指定监管者所有目标的动态评估结果缓存，强制下一周期对每个目标重新评估真实状态。
+        /// 用于全局动态开启、读档校正等需要立即刷新的场景，不修改 Hediff 或记录。
+        /// </summary>
+        private void ForceEvaluateAllDynamicTargets(Pawn overseer)
+        {
+            if (overseer == null || dynamicTargetRecords == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < dynamicTargetRecords.Count; i++)
+            {
+                Pawn? target = dynamicTargetRecords[i]?.target;
+                if (target != null
+                    && FindDynamicTargetRecord(overseer, target) != null)
+                {
+                    cachedDynamicEvaluationByTarget.Remove(target);
+                    nextDynamicCheckTickByTarget.Remove(target);
+                }
+            }
+
+            // 缓存清空后由下一周期调度器或即时计划重新评估；此处不立即同步 Hediff。
+            if (IsDynamicAllocationEnabled(overseer))
+            {
+                RunDynamicPlanForOverseer(overseer);
+            }
         }
 
         /// <summary>
@@ -1434,7 +1505,8 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void CleanupInvalidDynamicTargetRecords()
+        private void CleanupInvalidDynamicTargetRecords(
+            HashSet<Pawn>? affectedOverseers = null)
         {
             dynamicTargetRecords ??=
                 new List<DataProcessingDynamicTargetRecord>();
@@ -1456,6 +1528,12 @@ namespace MAP_MechanoidMechanitor
                     || target.Faction == null
                     || !target.Faction.IsPlayerSafe())
                 {
+                    // 失效记录删除：旧监管者需重跑计划以同步仍有效的目标。
+                    if (affectedOverseers != null && record?.overseer != null)
+                    {
+                        affectedOverseers.Add(record.overseer);
+                    }
+
                     RemoveDynamicTargetRecordAt(i);
                     continue;
                 }
@@ -1465,10 +1543,23 @@ namespace MAP_MechanoidMechanitor
                 if (currentOverseer != null
                     && !ReferenceEquals(record.overseer, currentOverseer))
                 {
+                    Pawn? oldOverseer = record.overseer;
+
                     record.overseer = currentOverseer;
 
                     cachedDynamicEvaluationByTarget.Remove(target);
                     nextDynamicCheckTickByTarget.Remove(target);
+
+                    // 迁移：旧监管者（失去目标）与新监管者（接管目标）都需重跑。
+                    if (affectedOverseers != null)
+                    {
+                        if (oldOverseer != null)
+                        {
+                            affectedOverseers.Add(oldOverseer);
+                        }
+
+                        affectedOverseers.Add(currentOverseer);
+                    }
                 }
 
                 // 暂时没有监管者时保留配置，以便以后重新接管时继续使用。
@@ -1477,7 +1568,13 @@ namespace MAP_MechanoidMechanitor
                 if (retainedByTarget.ContainsKey(target))
                 {
                     // 同一 target 出现重复配置（如监管者切换未完成），保留最新有效项，清理重复。
-                    RemoveDynamicTargetRecordAt(i);
+                    // 不清除该目标运行时缓存，保留项仍复用之。
+                    if (affectedOverseers != null && record.overseer != null)
+                    {
+                        affectedOverseers.Add(record.overseer);
+                    }
+
+                    RemoveDynamicTargetRecordAt(i, clearRuntimeState: false);
                     continue;
                 }
 
@@ -1487,14 +1584,14 @@ namespace MAP_MechanoidMechanitor
             RebuildDynamicTargetCaches();
         }
 
-        private void RemoveDynamicTargetRecordAt(int index)
+        private void RemoveDynamicTargetRecordAt(int index, bool clearRuntimeState = true)
         {
             DataProcessingDynamicTargetRecord? record = dynamicTargetRecords[index];
             Pawn? target = record?.target;
 
             dynamicTargetRecords.RemoveAt(index);
 
-            if (target != null)
+            if (target != null && clearRuntimeState)
             {
                 nextDynamicCheckTickByTarget.Remove(target);
                 cachedDynamicEvaluationByTarget.Remove(target);
@@ -1964,25 +2061,31 @@ namespace MAP_MechanoidMechanitor
                     config = GetOrCreateDynamicTargetRecord(overseer, target);
                 }
 
+                // 单体动态关闭：不运行状态评估，实际额度固定为常态额度，模式恢复默认。
+                // 跳过 GetOrEvaluateTarget，避免无谓的实时检查与缓存刷新。
+                if (!config.enabled)
+                {
+                    entries.Add(new PlanEntry
+                    {
+                        target = target,
+                        config = config,
+                        desiredSpecialization = config.defaultSpecialization,
+                        requestedSteps = config.normalSteps,
+                        currentSteps = GetStepsForOverseerTarget(overseer, target),
+                        currentSpecialization =
+                            GetSpecializationForOverseerTarget(overseer, target)
+                    });
+                    continue;
+                }
+
                 DynamicEvaluation evaluation =
                     GetOrEvaluateTarget(config, target);
 
                 DataProcessingSpecialization desiredSpecialization =
                     evaluation.specialization;
-                int requestedSteps;
-
-                if (!config.enabled)
-                {
-                    // 单体动态关闭：实际额度固定为常态额度，当前模式恢复默认模式。
-                    desiredSpecialization = config.defaultSpecialization;
-                    requestedSteps = config.normalSteps;
-                }
-                else
-                {
-                    requestedSteps = evaluation.taskActive
-                        ? config.GetMaxStepsForSpecialization(evaluation.specialization)
-                        : config.normalSteps;
-                }
+                int requestedSteps = evaluation.taskActive
+                    ? config.GetMaxStepsForSpecialization(evaluation.specialization)
+                    : config.normalSteps;
 
                 entries.Add(new PlanEntry
                 {
@@ -2668,7 +2771,8 @@ namespace MAP_MechanoidMechanitor
             EnsureNextPinOrderValid();
         }
 
-        public void CleanupInvalidRecords()
+        public void CleanupInvalidRecords(
+            bool synchronizeHediffs = true)
         {
             HashSet<Pawn> affectedTargets = new HashSet<Pawn>();
             HashSet<Pawn> affectedOverseers = new HashSet<Pawn>();
@@ -2697,27 +2801,35 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            // 批处理：先同步所有受影响监管者负面，再清理目标正面。
-            foreach (Pawn overseer in affectedOverseers)
+            if (synchronizeHediffs)
             {
-                if (overseer != null && !overseer.Destroyed)
+                // 批处理：先同步所有受影响监管者负面，再同步目标正面。
+                foreach (Pawn overseer in affectedOverseers)
                 {
-                    SyncHediffsForOverseer(overseer);
-                }
-            }
-
-            foreach (Pawn target in affectedTargets)
-            {
-                if (target == null || target.Destroyed)
-                {
-                    continue;
+                    if (overseer != null && !overseer.Destroyed)
+                    {
+                        SyncHediffsForOverseer(overseer);
+                    }
                 }
 
-                // 仅当该目标不再有任何分配记录时才清理其正面指令聚焦，
-                // 避免误删仍被其他监管者/关系保有的目标状态（例如自身同时是监管者的情形）。
-                if (!HasAnyAllocationRecordForTarget(target))
+                foreach (Pawn target in affectedTargets)
                 {
-                    RemoveAllCommandFocusHediffs(target);
+                    if (target == null || target.Destroyed)
+                    {
+                        continue;
+                    }
+
+                    // 仍存在合法记录时重新同步正面，不要仅仅“什么也不做”；
+                    // 仅当目标不再有任何分配记录时才清理其正面指令聚焦，
+                    // 避免误删仍被其他监管者/关系保有的目标状态（例如自身同时是监管者的情形）。
+                    if (HasAnyAllocationRecordForTarget(target))
+                    {
+                        SyncHediffForTarget(target);
+                    }
+                    else
+                    {
+                        RemoveAllCommandFocusHediffs(target);
+                    }
                 }
             }
 
@@ -3208,10 +3320,12 @@ namespace MAP_MechanoidMechanitor
                 dynamicAllocationRecords.RemoveAll(record => record == null);
                 dynamicTargetRecords.RemoveAll(record => record == null);
                 RebuildCaches();
-                CleanupInvalidRecords();
+                CleanupInvalidRecords(
+                    synchronizeHediffs: false);
                 CleanupInvalidSpecializationRecords();
                 CleanupInvalidDynamicAllocationRecords();
                 CleanupInvalidDynamicTargetRecords();
+                RebuildCaches();
             }
         }
 
@@ -3241,6 +3355,44 @@ namespace MAP_MechanoidMechanitor
                     // 失败：每 60 tick 重试一次，避免每 tick 反复执行完整恢复与计划。
                     postLoadReconciliationEarliestTick =
                         Find.TickManager.TicksGame + 60;
+                }
+            }
+
+            // 全局开关切换（开启/关闭）失败后的真实重试：每 60 tick 触发一次，
+            // 在意识保护早返回之前处理，确保切换失败不静默卡死。
+            if (pendingGlobalTransitionOverseers.Count > 0
+                && Find.TickManager.TicksGame >= globalTransitionRetryEarliestTick)
+            {
+                globalTransitionRetryEarliestTick = 0;
+                HashSet<Pawn> retryOverseers =
+                    new HashSet<Pawn>(pendingGlobalTransitionOverseers,
+                        new ReferencePawnEqualityComparer());
+                pendingGlobalTransitionOverseers.Clear();
+
+                foreach (Pawn overseer in retryOverseers)
+                {
+                    if (overseer == null || overseer.Destroyed)
+                    {
+                        continue;
+                    }
+
+                    bool ok;
+                    if (IsDynamicAllocationEnabled(overseer))
+                    {
+                        // 开启后重试：立即重新评估所有目标。
+                        ForceEvaluateAllDynamicTargets(overseer);
+                        ok = true;
+                    }
+                    else
+                    {
+                        // 关闭后重试：重新恢复默认常态额度与默认模式。
+                        ok = RestoreDefaultsForOverseer(overseer);
+                    }
+
+                    if (!ok)
+                    {
+                        QueueGlobalTransitionRetry(overseer);
+                    }
                 }
             }
 
@@ -3316,19 +3468,27 @@ namespace MAP_MechanoidMechanitor
                         }
                     }
 
-                    cachedDynamicEvaluationByTarget[target] =
-                        EvaluateTarget(existing, target);
-
-                    nextDynamicCheckTickByTarget[target] =
-                        Find.TickManager.TicksGame
-                        + Mathf.Max(60, existing.checkIntervalTicks);
+                    // 仅对“配置为新接入 / 监管者变更 / 评估缓存缺失”的目标立即重算评估，
+                    // 未变化的目标保留原评估缓存与独立检查间隔，不打断各自错峰调度。
+                    bool needsEvaluate =
+                        !ReferenceEquals(existing.overseer, overseer)
+                        || !cachedDynamicEvaluationByTarget.ContainsKey(target);
+                    if (needsEvaluate)
+                    {
+                        cachedDynamicEvaluationByTarget[target] =
+                            EvaluateTarget(existing, target);
+                        nextDynamicCheckTickByTarget[target] =
+                            Find.TickManager.TicksGame
+                            + Mathf.Max(60, existing.checkIntervalTicks);
+                    }
 
                     affectedOverseers.Add(overseer);
                 }
             }
 
             // 清理失效配置（不依据全局开关是否开启；全局关闭的配置被保留）。
-            CleanupInvalidDynamicTargetRecords();
+            // 传入受影响监管者，使其在删除/迁移后仍同步保留有效目标的运行时缓存。
+            CleanupInvalidDynamicTargetRecords(affectedOverseers);
 
             foreach (Pawn overseer in affectedOverseers)
             {
@@ -3341,71 +3501,48 @@ namespace MAP_MechanoidMechanitor
 
         private bool TryRunPostLoadDynamicReconciliation()
         {
-            // 确认容量与组件可读，避免不安全状态下增删 Hediff。
-            bool anyEnabled = false;
-            for (int i = 0; i < dynamicAllocationRecords.Count; i++)
-            {
-                if (dynamicAllocationRecords[i]?.enabled == true
-                    && dynamicAllocationRecords[i]!.overseer != null
-                    && !dynamicAllocationRecords[i]!.overseer!.Destroyed)
-                {
-                    anyEnabled = true;
-                    break;
-                }
-            }
-
-            if (!anyEnabled)
-            {
-                return true;
-            }
-
-            // 先确保 Hediff 一致性（正面指令聚焦 + 监管者负面数据流分发）。
-            // 读档阶段只恢复正面、不在失败时新建负面。若正面恢复不完整，则本轮不进入动态计划，
-            // 直接返回 false，由 GameComponentTick 降频重试，避免每 tick 反复执行完整恢复。
-            bool positiveRestoreSucceeded = RestoreCommandFocusHediffsAfterLoad();
-            if (!positiveRestoreSucceeded)
+            // 每次重试都先确保正面存在，同时保持所有负面暂时移除。
+            if (!RestoreCommandFocusHediffsAfterLoad())
             {
                 return false;
             }
 
-            // 为每个启用动态分配的目标建立/迁移单体配置；保留已有特化作为默认模式。
-            for (int i = 0; i < dynamicAllocationRecords.Count; i++)
+            HashSet<Pawn> overseers = CollectPostLoadReconciliationOverseers();
+
+            bool allSucceeded = true;
+
+            foreach (Pawn overseer in overseers)
             {
-                DataProcessingDynamicAllocationRecord? rec = dynamicAllocationRecords[i];
-                if (rec?.enabled != true || rec.overseer == null || rec.overseer.Destroyed)
+                if (overseer == null || overseer.Destroyed)
                 {
                     continue;
                 }
 
-                List<Pawn> targets = new List<Pawn>();
-                CollectDynamicAllocationTargets(rec.overseer, targets);
-                for (int j = 0; j < targets.Count; j++)
+                // 意识读取失败则本轮跳过该监管者，留待下次重试。
+                if (!DataProcessingAllocationUtility.TryGetCurrentConsciousness(
+                        overseer,
+                        out _))
                 {
-                    Pawn? target = targets[j];
-                    if (target == null || target.Destroyed)
-                    {
-                        continue;
-                    }
-
-                    GetOrCreateDynamicTargetRecord(rec.overseer, target);
-                }
-            }
-
-            // 确保动态目标的成员关系与评估缓存就绪，避免下一周期首次评估时数据缺失。
-            EnsureDynamicTargetsAndEvaluations();
-
-            bool allSucceeded = true;
-            for (int i = 0; i < dynamicAllocationRecords.Count; i++)
-            {
-                DataProcessingDynamicAllocationRecord? rec = dynamicAllocationRecords[i];
-                if (rec?.enabled != true || rec.overseer == null || rec.overseer.Destroyed)
-                {
+                    allSucceeded = false;
                     continue;
                 }
 
                 try
                 {
-                    if (!RunDynamicPlanForOverseer(rec.overseer))
+                    bool succeeded;
+
+                    if (IsDynamicAllocationEnabled(overseer))
+                    {
+                        ForceEvaluateAllDynamicTargets(overseer);
+
+                        succeeded = RunDynamicPlanForOverseer(overseer);
+                    }
+                    else
+                    {
+                        succeeded = TryReconcileNonDynamicOverseerAfterLoad(overseer);
+                    }
+
+                    if (!succeeded)
                     {
                         allSucceeded = false;
                     }
@@ -3414,50 +3551,187 @@ namespace MAP_MechanoidMechanitor
                 {
                     allSucceeded = false;
                     Log.ErrorOnce(
-                        "[MAP-机械族机械师] 读档后动态校正失败：" +
-                        $"overseer={rec.overseer.LabelShort}（{rec.overseer.ThingID}）：{ex}",
-                        unchecked(DynamicAllocationLogKeyBase + rec.overseer.thingIDNumber));
+                        "[MAP-机械族机械师] 读档后数据处理校正失败：" +
+                        $"overseer={overseer.LabelShort}" +
+                        $"（{overseer.ThingID}）：{ex}",
+                        unchecked(
+                            DynamicAllocationLogKeyBase
+                            + overseer.thingIDNumber));
                 }
             }
 
             return allSucceeded;
         }
 
+        /// <summary>
+        /// 收集所有需要读档后校正的监管者：包含有分配记录的监管者、有动态全局记录的监管者，
+        /// 以及仍残留 DataStreamDistribution 的玩家机械族机械师（可能已无记录）。
+        /// </summary>
+        private HashSet<Pawn> CollectPostLoadReconciliationOverseers()
+        {
+            HashSet<Pawn> result =
+                new HashSet<Pawn>(new ReferencePawnEqualityComparer());
+
+            for (int i = 0; i < records.Count; i++)
+            {
+                Pawn? overseer = records[i]?.overseer;
+                if (overseer != null && !overseer.Destroyed)
+                {
+                    result.Add(overseer);
+                }
+            }
+
+            for (int i = 0; i < dynamicAllocationRecords.Count; i++)
+            {
+                Pawn? overseer = dynamicAllocationRecords[i]?.overseer;
+                if (overseer != null && !overseer.Destroyed)
+                {
+                    result.Add(overseer);
+                }
+            }
+
+            // 把仍残留 DataStreamDistribution 但可能已经没有记录的监管者也纳入。
+            CollectOverseersNeedingDataStreamResync(result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// 处理未开启动态分配（纯手动或全局动态关闭）的监管者：
+        /// 以保存的单体动态配置（normalSteps / defaultSpecialization / priority）或当前实际档数与特化
+        /// 作为固定请求，在 50% 绝对安全线内安全恢复正面、负面、实际额度与默认模式。
+        /// 临时配置不写入存档，也不调用 GetOrCreateDynamicTargetRecord（除非本就存在配置）。
+        /// </summary>
+        private bool TryReconcileNonDynamicOverseerAfterLoad(Pawn overseer)
+        {
+            if (overseer == null || overseer.Destroyed)
+            {
+                return false;
+            }
+
+            HashSet<Pawn> targets =
+                new HashSet<Pawn>(new ReferencePawnEqualityComparer());
+
+            if (recordsByOverseer.TryGetValue(
+                    overseer,
+                    out List<DataProcessingAllocationRecord>? overseerRecords))
+            {
+                for (int i = 0; i < overseerRecords.Count; i++)
+                {
+                    Pawn? target = overseerRecords[i]?.target;
+                    if (target != null && !target.Destroyed)
+                    {
+                        targets.Add(target);
+                    }
+                }
+            }
+
+            for (int i = 0; i < dynamicTargetRecords.Count; i++)
+            {
+                DataProcessingDynamicTargetRecord? config = dynamicTargetRecords[i];
+                if (config?.target != null
+                    && ReferenceEquals(config.overseer, overseer)
+                    && !config.target.Destroyed
+                    && DataProcessingAllocationUtility.IsValidAllocationPair(
+                        overseer,
+                        config.target))
+                {
+                    targets.Add(config.target);
+                }
+            }
+
+            if (targets.Count == 0)
+            {
+                RemoveHediff(
+                    overseer,
+                    DataProcessingAllocationUtility.DataStreamDistributionDef);
+                return true;
+            }
+
+            List<PlanEntry> entries = new List<PlanEntry>();
+
+            foreach (Pawn target in targets)
+            {
+                int currentSteps = GetStepsForOverseerTarget(overseer, target);
+                DataProcessingSpecialization currentSpecialization =
+                    GetSpecializationForOverseerTarget(overseer, target);
+
+                DataProcessingDynamicTargetRecord? savedConfig =
+                    FindDynamicTargetRecord(overseer, target);
+
+                DataProcessingDynamicTargetRecord planConfig;
+
+                if (savedConfig != null)
+                {
+                    planConfig = savedConfig;
+                }
+                else
+                {
+                    // 仅用于这次计划的临时配置，不加入 dynamicTargetRecords，不持久化。
+                    planConfig = new DataProcessingDynamicTargetRecord(
+                        overseer,
+                        target,
+                        currentSteps,
+                        currentSpecialization);
+                    planConfig.enabled = false;
+                    planConfig.priority = 3;
+                    planConfig.Normalize();
+                }
+
+                entries.Add(new PlanEntry
+                {
+                    target = target,
+                    config = planConfig,
+                    desiredSpecialization =
+                        savedConfig != null
+                            ? savedConfig.defaultSpecialization
+                            : currentSpecialization,
+                    requestedSteps =
+                        savedConfig != null
+                            ? savedConfig.normalSteps
+                            : currentSteps,
+                    currentSteps = currentSteps,
+                    currentSpecialization = currentSpecialization
+                });
+            }
+
+            return ApplyDynamicPlan(
+                overseer,
+                entries,
+                treatAllEntriesAsFixed: true);
+        }
+
         public override void LoadedGame()
         {
             base.LoadedGame();
-            CleanupInvalidRecords();
+
+            // 仅清理失效记录，不触碰 Hediff（同步交由 RestoreCommandFocusHediffsAfterLoad）。
+            CleanupInvalidRecords(synchronizeHediffs: false);
             CleanupInvalidSpecializationRecords();
+            CleanupInvalidDynamicAllocationRecords();
+            CleanupInvalidDynamicTargetRecords();
             RebuildCaches();
 
-            // 读档后优先做一次 Hediff 一致性恢复（正面指令聚焦 + 监管者负面数据流分发）。
-            // 真正恢复失败（意识不足无法支撑当前分配）时不立即清除待校正标记，
-            // 交由下一周期动态校正重试，避免读档瞬间因负值返还缺失而致死。
+            // 读档阶段统一暂时移除所有相关负面（安全），再恢复正面指令聚焦。
+            // 失败时延迟更久重试，避免读档瞬间因负值返还缺失而致死。
             bool initialRestoreSucceeded = RestoreCommandFocusHediffsAfterLoad();
 
-            // 读档后清空运行时评估缓存，强制下一周期重新评估真实状态。
+            // 读档后清空运行时评估缓存，强制下一周期按各自检查间隔重新评估真实状态。
             cachedDynamicEvaluationByTarget.Clear();
             nextDynamicCheckTickByTarget.Clear();
 
-            // 设置读档后统一动态校正标记，下一实际 tick 再批量校正，避免立即旧版静态分类覆盖。
-            // 初始 Hediff 恢复已成功时仍可再跑一轮动态重算，确保配置与运行状态一致。
+            // 设置读档后统一动态校正标记：下一实际 tick 再批量校正，
+            // 避免立即旧版静态分类覆盖玩家选择。
             pendingPostLoadDynamicReconciliation = true;
-            postLoadReconciliationEarliestTick = Find.TickManager.TicksGame + 1;
+            postLoadReconciliationEarliestTick =
+                Find.TickManager.TicksGame + (initialRestoreSucceeded ? 1 : 60);
         }
 
         /// <summary>
         /// 仅在载入存档流程中调用：安全恢复指令聚焦。
-        /// 先确保每个正数目标拥有正确指令聚焦（按真实记录档数），再建立监管者负面数据流分发；
-        /// 只要有一个目标的正面恢复不完整（档数无法落到 Hediff 上），就直接移除该监管者
-        /// 的整个负面数据流分发，避免读档瞬间因负值返还缺失而致死。
-        /// 不根据身份重新判断正义/隐者/恋人的默认模式。
-        /// 返回是否所有监管者的负面分配都能被当前意识支撑（即恢复完整）。
-        /// </summary>
-        /// <summary>
-        /// 仅在载入存档流程中调用：安全恢复指令聚焦。
-        /// 读档阶段只允许：确保正面指令聚焦存在、先加正确正面再清理旧正面、正面失败时移除负面、
-        /// 保留现有负面；不得新建或提高负面数据流分发。完整负面由下一实际 tick 的安全计划恢复。
-        /// 返回是否所有正面指令聚焦都成功恢复（失败时不静默，交由动态校正重试）。
+        /// 读档阶段统一暂时移除所有相关监管者的负面数据流分发（移除只会提高意识，绝对安全），
+        /// 再恢复各目标的正面指令聚焦。本方法绝对不得重新添加或提高负面，
+        /// 完整负面由下一实际 tick 的安全计划恢复。返回是否所有正面都成功恢复。
         /// </summary>
         private bool RestoreCommandFocusHediffsAfterLoad()
         {
@@ -3466,10 +3740,28 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            bool allSucceeded = true;
+            // 收集所有有效分配记录中的监管者，读档阶段统一暂时移除其负面。
+            HashSet<Pawn> overseers =
+                new HashSet<Pawn>(new ReferencePawnEqualityComparer());
+            for (int i = 0; i < records.Count; i++)
+            {
+                Pawn? overseer = records[i]?.overseer;
+                if (overseer != null && !overseer.Destroyed)
+                {
+                    overseers.Add(overseer);
+                }
+            }
 
-            Dictionary<Pawn, bool> positiveReadyByOverseer =
-                new Dictionary<Pawn, bool>(new ReferencePawnEqualityComparer());
+            // 移除负面只会提高意识，不会导致读档死亡；下一 tick 再按安全预算恢复。
+            foreach (Pawn overseer in overseers)
+            {
+                RemoveHediff(
+                    overseer,
+                    DataProcessingAllocationUtility
+                        .DataStreamDistributionDef);
+            }
+
+            bool allSucceeded = true;
 
             for (int i = 0; i < records.Count; i++)
             {
@@ -3487,11 +3779,6 @@ namespace MAP_MechanoidMechanitor
                 Pawn overseer = record.overseer;
                 Pawn target = record.target;
 
-                if (!positiveReadyByOverseer.ContainsKey(overseer))
-                {
-                    positiveReadyByOverseer[overseer] = true;
-                }
-
                 bool restored =
                     TryApplyCommandFocusHediffForTarget(
                         target,
@@ -3499,13 +3786,9 @@ namespace MAP_MechanoidMechanitor
                         record.steps,
                         cleanupOtherCommandFocusHediffs: true);
 
-                bool hasUsablePositive =
-                    restored
-                    || HasAnyCommandFocusHediff(target);
-
-                if (!hasUsablePositive)
+                if (!restored
+                    && !HasAnyCommandFocusHediff(target))
                 {
-                    positiveReadyByOverseer[overseer] = false;
                     allSucceeded = false;
 
                     Log.ErrorOnce(
@@ -3518,29 +3801,9 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            foreach (KeyValuePair<Pawn, bool> pair in positiveReadyByOverseer)
-            {
-                Pawn overseer = pair.Key;
-
-                if (overseer == null || overseer.Destroyed)
-                {
-                    continue;
-                }
-
-                if (!pair.Value)
-                {
-                    // 正面恢复不完整：移除负面是安全操作，交由后续安全计划重建。
-                    RemoveHediff(
-                        overseer,
-                        DataProcessingAllocationUtility
-                            .DataStreamDistributionDef);
-                }
-
-                // pair.Value == true 时：不新增、不提高负面，
-                // 完整负面由下一实际 tick 的安全计划恢复。
-            }
-
             ScrubResidualOrphanCommandFocusHediffs();
+
+            // 此方法绝对不得重新添加负面。
             return allSucceeded;
         }
 
