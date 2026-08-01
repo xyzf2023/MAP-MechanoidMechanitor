@@ -110,7 +110,7 @@ namespace MAP_MechanoidMechanitor
             y += 48f;
 
             Rect scrollRect = new Rect(rect.x, y, rect.width, rect.yMax - y);
-            float viewHeight = 460f;
+            float viewHeight = Prefs.DevMode ? 640f : 460f;
             Rect viewRect = new Rect(0f, 0f, scrollRect.width - 16f, Mathf.Max(viewHeight, scrollRect.height));
             Widgets.BeginScrollView(scrollRect, ref detailScrollPosition, viewRect);
             try
