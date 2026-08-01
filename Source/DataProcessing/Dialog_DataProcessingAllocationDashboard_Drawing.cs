@@ -363,7 +363,7 @@ namespace MAP_MechanoidMechanitor
                 label,
                 DashboardButtonStyle.Compact,
                 selected: false,
-                enabled,
+                enabled: enabled,
                 font: GameFont.Small);
         }
 
@@ -374,7 +374,7 @@ namespace MAP_MechanoidMechanitor
                 label,
                 DashboardButtonStyle.Danger,
                 selected: false,
-                enabled);
+                enabled: enabled);
         }
 
         private static void Solid(Rect rect, Color color)
