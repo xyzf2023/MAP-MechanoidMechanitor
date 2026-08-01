@@ -56,7 +56,8 @@ namespace MAP_MechanoidMechanitor
                 icon = DataProcessingAllocationIcon,
                 action = delegate
                 {
-                    Find.WindowStack.Add(new Dialog_DataProcessingAllocation(localOverseer));
+                    Find.WindowStack.Add(
+                        new Dialog_DataProcessingAllocationMatrix(localOverseer));
                 }
             };
         }
