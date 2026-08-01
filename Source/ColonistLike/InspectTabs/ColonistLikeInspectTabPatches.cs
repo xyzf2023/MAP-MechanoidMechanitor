@@ -125,8 +125,9 @@ namespace MAP_MechanoidMechanitor
             bool addCharacter = ColonistLikeInspectTabUtility.ShouldShowCharacterTab(pawn);
             bool addSocial = ColonistLikeInspectTabUtility.ShouldAddSocialTab(pawn);
             bool addGear = ColonistLikeInspectTabUtility.ShouldAddGearTab(pawn);
-            bool addFormingCaravan =
-                ColonistLikeInspectTabUtility.ShouldAddFormingCaravanTab(pawn);
+            // 原版远行队页签只通过 SelPawn 取目标，不支持 Corpse.InnerPawn。
+            bool addFormingCaravan = __instance is Pawn
+                && ColonistLikeInspectTabUtility.ShouldAddFormingCaravanTab(pawn);
             bool addGenes = ColonistLikeInspectTabUtility.ShouldAddGeneTabs(pawn);
 
             if (!addCharacter
