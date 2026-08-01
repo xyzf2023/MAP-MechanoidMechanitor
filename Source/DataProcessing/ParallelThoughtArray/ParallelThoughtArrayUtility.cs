@@ -149,10 +149,13 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                for (int j = 0; j < buildings.Count; j++)
+                // 先创建快照，避免在遍历中修改建筑目标导致列表结构变化。
+                List<Building> snapshot =
+                    new List<Building>(buildings);
+                for (int j = 0; j < snapshot.Count; j++)
                 {
                     CompParallelThoughtArray? comp =
-                        buildings[j].TryGetComp<CompParallelThoughtArray>();
+                        snapshot[j].TryGetComp<CompParallelThoughtArray>();
                     comp?.ClearTargetFromExternalInvalidation(target);
                 }
             }

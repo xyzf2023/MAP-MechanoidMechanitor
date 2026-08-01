@@ -17,6 +17,7 @@ namespace MAP_MechanoidMechanitor
         private CompPowerTrader? powerTrader;
         private int lastEffectiveBoostPercent;
         private int fallbackTickCounter;
+        private bool removalCleanupCompleted;
 
         private CompProperties_ParallelThoughtArray Props
             => (CompProperties_ParallelThoughtArray)props;
@@ -29,9 +30,7 @@ namespace MAP_MechanoidMechanitor
             => IsOperating ? configuredBoostPercent : 0;
 
         public float RequestedPowerConsumption
-            => target != null && IsTargetValid
-                ? ParallelThoughtArrayUtility.GetPowerConsumptionForBoost(configuredBoostPercent)
-                : Props.idlePowerConsumption;
+            => CalculateRequestedPowerConsumption();
 
         public bool IsTargetValid
             => target != null
@@ -58,27 +57,20 @@ namespace MAP_MechanoidMechanitor
             base.PostExposeData();
             Scribe_References.Look(ref target, "target");
             Scribe_Values.Look(ref configuredBoostPercent, "configuredBoostPercent", ParallelThoughtArrayUtility.MinBoostPercent);
-
-            // 存档中出现异常档位时自动规范化。
-            if (Scribe.mode == LoadSaveMode.PostLoadInit)
-            {
-                configuredBoostPercent = ParallelThoughtArrayUtility.ClampBoostPercent(configuredBoostPercent);
-            }
+            configuredBoostPercent = ClampConfiguredBoostPercent(configuredBoostPercent);
         }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
+            removalCleanupCompleted = false;
             powerTrader = parent.TryGetComp<CompPowerTrader>();
-            configuredBoostPercent = ParallelThoughtArrayUtility.ClampBoostPercent(configuredBoostPercent);
+            configuredBoostPercent = ClampConfiguredBoostPercent(configuredBoostPercent);
             UpdateRequestedPowerDraw();
             lastEffectiveBoostPercent = EffectiveBoostPercent;
 
-            // 读档生成时不进行危险的全局大规模清理，依靠后续 60 tick 兜底刷新修正。
-            if (!respawningAfterLoad)
-            {
-                ReevaluateOperatingState(false);
-            }
+            // 读档后也必须在下一次实际 tick 完成状态校正，不要因 respawningAfterLoad 永久跳过。
+            ReevaluateOperatingState(true);
         }
 
         public override void PostDeSpawn(Map map, DestroyMode mode = DestroyMode.Vanish)
@@ -95,19 +87,52 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         ///     建筑移除（拆除/摧毁）时只执行一次回收与清理。
+        ///     此时 parent.Spawned 已为 false，EffectiveBoostPercent/IsOperating/IsProvidingBoostTo
+        ///     全部不可用于判断移除前是否正在提供增幅，必须依靠 lastEffectiveBoostPercent。
         /// </summary>
         private void HandleRemovalCleanup()
         {
-            Pawn? old = target;
-            if (old != null && IsProvidingBoostTo(old))
+            if (removalCleanupCompleted)
             {
-                ReclaimConsciousnessLoss(old, EffectiveBoostPercent / 100f);
+                return;
+            }
+
+            removalCleanupCompleted = true;
+
+            Pawn? oldTarget = target;
+            int lostBoostPercent = Mathf.Max(0, lastEffectiveBoostPercent);
+
+            if (oldTarget != null && lostBoostPercent > 0)
+            {
+                ReclaimConsciousnessLoss(
+                    oldTarget,
+                    lostBoostPercent / 100f);
             }
 
             target = null;
-            if (old != null)
+            lastEffectiveBoostPercent = 0;
+            fallbackTickCounter = 0;
+
+            if (oldTarget != null && !oldTarget.Destroyed)
             {
-                ParallelThoughtArrayUtility.RefreshTargetDynamicConsciousness(old);
+                ParallelThoughtArrayUtility
+                    .RefreshTargetDynamicConsciousness(oldTarget);
+            }
+        }
+
+        public override void ReceiveCompSignal(string signal)
+        {
+            base.ReceiveCompSignal(signal);
+
+            switch (signal)
+            {
+                case "PowerTurnedOn":
+                case "PowerTurnedOff":
+                case "FlickedOn":
+                case "FlickedOff":
+                case "Breakdown":
+                    ReevaluateOperatingState(true);
+                    break;
             }
         }
 
@@ -147,26 +172,25 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            int oldEffective = lastEffectiveBoostPercent;
             int newEffective = EffectiveBoostPercent;
-            if (newEffective < lastEffectiveBoostPercent)
+
+            if (newEffective < oldEffective && target != null)
             {
-                // 增幅下降：先安全回收超额分配，再刷新健康状态。
-                if (target != null)
-                {
-                    float lost = (lastEffectiveBoostPercent - newEffective) / 100f;
-                    ReclaimConsciousnessLoss(target, lost);
-                }
+                float lost =
+                    (oldEffective - newEffective) / 100f;
+
+                ReclaimConsciousnessLoss(target, lost);
             }
 
             lastEffectiveBoostPercent = newEffective;
 
-            if (target != null && newEffective > 0)
+            if (target != null
+                && (forceRefresh
+                    || newEffective != oldEffective))
             {
-                ParallelThoughtArrayUtility.RefreshTargetDynamicConsciousness(target);
-            }
-            else if (forceRefresh && target != null)
-            {
-                ParallelThoughtArrayUtility.RefreshTargetDynamicConsciousness(target);
+                ParallelThoughtArrayUtility
+                    .RefreshTargetDynamicConsciousness(target);
             }
         }
 
@@ -175,19 +199,34 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         private void HandlePermanentInvalidation(Pawn invalidTarget)
         {
-            Pawn? old = target;
-            if (old != null && IsProvidingBoostTo(old))
+            Pawn? oldTarget = target;
+            int lostBoostPercent = Mathf.Max(0, lastEffectiveBoostPercent);
+
+            if (oldTarget != null && lostBoostPercent > 0)
             {
-                ReclaimConsciousnessLoss(old, EffectiveBoostPercent / 100f);
+                ReclaimConsciousnessLoss(
+                    oldTarget,
+                    lostBoostPercent / 100f);
+            }
+
+            GameComponent_DataProcessingAllocationRegistry? registry =
+                GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
+
+            if (oldTarget != null)
+            {
+                registry?.ClearOverseer(oldTarget);
             }
 
             target = null;
             lastEffectiveBoostPercent = 0;
+            fallbackTickCounter = 0;
+
             UpdateRequestedPowerDraw();
 
-            if (old != null)
+            if (oldTarget != null && !oldTarget.Destroyed)
             {
-                ParallelThoughtArrayUtility.RefreshTargetDynamicConsciousness(old);
+                ParallelThoughtArrayUtility
+                    .RefreshTargetDynamicConsciousness(oldTarget);
             }
         }
 
@@ -317,28 +356,75 @@ namespace MAP_MechanoidMechanitor
 
         private void AdjustBoost(int delta)
         {
-            int next = ParallelThoughtArrayUtility.ClampBoostPercent(configuredBoostPercent + delta);
+            int next =
+                ClampConfiguredBoostPercent(
+                    configuredBoostPercent + delta);
+
             if (next == configuredBoostPercent)
             {
                 return;
             }
 
-            Pawn? old = target;
-            if (old != null && IsOperating && delta < 0)
-            {
-                // 降档且正在运行：先回收超额分配，再刷新。
-                float lost = (configuredBoostPercent - next) / 100f;
-                ReclaimConsciousnessLoss(old, lost);
-            }
+            Pawn? currentTarget = target;
+            int oldEffective = lastEffectiveBoostPercent;
 
             configuredBoostPercent = next;
             UpdateRequestedPowerDraw();
-            lastEffectiveBoostPercent = EffectiveBoostPercent;
 
-            if (old != null)
+            int newEffective = EffectiveBoostPercent;
+
+            if (currentTarget != null
+                && newEffective < oldEffective)
             {
-                ParallelThoughtArrayUtility.RefreshTargetDynamicConsciousness(old);
+                ReclaimConsciousnessLoss(
+                    currentTarget,
+                    (oldEffective - newEffective) / 100f);
             }
+
+            lastEffectiveBoostPercent = newEffective;
+
+            if (currentTarget != null
+                && !currentTarget.Destroyed)
+            {
+                ParallelThoughtArrayUtility
+                    .RefreshTargetDynamicConsciousness(
+                        currentTarget);
+            }
+        }
+
+        private int ClampConfiguredBoostPercent(int value)
+        {
+            int min = Props.minBoostPercent;
+            int max = Props.maxBoostPercent;
+            int step = Mathf.Max(1, Props.boostStepPercent);
+
+            int clamped = Mathf.Clamp(value, min, max);
+            int relative = clamped - min;
+            int alignedSteps =
+                Mathf.RoundToInt(relative / (float)step);
+
+            return Mathf.Clamp(
+                min + alignedSteps * step,
+                min,
+                max);
+        }
+
+        private float CalculateRequestedPowerConsumption()
+        {
+            if (target == null || !IsTargetValid)
+            {
+                return Props.idlePowerConsumption;
+            }
+
+            int step = Mathf.Max(1, Props.boostStepPercent);
+            int boostSteps =
+                Mathf.Max(
+                    0,
+                    (configuredBoostPercent
+                        - Props.minBoostPercent) / step);
+
+            return Props.basePowerConsumption
+                + boostSteps * Props.powerPerBoostStep;
         }
 
         /// <summary>
@@ -346,27 +432,32 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public void SetTarget(Pawn? newTarget)
         {
-            Pawn? old = target;
+            Pawn? oldTarget = target;
+            int oldEffectiveBoost = Mathf.Max(
+                0,
+                lastEffectiveBoostPercent);
 
-            if (old != null && IsProvidingBoostTo(old))
+            if (oldTarget != null && oldEffectiveBoost > 0)
             {
-                ReclaimConsciousnessLoss(old, EffectiveBoostPercent / 100f);
+                ReclaimConsciousnessLoss(
+                    oldTarget,
+                    oldEffectiveBoost / 100f);
             }
 
             target = null;
-            if (old != null)
+            lastEffectiveBoostPercent = 0;
+
+            if (oldTarget != null && !oldTarget.Destroyed)
             {
-                ParallelThoughtArrayUtility.RefreshTargetDynamicConsciousness(old);
+                ParallelThoughtArrayUtility
+                    .RefreshTargetDynamicConsciousness(oldTarget);
             }
 
             target = newTarget;
+            fallbackTickCounter = 0;
+
             UpdateRequestedPowerDraw();
             ReevaluateOperatingState(true);
-
-            if (newTarget != null)
-            {
-                ParallelThoughtArrayUtility.RefreshTargetDynamicConsciousness(newTarget);
-            }
         }
 
         /// <summary>

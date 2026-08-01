@@ -20,10 +20,7 @@
     <levelIsQuantity>false</levelIsQuantity>
     <duplicationAllowed>false</duplicationAllowed>
     <descriptionHyperlinks>
-      <li>
-        <key>MAP_ParallelThoughtInterface</key>
-        <thing>MAP_ParallelThoughtInterface</thing>
-      </li>
+      <ThingDef>MAP_ParallelThoughtInterface</ThingDef>
     </descriptionHyperlinks>
   </HediffDef>
 

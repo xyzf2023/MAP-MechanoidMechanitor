@@ -7,16 +7,13 @@
 
 安装后，该机械师可以成为并行思维阵列的增幅目标，并能够使用数据处理分配功能。接口本身不提供意识增幅。</description>
     <descriptionHyperlinks>
-      <li>
-        <key>MAP_ParallelThoughtInterface</key>
-        <hediff>MAP_ParallelThoughtInterface</hediff>
-      </li>
+      <HediffDef>MAP_ParallelThoughtInterface</HediffDef>
     </descriptionHyperlinks>
-    <maxInstallCount>1</maxInstallCount>
     <statBases>
       <MarketValue>3000</MarketValue>
       <Mass>0.01</Mass>
       <WorkToMake>18000</WorkToMake>
+      <MaxInstallCount>1</MaxInstallCount>
     </statBases>
     <recipeMaker>
       <researchPrerequisite>MAP_ParallelThoughtMatrix</researchPrerequisite>

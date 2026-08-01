@@ -11,32 +11,54 @@ namespace MAP_MechanoidMechanitor
     {
         protected override float CalculateConsciousnessOffset()
         {
-            return ParallelThoughtArrayUtility.GetTotalActiveConsciousnessOffset(pawn);
+            if (pawn == null
+                || !pawn.RaceProps.Humanlike
+                || pawn.RaceProps.IsMechanoid)
+            {
+                return 0f;
+            }
+
+            return ParallelThoughtArrayUtility
+                .GetTotalActiveConsciousnessOffset(pawn);
         }
 
         protected override int GetStageVariantKey()
         {
-            return ParallelThoughtArrayUtility.GetTotalActiveBoostPercent(pawn);
+            if (pawn == null
+                || !pawn.RaceProps.Humanlike
+                || pawn.RaceProps.IsMechanoid)
+            {
+                return 0;
+            }
+
+            return ParallelThoughtArrayUtility
+                .GetTotalActiveBoostPercent(pawn);
         }
 
+        // 接口移除后，该 Pawn 已不再具备意识分配资格。
+        // 清除其全部实际分配、相关正负 Hediff、特化记录与动态配置。
         public override void PostRemoved()
         {
             Pawn? localPawn = pawn;
+
             base.PostRemoved();
 
-            if (localPawn == null || localPawn.Destroyed)
+            if (localPawn == null
+                || localPawn.Destroyed)
             {
                 return;
             }
 
-            // 清理实际分配（保留配置），移除负向数据流分发与各目标正向指令聚焦。
-            GameComponent_DataProcessingAllocationRegistry.CurrentRegistry?.ClearOverseer(localPawn);
+            GameComponent_DataProcessingAllocationRegistry
+                .CurrentRegistry?
+                .ClearOverseer(localPawn);
 
-            // 解除所有阵列对该 Pawn 的连接（建筑回到待机，并触发安全回收）。
-            ParallelThoughtArrayUtility.ClearAllArrayTargetsFor(localPawn);
+            ParallelThoughtArrayUtility
+                .ClearAllArrayTargetsFor(localPawn);
 
-            // 刷新 Pawn 动态意识，使阵列加成从本 Hediff 中移除。
-            ParallelThoughtArrayUtility.RefreshTargetDynamicConsciousness(localPawn);
+            ParallelThoughtArrayUtility
+                .RefreshTargetDynamicConsciousness(
+                    localPawn);
         }
     }
 }

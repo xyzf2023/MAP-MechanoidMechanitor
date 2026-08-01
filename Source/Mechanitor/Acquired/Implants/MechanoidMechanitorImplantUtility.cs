@@ -18,6 +18,16 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsSupportedMechanitorImplant(Thing? implant)
         {
+            if (implant == null)
+            {
+                return false;
+            }
+
+            if (implant.def == MAPMechanitor_ThingDefOf.MAP_ParallelThoughtInterface)
+            {
+                return false;
+            }
+
             if (implant is not ThingWithComps thingWithComps)
             {
                 return false;

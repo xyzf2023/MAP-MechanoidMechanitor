@@ -8,9 +8,15 @@
     <description>一座由大量量子运算模块组成的外置思维设施。阵列能够与指定机械师建立持续同步连接，在外部并行处理其意识活动与控制数据，并将运算结果实时反馈给目标。
 
 对机械族机械师而言，这会增加其可用于分配的数据处理能力；对安装了并行思维接口的人类机械师而言，则会直接扩展其意识处理能力。提高阵列的运算强度会同时提高增幅效果与电力消耗。</description>
-    <texPath>Things/Building/Misc/BandNode</texPath>
-    <graphicClass>Graphic_Single</graphicClass>
-    <drawSize>(2,2)</drawSize>
+    <graphicData>
+      <texPath>Things/Building/Misc/BandNode</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(2,2)</drawSize>
+      <shadowData>
+        <volume>(1.5,0.35,1.2)</volume>
+        <offset>(0,0,-0.15)</offset>
+      </shadowData>
+    </graphicData>
     <altitudeLayer>Building</altitudeLayer>
     <passability>PassThroughOnly</passability>
     <fillPercent>0.7</fillPercent>
@@ -55,6 +61,12 @@
       </li>
       <li Class="CompProperties_Flickable" />
       <li Class="CompProperties_Breakdownable" />
+      <li Class="CompProperties_Stunnable">
+        <useLargeEMPEffecter>true</useLargeEMPEffecter>
+        <affectedDamageDefs>
+          <li>EMP</li>
+        </affectedDamageDefs>
+      </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ParallelThoughtArray">
         <minBoostPercent>100</minBoostPercent>
         <maxBoostPercent>300</maxBoostPercent>

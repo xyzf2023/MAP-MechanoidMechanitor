@@ -4383,12 +4383,17 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            IReadOnlyList<Pawn> mechanitors =
-                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
-            for (int i = 0; i < mechanitors.Count; i++)
+            // 周期意识保护必须覆盖所有实际拥有正数分配记录的监管者：
+            // 先天机械族机械师、后天机械族机械师、安装并行思维接口的人类机械师。
+            // 先创建快照，避免在保护过程中删除分配记录时修改字典。
+            List<Pawn> overseers =
+                new List<Pawn>(recordsByOverseer.Keys);
+            for (int i = 0; i < overseers.Count; i++)
             {
-                Pawn overseer = mechanitors[i];
-                if (overseer == null || overseer.Destroyed)
+                Pawn overseer = overseers[i];
+                if (overseer == null
+                    || overseer.Dead
+                    || overseer.Destroyed)
                 {
                     continue;
                 }
@@ -4404,60 +4409,75 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public void PrepareForExternalConsciousnessLoss(Pawn? overseer, float consciousnessOffsetLoss)
         {
-            if (overseer == null || overseer.Dead || overseer.Destroyed)
+            if (overseer == null
+                || overseer.Dead
+                || overseer.Destroyed
+                || consciousnessOffsetLoss <= 0f)
             {
                 return;
             }
 
-            if (consciousnessOffsetLoss <= 0f)
+            bool safelyPrepared = false;
+
+            try
+            {
+                safelyPrepared =
+                    ProtectOverseerConsciousness(
+                        overseer,
+                        consciousnessOffsetLoss);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] " +
+                    "并行思维阵列外部意识回收失败：" +
+                    $"overseer={overseer.LabelShortCap}，" +
+                    $"{ex}");
+            }
+
+            if (safelyPrepared)
             {
                 return;
             }
 
             try
             {
-                ProtectOverseerConsciousness(overseer, consciousnessOffsetLoss);
+                ClearOverseerActualAllocations(overseer);
+                DynamicConsciousnessBonusUtility
+                    .RefreshForPawn(overseer);
             }
             catch (Exception ex)
             {
                 Log.Error(
-                    $"[MAP-MechanoidMechanitor] 并行思维阵列外部意识回收失败，监管者={overseer.LabelShortCap}：{ex}");
-                // 保守兜底：仅把实际分配降为 0，尽量保留配置，避免监管者处于危险状态。
-                try
-                {
-                    ClearOverseerActualAllocations(overseer);
-                    DynamicConsciousnessBonusUtility.RefreshForPawn(overseer);
-                }
-                catch (Exception ex2)
-                {
-                    Log.Error(
-                        $"[MAP-MechanoidMechanitor] 并行思维阵列保守意识回收也失败，监管者={overseer.LabelShortCap}：{ex2}");
-                }
+                    "[MAP-机械族机械师] " +
+                    "并行思维阵列保守意识回收失败：" +
+                    $"overseer={overseer.LabelShortCap}，" +
+                    $"{ex}");
             }
         }
 
         /// <summary>
         ///     对单个监管者执行意识保护：以（当前意识 - 预期外部损失）为起点，安全回收分配至 >= 50% 意识。
+        ///     返回 true 表示已安全（无分配 / 无需回收 / 成功回收 / 无法读取时交由调用方兜底）。
         /// </summary>
-        private void ProtectOverseerConsciousness(Pawn overseer, float anticipatedExternalLoss = 0f)
+        private bool ProtectOverseerConsciousness(Pawn overseer, float anticipatedExternalLoss = 0f)
         {
             if (GetTotalStepsForOverseer(overseer) <= 0)
             {
-                return;
+                return true;
             }
 
             if (!DataProcessingAllocationUtility.TryGetCurrentConsciousness(
                     overseer,
                     out float consciousness))
             {
-                // 读取失败不得误判为意识归零；等待下一周期重试。
-                return;
+                return false;
             }
 
             // 以（当前意识 - 预期外部损失）作为规划起点，决定是否仍需回收。
             if (consciousness - anticipatedExternalLoss >= DataProcessingAllocationUtility.MinReservedConsciousness)
             {
-                return;
+                return true;
             }
 
             // 每名机械师最多两轮批量规划/提交，禁止逐档同步循环。
@@ -4465,19 +4485,19 @@ namespace MAP_MechanoidMechanitor
             {
                 if (GetTotalStepsForOverseer(overseer) <= 0)
                 {
-                    return;
+                    return true;
                 }
 
                 if (consciousness - anticipatedExternalLoss >= DataProcessingAllocationUtility.MinReservedConsciousness)
                 {
-                    return;
+                    return true;
                 }
 
                 Dictionary<DataProcessingAllocationRecord, int> plan =
                     BuildProtectionReductionPlan(overseer, consciousness - anticipatedExternalLoss);
                 if (plan.Count == 0)
                 {
-                    return;
+                    return false;
                 }
 
                 ApplyProtectionReductionPlan(overseer, plan);
@@ -4486,9 +4506,11 @@ namespace MAP_MechanoidMechanitor
                         overseer,
                         out consciousness))
                 {
-                    return;
+                    return false;
                 }
             }
+
+            return GetTotalStepsForOverseer(overseer) <= 0;
         }
 
         /// <summary>
