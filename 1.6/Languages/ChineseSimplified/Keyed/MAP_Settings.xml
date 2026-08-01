@@ -5,6 +5,10 @@
   <MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Label>在所有存档中启用机械族"头像显示"</MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Label>
   <MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>启用后，所有存档中的玩家机械体均可通过"机械族"管理表的"头像显示"选项，将头像追加到殖民者栏。关闭时此功能仅在机械族机械师剧本中启用。</MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>
 
+  <!-- 模块：数据处理 -->
+  <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>征召状态切换时立即刷新动态分配</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>
+  <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>开启后，受动态分配管理的机械族在征召或取消征召时，会在下一游戏刻立即重新评估当前状态、特化模式和请求额度。批量征召会按监管者合并预算重算。关闭后，征召状态变化将在目标原有的状态检查间隔到期时处理。</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>
+
   <!-- 模块：植入体功能 -->
   <MAP_MechanoidMechanitor.Settings.BrainImplants.Label>启用机械族机械师使用并安装脑部植入体</MAP_MechanoidMechanitor.Settings.BrainImplants.Label>
   <MAP_MechanoidMechanitor.Settings.BrainImplants.Description>开启后，机械族机械师可以右键选择人类脑部植入体并为自己安装。此功能会略微影响游戏启动时的加载速度。</MAP_MechanoidMechanitor.Settings.BrainImplants.Description>
