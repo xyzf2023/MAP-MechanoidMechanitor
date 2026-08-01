@@ -1,0 +1,1763 @@
+using System;
+using System.Collections.Generic;
+using RimWorld;
+using UnityEngine;
+using Verse;
+
+namespace MAP_MechanoidMechanitor
+{
+    /// <summary>
+    /// 意识分配矩阵：将监管者总览、目标浏览、实时分配与动态策略整合到同一窗口。
+    /// 仅负责展示和调用注册表公开接口，不改变数据处理分配的业务规则。
+    /// </summary>
+    public sealed class Dialog_DataProcessingAllocationMatrix : Window
+    {
+        private enum TargetFilter
+        {
+            All,
+            Active,
+            Limited,
+            Fixed
+        }
+
+        private static readonly Color WindowBackground = new Color(0.055f, 0.082f, 0.102f, 0.985f);
+        private static readonly Color PanelBackground = new Color(0.082f, 0.125f, 0.153f, 0.96f);
+        private static readonly Color PanelBackgroundAlt = new Color(0.105f, 0.158f, 0.19f, 0.96f);
+        private static readonly Color BorderColor = new Color(0.20f, 0.31f, 0.36f, 1f);
+        private static readonly Color AccentColor = new Color(0.33f, 0.84f, 0.91f, 1f);
+        private static readonly Color ActiveColor = new Color(0.31f, 0.65f, 1f, 1f);
+        private static readonly Color WarningColor = new Color(0.90f, 0.68f, 0.29f, 1f);
+        private static readonly Color DangerColor = new Color(0.89f, 0.33f, 0.33f, 1f);
+        private static readonly Color PrimaryText = new Color(0.90f, 0.95f, 0.97f, 1f);
+        private static readonly Color SecondaryText = new Color(0.58f, 0.67f, 0.71f, 1f);
+        private static readonly Color MutedFill = new Color(0.15f, 0.22f, 0.26f, 1f);
+        private static readonly Color GeneralColor = new Color(0.34f, 0.84f, 0.86f, 1f);
+        private static readonly Color ProductionColor = new Color(0.85f, 0.72f, 0.35f, 1f);
+        private static readonly Color FireControlColor = new Color(0.37f, 0.66f, 1f, 1f);
+        private static readonly Color AssaultColor = new Color(0.89f, 0.42f, 0.39f, 1f);
+        private static readonly Vector2 PortraitCameraOffset = default;
+
+        private const float OuterPadding = 10f;
+        private const float PanelGap = 10f;
+        private const float HeaderHeight = 116f;
+        private const float FooterHeight = 32f;
+        private const float LeftWidth = 300f;
+        private const float CenterWidth = 370f;
+        private const float TargetCardHeight = 74f;
+        private const float TargetCardGap = 6f;
+
+        private readonly Pawn overseer;
+        private Pawn? selectedTarget;
+        private Vector2 targetScrollPosition;
+        private Vector2 strategyScrollPosition;
+        private TargetFilter filter = TargetFilter.All;
+        private bool showGlobalStrategy;
+        private int lastCleanupTick = -99999;
+
+        public override Vector2 InitialSize => new Vector2(1080f, 700f);
+
+        public Dialog_DataProcessingAllocationMatrix(Pawn overseer)
+        {
+            this.overseer = overseer;
+            forcePause = false;
+            doCloseButton = false;
+            doCloseX = true;
+            absorbInputAroundWindow = false;
+            draggable = true;
+            doWindowBackground = false;
+            drawShadow = true;
+        }
+
+        public override void DoWindowContents(Rect inRect)
+        {
+            Color oldColor = GUI.color;
+            GameFont oldFont = Text.Font;
+            TextAnchor oldAnchor = Text.Anchor;
+            bool oldWordWrap = Text.WordWrap;
+
+            try
+            {
+                GameComponent_DataProcessingAllocationRegistry? registry =
+                    GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
+
+                DrawSolid(inRect, WindowBackground);
+                Widgets.DrawBox(inRect, 1);
+
+                if (registry == null || !IsOverseerValid())
+                {
+                    DrawCenteredMessage(
+                        inRect.ContractedBy(24f),
+                        "MAP_DataProcessingAllocation_OverseerInvalid".Translate());
+                    return;
+                }
+
+                int now = Find.TickManager?.TicksGame ?? 0;
+                if (now - lastCleanupTick >= 120)
+                {
+                    registry.CleanupInvalidRecords();
+                    lastCleanupTick = now;
+                }
+
+                List<Pawn> allTargets = CollectTargets(registry);
+                EnsureSelectedTarget(allTargets);
+
+                Rect contentRect = inRect.ContractedBy(OuterPadding);
+                Rect headerRect = new Rect(
+                    contentRect.x,
+                    contentRect.y,
+                    contentRect.width,
+                    HeaderHeight);
+                DrawHeader(headerRect, registry, allTargets);
+
+                float bodyY = headerRect.yMax + PanelGap;
+                float bodyHeight = contentRect.yMax - bodyY - FooterHeight - PanelGap;
+                Rect bodyRect = new Rect(contentRect.x, bodyY, contentRect.width, bodyHeight);
+
+                Rect leftRect = new Rect(bodyRect.x, bodyRect.y, LeftWidth, bodyRect.height);
+                Rect centerRect = new Rect(
+                    leftRect.xMax + PanelGap,
+                    bodyRect.y,
+                    CenterWidth,
+                    bodyRect.height);
+                Rect rightRect = new Rect(
+                    centerRect.xMax + PanelGap,
+                    bodyRect.y,
+                    Mathf.Max(0f, bodyRect.xMax - centerRect.xMax - PanelGap),
+                    bodyRect.height);
+
+                DrawTargetBrowser(leftRect, registry, allTargets);
+                DrawTargetControl(centerRect, registry, selectedTarget);
+                DrawStrategyPanel(rightRect, registry, selectedTarget);
+
+                Rect footerRect = new Rect(
+                    contentRect.x,
+                    bodyRect.yMax + PanelGap,
+                    contentRect.width,
+                    FooterHeight);
+                DrawFooter(footerRect);
+            }
+            finally
+            {
+                GUI.color = oldColor;
+                Text.Font = oldFont;
+                Text.Anchor = oldAnchor;
+                Text.WordWrap = oldWordWrap;
+            }
+        }
+
+        private bool IsOverseerValid()
+        {
+            return overseer != null
+                && !overseer.Dead
+                && !overseer.Destroyed
+                && overseer.mechanitor != null
+                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(overseer)
+                && overseer.Faction != null
+                && overseer.Faction.IsPlayerSafe();
+        }
+
+        private List<Pawn> CollectTargets(
+            GameComponent_DataProcessingAllocationRegistry registry)
+        {
+            List<Pawn> targets = new List<Pawn>();
+
+            if (registry.IsValidAllocationPairForList(overseer, overseer))
+            {
+                targets.Add(overseer);
+            }
+
+            if (overseer.mechanitor != null)
+            {
+                List<Pawn> overseen = overseer.mechanitor.OverseenPawns;
+                for (int i = 0; i < overseen.Count; i++)
+                {
+                    Pawn target = overseen[i];
+                    if (!ReferenceEquals(target, overseer)
+                        && registry.IsValidAllocationPairForList(overseer, target))
+                    {
+                        targets.Add(target);
+                    }
+                }
+            }
+
+            targets.Sort((left, right) => CompareTargets(registry, left, right));
+            return targets;
+        }
+
+        private int CompareTargets(
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn left,
+            Pawn right)
+        {
+            bool leftSelf = ReferenceEquals(left, overseer);
+            bool rightSelf = ReferenceEquals(right, overseer);
+            if (leftSelf != rightSelf)
+            {
+                return leftSelf ? -1 : 1;
+            }
+
+            bool leftPinned = registry.IsPinned(overseer, left);
+            bool rightPinned = registry.IsPinned(overseer, right);
+            if (leftPinned != rightPinned)
+            {
+                return leftPinned ? -1 : 1;
+            }
+
+            if (leftPinned && rightPinned)
+            {
+                int pinCompare = registry.GetPinOrder(overseer, left)
+                    .CompareTo(registry.GetPinOrder(overseer, right));
+                if (pinCompare != 0)
+                {
+                    return pinCompare;
+                }
+            }
+
+            int leftPriority = registry.GetDynamicTargetRecord(overseer, left)?.priority ?? 3;
+            int rightPriority = registry.GetDynamicTargetRecord(overseer, right)?.priority ?? 3;
+            int priorityCompare = leftPriority.CompareTo(rightPriority);
+            if (priorityCompare != 0)
+            {
+                return priorityCompare;
+            }
+
+            return string.Compare(
+                left.LabelShortCap.ToString(),
+                right.LabelShortCap.ToString(),
+                StringComparison.CurrentCulture);
+        }
+
+        private void EnsureSelectedTarget(List<Pawn> targets)
+        {
+            if (selectedTarget != null && targets.Contains(selectedTarget))
+            {
+                return;
+            }
+
+            selectedTarget = targets.Count > 0 ? targets[0] : null;
+        }
+
+        private void DrawHeader(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            List<Pawn> targets)
+        {
+            DrawPanel(rect, PanelBackground, AccentColor);
+            Rect inner = rect.ContractedBy(12f);
+
+            Rect portraitRect = new Rect(inner.x, inner.y, 72f, 72f);
+            DrawPortrait(portraitRect, overseer);
+
+            Rect identityRect = new Rect(
+                portraitRect.xMax + 12f,
+                inner.y,
+                210f,
+                inner.height);
+
+            Text.Font = GameFont.Medium;
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = PrimaryText;
+            Widgets.Label(
+                new Rect(identityRect.x, identityRect.y, identityRect.width, 30f),
+                "MAP_DataProcessingAllocation_MatrixTitle".Translate());
+
+            Text.Font = GameFont.Small;
+            GUI.color = AccentColor;
+            Widgets.Label(
+                new Rect(identityRect.x, identityRect.y + 34f, identityRect.width, Text.LineHeight),
+                overseer.LabelShortCap);
+            GUI.color = SecondaryText;
+            Widgets.Label(
+                new Rect(identityRect.x, identityRect.y + 56f, identityRect.width, Text.LineHeight),
+                "MAP_DataProcessingAllocation_MatrixSubjectCount".Translate(targets.Count));
+
+            float controlsWidth = 170f;
+            Rect controlsRect = new Rect(
+                inner.xMax - controlsWidth,
+                inner.y,
+                controlsWidth,
+                inner.height);
+
+            bool dynamicEnabled = registry.IsDynamicAllocationEnabled(overseer);
+            Rect toggleRect = new Rect(controlsRect.x, controlsRect.y, controlsRect.width, 34f);
+            if (DrawToggleButton(
+                    toggleRect,
+                    "MAP_DataProcessingAllocation_DynamicAllocation".Translate(),
+                    dynamicEnabled))
+            {
+                if (!registry.TrySetDynamicAllocationEnabled(overseer, !dynamicEnabled))
+                {
+                    Messages.Message(
+                        "MAP_DataProcessingAllocation_DynamicAllocationFailed".Translate(),
+                        overseer,
+                        MessageTypeDefOf.RejectInput,
+                        historical: false);
+                }
+            }
+
+            Rect strategyRect = new Rect(
+                controlsRect.x,
+                toggleRect.yMax + 8f,
+                controlsRect.width,
+                30f);
+            if (DrawFlatButton(
+                    strategyRect,
+                    showGlobalStrategy
+                        ? "MAP_DataProcessingAllocation_MatrixTargetStrategy".Translate()
+                        : "MAP_DataProcessingAllocation_MatrixGlobalStrategy".Translate(),
+                    active: showGlobalStrategy))
+            {
+                showGlobalStrategy = !showGlobalStrategy;
+                strategyScrollPosition = Vector2.zero;
+            }
+
+            Rect processingRect = new Rect(
+                identityRect.xMax + 16f,
+                inner.y,
+                Mathf.Max(0f, controlsRect.x - identityRect.xMax - 28f),
+                inner.height);
+            DrawProcessingOverview(processingRect, registry);
+
+            GUI.color = Color.white;
+            Text.Anchor = TextAnchor.UpperLeft;
+        }
+
+        private void DrawProcessingOverview(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry)
+        {
+            float current = DataProcessingAllocationUtility.GetCurrentConsciousness(overseer);
+            int totalSteps = registry.GetTotalStepsForOverseer(overseer);
+            int selfSteps = registry.GetStepsForOverseerTarget(overseer, overseer);
+            float baseProcessing = current
+                + totalSteps * DataProcessingAllocationUtility.StepPercent
+                - selfSteps * DataProcessingAllocationUtility.StepPercent * 0.5f;
+
+            DataProcessingDynamicAllocationRecord? global =
+                registry.FindDynamicAllocationRecordForUI(overseer);
+            float threshold = global != null
+                ? global.minConsciousnessPercent / 100f
+                : 1f;
+            float dynamicAvailable = Mathf.Max(0f, current - threshold);
+
+            Text.Font = GameFont.Tiny;
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = SecondaryText;
+            Widgets.Label(
+                new Rect(rect.x, rect.y, rect.width * 0.33f, Text.LineHeight),
+                "MAP_DataProcessingAllocation_MatrixBaseProcessing".Translate(
+                    baseProcessing.ToStringPercent()));
+            Widgets.Label(
+                new Rect(rect.x + rect.width * 0.33f, rect.y, rect.width * 0.33f, Text.LineHeight),
+                "MAP_DataProcessingAllocation_CurrentProcessing".Translate(
+                    current.ToStringPercent()));
+            Widgets.Label(
+                new Rect(rect.x + rect.width * 0.66f, rect.y, rect.width * 0.34f, Text.LineHeight),
+                "MAP_DataProcessingAllocation_MatrixDynamicAvailable".Translate(
+                    dynamicAvailable.ToStringPercent()));
+
+            Rect railRect = new Rect(rect.x, rect.y + 28f, rect.width, 18f);
+            float scale = Mathf.Max(2f, baseProcessing + 0.1f, threshold + 0.1f);
+            DrawProcessingRail(railRect, current, baseProcessing, threshold, scale);
+
+            Text.Font = GameFont.Tiny;
+            GUI.color = SecondaryText;
+            Widgets.Label(
+                new Rect(rect.x, railRect.yMax + 6f, rect.width * 0.33f, Text.LineHeight),
+                "MAP_DataProcessingAllocation_MatrixSafetyLine".Translate("50%"));
+            Widgets.Label(
+                new Rect(rect.x + rect.width * 0.33f, railRect.yMax + 6f, rect.width * 0.37f, Text.LineHeight),
+                "MAP_DataProcessingAllocation_MatrixDynamicThreshold".Translate(
+                    threshold.ToStringPercent()));
+            Widgets.Label(
+                new Rect(rect.x + rect.width * 0.70f, railRect.yMax + 6f, rect.width * 0.30f, Text.LineHeight),
+                "MAP_DataProcessingAllocation_MatrixAssigned".Translate(
+                    DataProcessingAllocationUtility.StepsToPercent(totalSteps).ToStringPercent()));
+        }
+
+        private void DrawProcessingRail(
+            Rect rect,
+            float current,
+            float baseProcessing,
+            float threshold,
+            float scale)
+        {
+            DrawSolid(rect, MutedFill);
+
+            float currentWidth = rect.width * Mathf.Clamp01(current / scale);
+            Color fill = current < 0.50f
+                ? DangerColor
+                : current < threshold
+                    ? WarningColor
+                    : AccentColor;
+            DrawSolid(new Rect(rect.x, rect.y, currentWidth, rect.height), fill);
+
+            DrawRailMarker(rect, 0.50f / scale, DangerColor, 2f);
+            DrawRailMarker(rect, threshold / scale, WarningColor, 2f);
+            DrawRailMarker(rect, baseProcessing / scale, PrimaryText, 2f);
+            Widgets.DrawBox(rect, 1);
+        }
+
+        private static void DrawRailMarker(Rect rect, float normalized, Color color, float width)
+        {
+            float x = rect.x + rect.width * Mathf.Clamp01(normalized);
+            DrawSolidStatic(new Rect(x - width * 0.5f, rect.y - 2f, width, rect.height + 4f), color);
+        }
+
+        private void DrawTargetBrowser(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            List<Pawn> allTargets)
+        {
+            DrawPanel(rect, PanelBackground, BorderColor);
+            Rect inner = rect.ContractedBy(10f);
+
+            Text.Font = GameFont.Small;
+            GUI.color = PrimaryText;
+            Widgets.Label(
+                new Rect(inner.x, inner.y, inner.width, Text.LineHeight),
+                "MAP_DataProcessingAllocation_SubjectsHeader".Translate());
+
+            float filterY = inner.y + 28f;
+            DrawFilterTabs(new Rect(inner.x, filterY, inner.width, 28f));
+
+            List<Pawn> visibleTargets = new List<Pawn>();
+            for (int i = 0; i < allTargets.Count; i++)
+            {
+                if (MatchesFilter(registry, allTargets[i]))
+                {
+                    visibleTargets.Add(allTargets[i]);
+                }
+            }
+
+            Rect listRect = new Rect(
+                inner.x,
+                filterY + 36f,
+                inner.width,
+                Mathf.Max(0f, inner.yMax - filterY - 36f));
+
+            if (visibleTargets.Count == 0)
+            {
+                DrawCenteredMessage(
+                    listRect,
+                    "MAP_DataProcessingAllocation_NoSubjects".Translate());
+                return;
+            }
+
+            float viewHeight = visibleTargets.Count * TargetCardHeight
+                + Mathf.Max(0, visibleTargets.Count - 1) * TargetCardGap;
+            Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, viewHeight);
+            Widgets.BeginScrollView(listRect, ref targetScrollPosition, viewRect);
+            try
+            {
+                float y = 0f;
+                for (int i = 0; i < visibleTargets.Count; i++)
+                {
+                    Pawn target = visibleTargets[i];
+                    DrawTargetCard(
+                        new Rect(0f, y, viewRect.width, TargetCardHeight),
+                        registry,
+                        target);
+                    y += TargetCardHeight + TargetCardGap;
+                }
+            }
+            finally
+            {
+                Widgets.EndScrollView();
+            }
+        }
+
+        private void DrawFilterTabs(Rect rect)
+        {
+            TargetFilter[] filters =
+            {
+                TargetFilter.All,
+                TargetFilter.Active,
+                TargetFilter.Limited,
+                TargetFilter.Fixed
+            };
+
+            string[] keys =
+            {
+                "MAP_DataProcessingAllocation_MatrixFilterAll",
+                "MAP_DataProcessingAllocation_MatrixFilterActive",
+                "MAP_DataProcessingAllocation_MatrixFilterLimited",
+                "MAP_DataProcessingAllocation_MatrixFilterFixed"
+            };
+
+            float width = (rect.width - 12f) / 4f;
+            for (int i = 0; i < filters.Length; i++)
+            {
+                Rect buttonRect = new Rect(
+                    rect.x + i * (width + 4f),
+                    rect.y,
+                    width,
+                    rect.height);
+                bool active = filter == filters[i];
+                if (DrawFlatButton(buttonRect, keys[i].Translate(), active))
+                {
+                    filter = filters[i];
+                    targetScrollPosition = Vector2.zero;
+                }
+            }
+        }
+
+        private bool MatchesFilter(
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn target)
+        {
+            if (filter == TargetFilter.All)
+            {
+                return true;
+            }
+
+            DataProcessingDynamicTargetRecord? config =
+                registry.GetDynamicTargetRecord(overseer, target);
+            bool globalEnabled = registry.IsDynamicAllocationEnabled(overseer);
+            bool targetDynamic = globalEnabled && (config?.enabled ?? true);
+            DataProcessingDynamicState state = registry.GetCachedDynamicStateForTarget(target);
+
+            if (filter == TargetFilter.Active)
+            {
+                return targetDynamic && state != DataProcessingDynamicState.Idle;
+            }
+
+            if (filter == TargetFilter.Fixed)
+            {
+                return !targetDynamic;
+            }
+
+            int actual = registry.GetStepsForOverseerTarget(overseer, target);
+            int requested = GetRequestedSteps(registry, target, config);
+            return actual < requested;
+        }
+
+        private void DrawTargetCard(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn target)
+        {
+            bool selected = ReferenceEquals(selectedTarget, target);
+            Color background = selected ? PanelBackgroundAlt : new Color(0.065f, 0.105f, 0.128f, 0.96f);
+            DrawPanel(rect, background, selected ? AccentColor : BorderColor);
+            Widgets.DrawHighlightIfMouseover(rect);
+
+            if (Widgets.ButtonInvisible(rect))
+            {
+                selectedTarget = target;
+                showGlobalStrategy = false;
+                strategyScrollPosition = Vector2.zero;
+            }
+
+            Rect portraitRect = new Rect(rect.x + 8f, rect.y + 10f, 48f, 48f);
+            DrawPortrait(portraitRect, target);
+
+            DataProcessingDynamicTargetRecord? config =
+                registry.GetDynamicTargetRecord(overseer, target);
+            bool globalEnabled = registry.IsDynamicAllocationEnabled(overseer);
+            bool targetDynamic = globalEnabled && (config?.enabled ?? true);
+            int actual = registry.GetStepsForOverseerTarget(overseer, target);
+            int normal = config?.normalSteps ?? actual;
+            DataProcessingSpecialization specialization =
+                registry.GetSpecializationForOverseerTarget(overseer, target);
+            DataProcessingDynamicState state = registry.GetCachedDynamicStateForTarget(target);
+            int requested = GetRequestedSteps(registry, target, config);
+            bool limited = actual < requested;
+
+            float infoX = portraitRect.xMax + 8f;
+            float rightControlsWidth = 54f;
+            float infoWidth = rect.xMax - infoX - rightControlsWidth - 8f;
+
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = PrimaryText;
+            Widgets.Label(
+                new Rect(infoX, rect.y + 7f, infoWidth, Text.LineHeight),
+                target.LabelShortCap);
+
+            Text.Font = GameFont.Tiny;
+            GUI.color = limited ? WarningColor : GetSpecializationColor(specialization);
+            string status = targetDynamic
+                ? registry.GetCachedDynamicStateLabelForUI(target)
+                    + " · "
+                    + DataProcessingAllocationUtility.GetSpecializationLabel(specialization)
+                : "MAP_DataProcessingAllocation_MatrixFixedStatus".Translate()
+                    + " · "
+                    + DataProcessingAllocationUtility.GetSpecializationLabel(specialization);
+            Widgets.Label(
+                new Rect(infoX, rect.y + 29f, infoWidth, Text.LineHeight),
+                status);
+
+            Rect railRect = new Rect(infoX, rect.y + 53f, infoWidth - 42f, 8f);
+            DrawAllocationRail(railRect, actual, normal, requested, limited);
+            GUI.color = limited ? WarningColor : PrimaryText;
+            Text.Anchor = TextAnchor.MiddleRight;
+            Widgets.Label(
+                new Rect(railRect.xMax + 4f, railRect.y - 7f, 40f, 22f),
+                DataProcessingAllocationUtility.StepsToPercent(actual).ToStringPercent());
+            Text.Anchor = TextAnchor.UpperLeft;
+
+            Rect dynamicRect = new Rect(rect.xMax - 50f, rect.y + 8f, 42f, 24f);
+            if (globalEnabled)
+            {
+                if (DrawMiniStateButton(dynamicRect, targetDynamic ? "●" : "○", targetDynamic))
+                {
+                    registry.SetDynamicAllocationEnabledForTarget(overseer, target, !targetDynamic);
+                }
+
+                TooltipHandler.TipRegion(
+                    dynamicRect,
+                    "MAP_DataProcessingAllocation_DynamicTargetEnabled".Translate());
+            }
+            else
+            {
+                DrawBadge(dynamicRect, "FIX", SecondaryText);
+            }
+
+            if (!ReferenceEquals(target, overseer))
+            {
+                bool pinned = registry.IsPinned(overseer, target);
+                Rect pinRect = new Rect(rect.xMax - 50f, rect.y + 40f, 42f, 24f);
+                if (DrawMiniStateButton(pinRect, pinned ? "★" : "☆", pinned))
+                {
+                    if (pinned)
+                    {
+                        registry.TryUnpinTarget(overseer, target);
+                    }
+                    else
+                    {
+                        registry.TryPinTarget(overseer, target);
+                    }
+                }
+            }
+        }
+
+        private void DrawTargetControl(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn? target)
+        {
+            DrawPanel(rect, PanelBackground, BorderColor);
+            Rect inner = rect.ContractedBy(12f);
+
+            if (target == null)
+            {
+                DrawCenteredMessage(inner, "MAP_DataProcessingAllocation_NoSubjects".Translate());
+                return;
+            }
+
+            DataProcessingDynamicTargetRecord? config =
+                registry.GetDynamicTargetRecord(overseer, target);
+            int actual = registry.GetStepsForOverseerTarget(overseer, target);
+            int normal = config?.normalSteps ?? actual;
+            DataProcessingSpecialization specialization =
+                registry.GetSpecializationForOverseerTarget(overseer, target);
+            int requested = GetRequestedSteps(registry, target, config);
+            DataProcessingDynamicState state = registry.GetCachedDynamicStateForTarget(target);
+            bool dynamicManaged = registry.IsDynamicAllocationEnabled(overseer)
+                && (config?.enabled ?? true);
+
+            Rect portraitRect = new Rect(inner.x, inner.y, 64f, 64f);
+            DrawPortrait(portraitRect, target);
+
+            Text.Font = GameFont.Medium;
+            GUI.color = PrimaryText;
+            Widgets.Label(
+                new Rect(portraitRect.xMax + 12f, inner.y, inner.width - 76f, 30f),
+                target.LabelShortCap);
+
+            Text.Font = GameFont.Small;
+            GUI.color = GetSpecializationColor(specialization);
+            Widgets.Label(
+                new Rect(portraitRect.xMax + 12f, inner.y + 34f, inner.width - 76f, Text.LineHeight),
+                DataProcessingAllocationUtility.GetSpecializationLabel(specialization));
+
+            float y = portraitRect.yMax + 12f;
+            DrawSectionTitle(
+                new Rect(inner.x, y, inner.width, 24f),
+                "MAP_DataProcessingAllocation_MatrixCurrentDecision".Translate());
+            y += 30f;
+
+            string stateLabel = dynamicManaged
+                ? registry.GetCachedDynamicStateLabelForUI(target)
+                : "MAP_DataProcessingAllocation_MatrixFixedStatus".Translate();
+            string decision = "MAP_DataProcessingAllocation_MatrixDecisionPath".Translate(
+                stateLabel,
+                DataProcessingAllocationUtility.GetSpecializationLabel(specialization),
+                DataProcessingAllocationUtility.StepsToPercent(requested).ToStringPercent());
+            DrawInfoBox(new Rect(inner.x, y, inner.width, 48f), decision, GetSpecializationColor(specialization));
+            y += 60f;
+
+            DrawSectionTitle(
+                new Rect(inner.x, y, inner.width, 24f),
+                "MAP_DataProcessingAllocation_MatrixAllocationControl".Translate());
+            y += 30f;
+
+            DrawAllocationMetrics(
+                new Rect(inner.x, y, inner.width, 48f),
+                actual,
+                normal,
+                requested);
+            y += 54f;
+
+            Rect bigRail = new Rect(inner.x, y, inner.width, 18f);
+            DrawAllocationRail(bigRail, actual, normal, requested, actual < requested);
+            y += 30f;
+
+            GUI.color = SecondaryText;
+            Text.Font = GameFont.Tiny;
+            Widgets.Label(
+                new Rect(inner.x, y, inner.width, Text.LineHeight),
+                dynamicManaged
+                    ? "MAP_DataProcessingAllocation_MatrixEditingNormal".Translate()
+                    : "MAP_DataProcessingAllocation_MatrixEditingActual".Translate());
+            y += 24f;
+
+            DrawAllocationButtons(
+                new Rect(inner.x, y, inner.width, 32f),
+                registry,
+                target,
+                dynamicManaged,
+                normal,
+                actual);
+            y += 46f;
+
+            DrawSectionTitle(
+                new Rect(inner.x, y, inner.width, 24f),
+                "MAP_DataProcessingAllocation_MatrixCurrentEffects".Translate());
+            y += 30f;
+
+            DrawEffectsPreview(
+                new Rect(inner.x, y, inner.width, Mathf.Max(0f, inner.yMax - y)),
+                actual,
+                specialization);
+        }
+
+        private void DrawAllocationMetrics(Rect rect, int actual, int normal, int requested)
+        {
+            float width = (rect.width - 12f) / 3f;
+            DrawMetric(
+                new Rect(rect.x, rect.y, width, rect.height),
+                "MAP_DataProcessingAllocation_MatrixActual".Translate(),
+                DataProcessingAllocationUtility.StepsToPercent(actual).ToStringPercent(),
+                AccentColor);
+            DrawMetric(
+                new Rect(rect.x + width + 6f, rect.y, width, rect.height),
+                "MAP_DataProcessingAllocation_MatrixNormal".Translate(),
+                DataProcessingAllocationUtility.StepsToPercent(normal).ToStringPercent(),
+                SecondaryText);
+            DrawMetric(
+                new Rect(rect.x + (width + 6f) * 2f, rect.y, width, rect.height),
+                "MAP_DataProcessingAllocation_MatrixMaximum".Translate(),
+                DataProcessingAllocationUtility.StepsToPercent(requested).ToStringPercent(),
+                requested > actual ? WarningColor : PrimaryText);
+        }
+
+        private void DrawMetric(Rect rect, string label, string value, Color color)
+        {
+            DrawSolid(rect, new Color(0.055f, 0.092f, 0.112f, 0.95f));
+            Widgets.DrawBox(rect, 1);
+            Text.Font = GameFont.Tiny;
+            Text.Anchor = TextAnchor.UpperCenter;
+            GUI.color = SecondaryText;
+            Widgets.Label(new Rect(rect.x, rect.y + 4f, rect.width, Text.LineHeight), label);
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.LowerCenter;
+            GUI.color = color;
+            Widgets.Label(new Rect(rect.x, rect.y + 20f, rect.width, 24f), value);
+            Text.Anchor = TextAnchor.UpperLeft;
+        }
+
+        private void DrawAllocationButtons(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn target,
+            bool dynamicManaged,
+            int normal,
+            int actual)
+        {
+            string[] labels = { "-25%", "-5%", "+5%", "+25%" };
+            int[] deltaSteps = { -5, -1, 1, 5 };
+            float width = (rect.width - 12f) / 4f;
+
+            for (int i = 0; i < labels.Length; i++)
+            {
+                Rect buttonRect = new Rect(
+                    rect.x + i * (width + 4f),
+                    rect.y,
+                    width,
+                    rect.height);
+
+                int source = dynamicManaged ? normal : actual;
+                bool enabled = source + deltaSteps[i] >= 0;
+                if (DrawFlatButton(buttonRect, labels[i], false, enabled))
+                {
+                    int next = Mathf.Max(0, source + deltaSteps[i]);
+                    bool succeeded;
+                    if (dynamicManaged)
+                    {
+                        succeeded = registry.SetDynamicTargetNormalSteps(overseer, target, next);
+                    }
+                    else
+                    {
+                        registry.SetSteps(overseer, target, next);
+                        succeeded = registry.GetStepsForOverseerTarget(overseer, target) == next;
+                    }
+
+                    if (!succeeded)
+                    {
+                        Messages.Message(
+                            "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
+                            overseer,
+                            MessageTypeDefOf.RejectInput,
+                            historical: false);
+                    }
+                }
+            }
+        }
+
+        private void DrawEffectsPreview(
+            Rect rect,
+            int steps,
+            DataProcessingSpecialization specialization)
+        {
+            if (steps <= 0)
+            {
+                DrawCenteredMessage(rect, "MAP_DataProcessingAllocation_EffectNone".Translate());
+                return;
+            }
+
+            List<string> effects = BuildEffectLabels(steps, specialization);
+            float y = rect.y;
+            for (int i = 0; i < effects.Count; i++)
+            {
+                Rect lineRect = new Rect(rect.x, y, rect.width, 28f);
+                DrawSolid(lineRect, i % 2 == 0
+                    ? new Color(0.065f, 0.105f, 0.128f, 0.75f)
+                    : new Color(0.08f, 0.125f, 0.15f, 0.75f));
+                GUI.color = i == 0 ? GetSpecializationColor(specialization) : PrimaryText;
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                Widgets.Label(lineRect.ContractedBy(8f, 0f), effects[i]);
+                Text.Anchor = TextAnchor.UpperLeft;
+                y += 32f;
+            }
+        }
+
+        private static List<string> BuildEffectLabels(
+            int steps,
+            DataProcessingSpecialization specialization)
+        {
+            List<string> result = new List<string>();
+
+            float work = DataProcessingAllocationUtility.GetWorkSpeedOffset(steps, specialization);
+            float move = DataProcessingAllocationUtility.GetMoveSpeedOffset(steps, specialization);
+            float aim = DataProcessingAllocationUtility.GetAimingDelayFactor(steps, specialization);
+            float ranged = DataProcessingAllocationUtility.GetRangedCooldownFactor(steps, specialization);
+            float melee = DataProcessingAllocationUtility.GetMeleeCooldownFactor(steps, specialization);
+            float damage = DataProcessingAllocationUtility.GetIncomingDamageFactor(steps, specialization);
+            float stagger = DataProcessingAllocationUtility.GetStaggerDurationFactor(steps, specialization);
+            float energy = DataProcessingAllocationUtility.GetMechEnergyUsageFactor(steps, specialization);
+
+            if (work > 0.0001f)
+            {
+                result.Add("MAP_DataProcessingAllocation_EffectWorkSpeed".Translate(work.ToStringPercent()));
+            }
+
+            if (move > 0.0001f)
+            {
+                result.Add("MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(move.ToStringPercent()));
+            }
+
+            if (aim < 0.9999f)
+            {
+                result.Add("MAP_DataProcessingAllocation_EffectAimingDelay".Translate(aim.ToString("0.##")));
+            }
+
+            if (ranged < 0.9999f)
+            {
+                result.Add("MAP_DataProcessingAllocation_EffectRangedCooldown".Translate(ranged.ToString("0.##")));
+            }
+
+            if (melee < 0.9999f)
+            {
+                result.Add("MAP_DataProcessingAllocation_EffectMeleeCooldown".Translate(melee.ToString("0.##")));
+            }
+
+            if (damage < 0.9999f)
+            {
+                result.Add("MAP_DataProcessingAllocation_EffectIncomingDamage".Translate(damage.ToString("0.##")));
+            }
+
+            if (stagger < 0.9999f)
+            {
+                result.Add("MAP_DataProcessingAllocation_EffectStaggerDuration".Translate(stagger.ToString("0.##")));
+            }
+
+            if (energy < 0.9999f)
+            {
+                result.Add("MAP_DataProcessingAllocation_EffectMechEnergyUsage".Translate(energy.ToString("0.##")));
+            }
+
+            if (result.Count == 0)
+            {
+                result.Add("MAP_DataProcessingAllocation_EffectNone".Translate());
+            }
+
+            return result;
+        }
+
+        private void DrawStrategyPanel(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn? target)
+        {
+            DrawPanel(rect, PanelBackground, showGlobalStrategy ? WarningColor : BorderColor);
+            Rect inner = rect.ContractedBy(10f);
+
+            Text.Font = GameFont.Small;
+            GUI.color = PrimaryText;
+            Widgets.Label(
+                new Rect(inner.x, inner.y, inner.width, Text.LineHeight),
+                showGlobalStrategy
+                    ? "MAP_DataProcessingAllocation_MatrixGlobalStrategy".Translate()
+                    : "MAP_DataProcessingAllocation_MatrixTargetStrategy".Translate());
+
+            Rect listRect = new Rect(
+                inner.x,
+                inner.y + 28f,
+                inner.width,
+                inner.height - 28f);
+
+            float viewHeight = showGlobalStrategy ? 520f : 760f;
+            Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, Mathf.Max(viewHeight, listRect.height));
+            Widgets.BeginScrollView(listRect, ref strategyScrollPosition, viewRect);
+            try
+            {
+                if (showGlobalStrategy)
+                {
+                    DrawGlobalStrategy(viewRect, registry);
+                }
+                else if (target != null)
+                {
+                    DrawTargetStrategy(viewRect, registry, target);
+                }
+                else
+                {
+                    DrawCenteredMessage(viewRect, "MAP_DataProcessingAllocation_NoSubjects".Translate());
+                }
+            }
+            finally
+            {
+                Widgets.EndScrollView();
+            }
+        }
+
+        private void DrawGlobalStrategy(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry)
+        {
+            float y = rect.y;
+            DataProcessingDynamicAllocationRecord? global =
+                registry.FindDynamicAllocationRecordForUI(overseer);
+            int threshold = global?.minConsciousnessPercent ?? 100;
+
+            DrawSectionTitle(
+                new Rect(rect.x, y, rect.width, 24f),
+                "MAP_DataProcessingAllocation_DynamicMinConsciousness".Translate());
+            y += 30f;
+
+            DrawInfoBox(
+                new Rect(rect.x, y, rect.width, 48f),
+                "MAP_DataProcessingAllocation_DynamicMinConsciousnessTip".Translate(),
+                WarningColor);
+            y += 60f;
+
+            Rect valueRect = new Rect(rect.x, y, rect.width, 42f);
+            DrawSolid(valueRect, new Color(0.055f, 0.092f, 0.112f, 0.95f));
+            Widgets.DrawBox(valueRect, 1);
+            Text.Font = GameFont.Medium;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            GUI.color = threshold <= 55 ? DangerColor : WarningColor;
+            Widgets.Label(valueRect, threshold + "%");
+            Text.Anchor = TextAnchor.UpperLeft;
+            y += 50f;
+
+            string[] presetLabels =
+            {
+                "MAP_DataProcessingAllocation_MatrixPresetConservative",
+                "MAP_DataProcessingAllocation_MatrixPresetBalanced",
+                "MAP_DataProcessingAllocation_MatrixPresetAggressive"
+            };
+            int[] presetValues = { 100, 75, 55 };
+            float presetWidth = (rect.width - 8f) / 3f;
+            for (int i = 0; i < presetValues.Length; i++)
+            {
+                Rect buttonRect = new Rect(
+                    rect.x + i * (presetWidth + 4f),
+                    y,
+                    presetWidth,
+                    32f);
+                if (DrawFlatButton(buttonRect, presetLabels[i].Translate(), threshold == presetValues[i]))
+                {
+                    registry.SetDynamicMinConsciousnessPercent(overseer, presetValues[i]);
+                }
+            }
+            y += 42f;
+
+            Rect minusRect = new Rect(rect.x, y, 56f, 30f);
+            Rect plusRect = new Rect(rect.x + 62f, y, 56f, 30f);
+            if (DrawFlatButton(minusRect, "-5%", false, threshold > 55))
+            {
+                registry.SetDynamicMinConsciousnessPercent(overseer, threshold - 5);
+            }
+            if (DrawFlatButton(plusRect, "+5%", false, threshold < 1000))
+            {
+                registry.SetDynamicMinConsciousnessPercent(overseer, threshold + 5);
+            }
+            y += 44f;
+
+            DrawSectionTitle(
+                new Rect(rect.x, y, rect.width, 24f),
+                "MAP_DataProcessingAllocation_MatrixBudgetStatistics".Translate());
+            y += 32f;
+
+            DrawGlobalBudgetStats(new Rect(rect.x, y, rect.width, 220f), registry, threshold);
+        }
+
+        private void DrawGlobalBudgetStats(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            int thresholdPercent)
+        {
+            float current = DataProcessingAllocationUtility.GetCurrentConsciousness(overseer);
+            int totalSteps = registry.GetTotalStepsForOverseer(overseer);
+            int selfSteps = registry.GetStepsForOverseerTarget(overseer, overseer);
+            float baseProcessing = current
+                + totalSteps * DataProcessingAllocationUtility.StepPercent
+                - selfSteps * DataProcessingAllocationUtility.StepPercent * 0.5f;
+
+            int fixedSteps = 0;
+            int dynamicSteps = 0;
+            int unmetSteps = 0;
+            List<Pawn> targets = CollectTargets(registry);
+            bool globalEnabled = registry.IsDynamicAllocationEnabled(overseer);
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                Pawn target = targets[i];
+                DataProcessingDynamicTargetRecord? config =
+                    registry.GetDynamicTargetRecord(overseer, target);
+                int actual = registry.GetStepsForOverseerTarget(overseer, target);
+                bool dynamic = globalEnabled && (config?.enabled ?? true);
+                if (dynamic)
+                {
+                    dynamicSteps += actual;
+                }
+                else
+                {
+                    fixedSteps += actual;
+                }
+
+                unmetSteps += Mathf.Max(0, GetRequestedSteps(registry, target, config) - actual);
+            }
+
+            string[] labels =
+            {
+                "MAP_DataProcessingAllocation_MatrixBaseProcessing".Translate(baseProcessing.ToStringPercent()),
+                "MAP_DataProcessingAllocation_CurrentProcessing".Translate(current.ToStringPercent()),
+                "MAP_DataProcessingAllocation_MatrixDynamicThreshold".Translate(thresholdPercent + "%"),
+                "MAP_DataProcessingAllocation_MatrixFixedUsage".Translate(
+                    DataProcessingAllocationUtility.StepsToPercent(fixedSteps).ToStringPercent()),
+                "MAP_DataProcessingAllocation_MatrixDynamicUsage".Translate(
+                    DataProcessingAllocationUtility.StepsToPercent(dynamicSteps).ToStringPercent()),
+                "MAP_DataProcessingAllocation_MatrixUnmetRequest".Translate(
+                    DataProcessingAllocationUtility.StepsToPercent(unmetSteps).ToStringPercent())
+            };
+
+            float y = rect.y;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                Rect line = new Rect(rect.x, y, rect.width, 30f);
+                DrawSolid(line, i % 2 == 0
+                    ? new Color(0.065f, 0.105f, 0.128f, 0.78f)
+                    : new Color(0.08f, 0.125f, 0.15f, 0.78f));
+                GUI.color = i == labels.Length - 1 && unmetSteps > 0
+                    ? WarningColor
+                    : PrimaryText;
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                Widgets.Label(line.ContractedBy(8f, 0f), labels[i]);
+                y += 34f;
+            }
+            Text.Anchor = TextAnchor.UpperLeft;
+        }
+
+        private void DrawTargetStrategy(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn target)
+        {
+            DataProcessingDynamicTargetRecord? config =
+                registry.GetDynamicTargetRecord(overseer, target);
+            bool globalEnabled = registry.IsDynamicAllocationEnabled(overseer);
+            bool targetEnabled = config?.enabled ?? true;
+            DataProcessingSpecialization defaultSpec = config?.defaultSpecialization
+                ?? registry.GetSpecializationForOverseerTarget(overseer, target);
+            int normal = config?.normalSteps ?? registry.GetStepsForOverseerTarget(overseer, target);
+            int commonMax = config?.commonMaxSteps ?? normal;
+            int priority = config?.priority ?? 3;
+            int interval = config?.checkIntervalTicks / 60 ?? 10;
+
+            float y = rect.y;
+            Rect toggleRect = new Rect(rect.x, y, rect.width, 34f);
+            bool canToggle = globalEnabled;
+            if (DrawToggleButton(
+                    toggleRect,
+                    "MAP_DataProcessingAllocation_DynamicTargetEnabled".Translate(),
+                    globalEnabled && targetEnabled,
+                    canToggle))
+            {
+                registry.SetDynamicAllocationEnabledForTarget(overseer, target, !targetEnabled);
+            }
+            y += 44f;
+
+            DrawSectionTitle(
+                new Rect(rect.x, y, rect.width, 24f),
+                "MAP_DataProcessingAllocation_DynamicDefaultMode".Translate());
+            y += 30f;
+            DrawSpecializationGrid(
+                new Rect(rect.x, y, rect.width, 74f),
+                registry,
+                target,
+                defaultSpec,
+                globalEnabled && targetEnabled);
+            y += 84f;
+
+            DrawSectionTitle(
+                new Rect(rect.x, y, rect.width, 24f),
+                "MAP_DataProcessingAllocation_DynamicNormalSteps".Translate());
+            y += 28f;
+            DrawStepEditor(
+                new Rect(rect.x, y, rect.width, 32f),
+                normal,
+                next => registry.SetDynamicTargetNormalSteps(overseer, target, next));
+            y += 42f;
+
+            DrawSectionTitle(
+                new Rect(rect.x, y, rect.width, 24f),
+                "MAP_DataProcessingAllocation_DynamicCommonMaxSteps".Translate());
+            y += 28f;
+            DrawStepEditor(
+                new Rect(rect.x, y, rect.width, 32f),
+                commonMax,
+                next => registry.SetDynamicTargetCommonMaxSteps(overseer, target, next));
+            y += 42f;
+
+            DrawSectionTitle(
+                new Rect(rect.x, y, rect.width, 24f),
+                "MAP_DataProcessingAllocation_DynamicPriority".Translate());
+            y += 28f;
+            DrawPriorityButtons(
+                new Rect(rect.x, y, rect.width, 32f),
+                priority,
+                next => registry.SetDynamicTargetPriority(overseer, target, next));
+            y += 42f;
+
+            DrawSectionTitle(
+                new Rect(rect.x, y, rect.width, 24f),
+                "MAP_DataProcessingAllocation_DynamicCheckInterval".Translate());
+            y += 28f;
+            DrawIntervalButtons(
+                new Rect(rect.x, y, rect.width, 32f),
+                interval,
+                next => registry.SetDynamicTargetCheckInterval(overseer, target, next));
+            y += 46f;
+
+            DrawSectionTitle(
+                new Rect(rect.x, y, rect.width, 24f),
+                "MAP_DataProcessingAllocation_MatrixAutomaticRules".Translate());
+            y += 30f;
+
+            bool work = config?.switchForWork ?? true;
+            bool drafted = config?.switchForDraftedWeapon ?? true;
+            bool melee = config?.switchForCloseMelee ?? true;
+            bool fallback = config?.applyUndraftedFallback ?? true;
+
+            DrawRuleToggle(
+                new Rect(rect.x, y, rect.width, 48f),
+                "MAP_DataProcessingAllocation_DynamicRuleWork".Translate(),
+                "MAP_DataProcessingAllocation_MatrixRuleWorkDesc".Translate(),
+                work,
+                next => registry.SetDynamicTargetRule(overseer, target, "Work", next));
+            y += 54f;
+            DrawRuleToggle(
+                new Rect(rect.x, y, rect.width, 48f),
+                "MAP_DataProcessingAllocation_DynamicRuleDraftedWeapon".Translate(),
+                "MAP_DataProcessingAllocation_MatrixRuleDraftedDesc".Translate(),
+                drafted,
+                next => registry.SetDynamicTargetRule(overseer, target, "DraftedWeapon", next));
+            y += 54f;
+            DrawRuleToggle(
+                new Rect(rect.x, y, rect.width, 48f),
+                "MAP_DataProcessingAllocation_DynamicRuleCloseMelee".Translate(),
+                "MAP_DataProcessingAllocation_MatrixRuleMeleeDesc".Translate(),
+                melee,
+                next => registry.SetDynamicTargetRule(overseer, target, "CloseMelee", next));
+            y += 54f;
+            DrawRuleToggle(
+                new Rect(rect.x, y, rect.width, 48f),
+                "MAP_DataProcessingAllocation_DynamicRuleUndraftedFallback".Translate(),
+                "MAP_DataProcessingAllocation_MatrixRuleFallbackDesc".Translate(),
+                fallback,
+                next => registry.SetDynamicTargetRule(overseer, target, "UndraftedFallback", next));
+            y += 60f;
+
+            bool advanced = config?.advancedMaxEnabled ?? false;
+            Rect advancedRect = new Rect(rect.x, y, rect.width, 34f);
+            if (DrawToggleButton(
+                    advancedRect,
+                    "MAP_DataProcessingAllocation_DynamicAdvancedMax".Translate(),
+                    advanced))
+            {
+                registry.SetDynamicTargetAdvancedMaxEnabled(overseer, target, !advanced);
+            }
+            y += 44f;
+
+            if (advanced && config != null)
+            {
+                DrawAdvancedMaxRows(new Rect(rect.x, y, rect.width, 150f), registry, target, config);
+            }
+        }
+
+        private void DrawSpecializationGrid(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn target,
+            DataProcessingSpecialization current,
+            bool dynamicManaged)
+        {
+            DataProcessingSpecialization[] values =
+            {
+                DataProcessingSpecialization.GeneralTuning,
+                DataProcessingSpecialization.ProductionCoordination,
+                DataProcessingSpecialization.FireControlCalculation,
+                DataProcessingSpecialization.AssaultProtocol
+            };
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                int row = i / 2;
+                int column = i % 2;
+                Rect buttonRect = new Rect(
+                    rect.x + column * (rect.width * 0.5f + 2f),
+                    rect.y + row * 38f,
+                    rect.width * 0.5f - 2f,
+                    34f);
+                DataProcessingSpecialization spec = values[i];
+                bool active = spec == current;
+                if (DrawModeButton(
+                        buttonRect,
+                        DataProcessingAllocationUtility.GetSpecializationLabel(spec),
+                        GetSpecializationColor(spec),
+                        active))
+                {
+                    if (dynamicManaged)
+                    {
+                        registry.SetDynamicTargetDefaultSpecialization(overseer, target, spec);
+                    }
+                    else
+                    {
+                        registry.TrySetManualSpecialization(overseer, target, spec);
+                    }
+                }
+            }
+        }
+
+        private void DrawPriorityButtons(Rect rect, int current, Action<int> setter)
+        {
+            string[] labels =
+            {
+                "MAP_DataProcessingAllocation_MatrixPriorityCritical",
+                "MAP_DataProcessingAllocation_MatrixPriorityHigh",
+                "MAP_DataProcessingAllocation_MatrixPriorityStandard",
+                "MAP_DataProcessingAllocation_MatrixPriorityLow"
+            };
+            float width = (rect.width - 12f) / 4f;
+            for (int i = 0; i < 4; i++)
+            {
+                int value = i + 1;
+                Rect buttonRect = new Rect(
+                    rect.x + i * (width + 4f),
+                    rect.y,
+                    width,
+                    rect.height);
+                if (DrawFlatButton(buttonRect, labels[i].Translate(), current == value))
+                {
+                    setter(value);
+                }
+            }
+        }
+
+        private void DrawIntervalButtons(Rect rect, int current, Action<int> setter)
+        {
+            int[] values = { 1, 5, 10, 30 };
+            float width = (rect.width - 12f) / 4f;
+            for (int i = 0; i < values.Length; i++)
+            {
+                int value = values[i];
+                Rect buttonRect = new Rect(
+                    rect.x + i * (width + 4f),
+                    rect.y,
+                    width,
+                    rect.height);
+                string label = "MAP_DataProcessingAllocation_DynamicSeconds".Translate(value);
+                if (DrawFlatButton(buttonRect, label, current == value))
+                {
+                    setter(value);
+                }
+
+                if (value == 1)
+                {
+                    TooltipHandler.TipRegion(
+                        buttonRect,
+                        "MAP_DataProcessingAllocation_MatrixIntervalHighFrequency".Translate());
+                }
+                else if (value == 10)
+                {
+                    TooltipHandler.TipRegion(
+                        buttonRect,
+                        "MAP_DataProcessingAllocation_MatrixIntervalRecommended".Translate());
+                }
+            }
+        }
+
+        private void DrawRuleToggle(
+            Rect rect,
+            string label,
+            string description,
+            bool value,
+            Action<bool> setter)
+        {
+            DrawSolid(rect, new Color(0.06f, 0.10f, 0.12f, 0.82f));
+            Widgets.DrawBox(rect, 1);
+
+            Rect toggleRect = new Rect(rect.xMax - 54f, rect.y + 10f, 44f, 28f);
+            if (DrawMiniStateButton(toggleRect, value ? "ON" : "OFF", value))
+            {
+                setter(!value);
+            }
+
+            Text.Font = GameFont.Small;
+            GUI.color = PrimaryText;
+            Widgets.Label(
+                new Rect(rect.x + 8f, rect.y + 5f, rect.width - 72f, Text.LineHeight),
+                label);
+            Text.Font = GameFont.Tiny;
+            GUI.color = SecondaryText;
+            Widgets.Label(
+                new Rect(rect.x + 8f, rect.y + 25f, rect.width - 72f, Text.LineHeight),
+                description);
+        }
+
+        private void DrawStepEditor(Rect rect, int steps, Action<int> setter)
+        {
+            Rect minusLarge = new Rect(rect.x, rect.y, 54f, rect.height);
+            Rect minusSmall = new Rect(minusLarge.xMax + 4f, rect.y, 46f, rect.height);
+            Rect valueRect = new Rect(minusSmall.xMax + 4f, rect.y, rect.width - 212f, rect.height);
+            Rect plusSmall = new Rect(valueRect.xMax + 4f, rect.y, 46f, rect.height);
+            Rect plusLarge = new Rect(plusSmall.xMax + 4f, rect.y, 54f, rect.height);
+
+            if (DrawFlatButton(minusLarge, "-25%", false, steps >= 5))
+            {
+                setter(Mathf.Max(0, steps - 5));
+            }
+            if (DrawFlatButton(minusSmall, "-5%", false, steps >= 1))
+            {
+                setter(Mathf.Max(0, steps - 1));
+            }
+
+            DrawSolid(valueRect, new Color(0.055f, 0.092f, 0.112f, 0.95f));
+            Widgets.DrawBox(valueRect, 1);
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            GUI.color = AccentColor;
+            Widgets.Label(
+                valueRect,
+                DataProcessingAllocationUtility.StepsToPercent(steps).ToStringPercent());
+            Text.Anchor = TextAnchor.UpperLeft;
+
+            if (DrawFlatButton(plusSmall, "+5%", false))
+            {
+                setter(steps + 1);
+            }
+            if (DrawFlatButton(plusLarge, "+25%", false))
+            {
+                setter(steps + 5);
+            }
+        }
+
+        private void DrawAdvancedMaxRows(
+            Rect rect,
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn target,
+            DataProcessingDynamicTargetRecord config)
+        {
+            DataProcessingSpecialization[] specs =
+            {
+                DataProcessingSpecialization.GeneralTuning,
+                DataProcessingSpecialization.ProductionCoordination,
+                DataProcessingSpecialization.FireControlCalculation,
+                DataProcessingSpecialization.AssaultProtocol
+            };
+            int[] values =
+            {
+                config.generalMaxSteps,
+                config.productionMaxSteps,
+                config.fireControlMaxSteps,
+                config.assaultMaxSteps
+            };
+
+            float y = rect.y;
+            for (int i = 0; i < specs.Length; i++)
+            {
+                DataProcessingSpecialization spec = specs[i];
+                int steps = values[i];
+                Rect line = new Rect(rect.x, y, rect.width, 32f);
+                DrawSolid(line, new Color(0.06f, 0.10f, 0.12f, 0.82f));
+                Widgets.DrawBox(line, 1);
+
+                Text.Font = GameFont.Tiny;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                GUI.color = GetSpecializationColor(spec);
+                Widgets.Label(
+                    new Rect(line.x + 8f, line.y, line.width - 132f, line.height),
+                    DataProcessingAllocationUtility.GetSpecializationLabel(spec));
+
+                Rect minusRect = new Rect(line.xMax - 122f, line.y + 3f, 30f, 26f);
+                Rect valueRect = new Rect(minusRect.xMax + 4f, line.y, 54f, line.height);
+                Rect plusRect = new Rect(valueRect.xMax + 4f, line.y + 3f, 30f, 26f);
+
+                int capturedSteps = steps;
+                DataProcessingSpecialization capturedSpec = spec;
+                if (DrawFlatButton(minusRect, "-", false, capturedSteps > config.normalSteps))
+                {
+                    registry.SetDynamicTargetMaxStepsForSpecialization(
+                        overseer,
+                        target,
+                        capturedSpec,
+                        capturedSteps - 1);
+                }
+
+                Text.Anchor = TextAnchor.MiddleCenter;
+                GUI.color = PrimaryText;
+                Widgets.Label(
+                    valueRect,
+                    DataProcessingAllocationUtility.StepsToPercent(capturedSteps).ToStringPercent());
+
+                if (DrawFlatButton(plusRect, "+", false))
+                {
+                    registry.SetDynamicTargetMaxStepsForSpecialization(
+                        overseer,
+                        target,
+                        capturedSpec,
+                        capturedSteps + 1);
+                }
+
+                Text.Anchor = TextAnchor.UpperLeft;
+                y += 36f;
+            }
+        }
+
+        private int GetRequestedSteps(
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn target,
+            DataProcessingDynamicTargetRecord? config)
+        {
+            int actual = registry.GetStepsForOverseerTarget(overseer, target);
+            int normal = config?.normalSteps ?? actual;
+            bool dynamic = registry.IsDynamicAllocationEnabled(overseer)
+                && (config?.enabled ?? true);
+            if (!dynamic || config == null)
+            {
+                return normal;
+            }
+
+            DataProcessingDynamicState state = registry.GetCachedDynamicStateForTarget(target);
+            if (state == DataProcessingDynamicState.Idle)
+            {
+                return normal;
+            }
+
+            DataProcessingSpecialization current =
+                registry.GetSpecializationForOverseerTarget(overseer, target);
+            return config.GetMaxStepsForSpecialization(current);
+        }
+
+        private void DrawAllocationRail(
+            Rect rect,
+            int actual,
+            int normal,
+            int maximum,
+            bool limited)
+        {
+            int scaleSteps = Mathf.Max(1, actual, normal, maximum);
+            DrawSolid(rect, MutedFill);
+
+            float actualWidth = rect.width * Mathf.Clamp01(actual / (float)scaleSteps);
+            DrawSolid(
+                new Rect(rect.x, rect.y, actualWidth, rect.height),
+                limited ? WarningColor : AccentColor);
+
+            float normalX = rect.x + rect.width * Mathf.Clamp01(normal / (float)scaleSteps);
+            DrawSolid(new Rect(normalX - 1f, rect.y - 3f, 2f, rect.height + 6f), PrimaryText);
+
+            float maxX = rect.x + rect.width * Mathf.Clamp01(maximum / (float)scaleSteps);
+            DrawSolid(new Rect(maxX - 1f, rect.y - 4f, 2f, rect.height + 8f), WarningColor);
+            DrawSolid(new Rect(maxX - 6f, rect.y - 4f, 6f, 2f), WarningColor);
+            DrawSolid(new Rect(maxX - 6f, rect.yMax + 2f, 6f, 2f), WarningColor);
+            Widgets.DrawBox(rect, 1);
+        }
+
+        private void DrawFooter(Rect rect)
+        {
+            DrawPanel(rect, new Color(0.06f, 0.095f, 0.115f, 0.95f), BorderColor);
+            Rect inner = rect.ContractedBy(8f, 4f);
+
+            Text.Font = GameFont.Tiny;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            GUI.color = SecondaryText;
+            Widgets.Label(
+                new Rect(inner.x, inner.y, inner.width - 110f, inner.height),
+                "MAP_DataProcessingAllocation_MatrixLegend".Translate());
+
+            Rect closeRect = new Rect(inner.xMax - 96f, inner.y, 96f, inner.height);
+            if (DrawFlatButton(closeRect, "CloseButton".Translate(), false))
+            {
+                Close();
+            }
+
+            Text.Anchor = TextAnchor.UpperLeft;
+        }
+
+        private static Color GetSpecializationColor(DataProcessingSpecialization specialization)
+        {
+            specialization = DataProcessingAllocationUtility.NormalizeSpecialization(specialization);
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.ProductionCoordination:
+                    return ProductionColor;
+                case DataProcessingSpecialization.FireControlCalculation:
+                    return FireControlColor;
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return AssaultColor;
+                default:
+                    return GeneralColor;
+            }
+        }
+
+        private static void DrawPortrait(Rect portraitRect, Pawn target)
+        {
+            try
+            {
+                float zoom = target.kindDef != null
+                    ? target.kindDef.controlGroupPortraitZoom
+                    : 1f;
+                RenderTexture image = PortraitsCache.Get(
+                    target,
+                    portraitRect.size,
+                    Rot4.East,
+                    PortraitCameraOffset,
+                    zoom);
+                GUI.DrawTexture(portraitRect, image);
+            }
+            catch
+            {
+                Widgets.DrawBoxSolid(portraitRect, new Color(0.12f, 0.17f, 0.20f, 1f));
+            }
+
+            Widgets.DrawBox(portraitRect, 1);
+        }
+
+        private static void DrawPanel(Rect rect, Color background, Color border)
+        {
+            DrawSolidStatic(rect, background);
+            Color old = GUI.color;
+            GUI.color = border;
+            Widgets.DrawBox(rect, 1);
+            GUI.color = old;
+        }
+
+        private static void DrawSectionTitle(Rect rect, string label)
+        {
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            GUI.color = PrimaryText;
+            Widgets.Label(rect, label);
+            DrawSolidStatic(
+                new Rect(rect.x, rect.yMax - 2f, rect.width, 1f),
+                BorderColor);
+            Text.Anchor = TextAnchor.UpperLeft;
+        }
+
+        private static void DrawInfoBox(Rect rect, string text, Color accent)
+        {
+            DrawSolidStatic(rect, new Color(0.055f, 0.092f, 0.112f, 0.95f));
+            DrawSolidStatic(new Rect(rect.x, rect.y, 3f, rect.height), accent);
+            Color old = GUI.color;
+            GUI.color = PrimaryText;
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Widgets.Label(rect.ContractedBy(10f, 2f), text);
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = old;
+        }
+
+        private static bool DrawToggleButton(
+            Rect rect,
+            string label,
+            bool enabled,
+            bool active = true)
+        {
+            Color background = enabled
+                ? new Color(0.13f, 0.34f, 0.38f, 1f)
+                : new Color(0.10f, 0.14f, 0.16f, 1f);
+            if (!active)
+            {
+                background *= 0.65f;
+            }
+
+            DrawSolidStatic(rect, background);
+            Color old = GUI.color;
+            GUI.color = active ? (enabled ? AccentColor : BorderColor) : SecondaryText;
+            Widgets.DrawBox(rect, 1);
+
+            Rect indicatorRect = new Rect(rect.xMax - 46f, rect.y + 7f, 36f, rect.height - 14f);
+            DrawSolidStatic(
+                indicatorRect,
+                enabled ? AccentColor : new Color(0.25f, 0.30f, 0.32f, 1f));
+
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            GUI.color = active ? PrimaryText : SecondaryText;
+            Widgets.Label(new Rect(rect.x + 10f, rect.y, rect.width - 62f, rect.height), label);
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = old;
+
+            return active && Widgets.ButtonInvisible(rect);
+        }
+
+        private static bool DrawFlatButton(
+            Rect rect,
+            string label,
+            bool active,
+            bool enabled = true)
+        {
+            Color background = active
+                ? new Color(0.13f, 0.31f, 0.35f, 1f)
+                : new Color(0.075f, 0.115f, 0.135f, 1f);
+            if (Mouse.IsOver(rect) && enabled)
+            {
+                background += new Color(0.035f, 0.045f, 0.05f, 0f);
+            }
+            if (!enabled)
+            {
+                background *= 0.60f;
+            }
+
+            DrawSolidStatic(rect, background);
+            Color old = GUI.color;
+            GUI.color = active ? AccentColor : BorderColor;
+            Widgets.DrawBox(rect, 1);
+            GUI.color = enabled ? PrimaryText : SecondaryText;
+            Text.Font = GameFont.Tiny;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            Text.WordWrap = false;
+            Widgets.Label(rect, label);
+            Text.WordWrap = true;
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = old;
+
+            return enabled && Widgets.ButtonInvisible(rect);
+        }
+
+        private static bool DrawMiniStateButton(Rect rect, string label, bool active)
+        {
+            DrawSolidStatic(
+                rect,
+                active
+                    ? new Color(0.13f, 0.31f, 0.35f, 1f)
+                    : new Color(0.075f, 0.115f, 0.135f, 1f));
+            Color old = GUI.color;
+            GUI.color = active ? AccentColor : BorderColor;
+            Widgets.DrawBox(rect, 1);
+            GUI.color = active ? AccentColor : SecondaryText;
+            Text.Font = GameFont.Tiny;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            Widgets.Label(rect, label);
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = old;
+            return Widgets.ButtonInvisible(rect);
+        }
+
+        private static bool DrawModeButton(
+            Rect rect,
+            string label,
+            Color color,
+            bool active)
+        {
+            DrawSolidStatic(
+                rect,
+                active
+                    ? new Color(color.r * 0.25f, color.g * 0.25f, color.b * 0.25f, 1f)
+                    : new Color(0.075f, 0.115f, 0.135f, 1f));
+            Color old = GUI.color;
+            GUI.color = active ? color : BorderColor;
+            Widgets.DrawBox(rect, active ? 2 : 1);
+            GUI.color = active ? color : PrimaryText;
+            Text.Font = GameFont.Tiny;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            Text.WordWrap = false;
+            Widgets.Label(rect, label);
+            Text.WordWrap = true;
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = old;
+            return Widgets.ButtonInvisible(rect);
+        }
+
+        private static void DrawBadge(Rect rect, string label, Color color)
+        {
+            DrawSolidStatic(rect, new Color(0.075f, 0.115f, 0.135f, 1f));
+            Color old = GUI.color;
+            GUI.color = color;
+            Widgets.DrawBox(rect, 1);
+            Text.Font = GameFont.Tiny;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            Widgets.Label(rect, label);
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = old;
+        }
+
+        private static void DrawCenteredMessage(Rect rect, string message)
+        {
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.MiddleCenter;
+            GUI.color = SecondaryText;
+            Widgets.Label(rect, message);
+            Text.Anchor = TextAnchor.UpperLeft;
+        }
+
+        private void DrawSolid(Rect rect, Color color)
+        {
+            DrawSolidStatic(rect, color);
+        }
+
+        private static void DrawSolidStatic(Rect rect, Color color)
+        {
+            Color old = GUI.color;
+            GUI.color = color;
+            GUI.DrawTexture(rect, BaseContent.WhiteTex);
+            GUI.color = old;
+        }
+    }
+}
