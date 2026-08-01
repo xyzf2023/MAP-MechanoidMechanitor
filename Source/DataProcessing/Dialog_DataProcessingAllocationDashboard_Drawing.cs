@@ -8,6 +8,27 @@ namespace MAP_MechanoidMechanitor
 {
     public sealed partial class Dialog_DataProcessingAllocationDashboard : Window
     {
+        private enum DashboardButtonStyle
+        {
+            Primary,
+            Secondary,
+            Compact,
+            Danger
+        }
+
+        private static readonly Color ButtonPrimaryBackground =
+            new Color(0.095f, 0.255f, 0.285f, 0.98f);
+        private static readonly Color ButtonPrimarySelectedBackground =
+            new Color(0.12f, 0.35f, 0.38f, 0.98f);
+        private static readonly Color ButtonSecondaryBackground =
+            new Color(0.072f, 0.105f, 0.12f, 0.98f);
+        private static readonly Color ButtonCompactBackground =
+            new Color(0.065f, 0.095f, 0.108f, 0.98f);
+        private static readonly Color ButtonDangerBackground =
+            new Color(0.24f, 0.085f, 0.085f, 0.98f);
+        private static readonly Color ButtonDisabledBackground =
+            new Color(0.065f, 0.075f, 0.08f, 0.90f);
+
         private static bool DrawCheckboxRow(
             Rect rect,
             string label,
@@ -16,28 +37,63 @@ namespace MAP_MechanoidMechanitor
             bool active = true)
         {
             next = value;
-            Color oldColor = GUI.color;
-            if (!active)
+            if (!DrawToggleRow(rect, label, value, active))
             {
-                GUI.color = Widgets.InactiveColor;
+                return false;
             }
 
-            Rect checkboxRect = new Rect(rect.x, rect.y + 2f, 24f, 24f);
-            Widgets.Checkbox(
-                checkboxRect.x,
-                checkboxRect.y,
-                ref next,
-                24f,
-                !active);
+            next = !value;
+            return true;
+        }
 
-            Text.Font = GameFont.Small;
-            Text.Anchor = TextAnchor.MiddleLeft;
-            Widgets.Label(
-                new Rect(checkboxRect.xMax + 8f, rect.y, rect.width - 32f, rect.height),
-                label);
-            Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = oldColor;
-            return active && next != value;
+        private static bool DrawToggleRow(
+            Rect rect,
+            string label,
+            bool value,
+            bool active = true)
+        {
+            Color oldColor = GUI.color;
+            GameFont oldFont = Text.Font;
+            TextAnchor oldAnchor = Text.Anchor;
+            bool oldWrap = Text.WordWrap;
+
+            try
+            {
+                const float toggleWidth = 78f;
+                Rect labelRect = new Rect(
+                    rect.x,
+                    rect.y,
+                    Mathf.Max(0f, rect.width - toggleWidth - 10f),
+                    rect.height);
+                Rect toggleRect = new Rect(
+                    rect.xMax - toggleWidth,
+                    rect.y + 1f,
+                    toggleWidth,
+                    Mathf.Max(24f, rect.height - 2f));
+
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                Text.WordWrap = false;
+                GUI.color = active ? TextMain : Disabled;
+                Widgets.Label(labelRect, label);
+
+                return DrawFlatButton(
+                    toggleRect,
+                    value
+                        ? "MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOn".Translate()
+                        : "MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOff".Translate(),
+                    value ? DashboardButtonStyle.Primary : DashboardButtonStyle.Secondary,
+                    selected: value,
+                    enabled: active,
+                    font: GameFont.Tiny);
+            }
+            finally
+            {
+                GUI.color = oldColor;
+                Text.Font = oldFont;
+                Text.Anchor = oldAnchor;
+                Text.WordWrap = oldWrap;
+            }
         }
 
         private static void DrawInfoRow(
@@ -117,22 +173,95 @@ namespace MAP_MechanoidMechanitor
 
         private static bool DrawTabButton(Rect rect, string label, bool selected)
         {
-            Color background = selected
-                ? new Color(0.13f, 0.29f, 0.32f, 1f)
-                : new Color(0.075f, 0.105f, 0.12f, 1f);
-            Widgets.DrawBoxSolid(rect, background);
-            GUI.color = selected ? Accent : Border;
-            Widgets.DrawBox(rect, selected ? 2 : 1);
-            GUI.color = selected ? Accent : TextMain;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.MiddleCenter;
+            return DrawFlatButton(
+                rect,
+                label,
+                DashboardButtonStyle.Secondary,
+                selected,
+                enabled: true,
+                font: GameFont.Tiny);
+        }
+
+        private static bool DrawFlatButton(
+            Rect rect,
+            string label,
+            DashboardButtonStyle style,
+            bool selected = false,
+            bool enabled = true,
+            GameFont font = GameFont.Small)
+        {
+            Color oldColor = GUI.color;
+            GameFont oldFont = Text.Font;
+            TextAnchor oldAnchor = Text.Anchor;
             bool oldWrap = Text.WordWrap;
-            Text.WordWrap = false;
-            Widgets.Label(rect, label);
-            Text.WordWrap = oldWrap;
-            Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = Color.white;
-            return Widgets.ButtonInvisible(rect);
+
+            try
+            {
+                Color background;
+                Color borderColor;
+                Color textColor;
+
+                if (!enabled)
+                {
+                    background = ButtonDisabledBackground;
+                    borderColor = Disabled;
+                    textColor = Disabled;
+                }
+                else
+                {
+                    switch (style)
+                    {
+                        case DashboardButtonStyle.Primary:
+                            background = selected
+                                ? ButtonPrimarySelectedBackground
+                                : ButtonPrimaryBackground;
+                            borderColor = Accent;
+                            textColor = TextMain;
+                            break;
+                        case DashboardButtonStyle.Danger:
+                            background = ButtonDangerBackground;
+                            borderColor = Danger;
+                            textColor = TextMain;
+                            break;
+                        case DashboardButtonStyle.Compact:
+                            background = ButtonCompactBackground;
+                            borderColor = selected ? Accent : Border;
+                            textColor = selected ? Accent : TextMain;
+                            break;
+                        default:
+                            background = selected
+                                ? ButtonPrimarySelectedBackground
+                                : ButtonSecondaryBackground;
+                            borderColor = selected ? Accent : Border;
+                            textColor = selected ? Accent : TextMain;
+                            break;
+                    }
+                }
+
+                Widgets.DrawBoxSolid(rect, background);
+                if (enabled)
+                {
+                    Widgets.DrawHighlightIfMouseover(rect);
+                }
+
+                GUI.color = borderColor;
+                Widgets.DrawBox(rect, selected ? 2 : 1);
+
+                Text.Font = font;
+                Text.Anchor = TextAnchor.MiddleCenter;
+                Text.WordWrap = false;
+                GUI.color = textColor;
+                Widgets.Label(rect, label);
+
+                return enabled && Widgets.ButtonInvisible(rect);
+            }
+            finally
+            {
+                GUI.color = oldColor;
+                Text.Font = oldFont;
+                Text.Anchor = oldAnchor;
+                Text.WordWrap = oldWrap;
+            }
         }
 
         private static void DrawPanel(Rect rect, Color background, Color border)
@@ -194,9 +323,9 @@ namespace MAP_MechanoidMechanitor
             bool active,
             out bool changed)
         {
-            bool result = DrawCheckboxRow(rect, label, value, out _, active);
-            changed = result;
-            return result;
+            bool clicked = DrawCheckboxRow(rect, label, value, out bool next, active);
+            changed = clicked && next != value;
+            return clicked;
         }
 
         private static void DrawPanel(Rect rect, Color border)
@@ -206,16 +335,46 @@ namespace MAP_MechanoidMechanitor
 
         private static bool DrawPrimaryButton(Rect rect, string label, bool selected = false)
         {
-            Color oldColor = GUI.color;
-            GUI.color = selected ? Accent : Color.white;
-            bool clicked = Widgets.ButtonText(rect, label);
-            GUI.color = oldColor;
-            return clicked;
+            return DrawFlatButton(
+                rect,
+                label,
+                DashboardButtonStyle.Primary,
+                selected);
         }
 
-        private static bool DrawSecondaryButton(Rect rect, string label)
+        private static bool DrawSecondaryButton(
+            Rect rect,
+            string label,
+            bool selected = false,
+            bool enabled = true)
         {
-            return Widgets.ButtonText(rect, label);
+            return DrawFlatButton(
+                rect,
+                label,
+                DashboardButtonStyle.Secondary,
+                selected,
+                enabled);
+        }
+
+        private static bool DrawMiniButton(Rect rect, string label, bool enabled = true)
+        {
+            return DrawFlatButton(
+                rect,
+                label,
+                DashboardButtonStyle.Compact,
+                selected: false,
+                enabled,
+                font: GameFont.Small);
+        }
+
+        private static bool DrawDangerButton(Rect rect, string label, bool enabled = true)
+        {
+            return DrawFlatButton(
+                rect,
+                label,
+                DashboardButtonStyle.Danger,
+                selected: false,
+                enabled);
         }
 
         private static void Solid(Rect rect, Color color)
