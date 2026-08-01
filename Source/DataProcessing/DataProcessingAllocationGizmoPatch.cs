@@ -57,7 +57,7 @@ namespace MAP_MechanoidMechanitor
                 action = delegate
                 {
                     Find.WindowStack.Add(
-                        new Dialog_DataProcessingAllocationMatrix(localOverseer));
+                        new Dialog_DataProcessingAllocationDashboard(localOverseer));
                 }
             };
         }
