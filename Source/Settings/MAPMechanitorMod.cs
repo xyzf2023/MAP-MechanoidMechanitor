@@ -31,6 +31,13 @@ namespace MAP_MechanoidMechanitor
                 ref Settings!.addMechanoidMechanitorsToWorkTab,
                 "启用后，符合条件的机械族机械师会被追加显示到原版“工作”标签页中，方便调整工作优先级。若与修改工作标签页或工作优先级界面的 MOD 冲突，请关闭此项。");
 
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label"
+                    .Translate(),
+                ref Settings.enableImmediateDraftStateRefresh,
+                "MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description"
+                    .Translate());
+
             bool previousEnablePortraitDisplayForAllSaves =
                 Settings.enablePortraitDisplayForAllSaves;
             listing.CheckboxLabeled(
