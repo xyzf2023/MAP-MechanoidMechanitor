@@ -35,7 +35,11 @@ namespace MAP_MechanoidMechanitor
             DrawEditTabs(tabsRect);
 
             Rect listRect = new Rect(rect.x, tabsRect.yMax + 10f, rect.width, rect.yMax - tabsRect.yMax - 10f);
-            float viewHeight = editTab == EditTab.Advanced ? 600f : 500f;
+            float viewHeight = editTab == EditTab.Advanced
+                ? 600f
+                : editTab == EditTab.Rules && Prefs.DevMode
+                    ? 700f
+                    : 500f;
             Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, Mathf.Max(viewHeight, listRect.height));
             Widgets.BeginScrollView(listRect, ref detailScrollPosition, viewRect);
             try
