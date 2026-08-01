@@ -13,7 +13,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry registry)
         {
             Rect backRect = new Rect(rect.x, rect.y, 126f, 30f);
-            if (Widgets.ButtonText(
+            if (DrawSecondaryButton(
                     backRect,
                     "MAP_MechanoidMechanitor.DataProcessing.Dashboard.BackMonitor".Translate()))
             {
@@ -86,25 +86,21 @@ namespace MAP_MechanoidMechanitor
                     y,
                     presetWidth,
                     32f);
-                if (threshold != presetValues[i]
-                    && DrawTabButton(buttonRect, presetLabels[i], false))
+                bool selected = threshold == presetValues[i];
+                if (DrawTabButton(buttonRect, presetLabels[i], selected) && !selected)
                 {
                     registry.SetDynamicMinConsciousnessPercent(overseer, presetValues[i]);
-                }
-                else if (threshold == presetValues[i])
-                {
-                    DrawTabButton(buttonRect, presetLabels[i], true);
                 }
             }
             y += 44f;
 
             Rect minusRect = new Rect(rect.x, y, 76f, 30f);
             Rect plusRect = new Rect(minusRect.xMax + 8f, y, 76f, 30f);
-            if (Widgets.ButtonText(minusRect, "-5%") && threshold > 55)
+            if (DrawMiniButton(minusRect, "-5%", threshold > 55))
             {
                 registry.SetDynamicMinConsciousnessPercent(overseer, threshold - 5);
             }
-            if (Widgets.ButtonText(plusRect, "+5%") && threshold < 1000)
+            if (DrawMiniButton(plusRect, "+5%", threshold < 1000))
             {
                 registry.SetDynamicMinConsciousnessPercent(overseer, threshold + 5);
             }
