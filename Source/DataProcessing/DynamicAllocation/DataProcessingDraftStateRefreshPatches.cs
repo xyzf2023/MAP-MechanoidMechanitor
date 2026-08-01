@@ -60,7 +60,7 @@ namespace MAP_MechanoidMechanitor
         private const int ReflectionFailureLogKey = 0x4D415252; // "MARR"
 
         private static readonly Dictionary<Pawn, int> PendingTargets =
-            new Dictionary<Pawn, int>();
+            new Dictionary<Pawn, int>(ReferencePawnComparer.Instance);
 
         private static readonly FieldInfo? NextDynamicCheckTickField =
             AccessTools.Field(
@@ -208,7 +208,7 @@ namespace MAP_MechanoidMechanitor
 
             config = registry.GetDynamicTargetRecord(
                 overseer: null,
-                target);
+                target: target);
 
             if (config == null)
             {
@@ -254,6 +254,22 @@ namespace MAP_MechanoidMechanitor
         {
             PendingTargets.Clear();
             queuedGame = null;
+        }
+
+        private sealed class ReferencePawnComparer : IEqualityComparer<Pawn>
+        {
+            public static readonly ReferencePawnComparer Instance =
+                new ReferencePawnComparer();
+
+            public bool Equals(Pawn? left, Pawn? right)
+            {
+                return ReferenceEquals(left, right);
+            }
+
+            public int GetHashCode(Pawn pawn)
+            {
+                return pawn == null ? 0 : pawn.thingIDNumber;
+            }
         }
     }
 }
