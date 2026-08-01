@@ -14,7 +14,7 @@ namespace MAP_MechanoidMechanitor
             Pawn target)
         {
             Rect backRect = new Rect(rect.x, rect.y, 126f, 30f);
-            if (Widgets.ButtonText(
+            if (DrawSecondaryButton(
                     backRect,
                     "MAP_MechanoidMechanitor.DataProcessing.Dashboard.BackMonitor".Translate()))
             {
