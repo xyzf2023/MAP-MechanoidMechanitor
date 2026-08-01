@@ -5,6 +5,8 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(typeof(ITab_Pawn_Character), nameof(ITab_Pawn_Character.IsVisible), MethodType.Getter)]
+    [HarmonyAfter("Fortified")]
+    [HarmonyPriority(Priority.Last)]
     public static class Patch_ITab_Pawn_Character_IsVisible_CommanderFaction
     {
         private const string HermitDefName = "MAP_Mech_Hermit";
@@ -12,19 +14,22 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPostfix]
         public static void Postfix(ref bool __result)
         {
-            if (!__result)
+            Pawn? pawn = ColonistLikeInspectTabUtility.ResolvePawn(
+                Find.Selector?.SingleSelectedThing);
+            if (pawn == null)
             {
                 return;
             }
 
-            Thing? selectedThing = Find.Selector.SingleSelectedThing;
-            Pawn? pawn = selectedThing as Pawn;
-            if (pawn == null && selectedThing is Corpse corpse)
+            // Fortified 会对全部 HumanlikeMech 强制隐藏角色页。
+            // 这里只为已经获得 MAP 授权且角色数据完整的玩家 Pawn 最终放行。
+            if (ColonistLikeInspectTabUtility.ShouldShowCharacterTab(pawn))
             {
-                pawn = corpse.InnerPawn;
+                __result = true;
+                return;
             }
 
-            if (pawn == null || pawn.Faction == Faction.OfPlayer)
+            if (!__result || pawn.Faction == Faction.OfPlayer)
             {
                 return;
             }
