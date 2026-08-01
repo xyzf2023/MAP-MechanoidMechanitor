@@ -149,7 +149,7 @@ namespace MAP_MechanoidMechanitor
             Rect valueRect = new Rect(minusRect.xMax + 6f, lineRect.y, 76f, lineRect.height);
             Rect plusRect = new Rect(valueRect.xMax + 6f, minusRect.y, 38f, 30f);
 
-            if (steps > minimum && Widgets.ButtonText(minusRect, "-"))
+            if (DrawMiniButton(minusRect, "-", steps > minimum))
             {
                 setter(Mathf.Max(minimum, steps - 1));
             }
@@ -160,7 +160,7 @@ namespace MAP_MechanoidMechanitor
                 valueRect,
                 DataProcessingAllocationUtility.StepsToPercent(steps).ToStringPercent());
 
-            if (Widgets.ButtonText(plusRect, "+"))
+            if (DrawMiniButton(plusRect, "+"))
             {
                 setter(steps + 1);
             }
