@@ -18,6 +18,7 @@ concurrency:
 jobs:
   finalize:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: 检出仓库
         uses: actions/checkout@v4
