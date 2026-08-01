@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：简化意识分配面板 -->
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Title>意识分配</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Title>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.TargetCount>目标：{0}</MAP_MechanoidMechanitor.DataProcessing.Dashboard.TargetCount>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Current>当前处理</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Current>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Threshold>动态阈值</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Threshold>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Available>阈值余量</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Available>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Margin>阈值余量</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Margin>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.CompactStatsTooltip>当前处理：{0}&#10;动态阈值：{1}&#10;阈值余量：{2}</MAP_MechanoidMechanitor.DataProcessing.Dashboard.CompactStatsTooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.GlobalSettings>全局设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.GlobalSettings>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.OpenGlobalSettings>打开全局设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.OpenGlobalSettings>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAll>全部</MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAll>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAttention>需要处理</MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAttention>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.NoAttention>当前没有需要处理的目标。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.NoAttention>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.LimitedTooltip>当前请求尚缺 {0} 数据处理额度。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.LimitedTooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.LimitedShort>预算受限</MAP_MechanoidMechanitor.DataProcessing.Dashboard.LimitedShort>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Runtime>当前运行状态</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Runtime>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Allocation>额度状态</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Allocation>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.QuotaSource>额度来源</MAP_MechanoidMechanitor.DataProcessing.Dashboard.QuotaSource>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Limited>动态预算不足，仍有 {0} 请求未满足。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Limited>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.EditStrategy>编辑策略</MAP_MechanoidMechanitor.DataProcessing.Dashboard.EditStrategy>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Pin>顶置目标</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Pin>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Unpin>取消顶置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Unpin>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Permissions>功能权限</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Permissions>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.SpecializationEffects>{0}增益</MAP_MechanoidMechanitor.DataProcessing.Dashboard.SpecializationEffects>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.BackMonitor>返回监控</MAP_MechanoidMechanitor.DataProcessing.Dashboard.BackMonitor>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Editing>正在编辑：{0}</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Editing>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.TabBasic>基础设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.TabBasic>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.TabRules>自动规则</MAP_MechanoidMechanitor.DataProcessing.Dashboard.TabRules>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.TabAdvanced>高级设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.TabAdvanced>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.AdvancedDisabled>启用高级最高额度后，可以分别设置四种特化的任务上限。关闭时统一使用“统一最高额度”。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.AdvancedDisabled>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.CommonMaxUnused>高级最高额度已启用。统一最高额度 {0} 当前不会参与任务请求；系统将使用当前特化的独立上限。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.CommonMaxUnused>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.EnableDynamicFirst>尚未建立全局动态分配记录。请先在窗口顶部启用动态分配，再设置动态最低处理阈值。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.EnableDynamicFirst>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.BaseProcessing>基础处理</MAP_MechanoidMechanitor.DataProcessing.Dashboard.BaseProcessing>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.FixedUsage>固定分配</MAP_MechanoidMechanitor.DataProcessing.Dashboard.FixedUsage>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DynamicUsage>动态分配</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DynamicUsage>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.UnmetRequest>未满足请求</MAP_MechanoidMechanitor.DataProcessing.Dashboard.UnmetRequest>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.FooterHint>点击目标查看监控信息；设置操作仅在“编辑策略”或“全局设置”中显示。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.FooterHint>
+
+  <!-- 模块：额度来源说明 -->
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Fixed>固定额度</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Fixed>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Normal>常态额度（当前未触发任务状态）</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Normal>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.CommonMax>统一最高额度</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.CommonMax>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.SpecializationMax>{0}独立最高额度</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.SpecializationMax>
+
+  <!-- 模块：功能权限 -->
+  <MAP_MechanoidMechanitor.DataProcessing.PermissionLocked>{0}（需要 {1}，当前 {2}）</MAP_MechanoidMechanitor.DataProcessing.PermissionLocked>
+
+  <!-- 模块：工作识别诊断 -->
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Diagnostic>工作识别诊断（开发者模式）</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Diagnostic>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.JobDef>当前 JobDef</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.JobDef>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.WorkGiver>当前 WorkGiver</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.WorkGiver>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Result>识别结果</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Result>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source>识别来源</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Yes>工作</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Yes>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.No>非工作</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.No>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.NoPawn>目标不存在</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.NoPawn>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.Drafted>目标已征召</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.Drafted>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.NoJob>当前没有Job</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.NoJob>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.ExplicitWork>JobDef兼容扩展：明确计为工作</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.ExplicitWork>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.ExplicitNonWork>JobDef兼容扩展：明确排除</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.ExplicitNonWork>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.StandardWorkGiver>标准WorkGiver工作</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.StandardWorkGiver>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.VanillaSpecialJob>原版特殊工作白名单</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.VanillaSpecialJob>
+  <MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.UnknownJob>无法可靠分类的Job</MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source.UnknownJob>
+
+</LanguageData>
