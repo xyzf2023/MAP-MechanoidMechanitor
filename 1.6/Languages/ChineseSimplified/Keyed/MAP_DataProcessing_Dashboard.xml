@@ -11,6 +11,8 @@
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.CompactStatsTooltip>当前处理：{0}&#10;动态阈值：{1}&#10;阈值余量：{2}</MAP_MechanoidMechanitor.DataProcessing.Dashboard.CompactStatsTooltip>
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.GlobalSettings>全局设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.GlobalSettings>
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.OpenGlobalSettings>打开全局设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.OpenGlobalSettings>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOn>开启</MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOn>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOff>关闭</MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOff>
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAll>全部</MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAll>
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAttention>需要处理</MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAttention>
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.NoAttention>当前没有需要处理的目标。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.NoAttention>
