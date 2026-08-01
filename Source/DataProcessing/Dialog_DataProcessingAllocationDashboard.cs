@@ -47,7 +47,7 @@ namespace MAP_MechanoidMechanitor
         private const float OuterPadding = 12f;
         private const float Gap = 10f;
         private const float HeaderHeight = 84f;
-        private const float FooterHeight = 34f;
+        private const float FooterHeight = 24f;
         private const float LeftWidth = 310f;
         private const float TargetRowHeight = 64f;
         private const float TargetRowGap = 5f;
@@ -274,7 +274,7 @@ namespace MAP_MechanoidMechanitor
             float thresholdMargin = Mathf.Max(0f, current - threshold);
 
             float statsX = inner.x + 240f;
-            float controlsWidth = 250f;
+            const float controlsWidth = 250f;
             float statsWidth = Mathf.Max(240f, inner.xMax - statsX - controlsWidth - 16f);
             DrawHeaderStats(
                 new Rect(statsX, inner.y + 6f, statsWidth, 58f),
@@ -288,16 +288,17 @@ namespace MAP_MechanoidMechanitor
                 controlsWidth,
                 58f);
             bool dynamic = registry.IsDynamicAllocationEnabled(overseer);
-            Rect checkRect = new Rect(controlsRect.x, controlsRect.y, controlsRect.width, 26f);
-            if (DrawCheckboxRow(
-                    checkRect,
+            Rect toggleRect = new Rect(
+                controlsRect.x,
+                controlsRect.y,
+                controlsRect.width,
+                27f);
+            if (DrawToggleRow(
+                    toggleRect,
                     "MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation".Translate(),
-                    dynamic,
-                    true,
-                    out bool changedDynamic))
+                    dynamic))
             {
-                if (changedDynamic
-                    && !registry.TrySetDynamicAllocationEnabled(overseer, !dynamic))
+                if (!registry.TrySetDynamicAllocationEnabled(overseer, !dynamic))
                 {
                     Messages.Message(
                         "MAP_MechanoidMechanitor.DataProcessing.DynamicAllocationFailed".Translate(),
@@ -308,14 +309,14 @@ namespace MAP_MechanoidMechanitor
             }
 
             Rect globalRect = new Rect(
-                controlsRect.x,
+                controlsRect.xMax - 142f,
                 controlsRect.y + 32f,
-                controlsRect.width,
+                142f,
                 28f);
-            if (DrawPrimaryButton(
+            if (DrawSecondaryButton(
                     globalRect,
-                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.OpenGlobalSettings".Translate(),
-                    mode == DashboardMode.GlobalSettings))
+                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.GlobalSettings".Translate(),
+                    selected: mode == DashboardMode.GlobalSettings))
             {
                 mode = DashboardMode.GlobalSettings;
                 detailScrollPosition = Vector2.zero;
@@ -454,8 +455,6 @@ namespace MAP_MechanoidMechanitor
             int actual = registry.GetStepsForOverseerTarget(overseer, target);
             DataProcessingSpecialization specialization =
                 registry.GetSpecializationForOverseerTarget(overseer, target);
-            DataProcessingDynamicState state =
-                registry.GetCachedDynamicStateForTarget(target);
             bool dynamic = registry.IsDynamicAllocationEnabledForTarget(overseer, target);
             int requested = GetRequestedSteps(registry, target, out _);
             bool limited = actual < requested;
@@ -551,14 +550,8 @@ namespace MAP_MechanoidMechanitor
             Text.Anchor = TextAnchor.MiddleLeft;
             GUI.color = TextSecondary;
             Widgets.Label(
-                new Rect(rect.x, rect.y, rect.width - 112f, rect.height),
+                rect,
                 "MAP_MechanoidMechanitor.DataProcessing.Dashboard.FooterHint".Translate());
-
-            Rect closeRect = new Rect(rect.xMax - 100f, rect.y + 2f, 100f, rect.height - 4f);
-            if (DrawSecondaryButton(closeRect, "CloseButton".Translate()))
-            {
-                Close();
-            }
             Text.Anchor = TextAnchor.UpperLeft;
         }
     }
