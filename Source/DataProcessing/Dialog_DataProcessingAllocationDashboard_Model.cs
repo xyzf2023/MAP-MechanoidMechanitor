@@ -105,11 +105,11 @@ namespace MAP_MechanoidMechanitor
                     rect.y + row * (height + 6f),
                     width,
                     height);
-                if (current != value
-                    && DrawTabButton(
-                        buttonRect,
-                        DataProcessingAllocationUtility.GetSpecializationLabel(value),
-                        current == value))
+                bool clicked = DrawTabButton(
+                    buttonRect,
+                    DataProcessingAllocationUtility.GetSpecializationLabel(value),
+                    current == value);
+                if (clicked && current != value)
                 {
                     if (dynamicManaged)
                     {
@@ -182,8 +182,11 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < 4; i++)
             {
                 Rect buttonRect = new Rect(rect.x + i * (width + 6f), rect.y, width, rect.height);
-                if (current != i + 1
-                    && DrawTabButton(buttonRect, labels[i], current == i + 1))
+                bool clicked = DrawTabButton(
+                    buttonRect,
+                    labels[i],
+                    current == i + 1);
+                if (clicked && current != i + 1)
                 {
                     setter(i + 1);
                 }
@@ -198,11 +201,11 @@ namespace MAP_MechanoidMechanitor
             {
                 int value = values[i];
                 Rect buttonRect = new Rect(rect.x + i * (width + 6f), rect.y, width, rect.height);
-                if (current != value
-                    && DrawTabButton(
-                        buttonRect,
-                        "MAP_MechanoidMechanitor.DataProcessing.DynamicSeconds".Translate(value),
-                        current == value))
+                bool clicked = DrawTabButton(
+                    buttonRect,
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicSeconds".Translate(value),
+                    current == value);
+                if (clicked && current != value)
                 {
                     setter(value);
                 }
