@@ -346,7 +346,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void RemoveDataStreamDistribution(Pawn pawn)
+        private static void RemoveDataStreamDistribution(Pawn? pawn)
         {
             if (pawn?.health?.hediffSet == null)
             {
