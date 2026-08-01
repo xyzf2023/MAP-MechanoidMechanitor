@@ -188,12 +188,13 @@ namespace MAP_MechanoidMechanitor
 
             if (addGenes)
             {
-                if (!ContainsTab<ITab_Genes>(tabs))
+                // ITab_GenesPregnancy 继承 ITab_Genes，必须按具体运行时类型分别去重。
+                if (!ContainsExactTab(tabs, typeof(ITab_Genes)))
                 {
                     tabs.Add(GetSharedTab(typeof(ITab_Genes)));
                 }
 
-                if (!ContainsTab<ITab_GenesPregnancy>(tabs))
+                if (!ContainsExactTab(tabs, typeof(ITab_GenesPregnancy)))
                 {
                     tabs.Add(GetSharedTab(typeof(ITab_GenesPregnancy)));
                 }
@@ -231,6 +232,21 @@ namespace MAP_MechanoidMechanitor
             where TTab : InspectTabBase
         {
             return FindFirstIndex<TTab>(tabs) >= 0;
+        }
+
+        private static bool ContainsExactTab(
+            List<InspectTabBase> tabs,
+            Type tabType)
+        {
+            for (int i = 0; i < tabs.Count; i++)
+            {
+                if (tabs[i].GetType() == tabType)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static int FindFirstIndex<TTab>(List<InspectTabBase> tabs)
