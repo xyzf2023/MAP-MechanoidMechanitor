@@ -8,13 +8,16 @@ namespace MAP_MechanoidMechanitor
         protected override float CalculateConsciousnessOffset()
         {
             return DynamicConsciousnessBonusCalculationUtility
-                .GetMechanitorIdentityConsciousnessOffset();
+                       .GetMechanitorIdentityConsciousnessOffset()
+                   + ParallelThoughtArrayUtility.GetTotalActiveConsciousnessOffset(pawn);
         }
 
         protected override int GetStageVariantKey()
         {
-            return DynamicConsciousnessBonusCalculationUtility
+            int originalKey = DynamicConsciousnessBonusCalculationUtility
                 .GetConsciousnessStageVariantKey();
+            int totalBoostPercent = ParallelThoughtArrayUtility.GetTotalActiveBoostPercent(pawn);
+            return unchecked(originalKey * 397 ^ totalBoostPercent);
         }
     }
 }

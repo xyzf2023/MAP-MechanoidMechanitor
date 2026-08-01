@@ -181,13 +181,17 @@
   <ResearchProjectDef>
     <defName>MAP_ParallelThoughtMatrix</defName>
     <label>并行思维矩阵</label>
-    <description>将机械意识划分为多个可同时运行的思维进程，并以统一矩阵协调其运作，使机械族机械师能够同时处理更加复杂的意识活动与指令任务。\n\n研究此科技以进一步提高“机械族机械师”健康状态所提供的数据处理能力。若存在多个机械族机械师，该加成还会随其数量进一步提升。\n在“机械族机械师”剧本中，还将进一步提高“机械意识”健康状态所提供的数据处理能力。</description>
+    <description>将机械意识划分为多个可同时运行的思维进程，并以统一矩阵协调其运作，使机械族机械师能够同时处理更加复杂的意识活动与指令任务。\n\n研究此科技以进一步提高“机械族机械师”健康状态所提供的数据处理能力。若存在多个机械族机械师，该加成还会随其数量进一步提升。\n在“机械族机械师”剧本中，还将进一步提高“机械意识”健康状态所提供的数据处理能力。\n\n研究完成后，还可建造「并行思维阵列」并制造「并行思维接口」。</description>
     <baseCost>8000</baseCost>
     <techLevel>Industrial</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_DataStreamReorganization</li>
     </prerequisites>
+    <unlockedThings>
+      <li>MAP_ParallelThoughtArray</li>
+      <li>MAP_ParallelThoughtInterface</li>
+    </unlockedThings>
     <researchViewX>4.00</researchViewX>
     <researchViewY>2.00</researchViewY>
   </ResearchProjectDef>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <!-- 能力术语 -->
+  <MAP_MechanoidMechanitor.DataProcessing>数据处理</MAP_MechanoidMechanitor.DataProcessing>
+  <MAP_MechanoidMechanitor.Consciousness>意识</MAP_MechanoidMechanitor.Consciousness>
+
+  <!-- 分配标签 -->
+  <MAP_MechanoidMechanitor.DataProcessingAllocation>数据处理分配</MAP_MechanoidMechanitor.DataProcessingAllocation>
+  <MAP_MechanoidMechanitor.ConsciousnessAllocation>意识分配</MAP_MechanoidMechanitor.ConsciousnessAllocation>
+  <MAP_MechanoidMechanitor.DataProcessingAllocation.Desc>将数据处理能力分配给受控机械族。分配会按档位降低自身数据处理能力，但可为下属机械体提供对应增幅。</MAP_MechanoidMechanitor.DataProcessingAllocation.Desc>
+  <MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>将意识处理能力分配给受控机械族。分配会按档位降低自身意识处理能力，但可为下属机械体提供对应增幅。</MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>
+
+  <!-- 并行思维阵列：Gizmo -->
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget>选择增幅目标</MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>选择一名机械族机械师或安装了并行思维接口的人类机械师，建立持续同步连接。更换目标立即生效，无需调谐。</MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget>解除增幅目标</MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>解除当前建立的同步连接，阵列回到待机状态。</MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost>提高增幅</MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>将运算强度提高 25%，同步提高增幅效果与电力消耗。</MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost>降低增幅</MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc>将运算强度降低 25%，同步降低增幅效果与电力消耗。</MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost>已达到最高增幅（300%）。</MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMinBoost>已达到最低增幅（100%）。</MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMinBoost>
+
+  <!-- 并行思维阵列：检查栏 -->
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.TargetUnspecified>未指定</MAP_MechanoidMechanitor.ParallelThoughtArray.TargetUnspecified>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Target>增幅目标：{0}</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Target>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.ConfiguredBoost>设定{0}增幅：+{1}%</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.ConfiguredBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoost>当前{0}增幅：+{1}%</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoostNoTarget>当前增幅：{0}%</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoostNoTarget>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower>当前耗电：{0} W</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Status>状态：{0}</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Status>
+
+  <!-- 并行思维阵列：状态 -->
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusRunning>运行中</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusRunning>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusIdle>待机</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusIdle>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusNoPower>未通电</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusNoPower>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusInvalidTarget>目标无效</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusInvalidTarget>
+
+  <!-- 仪表盘（人类机械师）动态术语 -->
+  <MAP_MechanoidMechanitor.Consciousness.Dashboard.Title>意识分配仪表盘</MAP_MechanoidMechanitor.Consciousness.Dashboard.Title>
+  <MAP_MechanoidMechanitor.Consciousness.Dashboard.BaseConsciousness>基础意识</MAP_MechanoidMechanitor.Consciousness.Dashboard.BaseConsciousness>
+  <MAP_MechanoidMechanitor.Consciousness.Dashboard.Current>当前</MAP_MechanoidMechanitor.Consciousness.Dashboard.Current>
+  <MAP_MechanoidMechanitor.Consciousness.Dashboard.Threshold>阈值</MAP_MechanoidMechanitor.Consciousness.Dashboard.Threshold>
+  <MAP_MechanoidMechanitor.Consciousness.Dashboard.FixedUsage>固定占用</MAP_MechanoidMechanitor.Consciousness.Dashboard.FixedUsage>
+  <MAP_MechanoidMechanitor.Consciousness.Dashboard.DynamicUsage>动态占用</MAP_MechanoidMechanitor.Consciousness.Dashboard.DynamicUsage>
+  <MAP_MechanoidMechanitor.Consciousness.Dashboard.UnmetRequest>未满足请求</MAP_MechanoidMechanitor.Consciousness.Dashboard.UnmetRequest>
+  <MAP_MechanoidMechanitor.Consciousness.Dashboard.TargetCount>目标数量：{0}</MAP_MechanoidMechanitor.Consciousness.Dashboard.TargetCount>
+
+  <!-- 通用动态术语（占位符） -->
+  <MAP_MechanoidMechanitor.Term.CurrentWithResource>当前{0}：{1}</MAP_MechanoidMechanitor.Term.CurrentWithResource>
+  <MAP_MechanoidMechanitor.Term.RemainingWithResource>剩余可分配{0}：{1}</MAP_MechanoidMechanitor.Term.RemainingWithResource>
+  <MAP_MechanoidMechanitor.Term.KeepFiftyPercent>至少保留50%{0}</MAP_MechanoidMechanitor.Term.KeepFiftyPercent>
+  <MAP_MechanoidMechanitor.Term.ResourceAllocation>{0}分配</MAP_MechanoidMechanitor.Term.ResourceAllocation>
+
+</LanguageData>

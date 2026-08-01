@@ -1262,7 +1262,7 @@ namespace MAP_MechanoidMechanitor
                 && overseer.Faction != null
                 && overseer.Faction.IsPlayerSafe()
                 && overseer.mechanitor != null
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(overseer);
+                && DataProcessingAllocatorEligibilityUtility.IsEligibleDataProcessingOverseer(overseer);
         }
 
         private string GetOverseerDisplayName()

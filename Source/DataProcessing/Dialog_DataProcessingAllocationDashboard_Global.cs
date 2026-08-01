@@ -146,27 +146,27 @@ namespace MAP_MechanoidMechanitor
             }
 
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.BaseProcessing".Translate(),
+                DataProcessingTerminologyUtility.GetBaseProcessingKey(overseer).Translate(),
                 baseProcessing.ToStringPercent(),
                 TextMain);
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Current".Translate(),
+                DataProcessingTerminologyUtility.GetCurrentKey(overseer).Translate(),
                 current.ToStringPercent(),
                 Accent);
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Threshold".Translate(),
+                DataProcessingTerminologyUtility.GetThresholdKey(overseer).Translate(),
                 thresholdPercent + "%",
                 Warning);
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.FixedUsage".Translate(),
+                DataProcessingTerminologyUtility.GetFixedUsageKey(overseer).Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(fixedSteps).ToStringPercent(),
                 TextMain);
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.DynamicUsage".Translate(),
+                DataProcessingTerminologyUtility.GetDynamicUsageKey(overseer).Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(dynamicSteps).ToStringPercent(),
                 TextMain);
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.UnmetRequest".Translate(),
+                DataProcessingTerminologyUtility.GetUnmetRequestKey(overseer).Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(unmetSteps).ToStringPercent(),
                 unmetSteps > 0 ? Warning : TextMain);
         }

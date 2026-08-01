@@ -551,7 +551,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(overseer)
+            if (!DataProcessingAllocatorEligibilityUtility.IsEligibleDataProcessingOverseer(overseer)
                 || overseer.mechanitor == null
                 || !target.RaceProps.IsMechanoid)
             {
@@ -561,7 +561,9 @@ namespace MAP_MechanoidMechanitor
             bool isSelf = IsSelfAllocationPair(overseer, target);
             if (isSelf)
             {
-                if (!ResearchFeatureUnlockUtility.IsSelfDirectiveFocusUnlocked())
+                // 只有机械族机械师允许自我分配；人类接口机械师永远不能自我分配。
+                if (!DataProcessingAllocatorEligibilityUtility.CanUseSelfAllocation(overseer)
+                    || !ResearchFeatureUnlockUtility.IsSelfDirectiveFocusUnlocked())
                 {
                     return false;
                 }

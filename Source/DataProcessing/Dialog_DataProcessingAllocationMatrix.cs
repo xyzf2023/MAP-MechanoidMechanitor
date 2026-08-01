@@ -156,7 +156,7 @@ namespace MAP_MechanoidMechanitor
                 && !overseer.Dead
                 && !overseer.Destroyed
                 && overseer.mechanitor != null
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(overseer)
+                && DataProcessingAllocatorEligibilityUtility.IsEligibleDataProcessingOverseer(overseer)
                 && overseer.Faction != null
                 && overseer.Faction.IsPlayerSafe();
         }

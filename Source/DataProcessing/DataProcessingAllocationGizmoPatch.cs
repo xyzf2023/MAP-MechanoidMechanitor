@@ -1,21 +1,18 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using RimWorld;
-using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
+    /// <summary>
+    ///     机械族机械师：在 MechanitorUtility.GetMechGizmos 后置补丁中继续追加分配 Gizmo。
+    ///     人类机械师由独立补丁在 Pawn.GetGizmos 中处理，避免重复 Gizmo。
+    /// </summary>
     [StaticConstructorOnStartup]
     [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.GetMechGizmos))]
     public static class Patch_MechanitorUtility_GetMechGizmos_DataProcessingAllocation
     {
-        private const string LabelKey = "MAP_MechanoidMechanitor.DataProcessing.Label";
-        private const string DescriptionKey = "MAP_MechanoidMechanitor.DataProcessing.Desc";
-
-        private static readonly Texture2D DataProcessingAllocationIcon =
-            ContentFinder<Texture2D>.Get("UI/MM_DataProcessingAllocation");
-
         [HarmonyPostfix]
         public static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Pawn mech)
         {
@@ -24,42 +21,39 @@ namespace MAP_MechanoidMechanitor
                 yield return gizmo;
             }
 
-            if (!ShouldShowDataProcessingAllocationGizmo(mech))
+            if (DataProcessingAllocationGizmoUtility.ShouldShowForMechanoid(mech))
+            {
+                yield return DataProcessingAllocationGizmoUtility.MakeCommand(mech);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     人类机械师（安装并行思维接口）：在 Pawn.GetGizmos 后置补丁中追加“意识分配” Gizmo。
+    ///     机械体跳过，避免与机械族补丁重复。
+    /// </summary>
+    [StaticConstructorOnStartup]
+    [HarmonyPatch(typeof(Pawn), nameof(Pawn.GetGizmos))]
+    public static class Patch_Pawn_GetGizmos_HumanInterfaceDataProcessingAllocation
+    {
+        [HarmonyPostfix]
+        public static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Pawn __instance)
+        {
+            foreach (Gizmo gizmo in __result)
+            {
+                yield return gizmo;
+            }
+
+            // 机械体已由另一补丁处理，跳过避免重复 Gizmo。
+            if (__instance.RaceProps.IsMechanoid)
             {
                 yield break;
             }
 
-            yield return MakeDataProcessingAllocationCommand(mech);
-        }
-
-        private static bool ShouldShowDataProcessingAllocationGizmo(Pawn? mech)
-        {
-            return ModsConfig.BiotechActive
-                && ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked()
-                && mech != null
-                && !mech.Dead
-                && !mech.Destroyed
-                && mech.RaceProps.IsMechanoid
-                && mech.Faction != null
-                && mech.Faction.IsPlayerSafe()
-                && mech.mechanitor != null
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(mech);
-        }
-
-        private static Command_Action MakeDataProcessingAllocationCommand(Pawn overseer)
-        {
-            Pawn localOverseer = overseer;
-            return new Command_Action
+            if (DataProcessingAllocationGizmoUtility.ShouldShowForHumanInterfaceMechanitor(__instance))
             {
-                defaultLabel = LabelKey.Translate(),
-                defaultDesc = DescriptionKey.Translate(),
-                icon = DataProcessingAllocationIcon,
-                action = delegate
-                {
-                    Find.WindowStack.Add(
-                        new Dialog_DataProcessingAllocationDashboard(localOverseer));
-                }
-            };
+                yield return DataProcessingAllocationGizmoUtility.MakeCommand(__instance);
+            }
         }
     }
 }

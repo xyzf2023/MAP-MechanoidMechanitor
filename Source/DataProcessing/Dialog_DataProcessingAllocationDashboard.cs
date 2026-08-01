@@ -162,7 +162,7 @@ namespace MAP_MechanoidMechanitor
                 && !overseer.Dead
                 && !overseer.Destroyed
                 && overseer.mechanitor != null
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(overseer)
+                && DataProcessingAllocatorEligibilityUtility.IsEligibleDataProcessingOverseer(overseer)
                 && overseer.Faction != null
                 && overseer.Faction.IsPlayerSafe();
         }
@@ -253,7 +253,7 @@ namespace MAP_MechanoidMechanitor
             GUI.color = TextMain;
             Widgets.Label(
                 new Rect(inner.x, inner.y, 220f, 28f),
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Title".Translate());
+                DataProcessingTerminologyUtility.GetDashboardTitleKey(overseer).Translate());
 
             Text.Font = GameFont.Small;
             GUI.color = Accent;
@@ -263,7 +263,7 @@ namespace MAP_MechanoidMechanitor
             GUI.color = TextSecondary;
             Widgets.Label(
                 new Rect(inner.x, inner.y + 52f, 220f, Text.LineHeight),
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.TargetCount"
+                DataProcessingTerminologyUtility.GetTargetCountKey(overseer)
                     .Translate(targetCount));
 
             float current = DataProcessingAllocationUtility.GetCurrentConsciousness(overseer);

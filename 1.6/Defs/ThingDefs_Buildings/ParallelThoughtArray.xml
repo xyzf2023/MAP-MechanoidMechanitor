@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- 并行思维阵列 -->
+  <ThingDef ParentName="BuildingBase" MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_ParallelThoughtArray</defName>
+    <label>并行思维阵列</label>
+    <description>一座由大量量子运算模块组成的外置思维设施。阵列能够与指定机械师建立持续同步连接，在外部并行处理其意识活动与控制数据，并将运算结果实时反馈给目标。
+
+对机械族机械师而言，这会增加其可用于分配的数据处理能力；对安装了并行思维接口的人类机械师而言，则会直接扩展其意识处理能力。提高阵列的运算强度会同时提高增幅效果与电力消耗。</description>
+    <texPath>Things/Building/Misc/BandNode</texPath>
+    <graphicClass>Graphic_Single</graphicClass>
+    <drawSize>(2,2)</drawSize>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>PassThroughOnly</passability>
+    <fillPercent>0.7</fillPercent>
+    <rotatable>false</rotatable>
+    <size>(2,2)</size>
+    <terrainAffordanceNeeded>Heavy</terrainAffordanceNeeded>
+    <constructionSkillPrerequisite>12</constructionSkillPrerequisite>
+    <designationCategory>Biotech</designationCategory>
+    <uiOrder>2485</uiOrder>
+    <building>
+      <buildingTags>
+        <li>Biotech</li>
+      </buildingTags>
+    </building>
+    <statBases>
+      <MaxHitPoints>600</MaxHitPoints>
+      <WorkToBuild>30000</WorkToBuild>
+      <Mass>300</Mass>
+      <Flammability>0.3</Flammability>
+    </statBases>
+    <costList>
+      <Steel>500</Steel>
+      <Plasteel>250</Plasteel>
+      <Gold>50</Gold>
+      <ComponentSpacer>12</ComponentSpacer>
+      <MAP_QuantumComputingChip>2</MAP_QuantumComputingChip>
+    </costList>
+    <researchPrerequisites>
+      <li>MAP_ParallelThoughtMatrix</li>
+    </researchPrerequisites>
+    <tickerType>Normal</tickerType>
+    <drawerType>MapMeshAndRealTime</drawerType>
+    <killedLeavings>
+      <ChunkSlagSteel>5</ChunkSlagSteel>
+    </killedLeavings>
+    <filthLeaving>Filth_MachineBits</filthLeaving>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <basePowerConsumption>1600</basePowerConsumption>
+        <shortCircuitInRain>false</shortCircuitInRain>
+      </li>
+      <li Class="CompProperties_Flickable" />
+      <li Class="CompProperties_Breakdownable" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_ParallelThoughtArray">
+        <minBoostPercent>100</minBoostPercent>
+        <maxBoostPercent>300</maxBoostPercent>
+        <boostStepPercent>25</boostStepPercent>
+        <basePowerConsumption>1600</basePowerConsumption>
+        <powerPerBoostStep>400</powerPerBoostStep>
+        <idlePowerConsumption>100</idlePowerConsumption>
+        <fallbackRefreshIntervalTicks>60</fallbackRefreshIntervalTicks>
+      </li>
+    </comps>
+  </ThingDef>
+
+</Defs>

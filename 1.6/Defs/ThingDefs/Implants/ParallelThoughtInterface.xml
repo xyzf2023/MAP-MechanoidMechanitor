@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_ParallelThoughtInterface</defName>
+    <label>并行思维接口</label>
+    <description>一种安装于人类机械师脑部的高带宽神经机械接口。它能够接收并行思维阵列传输的运算结果，将机械数据流转换为人类意识能够处理的神经信号。
+
+安装后，该机械师可以成为并行思维阵列的增幅目标，并能够使用数据处理分配功能。接口本身不提供意识增幅。</description>
+    <descriptionHyperlinks>
+      <li>
+        <key>MAP_ParallelThoughtInterface</key>
+        <hediff>MAP_ParallelThoughtInterface</hediff>
+      </li>
+    </descriptionHyperlinks>
+    <maxInstallCount>1</maxInstallCount>
+    <statBases>
+      <MarketValue>3000</MarketValue>
+      <Mass>0.01</Mass>
+      <WorkToMake>18000</WorkToMake>
+    </statBases>
+    <recipeMaker>
+      <researchPrerequisite>MAP_ParallelThoughtMatrix</researchPrerequisite>
+      <skillRequirements Inherit="False">
+        <Crafting>12</Crafting>
+      </skillRequirements>
+    </recipeMaker>
+    <costList>
+      <Plasteel>50</Plasteel>
+      <Gold>20</Gold>
+      <ComponentSpacer>4</ComponentSpacer>
+    </costList>
+    <comps>
+      <li Class="CompProperties_Usable">
+        <compClass>CompUsableImplant</compClass>
+        <useJob>UseItem</useJob>
+        <useLabel>植入并行思维接口</useLabel>
+        <userMustHaveHediff>MechlinkImplant</userMustHaveHediff>
+      </li>
+      <li Class="CompProperties_UseEffectInstallImplant">
+        <hediffDef>MAP_ParallelThoughtInterface</hediffDef>
+        <bodyPart>Brain</bodyPart>
+        <canUpgrade>false</canUpgrade>
+        <requiresExistingHediff>false</requiresExistingHediff>
+        <maxSeverity>1</maxSeverity>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>

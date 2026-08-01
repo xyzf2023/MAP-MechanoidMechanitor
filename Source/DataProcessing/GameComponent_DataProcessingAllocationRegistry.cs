@@ -527,7 +527,11 @@ namespace MAP_MechanoidMechanitor
             RemoveSpecializationRecordsForTarget(target);
         }
 
-        public void ClearOverseer(Pawn? overseer)
+        /// <summary>
+        ///     仅清理实际分配记录与对应正负 Hediff，保留顶置记录、特化选择和动态目标配置，
+        ///     便于系统之后重新分配。供外部（如并行思维阵列）安全回收使用。
+        /// </summary>
+        public void ClearOverseerActualAllocations(Pawn? overseer)
         {
             if (overseer == null)
             {
@@ -591,6 +595,16 @@ namespace MAP_MechanoidMechanitor
                     overseer,
                     DataProcessingAllocationUtility.DataStreamDistributionDef);
             }
+        }
+
+        public void ClearOverseer(Pawn? overseer)
+        {
+            if (overseer == null)
+            {
+                return;
+            }
+
+            ClearOverseerActualAllocations(overseer);
 
             // 无论是否存在正数分配，都统一清理该监管者的全部特化配置（含 0% 预选）。
             RemoveSpecializationRecordsForOverseer(overseer);
@@ -815,7 +829,7 @@ namespace MAP_MechanoidMechanitor
             return overseer != null
                 && !overseer.Dead
                 && !overseer.Destroyed
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(overseer)
+                && DataProcessingAllocatorEligibilityUtility.IsEligibleDataProcessingOverseer(overseer)
                 && overseer.mechanitor != null
                 && overseer.Faction != null
                 && overseer.Faction.IsPlayerSafe();
@@ -4379,11 +4393,53 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                ProtectOverseerConsciousness(overseer);
+                ProtectOverseerConsciousness(overseer, 0f);
             }
         }
 
-        private void ProtectOverseerConsciousness(Pawn overseer)
+        /// <summary>
+        ///     外部（如并行思维阵列）即将失去的意识偏移，单位为意识比例（100% => 1f）。
+        ///     失去 100% 时传入 1f，失去 25% 时传入 0.25f。参数小于等于 0 时直接返回。
+        ///     不先刷新正向 Hediff，以（当前意识 - 预期外部损失）作为规划起点。
+        /// </summary>
+        public void PrepareForExternalConsciousnessLoss(Pawn? overseer, float consciousnessOffsetLoss)
+        {
+            if (overseer == null || overseer.Dead || overseer.Destroyed)
+            {
+                return;
+            }
+
+            if (consciousnessOffsetLoss <= 0f)
+            {
+                return;
+            }
+
+            try
+            {
+                ProtectOverseerConsciousness(overseer, consciousnessOffsetLoss);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    $"[MAP-MechanoidMechanitor] 并行思维阵列外部意识回收失败，监管者={overseer.LabelShortCap}：{ex}");
+                // 保守兜底：仅把实际分配降为 0，尽量保留配置，避免监管者处于危险状态。
+                try
+                {
+                    ClearOverseerActualAllocations(overseer);
+                    DynamicConsciousnessBonusUtility.RefreshForPawn(overseer);
+                }
+                catch (Exception ex2)
+                {
+                    Log.Error(
+                        $"[MAP-MechanoidMechanitor] 并行思维阵列保守意识回收也失败，监管者={overseer.LabelShortCap}：{ex2}");
+                }
+            }
+        }
+
+        /// <summary>
+        ///     对单个监管者执行意识保护：以（当前意识 - 预期外部损失）为起点，安全回收分配至 >= 50% 意识。
+        /// </summary>
+        private void ProtectOverseerConsciousness(Pawn overseer, float anticipatedExternalLoss = 0f)
         {
             if (GetTotalStepsForOverseer(overseer) <= 0)
             {
@@ -4398,7 +4454,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (consciousness >= DataProcessingAllocationUtility.MinReservedConsciousness)
+            // 以（当前意识 - 预期外部损失）作为规划起点，决定是否仍需回收。
+            if (consciousness - anticipatedExternalLoss >= DataProcessingAllocationUtility.MinReservedConsciousness)
             {
                 return;
             }
@@ -4411,13 +4468,13 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                if (consciousness >= DataProcessingAllocationUtility.MinReservedConsciousness)
+                if (consciousness - anticipatedExternalLoss >= DataProcessingAllocationUtility.MinReservedConsciousness)
                 {
                     return;
                 }
 
                 Dictionary<DataProcessingAllocationRecord, int> plan =
-                    BuildProtectionReductionPlan(overseer, consciousness);
+                    BuildProtectionReductionPlan(overseer, consciousness - anticipatedExternalLoss);
                 if (plan.Count == 0)
                 {
                     return;
