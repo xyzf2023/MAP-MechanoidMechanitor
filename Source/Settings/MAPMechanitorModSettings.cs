@@ -11,6 +11,12 @@ namespace MAP_MechanoidMechanitor
         public bool enableLoverImplants = false;
 
         /// <summary>
+        /// 是否监听动态分配目标的征召状态切换，并在下一游戏刻立即刷新目标状态。
+        /// 默认开启；关闭后继续依赖各目标原有的周期检查间隔。
+        /// </summary>
+        public bool enableImmediateDraftStateRefresh = true;
+
+        /// <summary>
         /// 是否在打开肃清指令机械主脑通讯 UI 时显示连接加载界面。
         /// 默认开启。
         /// </summary>
@@ -73,6 +79,10 @@ namespace MAP_MechanoidMechanitor
                 ref enableLoverImplants,
                 "enableLoverImplants",
                 false);
+            Scribe_Values.Look(
+                ref enableImmediateDraftStateRefresh,
+                "enableImmediateDraftStateRefresh",
+                true);
             Scribe_Values.Look(
                 ref enablePurgeDirectiveUiLoadingScreen,
                 "enablePurgeDirectiveUiLoadingScreen",
