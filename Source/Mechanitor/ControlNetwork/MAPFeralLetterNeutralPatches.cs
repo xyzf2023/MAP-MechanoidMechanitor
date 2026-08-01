@@ -41,7 +41,7 @@ namespace MAP_MechanoidMechanitor
         private static string GetFeralLetterTextKey()
         {
             return ShouldUseNeutralFeralLetter()
-                ? "MAP_MechanoidMechanitor.LetterMechsReclaimed"
+                ? "MAP_MechanoidMechanitor.Core.Reclamation.Letter.Text"
                 : "LetterMechsFeral";
         }
 

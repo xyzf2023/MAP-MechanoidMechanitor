@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LanguageData>
-  <MAP_Settings_ProductivityCoreWorkSpeedOffset_Label>每级效能核心工作速度偏移</MAP_Settings_ProductivityCoreWorkSpeedOffset_Label>
-  <MAP_Settings_ProductivityCoreWorkSpeedOffset_Description>设置每级效能核心给予的机械族工作速度偏移。允许输入0至10000；超出范围的数值会在输入框失去焦点或离开设置页面时调整。</MAP_Settings_ProductivityCoreWorkSpeedOffset_Description>
-  <MAP_MechanoidMechanitor.ProductivityCore.WorkSpeedOffset>效能核心：+{0}</MAP_MechanoidMechanitor.ProductivityCore.WorkSpeedOffset>
-</LanguageData>

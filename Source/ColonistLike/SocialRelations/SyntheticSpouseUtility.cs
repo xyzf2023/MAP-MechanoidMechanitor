@@ -11,17 +11,17 @@ namespace MAP_MechanoidMechanitor
     public static class SyntheticSpouseUtility
     {
         private const string AssignSpouseButtonKey =
-            "MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButton";
+            "MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button";
         private const string AssignSpouseButtonDescKey =
-            "MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseButtonDesc";
+            "MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description";
         private const string NoCandidateKey =
-            "MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseNoCandidate";
+            "MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseNoCandidate";
         private const string FailedKey =
-            "MAP_MechanoidMechanitor.SyntheticSpouse.AssignSpouseFailed";
+            "MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed";
         private const string MarriageLetterLabelKey =
-            "MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterLabel";
+            "MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Label";
         private const string MarriageLetterTextKey =
-            "MAP_MechanoidMechanitor.SyntheticSpouse.MarriageLetterText";
+            "MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Text";
 
         private const float MinSpouseCandidateAgeYears = 16f;
 

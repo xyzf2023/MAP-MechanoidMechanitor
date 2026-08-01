@@ -29,15 +29,15 @@ namespace MAP_MechanoidMechanitor
         private const int PendingPawnSyncMediumStageMaxFailures = 6;
 
         private const string AbilityUnlockLetterTitleKey =
-            "MAP_MechanoidMechanitor.AbilityUnlockLetter.Title";
+            "MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.Title";
         private const string AbilityUnlockLetterSpecialScenarioTextKey =
-            "MAP_MechanoidMechanitor.AbilityUnlockLetter.SpecialScenarioText";
+            "MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.SpecialScenario.Text";
         private const string AbilityUnlockLetterJusticeOnlyTextKey =
-            "MAP_MechanoidMechanitor.AbilityUnlockLetter.JusticeOnlyText";
+            "MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.JusticeOnly.Text";
         private const string FeatureUnlockLetterTitleKey =
-            "MAP_MechanoidMechanitor.FeatureUnlockLetter.Title";
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Title";
         private const string FeatureUnlockLetterTextKey =
-            "MAP_MechanoidMechanitor.FeatureUnlockLetter.Text";
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Text";
 
         private bool pendingForcedSync;
         private bool pendingDynamicConsciousnessRefresh;

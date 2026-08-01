@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：头像显示 -->
+  <MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Label>在所有存档中启用机械族"头像显示"</MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Label>
+  <MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>启用后，所有存档中的玩家机械体均可通过"机械族"管理表的"头像显示"选项，将头像追加到殖民者栏。关闭时此功能仅在机械族机械师剧本中启用。</MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>
+
+  <!-- 模块：植入体功能 -->
+  <MAP_MechanoidMechanitor.Settings.BrainImplants.Label>启用机械族机械师使用并安装脑部植入体</MAP_MechanoidMechanitor.Settings.BrainImplants.Label>
+  <MAP_MechanoidMechanitor.Settings.BrainImplants.Description>开启后，机械族机械师可以右键选择人类脑部植入体并为自己安装。此功能会略微影响游戏启动时的加载速度。</MAP_MechanoidMechanitor.Settings.BrainImplants.Description>
+  <MAP_MechanoidMechanitor.Settings.BrainImplants.RestartRequired>此设置将在重新启动游戏后生效。</MAP_MechanoidMechanitor.Settings.BrainImplants.RestartRequired>
+  <MAP_MechanoidMechanitor.Settings.LoverImplants.Label>启用“恋人”使用并安装植入体</MAP_MechanoidMechanitor.Settings.LoverImplants.Label>
+  <MAP_MechanoidMechanitor.Settings.LoverImplants.Description>开启后，“恋人”可以右键选择其身体结构支持的标准植入体或义体并自行安装。此功能会略微影响游戏启动时的加载速度。</MAP_MechanoidMechanitor.Settings.LoverImplants.Description>
+  <MAP_MechanoidMechanitor.Settings.LoverImplants.RestartRequired>此设置将在重新启动游戏后生效。</MAP_MechanoidMechanitor.Settings.LoverImplants.RestartRequired>
+
+  <!-- 模块：仿生子嗣 -->
+  <MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label>通过仿生孕育的子嗣继承异种基因</MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label>
+  <MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description>开启后，具备仿生孕育能力的机械体孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description>
+
+  <!-- 模块：肃清指令界面 -->
+  <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>启用肃清指令UI加载界面</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>
+  <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>开启后，每次打开肃清指令UI时都会先显示通讯连接与进度条界面。关闭后，将跳过加载界面并直接进入主界面。</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>
+
+  <!-- 模块：正义 BOSS 难度 -->
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>正义 BOSS 战难度</MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」作为敌对 BOSS 到达地图后使用的战斗参数。设置会在每场 BOSS 战开始时锁定；战斗过程中修改设置只会影响下一场 BOSS 战。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>召唤高角护盾</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>启用后，「正义」部署设施时会召唤一座用于拦截高角度攻击的护盾发生器。此设置仅在启用皇权 DLC 时显示。</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Label>召唤低角护盾</MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Description>启用后，「正义」部署设施时会召唤一座用于拦截低角度攻击的护盾发生器。此设置仅在启用皇权 DLC 时显示。</MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Label>自动迫击炮数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Description>「正义」到达后尝试部署的自动迫击炮数量。设为 0 时不部署。地图空间不足时，实际部署数量可能少于设置值。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Label>自动电荷炮塔数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Description>「正义」到达后尝试部署的自动电荷炮塔数量。设为 0 时不部署。地图空间不足时，实际部署数量可能少于设置值。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Label>自动炼狱炮塔数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Description>「正义」到达后尝试部署的自动炼狱炮塔数量。设为 0 时不部署。地图空间不足时，实际部署数量可能少于设置值。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Label>召唤波数：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Description>「正义」完成该数量的机械族召唤波次后，将停止继续召唤，并在原有等待时间结束后撤离。</MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Label>波次间隔：{0} 秒</MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Description>两次正常机械族召唤波次之间的等待时间。该设置不影响第一波的初始等待时间、空投失败重试时间或最后一波后的撤退等待时间。</MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Label>每波基础机械族数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>第二波及以后每波召唤的机械族数量。第一波会召唤该数值两倍的机械族。每波约 40% 的位置会从重型机械族池中抽取。</MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label>允许生成 BOSS 机械族</MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>启用后，每个正常波次会进行一次 2% 概率判定。判定成功时，随机将本波的一个机械族替换为现有候选池中的 BOSS 机械族。开发者模式的强制替换指令不受此开关限制。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>
+
+  <!-- 模块：效能核心 -->
+  <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>每级效能核心工作速度偏移</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>
+  <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>设置每级效能核心给予的机械族工作速度偏移。允许输入0至10000；超出范围的数值会在输入框失去焦点或离开设置页面时调整。</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>
+
+</LanguageData>

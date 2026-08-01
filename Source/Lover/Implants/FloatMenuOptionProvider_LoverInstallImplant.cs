@@ -55,8 +55,8 @@ namespace MAP_MechanoidMechanitor
             if (validParts.NullOrEmpty())
             {
                 yield return new FloatMenuOption(
-                    "MAP_LoverImplant.Install".Translate(clickedThing.LabelNoCount)
-                        + "：" + "MAP_LoverImplant.NoValidPart".Translate(),
+                    "MAP_MechanoidMechanitor.Lover.Implant.Install".Translate(clickedThing.LabelNoCount)
+                        + "：" + "MAP_MechanoidMechanitor.Lover.Implant.NoValidPart".Translate(),
                     null);
                 yield break;
             }
@@ -64,7 +64,7 @@ namespace MAP_MechanoidMechanitor
             if (!pawn.CanReach(clickedThing, PathEndMode.Touch, Danger.Deadly))
             {
                 yield return new FloatMenuOption(
-                    "MAP_LoverImplant.Install".Translate(clickedThing.LabelNoCount)
+                    "MAP_MechanoidMechanitor.Lover.Implant.Install".Translate(clickedThing.LabelNoCount)
                         + "：" + "NoPath".Translate().CapitalizeFirst(),
                     null);
                 yield break;
@@ -73,7 +73,7 @@ namespace MAP_MechanoidMechanitor
             if (!pawn.CanReserve(clickedThing))
             {
                 yield return new FloatMenuOption(
-                    "MAP_LoverImplant.Install".Translate(clickedThing.LabelNoCount)
+                    "MAP_MechanoidMechanitor.Lover.Implant.Install".Translate(clickedThing.LabelNoCount)
                         + "：" + "Reserved".Translate().CapitalizeFirst(),
                     null);
                 yield break;
@@ -84,7 +84,7 @@ namespace MAP_MechanoidMechanitor
                 BodyPartRecord selectedPart = validParts[0];
                 yield return FloatMenuUtility.DecoratePrioritizedTask(
                     new FloatMenuOption(
-                        "MAP_LoverImplant.Install".Translate(clickedThing.LabelNoCount),
+                        "MAP_MechanoidMechanitor.Lover.Implant.Install".Translate(clickedThing.LabelNoCount),
                         () => StartJob(pawn, clickedThing, selectedPart)),
                     pawn,
                     clickedThing,
@@ -95,7 +95,7 @@ namespace MAP_MechanoidMechanitor
             // 多个合法部位：主选项点击后创建第二级 FloatMenu 选择具体部位。
             yield return FloatMenuUtility.DecoratePrioritizedTask(
                 new FloatMenuOption(
-                    "MAP_LoverImplant.Install".Translate(clickedThing.LabelNoCount),
+                    "MAP_MechanoidMechanitor.Lover.Implant.Install".Translate(clickedThing.LabelNoCount),
                     () => OpenPartMenu(pawn, clickedThing, validParts)),
                 pawn,
                 clickedThing,
@@ -115,7 +115,7 @@ namespace MAP_MechanoidMechanitor
                 BodyPartRecord selectedPart = validParts[i];
 
                 FloatMenuOption option = new FloatMenuOption(
-                    "MAP_LoverImplant.InstallToPart".Translate(
+                    "MAP_MechanoidMechanitor.Lover.Implant.InstallToPart".Translate(
                         item.LabelNoCount,
                         selectedPart.LabelCap),
                     () => StartJob(pawn, item, selectedPart));
@@ -140,7 +140,7 @@ namespace MAP_MechanoidMechanitor
             if (partIndex < 0)
             {
                 Messages.Message(
-                    "MAP_LoverImplant.InvalidSelection".Translate(),
+                    "MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection".Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;

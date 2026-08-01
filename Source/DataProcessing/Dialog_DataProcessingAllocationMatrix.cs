@@ -90,7 +90,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     DrawCenteredMessage(
                         inRect.ContractedBy(24f),
-                        "MAP_DataProcessingAllocation_OverseerInvalid".Translate());
+                        "MAP_MechanoidMechanitor.DataProcessing.OverseerInvalid".Translate());
                     return;
                 }
 
@@ -264,7 +264,7 @@ namespace MAP_MechanoidMechanitor
             GUI.color = PrimaryText;
             Widgets.Label(
                 new Rect(identityRect.x, identityRect.y, identityRect.width, 30f),
-                "MAP_DataProcessingAllocation_MatrixTitle".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.Matrix.Title".Translate());
 
             Text.Font = GameFont.Small;
             GUI.color = AccentColor;
@@ -275,7 +275,7 @@ namespace MAP_MechanoidMechanitor
             GUI.color = SecondaryText;
             Widgets.Label(
                 new Rect(identityRect.x, identityRect.y + 56f, identityRect.width, Text.LineHeight),
-                "MAP_DataProcessingAllocation_MatrixSubjectCount".Translate(targets.Count));
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixSubjectCount".Translate(targets.Count));
 
             float controlsWidth = 170f;
             Rect controlsRect = new Rect(
@@ -288,13 +288,13 @@ namespace MAP_MechanoidMechanitor
             Rect toggleRect = new Rect(controlsRect.x, controlsRect.y, controlsRect.width, 34f);
             if (ToggleButton(
                     toggleRect,
-                    "MAP_DataProcessingAllocation_DynamicAllocation".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation".Translate(),
                     dynamicEnabled))
             {
                 if (!registry.TrySetDynamicAllocationEnabled(overseer, !dynamicEnabled))
                 {
                     Messages.Message(
-                        "MAP_DataProcessingAllocation_DynamicAllocationFailed".Translate(),
+                        "MAP_MechanoidMechanitor.DataProcessing.DynamicAllocationFailed".Translate(),
                         overseer,
                         MessageTypeDefOf.RejectInput,
                         historical: false);
@@ -309,8 +309,8 @@ namespace MAP_MechanoidMechanitor
             if (FlatButton(
                     strategyRect,
                     showGlobalStrategy
-                        ? "MAP_DataProcessingAllocation_MatrixTargetStrategy".Translate()
-                        : "MAP_DataProcessingAllocation_MatrixGlobalStrategy".Translate(),
+                        ? "MAP_MechanoidMechanitor.DataProcessing.MatrixTargetStrategy".Translate()
+                        : "MAP_MechanoidMechanitor.DataProcessing.MatrixGlobalStrategy".Translate(),
                     showGlobalStrategy))
             {
                 showGlobalStrategy = !showGlobalStrategy;
@@ -349,15 +349,15 @@ namespace MAP_MechanoidMechanitor
             GUI.color = SecondaryText;
             Widgets.Label(
                 new Rect(rect.x, rect.y, rect.width * 0.33f, Text.LineHeight),
-                "MAP_DataProcessingAllocation_MatrixBaseProcessing".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixBaseProcessing".Translate(
                     baseProcessing.ToStringPercent()));
             Widgets.Label(
                 new Rect(rect.x + rect.width * 0.33f, rect.y, rect.width * 0.33f, Text.LineHeight),
-                "MAP_DataProcessingAllocation_CurrentProcessing".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.CurrentProcessing".Translate(
                     current.ToStringPercent()));
             Widgets.Label(
                 new Rect(rect.x + rect.width * 0.66f, rect.y, rect.width * 0.34f, Text.LineHeight),
-                "MAP_DataProcessingAllocation_MatrixDynamicAvailable".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicAvailable".Translate(
                     dynamicAvailable.ToStringPercent()));
 
             Rect railRect = new Rect(rect.x, rect.y + 28f, rect.width, 18f);
@@ -367,14 +367,14 @@ namespace MAP_MechanoidMechanitor
             GUI.color = SecondaryText;
             Widgets.Label(
                 new Rect(rect.x, railRect.yMax + 6f, rect.width * 0.33f, Text.LineHeight),
-                "MAP_DataProcessingAllocation_MatrixSafetyLine".Translate("50%"));
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixSafetyLine".Translate("50%"));
             Widgets.Label(
                 new Rect(rect.x + rect.width * 0.33f, railRect.yMax + 6f, rect.width * 0.37f, Text.LineHeight),
-                "MAP_DataProcessingAllocation_MatrixDynamicThreshold".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicThreshold".Translate(
                     threshold.ToStringPercent()));
             Widgets.Label(
                 new Rect(rect.x + rect.width * 0.70f, railRect.yMax + 6f, rect.width * 0.30f, Text.LineHeight),
-                "MAP_DataProcessingAllocation_MatrixAssigned".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixAssigned".Translate(
                     DataProcessingAllocationUtility.StepsToPercent(totalSteps).ToStringPercent()));
         }
 
@@ -421,7 +421,7 @@ namespace MAP_MechanoidMechanitor
             GUI.color = PrimaryText;
             Widgets.Label(
                 new Rect(inner.x, inner.y, inner.width, Text.LineHeight),
-                "MAP_DataProcessingAllocation_SubjectsHeader".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.SubjectsHeader".Translate());
 
             float filterY = inner.y + 28f;
             DrawFilterTabs(new Rect(inner.x, filterY, inner.width, 28f));
@@ -443,7 +443,7 @@ namespace MAP_MechanoidMechanitor
 
             if (visibleTargets.Count == 0)
             {
-                DrawCenteredMessage(listRect, "MAP_DataProcessingAllocation_NoSubjects".Translate());
+                DrawCenteredMessage(listRect, "MAP_MechanoidMechanitor.DataProcessing.NoSubjects".Translate());
                 return;
             }
 
@@ -480,10 +480,10 @@ namespace MAP_MechanoidMechanitor
             };
             string[] keys =
             {
-                "MAP_DataProcessingAllocation_MatrixFilterAll",
-                "MAP_DataProcessingAllocation_MatrixFilterActive",
-                "MAP_DataProcessingAllocation_MatrixFilterLimited",
-                "MAP_DataProcessingAllocation_MatrixFilterFixed"
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixFilterAll",
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixFilterActive",
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixFilterLimited",
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixFilterFixed"
             };
 
             float width = (rect.width - 12f) / 4f;
@@ -570,7 +570,7 @@ namespace MAP_MechanoidMechanitor
                 ? registry.GetCachedDynamicStateLabelForUI(target)
                     + " · "
                     + DataProcessingAllocationUtility.GetSpecializationLabel(specialization)
-                : "MAP_DataProcessingAllocation_MatrixFixedStatus".Translate()
+                : "MAP_MechanoidMechanitor.DataProcessing.MatrixFixedStatus".Translate()
                     + " · "
                     + DataProcessingAllocationUtility.GetSpecializationLabel(specialization);
             Widgets.Label(
@@ -595,7 +595,7 @@ namespace MAP_MechanoidMechanitor
                 }
                 TooltipHandler.TipRegion(
                     dynamicRect,
-                    "MAP_DataProcessingAllocation_DynamicTargetEnabled".Translate());
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicTargetEnabled".Translate());
             }
             else
             {
@@ -638,7 +638,7 @@ namespace MAP_MechanoidMechanitor
 
             if (target == null)
             {
-                DrawCenteredMessage(inner, "MAP_DataProcessingAllocation_NoSubjects".Translate());
+                DrawCenteredMessage(inner, "MAP_MechanoidMechanitor.DataProcessing.NoSubjects".Translate());
                 return;
             }
 
@@ -669,13 +669,13 @@ namespace MAP_MechanoidMechanitor
             float y = portraitRect.yMax + 12f;
             DrawSectionTitle(
                 new Rect(inner.x, y, inner.width, 24f),
-                "MAP_DataProcessingAllocation_MatrixCurrentDecision".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixCurrentDecision".Translate());
             y += 30f;
 
             string stateLabel = dynamicManaged
                 ? registry.GetCachedDynamicStateLabelForUI(target)
-                : "MAP_DataProcessingAllocation_MatrixFixedStatus".Translate();
-            string decision = "MAP_DataProcessingAllocation_MatrixDecisionPath".Translate(
+                : "MAP_MechanoidMechanitor.DataProcessing.MatrixFixedStatus".Translate();
+            string decision = "MAP_MechanoidMechanitor.DataProcessing.MatrixDecisionPath".Translate(
                 stateLabel,
                 DataProcessingAllocationUtility.GetSpecializationLabel(specialization),
                 DataProcessingAllocationUtility.StepsToPercent(requested).ToStringPercent());
@@ -687,7 +687,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(inner.x, y, inner.width, 24f),
-                "MAP_DataProcessingAllocation_MatrixAllocationControl".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixAllocationControl".Translate());
             y += 30f;
 
             DrawAllocationMetrics(
@@ -706,8 +706,8 @@ namespace MAP_MechanoidMechanitor
             Widgets.Label(
                 new Rect(inner.x, y, inner.width, Text.LineHeight),
                 dynamicManaged
-                    ? "MAP_DataProcessingAllocation_MatrixEditingNormal".Translate()
-                    : "MAP_DataProcessingAllocation_MatrixEditingActual".Translate());
+                    ? "MAP_MechanoidMechanitor.DataProcessing.MatrixEditingNormal".Translate()
+                    : "MAP_MechanoidMechanitor.DataProcessing.MatrixEditingActual".Translate());
             y += 24f;
 
             DrawAllocationButtons(
@@ -721,7 +721,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(inner.x, y, inner.width, 24f),
-                "MAP_DataProcessingAllocation_MatrixCurrentEffects".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixCurrentEffects".Translate());
             y += 30f;
 
             DrawEffectsPreview(
@@ -735,17 +735,17 @@ namespace MAP_MechanoidMechanitor
             float width = (rect.width - 12f) / 3f;
             DrawMetric(
                 new Rect(rect.x, rect.y, width, rect.height),
-                "MAP_DataProcessingAllocation_MatrixActual".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixActual".Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(actual).ToStringPercent(),
                 AccentColor);
             DrawMetric(
                 new Rect(rect.x + width + 6f, rect.y, width, rect.height),
-                "MAP_DataProcessingAllocation_MatrixNormal".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixNormal".Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(normal).ToStringPercent(),
                 SecondaryText);
             DrawMetric(
                 new Rect(rect.x + (width + 6f) * 2f, rect.y, width, rect.height),
-                "MAP_DataProcessingAllocation_MatrixMaximum".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixMaximum".Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(requested).ToStringPercent(),
                 requested > actual ? WarningColor : PrimaryText);
         }
@@ -808,7 +808,7 @@ namespace MAP_MechanoidMechanitor
                     if (!succeeded)
                     {
                         Messages.Message(
-                            "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
+                            "MAP_MechanoidMechanitor.DataProcessing.AdjustFailed".Translate(),
                             overseer,
                             MessageTypeDefOf.RejectInput,
                             historical: false);
@@ -824,7 +824,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (steps <= 0)
             {
-                DrawCenteredMessage(rect, "MAP_DataProcessingAllocation_EffectNone".Translate());
+                DrawCenteredMessage(rect, "MAP_MechanoidMechanitor.DataProcessing.EffectNone".Translate());
                 return;
             }
 
@@ -865,40 +865,40 @@ namespace MAP_MechanoidMechanitor
 
             if (work > 0.0001f)
             {
-                result.Add("MAP_DataProcessingAllocation_EffectWorkSpeed".Translate(work.ToStringPercent()));
+                result.Add("MAP_MechanoidMechanitor.DataProcessing.EffectWorkSpeed".Translate(work.ToStringPercent()));
             }
             if (move > 0.0001f)
             {
-                result.Add("MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(move.ToStringPercent()));
+                result.Add("MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed".Translate(move.ToStringPercent()));
             }
             if (aim < 0.9999f)
             {
-                result.Add("MAP_DataProcessingAllocation_EffectAimingDelay".Translate(aim.ToString("0.##")));
+                result.Add("MAP_MechanoidMechanitor.DataProcessing.EffectAimingDelay".Translate(aim.ToString("0.##")));
             }
             if (ranged < 0.9999f)
             {
-                result.Add("MAP_DataProcessingAllocation_EffectRangedCooldown".Translate(ranged.ToString("0.##")));
+                result.Add("MAP_MechanoidMechanitor.DataProcessing.EffectRangedCooldown".Translate(ranged.ToString("0.##")));
             }
             if (melee < 0.9999f)
             {
-                result.Add("MAP_DataProcessingAllocation_EffectMeleeCooldown".Translate(melee.ToString("0.##")));
+                result.Add("MAP_MechanoidMechanitor.DataProcessing.EffectMeleeCooldown".Translate(melee.ToString("0.##")));
             }
             if (damage < 0.9999f)
             {
-                result.Add("MAP_DataProcessingAllocation_EffectIncomingDamage".Translate(damage.ToString("0.##")));
+                result.Add("MAP_MechanoidMechanitor.DataProcessing.EffectIncomingDamage".Translate(damage.ToString("0.##")));
             }
             if (stagger < 0.9999f)
             {
-                result.Add("MAP_DataProcessingAllocation_EffectStaggerDuration".Translate(stagger.ToString("0.##")));
+                result.Add("MAP_MechanoidMechanitor.DataProcessing.EffectStaggerDuration".Translate(stagger.ToString("0.##")));
             }
             if (energy < 0.9999f)
             {
-                result.Add("MAP_DataProcessingAllocation_EffectMechEnergyUsage".Translate(energy.ToString("0.##")));
+                result.Add("MAP_MechanoidMechanitor.DataProcessing.EffectMechEnergyUsage".Translate(energy.ToString("0.##")));
             }
 
             if (result.Count == 0)
             {
-                result.Add("MAP_DataProcessingAllocation_EffectNone".Translate());
+                result.Add("MAP_MechanoidMechanitor.DataProcessing.EffectNone".Translate());
             }
 
             return result;
@@ -917,8 +917,8 @@ namespace MAP_MechanoidMechanitor
             Widgets.Label(
                 new Rect(inner.x, inner.y, inner.width, Text.LineHeight),
                 showGlobalStrategy
-                    ? "MAP_DataProcessingAllocation_MatrixGlobalStrategy".Translate()
-                    : "MAP_DataProcessingAllocation_MatrixTargetStrategy".Translate());
+                    ? "MAP_MechanoidMechanitor.DataProcessing.MatrixGlobalStrategy".Translate()
+                    : "MAP_MechanoidMechanitor.DataProcessing.MatrixTargetStrategy".Translate());
 
             Rect listRect = new Rect(
                 inner.x,
@@ -941,7 +941,7 @@ namespace MAP_MechanoidMechanitor
                 }
                 else
                 {
-                    DrawCenteredMessage(viewRect, "MAP_DataProcessingAllocation_NoSubjects".Translate());
+                    DrawCenteredMessage(viewRect, "MAP_MechanoidMechanitor.DataProcessing.NoSubjects".Translate());
                 }
             }
             finally
@@ -961,12 +961,12 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(rect.x, y, rect.width, 24f),
-                "MAP_DataProcessingAllocation_DynamicMinConsciousness".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicMinConsciousness".Translate());
             y += 30f;
 
             DrawInfoBox(
                 new Rect(rect.x, y, rect.width, 48f),
-                "MAP_DataProcessingAllocation_DynamicMinConsciousnessTip".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicMinConsciousness.Tooltip".Translate(),
                 WarningColor);
             y += 60f;
 
@@ -983,9 +983,9 @@ namespace MAP_MechanoidMechanitor
 
             string[] presetKeys =
             {
-                "MAP_DataProcessingAllocation_MatrixPresetConservative",
-                "MAP_DataProcessingAllocation_MatrixPresetBalanced",
-                "MAP_DataProcessingAllocation_MatrixPresetAggressive"
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixPresetConservative",
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixPresetBalanced",
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixPresetAggressive"
             };
             int[] presetValues = { 100, 75, 55 };
             float presetWidth = (rect.width - 8f) / 3f;
@@ -1017,7 +1017,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(rect.x, y, rect.width, 24f),
-                "MAP_DataProcessingAllocation_MatrixBudgetStatistics".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixBudgetStatistics".Translate());
             y += 32f;
 
             DrawGlobalBudgetStats(new Rect(rect.x, y, rect.width, 220f), registry, threshold);
@@ -1062,14 +1062,14 @@ namespace MAP_MechanoidMechanitor
 
             string[] labels =
             {
-                "MAP_DataProcessingAllocation_MatrixBaseProcessing".Translate(baseProcessing.ToStringPercent()),
-                "MAP_DataProcessingAllocation_CurrentProcessing".Translate(current.ToStringPercent()),
-                "MAP_DataProcessingAllocation_MatrixDynamicThreshold".Translate(thresholdPercent + "%"),
-                "MAP_DataProcessingAllocation_MatrixFixedUsage".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixBaseProcessing".Translate(baseProcessing.ToStringPercent()),
+                "MAP_MechanoidMechanitor.DataProcessing.CurrentProcessing".Translate(current.ToStringPercent()),
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicThreshold".Translate(thresholdPercent + "%"),
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixFixedUsage".Translate(
                     DataProcessingAllocationUtility.StepsToPercent(fixedSteps).ToStringPercent()),
-                "MAP_DataProcessingAllocation_MatrixDynamicUsage".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicUsage".Translate(
                     DataProcessingAllocationUtility.StepsToPercent(dynamicSteps).ToStringPercent()),
-                "MAP_DataProcessingAllocation_MatrixUnmetRequest".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixUnmetRequest".Translate(
                     DataProcessingAllocationUtility.StepsToPercent(unmetSteps).ToStringPercent())
             };
 
@@ -1114,7 +1114,7 @@ namespace MAP_MechanoidMechanitor
             Rect toggleRect = new Rect(rect.x, y, rect.width, 34f);
             if (ToggleButton(
                     toggleRect,
-                    "MAP_DataProcessingAllocation_DynamicTargetEnabled".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicTargetEnabled".Translate(),
                     globalEnabled && targetEnabled,
                     globalEnabled))
             {
@@ -1124,7 +1124,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(rect.x, y, rect.width, 24f),
-                "MAP_DataProcessingAllocation_DynamicDefaultMode".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicDefaultMode".Translate());
             y += 30f;
             DrawSpecializationGrid(
                 new Rect(rect.x, y, rect.width, 74f),
@@ -1136,7 +1136,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(rect.x, y, rect.width, 24f),
-                "MAP_DataProcessingAllocation_DynamicNormalSteps".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicNormalSteps".Translate());
             y += 28f;
             DrawStepEditor(
                 new Rect(rect.x, y, rect.width, 32f),
@@ -1146,7 +1146,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(rect.x, y, rect.width, 24f),
-                "MAP_DataProcessingAllocation_DynamicCommonMaxSteps".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicCommonMaxSteps".Translate());
             y += 28f;
             DrawStepEditor(
                 new Rect(rect.x, y, rect.width, 32f),
@@ -1156,7 +1156,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(rect.x, y, rect.width, 24f),
-                "MAP_DataProcessingAllocation_DynamicPriority".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicPriority".Translate());
             y += 28f;
             DrawPriorityButtons(
                 new Rect(rect.x, y, rect.width, 32f),
@@ -1166,7 +1166,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(rect.x, y, rect.width, 24f),
-                "MAP_DataProcessingAllocation_DynamicCheckInterval".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicCheckInterval".Translate());
             y += 28f;
             DrawIntervalButtons(
                 new Rect(rect.x, y, rect.width, 32f),
@@ -1176,7 +1176,7 @@ namespace MAP_MechanoidMechanitor
 
             DrawSectionTitle(
                 new Rect(rect.x, y, rect.width, 24f),
-                "MAP_DataProcessingAllocation_MatrixAutomaticRules".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixAutomaticRules".Translate());
             y += 30f;
 
             bool work = config?.switchForWork ?? true;
@@ -1186,29 +1186,29 @@ namespace MAP_MechanoidMechanitor
 
             DrawRuleToggle(
                 new Rect(rect.x, y, rect.width, 48f),
-                "MAP_DataProcessingAllocation_DynamicRuleWork".Translate(),
-                "MAP_DataProcessingAllocation_MatrixRuleWorkDesc".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicRuleWork".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixRuleWork.Description".Translate(),
                 work,
                 next => registry.SetDynamicTargetRule(overseer, target, "Work", next));
             y += 54f;
             DrawRuleToggle(
                 new Rect(rect.x, y, rect.width, 48f),
-                "MAP_DataProcessingAllocation_DynamicRuleDraftedWeapon".Translate(),
-                "MAP_DataProcessingAllocation_MatrixRuleDraftedDesc".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicRuleDraftedWeapon".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixRuleDrafted.Description".Translate(),
                 drafted,
                 next => registry.SetDynamicTargetRule(overseer, target, "DraftedWeapon", next));
             y += 54f;
             DrawRuleToggle(
                 new Rect(rect.x, y, rect.width, 48f),
-                "MAP_DataProcessingAllocation_DynamicRuleCloseMelee".Translate(),
-                "MAP_DataProcessingAllocation_MatrixRuleMeleeDesc".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicRuleCloseMelee".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixRuleMelee.Description".Translate(),
                 closeMelee,
                 next => registry.SetDynamicTargetRule(overseer, target, "CloseMelee", next));
             y += 54f;
             DrawRuleToggle(
                 new Rect(rect.x, y, rect.width, 48f),
-                "MAP_DataProcessingAllocation_DynamicRuleUndraftedFallback".Translate(),
-                "MAP_DataProcessingAllocation_MatrixRuleFallbackDesc".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicRuleUndraftedFallback".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixRuleFallback.Description".Translate(),
                 fallback,
                 next => registry.SetDynamicTargetRule(overseer, target, "UndraftedFallback", next));
             y += 60f;
@@ -1217,7 +1217,7 @@ namespace MAP_MechanoidMechanitor
             Rect advancedRect = new Rect(rect.x, y, rect.width, 34f);
             if (ToggleButton(
                     advancedRect,
-                    "MAP_DataProcessingAllocation_DynamicAdvancedMax".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicAdvancedMax".Translate(),
                     advanced))
             {
                 registry.SetDynamicTargetAdvancedMaxEnabled(overseer, target, !advanced);
@@ -1281,10 +1281,10 @@ namespace MAP_MechanoidMechanitor
         {
             string[] keys =
             {
-                "MAP_DataProcessingAllocation_MatrixPriorityCritical",
-                "MAP_DataProcessingAllocation_MatrixPriorityHigh",
-                "MAP_DataProcessingAllocation_MatrixPriorityStandard",
-                "MAP_DataProcessingAllocation_MatrixPriorityLow"
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityCritical",
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityHigh",
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityStandard",
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityLow"
             };
             float width = (rect.width - 12f) / 4f;
             for (int i = 0; i < 4; i++)
@@ -1316,7 +1316,7 @@ namespace MAP_MechanoidMechanitor
                     rect.height);
                 if (FlatButton(
                         buttonRect,
-                        "MAP_DataProcessingAllocation_DynamicSeconds".Translate(value),
+                        "MAP_MechanoidMechanitor.DataProcessing.DynamicSeconds".Translate(value),
                         current == value))
                 {
                     setter(value);
@@ -1326,13 +1326,13 @@ namespace MAP_MechanoidMechanitor
                 {
                     TooltipHandler.TipRegion(
                         buttonRect,
-                        "MAP_DataProcessingAllocation_MatrixIntervalHighFrequency".Translate());
+                        "MAP_MechanoidMechanitor.DataProcessing.MatrixIntervalHighFrequency".Translate());
                 }
                 else if (value == 10)
                 {
                     TooltipHandler.TipRegion(
                         buttonRect,
-                        "MAP_DataProcessingAllocation_MatrixIntervalRecommended".Translate());
+                        "MAP_MechanoidMechanitor.DataProcessing.MatrixIntervalRecommended".Translate());
                 }
             }
         }
@@ -1541,7 +1541,7 @@ namespace MAP_MechanoidMechanitor
             GUI.color = SecondaryText;
             Widgets.Label(
                 new Rect(inner.x, inner.y, inner.width - 110f, inner.height),
-                "MAP_DataProcessingAllocation_MatrixLegend".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.MatrixLegend".Translate());
 
             Rect closeRect = new Rect(inner.xMax - 96f, inner.y, 96f, inner.height);
             if (FlatButton(closeRect, "CloseButton".Translate(), false))

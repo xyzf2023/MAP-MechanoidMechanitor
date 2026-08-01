@@ -12,14 +12,14 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.GetMechGizmos))]
     public static class Patch_MechanitorUtility_GetMechGizmos_MechanicalConsciousnessTransfer
     {
-        private const string LabelKey = "MAP_MechanoidMechanitor.ConsciousnessTransfer.Label";
+        private const string LabelKey = "MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.Label";
         private const string DescriptionKey =
-            "MAP_MechanoidMechanitor.ConsciousnessTransfer.Description";
+            "MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.Description";
         private const string NoCandidateKey =
-            "MAP_MechanoidMechanitor.ConsciousnessTransfer.NoCandidate";
+            "MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.NoCandidate";
         private const string RecoveringEmergencyDataKey =
-            "MAP_MechanoidMechanitor.ConsciousnessTransfer.RecoveringEmergencyData";
-        private const string FailedKey = "MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed";
+            "MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.RecoveringEmergencyData";
+        private const string FailedKey = "MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.Failed";
 
         [HarmonyPostfix]
         public static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Pawn mech)

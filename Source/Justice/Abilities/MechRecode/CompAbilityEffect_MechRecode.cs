@@ -5,7 +5,7 @@ namespace MAP_MechanoidMechanitor
 {
     public class CompAbilityEffect_MechRecode : CompAbilityEffect
     {
-        private const string InvalidTargetMessageKey = "MAP_MechanoidMechanitor.MechRecode.InvalidTarget";
+        private const string InvalidTargetMessageKey = "MAP_MechanoidMechanitor.Justice.Ability.MechRecode.InvalidTarget";
 
         public new CompProperties_AbilityMechRecode Props =>
             (CompProperties_AbilityMechRecode)props;

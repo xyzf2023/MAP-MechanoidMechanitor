@@ -9,8 +9,8 @@ namespace MAP_MechanoidMechanitor
     public class JobDriver_MechRecode : JobDriver
     {
         private const float DefaultRecodeTicksPerBandwidth = 300f;
-        private const string InvalidTargetMessageKey = "MAP_MechanoidMechanitor.MechRecode.InvalidTarget";
-        private const string SuccessMessageKey = "MAP_MechanoidMechanitor.MechRecode.Success";
+        private const string InvalidTargetMessageKey = "MAP_MechanoidMechanitor.Justice.Ability.MechRecode.InvalidTarget";
+        private const string SuccessMessageKey = "MAP_MechanoidMechanitor.Justice.Ability.MechRecode.Success";
 
         private Corpse? TargetCorpse => job?.GetTarget(TargetIndex.A).Thing as Corpse;
 

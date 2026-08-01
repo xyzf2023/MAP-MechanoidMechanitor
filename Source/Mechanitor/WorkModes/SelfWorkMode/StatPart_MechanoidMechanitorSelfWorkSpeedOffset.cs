@@ -20,7 +20,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (TryGetOffset(req, out float offset))
             {
-                return "MAP_MechanoidMechanitor.MechanoidMechanitorSelfWorkSpeedFeedback"
+                return "MAP_MechanoidMechanitor.Core.WorkSpeed.Feedback"
                     .Translate(offset.ToStringPercent());
             }
 

@@ -143,9 +143,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 // 复用“部队支援”已有翻译键，不新增设定文本。
                 Find.LetterStack.ReceiveLetter(
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.LetterLabel"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Letter.Label"
                         .Translate(),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.LetterText"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Letter.Text"
                         .Translate(),
                     LetterDefOf.PositiveEvent,
                     new LookTargets(map.Center, map),

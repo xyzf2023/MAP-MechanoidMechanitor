@@ -85,46 +85,46 @@ namespace MAP_MechanoidMechanitor
 
             if (!LoverImplantFeatureState.EnabledForSession)
             {
-                failureReason = "MAP_LoverImplant.InstallFailed".Translate();
+                failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate();
                 return false;
             }
 
             if (!IsLover(pawn))
             {
-                failureReason = "MAP_LoverImplant.InstallFailed".Translate();
+                failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate();
                 return false;
             }
 
             if (item == null || item.Destroyed || item.stackCount <= 0)
             {
-                failureReason = "MAP_LoverImplant.InstallFailed".Translate();
+                failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate();
                 return false;
             }
 
             if (!LoverRecipeImplantRegistrar.TryGetRecipe(item.def, out RecipeDef registeredRecipe)
                 || registeredRecipe != recipe)
             {
-                failureReason = "MAP_LoverImplant.InvalidSelection".Translate();
+                failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection".Translate();
                 return false;
             }
 
             if (selectedPart == null
                 || !pawn.RaceProps.body.AllParts.Contains(selectedPart))
             {
-                failureReason = "MAP_LoverImplant.InvalidSelection".Translate();
+                failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection".Translate();
                 return false;
             }
 
             List<BodyPartRecord> validParts = GetValidParts(pawn, recipe);
             if (!validParts.Contains(selectedPart))
             {
-                failureReason = "MAP_LoverImplant.InvalidSelection".Translate();
+                failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection".Translate();
                 return false;
             }
 
             if (recipe.addsHediff == null)
             {
-                failureReason = "MAP_LoverImplant.InstallFailed".Translate();
+                failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate();
                 return false;
             }
 
@@ -138,7 +138,7 @@ namespace MAP_MechanoidMechanitor
                 return TryInstallAttachment(pawn, item, recipe, selectedPart, out failureReason);
             }
 
-            failureReason = "MAP_LoverImplant.InstallFailed".Translate();
+            failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate();
             return false;
         }
 
@@ -156,7 +156,7 @@ namespace MAP_MechanoidMechanitor
                 || installed.Part != selectedPart
                 || !pawn.health.hediffSet.hediffs.Contains(installed))
             {
-                failureReason = "MAP_LoverImplant.InstallFailed".Translate();
+                failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate();
                 return false;
             }
 
@@ -188,7 +188,7 @@ namespace MAP_MechanoidMechanitor
                 || !pawn.health.hediffSet.hediffs.Contains(installed))
             {
                 SpawnReturnedItems(pawn, returnedItems);
-                failureReason = "MAP_LoverImplant.InstallFailed".Translate();
+                failureReason = "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate();
                 return false;
             }
 

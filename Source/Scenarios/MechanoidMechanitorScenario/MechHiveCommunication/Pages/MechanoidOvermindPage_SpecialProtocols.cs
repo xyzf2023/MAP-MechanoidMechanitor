@@ -51,14 +51,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 MechanoidOvermindUiStyle.DrawLabel(
                     new Rect(inner.x, inner.y, inner.width, 24f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Body".Translate(),
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Body".Translate(),
                     GameFont.Small,
                     TextAnchor.MiddleLeft,
                     MechanoidOvermindUiStyle.AccentBright);
 
                 MechanoidOvermindUiStyle.DrawSecondaryLabel(
                     new Rect(inner.x, inner.y + 26f, inner.width, 20f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Description"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Description"
                         .Translate());
 
                 bool clusterAvailable =
@@ -107,15 +107,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     cardHeight);
 
                 string clusterMeta = clusterMap != null
-                    ? "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.CardMeta"
+                    ? "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.CardMeta"
                         .Translate(clusterMap.Parent.LabelCap)
-                    : "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ProtocolUnavailable"
+                    : "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ProtocolUnavailable"
                         .Translate();
                 DrawProtocolCard(
                     clusterCardRect,
                     SpecialProtocolKind.MechClusterDeployment,
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Title",
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Description",
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Title",
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Description",
                     clusterMeta,
                     clusterAvailable,
                     clusterOrder,
@@ -124,9 +124,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 DrawProtocolCard(
                     forceSupportCardRect,
                     SpecialProtocolKind.MechForceSupport,
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Title",
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Description",
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.CardMeta"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Title",
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Description",
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.CardMeta"
                         .Translate(),
                     forceSupportAvailable,
                     clusterOrder,
@@ -163,7 +163,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 cornerMarks: false);
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(inner.x + 12f, inner.y + 68f, inner.width - 24f, 56f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Empty"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Empty"
                     .Translate(),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
@@ -274,7 +274,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(inner.x, inner.y, inner.width, 22f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Configuration"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Configuration"
                     .Translate(),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
@@ -282,7 +282,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(inner.x, inner.y + 28f, inner.width, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Map"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Map"
                     .Translate(map.Parent.LabelCap));
 
             Rect threatSelectorRect = new Rect(
@@ -292,14 +292,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 30f);
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     threatSelectorRect,
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Threat"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Threat"
                         .Translate(order.ThreatPoints)))
             {
                 OpenThreatPointsMenu(order);
             }
 
             string conditionLabel = order.ConditionCauser?.LabelCap
-                ?? "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.NoConditionCauser"
+                ?? "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.NoConditionCauser"
                     .Translate();
             Rect selectorRect = new Rect(
                 inner.x,
@@ -308,7 +308,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 30f);
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     selectorRect,
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.ConditionCauser"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.ConditionCauser"
                         .Translate(conditionLabel)))
             {
                 OpenConditionCauserMenu(order);
@@ -320,7 +320,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     threatSelectorRect.y,
                     inner.xMax - selectorRect.xMax - 12f,
                     threatSelectorRect.height + 8f + selectorRect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Cost"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Cost"
                     .Translate(order.Cost),
                 GameFont.Small,
                 TextAnchor.MiddleRight,
@@ -332,7 +332,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     selectorRect.yMax + 8f,
                     inner.width,
                     Mathf.Max(20f, inner.yMax - selectorRect.yMax - 8f)),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Footnote"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Footnote"
                     .Translate(),
                 TextAnchor.UpperLeft);
         }
@@ -347,7 +347,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(inner.x, inner.y, inner.width, 22f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Configuration"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Configuration"
                     .Translate(),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
@@ -360,7 +360,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 30f);
             MechanoidOvermindUiStyle.DrawLabel(
                 pointsLabelRect,
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Points"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Points"
                     .Translate(),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
@@ -379,7 +379,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     pointsFieldRect.y,
                     Mathf.Max(0f, inner.xMax - pointsFieldRect.xMax - 12f),
                     pointsFieldRect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Cost"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Cost"
                     .Translate(order.Cost),
                 GameFont.Small,
                 TextAnchor.MiddleRight,
@@ -391,7 +391,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Mathf.Min(430f, inner.width),
                 30f);
             string templateFullLabel =
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Template"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Template"
                     .Translate(order.GetTemplateLabel());
             Text.Font = GameFont.Small;
             string templateButtonLabel = templateFullLabel.Truncate(
@@ -411,7 +411,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     templateButtonRect.yMax + 8f,
                     inner.width,
                     Mathf.Max(20f, inner.yMax - templateButtonRect.yMax - 8f)),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Footnote"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Footnote"
                     .Translate(),
                 TextAnchor.UpperLeft);
         }
@@ -448,7 +448,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 int captured = points;
                 string label = (order.ThreatPoints == captured ? "● " : string.Empty)
-                    + "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.ThreatOption"
+                    + "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.ThreatOption"
                         .Translate(
                             captured,
                             MechClusterDeploymentOrder.ComputeCost(captured, false));
@@ -466,7 +466,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 new FloatMenuOption(
                     (order.ConditionCauser == null ? "● " : string.Empty)
-                        + "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.NoConditionCauser"
+                        + "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.NoConditionCauser"
                             .Translate(),
                     () => order.SetConditionCauser(null))
             };

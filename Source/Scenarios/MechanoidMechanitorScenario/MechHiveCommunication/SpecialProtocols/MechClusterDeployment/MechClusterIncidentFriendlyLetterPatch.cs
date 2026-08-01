@@ -39,10 +39,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             baseLetterLabel =
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.LetterLabel"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Letter.Label"
                     .Translate();
             baseLetterText =
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.LetterText"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Letter.Text"
                     .Translate();
             baseLetterDef = LetterDefOf.PositiveEvent;
         }

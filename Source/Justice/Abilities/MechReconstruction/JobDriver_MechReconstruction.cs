@@ -10,9 +10,9 @@ namespace MAP_MechanoidMechanitor
     {
         private const int DefaultReconstructionDurationTicks = 900;
         private const string WarmupEffecterDefName = "MAP_Effecter_MechReconstructionWarmupOnTarget";
-        private const string InvalidTargetMessageKey = "MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget";
-        private const string ReportWithTargetKey = "MAP_MechanoidMechanitor.MechReconstruction.ReportWithTarget";
-        private const string ReportDefaultKey = "MAP_MechanoidMechanitor.MechReconstruction.ReportDefault";
+        private const string InvalidTargetMessageKey = "MAP_MechanoidMechanitor.Justice.Ability.MechReconstruction.InvalidTarget";
+        private const string ReportWithTargetKey = "MAP_MechanoidMechanitor.Justice.Ability.MechReconstruction.ReportWithTarget";
+        private const string ReportDefaultKey = "MAP_MechanoidMechanitor.Justice.Ability.MechReconstruction.ReportDefault";
 
         private Effecter? warmupEffecter;
 

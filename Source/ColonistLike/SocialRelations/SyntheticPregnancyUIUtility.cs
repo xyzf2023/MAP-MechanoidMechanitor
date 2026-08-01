@@ -27,7 +27,7 @@ namespace MAP_MechanoidMechanitor
             {
                 TooltipHandler.TipRegion(
                     rect,
-                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ApproachTitle".Translate()
+                    "MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title".Translate()
                     .Colorize(ColoredText.TipSectionTitleColor)
                     + "\n"
                     + GetLabel(current)
@@ -69,9 +69,9 @@ namespace MAP_MechanoidMechanitor
                 SyntheticPregnancyApproach.TryForBaby =>
                     PregnancyApproach.TryForBaby.GetLabel().CapitalizeFirst(),
                 SyntheticPregnancyApproach.TryForBabyMale =>
-                    "MAP_MechanoidMechanitor.SyntheticPregnancy.TryForBabyMale".Translate(),
+                    "MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyMale".Translate(),
                 SyntheticPregnancyApproach.TryForBabyFemale =>
-                    "MAP_MechanoidMechanitor.SyntheticPregnancy.TryForBabyFemale".Translate(),
+                    "MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyFemale".Translate(),
                 _ => PregnancyApproach.AvoidPregnancy.GetLabel().CapitalizeFirst(),
             };
         }

@@ -58,9 +58,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Find.LetterStack.ReceiveLetter(
-                "MAP_MechanoidMechanitor.MechHiveCommunication.ContactUnlockedLetter.Label"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactUnlockedLetter.Label"
                     .Translate(),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.ContactUnlockedLetter.Text"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactUnlockedLetter.Text"
                     .Translate(),
                 LetterDefOf.NeutralEvent,
                 parent,

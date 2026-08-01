@@ -40,7 +40,7 @@ namespace MAP_MechanoidMechanitor
             Text.Font = GameFont.Medium;
             Widgets.Label(
                 new Rect(contentRect.x, curY, contentRect.width, Text.LineHeight),
-                "MAP_DataProcessingAllocation_DynamicSettingsTitle".Translate(overseer.LabelShortCap));
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicSettings.Title".Translate(overseer.LabelShortCap));
             curY += Text.LineHeight + SectionGap;
             Text.Font = GameFont.Small;
 
@@ -56,7 +56,7 @@ namespace MAP_MechanoidMechanitor
             float current = DataProcessingAllocationUtility.GetCurrentConsciousness(overseer);
             Widgets.Label(
                 new Rect(contentRect.x, curY, contentRect.width, Text.LineHeight),
-                "MAP_DataProcessingAllocation_DynamicCurrentProcessing".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentProcessing".Translate(
                     current.ToStringPercent()));
             curY += Text.LineHeight + RowGap;
 
@@ -65,7 +65,7 @@ namespace MAP_MechanoidMechanitor
                 float labelWidth = 360f;
                 Rect labelRect = new Rect(contentRect.x, curY, labelWidth, Text.LineHeight);
                 Widgets.Label(labelRect,
-                    "MAP_DataProcessingAllocation_DynamicMinConsciousness".Translate());
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicMinConsciousness".Translate());
                 Rect minusRect = new Rect(contentRect.x + labelWidth, curY, 28f, Text.LineHeight + 4f);
                 Rect plusRect = new Rect(contentRect.x + labelWidth + 36f, curY, 28f, Text.LineHeight + 4f);
                 Rect valueRect = new Rect(contentRect.x + labelWidth + 72f, curY, 160f, Text.LineHeight + 4f);
@@ -83,7 +83,7 @@ namespace MAP_MechanoidMechanitor
 
                 Widgets.Label(valueRect, percent + "%");
                 TooltipHandler.TipRegion(labelRect,
-                    "MAP_DataProcessingAllocation_DynamicMinConsciousnessTip".Translate());
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicMinConsciousness.Tooltip".Translate());
                 curY += Text.LineHeight + RowGap;
 
                 float threshold = percent / 100f;
@@ -92,7 +92,7 @@ namespace MAP_MechanoidMechanitor
                     GUI.color = new Color(0.9f, 0.6f, 0.2f);
                     Widgets.Label(
                         new Rect(contentRect.x, curY, contentRect.width, Text.LineHeight),
-                        "MAP_DataProcessingAllocation_DynamicBudgetInsufficient".Translate());
+                        "MAP_MechanoidMechanitor.DataProcessing.DynamicBudgetInsufficient".Translate());
                     GUI.color = Color.white;
                     curY += Text.LineHeight + RowGap;
                 }
@@ -104,7 +104,7 @@ namespace MAP_MechanoidMechanitor
             Text.Font = GameFont.Small;
             Widgets.Label(
                 new Rect(contentRect.x, curY, contentRect.width, Text.LineHeight),
-                "MAP_DataProcessingAllocation_DynamicTargetsHeader".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicTargetsHeader".Translate());
             curY += Text.LineHeight + RowGap;
 
             List<Pawn> targets = new List<Pawn>();
@@ -188,11 +188,11 @@ namespace MAP_MechanoidMechanitor
             string stateLabel = registry.GetCachedDynamicStateLabelForUI(target);
             string info = string.Format(
                 "{0}: {1} | {2}: {3} | {4}: {5}",
-                "MAP_DataProcessingAllocation_DynamicCurrentMode".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentMode".Translate(),
                 DataProcessingAllocationUtility.GetSpecializationLabel(currentSpec),
-                "MAP_DataProcessingAllocation_DynamicCurrentActualSteps".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentActualSteps".Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(actual).ToStringPercent(),
-                "MAP_DataProcessingAllocation_DynamicNormalSteps".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicNormalSteps".Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(normal).ToStringPercent());
             Widgets.Label(infoRect, info);
 
@@ -200,17 +200,17 @@ namespace MAP_MechanoidMechanitor
             string fullInfo = string.Format(
                 "{0}\n{1}: {2}\n{3}: {4}\n{5}: {6}",
                 info,
-                "MAP_DataProcessingAllocation_DynamicCurrentState".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentState".Translate(),
                 stateLabel,
-                "MAP_DataProcessingAllocation_DynamicPriority".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicPriority".Translate(),
                 (config?.priority ?? 3).ToString(),
-                "MAP_DataProcessingAllocation_DynamicCurrentActualSteps".Translate(),
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentActualSteps".Translate(),
                 DataProcessingAllocationUtility.StepsToPercent(actual).ToStringPercent());
             TooltipHandler.TipRegion(infoRect, fullInfo);
 
             if (Widgets.ButtonText(
                     detailRect,
-                    "MAP_DataProcessingAllocation_DynamicDetailButton".Translate()))
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicDetail.Button".Translate()))
             {
                 Find.WindowStack.Add(
                     new Dialog_DataProcessingDynamicTargetSettings(overseer, target));

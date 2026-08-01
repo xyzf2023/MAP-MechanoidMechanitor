@@ -29,7 +29,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return null;
             }
 
-            return "MAP_MechanoidMechanitor.Story.PurgeDirective.DisabledReason".Translate();
+            return "MAP_MechanoidMechanitor.PurgeDirective.Scenario.DisabledReason".Translate();
         }
 
         public override string? GetSummaryValue(

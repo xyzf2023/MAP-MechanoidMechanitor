@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：剧本词条 -->
+  <MAP_MechanoidMechanitor.Scenario.Editor.Tooltip>机械族机械师剧本：扮演一个觉醒了自我意识的机械族进行游戏。加入此词条后，当前剧本原定的殖民者将会被选定的机械族机械师替换，且存档会启用一系列机械族机械师殖民地专属效果。\n注意：可能与某些MOD剧本发生冲突。</MAP_MechanoidMechanitor.Scenario.Editor.Tooltip>
+
+  <!-- 模块：剧情组件 -->
+  <MAP_MechanoidMechanitor.Scenario.MechanitorEditor.Tooltip>选择一个任意机械族以作为开局的机械族机械师。</MAP_MechanoidMechanitor.Scenario.MechanitorEditor.Tooltip>
+  <MAP_MechanoidMechanitor.Story.Option.Enabled>开启</MAP_MechanoidMechanitor.Story.Option.Enabled>
+  <MAP_MechanoidMechanitor.Story.Option.Disabled>关闭</MAP_MechanoidMechanitor.Story.Option.Disabled>
+  <MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>当前世界中没有可配置的普通派系。</MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Off>关闭</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Off>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Low>频率：低</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Low>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Medium>频率：中</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Medium>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.High>频率：高</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.High>
+
+  <!-- 模块：剧情风格选择 -->
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>选择本局机械族机械师剧情风格</MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>你想体验怎样的机械族殖民地故事？这些剧情风格选项会影响本局的游戏体验。</MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>无法保存剧情风格选择，请重试或重新开始开局流程。</MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.NoStylesAvailable>未找到可用的剧情风格。请检查MOD配置或重新开始开局流程。</MAP_MechanoidMechanitor.Scenario.ReadyPage.NoStylesAvailable>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Continue>继续</MAP_MechanoidMechanitor.Scenario.ReadyPage.Continue>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.StartGame>开始游戏</MAP_MechanoidMechanitor.Scenario.ReadyPage.StartGame>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Title>是否启用文化适配</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Title>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Description>决定文化DLC对本局游戏的影响。注意：开启后可能与某些MOD产生冲突。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Description>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Disabled>不启用任何与文化有关的适配。此选项通常对游戏流程没有影响，如果担心某些文化会导致冲突，请选择此选项。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Disabled>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Basic>仅锁定玩家派系的主流文化，避免它因殖民地成员构成变化而被自动替换。没有其他改动，也不会为机械族机械师添加所属文化。\n通常适用于想通过文化影响殖民地建筑风格，而不体验其他文化效果的玩家。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Basic>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Partial>为机械族机械师添加文化属性并享受其中可以对于机械族生效的效果。\n机械族机械师的文化可以在社交面板手动切换。同时，机械族机械师会计入对应文化的信徒人数以影响主流文化。\n此选项不会让机械族机械师拥有担任文化职位、执行文化教化或作为完整参与者加入文化仪式的能力。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Partial>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Full>尽量完整的文化DLC体验。机械族机械师将可以担任文化职位，加入文化仪式，以及一些其他文化DLC允许机械族执行的效果。</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Full>
+
+  <!-- 模块：自定义剧情 -->
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>自定义机械族机械师剧情</MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>自由调整本局启用的剧情组件。部分选项会根据其他组件的设置自动禁用。</MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>载入预设</MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>开始游戏</MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>
+
+  <!-- 模块：普通派系关系 -->
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>默认</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>全部敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>全部永久敌对</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentNeutral>全部永久中立</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentNeutral>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllAlly>全部盟友</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllAlly>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentAlly>全部永久盟友</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentAlly>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Custom>自定义</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Custom>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.Default>默认</MAP_MechanoidMechanitor.Story.FactionRelationOption.Default>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.Hostile>敌对</MAP_MechanoidMechanitor.Story.FactionRelationOption.Hostile>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentHostile>永久敌对</MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentHostile>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentNeutral>永久中立</MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentNeutral>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.Ally>盟友</MAP_MechanoidMechanitor.Story.FactionRelationOption.Ally>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentAlly>永久盟友</MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentAlly>
+
+  <!-- 模块：机械巢关系 -->
+  <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Default>默认</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Default>
+  <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Neutral>中立</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Neutral>
+  <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.PermanentNeutral>永久中立</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.PermanentNeutral>
+  <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Ally>盟友</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Ally>
+  <MAP_MechanoidMechanitor.Story.NoMechHive>当前世界中没有机械巢派系。</MAP_MechanoidMechanitor.Story.NoMechHive>
+  <MAP_MechanoidMechanitor.Story.MechHiveRelation.PursuingMechanoidsDisabledReason>无法修改此选项。我们正在被机械族追杀！</MAP_MechanoidMechanitor.Story.MechHiveRelation.PursuingMechanoidsDisabledReason>
+
+  <!-- 模块：文化适配 -->
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Disabled>不启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Disabled>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Basic>基础功能</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Basic>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>部分启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Full>全部启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Full>
+  <MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo>切换意识形态</MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo>
+  <MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>手动切换该机械族机械师的意识形态。确定度将保持为100%，且不会触发传教成功或文化改革点数。</MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>
+  <MAP_MechanoidMechanitor.Scenario.Ideology.CurrentIdeoSuffix>（当前）</MAP_MechanoidMechanitor.Scenario.Ideology.CurrentIdeoSuffix>
+
+</LanguageData>

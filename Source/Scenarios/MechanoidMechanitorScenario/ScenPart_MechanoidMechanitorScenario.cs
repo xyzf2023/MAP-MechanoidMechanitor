@@ -22,7 +22,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             TooltipHandler.TipRegion(
                 fullRowRect,
                 new TipSignal(
-                    "MAP_MechanoidMechanitor.Scenario.EditorTooltip".Translate(),
+                    "MAP_MechanoidMechanitor.Scenario.Editor.Tooltip".Translate(),
                     TooltipId));
         }
 

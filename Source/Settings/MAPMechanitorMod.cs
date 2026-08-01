@@ -34,9 +34,9 @@ namespace MAP_MechanoidMechanitor
             bool previousEnablePortraitDisplayForAllSaves =
                 Settings.enablePortraitDisplayForAllSaves;
             listing.CheckboxLabeled(
-                "MAP_Settings_EnablePortraitDisplayForAllSaves_Label".Translate(),
+                "MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Label".Translate(),
                 ref Settings.enablePortraitDisplayForAllSaves,
-                "MAP_Settings_EnablePortraitDisplayForAllSaves_Description".Translate());
+                "MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description".Translate());
             if (Settings.enablePortraitDisplayForAllSaves
                 != previousEnablePortraitDisplayForAllSaves)
             {
@@ -44,37 +44,37 @@ namespace MAP_MechanoidMechanitor
             }
 
             listing.CheckboxLabeled(
-                "MAP_Settings_EnableMechanoidMechanitorBrainImplants_Label".Translate(),
+                "MAP_MechanoidMechanitor.Settings.BrainImplants.Label".Translate(),
                 ref Settings.enableMechanoidMechanitorBrainImplants,
-                "MAP_Settings_EnableMechanoidMechanitorBrainImplants_Description".Translate());
+                "MAP_MechanoidMechanitor.Settings.BrainImplants.Description".Translate());
             if (MechanoidMechanitorBrainImplantFeatureState.RestartRequired)
             {
                 listing.Label(
-                    "MAP_Settings_EnableMechanoidMechanitorBrainImplants_RestartRequired"
+                    "MAP_MechanoidMechanitor.Settings.BrainImplants.RestartRequired"
                         .Translate());
             }
 
             listing.CheckboxLabeled(
-                "MAP_Settings_EnableLoverImplants_Label".Translate(),
+                "MAP_MechanoidMechanitor.Settings.LoverImplants.Label".Translate(),
                 ref Settings!.enableLoverImplants,
-                "MAP_Settings_EnableLoverImplants_Description".Translate());
+                "MAP_MechanoidMechanitor.Settings.LoverImplants.Description".Translate());
             if (LoverImplantFeatureState.RestartRequired)
             {
                 listing.Label(
-                    "MAP_Settings_EnableLoverImplants_RestartRequired".Translate());
+                    "MAP_MechanoidMechanitor.Settings.LoverImplants.RestartRequired".Translate());
             }
 
             DrawProductivityCoreWorkSpeedSetting(listing);
 
             listing.CheckboxLabeled(
-                "MAP_Settings_SyntheticOffspringInheritXenogenes_Label".Translate(),
+                "MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label".Translate(),
                 ref Settings.syntheticOffspringInheritXenogenes,
-                "MAP_Settings_SyntheticOffspringInheritXenogenes_Description".Translate());
+                "MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description".Translate());
 
             listing.CheckboxLabeled(
-                "MAP_Settings_EnablePurgeDirectiveUiLoadingScreen_Label".Translate(),
+                "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label".Translate(),
                 ref Settings.enablePurgeDirectiveUiLoadingScreen,
-                "MAP_Settings_EnablePurgeDirectiveUiLoadingScreen_Description".Translate());
+                "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description".Translate());
 
             DrawJusticeBossDifficultySettings(listing);
 
@@ -93,33 +93,33 @@ namespace MAP_MechanoidMechanitor
 
             listing.GapLine();
             listing.Label(
-                "MAP_Settings_JusticeBossDifficulty_Section".Translate());
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.Section".Translate());
 
             listing.Label(
-                "MAP_Settings_JusticeBossDifficulty_Description".Translate());
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.Description".Translate());
 
             if (ModsConfig.RoyaltyActive)
             {
                 listing.CheckboxLabeled(
-                    "MAP_Settings_JusticeBossDifficulty_MortarShield_Label"
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label"
                         .Translate(),
                     ref settings.justiceBossEnableMortarShield,
-                    "MAP_Settings_JusticeBossDifficulty_MortarShield_Description"
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description"
                         .Translate());
 
                 listing.CheckboxLabeled(
-                    "MAP_Settings_JusticeBossDifficulty_BulletShield_Label"
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Label"
                         .Translate(),
                     ref settings.justiceBossEnableBulletShield,
-                    "MAP_Settings_JusticeBossDifficulty_BulletShield_Description"
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Description"
                         .Translate());
             }
 
             settings.justiceBossAutoMortarCount =
                 DrawIntSliderSetting(
                     listing,
-                    "MAP_Settings_JusticeBossDifficulty_AutoMortar_Label",
-                    "MAP_Settings_JusticeBossDifficulty_AutoMortar_Description",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Label",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Description",
                     settings.justiceBossAutoMortarCount,
                     JusticeBossDifficultyValues.MinTurretCount,
                     JusticeBossDifficultyValues.MaxTurretCount);
@@ -127,8 +127,8 @@ namespace MAP_MechanoidMechanitor
             settings.justiceBossAutoChargeBlasterCount =
                 DrawIntSliderSetting(
                     listing,
-                    "MAP_Settings_JusticeBossDifficulty_AutoChargeBlaster_Label",
-                    "MAP_Settings_JusticeBossDifficulty_AutoChargeBlaster_Description",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Label",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Description",
                     settings.justiceBossAutoChargeBlasterCount,
                     JusticeBossDifficultyValues.MinTurretCount,
                     JusticeBossDifficultyValues.MaxTurretCount);
@@ -136,8 +136,8 @@ namespace MAP_MechanoidMechanitor
             settings.justiceBossAutoInfernoCount =
                 DrawIntSliderSetting(
                     listing,
-                    "MAP_Settings_JusticeBossDifficulty_AutoInferno_Label",
-                    "MAP_Settings_JusticeBossDifficulty_AutoInferno_Description",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Label",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Description",
                     settings.justiceBossAutoInfernoCount,
                     JusticeBossDifficultyValues.MinTurretCount,
                     JusticeBossDifficultyValues.MaxTurretCount);
@@ -145,8 +145,8 @@ namespace MAP_MechanoidMechanitor
             settings.justiceBossTotalWaves =
                 DrawIntSliderSetting(
                     listing,
-                    "MAP_Settings_JusticeBossDifficulty_TotalWaves_Label",
-                    "MAP_Settings_JusticeBossDifficulty_TotalWaves_Description",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Label",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Description",
                     settings.justiceBossTotalWaves,
                     JusticeBossDifficultyValues.MinTotalWaves,
                     JusticeBossDifficultyValues.MaxTotalWaves);
@@ -159,17 +159,17 @@ namespace MAP_MechanoidMechanitor
             settings.justiceBossMechsPerWave =
                 DrawIntSliderSetting(
                     listing,
-                    "MAP_Settings_JusticeBossDifficulty_MechsPerWave_Label",
-                    "MAP_Settings_JusticeBossDifficulty_MechsPerWave_Description",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Label",
+                    "MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description",
                     settings.justiceBossMechsPerWave,
                     JusticeBossDifficultyValues.MinMechsPerWave,
                     JusticeBossDifficultyValues.MaxMechsPerWave);
 
             listing.CheckboxLabeled(
-                "MAP_Settings_JusticeBossDifficulty_AllowBossReplacement_Label"
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label"
                     .Translate(),
                 ref settings.justiceBossAllowBossReplacement,
-                "MAP_Settings_JusticeBossDifficulty_AllowBossReplacement_Description"
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description"
                     .Translate());
         }
 
@@ -210,14 +210,14 @@ namespace MAP_MechanoidMechanitor
                     CultureInfo.CurrentCulture);
 
             float sliderValue = listing.SliderLabeled(
-                "MAP_Settings_JusticeBossDifficulty_WaveInterval_Label"
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Label"
                     .Translate(secondsText)
                     .ToString(),
                 clamped,
                 JusticeBossDifficultyValues.MinWaveIntervalTicks,
                 JusticeBossDifficultyValues.MaxWaveIntervalTicks,
                 0.62f,
-                "MAP_Settings_JusticeBossDifficulty_WaveInterval_Description"
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Description"
                     .Translate()
                     .ToString());
 
@@ -246,10 +246,10 @@ namespace MAP_MechanoidMechanitor
             Rect labelRect = new Rect(row.x, row.y, row.width - 150f, row.height);
             Widgets.Label(
                 labelRect,
-                "MAP_Settings_ProductivityCoreWorkSpeedOffset_Label".Translate());
+                "MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label".Translate());
             TooltipHandler.TipRegion(
                 labelRect,
-                "MAP_Settings_ProductivityCoreWorkSpeedOffset_Description".Translate());
+                "MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description".Translate());
 
             Rect fieldRect = new Rect(row.xMax - 140f, row.y, 110f, row.height);
             GUI.SetNextControlName(ProductivityCoreWorkSpeedControlName);

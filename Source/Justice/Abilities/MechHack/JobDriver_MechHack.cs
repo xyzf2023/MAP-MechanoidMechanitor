@@ -11,8 +11,8 @@ namespace MAP_MechanoidMechanitor
         private const string WarmupEffecterDefName = "MAP_Effecter_MechReconstructionWarmupOnTarget";
         private const string ImmobilizeHediffDefName = "MAP_Hediff_MechHackImmobilized";
         private const string HistoryEventDefName = "MAP_MechHack";
-        private const string ReportWithTargetKey = "MAP_MechanoidMechanitor.MechHack.ReportWithTarget";
-        private const string ReportDefaultKey = "MAP_MechanoidMechanitor.MechHack.ReportDefault";
+        private const string ReportWithTargetKey = "MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportWithTarget";
+        private const string ReportDefaultKey = "MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportDefault";
 
         private Faction? originalFaction;
         private bool confirmedHostileAction;

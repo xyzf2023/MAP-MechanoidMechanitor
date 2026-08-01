@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：恋人植入体安装 -->
+  <MAP_MechanoidMechanitor.Lover.Implant.Install>安装{0}</MAP_MechanoidMechanitor.Lover.Implant.Install>
+  <MAP_MechanoidMechanitor.Lover.Implant.InstallToPart>安装{0}：{1}</MAP_MechanoidMechanitor.Lover.Implant.InstallToPart>
+  <MAP_MechanoidMechanitor.Lover.Implant.NoValidPart>没有可安装的身体部位</MAP_MechanoidMechanitor.Lover.Implant.NoValidPart>
+  <MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection>选定的身体部位已无法安装该植入体</MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection>
+  <MAP_MechanoidMechanitor.Lover.Implant.InstallFailed>植入体安装失败</MAP_MechanoidMechanitor.Lover.Implant.InstallFailed>
+  <MAP_MechanoidMechanitor.Lover.Implant.InstallSucceeded>{0}已将{1}安装至{2}。</MAP_MechanoidMechanitor.Lover.Implant.InstallSucceeded>
+
+  <!-- 模块：配偶与婚姻关系 -->
+  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button>指定配偶……</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button>
+  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>选择一名殖民者成为当前授权机械体的配偶。更换配偶时会与旧配偶离婚。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>
+  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseNoCandidate>当前没有可指定为配偶的殖民者。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseNoCandidate>
+  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>无法指定该殖民者为配偶。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>
+  <MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Label>结婚</MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Label>
+  <MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Text>{COMPANION_labelShort}与{TARGET_labelShort}已经结婚。{COMPANION_labelShort}已成为{TARGET_labelShort}的配偶。</MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Text>
+  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>与配偶爱爱</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>
+  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>开启后，授权机械体将尝试在配偶允许时与配偶爱爱。</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>
+
+  <!-- 模块：仿生怀孕与分娩 -->
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>仿生生育方式</MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyMale>尝试生育（孕育男婴）</MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyMale>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyFemale>尝试生育（孕育女婴）</MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyFemale>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Label>{0}怀孕</MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Label>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Text>{0}正在使用仿生子宫孕育新生命！由{0}孕育的胚胎能更快成熟，并在出生后拥有更强的身体素质。</MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Text>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Label>{0}可以进行分娩</MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Label>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Text>{0}孕育的婴儿已发育完成，可随时选中{0}为其下达分娩指令。\n\n在分娩完成前，婴儿的生理活动将暂时处于冻结状态。</MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Text>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Description>命令{0}在原地执行分娩流程。请确保环境安全后再下达此命令。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Description>
+
+</LanguageData>

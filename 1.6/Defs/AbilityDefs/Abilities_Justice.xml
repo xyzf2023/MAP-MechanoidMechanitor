@@ -76,7 +76,7 @@
     </verbProperties>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_AbilityMechReconstruction">
-        <invalidTargetMessageKey>MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget</invalidTargetMessageKey>
+        <invalidTargetMessageKey>MAP_MechanoidMechanitor.Justice.Ability.MechReconstruction.InvalidTarget</invalidTargetMessageKey>
         <reconstructionDurationTicks>900</reconstructionDurationTicks>
         <appliedEffecterDef>MechResurrected</appliedEffecterDef>
       </li>
@@ -117,8 +117,8 @@
     </verbProperties>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_AbilityMechHack">
-        <invalidTargetMessageKey>MAP_MechanoidMechanitor.MechHack.InvalidTarget</invalidTargetMessageKey>
-        <nonHostileConfirmMessageKey>MAP_MechanoidMechanitor.MechHack.NonHostileConfirm</nonHostileConfirmMessageKey>
+        <invalidTargetMessageKey>MAP_MechanoidMechanitor.Justice.Ability.MechHack.InvalidTarget</invalidTargetMessageKey>
+        <nonHostileConfirmMessageKey>MAP_MechanoidMechanitor.Justice.Ability.MechHack.NonHostileConfirm</nonHostileConfirmMessageKey>
         <hackDurationTicks>900</hackDurationTicks>
         <cooldownTicks>300000</cooldownTicks>
       </li>

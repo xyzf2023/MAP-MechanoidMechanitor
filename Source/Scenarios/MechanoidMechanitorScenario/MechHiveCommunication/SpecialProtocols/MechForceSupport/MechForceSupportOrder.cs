@@ -52,7 +52,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (selectedGroupMaker == null)
             {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateRandom"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TemplateRandom"
                     .Translate();
             }
 

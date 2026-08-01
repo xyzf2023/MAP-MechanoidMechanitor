@@ -8,9 +8,9 @@ namespace MAP_MechanoidMechanitor
     public static class SyntheticCompanionGizmoUtility
     {
         private const string LovinToggleLabelKey =
-            "MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggle";
+            "MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle";
         private const string LovinToggleDescKey =
-            "MAP_MechanoidMechanitor.SyntheticSpouse.LovinWithSpouseToggleDesc";
+            "MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description";
 
         public static IEnumerable<Gizmo> GetGizmos(Pawn pawn)
         {

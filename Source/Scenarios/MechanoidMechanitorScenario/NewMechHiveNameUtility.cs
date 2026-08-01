@@ -8,23 +8,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         private static readonly string[] GreekPrefixKeys =
         {
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Alpha",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Beta",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Gamma",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Delta",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Epsilon",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Zeta",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Eta",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Theta",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Iota",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Kappa",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Lambda",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Xi",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Omicron",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Sigma",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Upsilon",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Psi",
-            "MAP_MechanoidMechanitor.NewMechHive.Greek.Omega"
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Alpha",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Beta",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Gamma",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Delta",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Epsilon",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Zeta",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Eta",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Theta",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Iota",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Kappa",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Lambda",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Xi",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Omicron",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Sigma",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Upsilon",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Psi",
+            "MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Omega"
         };
 
         public static string GenerateFactionName(

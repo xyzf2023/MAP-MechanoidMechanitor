@@ -41,12 +41,12 @@ namespace MAP_MechanoidMechanitor
         {
             if (!MechanoidMechanitorBrainImplantFeatureState.EnabledForSession)
             {
-                return "MAP_MechanoidMechanitor.BrainImplant.FeatureDisabled".Translate();
+                return "MAP_MechanoidMechanitor.Implants.Brain.FeatureDisabled".Translate();
             }
 
             if (!MechanoidMechanitorImplantUtility.HasImplantInstallationCapability(p))
             {
-                return "MAP_MechanoidMechanitor.BrainImplant.MissingCapability".Translate();
+                return "MAP_MechanoidMechanitor.Implants.Brain.MissingCapability".Translate();
             }
 
             AcceptanceReport vanillaReport =
@@ -70,19 +70,19 @@ namespace MAP_MechanoidMechanitor
             RecipeDef? recipe = BrainImplantProps.sourceRecipe;
             if (recipe?.addsHediff == null)
             {
-                return "MAP_MechanoidMechanitor.BrainImplant.InvalidRecipe".Translate();
+                return "MAP_MechanoidMechanitor.Implants.Brain.InvalidRecipe".Translate();
             }
 
             BodyPartRecord? part =
                 MechanoidMechanitorImplantUtility.GetPrimaryConsciousnessSourcePart(pawn);
             if (part == null || !pawn.health.hediffSet.GetNotMissingParts().Contains(part))
             {
-                return "MAP_MechanoidMechanitor.BrainImplant.NoConsciousnessSource".Translate();
+                return "MAP_MechanoidMechanitor.Implants.Brain.NoConsciousnessSource".Translate();
             }
 
             if (pawn.health.hediffSet.PartOrAnyAncestorHasDirectlyAddedParts(part))
             {
-                return "MAP_MechanoidMechanitor.BrainImplant.PartReplaced".Translate();
+                return "MAP_MechanoidMechanitor.Implants.Brain.PartReplaced".Translate();
             }
 
             List<Hediff> hediffs = pawn.health.hediffSet.hediffs;
@@ -101,7 +101,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (!recipe.CompatibleWithHediff(existing.def))
                 {
-                    return "MAP_MechanoidMechanitor.BrainImplant.IncompatibleImplant"
+                    return "MAP_MechanoidMechanitor.Implants.Brain.IncompatibleImplant"
                         .Translate(existing.LabelBase);
                 }
             }

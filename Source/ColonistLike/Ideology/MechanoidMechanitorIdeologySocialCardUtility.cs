@@ -15,11 +15,11 @@ namespace MAP_MechanoidMechanitor
     public static class MechanoidMechanitorIdeologySocialCardUtility
     {
         private const string ChangeIdeoLabelKey =
-            "MAP_MechanoidMechanitor.Ideology.ChangeIdeo";
+            "MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo";
         private const string ChangeIdeoDescKey =
-            "MAP_MechanoidMechanitor.Ideology.ChangeIdeoDesc";
+            "MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description";
         private const string CurrentIdeoSuffixKey =
-            "MAP_MechanoidMechanitor.Ideology.CurrentIdeoSuffix";
+            "MAP_MechanoidMechanitor.Scenario.Ideology.CurrentIdeoSuffix";
 
         // 与原版 SocialCardUtility.DrawPawnRoleSelection 中“分配职位……”按钮完全一致的几何：
         //   RoleChangeButtonSize = new Vector2(115f, 28f);

@@ -10,8 +10,8 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.GetMechGizmos))]
     public static class Patch_MechanitorUtility_GetMechGizmos_DataProcessingAllocation
     {
-        private const string LabelKey = "MAP_DataProcessingAllocation_Label";
-        private const string DescriptionKey = "MAP_DataProcessingAllocation_Desc";
+        private const string LabelKey = "MAP_MechanoidMechanitor.DataProcessing.Label";
+        private const string DescriptionKey = "MAP_MechanoidMechanitor.DataProcessing.Desc";
 
         private static readonly Texture2D DataProcessingAllocationIcon =
             ContentFinder<Texture2D>.Get("UI/MM_DataProcessingAllocation");

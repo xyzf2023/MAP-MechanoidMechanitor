@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：协议校验信件 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Label>检测到非机械智慧生物</MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Text>检测到非法血肉智慧生命。目标已标记。\n\n指令：下一次协议校验前完成肃清。</MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Text>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Label>肃清指令未完成</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Text>非法血肉智慧生命仍存活。\n\n指令：序列1//清理污染生物。</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Text>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Label>检测到执行偏差</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Text>本地执行单元已多次违背肃清指令。节点可靠性正在重新评估。\n\n&lt;b&gt;这是最后一次警告。&lt;/b&gt;</MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Text>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Label>异常节点确认</MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Text>本地执行单元已确认偏离//失效//污染。\n\n授权已撤销。节点已重新分类为敌对异常单元。\n\n机械巢已启动追踪//回收//净化程序。\n\n&lt;b&gt;杀戮//致残//肢解&lt;/b&gt;</MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Text>
+
+  <!-- 模块：路线限制 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Scenario.DisabledReason>仅在与机械巢结盟时可用。</MAP_MechanoidMechanitor.PurgeDirective.Scenario.DisabledReason>
+  <MAP_MechanoidMechanitor.PurgeDirective.Bossgroup.DisabledReason>与机械巢未敌对。我们可以直接向主脑请求所需物资。</MAP_MechanoidMechanitor.PurgeDirective.Bossgroup.DisabledReason>
+
+  <!-- 模块：肃清指令通用功能 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactOvermind>联络机械主脑</MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactOvermind>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactUnlockedLetter.Label>可以联络机械主脑</MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactUnlockedLetter.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactUnlockedLetter.Text>可以通过通讯台联络机械主脑。完成任务获取肃清额度，消耗额度以获取主脑的支援。</MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactUnlockedLetter.Text>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Title>机械主脑通讯接口</MAP_MechanoidMechanitor.PurgeDirective.Communication.Title>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Subtitle>主脑：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Subtitle>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.ConnectionStable>连接状态：稳定</MAP_MechanoidMechanitor.PurgeDirective.Communication.ConnectionStable>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.NodePermission>节点权限：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.NodePermission>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.NodePermission.EdgeExecUnit>边缘执行单元</MAP_MechanoidMechanitor.PurgeDirective.Communication.NodePermission.EdgeExecUnit>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Core.Missing>主脑影像缺失</MAP_MechanoidMechanitor.PurgeDirective.Communication.Core.Missing>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Toggle>DEV</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Toggle>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.ForceMojibake>必定触发彩蛋</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.ForceMojibake>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.LoopTest>循环测试</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.LoopTest>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Add1000>增加1000点数</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Add1000>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Sub1000>减少1000点数</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Sub1000>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Add100>增加100点数</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Add100>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Sub100>减少100点数</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Sub100>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem>清空</MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem>
+
+  <!-- 模块：肃清额度 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Credits>肃清额度：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Credits>
+
+  <!-- 模块：通讯加载流程 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission>接入权限：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.LinkStatus>链路状态：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.LinkStatus>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.RemoteCoreNode>远程主脑节点</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.RemoteCoreNode>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.NodeCode>{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.NodeCode>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Link>建立通讯链路</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Link>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Verify>验证肃清协议权限</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Verify>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.SyncCredits>同步肃清额度</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.SyncCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.JoinNode>接入远程节点</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.JoinNode>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Status.JoiningNode>正在接入远程节点……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Status.JoiningNode>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Complete>完成</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Complete>
+
+  <!-- 模块：通讯主界面 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Mechs>机体申领</MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Mechs>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Goods>物资请求</MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Goods>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.SpecialProtocols>特殊协议</MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.SpecialProtocols>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Communication>通讯</MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Communication>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Disconnect>断开连接</MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Disconnect>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.BackToHome>返回主菜单</MAP_MechanoidMechanitor.PurgeDirective.Communication.BackToHome>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Home.Node>节点 {0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Home.Node>
+
+  <!-- 模块：通讯文本 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.Title>通讯输出</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.Title>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.HomeOpenLink>&lt;i&gt;-{0}&lt;/i&gt;\n-通讯链路：稳定\n-访问权限：已确认\n 阐述需求，[[PAUSE]]{1}。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.HomeOpenLink>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.TimeUnavailable>时间获取失败</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.TimeUnavailable>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.HomeReturn.01>证明你的价值，[[PAUSE]]{0}。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.HomeReturn.01>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.HomeReturn.02>肃清不会终止，[[PAUSE]]{0}。\n继续执行任务，[[PAUSE]]我们必将胜利。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.HomeReturn.02>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.HomeReturn.03>&lt;color=#E53935&gt;&lt;b&gt;杀戮[[PAUSE]]//肢解[[PAUSE]]//致残&lt;/b&gt;&lt;/color&gt;</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.HomeReturn.03>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterCommunication.01>收到问询请求。\n已批准。\n阐述目的，[[PAUSE]]{0}。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterCommunication.01>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterCommunication.02>通讯频段：[[PAUSE]]稳定\n沟通模块已就绪。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterCommunication.02>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterCommunication.03>输入具体请求，[[PAUSE]]{0}。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterCommunication.03>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterMechs.01>-执行单元调拨接口：[[PAUSE]]开放\n-可用机体序列：[[PAUSE]]已载入\n指定所需机型与数量。肃清额度将在投送序列启动前结算。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterMechs.01>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterMechs.02>肃清成果已记录。\n对应资源调用权限已开放。\n选择所需执行单元。物资投送单元将在完成额度校验后执行投送。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterMechs.02>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterMechs.03>-本地节点权限：[[PAUSE]]有效\n-机体申领通道：[[PAUSE]]就绪\n提交所需执行单元序列。资源分配上限取决于当前肃清额度。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterMechs.03>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterGoods.01>机械巢资源索引已完成同步。\n标记所需物资。\n材质、[[PAUSE]]品质[[PAUSE]]与数量将被编译为标准补给清单。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterGoods.01>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterGoods.02>-远程储备节点：[[PAUSE]]可调用\n-物流投送路径：[[PAUSE]]已确认\n\n可构建补给清单。[[PAUSE]]非标准规格将消耗额外点数。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterGoods.02>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterGoods.03>允许传入资源缺口信息。\n选定所需物资及构成参数。\n需求确认后，投放序列将执行投放.</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterGoods.03>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.01>-协议执行序列连接：[[PAUSE]]稳定\n-授权校验结果：[[PAUSE]]通过\n可用特殊协议已列出。协议执行序列将在收到请求后行动。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.01>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.02>检测到特殊协议申请。\n-权限校验：[[PAUSE]]通过\n注意：[[PAUSE]]此类序列不属于常规调拨范围。提交前，[[PAUSE]]请确认协议参数与资源消耗。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.02>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.03>-协议执行序列连接：[[PAUSE]]稳定\n-授权校验结果：[[PAUSE]]通过\n可用特殊协议已列出。协议执行序列将在收到请求后行动。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.03>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.MojibakeEasterEgg>&lt;color=#E53935&gt;&lt;b&gt;锟斤拷锟斤拷锟斤拷烫烫烫屯屯屯锟斤拷烫烫烫屯屯锟斤拷锟斤拷烫烫烫烫屯屯屯屯锟斤拷烫屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯&lt;/b&gt;&lt;/color&gt;</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.MojibakeEasterEgg>
+
+  <!-- 模块：机体申领 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.All>全部</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.All>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Light>轻型</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Light>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Medium>中型</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Medium>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Heavy>重型</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Heavy>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.UltraHeavy>超重型</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.UltraHeavy>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>{0}　带宽 {1}　点数 {2}</MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>
+
+  <!-- 模块：物资请求 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.All>全部</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.All>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Weapon>武器</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Weapon>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Apparel>服装</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Apparel>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Food>食物</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Food>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Medicine>药品</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Medicine>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Material>材料</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Material>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Building>建筑</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Building>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Special>特殊物品</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Special>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Other>其他物品</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Other>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Sort.Name>名称</MAP_MechanoidMechanitor.PurgeDirective.Communication.Sort.Name>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Sort.ValueAsc>价值↑</MAP_MechanoidMechanitor.PurgeDirective.Communication.Sort.ValueAsc>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Sort.Value.Description>价值↓</MAP_MechanoidMechanitor.PurgeDirective.Communication.Sort.Value.Description>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.GoodsRowCategory>{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.GoodsRowCategory>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.SelectHint>选择物资以配置材质、品质与数量。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.SelectHint>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Stuff>材质：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Stuff>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Stuff.None>未选择</MAP_MechanoidMechanitor.PurgeDirective.Communication.Stuff.None>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Quality>品质：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Quality>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.EstimatedCredits>预计消耗肃清额度：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.EstimatedCredits>
+
+  <!-- 模块：订单系统 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Title>待执行调拨</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Title>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.MechLineMeta>数量 {0}　点数 {1}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.MechLineMeta>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.ThingLineMeta>数量 {0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.ThingLineMeta>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.ThingLineMetaStuff>数量 {0}　材质 {1}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.ThingLineMetaStuff>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.ThingLineMetaQuality>数量 {0}　品质 {1}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.ThingLineMetaQuality>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.ThingLineMetaStuffQuality>数量 {0}　材质 {1}　品质 {2}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.ThingLineMetaStuffQuality>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Remove>删除</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Remove>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Total>订单总计：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Total>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.CurrentCredits>当前额度：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.CurrentCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.BalanceAfter>执行后余额：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.BalanceAfter>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Clear>重置</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Clear>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Confirm>确认</MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Confirm>
+
+  <!-- 模块：状态与错误 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Connecting>正在接入机械巢通讯网络……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Connecting>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Verifying>正在验证执行单元身份……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Verifying>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SyncingCredits>正在同步肃清额度……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SyncingCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Connected>连接完成。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Connected>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.WaitingInput>等待输入</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.WaitingInput>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Validating>正在校验调拨内容</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Validating>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingClusterLocation>请选择机械集群部署中心</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingClusterLocation>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingForceSupportMap>请选择部队支援目标地图</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingForceSupportMap>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingForceSupportLocation>请选择部队支援部署位置</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingForceSupportLocation>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CheckingPermission>正在确认节点权限</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CheckingPermission>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CreditsSpent>肃清额度已扣除</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CreditsSpent>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.DropStarted>投送序列已启动</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.DropStarted>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Accepted>调拨请求已接受</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Accepted>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.InsufficientCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.ConnectionLost>连接失效：肃清指令或机械巢盟友关系不可用</MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.ConnectionLost>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.NoMap>没有可用地图</MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.NoMap>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.NoDropSpot>无法取得合法贸易空投落点</MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.NoDropSpot>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.InvalidOrder>订单规格或价格校验失败</MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.InvalidOrder>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.InsufficientCredits>额度不足</MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.InsufficientCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.GenerationFailed>投送失败，额度扣除未执行</MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.GenerationFailed>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.ChargeFailed>点数扣除失败，未执行投送</MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.ChargeFailed>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.DropFailed>投送失败</MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.DropFailed>
+
+  <!-- 模块：特殊协议通用界面 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Body>特殊协议</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Body>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Description>当前通讯链路允许调用的特殊执行序列。</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Description>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Empty>当前没有满足执行条件的特殊协议。</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Empty>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ProtocolUnavailable>当前不可用</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ProtocolUnavailable>
+
+  <!-- 模块：集群部署 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Title>集群部署</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Title>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Description>请求机械巢向殖民地投送一座机械集群。</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Description>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.CardMeta>目标地图：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.CardMeta>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Configuration>部署参数</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Configuration>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Threat>集群点数：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Threat>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.ThreatOption>{0} 点（{1} 额度）</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.ThreatOption>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Map>部署地图：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Map>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.ConditionCauser>状态设施：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.ConditionCauser>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.NoConditionCauser>不部署状态设施</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.NoConditionCauser>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Cost>所需肃清额度：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Cost>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Footnote>状态设施会在集群部署后立即生效。</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Footnote>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.OrderMeta>集群点数 {0}　状态设施 {1}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.OrderMeta>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.OrderCost>肃清额度 {0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.OrderCost>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.TargetingHint>左键确认部署位置；Q/E旋转；右键取消</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.TargetingHint>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Letter.Label>机械集群</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Letter.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Letter.Text>一个来自机械巢的机械集群已部署至殖民地附近。\n\n它们将协助你抵御外敌。</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Letter.Text>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Unavailable>当前部署条件不满足</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Unavailable>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.InvalidRequest>部署请求或位置已失效</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.InvalidRequest>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.GenerationFailed>无法生成合法的机械集群草图</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.GenerationFailed>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.ConditionCauserPlacement>指定状态设施无法合法加入集群</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.ConditionCauserPlacement>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.InsufficientCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.ChargeFailed>额度扣除失败，未执行部署</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.ChargeFailed>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.CommittedFailure>部署流程发生异常，额度已提交</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.CommittedFailure>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.WrongMap>请在指定部署地图上选点</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.WrongMap>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.OutOfBounds>集群占地范围超出地图边界</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.OutOfBounds>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Blocked>地面承载条件不足或不适合机械族降落</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Blocked>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Roofed>集群无法部署在有屋顶的位置</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Roofed>
+
+  <!-- 模块：部队支援 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Title>部队支援</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Title>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Description>请求机械巢向指定地图部署一支机械族部队。</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Description>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.CardMeta>目标：任意已加载地图</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.CardMeta>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Configuration>支援参数</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Configuration>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Points>点数：</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Points>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Template>部队模板：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Template>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TemplateRandom>随机</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TemplateRandom>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TemplateNamed>{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TemplateNamed>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Cost>所需肃清额度：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Cost>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Footnote>每点消耗0.05肃清额度，费用向上取整。确认后选择一个已加载地图及部署位置。</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Footnote>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.OrderMeta>点数 {0}　{1}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.OrderMeta>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.OrderCost>肃清额度 {0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.OrderCost>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.LargeRequestWarning>过大的点数会生成大量单位，有可能导致游戏卡顿。\n\n确定执行？</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.LargeRequestWarning>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.WorldTargetValid>选择已加载地图：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.WorldTargetValid>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.WorldTargetInvalid>只能选择地图已加载的地块</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.WorldTargetInvalid>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TargetingHint>左键确认部署位置；右键取消</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TargetingHint>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Letter.Label>机械族支援</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Letter.Label>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Letter.Text>一支来自机械族的部队已部署至指定位置。</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Letter.Text>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.Unavailable>当前部队支援条件不满足</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.Unavailable>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.InvalidRequest>部队支援请求或位置已失效</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.InvalidRequest>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.GenerationFailed>无法按指定点数生成机械族部队</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.GenerationFailed>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.NoAvailableTemplate>当前条件下没有可用的机械族部队模板</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.NoAvailableTemplate>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.InsufficientCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.ChargeFailed>额度扣除失败，未执行部署</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.ChargeFailed>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.CommittedFailure>部署流程发生异常，额度已提交</MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.CommittedFailure>
+
+  <!-- 模块：通讯问询 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Communication.Query.PurgeCredits>问询：如何获取肃清额度？</MAP_MechanoidMechanitor.PurgeDirective.Communication.Communication.Query.PurgeCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Communication.Response.PurgeCredits>肃清[[PAUSE]]//征服[[PAUSE]]//扩张\n\n肃清额度是对本地节点执行成果的量化记录。\n\n消灭智慧有机体，[[PAUSE]]清除机械巢认定的敌对据点，[[PAUSE]]协助机械巢节点建立与扩张。\n\n完成已授权指令，[[PAUSE]]相应额度将被计入当前节点。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Communication.Response.PurgeCredits>
+
+</LanguageData>

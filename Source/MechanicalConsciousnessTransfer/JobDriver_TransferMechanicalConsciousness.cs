@@ -8,7 +8,7 @@ namespace MAP_MechanoidMechanitor
     public class JobDriver_TransferMechanicalConsciousness : JobDriver
     {
         private const int TransferDurationTicks = 600;
-        private const string FailedKey = "MAP_MechanoidMechanitor.ConsciousnessTransfer.Failed";
+        private const string FailedKey = "MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.Failed";
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
         {

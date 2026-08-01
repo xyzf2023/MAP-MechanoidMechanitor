@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：脑部植入体安装 -->
+  <MAP_MechanoidMechanitor.Implants.Brain.Install.Label>安装 {0_label}</MAP_MechanoidMechanitor.Implants.Brain.Install.Label>
+  <MAP_MechanoidMechanitor.Implants.Brain.FeatureDisabled>脑部植入体安装功能未在本次游戏启动时启用</MAP_MechanoidMechanitor.Implants.Brain.FeatureDisabled>
+  <MAP_MechanoidMechanitor.Implants.Brain.MissingCapability>该角色不具备植入体安装能力</MAP_MechanoidMechanitor.Implants.Brain.MissingCapability>
+  <MAP_MechanoidMechanitor.Implants.Brain.InvalidRecipe>无法识别该植入体对应的安装配方</MAP_MechanoidMechanitor.Implants.Brain.InvalidRecipe>
+  <MAP_MechanoidMechanitor.Implants.Brain.NoConsciousnessSource>未找到可用于安装植入体的意识相关部位</MAP_MechanoidMechanitor.Implants.Brain.NoConsciousnessSource>
+  <MAP_MechanoidMechanitor.Implants.Brain.PartReplaced>意识相关部位或其上级部位已被替换</MAP_MechanoidMechanitor.Implants.Brain.PartReplaced>
+  <MAP_MechanoidMechanitor.Implants.Brain.IncompatibleImplant>与已安装的{0}不兼容</MAP_MechanoidMechanitor.Implants.Brain.IncompatibleImplant>
+
+  <!-- 模块：效能核心游戏效果 -->
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.WorkSpeedOffset>效能核心：+{0}</MAP_MechanoidMechanitor.Implants.ProductivityCore.WorkSpeedOffset>
+
+</LanguageData>

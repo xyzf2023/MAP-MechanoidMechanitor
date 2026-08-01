@@ -117,10 +117,10 @@ namespace MAP_MechanoidMechanitor
 
             quest.Letter(
                 LetterDefOf.Bossgroup,
-                label: "MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedLabel".Translate(),
+                label: "MAP_MechanoidMechanitor.JusticeBoss.Letter.Arrived.Label".Translate(),
                 inSignal: arriveSignal,
                 chosenPawnSignal: null,
-                text: "MAP_MechanoidMechanitor.JusticeBoss.Letter.ArrivedText".Translate(),
+                text: "MAP_MechanoidMechanitor.JusticeBoss.Letter.Arrived.Text".Translate(),
                 relatedFaction: faction,
                 useColonistsOnMap: null,
                 useColonistsFromCaravanArg: false,

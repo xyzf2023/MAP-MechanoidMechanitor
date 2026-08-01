@@ -30,7 +30,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (DrawCard(
                         new Rect(inRect.x, y, inRect.width, rowH),
                         "01",
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Communication".Translate(),
+                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Communication".Translate(),
                         inputEnabled))
                 {
                     selected = MechanoidOvermindPageKind.Communication;
@@ -40,7 +40,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (DrawCard(
                         new Rect(inRect.x, y, inRect.width, rowH),
                         "02",
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Mechs".Translate(),
+                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Mechs".Translate(),
                         inputEnabled))
                 {
                     selected = MechanoidOvermindPageKind.Mechs;
@@ -50,7 +50,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (DrawCard(
                         new Rect(inRect.x, y, inRect.width, rowH),
                         "03",
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.Goods".Translate(),
+                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Goods".Translate(),
                         inputEnabled))
                 {
                     selected = MechanoidOvermindPageKind.Goods;
@@ -60,7 +60,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (DrawCard(
                         new Rect(inRect.x, y, inRect.width, rowH),
                         "04",
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Nav.SpecialProtocols".Translate(),
+                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.SpecialProtocols".Translate(),
                         inputEnabled))
                 {
                     selected = MechanoidOvermindPageKind.SpecialProtocols;
@@ -77,7 +77,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool inputEnabled)
         {
             string nodeLabel =
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node".Translate(node);
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Home.Node".Translate(node);
             return MechanoidOvermindUiStyle.DrawMenuCard(
                 rect,
                 nodeLabel,

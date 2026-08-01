@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：基础分配界面 -->
+  <MAP_MechanoidMechanitor.DataProcessing.Label>数据处理分配</MAP_MechanoidMechanitor.DataProcessing.Label>
+  <MAP_MechanoidMechanitor.DataProcessing.Desc>打开数据处理分配界面，为该机械族机械师当前监管的机械体分配部分数据处理能力。</MAP_MechanoidMechanitor.DataProcessing.Desc>
+  <MAP_MechanoidMechanitor.DataProcessing.Window.Title>数据处理分配：{0}</MAP_MechanoidMechanitor.DataProcessing.Window.Title>
+  <MAP_MechanoidMechanitor.DataProcessing.CurrentProcessing>当前数据处理：{0}</MAP_MechanoidMechanitor.DataProcessing.CurrentProcessing>
+  <MAP_MechanoidMechanitor.DataProcessing.RemainingProcessing>剩余可分配：{0}</MAP_MechanoidMechanitor.DataProcessing.RemainingProcessing>
+  <MAP_MechanoidMechanitor.DataProcessing.MinReserveHint>为保证基础数据处理，{0}的最低数据处理能力不能低于50%。</MAP_MechanoidMechanitor.DataProcessing.MinReserveHint>
+  <MAP_MechanoidMechanitor.DataProcessing.SubjectsHeader>受监管机械体</MAP_MechanoidMechanitor.DataProcessing.SubjectsHeader>
+  <MAP_MechanoidMechanitor.DataProcessing.CurrentEffects>当前生效效果：</MAP_MechanoidMechanitor.DataProcessing.CurrentEffects>
+  <MAP_MechanoidMechanitor.DataProcessing.Pin.Tooltip>顶置该机械体</MAP_MechanoidMechanitor.DataProcessing.Pin.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Unpin.Tooltip>取消顶置该机械体</MAP_MechanoidMechanitor.DataProcessing.Unpin.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Add>+5%</MAP_MechanoidMechanitor.DataProcessing.Add>
+  <MAP_MechanoidMechanitor.DataProcessing.Remove>-5%</MAP_MechanoidMechanitor.DataProcessing.Remove>
+  <MAP_MechanoidMechanitor.DataProcessing.NothingToRemove>该机械体当前没有可回收的数据处理。</MAP_MechanoidMechanitor.DataProcessing.NothingToRemove>
+  <MAP_MechanoidMechanitor.DataProcessing.NotEnoughProcessing>为保证基础数据处理，{0}的数据处理能力不能低于50%。</MAP_MechanoidMechanitor.DataProcessing.NotEnoughProcessing>
+  <MAP_MechanoidMechanitor.DataProcessing.TargetInvalid>该机械体已不再是有效的数据处理分配目标。</MAP_MechanoidMechanitor.DataProcessing.TargetInvalid>
+  <MAP_MechanoidMechanitor.DataProcessing.OverseerInvalid>当前单位已不再具备数据处理分配能力。</MAP_MechanoidMechanitor.DataProcessing.OverseerInvalid>
+  <MAP_MechanoidMechanitor.DataProcessing.NoSubjects>当前没有可分配数据处理的受监管机械体。</MAP_MechanoidMechanitor.DataProcessing.NoSubjects>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization>特化：{0}</MAP_MechanoidMechanitor.DataProcessing.Specialization>
+
+  <!-- 模块：数据处理效果 -->
+  <MAP_MechanoidMechanitor.DataProcessing.EffectNone>无</MAP_MechanoidMechanitor.DataProcessing.EffectNone>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectWorkSpeed>工作速度 +{0}</MAP_MechanoidMechanitor.DataProcessing.EffectWorkSpeed>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange>可脱离指挥范围行动</MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>该机械体可以脱离当前机械族机械师的命令距离范围行动。</MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectAttackTiming>瞄准时间、射击冷却与近战冷却 ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectAttackTiming>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead>可带领远行队</MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>该机械体获得完整的虚拟旅行节点能力，可以带领远行队、收集远行队物资，并在运输抵达后刷新相关状态。</MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot>可驾驶穿梭机</MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot.Tooltip>该机械体获得穿梭机驾驶资格，可作为奥德赛玩家穿梭机的有效驾驶员。</MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed>移动速度 +{0}</MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectStaggerDuration>抑止时间 ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectStaggerDuration>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectIncomingDamage>承伤系数 ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectIncomingDamage>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectAimingDelay>瞄准时间 ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectAimingDelay>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectRangedCooldown>远程攻击冷却 ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectRangedCooldown>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectMeleeCooldown>近战攻击冷却 ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectMeleeCooldown>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectMechEnergyUsage>机械能消耗 ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectMechEnergyUsage>
+
+  <!-- 模块：错误与提示 -->
+  <MAP_MechanoidMechanitor.DataProcessing.AdjustFailed>当前无法调整该机械体的数据处理分配。</MAP_MechanoidMechanitor.DataProcessing.AdjustFailed>
+
+  <!-- 模块：特化模式 -->
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning>通用调谐</MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination>生产统筹</MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation>火控演算</MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol>强袭协议</MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning.Tooltip>均衡分配数据处理能力，同时改善作业、攻击时序、机动、防御与抑止恢复。</MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination.Tooltip>集中优化生产流程，提高工作速度、移动速度并降低机械能消耗。</MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation.Tooltip>集中执行远程火控演算，缩短瞄准时间与远程攻击冷却。</MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol.Tooltip>集中执行前线强袭协议，强化近战循环、机动、防护与抗抑止能力。</MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol.Tooltip>
+
+  <!-- 模块：动态分配 -->
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation>动态分配</MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation.Tooltip>开启后，可分别为每个机械族设置常态额度、最高额度、默认模式、优先级、检查间隔与自动切换规则。系统会根据工作、征召、实际攻击方式和近战接战状态临时调整特化与实际额度，并在监管者的最低数据处理阈值内按优先级分配可用额度。正义、隐者、恋人和机械族机械师仅在首次创建配置时默认使用通用调谐，玩家设置的默认模式不会被周期判断覆盖。</MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicAllocationFailed>无法切换动态分配状态。</MAP_MechanoidMechanitor.DataProcessing.DynamicAllocationFailed>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicSettings.Button>动态分配设置</MAP_MechanoidMechanitor.DataProcessing.DynamicSettings.Button>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicSettings.Title>动态分配设置：{0}</MAP_MechanoidMechanitor.DataProcessing.DynamicSettings.Title>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentProcessing>当前数据处理：{0}</MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentProcessing>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicMinConsciousness>动态最低数据处理：</MAP_MechanoidMechanitor.DataProcessing.DynamicMinConsciousness>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicMinConsciousness.Tooltip>动态分配允许将该机械族机械师的数据处理最低降低到该百分比。必须高于50%，UI与数据层最低限制为55%。</MAP_MechanoidMechanitor.DataProcessing.DynamicMinConsciousness.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicBudgetInsufficient>动态预算不足：固定分配已超过动态阈值，无法进一步削减其他目标。</MAP_MechanoidMechanitor.DataProcessing.DynamicBudgetInsufficient>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicTargetsHeader>目标列表</MAP_MechanoidMechanitor.DataProcessing.DynamicTargetsHeader>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicDetail.Button>详细设置</MAP_MechanoidMechanitor.DataProcessing.DynamicDetail.Button>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicTargetSettings.Title>动态分配详细设置：{0}</MAP_MechanoidMechanitor.DataProcessing.DynamicTargetSettings.Title>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicTargetEnabled>启用该机械族的动态分配</MAP_MechanoidMechanitor.DataProcessing.DynamicTargetEnabled>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicDefaultMode>默认模式</MAP_MechanoidMechanitor.DataProcessing.DynamicDefaultMode>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicNormalSteps>常态额度</MAP_MechanoidMechanitor.DataProcessing.DynamicNormalSteps>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicCommonMaxSteps>统一最高额度</MAP_MechanoidMechanitor.DataProcessing.DynamicCommonMaxSteps>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicAdvancedMax>启用高级最高额度</MAP_MechanoidMechanitor.DataProcessing.DynamicAdvancedMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicGeneralMax>通用调谐最高额度</MAP_MechanoidMechanitor.DataProcessing.DynamicGeneralMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicProductionMax>生产统筹最高额度</MAP_MechanoidMechanitor.DataProcessing.DynamicProductionMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicFireControlMax>火控演算最高额度</MAP_MechanoidMechanitor.DataProcessing.DynamicFireControlMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicAssaultMax>强袭协议最高额度</MAP_MechanoidMechanitor.DataProcessing.DynamicAssaultMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicPriority>优先级</MAP_MechanoidMechanitor.DataProcessing.DynamicPriority>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicPriority1Short>(1)</MAP_MechanoidMechanitor.DataProcessing.DynamicPriority1Short>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicPriority2Short>(2)</MAP_MechanoidMechanitor.DataProcessing.DynamicPriority2Short>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicPriority3Short>(3)</MAP_MechanoidMechanitor.DataProcessing.DynamicPriority3Short>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicPriority4Short>(4)</MAP_MechanoidMechanitor.DataProcessing.DynamicPriority4Short>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicCheckInterval>状态检查间隔</MAP_MechanoidMechanitor.DataProcessing.DynamicCheckInterval>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicSeconds>{0}秒</MAP_MechanoidMechanitor.DataProcessing.DynamicSeconds>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicRuleWork>工作时切换生产统筹</MAP_MechanoidMechanitor.DataProcessing.DynamicRuleWork>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicRuleDraftedWeapon>征召时根据武器切换</MAP_MechanoidMechanitor.DataProcessing.DynamicRuleDraftedWeapon>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicRuleCloseMelee>近战接战时切换强袭协议</MAP_MechanoidMechanitor.DataProcessing.DynamicRuleCloseMelee>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicRuleUndraftedFallback>取消征召后的自动回落</MAP_MechanoidMechanitor.DataProcessing.DynamicRuleUndraftedFallback>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentState>当前状态</MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentState>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentMode>当前模式</MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentMode>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentActualSteps>当前实际额度</MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentActualSteps>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateIdle>闲置</MAP_MechanoidMechanitor.DataProcessing.DynamicStateIdle>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateWorking>工作</MAP_MechanoidMechanitor.DataProcessing.DynamicStateWorking>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateDraftedRanged>征召远程</MAP_MechanoidMechanitor.DataProcessing.DynamicStateDraftedRanged>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateDraftedMelee>征召近战</MAP_MechanoidMechanitor.DataProcessing.DynamicStateDraftedMelee>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateCloseMelee>近战接战</MAP_MechanoidMechanitor.DataProcessing.DynamicStateCloseMelee>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicLockedMode.Tooltip>当前模式由动态分配控制。请在动态分配设置中修改该机械族的默认模式与切换规则。</MAP_MechanoidMechanitor.DataProcessing.DynamicLockedMode.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicSteps.Tooltip>当前实际额度：{0}
+常态额度：{1}</MAP_MechanoidMechanitor.DataProcessing.DynamicSteps.Tooltip>
+
+  <!-- 模块：意识分配矩阵 -->
+  <MAP_MechanoidMechanitor.DataProcessing.Matrix.Title>意识分配矩阵</MAP_MechanoidMechanitor.DataProcessing.Matrix.Title>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixSubjectCount>接入节点：{0}</MAP_MechanoidMechanitor.DataProcessing.MatrixSubjectCount>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixGlobalStrategy>全局策略</MAP_MechanoidMechanitor.DataProcessing.MatrixGlobalStrategy>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixTargetStrategy>目标策略</MAP_MechanoidMechanitor.DataProcessing.MatrixTargetStrategy>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixBaseProcessing>基础处理：{0}</MAP_MechanoidMechanitor.DataProcessing.MatrixBaseProcessing>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicAvailable>动态余量：{0}</MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicAvailable>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixSafetyLine>安全线：{0}</MAP_MechanoidMechanitor.DataProcessing.MatrixSafetyLine>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicThreshold>动态阈值：{0}</MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicThreshold>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixAssigned>已分配：{0}</MAP_MechanoidMechanitor.DataProcessing.MatrixAssigned>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixFilterAll>全部</MAP_MechanoidMechanitor.DataProcessing.MatrixFilterAll>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixFilterActive>活动</MAP_MechanoidMechanitor.DataProcessing.MatrixFilterActive>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixFilterLimited>受限</MAP_MechanoidMechanitor.DataProcessing.MatrixFilterLimited>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixFilterFixed>固定</MAP_MechanoidMechanitor.DataProcessing.MatrixFilterFixed>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixFixedStatus>固定分配</MAP_MechanoidMechanitor.DataProcessing.MatrixFixedStatus>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixCurrentDecision>当前判定</MAP_MechanoidMechanitor.DataProcessing.MatrixCurrentDecision>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixDecisionPath>{0}  →  {1}  →  请求 {2}</MAP_MechanoidMechanitor.DataProcessing.MatrixDecisionPath>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixAllocationControl>分配控制</MAP_MechanoidMechanitor.DataProcessing.MatrixAllocationControl>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixEditingNormal>正在修改：常态额度。当前实际额度由动态调度决定。</MAP_MechanoidMechanitor.DataProcessing.MatrixEditingNormal>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixEditingActual>正在修改：当前实际额度。</MAP_MechanoidMechanitor.DataProcessing.MatrixEditingActual>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixCurrentEffects>当前生效效果</MAP_MechanoidMechanitor.DataProcessing.MatrixCurrentEffects>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixActual>实际</MAP_MechanoidMechanitor.DataProcessing.MatrixActual>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixNormal>常态</MAP_MechanoidMechanitor.DataProcessing.MatrixNormal>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixMaximum>请求</MAP_MechanoidMechanitor.DataProcessing.MatrixMaximum>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPresetConservative>保守 100%</MAP_MechanoidMechanitor.DataProcessing.MatrixPresetConservative>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPresetBalanced>均衡 75%</MAP_MechanoidMechanitor.DataProcessing.MatrixPresetBalanced>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPresetAggressive>激进 55%</MAP_MechanoidMechanitor.DataProcessing.MatrixPresetAggressive>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixBudgetStatistics>预算统计</MAP_MechanoidMechanitor.DataProcessing.MatrixBudgetStatistics>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixFixedUsage>固定分配：{0}</MAP_MechanoidMechanitor.DataProcessing.MatrixFixedUsage>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicUsage>动态分配：{0}</MAP_MechanoidMechanitor.DataProcessing.MatrixDynamicUsage>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixUnmetRequest>未满足请求：{0}</MAP_MechanoidMechanitor.DataProcessing.MatrixUnmetRequest>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixAutomaticRules>自动规则</MAP_MechanoidMechanitor.DataProcessing.MatrixAutomaticRules>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixRuleWork.Description>执行工作时使用生产统筹及对应最高额度。</MAP_MechanoidMechanitor.DataProcessing.MatrixRuleWork.Description>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixRuleDrafted.Description>征召后根据实际远程或近战武器切换模式。</MAP_MechanoidMechanitor.DataProcessing.MatrixRuleDrafted.Description>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixRuleMelee.Description>确认进入近战接战后优先使用强袭协议。</MAP_MechanoidMechanitor.DataProcessing.MatrixRuleMelee.Description>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixRuleFallback.Description>未征召且无活动任务时按机械族职责自动选择模式。</MAP_MechanoidMechanitor.DataProcessing.MatrixRuleFallback.Description>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityCritical>关键 P1</MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityCritical>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityHigh>高 P2</MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityHigh>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityStandard>标准 P3</MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityStandard>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityLow>低 P4</MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityLow>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixIntervalHighFrequency>高频检查。大量机械族使用1秒间隔可能增加性能开销。</MAP_MechanoidMechanitor.DataProcessing.MatrixIntervalHighFrequency>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixIntervalRecommended>推荐检查间隔，兼顾响应速度与性能。</MAP_MechanoidMechanitor.DataProcessing.MatrixIntervalRecommended>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixLegend>实心填充＝当前实际额度　白色竖线＝常态额度　琥珀括号＝当前请求额度</MAP_MechanoidMechanitor.DataProcessing.MatrixLegend>
+
+</LanguageData>

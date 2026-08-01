@@ -73,7 +73,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     DrawCenteredMessage(
                         listRect,
-                        "MAP_DataProcessingAllocation_OverseerInvalid".Translate());
+                        "MAP_MechanoidMechanitor.DataProcessing.OverseerInvalid".Translate());
                     return;
                 }
 
@@ -83,7 +83,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     DrawCenteredMessage(
                         listRect,
-                        "MAP_DataProcessingAllocation_NoSubjects".Translate());
+                        "MAP_MechanoidMechanitor.DataProcessing.NoSubjects".Translate());
                     return;
                 }
 
@@ -103,7 +103,7 @@ namespace MAP_MechanoidMechanitor
             Text.Anchor = TextAnchor.UpperLeft;
             Widgets.Label(
                 new Rect(contentRect.x, curY, contentRect.width, TitleHeight),
-                "MAP_DataProcessingAllocation_WindowTitle".Translate(GetOverseerDisplayName()));
+                "MAP_MechanoidMechanitor.DataProcessing.Window.Title".Translate(GetOverseerDisplayName()));
             curY += TitleHeight + 4f;
         }
 
@@ -123,16 +123,16 @@ namespace MAP_MechanoidMechanitor
             float halfWidth = contentRect.width * 0.5f;
             Widgets.Label(
                 new Rect(contentRect.x, curY, halfWidth - 4f, Text.LineHeight),
-                "MAP_DataProcessingAllocation_CurrentProcessing".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.CurrentProcessing".Translate(
                     currentProcessing.ToStringPercent()));
             Widgets.Label(
                 new Rect(contentRect.x + halfWidth, curY, halfWidth - 4f, Text.LineHeight),
-                "MAP_DataProcessingAllocation_RemainingProcessing".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.RemainingProcessing".Translate(
                     DataProcessingAllocationUtility.StepsToPercent(remainingSteps)
                         .ToStringPercent()));
             curY += Text.LineHeight + 2f;
 
-            string hint = "MAP_DataProcessingAllocation_MinReserveHint"
+            string hint = "MAP_MechanoidMechanitor.DataProcessing.MinReserveHint"
                 .Translate(GetOverseerDisplayName());
             float hintHeight = Text.CalcHeight(hint, contentRect.width);
             GUI.color = HintTextColor;
@@ -154,14 +154,14 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool enabled = registry.IsDynamicAllocationEnabled(overseer);
-            string label = "MAP_DataProcessingAllocation_DynamicAllocation".Translate();
+            string label = "MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation".Translate();
 
             float checkboxSize = 22f;
             Rect checkboxRect = new Rect(contentRect.x, curY, checkboxSize, checkboxSize);
             Widgets.Checkbox(checkboxRect.x, checkboxRect.y, ref enabled, checkboxSize, false);
             TooltipHandler.TipRegion(
                 checkboxRect,
-                "MAP_DataProcessingAllocation_DynamicAllocationTip".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation.Tooltip".Translate());
 
             Rect labelRect = new Rect(
                 checkboxRect.xMax + 4f,
@@ -180,7 +180,7 @@ namespace MAP_MechanoidMechanitor
                 else
                 {
                     Messages.Message(
-                        "MAP_DataProcessingAllocation_DynamicAllocationFailed".Translate(),
+                        "MAP_MechanoidMechanitor.DataProcessing.DynamicAllocationFailed".Translate(),
                         overseer,
                         MessageTypeDefOf.RejectInput,
                         historical: false);
@@ -198,7 +198,7 @@ namespace MAP_MechanoidMechanitor
                     Text.LineHeight + 4f);
                 if (Widgets.ButtonText(
                         settingsRect,
-                        "MAP_DataProcessingAllocation_DynamicSettingsButton".Translate()))
+                        "MAP_MechanoidMechanitor.DataProcessing.DynamicSettings.Button".Translate()))
                 {
                     Find.WindowStack.Add(
                         new Dialog_DataProcessingDynamicAllocationSettings(overseer));
@@ -216,7 +216,7 @@ namespace MAP_MechanoidMechanitor
             Text.Anchor = TextAnchor.UpperLeft;
             Widgets.Label(
                 new Rect(contentRect.x, curY, contentRect.width, Text.LineHeight),
-                "MAP_DataProcessingAllocation_SubjectsHeader".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.SubjectsHeader".Translate());
             curY += Text.LineHeight + 2f;
             Widgets.DrawLineHorizontal(contentRect.x, curY, contentRect.width);
             curY += SectionGap;
@@ -366,7 +366,7 @@ namespace MAP_MechanoidMechanitor
             {
                 TooltipHandler.TipRegion(
                     percentRect,
-                    "MAP_DataProcessingAllocation_DynamicStepsTooltip".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicSteps.Tooltip".Translate(
                         DataProcessingAllocationUtility.StepsToPercent(actualSteps).ToStringPercent(),
                         DataProcessingAllocationUtility.StepsToPercent(normalSteps).ToStringPercent()));
             }
@@ -383,14 +383,14 @@ namespace MAP_MechanoidMechanitor
 
             if (DrawActionButton(
                     removeRect,
-                    "MAP_DataProcessingAllocation_Remove".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.Remove".Translate(),
                     canRemove)
                 && registry != null)
             {
                 if (!registry.TryRemoveStep(overseer, row.target))
                 {
                     Messages.Message(
-                        "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
+                        "MAP_MechanoidMechanitor.DataProcessing.AdjustFailed".Translate(),
                         overseer,
                         MessageTypeDefOf.RejectInput,
                         historical: false);
@@ -407,14 +407,14 @@ namespace MAP_MechanoidMechanitor
 
             if (DrawActionButton(
                     addRect,
-                    "MAP_DataProcessingAllocation_Add".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.Add".Translate(),
                     canAdd)
                 && registry != null)
             {
                 if (!registry.TryAddStep(overseer, row.target))
                 {
                     Messages.Message(
-                        "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
+                        "MAP_MechanoidMechanitor.DataProcessing.AdjustFailed".Translate(),
                         overseer,
                         MessageTypeDefOf.RejectInput,
                         historical: false);
@@ -440,7 +440,7 @@ namespace MAP_MechanoidMechanitor
             if (dynamicLocked)
             {
                 string lockTip =
-                    "MAP_DataProcessingAllocation_DynamicLockedModeTip"
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicLockedMode.Tooltip"
                         .Translate();
 
                 string combinedTip = tip.NullOrEmpty()
@@ -492,7 +492,7 @@ namespace MAP_MechanoidMechanitor
                             && overseer != null)
                         {
                             Messages.Message(
-                                "MAP_DataProcessingAllocation_AdjustFailed".Translate(),
+                                "MAP_MechanoidMechanitor.DataProcessing.AdjustFailed".Translate(),
                                 overseer,
                                 MessageTypeDefOf.RejectInput,
                                 historical: false);
@@ -509,15 +509,15 @@ namespace MAP_MechanoidMechanitor
             switch (specialization)
             {
                 case DataProcessingSpecialization.GeneralTuning:
-                    return "MAP_DataProcessingAllocation_Specialization_GeneralTuningTip".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning.Tooltip".Translate();
                 case DataProcessingSpecialization.ProductionCoordination:
-                    return "MAP_DataProcessingAllocation_Specialization_ProductionCoordinationTip".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination.Tooltip".Translate();
                 case DataProcessingSpecialization.FireControlCalculation:
-                    return "MAP_DataProcessingAllocation_Specialization_FireControlCalculationTip".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation.Tooltip".Translate();
                 case DataProcessingSpecialization.AssaultProtocol:
-                    return "MAP_DataProcessingAllocation_Specialization_AssaultProtocolTip".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol.Tooltip".Translate();
                 default:
-                    return "MAP_DataProcessingAllocation_Specialization_GeneralTuningTip".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning.Tooltip".Translate();
             }
         }
 
@@ -537,11 +537,11 @@ namespace MAP_MechanoidMechanitor
                 && DataProcessingAllocationUtility.IsValidAllocationPair(overseer, row.target);
             string tip = !canPin
                 ? (registry == null || !IsOverseerCapable()
-                    ? "MAP_DataProcessingAllocation_OverseerInvalid".Translate()
-                    : "MAP_DataProcessingAllocation_TargetInvalid".Translate())
+                    ? "MAP_MechanoidMechanitor.DataProcessing.OverseerInvalid".Translate()
+                    : "MAP_MechanoidMechanitor.DataProcessing.TargetInvalid".Translate())
                 : (row.isPinned
-                    ? "MAP_DataProcessingAllocation_UnpinTip".Translate()
-                    : "MAP_DataProcessingAllocation_PinTip".Translate());
+                    ? "MAP_MechanoidMechanitor.DataProcessing.Unpin.Tooltip".Translate()
+                    : "MAP_MechanoidMechanitor.DataProcessing.Pin.Tooltip".Translate());
             TooltipHandler.TipRegion(pinRect, tip);
 
             if (!DrawActionButton(pinRect, label, canPin) || registry == null)
@@ -655,7 +655,7 @@ namespace MAP_MechanoidMechanitor
             float y = effectRect.y;
             Widgets.Label(
                 new Rect(effectRect.x, y, effectRect.width, Text.LineHeight),
-                "MAP_DataProcessingAllocation_CurrentEffects".Translate());
+                "MAP_MechanoidMechanitor.DataProcessing.CurrentEffects".Translate());
             y += Text.LineHeight;
 
             for (int i = 0; i < row.effectLabels.Count; i++)
@@ -1041,26 +1041,26 @@ namespace MAP_MechanoidMechanitor
 
             if (steps < DataProcessingAllocationUtility.CommandRangeThresholdSteps)
             {
-                effectLabels.Add("MAP_DataProcessingAllocation_EffectNone".Translate());
+                effectLabels.Add("MAP_MechanoidMechanitor.DataProcessing.EffectNone".Translate());
                 effectTips.Add(string.Empty);
                 return;
             }
 
             // 通用功能权限（脱离指挥范围、带远行队、驾驶穿梭机）始终按真实档数显示。
-            effectLabels.Add("MAP_DataProcessingAllocation_EffectCommandRange".Translate());
-            effectTips.Add("MAP_DataProcessingAllocation_EffectCommandRangeTip".Translate());
+            effectLabels.Add("MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange".Translate());
+            effectTips.Add("MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip".Translate());
 
             if (steps >= DataProcessingAllocationUtility.TravelNodeThresholdSteps)
             {
-                effectLabels.Add("MAP_DataProcessingAllocation_EffectTravelLead".Translate());
-                effectTips.Add("MAP_DataProcessingAllocation_EffectTravelLeadTip".Translate());
+                effectLabels.Add("MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead".Translate());
+                effectTips.Add("MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip".Translate());
             }
 
             if (ModsConfig.OdysseyActive
                 && steps >= DataProcessingAllocationUtility.ShuttlePilotThresholdSteps)
             {
-                effectLabels.Add("MAP_DataProcessingAllocation_EffectShuttlePilot".Translate());
-                effectTips.Add("MAP_DataProcessingAllocation_EffectShuttlePilotTip".Translate());
+                effectLabels.Add("MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot".Translate());
+                effectTips.Add("MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot.Tooltip".Translate());
             }
 
             // 仅显示当前特化实际提供的数值属性。
@@ -1092,7 +1092,7 @@ namespace MAP_MechanoidMechanitor
             float workSpeedOffset = DataProcessingAllocationUtility.GetWorkSpeedOffset(
                 steps, DataProcessingSpecialization.GeneralTuning);
             effectLabels.Add(
-                "MAP_DataProcessingAllocation_EffectWorkSpeed".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.EffectWorkSpeed".Translate(
                     workSpeedOffset.ToStringPercent()));
             effectTips.Add(string.Empty);
 
@@ -1102,7 +1102,7 @@ namespace MAP_MechanoidMechanitor
             if (timingFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectAttackTiming".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectAttackTiming".Translate(
                         timingFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
@@ -1112,7 +1112,7 @@ namespace MAP_MechanoidMechanitor
             if (moveSpeedOffset > 0f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed".Translate(
                         moveSpeedOffset.ToString("F1")));
                 effectTips.Add(string.Empty);
             }
@@ -1122,7 +1122,7 @@ namespace MAP_MechanoidMechanitor
             if (staggerDurationFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectStaggerDuration".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectStaggerDuration".Translate(
                         staggerDurationFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
@@ -1132,7 +1132,7 @@ namespace MAP_MechanoidMechanitor
             if (incomingDamageFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectIncomingDamage".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectIncomingDamage".Translate(
                         incomingDamageFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
@@ -1146,7 +1146,7 @@ namespace MAP_MechanoidMechanitor
             float workSpeedOffset = DataProcessingAllocationUtility.GetWorkSpeedOffset(
                 steps, DataProcessingSpecialization.ProductionCoordination);
             effectLabels.Add(
-                "MAP_DataProcessingAllocation_EffectWorkSpeed".Translate(
+                "MAP_MechanoidMechanitor.DataProcessing.EffectWorkSpeed".Translate(
                     workSpeedOffset.ToStringPercent()));
             effectTips.Add(string.Empty);
 
@@ -1155,7 +1155,7 @@ namespace MAP_MechanoidMechanitor
             if (moveSpeedOffset > 0f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed".Translate(
                         moveSpeedOffset.ToString("F1")));
                 effectTips.Add(string.Empty);
             }
@@ -1165,7 +1165,7 @@ namespace MAP_MechanoidMechanitor
             if (mechEnergyUsageFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectMechEnergyUsage".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectMechEnergyUsage".Translate(
                         mechEnergyUsageFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
@@ -1181,7 +1181,7 @@ namespace MAP_MechanoidMechanitor
             if (aimingDelayFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectAimingDelay".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectAimingDelay".Translate(
                         aimingDelayFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
@@ -1191,7 +1191,7 @@ namespace MAP_MechanoidMechanitor
             if (rangedCooldownFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectRangedCooldown".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectRangedCooldown".Translate(
                         rangedCooldownFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
@@ -1207,7 +1207,7 @@ namespace MAP_MechanoidMechanitor
             if (meleeCooldownFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectMeleeCooldown".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectMeleeCooldown".Translate(
                         meleeCooldownFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
@@ -1217,7 +1217,7 @@ namespace MAP_MechanoidMechanitor
             if (moveSpeedOffset > 0f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed".Translate(
                         moveSpeedOffset.ToString("F1")));
                 effectTips.Add(string.Empty);
             }
@@ -1227,7 +1227,7 @@ namespace MAP_MechanoidMechanitor
             if (staggerDurationFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectStaggerDuration".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectStaggerDuration".Translate(
                         staggerDurationFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
@@ -1237,7 +1237,7 @@ namespace MAP_MechanoidMechanitor
             if (incomingDamageFactor < 1f)
             {
                 effectLabels.Add(
-                    "MAP_DataProcessingAllocation_EffectIncomingDamage".Translate(
+                    "MAP_MechanoidMechanitor.DataProcessing.EffectIncomingDamage".Translate(
                         incomingDamageFactor.ToStringPercent()));
                 effectTips.Add(string.Empty);
             }
@@ -1360,13 +1360,13 @@ namespace MAP_MechanoidMechanitor
                 case AllocationAdjustBlockReason.None:
                     return string.Empty;
                 case AllocationAdjustBlockReason.NothingToRemove:
-                    return "MAP_DataProcessingAllocation_NothingToRemove".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.NothingToRemove".Translate();
                 case AllocationAdjustBlockReason.TargetInvalid:
-                    return "MAP_DataProcessingAllocation_TargetInvalid".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.TargetInvalid".Translate();
                 case AllocationAdjustBlockReason.OverseerInvalid:
-                    return "MAP_DataProcessingAllocation_OverseerInvalid".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.OverseerInvalid".Translate();
                 default:
-                    return "MAP_DataProcessingAllocation_AdjustFailed".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.AdjustFailed".Translate();
             }
         }
 
@@ -1377,15 +1377,15 @@ namespace MAP_MechanoidMechanitor
                 case AllocationAdjustBlockReason.None:
                     return string.Empty;
                 case AllocationAdjustBlockReason.NotEnoughProcessing:
-                    return "MAP_DataProcessingAllocation_NotEnoughProcessing".Translate(
+                    return "MAP_MechanoidMechanitor.DataProcessing.NotEnoughProcessing".Translate(
                         GetOverseerDisplayName());
                 case AllocationAdjustBlockReason.TargetInvalid:
-                    return "MAP_DataProcessingAllocation_TargetInvalid".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.TargetInvalid".Translate();
                 case AllocationAdjustBlockReason.OverseerInvalid:
                 case AllocationAdjustBlockReason.RegistryMissing:
-                    return "MAP_DataProcessingAllocation_OverseerInvalid".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.OverseerInvalid".Translate();
                 default:
-                    return "MAP_DataProcessingAllocation_AdjustFailed".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.AdjustFailed".Translate();
             }
         }
 

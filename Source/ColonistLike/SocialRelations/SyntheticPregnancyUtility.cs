@@ -91,9 +91,9 @@ namespace MAP_MechanoidMechanitor
             {
                 string name = pregnantCompanion.LabelShortCap;
                 Find.LetterStack.ReceiveLetter(
-                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterLabel"
+                    "MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Label"
                         .Translate(name),
-                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ConceivedLetterText"
+                    "MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Text"
                         .Translate(name),
                     LetterDefOf.PositiveEvent,
                     pregnantCompanion);

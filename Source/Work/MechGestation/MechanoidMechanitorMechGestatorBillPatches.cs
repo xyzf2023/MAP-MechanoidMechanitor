@@ -137,7 +137,7 @@ namespace MAP_MechanoidMechanitor
                         string.Format(
                             "{0} ({1})",
                             pawn.LabelShortCap,
-                            "MAP_MechanoidMechanitor.Bill.Reason.MissingSkillsTracker".Translate()),
+                            "MAP_MechanoidMechanitor.Core.Bill.Reason.MissingSkillsTracker".Translate()),
                         null),
                     payload = pawn
                 };

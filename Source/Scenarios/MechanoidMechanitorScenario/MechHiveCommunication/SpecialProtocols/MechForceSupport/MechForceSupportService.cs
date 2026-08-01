@@ -39,25 +39,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public static class MechForceSupportService
     {
         public const string ErrorUnavailable =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.Unavailable";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.Unavailable";
 
         public const string ErrorInvalidRequest =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.InvalidRequest";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.InvalidRequest";
 
         public const string ErrorGenerationFailed =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.GenerationFailed";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.GenerationFailed";
 
         public const string ErrorNoAvailableTemplate =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.NoAvailableTemplate";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.NoAvailableTemplate";
 
         public const string ErrorInsufficientCredits =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.InsufficientCredits";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.InsufficientCredits";
 
         public const string ErrorChargeFailed =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.ChargeFailed";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.ChargeFailed";
 
         public const string ErrorCommittedFailure =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.Error.CommittedFailure";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Error.CommittedFailure";
 
         private static readonly HashSet<PawnGroupMaker> warnedAbnormalMakers =
             new HashSet<PawnGroupMaker>();
@@ -128,11 +128,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (TryResolveLoadedMap(target, out Map? map) && map != null)
             {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.WorldTargetValid"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.WorldTargetValid"
                     .Translate(map.Parent.LabelCap);
             }
 
-            return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.WorldTargetInvalid"
+            return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.WorldTargetInvalid"
                 .Translate();
         }
 
@@ -235,12 +235,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     composition = "—";
                 }
 
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateNamed"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TemplateNamed"
                     .Translate(composition);
             }
             catch
             {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateNamed"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TemplateNamed"
                     .Translate("—");
             }
         }
@@ -251,7 +251,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<(PawnGroupMaker? maker, string label, string fullLabel)> entries =
                 new List<(PawnGroupMaker?, string, string)>();
             string randomLabel =
-                "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateRandom"
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TemplateRandom"
                     .Translate();
             entries.Add((null, randomLabel, randomLabel));
 
@@ -263,7 +263,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 string baseName = BuildTemplateDisplayName(makers[i]);
                 if (baseName.NullOrEmpty())
                 {
-                    baseName = "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.TemplateNamed"
+                    baseName = "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.TemplateNamed"
                         .Translate("—");
                 }
 
@@ -659,9 +659,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             try
             {
                 Find.LetterStack.ReceiveLetter(
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.LetterLabel"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Letter.Label"
                         .Translate(),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.ForceSupport.LetterText"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Letter.Text"
                         .Translate(),
                     LetterDefOf.PositiveEvent,
                     new LookTargets(center, map),

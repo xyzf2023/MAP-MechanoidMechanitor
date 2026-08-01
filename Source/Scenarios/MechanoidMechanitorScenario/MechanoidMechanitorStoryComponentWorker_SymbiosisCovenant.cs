@@ -28,7 +28,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return null;
             }
 
-            return "MAP_MechanoidMechanitor.Story.SymbiosisCovenant.DisabledReason".Translate();
+            return "MAP_MechanoidMechanitor.Symbiosis.Scenario.DisabledReason".Translate();
         }
 
         public override string? GetSummaryValue(

@@ -21,15 +21,15 @@ namespace MAP_MechanoidMechanitor
         public const int InitializationDurationTicks = 900;
 
         private const string ActivateLabelKey =
-            "MAP_MechanoidMechanitor.DormantJustice.Activate.Label";
+            "MAP_MechanoidMechanitor.Justice.DormantActivation.Activate.Label";
         private const string ActivateDescriptionKey =
-            "MAP_MechanoidMechanitor.DormantJustice.Activate.Description";
+            "MAP_MechanoidMechanitor.Justice.DormantActivation.Activate.Description";
         private const string InitializingInspectKey =
-            "MAP_MechanoidMechanitor.DormantJustice.Initializing";
+            "MAP_MechanoidMechanitor.Justice.DormantActivation.Initializing";
         private const string EmergencyCarryLabelKey =
-            "MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Label";
+            "MAP_MechanoidMechanitor.Justice.DormantActivation.EmergencyCarry.Label";
         private const string EmergencyCarryDescriptionKey =
-            "MAP_MechanoidMechanitor.DormantJustice.EmergencyCarry.Description";
+            "MAP_MechanoidMechanitor.Justice.DormantActivation.EmergencyCarry.Description";
 
         private bool isInitializing;
         private int remainingInitTicks;

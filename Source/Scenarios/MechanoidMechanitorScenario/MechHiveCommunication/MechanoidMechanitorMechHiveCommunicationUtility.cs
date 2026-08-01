@@ -18,7 +18,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static Color? cachedContactOvermindIconColor;
 
         public static string ContactOvermindLabel =>
-            "MAP_MechanoidMechanitor.MechHiveCommunication.ContactOvermind".Translate();
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactOvermind".Translate();
 
         public static Texture2D ContactOvermindIcon
         {
@@ -181,7 +181,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 Log.Warning(
                     "[MAP] Failed to read local time for mechanoid overmind dialogue: " + ex);
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.Dialogue.TimeUnavailable"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.TimeUnavailable"
                     .Translate();
             }
         }

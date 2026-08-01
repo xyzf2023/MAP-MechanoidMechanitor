@@ -1091,7 +1091,7 @@ namespace MAP_MechanoidMechanitor
         public string GetCachedDynamicStateLabelForUI(Pawn? target)
         {
             DataProcessingDynamicState state = GetCachedDynamicStateForTarget(target);
-            return ("MAP_DataProcessingAllocation_DynamicState" + state).Translate();
+            return ("MAP_MechanoidMechanitor.DataProcessing.DynamicState" + state).Translate();
         }
 
         public DataProcessingDynamicTargetRecord GetOrCreateDynamicTargetRecord(

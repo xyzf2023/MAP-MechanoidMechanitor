@@ -4,45 +4,45 @@
   <MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
     <defName>MAP_OvermindDialogue_HomeReturn</defName>
     <textKeys>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.01</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.02</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.HomeReturn.03</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.HomeReturn.01</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.HomeReturn.02</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.HomeReturn.03</li>
     </textKeys>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
     <defName>MAP_OvermindDialogue_EnterCommunication</defName>
     <textKeys>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.01</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.02</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterCommunication.03</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterCommunication.01</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterCommunication.02</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterCommunication.03</li>
     </textKeys>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
     <defName>MAP_OvermindDialogue_EnterMechs</defName>
     <textKeys>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.01</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.02</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterMechs.03</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterMechs.01</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterMechs.02</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterMechs.03</li>
     </textKeys>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
     <defName>MAP_OvermindDialogue_EnterGoods</defName>
     <textKeys>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.01</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.02</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterGoods.03</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterGoods.01</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterGoods.02</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterGoods.03</li>
     </textKeys>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
     <defName>MAP_OvermindDialogue_EnterSpecialProtocols</defName>
     <textKeys>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterSpecialProtocols.01</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterSpecialProtocols.02</li>
-      <li>MAP_MechanoidMechanitor.MechHiveCommunication.Pool.EnterSpecialProtocols.03</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.01</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.02</li>
+      <li>MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.03</li>
     </textKeys>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidOvermindDialoguePoolDef>
 

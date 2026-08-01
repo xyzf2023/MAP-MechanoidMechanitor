@@ -16,7 +16,7 @@ namespace MAP_MechanoidMechanitor
         public override string ExplanationPart(StatRequest req)
         {
             return TryGetOffset(req, out float offset)
-                ? "MAP_MechanoidMechanitor.ProductivityCore.WorkSpeedOffset"
+                ? "MAP_MechanoidMechanitor.Implants.ProductivityCore.WorkSpeedOffset"
                     .Translate(offset.ToStringPercent())
                 : null!;
         }

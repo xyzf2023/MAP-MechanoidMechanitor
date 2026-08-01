@@ -60,7 +60,7 @@ namespace MAP_MechanoidMechanitor
             if (item == null || item.Destroyed || item.stackCount <= 0)
             {
                 Messages.Message(
-                    "MAP_LoverImplant.InstallFailed".Translate(),
+                    "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
@@ -69,7 +69,7 @@ namespace MAP_MechanoidMechanitor
             if (!LoverRecipeImplantRegistrar.TryGetRecipe(item.def, out RecipeDef recipe))
             {
                 Messages.Message(
-                    "MAP_LoverImplant.InvalidSelection".Translate(),
+                    "MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection".Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
@@ -79,7 +79,7 @@ namespace MAP_MechanoidMechanitor
             if (selectedPart == null)
             {
                 Messages.Message(
-                    "MAP_LoverImplant.InvalidSelection".Translate(),
+                    "MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection".Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
@@ -91,14 +91,14 @@ namespace MAP_MechanoidMechanitor
             if (!LoverImplantUtility.TryInstall(pawn, item, recipe, selectedPart, out string? failureReason))
             {
                 Messages.Message(
-                    failureReason ?? "MAP_LoverImplant.InstallFailed".Translate(),
+                    failureReason ?? "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
             }
 
             Messages.Message(
-                "MAP_LoverImplant.InstallSucceeded".Translate(
+                "MAP_MechanoidMechanitor.Lover.Implant.InstallSucceeded".Translate(
                     pawn.LabelShort,
                     itemLabel,
                     partLabel),

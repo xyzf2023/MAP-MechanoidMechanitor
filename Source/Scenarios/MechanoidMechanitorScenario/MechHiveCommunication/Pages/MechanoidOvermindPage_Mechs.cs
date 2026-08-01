@@ -82,23 +82,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             float buttonWidth = rect.width / 5f;
             DrawFilterButton(
                 new Rect(rect.x, rect.y, buttonWidth - 2f, rect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Weight.All".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.All".Translate(),
                 WeightFilter.All);
             DrawFilterButton(
                 new Rect(rect.x + buttonWidth, rect.y, buttonWidth - 2f, rect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Light".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Light".Translate(),
                 WeightFilter.Light);
             DrawFilterButton(
                 new Rect(rect.x + buttonWidth * 2f, rect.y, buttonWidth - 2f, rect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Medium".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Medium".Translate(),
                 WeightFilter.Medium);
             DrawFilterButton(
                 new Rect(rect.x + buttonWidth * 3f, rect.y, buttonWidth - 2f, rect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Heavy".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Heavy".Translate(),
                 WeightFilter.Heavy);
             DrawFilterButton(
                 new Rect(rect.x + buttonWidth * 4f, rect.y, buttonWidth - 2f, rect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Weight.UltraHeavy".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.UltraHeavy".Translate(),
                 WeightFilter.UltraHeavy);
         }
 
@@ -222,10 +222,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             string weightLabel = entry.WeightClass != null
                 ? entry.WeightClass.LabelCap
-                : "MAP_MechanoidMechanitor.MechHiveCommunication.Weight.Light".Translate();
+                : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Light".Translate();
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(textX, rowRect.y + 24f, textWidth, 20f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.MechRowMeta".Translate(
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta".Translate(
                     weightLabel,
                     entry.BandwidthCost.ToString("0.##"),
                     entry.PurgePrice));
@@ -250,7 +250,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(rowRect.xMax - 56f, rowRect.y + 12f, 52f, 28f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.ClearItem".Translate()))
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem".Translate()))
             {
                 ApplyMechCount(order, entry.Kind, 0);
             }

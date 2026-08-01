@@ -43,7 +43,7 @@ namespace MAP_MechanoidMechanitor
             Text.Font = GameFont.Medium;
             Widgets.Label(
                 new Rect(contentRect.x, contentRect.y, contentRect.width, Text.LineHeight),
-                "MAP_DataProcessingAllocation_DynamicTargetSettingsTitle".Translate(target.LabelShortCap));
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicTargetSettings.Title".Translate(target.LabelShortCap));
             float headerHeight = Text.LineHeight + SectionGap;
             Rect listRect = new Rect(
                 contentRect.x,
@@ -73,67 +73,67 @@ namespace MAP_MechanoidMechanitor
 
                 // 当前状态（只读）。
                 DrawReadOnlyLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicCurrentState".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentState".Translate(),
                     GetStateLabel(registry, config));
                 DrawReadOnlyLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicCurrentMode".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentMode".Translate(),
                     DataProcessingAllocationUtility.GetSpecializationLabel(
                         registry.GetSpecializationForOverseerTarget(overseer, target)));
                 DrawReadOnlyLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicCurrentActualSteps".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicCurrentActualSteps".Translate(),
                     DataProcessingAllocationUtility.StepsToPercent(
                         registry.GetStepsForOverseerTarget(overseer, target)).ToStringPercent());
                 curY += SectionGap;
 
                 // 单体动态开关。
                 DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicTargetEnabled".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicTargetEnabled".Translate(),
                     config.enabled,
                     v => registry.SetDynamicAllocationEnabledForTarget(overseer, target, v));
 
                 // 默认模式。
                 DrawSpecializationLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicDefaultMode".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicDefaultMode".Translate(),
                     config.defaultSpecialization,
                     s => registry.SetDynamicTargetDefaultSpecialization(overseer, target, s));
 
                 // 常态额度。
                 DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicNormalSteps".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicNormalSteps".Translate(),
                     config.normalSteps,
                     v => registry.SetDynamicTargetNormalSteps(overseer, target, v));
 
                 // 统一最高额度。
                 DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicCommonMaxSteps".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicCommonMaxSteps".Translate(),
                     config.commonMaxSteps,
                     v => registry.SetDynamicTargetCommonMaxSteps(overseer, target, v));
 
                 // 高级最高额度开关。
                 DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicAdvancedMax".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicAdvancedMax".Translate(),
                     config.advancedMaxEnabled,
                     v => registry.SetDynamicTargetAdvancedMaxEnabled(overseer, target, v));
 
                 if (config.advancedMaxEnabled)
                 {
                     DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                        "MAP_DataProcessingAllocation_DynamicGeneralMax".Translate(),
+                        "MAP_MechanoidMechanitor.DataProcessing.DynamicGeneralMax".Translate(),
                         config.generalMaxSteps,
                         v => registry.SetDynamicTargetMaxStepsForSpecialization(
                             overseer, target, DataProcessingSpecialization.GeneralTuning, v));
                     DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                        "MAP_DataProcessingAllocation_DynamicProductionMax".Translate(),
+                        "MAP_MechanoidMechanitor.DataProcessing.DynamicProductionMax".Translate(),
                         config.productionMaxSteps,
                         v => registry.SetDynamicTargetMaxStepsForSpecialization(
                             overseer, target, DataProcessingSpecialization.ProductionCoordination, v));
                     DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                        "MAP_DataProcessingAllocation_DynamicFireControlMax".Translate(),
+                        "MAP_MechanoidMechanitor.DataProcessing.DynamicFireControlMax".Translate(),
                         config.fireControlMaxSteps,
                         v => registry.SetDynamicTargetMaxStepsForSpecialization(
                             overseer, target, DataProcessingSpecialization.FireControlCalculation, v));
                     DrawStepsLine(viewRect, ref curY, labelWidth, fieldWidth,
-                        "MAP_DataProcessingAllocation_DynamicAssaultMax".Translate(),
+                        "MAP_MechanoidMechanitor.DataProcessing.DynamicAssaultMax".Translate(),
                         config.assaultMaxSteps,
                         v => registry.SetDynamicTargetMaxStepsForSpecialization(
                             overseer, target, DataProcessingSpecialization.AssaultProtocol, v));
@@ -141,31 +141,31 @@ namespace MAP_MechanoidMechanitor
 
                 // 优先级。
                 DrawPriorityLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicPriority".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicPriority".Translate(),
                     config.priority,
                     v => registry.SetDynamicTargetPriority(overseer, target, v));
 
                 // 检查间隔（秒）。
                 DrawIntervalLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicCheckInterval".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicCheckInterval".Translate(),
                     config.checkIntervalTicks / 60,
                     v => registry.SetDynamicTargetCheckInterval(overseer, target, v));
 
                 // 规则开关。
                 DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicRuleWork".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicRuleWork".Translate(),
                     config.switchForWork,
                     v => registry.SetDynamicTargetRule(overseer, target, "Work", v));
                 DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicRuleDraftedWeapon".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicRuleDraftedWeapon".Translate(),
                     config.switchForDraftedWeapon,
                     v => registry.SetDynamicTargetRule(overseer, target, "DraftedWeapon", v));
                 DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicRuleCloseMelee".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicRuleCloseMelee".Translate(),
                     config.switchForCloseMelee,
                     v => registry.SetDynamicTargetRule(overseer, target, "CloseMelee", v));
                 DrawToggleLine(viewRect, ref curY, labelWidth, fieldWidth,
-                    "MAP_DataProcessingAllocation_DynamicRuleUndraftedFallback".Translate(),
+                    "MAP_MechanoidMechanitor.DataProcessing.DynamicRuleUndraftedFallback".Translate(),
                     config.applyUndraftedFallback,
                     v => registry.SetDynamicTargetRule(overseer, target, "UndraftedFallback", v));
             }
@@ -181,7 +181,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (!config.enabled)
             {
-                return "MAP_DataProcessingAllocation_DynamicStateIdle".Translate();
+                return "MAP_MechanoidMechanitor.DataProcessing.DynamicStateIdle".Translate();
             }
 
             // 统一通过注册表入口获取运行时状态标签，避免与调度器评估不一致或重复拼接翻译键。
@@ -329,7 +329,7 @@ namespace MAP_MechanoidMechanitor
                     Text.LineHeight + 4f);
                 bool active = p == priority;
                 if (Widgets.ButtonText(buttonRect,
-                        ("MAP_DataProcessingAllocation_DynamicPriority" + p + "Short").Translate(),
+                        ("MAP_MechanoidMechanitor.DataProcessing.DynamicPriority" + p + "Short").Translate(),
                         active,
                         active,
                         true)
@@ -370,7 +370,7 @@ namespace MAP_MechanoidMechanitor
 
             Widgets.Label(
                 valueRect,
-                "MAP_DataProcessingAllocation_DynamicSeconds".Translate(seconds));
+                "MAP_MechanoidMechanitor.DataProcessing.DynamicSeconds".Translate(seconds));
 
             curY += Text.LineHeight + RowGap + 4f;
         }

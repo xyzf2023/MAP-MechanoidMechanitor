@@ -135,15 +135,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             string[] labels =
             {
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Category.All".Translate(),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Weapon".Translate(),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Apparel".Translate(),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Food".Translate(),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Medicine".Translate(),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Material".Translate(),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Building".Translate(),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Special".Translate(),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Other".Translate()
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.All".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Weapon".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Apparel".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Food".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Medicine".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Material".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Building".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Special".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Other".Translate()
             };
 
             MechanoidOvermindThingCategory?[] values =
@@ -188,15 +188,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             float w = rect.width / 3f;
             DrawSortButton(
                 new Rect(rect.x, rect.y, w - 2f, rect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Sort.Name".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Sort.Name".Translate(),
                 SortMode.Name);
             DrawSortButton(
                 new Rect(rect.x + w, rect.y, w - 2f, rect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueAsc".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Sort.ValueAsc".Translate(),
                 SortMode.MarketValueAsc);
             DrawSortButton(
                 new Rect(rect.x + w * 2f, rect.y, w - 2f, rect.height),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Sort.ValueDesc".Translate(),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Sort.Value.Description".Translate(),
                 SortMode.MarketValueDesc);
         }
 
@@ -347,7 +347,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(textX, rowRect.y + 20f, textWidth, 16f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.GoodsRowCategory".Translate(
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.GoodsRowCategory".Translate(
                     GetCategoryLabel(entry.Category)));
 
             if (Widgets.ButtonInvisible(rowRect))
@@ -378,7 +378,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 MechanoidOvermindUiStyle.DrawSecondaryLabel(
                     inner,
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.Goods.SelectHint".Translate());
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.SelectHint".Translate());
                 return;
             }
 
@@ -397,10 +397,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Rect stuffRect = new Rect(x, y, 220f, 28f);
                 string stuffLabel = selectedStuff != null
                     ? selectedStuff.LabelCap
-                    : "MAP_MechanoidMechanitor.MechHiveCommunication.Stuff.None".Translate();
+                    : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Stuff.None".Translate();
                 if (MechanoidOvermindUiStyle.DrawActionButton(
                         stuffRect,
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Stuff".Translate(
+                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Stuff".Translate(
                             stuffLabel)))
                 {
                     OpenStuffMenu(entry.Def, order);
@@ -414,7 +414,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Rect qualityRect = new Rect(x, y, 180f, 28f);
                 if (MechanoidOvermindUiStyle.DrawActionButton(
                         qualityRect,
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Quality".Translate(
+                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Quality".Translate(
                             selectedQuality.GetLabel())))
                 {
                     OpenQualityMenu(order);
@@ -445,7 +445,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             float infoY = y + 36f;
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(inner.x, infoY, inner.width * 0.6f, 22f),
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Goods.EstimatedCredits".Translate(
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.EstimatedCredits".Translate(
                     cachedEstimatedCredits),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
@@ -453,7 +453,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(inner.xMax - 140f, inner.yMax - 34f, 140f, 30f),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.ClearItem".Translate()))
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem".Translate()))
             {
                 ApplyThingCount(order, entry, 0);
             }
@@ -627,28 +627,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
             switch (category)
             {
                 case MechanoidOvermindThingCategory.Weapon:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Weapon"
+                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Weapon"
                         .Translate();
                 case MechanoidOvermindThingCategory.Apparel:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Apparel"
+                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Apparel"
                         .Translate();
                 case MechanoidOvermindThingCategory.Food:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Food"
+                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Food"
                         .Translate();
                 case MechanoidOvermindThingCategory.Medicine:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Medicine"
+                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Medicine"
                         .Translate();
                 case MechanoidOvermindThingCategory.Material:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Material"
+                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Material"
                         .Translate();
                 case MechanoidOvermindThingCategory.Building:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Building"
+                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Building"
                         .Translate();
                 case MechanoidOvermindThingCategory.Special:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Special"
+                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Special"
                         .Translate();
                 default:
-                    return "MAP_MechanoidMechanitor.MechHiveCommunication.Category.Other"
+                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Other"
                         .Translate();
             }
         }

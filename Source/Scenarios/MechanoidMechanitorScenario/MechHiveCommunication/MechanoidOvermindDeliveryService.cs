@@ -34,28 +34,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public static class MechanoidOvermindDeliveryService
     {
         public const string ErrorConnection =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.Error.ConnectionLost";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.ConnectionLost";
 
         public const string ErrorNoMap =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoMap";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.NoMap";
 
         public const string ErrorNoDropSpot =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.Error.NoDropSpot";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.NoDropSpot";
 
         public const string ErrorInvalidOrder =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.Error.InvalidOrder";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.InvalidOrder";
 
         public const string ErrorInsufficientCredits =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.Error.InsufficientCredits";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.InsufficientCredits";
 
         public const string ErrorGenerationFailed =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.Error.GenerationFailed";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.GenerationFailed";
 
         public const string ErrorChargeFailed =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.Error.ChargeFailed";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.ChargeFailed";
 
         public const string ErrorDropFailed =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.Error.DropFailed";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.DropFailed";
 
         private static int lastDropResolveErrorTick = int.MinValue;
 

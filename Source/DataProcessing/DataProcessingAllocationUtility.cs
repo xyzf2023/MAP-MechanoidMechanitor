@@ -386,15 +386,15 @@ namespace MAP_MechanoidMechanitor
             switch (specialization)
             {
                 case DataProcessingSpecialization.GeneralTuning:
-                    return "MAP_DataProcessingAllocation_Specialization_GeneralTuning".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning".Translate();
                 case DataProcessingSpecialization.ProductionCoordination:
-                    return "MAP_DataProcessingAllocation_Specialization_ProductionCoordination".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination".Translate();
                 case DataProcessingSpecialization.FireControlCalculation:
-                    return "MAP_DataProcessingAllocation_Specialization_FireControlCalculation".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation".Translate();
                 case DataProcessingSpecialization.AssaultProtocol:
-                    return "MAP_DataProcessingAllocation_Specialization_AssaultProtocol".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol".Translate();
                 default:
-                    return "MAP_DataProcessingAllocation_Specialization_GeneralTuning".Translate();
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning".Translate();
             }
         }
 

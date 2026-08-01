@@ -6,7 +6,7 @@ namespace MAP_MechanoidMechanitor
     public class CompProperties_AbilityMechReconstruction : CompProperties_AbilityEffect
     {
         public string invalidTargetMessageKey =
-            "MAP_MechanoidMechanitor.MechReconstruction.InvalidTarget";
+            "MAP_MechanoidMechanitor.Justice.Ability.MechReconstruction.InvalidTarget";
 
         public int reconstructionDurationTicks = 900;
 

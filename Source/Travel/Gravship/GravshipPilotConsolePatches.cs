@@ -305,7 +305,7 @@ namespace MAP_MechanoidMechanitor
             if (ritual == null)
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.GravshipPilot.NoGravshipLaunchRitual".Translate(),
+                    "MAP_MechanoidMechanitor.Core.Gravship.NoGravshipLaunchRitual".Translate(),
                     target,
                     MessageTypeDefOf.RejectInput,
                     historical: false);

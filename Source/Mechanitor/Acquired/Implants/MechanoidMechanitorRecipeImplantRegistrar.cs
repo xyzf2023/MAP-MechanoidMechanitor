@@ -212,7 +212,7 @@ namespace MAP_MechanoidMechanitor
                     sourceRecipe = recipe,
                     useJob = useItemJob,
                     useLabel =
-                        "MAP_MechanoidMechanitor.BrainImplant.InstallLabel".Translate()
+                        "MAP_MechanoidMechanitor.Implants.Brain.Install.Label".Translate()
                 });
 
             implantDef.comps.Add(

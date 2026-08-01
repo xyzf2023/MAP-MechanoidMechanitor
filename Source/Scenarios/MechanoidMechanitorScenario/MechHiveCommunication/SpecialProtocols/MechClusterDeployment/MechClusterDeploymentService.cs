@@ -120,25 +120,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechClusterDeploymentOrder.DefaultThreatPoints;
 
         public const string ErrorUnavailable =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.Unavailable";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Unavailable";
 
         public const string ErrorInvalidRequest =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.InvalidRequest";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.InvalidRequest";
 
         public const string ErrorGenerationFailed =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.GenerationFailed";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.GenerationFailed";
 
         public const string ErrorConditionCauserPlacement =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.ConditionCauserPlacement";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.ConditionCauserPlacement";
 
         public const string ErrorInsufficientCredits =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.InsufficientCredits";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.InsufficientCredits";
 
         public const string ErrorChargeFailed =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.ChargeFailed";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.ChargeFailed";
 
         public const string ErrorCommittedFailure =
-            "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.CommittedFailure";
+            "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.CommittedFailure";
 
         private static readonly List<IntVec3> PlacementEdgeCells = new List<IntVec3>();
 
@@ -325,13 +325,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Sketch buildings = session.Sketch.buildingsSketch;
             if (Find.CurrentMap != map)
             {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.WrongMap"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.WrongMap"
                     .Translate();
             }
 
             if (buildings.AnyThingOutOfBounds(map, center))
             {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.OutOfBounds"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.OutOfBounds"
                     .Translate();
             }
 
@@ -345,7 +345,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (!buildable.CanBuildOnTerrain(at, map)
                         || buildable.FirstPermanentBlockerAt(at, map) != null)
                     {
-                        return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.Blocked"
+                        return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Blocked"
                             .Translate();
                     }
                 }
@@ -638,13 +638,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (!cell.InBounds(map))
             {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.OutOfBounds"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.OutOfBounds"
                     .Translate();
             }
 
             if (cell.Roofed(map))
             {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.Roofed"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Roofed"
                     .Translate();
             }
 
@@ -663,7 +663,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             TerrainDef terrain = cell.GetTerrain(map);
             if (terrain == null || terrain.passability == Traversability.Impassable)
             {
-                return "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.Error.Blocked"
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Error.Blocked"
                     .Translate();
             }
 
@@ -679,9 +679,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         && thing.def != ThingDefOf.Wall
                         && thing.def != ThingDefOf.Barricade);
                 Find.LetterStack.ReceiveLetter(
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.LetterLabel"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Letter.Label"
                         .Translate(),
-                    "MAP_MechanoidMechanitor.MechHiveCommunication.SpecialProtocols.Cluster.LetterText"
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Letter.Text"
                         .Translate(),
                     LetterDefOf.PositiveEvent,
                     new LookTargets(targets),

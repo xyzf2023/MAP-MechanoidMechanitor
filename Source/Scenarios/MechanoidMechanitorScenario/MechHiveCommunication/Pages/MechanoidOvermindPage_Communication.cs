@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (DrawQueryCard(
                         queryRect,
                         "01",
-                        "MAP_MechanoidMechanitor.MechHiveCommunication.Communication.Query.PurgeCredits"
+                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Communication.Query.PurgeCredits"
                             .Translate()))
                 {
                     selected = MechanoidOvermindCommunicationQueryKind.PurgeCredits;
@@ -32,7 +32,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static bool DrawQueryCard(Rect rect, string node, string title)
         {
             string nodeLabel =
-                "MAP_MechanoidMechanitor.MechHiveCommunication.Home.Node".Translate(node);
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Home.Node".Translate(node);
             return MechanoidOvermindUiStyle.DrawMenuCard(
                 rect,
                 nodeLabel,

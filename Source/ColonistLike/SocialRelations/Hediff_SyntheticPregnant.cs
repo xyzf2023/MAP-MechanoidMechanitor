@@ -98,9 +98,9 @@ namespace MAP_MechanoidMechanitor
             {
                 string name = pawn.LabelShortCap;
                 Find.LetterStack.ReceiveLetter(
-                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterLabel"
+                    "MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Label"
                         .Translate(name),
-                    "MAP_MechanoidMechanitor.SyntheticPregnancy.ReadyForBirthLetterText"
+                    "MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Text"
                         .Translate(name),
                     LetterDefOf.PositiveEvent,
                     pawn);
@@ -130,7 +130,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = "开始分娩",
                 defaultDesc =
-                    "MAP_MechanoidMechanitor.SyntheticPregnancy.StartBirthGizmoDesc"
+                    "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Description"
                         .Translate(pawn.LabelShortCap),
                 icon = BirthIcon,
                 action = StartBirthJob,

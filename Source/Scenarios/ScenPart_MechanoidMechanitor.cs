@@ -58,7 +58,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             TooltipHandler.TipRegion(
                 fullRowRect,
                 new TipSignal(
-                    "MAP_MechanoidMechanitor.Scenario.MechanitorEditorTooltip".Translate(),
+                    "MAP_MechanoidMechanitor.Scenario.MechanitorEditor.Tooltip".Translate(),
                     TooltipId));
 
             string label = mechKind != null

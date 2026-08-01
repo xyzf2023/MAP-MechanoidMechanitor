@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：账单与工作提示 -->
+  <MAP_MechanoidMechanitor.Core.Bill.Reason.MissingSkillsTracker>缺少技能追踪器</MAP_MechanoidMechanitor.Core.Bill.Reason.MissingSkillsTracker>
+
+  <!-- 模块：奥德赛旅行兼容 -->
+  <MAP_MechanoidMechanitor.Core.Gravship.NoGravshipLaunchRitual>无法找到逆重飞船发射仪式。</MAP_MechanoidMechanitor.Core.Gravship.NoGravshipLaunchRitual>
+
+  <!-- 模块：工作速度反馈 -->
+  <MAP_MechanoidMechanitor.Core.WorkSpeed.Feedback>工作速度偏移：+{0}</MAP_MechanoidMechanitor.Core.WorkSpeed.Feedback>
+
+  <!-- 模块：机械族脱离监管 -->
+  <MAP_MechanoidMechanitor.Core.Reclamation.Letter.Text>由于长时间缺乏机械师监管，以下机械族已重新连接至{0}的控制网络，并由机械巢重新接管。它们已脱离殖民地控制，并将离开当前区域。\n\n以下机械族受到影响：\n\n{1}</MAP_MechanoidMechanitor.Core.Reclamation.Letter.Text>
+
+</LanguageData>
