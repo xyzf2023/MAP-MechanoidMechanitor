@@ -76,10 +76,9 @@ namespace MAP_MechanoidMechanitor
                 y += 8f;
             }
 
-            Rect actionsRect = new Rect(rect.x, y, rect.width, 34f);
-            float actionWidth = (actionsRect.width - 8f) / 2f;
-            if (Widgets.ButtonText(
-                    new Rect(actionsRect.x, actionsRect.y, actionWidth, actionsRect.height),
+            Rect editRect = new Rect(rect.x, y, 154f, 32f);
+            if (DrawPrimaryButton(
+                    editRect,
                     "MAP_MechanoidMechanitor.DataProcessing.Dashboard.EditStrategy".Translate()))
             {
                 registry.GetOrCreateDynamicTargetRecord(overseer, target);
@@ -91,11 +90,13 @@ namespace MAP_MechanoidMechanitor
             if (!ReferenceEquals(target, overseer))
             {
                 bool pinned = registry.IsPinned(overseer, target);
-                if (Widgets.ButtonText(
-                        new Rect(actionsRect.x + actionWidth + 8f, actionsRect.y, actionWidth, actionsRect.height),
+                Rect pinRect = new Rect(editRect.xMax + 8f, y, 124f, 32f);
+                if (DrawSecondaryButton(
+                        pinRect,
                         pinned
                             ? "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Unpin".Translate()
-                            : "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Pin".Translate()))
+                            : "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Pin".Translate(),
+                        selected: pinned))
                 {
                     if (pinned)
                     {
@@ -107,7 +108,7 @@ namespace MAP_MechanoidMechanitor
                     }
                 }
             }
-            y += 48f;
+            y += 44f;
 
             Rect scrollRect = new Rect(rect.x, y, rect.width, rect.yMax - y);
             float viewHeight = Prefs.DevMode ? 640f : 460f;
