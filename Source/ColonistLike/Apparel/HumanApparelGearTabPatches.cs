@@ -26,6 +26,12 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
+            if (pawn.Faction == Faction.OfPlayer
+                && MechanoidMechanitorRoleUtility.AllowsHumanWeapons(pawn))
+            {
+                return true;
+            }
+
             return HumanApparelUtility.TryGetApparelComp(pawn, out CompHumanApparelUser? comp)
                 && comp!.AllowRemoveApparel;
         }
