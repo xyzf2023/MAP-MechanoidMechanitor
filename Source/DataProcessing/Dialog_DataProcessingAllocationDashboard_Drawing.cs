@@ -217,5 +217,10 @@ namespace MAP_MechanoidMechanitor
         {
             return Widgets.ButtonText(rect, label);
         }
+
+        private static void Solid(Rect rect, Color color)
+        {
+            Widgets.DrawBoxSolid(rect, color);
+        }
     }
 }
