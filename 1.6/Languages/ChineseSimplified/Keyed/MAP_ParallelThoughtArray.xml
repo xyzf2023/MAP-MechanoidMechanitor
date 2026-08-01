@@ -11,6 +11,9 @@
   <MAP_MechanoidMechanitor.DataProcessingAllocation.Desc>将数据处理能力分配给受控机械族。分配会按档位降低自身数据处理能力，但可为下属机械体提供对应增幅。</MAP_MechanoidMechanitor.DataProcessingAllocation.Desc>
   <MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>将意识处理能力分配给受控机械族。分配会按档位降低自身意识处理能力，但可为下属机械体提供对应增幅。</MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>
 
+  <!-- 并行思维接口：使用限制 -->
+  <MAP_MechanoidMechanitor.ParallelThoughtInterface.RequiresHumanMechanitor>并行思维接口只能由人类机械师安装。</MAP_MechanoidMechanitor.ParallelThoughtInterface.RequiresHumanMechanitor>
+
   <!-- 并行思维阵列：Gizmo -->
   <MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget>选择增幅目标</MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>选择一名机械族机械师或安装了并行思维接口的人类机械师，建立持续同步连接。更换目标立即生效，无需调谐。</MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>
