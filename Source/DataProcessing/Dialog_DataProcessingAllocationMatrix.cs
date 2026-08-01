@@ -7,8 +7,8 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 意识分配矩阵：将监管者总览、目标浏览、实时分配与动态策略整合到同一窗口。
-    /// 仅负责展示和调用注册表公开接口，不改变数据处理分配的业务规则。
+    /// 意识分配矩阵：在一个窗口中整合监管者总览、目标浏览、实时分配和动态策略。
+    /// 该窗口仅调用注册表公开接口，不改变数据处理分配的业务规则。
     /// </summary>
     public sealed class Dialog_DataProcessingAllocationMatrix : Window
     {
@@ -22,10 +22,11 @@ namespace MAP_MechanoidMechanitor
 
         private static readonly Color WindowBackground = new Color(0.055f, 0.082f, 0.102f, 0.985f);
         private static readonly Color PanelBackground = new Color(0.082f, 0.125f, 0.153f, 0.96f);
-        private static readonly Color PanelBackgroundAlt = new Color(0.105f, 0.158f, 0.19f, 0.96f);
+        private static readonly Color PanelSelected = new Color(0.105f, 0.158f, 0.19f, 0.98f);
+        private static readonly Color CardBackground = new Color(0.065f, 0.105f, 0.128f, 0.98f);
+        private static readonly Color FieldBackground = new Color(0.055f, 0.092f, 0.112f, 0.98f);
         private static readonly Color BorderColor = new Color(0.20f, 0.31f, 0.36f, 1f);
         private static readonly Color AccentColor = new Color(0.33f, 0.84f, 0.91f, 1f);
-        private static readonly Color ActiveColor = new Color(0.31f, 0.65f, 1f, 1f);
         private static readonly Color WarningColor = new Color(0.90f, 0.68f, 0.29f, 1f);
         private static readonly Color DangerColor = new Color(0.89f, 0.33f, 0.33f, 1f);
         private static readonly Color PrimaryText = new Color(0.90f, 0.95f, 0.97f, 1f);
@@ -50,7 +51,7 @@ namespace MAP_MechanoidMechanitor
         private Pawn? selectedTarget;
         private Vector2 targetScrollPosition;
         private Vector2 strategyScrollPosition;
-        private TargetFilter filter = TargetFilter.All;
+        private TargetFilter filter;
         private bool showGlobalStrategy;
         private int lastCleanupTick = -99999;
 
@@ -77,11 +78,13 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
+                Solid(inRect, WindowBackground);
+                GUI.color = BorderColor;
+                Widgets.DrawBox(inRect, 1);
+                GUI.color = Color.white;
+
                 GameComponent_DataProcessingAllocationRegistry? registry =
                     GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
-
-                DrawSolid(inRect, WindowBackground);
-                Widgets.DrawBox(inRect, 1);
 
                 if (registry == null || !IsOverseerValid())
                 {
@@ -91,15 +94,17 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                int now = Find.TickManager?.TicksGame ?? 0;
-                if (now - lastCleanupTick >= 120)
+                int currentTick = Find.TickManager != null
+                    ? Find.TickManager.TicksGame
+                    : 0;
+                if (currentTick - lastCleanupTick >= 120)
                 {
                     registry.CleanupInvalidRecords();
-                    lastCleanupTick = now;
+                    lastCleanupTick = currentTick;
                 }
 
-                List<Pawn> allTargets = CollectTargets(registry);
-                EnsureSelectedTarget(allTargets);
+                List<Pawn> targets = CollectTargets(registry);
+                EnsureSelectedTarget(targets);
 
                 Rect contentRect = inRect.ContractedBy(OuterPadding);
                 Rect headerRect = new Rect(
@@ -107,7 +112,7 @@ namespace MAP_MechanoidMechanitor
                     contentRect.y,
                     contentRect.width,
                     HeaderHeight);
-                DrawHeader(headerRect, registry, allTargets);
+                DrawHeader(headerRect, registry, targets);
 
                 float bodyY = headerRect.yMax + PanelGap;
                 float bodyHeight = contentRect.yMax - bodyY - FooterHeight - PanelGap;
@@ -122,10 +127,10 @@ namespace MAP_MechanoidMechanitor
                 Rect rightRect = new Rect(
                     centerRect.xMax + PanelGap,
                     bodyRect.y,
-                    Mathf.Max(0f, bodyRect.xMax - centerRect.xMax - PanelGap),
+                    bodyRect.xMax - centerRect.xMax - PanelGap,
                     bodyRect.height);
 
-                DrawTargetBrowser(leftRect, registry, allTargets);
+                DrawTargetBrowser(leftRect, registry, targets);
                 DrawTargetControl(centerRect, registry, selectedTarget);
                 DrawStrategyPanel(rightRect, registry, selectedTarget);
 
@@ -159,11 +164,11 @@ namespace MAP_MechanoidMechanitor
         private List<Pawn> CollectTargets(
             GameComponent_DataProcessingAllocationRegistry registry)
         {
-            List<Pawn> targets = new List<Pawn>();
+            List<Pawn> result = new List<Pawn>();
 
             if (registry.IsValidAllocationPairForList(overseer, overseer))
             {
-                targets.Add(overseer);
+                result.Add(overseer);
             }
 
             if (overseer.mechanitor != null)
@@ -175,13 +180,13 @@ namespace MAP_MechanoidMechanitor
                     if (!ReferenceEquals(target, overseer)
                         && registry.IsValidAllocationPairForList(overseer, target))
                     {
-                        targets.Add(target);
+                        result.Add(target);
                     }
                 }
             }
 
-            targets.Sort((left, right) => CompareTargets(registry, left, right));
-            return targets;
+            result.Sort((left, right) => CompareTargets(registry, left, right));
+            return result;
         }
 
         private int CompareTargets(
@@ -242,7 +247,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry registry,
             List<Pawn> targets)
         {
-            DrawPanel(rect, PanelBackground, AccentColor);
+            Panel(rect, PanelBackground, AccentColor);
             Rect inner = rect.ContractedBy(12f);
 
             Rect portraitRect = new Rect(inner.x, inner.y, 72f, 72f);
@@ -266,6 +271,7 @@ namespace MAP_MechanoidMechanitor
             Widgets.Label(
                 new Rect(identityRect.x, identityRect.y + 34f, identityRect.width, Text.LineHeight),
                 overseer.LabelShortCap);
+
             GUI.color = SecondaryText;
             Widgets.Label(
                 new Rect(identityRect.x, identityRect.y + 56f, identityRect.width, Text.LineHeight),
@@ -280,7 +286,7 @@ namespace MAP_MechanoidMechanitor
 
             bool dynamicEnabled = registry.IsDynamicAllocationEnabled(overseer);
             Rect toggleRect = new Rect(controlsRect.x, controlsRect.y, controlsRect.width, 34f);
-            if (DrawToggleButton(
+            if (ToggleButton(
                     toggleRect,
                     "MAP_DataProcessingAllocation_DynamicAllocation".Translate(),
                     dynamicEnabled))
@@ -300,12 +306,12 @@ namespace MAP_MechanoidMechanitor
                 toggleRect.yMax + 8f,
                 controlsRect.width,
                 30f);
-            if (DrawFlatButton(
+            if (FlatButton(
                     strategyRect,
                     showGlobalStrategy
                         ? "MAP_DataProcessingAllocation_MatrixTargetStrategy".Translate()
                         : "MAP_DataProcessingAllocation_MatrixGlobalStrategy".Translate(),
-                    active: showGlobalStrategy))
+                    showGlobalStrategy))
             {
                 showGlobalStrategy = !showGlobalStrategy;
                 strategyScrollPosition = Vector2.zero;
@@ -314,12 +320,11 @@ namespace MAP_MechanoidMechanitor
             Rect processingRect = new Rect(
                 identityRect.xMax + 16f,
                 inner.y,
-                Mathf.Max(0f, controlsRect.x - identityRect.xMax - 28f),
+                controlsRect.x - identityRect.xMax - 28f,
                 inner.height);
             DrawProcessingOverview(processingRect, registry);
 
             GUI.color = Color.white;
-            Text.Anchor = TextAnchor.UpperLeft;
         }
 
         private void DrawProcessingOverview(
@@ -341,7 +346,6 @@ namespace MAP_MechanoidMechanitor
             float dynamicAvailable = Mathf.Max(0f, current - threshold);
 
             Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.UpperLeft;
             GUI.color = SecondaryText;
             Widgets.Label(
                 new Rect(rect.x, rect.y, rect.width * 0.33f, Text.LineHeight),
@@ -357,10 +361,9 @@ namespace MAP_MechanoidMechanitor
                     dynamicAvailable.ToStringPercent()));
 
             Rect railRect = new Rect(rect.x, rect.y + 28f, rect.width, 18f);
-            float scale = Mathf.Max(2f, baseProcessing + 0.1f, threshold + 0.1f);
+            float scale = Mathf.Max(2f, Mathf.Max(baseProcessing + 0.1f, threshold + 0.1f));
             DrawProcessingRail(railRect, current, baseProcessing, threshold, scale);
 
-            Text.Font = GameFont.Tiny;
             GUI.color = SecondaryText;
             Widgets.Label(
                 new Rect(rect.x, railRect.yMax + 6f, rect.width * 0.33f, Text.LineHeight),
@@ -375,33 +378,35 @@ namespace MAP_MechanoidMechanitor
                     DataProcessingAllocationUtility.StepsToPercent(totalSteps).ToStringPercent()));
         }
 
-        private void DrawProcessingRail(
+        private static void DrawProcessingRail(
             Rect rect,
             float current,
             float baseProcessing,
             float threshold,
             float scale)
         {
-            DrawSolid(rect, MutedFill);
-
-            float currentWidth = rect.width * Mathf.Clamp01(current / scale);
+            Solid(rect, MutedFill);
             Color fill = current < 0.50f
                 ? DangerColor
                 : current < threshold
                     ? WarningColor
                     : AccentColor;
-            DrawSolid(new Rect(rect.x, rect.y, currentWidth, rect.height), fill);
+            float fillWidth = rect.width * Mathf.Clamp01(current / scale);
+            Solid(new Rect(rect.x, rect.y, fillWidth, rect.height), fill);
 
-            DrawRailMarker(rect, 0.50f / scale, DangerColor, 2f);
-            DrawRailMarker(rect, threshold / scale, WarningColor, 2f);
-            DrawRailMarker(rect, baseProcessing / scale, PrimaryText, 2f);
+            RailMarker(rect, 0.50f / scale, DangerColor, 2f);
+            RailMarker(rect, threshold / scale, WarningColor, 2f);
+            RailMarker(rect, baseProcessing / scale, PrimaryText, 2f);
+
+            GUI.color = BorderColor;
             Widgets.DrawBox(rect, 1);
+            GUI.color = Color.white;
         }
 
-        private static void DrawRailMarker(Rect rect, float normalized, Color color, float width)
+        private static void RailMarker(Rect rect, float normalized, Color color, float width)
         {
             float x = rect.x + rect.width * Mathf.Clamp01(normalized);
-            DrawSolidStatic(new Rect(x - width * 0.5f, rect.y - 2f, width, rect.height + 4f), color);
+            Solid(new Rect(x - width * 0.5f, rect.y - 2f, width, rect.height + 4f), color);
         }
 
         private void DrawTargetBrowser(
@@ -409,7 +414,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry registry,
             List<Pawn> allTargets)
         {
-            DrawPanel(rect, PanelBackground, BorderColor);
+            Panel(rect, PanelBackground, BorderColor);
             Rect inner = rect.ContractedBy(10f);
 
             Text.Font = GameFont.Small;
@@ -434,13 +439,11 @@ namespace MAP_MechanoidMechanitor
                 inner.x,
                 filterY + 36f,
                 inner.width,
-                Mathf.Max(0f, inner.yMax - filterY - 36f));
+                inner.yMax - filterY - 36f);
 
             if (visibleTargets.Count == 0)
             {
-                DrawCenteredMessage(
-                    listRect,
-                    "MAP_DataProcessingAllocation_NoSubjects".Translate());
+                DrawCenteredMessage(listRect, "MAP_DataProcessingAllocation_NoSubjects".Translate());
                 return;
             }
 
@@ -453,11 +456,10 @@ namespace MAP_MechanoidMechanitor
                 float y = 0f;
                 for (int i = 0; i < visibleTargets.Count; i++)
                 {
-                    Pawn target = visibleTargets[i];
                     DrawTargetCard(
                         new Rect(0f, y, viewRect.width, TargetCardHeight),
                         registry,
-                        target);
+                        visibleTargets[i]);
                     y += TargetCardHeight + TargetCardGap;
                 }
             }
@@ -469,14 +471,13 @@ namespace MAP_MechanoidMechanitor
 
         private void DrawFilterTabs(Rect rect)
         {
-            TargetFilter[] filters =
+            TargetFilter[] values =
             {
                 TargetFilter.All,
                 TargetFilter.Active,
                 TargetFilter.Limited,
                 TargetFilter.Fixed
             };
-
             string[] keys =
             {
                 "MAP_DataProcessingAllocation_MatrixFilterAll",
@@ -486,17 +487,16 @@ namespace MAP_MechanoidMechanitor
             };
 
             float width = (rect.width - 12f) / 4f;
-            for (int i = 0; i < filters.Length; i++)
+            for (int i = 0; i < values.Length; i++)
             {
                 Rect buttonRect = new Rect(
                     rect.x + i * (width + 4f),
                     rect.y,
                     width,
                     rect.height);
-                bool active = filter == filters[i];
-                if (DrawFlatButton(buttonRect, keys[i].Translate(), active))
+                if (FlatButton(buttonRect, keys[i].Translate(), filter == values[i]))
                 {
-                    filter = filters[i];
+                    filter = values[i];
                     targetScrollPosition = Vector2.zero;
                 }
             }
@@ -513,23 +513,22 @@ namespace MAP_MechanoidMechanitor
 
             DataProcessingDynamicTargetRecord? config =
                 registry.GetDynamicTargetRecord(overseer, target);
-            bool globalEnabled = registry.IsDynamicAllocationEnabled(overseer);
-            bool targetDynamic = globalEnabled && (config?.enabled ?? true);
+            bool dynamic = registry.IsDynamicAllocationEnabled(overseer)
+                && (config?.enabled ?? true);
             DataProcessingDynamicState state = registry.GetCachedDynamicStateForTarget(target);
 
             if (filter == TargetFilter.Active)
             {
-                return targetDynamic && state != DataProcessingDynamicState.Idle;
+                return dynamic && state != DataProcessingDynamicState.Idle;
             }
 
             if (filter == TargetFilter.Fixed)
             {
-                return !targetDynamic;
+                return !dynamic;
             }
 
             int actual = registry.GetStepsForOverseerTarget(overseer, target);
-            int requested = GetRequestedSteps(registry, target, config);
-            return actual < requested;
+            return actual < GetRequestedSteps(registry, target, config);
         }
 
         private void DrawTargetCard(
@@ -538,19 +537,8 @@ namespace MAP_MechanoidMechanitor
             Pawn target)
         {
             bool selected = ReferenceEquals(selectedTarget, target);
-            Color background = selected ? PanelBackgroundAlt : new Color(0.065f, 0.105f, 0.128f, 0.96f);
-            DrawPanel(rect, background, selected ? AccentColor : BorderColor);
+            Panel(rect, selected ? PanelSelected : CardBackground, selected ? AccentColor : BorderColor);
             Widgets.DrawHighlightIfMouseover(rect);
-
-            if (Widgets.ButtonInvisible(rect))
-            {
-                selectedTarget = target;
-                showGlobalStrategy = false;
-                strategyScrollPosition = Vector2.zero;
-            }
-
-            Rect portraitRect = new Rect(rect.x + 8f, rect.y + 10f, 48f, 48f);
-            DrawPortrait(portraitRect, target);
 
             DataProcessingDynamicTargetRecord? config =
                 registry.GetDynamicTargetRecord(overseer, target);
@@ -558,18 +546,19 @@ namespace MAP_MechanoidMechanitor
             bool targetDynamic = globalEnabled && (config?.enabled ?? true);
             int actual = registry.GetStepsForOverseerTarget(overseer, target);
             int normal = config?.normalSteps ?? actual;
-            DataProcessingSpecialization specialization =
-                registry.GetSpecializationForOverseerTarget(overseer, target);
-            DataProcessingDynamicState state = registry.GetCachedDynamicStateForTarget(target);
             int requested = GetRequestedSteps(registry, target, config);
             bool limited = actual < requested;
+            DataProcessingSpecialization specialization =
+                registry.GetSpecializationForOverseerTarget(overseer, target);
+
+            Rect portraitRect = new Rect(rect.x + 8f, rect.y + 10f, 48f, 48f);
+            DrawPortrait(portraitRect, target);
 
             float infoX = portraitRect.xMax + 8f;
-            float rightControlsWidth = 54f;
-            float infoWidth = rect.xMax - infoX - rightControlsWidth - 8f;
+            float controlsWidth = 50f;
+            float infoWidth = rect.xMax - infoX - controlsWidth - 8f;
 
             Text.Font = GameFont.Small;
-            Text.Anchor = TextAnchor.UpperLeft;
             GUI.color = PrimaryText;
             Widgets.Label(
                 new Rect(infoX, rect.y + 7f, infoWidth, Text.LineHeight),
@@ -600,11 +589,10 @@ namespace MAP_MechanoidMechanitor
             Rect dynamicRect = new Rect(rect.xMax - 50f, rect.y + 8f, 42f, 24f);
             if (globalEnabled)
             {
-                if (DrawMiniStateButton(dynamicRect, targetDynamic ? "●" : "○", targetDynamic))
+                if (MiniButton(dynamicRect, targetDynamic ? "●" : "○", targetDynamic))
                 {
                     registry.SetDynamicAllocationEnabledForTarget(overseer, target, !targetDynamic);
                 }
-
                 TooltipHandler.TipRegion(
                     dynamicRect,
                     "MAP_DataProcessingAllocation_DynamicTargetEnabled".Translate());
@@ -618,7 +606,7 @@ namespace MAP_MechanoidMechanitor
             {
                 bool pinned = registry.IsPinned(overseer, target);
                 Rect pinRect = new Rect(rect.xMax - 50f, rect.y + 40f, 42f, 24f);
-                if (DrawMiniStateButton(pinRect, pinned ? "★" : "☆", pinned))
+                if (MiniButton(pinRect, pinned ? "★" : "☆", pinned))
                 {
                     if (pinned)
                     {
@@ -630,6 +618,14 @@ namespace MAP_MechanoidMechanitor
                     }
                 }
             }
+
+            Rect selectRect = new Rect(rect.x, rect.y, rect.width - controlsWidth - 4f, rect.height);
+            if (Widgets.ButtonInvisible(selectRect))
+            {
+                selectedTarget = target;
+                showGlobalStrategy = false;
+                strategyScrollPosition = Vector2.zero;
+            }
         }
 
         private void DrawTargetControl(
@@ -637,7 +633,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry registry,
             Pawn? target)
         {
-            DrawPanel(rect, PanelBackground, BorderColor);
+            Panel(rect, PanelBackground, BorderColor);
             Rect inner = rect.ContractedBy(12f);
 
             if (target == null)
@@ -650,10 +646,9 @@ namespace MAP_MechanoidMechanitor
                 registry.GetDynamicTargetRecord(overseer, target);
             int actual = registry.GetStepsForOverseerTarget(overseer, target);
             int normal = config?.normalSteps ?? actual;
+            int requested = GetRequestedSteps(registry, target, config);
             DataProcessingSpecialization specialization =
                 registry.GetSpecializationForOverseerTarget(overseer, target);
-            int requested = GetRequestedSteps(registry, target, config);
-            DataProcessingDynamicState state = registry.GetCachedDynamicStateForTarget(target);
             bool dynamicManaged = registry.IsDynamicAllocationEnabled(overseer)
                 && (config?.enabled ?? true);
 
@@ -665,7 +660,6 @@ namespace MAP_MechanoidMechanitor
             Widgets.Label(
                 new Rect(portraitRect.xMax + 12f, inner.y, inner.width - 76f, 30f),
                 target.LabelShortCap);
-
             Text.Font = GameFont.Small;
             GUI.color = GetSpecializationColor(specialization);
             Widgets.Label(
@@ -685,7 +679,10 @@ namespace MAP_MechanoidMechanitor
                 stateLabel,
                 DataProcessingAllocationUtility.GetSpecializationLabel(specialization),
                 DataProcessingAllocationUtility.StepsToPercent(requested).ToStringPercent());
-            DrawInfoBox(new Rect(inner.x, y, inner.width, 48f), decision, GetSpecializationColor(specialization));
+            DrawInfoBox(
+                new Rect(inner.x, y, inner.width, 48f),
+                decision,
+                GetSpecializationColor(specialization));
             y += 60f;
 
             DrawSectionTitle(
@@ -700,12 +697,12 @@ namespace MAP_MechanoidMechanitor
                 requested);
             y += 54f;
 
-            Rect bigRail = new Rect(inner.x, y, inner.width, 18f);
-            DrawAllocationRail(bigRail, actual, normal, requested, actual < requested);
+            Rect railRect = new Rect(inner.x, y, inner.width, 18f);
+            DrawAllocationRail(railRect, actual, normal, requested, actual < requested);
             y += 30f;
 
-            GUI.color = SecondaryText;
             Text.Font = GameFont.Tiny;
+            GUI.color = SecondaryText;
             Widgets.Label(
                 new Rect(inner.x, y, inner.width, Text.LineHeight),
                 dynamicManaged
@@ -728,12 +725,12 @@ namespace MAP_MechanoidMechanitor
             y += 30f;
 
             DrawEffectsPreview(
-                new Rect(inner.x, y, inner.width, Mathf.Max(0f, inner.yMax - y)),
+                new Rect(inner.x, y, inner.width, inner.yMax - y),
                 actual,
                 specialization);
         }
 
-        private void DrawAllocationMetrics(Rect rect, int actual, int normal, int requested)
+        private static void DrawAllocationMetrics(Rect rect, int actual, int normal, int requested)
         {
             float width = (rect.width - 12f) / 3f;
             DrawMetric(
@@ -753,19 +750,23 @@ namespace MAP_MechanoidMechanitor
                 requested > actual ? WarningColor : PrimaryText);
         }
 
-        private void DrawMetric(Rect rect, string label, string value, Color color)
+        private static void DrawMetric(Rect rect, string label, string value, Color valueColor)
         {
-            DrawSolid(rect, new Color(0.055f, 0.092f, 0.112f, 0.95f));
+            Solid(rect, FieldBackground);
+            GUI.color = BorderColor;
             Widgets.DrawBox(rect, 1);
+
             Text.Font = GameFont.Tiny;
             Text.Anchor = TextAnchor.UpperCenter;
             GUI.color = SecondaryText;
             Widgets.Label(new Rect(rect.x, rect.y + 4f, rect.width, Text.LineHeight), label);
+
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.LowerCenter;
-            GUI.color = color;
+            GUI.color = valueColor;
             Widgets.Label(new Rect(rect.x, rect.y + 20f, rect.width, 24f), value);
             Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = Color.white;
         }
 
         private void DrawAllocationButtons(
@@ -777,7 +778,7 @@ namespace MAP_MechanoidMechanitor
             int actual)
         {
             string[] labels = { "-25%", "-5%", "+5%", "+25%" };
-            int[] deltaSteps = { -5, -1, 1, 5 };
+            int[] deltas = { -5, -1, 1, 5 };
             float width = (rect.width - 12f) / 4f;
 
             for (int i = 0; i < labels.Length; i++)
@@ -787,12 +788,12 @@ namespace MAP_MechanoidMechanitor
                     rect.y,
                     width,
                     rect.height);
-
                 int source = dynamicManaged ? normal : actual;
-                bool enabled = source + deltaSteps[i] >= 0;
-                if (DrawFlatButton(buttonRect, labels[i], false, enabled))
+                bool enabled = source + deltas[i] >= 0;
+
+                if (FlatButton(buttonRect, labels[i], false, enabled))
                 {
-                    int next = Mathf.Max(0, source + deltaSteps[i]);
+                    int next = Mathf.Max(0, source + deltas[i]);
                     bool succeeded;
                     if (dynamicManaged)
                     {
@@ -816,7 +817,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void DrawEffectsPreview(
+        private static void DrawEffectsPreview(
             Rect rect,
             int steps,
             DataProcessingSpecialization specialization)
@@ -832,16 +833,20 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < effects.Count; i++)
             {
                 Rect lineRect = new Rect(rect.x, y, rect.width, 28f);
-                DrawSolid(lineRect, i % 2 == 0
-                    ? new Color(0.065f, 0.105f, 0.128f, 0.75f)
-                    : new Color(0.08f, 0.125f, 0.15f, 0.75f));
+                Solid(
+                    lineRect,
+                    i % 2 == 0
+                        ? new Color(0.065f, 0.105f, 0.128f, 0.78f)
+                        : new Color(0.08f, 0.125f, 0.15f, 0.78f));
                 GUI.color = i == 0 ? GetSpecializationColor(specialization) : PrimaryText;
                 Text.Font = GameFont.Small;
                 Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(lineRect.ContractedBy(8f, 0f), effects[i]);
-                Text.Anchor = TextAnchor.UpperLeft;
+                Rect textRect = Inset(lineRect, 8f, 0f);
+                Widgets.Label(textRect, effects[i]);
                 y += 32f;
             }
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = Color.white;
         }
 
         private static List<string> BuildEffectLabels(
@@ -849,7 +854,6 @@ namespace MAP_MechanoidMechanitor
             DataProcessingSpecialization specialization)
         {
             List<string> result = new List<string>();
-
             float work = DataProcessingAllocationUtility.GetWorkSpeedOffset(steps, specialization);
             float move = DataProcessingAllocationUtility.GetMoveSpeedOffset(steps, specialization);
             float aim = DataProcessingAllocationUtility.GetAimingDelayFactor(steps, specialization);
@@ -863,37 +867,30 @@ namespace MAP_MechanoidMechanitor
             {
                 result.Add("MAP_DataProcessingAllocation_EffectWorkSpeed".Translate(work.ToStringPercent()));
             }
-
             if (move > 0.0001f)
             {
                 result.Add("MAP_DataProcessingAllocation_EffectMoveSpeed".Translate(move.ToStringPercent()));
             }
-
             if (aim < 0.9999f)
             {
                 result.Add("MAP_DataProcessingAllocation_EffectAimingDelay".Translate(aim.ToString("0.##")));
             }
-
             if (ranged < 0.9999f)
             {
                 result.Add("MAP_DataProcessingAllocation_EffectRangedCooldown".Translate(ranged.ToString("0.##")));
             }
-
             if (melee < 0.9999f)
             {
                 result.Add("MAP_DataProcessingAllocation_EffectMeleeCooldown".Translate(melee.ToString("0.##")));
             }
-
             if (damage < 0.9999f)
             {
                 result.Add("MAP_DataProcessingAllocation_EffectIncomingDamage".Translate(damage.ToString("0.##")));
             }
-
             if (stagger < 0.9999f)
             {
                 result.Add("MAP_DataProcessingAllocation_EffectStaggerDuration".Translate(stagger.ToString("0.##")));
             }
-
             if (energy < 0.9999f)
             {
                 result.Add("MAP_DataProcessingAllocation_EffectMechEnergyUsage".Translate(energy.ToString("0.##")));
@@ -912,7 +909,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry registry,
             Pawn? target)
         {
-            DrawPanel(rect, PanelBackground, showGlobalStrategy ? WarningColor : BorderColor);
+            Panel(rect, PanelBackground, showGlobalStrategy ? WarningColor : BorderColor);
             Rect inner = rect.ContractedBy(10f);
 
             Text.Font = GameFont.Small;
@@ -928,9 +925,9 @@ namespace MAP_MechanoidMechanitor
                 inner.y + 28f,
                 inner.width,
                 inner.height - 28f);
-
             float viewHeight = showGlobalStrategy ? 520f : 760f;
             Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, Mathf.Max(viewHeight, listRect.height));
+
             Widgets.BeginScrollView(listRect, ref strategyScrollPosition, viewRect);
             try
             {
@@ -974,7 +971,8 @@ namespace MAP_MechanoidMechanitor
             y += 60f;
 
             Rect valueRect = new Rect(rect.x, y, rect.width, 42f);
-            DrawSolid(valueRect, new Color(0.055f, 0.092f, 0.112f, 0.95f));
+            Solid(valueRect, FieldBackground);
+            GUI.color = BorderColor;
             Widgets.DrawBox(valueRect, 1);
             Text.Font = GameFont.Medium;
             Text.Anchor = TextAnchor.MiddleCenter;
@@ -983,7 +981,7 @@ namespace MAP_MechanoidMechanitor
             Text.Anchor = TextAnchor.UpperLeft;
             y += 50f;
 
-            string[] presetLabels =
+            string[] presetKeys =
             {
                 "MAP_DataProcessingAllocation_MatrixPresetConservative",
                 "MAP_DataProcessingAllocation_MatrixPresetBalanced",
@@ -998,7 +996,7 @@ namespace MAP_MechanoidMechanitor
                     y,
                     presetWidth,
                     32f);
-                if (DrawFlatButton(buttonRect, presetLabels[i].Translate(), threshold == presetValues[i]))
+                if (FlatButton(buttonRect, presetKeys[i].Translate(), threshold == presetValues[i]))
                 {
                     registry.SetDynamicMinConsciousnessPercent(overseer, presetValues[i]);
                 }
@@ -1007,11 +1005,11 @@ namespace MAP_MechanoidMechanitor
 
             Rect minusRect = new Rect(rect.x, y, 56f, 30f);
             Rect plusRect = new Rect(rect.x + 62f, y, 56f, 30f);
-            if (DrawFlatButton(minusRect, "-5%", false, threshold > 55))
+            if (FlatButton(minusRect, "-5%", false, threshold > 55))
             {
                 registry.SetDynamicMinConsciousnessPercent(overseer, threshold - 5);
             }
-            if (DrawFlatButton(plusRect, "+5%", false, threshold < 1000))
+            if (FlatButton(plusRect, "+5%", false, threshold < 1000))
             {
                 registry.SetDynamicMinConsciousnessPercent(overseer, threshold + 5);
             }
@@ -1040,8 +1038,8 @@ namespace MAP_MechanoidMechanitor
             int fixedSteps = 0;
             int dynamicSteps = 0;
             int unmetSteps = 0;
-            List<Pawn> targets = CollectTargets(registry);
             bool globalEnabled = registry.IsDynamicAllocationEnabled(overseer);
+            List<Pawn> targets = CollectTargets(registry);
 
             for (int i = 0; i < targets.Count; i++)
             {
@@ -1078,19 +1076,22 @@ namespace MAP_MechanoidMechanitor
             float y = rect.y;
             for (int i = 0; i < labels.Length; i++)
             {
-                Rect line = new Rect(rect.x, y, rect.width, 30f);
-                DrawSolid(line, i % 2 == 0
-                    ? new Color(0.065f, 0.105f, 0.128f, 0.78f)
-                    : new Color(0.08f, 0.125f, 0.15f, 0.78f));
+                Rect lineRect = new Rect(rect.x, y, rect.width, 30f);
+                Solid(
+                    lineRect,
+                    i % 2 == 0
+                        ? new Color(0.065f, 0.105f, 0.128f, 0.78f)
+                        : new Color(0.08f, 0.125f, 0.15f, 0.78f));
                 GUI.color = i == labels.Length - 1 && unmetSteps > 0
                     ? WarningColor
                     : PrimaryText;
                 Text.Font = GameFont.Small;
                 Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(line.ContractedBy(8f, 0f), labels[i]);
+                Widgets.Label(Inset(lineRect, 8f, 0f), labels[i]);
                 y += 34f;
             }
             Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = Color.white;
         }
 
         private void DrawTargetStrategy(
@@ -1107,16 +1108,15 @@ namespace MAP_MechanoidMechanitor
             int normal = config?.normalSteps ?? registry.GetStepsForOverseerTarget(overseer, target);
             int commonMax = config?.commonMaxSteps ?? normal;
             int priority = config?.priority ?? 3;
-            int interval = config?.checkIntervalTicks / 60 ?? 10;
+            int intervalSeconds = config?.checkIntervalTicks / 60 ?? 10;
 
             float y = rect.y;
             Rect toggleRect = new Rect(rect.x, y, rect.width, 34f);
-            bool canToggle = globalEnabled;
-            if (DrawToggleButton(
+            if (ToggleButton(
                     toggleRect,
                     "MAP_DataProcessingAllocation_DynamicTargetEnabled".Translate(),
                     globalEnabled && targetEnabled,
-                    canToggle))
+                    globalEnabled))
             {
                 registry.SetDynamicAllocationEnabledForTarget(overseer, target, !targetEnabled);
             }
@@ -1170,7 +1170,7 @@ namespace MAP_MechanoidMechanitor
             y += 28f;
             DrawIntervalButtons(
                 new Rect(rect.x, y, rect.width, 32f),
-                interval,
+                intervalSeconds,
                 next => registry.SetDynamicTargetCheckInterval(overseer, target, next));
             y += 46f;
 
@@ -1181,7 +1181,7 @@ namespace MAP_MechanoidMechanitor
 
             bool work = config?.switchForWork ?? true;
             bool drafted = config?.switchForDraftedWeapon ?? true;
-            bool melee = config?.switchForCloseMelee ?? true;
+            bool closeMelee = config?.switchForCloseMelee ?? true;
             bool fallback = config?.applyUndraftedFallback ?? true;
 
             DrawRuleToggle(
@@ -1202,7 +1202,7 @@ namespace MAP_MechanoidMechanitor
                 new Rect(rect.x, y, rect.width, 48f),
                 "MAP_DataProcessingAllocation_DynamicRuleCloseMelee".Translate(),
                 "MAP_DataProcessingAllocation_MatrixRuleMeleeDesc".Translate(),
-                melee,
+                closeMelee,
                 next => registry.SetDynamicTargetRule(overseer, target, "CloseMelee", next));
             y += 54f;
             DrawRuleToggle(
@@ -1215,7 +1215,7 @@ namespace MAP_MechanoidMechanitor
 
             bool advanced = config?.advancedMaxEnabled ?? false;
             Rect advancedRect = new Rect(rect.x, y, rect.width, 34f);
-            if (DrawToggleButton(
+            if (ToggleButton(
                     advancedRect,
                     "MAP_DataProcessingAllocation_DynamicAdvancedMax".Translate(),
                     advanced))
@@ -1226,7 +1226,11 @@ namespace MAP_MechanoidMechanitor
 
             if (advanced && config != null)
             {
-                DrawAdvancedMaxRows(new Rect(rect.x, y, rect.width, 150f), registry, target, config);
+                DrawAdvancedMaxRows(
+                    new Rect(rect.x, y, rect.width, 150f),
+                    registry,
+                    target,
+                    config);
             }
         }
 
@@ -1254,29 +1258,28 @@ namespace MAP_MechanoidMechanitor
                     rect.y + row * 38f,
                     rect.width * 0.5f - 2f,
                     34f);
-                DataProcessingSpecialization spec = values[i];
-                bool active = spec == current;
-                if (DrawModeButton(
+                DataProcessingSpecialization specialization = values[i];
+                if (ModeButton(
                         buttonRect,
-                        DataProcessingAllocationUtility.GetSpecializationLabel(spec),
-                        GetSpecializationColor(spec),
-                        active))
+                        DataProcessingAllocationUtility.GetSpecializationLabel(specialization),
+                        GetSpecializationColor(specialization),
+                        specialization == current))
                 {
                     if (dynamicManaged)
                     {
-                        registry.SetDynamicTargetDefaultSpecialization(overseer, target, spec);
+                        registry.SetDynamicTargetDefaultSpecialization(overseer, target, specialization);
                     }
                     else
                     {
-                        registry.TrySetManualSpecialization(overseer, target, spec);
+                        registry.TrySetManualSpecialization(overseer, target, specialization);
                     }
                 }
             }
         }
 
-        private void DrawPriorityButtons(Rect rect, int current, Action<int> setter)
+        private static void DrawPriorityButtons(Rect rect, int current, Action<int> setter)
         {
-            string[] labels =
+            string[] keys =
             {
                 "MAP_DataProcessingAllocation_MatrixPriorityCritical",
                 "MAP_DataProcessingAllocation_MatrixPriorityHigh",
@@ -1292,14 +1295,14 @@ namespace MAP_MechanoidMechanitor
                     rect.y,
                     width,
                     rect.height);
-                if (DrawFlatButton(buttonRect, labels[i].Translate(), current == value))
+                if (FlatButton(buttonRect, keys[i].Translate(), current == value))
                 {
                     setter(value);
                 }
             }
         }
 
-        private void DrawIntervalButtons(Rect rect, int current, Action<int> setter)
+        private static void DrawIntervalButtons(Rect rect, int current, Action<int> setter)
         {
             int[] values = { 1, 5, 10, 30 };
             float width = (rect.width - 12f) / 4f;
@@ -1311,8 +1314,10 @@ namespace MAP_MechanoidMechanitor
                     rect.y,
                     width,
                     rect.height);
-                string label = "MAP_DataProcessingAllocation_DynamicSeconds".Translate(value);
-                if (DrawFlatButton(buttonRect, label, current == value))
+                if (FlatButton(
+                        buttonRect,
+                        "MAP_DataProcessingAllocation_DynamicSeconds".Translate(value),
+                        current == value))
                 {
                     setter(value);
                 }
@@ -1332,18 +1337,19 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void DrawRuleToggle(
+        private static void DrawRuleToggle(
             Rect rect,
             string label,
             string description,
             bool value,
             Action<bool> setter)
         {
-            DrawSolid(rect, new Color(0.06f, 0.10f, 0.12f, 0.82f));
+            Solid(rect, CardBackground);
+            GUI.color = BorderColor;
             Widgets.DrawBox(rect, 1);
 
             Rect toggleRect = new Rect(rect.xMax - 54f, rect.y + 10f, 44f, 28f);
-            if (DrawMiniStateButton(toggleRect, value ? "ON" : "OFF", value))
+            if (MiniButton(toggleRect, value ? "ON" : "OFF", value))
             {
                 setter(!value);
             }
@@ -1358,9 +1364,10 @@ namespace MAP_MechanoidMechanitor
             Widgets.Label(
                 new Rect(rect.x + 8f, rect.y + 25f, rect.width - 72f, Text.LineHeight),
                 description);
+            GUI.color = Color.white;
         }
 
-        private void DrawStepEditor(Rect rect, int steps, Action<int> setter)
+        private static void DrawStepEditor(Rect rect, int steps, Action<int> setter)
         {
             Rect minusLarge = new Rect(rect.x, rect.y, 54f, rect.height);
             Rect minusSmall = new Rect(minusLarge.xMax + 4f, rect.y, 46f, rect.height);
@@ -1368,16 +1375,17 @@ namespace MAP_MechanoidMechanitor
             Rect plusSmall = new Rect(valueRect.xMax + 4f, rect.y, 46f, rect.height);
             Rect plusLarge = new Rect(plusSmall.xMax + 4f, rect.y, 54f, rect.height);
 
-            if (DrawFlatButton(minusLarge, "-25%", false, steps >= 5))
+            if (FlatButton(minusLarge, "-25%", false, steps >= 5))
             {
                 setter(Mathf.Max(0, steps - 5));
             }
-            if (DrawFlatButton(minusSmall, "-5%", false, steps >= 1))
+            if (FlatButton(minusSmall, "-5%", false, steps >= 1))
             {
                 setter(Mathf.Max(0, steps - 1));
             }
 
-            DrawSolid(valueRect, new Color(0.055f, 0.092f, 0.112f, 0.95f));
+            Solid(valueRect, FieldBackground);
+            GUI.color = BorderColor;
             Widgets.DrawBox(valueRect, 1);
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.MiddleCenter;
@@ -1387,14 +1395,15 @@ namespace MAP_MechanoidMechanitor
                 DataProcessingAllocationUtility.StepsToPercent(steps).ToStringPercent());
             Text.Anchor = TextAnchor.UpperLeft;
 
-            if (DrawFlatButton(plusSmall, "+5%", false))
+            if (FlatButton(plusSmall, "+5%", false))
             {
                 setter(steps + 1);
             }
-            if (DrawFlatButton(plusLarge, "+25%", false))
+            if (FlatButton(plusLarge, "+25%", false))
             {
                 setter(steps + 5);
             }
+            GUI.color = Color.white;
         }
 
         private void DrawAdvancedMaxRows(
@@ -1403,7 +1412,7 @@ namespace MAP_MechanoidMechanitor
             Pawn target,
             DataProcessingDynamicTargetRecord config)
         {
-            DataProcessingSpecialization[] specs =
+            DataProcessingSpecialization[] specializations =
             {
                 DataProcessingSpecialization.GeneralTuning,
                 DataProcessingSpecialization.ProductionCoordination,
@@ -1419,54 +1428,54 @@ namespace MAP_MechanoidMechanitor
             };
 
             float y = rect.y;
-            for (int i = 0; i < specs.Length; i++)
+            for (int i = 0; i < specializations.Length; i++)
             {
-                DataProcessingSpecialization spec = specs[i];
+                DataProcessingSpecialization specialization = specializations[i];
                 int steps = values[i];
-                Rect line = new Rect(rect.x, y, rect.width, 32f);
-                DrawSolid(line, new Color(0.06f, 0.10f, 0.12f, 0.82f));
-                Widgets.DrawBox(line, 1);
+                Rect lineRect = new Rect(rect.x, y, rect.width, 32f);
+                Solid(lineRect, CardBackground);
+                GUI.color = BorderColor;
+                Widgets.DrawBox(lineRect, 1);
 
                 Text.Font = GameFont.Tiny;
                 Text.Anchor = TextAnchor.MiddleLeft;
-                GUI.color = GetSpecializationColor(spec);
+                GUI.color = GetSpecializationColor(specialization);
                 Widgets.Label(
-                    new Rect(line.x + 8f, line.y, line.width - 132f, line.height),
-                    DataProcessingAllocationUtility.GetSpecializationLabel(spec));
+                    new Rect(lineRect.x + 8f, lineRect.y, lineRect.width - 132f, lineRect.height),
+                    DataProcessingAllocationUtility.GetSpecializationLabel(specialization));
 
-                Rect minusRect = new Rect(line.xMax - 122f, line.y + 3f, 30f, 26f);
-                Rect valueRect = new Rect(minusRect.xMax + 4f, line.y, 54f, line.height);
-                Rect plusRect = new Rect(valueRect.xMax + 4f, line.y + 3f, 30f, 26f);
+                Rect minusRect = new Rect(lineRect.xMax - 122f, lineRect.y + 3f, 30f, 26f);
+                Rect valueRect = new Rect(minusRect.xMax + 4f, lineRect.y, 54f, lineRect.height);
+                Rect plusRect = new Rect(valueRect.xMax + 4f, lineRect.y + 3f, 30f, 26f);
 
-                int capturedSteps = steps;
-                DataProcessingSpecialization capturedSpec = spec;
-                if (DrawFlatButton(minusRect, "-", false, capturedSteps > config.normalSteps))
+                if (FlatButton(minusRect, "-", false, steps > config.normalSteps))
                 {
                     registry.SetDynamicTargetMaxStepsForSpecialization(
                         overseer,
                         target,
-                        capturedSpec,
-                        capturedSteps - 1);
+                        specialization,
+                        steps - 1);
                 }
 
                 Text.Anchor = TextAnchor.MiddleCenter;
                 GUI.color = PrimaryText;
                 Widgets.Label(
                     valueRect,
-                    DataProcessingAllocationUtility.StepsToPercent(capturedSteps).ToStringPercent());
+                    DataProcessingAllocationUtility.StepsToPercent(steps).ToStringPercent());
 
-                if (DrawFlatButton(plusRect, "+", false))
+                if (FlatButton(plusRect, "+", false))
                 {
                     registry.SetDynamicTargetMaxStepsForSpecialization(
                         overseer,
                         target,
-                        capturedSpec,
-                        capturedSteps + 1);
+                        specialization,
+                        steps + 1);
                 }
 
                 Text.Anchor = TextAnchor.UpperLeft;
                 y += 36f;
             }
+            GUI.color = Color.white;
         }
 
         private int GetRequestedSteps(
@@ -1494,35 +1503,38 @@ namespace MAP_MechanoidMechanitor
             return config.GetMaxStepsForSpecialization(current);
         }
 
-        private void DrawAllocationRail(
+        private static void DrawAllocationRail(
             Rect rect,
             int actual,
             int normal,
             int maximum,
             bool limited)
         {
-            int scaleSteps = Mathf.Max(1, actual, normal, maximum);
-            DrawSolid(rect, MutedFill);
+            int scaleSteps = Mathf.Max(1, Mathf.Max(actual, Mathf.Max(normal, maximum)));
+            Solid(rect, MutedFill);
 
             float actualWidth = rect.width * Mathf.Clamp01(actual / (float)scaleSteps);
-            DrawSolid(
+            Solid(
                 new Rect(rect.x, rect.y, actualWidth, rect.height),
                 limited ? WarningColor : AccentColor);
 
             float normalX = rect.x + rect.width * Mathf.Clamp01(normal / (float)scaleSteps);
-            DrawSolid(new Rect(normalX - 1f, rect.y - 3f, 2f, rect.height + 6f), PrimaryText);
+            Solid(new Rect(normalX - 1f, rect.y - 3f, 2f, rect.height + 6f), PrimaryText);
 
             float maxX = rect.x + rect.width * Mathf.Clamp01(maximum / (float)scaleSteps);
-            DrawSolid(new Rect(maxX - 1f, rect.y - 4f, 2f, rect.height + 8f), WarningColor);
-            DrawSolid(new Rect(maxX - 6f, rect.y - 4f, 6f, 2f), WarningColor);
-            DrawSolid(new Rect(maxX - 6f, rect.yMax + 2f, 6f, 2f), WarningColor);
+            Solid(new Rect(maxX - 1f, rect.y - 4f, 2f, rect.height + 8f), WarningColor);
+            Solid(new Rect(maxX - 6f, rect.y - 4f, 6f, 2f), WarningColor);
+            Solid(new Rect(maxX - 6f, rect.yMax + 2f, 6f, 2f), WarningColor);
+
+            GUI.color = BorderColor;
             Widgets.DrawBox(rect, 1);
+            GUI.color = Color.white;
         }
 
         private void DrawFooter(Rect rect)
         {
-            DrawPanel(rect, new Color(0.06f, 0.095f, 0.115f, 0.95f), BorderColor);
-            Rect inner = rect.ContractedBy(8f, 4f);
+            Panel(rect, new Color(0.06f, 0.095f, 0.115f, 0.95f), BorderColor);
+            Rect inner = Inset(rect, 8f, 4f);
 
             Text.Font = GameFont.Tiny;
             Text.Anchor = TextAnchor.MiddleLeft;
@@ -1532,18 +1544,16 @@ namespace MAP_MechanoidMechanitor
                 "MAP_DataProcessingAllocation_MatrixLegend".Translate());
 
             Rect closeRect = new Rect(inner.xMax - 96f, inner.y, 96f, inner.height);
-            if (DrawFlatButton(closeRect, "CloseButton".Translate(), false))
+            if (FlatButton(closeRect, "CloseButton".Translate(), false))
             {
                 Close();
             }
-
             Text.Anchor = TextAnchor.UpperLeft;
         }
 
         private static Color GetSpecializationColor(DataProcessingSpecialization specialization)
         {
-            specialization = DataProcessingAllocationUtility.NormalizeSpecialization(specialization);
-            switch (specialization)
+            switch (DataProcessingAllocationUtility.NormalizeSpecialization(specialization))
             {
                 case DataProcessingSpecialization.ProductionCoordination:
                     return ProductionColor;
@@ -1556,7 +1566,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void DrawPortrait(Rect portraitRect, Pawn target)
+        private static void DrawPortrait(Rect rect, Pawn target)
         {
             try
             {
@@ -1565,27 +1575,28 @@ namespace MAP_MechanoidMechanitor
                     : 1f;
                 RenderTexture image = PortraitsCache.Get(
                     target,
-                    portraitRect.size,
+                    rect.size,
                     Rot4.East,
                     PortraitCameraOffset,
                     zoom);
-                GUI.DrawTexture(portraitRect, image);
+                GUI.DrawTexture(rect, image);
             }
             catch
             {
-                Widgets.DrawBoxSolid(portraitRect, new Color(0.12f, 0.17f, 0.20f, 1f));
+                Solid(rect, new Color(0.12f, 0.17f, 0.20f, 1f));
             }
 
-            Widgets.DrawBox(portraitRect, 1);
+            GUI.color = BorderColor;
+            Widgets.DrawBox(rect, 1);
+            GUI.color = Color.white;
         }
 
-        private static void DrawPanel(Rect rect, Color background, Color border)
+        private static void Panel(Rect rect, Color background, Color border)
         {
-            DrawSolidStatic(rect, background);
-            Color old = GUI.color;
+            Solid(rect, background);
             GUI.color = border;
             Widgets.DrawBox(rect, 1);
-            GUI.color = old;
+            GUI.color = Color.white;
         }
 
         private static void DrawSectionTitle(Rect rect, string label)
@@ -1594,148 +1605,145 @@ namespace MAP_MechanoidMechanitor
             Text.Anchor = TextAnchor.MiddleLeft;
             GUI.color = PrimaryText;
             Widgets.Label(rect, label);
-            DrawSolidStatic(
-                new Rect(rect.x, rect.yMax - 2f, rect.width, 1f),
-                BorderColor);
+            Solid(new Rect(rect.x, rect.yMax - 1f, rect.width, 1f), BorderColor);
             Text.Anchor = TextAnchor.UpperLeft;
         }
 
         private static void DrawInfoBox(Rect rect, string text, Color accent)
         {
-            DrawSolidStatic(rect, new Color(0.055f, 0.092f, 0.112f, 0.95f));
-            DrawSolidStatic(new Rect(rect.x, rect.y, 3f, rect.height), accent);
-            Color old = GUI.color;
-            GUI.color = PrimaryText;
+            Solid(rect, FieldBackground);
+            Solid(new Rect(rect.x, rect.y, 3f, rect.height), accent);
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.MiddleLeft;
-            Widgets.Label(rect.ContractedBy(10f, 2f), text);
+            GUI.color = PrimaryText;
+            Widgets.Label(Inset(rect, 10f, 2f), text);
             Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = old;
         }
 
-        private static bool DrawToggleButton(
-            Rect rect,
-            string label,
-            bool enabled,
-            bool active = true)
+        private static bool ToggleButton(Rect rect, string label, bool enabled, bool active = true)
         {
             Color background = enabled
                 ? new Color(0.13f, 0.34f, 0.38f, 1f)
                 : new Color(0.10f, 0.14f, 0.16f, 1f);
             if (!active)
             {
-                background *= 0.65f;
+                background = new Color(
+                    background.r * 0.60f,
+                    background.g * 0.60f,
+                    background.b * 0.60f,
+                    background.a);
             }
 
-            DrawSolidStatic(rect, background);
-            Color old = GUI.color;
+            Solid(rect, background);
             GUI.color = active ? (enabled ? AccentColor : BorderColor) : SecondaryText;
             Widgets.DrawBox(rect, 1);
 
-            Rect indicatorRect = new Rect(rect.xMax - 46f, rect.y + 7f, 36f, rect.height - 14f);
-            DrawSolidStatic(
-                indicatorRect,
-                enabled ? AccentColor : new Color(0.25f, 0.30f, 0.32f, 1f));
+            Rect indicator = new Rect(rect.xMax - 46f, rect.y + 7f, 36f, rect.height - 14f);
+            Solid(
+                indicator,
+                enabled
+                    ? AccentColor
+                    : new Color(0.25f, 0.30f, 0.32f, 1f));
 
             Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.MiddleLeft;
             GUI.color = active ? PrimaryText : SecondaryText;
             Widgets.Label(new Rect(rect.x + 10f, rect.y, rect.width - 62f, rect.height), label);
             Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = old;
+            GUI.color = Color.white;
 
             return active && Widgets.ButtonInvisible(rect);
         }
 
-        private static bool DrawFlatButton(
-            Rect rect,
-            string label,
-            bool active,
-            bool enabled = true)
+        private static bool FlatButton(Rect rect, string label, bool selected, bool enabled = true)
         {
-            Color background = active
+            Color background = selected
                 ? new Color(0.13f, 0.31f, 0.35f, 1f)
                 : new Color(0.075f, 0.115f, 0.135f, 1f);
             if (Mouse.IsOver(rect) && enabled)
             {
-                background += new Color(0.035f, 0.045f, 0.05f, 0f);
+                background = new Color(
+                    Mathf.Min(1f, background.r + 0.035f),
+                    Mathf.Min(1f, background.g + 0.045f),
+                    Mathf.Min(1f, background.b + 0.05f),
+                    background.a);
             }
             if (!enabled)
             {
-                background *= 0.60f;
+                background = new Color(
+                    background.r * 0.60f,
+                    background.g * 0.60f,
+                    background.b * 0.60f,
+                    background.a);
             }
 
-            DrawSolidStatic(rect, background);
-            Color old = GUI.color;
-            GUI.color = active ? AccentColor : BorderColor;
+            Solid(rect, background);
+            GUI.color = selected ? AccentColor : BorderColor;
             Widgets.DrawBox(rect, 1);
-            GUI.color = enabled ? PrimaryText : SecondaryText;
+
+            bool oldWrap = Text.WordWrap;
+            Text.WordWrap = false;
             Text.Font = GameFont.Tiny;
             Text.Anchor = TextAnchor.MiddleCenter;
-            Text.WordWrap = false;
+            GUI.color = enabled ? PrimaryText : SecondaryText;
             Widgets.Label(rect, label);
-            Text.WordWrap = true;
             Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = old;
+            Text.WordWrap = oldWrap;
+            GUI.color = Color.white;
 
             return enabled && Widgets.ButtonInvisible(rect);
         }
 
-        private static bool DrawMiniStateButton(Rect rect, string label, bool active)
+        private static bool MiniButton(Rect rect, string label, bool selected)
         {
-            DrawSolidStatic(
+            Solid(
                 rect,
-                active
+                selected
                     ? new Color(0.13f, 0.31f, 0.35f, 1f)
                     : new Color(0.075f, 0.115f, 0.135f, 1f));
-            Color old = GUI.color;
-            GUI.color = active ? AccentColor : BorderColor;
+            GUI.color = selected ? AccentColor : BorderColor;
             Widgets.DrawBox(rect, 1);
-            GUI.color = active ? AccentColor : SecondaryText;
             Text.Font = GameFont.Tiny;
             Text.Anchor = TextAnchor.MiddleCenter;
+            GUI.color = selected ? AccentColor : SecondaryText;
             Widgets.Label(rect, label);
             Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = old;
+            GUI.color = Color.white;
             return Widgets.ButtonInvisible(rect);
         }
 
-        private static bool DrawModeButton(
-            Rect rect,
-            string label,
-            Color color,
-            bool active)
+        private static bool ModeButton(Rect rect, string label, Color color, bool selected)
         {
-            DrawSolidStatic(
+            Solid(
                 rect,
-                active
+                selected
                     ? new Color(color.r * 0.25f, color.g * 0.25f, color.b * 0.25f, 1f)
                     : new Color(0.075f, 0.115f, 0.135f, 1f));
-            Color old = GUI.color;
-            GUI.color = active ? color : BorderColor;
-            Widgets.DrawBox(rect, active ? 2 : 1);
-            GUI.color = active ? color : PrimaryText;
+            GUI.color = selected ? color : BorderColor;
+            Widgets.DrawBox(rect, selected ? 2 : 1);
+
+            bool oldWrap = Text.WordWrap;
+            Text.WordWrap = false;
             Text.Font = GameFont.Tiny;
             Text.Anchor = TextAnchor.MiddleCenter;
-            Text.WordWrap = false;
+            GUI.color = selected ? color : PrimaryText;
             Widgets.Label(rect, label);
-            Text.WordWrap = true;
             Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = old;
+            Text.WordWrap = oldWrap;
+            GUI.color = Color.white;
             return Widgets.ButtonInvisible(rect);
         }
 
         private static void DrawBadge(Rect rect, string label, Color color)
         {
-            DrawSolidStatic(rect, new Color(0.075f, 0.115f, 0.135f, 1f));
-            Color old = GUI.color;
+            Solid(rect, new Color(0.075f, 0.115f, 0.135f, 1f));
             GUI.color = color;
             Widgets.DrawBox(rect, 1);
             Text.Font = GameFont.Tiny;
             Text.Anchor = TextAnchor.MiddleCenter;
             Widgets.Label(rect, label);
             Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = old;
+            GUI.color = Color.white;
         }
 
         private static void DrawCenteredMessage(Rect rect, string message)
@@ -1745,19 +1753,21 @@ namespace MAP_MechanoidMechanitor
             GUI.color = SecondaryText;
             Widgets.Label(rect, message);
             Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = Color.white;
         }
 
-        private void DrawSolid(Rect rect, Color color)
+        private static Rect Inset(Rect rect, float horizontal, float vertical)
         {
-            DrawSolidStatic(rect, color);
+            return new Rect(
+                rect.x + horizontal,
+                rect.y + vertical,
+                Mathf.Max(0f, rect.width - horizontal * 2f),
+                Mathf.Max(0f, rect.height - vertical * 2f));
         }
 
-        private static void DrawSolidStatic(Rect rect, Color color)
+        private static void Solid(Rect rect, Color color)
         {
-            Color old = GUI.color;
-            GUI.color = color;
-            GUI.DrawTexture(rect, BaseContent.WhiteTex);
-            GUI.color = old;
+            Widgets.DrawBoxSolid(rect, color);
         }
     }
 }
