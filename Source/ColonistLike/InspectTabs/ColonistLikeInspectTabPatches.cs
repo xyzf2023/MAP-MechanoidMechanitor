@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using RimWorld;
+using RimWorld.Planet;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -42,7 +43,8 @@ namespace MAP_MechanoidMechanitor
                 && pawn.health != null
                 && pawn.ageTracker != null
                 && pawn.story?.traits != null
-                && pawn.skills != null;
+                && pawn.skills != null
+                && pawn.abilities != null;
         }
 
         public static bool ShouldShowCharacterTab(Pawn? pawn)
