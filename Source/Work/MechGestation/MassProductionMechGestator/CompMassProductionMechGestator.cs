@@ -35,9 +35,9 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         private bool idleStateConfirmed;
 
-        private Bill_ProductionMech? settlementBlockedForBill;
+        private Bill_Mech? settlementBlockedForBill;
 
-        private Bill_ProductionMech? committedBill;
+        private Bill_Mech? committedBill;
 
         private Pawn? settledProducer;
 
@@ -51,7 +51,7 @@ namespace MAP_MechanoidMechanitor
 
         public bool SettlementNotificationsSent => settlementNotificationsSent;
 
-        public Bill_ProductionMech? CommittedBill => committedBill;
+        public Bill_Mech? CommittedBill => committedBill;
 
         public Pawn? SettledProducer => settledProducer;
 
@@ -98,15 +98,15 @@ namespace MAP_MechanoidMechanitor
 
             Bill_Mech? activeBill = gestator.ActiveMechBill;
 
-            // 第二优先级：Formed，且尚未提交结算。
-            if (activeBill is Bill_ProductionMech formedBill
-                && formedBill.State == FormingState.Formed)
+            // 第二优先级：受支持账单已 Formed，且尚未提交结算。
+            if (MassProductionMechGestatorBillUtility.IsSupported(activeBill)
+                && activeBill!.State == FormingState.Formed)
             {
                 idleStateConfirmed = false;
                 ResetTimer();
-                if (!ReferenceEquals(settlementBlockedForBill, formedBill))
+                if (!ReferenceEquals(settlementBlockedForBill, activeBill))
                 {
-                    RunSettlement(gestator, formedBill);
+                    RunSettlement(gestator, activeBill);
                 }
 
                 return;
@@ -117,14 +117,14 @@ namespace MAP_MechanoidMechanitor
                 settlementBlockedForBill = null;
             }
 
-            // 第三优先级：Forming。
-            if (activeBill is Bill_ProductionMech productionBill
-                && productionBill.State == FormingState.Forming)
+            // 第三优先级：受支持账单正在 Forming。
+            if (MassProductionMechGestatorBillUtility.IsSupported(activeBill)
+                && activeBill!.State == FormingState.Forming)
             {
                 idleStateConfirmed = false;
-                if (!ReferenceEquals(settlementBlockedForBill, productionBill))
+                if (!ReferenceEquals(settlementBlockedForBill, activeBill))
                 {
-                    TickForming(gestator, productionBill);
+                    TickForming(gestator, activeBill);
                 }
 
                 return;
@@ -166,7 +166,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         internal void MarkSettlementCommitted(
-            Bill_ProductionMech bill,
+            Bill_Mech bill,
             Pawn producer,
             bool updateResourceCountsOnRelease)
         {
@@ -212,7 +212,7 @@ namespace MAP_MechanoidMechanitor
             releaseMissingLogged = false;
         }
 
-        internal void NotifySettlementBlocked(Bill_ProductionMech bill)
+        internal void NotifySettlementBlocked(Bill_Mech bill)
         {
             idleStateConfirmed = false;
             settlementBlockedForBill = bill;
@@ -280,7 +280,9 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (gestator.ActiveMechBill is not Bill_ProductionMech { State: FormingState.Forming })
+            Bill_Mech? activeBill = gestator.ActiveMechBill;
+            if (!MassProductionMechGestatorBillUtility.IsSupported(activeBill)
+                || activeBill!.State != FormingState.Forming)
             {
                 return;
             }
@@ -318,7 +320,9 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (gestator.ActiveMechBill is not Bill_ProductionMech { State: FormingState.Forming })
+            Bill_Mech? activeBill = gestator.ActiveMechBill;
+            if (!MassProductionMechGestatorBillUtility.IsSupported(activeBill)
+                || activeBill!.State != FormingState.Forming)
             {
                 return;
             }
@@ -356,7 +360,7 @@ namespace MAP_MechanoidMechanitor
 
         private void TickForming(
             Building_MassProductionMechGestator gestator,
-            Bill_ProductionMech productionBill)
+            Bill_Mech bill)
         {
             if (!timerInitialized)
             {
@@ -364,7 +368,7 @@ namespace MAP_MechanoidMechanitor
                 timerInitialized = true;
             }
 
-            if (productionBill.suspended
+            if (bill.suspended
                 || !gestator.PoweredOn
                 || !gestator.BoundPawnStateAllowsForming)
             {
@@ -378,13 +382,13 @@ namespace MAP_MechanoidMechanitor
 
             if (remainingTicks <= 0)
             {
-                CompleteFormingThenSettle(gestator, productionBill);
+                CompleteFormingThenSettle(gestator, bill);
             }
         }
 
         private void CompleteFormingThenSettle(
             Building_MassProductionMechGestator gestator,
-            Bill_ProductionMech bill)
+            Bill_Mech bill)
         {
             if (completionInProgress || settlementCommitted)
             {
@@ -438,7 +442,7 @@ namespace MAP_MechanoidMechanitor
 
         private void RunSettlement(
             Building_MassProductionMechGestator gestator,
-            Bill_ProductionMech bill)
+            Bill_Mech bill)
         {
             if (completionInProgress || settlementCommitted)
             {
