@@ -31,6 +31,9 @@
       <li>Fabricor</li>
       <li>Paramedic</li>
       <li>ResurrectLightMech</li>
+      <li>ResurrectMediumMech</li>
+      <li>ResurrectHeavyMech</li>
+      <li>ResurrectUltraheavyMech</li>
     </recipes>
     <statBases>
       <MaxHitPoints>250</MaxHitPoints>
