@@ -11,9 +11,12 @@ namespace MAP_MechanoidMechanitor
         public static bool TryAutoSettleAndRelease(
             Building_MassProductionMechGestator gestator,
             CompMassProductionMechGestator comp,
-            Bill_ProductionMech bill)
+            Bill_Mech bill)
         {
-            if (gestator == null || comp == null || bill == null)
+            if (gestator == null
+                || comp == null
+                || bill == null
+                || !MassProductionMechGestatorBillUtility.IsSupported(bill))
             {
                 return false;
             }
@@ -91,10 +94,23 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            Bill_ProductionMech? bill = comp.CommittedBill;
-            if (bill == null && gestator.ActiveMechBill is Bill_ProductionMech activeProduction)
+            Bill_Mech? bill = comp.CommittedBill;
+            if (bill != null && !MassProductionMechGestatorBillUtility.IsSupported(bill))
             {
-                bill = activeProduction;
+                Log.ErrorOnce(
+                    "[MAP-MechanoidMechanitor] Mass production gestator restored an unsupported committed bill. Building="
+                    + gestator.ToStringSafe()
+                    + ", bill="
+                    + bill.ToStringSafe()
+                    + ".",
+                    gestator.thingIDNumber ^ 0x4D505342);
+                return false;
+            }
+
+            Bill_Mech? activeBill = gestator.ActiveMechBill;
+            if (bill == null && MassProductionMechGestatorBillUtility.IsSupported(activeBill))
+            {
+                bill = activeBill;
             }
 
             if (bill != null && !AreSettlementPostconditionsMet(gestator, bill, product))
@@ -106,14 +122,14 @@ namespace MAP_MechanoidMechanitor
                 }
             }
             else if (bill == null
-                && gestator.ActiveMechBill is Bill_ProductionMech leftover
-                && leftover.State == FormingState.Formed)
+                && MassProductionMechGestatorBillUtility.IsSupported(activeBill)
+                && activeBill!.State == FormingState.Formed)
             {
                 Log.ErrorOnce(
                     "[MAP-MechanoidMechanitor] Mass production gestator has settlementCommitted but lost committed bill reference while ActiveBill is still Formed. Building="
                     + gestator.ToStringSafe()
                     + ", activeBill="
-                    + leftover.ToStringSafe()
+                    + activeBill.ToStringSafe()
                     + ".",
                     gestator.thingIDNumber ^ 0x4D505343);
                 return false;
@@ -147,10 +163,13 @@ namespace MAP_MechanoidMechanitor
 
         public static bool EnsureSettlementPostconditions(
             Building_MassProductionMechGestator gestator,
-            Bill_ProductionMech bill,
+            Bill_Mech bill,
             Pawn product)
         {
-            if (gestator == null || bill == null || product == null)
+            if (gestator == null
+                || bill == null
+                || product == null
+                || !MassProductionMechGestatorBillUtility.IsSupported(bill))
             {
                 return false;
             }
@@ -175,10 +194,13 @@ namespace MAP_MechanoidMechanitor
 
         public static bool AreSettlementPostconditionsMet(
             Building_MassProductionMechGestator gestator,
-            Bill_ProductionMech bill,
+            Bill_Mech bill,
             Pawn product)
         {
-            if (gestator == null || bill == null || product == null)
+            if (gestator == null
+                || bill == null
+                || product == null
+                || !MassProductionMechGestatorBillUtility.IsSupported(bill))
             {
                 return false;
             }
@@ -204,10 +226,15 @@ namespace MAP_MechanoidMechanitor
         public static bool TryReleaseProduct(
             Building_MassProductionMechGestator gestator,
             CompMassProductionMechGestator comp,
-            Bill_ProductionMech? bill,
+            Bill_Mech? bill,
             Pawn product)
         {
             if (gestator == null || comp == null || product == null)
+            {
+                return false;
+            }
+
+            if (bill != null && !MassProductionMechGestatorBillUtility.IsSupported(bill))
             {
                 return false;
             }
@@ -276,7 +303,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void SendSettlementNotifications(
             Building_MassProductionMechGestator gestator,
-            Bill_ProductionMech? bill,
+            Bill_Mech? bill,
             Pawn producer,
             List<Thing> products,
             CompMassProductionMechGestator comp)
@@ -324,12 +351,17 @@ namespace MAP_MechanoidMechanitor
 
         private static bool ValidateFormedState(
             Building_MassProductionMechGestator gestator,
-            Bill_ProductionMech bill,
+            Bill_Mech bill,
             out Pawn producer,
             out Pawn product)
         {
             producer = null!;
             product = null!;
+
+            if (!MassProductionMechGestatorBillUtility.IsSupported(bill))
+            {
+                return false;
+            }
 
             if (bill.State != FormingState.Formed)
             {
@@ -383,7 +415,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void LogAutoSettleAbort(
             Building_MassProductionMechGestator gestator,
-            Bill_ProductionMech bill,
+            Bill_Mech bill,
             string reason)
         {
             Log.ErrorOnce(
@@ -401,7 +433,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void LogPostconditionFailureOnce(
             Building_MassProductionMechGestator gestator,
-            Bill_ProductionMech bill,
+            Bill_Mech bill,
             Pawn? product)
         {
             Log.ErrorOnce(
@@ -423,22 +455,23 @@ namespace MAP_MechanoidMechanitor
                 gestator.thingIDNumber ^ bill.GetUniqueLoadID().GetHashCode() ^ 0x4D505350);
         }
 
-        private static ThingStyleDef? ResolveProductStyle(Bill_ProductionMech bill)
+        private static ThingStyleDef? ResolveProductStyle(Bill_Mech bill)
         {
-            if (!ModsConfig.IdeologyActive
-                || bill.recipe.products == null
-                || bill.recipe.products.Count != 1)
+            if (bill is not Bill_ProductionMech productionBill
+                || !ModsConfig.IdeologyActive
+                || productionBill.recipe.products == null
+                || productionBill.recipe.products.Count != 1)
             {
                 return null;
             }
 
-            if (!bill.globalStyle)
+            if (!productionBill.globalStyle)
             {
-                return bill.style;
+                return productionBill.style;
             }
 
             return Faction.OfPlayer.ideos?.PrimaryIdeo?.style
-                .StyleForThingDef(bill.recipe.ProducedThingDef)
+                .StyleForThingDef(productionBill.recipe.ProducedThingDef)
                 ?.styleDef;
         }
     }
