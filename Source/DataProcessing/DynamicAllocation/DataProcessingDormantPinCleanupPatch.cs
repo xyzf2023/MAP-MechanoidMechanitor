@@ -61,26 +61,38 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                bool dormant = IsDormant(overseer) || IsDormant(target);
-                if (!dormant)
-                {
-                    Pawn? currentOverseer = ResolveCurrentExternalOverseer(
-                        __instance,
-                        target);
-                    if (currentOverseer != null
-                        && !ReferenceEquals(currentOverseer, overseer))
-                    {
-                        pin.overseer = currentOverseer;
-                        overseer = currentOverseer;
-                    }
+                bool targetDormant = IsDormant(target);
+                Pawn? currentOverseer = targetDormant
+                    ? null
+                    : ResolveCurrentExternalOverseer(__instance, target);
 
-                    if (!__instance.IsValidAllocationPairForList(
-                            overseer,
-                            target))
-                    {
-                        records.RemoveAt(i);
-                        continue;
-                    }
+                // 即使旧监管者仍处于死亡状态，只要目标已经被新监管者接管，
+                // 顶置状态就应立即随目标迁移，而不是永远停留在旧监管者名下。
+                if (currentOverseer != null
+                    && !ReferenceEquals(currentOverseer, overseer))
+                {
+                    pin.overseer = currentOverseer;
+                    overseer = currentOverseer;
+                }
+
+                bool relationDormant =
+                    !targetDormant
+                    && currentOverseer == null
+                    && __instance.GetDynamicTargetRecord(
+                        overseer: null,
+                        target: target) != null;
+                bool dormant =
+                    targetDormant
+                    || IsDormant(overseer)
+                    || relationDormant;
+
+                if (!dormant
+                    && !__instance.IsValidAllocationPairForList(
+                        overseer,
+                        target))
+                {
+                    records.RemoveAt(i);
+                    continue;
                 }
 
                 int overseerId = overseer.thingIDNumber;
