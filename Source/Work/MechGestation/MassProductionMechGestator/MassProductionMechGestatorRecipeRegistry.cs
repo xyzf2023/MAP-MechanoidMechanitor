@@ -6,7 +6,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 惰性扫描并缓存全部符合原版机械培育结构的 Bill_ProductionMech 生产配方。
+    /// 惰性扫描并缓存全部符合原版机械培育结构的普通生产与机械族复活配方。
     /// 不含科研可用性过滤；界面仍由 AvailableNow / AvailableOnNow 实时决定是否显示。
     /// </summary>
     public static class MassProductionMechGestatorRecipeRegistry
@@ -53,23 +53,34 @@ namespace MAP_MechanoidMechanitor
             List<string> rejectedNoPawnKind = new List<string>();
             List<string> rejectedBadCount = new List<string>();
 
+            int productionRecipeCount = 0;
+            int resurrectionRecipeCount = 0;
+
             List<RecipeDef> allRecipes = DefDatabase<RecipeDef>.AllDefsListForReading;
             for (int i = 0; i < allRecipes.Count; i++)
             {
                 RecipeDef? recipe = allRecipes[i];
-                if (recipe == null)
+                if (recipe == null
+                    || recipe.gestationCycles <= 0
+                    || !recipe.mechanitorOnlyRecipe)
                 {
                     continue;
                 }
 
-                if (recipe.gestationCycles <= 0
-                    || !recipe.mechanitorOnlyRecipe
-                    || recipe.mechResurrection)
+                // 复活配方的产品由送入的机械族尸体决定，原版结构没有固定 products。
+                // mechResurrection 同时也是 BillUtility 选择 Bill_ResurrectMech 的权威标志。
+                if (recipe.mechResurrection)
                 {
+                    if (acceptedSet.Add(recipe))
+                    {
+                        accepted.Add(recipe);
+                        resurrectionRecipeCount++;
+                    }
+
                     continue;
                 }
 
-                // 以上条件已满足：视为疑似机械培育生产配方，后续排除原因可记入开发者汇总。
+                // 普通机械培育配方仍维持严格校验，避免误收其他自主工作台配方。
                 if (!TryGetSingleProduct(recipe, out ThingDefCountClass? productEntry, out string? rejectReason))
                 {
                     if (rejectReason == "noProduct")
@@ -106,6 +117,7 @@ namespace MAP_MechanoidMechanitor
                 if (acceptedSet.Add(recipe))
                 {
                     accepted.Add(recipe);
+                    productionRecipeCount++;
                 }
             }
 
@@ -114,7 +126,15 @@ namespace MAP_MechanoidMechanitor
 
             if (Prefs.DevMode)
             {
-                LogDevSummary(accepted, rejectedNoProduct, rejectedNotPawn, rejectedNotMechanoid, rejectedNoPawnKind, rejectedBadCount);
+                LogDevSummary(
+                    accepted,
+                    productionRecipeCount,
+                    resurrectionRecipeCount,
+                    rejectedNoProduct,
+                    rejectedNotPawn,
+                    rejectedNotMechanoid,
+                    rejectedNoPawnKind,
+                    rejectedBadCount);
             }
 
             return accepted;
@@ -193,6 +213,8 @@ namespace MAP_MechanoidMechanitor
 
         private static void LogDevSummary(
             List<RecipeDef> accepted,
+            int productionRecipeCount,
+            int resurrectionRecipeCount,
             List<string> rejectedNoProduct,
             List<string> rejectedNotPawn,
             List<string> rejectedNotMechanoid,
@@ -213,6 +235,10 @@ namespace MAP_MechanoidMechanitor
             Log.Message(
                 "[MAP-MechanoidMechanitor] Mass production gestator recipe registry initialized. Eligible count="
                 + accepted.Count
+                + ", production="
+                + productionRecipeCount
+                + ", resurrection="
+                + resurrectionRecipeCount
                 + ". Candidates=["
                 + names
                 + "].");
