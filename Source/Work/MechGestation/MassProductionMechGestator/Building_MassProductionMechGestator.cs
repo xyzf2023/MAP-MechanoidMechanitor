@@ -44,7 +44,9 @@ namespace MAP_MechanoidMechanitor
 
         protected override string GetInspectStringExtra()
         {
-            if (ActiveMechBill is not Bill_ProductionMech { State: FormingState.Forming })
+            Bill_Mech? activeMechBill = ActiveMechBill;
+            if (!MassProductionMechGestatorBillUtility.IsSupported(activeMechBill)
+                || activeMechBill!.State != FormingState.Forming)
             {
                 return base.GetInspectStringExtra();
             }
