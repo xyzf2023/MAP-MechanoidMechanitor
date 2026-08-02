@@ -27,11 +27,6 @@ namespace MAP_MechanoidMechanitor
                 typeof(GameComponent_DataProcessingAllocationRegistry),
                 "RemoveRecord");
 
-        private static readonly MethodInfo? RemoveAllCommandFocusHediffsMethod =
-            AccessTools.Method(
-                typeof(GameComponent_DataProcessingAllocationRegistry),
-                "RemoveAllCommandFocusHediffs");
-
         private static bool Prefix(
             GameComponent_DataProcessingAllocationRegistry __instance,
             Pawn? target)
@@ -60,47 +55,64 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (RemoveRecordMethod == null
-                || RemoveAllCommandFocusHediffsMethod == null)
+            if (record != null && RemoveRecordMethod == null)
             {
                 Log.ErrorOnce(
-                    "[MAP-机械族机械师] 无法访问死亡暂停所需的分配清理方法；已回退到原 ClearTarget。",
+                    "[MAP-机械族机械师] 无法访问死亡暂停所需的分配记录清理方法；已回退到原 ClearTarget。",
                     ReflectionFailureLogKey);
                 return true;
             }
 
-            try
+            if (record != null)
             {
-                if (record != null)
+                try
                 {
-                    RemoveRecordMethod.Invoke(
+                    RemoveRecordMethod!.Invoke(
                         __instance,
                         new object[] { record });
+                }
+                catch (Exception ex)
+                {
+                    LogFailure(
+                        "死亡暂停移除实际分配记录失败，已回退到原 ClearTarget",
+                        ex,
+                        ReflectionFailureLogKey + 1);
+                    return true;
+                }
 
-                    if (overseer != null && !overseer.Destroyed)
+                // 从这里开始实际记录已经被修改，不能再回退原 ClearTarget，
+                // 否则会把需要保留的特化配置一并删除。
+                if (overseer != null && !overseer.Destroyed)
+                {
+                    try
                     {
                         __instance.SyncHediffsForOverseer(overseer);
                     }
+                    catch (Exception ex)
+                    {
+                        LogFailure(
+                            "死亡暂停同步监管者数据流分发失败",
+                            ex,
+                            ReflectionFailureLogKey + 2);
+                    }
                 }
+            }
 
-                RemoveAllCommandFocusHediffsMethod.Invoke(
-                    null,
-                    new object[] { target });
-                return false;
+            try
+            {
+                // 当前实际档数已经为 0；公共同步入口会清除指令聚焦 Hediff，
+                // 并且明确保留特化配置记录。
+                __instance.SyncHediffForTarget(target);
             }
             catch (Exception ex)
             {
-                Exception actual =
-                    ex is TargetInvocationException invocation
-                    && invocation.InnerException != null
-                        ? invocation.InnerException
-                        : ex;
-
-                Log.ErrorOnce(
-                    "[MAP-机械族机械师] 死亡暂停清理实际分配失败，已回退到原 ClearTarget：" + actual,
-                    ReflectionFailureLogKey + 1);
-                return true;
+                LogFailure(
+                    "死亡暂停清除目标指令聚焦失败",
+                    ex,
+                    ReflectionFailureLogKey + 3);
             }
+
+            return false;
         }
 
         private static DataProcessingAllocationRecord? FindAllocationRecord(
@@ -125,6 +137,22 @@ namespace MAP_MechanoidMechanitor
             }
 
             return null;
+        }
+
+        private static void LogFailure(
+            string message,
+            Exception exception,
+            int key)
+        {
+            Exception actual =
+                exception is TargetInvocationException invocation
+                && invocation.InnerException != null
+                    ? invocation.InnerException
+                    : exception;
+
+            Log.ErrorOnce(
+                "[MAP-机械族机械师] " + message + "：" + actual,
+                key);
         }
     }
 }
