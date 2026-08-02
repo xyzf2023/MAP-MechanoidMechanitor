@@ -6,6 +6,21 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
+    /// ExposeData(PostLoadInit) 只允许整理引用与缓存，不允许修改 Hediff 或实际分配。
+    /// LoadedGame 完成后会统一执行休眠运行态擦除。
+    /// </summary>
+    [HarmonyPatch(
+        typeof(DataProcessingPawnLifecycleCoordinator),
+        nameof(DataProcessingPawnLifecycleCoordinator.SuspendOverseerRuntime))]
+    internal static class DataProcessingDormantPostLoadInitSuspendGuardPatch
+    {
+        private static bool Prefix()
+        {
+            return Scribe.mode != LoadSaveMode.PostLoadInit;
+        }
+    }
+
+    /// <summary>
     /// 原读档校正集合会包含仅保留配置的死亡监管者，导致意识读取失败后持续重试。
     /// 休眠监管者不需要读档预算校正，复活后由生命周期队列重新激活。
     /// </summary>
@@ -106,7 +121,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (IsDormant(target))
                 {
-                    // 死亡安全 ClearTarget 只清实际记录与正面 Hediff，不删除特化和动态配置。
+                    // 生命周期安全 ClearTarget 只清实际记录与正面 Hediff，不删除特化和动态配置。
                     __instance.ClearTarget(target);
                     continue;
                 }
