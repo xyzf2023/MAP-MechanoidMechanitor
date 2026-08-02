@@ -35,12 +35,12 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// CleanupInvalidRecords 可能先删除旧存档中的死亡实际记录。清理完成后依据仍保留的
-    /// 动态配置擦除休眠对象上的运行效果，防止尸体或死亡监管者保留旧 Hediff。
+    /// LoadedGame 原逻辑可能先删除旧存档中的死亡实际记录。读档流程全部完成后，
+    /// 再依据仍保留的动态配置擦除休眠对象上的运行效果，避免在 PostLoadInit 阶段触碰 Hediff。
     /// </summary>
     [HarmonyPatch(
         typeof(GameComponent_DataProcessingAllocationRegistry),
-        nameof(GameComponent_DataProcessingAllocationRegistry.CleanupInvalidRecords))]
+        nameof(GameComponent_DataProcessingAllocationRegistry.LoadedGame))]
     internal static class DataProcessingDormantEffectScrubPatch
     {
         private const int ReflectionFailureLogKey = 0x4D415053; // "MAPS"
