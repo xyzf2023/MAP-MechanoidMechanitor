@@ -31,12 +31,13 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return potentialOverseer.mechanitor?.GetControlGroup(subject) != null;
+            return ControlsSubject(potentialOverseer, subject);
         }
 
         /// <summary>
         /// 从 subject 的 Overseer DirectRelations 中寻找实际监管者。
-        /// 不调用 GetFirstDirectRelationPawn，避免与查询补丁递归。
+        /// 当前循环已经确认候选者与 subject 存在 Overseer 关系，因此只验证控制组方向，
+        /// 不再调用 IsActualOverseerOf 重新扫描双方关系列表。
         /// </summary>
         public static Pawn? FindActualOverseer(Pawn? subject, Predicate<Pawn>? predicate = null)
         {
@@ -55,7 +56,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Pawn? candidate = relation.otherPawn;
-                if (candidate == null)
+                if (candidate == null || ReferenceEquals(candidate, subject))
                 {
                     continue;
                 }
@@ -65,7 +66,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (!IsActualOverseerOf(candidate, subject))
+                if (!ControlsSubject(candidate, subject))
                 {
                     continue;
                 }
@@ -86,7 +87,8 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 收集 subject 的全部实际监管者（控制组包含 subject 的 Overseer 对端）。
-        /// 写入前不清空 into；调用方应自行准备空列表。不调用 GetFirstDirectRelationPawn。
+        /// 写入前不清空 into；调用方应自行准备空列表。
+        /// 当前遍历已确认关系存在，因此只检查控制组方向。
         /// </summary>
         public static void CollectActualOverseers(Pawn? subject, List<Pawn> into)
         {
@@ -105,12 +107,12 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Pawn? candidate = relation.otherPawn;
-                if (candidate == null)
+                if (candidate == null || ReferenceEquals(candidate, subject))
                 {
                     continue;
                 }
 
-                if (!IsActualOverseerOf(candidate, subject))
+                if (!ControlsSubject(candidate, subject))
                 {
                     continue;
                 }
@@ -120,6 +122,11 @@ namespace MAP_MechanoidMechanitor
                     into.Add(candidate);
                 }
             }
+        }
+
+        private static bool ControlsSubject(Pawn potentialOverseer, Pawn subject)
+        {
+            return potentialOverseer.mechanitor?.GetControlGroup(subject) != null;
         }
 
         private static bool HasOverseerRelation(Pawn a, Pawn b)
