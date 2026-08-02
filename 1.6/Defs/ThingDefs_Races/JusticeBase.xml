@@ -74,7 +74,7 @@
 
     <race>
       <body>MAP_Body_Justice</body>
-      <baseBodySize>2</baseBodySize>
+      <baseBodySize>2.8</baseBodySize>
       <baseHealthScale>2.5</baseHealthScale>
       <mechWeightClass>UltraHeavy</mechWeightClass>
 
