@@ -51,6 +51,12 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
+            // PostLoadInit 只整理引用与缓存；运行效果统一在 LoadedGame 后处理。
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                return false;
+            }
+
             DataProcessingAllocationRecord? record =
                 FindAllocationRecord(__instance, target);
             Pawn? recordedOverseer = record?.overseer ?? config.overseer;
