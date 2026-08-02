@@ -28,9 +28,8 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 热路径专用的一次性节点配置查询。
-        /// 普通机械体仅执行一次 mechanitor 空值判断和一次按 ThingDef 缓存的字典查询；
-        /// 原生节点直接读取 Def 上的节点配置，后天机械族机械师仅在自身已有
-        /// mechanitor Tracker 时查询注册表，避免在 State 等高频入口重复扫描组件与注册表。
+        /// 后天机械族机械师只查询一次注册表；原生节点直接读取按 ThingDef 缓存的配置，
+        /// 避免在 State 等高频入口重复扫描 Pawn 组件并多次访问注册表。
         /// </summary>
         public static bool TryGetVanillaControlNodeProfile(
             Pawn? pawn,
@@ -42,10 +41,10 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 后天机械族机械师没有原生节点 Comp，但其正常运行态一定已经拥有
-            // mechanitor Tracker。先用 Tracker 作廉价门控，避免普通机械体访问注册表。
-            if (pawn.mechanitor != null
-                && MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
+            // 不以 mechanitor Tracker 是否已建立作为身份前提。
+            // 读档或升格初始化的短暂阶段可能已经存在后天身份记录，
+            // 但动态 Tracker 尚未补齐；此时仍必须拦截原版 State，避免错误方向查询。
+            if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
             {
                 return true;
             }
