@@ -72,7 +72,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (__instance is Bill_ProductionMech
+            if (MassProductionMechGestatorBillUtility.IsSupported(__instance)
                 && __instance.billStack?.billGiver is Building_MassProductionMechGestator)
             {
                 return false;
@@ -93,7 +93,9 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (gestator.ActiveMechBill is not Bill_ProductionMech { State: FormingState.Forming })
+            Bill_Mech? activeBill = gestator.ActiveMechBill;
+            if (!MassProductionMechGestatorBillUtility.IsSupported(activeBill)
+                || activeBill!.State != FormingState.Forming)
             {
                 return true;
             }
@@ -115,7 +117,7 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPrefix]
         public static bool Prefix(Bill_Mech __instance, StringBuilder sb)
         {
-            if (__instance is not Bill_ProductionMech
+            if (!MassProductionMechGestatorBillUtility.IsSupported(__instance)
                 || __instance.billStack?.billGiver is not Building_MassProductionMechGestator gestator)
             {
                 return true;
