@@ -188,10 +188,6 @@
     <prerequisites>
       <li>MAP_DataStreamReorganization</li>
     </prerequisites>
-    <unlockedThings>
-      <li>MAP_ParallelThoughtArray</li>
-      <li>MAP_ParallelThoughtInterface</li>
-    </unlockedThings>
     <researchViewX>4.00</researchViewX>
     <researchViewY>2.00</researchViewY>
   </ResearchProjectDef>
