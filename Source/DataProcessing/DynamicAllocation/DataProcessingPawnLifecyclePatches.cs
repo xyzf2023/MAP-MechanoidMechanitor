@@ -9,7 +9,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// Pawn 死亡后只暂停数据处理运行态，不删除玩家保存的动态分配配置。
+    /// Pawn 死亡完成后暂停数据处理运行态，但不删除玩家保存的动态分配配置。
     /// </summary>
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.Kill))]
     internal static class DataProcessingPawnKilledLifecyclePatch
@@ -24,8 +24,8 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 原版 1.6 的 ResurrectionUtility.TryResurrect 返回 true 时，Pawn 的组件、健康和生成状态
-    /// 已经完成恢复。这里只排队，在下一游戏刻重新接入动态调度器。
+    /// 原版 1.6 的 TryResurrect 返回 true 时，Pawn 的组件、健康和生成状态均已恢复。
+    /// 此处只排队，实际恢复延迟到下一游戏刻执行。
     /// </summary>
     [HarmonyPatch(typeof(ResurrectionUtility), nameof(ResurrectionUtility.TryResurrect))]
     internal static class DataProcessingPawnResurrectedLifecyclePatch
@@ -40,8 +40,8 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 监管者死亡时，原 ClearOverseer 会把全局动态设置和全部单体设置一起删除。
-    /// 死亡场景改为仅释放实际额度和运行时缓存；活体上的明确清除仍执行原逻辑。
+    /// 监管者处于死亡流程时，原 ClearOverseer 会连同全局与单体动态配置一起删除。
+    /// 死亡场景改为只释放运行态；活体上的明确清除仍执行原逻辑。
     /// </summary>
     [HarmonyPatch(
         typeof(GameComponent_DataProcessingAllocationRegistry),
@@ -52,7 +52,9 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry __instance,
             Pawn? overseer)
         {
-            if (overseer == null || !overseer.Dead || overseer.Discarded)
+            bool dying = overseer?.health?.isBeingKilled == true;
+            if (overseer == null
+                || ((!overseer.Dead && !dying) || overseer.Discarded))
             {
                 return true;
             }
@@ -65,8 +67,8 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 替换单体动态配置清理：死亡、暂时无监管者、暂时失去玩家派系均视为休眠，
-    /// 只有引用为空、Pawn 被正式 Discard，或重复记录才永久删除。
+    /// 替换单体配置清理：死亡、暂时无监管者或派系过渡均视为休眠；
+    /// 只有引用为空、Pawn 已被 Discard，或重复配置才永久删除。
     /// </summary>
     [HarmonyPatch(
         typeof(GameComponent_DataProcessingAllocationRegistry),
@@ -90,7 +92,7 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 替换监管者级配置清理：死亡的机械师保留全局动态开关和最低处理阈值。
+    /// 替换监管者级配置清理：死亡机械师保留全局动态开关与最低处理阈值。
     /// </summary>
     [HarmonyPatch(
         typeof(GameComponent_DataProcessingAllocationRegistry),
@@ -107,7 +109,7 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 休眠监管者不运行预算计划。配置仍然保留，复活后由恢复队列重新调度。
+    /// 死亡或正在死亡的监管者不能进入预算计划。
     /// </summary>
     [HarmonyPatch(
         typeof(GameComponent_DataProcessingAllocationRegistry),
@@ -124,12 +126,14 @@ namespace MAP_MechanoidMechanitor
             return overseer != null
                 && !overseer.Dead
                 && !overseer.Destroyed
-                && !overseer.Discarded;
+                && !overseer.Discarded
+                && overseer.health?.isBeingKilled != true;
         }
     }
 
     /// <summary>
-    /// 处理复活即时恢复，并低频扫描休眠配置作为其他 MOD 复活流程的兜底。
+    /// 处理复活即时恢复，并每 600 tick 扫描一次缺少运行时调度的休眠配置，
+    /// 兼容绕过原版复活入口的其他 MOD。
     /// </summary>
     [HarmonyPatch(
         typeof(GameComponent_DataProcessingAllocationRegistry),
@@ -332,8 +336,16 @@ namespace MAP_MechanoidMechanitor
                     record.overseer = null;
                 }
 
-                if (target.Dead)
+                bool targetDormant =
+                    target.Dead
+                    || target.Destroyed
+                    || target.health?.isBeingKilled == true;
+                if (targetDormant)
                 {
+                    if (HasActualAllocation(registry, target))
+                    {
+                        registry.ClearTarget(target);
+                    }
                     ClearTargetRuntime(registry, target);
                     continue;
                 }
@@ -341,6 +353,10 @@ namespace MAP_MechanoidMechanitor
                 Pawn? currentOverseer = ResolveCurrentOverseer(registry, target);
                 if (currentOverseer == null)
                 {
+                    if (HasActualAllocation(registry, target))
+                    {
+                        registry.ClearTarget(target);
+                    }
                     ClearTargetRuntime(registry, target);
                     continue;
                 }
@@ -348,6 +364,10 @@ namespace MAP_MechanoidMechanitor
                 if (!ReferenceEquals(record.overseer, currentOverseer))
                 {
                     Pawn? oldOverseer = record.overseer;
+                    if (HasActualAllocation(registry, target))
+                    {
+                        registry.ClearTarget(target);
+                    }
                     record.overseer = currentOverseer;
                     ClearTargetRuntime(registry, target);
 
@@ -355,7 +375,6 @@ namespace MAP_MechanoidMechanitor
                     {
                         affectedOverseers?.Add(oldOverseer);
                     }
-
                     affectedOverseers?.Add(currentOverseer);
                 }
             }
@@ -388,6 +407,25 @@ namespace MAP_MechanoidMechanitor
                     || overseer == null
                     || overseer.Discarded
                     || !retainedOverseers.Add(overseer))
+                {
+                    records.RemoveAt(i);
+                    continue;
+                }
+
+                bool dormant =
+                    overseer.Dead
+                    || overseer.Destroyed
+                    || overseer.health?.isBeingKilled == true;
+                if (dormant)
+                {
+                    if (HasActualAllocationsForOverseer(registry, overseer))
+                    {
+                        SuspendOverseerRuntime(registry, overseer);
+                    }
+                    continue;
+                }
+
+                if (!registry.IsDynamicAllocationOverseerValid(overseer))
                 {
                     records.RemoveAt(i);
                 }
@@ -454,13 +492,17 @@ namespace MAP_MechanoidMechanitor
                     target: target);
             Pawn? oldOverseer = config?.overseer;
 
-            registry.ClearTarget(target);
+            if (HasActualAllocation(registry, target))
+            {
+                registry.ClearTarget(target);
+            }
             ClearTargetRuntime(registry, target);
 
             if (oldOverseer != null
                 && !oldOverseer.Dead
                 && !oldOverseer.Destroyed
-                && !oldOverseer.Discarded)
+                && !oldOverseer.Discarded
+                && oldOverseer.health?.isBeingKilled != true)
             {
                 InvokeRunPlan(registry, oldOverseer);
             }
@@ -491,7 +533,7 @@ namespace MAP_MechanoidMechanitor
 
             HashSet<Pawn> requested =
                 new HashSet<Pawn>(duePawns, ReferencePawnComparer.Instance);
-            HashSet<Pawn> affectedOverseers =
+            HashSet<Pawn> oldOverseersToReplan =
                 new HashSet<Pawn>(ReferencePawnComparer.Instance);
             bool cacheNeedsRebuild = false;
             bool anyScheduled = false;
@@ -508,14 +550,23 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (overseer.Dead || overseer.Destroyed)
+                bool overseerDormant =
+                    overseer.Dead
+                    || overseer.Destroyed
+                    || overseer.health?.isBeingKilled == true;
+                if (overseerDormant)
                 {
-                    SuspendOverseerRuntime(registry, overseer);
+                    if (HasActualAllocationsForOverseer(registry, overseer))
+                    {
+                        SuspendOverseerRuntime(registry, overseer);
+                    }
                     continue;
                 }
 
+                bool explicitlyRequested = requested.Contains(overseer);
                 if (!global!.enabled
-                    || (!scanAll && !requested.Contains(overseer)))
+                    || !registry.IsDynamicAllocationOverseerValid(overseer)
+                    || (!scanAll && !explicitlyRequested))
                 {
                     continue;
                 }
@@ -528,6 +579,7 @@ namespace MAP_MechanoidMechanitor
                         registry.GetDynamicTargetRecord(
                             overseer: null,
                             target: target);
+                    bool created = config == null;
                     if (config == null)
                     {
                         config = registry.GetOrCreateDynamicTargetRecord(
@@ -538,18 +590,26 @@ namespace MAP_MechanoidMechanitor
                     if (!ReferenceEquals(config.overseer, overseer))
                     {
                         Pawn? oldOverseer = config.overseer;
-                        registry.ClearTarget(target);
+                        if (HasActualAllocation(registry, target))
+                        {
+                            registry.ClearTarget(target);
+                        }
                         config.overseer = overseer;
                         ClearTargetRuntime(registry, target);
                         cacheNeedsRebuild = true;
 
                         if (oldOverseer != null)
                         {
-                            affectedOverseers.Add(oldOverseer);
+                            oldOverseersToReplan.Add(oldOverseer);
                         }
                     }
 
-                    if (config.enabled)
+                    bool missingRuntimeSchedule =
+                        !nextChecks.ContainsKey(target);
+                    if (config.enabled
+                        && (explicitlyRequested
+                            || created
+                            || missingRuntimeSchedule))
                     {
                         nextChecks[target] = now;
                         anyScheduled = true;
@@ -568,12 +628,17 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (!scanAll && !requested.Contains(target))
+                bool explicitlyRequested = requested.Contains(target);
+                if (!scanAll && !explicitlyRequested)
                 {
                     continue;
                 }
 
-                if (target.Dead || target.Destroyed)
+                bool targetDormant =
+                    target.Dead
+                    || target.Destroyed
+                    || target.health?.isBeingKilled == true;
+                if (targetDormant)
                 {
                     if (HasActualAllocation(registry, target))
                     {
@@ -597,28 +662,37 @@ namespace MAP_MechanoidMechanitor
                 if (!ReferenceEquals(config.overseer, currentOverseer))
                 {
                     Pawn? oldOverseer = config.overseer;
-                    registry.ClearTarget(target);
+                    if (HasActualAllocation(registry, target))
+                    {
+                        registry.ClearTarget(target);
+                    }
                     config.overseer = currentOverseer;
                     ClearTargetRuntime(registry, target);
                     cacheNeedsRebuild = true;
 
                     if (oldOverseer != null)
                     {
-                        affectedOverseers.Add(oldOverseer);
+                        oldOverseersToReplan.Add(oldOverseer);
                     }
                 }
 
-                if (config.enabled
+                bool canRun =
+                    config.enabled
                     && registry.IsDynamicAllocationEnabled(currentOverseer)
+                    && registry.IsDynamicAllocationOverseerValid(currentOverseer)
                     && registry.IsValidAllocationPairForList(
                         currentOverseer,
-                        target))
+                        target);
+                bool missingRuntimeSchedule =
+                    !nextChecks.ContainsKey(target);
+
+                if (canRun
+                    && (explicitlyRequested || missingRuntimeSchedule))
                 {
                     nextChecks[target] = now;
-                    affectedOverseers.Add(currentOverseer);
                     anyScheduled = true;
                 }
-                else
+                else if (!canRun)
                 {
                     ClearTargetRuntime(registry, target);
                 }
@@ -634,15 +708,17 @@ namespace MAP_MechanoidMechanitor
                 InvokeNoArgs(TickDynamicSchedulerMethod, registry, 6);
             }
 
-            foreach (Pawn affectedOverseer in affectedOverseers)
+            foreach (Pawn oldOverseer in oldOverseersToReplan)
             {
-                if (affectedOverseer != null
-                    && !affectedOverseer.Dead
-                    && !affectedOverseer.Destroyed
-                    && !affectedOverseer.Discarded
-                    && registry.IsDynamicAllocationEnabled(affectedOverseer))
+                if (oldOverseer != null
+                    && !oldOverseer.Dead
+                    && !oldOverseer.Destroyed
+                    && !oldOverseer.Discarded
+                    && oldOverseer.health?.isBeingKilled != true
+                    && registry.IsDynamicAllocationEnabled(oldOverseer)
+                    && registry.IsDynamicAllocationOverseerValid(oldOverseer))
                 {
-                    InvokeRunPlan(registry, affectedOverseer);
+                    InvokeRunPlan(registry, oldOverseer);
                 }
             }
         }
@@ -686,6 +762,7 @@ namespace MAP_MechanoidMechanitor
                 && !externalOverseer.Dead
                 && !externalOverseer.Destroyed
                 && !externalOverseer.Discarded
+                && externalOverseer.health?.isBeingKilled != true
                 && registry.IsValidAllocationPairForList(
                     externalOverseer,
                     target))
@@ -696,6 +773,7 @@ namespace MAP_MechanoidMechanitor
             if (!target.Dead
                 && !target.Destroyed
                 && !target.Discarded
+                && target.health?.isBeingKilled != true
                 && registry.IsValidAllocationPairForList(target, target))
             {
                 return target;
@@ -718,6 +796,28 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < records.Count; i++)
             {
                 if (ReferenceEquals(records[i]?.target, target))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool HasActualAllocationsForOverseer(
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn overseer)
+        {
+            List<DataProcessingAllocationRecord>? records =
+                GetAllocationRecords(registry);
+            if (records == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < records.Count; i++)
+            {
+                if (ReferenceEquals(records[i]?.overseer, overseer))
                 {
                     return true;
                 }
