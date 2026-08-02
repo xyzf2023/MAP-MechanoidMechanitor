@@ -7,8 +7,8 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// ClearTarget 的正常语义会同时删除特化记录。死亡暂停只应释放实际分配，
-    /// 因此当目标或其监管者处于死亡流程时，改用窄清理并跳过原方法。
+    /// ClearTarget 的正常语义会同时删除特化记录。死亡、暂时无监管者和监管者迁移
+    /// 都只应释放实际分配，因此这些生命周期场景改用窄清理并跳过原方法。
     /// </summary>
     [HarmonyPatch(
         typeof(GameComponent_DataProcessingAllocationRegistry),
@@ -27,6 +27,11 @@ namespace MAP_MechanoidMechanitor
                 typeof(GameComponent_DataProcessingAllocationRegistry),
                 "RemoveRecord");
 
+        private static readonly MethodInfo? RemoveAllCommandFocusHediffsMethod =
+            AccessTools.Method(
+                typeof(GameComponent_DataProcessingAllocationRegistry),
+                "RemoveAllCommandFocusHediffs");
+
         private static bool Prefix(
             GameComponent_DataProcessingAllocationRegistry __instance,
             Pawn? target)
@@ -36,21 +41,42 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
+            DataProcessingDynamicTargetRecord? config =
+                __instance.GetDynamicTargetRecord(
+                    overseer: null,
+                    target: target);
+            if (config == null)
+            {
+                return true;
+            }
+
             DataProcessingAllocationRecord? record =
                 FindAllocationRecord(__instance, target);
-            Pawn? overseer = record?.overseer;
+            Pawn? recordedOverseer = record?.overseer ?? config.overseer;
+            Pawn? currentOverseer = ResolveCurrentOverseer(__instance, target);
 
-            bool targetDying =
+            bool targetDormant =
                 target.Dead
                 || target.Destroyed
                 || target.health?.isBeingKilled == true;
-            bool overseerDying =
-                overseer != null
-                && (overseer.Dead
-                    || overseer.Destroyed
-                    || overseer.health?.isBeingKilled == true);
+            bool recordedOverseerDormant =
+                recordedOverseer != null
+                && (recordedOverseer.Dead
+                    || recordedOverseer.Destroyed
+                    || recordedOverseer.health?.isBeingKilled == true);
+            bool relationDormant =
+                !targetDormant
+                && currentOverseer == null;
+            bool overseerMigrating =
+                !targetDormant
+                && currentOverseer != null
+                && recordedOverseer != null
+                && !ReferenceEquals(currentOverseer, recordedOverseer);
 
-            if (!targetDying && !overseerDying)
+            if (!targetDormant
+                && !recordedOverseerDormant
+                && !relationDormant
+                && !overseerMigrating)
             {
                 return true;
             }
@@ -58,9 +84,9 @@ namespace MAP_MechanoidMechanitor
             if (record != null && RemoveRecordMethod == null)
             {
                 Log.ErrorOnce(
-                    "[MAP-机械族机械师] 无法访问死亡暂停所需的分配记录清理方法；已回退到原 ClearTarget。",
+                    "[MAP-机械族机械师] 无法访问生命周期暂停所需的分配记录清理方法；为避免配置丢失，本次未执行 ClearTarget。",
                     ReflectionFailureLogKey);
-                return true;
+                return false;
             }
 
             if (record != null)
@@ -74,24 +100,22 @@ namespace MAP_MechanoidMechanitor
                 catch (Exception ex)
                 {
                     LogFailure(
-                        "死亡暂停移除实际分配记录失败，已回退到原 ClearTarget",
+                        "生命周期暂停移除实际分配记录失败；为避免配置丢失，本次未执行原 ClearTarget",
                         ex,
                         ReflectionFailureLogKey + 1);
-                    return true;
+                    return false;
                 }
 
-                // 从这里开始实际记录已经被修改，不能再回退原 ClearTarget，
-                // 否则会把需要保留的特化配置一并删除。
-                if (overseer != null && !overseer.Destroyed)
+                if (recordedOverseer != null && !recordedOverseer.Destroyed)
                 {
                     try
                     {
-                        __instance.SyncHediffsForOverseer(overseer);
+                        __instance.SyncHediffsForOverseer(recordedOverseer);
                     }
                     catch (Exception ex)
                     {
                         LogFailure(
-                            "死亡暂停同步监管者数据流分发失败",
+                            "生命周期暂停同步监管者数据流分发失败",
                             ex,
                             ReflectionFailureLogKey + 2);
                     }
@@ -100,19 +124,61 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
-                // 当前实际档数已经为 0；公共同步入口会清除指令聚焦 Hediff，
-                // 并且明确保留特化配置记录。
-                __instance.SyncHediffForTarget(target);
+                if (RemoveAllCommandFocusHediffsMethod != null)
+                {
+                    // 私有静态清理可处理位于尸体中的 Destroyed Pawn；不删除特化记录。
+                    RemoveAllCommandFocusHediffsMethod.Invoke(
+                        null,
+                        new object[] { target });
+                }
+                else
+                {
+                    // 活体休眠或迁移时可安全使用公开同步入口。
+                    __instance.SyncHediffForTarget(target);
+                }
             }
             catch (Exception ex)
             {
                 LogFailure(
-                    "死亡暂停清除目标指令聚焦失败",
+                    "生命周期暂停清除目标指令聚焦失败",
                     ex,
                     ReflectionFailureLogKey + 3);
             }
 
             return false;
+        }
+
+        private static Pawn? ResolveCurrentOverseer(
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn target)
+        {
+            if (target.Dead
+                || target.Destroyed
+                || target.Discarded
+                || target.health?.isBeingKilled == true)
+            {
+                return null;
+            }
+
+            Pawn? externalOverseer = target.GetOverseer();
+            if (externalOverseer != null
+                && !externalOverseer.Dead
+                && !externalOverseer.Destroyed
+                && !externalOverseer.Discarded
+                && externalOverseer.health?.isBeingKilled != true
+                && registry.IsValidAllocationPairForList(
+                    externalOverseer,
+                    target))
+            {
+                return externalOverseer;
+            }
+
+            if (registry.IsValidAllocationPairForList(target, target))
+            {
+                return target;
+            }
+
+            return null;
         }
 
         private static DataProcessingAllocationRecord? FindAllocationRecord(
