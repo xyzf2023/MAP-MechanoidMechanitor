@@ -14,7 +14,8 @@ namespace MAP_MechanoidMechanitor
         {
             "BringBabyToSafety",
             "BottleFeedBaby",
-            "PlayWithBaby"
+            "PlayWithBaby",
+            "ChildcarerTeach"
         };
 
         public static WorkTypeDef ChildcareWorkType =>
