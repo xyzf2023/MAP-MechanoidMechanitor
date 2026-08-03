@@ -53,7 +53,6 @@ namespace MAP_MechanoidMechanitor
                     && (int)globalDefaultsTab != i)
                 {
                     globalDefaultsTab = (GlobalDefaultsTab)i;
-                    detailScrollPosition = Vector2.zero;
                 }
             }
             y += 38f;
