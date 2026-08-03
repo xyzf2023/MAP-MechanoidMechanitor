@@ -69,10 +69,10 @@
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ParallelThoughtArray">
         <minBoostPercent>100</minBoostPercent>
-        <maxBoostPercent>300</maxBoostPercent>
+        <maxBoostPercent>30000</maxBoostPercent>
         <boostStepPercent>25</boostStepPercent>
-        <basePowerConsumption>1600</basePowerConsumption>
-        <powerPerBoostStep>400</powerPerBoostStep>
+        <basePowerConsumption>1000</basePowerConsumption>
+        <powerPerBoostStep>600</powerPerBoostStep>
         <idlePowerConsumption>100</idlePowerConsumption>
         <fallbackRefreshIntervalTicks>60</fallbackRefreshIntervalTicks>
       </li>
