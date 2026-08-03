@@ -27,7 +27,9 @@
 
   <!-- 模块：正义 BOSS 难度 -->
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>正义 BOSS 战难度</MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」作为敌对 BOSS 到达地图后使用的战斗参数。设置会在每场 BOSS 战开始时锁定；战斗过程中修改设置只会影响下一场 BOSS 战。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」作为敌对 BOSS 到达地图后使用的战斗参数。战斗参数会在每场 BOSS 战开始时锁定；战斗过程中修改只会影响下一场 BOSS 战。详细诊断日志开关不属于战斗参数，会实时生效。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>启用正义 BOSS 详细诊断日志</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>默认关闭。开启后，将记录正义 BOSS 的波次生成、机械族生成、空投落点搜索、空投仓创建及落地分配等阶段，用于定位卡死或异常耗时。该功能不要求开启开发者模式，但可能产生较多日志并带来少量额外性能开销。关闭后不会执行相关计时、阶段跟踪或日志内容构造。</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>召唤高角护盾</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>启用后，「正义」部署设施时会召唤一座用于拦截高角度攻击的护盾发生器。此设置仅在启用皇权 DLC 时显示。</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Label>召唤低角护盾</MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Label>

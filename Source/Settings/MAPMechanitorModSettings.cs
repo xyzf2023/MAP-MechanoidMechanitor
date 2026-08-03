@@ -33,6 +33,12 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool syntheticOffspringInheritXenogenes = false;
 
+        /// <summary>
+        /// 默认关闭。开启后输出正义 BOSS 召唤、空投与落地处理的详细诊断日志。
+        /// 此设置实时生效，不纳入单场 BOSS 战难度快照。
+        /// </summary>
+        public bool enableJusticeBossDiagnosticLogging = false;
+
         public bool justiceBossEnableMortarShield =
             JusticeBossDifficultyValues.DefaultEnableMortarShield;
 
@@ -94,6 +100,10 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref syntheticOffspringInheritXenogenes,
                 "syntheticOffspringInheritXenogenes",
+                false);
+            Scribe_Values.Look(
+                ref enableJusticeBossDiagnosticLogging,
+                "enableJusticeBossDiagnosticLogging",
                 false);
 
             Scribe_Values.Look(
