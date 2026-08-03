@@ -79,6 +79,7 @@ namespace MAP_MechanoidMechanitor
             // 第一行：三等分按钮（编辑策略 | 复制设置 | 粘贴设置）
             float buttonGap = 8f;
             float buttonWidth = (rect.width - buttonGap * 2f) / 3f;
+            bool targetIsMechanoid = target.RaceProps?.IsMechanoid == true;
 
             Rect editRect = new Rect(rect.x, y, buttonWidth, 32f);
             if (DrawPrimaryButton(
@@ -94,7 +95,8 @@ namespace MAP_MechanoidMechanitor
             Rect copyRect = new Rect(editRect.xMax + buttonGap, y, buttonWidth, 32f);
             if (DrawSecondaryButton(
                     copyRect,
-                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopySettings".Translate()))
+                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopySettings".Translate(),
+                    enabled: targetIsMechanoid))
             {
                 DataProcessingDynamicTargetRecord config =
                     registry.GetOrCreateDynamicTargetRecord(overseer, target);
@@ -124,8 +126,10 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool canPaste =
-                settingsClipboard != null
+                targetIsMechanoid
+                && settingsClipboard != null
                 && settingsClipboardSource != null
+                && settingsClipboardSource.RaceProps?.IsMechanoid == true
                 && !ReferenceEquals(settingsClipboardSource, target);
             Rect pasteRect = new Rect(copyRect.xMax + buttonGap, y, buttonWidth, 32f);
             if (DrawFlatButton(
@@ -198,7 +202,6 @@ namespace MAP_MechanoidMechanitor
                 Text.Font = GameFont.Tiny;
                 Text.Anchor = TextAnchor.MiddleLeft;
                 GUI.color = TextSecondary;
-                float statusWidth = Text.CalcSize(status).x;
                 Widgets.Label(
                     new Rect(rowStartX, y, Mathf.Max(0f, rect.xMax - rowStartX - 70f), 30f),
                     status);
