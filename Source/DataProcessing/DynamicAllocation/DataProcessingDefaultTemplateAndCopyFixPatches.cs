@@ -269,7 +269,6 @@ namespace MAP_MechanoidMechanitor
                 foreach (Pawn target in targets)
                 {
                     if (target == null
-                        || target.Destroyed
                         || target.Discarded
                         || target.RaceProps?.IsMechanoid != true)
                     {
@@ -444,7 +443,6 @@ namespace MAP_MechanoidMechanitor
                 if (target != null
                     && ReferenceEquals(record!.overseer, overseer)
                     && target.RaceProps?.IsMechanoid == true
-                    && !target.Destroyed
                     && !target.Discarded)
                 {
                     targets.Add(target);
