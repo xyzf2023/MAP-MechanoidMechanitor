@@ -18,6 +18,8 @@ namespace MAP_MechanoidMechanitor
         public MAPMechanitorMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<MAPMechanitorModSettings>();
+            LongEventHandler.ExecuteWhenFinished(
+                JusticeBossDiagnosticPatchManager.Refresh);
         }
 
         public override string SettingsCategory() => "[MAP]机械族机械师";
@@ -105,12 +107,19 @@ namespace MAP_MechanoidMechanitor
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.JusticeBoss.Description".Translate());
 
+            bool diagnosticLoggingBefore =
+                settings.enableJusticeBossDiagnosticLogging;
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label"
                     .Translate(),
                 ref settings.enableJusticeBossDiagnosticLogging,
                 "MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description"
                     .Translate());
+            if (diagnosticLoggingBefore
+                != settings.enableJusticeBossDiagnosticLogging)
+            {
+                JusticeBossDiagnosticPatchManager.Refresh();
+            }
 
             if (ModsConfig.RoyaltyActive)
             {
@@ -248,6 +257,7 @@ namespace MAP_MechanoidMechanitor
         public override void WriteSettings()
         {
             CommitProductivityCoreWorkSpeedBuffer();
+            JusticeBossDiagnosticPatchManager.Refresh();
             base.WriteSettings();
         }
 
