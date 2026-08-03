@@ -41,6 +41,27 @@
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.UnmetRequest>未满足请求</MAP_MechanoidMechanitor.DataProcessing.Dashboard.UnmetRequest>
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.FooterHint>点击目标查看监控信息；设置操作仅在“编辑策略”或“全局设置”中显示。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.FooterHint>
 
+  <!-- 模块：默认模板与复制粘贴 -->
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsHeader>新加入机械族默认设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsHeader>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsDescription>以下设置仅应用于首次建立动态分配配置的机械族；不会自动覆盖现有机械族。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsDescription>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsTabBasic>基础</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsTabBasic>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsTabRules>自动规则</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsTabRules>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsTabAdvanced>高级</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsTabAdvanced>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultTargetEnabled>默认启用动态分配</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultTargetEnabled>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.ResetAll>重置为默认</MAP_MechanoidMechanitor.DataProcessing.Dashboard.ResetAll>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.ResetAllConfirm>确认将所有机械族动态分配设置重置为默认？</MAP_MechanoidMechanitor.DataProcessing.Dashboard.ResetAllConfirm>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.ResetAllComplete>已将{0}个机械族的动态分配设置重置为默认。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.ResetAllComplete>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopySettings>复制设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopySettings>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.PasteSettings>粘贴设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.PasteSettings>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyQuotaOnly>仅复制常态额度和最高额度</MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyQuotaOnly>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyAllSettings>复制全部动态分配设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyAllSettings>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyModeQuota>额度设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyModeQuota>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyModeAll>全部设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyModeAll>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.ClipboardStatus>已复制：{0}（{1}）</MAP_MechanoidMechanitor.DataProcessing.Dashboard.ClipboardStatus>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.NoClipboard>未复制设置</MAP_MechanoidMechanitor.DataProcessing.Dashboard.NoClipboard>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.ClearClipboard>清除</MAP_MechanoidMechanitor.DataProcessing.Dashboard.ClearClipboard>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.PasteComplete>已将“{0}”的{1}应用至“{2}”。</MAP_MechanoidMechanitor.DataProcessing.Dashboard.PasteComplete>
+
   <!-- 模块：额度来源说明 -->
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Fixed>固定额度</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Fixed>
   <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Normal>常态额度（当前未触发任务状态）</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Normal>

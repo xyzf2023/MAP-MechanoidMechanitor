@@ -29,7 +29,33 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.DataProcessing.Dashboard.GlobalSettings".Translate());
 
             Rect listRect = new Rect(rect.x, rect.y + 44f, rect.width, rect.height - 44f);
-            Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, Mathf.Max(500f, listRect.height));
+
+            DataProcessingDynamicAllocationRecord? globalForHeight =
+                registry.FindDynamicAllocationRecordForUI(overseer);
+
+            float minimumHeight;
+            if (globalForHeight == null)
+            {
+                minimumHeight = 90f;
+            }
+            else if (globalDefaultsTab == GlobalDefaultsTab.Advanced)
+            {
+                minimumHeight = 1050f;
+            }
+            else if (globalDefaultsTab == GlobalDefaultsTab.Rules)
+            {
+                minimumHeight = 940f;
+            }
+            else
+            {
+                minimumHeight = 980f;
+            }
+
+            Rect viewRect = new Rect(
+                0f,
+                0f,
+                listRect.width - 16f,
+                Mathf.Max(minimumHeight, listRect.height));
             Widgets.BeginScrollView(listRect, ref detailScrollPosition, viewRect);
             try
             {
@@ -112,6 +138,10 @@ namespace MAP_MechanoidMechanitor
             y += 32f;
 
             DrawGlobalBudgetRows(rect, ref y, registry, threshold);
+
+            DrawGlobalDefaultsSection(
+                new Rect(rect.x, y, rect.width, rect.yMax - y),
+                registry);
         }
 
         private void DrawGlobalBudgetRows(

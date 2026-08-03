@@ -269,15 +269,15 @@ namespace MAP_MechanoidMechanitor
             transitLoggedPawnIds.Remove(pawn.thingIDNumber);
         }
 
-        internal static string Sanitize(string? value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                return "null";
-            }
+	internal static string Sanitize(string? value)
+		{
+			if (string.IsNullOrEmpty(value))
+			{
+				return "null";
+			}
 
-            return value.Replace('\n', ' ').Replace('\r', ' ');
-        }
+			return value!.Replace('\n', ' ').Replace('\r', ' ');
+		}
 
         public static string GetLastStatusText()
         {

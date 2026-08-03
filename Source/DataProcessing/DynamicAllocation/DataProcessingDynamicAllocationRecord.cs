@@ -13,8 +13,12 @@ namespace MAP_MechanoidMechanitor
         public bool enabled;
         public int minConsciousnessPercent = 100;
 
+        public DataProcessingDynamicTargetDefaults? targetDefaults =
+            new DataProcessingDynamicTargetDefaults();
+
         public DataProcessingDynamicAllocationRecord()
         {
+            targetDefaults ??= new DataProcessingDynamicTargetDefaults();
         }
 
         public DataProcessingDynamicAllocationRecord(Pawn? overseer, bool enabled)
@@ -22,6 +26,7 @@ namespace MAP_MechanoidMechanitor
             this.overseer = overseer;
             this.enabled = enabled;
             minConsciousnessPercent = 100;
+            targetDefaults ??= new DataProcessingDynamicTargetDefaults();
         }
 
         public void ExposeData()
@@ -33,10 +38,17 @@ namespace MAP_MechanoidMechanitor
                 "minConsciousnessPercent",
                 100);
 
+            Scribe_Deep.Look(
+                ref targetDefaults,
+                "targetDefaults");
+
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 minConsciousnessPercent =
                     Mathf.Clamp(minConsciousnessPercent, 55, 1000);
+
+                targetDefaults ??= new DataProcessingDynamicTargetDefaults();
+                targetDefaults.Normalize();
             }
         }
     }

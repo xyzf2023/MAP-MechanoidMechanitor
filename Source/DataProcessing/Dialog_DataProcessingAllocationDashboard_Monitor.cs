@@ -76,7 +76,11 @@ namespace MAP_MechanoidMechanitor
                 y += 8f;
             }
 
-            Rect editRect = new Rect(rect.x, y, 154f, 32f);
+            // 第一行：三等分按钮（编辑策略 | 复制设置 | 粘贴设置）
+            float buttonGap = 8f;
+            float buttonWidth = (rect.width - buttonGap * 2f) / 3f;
+
+            Rect editRect = new Rect(rect.x, y, buttonWidth, 32f);
             if (DrawPrimaryButton(
                     editRect,
                     "MAP_MechanoidMechanitor.DataProcessing.Dashboard.EditStrategy".Translate()))
@@ -87,10 +91,80 @@ namespace MAP_MechanoidMechanitor
                 detailScrollPosition = Vector2.zero;
             }
 
-            if (!ReferenceEquals(target, overseer))
+            Rect copyRect = new Rect(editRect.xMax + buttonGap, y, buttonWidth, 32f);
+            if (DrawSecondaryButton(
+                    copyRect,
+                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopySettings".Translate()))
+            {
+                DataProcessingDynamicTargetRecord config =
+                    registry.GetOrCreateDynamicTargetRecord(overseer, target);
+
+                List<FloatMenuOption> options = new List<FloatMenuOption>
+                {
+                    new FloatMenuOption(
+                        "MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyQuotaOnly".Translate(),
+                        () =>
+                        {
+                            settingsClipboard =
+                                DataProcessingDynamicTargetSettingsSnapshot.Capture(config);
+                            settingsClipboardSource = target;
+                            settingsClipboardMode = DataProcessingTargetCopyMode.QuotaOnly;
+                        }),
+                    new FloatMenuOption(
+                        "MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyAllSettings".Translate(),
+                        () =>
+                        {
+                            settingsClipboard =
+                                DataProcessingDynamicTargetSettingsSnapshot.Capture(config);
+                            settingsClipboardSource = target;
+                            settingsClipboardMode = DataProcessingTargetCopyMode.AllSettings;
+                        })
+                };
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+
+            bool canPaste =
+                settingsClipboard != null
+                && settingsClipboardSource != null
+                && !ReferenceEquals(settingsClipboardSource, target);
+            Rect pasteRect = new Rect(copyRect.xMax + buttonGap, y, buttonWidth, 32f);
+            if (DrawFlatButton(
+                    pasteRect,
+                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.PasteSettings".Translate(),
+                    DashboardButtonStyle.Primary,
+                    selected: false,
+                    enabled: canPaste))
+            {
+                if (canPaste
+                    && registry.ApplyDynamicTargetSettingsSnapshot(
+                        overseer,
+                        target,
+                        settingsClipboard,
+                        settingsClipboardMode))
+                {
+                    string modeLabel =
+                        settingsClipboardMode == DataProcessingTargetCopyMode.AllSettings
+                            ? "MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyModeAll".Translate()
+                            : "MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyModeQuota".Translate();
+                    Messages.Message(
+                        "MAP_MechanoidMechanitor.DataProcessing.Dashboard.PasteComplete".Translate(
+                            settingsClipboardSource!.LabelShort,
+                            modeLabel,
+                            target.LabelShort),
+                        MessageTypeDefOf.NeutralEvent,
+                        historical: false);
+                }
+            }
+
+            y += 40f;
+
+            // 第二行：顶置按钮 + 复制状态
+            bool showPin = !ReferenceEquals(target, overseer);
+            float rowStartX = rect.x;
+            if (showPin)
             {
                 bool pinned = registry.IsPinned(overseer, target);
-                Rect pinRect = new Rect(editRect.xMax + 8f, y, 124f, 32f);
+                Rect pinRect = new Rect(rowStartX, y, 124f, 30f);
                 if (DrawSecondaryButton(
                         pinRect,
                         pinned
@@ -107,8 +181,49 @@ namespace MAP_MechanoidMechanitor
                         registry.TryPinTarget(overseer, target);
                     }
                 }
+                rowStartX = pinRect.xMax + 8f;
             }
-            y += 44f;
+
+            if (settingsClipboardSource != null)
+            {
+                string modeLabel =
+                    settingsClipboardMode == DataProcessingTargetCopyMode.AllSettings
+                        ? "MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyModeAll".Translate()
+                        : "MAP_MechanoidMechanitor.DataProcessing.Dashboard.CopyModeQuota".Translate();
+                string status =
+                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.ClipboardStatus".Translate(
+                        settingsClipboardSource.LabelShort,
+                        modeLabel);
+
+                Text.Font = GameFont.Tiny;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                GUI.color = TextSecondary;
+                float statusWidth = Text.CalcSize(status).x;
+                Widgets.Label(
+                    new Rect(rowStartX, y, Mathf.Max(0f, rect.xMax - rowStartX - 70f), 30f),
+                    status);
+                Text.Anchor = TextAnchor.UpperLeft;
+
+                Rect clearRect = new Rect(rect.xMax - 62f, y, 62f, 28f);
+                if (DrawMiniButton(
+                        clearRect,
+                        "MAP_MechanoidMechanitor.DataProcessing.Dashboard.ClearClipboard".Translate()))
+                {
+                    settingsClipboard = null;
+                    settingsClipboardSource = null;
+                }
+            }
+            else
+            {
+                Text.Font = GameFont.Tiny;
+                Text.Anchor = TextAnchor.MiddleLeft;
+                GUI.color = TextSecondary;
+                Widgets.Label(
+                    new Rect(rowStartX, y, rect.width - (rowStartX - rect.x), 30f),
+                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.NoClipboard".Translate());
+                Text.Anchor = TextAnchor.UpperLeft;
+            }
+            y += 40f;
 
             Rect scrollRect = new Rect(rect.x, y, rect.width, rect.yMax - y);
             float viewHeight = Prefs.DevMode ? 640f : 460f;

@@ -1130,17 +1130,339 @@ namespace MAP_MechanoidMechanitor
                         : DataProcessingDynamicAllocationUtility
                             .DetermineInitialDefaultSpecialization(target);
 
-            DataProcessingDynamicTargetRecord record =
-                new DataProcessingDynamicTargetRecord(
-                    overseer,
-                    target,
-                    currentSteps,
-                    initialDefault);
+            DataProcessingDynamicTargetRecord record;
+
+            DataProcessingDynamicAllocationRecord? global =
+                FindDynamicAllocationRecord(overseer);
+
+            if (global != null)
+            {
+                // 监管者已有全局动态记录：使用默认模板创建新配置。
+                global.targetDefaults ??=
+                    new DataProcessingDynamicTargetDefaults();
+                global.targetDefaults.Normalize();
+
+                record =
+                    new DataProcessingDynamicTargetRecord(
+                        overseer,
+                        target,
+                        global.targetDefaults.normalSteps,
+                        initialDefault);
+
+                global.targetDefaults.ApplyTo(record);
+
+                // 默认特化必须保持自动判断结果，不能被模板覆盖。
+                record.defaultSpecialization = initialDefault;
+                record.Normalize();
+            }
+            else
+            {
+                // 监管者还没有全局动态记录：保持原来的当前实际额度初始化逻辑。
+                record =
+                    new DataProcessingDynamicTargetRecord(
+                        overseer,
+                        target,
+                        currentSteps,
+                        initialDefault);
+            }
 
             dynamicTargetRecords.Add(record);
             RebuildDynamicTargetCaches();
             ScheduleDynamicTargetCheck(target, record.checkIntervalTicks, immediate: true);
             return record;
+        }
+
+        /// <summary>
+        /// 取得当前监管者的新目标默认模板（供 UI 编辑使用）。
+        /// 不存在全局记录或监管者为空时返回 null。
+        /// 返回前确保对象不为 null 并已规范化。
+        /// 修改模板不会影响任何现有机械族。
+        /// </summary>
+        public DataProcessingDynamicTargetDefaults?
+            GetDynamicTargetDefaultsForUI(Pawn? overseer)
+        {
+            if (overseer == null)
+            {
+                return null;
+            }
+
+            DataProcessingDynamicAllocationRecord? global =
+                FindDynamicAllocationRecord(overseer);
+
+            if (global == null)
+            {
+                return null;
+            }
+
+            global.targetDefaults ??=
+                new DataProcessingDynamicTargetDefaults();
+            global.targetDefaults.Normalize();
+
+            return global.targetDefaults;
+        }
+
+        /// <summary>
+        /// 更新当前监管者的新目标默认模板。
+        /// 只改变以后新建配置与手动重置时使用的模板，不会覆盖现有机械族，
+        /// 不运行预算计划，不重建单体配置缓存。
+        /// </summary>
+        public bool TryUpdateDynamicTargetDefaults(
+            Pawn? overseer,
+            Action<DataProcessingDynamicTargetDefaults> update)
+        {
+            if (overseer == null || update == null)
+            {
+                return false;
+            }
+
+            DataProcessingDynamicTargetDefaults? defaults =
+                GetDynamicTargetDefaultsForUI(overseer);
+
+            if (defaults == null)
+            {
+                return false;
+            }
+
+            update(defaults);
+            defaults.Normalize();
+
+            return true;
+        }
+
+        /// <summary>
+        /// 将当前监管者名下所有机械族的动态分配设置重置为默认模板。
+        /// 只处理机械族目标（含休眠配置与暂时失去监管关系但配置仍归属者），
+        /// 不处理人类目标、其他监管者目标，不改变顶置、监管者阈值或全局开关。
+        /// 返回被重置的机械族数量。
+        /// </summary>
+        public int ResetAllMechanoidDynamicSettingsToDefaults(Pawn? overseer)
+        {
+            if (overseer == null)
+            {
+                return 0;
+            }
+
+            DataProcessingDynamicAllocationRecord? global =
+                FindDynamicAllocationRecord(overseer);
+            if (global == null)
+            {
+                return 0;
+            }
+
+            global.targetDefaults ??= new DataProcessingDynamicTargetDefaults();
+            global.targetDefaults.Normalize();
+            DataProcessingDynamicTargetDefaults defaults = global.targetDefaults;
+
+            // 按 Pawn 引用收集当前监管者名下的机械族目标。
+            List<Pawn> targets = new List<Pawn>();
+
+            if (dynamicTargetRecords != null)
+            {
+                for (int i = 0; i < dynamicTargetRecords.Count; i++)
+                {
+                    DataProcessingDynamicTargetRecord record = dynamicTargetRecords[i];
+                    if (record?.overseer == null
+                        || !ReferenceEquals(record.overseer, overseer)
+                        || record.target == null)
+                    {
+                        continue;
+                    }
+
+                    // 只处理机械族，不处理人类目标。
+                    if (record.target.RaceProps?.IsMechanoid != true)
+                    {
+                        continue;
+                    }
+
+                    if (!ContainsReference(targets, record.target))
+                    {
+                        targets.Add(record.target);
+                    }
+                }
+            }
+
+            // 监管者自身，前提是自身为机械族且是有效分配目标。
+            if (overseer.RaceProps?.IsMechanoid == true
+                && IsValidAllocationPairForList(overseer, overseer))
+            {
+                if (!ContainsReference(targets, overseer))
+                {
+                    targets.Add(overseer);
+                }
+            }
+
+            int count = 0;
+
+            foreach (Pawn target in targets)
+            {
+                if (target == null)
+                {
+                    continue;
+                }
+
+                DataProcessingDynamicTargetRecord config =
+                    FindDynamicTargetRecord(overseer, target)
+                    ?? GetOrCreateDynamicTargetRecord(overseer, target);
+
+                // 用默认模板覆盖额度与规则设置。
+                defaults.ApplyTo(config);
+
+                // 默认特化必须重新自动判断。
+                DataProcessingSpecialization auto =
+                    DataProcessingDynamicAllocationUtility
+                        .DetermineInitialDefaultSpecialization(target);
+                config.defaultSpecialization = auto;
+
+                // 当前保存特化也改为自动判断结果（不立即同步 Hediff、不运行预算）。
+                SetStoredSpecializationWithoutImmediateSync(overseer, target, auto);
+
+                config.Normalize();
+
+                // 清理运行态，死亡/休眠目标只修改保存配置，不加入运行时调度。
+                cachedDynamicEvaluationByTarget.Remove(target);
+                nextDynamicCheckTickByTarget.Remove(target);
+
+                if (!target.Dead
+                    && !target.Destroyed
+                    && target.RaceProps?.IsMechanoid == true
+                    && IsDynamicAllocationOverseerValid(overseer)
+                    && IsValidAllocationPairForList(overseer, target))
+                {
+                    nextDynamicCheckTickByTarget[target] = Find.TickManager.TicksGame;
+                }
+
+                count++;
+            }
+
+            // 整批只重建缓存一次。
+            RebuildSpecializationCaches();
+            RebuildDynamicTargetCaches();
+
+            // 整批只运行一次计划。
+            if (IsDynamicAllocationEnabled(overseer))
+            {
+                RunDynamicPlanForOverseer(overseer);
+            }
+            else
+            {
+                TryReconcileNonDynamicOverseerAfterLoad(overseer);
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// 仅更新或创建特化记录，不立即同步 Hediff、不运行预算、不每次重建缓存。
+        /// 供批量重置时设置当前保存特化为自动判断结果使用。
+        /// </summary>
+        private static bool ContainsReference(List<Pawn> list, Pawn value)
+        {
+            if (list == null || value == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (ReferenceEquals(list[i], value))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void SetStoredSpecializationWithoutImmediateSync(
+            Pawn overseer,
+            Pawn target,
+            DataProcessingSpecialization specialization)
+        {
+            if (overseer == null || target == null)
+            {
+                return;
+            }
+
+            DataProcessingSpecializationRecord? existing =
+                FindSpecializationRecord(overseer, target);
+            if (existing != null)
+            {
+                existing.specialization = specialization;
+                return;
+            }
+
+            specializationRecords.Add(
+                new DataProcessingSpecializationRecord(
+                    overseer,
+                    target,
+                    specialization));
+        }
+
+        /// <summary>
+        /// 将运行时设置快照应用到目标配置（粘贴）。
+        /// 验证目标合法后，取得或创建目标配置，应用快照并保留其默认特化。
+        /// 全局动态开启时仅运行一次当前监管者预算计划；关闭时只保存配置。
+        /// 禁止逐字段调用现有公共 setter。
+        /// </summary>
+        public bool ApplyDynamicTargetSettingsSnapshot(
+            Pawn? overseer,
+            Pawn? target,
+            DataProcessingDynamicTargetSettingsSnapshot? snapshot,
+            DataProcessingTargetCopyMode mode)
+        {
+            if (overseer == null || target == null || snapshot == null)
+            {
+                return false;
+            }
+
+            if (!IsDynamicAllocationOverseerValid(overseer))
+            {
+                return false;
+            }
+
+            if (target.Dead || target.Destroyed || target.Discarded)
+            {
+                return false;
+            }
+
+            // 目标仍属于当前监管者或是有效自我分配目标；且必须是机械族。
+            if (target.RaceProps?.IsMechanoid != true)
+            {
+                return false;
+            }
+
+            if (!IsValidAllocationPairForList(overseer, target)
+                && !(ReferenceEquals(overseer, target)
+                    && IsValidAllocationPairForList(overseer, overseer)))
+            {
+                return false;
+            }
+
+            DataProcessingDynamicTargetRecord config =
+                GetOrCreateDynamicTargetRecord(overseer, target);
+
+            DataProcessingSpecialization originalDefault =
+                config.defaultSpecialization;
+
+            snapshot.ApplyTo(config, mode);
+            config.defaultSpecialization = originalDefault;
+            config.Normalize();
+
+            RebuildDynamicTargetCaches();
+            cachedDynamicEvaluationByTarget.Remove(target);
+
+            if (IsDynamicAllocationEnabled(overseer))
+            {
+                // 对目标立即执行一次状态评估并更新检查时间。
+                ScheduleDynamicTargetCheck(target, config.checkIntervalTicks, immediate: true);
+                TriggerDynamicStateReevaluation(overseer, target);
+
+                // 只运行一次当前监管者预算计划。
+                RunDynamicPlanForOverseer(overseer);
+            }
+            // 全局动态关闭时只保存配置，不直接覆盖当前实际额度，不添加或删除 Hediff。
+
+            return true;
         }
 
         private void ScheduleDynamicTargetCheck(

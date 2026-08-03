@@ -293,27 +293,43 @@ namespace MAP_MechanoidMechanitor
 
         private static void DrawPortrait(Rect rect, Pawn target)
         {
+            // 完全隔离自己的颜色状态：头像必须始终按原始颜色绘制，
+            // 不受目标行边框颜色或选中颜色乘色。
+            Color oldColor = GUI.color;
+
             try
             {
-                float zoom = target.kindDef != null
-                    ? target.kindDef.controlGroupPortraitZoom
-                    : 1f;
-                RenderTexture image = PortraitsCache.Get(
-                    target,
-                    rect.size,
-                    Rot4.East,
-                    PortraitCameraOffset,
-                    zoom);
-                GUI.DrawTexture(rect, image);
-            }
-            catch
-            {
-                Widgets.DrawBoxSolid(rect, Background);
-            }
+                GUI.color = Color.white;
 
-            GUI.color = Border;
-            Widgets.DrawBox(rect, 1);
-            GUI.color = Color.white;
+                try
+                {
+                    float zoom = target.kindDef != null
+                        ? target.kindDef.controlGroupPortraitZoom
+                        : 1f;
+
+                    RenderTexture image = PortraitsCache.Get(
+                        target,
+                        rect.size,
+                        Rot4.East,
+                        PortraitCameraOffset,
+                        zoom);
+
+                    GUI.color = Color.white;
+                    GUI.DrawTexture(rect, image);
+                }
+                catch
+                {
+                    GUI.color = Color.white;
+                    Widgets.DrawBoxSolid(rect, Background);
+                }
+
+                GUI.color = Border;
+                Widgets.DrawBox(rect, 1);
+            }
+            finally
+            {
+                GUI.color = oldColor;
+            }
         }
 
         private static bool DrawCheckboxRow(

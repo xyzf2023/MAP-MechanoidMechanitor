@@ -25,6 +25,13 @@ namespace MAP_MechanoidMechanitor
             Advanced
         }
 
+        private enum GlobalDefaultsTab
+        {
+            Basic,
+            Rules,
+            Advanced
+        }
+
         private enum TargetFilter
         {
             All,
@@ -54,12 +61,18 @@ namespace MAP_MechanoidMechanitor
 
         private readonly Pawn overseer;
         private Pawn? selectedTarget;
-        private DashboardMode mode;
-        private EditTab editTab;
-        private TargetFilter filter;
+		private DashboardMode mode;
+		private EditTab editTab;
+		private GlobalDefaultsTab globalDefaultsTab;
+		private TargetFilter filter;
         private Vector2 targetScrollPosition;
         private Vector2 detailScrollPosition;
         private int lastCleanupTick = -99999;
+
+        // 复制/粘贴运行时剪贴板：非 static、不序列化、不跨窗口保存。
+        private DataProcessingDynamicTargetSettingsSnapshot? settingsClipboard;
+        private Pawn? settingsClipboardSource;
+        private DataProcessingTargetCopyMode settingsClipboardMode;
 
         public override Vector2 InitialSize
         {
@@ -82,6 +95,15 @@ namespace MAP_MechanoidMechanitor
             doWindowBackground = false;
             drawShadow = true;
             onlyOneOfTypeAllowed = true;
+        }
+
+        public override void PostClose()
+        {
+            // 关闭仪表盘后复制内容必须彻底消失。
+            settingsClipboard = null;
+            settingsClipboardSource = null;
+
+            base.PostClose();
         }
 
         public override void DoWindowContents(Rect inRect)

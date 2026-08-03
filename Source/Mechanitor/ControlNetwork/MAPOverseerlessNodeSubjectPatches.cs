@@ -67,12 +67,17 @@ namespace MAP_MechanoidMechanitor
     public static class MAPOverseerlessNodeSubjectPatches_InspectString
     {
         [HarmonyPrefix]
-        public static bool Prefix(
-            CompOverseerSubject __instance,
-            ref string? __result,
-            int ___delayUntilFeralCheck)
-        {
-            Pawn? subject = __instance?.Parent;
+		public static bool Prefix(
+			CompOverseerSubject __instance,
+			ref string? __result,
+			int ___delayUntilFeralCheck)
+		{
+			if (__instance == null)
+			{
+				return true;
+			}
+
+			Pawn? subject = __instance.Parent;
             if (subject == null
                 || !MAPMechanitorNodeUtility.TryGetVanillaControlNodeProfile(
                     subject,
