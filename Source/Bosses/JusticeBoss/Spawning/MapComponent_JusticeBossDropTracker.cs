@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -170,7 +171,42 @@ namespace MAP_MechanoidMechanitor
             }
 
             pawn.jobs?.EndCurrentJob(JobCondition.InterruptForced);
-            lord.CurLordToil?.UpdateAllDuties();
+
+            bool diagnosticEnabled = JusticeBossDiagnosticUtility.Enabled;
+            JusticeBossDiagnosticScopeState dutyState = default;
+            if (diagnosticEnabled)
+            {
+                dutyState = JusticeBossDiagnosticUtility.BeginScope(
+                    "LordToil.UpdateAllDuties",
+                    "lord=" + lord.GetHashCode()
+                        + " toil="
+                        + JusticeBossDiagnosticUtility.Sanitize(
+                            lord.CurLordToil?.GetType().FullName));
+            }
+
+            try
+            {
+                lord.CurLordToil?.UpdateAllDuties();
+                if (diagnosticEnabled)
+                {
+                    JusticeBossDiagnosticUtility.EndScope(
+                        dutyState,
+                        "returned=true",
+                        JusticeBossDiagnosticUtility.LandingSlowMs);
+                }
+            }
+            catch (Exception exception)
+            {
+                if (diagnosticEnabled)
+                {
+                    JusticeBossDiagnosticUtility.FinalizeScope(
+                        exception,
+                        dutyState);
+                }
+
+                throw;
+            }
+
             landedAndAssignedCount++;
         }
 
