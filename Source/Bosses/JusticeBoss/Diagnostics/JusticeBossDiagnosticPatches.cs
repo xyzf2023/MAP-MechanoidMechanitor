@@ -57,13 +57,12 @@ namespace MAP_MechanoidMechanitor
         private static JusticeBossDiagnosticContext? activeContext;
 
         private static readonly HashSet<int> transitLoggedPawnIds = new HashSet<int>();
+        private static readonly List<string> pendingPatchFailures = new List<string>();
+        private static bool patchFailuresReported;
 
         public static string LastPhase { get; private set; } = "none";
-
         public static int LastGameTick { get; private set; } = -1;
-
         public static string LastDetail { get; private set; } = string.Empty;
-
         public static double LastElapsedMs { get; private set; } = -1d;
 
         public static bool Enabled =>
@@ -171,6 +170,35 @@ namespace MAP_MechanoidMechanitor
             return exception;
         }
 
+        internal static void RecordPatchFailure(string description, Exception? exception = null)
+        {
+            string text = description;
+            if (exception != null)
+            {
+                text += " exception=" + exception.GetType().FullName
+                    + " message=" + Sanitize(exception.Message);
+            }
+
+            pendingPatchFailures.Add(text);
+        }
+
+        private static void ReportPatchFailuresIfNeeded()
+        {
+            if (patchFailuresReported || pendingPatchFailures.Count == 0)
+            {
+                return;
+            }
+
+            patchFailuresReported = true;
+            for (int i = 0; i < pendingPatchFailures.Count; i++)
+            {
+                Log.Warning(
+                    Prefix
+                    + " phase=Patch.InstallFailed "
+                    + pendingPatchFailures[i]);
+            }
+        }
+
         internal static void Write(
             string phase,
             string detail,
@@ -181,6 +209,8 @@ namespace MAP_MechanoidMechanitor
             {
                 return;
             }
+
+            ReportPatchFailuresIfNeeded();
 
             StringBuilder builder = new StringBuilder(256);
             builder.Append(Prefix);
@@ -305,26 +335,22 @@ namespace MAP_MechanoidMechanitor
             Harmony harmony = new Harmony(
                 "MAP_MechanoidMechanitor.JusticeBossDiagnostics");
 
-            Patch(
-                harmony,
+            Patch(harmony, "Controller.TrySpawnWave",
                 FindMethod(typeof(CompJusticeBossController), "TrySpawnWave", 1),
                 nameof(JusticeBossDiagnosticHooks.WavePrefix),
                 nameof(JusticeBossDiagnosticHooks.WavePostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Spawn.BuildWaveComposition",
                 FindMethod(typeof(JusticeBossSpawnUtility), "BuildWaveComposition", 3),
                 nameof(JusticeBossDiagnosticHooks.CompositionPrefix),
                 nameof(JusticeBossDiagnosticHooks.CompositionPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Spawn.LaunchWaveDropPodsNear",
                 FindMethod(typeof(JusticeBossSpawnUtility), "LaunchWaveDropPodsNear", 5),
                 nameof(JusticeBossDiagnosticHooks.LaunchWavePrefix),
                 nameof(JusticeBossDiagnosticHooks.LaunchResultPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Spawn.LaunchGuardDropPodsNear.List",
                 FindMethod(
                     typeof(JusticeBossSpawnUtility),
                     "LaunchGuardDropPodsNear",
@@ -333,14 +359,12 @@ namespace MAP_MechanoidMechanitor
                 nameof(JusticeBossDiagnosticHooks.LaunchGuardPrefix),
                 nameof(JusticeBossDiagnosticHooks.LaunchResultPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Spawn.TryGeneratePawn",
                 FindMethod(typeof(JusticeBossSpawnUtility), "TryGeneratePawn", 2),
                 nameof(JusticeBossDiagnosticHooks.GeneratePawnPrefix),
                 nameof(JusticeBossDiagnosticHooks.GeneratePawnPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "PawnGenerator.GeneratePawn",
                 FindMethod(
                     typeof(PawnGenerator),
                     nameof(PawnGenerator.GeneratePawn),
@@ -349,8 +373,7 @@ namespace MAP_MechanoidMechanitor
                 nameof(JusticeBossDiagnosticHooks.PawnGeneratorPrefix),
                 nameof(JusticeBossDiagnosticHooks.PawnGeneratorPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Pawn.SetFaction",
                 FindMethod(
                     typeof(Pawn),
                     nameof(Pawn.SetFaction),
@@ -360,8 +383,7 @@ namespace MAP_MechanoidMechanitor
                 nameof(JusticeBossDiagnosticHooks.SetFactionPrefix),
                 nameof(JusticeBossDiagnosticHooks.SetFactionPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "WorkMode.EnsureMobileCombatHediff",
                 FindMethod(
                     typeof(MechanoidMechanitorWorkModeUtility),
                     nameof(MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff),
@@ -369,26 +391,22 @@ namespace MAP_MechanoidMechanitor
                 nameof(JusticeBossDiagnosticHooks.HediffPrefix),
                 nameof(JusticeBossDiagnosticHooks.HediffPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Spawn.LaunchPawnDropPods",
                 FindMethod(typeof(JusticeBossSpawnUtility), "LaunchPawnDropPods", 9),
                 nameof(JusticeBossDiagnosticHooks.LaunchPawnPodsPrefix),
                 nameof(JusticeBossDiagnosticHooks.LaunchResultPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Spawn.TryFindDropCell",
                 FindMethod(typeof(JusticeBossSpawnUtility), "TryFindDropCell", 5),
                 nameof(JusticeBossDiagnosticHooks.DropCellPrefix),
                 nameof(JusticeBossDiagnosticHooks.DropCellPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Spawn.TryMakeDropPod",
                 FindMethod(typeof(JusticeBossSpawnUtility), "TryMakeDropPod", 4),
                 nameof(JusticeBossDiagnosticHooks.DropPodPrefix),
                 nameof(JusticeBossDiagnosticHooks.DropPodPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "DropPodUtility.MakeDropPodAt",
                 FindMethod(
                     typeof(DropPodUtility),
                     nameof(DropPodUtility.MakeDropPodAt),
@@ -399,63 +417,54 @@ namespace MAP_MechanoidMechanitor
                 nameof(JusticeBossDiagnosticHooks.MakeDropPodAtPrefix),
                 nameof(JusticeBossDiagnosticHooks.MakeDropPodAtPostfix));
 
-            Patch(
-                harmony,
-                FindMethod(typeof(JusticeBossDeploymentUtility), "DeployInfrastructure", 12),
+            Patch(harmony, "Deployment.DeployInfrastructure",
+                FindMethod(typeof(JusticeBossDeploymentUtility), "DeployInfrastructure", 11),
                 nameof(JusticeBossDiagnosticHooks.InfrastructurePrefix),
                 nameof(JusticeBossDiagnosticHooks.InfrastructurePostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Deployment.TryFindPlacement",
                 FindMethod(typeof(JusticeBossDeploymentUtility), "TryFindPlacement", 9),
                 nameof(JusticeBossDiagnosticHooks.PlacementPrefix),
                 nameof(JusticeBossDiagnosticHooks.PlacementPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Deployment.SpawnBuildingViaDropPod",
                 FindMethod(typeof(JusticeBossDeploymentUtility), "SpawnBuildingViaDropPod", 5),
                 nameof(JusticeBossDiagnosticHooks.InfrastructurePodPrefix),
                 nameof(JusticeBossDiagnosticHooks.InfrastructurePodPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Tracker.Register",
                 FindMethod(typeof(MapComponent_JusticeBossDropTracker), "Register", 1),
                 nameof(JusticeBossDiagnosticHooks.RegisterPrefix),
                 nameof(JusticeBossDiagnosticHooks.RegisterPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Tracker.Unregister",
                 FindMethod(typeof(MapComponent_JusticeBossDropTracker), "Unregister", 1),
                 nameof(JusticeBossDiagnosticHooks.UnregisterPrefix),
-                null);
+                null,
+                finalizerName: null);
 
-            Patch(
-                harmony,
+            Patch(harmony, "Tracker.IsInTransit",
                 FindMethod(typeof(MapComponent_JusticeBossDropTracker), "IsInTransit", 1),
                 null,
                 nameof(JusticeBossDiagnosticHooks.TransitPostfix),
                 finalizerName: null);
 
-            Patch(
-                harmony,
+            Patch(harmony, "Tracker.CompleteLanding",
                 FindMethod(typeof(MapComponent_JusticeBossDropTracker), "CompleteLanding", 1),
                 nameof(JusticeBossDiagnosticHooks.LandingPrefix),
                 nameof(JusticeBossDiagnosticHooks.LandingPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Lord.EnsureAssaultLord",
                 FindMethod(typeof(JusticeBossLordUtility), "EnsureAssaultLord", 3),
                 nameof(JusticeBossDiagnosticHooks.LordPrefix),
                 nameof(JusticeBossDiagnosticHooks.LordPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Lord.EnsureGuardLord",
                 FindMethod(typeof(JusticeBossLordUtility), "EnsureGuardLord", 4),
                 nameof(JusticeBossDiagnosticHooks.LordPrefix),
                 nameof(JusticeBossDiagnosticHooks.LordPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "Lord.AddPawn",
                 FindMethod(
                     typeof(Lord),
                     nameof(Lord.AddPawn),
@@ -464,8 +473,7 @@ namespace MAP_MechanoidMechanitor
                 nameof(JusticeBossDiagnosticHooks.AddPawnPrefix),
                 nameof(JusticeBossDiagnosticHooks.AddPawnPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "PawnJobTracker.EndCurrentJob",
                 FindMethod(
                     typeof(Pawn_JobTracker),
                     "EndCurrentJob",
@@ -475,8 +483,7 @@ namespace MAP_MechanoidMechanitor
                 nameof(JusticeBossDiagnosticHooks.EndJobPrefix),
                 nameof(JusticeBossDiagnosticHooks.EndJobPostfix));
 
-            Patch(
-                harmony,
+            Patch(harmony, "LordToil.UpdateAllDuties",
                 FindMethod(typeof(LordToil), "UpdateAllDuties", 0),
                 nameof(JusticeBossDiagnosticHooks.UpdateDutiesPrefix),
                 nameof(JusticeBossDiagnosticHooks.UpdateDutiesPostfix));
@@ -510,6 +517,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void Patch(
             Harmony harmony,
+            string description,
             MethodBase? original,
             string? prefixName,
             string? postfixName,
@@ -517,28 +525,36 @@ namespace MAP_MechanoidMechanitor
         {
             if (original == null)
             {
+                JusticeBossDiagnosticUtility.RecordPatchFailure(
+                    description + " target method not found");
                 return;
             }
 
-            HarmonyMethod? prefix = prefixName == null
-                ? null
-                : new HarmonyMethod(
-                    AccessTools.Method(typeof(JusticeBossDiagnosticHooks), prefixName));
-            HarmonyMethod? postfix = postfixName == null
-                ? null
-                : new HarmonyMethod(
-                    AccessTools.Method(typeof(JusticeBossDiagnosticHooks), postfixName));
-            HarmonyMethod? finalizer = finalizerName == null
-                ? null
-                : new HarmonyMethod(
-                    AccessTools.Method(typeof(JusticeBossDiagnosticHooks), finalizerName));
+            try
+            {
+                MethodInfo? prefixMethod = prefixName == null
+                    ? null
+                    : AccessTools.Method(typeof(JusticeBossDiagnosticHooks), prefixName);
+                MethodInfo? postfixMethod = postfixName == null
+                    ? null
+                    : AccessTools.Method(typeof(JusticeBossDiagnosticHooks), postfixName);
+                MethodInfo? finalizerMethod = finalizerName == null
+                    ? null
+                    : AccessTools.Method(typeof(JusticeBossDiagnosticHooks), finalizerName);
 
-            harmony.Patch(
-                original,
-                prefix: prefix,
-                postfix: postfix,
-                transpiler: null,
-                finalizer: finalizer);
+                harmony.Patch(
+                    original,
+                    prefix: prefixMethod == null ? null : new HarmonyMethod(prefixMethod),
+                    postfix: postfixMethod == null ? null : new HarmonyMethod(postfixMethod),
+                    transpiler: null,
+                    finalizer: finalizerMethod == null ? null : new HarmonyMethod(finalizerMethod));
+            }
+            catch (Exception exception)
+            {
+                JusticeBossDiagnosticUtility.RecordPatchFailure(
+                    description,
+                    exception);
+            }
         }
     }
 
@@ -626,9 +642,7 @@ namespace MAP_MechanoidMechanitor
 
             string kinds = __result == null
                 ? "null"
-                : string.Join(
-                    ",",
-                    __result.Select(kind => kind?.defName ?? "null"));
+                : string.Join(",", __result.Select(kind => kind?.defName ?? "null"));
             JusticeBossDiagnosticUtility.EndScope(
                 __state,
                 "count=" + (__result?.Count ?? 0) + " kinds=" + kinds,
@@ -655,8 +669,6 @@ namespace MAP_MechanoidMechanitor
                 context = new JusticeBossDiagnosticContext
                 {
                     eventId = justiceEventId,
-                    waveIndex = 0,
-                    retryCount = 0,
                     role = JusticeBossDropRole.Assault.ToString(),
                 };
                 __state = JusticeBossDiagnosticUtility.BeginScope(
@@ -694,8 +706,6 @@ namespace MAP_MechanoidMechanitor
             JusticeBossDiagnosticContext context = new JusticeBossDiagnosticContext
             {
                 eventId = justiceEventId,
-                waveIndex = 0,
-                retryCount = 0,
                 role = JusticeBossDropRole.Guard.ToString(),
             };
             __state = JusticeBossDiagnosticUtility.BeginScope(
@@ -738,8 +748,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            JusticeBossDiagnosticContext context =
-                JusticeBossDiagnosticUtility.ActiveContext!;
+            JusticeBossDiagnosticContext context = JusticeBossDiagnosticUtility.ActiveContext!;
             int previousIndex = context.activePawnIndex;
             string? previousKind = context.activePawnKind;
             context.pawnSequence++;
@@ -881,9 +890,7 @@ namespace MAP_MechanoidMechanitor
                 && __args[5] is JusticeBossDropRole parsedRole
                     ? parsedRole
                     : JusticeBossDropRole.Assault;
-            List<Pawn>? pawns = __args.Length > 6
-                ? __args[6] as List<Pawn>
-                : null;
+            List<Pawn>? pawns = __args.Length > 6 ? __args[6] as List<Pawn> : null;
             JusticeBossDiagnosticUtility.ActiveContext!.role = role.ToString();
             __state = JusticeBossDiagnosticUtility.BeginScope(
                 "DropLaunch",
@@ -902,16 +909,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            JusticeBossDiagnosticContext context =
-                JusticeBossDiagnosticUtility.ActiveContext!;
+            JusticeBossDiagnosticContext context = JusticeBossDiagnosticUtility.ActiveContext!;
             context.dropCellSequence++;
-            List<IntVec3>? reserved = __args.Length > 3
-                ? __args[3] as List<IntVec3>
-                : null;
+            List<IntVec3>? reserved = __args.Length > 3 ? __args[3] as List<IntVec3> : null;
+            Map? map = __args.Length > 0 ? __args[0] as Map : null;
             __state = JusticeBossDiagnosticUtility.BeginScope(
                 "DropCell.Search",
                 "searchIndex=" + context.dropCellSequence
-                    + " map=" + ((__args.Length > 0 ? __args[0] : null) as Map)?.uniqueID
+                    + " map=" + (map?.uniqueID ?? -1)
                     + " center=" + (__args.Length > 1 ? __args[1] : null)
                     + " reserved=" + (reserved?.Count ?? 0));
         }
@@ -926,10 +931,10 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            object? cell = __args.Length > 4 ? __args[4] : null;
             JusticeBossDiagnosticUtility.EndScope(
                 __state,
-                "success=" + __result + " cell=" + cell,
+                "success=" + __result
+                    + " cell=" + (__args.Length > 4 ? __args[4] : null),
                 JusticeBossDiagnosticUtility.DropCellSlowMs);
         }
 
@@ -943,14 +948,11 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            JusticeBossDiagnosticContext context =
-                JusticeBossDiagnosticUtility.ActiveContext!;
+            JusticeBossDiagnosticContext context = JusticeBossDiagnosticUtility.ActiveContext!;
             int previousPodIndex = context.activePodIndex;
             context.podSequence++;
             context.activePodIndex = context.podSequence;
-            List<Pawn>? group = __args.Length > 3
-                ? __args[3] as List<Pawn>
-                : null;
+            List<Pawn>? group = __args.Length > 3 ? __args[3] as List<Pawn> : null;
             __state = JusticeBossDiagnosticUtility.BeginScope(
                 "DropPod.Create",
                 "cell=" + (__args.Length > 2 ? __args[2] : null)
@@ -987,10 +989,11 @@ namespace MAP_MechanoidMechanitor
             ActiveTransporterInfo? info = __args.Length > 2
                 ? __args[2] as ActiveTransporterInfo
                 : null;
+            Map? map = __args.Length > 1 ? __args[1] as Map : null;
             __state = JusticeBossDiagnosticUtility.BeginScope(
                 "DropPod.MakeDropPodAt",
                 "cell=" + (__args.Length > 0 ? __args[0] : null)
-                    + " map=" + ((__args.Length > 1 ? __args[1] : null) as Map)?.uniqueID
+                    + " map=" + (map?.uniqueID ?? -1)
                     + " contents=" + (info?.innerContainer?.Count ?? -1));
         }
 
@@ -1025,8 +1028,6 @@ namespace MAP_MechanoidMechanitor
             JusticeBossDiagnosticContext context = new JusticeBossDiagnosticContext
             {
                 eventId = eventId,
-                waveIndex = 0,
-                retryCount = 0,
                 role = "Infrastructure",
             };
             __state = JusticeBossDiagnosticUtility.BeginScope(
@@ -1046,11 +1047,9 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            List<Thing>? deployed = __args.Length > 9
-                ? __args[9] as List<Thing>
-                : null;
-            List<PawnKindDef>? failedGuards = __args.Length > 10
-                ? __args[10] as List<PawnKindDef>
+            List<Thing>? deployed = __args.Length > 8 ? __args[8] as List<Thing> : null;
+            List<PawnKindDef>? failedGuards = __args.Length > 9
+                ? __args[9] as List<PawnKindDef>
                 : null;
             JusticeBossDiagnosticUtility.EndScope(
                 __state,
@@ -1069,8 +1068,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            JusticeBossDiagnosticContext context =
-                JusticeBossDiagnosticUtility.ActiveContext!;
+            JusticeBossDiagnosticContext context = JusticeBossDiagnosticUtility.ActiveContext!;
             context.placementSequence++;
             ThingDef? def = __args.Length > 2 ? __args[2] as ThingDef : null;
             __state = JusticeBossDiagnosticUtility.BeginScope(
@@ -1108,8 +1106,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            JusticeBossDiagnosticContext context =
-                JusticeBossDiagnosticUtility.ActiveContext!;
+            JusticeBossDiagnosticContext context = JusticeBossDiagnosticUtility.ActiveContext!;
             int previousPodIndex = context.activePodIndex;
             context.podSequence++;
             context.activePodIndex = context.podSequence;
@@ -1206,8 +1203,6 @@ namespace MAP_MechanoidMechanitor
             JusticeBossDiagnosticContext context = new JusticeBossDiagnosticContext
             {
                 eventId = entry?.justiceEventId ?? 0,
-                waveIndex = 0,
-                retryCount = 0,
                 role = entry?.role.ToString() ?? "Unknown",
                 landingPawnId = entry?.pawn?.thingIDNumber ?? -1,
                 activePawnIndex = 0,
