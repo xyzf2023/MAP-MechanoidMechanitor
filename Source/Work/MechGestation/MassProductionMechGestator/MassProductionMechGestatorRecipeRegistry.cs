@@ -121,7 +121,14 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            // ITab_Bills 浮层会按 -displayPriority 排序；缓存仍用稳定顺序，避免依赖 DefDatabase 加载序。
+            // 此处只决定动态配方追加到 ThingDef.AllRecipes 时的稳定顺序。
+            //
+            // ITab_Bills 创建菜单选项时会传入 orderInPriority = -recipe.displayPriority，
+            // FloatMenu 随后按 orderInPriority 从大到小排序，因此原版最终菜单实际上是
+            // displayPriority 数值越小越靠前。
+            //
+            // 量产仓专用 ITab 会在菜单构建期间临时统一复活配方优先级，
+            // 使全部 mechResurrection 配方形成连续的置顶区块。
             accepted.Sort(CompareRecipesForStableAppend);
 
             if (Prefs.DevMode)
