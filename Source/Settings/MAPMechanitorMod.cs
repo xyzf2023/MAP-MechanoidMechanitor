@@ -105,6 +105,13 @@ namespace MAP_MechanoidMechanitor
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.JusticeBoss.Description".Translate());
 
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label"
+                    .Translate(),
+                ref settings.enableJusticeBossDiagnosticLogging,
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description"
+                    .Translate());
+
             if (ModsConfig.RoyaltyActive)
             {
                 listing.CheckboxLabeled(
