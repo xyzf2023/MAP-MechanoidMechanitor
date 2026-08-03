@@ -219,8 +219,18 @@ namespace MAP_MechanoidMechanitor
 
             CompJusticeBossController? comp = FindControllerOnMap();
             string compText = comp?.GetDebugStatus() ?? "controller=null";
-            Log.Message("[MAP JusticeBoss] " + trackerText + " | " + compText);
-            Messages.Message(compText, MessageTypeDefOf.NeutralEvent, historical: false);
+            string diagnosticText = JusticeBossDiagnosticUtility.GetLastStatusText();
+            Log.Message(
+                "[MAP JusticeBoss] "
+                + trackerText
+                + " | "
+                + compText
+                + " | "
+                + diagnosticText);
+            Messages.Message(
+                compText + "\n" + diagnosticText,
+                MessageTypeDefOf.NeutralEvent,
+                historical: false);
         }
     }
 }
