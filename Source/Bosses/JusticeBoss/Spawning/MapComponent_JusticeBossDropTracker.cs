@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
-using Verse.AI;
 using Verse.AI.Group;
 
 namespace MAP_MechanoidMechanitor
@@ -188,44 +186,9 @@ namespace MAP_MechanoidMechanitor
 
             if (!lord.ownedPawns.Contains(pawn))
             {
+                // Lord.AddPawn already invokes the current LordToil's duty refresh.
+                // Do not end the pawn's job or refresh all duties a second time here.
                 lord.AddPawn(pawn);
-            }
-
-            pawn.jobs?.EndCurrentJob(JobCondition.InterruptForced);
-
-            bool diagnosticEnabled = JusticeBossDiagnosticUtility.Enabled;
-            JusticeBossDiagnosticScopeState dutyState = default;
-            if (diagnosticEnabled)
-            {
-                dutyState = JusticeBossDiagnosticUtility.BeginScope(
-                    "LordToil.UpdateAllDuties",
-                    "lord=" + lord.GetHashCode()
-                        + " toil="
-                        + JusticeBossDiagnosticUtility.Sanitize(
-                            lord.CurLordToil?.GetType().FullName));
-            }
-
-            try
-            {
-                lord.CurLordToil?.UpdateAllDuties();
-                if (diagnosticEnabled)
-                {
-                    JusticeBossDiagnosticUtility.EndScope(
-                        dutyState,
-                        "returned=true",
-                        JusticeBossDiagnosticUtility.LandingSlowMs);
-                }
-            }
-            catch (Exception exception)
-            {
-                if (diagnosticEnabled)
-                {
-                    JusticeBossDiagnosticUtility.FinalizeScope(
-                        exception,
-                        dutyState);
-                }
-
-                throw;
             }
 
             landedAndAssignedCount++;
