@@ -8,6 +8,8 @@
   <!-- 模块：数据处理 -->
   <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>征召状态切换时立即刷新动态分配</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>
   <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>开启后，受动态分配管理的机械族在征召或取消征召时，会在下一游戏刻立即重新评估当前状态、特化模式和请求额度。批量征召会按监管者合并预算重算。关闭后，征召状态变化将在目标原有的状态检查间隔到期时处理。</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>
+  <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>启用加载期死亡诊断日志（临时）</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>
+  <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>默认关闭。仅用于诊断旧存档加载时机械族机械师突然死亡。开启后会在加载期间记录健康状态、意识、Hediff、数据处理记录与关键调用栈，可能产生较多日志。诊断完成后应关闭。此选项不会阻止死亡或修改存档。</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>
 
   <!-- 模块：植入体功能 -->
   <MAP_MechanoidMechanitor.Settings.BrainImplants.Label>启用机械族机械师使用并安装脑部植入体</MAP_MechanoidMechanitor.Settings.BrainImplants.Label>

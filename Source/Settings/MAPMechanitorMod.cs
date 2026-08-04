@@ -40,6 +40,14 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description"
                     .Translate());
 
+            // 临时诊断开关：实时读取，无需缓存或重启提示。
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label"
+                    .Translate(),
+                ref Settings.enableLoadDeathDiagnosticLogging,
+                "MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description"
+                    .Translate());
+
             bool previousEnablePortraitDisplayForAllSaves =
                 Settings.enablePortraitDisplayForAllSaves;
             listing.CheckboxLabeled(

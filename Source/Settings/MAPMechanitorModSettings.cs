@@ -17,6 +17,14 @@ namespace MAP_MechanoidMechanitor
         public bool enableImmediateDraftStateRefresh = true;
 
         /// <summary>
+        /// 临时诊断开关，默认关闭。
+        /// 仅用于诊断旧存档加载时机械族机械师突然死亡：开启后会输出较详细的加载顺序、
+        /// Hediff 与调用栈日志，以帮助定位 Pawn 从存活变为死亡的具体方法与步骤。
+        /// 不影响任何游戏逻辑；诊断完成后应关闭以避免日志堆积。
+        /// </summary>
+        public bool enableLoadDeathDiagnosticLogging = false;
+
+        /// <summary>
         /// 是否在打开肃清指令机械主脑通讯 UI 时显示连接加载界面。
         /// 默认开启。
         /// </summary>
@@ -89,6 +97,10 @@ namespace MAP_MechanoidMechanitor
                 ref enableImmediateDraftStateRefresh,
                 "enableImmediateDraftStateRefresh",
                 true);
+            Scribe_Values.Look(
+                ref enableLoadDeathDiagnosticLogging,
+                "enableLoadDeathDiagnosticLogging",
+                false);
             Scribe_Values.Look(
                 ref enablePurgeDirectiveUiLoadingScreen,
                 "enablePurgeDirectiveUiLoadingScreen",

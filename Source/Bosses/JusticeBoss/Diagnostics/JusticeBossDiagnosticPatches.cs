@@ -16,7 +16,7 @@ namespace MAP_MechanoidMechanitor
     {
         public int eventId;
         public int waveIndex;
-        public int retryCount;
+        public int retryCount = 0;
         public string role = "Unknown";
         public int pawnSequence;
         public int dropCellSequence;
