@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using MAP_MechanoidMechanitor.Scenarios;
 using UnityEngine;
 using Verse;
@@ -18,6 +19,13 @@ namespace MAP_MechanoidMechanitor
         public MAPMechanitorMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<MAPMechanitorModSettings>();
+
+            // 正义 BOSS 诊断会在主菜单阶段安装，此时 Current.Game 尚未创建。
+            // 必须先确定性安装 TickManager 安全替换，不能依赖
+            // [StaticConstructorOnStartup] 类型之间未定义的执行顺序。
+            RuntimeHelpers.RunClassConstructor(
+                typeof(JusticeBossDiagnosticStartupSafety).TypeHandle);
+
             LongEventHandler.ExecuteWhenFinished(
                 JusticeBossDiagnosticsRuntime.Refresh);
         }
