@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor
         {
             Settings = GetSettings<MAPMechanitorModSettings>();
             LongEventHandler.ExecuteWhenFinished(
-                JusticeBossDiagnosticPatchManager.Refresh);
+                JusticeBossDiagnosticsRuntime.Refresh);
         }
 
         public override string SettingsCategory() => "[MAP]机械族机械师";
@@ -118,7 +118,7 @@ namespace MAP_MechanoidMechanitor
             if (diagnosticLoggingBefore
                 != settings.enableJusticeBossDiagnosticLogging)
             {
-                JusticeBossDiagnosticPatchManager.Refresh();
+                JusticeBossDiagnosticsRuntime.Refresh();
             }
 
             if (ModsConfig.RoyaltyActive)
@@ -257,7 +257,7 @@ namespace MAP_MechanoidMechanitor
         public override void WriteSettings()
         {
             CommitProductivityCoreWorkSpeedBuffer();
-            JusticeBossDiagnosticPatchManager.Refresh();
+            JusticeBossDiagnosticsRuntime.Refresh();
             base.WriteSettings();
         }
 
