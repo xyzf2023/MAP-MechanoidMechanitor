@@ -1,41 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 using HarmonyLib;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 数据处理注册表与生命周期协调器诊断补丁：仅记录，不修改任何逻辑，
-    /// 不改变 ClearTarget / SuspendOverseerRuntime 的返回值与执行顺序。
+    /// 数据处理注册表及生命周期诊断。只读取持久化列表与运行时标记，
+    /// 不调用任何同步、清理或规划方法。
     /// </summary>
     internal static class LoadDeathDataProcessingDiagnosticPatches
     {
-        // 使用中性的低优先级：仅保证诊断补丁不抢在现有补丁之前，不改变任何既有补丁优先级。
-        private const int ClearTargetPrefixPriority = Priority.Low;
-        private const int ClearTargetPostfixPriority = Priority.Low;
-
-        // ===== GameComponent_DataProcessingAllocationRegistry.ExposeData =====
-
         [HarmonyPatch(
             typeof(GameComponent_DataProcessingAllocationRegistry),
             nameof(GameComponent_DataProcessingAllocationRegistry.ExposeData))]
-        internal static class DataRegistryExposeDataPatch
+        internal static class RegistryExposeDataPatch
         {
             private static void Prefix(GameComponent_DataProcessingAllocationRegistry __instance)
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    if (Scribe.mode != LoadSaveMode.LoadingVars
-                        && Scribe.mode != LoadSaveMode.ResolvingCrossRefs
-                        && Scribe.mode != LoadSaveMode.PostLoadInit)
+                    if (!LoadDeathDiagnosticUtility.Active
+                        || (Scribe.mode != LoadSaveMode.LoadingVars
+                            && Scribe.mode != LoadSaveMode.ResolvingCrossRefs
+                            && Scribe.mode != LoadSaveMode.PostLoadInit))
                     {
                         return;
                     }
@@ -43,8 +29,8 @@ namespace MAP_MechanoidMechanitor
                     LoadDeathDiagnosticUtility.Write(
                         "DataRegistry.ExposeData.Enter",
                         null,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + SummarizeRegistry(__instance, "正义", "刃"),
+                        "MODE=" + Scribe.mode
+                        + " RAW={" + LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(__instance, null) + "}",
                         false);
                 }
                 catch
@@ -57,14 +43,10 @@ namespace MAP_MechanoidMechanitor
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    if (Scribe.mode != LoadSaveMode.LoadingVars
-                        && Scribe.mode != LoadSaveMode.ResolvingCrossRefs
-                        && Scribe.mode != LoadSaveMode.PostLoadInit)
+                    if (!LoadDeathDiagnosticUtility.Active
+                        || (Scribe.mode != LoadSaveMode.LoadingVars
+                            && Scribe.mode != LoadSaveMode.ResolvingCrossRefs
+                            && Scribe.mode != LoadSaveMode.PostLoadInit))
                     {
                         return;
                     }
@@ -72,8 +54,8 @@ namespace MAP_MechanoidMechanitor
                     LoadDeathDiagnosticUtility.Write(
                         "DataRegistry.ExposeData.Exit",
                         null,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + SummarizeRegistry(__instance, "正义", "刃"),
+                        "MODE=" + Scribe.mode
+                        + " RAW={" + LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(__instance, null) + "}",
                         false);
                 }
                 catch
@@ -83,18 +65,16 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        // ===== GameComponent_DataProcessingAllocationRegistry.LoadedGame =====
-
         [HarmonyPatch(
             typeof(GameComponent_DataProcessingAllocationRegistry),
             nameof(GameComponent_DataProcessingAllocationRegistry.LoadedGame))]
-        internal static class DataRegistryLoadedGamePatch
+        internal static class RegistryLoadedGamePatch
         {
             private static void Prefix(GameComponent_DataProcessingAllocationRegistry __instance)
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active)
                     {
                         return;
                     }
@@ -102,9 +82,8 @@ namespace MAP_MechanoidMechanitor
                     LoadDeathDiagnosticUtility.Write(
                         "DataRegistry.LoadedGame.Enter",
                         null,
-                        "PROGRAM=" + SafeProgramState()
-                        + " " + SummarizeRegistry(__instance, "正义", "刃"),
-                        false);
+                        "RAW={" + LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(__instance, null) + "}",
+                        true);
                 }
                 catch
                 {
@@ -116,7 +95,7 @@ namespace MAP_MechanoidMechanitor
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active)
                     {
                         return;
                     }
@@ -124,8 +103,7 @@ namespace MAP_MechanoidMechanitor
                     LoadDeathDiagnosticUtility.Write(
                         "DataRegistry.LoadedGame.Exit",
                         null,
-                        "PROGRAM=" + SafeProgramState()
-                        + " " + SummarizeRegistry(__instance, "正义", "刃"),
+                        "RAW={" + LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(__instance, null) + "}",
                         false);
                 }
                 catch
@@ -135,37 +113,34 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        // ===== ClearTarget =====
-
         [HarmonyPatch(
             typeof(GameComponent_DataProcessingAllocationRegistry),
             nameof(GameComponent_DataProcessingAllocationRegistry.ClearTarget),
             new[] { typeof(Pawn) })]
-        [HarmonyPriority(ClearTargetPrefixPriority)]
-        internal static class DataRegistryClearTargetPatch
+        [HarmonyPriority(Priority.First)]
+        internal static class RegistryClearTargetPatch
         {
             private static void Prefix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
-                Pawn? target)
+                Pawn? target,
+                ref string? __state)
             {
+                __state = null;
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active
+                        || !LoadDeathDiagnosticUtility.ShouldTracePawn(target))
                     {
                         return;
                     }
 
+                    __state = LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(__instance, target);
                     LoadDeathDiagnosticUtility.Write(
                         "DataRegistry.ClearTarget.Enter",
                         target,
-                        "SCRIBE=" + Scribe.mode
-                        + " HAS_DYNAMIC_CONFIG=" + HasDynamicConfig(__instance, target)
-                        + " HAS_ACTUAL_ALLOCATION=" + HasActualAllocation(__instance, target)
-                        + " CURRENT_COMMAND_FOCUS="
-                            + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(target)
-                        + " TARGET_DEAD=" + (target?.Dead == true)
-                        + " TARGET_DESTROYED=" + (target?.Destroyed == true)
-                        + " | DIAGNOSTIC PREFIX ENTERED (执行顺序不假定)",
+                        "RAW_BEFORE={" + __state + "}"
+                        + " PAWN_BEFORE={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(target) + "}"
+                        + " HEDIFFS_BEFORE={" + LoadDeathDiagnosticUtility.BuildPassiveHediffList(target) + "}",
                         true);
                 }
                 catch
@@ -174,14 +149,15 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            [HarmonyPriority(ClearTargetPostfixPriority)]
             private static void Postfix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
-                Pawn? target)
+                Pawn? target,
+                bool __runOriginal,
+                string? __state)
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active || __state == null)
                     {
                         return;
                     }
@@ -189,8 +165,11 @@ namespace MAP_MechanoidMechanitor
                     LoadDeathDiagnosticUtility.Write(
                         "DataRegistry.ClearTarget.Exit",
                         target,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(target),
+                        "RUN_ORIGINAL=" + __runOriginal
+                        + " RAW_BEFORE={" + __state + "}"
+                        + " RAW_AFTER={" + LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(__instance, target) + "}"
+                        + " PAWN_AFTER={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(target) + "}"
+                        + " HEDIFFS_AFTER={" + LoadDeathDiagnosticUtility.BuildPassiveHediffList(target) + "}",
                         false);
                 }
                 catch
@@ -200,30 +179,34 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        // ===== SuspendOverseerRuntime =====
-
         [HarmonyPatch(
             typeof(DataProcessingPawnLifecycleCoordinator),
-            nameof(DataProcessingPawnLifecycleCoordinator.SuspendOverseerRuntime))]
-        internal static class LifecycleSuspendOverseerRuntimePatch
+            nameof(DataProcessingPawnLifecycleCoordinator.SuspendOverseerRuntime),
+            new[] { typeof(GameComponent_DataProcessingAllocationRegistry), typeof(Pawn) })]
+        [HarmonyPriority(Priority.First)]
+        internal static class SuspendOverseerRuntimePatch
         {
             private static void Prefix(
                 GameComponent_DataProcessingAllocationRegistry registry,
-                Pawn? overseer)
+                Pawn? overseer,
+                ref string? __state)
             {
+                __state = null;
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active
+                        || !LoadDeathDiagnosticUtility.ShouldTracePawn(overseer))
                     {
                         return;
                     }
 
+                    __state = LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(registry, overseer);
                     LoadDeathDiagnosticUtility.Write(
                         "Lifecycle.SuspendOverseerRuntime.Enter",
                         overseer,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(overseer)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(overseer),
+                        "RAW_BEFORE={" + __state + "}"
+                        + " PAWN_BEFORE={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(overseer) + "}"
+                        + " HEDIFFS_BEFORE={" + LoadDeathDiagnosticUtility.BuildPassiveHediffList(overseer) + "}",
                         true);
                 }
                 catch
@@ -234,11 +217,13 @@ namespace MAP_MechanoidMechanitor
 
             private static void Postfix(
                 GameComponent_DataProcessingAllocationRegistry registry,
-                Pawn? overseer)
+                Pawn? overseer,
+                bool __runOriginal,
+                string? __state)
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active || __state == null)
                     {
                         return;
                     }
@@ -246,9 +231,11 @@ namespace MAP_MechanoidMechanitor
                     LoadDeathDiagnosticUtility.Write(
                         "Lifecycle.SuspendOverseerRuntime.Exit",
                         overseer,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(overseer)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(overseer),
+                        "RUN_ORIGINAL=" + __runOriginal
+                        + " RAW_BEFORE={" + __state + "}"
+                        + " RAW_AFTER={" + LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(registry, overseer) + "}"
+                        + " PAWN_AFTER={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(overseer) + "}"
+                        + " HEDIFFS_AFTER={" + LoadDeathDiagnosticUtility.BuildPassiveHediffList(overseer) + "}",
                         false);
                 }
                 catch
@@ -258,74 +245,36 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        // ===== 其他数据处理同步入口 =====
-
         [HarmonyPatch(
             typeof(GameComponent_DataProcessingAllocationRegistry),
             nameof(GameComponent_DataProcessingAllocationRegistry.SyncHediffForTarget),
             new[] { typeof(Pawn) })]
-        internal static class DataRegistrySyncHediffForTargetPatch
+        internal static class SyncHediffForTargetPatch
         {
             private static void Prefix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
-                Pawn? target)
+                Pawn? target,
+                ref LoadDeathPawnState? __state)
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    if (target != null && !LoadDeathDiagnosticUtility.ShouldTracePawn(target)
-                        && Scribe.mode == LoadSaveMode.Inactive)
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "DataRegistry.SyncHediffForTarget.Enter",
-                        target,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(target)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(target),
-                        false);
-                }
-                catch
-                {
-                    // 忽略。
-                }
+                CaptureRegistryPawnOperation(
+                    __instance,
+                    target,
+                    "DataRegistry.SyncHediffForTarget.Enter",
+                    "GameComponent_DataProcessingAllocationRegistry.SyncHediffForTarget",
+                    ref __state);
             }
 
             private static void Postfix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
-                Pawn? target)
+                Pawn? target,
+                LoadDeathPawnState? __state)
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    if (target != null && !LoadDeathDiagnosticUtility.ShouldTracePawn(target)
-                        && Scribe.mode == LoadSaveMode.Inactive)
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "DataRegistry.SyncHediffForTarget.Exit",
-                        target,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(target)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(target),
-                        false);
-                }
-                catch
-                {
-                    // 忽略。
-                }
+                CompleteRegistryPawnOperation(
+                    __instance,
+                    target,
+                    "DataRegistry.SyncHediffForTarget.Exit",
+                    "GameComponent_DataProcessingAllocationRegistry.SyncHediffForTarget",
+                    __state);
             }
         }
 
@@ -333,68 +282,32 @@ namespace MAP_MechanoidMechanitor
             typeof(GameComponent_DataProcessingAllocationRegistry),
             nameof(GameComponent_DataProcessingAllocationRegistry.SyncHediffsForOverseer),
             new[] { typeof(Pawn) })]
-        internal static class DataRegistrySyncHediffsForOverseerPatch
+        internal static class SyncHediffsForOverseerPatch
         {
             private static void Prefix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
-                Pawn? overseer)
+                Pawn? overseer,
+                ref LoadDeathPawnState? __state)
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    if (overseer != null && !LoadDeathDiagnosticUtility.ShouldTracePawn(overseer)
-                        && Scribe.mode == LoadSaveMode.Inactive)
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "DataRegistry.SyncHediffsForOverseer.Enter",
-                        overseer,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(overseer)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(overseer),
-                        false);
-                }
-                catch
-                {
-                    // 忽略。
-                }
+                CaptureRegistryPawnOperation(
+                    __instance,
+                    overseer,
+                    "DataRegistry.SyncHediffsForOverseer.Enter",
+                    "GameComponent_DataProcessingAllocationRegistry.SyncHediffsForOverseer",
+                    ref __state);
             }
 
             private static void Postfix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
-                Pawn? overseer)
+                Pawn? overseer,
+                LoadDeathPawnState? __state)
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    if (overseer != null && !LoadDeathDiagnosticUtility.ShouldTracePawn(overseer)
-                        && Scribe.mode == LoadSaveMode.Inactive)
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "DataRegistry.SyncHediffsForOverseer.Exit",
-                        overseer,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(overseer)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(overseer),
-                        false);
-                }
-                catch
-                {
-                    // 忽略。
-                }
+                CompleteRegistryPawnOperation(
+                    __instance,
+                    overseer,
+                    "DataRegistry.SyncHediffsForOverseer.Exit",
+                    "GameComponent_DataProcessingAllocationRegistry.SyncHediffsForOverseer",
+                    __state);
             }
         }
 
@@ -402,32 +315,30 @@ namespace MAP_MechanoidMechanitor
             typeof(GameComponent_DataProcessingAllocationRegistry),
             nameof(GameComponent_DataProcessingAllocationRegistry.ClearOverseer),
             new[] { typeof(Pawn) })]
-        internal static class DataRegistryClearOverseerPatch
+        [HarmonyPriority(Priority.First)]
+        internal static class ClearOverseerPatch
         {
             private static void Prefix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
-                Pawn? overseer)
+                Pawn? overseer,
+                ref string? __state)
             {
+                __state = null;
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active
+                        || !LoadDeathDiagnosticUtility.ShouldTracePawn(overseer))
                     {
                         return;
                     }
 
-                    if (overseer != null && !LoadDeathDiagnosticUtility.ShouldTracePawn(overseer)
-                        && Scribe.mode == LoadSaveMode.Inactive)
-                    {
-                        return;
-                    }
-
+                    __state = LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(__instance, overseer);
                     LoadDeathDiagnosticUtility.Write(
                         "DataRegistry.ClearOverseer.Enter",
                         overseer,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(overseer)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(overseer),
-                        false);
+                        "RAW_BEFORE={" + __state + "}"
+                        + " PAWN_BEFORE={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(overseer) + "}",
+                        true);
                 }
                 catch
                 {
@@ -437,17 +348,13 @@ namespace MAP_MechanoidMechanitor
 
             private static void Postfix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
-                Pawn? overseer)
+                Pawn? overseer,
+                bool __runOriginal,
+                string? __state)
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    if (overseer != null && !LoadDeathDiagnosticUtility.ShouldTracePawn(overseer)
-                        && Scribe.mode == LoadSaveMode.Inactive)
+                    if (!LoadDeathDiagnosticUtility.Active || __state == null)
                     {
                         return;
                     }
@@ -455,9 +362,10 @@ namespace MAP_MechanoidMechanitor
                     LoadDeathDiagnosticUtility.Write(
                         "DataRegistry.ClearOverseer.Exit",
                         overseer,
-                        "SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(overseer)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(overseer),
+                        "RUN_ORIGINAL=" + __runOriginal
+                        + " RAW_BEFORE={" + __state + "}"
+                        + " RAW_AFTER={" + LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(__instance, overseer) + "}"
+                        + " PAWN_AFTER={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(overseer) + "}",
                         false);
                 }
                 catch
@@ -471,246 +379,107 @@ namespace MAP_MechanoidMechanitor
             typeof(GameComponent_DataProcessingAllocationRegistry),
             nameof(GameComponent_DataProcessingAllocationRegistry.PrepareForExternalConsciousnessLoss),
             new[] { typeof(Pawn), typeof(float) })]
-        internal static class DataRegistryPrepareForExternalConsciousnessLossPatch
+        internal static class PrepareForExternalConsciousnessLossPatch
         {
             private static void Prefix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
                 Pawn? overseer,
-                float consciousnessOffsetLoss)
+                float consciousnessOffsetLoss,
+                ref LoadDeathPawnState? __state)
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    if (overseer != null && !LoadDeathDiagnosticUtility.ShouldTracePawn(overseer)
-                        && Scribe.mode == LoadSaveMode.Inactive)
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "DataRegistry.PrepareForExternalConsciousnessLoss.Enter",
-                        overseer,
-                        "OFFSET_LOSS=" + consciousnessOffsetLoss.ToString("F4")
-                        + " SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(overseer)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(overseer),
-                        false);
-                }
-                catch
-                {
-                    // 忽略。
-                }
+                CaptureRegistryPawnOperation(
+                    __instance,
+                    overseer,
+                    "DataRegistry.PrepareForExternalConsciousnessLoss.Enter",
+                    "GameComponent_DataProcessingAllocationRegistry.PrepareForExternalConsciousnessLoss"
+                    + " OFFSET_LOSS=" + consciousnessOffsetLoss.ToString("F4"),
+                    ref __state);
             }
 
             private static void Postfix(
                 GameComponent_DataProcessingAllocationRegistry __instance,
                 Pawn? overseer,
-                float consciousnessOffsetLoss)
+                float consciousnessOffsetLoss,
+                LoadDeathPawnState? __state)
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    if (overseer != null && !LoadDeathDiagnosticUtility.ShouldTracePawn(overseer)
-                        && Scribe.mode == LoadSaveMode.Inactive)
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "DataRegistry.PrepareForExternalConsciousnessLoss.Exit",
-                        overseer,
-                        "OFFSET_LOSS=" + consciousnessOffsetLoss.ToString("F4")
-                        + " SCRIBE=" + Scribe.mode
-                        + " " + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(overseer)
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(overseer),
-                        false);
-                }
-                catch
-                {
-                    // 忽略。
-                }
+                CompleteRegistryPawnOperation(
+                    __instance,
+                    overseer,
+                    "DataRegistry.PrepareForExternalConsciousnessLoss.Exit",
+                    "GameComponent_DataProcessingAllocationRegistry.PrepareForExternalConsciousnessLoss"
+                    + " OFFSET_LOSS=" + consciousnessOffsetLoss.ToString("F4"),
+                    __state);
             }
         }
 
-        // ===== 只读辅助 =====
-
-        private static string SummarizeRegistry(
-            GameComponent_DataProcessingAllocationRegistry? registry,
-            string nameA,
-            string nameB)
+        private static void CaptureRegistryPawnOperation(
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn? pawn,
+            string eventName,
+            string methodName,
+            ref LoadDeathPawnState? state)
         {
-            StringBuilder sb = new StringBuilder();
+            state = null;
             try
             {
-                if (registry == null)
+                if (!LoadDeathDiagnosticUtility.Active
+                    || !LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
                 {
-                    return "REGISTRY=null";
+                    return;
                 }
 
-                // 通过反射只读读取内部集合数量。
-                int actual = ReadCount(registry, "records");
-                int dynamicTargets = ReadCount(registry, "dynamicTargetRecords");
-                int specs = ReadCount(registry, "specializationRecords");
-                sb.Append("ACTUAL_ALLOC_COUNT=").Append(actual);
-                sb.Append(' ');
-                sb.Append("DYNAMIC_TARGET_COUNT=").Append(dynamicTargets);
-                sb.Append(' ');
-                sb.Append("SPEC_COUNT=").Append(specs);
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            try
-            {
-                sb.Append(' ');
-                sb.Append("RELATED_TO_WATCHED=")
-                    .Append(BuildWatchedRelatedSnapshot(registry));
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            return sb.ToString();
-        }
-
-        private static int ReadCount(object registry, string fieldName)
-        {
-            try
-            {
-                System.Reflection.FieldInfo? field = AccessTools.Field(
-                    registry.GetType(), fieldName);
-                object? value = field?.GetValue(registry);
-                if (value is System.Collections.ICollection collection)
-                {
-                    return collection.Count;
-                }
+                state = LoadDeathDiagnosticUtility.CaptureState(
+                    pawn,
+                    methodName,
+                    null,
+                    true);
+                LoadDeathDiagnosticUtility.WriteWithStack(
+                    eventName,
+                    pawn,
+                    "RAW_BEFORE={" + LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(registry, pawn) + "}"
+                    + " PAWN_BEFORE={" + state.passivePawnBefore + "}"
+                    + " HEDIFFS_BEFORE={" + state.hediffsBefore + "}",
+                    state.stackTrace);
             }
             catch
             {
                 // 忽略。
             }
-
-            return -1;
         }
 
-        private static string BuildWatchedRelatedSnapshot(
-            GameComponent_DataProcessingAllocationRegistry? registry)
+        private static void CompleteRegistryPawnOperation(
+            GameComponent_DataProcessingAllocationRegistry registry,
+            Pawn? pawn,
+            string eventName,
+            string methodName,
+            LoadDeathPawnState? state)
         {
-            // 仅记录与“正义/刃/关注集合”相关的记录；不扫描全部世界 Pawn。
-            StringBuilder sb = new StringBuilder();
             try
             {
-                if (registry == null)
+                if (!LoadDeathDiagnosticUtility.Active || state == null)
                 {
-                    return "null";
+                    return;
                 }
 
-                List<Pawn> watched = CollectWatchedPawns();
-                if (watched.Count == 0)
-                {
-                    return "none";
-                }
-
-                foreach (Pawn pawn in watched)
-                {
-                    sb.Append('{');
-                    sb.Append(LoadDeathDiagnosticUtility.SafeThingId(pawn));
-                    sb.Append(":targetSteps=").Append(registry.GetStepsForTarget(pawn));
-                    sb.Append(",overseerSteps=").Append(registry.GetTotalStepsForOverseer(pawn));
-                    sb.Append('}');
-                }
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            return sb.ToString();
-        }
-
-        private static List<Pawn> CollectWatchedPawns()
-        {
-            List<Pawn> result = new List<Pawn>();
-            try
-            {
-                // 通过当前已关注集合无法直接持有 Pawn 引用（只存 ThingID），
-                // 退而求其次：在加载阶段使用“正义/刃”名称与注册表已加载记录判断。
-                // 注意：CurrentRegistry 是注册表内部私有属性，此处改用其对外公开的
-                // RegisteredMechanitors 只读属性，避免访问受保护成员。
-                foreach (Pawn p in GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors)
-                {
-                    if (p != null)
-                    {
-                        result.Add(p);
-                    }
-                }
+                LoadDeathDiagnosticUtility.Write(
+                    eventName,
+                    pawn,
+                    "DEAD_BEFORE=" + state.deadBefore
+                    + " DEAD_AFTER=" + LoadDeathDiagnosticUtility.SafeDead(pawn)
+                    + " RAW_BEFORE={" + state.dataProcessingBefore + "}"
+                    + " RAW_AFTER={" + LoadDeathDiagnosticUtility.BuildRawRegistrySnapshot(registry, pawn) + "}"
+                    + " PAWN_AFTER={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(pawn) + "}"
+                    + " HEDIFFS_AFTER={" + LoadDeathDiagnosticUtility.BuildPassiveHediffList(pawn) + "}",
+                    false);
+                LoadDeathDiagnosticUtility.ReportFirstDeadTransition(
+                    state,
+                    pawn,
+                    methodName,
+                    null);
             }
             catch
             {
                 // 忽略。
-            }
-
-            return result;
-        }
-
-        private static bool HasDynamicConfig(
-            GameComponent_DataProcessingAllocationRegistry? registry,
-            Pawn? target)
-        {
-            try
-            {
-                if (registry == null || target == null)
-                {
-                    return false;
-                }
-
-                return registry.GetDynamicTargetRecord(null, target) != null;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private static bool HasActualAllocation(
-            GameComponent_DataProcessingAllocationRegistry? registry,
-            Pawn? target)
-        {
-            try
-            {
-                if (registry == null || target == null)
-                {
-                    return false;
-                }
-
-                return registry.GetStepsForTarget(target) > 0;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private static string SafeProgramState()
-        {
-            try
-            {
-                return Current.ProgramState.ToString();
-            }
-            catch
-            {
-                return "<error>";
             }
         }
     }
