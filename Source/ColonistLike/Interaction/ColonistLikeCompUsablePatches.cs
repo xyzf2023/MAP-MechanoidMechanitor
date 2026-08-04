@@ -7,6 +7,41 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
+    internal static class ColonistLikeCompUsableUtility
+    {
+        public static bool IsAuthorizedMechanicalCompUsableUser(
+            Pawn? pawn,
+            CompUsable? usable)
+        {
+            if (pawn == null
+                || pawn.Destroyed
+                || pawn.Dead
+                || pawn.Downed
+                || pawn.Deathresting
+                || pawn.IsSelfShutdown()
+                || pawn.jobs == null
+                || !pawn.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
+            {
+                return false;
+            }
+
+            if (CompColonistLikeFloatMenuUser.PawnCanUseColonistLikeFloatMenu(pawn))
+            {
+                return true;
+            }
+
+            return usable != null
+                && MechanoidMechanitorImplantUtility.CanUseMechanitorImplant(
+                    pawn,
+                    usable.parent);
+        }
+    }
+
     // CompUsable normally rejects every non-flesh pawn before running its other checks.
     // This transpiler keeps the vanilla Pawn.RaceProps getter and replaces only the
     // RaceProperties.IsFlesh value production with a helper that ORs in authorized player
@@ -67,25 +102,10 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             CompUsable usable)
         {
-            if (raceProps.IsFlesh)
-            {
-                return true;
-            }
-
-            if (pawn == null || !raceProps.IsMechanoid)
-            {
-                return false;
-            }
-
-            if (CompColonistLikeFloatMenuUser.PawnCanUseColonistLikeFloatMenu(pawn))
-            {
-                return true;
-            }
-
-            return usable != null
-                && MechanoidMechanitorImplantUtility.CanUseMechanitorImplant(
+            return raceProps.IsFlesh
+                || ColonistLikeCompUsableUtility.IsAuthorizedMechanicalCompUsableUser(
                     pawn,
-                    usable.parent);
+                    usable);
         }
 
         [HarmonyTranspiler]
@@ -178,15 +198,12 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!HasPawnLoadBeforeRaceProps(codes, racePropsIndex))
-            {
-                return false;
-            }
-
-            return true;
+            return HasPawnLoadBeforeRaceProps(codes, racePropsIndex);
         }
 
-        private static bool HasPawnLoadBeforeRaceProps(List<CodeInstruction> codes, int racePropsIndex)
+        private static bool HasPawnLoadBeforeRaceProps(
+            List<CodeInstruction> codes,
+            int racePropsIndex)
         {
             int searchStart = System.Math.Max(0, racePropsIndex - 3);
             for (int i = racePropsIndex - 1; i >= searchStart; i--)
@@ -214,7 +231,7 @@ namespace MAP_MechanoidMechanitor
             CodeInstruction loadPawn = CreateLoadPawnParameterInstruction();
             CodeInstruction loadUsable = new CodeInstruction(OpCodes.Ldarg_0);
 
-            // Stack before expansion: RaceProperties
+            // Stack before expansion: RaceProperties.
             // Inserted loads push Pawn and CompUsable -> RaceProperties, Pawn, CompUsable.
             TransferEntryLabels(getterInstruction, loadPawn);
 
@@ -266,7 +283,224 @@ namespace MAP_MechanoidMechanitor
             source.labels.Clear();
         }
 
-        private static bool CanSafelyInsertBefore(List<CodeInstruction> codes, int insertIndex)
+        private static bool CanSafelyInsertBefore(
+            List<CodeInstruction> codes,
+            int insertIndex)
+        {
+            if (insertIndex < 0 || insertIndex >= codes.Count)
+            {
+                return false;
+            }
+
+            return codes[insertIndex].blocks.Count == 0;
+        }
+    }
+
+    // CompUsable's gizmo first asks the player to choose a user. Vanilla accepts only pawns
+    // reported by Pawn.IsPlayerControlled, which excludes independent mechanoid mechanitors.
+    // Replace only that local gate and leave CanBeUsedBy, messages, targeting and jobs vanilla.
+    [HarmonyPatch]
+    public static class Patch_CompUsable_ValidateTarget_ColonistLikeMechanoid
+    {
+        private const string LogPrefix =
+            "[MAP-机械族机械师] ColonistLikeCompUsablePatches：";
+
+        private const int ErrorKeyTargetMethodNotFound = 879345405;
+        private const int ErrorKeyResolveFailed = 879345406;
+        private const int ErrorKeyMatchCount = 879345407;
+        private const int ErrorKeyExpandFailed = 879345408;
+
+        private static MethodInfo? cachedValidateTargetMethod;
+        private static MethodInfo? cachedCanBeUsedByMethod;
+
+        private static MethodBase? TargetMethod()
+        {
+            MethodInfo? method = GetValidateTargetMethod();
+            if (method == null)
+            {
+                Log.ErrorOnce(
+                    $"{LogPrefix}未找到 CompUsable.ValidateTarget(LocalTargetInfo, bool)，补丁未应用。",
+                    ErrorKeyTargetMethodNotFound);
+            }
+
+            return method;
+        }
+
+        private static bool Prepare()
+        {
+            return GetValidateTargetMethod() != null;
+        }
+
+        private static MethodInfo? GetValidateTargetMethod()
+        {
+            if (cachedValidateTargetMethod != null)
+            {
+                return cachedValidateTargetMethod;
+            }
+
+            cachedValidateTargetMethod = AccessTools.Method(
+                typeof(CompUsable),
+                nameof(CompUsable.ValidateTarget),
+                new[] { typeof(LocalTargetInfo), typeof(bool) });
+
+            return cachedValidateTargetMethod;
+        }
+
+        private static MethodInfo? GetCanBeUsedByMethod()
+        {
+            if (cachedCanBeUsedByMethod != null)
+            {
+                return cachedCanBeUsedByMethod;
+            }
+
+            cachedCanBeUsedByMethod = AccessTools.Method(
+                typeof(CompUsable),
+                nameof(CompUsable.CanBeUsedBy),
+                new[] { typeof(Pawn), typeof(bool), typeof(bool) });
+
+            return cachedCanBeUsedByMethod;
+        }
+
+        private static bool IsPlayerControlledOrAuthorizedCompUsableUser(
+            Pawn pawn,
+            CompUsable usable)
+        {
+            return pawn.IsPlayerControlled
+                || ColonistLikeCompUsableUtility.IsAuthorizedMechanicalCompUsableUser(
+                    pawn,
+                    usable);
+        }
+
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> Transpiler(
+            IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
+
+            MethodInfo? isPlayerControlledGetter = AccessTools.PropertyGetter(
+                typeof(Pawn),
+                nameof(Pawn.IsPlayerControlled));
+            MethodInfo? canBeUsedByMethod = GetCanBeUsedByMethod();
+            MethodInfo? helperMethod = AccessTools.Method(
+                typeof(Patch_CompUsable_ValidateTarget_ColonistLikeMechanoid),
+                nameof(IsPlayerControlledOrAuthorizedCompUsableUser));
+
+            if (isPlayerControlledGetter == null
+                || canBeUsedByMethod == null
+                || helperMethod == null)
+            {
+                Log.ErrorOnce(
+                    $"{LogPrefix}无法解析使用者目标门控相关方法，补丁未应用。",
+                    ErrorKeyResolveFailed);
+                return codes;
+            }
+
+            if (!TryFindUniquePlayerControlledGateAnchor(
+                    codes,
+                    isPlayerControlledGetter,
+                    canBeUsedByMethod,
+                    out int getterIndex,
+                    out int matchCount))
+            {
+                Log.ErrorOnce(
+                    $"{LogPrefix}CompUsable.ValidateTarget 中 Pawn.IsPlayerControlled 语义锚点预期仅 1 处，实际找到 {matchCount} 处，补丁未应用。",
+                    ErrorKeyMatchCount);
+                return codes;
+            }
+
+            if (!TryExpandPlayerControlledGetter(codes, getterIndex, helperMethod))
+            {
+                Log.ErrorOnce(
+                    $"{LogPrefix}无法安全扩展 IsPlayerControlled 值生产点（目标 getter 上存在 exception block），补丁未应用。",
+                    ErrorKeyExpandFailed);
+                return codes;
+            }
+
+            return codes;
+        }
+
+        private static bool TryFindUniquePlayerControlledGateAnchor(
+            List<CodeInstruction> codes,
+            MethodInfo isPlayerControlledGetter,
+            MethodInfo canBeUsedByMethod,
+            out int getterIndex,
+            out int matchCount)
+        {
+            getterIndex = -1;
+            matchCount = 0;
+
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (!codes[i].Calls(isPlayerControlledGetter)
+                    || !HasCallAfter(codes, i + 1, canBeUsedByMethod))
+                {
+                    continue;
+                }
+
+                matchCount++;
+                getterIndex = i;
+            }
+
+            return matchCount == 1;
+        }
+
+        private static bool HasCallAfter(
+            List<CodeInstruction> codes,
+            int startIndex,
+            MethodInfo method)
+        {
+            for (int i = startIndex; i < codes.Count; i++)
+            {
+                if (codes[i].Calls(method))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryExpandPlayerControlledGetter(
+            List<CodeInstruction> codes,
+            int getterIndex,
+            MethodInfo helperMethod)
+        {
+            if (!CanSafelyInsertBefore(codes, getterIndex))
+            {
+                return false;
+            }
+
+            CodeInstruction getterInstruction = codes[getterIndex];
+            CodeInstruction loadUsable = new CodeInstruction(OpCodes.Ldarg_0);
+
+            // Stack before expansion: Pawn.
+            // Loading this adds CompUsable -> Pawn, CompUsable.
+            TransferEntryLabels(getterInstruction, loadUsable);
+            codes.Insert(getterIndex, loadUsable);
+
+            CodeInstruction helperCall = codes[getterIndex + 1];
+            helperCall.opcode = OpCodes.Call;
+            helperCall.operand = helperMethod;
+
+            return true;
+        }
+
+        private static void TransferEntryLabels(
+            CodeInstruction source,
+            CodeInstruction target)
+        {
+            if (source.labels.Count == 0)
+            {
+                return;
+            }
+
+            target.labels.AddRange(source.labels);
+            source.labels.Clear();
+        }
+
+        private static bool CanSafelyInsertBefore(
+            List<CodeInstruction> codes,
+            int insertIndex)
         {
             if (insertIndex < 0 || insertIndex >= codes.Count)
             {
