@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -95,16 +94,6 @@ namespace MAP_MechanoidMechanitor
                 Pawn? pawn = entry.pawn;
                 if (pawn == null || pawn.Destroyed || pawn.Dead)
                 {
-                    if (JusticeBossDiagnosticUtility.Enabled && pawn != null)
-                    {
-                        JusticeBossDiagnosticUtility.ForgetPawn(pawn);
-                        JusticeBossDiagnosticUtility.Write(
-                            "Tracker.RemovedInvalid",
-                            "pawnId=" + pawn.thingIDNumber
-                                + " destroyed=" + pawn.Destroyed
-                                + " dead=" + pawn.Dead);
-                    }
-
                     pending.RemoveAt(i);
                     continue;
                 }
@@ -125,20 +114,9 @@ namespace MAP_MechanoidMechanitor
                 bool held = pawn.ParentHolder is IThingHolder;
                 if (!inWorld && !held && pawn.MapHeld == null)
                 {
-                    if (JusticeBossDiagnosticUtility.Enabled)
-                    {
-                        JusticeBossDiagnosticUtility.ForgetPawn(pawn);
-                        JusticeBossDiagnosticUtility.Write(
-                            "Tracker.Lost",
-                            "pawnId=" + pawn.thingIDNumber
-                                + " pawn="
-                                + JusticeBossDiagnosticUtility.Sanitize(
-                                    pawn.LabelShort));
-                    }
-
                     Log.WarningOnce(
                         "[MAP JusticeBoss] Pending drop pawn lost before landing: "
-                        + pawn.LabelShort,
+                            + pawn.LabelShort,
                         pawn.thingIDNumber ^ 0x4A05);
                     pending.RemoveAt(i);
                 }
@@ -183,45 +161,14 @@ namespace MAP_MechanoidMechanitor
                     faction,
                     entry.justiceEventId,
                     entry.anchorCell)
-                : JusticeBossLordUtility.EnsureAssaultLord(map, faction, entry.justiceEventId);
+                : JusticeBossLordUtility.EnsureAssaultLord(
+                    map,
+                    faction,
+                    entry.justiceEventId);
 
             if (!lord.ownedPawns.Contains(pawn))
             {
-                bool diagnosticEnabled = JusticeBossDiagnosticUtility.Enabled;
-                JusticeBossDiagnosticScopeState dutyState = default;
-                if (diagnosticEnabled)
-                {
-                    dutyState = JusticeBossDiagnosticUtility.BeginScope(
-                        "LordToil.UpdateAllDuties",
-                        "lord=" + lord.GetHashCode()
-                            + " toil="
-                            + JusticeBossDiagnosticUtility.Sanitize(
-                                lord.CurLordToil?.GetType().FullName)
-                            + " source=Lord.AddPawn");
-                }
-
-                try
-                {
-                    lord.AddPawn(pawn);
-                    if (diagnosticEnabled)
-                    {
-                        JusticeBossDiagnosticUtility.EndScope(
-                            dutyState,
-                            "returned=true source=Lord.AddPawn",
-                            JusticeBossDiagnosticUtility.LandingSlowMs);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    if (diagnosticEnabled)
-                    {
-                        JusticeBossDiagnosticUtility.FinalizeScope(
-                            exception,
-                            dutyState);
-                    }
-
-                    throw;
-                }
+                lord.AddPawn(pawn);
             }
 
             landedAndAssignedCount++;
