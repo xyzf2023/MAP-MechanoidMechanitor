@@ -52,7 +52,6 @@ namespace MAP_MechanoidMechanitor
     internal sealed class JusticeBossCriticalDutyFrame
     {
         public long startedTimestamp;
-        public LordToil_AssaultColony? toil;
         public Lord? lord;
         public int lastPawnIndex = -1;
         public Pawn? lastPawn;
@@ -92,11 +91,12 @@ namespace MAP_MechanoidMechanitor
         internal static bool HasLandingContext =>
             Enabled && activeContext != null;
 
-        internal static void OpenSession()
+        internal static bool OpenSession()
         {
             lock (SyncRoot)
             {
                 CloseWriterUnsafe();
+                ioFailureReported = false;
                 try
                 {
                     traceStream = new FileStream(
@@ -106,22 +106,23 @@ namespace MAP_MechanoidMechanitor
                         FileShare.ReadWrite);
                     traceWriter = new StreamWriter(
                         traceStream,
-                        new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+                        new UTF8Encoding(false))
                     {
                         AutoFlush = true,
                     };
                     sequence = 0L;
-                    ioFailureReported = false;
                     WriteLineUnsafe(
                         "SESSION_BEGIN",
                         "process=" + Process.GetCurrentProcess().Id
                             + " file=" + Sanitize(TraceFilePath),
                         includeContext: false);
+                    return traceWriter != null;
                 }
                 catch (Exception exception)
                 {
                     CloseWriterUnsafe();
                     ReportIoFailure(exception);
+                    return false;
                 }
             }
         }
@@ -188,18 +189,17 @@ namespace MAP_MechanoidMechanitor
                 return exception;
             }
 
-            string stage = exception == null
-                ? "LANDING_END"
-                : "LANDING_EXCEPTION";
             string detail = DescribePawn(state.pawn)
                 + " elapsedMs=" + FormatElapsed(state.startedTimestamp);
             if (exception != null)
             {
-                detail += " exception=" + Sanitize(exception.GetType().FullName)
-                    + " message=" + Sanitize(exception.Message);
+                detail += ExceptionDetail(exception);
             }
 
-            Write(stage, detail, requireEnabled: false);
+            Write(
+                exception == null ? "LANDING_END" : "LANDING_EXCEPTION",
+                detail,
+                requireEnabled: false);
             activeContext = state.previousContext;
             return exception;
         }
@@ -227,7 +227,7 @@ namespace MAP_MechanoidMechanitor
                     dormantComp = dormantComp,
                 };
 
-            StringBuilder detail = new StringBuilder(256);
+            StringBuilder detail = new StringBuilder(320);
             detail.Append(DescribePawn(pawn));
             if (lord != null)
             {
@@ -236,9 +236,7 @@ namespace MAP_MechanoidMechanitor
 
             if (dormantComp != null)
             {
-                detail.Append(" awakeBefore=").Append(SafeAwake(dormantComp));
-                detail.Append(" wokeUpTickBefore=").Append(dormantComp.wokeUpTick);
-                detail.Append(" wakeUpOnTickBefore=").Append(dormantComp.wakeUpOnTick);
+                AppendDormantFields(detail, dormantComp, "Before");
             }
 
             if (!string.IsNullOrWhiteSpace(extra))
@@ -259,7 +257,7 @@ namespace MAP_MechanoidMechanitor
                 return exception;
             }
 
-            StringBuilder detail = new StringBuilder(256);
+            StringBuilder detail = new StringBuilder(320);
             detail.Append(DescribePawn(state.pawn));
             if (state.lord != null)
             {
@@ -268,18 +266,14 @@ namespace MAP_MechanoidMechanitor
 
             if (state.dormantComp != null)
             {
-                detail.Append(" awakeAfter=").Append(SafeAwake(state.dormantComp));
-                detail.Append(" wokeUpTickAfter=").Append(state.dormantComp.wokeUpTick);
-                detail.Append(" wakeUpOnTickAfter=").Append(state.dormantComp.wakeUpOnTick);
+                AppendDormantFields(detail, state.dormantComp, "After");
             }
 
             detail.Append(" elapsedMs=").Append(
                 FormatElapsed(state.startedTimestamp));
             if (exception != null)
             {
-                detail.Append(" exception=").Append(
-                    Sanitize(exception.GetType().FullName));
-                detail.Append(" message=").Append(Sanitize(exception.Message));
+                detail.Append(ExceptionDetail(exception));
             }
 
             Write(
@@ -301,7 +295,6 @@ namespace MAP_MechanoidMechanitor
                 new JusticeBossCriticalDutyFrame
                 {
                     startedTimestamp = Stopwatch.GetTimestamp(),
-                    toil = toil,
                     lord = toil.lord,
                 };
 
@@ -369,8 +362,7 @@ namespace MAP_MechanoidMechanitor
                 + " elapsedMs=" + FormatElapsed(frame.startedTimestamp);
             if (exception != null)
             {
-                detail += " exception=" + Sanitize(exception.GetType().FullName)
-                    + " message=" + Sanitize(exception.Message);
+                detail += ExceptionDetail(exception);
             }
 
             Write(
@@ -379,35 +371,7 @@ namespace MAP_MechanoidMechanitor
                     : "UPDATE_DUTIES_EXCEPTION",
                 detail,
                 requireEnabled: false);
-
-            if (dutyFrames != null && dutyFrames.Count > 0)
-            {
-                if (ReferenceEquals(dutyFrames.Peek(), frame))
-                {
-                    dutyFrames.Pop();
-                }
-                else
-                {
-                    Stack<JusticeBossCriticalDutyFrame> rebuilt =
-                        new Stack<JusticeBossCriticalDutyFrame>();
-                    while (dutyFrames.Count > 0)
-                    {
-                        JusticeBossCriticalDutyFrame current = dutyFrames.Pop();
-                        if (ReferenceEquals(current, frame))
-                        {
-                            break;
-                        }
-
-                        rebuilt.Push(current);
-                    }
-
-                    while (rebuilt.Count > 0)
-                    {
-                        dutyFrames.Push(rebuilt.Pop());
-                    }
-                }
-            }
-
+            PopDutyFrame(frame);
             return exception;
         }
 
@@ -423,12 +387,10 @@ namespace MAP_MechanoidMechanitor
 
             lock (SyncRoot)
             {
-                if (traceWriter == null)
+                if (traceWriter != null)
                 {
-                    return;
+                    WriteLineUnsafe(stage, detail, includeContext: true);
                 }
-
-                WriteLineUnsafe(stage, detail, includeContext: true);
             }
         }
 
@@ -444,24 +406,45 @@ namespace MAP_MechanoidMechanitor
                 Pawn_JobTracker? jobs = pawn.jobs;
                 Lord? lord = pawn.GetLord();
                 CompCanBeDormant? dormant = pawn.TryGetComp<CompCanBeDormant>();
-                return "actualPawnId=" + pawn.thingIDNumber
-                    + " actualPawnKind=" + Sanitize(pawn.kindDef?.defName)
-                    + " actualPawnRace=" + Sanitize(pawn.def?.defName)
-                    + " job=" + Sanitize(jobs?.curJob?.def?.defName)
-                    + " jobDriver=" + Sanitize(jobs?.curDriver?.GetType().FullName)
-                    + " duty=" + Sanitize(pawn.mindState?.duty?.def?.defName)
-                    + " lord=" + (lord == null ? "null" : DescribeLord(lord))
-                    + " spawned=" + pawn.Spawned
-                    + " map=" + (pawn.Map?.uniqueID ?? -1)
-                    + " position=" + (pawn.Spawned ? pawn.Position.ToString() : "unspawned")
-                    + " downed=" + pawn.Downed
-                    + " dead=" + pawn.Dead
-                    + " dormant=" + (dormant == null ? "none" : (!SafeAwake(dormant)).ToString());
+                StringBuilder result = new StringBuilder(320);
+                result.Append("actualPawnId=").Append(pawn.thingIDNumber);
+                result.Append(" actualPawnKind=").Append(
+                    Sanitize(pawn.kindDef?.defName));
+                result.Append(" actualPawnRace=").Append(
+                    Sanitize(pawn.def?.defName));
+                result.Append(" job=").Append(
+                    Sanitize(jobs?.curJob?.def?.defName));
+                result.Append(" jobDriver=").Append(
+                    Sanitize(jobs?.curDriver?.GetType().FullName));
+                result.Append(" duty=").Append(
+                    Sanitize(pawn.mindState?.duty?.def?.defName));
+                result.Append(" lord=").Append(
+                    lord == null ? "null" : DescribeLord(lord));
+                result.Append(" spawned=").Append(pawn.Spawned);
+                result.Append(" map=").Append(pawn.Map?.uniqueID ?? -1);
+                result.Append(" position=").Append(
+                    pawn.Spawned ? pawn.Position.ToString() : "unspawned");
+                result.Append(" downed=").Append(pawn.Downed);
+                result.Append(" dead=").Append(pawn.Dead);
+                if (dormant == null)
+                {
+                    result.Append(" dormantComp=none");
+                }
+                else
+                {
+                    result.Append(" dormantComp=").Append(
+                        Sanitize(dormant.GetType().FullName));
+                    result.Append(" wokeUpTick=").Append(dormant.wokeUpTick);
+                    result.Append(" wakeUpOnTick=").Append(dormant.wakeUpOnTick);
+                }
+
+                return result.ToString();
             }
             catch (Exception exception)
             {
                 return "actualPawnId=" + pawn.thingIDNumber
-                    + " describeException=" + Sanitize(exception.GetType().FullName);
+                    + " describeException="
+                    + Sanitize(exception.GetType().FullName);
             }
         }
 
@@ -501,6 +484,25 @@ namespace MAP_MechanoidMechanitor
                 .Replace('\t', ' ');
         }
 
+        private static void AppendDormantFields(
+            StringBuilder detail,
+            CompCanBeDormant comp,
+            string suffix)
+        {
+            detail.Append(" dormantCompType").Append(suffix).Append('=')
+                .Append(Sanitize(comp.GetType().FullName));
+            detail.Append(" wokeUpTick").Append(suffix).Append('=')
+                .Append(comp.wokeUpTick);
+            detail.Append(" wakeUpOnTick").Append(suffix).Append('=')
+                .Append(comp.wakeUpOnTick);
+        }
+
+        private static string ExceptionDetail(Exception exception)
+        {
+            return " exception=" + Sanitize(exception.GetType().FullName)
+                + " message=" + Sanitize(exception.Message);
+        }
+
         private static string FormatElapsed(long startedTimestamp)
         {
             if (startedTimestamp <= 0L)
@@ -515,15 +517,36 @@ namespace MAP_MechanoidMechanitor
             return milliseconds.ToString("0.###");
         }
 
-        private static bool SafeAwake(CompCanBeDormant comp)
+        private static void PopDutyFrame(
+            JusticeBossCriticalDutyFrame frame)
         {
-            try
+            if (dutyFrames == null || dutyFrames.Count == 0)
             {
-                return comp.Awake;
+                return;
             }
-            catch
+
+            if (ReferenceEquals(dutyFrames.Peek(), frame))
             {
-                return false;
+                dutyFrames.Pop();
+                return;
+            }
+
+            Stack<JusticeBossCriticalDutyFrame> temporary =
+                new Stack<JusticeBossCriticalDutyFrame>();
+            while (dutyFrames.Count > 0)
+            {
+                JusticeBossCriticalDutyFrame current = dutyFrames.Pop();
+                if (ReferenceEquals(current, frame))
+                {
+                    break;
+                }
+
+                temporary.Push(current);
+            }
+
+            while (temporary.Count > 0)
+            {
+                dutyFrames.Push(temporary.Pop());
             }
         }
 
@@ -640,12 +663,11 @@ namespace MAP_MechanoidMechanitor
 
         private static void Install()
         {
-            if (installed)
+            if (installed || !JusticeBossCriticalTrace.OpenSession())
             {
                 return;
             }
 
-            JusticeBossCriticalTrace.OpenSession();
             try
             {
                 PatchRequired(
@@ -711,11 +733,7 @@ namespace MAP_MechanoidMechanitor
                 installed = false;
                 JusticeBossCriticalTrace.Write(
                     "PATCH_INSTALL_EXCEPTION",
-                    "exception="
-                        + JusticeBossCriticalTrace.Sanitize(
-                            exception.GetType().FullName)
-                        + " message="
-                        + JusticeBossCriticalTrace.Sanitize(exception.Message),
+                    ExceptionText(exception),
                     requireEnabled: false);
                 JusticeBossCriticalTrace.CloseSession("install-failed");
                 Log.Error(
@@ -785,6 +803,15 @@ namespace MAP_MechanoidMechanitor
             }
 
             return method;
+        }
+
+        private static string ExceptionText(Exception exception)
+        {
+            return "exception="
+                + JusticeBossCriticalTrace.Sanitize(
+                    exception.GetType().FullName)
+                + " message="
+                + JusticeBossCriticalTrace.Sanitize(exception.Message);
         }
     }
 
