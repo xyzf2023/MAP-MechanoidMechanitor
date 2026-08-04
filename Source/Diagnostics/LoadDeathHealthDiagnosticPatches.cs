@@ -1,100 +1,80 @@
 using System;
-using System.Reflection;
 using HarmonyLib;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 原版健康状态诊断补丁：纯观察性质，全部 Prefix 继续执行原方法，
-    /// 不阻止/延迟任何逻辑，不修改返回值。
+    /// 原版健康状态诊断补丁。全部 Prefix/Postfix/Finalizer 仅记录，不改变返回值或异常。
     /// </summary>
     internal static class LoadDeathHealthDiagnosticPatches
     {
-        // ===== Game.LoadGame 会话边界 =====
-
         [HarmonyPatch(typeof(Game), nameof(Game.LoadGame))]
-        internal static class GameLoadGameSessionPatch
+        internal static class GameLoadGamePatch
         {
             private static void Prefix()
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.ResetSession("Game.LoadGame Prefix");
-                    LoadDeathDiagnosticUtility.Write(
-                        "Game.LoadGame.Enter",
-                        null,
-                        "存档加载开始。",
-                        false);
-                }
-                catch
-                {
-                    // 忽略。
-                }
+                LoadDeathDiagnosticUtility.BeginLoadSession("Game.LoadGame Prefix");
+                LoadDeathDiagnosticUtility.Write(
+                    "Game.LoadGame.Enter",
+                    null,
+                    "存档加载开始。",
+                    false);
             }
 
             private static void Postfix()
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
+                LoadDeathDiagnosticUtility.Write(
+                    "Game.LoadGame.Exit",
+                    null,
+                    "Game.LoadGame 正常返回。",
+                    false);
+            }
 
-                    LoadDeathDiagnosticUtility.Write(
-                        "Game.LoadGame.Exit",
-                        null,
-                        "存档加载返回（未执行任何清理或同步）。",
-                        false);
-                }
-                catch
-                {
-                    // 忽略。
-                }
+            private static Exception? Finalizer(Exception? __exception)
+            {
+                LoadDeathDiagnosticUtility.EndLoadSession(
+                    "Game.LoadGame Finalizer",
+                    __exception);
+                return __exception;
             }
         }
 
-        // ===== Pawn_HealthTracker.ExposeData =====
-
-        [HarmonyPatch(
-            typeof(Pawn_HealthTracker),
-            nameof(Pawn_HealthTracker.ExposeData))]
+        [HarmonyPatch(typeof(Pawn_HealthTracker), nameof(Pawn_HealthTracker.ExposeData))]
         internal static class HealthExposeDataPatch
         {
-            private static void Prefix(Pawn_HealthTracker __instance)
+            private static void Prefix(
+                Pawn_HealthTracker __instance,
+                ref LoadDeathPawnState? __state)
             {
+                __state = null;
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active
+                        || (Scribe.mode != LoadSaveMode.LoadingVars
+                            && Scribe.mode != LoadSaveMode.ResolvingCrossRefs
+                            && Scribe.mode != LoadSaveMode.PostLoadInit))
                     {
                         return;
                     }
 
-                    if (Scribe.mode != LoadSaveMode.LoadingVars
-                        && Scribe.mode != LoadSaveMode.ResolvingCrossRefs
-                        && Scribe.mode != LoadSaveMode.PostLoadInit)
+                    Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
+                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
                     {
                         return;
                     }
 
-                    Pawn? pawn =
-                        LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    if (pawn == null || !LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
-                    {
-                        return;
-                    }
-
+                    __state = LoadDeathDiagnosticUtility.CaptureState(
+                        pawn,
+                        "Pawn_HealthTracker.ExposeData",
+                        null,
+                        false);
                     LoadDeathDiagnosticUtility.Write(
                         "Health.ExposeData.Enter",
                         pawn,
-                        "SCRIBE=" + Scribe.mode
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
+                        "MODE=" + Scribe.mode
+                        + " BEFORE={" + __state.passivePawnBefore + "}"
+                        + " HEDIFFS={" + __state.hediffsBefore + "}",
                         false);
                 }
                 catch
@@ -103,25 +83,19 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            private static void Postfix(Pawn_HealthTracker __instance)
+            private static void Postfix(
+                Pawn_HealthTracker __instance,
+                LoadDeathPawnState? __state)
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active)
                     {
                         return;
                     }
 
-                    if (Scribe.mode != LoadSaveMode.LoadingVars
-                        && Scribe.mode != LoadSaveMode.ResolvingCrossRefs
-                        && Scribe.mode != LoadSaveMode.PostLoadInit)
-                    {
-                        return;
-                    }
-
-                    Pawn? pawn =
-                        LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    if (pawn == null || !LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
+                    Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
+                    if (__state == null && !LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
                     {
                         return;
                     }
@@ -129,9 +103,17 @@ namespace MAP_MechanoidMechanitor
                     LoadDeathDiagnosticUtility.Write(
                         "Health.ExposeData.Exit",
                         pawn,
-                        "SCRIBE=" + Scribe.mode
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
+                        "MODE=" + Scribe.mode
+                        + " DEAD_BEFORE=" + (__state?.deadBefore.ToString() ?? "unavailable")
+                        + " DEAD_AFTER=" + LoadDeathDiagnosticUtility.SafeDead(pawn)
+                        + " AFTER={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(pawn) + "}"
+                        + " HEDIFFS={" + LoadDeathDiagnosticUtility.BuildPassiveHediffList(pawn) + "}",
                         false);
+                    LoadDeathDiagnosticUtility.ReportFirstDeadTransition(
+                        __state,
+                        pawn,
+                        "Pawn_HealthTracker.ExposeData",
+                        null);
                 }
                 catch
                 {
@@ -140,361 +122,221 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        // ===== Pawn_HealthTracker.CheckForStateChange =====
-
         [HarmonyPatch(
             typeof(Pawn_HealthTracker),
-            nameof(Pawn_HealthTracker.CheckForStateChange))]
+            nameof(Pawn_HealthTracker.CheckForStateChange),
+            new[] { typeof(DamageInfo?), typeof(Hediff) })]
         internal static class HealthCheckForStateChangePatch
         {
-            private sealed class State
-            {
-                public string? thingId;
-                public bool deadBefore;
-                public float? consciousnessBefore;
-                public string? triggeringHediffDefName;
-                public string? methodName;
-            }
-
             private static void Prefix(
                 Pawn_HealthTracker __instance,
                 DamageInfo? dinfo,
                 Hediff hediff,
-                ref State __state)
+                ref LoadDeathPawnState? __state)
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn? pawn =
-                        LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    __state = new State
-                    {
-                        methodName = "Pawn_HealthTracker.CheckForStateChange",
-                    };
-
-                    if (pawn == null)
-                    {
-                        return;
-                    }
-
-                    __state.thingId = LoadDeathDiagnosticUtility.SafeThingId(pawn);
-                    __state.deadBefore = pawn.Dead;
-                    LoadDeathDiagnosticUtility.TryGetConsciousness(
-                        pawn, out float cons);
-                    __state.consciousnessBefore = cons;
-                    __state.triggeringHediffDefName = hediff?.def?.defName;
-
-                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "Health.CheckForStateChange.Enter",
-                        pawn,
-                        "DAMAGE=" + LoadDeathDiagnosticUtility.FormatDamageInfo(
-                            new object[] { dinfo! })
-                        + " | HEDIFF=" + (__state.triggeringHediffDefName ?? "null")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
-                        true);
-                }
-                catch
-                {
-                    // 忽略。不在 Prefix 中调用死亡判断。
-                }
+                CaptureHealthOperation(
+                    __instance,
+                    "Health.CheckForStateChange.Enter",
+                    "Pawn_HealthTracker.CheckForStateChange",
+                    hediff,
+                    FormatDamage(dinfo),
+                    ref __state);
             }
 
             private static void Postfix(
                 Pawn_HealthTracker __instance,
-                ref State __state)
+                Hediff hediff,
+                LoadDeathPawnState? __state)
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn? pawn =
-                        LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    if (pawn == null)
-                    {
-                        return;
-                    }
-
-                    bool deadAfter = pawn.Dead;
-                    LoadDeathDiagnosticUtility.TryGetConsciousness(
-                        pawn, out float consAfter);
-                    float? consBefore = __state?.consciousnessBefore;
-
-                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn)
-                        && !(__state != null && __state.deadBefore == false
-                            && deadAfter == true))
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "Health.CheckForStateChange.Exit",
-                        pawn,
-                        "DEAD_BEFORE=" + (__state?.deadBefore.ToString() ?? "?")
-                        + " DEAD_AFTER=" + deadAfter
-                        + " CONS_BEFORE=" + (consBefore?.ToString("F4") ?? "null")
-                        + " CONS_AFTER=" + consAfter.ToString("F4")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
-                        false);
-
-                    if (__state != null && __state.deadBefore == false
-                        && deadAfter == true)
-                    {
-                        LoadDeathDiagnosticUtility.ReportFirstDeadTransition(
-                            __state.methodName ?? "Pawn_HealthTracker.CheckForStateChange",
-                            pawn,
-                            __state.triggeringHediffDefName,
-                            __state.deadBefore,
-                            deadAfter,
-                            consBefore,
-                            consAfter,
-                            "CheckForStateChange 调用后存活->死亡。");
-                    }
-                }
-                catch
-                {
-                    // 忽略。
-                }
+                CompleteHealthOperation(
+                    __instance,
+                    "Health.CheckForStateChange.Exit",
+                    "Pawn_HealthTracker.CheckForStateChange",
+                    hediff,
+                    __state);
             }
         }
-
-        // ===== Hediff 变化入口：AddHediff / RemoveHediff / Notify_HediffChanged =====
 
         [HarmonyPatch(
             typeof(Pawn_HealthTracker),
             nameof(Pawn_HealthTracker.AddHediff),
-            new[] { typeof(Hediff), typeof(BodyPartRecord), typeof(DamageInfo?), typeof(DamageWorker.DamageResult) })]
+            new[]
+            {
+                typeof(Hediff),
+                typeof(BodyPartRecord),
+                typeof(DamageInfo?),
+                typeof(DamageWorker.DamageResult)
+            })]
         internal static class HealthAddHediffPatch
         {
-            private sealed class State
+            private static void Prefix(
+                Pawn_HealthTracker __instance,
+                Hediff hediff,
+                DamageInfo? dinfo,
+                ref LoadDeathPawnState? __state)
             {
-                public bool deadBefore;
-                public float? consciousnessBefore;
-                public string? triggeringHediffDefName;
-                public string? methodName;
-                public string? thingId;
+                CaptureHealthOperation(
+                    __instance,
+                    "Health.AddHediff.Enter",
+                    "Pawn_HealthTracker.AddHediff(Hediff,...)",
+                    hediff,
+                    FormatDamage(dinfo),
+                    ref __state);
             }
 
-            private static void Prefix(Pawn_HealthTracker __instance, Hediff hediff, ref State __state)
+            private static void Postfix(
+                Pawn_HealthTracker __instance,
+                Hediff hediff,
+                LoadDeathPawnState? __state)
             {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    __state = new State
-                    {
-                        methodName = "Pawn_HealthTracker.AddHediff(Hediff,...)",
-                        triggeringHediffDefName = hediff?.def?.defName,
-                    };
-                    if (pawn == null)
-                    {
-                        return;
-                    }
-
-                    __state.thingId = LoadDeathDiagnosticUtility.SafeThingId(pawn);
-                    __state.deadBefore = pawn.Dead;
-                    LoadDeathDiagnosticUtility.TryGetConsciousness(pawn, out float cons);
-                    __state.consciousnessBefore = cons;
-
-                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "Health.AddHediff.Enter",
-                        pawn,
-                        "HEDIFF=" + (__state.triggeringHediffDefName ?? "null")
-                        + " TYPE=" + (hediff?.GetType().Name ?? "?")
-                        + " SEV=" + (hediff?.Severity.ToString("F2") ?? "?")
-                        + " PART=" + (hediff?.Part?.LabelCap ?? "null")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
-                        true);
-                }
-                catch
-                {
-                    // 忽略。
-                }
-            }
-
-            private static void Postfix(Pawn_HealthTracker __instance, ref State __state)
-            {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    if (pawn == null)
-                    {
-                        return;
-                    }
-
-                    bool deadAfter = pawn.Dead;
-                    LoadDeathDiagnosticUtility.TryGetConsciousness(pawn, out float consAfter);
-                    float? consBefore = __state?.consciousnessBefore;
-
-                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn)
-                        && !(__state != null && __state.deadBefore == false && deadAfter == true))
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "Health.AddHediff.Exit",
-                        pawn,
-                        "DEAD_BEFORE=" + (__state?.deadBefore.ToString() ?? "?")
-                        + " DEAD_AFTER=" + deadAfter
-                        + " CONS_BEFORE=" + (consBefore?.ToString("F4") ?? "null")
-                        + " CONS_AFTER=" + consAfter.ToString("F4")
-                        + " CONS_DELTA=" + ((consBefore.HasValue)
-                            ? (consAfter - consBefore.Value).ToString("F4")
-                            : "null")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
-                        false);
-
-                    if (__state != null && __state.deadBefore == false && deadAfter == true)
-                    {
-                        LoadDeathDiagnosticUtility.ReportFirstDeadTransition(
-                            __state.methodName ?? "Pawn_HealthTracker.AddHediff",
-                            pawn,
-                            __state.triggeringHediffDefName,
-                            __state.deadBefore,
-                            deadAfter,
-                            consBefore,
-                            consAfter,
-                            "AddHediff 调用后存活->死亡。");
-                    }
-                }
-                catch
-                {
-                    // 忽略。
-                }
+                CompleteHealthOperation(
+                    __instance,
+                    "Health.AddHediff.Exit",
+                    "Pawn_HealthTracker.AddHediff(Hediff,...)",
+                    hediff,
+                    __state);
             }
         }
 
         [HarmonyPatch(
             typeof(Pawn_HealthTracker),
-            nameof(Pawn_HealthTracker.RemoveHediff))]
+            nameof(Pawn_HealthTracker.RemoveHediff),
+            new[] { typeof(Hediff) })]
         internal static class HealthRemoveHediffPatch
         {
-            private sealed class State
+            private static void Prefix(
+                Pawn_HealthTracker __instance,
+                Hediff hediff,
+                ref LoadDeathPawnState? __state)
             {
-                public bool deadBefore;
-                public float? consciousnessBefore;
-                public string? triggeringHediffDefName;
-                public string? methodName;
+                CaptureHealthOperation(
+                    __instance,
+                    "Health.RemoveHediff.Enter",
+                    "Pawn_HealthTracker.RemoveHediff",
+                    hediff,
+                    string.Empty,
+                    ref __state);
             }
 
-            private static void Prefix(Pawn_HealthTracker __instance, Hediff hediff, ref State __state)
+            private static void Postfix(
+                Pawn_HealthTracker __instance,
+                Hediff hediff,
+                LoadDeathPawnState? __state)
             {
+                CompleteHealthOperation(
+                    __instance,
+                    "Health.RemoveHediff.Exit",
+                    "Pawn_HealthTracker.RemoveHediff",
+                    hediff,
+                    __state);
+            }
+        }
+
+        [HarmonyPatch(
+            typeof(Pawn_HealthTracker),
+            nameof(Pawn_HealthTracker.Notify_HediffChanged),
+            new[] { typeof(Hediff) })]
+        internal static class HealthNotifyHediffChangedPatch
+        {
+            private static void Prefix(
+                Pawn_HealthTracker __instance,
+                Hediff hediff,
+                ref LoadDeathPawnState? __state)
+            {
+                CaptureHealthOperation(
+                    __instance,
+                    "Health.NotifyHediffChanged.Enter",
+                    "Pawn_HealthTracker.Notify_HediffChanged",
+                    hediff,
+                    string.Empty,
+                    ref __state);
+            }
+
+            private static void Postfix(
+                Pawn_HealthTracker __instance,
+                Hediff hediff,
+                LoadDeathPawnState? __state)
+            {
+                CompleteHealthOperation(
+                    __instance,
+                    "Health.NotifyHediffChanged.Exit",
+                    "Pawn_HealthTracker.Notify_HediffChanged",
+                    hediff,
+                    __state);
+            }
+        }
+
+        [HarmonyPatch(
+            typeof(Pawn),
+            nameof(Pawn.Kill),
+            new[] { typeof(DamageInfo?), typeof(Hediff) })]
+        internal static class PawnKillPatch
+        {
+            private static void Prefix(
+                Pawn __instance,
+                DamageInfo? dinfo,
+                Hediff exactCulprit,
+                ref LoadDeathPawnState? __state)
+            {
+                __state = null;
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active
+                        || !LoadDeathDiagnosticUtility.ShouldTracePawn(__instance))
                     {
                         return;
                     }
 
-                    Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    __state = new State
-                    {
-                        methodName = "Pawn_HealthTracker.RemoveHediff",
-                        triggeringHediffDefName = hediff?.def?.defName,
-                    };
-                    if (pawn == null)
-                    {
-                        return;
-                    }
-
-                    __state.deadBefore = pawn.Dead;
-                    LoadDeathDiagnosticUtility.TryGetConsciousness(pawn, out float cons);
-                    __state.consciousnessBefore = cons;
-
-                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "Health.RemoveHediff.Enter",
-                        pawn,
-                        "HEDIFF=" + (__state.triggeringHediffDefName ?? "null")
-                        + " TYPE=" + (hediff?.GetType().Name ?? "?")
-                        + " SEV=" + (hediff?.Severity.ToString("F2") ?? "?")
-                        + " PART=" + (hediff?.Part?.LabelCap ?? "null")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
+                    __state = LoadDeathDiagnosticUtility.CaptureState(
+                        __instance,
+                        "Pawn.Kill",
+                        exactCulprit?.def?.defName,
                         true);
+                    LoadDeathDiagnosticUtility.WriteWithStack(
+                        "Pawn.Kill.Enter",
+                        __instance,
+                        "DAMAGE=" + FormatDamage(dinfo)
+                        + " EXACT_CULPRIT=" + (exactCulprit?.def?.defName ?? "null")
+                        + " BEFORE={" + __state.passivePawnBefore + "}"
+                        + " HEDIFFS={" + __state.hediffsBefore + "}"
+                        + " DATAPROC={" + __state.dataProcessingBefore + "}"
+                        + " MECHANITOR={" + __state.mechanitorBefore + "}",
+                        __state.stackTrace);
                 }
                 catch
                 {
-                    // 忽略。
+                    // 不得阻止 Kill。
                 }
             }
 
-            private static void Postfix(Pawn_HealthTracker __instance, ref State __state)
+            private static void Postfix(
+                Pawn __instance,
+                Hediff exactCulprit,
+                LoadDeathPawnState? __state)
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    if (pawn == null)
-                    {
-                        return;
-                    }
-
-                    bool deadAfter = pawn.Dead;
-                    LoadDeathDiagnosticUtility.TryGetConsciousness(pawn, out float consAfter);
-                    float? consBefore = __state?.consciousnessBefore;
-
-                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn)
-                        && !(__state != null && __state.deadBefore == false && deadAfter == true))
+                    if (!LoadDeathDiagnosticUtility.Active || __state == null)
                     {
                         return;
                     }
 
                     LoadDeathDiagnosticUtility.Write(
-                        "Health.RemoveHediff.Exit",
-                        pawn,
-                        "DEAD_BEFORE=" + (__state?.deadBefore.ToString() ?? "?")
-                        + " DEAD_AFTER=" + deadAfter
-                        + " CONS_BEFORE=" + (consBefore?.ToString("F4") ?? "null")
-                        + " CONS_AFTER=" + consAfter.ToString("F4")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
+                        "Pawn.Kill.Exit",
+                        __instance,
+                        "DEAD=" + LoadDeathDiagnosticUtility.SafeDead(__instance)
+                        + " DESTROYED=" + __instance.Destroyed
+                        + " CORPSE=" + LoadDeathDiagnosticUtility.SafeThingId(__instance.Corpse)
+                        + " AFTER={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(__instance) + "}"
+                        + " HEDIFFS={" + LoadDeathDiagnosticUtility.BuildPassiveHediffList(__instance) + "}"
+                        + " DATAPROC={" + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(__instance) + "}"
+                        + " MECHANITOR={" + LoadDeathDiagnosticUtility.BuildMechanitorRecordSnapshot(__instance) + "}",
                         false);
-
-                    if (__state != null && __state.deadBefore == false && deadAfter == true)
-                    {
-                        LoadDeathDiagnosticUtility.ReportFirstDeadTransition(
-                            __state.methodName ?? "Pawn_HealthTracker.RemoveHediff",
-                            pawn,
-                            __state.triggeringHediffDefName,
-                            __state.deadBefore,
-                            deadAfter,
-                            consBefore,
-                            consAfter,
-                            "RemoveHediff 调用后存活->死亡。");
-                    }
+                    LoadDeathDiagnosticUtility.ReportFirstDeadTransition(
+                        __state,
+                        __instance,
+                        "Pawn.Kill",
+                        exactCulprit?.def?.defName);
                 }
                 catch
                 {
@@ -504,216 +346,36 @@ namespace MAP_MechanoidMechanitor
         }
 
         [HarmonyPatch(
-            typeof(Pawn_HealthTracker),
-            nameof(Pawn_HealthTracker.Notify_HediffChanged))]
-        internal static class HealthNotifyHediffChangedPatch
-        {
-            private sealed class State
-            {
-                public bool deadBefore;
-                public float? consciousnessBefore;
-                public string? triggeringHediffDefName;
-                public string? methodName;
-            }
-
-            private static void Prefix(Pawn_HealthTracker __instance, Hediff hediff, ref State __state)
-            {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    __state = new State
-                    {
-                        methodName = "Pawn_HealthTracker.Notify_HediffChanged",
-                        triggeringHediffDefName = hediff?.def?.defName,
-                    };
-                    if (pawn == null)
-                    {
-                        return;
-                    }
-
-                    __state.deadBefore = pawn.Dead;
-                    LoadDeathDiagnosticUtility.TryGetConsciousness(pawn, out float cons);
-                    __state.consciousnessBefore = cons;
-
-                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "Health.NotifyHediffChanged.Enter",
-                        pawn,
-                        "HEDIFF=" + (__state.triggeringHediffDefName ?? "null")
-                        + " TYPE=" + (hediff?.GetType().Name ?? "?")
-                        + " SEV=" + (hediff?.Severity.ToString("F2") ?? "?")
-                        + " PART=" + (hediff?.Part?.LabelCap ?? "null")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
-                        true);
-                }
-                catch
-                {
-                    // 忽略。
-                }
-            }
-
-            private static void Postfix(Pawn_HealthTracker __instance, ref State __state)
-            {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(__instance);
-                    if (pawn == null)
-                    {
-                        return;
-                    }
-
-                    bool deadAfter = pawn.Dead;
-                    LoadDeathDiagnosticUtility.TryGetConsciousness(pawn, out float consAfter);
-                    float? consBefore = __state?.consciousnessBefore;
-
-                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn)
-                        && !(__state != null && __state.deadBefore == false && deadAfter == true))
-                    {
-                        return;
-                    }
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "Health.NotifyHediffChanged.Exit",
-                        pawn,
-                        "DEAD_BEFORE=" + (__state?.deadBefore.ToString() ?? "?")
-                        + " DEAD_AFTER=" + deadAfter
-                        + " CONS_BEFORE=" + (consBefore?.ToString("F4") ?? "null")
-                        + " CONS_AFTER=" + consAfter.ToString("F4")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
-                        false);
-
-                    if (__state != null && __state.deadBefore == false && deadAfter == true)
-                    {
-                        LoadDeathDiagnosticUtility.ReportFirstDeadTransition(
-                            __state.methodName ?? "Pawn_HealthTracker.Notify_HediffChanged",
-                            pawn,
-                            __state.triggeringHediffDefName,
-                            __state.deadBefore,
-                            deadAfter,
-                            consBefore,
-                            consAfter,
-                            "Notify_HediffChanged 调用后存活->死亡。");
-                    }
-                }
-                catch
-                {
-                    // 忽略。
-                }
-            }
-        }
-
-        // ===== Pawn.Kill =====
-
-        [HarmonyPatch(typeof(Pawn), nameof(Pawn.Kill))]
-        internal static class PawnKillPatch
-        {
-            private static void Prefix(Pawn __instance, DamageInfo? dinfo, Hediff exactCulprit)
-            {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn pawn = __instance;
-                    // 无条件关注：Kill 必然是关键入口。
-                    LoadDeathDiagnosticUtility.ShouldTracePawn(pawn);
-
-                    LoadDeathDiagnosticUtility.Write(
-                        "Pawn.Kill.Enter",
-                        pawn,
-                        "DAMAGE=" + LoadDeathDiagnosticUtility.FormatDamageInfo(
-                            new object[] { dinfo! })
-                        + " EXACT_CULPRIT=" + (exactCulprit?.def?.defName ?? "null")
-                        + " | MECHANITOR_RECORD="
-                            + LoadDeathDiagnosticUtility.BuildMechanitorRecordSnapshot(pawn)
-                        + " | DATAPROC="
-                            + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(pawn)
-                        + " | ALL_HEDIFFS="
-                            + LoadDeathDiagnosticUtility.BuildHediffList(pawn, "KILL")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
-                        true);
-                }
-                catch
-                {
-                    // 忽略。不得阻止或延迟 Kill。
-                }
-            }
-
-            private static void Postfix(Pawn __instance)
-            {
-                try
-                {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn pawn = __instance;
-                    LoadDeathDiagnosticUtility.Write(
-                        "Pawn.Kill.Exit",
-                        pawn,
-                        "DEAD=" + pawn.Dead
-                        + " DESTROYED=" + pawn.Destroyed
-                        + " HAS_CORPSE=" + (pawn.Corpse != null)
-                        + " MAP=" + (pawn.Map?.uniqueID.ToString() ?? "null")
-                        + " POS=" + (pawn.Position.IsValid ? pawn.Position.ToString() : "Invalid")
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
-                        false);
-                }
-                catch
-                {
-                    // 忽略。
-                }
-            }
-        }
-
-        // ===== Pawn.SpawnSetup =====
-
-        [HarmonyPatch(typeof(Pawn), nameof(Pawn.SpawnSetup))]
+            typeof(Pawn),
+            nameof(Pawn.SpawnSetup),
+            new[] { typeof(Map), typeof(bool) })]
         internal static class PawnSpawnSetupPatch
         {
             private static void Prefix(Pawn __instance, Map map, bool respawningAfterLoad)
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
+                    if (!LoadDeathDiagnosticUtility.Active)
                     {
                         return;
                     }
 
-                    Pawn pawn = __instance;
-                    // 已关注、或机械体在 SpawnSetup 前已经 Dead 时都记录（用于确认其他同类受害者）。
-                    bool isWatched = LoadDeathDiagnosticUtility.ShouldTracePawn(pawn);
-                    bool mechanoidDeadBeforeSpawn =
-                        pawn.RaceProps?.IsMechanoid == true && pawn.Dead;
-                    if (!isWatched && !mechanoidDeadBeforeSpawn)
+                    bool trace = LoadDeathDiagnosticUtility.ShouldTracePawn(__instance);
+                    bool deadMech = __instance.RaceProps?.IsMechanoid == true
+                        && LoadDeathDiagnosticUtility.SafeDead(__instance);
+                    if (!trace && !deadMech)
                     {
                         return;
                     }
 
                     LoadDeathDiagnosticUtility.Write(
                         "Pawn.SpawnSetup.Enter",
-                        pawn,
+                        __instance,
                         "RESPAWNING_AFTER_LOAD=" + respawningAfterLoad
-                        + " MAP_ID=" + (map?.uniqueID.ToString() ?? "null")
-                        + " DEAD_BEFORE_SPAWN_SETUP=" + pawn.Dead
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
+                        + " MAP=" + (map?.uniqueID.ToString() ?? "null")
+                        + " DEAD_BEFORE_SPAWN_SETUP=" + LoadDeathDiagnosticUtility.SafeDead(__instance)
+                        + " SNAPSHOT={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(__instance) + "}"
+                        + " HEDIFFS={" + LoadDeathDiagnosticUtility.BuildPassiveHediffList(__instance) + "}",
                         false);
                 }
                 catch
@@ -726,31 +388,122 @@ namespace MAP_MechanoidMechanitor
             {
                 try
                 {
-                    if (!LoadDeathDiagnosticUtility.Enabled)
-                    {
-                        return;
-                    }
-
-                    Pawn pawn = __instance;
-                    if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn)
-                        && !(pawn.RaceProps?.IsMechanoid == true && pawn.Dead))
+                    if (!LoadDeathDiagnosticUtility.Active
+                        || (!LoadDeathDiagnosticUtility.ShouldTracePawn(__instance)
+                            && !(__instance.RaceProps?.IsMechanoid == true
+                                && LoadDeathDiagnosticUtility.SafeDead(__instance))))
                     {
                         return;
                     }
 
                     LoadDeathDiagnosticUtility.Write(
                         "Pawn.SpawnSetup.Exit",
-                        pawn,
+                        __instance,
                         "RESPAWNING_AFTER_LOAD=" + respawningAfterLoad
-                        + " MAP_ID=" + (map?.uniqueID.ToString() ?? "null")
-                        + " DEAD=" + pawn.Dead
-                        + " | SNAPSHOT=" + LoadDeathDiagnosticUtility.BuildPawnSnapshot(pawn),
+                        + " MAP=" + (map?.uniqueID.ToString() ?? "null")
+                        + " DEAD=" + LoadDeathDiagnosticUtility.SafeDead(__instance)
+                        + " SNAPSHOT={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(__instance) + "}",
                         false);
                 }
                 catch
                 {
                     // 忽略。
                 }
+            }
+        }
+
+        private static void CaptureHealthOperation(
+            Pawn_HealthTracker tracker,
+            string eventName,
+            string methodName,
+            Hediff? hediff,
+            string extra,
+            ref LoadDeathPawnState? state)
+        {
+            state = null;
+            try
+            {
+                if (!LoadDeathDiagnosticUtility.Active)
+                {
+                    return;
+                }
+
+                Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(tracker);
+                if (!LoadDeathDiagnosticUtility.ShouldTracePawn(pawn))
+                {
+                    return;
+                }
+
+                state = LoadDeathDiagnosticUtility.CaptureState(
+                    pawn,
+                    methodName,
+                    hediff?.def?.defName,
+                    true);
+                LoadDeathDiagnosticUtility.WriteWithStack(
+                    eventName,
+                    pawn,
+                    "HEDIFF=" + (hediff?.def?.defName ?? "null")
+                    + " TYPE=" + (hediff?.GetType().FullName ?? "null")
+                    + " EXTRA=" + extra
+                    + " BEFORE={" + state.passivePawnBefore + "}"
+                    + " HEDIFFS={" + state.hediffsBefore + "}"
+                    + " DATAPROC={" + state.dataProcessingBefore + "}"
+                    + " MECHANITOR={" + state.mechanitorBefore + "}",
+                    state.stackTrace);
+            }
+            catch
+            {
+                // 忽略。
+            }
+        }
+
+        private static void CompleteHealthOperation(
+            Pawn_HealthTracker tracker,
+            string eventName,
+            string methodName,
+            Hediff? hediff,
+            LoadDeathPawnState? state)
+        {
+            try
+            {
+                if (!LoadDeathDiagnosticUtility.Active || state == null)
+                {
+                    return;
+                }
+
+                Pawn? pawn = LoadDeathDiagnosticUtility.GetPawnFromHealthTracker(tracker);
+                LoadDeathDiagnosticUtility.Write(
+                    eventName,
+                    pawn,
+                    "HEDIFF=" + (hediff?.def?.defName ?? "null")
+                    + " DEAD_BEFORE=" + state.deadBefore
+                    + " DEAD_AFTER=" + LoadDeathDiagnosticUtility.SafeDead(pawn)
+                    + " AFTER={" + LoadDeathDiagnosticUtility.BuildPassivePawnSnapshot(pawn) + "}"
+                    + " HEDIFFS={" + LoadDeathDiagnosticUtility.BuildPassiveHediffList(pawn) + "}"
+                    + " DATAPROC={" + LoadDeathDiagnosticUtility.BuildDataProcessingSnapshot(pawn) + "}"
+                    + " MECHANITOR={" + LoadDeathDiagnosticUtility.BuildMechanitorRecordSnapshot(pawn) + "}",
+                    false);
+                LoadDeathDiagnosticUtility.ReportFirstDeadTransition(
+                    state,
+                    pawn,
+                    methodName,
+                    hediff?.def?.defName);
+            }
+            catch
+            {
+                // 忽略。
+            }
+        }
+
+        private static string FormatDamage(DamageInfo? dinfo)
+        {
+            try
+            {
+                return dinfo.HasValue ? dinfo.Value.ToString() : "null";
+            }
+            catch
+            {
+                return "<error>";
             }
         }
     }
