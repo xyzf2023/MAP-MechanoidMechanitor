@@ -1,62 +1,75 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using HarmonyLib;
 using RimWorld;
-using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 加载期死亡诊断统一工具。
-    /// 临时、默认关闭、只记录不修复。所有日志均带前缀 [MAP-LOAD-DEATH-DIAG]。
-    /// 任何格式化或快照方法都必须独立 try/catch，异常绝不外抛。
+    /// 加载期死亡诊断统一工具。所有快照均为被动读取：
+    /// 禁止调用 PawnCapacity GetLevel/CapableOf、Hediff.CurStage/CurStageIndex，
+    /// 避免诊断日志提前初始化动态缓存并改变旧存档加载时序。
     /// </summary>
     internal static class LoadDeathDiagnosticUtility
     {
-        public const string LogPrefix = "[MAP-LOAD-DEATH-DIAG]";
+        internal const string LogPrefix = "[MAP-LOAD-DEATH-DIAG]";
 
+        private static readonly object Sync = new object();
+        private static readonly HashSet<string> WatchedPawnIds = new HashSet<string>();
+        private static readonly HashSet<string> FirstDeathLoggedPawnIds = new HashSet<string>();
         private static int sequence;
+        private static bool loadSessionActive;
 
-        private static readonly HashSet<string> watchedPawnIds =
-            new HashSet<string>();
+        private static readonly FieldInfo? HealthPawnField =
+            AccessTools.Field(typeof(Pawn_HealthTracker), "pawn");
+        private static readonly FieldInfo? CapacityCacheField =
+            AccessTools.Field(typeof(PawnCapacitiesHandler), "cachedCapacityLevels");
 
-        private static readonly HashSet<string> firstDeathLoggedPawnIds =
-            new HashSet<string>();
+        private static readonly FieldInfo? AllocationRecordsField =
+            AccessTools.Field(typeof(GameComponent_DataProcessingAllocationRegistry), "records");
+        private static readonly FieldInfo? DynamicAllocationRecordsField =
+            AccessTools.Field(typeof(GameComponent_DataProcessingAllocationRegistry), "dynamicAllocationRecords");
+        private static readonly FieldInfo? DynamicTargetRecordsField =
+            AccessTools.Field(typeof(GameComponent_DataProcessingAllocationRegistry), "dynamicTargetRecords");
+        private static readonly FieldInfo? SpecializationRecordsField =
+            AccessTools.Field(typeof(GameComponent_DataProcessingAllocationRegistry), "specializationRecords");
+        private static readonly FieldInfo? PendingPostLoadReconciliationField =
+            AccessTools.Field(typeof(GameComponent_DataProcessingAllocationRegistry), "pendingPostLoadDynamicReconciliation");
+        private static readonly FieldInfo? PostLoadReconciliationTickField =
+            AccessTools.Field(typeof(GameComponent_DataProcessingAllocationRegistry), "postLoadReconciliationEarliestTick");
 
-        private static readonly object sessionLock = new object();
+        private static readonly FieldInfo? DataCachedStepsField =
+            AccessTools.Field(typeof(Hediff_DataProcessingAllocationBase), "cachedSteps");
+        private static readonly FieldInfo? DataCachedVariantField =
+            AccessTools.Field(typeof(Hediff_DataProcessingAllocationBase), "cachedVariantKey");
+        private static readonly FieldInfo? DataCachedStageField =
+            AccessTools.Field(typeof(Hediff_DataProcessingAllocationBase), "cachedStage");
 
-        // Pawn_HealthTracker 内部持有 Pawn（private readonly Pawn pawn）。
-        private static readonly AccessTools.FieldRef<Pawn_HealthTracker, Pawn>? pawnFromHealthTracker =
-            TryCreatePawnFromHealthTrackerAccessor();
+        private static readonly FieldInfo? DynamicCacheInitializedField =
+            AccessTools.Field(typeof(Hediff_DynamicConsciousnessBonusBase), "cacheInitialized");
+        private static readonly FieldInfo? DynamicCachedOffsetField =
+            AccessTools.Field(typeof(Hediff_DynamicConsciousnessBonusBase), "cachedOffset");
+        private static readonly FieldInfo? DynamicCachedVariantField =
+            AccessTools.Field(typeof(Hediff_DynamicConsciousnessBonusBase), "cachedVariantKey");
+        private static readonly FieldInfo? DynamicCachedStageField =
+            AccessTools.Field(typeof(Hediff_DynamicConsciousnessBonusBase), "cachedStage");
 
-        private static AccessTools.FieldRef<Pawn_HealthTracker, Pawn>? TryCreatePawnFromHealthTrackerAccessor()
-        {
-            try
-            {
-                return AccessTools.FieldRefAccess<Pawn_HealthTracker, Pawn>("pawn");
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    WriteSelfError("无法获取 Pawn_HealthTracker.pawn 访问器：" + ex);
-                }
-                catch
-                {
-                    // 忽略：工具自身错误不得影响游戏。
-                }
+        private static readonly FieldInfo? ArrayTargetField =
+            AccessTools.Field(typeof(CompParallelThoughtArray), "target");
+        private static readonly FieldInfo? ArrayConfiguredBoostField =
+            AccessTools.Field(typeof(CompParallelThoughtArray), "configuredBoostPercent");
+        private static readonly FieldInfo? ArrayPowerTraderField =
+            AccessTools.Field(typeof(CompParallelThoughtArray), "powerTrader");
+        private static readonly FieldInfo? ArrayLastEffectiveField =
+            AccessTools.Field(typeof(CompParallelThoughtArray), "lastEffectiveBoostPercent");
+        private static readonly FieldInfo? ArrayFallbackTickField =
+            AccessTools.Field(typeof(CompParallelThoughtArray), "fallbackTickCounter");
 
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 只读开关。仅在设置开启时允许诊断。
-        /// </summary>
         internal static bool Enabled
         {
             get
@@ -72,373 +85,274 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        /// <summary>
-        /// 清空关注集合与序号，开始一次新的诊断会话。不修改任何游戏数据。
-        /// </summary>
-        internal static void ResetSession(string reason)
+        internal static bool LoadSessionActive
         {
-            try
+            get
             {
-                lock (sessionLock)
+                lock (Sync)
                 {
-                    watchedPawnIds.Clear();
-                    firstDeathLoggedPawnIds.Clear();
-                    sequence = 0;
+                    return loadSessionActive;
                 }
-
-                WriteCore("SESSION", "LoadDeathDiagnostic", string.Empty,
-                    "LoadDeathDiagnostic",
-                    "开始新的诊断会话，原因=" + (reason ?? "null") +
-                    "。关注集合已清空。", null);
-            }
-            catch
-            {
-                // 忽略。
             }
         }
 
-        // ===== 关注对象判定 =====
+        internal static bool Active => Enabled && LoadSessionActive;
 
-        /// <summary>
-        /// 空值安全与加载中安全的关注对象判定。命中后把 ThingID 加入关注集合。
-        /// </summary>
-        internal static bool ShouldTracePawn(Pawn? pawn)
+        internal static void BeginLoadSession(string reason)
         {
             if (!Enabled)
             {
-                return false;
-            }
-
-            if (pawn == null)
-            {
-                return false;
+                return;
             }
 
             try
             {
-                string? thingId = SafeThingId(pawn);
-                if (thingId != null && watchedPawnIds.Contains(thingId))
+                lock (Sync)
+                {
+                    WatchedPawnIds.Clear();
+                    FirstDeathLoggedPawnIds.Clear();
+                    sequence = 0;
+                    loadSessionActive = true;
+                }
+
+                WriteCore("SESSION.BEGIN", null, "REASON=" + SafeText(reason), null);
+            }
+            catch
+            {
+                // 诊断不得影响加载。
+            }
+        }
+
+        internal static void EndLoadSession(string reason, Exception? exception)
+        {
+            if (!Enabled)
+            {
+                return;
+            }
+
+            try
+            {
+                if (LoadSessionActive)
+                {
+                    WriteCore(
+                        "SESSION.END",
+                        null,
+                        "REASON=" + SafeText(reason)
+                        + " EXCEPTION=" + (exception?.GetType().FullName ?? "null"),
+                        null);
+                }
+            }
+            catch
+            {
+                // 忽略。
+            }
+            finally
+            {
+                lock (Sync)
+                {
+                    loadSessionActive = false;
+                }
+            }
+        }
+
+        internal static Pawn? GetPawnFromHealthTracker(Pawn_HealthTracker? tracker)
+        {
+            if (tracker == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                return HealthPawnField?.GetValue(tracker) as Pawn;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        internal static bool ShouldTracePawn(Pawn? pawn)
+        {
+            if (!Active || pawn == null)
+            {
+                return false;
+            }
+
+            string id = SafeThingId(pawn);
+            lock (Sync)
+            {
+                if (WatchedPawnIds.Contains(id))
                 {
                     return true;
                 }
+            }
 
-                bool watch = DetermineTrace(pawn);
-                if (watch && thingId != null)
+            bool trace = false;
+            try
+            {
+                string name = SafePawnName(pawn);
+                trace = name.Contains("正义") || name.Contains("刃");
+            }
+            catch
+            {
+                // 忽略。
+            }
+
+            if (!trace)
+            {
+                try
                 {
-                    lock (sessionLock)
+                    trace = pawn.TryGetComp<CompNativeMechanoidMechanitor>() != null;
+                }
+                catch
+                {
+                    // 忽略。
+                }
+            }
+
+            if (!trace)
+            {
+                try
+                {
+                    List<Hediff>? hediffs = pawn.health?.hediffSet?.hediffs;
+                    if (hediffs != null)
                     {
-                        watchedPawnIds.Add(thingId);
+                        for (int i = 0; i < hediffs.Count; i++)
+                        {
+                            Hediff? hediff = hediffs[i];
+                            if (hediff is Hediff_DataProcessingAllocationBase
+                                || hediff is Hediff_DynamicConsciousnessBonusBase)
+                            {
+                                trace = true;
+                                break;
+                            }
+
+                            string? defName = hediff?.def?.defName;
+                            if (defName == "MAP_NativeMechanoidMechanitor"
+                                || defName == "MAP_AcquiredMechanoidMechanitor"
+                                || defName == "MAP_MechanicalConsciousness")
+                            {
+                                trace = true;
+                                break;
+                            }
+                        }
                     }
                 }
+                catch
+                {
+                    // 忽略。
+                }
+            }
 
-                return watch;
-            }
-            catch
+            if (!trace)
             {
-                return false;
+                try
+                {
+                    IReadOnlyList<MechanoidMechanitorRegistrySnapshotEntry> entries =
+                        GameComponent_MechanoidMechanitorRegistry.GetPersistentRecordSnapshot();
+                    for (int i = 0; i < entries.Count; i++)
+                    {
+                        if (ReferenceEquals(entries[i].Pawn, pawn)
+                            || SafeThingId(entries[i].Pawn) == id)
+                        {
+                            trace = true;
+                            break;
+                        }
+                    }
+                }
+                catch
+                {
+                    // 忽略。
+                }
             }
+
+            if (!trace)
+            {
+                trace = IsPawnReferencedByRawDataProcessingRecords(pawn);
+            }
+
+            if (trace)
+            {
+                lock (Sync)
+                {
+                    WatchedPawnIds.Add(id);
+                }
+            }
+
+            return trace;
         }
 
-        private static bool DetermineTrace(Pawn pawn)
-        {
-            try
-            {
-                if (SafePawnName(pawn) == "正义" || SafePawnName(pawn) == "刃")
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-                // 忽略。
-            }
-
-            try
-            {
-                if (pawn.TryGetComp<CompNativeMechanoidMechanitor>() != null)
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-                // 忽略。
-            }
-
-            try
-            {
-                if (HasModIdentityHediff(pawn))
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-                // 忽略。
-            }
-
-            try
-            {
-                if (HasDataProcessingAllocationHediff(pawn))
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-                // 忽略。
-            }
-
-            try
-            {
-                if (HasDynamicConsciousnessHediff(pawn))
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-                // 忽略。
-            }
-
-            try
-            {
-                if (GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
-                        pawn, out _))
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-                // 忽略。
-            }
-
-            try
-            {
-                if (IsOverseerOrTargetInRegistry(pawn))
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-                // 忽略。
-            }
-
-            return false;
-        }
-
-        private static bool HasModIdentityHediff(Pawn pawn)
-        {
-            HediffSet? set = pawn.health?.hediffSet;
-            if (set?.hediffs == null)
-            {
-                return false;
-            }
-
-            foreach (Hediff hediff in set.hediffs)
-            {
-                if (hediff == null)
-                {
-                    continue;
-                }
-
-                string? defName = hediff.def?.defName;
-                if (defName == "MAP_NativeMechanoidMechanitor"
-                    || defName == "MAP_AcquiredMechanoidMechanitor"
-                    || defName == "MAP_MechanicalConsciousness")
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool HasDataProcessingAllocationHediff(Pawn pawn)
-        {
-            HediffSet? set = pawn.health?.hediffSet;
-            if (set?.hediffs == null)
-            {
-                return false;
-            }
-
-            foreach (Hediff hediff in set.hediffs)
-            {
-                if (hediff == null)
-                {
-                    continue;
-                }
-
-                if (hediff is Hediff_DataProcessingAllocationBase)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool HasDynamicConsciousnessHediff(Pawn pawn)
-        {
-            HediffSet? set = pawn.health?.hediffSet;
-            if (set?.hediffs == null)
-            {
-                return false;
-            }
-
-            foreach (Hediff hediff in set.hediffs)
-            {
-                if (hediff == null)
-                {
-                    continue;
-                }
-
-                if (hediff is Hediff_DynamicConsciousnessBonusBase)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool IsOverseerOrTargetInRegistry(Pawn pawn)
-        {
-            GameComponent_DataProcessingAllocationRegistry? registry =
-                GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
-            if (registry == null)
-            {
-                return false;
-            }
-
-            // 机械体才检查监管者/目标关系（任务范围）。
-            if (pawn.RaceProps == null || !pawn.RaceProps.IsMechanoid)
-            {
-                return false;
-            }
-
-            // 优先使用公开查询 API。
-            try
-            {
-                if (registry.GetStepsForTarget(pawn) > 0
-                    || registry.GetTotalStepsForOverseer(pawn) > 0)
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-                // 忽略。
-            }
-
-            return false;
-        }
-
-        // ===== 安全日志 =====
-
-        /// <summary>
-        /// 通用诊断日志。绝不由本方法向外抛异常。
-        /// </summary>
         internal static void Write(
             string eventName,
             Pawn? pawn,
             string details,
             bool includeStack = false)
         {
+            if (!Active)
+            {
+                return;
+            }
+
             try
             {
-                if (!Enabled)
-                {
-                    return;
-                }
-
-                string stack = string.Empty;
-                if (includeStack)
-                {
-                    try
-                    {
-                        stack = new StackTrace(2, true).ToString();
-                    }
-                    catch
-                    {
-                        stack = "<stack-unavailable>";
-                    }
-                }
-
-                WriteCore(eventName, SafeThingId(pawn), SafeDefName(pawn), SafePawnName(pawn),
-                    details, includeStack ? stack : null);
+                string? stack = includeStack
+                    ? new StackTrace(2, true).ToString()
+                    : null;
+                WriteCore(eventName, pawn, details, stack);
             }
             catch
             {
-                // 忽略：日志失败不得影响游戏。
+                // 日志不得影响加载。
+            }
+        }
+
+        internal static void WriteWithStack(
+            string eventName,
+            Pawn? pawn,
+            string details,
+            string? stack)
+        {
+            if (!Active)
+            {
+                return;
+            }
+
+            try
+            {
+                WriteCore(eventName, pawn, details, stack);
+            }
+            catch
+            {
+                // 忽略。
             }
         }
 
         private static void WriteCore(
             string eventName,
-            string thingId,
-            string defName,
-            string name,
+            Pawn? pawn,
             string details,
             string? stack)
         {
-            int localSeq;
-            lock (sessionLock)
+            int localSequence;
+            lock (Sync)
             {
-                localSeq = ++sequence;
+                localSequence = ++sequence;
             }
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append(LogPrefix);
-            sb.Append(' ');
-            sb.Append('#');
-            sb.Append(localSeq.ToString("D6"));
-            sb.Append(' ');
-            sb.Append("EVENT=").Append(eventName);
-            sb.Append(" PAWN=").Append(thingId);
-            sb.Append(" NAME=").Append(name);
-            sb.Append(" DEF=").Append(defName);
+            StringBuilder builder = new StringBuilder();
+            builder.Append(LogPrefix)
+                .Append(" #").Append(localSequence.ToString("D6"))
+                .Append(" EVENT=").Append(SafeText(eventName))
+                .Append(" PAWN=").Append(SafeThingId(pawn))
+                .Append(" NAME=").Append(SafePawnName(pawn))
+                .Append(" DEF=").Append(SafeDefName(pawn))
+                .Append(" SCRIBE=").Append(Safe(() => Scribe.mode.ToString()))
+                .Append(" PROGRAM=").Append(Safe(() => Current.ProgramState.ToString()))
+                .Append(" TICK=").Append(Safe(() => Find.TickManager?.TicksGame.ToString() ?? "N/A"))
+                .Append(" DETAILS=").Append(details ?? string.Empty);
 
-            try
-            {
-                sb.Append(" SCRIBE=").Append(Scribe.mode.ToString());
-            }
-            catch
-            {
-                sb.Append(" SCRIBE=<error>");
-            }
-
-            try
-            {
-                sb.Append(" PROGRAM=").Append(Current.ProgramState.ToString());
-            }
-            catch
-            {
-                sb.Append(" PROGRAM=<error>");
-            }
-
-            try
-            {
-                if (Find.TickManager != null)
-                {
-                    sb.Append(" TICK=").Append(Find.TickManager.TicksGame);
-                }
-                else
-                {
-                    sb.Append(" TICK=N/A");
-                }
-            }
-            catch
-            {
-                sb.Append(" TICK=N/A");
-            }
-
-            sb.Append(" DETAILS=").Append(details ?? string.Empty);
-
-            string line = sb.ToString();
-
+            string line = builder.ToString();
             try
             {
                 Log.Message(line);
@@ -447,15 +361,15 @@ namespace MAP_MechanoidMechanitor
             {
                 try
                 {
-                    global::System.Diagnostics.Debug.WriteLine(line);
+                    System.Diagnostics.Debug.WriteLine(line);
                 }
                 catch
                 {
-                    // 放弃：不得影响加载。
+                    // 放弃。
                 }
             }
 
-            if (stack != null)
+            if (!string.IsNullOrEmpty(stack))
             {
                 try
                 {
@@ -468,324 +382,138 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void WriteSelfError(string message)
+        internal static LoadDeathPawnState CaptureState(
+            Pawn? pawn,
+            string methodName,
+            string? triggeringHediff,
+            bool includeStack)
         {
-            try
+            LoadDeathPawnState state = new LoadDeathPawnState
             {
-                Log.Warning(LogPrefix + " SELF-ERROR " + (message ?? string.Empty));
-            }
-            catch
+                methodName = methodName,
+                triggeringHediffDefName = triggeringHediff,
+                pawnThingId = SafeThingId(pawn),
+                deadBefore = SafeDead(pawn),
+                passivePawnBefore = BuildPassivePawnSnapshot(pawn),
+                hediffsBefore = BuildPassiveHediffList(pawn),
+                dataProcessingBefore = BuildDataProcessingSnapshot(pawn),
+                mechanitorBefore = BuildMechanitorRecordSnapshot(pawn),
+                stackTrace = includeStack ? SafeStackTrace(2) : null
+            };
+
+            string status;
+            if (TryGetCachedConsciousness(pawn, out float cached, out status))
             {
-                // 忽略。
+                state.cachedConsciousnessBefore = cached;
             }
+
+            state.consciousnessCacheStatusBefore = status;
+            return state;
         }
-
-        // ===== Pawn 获取 =====
-
-        internal static Pawn? GetPawnFromHealthTracker(Pawn_HealthTracker? health)
-        {
-            if (health == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                if (pawnFromHealthTracker != null)
-                {
-                    return pawnFromHealthTracker(health);
-                }
-            }
-            catch (Exception ex)
-            {
-                WriteSelfError("读取 Pawn_HealthTracker.pawn 失败：" + ex);
-            }
-
-            return null;
-        }
-
-        // ===== 首次死亡转换 =====
 
         internal static void ReportFirstDeadTransition(
-            string methodName,
+            LoadDeathPawnState? state,
             Pawn? pawn,
-            string? triggeringHediffDefName,
-            bool deadBefore,
-            bool deadAfter,
-            float? consciousnessBefore,
-            float? consciousnessAfter,
-            string? details)
+            string methodName,
+            string? triggeringHediff)
         {
-            if (!Enabled)
+            if (!Active || state == null || state.deadBefore || !SafeDead(pawn))
             {
                 return;
             }
 
-            string? thingId = SafeThingId(pawn);
-            if (thingId == null)
+            string id = SafeThingId(pawn);
+            lock (Sync)
             {
-                return;
+                if (!FirstDeathLoggedPawnIds.Add(id))
+                {
+                    return;
+                }
             }
 
-            bool already;
-            lock (sessionLock)
+            float? afterValue = null;
+            string afterStatus;
+            if (TryGetCachedConsciousness(pawn, out float cached, out afterStatus))
             {
-                already = !firstDeathLoggedPawnIds.Add(thingId);
+                afterValue = cached;
             }
 
-            if (already)
-            {
-                return;
-            }
+            string details =
+                "*** FIRST DEAD TRANSITION ***"
+                + " METHOD=" + SafeText(methodName)
+                + " TRIGGER_HEDIFF=" + SafeText(triggeringHediff)
+                + " DEAD_BEFORE=" + state.deadBefore
+                + " DEAD_AFTER=" + SafeDead(pawn)
+                + " CONS_CACHE_BEFORE=" + FormatNullable(state.cachedConsciousnessBefore)
+                + " CONS_CACHE_STATUS_BEFORE=" + SafeText(state.consciousnessCacheStatusBefore)
+                + " CONS_CACHE_AFTER=" + FormatNullable(afterValue)
+                + " CONS_CACHE_STATUS_AFTER=" + SafeText(afterStatus)
+                + " BEFORE_PAWN={" + state.passivePawnBefore + "}"
+                + " AFTER_PAWN={" + BuildPassivePawnSnapshot(pawn) + "}"
+                + " BEFORE_HEDIFFS={" + state.hediffsBefore + "}"
+                + " AFTER_HEDIFFS={" + BuildPassiveHediffList(pawn) + "}"
+                + " BEFORE_DATAPROC={" + state.dataProcessingBefore + "}"
+                + " AFTER_DATAPROC={" + BuildDataProcessingSnapshot(pawn) + "}"
+                + " BEFORE_MECHANITOR={" + state.mechanitorBefore + "}"
+                + " AFTER_MECHANITOR={" + BuildMechanitorRecordSnapshot(pawn) + "}";
 
-            if (deadBefore && !deadAfter)
-            {
-                // 不是“存活->死亡”的首次转换，跳过。
-                return;
-            }
-
-            try
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.Append(LogPrefix);
-                sb.Append(' ');
-                int localSeq;
-                lock (sessionLock)
-                {
-                    localSeq = ++sequence;
-                }
-
-                sb.Append('#').Append(localSeq.ToString("D6")).Append(' ');
-                sb.Append("*** FIRST DEAD TRANSITION ***");
-                sb.Append(" PAWN=").Append(thingId);
-                sb.Append(" NAME=").Append(SafePawnName(pawn));
-                sb.Append(" METHOD=").Append(methodName ?? "?");
-                sb.Append(" TRIGGER_HEDIFF=").Append(triggeringHediffDefName ?? "null");
-                try
-                {
-                    sb.Append(" SCRIBE=").Append(Scribe.mode.ToString());
-                }
-                catch
-                {
-                    sb.Append(" SCRIBE=<error>");
-                }
-
-                try
-                {
-                    sb.Append(" PROGRAM=").Append(Current.ProgramState.ToString());
-                }
-                catch
-                {
-                    sb.Append(" PROGRAM=<error>");
-                }
-
-                sb.Append(" CONSCIOUSNESS_BEFORE=")
-                    .Append(FormatFloat(consciousnessBefore));
-                sb.Append(" CONSCIOUSNESS_AFTER=")
-                    .Append(FormatFloat(consciousnessAfter));
-                sb.Append(" DETAILS=").Append(details ?? string.Empty);
-
-                try
-                {
-                    Log.Message(sb.ToString());
-                }
-                catch
-                {
-                    try
-                    {
-                        global::System.Diagnostics.Debug.WriteLine(sb.ToString());
-                    }
-                    catch
-                    {
-                        // 忽略。
-                    }
-                }
-
-                // 操作前后 Hediff 列表、数据处理记录、身份记录、完整调用栈。
-                try
-                {
-                    Log.Message(LogPrefix + " FIRST-DEAD HEDIFF-LIST-BEFORE " +
-                        SafeThingId(pawn) + " " + BuildHediffList(pawn, "BEFORE"));
-                }
-                catch
-                {
-                    // 忽略。
-                }
-
-                try
-                {
-                    Log.Message(LogPrefix + " FIRST-DEAD HEDIFF-LIST-AFTER " +
-                        SafeThingId(pawn) + " " + BuildHediffList(pawn, "AFTER"));
-                }
-                catch
-                {
-                    // 忽略。
-                }
-
-                try
-                {
-                    Log.Message(LogPrefix + " FIRST-DEAD DATAPROC-BEFORE " +
-                        SafeThingId(pawn) + " " + BuildDataProcessingSnapshot(pawn));
-                }
-                catch
-                {
-                    // 忽略。
-                }
-
-                try
-                {
-                    Log.Message(LogPrefix + " FIRST-DEAD DATAPROC-AFTER " +
-                        SafeThingId(pawn) + " " + BuildDataProcessingSnapshot(pawn));
-                }
-                catch
-                {
-                    // 忽略。
-                }
-
-                try
-                {
-                    Log.Message(LogPrefix + " FIRST-DEAD MECHANITOR-RECORD " +
-                        SafeThingId(pawn) + " " + BuildMechanitorRecordSnapshot(pawn));
-                }
-                catch
-                {
-                    // 忽略。
-                }
-
-                try
-                {
-                    Log.Message(LogPrefix + " FIRST-DEAD STACK " +
-                        new StackTrace(1, true).ToString());
-                }
-                catch
-                {
-                    // 忽略。
-                }
-            }
-            catch
-            {
-                // 忽略。
-            }
+            WriteWithStack(
+                "*** FIRST DEAD TRANSITION ***",
+                pawn,
+                details,
+                state.stackTrace ?? SafeStackTrace(2));
         }
 
-        // ===== 快照 =====
-
-        internal static string BuildPawnSnapshot(Pawn? pawn)
+        internal static string BuildPassivePawnSnapshot(Pawn? pawn)
         {
             if (pawn == null)
             {
                 return "PAWN=null";
             }
 
-            StringBuilder sb = new StringBuilder();
-            try
+            StringBuilder builder = new StringBuilder();
+            Append(builder, "THINGID", SafeThingId(pawn));
+            Append(builder, "NAME", SafePawnName(pawn));
+            Append(builder, "DEF", SafeDefName(pawn));
+            Append(builder, "KIND", Safe(() => pawn.kindDef?.defName ?? "null"));
+            Append(builder, "DEAD", Safe(() => pawn.Dead.ToString()));
+            Append(builder, "DESTROYED", Safe(() => pawn.Destroyed.ToString()));
+            Append(builder, "DISCARDED", Safe(() => pawn.Discarded.ToString()));
+            Append(builder, "SPAWNED", Safe(() => pawn.Spawned.ToString()));
+            Append(builder, "HEALTH_STATE", Safe(() => pawn.health?.State.ToString() ?? "null"));
+            Append(builder, "IS_BEING_KILLED", Safe(() => (pawn.health?.isBeingKilled == true).ToString()));
+            Append(builder, "MAP", Safe(() => pawn.Map?.uniqueID.ToString() ?? "null"));
+            Append(builder, "POSITION", Safe(() => pawn.Position.IsValid ? pawn.Position.ToString() : "Invalid"));
+
+            float? value = null;
+            string status;
+            if (TryGetCachedConsciousness(pawn, out float cached, out status))
             {
-                sb.Append("THINGID=").Append(SafeThingId(pawn));
-                sb.Append('|');
-                sb.Append("NAME=").Append(SafePawnName(pawn));
-                sb.Append('|');
-                sb.Append("DEF=").Append(SafeDefName(pawn));
-                sb.Append('|');
-                sb.Append("KIND=").Append(pawn.kindDef?.defName ?? "null");
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
+                value = cached;
             }
 
-            try
-            {
-                sb.Append('|');
-                sb.Append("DEAD=").Append(pawn.Dead);
-                sb.Append('|');
-                sb.Append("DESTROYED=").Append(pawn.Destroyed);
-                sb.Append('|');
-                sb.Append("DISCARDED=").Append(pawn.Discarded);
-                sb.Append('|');
-                sb.Append("SPAWNED=").Append(pawn.Spawned);
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            try
-            {
-                Pawn_HealthTracker? health = pawn.health;
-                sb.Append('|');
-                sb.Append("HEALTH_STATE=").Append(health?.State.ToString() ?? "null");
-                sb.Append('|');
-                sb.Append("IS_BEING_KILLED=").Append(health?.isBeingKilled == true);
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            try
-            {
-                Map? map = pawn.Map;
-                sb.Append('|');
-                sb.Append("MAP_ID=").Append(map?.uniqueID.ToString() ?? "null");
-                IntVec3 pos = pawn.Position;
-                sb.Append('|');
-                sb.Append("POS=").Append(
-                    pos.IsValid ? pos.ToString() : "Invalid");
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            // 意识状态：只读取，不触发死亡判断。
-            try
-            {
-                PawnCapacityDef? consciousness = PawnCapacityDefOf.Consciousness;
-                if (consciousness != null && pawn.health?.capacities != null)
-                {
-                    float level = pawn.health.capacities.GetLevel(consciousness);
-                    sb.Append('|');
-                    sb.Append("CONSCIOUSNESS_LEVEL=").Append(level.ToString("F4"));
-                    bool capable = pawn.health.capacities.CapableOf(consciousness);
-                    sb.Append('|');
-                    sb.Append("CONSCIOUSNESS_CAPABLE=").Append(capable);
-                }
-                else
-                {
-                    sb.Append("|CONSCIOUSNESS=<unavailable>");
-                }
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            try
-            {
-                sb.Append('|');
-                sb.Append("HEDIFFS=[").Append(BuildHediffList(pawn, "SNAPSHOT")).Append(']');
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            return sb.ToString();
+            Append(builder, "CONS_CACHE_STATUS", status);
+            Append(builder, "CONS_CACHE_VALUE", FormatNullable(value));
+            Append(
+                builder,
+                "CONS_CACHE_CAPABLE",
+                value.HasValue
+                    ? (value.Value > PawnCapacityDefOf.Consciousness.minForCapable).ToString()
+                    : "unavailable");
+            return builder.ToString();
         }
 
-        internal static string BuildHediffList(Pawn? pawn, string context)
+        internal static string BuildPassiveHediffList(Pawn? pawn)
         {
-            StringBuilder sb = new StringBuilder();
             try
             {
-                HediffSet? set = pawn?.health?.hediffSet;
-                if (set?.hediffs == null)
+                List<Hediff>? hediffs = pawn?.health?.hediffSet?.hediffs;
+                if (hediffs == null)
                 {
-                    sb.Append("null");
-                    return sb.ToString();
+                    return "null";
                 }
 
-                List<Hediff> hediffs = set.hediffs;
+                StringBuilder builder = new StringBuilder();
                 for (int i = 0; i < hediffs.Count; i++)
                 {
                     Hediff? hediff = hediffs[i];
@@ -794,436 +522,301 @@ namespace MAP_MechanoidMechanitor
                         continue;
                     }
 
-                    if (i > 0)
+                    if (builder.Length > 0)
                     {
-                        sb.Append("; ");
+                        builder.Append("; ");
                     }
 
-                    sb.Append('{');
-                    sb.Append("TYPE=").Append(hediff.GetType().Name);
-                    sb.Append(' ');
-                    sb.Append("DEF=").Append(hediff.def?.defName ?? "null");
-                    sb.Append(' ');
-                    sb.Append("SEV=").Append(hediff.Severity.ToString("F2"));
-                    sb.Append(' ');
-                    try
+                    builder.Append('{')
+                        .Append("TYPE=").Append(hediff.GetType().FullName ?? hediff.GetType().Name)
+                        .Append(" DEF=").Append(hediff.def?.defName ?? "null")
+                        .Append(" SEVERITY=").Append(Safe(() => hediff.Severity.ToString("F4")))
+                        .Append(" PART=").Append(hediff.Part?.def?.defName ?? "null");
+
+                    if (hediff is Hediff_DataProcessingAllocationBase)
                     {
-                        sb.Append("STAGE=").Append(hediff.CurStageIndex);
-                    }
-                    catch (Exception ex)
-                    {
-                        sb.Append("STAGE=<error:").Append(ex.GetType().Name).Append('>');
+                        builder.Append(" DATA_CACHE=")
+                            .Append(BuildDataProcessingHediffCacheSnapshot(hediff));
                     }
 
-                    sb.Append(' ');
-                    sb.Append("PART=").Append(hediff.Part?.LabelCap ?? "null");
-                    sb.Append(' ');
-                    sb.Append("IS_DP=")
-                        .Append(hediff is Hediff_DataProcessingAllocationBase
-                            || hediff is Hediff_DynamicConsciousnessBonusBase);
-
-                    // 当前 Stage 对 Consciousness 的修正（可能失败，单独捕获）。
-                    try
+                    if (hediff is Hediff_DynamicConsciousnessBonusBase)
                     {
-                        HediffStage? stage = hediff.CurStage;
-                        if (stage?.capMods != null)
-                        {
-                            foreach (PawnCapacityModifier mod in stage.capMods)
-                            {
-                                if (mod.capacity == PawnCapacityDefOf.Consciousness)
-                                {
-                                    sb.Append(' ');
-                                    sb.Append("CONS_OFFSET=").Append(mod.offset.ToString("F4"));
-                                    sb.Append(' ');
-                                    sb.Append("CONS_POSTFACTOR=")
-                                        .Append(mod.postFactor.ToString("F4"));
-                                    sb.Append(' ');
-                                    sb.Append("CONS_SETMAX=")
-                                        .Append(mod.setMax.ToString("F4"));
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        sb.Append(" CONS=<error:").Append(ex.GetType().Name).Append('>');
+                        builder.Append(" DYNAMIC_CACHE=")
+                            .Append(BuildDynamicConsciousnessCacheSnapshot(hediff));
                     }
 
-                    sb.Append('}');
+                    builder.Append('}');
                 }
+
+                return builder.ToString();
             }
             catch (Exception ex)
             {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
+                return "<error:" + ex.GetType().Name + ">";
+            }
+        }
+
+        internal static string BuildDataProcessingHediffCacheSnapshot(Hediff? hediff)
+        {
+            if (!(hediff is Hediff_DataProcessingAllocationBase))
+            {
+                return "not-data-processing";
             }
 
-            return sb.ToString();
+            return "cachedSteps=" + SafeField(DataCachedStepsField, hediff)
+                + ",cachedVariantKey=" + SafeField(DataCachedVariantField, hediff)
+                + ",cachedStagePresent=" + SafeFieldPresent(DataCachedStageField, hediff);
+        }
+
+        internal static string BuildDynamicConsciousnessCacheSnapshot(Hediff? hediff)
+        {
+            if (!(hediff is Hediff_DynamicConsciousnessBonusBase))
+            {
+                return "not-dynamic-consciousness";
+            }
+
+            return "cacheInitialized=" + SafeField(DynamicCacheInitializedField, hediff)
+                + ",cachedOffset=" + SafeField(DynamicCachedOffsetField, hediff)
+                + ",cachedVariantKey=" + SafeField(DynamicCachedVariantField, hediff)
+                + ",cachedStagePresent=" + SafeFieldPresent(DynamicCachedStageField, hediff);
         }
 
         internal static string BuildMechanitorRecordSnapshot(Pawn? pawn)
         {
-            StringBuilder sb = new StringBuilder();
-            try
-            {
-                if (!GameComponent_MechanoidMechanitorRegistry
-                        .TryGetMechanitorRecord(pawn, out MechanoidMechanitorRecord? record))
-                {
-                    sb.Append("HAS_RECORD=false");
-                    return sb.ToString();
-                }
-
-                sb.Append("HAS_RECORD=true");
-                sb.Append('|');
-                sb.Append("ORIGIN=").Append(record?.Origin.ToString() ?? "null");
-                sb.Append('|');
-                sb.Append("CHIP_BANDWIDTH_BONUS=")
-                    .Append(record?.ChipBandwidthBonus.ToString() ?? "null");
-                sb.Append('|');
-                sb.Append("ROLE_WORK_INIT=")
-                    .Append(record?.RoleWorkSettingsInitialized.ToString() ?? "null");
-                sb.Append('|');
-                sb.Append("SELF_WORK_MODE=")
-                    .Append(record?.SelfWorkMode?.defName ?? "null");
-
-                try
-                {
-                    bool isHost = GameComponent_MechanoidMechanitorRegistry
-                        .IsMechanicalConsciousnessHost(pawn);
-                    sb.Append('|');
-                    sb.Append("IS_CONSCIOUSNESS_HOST=").Append(isHost);
-                }
-                catch
-                {
-                    sb.Append("|IS_CONSCIOUSNESS_HOST=<error>");
-                }
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            return sb.ToString();
-        }
-
-        internal static string BuildDataProcessingSnapshot(Pawn? pawn)
-        {
-            StringBuilder sb = new StringBuilder();
-            try
-            {
-                GameComponent_DataProcessingAllocationRegistry? registry =
-                    GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
-                if (registry == null)
-                {
-                    sb.Append("REGISTRY=null");
-                    return sb.ToString();
-                }
-
-                sb.Append("REGISTRY=present");
-
-                try
-                {
-                    sb.Append('|');
-                    sb.Append("STEPS_FOR_TARGET=").Append(registry.GetStepsForTarget(pawn));
-                }
-                catch
-                {
-                    sb.Append("|STEPS_FOR_TARGET=<error>");
-                }
-
-                try
-                {
-                    sb.Append('|');
-                    sb.Append("TOTAL_STEPS_FOR_OVERSEER=")
-                        .Append(registry.GetTotalStepsForOverseer(pawn));
-                }
-                catch
-                {
-                    sb.Append("|TOTAL_STEPS_FOR_OVERSEER=<error>");
-                }
-
-                try
-                {
-                    DataProcessingDynamicTargetRecord? config =
-                        registry.GetDynamicTargetRecord(null, pawn);
-                    sb.Append('|');
-                    if (config == null)
-                    {
-                        sb.Append("DYNAMIC_TARGET_CONFIG=null");
-                    }
-                    else
-                    {
-                        sb.Append("DYNAMIC_TARGET_CONFIG{enabled=")
-                            .Append(config.enabled)
-                            .Append(", overseer=").Append(SafeThingId(config.overseer))
-                            .Append(", normalSteps=").Append(config.normalSteps)
-                            .Append(", defaultSpec=").Append(config.defaultSpecialization)
-                            .Append('}');
-                    }
-                }
-                catch
-                {
-                    sb.Append("|DYNAMIC_TARGET_CONFIG=<error>");
-                }
-
-                try
-                {
-                    sb.Append('|');
-                    sb.Append("CURRENT_DATASTREAM_HEDIFF=")
-                        .Append(FindHediffDefName(
-                            pawn, DataProcessingAllocationUtility.DataStreamDistributionDef));
-                }
-                catch
-                {
-                    sb.Append("|CURRENT_DATASTREAM_HEDIFF=<error>");
-                }
-
-                try
-                {
-                    sb.Append('|');
-                    sb.Append("CURRENT_COMMAND_FOCUS_HEDIFF=")
-                        .Append(FindCommandFocusDefName(pawn));
-                }
-                catch
-                {
-                    sb.Append("|CURRENT_COMMAND_FOCUS_HEDIFF=<error>");
-                }
-            }
-            catch (Exception ex)
-            {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
-            }
-
-            return sb.ToString();
-        }
-
-        private static string FindHediffDefName(Pawn? pawn, HediffDef? def)
-        {
-            if (pawn == null || def == null)
-            {
-                return "null";
-            }
-
-            HediffSet? set = pawn.health?.hediffSet;
-            if (set?.hediffs == null)
-            {
-                return "null";
-            }
-
-            foreach (Hediff hediff in set.hediffs)
-            {
-                if (hediff?.def == def)
-                {
-                    return def.defName;
-                }
-            }
-
-            return "null";
-        }
-
-        private static string FindCommandFocusDefName(Pawn? pawn)
-        {
             if (pawn == null)
             {
-                return "null";
+                return "PAWN=null";
             }
 
-            HediffSet? set = pawn.health?.hediffSet;
-            if (set?.hediffs == null)
-            {
-                return "null";
-            }
-
-            foreach (Hediff hediff in set.hediffs)
-            {
-                if (hediff?.def != null
-                    && DataProcessingAllocationUtility.IsAnyCommandFocusDef(hediff.def))
-                {
-                    return hediff.def.defName;
-                }
-            }
-
-            return "null";
-        }
-
-        internal static string BuildParallelThoughtArraySnapshot(
-            CompParallelThoughtArray? comp)
-        {
-            StringBuilder sb = new StringBuilder();
             try
             {
-                if (comp == null)
+                IReadOnlyList<MechanoidMechanitorRegistrySnapshotEntry> entries =
+                    GameComponent_MechanoidMechanitorRegistry.GetPersistentRecordSnapshot();
+                for (int i = 0; i < entries.Count; i++)
                 {
-                    sb.Append("COMP=null");
-                    return sb.ToString();
+                    MechanoidMechanitorRegistrySnapshotEntry entry = entries[i];
+                    if (ReferenceEquals(entry.Pawn, pawn)
+                        || SafeThingId(entry.Pawn) == SafeThingId(pawn))
+                    {
+                        return "HAS_PERSISTENT_RECORD=true"
+                            + "|ORIGIN=" + entry.Origin
+                            + "|IS_CONSCIOUSNESS_HOST=" + entry.IsMechanicalConsciousnessHost
+                            + "|RECORD_PAWN=" + SafeThingId(entry.Pawn);
+                    }
                 }
 
-                Building? building = comp.parent as Building;
-                sb.Append("BUILDING_THINGID=").Append(SafeThingId(building));
-                sb.Append('|');
-                sb.Append("SPAWNED=").Append(comp.parent?.Spawned == true);
-                sb.Append('|');
-                try
-                {
-                    sb.Append("MAP_ID=").Append(comp.parent?.Map?.uniqueID.ToString() ?? "null");
-                }
-                catch
-                {
-                    sb.Append("MAP_ID=<error>");
-                }
-
-                sb.Append('|');
-                sb.Append("TARGET=").Append(SafeThingId(comp.Target));
-                sb.Append('|');
-                sb.Append("TARGET_VALID=").Append(comp.IsTargetValid);
-                sb.Append('|');
-                sb.Append("CONFIGURED_BOOST=").Append(comp.ConfiguredBoostPercent);
-                sb.Append('|');
-                sb.Append("EFFECTIVE_BOOST=").Append(comp.EffectiveBoostPercent);
-                sb.Append('|');
-
-                try
-                {
-                    // lastEffectiveBoostPercent 为私有字段，使用只读反射。
-                    FieldInfo? field = AccessTools.Field(
-                        typeof(CompParallelThoughtArray), "lastEffectiveBoostPercent");
-                    object? val = field?.GetValue(comp);
-                    sb.Append("LAST_EFFECTIVE_BOOST=")
-                        .Append(val?.ToString() ?? "null");
-                }
-                catch
-                {
-                    sb.Append("LAST_EFFECTIVE_BOOST=<error>");
-                }
-
-                sb.Append('|');
-                sb.Append("IS_OPERATING=").Append(comp.IsOperating);
-                sb.Append('|');
-
-                try
-                {
-                    CompPowerTrader? power = comp.parent?.TryGetComp<CompPowerTrader>();
-                    sb.Append("POWER_TRADER=").Append(power != null);
-                    sb.Append('|');
-                    sb.Append("POWER_ON=").Append(power?.PowerOn == true);
-                    sb.Append('|');
-                    sb.Append("POWER_OUTPUT=")
-                        .Append(power != null ? power.PowerOutput.ToString("F1") : "null");
-                }
-                catch
-                {
-                    sb.Append("POWER=<error>");
-                }
-
-                sb.Append('|');
-                sb.Append("REQUESTED_POWER=")
-                    .Append(comp.RequestedPowerConsumption.ToString("F1"));
-                sb.Append('|');
-
-                try
-                {
-                    sb.Append("FACTION=")
-                        .Append(comp.parent?.Faction?.Name ?? "null");
-                }
-                catch
-                {
-                    sb.Append("FACTION=<error>");
-                }
+                return "HAS_PERSISTENT_RECORD=false";
             }
             catch (Exception ex)
             {
-                sb.Append("<error:").Append(ex.GetType().Name).Append('>');
+                return "<error:" + ex.GetType().Name + ">";
             }
-
-            return sb.ToString();
         }
 
-        // ===== 通用辅助 =====
+        internal static string BuildDataProcessingSnapshot(Pawn? focus)
+        {
+            return BuildRawRegistrySnapshot(
+                GameComponent_DataProcessingAllocationRegistry.CurrentRegistry,
+                focus);
+        }
 
-        internal static bool TryGetConsciousness(Pawn? pawn, out float value)
+        internal static string BuildRawRegistrySnapshot(
+            GameComponent_DataProcessingAllocationRegistry? registry,
+            Pawn? focus)
+        {
+            if (registry == null)
+            {
+                return "REGISTRY=null";
+            }
+
+            try
+            {
+                StringBuilder builder = new StringBuilder("REGISTRY=present");
+                AppendRawCollection(builder, "ALLOC", AllocationRecordsField?.GetValue(registry), focus);
+                AppendRawCollection(builder, "DYNAMIC_OVERSEER", DynamicAllocationRecordsField?.GetValue(registry), focus);
+                AppendRawCollection(builder, "DYNAMIC_TARGET", DynamicTargetRecordsField?.GetValue(registry), focus);
+                AppendRawCollection(builder, "SPECIALIZATION", SpecializationRecordsField?.GetValue(registry), focus);
+                Append(builder, "PENDING_POST_LOAD_RECONCILIATION", SafeField(PendingPostLoadReconciliationField, registry));
+                Append(builder, "POST_LOAD_RECONCILIATION_TICK", SafeField(PostLoadReconciliationTickField, registry));
+                return builder.ToString();
+            }
+            catch (Exception ex)
+            {
+                return "<error:" + ex.GetType().Name + ">";
+            }
+        }
+
+        private static void AppendRawCollection(
+            StringBuilder builder,
+            string label,
+            object? collectionObject,
+            Pawn? focus)
+        {
+            builder.Append('|').Append(label).Append("=[");
+            if (!(collectionObject is IEnumerable enumerable))
+            {
+                builder.Append("unavailable]");
+                return;
+            }
+
+            int total = 0;
+            int emitted = 0;
+            foreach (object? item in enumerable)
+            {
+                total++;
+                if (item == null)
+                {
+                    continue;
+                }
+
+                Pawn? overseer = ReadPawnMember(item, "overseer");
+                Pawn? target = ReadPawnMember(item, "target");
+                bool related = focus == null
+                    || ReferenceEquals(overseer, focus)
+                    || ReferenceEquals(target, focus)
+                    || SafeThingId(overseer) == SafeThingId(focus)
+                    || SafeThingId(target) == SafeThingId(focus);
+                if (!related)
+                {
+                    continue;
+                }
+
+                if (emitted > 0)
+                {
+                    builder.Append(';');
+                }
+
+                emitted++;
+                builder.Append('{')
+                    .Append("type=").Append(item.GetType().Name)
+                    .Append(",overseer=").Append(SafeThingId(overseer))
+                    .Append(",target=").Append(SafeThingId(target));
+                AppendMemberIfPresent(builder, item, "steps");
+                AppendMemberIfPresent(builder, item, "enabled");
+                AppendMemberIfPresent(builder, item, "normalSteps");
+                AppendMemberIfPresent(builder, item, "commonMaxSteps");
+                AppendMemberIfPresent(builder, item, "defaultSpecialization");
+                AppendMemberIfPresent(builder, item, "specialization");
+                AppendMemberIfPresent(builder, item, "minimumReserveSteps");
+                builder.Append('}');
+
+                if (emitted >= 200)
+                {
+                    builder.Append(";...truncated");
+                    break;
+                }
+            }
+
+            builder.Append("]COUNT=").Append(total)
+                .Append(",EMITTED=").Append(emitted);
+        }
+
+        internal static string BuildParallelThoughtArraySnapshot(CompParallelThoughtArray? comp)
+        {
+            if (comp == null)
+            {
+                return "COMP=null";
+            }
+
+            try
+            {
+                Pawn? target = ArrayTargetField?.GetValue(comp) as Pawn;
+                CompPowerTrader? power = ArrayPowerTraderField?.GetValue(comp) as CompPowerTrader;
+                StringBuilder builder = new StringBuilder();
+                Append(builder, "BUILDING", SafeThingId(comp.parent));
+                Append(builder, "SPAWNED", Safe(() => (comp.parent?.Spawned == true).ToString()));
+                Append(builder, "MAP", Safe(() => comp.parent?.Map?.uniqueID.ToString() ?? "null"));
+                Append(builder, "TARGET", SafeThingId(target));
+                Append(builder, "CONFIGURED_BOOST", SafeField(ArrayConfiguredBoostField, comp));
+                Append(builder, "LAST_EFFECTIVE_BOOST", SafeField(ArrayLastEffectiveField, comp));
+                Append(builder, "FALLBACK_TICK", SafeField(ArrayFallbackTickField, comp));
+                Append(builder, "POWER_TRADER_PRESENT", (power != null).ToString());
+                Append(builder, "POWER_ON", Safe(() => (power?.PowerOn == true).ToString()));
+                Append(builder, "POWER_OUTPUT", Safe(() => power?.PowerOutput.ToString("F1") ?? "null"));
+                Append(builder, "FACTION", Safe(() => comp.parent?.Faction?.def?.defName ?? "null"));
+                return builder.ToString();
+            }
+            catch (Exception ex)
+            {
+                return "<error:" + ex.GetType().Name + ">";
+            }
+        }
+
+        internal static bool TryGetCachedConsciousness(
+            Pawn? pawn,
+            out float value,
+            out string status)
         {
             value = 0f;
+            status = "unavailable";
             try
             {
-                PawnCapacityDef? consciousness = PawnCapacityDefOf.Consciousness;
-                if (consciousness != null && pawn != null && pawn.health.capacities != null)
+                PawnCapacitiesHandler? capacities = pawn?.health?.capacities;
+                if (capacities == null)
                 {
-                    value = pawn.health.capacities.GetLevel(consciousness);
+                    status = "capacities-null";
+                    return false;
+                }
+
+                object? cacheMap = CapacityCacheField?.GetValue(capacities);
+                if (cacheMap == null)
+                {
+                    status = "cache-map-null";
+                    return false;
+                }
+
+                PropertyInfo? indexer = cacheMap.GetType().GetProperty(
+                    "Item",
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (indexer == null)
+                {
+                    status = "indexer-unavailable";
+                    return false;
+                }
+
+                object? element = indexer.GetValue(
+                    cacheMap,
+                    new object[] { PawnCapacityDefOf.Consciousness });
+                if (element == null)
+                {
+                    status = "cache-element-null";
+                    return false;
+                }
+
+                FieldInfo? statusField = AccessTools.Field(element.GetType(), "status");
+                FieldInfo? valueField = AccessTools.Field(element.GetType(), "value");
+                status = statusField?.GetValue(element)?.ToString() ?? "status-null";
+                if (!string.Equals(status, "Cached", StringComparison.Ordinal))
+                {
+                    return false;
+                }
+
+                if (valueField?.GetValue(element) is float cached)
+                {
+                    value = cached;
                     return true;
                 }
-            }
-            catch
-            {
-                // 忽略。
-            }
 
-            return false;
+                status = "cached-value-unavailable";
+                return false;
+            }
+            catch (Exception ex)
+            {
+                status = "error:" + ex.GetType().Name;
+                return false;
+            }
         }
 
-        internal static Hediff? FindHediffArgument(object[] args)
-        {
-            if (args == null)
-            {
-                return null;
-            }
-
-            foreach (object arg in args)
-            {
-                if (arg is Hediff hediff)
-                {
-                    return hediff;
-                }
-            }
-
-            return null;
-        }
-
-        internal static string FormatMethod(MethodBase? method)
+        internal static string SafeStackTrace(int skipFrames)
         {
             try
             {
-                if (method == null)
-                {
-                    return "?";
-                }
-
-                Type? declaring = method.DeclaringType;
-                return (declaring?.FullName ?? "?") + "." + method.Name
-                    + "(" + string.Join(", ",
-                        Array.ConvertAll(
-                            method.GetParameters(),
-                            p => (p.ParameterType.Name + " " + p.Name))) + ")";
+                return new StackTrace(skipFrames, true).ToString();
             }
             catch
             {
-                return "?";
+                return "<stack-unavailable>";
             }
-        }
-
-        internal static string FormatDamageInfo(object[] args)
-        {
-            if (args == null)
-            {
-                return "null";
-            }
-
-            foreach (object arg in args)
-            {
-                if (arg is DamageInfo dinfo)
-                {
-                    try
-                    {
-                        return "DamageInfo{Amount=" + dinfo.Amount
-                            + ", Def=" + (dinfo.Def?.defName ?? "null")
-                            + ", Part=" + (dinfo.HitPart?.LabelCap ?? "null") + "}";
-                    }
-                    catch
-                    {
-                        return "DamageInfo<error>";
-                    }
-                }
-            }
-
-            return "null";
         }
 
         internal static string SafeThingId(Thing? thing)
@@ -1247,12 +840,7 @@ namespace MAP_MechanoidMechanitor
                     return "null";
                 }
 
-                if (pawn.Name is Name name)
-                {
-                    return name.ToStringFull ?? "null";
-                }
-
-                return pawn.LabelShortCap ?? "null";
+                return pawn.Name?.ToStringFull ?? pawn.LabelShort ?? "null";
             }
             catch
             {
@@ -1262,31 +850,180 @@ namespace MAP_MechanoidMechanitor
 
         internal static string SafeDefName(Pawn? pawn)
         {
-            try
-            {
-                return pawn?.def?.defName ?? "null";
-            }
-            catch
-            {
-                return "<error>";
-            }
+            return Safe(() => pawn?.def?.defName ?? "null");
         }
 
-        private static string FormatFloat(float? value)
+        internal static bool SafeDead(Pawn? pawn)
         {
-            if (value == null)
-            {
-                return "null";
-            }
-
             try
             {
-                return value.Value.ToString("F4");
+                return pawn?.Dead == true;
             }
             catch
             {
-                return "<error>";
+                return false;
             }
         }
+
+        internal static string FormatNullable(float? value)
+        {
+            return value.HasValue ? value.Value.ToString("F4") : "unavailable";
+        }
+
+        private static bool IsPawnReferencedByRawDataProcessingRecords(Pawn pawn)
+        {
+            try
+            {
+                GameComponent_DataProcessingAllocationRegistry? registry =
+                    GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
+                if (registry == null)
+                {
+                    return false;
+                }
+
+                return CollectionReferencesPawn(AllocationRecordsField?.GetValue(registry), pawn)
+                    || CollectionReferencesPawn(DynamicAllocationRecordsField?.GetValue(registry), pawn)
+                    || CollectionReferencesPawn(DynamicTargetRecordsField?.GetValue(registry), pawn)
+                    || CollectionReferencesPawn(SpecializationRecordsField?.GetValue(registry), pawn);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool CollectionReferencesPawn(object? collectionObject, Pawn pawn)
+        {
+            if (!(collectionObject is IEnumerable enumerable))
+            {
+                return false;
+            }
+
+            foreach (object? item in enumerable)
+            {
+                if (item == null)
+                {
+                    continue;
+                }
+
+                Pawn? overseer = ReadPawnMember(item, "overseer");
+                Pawn? target = ReadPawnMember(item, "target");
+                if (ReferenceEquals(overseer, pawn)
+                    || ReferenceEquals(target, pawn)
+                    || SafeThingId(overseer) == SafeThingId(pawn)
+                    || SafeThingId(target) == SafeThingId(pawn))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static Pawn? ReadPawnMember(object item, string memberName)
+        {
+            try
+            {
+                FieldInfo? field = AccessTools.Field(item.GetType(), memberName);
+                if (field?.GetValue(item) is Pawn fieldPawn)
+                {
+                    return fieldPawn;
+                }
+
+                PropertyInfo? property = AccessTools.Property(item.GetType(), memberName);
+                return property?.GetValue(item, null) as Pawn;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static void AppendMemberIfPresent(StringBuilder builder, object item, string memberName)
+        {
+            try
+            {
+                FieldInfo? field = AccessTools.Field(item.GetType(), memberName);
+                PropertyInfo? property = AccessTools.Property(item.GetType(), memberName);
+                object? value = field != null
+                    ? field.GetValue(item)
+                    : property?.GetValue(item, null);
+                if (field != null || property != null)
+                {
+                    builder.Append(',').Append(memberName).Append('=')
+                        .Append(value?.ToString() ?? "null");
+                }
+            }
+            catch
+            {
+                builder.Append(',').Append(memberName).Append("=<error>");
+            }
+        }
+
+        private static string SafeField(FieldInfo? field, object? instance)
+        {
+            try
+            {
+                return field?.GetValue(instance)?.ToString() ?? "null";
+            }
+            catch (Exception ex)
+            {
+                return "<error:" + ex.GetType().Name + ">";
+            }
+        }
+
+        private static string SafeFieldPresent(FieldInfo? field, object? instance)
+        {
+            try
+            {
+                return (field?.GetValue(instance) != null).ToString();
+            }
+            catch (Exception ex)
+            {
+                return "<error:" + ex.GetType().Name + ">";
+            }
+        }
+
+        private static void Append(StringBuilder builder, string key, string value)
+        {
+            if (builder.Length > 0)
+            {
+                builder.Append('|');
+            }
+
+            builder.Append(key).Append('=').Append(value);
+        }
+
+        private static string Safe(Func<string> getter)
+        {
+            try
+            {
+                return getter();
+            }
+            catch (Exception ex)
+            {
+                return "<error:" + ex.GetType().Name + ">";
+            }
+        }
+
+        private static string SafeText(string? value)
+        {
+            return value ?? "null";
+        }
+    }
+
+    internal sealed class LoadDeathPawnState
+    {
+        public string? methodName;
+        public string? triggeringHediffDefName;
+        public string? pawnThingId;
+        public bool deadBefore;
+        public float? cachedConsciousnessBefore;
+        public string? consciousnessCacheStatusBefore;
+        public string? passivePawnBefore;
+        public string? hediffsBefore;
+        public string? dataProcessingBefore;
+        public string? mechanitorBefore;
+        public string? stackTrace;
     }
 }
