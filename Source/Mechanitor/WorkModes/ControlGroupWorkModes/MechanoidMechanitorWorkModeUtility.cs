@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using RimWorld;
@@ -109,9 +110,18 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        /// <summary>
+        /// 幂等同步机械族机械师工作模式 Hediff。
+        /// 已经恰好拥有目标状态时完全不触碰健康系统；需要切换时先补目标，
+        /// 确认目标存在且 Pawn 仍存活后，再移除错误状态与重复项。
+        /// </summary>
         public static void ApplyWorkModeHediff(Pawn pawn, MechWorkModeDef workMode)
         {
-            if (pawn?.health?.hediffSet == null)
+            if (pawn?.health?.hediffSet?.hediffs == null
+                || pawn.Dead
+                || pawn.Destroyed
+                || pawn.Discarded
+                || pawn.health.isBeingKilled)
             {
                 return;
             }
@@ -119,55 +129,144 @@ namespace MAP_MechanoidMechanitor
             HediffDef? efficientDef = GetEfficientExecutionDef();
             HediffDef? mobileDef = GetMobileCombatDef();
             HediffDef? fortifiedDef = GetFortifiedDefenseDef();
+            HediffDef? targetDef = ResolveTargetHediffDef(
+                workMode,
+                efficientDef,
+                mobileDef,
+                fortifiedDef);
 
-            if (efficientDef != null)
+            if (workMode != null
+                && IsMechanoidMechanitorWorkMode(workMode)
+                && targetDef == null)
             {
-                Hediff existing = pawn.health.hediffSet.GetFirstHediffOfDef(efficientDef);
-                if (existing != null)
-                {
-                    pawn.health.RemoveHediff(existing);
-                }
-            }
-            if (mobileDef != null)
-            {
-                Hediff existing = pawn.health.hediffSet.GetFirstHediffOfDef(mobileDef);
-                if (existing != null)
-                {
-                    pawn.health.RemoveHediff(existing);
-                }
-            }
-            if (fortifiedDef != null)
-            {
-                Hediff existing = pawn.health.hediffSet.GetFirstHediffOfDef(fortifiedDef);
-                if (existing != null)
-                {
-                    pawn.health.RemoveHediff(existing);
-                }
+                Log.ErrorOnce(
+                    "[MAP-机械族机械师] 工作模式对应的 HediffDef 缺失，" +
+                    $"已保留现有状态：workMode={workMode.defName}。",
+                    unchecked(0x4D415057 + workMode.index));
+                return;
             }
 
-            if (workMode == null)
+            List<Hediff> snapshot =
+                new List<Hediff>(pawn.health.hediffSet.hediffs);
+            Hediff? keeper = null;
+            int customCount = 0;
+
+            for (int i = 0; i < snapshot.Count; i++)
+            {
+                Hediff? hediff = snapshot[i];
+                if (hediff?.def == null
+                    || !IsMechanoidMechanitorWorkMode(hediff.def))
+                {
+                    continue;
+                }
+
+                customCount++;
+                if (targetDef != null && hediff.def == targetDef && keeper == null)
+                {
+                    keeper = hediff;
+                }
+            }
+
+            if (targetDef != null && keeper != null && customCount == 1)
             {
                 return;
             }
 
-            HediffDef? targetDef = null;
-            if (workMode.defName == "MAP_WorkMode_EfficientExecution")
+            if (targetDef != null && keeper == null)
             {
-                targetDef = efficientDef;
-            }
-            else if (workMode.defName == "MAP_WorkMode_MobileCombat" ||
-                     workMode.defName == "MAP_WorkMode_MobileCombat_Guard")
-            {
-                targetDef = mobileDef;
-            }
-            else if (workMode.defName == "MAP_WorkMode_FortifiedDefense")
-            {
-                targetDef = fortifiedDef;
+                try
+                {
+                    pawn.health.AddHediff(targetDef);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 添加工作模式健康状态失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                        $"hediff={targetDef.defName}：{ex}");
+                    return;
+                }
+
+                if (pawn.Dead
+                    || pawn.Destroyed
+                    || pawn.Discarded
+                    || pawn.health?.isBeingKilled == true)
+                {
+                    return;
+                }
+
+                keeper = pawn.health?.hediffSet?.GetFirstHediffOfDef(targetDef);
+                if (keeper == null)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 添加工作模式健康状态后验证失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                        $"hediff={targetDef.defName}。");
+                    return;
+                }
             }
 
-            if (targetDef != null && pawn.health.hediffSet.GetFirstHediffOfDef(targetDef) == null)
+            List<Hediff>? current = pawn.health?.hediffSet?.hediffs;
+            if (current == null)
             {
-                pawn.health.AddHediff(targetDef);
+                return;
+            }
+
+            snapshot = new List<Hediff>(current);
+            for (int i = snapshot.Count - 1; i >= 0; i--)
+            {
+                Hediff? hediff = snapshot[i];
+                if (hediff?.def == null
+                    || !IsMechanoidMechanitorWorkMode(hediff.def)
+                    || ReferenceEquals(hediff, keeper))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    pawn.health.RemoveHediff(hediff);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 移除错误或重复工作模式健康状态失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                        $"hediff={hediff.def.defName}：{ex}");
+                }
+
+                if (pawn.Dead
+                    || pawn.Destroyed
+                    || pawn.Discarded
+                    || pawn.health?.isBeingKilled == true)
+                {
+                    return;
+                }
+            }
+        }
+
+        private static HediffDef? ResolveTargetHediffDef(
+            MechWorkModeDef? workMode,
+            HediffDef? efficientDef,
+            HediffDef? mobileDef,
+            HediffDef? fortifiedDef)
+        {
+            if (workMode == null)
+            {
+                return null;
+            }
+
+            switch (workMode.defName)
+            {
+                case "MAP_WorkMode_EfficientExecution":
+                    return efficientDef;
+                case "MAP_WorkMode_MobileCombat":
+                case "MAP_WorkMode_MobileCombat_Guard":
+                    return mobileDef;
+                case "MAP_WorkMode_FortifiedDefense":
+                    return fortifiedDef;
+                default:
+                    return null;
             }
         }
 
