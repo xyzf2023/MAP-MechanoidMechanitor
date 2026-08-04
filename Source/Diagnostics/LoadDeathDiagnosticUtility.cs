@@ -43,6 +43,9 @@ namespace MAP_MechanoidMechanitor
         private static readonly FieldInfo? PostLoadReconciliationTickField =
             AccessTools.Field(typeof(GameComponent_DataProcessingAllocationRegistry), "postLoadReconciliationEarliestTick");
 
+        private static readonly FieldInfo? HediffSeverityField =
+            AccessTools.Field(typeof(Hediff), "severityInt");
+
         private static readonly FieldInfo? DataCachedStepsField =
             AccessTools.Field(typeof(Hediff_DataProcessingAllocationBase), "cachedSteps");
         private static readonly FieldInfo? DataCachedVariantField =
@@ -530,7 +533,7 @@ namespace MAP_MechanoidMechanitor
                     builder.Append('{')
                         .Append("TYPE=").Append(hediff.GetType().FullName ?? hediff.GetType().Name)
                         .Append(" DEF=").Append(hediff.def?.defName ?? "null")
-                        .Append(" SEVERITY=").Append(Safe(() => hediff.Severity.ToString("F4")))
+                        .Append(" SEVERITY_RAW=").Append(SafeField(HediffSeverityField, hediff))
                         .Append(" PART=").Append(hediff.Part?.def?.defName ?? "null");
 
                     if (hediff is Hediff_DataProcessingAllocationBase)
@@ -613,11 +616,11 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        internal static string BuildDataProcessingSnapshot(Pawn? focus)
+        internal static string BuildDataProcessingSnapshot(Pawn? pawn)
         {
             return BuildRawRegistrySnapshot(
                 GameComponent_DataProcessingAllocationRegistry.CurrentRegistry,
-                focus);
+                pawn);
         }
 
         internal static string BuildRawRegistrySnapshot(
