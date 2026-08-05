@@ -1432,7 +1432,7 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    [HarmonyPatch(typeof(CompCerebrexCore), nameof(CompCerebrexCore.DrawAt), new[] { typeof(Vector3), typeof(bool) })]
+    [HarmonyPatch(typeof(CompCerebrexCore), nameof(CompCerebrexCore.DrawAt), new System.Type[] { typeof(Vector3), typeof(bool) })]
     public static class CerebrexCoreEmpWarningDrawPatch
     {
         [HarmonyPrefix]
