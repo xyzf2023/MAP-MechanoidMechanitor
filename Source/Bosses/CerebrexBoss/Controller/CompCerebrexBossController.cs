@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -39,6 +40,16 @@ namespace MAP_MechanoidMechanitor
         public const float EmpPropagationSpeed = 1f;
         public const float OriginalShockwaveRadius = 30.9f;
 
+        public const int EmpWarningRiseTicks = 30;
+        public const int EmpWarningHoldTicks = 60;
+        public const int EmpWarningSlamTicks = 20;
+        public const int EmpWarningRecoveryTicks = 20;
+        public const float EmpWarningPeakZOffset = 2.65f;
+        public const float EmpWarningImpactZOffset = 1.85f;
+        public const float OriginalBrainBaseZOffset = 2f;
+        public const float OriginalBrainBobHeight = 0.35f;
+        public const int OriginalBrainBobPeriodTicks = 300;
+
         public const int BandwidthCooldownMinTicks = 3000;
         public const int BandwidthCooldownMaxTicks = 4500;
         public const int BandwidthDurationTicks = 1800;
@@ -60,6 +71,12 @@ namespace MAP_MechanoidMechanitor
 
         private List<PendingCerebrexEmpHit> pendingEmpHits = new List<PendingCerebrexEmpHit>();
         private Dictionary<Thing, int> disabledPowerBuildings = new Dictionary<Thing, int>();
+
+        private bool empWarningActive;
+        private int empWarningStartTick;
+        private int empShockwaveReleaseTick;
+        private int empWarningEndTick;
+        private bool empShockwaveReleased;
 
         private bool bandwidthInterferenceActive;
         private Pawn? bandwidthTarget;
@@ -104,6 +121,11 @@ namespace MAP_MechanoidMechanitor
             Scribe_References.Look(ref assaultLord, "assaultLord");
             Scribe_Collections.Look(ref pendingEmpHits, "pendingEmpHits", LookMode.Deep);
             Scribe_Collections.Look(ref disabledPowerBuildings, "disabledPowerBuildings", LookMode.Reference, LookMode.Value);
+            Scribe_Values.Look(ref empWarningActive, "empWarningActive", false);
+            Scribe_Values.Look(ref empWarningStartTick, "empWarningStartTick", 0);
+            Scribe_Values.Look(ref empShockwaveReleaseTick, "empShockwaveReleaseTick", 0);
+            Scribe_Values.Look(ref empWarningEndTick, "empWarningEndTick", 0);
+            Scribe_Values.Look(ref empShockwaveReleased, "empShockwaveReleased", false);
             Scribe_Values.Look(ref bandwidthInterferenceActive, "bandwidthInterferenceActive", false);
             Scribe_References.Look(ref bandwidthTarget, "bandwidthTarget");
             Scribe_References.Look(ref bandwidthOverseer, "bandwidthOverseer");
@@ -160,6 +182,36 @@ namespace MAP_MechanoidMechanitor
             }
 
             disabledPowerBuildings.Remove(null!);
+
+            if (empWarningActive)
+            {
+                int expectedReleaseTick = empWarningStartTick
+                    + EmpWarningRiseTicks
+                    + EmpWarningHoldTicks
+                    + EmpWarningSlamTicks;
+                int expectedEndTick = expectedReleaseTick + EmpWarningRecoveryTicks;
+                bool empStateBroken = !ModsConfig.OdysseyActive
+                    || stopped
+                    || !parent.Spawned
+                    || parent.Destroyed
+                    || parent.Map == null
+                    || empWarningStartTick <= 0
+                    || empShockwaveReleaseTick != expectedReleaseTick
+                    || empWarningEndTick != expectedEndTick;
+
+                if (empStateBroken)
+                {
+                    ResetEmpWarningState();
+                    if (!stopped && ModsConfig.OdysseyActive && parent.Spawned && !parent.Destroyed && parent.Map != null)
+                    {
+                        nextEmpTick = nowTicks + Rand.RangeInclusive(EmpCooldownMinTicks, EmpCooldownMaxTicks);
+                    }
+                }
+            }
+            else
+            {
+                ResetEmpWarningState();
+            }
 
             if (bandwidthInterferenceActive)
             {
@@ -233,19 +285,25 @@ namespace MAP_MechanoidMechanitor
                 TickBandwidthInterference();
             }
 
-            // 4. 若主脑已停止，返回。
+            // 4. 已开始的 EMP 预警不因敌对关系中途变化而中断；主脑失效时由状态方法取消。
+            if (empWarningActive)
+            {
+                TickEmpWarning();
+            }
+
+            // 5. 若主脑已停止，返回。
             if (stopped)
             {
                 return;
             }
 
-            // 5. 检查自动运行条件。
+            // 6. 检查自动运行条件。
             if (!CanRunAutomatically())
             {
                 return;
             }
 
-            // 6. 每 60 tick 为全部机械巢单位补充机动作战。
+            // 7. 每 60 tick 为全部机械巢单位补充机动作战。
             mobileCombatTickCounter++;
             if (mobileCombatTickCounter >= MobileCombatCheckIntervalTicks)
             {
@@ -253,21 +311,20 @@ namespace MAP_MechanoidMechanitor
                 EnsureMobileCombatForAllMechanoids();
             }
 
-            // 7. 检查增援计时。
+            // 8. 检查增援计时。
             int now = Find.TickManager.TicksGame;
             if (now >= nextSummonTick)
             {
                 TrySummonWave(force: false);
             }
 
-            // 8. 检查 EMP 计时。
-            if (now >= nextEmpTick)
+            // 9. 检查 EMP 计时。冷却从冲击波真正释放时开始，而不是从预警开始。
+            if (!empWarningActive && now >= nextEmpTick)
             {
-                TriggerEmpShockwave();
-                nextEmpTick = now + Rand.RangeInclusive(EmpCooldownMinTicks, EmpCooldownMaxTicks);
+                StartEmpWarning(force: false);
             }
 
-            // 9. 若没有正在进行的带宽干扰，检查带宽干扰计时。
+            // 10. 若没有正在进行的带宽干扰，检查带宽干扰计时。
             if (!bandwidthInterferenceActive && now >= nextBandwidthTick)
             {
                 // 自动尝试失败（如无合法目标）仅延迟 60 tick 再次尝试，不进入完整冷却。
@@ -455,6 +512,121 @@ namespace MAP_MechanoidMechanitor
         // ----------------------------------------------------------------
         // EMP 冲击波
         // ----------------------------------------------------------------
+
+        private bool StartEmpWarning(bool force)
+        {
+            if (empWarningActive)
+            {
+                if (force)
+                {
+                    Messages.Message("主脑正在准备释放EMP冲击。", MessageTypeDefOf.RejectInput);
+                }
+
+                return false;
+            }
+
+            if (!ModsConfig.OdysseyActive || stopped || parent.Destroyed || !parent.Spawned || parent.Map == null)
+            {
+                return false;
+            }
+
+            int now = Find.TickManager.TicksGame;
+            empWarningActive = true;
+            empWarningStartTick = now;
+            empShockwaveReleaseTick = now + EmpWarningRiseTicks + EmpWarningHoldTicks + EmpWarningSlamTicks;
+            empWarningEndTick = empShockwaveReleaseTick + EmpWarningRecoveryTicks;
+            empShockwaveReleased = false;
+            return true;
+        }
+
+        private void TickEmpWarning()
+        {
+            if (!empWarningActive)
+            {
+                return;
+            }
+
+            if (!ModsConfig.OdysseyActive || stopped || parent.Destroyed || !parent.Spawned || parent.Map == null)
+            {
+                ResetEmpWarningState();
+                return;
+            }
+
+            int now = Find.TickManager.TicksGame;
+            if (!empShockwaveReleased && now >= empShockwaveReleaseTick)
+            {
+                TriggerEmpShockwave();
+                empShockwaveReleased = true;
+                nextEmpTick = now + Rand.RangeInclusive(EmpCooldownMinTicks, EmpCooldownMaxTicks);
+            }
+
+            if (now >= empWarningEndTick)
+            {
+                ResetEmpWarningState();
+            }
+        }
+
+        private void ResetEmpWarningState()
+        {
+            empWarningActive = false;
+            empWarningStartTick = 0;
+            empShockwaveReleaseTick = 0;
+            empWarningEndTick = 0;
+            empShockwaveReleased = false;
+        }
+
+        public static float CalculateOriginalBrainZOffset(int tick)
+        {
+            float bob = 0.5f * (1f + Mathf.Sin(Mathf.PI * 2f * tick / OriginalBrainBobPeriodTicks));
+            return OriginalBrainBaseZOffset + bob * OriginalBrainBobHeight;
+        }
+
+        public bool TryGetEmpWarningBrainZOffset(out float zOffset)
+        {
+            zOffset = 0f;
+            if (!empWarningActive || stopped || !parent.Spawned || parent.Destroyed || parent.Map == null)
+            {
+                return false;
+            }
+
+            int now = Find.TickManager.TicksGame;
+            int riseEndTick = empWarningStartTick + EmpWarningRiseTicks;
+            int holdEndTick = riseEndTick + EmpWarningHoldTicks;
+
+            if (now < riseEndTick)
+            {
+                float progress = Mathf.InverseLerp(empWarningStartTick, riseEndTick, now);
+                float eased = Mathf.SmoothStep(0f, 1f, progress);
+                float startZ = CalculateOriginalBrainZOffset(empWarningStartTick);
+                zOffset = Mathf.Lerp(startZ, EmpWarningPeakZOffset, eased);
+                return true;
+            }
+
+            if (now < holdEndTick)
+            {
+                zOffset = EmpWarningPeakZOffset;
+                return true;
+            }
+
+            if (now < empShockwaveReleaseTick)
+            {
+                float progress = Mathf.InverseLerp(holdEndTick, empShockwaveReleaseTick, now);
+                float eased = Mathf.SmoothStep(0f, 1f, progress);
+                zOffset = Mathf.Lerp(EmpWarningPeakZOffset, EmpWarningImpactZOffset, eased);
+                return true;
+            }
+
+            if (now < empWarningEndTick)
+            {
+                float progress = Mathf.InverseLerp(empShockwaveReleaseTick, empWarningEndTick, now);
+                float eased = Mathf.SmoothStep(0f, 1f, progress);
+                float originalZ = CalculateOriginalBrainZOffset(now);
+                zOffset = Mathf.Lerp(EmpWarningImpactZOffset, originalZ, eased);
+                return true;
+            }
+
+            return false;
+        }
 
         private void TriggerEmpShockwave()
         {
@@ -1114,6 +1286,7 @@ namespace MAP_MechanoidMechanitor
         public void Notify_CoreDeactivationStarted()
         {
             stopped = true;
+            ResetEmpWarningState();
             EndBandwidthInterference(startCooldown: false, reason: "deactivation");
             pendingEmpHits.Clear();
             bandwidthTargetsUsedThisBattle.Clear();
@@ -1124,6 +1297,7 @@ namespace MAP_MechanoidMechanitor
         private void FullCleanup(string reason)
         {
             stopped = true;
+            ResetEmpWarningState();
             EndBandwidthInterference(startCooldown: false, reason: reason);
             pendingEmpHits.Clear();
             bandwidthTargetsUsedThisBattle.Clear();
@@ -1254,7 +1428,24 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            TriggerEmpShockwave();
+            StartEmpWarning(force: true);
+        }
+    }
+
+    [HarmonyPatch(typeof(CompCerebrexCore), nameof(CompCerebrexCore.DrawAt), new[] { typeof(Vector3), typeof(bool) })]
+    public static class CerebrexCoreEmpWarningDrawPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(CompCerebrexCore __instance, ref Vector3 drawLoc)
+        {
+            CompCerebrexBossController? controller = __instance.parent?.GetComp<CompCerebrexBossController>();
+            if (controller == null || !controller.TryGetEmpWarningBrainZOffset(out float warningZ))
+            {
+                return;
+            }
+
+            float originalZ = CompCerebrexBossController.CalculateOriginalBrainZOffset(GenTicks.TicksGame);
+            drawLoc.z += warningZ - originalZ;
         }
     }
 }
