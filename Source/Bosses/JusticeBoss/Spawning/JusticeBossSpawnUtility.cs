@@ -38,6 +38,10 @@ namespace MAP_MechanoidMechanitor
 
         public const int DropOpenDelayTicks = 60;
 
+        private const int MinimumSafeDropSearchRadius = 5;
+
+        private const int MaximumDropSearchRadius = 24;
+
         public static List<PawnKindDef> BuildWaveComposition(
             int waveIndex,
             bool applyBossReplace = true)
@@ -1099,15 +1103,21 @@ namespace MAP_MechanoidMechanitor
         {
             bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
             IntVec2 size = IntVec2.One;
-            for (int radius = 3; radius <= 24; radius += 2)
+            for (
+                int radius = MinimumSafeDropSearchRadius;
+                radius <= MaximumDropSearchRadius;
+                radius += 2)
             {
+                // RimWorld 1.6 derives its internal search step from maxRadius / 5.
+                // Values below 5 produce a zero step and can loop forever after a failed search.
+                int safeRadius = Math.Max(radius, MinimumSafeDropSearchRadius);
                 string? detail = trace
                     ? "event=" + justiceEventId
                         + " wave=" + waveIndex
                         + " role=" + role
                         + " pawnIndex=" + pawnIndex
                         + " pawnId=" + pawn.thingIDNumber
-                        + " radius=" + radius
+                        + " radius=" + safeRadius
                         + " reserved=" + reserved.Count
                         + " center=" + JusticeBossTraceFormatting.DescribeCell(center)
                     : null;
@@ -1126,7 +1136,7 @@ namespace MAP_MechanoidMechanitor
                     out IntVec3 candidate,
                     allowFogged: false,
                     canRoofPunch: false,
-                    radius,
+                    safeRadius,
                     allowIndoors: true,
                     size,
                     mustBeReachableFromCenter: true);
@@ -1194,7 +1204,7 @@ namespace MAP_MechanoidMechanitor
                     && !thickRoof)
                 {
                     cell = candidate;
-                    radiusUsed = radius;
+                    radiusUsed = safeRadius;
                     return true;
                 }
             }
