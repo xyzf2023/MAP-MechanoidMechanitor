@@ -144,8 +144,10 @@ namespace MAP_MechanoidMechanitor
             int waveIndex =
                 JusticeBossLaunchTracePatchManager.ResolveWaveIndex(
                     justiceEventId);
-            long launchStarted = Stopwatch.GetTimestamp();
+            bool traceSession = JusticeBossLaunchTracePatchManager.Active;
             bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
+            long launchStarted =
+                traceSession ? Stopwatch.GetTimestamp() : 0L;
 
             if (trace)
             {
@@ -378,8 +380,10 @@ namespace MAP_MechanoidMechanitor
             guardLord = null;
             JusticeBossDropLaunchResult result =
                 new JusticeBossDropLaunchResult(kinds?.Count ?? 0);
-            long launchStarted = Stopwatch.GetTimestamp();
+            bool traceSession = JusticeBossLaunchTracePatchManager.Active;
             bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
+            long launchStarted =
+                traceSession ? Stopwatch.GetTimestamp() : 0L;
 
             if (trace)
             {
@@ -488,6 +492,23 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        private static string BuildPawnTraceDetail(
+            int justiceEventId,
+            int waveIndex,
+            JusticeBossDropRole role,
+            int pawnIndex,
+            int attempt,
+            PawnKindDef? kind)
+        {
+            return "event=" + justiceEventId
+                + " wave=" + waveIndex
+                + " role=" + role
+                + " pawnIndex=" + pawnIndex
+                + " attempt=" + attempt
+                + " pawnKind="
+                + JusticeBossTraceFormatting.Sanitize(kind?.defName);
+        }
+
         private static Pawn? TryGeneratePawn(
             PawnKindDef kind,
             Faction? faction,
@@ -497,15 +518,19 @@ namespace MAP_MechanoidMechanitor
             int pawnIndex,
             int attempt)
         {
-            long started = Stopwatch.GetTimestamp();
+            bool traceSession = JusticeBossLaunchTracePatchManager.Active;
             bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
-            string baseDetail =
-                "event=" + justiceEventId
-                + " wave=" + waveIndex
-                + " role=" + role
-                + " pawnIndex=" + pawnIndex
-                + " attempt=" + attempt
-                + " pawnKind=" + JusticeBossTraceFormatting.Sanitize(kind?.defName);
+            long started =
+                traceSession ? Stopwatch.GetTimestamp() : 0L;
+            string? baseDetail = trace
+                ? BuildPawnTraceDetail(
+                    justiceEventId,
+                    waveIndex,
+                    role,
+                    pawnIndex,
+                    attempt,
+                    kind)
+                : null;
 
             if (trace)
             {
@@ -600,9 +625,18 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception exception)
             {
+                string exceptionDetail =
+                    baseDetail
+                    ?? BuildPawnTraceDetail(
+                        justiceEventId,
+                        waveIndex,
+                        role,
+                        pawnIndex,
+                        attempt,
+                        kind);
                 JusticeBossLaunchTracePatchManager.WriteException(
                     "GENERATE_PAWN_EXCEPTION",
-                    baseDetail
+                    exceptionDetail
                         + " elapsedMs="
                         + JusticeBossTraceFormatting.FormatElapsed(started),
                     exception);
@@ -635,7 +669,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
-            long planningStarted = Stopwatch.GetTimestamp();
+            long planningStarted =
+                trace ? Stopwatch.GetTimestamp() : 0L;
             MapComponent_JusticeBossDropTracker tracker =
                 MapComponent_JusticeBossDropTracker.For(map);
 
@@ -659,26 +694,27 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < pawns.Count; i++)
             {
                 Pawn pawn = pawns[i];
-                string baseDetail =
-                    "event=" + justiceEventId
-                    + " wave=" + waveIndex
-                    + " role=" + role
-                    + " pawnIndex=" + i
-                    + " pawnId=" + pawn.thingIDNumber
-                    + " pawnKind="
-                    + JusticeBossTraceFormatting.Sanitize(
-                        pawnKinds.TryGetValue(pawn, out PawnKindDef kind)
-                            ? kind?.defName
-                            : pawn.kindDef?.defName)
-                    + " reserved=" + reserved.Count
-                    + " podGroups=" + podGroups.Count;
+                string? baseDetail = trace
+                    ? "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=" + role
+                        + " pawnIndex=" + i
+                        + " pawnId=" + pawn.thingIDNumber
+                        + " pawnKind="
+                        + JusticeBossTraceFormatting.Sanitize(
+                            pawnKinds.TryGetValue(pawn, out PawnKindDef kind)
+                                ? kind?.defName
+                                : pawn.kindDef?.defName)
+                        + " reserved=" + reserved.Count
+                        + " podGroups=" + podGroups.Count
+                    : null;
 
                 if (trace)
                 {
                     JusticeBossLaunchTracePatchManager.Write(
                         "DROP_CELL_BEGIN",
                         baseDetail,
-                        JusticeBossTraceWriteMode.Critical);
+                        JusticeBossTraceWriteMode.Buffered);
                 }
 
                 bool found = TryFindDropCell(
@@ -760,7 +796,8 @@ namespace MAP_MechanoidMechanitor
                     JusticeBossTraceWriteMode.Critical);
             }
 
-            long launchStarted = Stopwatch.GetTimestamp();
+            long launchStarted =
+                trace ? Stopwatch.GetTimestamp() : 0L;
             for (int i = 0; i < podGroups.Count; i++)
             {
                 List<Pawn> group = podGroups[i];
@@ -783,19 +820,20 @@ namespace MAP_MechanoidMechanitor
                 for (int p = 0; p < group.Count; p++)
                 {
                     Pawn pawn = group[p];
-                    string registerDetail =
-                        "event=" + justiceEventId
-                        + " wave=" + waveIndex
-                        + " role=" + role
-                        + " podIndex=" + i
-                        + " pawnInGroup=" + p
-                        + " pawnId=" + pawn.thingIDNumber
-                        + " pawnKind="
-                        + JusticeBossTraceFormatting.Sanitize(
-                            pawnKinds.TryGetValue(pawn, out PawnKindDef kind)
-                                ? kind?.defName
-                                : pawn.kindDef?.defName)
-                        + " pendingBefore=" + tracker.PendingCount;
+                    string? registerDetail = trace
+                        ? "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=" + role
+                            + " podIndex=" + i
+                            + " pawnInGroup=" + p
+                            + " pawnId=" + pawn.thingIDNumber
+                            + " pawnKind="
+                            + JusticeBossTraceFormatting.Sanitize(
+                                pawnKinds.TryGetValue(pawn, out PawnKindDef kind)
+                                    ? kind?.defName
+                                    : pawn.kindDef?.defName)
+                            + " pendingBefore=" + tracker.PendingCount
+                        : null;
 
                     if (trace)
                     {
@@ -964,14 +1002,15 @@ namespace MAP_MechanoidMechanitor
                 for (int i = 0; i < group.Count; i++)
                 {
                     Pawn pawn = group[i];
-                    string detail =
-                        "event=" + justiceEventId
-                        + " wave=" + waveIndex
-                        + " role=" + role
-                        + " podIndex=" + podIndex
-                        + " pawnInGroup=" + i
-                        + " pawnId=" + pawn.thingIDNumber
-                        + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell);
+                    string? detail = trace
+                        ? "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=" + role
+                            + " podIndex=" + podIndex
+                            + " pawnInGroup=" + i
+                            + " pawnId=" + pawn.thingIDNumber
+                            + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell)
+                        : null;
 
                     if (trace)
                     {
@@ -1062,15 +1101,16 @@ namespace MAP_MechanoidMechanitor
             IntVec2 size = IntVec2.One;
             for (int radius = 3; radius <= 24; radius += 2)
             {
-                string detail =
-                    "event=" + justiceEventId
-                    + " wave=" + waveIndex
-                    + " role=" + role
-                    + " pawnIndex=" + pawnIndex
-                    + " pawnId=" + pawn.thingIDNumber
-                    + " radius=" + radius
-                    + " reserved=" + reserved.Count
-                    + " center=" + JusticeBossTraceFormatting.DescribeCell(center);
+                string? detail = trace
+                    ? "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=" + role
+                        + " pawnIndex=" + pawnIndex
+                        + " pawnId=" + pawn.thingIDNumber
+                        + " radius=" + radius
+                        + " reserved=" + reserved.Count
+                        + " center=" + JusticeBossTraceFormatting.DescribeCell(center)
+                    : null;
 
                 if (trace)
                 {
@@ -1123,9 +1163,18 @@ namespace MAP_MechanoidMechanitor
                         map,
                         size,
                         faction);
-                bool alreadyReserved = reserved.Contains(candidate);
-                bool thickRoof =
-                    candidate.GetRoof(map) == RoofDefOf.RoofRockThick;
+                bool alreadyReserved = false;
+                bool thickRoof = false;
+                if (skyfallerCanLand)
+                {
+                    alreadyReserved = reserved.Contains(candidate);
+                    if (!alreadyReserved)
+                    {
+                        thickRoof =
+                            candidate.GetRoof(map)
+                            == RoofDefOf.RoofRockThick;
+                    }
+                }
 
                 if (trace)
                 {

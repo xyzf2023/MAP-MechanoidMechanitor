@@ -41,7 +41,7 @@ namespace MAP_MechanoidMechanitor
             Active && JusticeBossTraceFileWriter.CanWriteNormal;
 
         internal static bool CanWriteEmergency =>
-            Active && JusticeBossTraceFileWriter.IsOpen;
+            installed && JusticeBossTraceFileWriter.IsOpen;
 
         internal static void Refresh()
         {
@@ -304,14 +304,17 @@ namespace MAP_MechanoidMechanitor
             int waveCount,
             int totalWaves)
         {
+            bool contextActive = Active;
             JusticeBossWaveTraceContext context =
                 new JusticeBossWaveTraceContext
                 {
-                    active = Active,
+                    active = contextActive,
                     eventId = eventId,
                     waveIndex = waveCount + 1,
                     totalWaves = totalWaves,
-                    startedTimestamp = Stopwatch.GetTimestamp(),
+                    startedTimestamp = contextActive
+                        ? Stopwatch.GetTimestamp()
+                        : 0L,
                 };
 
             if (!context.active)
