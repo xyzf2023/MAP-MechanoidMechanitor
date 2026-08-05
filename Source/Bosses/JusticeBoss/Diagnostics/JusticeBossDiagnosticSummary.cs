@@ -14,8 +14,8 @@ namespace MAP_MechanoidMechanitor
     {
         internal static void Refresh()
         {
+            JusticeBossLaunchTracePatchManager.Refresh();
             JusticeBossDiagnosticSummaryPatchManager.Refresh();
-            JusticeBossPostLandingTracePatchManager.Refresh();
         }
     }
 
@@ -99,7 +99,7 @@ namespace MAP_MechanoidMechanitor
             double elapsedMs,
             Exception? exception)
         {
-            if (landedCount < JusticeBossPostLandingTraceState.RecentBatchPawnThreshold
+            if (landedCount < JusticeBossLaunchTracePatchManager.LandingSummaryPawnThreshold
                 && !(pendingBefore > 0 && pendingAfter <= 0)
                 && exception == null)
             {
@@ -172,8 +172,8 @@ namespace MAP_MechanoidMechanitor
             return "diagnostics=" + (Enabled ? "on" : "off")
                 + " summaryPatches="
                 + (JusticeBossDiagnosticSummaryPatchManager.Installed ? "on" : "off")
-                + " tracePatches="
-                + (JusticeBossPostLandingTracePatchManager.Installed ? "on" : "off")
+                + " launchTrace="
+                + (JusticeBossLaunchTracePatchManager.Active ? "on" : "off")
                 + " traceFile="
                 + (JusticeBossTraceFileWriter.IsOpen ? "open" : "closed")
                 + " traceLimit="
@@ -283,7 +283,7 @@ namespace MAP_MechanoidMechanitor
                             typeof(Lord).MakeByRefType(),
                         }),
                     nameof(JusticeBossDiagnosticSummaryHooks.LaunchWavePrefix),
-                    nameof(JusticeBossDiagnosticSummaryHooks.LaunchResultPostfix));
+                    nameof(JusticeBossDiagnosticSummaryHooks.LaunchWaveResultPostfix));
 
                 PatchRequired(
                     "Spawn.LaunchGuardDropPodsNear",
@@ -300,7 +300,7 @@ namespace MAP_MechanoidMechanitor
                             typeof(Lord).MakeByRefType(),
                         }),
                     nameof(JusticeBossDiagnosticSummaryHooks.LaunchGuardPrefix),
-                    nameof(JusticeBossDiagnosticSummaryHooks.LaunchResultPostfix));
+                    nameof(JusticeBossDiagnosticSummaryHooks.LaunchGuardResultPostfix));
 
                 installed = true;
                 WriteInstall("success");
@@ -449,7 +449,23 @@ namespace MAP_MechanoidMechanitor
             __state = JusticeBossDiagnosticUtility.BeginSummaryScope("Guard.Launch");
         }
 
-        public static void LaunchResultPostfix(
+        public static void LaunchWaveResultPostfix(
+            int justiceEventId,
+            JusticeBossDropLaunchResult? __result,
+            JusticeBossSummaryScopeState __state)
+        {
+            JusticeBossDiagnosticUtility.EndSummaryScope(
+                __state,
+                "event=" + justiceEventId
+                    + " requested=" + (__result?.RequestedPawnCount ?? -1)
+                    + " launched=" + (__result?.LaunchedPawnCount ?? -1)
+                    + " failed=" + (__result?.FailedKinds.Count ?? -1)
+                    + " bossReplacements=" + (__result?.BossReplacementCount ?? -1)
+                    + " fatal=" + (__result?.FatalFailure ?? false),
+                JusticeBossDiagnosticUtility.WaveSlowMs);
+        }
+
+        public static void LaunchGuardResultPostfix(
             int justiceEventId,
             JusticeBossDropLaunchResult? __result,
             JusticeBossSummaryScopeState __state)

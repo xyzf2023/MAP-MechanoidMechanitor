@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using RimWorld;
 using Verse;
 using Verse.AI.Group;
@@ -140,83 +141,186 @@ namespace MAP_MechanoidMechanitor
             JusticeBossDropLaunchResult result =
                 new JusticeBossDropLaunchResult(kinds?.Count ?? 0);
             Map? map = justice?.Map ?? justice?.MapHeld;
-            if (justice == null || map == null || kinds == null || kinds.Count == 0)
+            int waveIndex =
+                JusticeBossLaunchTracePatchManager.ResolveWaveIndex(
+                    justiceEventId);
+            long launchStarted = Stopwatch.GetTimestamp();
+            bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
+
+            if (trace)
             {
-                if (kinds != null)
+                JusticeBossLaunchTracePatchManager.Write(
+                    "WAVE_LAUNCH_BEGIN",
+                    "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=Assault"
+                        + " requested=" + result.RequestedPawnCount
+                        + " map=" + (map?.uniqueID ?? -1),
+                    JusticeBossTraceWriteMode.Critical);
+            }
+
+            try
+            {
+                if (justice == null || map == null || kinds == null || kinds.Count == 0)
                 {
-                    result.FailedKinds.AddRange(kinds);
+                    if (kinds != null)
+                    {
+                        result.FailedKinds.AddRange(kinds);
+                    }
+
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "WAVE_LAUNCH_END",
+                            "event=" + justiceEventId
+                                + " wave=" + waveIndex
+                                + " role=Assault result=invalid-input"
+                                + " requested=" + result.RequestedPawnCount
+                                + " elapsedMs="
+                                + JusticeBossTraceFormatting.FormatElapsed(launchStarted),
+                            JusticeBossTraceWriteMode.Critical);
+                    }
+
+                    return result;
+                }
+
+                Faction? faction = justice.Faction ?? Faction.OfMechanoids;
+                IntVec3 center = justice.Spawned ? justice.Position : fallbackAnchor;
+                if (!center.IsValid)
+                {
+                    center = fallbackAnchor;
+                }
+
+                assaultLordCache = JusticeBossLordUtility.EnsureAssaultLord(
+                    map,
+                    faction,
+                    justiceEventId);
+
+                List<Pawn> pawns = new List<Pawn>();
+                Dictionary<Pawn, PawnKindDef> pawnKinds =
+                    new Dictionary<Pawn, PawnKindDef>();
+                HashSet<Pawn> bossPawns = new HashSet<Pawn>();
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "WAVE_GENERATION_BEGIN",
+                        "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=Assault requested=" + kinds.Count,
+                        JusticeBossTraceWriteMode.Critical);
+                }
+
+                for (int i = 0; i < kinds.Count; i++)
+                {
+                    PawnKindDef kind = kinds[i];
+                    if (kind == null)
+                    {
+                        continue;
+                    }
+
+                    bool wantBoss =
+                        kind.isBoss && !JusticePawnUtility.IsBossJustice(kind);
+                    PawnKindDef launchKind = kind;
+                    Pawn? pawn = TryGeneratePawn(
+                        kind,
+                        faction,
+                        justiceEventId,
+                        waveIndex,
+                        JusticeBossDropRole.Assault,
+                        i,
+                        attempt: 1);
+
+                    if (pawn == null && wantBoss)
+                    {
+                        PawnKindDef? fallback =
+                            JusticeBossMechPoolUtility.PickWeighted(
+                                JusticeBossMechPoolUtility.BuildCombatPool());
+                        if (fallback != null)
+                        {
+                            launchKind = fallback;
+                            pawn = TryGeneratePawn(
+                                fallback,
+                                faction,
+                                justiceEventId,
+                                waveIndex,
+                                JusticeBossDropRole.Assault,
+                                i,
+                                attempt: 2);
+                        }
+                    }
+                    else if (pawn != null && wantBoss)
+                    {
+                        bossPawns.Add(pawn);
+                    }
+
+                    if (pawn == null)
+                    {
+                        result.FailedKinds.Add(launchKind);
+                        continue;
+                    }
+
+                    pawns.Add(pawn);
+                    pawnKinds[pawn] = launchKind;
+                }
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "WAVE_GENERATION_END",
+                        "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=Assault generated=" + pawns.Count
+                            + " failed=" + result.FailedKinds.Count
+                            + " elapsedMs="
+                            + JusticeBossTraceFormatting.FormatElapsed(launchStarted),
+                        JusticeBossTraceWriteMode.Critical);
+                }
+
+                JusticeBossDropLaunchResult launchResult = LaunchPawnDropPods(
+                    map,
+                    faction,
+                    center,
+                    fallbackAnchor,
+                    justiceEventId,
+                    waveIndex,
+                    JusticeBossDropRole.Assault,
+                    pawns,
+                    pawnKinds,
+                    bossPawns);
+                result.LaunchedPawnCount = launchResult.LaunchedPawnCount;
+                result.BossReplacementCount = launchResult.BossReplacementCount;
+                result.FatalFailure = launchResult.FatalFailure;
+                result.FailedKinds.AddRange(launchResult.FailedKinds);
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "WAVE_LAUNCH_END",
+                        "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=Assault requested=" + result.RequestedPawnCount
+                            + " launched=" + result.LaunchedPawnCount
+                            + " failed=" + result.FailedKinds.Count
+                            + " fatal=" + result.FatalFailure
+                            + " elapsedMs="
+                            + JusticeBossTraceFormatting.FormatElapsed(launchStarted),
+                        JusticeBossTraceWriteMode.Critical);
                 }
 
                 return result;
             }
-
-            Faction? faction = justice.Faction ?? Faction.OfMechanoids;
-            IntVec3 center = justice.Spawned ? justice.Position : fallbackAnchor;
-            if (!center.IsValid)
+            catch (Exception exception)
             {
-                center = fallbackAnchor;
+                JusticeBossLaunchTracePatchManager.WriteException(
+                    "WAVE_LAUNCH_EXCEPTION",
+                    "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=Assault"
+                        + " requested=" + result.RequestedPawnCount,
+                    exception);
+                throw;
             }
-
-            assaultLordCache = JusticeBossLordUtility.EnsureAssaultLord(
-                map,
-                faction,
-                justiceEventId);
-
-            List<Pawn> pawns = new List<Pawn>();
-            Dictionary<Pawn, PawnKindDef> pawnKinds = new Dictionary<Pawn, PawnKindDef>();
-            HashSet<Pawn> bossPawns = new HashSet<Pawn>();
-            for (int i = 0; i < kinds.Count; i++)
-            {
-                PawnKindDef kind = kinds[i];
-                if (kind == null)
-                {
-                    continue;
-                }
-
-                bool wantBoss = kind.isBoss && !JusticePawnUtility.IsBossJustice(kind);
-                PawnKindDef launchKind = kind;
-                Pawn? pawn = TryGeneratePawn(kind, faction);
-                if (pawn == null && wantBoss)
-                {
-                    PawnKindDef? fallback =
-                        JusticeBossMechPoolUtility.PickWeighted(
-                            JusticeBossMechPoolUtility.BuildCombatPool());
-                    if (fallback != null)
-                    {
-                        launchKind = fallback;
-                        pawn = TryGeneratePawn(fallback, faction);
-                    }
-                }
-                else if (pawn != null && wantBoss)
-                {
-                    bossPawns.Add(pawn);
-                }
-
-                if (pawn == null)
-                {
-                    result.FailedKinds.Add(launchKind);
-                    continue;
-                }
-
-                pawns.Add(pawn);
-                pawnKinds[pawn] = launchKind;
-            }
-
-            JusticeBossDropLaunchResult launchResult = LaunchPawnDropPods(
-                map,
-                faction,
-                center,
-                fallbackAnchor,
-                justiceEventId,
-                JusticeBossDropRole.Assault,
-                pawns,
-                pawnKinds,
-                bossPawns);
-            result.LaunchedPawnCount = launchResult.LaunchedPawnCount;
-            result.BossReplacementCount = launchResult.BossReplacementCount;
-            result.FatalFailure = launchResult.FatalFailure;
-            result.FailedKinds.AddRange(launchResult.FailedKinds);
-            return result;
         }
 
         public static JusticeBossDropLaunchResult LaunchGuardDropPodsNear(
@@ -227,14 +331,16 @@ namespace MAP_MechanoidMechanitor
             int count,
             out Lord? guardLord)
         {
-            List<PawnGenOption> combat = JusticeBossMechPoolUtility.BuildCombatPool();
+            List<PawnGenOption> combat =
+                JusticeBossMechPoolUtility.BuildCombatPool();
             if (combat.Count == 0 || map == null || faction == null)
             {
                 guardLord = null;
-                JusticeBossDropLaunchResult failed = new JusticeBossDropLaunchResult(count)
-                {
-                    FatalFailure = true,
-                };
+                JusticeBossDropLaunchResult failed =
+                    new JusticeBossDropLaunchResult(count)
+                    {
+                        FatalFailure = true,
+                    };
                 Log.ErrorOnce(
                     "[MAP JusticeBoss] Cannot build the guard mechanoid pool.",
                     map?.uniqueID ^ 0x2C91 ?? 0x2C91);
@@ -244,7 +350,8 @@ namespace MAP_MechanoidMechanitor
             List<PawnKindDef> kinds = new List<PawnKindDef>(count);
             for (int i = 0; i < count; i++)
             {
-                PawnKindDef? kind = JusticeBossMechPoolUtility.PickWeighted(combat);
+                PawnKindDef? kind =
+                    JusticeBossMechPoolUtility.PickWeighted(combat);
                 if (kind != null)
                 {
                     kinds.Add(kind);
@@ -271,56 +378,143 @@ namespace MAP_MechanoidMechanitor
             guardLord = null;
             JusticeBossDropLaunchResult result =
                 new JusticeBossDropLaunchResult(kinds?.Count ?? 0);
-            if (map == null || faction == null || kinds == null || kinds.Count == 0)
+            long launchStarted = Stopwatch.GetTimestamp();
+            bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
+
+            if (trace)
             {
-                if (kinds != null)
+                JusticeBossLaunchTracePatchManager.Write(
+                    "GUARD_LAUNCH_BEGIN",
+                    "event=" + justiceEventId
+                        + " wave=0 role=Guard requested=" + result.RequestedPawnCount
+                        + " map=" + (map?.uniqueID ?? -1),
+                    JusticeBossTraceWriteMode.Critical);
+            }
+
+            try
+            {
+                if (map == null || faction == null || kinds == null || kinds.Count == 0)
                 {
-                    result.FailedKinds.AddRange(kinds);
+                    if (kinds != null)
+                    {
+                        result.FailedKinds.AddRange(kinds);
+                    }
+
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "GUARD_LAUNCH_END",
+                            "event=" + justiceEventId
+                                + " wave=0 role=Guard result=invalid-input"
+                                + " requested=" + result.RequestedPawnCount
+                                + " elapsedMs="
+                                + JusticeBossTraceFormatting.FormatElapsed(launchStarted),
+                            JusticeBossTraceWriteMode.Critical);
+                    }
+
+                    return result;
+                }
+
+                guardLord = JusticeBossLordUtility.EnsureGuardLord(
+                    map,
+                    faction,
+                    justiceEventId,
+                    anchor);
+
+                List<Pawn> pawns = new List<Pawn>();
+                Dictionary<Pawn, PawnKindDef> pawnKinds =
+                    new Dictionary<Pawn, PawnKindDef>();
+                for (int i = 0; i < kinds.Count; i++)
+                {
+                    PawnKindDef kind = kinds[i];
+                    Pawn? pawn = TryGeneratePawn(
+                        kind,
+                        faction,
+                        justiceEventId,
+                        0,
+                        JusticeBossDropRole.Guard,
+                        i,
+                        1);
+                    if (pawn == null)
+                    {
+                        result.FailedKinds.Add(kind);
+                        continue;
+                    }
+
+                    pawns.Add(pawn);
+                    pawnKinds[pawn] = kind;
+                }
+
+                JusticeBossDropLaunchResult launchResult = LaunchPawnDropPods(
+                    map,
+                    faction,
+                    anchor,
+                    anchor,
+                    justiceEventId,
+                    0,
+                    JusticeBossDropRole.Guard,
+                    pawns,
+                    pawnKinds,
+                    bossPawns: null);
+                result.LaunchedPawnCount = launchResult.LaunchedPawnCount;
+                result.FatalFailure = launchResult.FatalFailure;
+                result.FailedKinds.AddRange(launchResult.FailedKinds);
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "GUARD_LAUNCH_END",
+                        "event=" + justiceEventId
+                            + " wave=0 role=Guard requested=" + result.RequestedPawnCount
+                            + " launched=" + result.LaunchedPawnCount
+                            + " failed=" + result.FailedKinds.Count
+                            + " fatal=" + result.FatalFailure
+                            + " elapsedMs="
+                            + JusticeBossTraceFormatting.FormatElapsed(launchStarted),
+                        JusticeBossTraceWriteMode.Critical);
                 }
 
                 return result;
             }
-
-            guardLord = JusticeBossLordUtility.EnsureGuardLord(
-                map,
-                faction,
-                justiceEventId,
-                anchor);
-
-            List<Pawn> pawns = new List<Pawn>();
-            Dictionary<Pawn, PawnKindDef> pawnKinds = new Dictionary<Pawn, PawnKindDef>();
-            for (int i = 0; i < kinds.Count; i++)
+            catch (Exception exception)
             {
-                PawnKindDef kind = kinds[i];
-                Pawn? pawn = TryGeneratePawn(kind, faction);
-                if (pawn == null)
-                {
-                    result.FailedKinds.Add(kind);
-                    continue;
-                }
-
-                pawns.Add(pawn);
-                pawnKinds[pawn] = kind;
+                JusticeBossLaunchTracePatchManager.WriteException(
+                    "GUARD_LAUNCH_EXCEPTION",
+                    "event=" + justiceEventId
+                        + " wave=0 role=Guard"
+                        + " requested=" + result.RequestedPawnCount,
+                    exception);
+                throw;
             }
-
-            JusticeBossDropLaunchResult launchResult = LaunchPawnDropPods(
-                map,
-                faction,
-                anchor,
-                anchor,
-                justiceEventId,
-                JusticeBossDropRole.Guard,
-                pawns,
-                pawnKinds,
-                bossPawns: null);
-            result.LaunchedPawnCount = launchResult.LaunchedPawnCount;
-            result.FatalFailure = launchResult.FatalFailure;
-            result.FailedKinds.AddRange(launchResult.FailedKinds);
-            return result;
         }
 
-        private static Pawn? TryGeneratePawn(PawnKindDef kind, Faction? faction)
+        private static Pawn? TryGeneratePawn(
+            PawnKindDef kind,
+            Faction? faction,
+            int justiceEventId,
+            int waveIndex,
+            JusticeBossDropRole role,
+            int pawnIndex,
+            int attempt)
         {
+            long started = Stopwatch.GetTimestamp();
+            bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
+            string baseDetail =
+                "event=" + justiceEventId
+                + " wave=" + waveIndex
+                + " role=" + role
+                + " pawnIndex=" + pawnIndex
+                + " attempt=" + attempt
+                + " pawnKind=" + JusticeBossTraceFormatting.Sanitize(kind?.defName);
+
+            if (trace)
+            {
+                JusticeBossLaunchTracePatchManager.Write(
+                    "GENERATE_PAWN_BEGIN",
+                    baseDetail,
+                    JusticeBossTraceWriteMode.Critical);
+            }
+
             try
             {
                 PawnGenerationRequest request = new PawnGenerationRequest(
@@ -329,14 +523,94 @@ namespace MAP_MechanoidMechanitor
                     PawnGenerationContext.NonPlayer,
                     forceGenerateNewPawn: true);
                 Pawn pawn = PawnGenerator.GeneratePawn(request);
-                pawn.SetFaction(faction);
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "GENERATE_PAWN_CREATED",
+                        baseDetail
+                            + " pawnId=" + pawn.thingIDNumber
+                            + " faction="
+                            + JusticeBossTraceFormatting.Sanitize(
+                                pawn.Faction?.def?.defName),
+                        JusticeBossTraceWriteMode.Buffered);
+                }
+
+                if (pawn.Faction != faction)
+                {
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "SET_FACTION_BEGIN",
+                            baseDetail
+                                + " pawnId=" + pawn.thingIDNumber
+                                + " currentFaction="
+                                + JusticeBossTraceFormatting.Sanitize(
+                                    pawn.Faction?.def?.defName)
+                                + " targetFaction="
+                                + JusticeBossTraceFormatting.Sanitize(
+                                    faction?.def?.defName),
+                            JusticeBossTraceWriteMode.Critical);
+                    }
+
+                    pawn.SetFaction(faction);
+
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "SET_FACTION_END",
+                            baseDetail
+                                + " pawnId=" + pawn.thingIDNumber
+                                + " faction="
+                                + JusticeBossTraceFormatting.Sanitize(
+                                    pawn.Faction?.def?.defName),
+                            JusticeBossTraceWriteMode.Buffered);
+                    }
+                }
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "MOBILE_COMBAT_HEDIFF_BEGIN",
+                        baseDetail + " pawnId=" + pawn.thingIDNumber,
+                        JusticeBossTraceWriteMode.Critical);
+                }
+
                 MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff(pawn);
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "MOBILE_COMBAT_HEDIFF_END",
+                        baseDetail
+                            + " pawnId=" + pawn.thingIDNumber
+                            + " elapsedMs="
+                            + JusticeBossTraceFormatting.FormatElapsed(started),
+                        JusticeBossTraceWriteMode.Buffered);
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "GENERATE_PAWN_END",
+                        baseDetail
+                            + " pawnId=" + pawn.thingIDNumber
+                            + " elapsedMs="
+                            + JusticeBossTraceFormatting.FormatElapsed(started),
+                        JusticeBossTraceWriteMode.Buffered);
+                }
+
                 return pawn;
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
+                JusticeBossLaunchTracePatchManager.WriteException(
+                    "GENERATE_PAWN_EXCEPTION",
+                    baseDetail
+                        + " elapsedMs="
+                        + JusticeBossTraceFormatting.FormatElapsed(started),
+                    exception);
                 Log.Warning(
-                    "[MAP JusticeBoss] Failed to generate " + kind?.defName + ": " + e.Message);
+                    "[MAP JusticeBoss] Failed to generate "
+                        + kind?.defName
+                        + ": "
+                        + exception.Message);
                 return null;
             }
         }
@@ -347,17 +621,21 @@ namespace MAP_MechanoidMechanitor
             IntVec3 center,
             IntVec3 anchor,
             int justiceEventId,
+            int waveIndex,
             JusticeBossDropRole role,
             List<Pawn> pawns,
             Dictionary<Pawn, PawnKindDef> pawnKinds,
             HashSet<Pawn>? bossPawns)
         {
-            JusticeBossDropLaunchResult result = new JusticeBossDropLaunchResult(pawns.Count);
+            JusticeBossDropLaunchResult result =
+                new JusticeBossDropLaunchResult(pawns.Count);
             if (pawns.Count == 0)
             {
                 return result;
             }
 
+            bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
+            long planningStarted = Stopwatch.GetTimestamp();
             MapComponent_JusticeBossDropTracker tracker =
                 MapComponent_JusticeBossDropTracker.For(map);
 
@@ -365,10 +643,69 @@ namespace MAP_MechanoidMechanitor
             List<List<Pawn>> podGroups = new List<List<Pawn>>();
             List<IntVec3> podCells = new List<IntVec3>();
 
+            if (trace)
+            {
+                JusticeBossLaunchTracePatchManager.Write(
+                    "DROP_PLAN_BEGIN",
+                    "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=" + role
+                        + " pawns=" + pawns.Count
+                        + " center=" + JusticeBossTraceFormatting.DescribeCell(center)
+                        + " map=" + map.uniqueID,
+                    JusticeBossTraceWriteMode.Critical);
+            }
+
             for (int i = 0; i < pawns.Count; i++)
             {
                 Pawn pawn = pawns[i];
-                if (TryFindDropCell(map, center, faction, reserved, out IntVec3 cell))
+                string baseDetail =
+                    "event=" + justiceEventId
+                    + " wave=" + waveIndex
+                    + " role=" + role
+                    + " pawnIndex=" + i
+                    + " pawnId=" + pawn.thingIDNumber
+                    + " pawnKind="
+                    + JusticeBossTraceFormatting.Sanitize(
+                        pawnKinds.TryGetValue(pawn, out PawnKindDef kind)
+                            ? kind?.defName
+                            : pawn.kindDef?.defName)
+                    + " reserved=" + reserved.Count
+                    + " podGroups=" + podGroups.Count;
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "DROP_CELL_BEGIN",
+                        baseDetail,
+                        JusticeBossTraceWriteMode.Critical);
+                }
+
+                bool found = TryFindDropCell(
+                    map,
+                    center,
+                    faction,
+                    reserved,
+                    justiceEventId,
+                    waveIndex,
+                    role,
+                    i,
+                    pawn,
+                    out IntVec3 cell,
+                    out int radiusUsed);
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "DROP_CELL_END",
+                        baseDetail
+                            + " success=" + found
+                            + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell)
+                            + " radius=" + radiusUsed,
+                        JusticeBossTraceWriteMode.Buffered);
+                }
+
+                if (found)
                 {
                     reserved.Add(cell);
                     podGroups.Add(new List<Pawn> { pawn });
@@ -377,9 +714,28 @@ namespace MAP_MechanoidMechanitor
                 else if (podGroups.Count > 0)
                 {
                     podGroups[podGroups.Count - 1].Add(pawn);
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "DROP_CELL_FALLBACK_GROUP",
+                            baseDetail
+                                + " targetPodIndex=" + (podGroups.Count - 1)
+                                + " targetCell="
+                                + JusticeBossTraceFormatting.DescribeCell(
+                                    podCells[podCells.Count - 1]),
+                            JusticeBossTraceWriteMode.Buffered);
+                    }
                 }
                 else
                 {
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "DROP_PLAN_ABORTED",
+                            baseDetail + " reason=no-legal-initial-cell",
+                            JusticeBossTraceWriteMode.Critical);
+                    }
+
                     Log.ErrorOnce(
                         "[MAP JusticeBoss] No legal drop cells for summoned mechanoids; aborting launch.",
                         map.uniqueID ^ 0x5B0D);
@@ -389,12 +745,66 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
+            if (trace)
+            {
+                JusticeBossLaunchTracePatchManager.Write(
+                    "DROP_PLAN_END",
+                    "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=" + role
+                        + " pawns=" + pawns.Count
+                        + " reserved=" + reserved.Count
+                        + " podGroups=" + podGroups.Count
+                        + " elapsedMs="
+                        + JusticeBossTraceFormatting.FormatElapsed(planningStarted),
+                    JusticeBossTraceWriteMode.Critical);
+            }
+
+            long launchStarted = Stopwatch.GetTimestamp();
             for (int i = 0; i < podGroups.Count; i++)
             {
                 List<Pawn> group = podGroups[i];
                 IntVec3 cell = podCells[i];
-                foreach (Pawn pawn in group)
+
+                if (trace)
                 {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "POD_GROUP_BEGIN",
+                        "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=" + role
+                            + " podIndex=" + i
+                            + " groupCount=" + group.Count
+                            + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell)
+                            + " pendingBefore=" + tracker.PendingCount,
+                        JusticeBossTraceWriteMode.Critical);
+                }
+
+                for (int p = 0; p < group.Count; p++)
+                {
+                    Pawn pawn = group[p];
+                    string registerDetail =
+                        "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=" + role
+                        + " podIndex=" + i
+                        + " pawnInGroup=" + p
+                        + " pawnId=" + pawn.thingIDNumber
+                        + " pawnKind="
+                        + JusticeBossTraceFormatting.Sanitize(
+                            pawnKinds.TryGetValue(pawn, out PawnKindDef kind)
+                                ? kind?.defName
+                                : pawn.kindDef?.defName)
+                        + " pendingBefore=" + tracker.PendingCount;
+
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "TRACKER_REGISTER_BEGIN",
+                            registerDetail,
+                            JusticeBossTraceWriteMode.Critical);
+                    }
+
                     tracker.Register(
                         new PendingJusticeBossDrop
                         {
@@ -403,20 +813,68 @@ namespace MAP_MechanoidMechanitor
                             role = role,
                             faction = faction,
                             anchorCell = anchor,
-                            registeredTick = Find.TickManager.TicksGame,
+                            registeredTick =
+                                Current.Game?.tickManager?.TicksGame ?? -1,
                         });
+
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "TRACKER_REGISTER_END",
+                            registerDetail
+                                + " pendingAfter=" + tracker.PendingCount,
+                            JusticeBossTraceWriteMode.Buffered);
+                    }
                 }
 
-                if (!TryMakeDropPod(map, faction, cell, group))
+                if (trace)
                 {
-                    foreach (Pawn pawn in group)
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "MAKE_DROP_POD_BEGIN",
+                        "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=" + role
+                            + " podIndex=" + i
+                            + " groupCount=" + group.Count
+                            + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell),
+                        JusticeBossTraceWriteMode.Critical);
+                }
+
+                bool podCreated = TryMakeDropPod(
+                    map,
+                    faction,
+                    cell,
+                    group,
+                    justiceEventId,
+                    waveIndex,
+                    role,
+                    i);
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "MAKE_DROP_POD_END",
+                        "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=" + role
+                            + " podIndex=" + i
+                            + " groupCount=" + group.Count
+                            + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell)
+                            + " success=" + podCreated,
+                        JusticeBossTraceWriteMode.Buffered);
+                }
+
+                if (!podCreated)
+                {
+                    for (int p = 0; p < group.Count; p++)
                     {
-                        tracker.Unregister(pawn);
+                        tracker.Unregister(group[p]);
                     }
 
                     AddFailedKinds(result, group, pawnKinds);
                     DiscardPawns(group);
-                    Log.Warning("[MAP JusticeBoss] Failed to create drop pod for summoned mechs.");
+                    Log.Warning(
+                        "[MAP JusticeBoss] Failed to create drop pod for summoned mechs.");
                     continue;
                 }
 
@@ -431,6 +889,35 @@ namespace MAP_MechanoidMechanitor
                         }
                     }
                 }
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "POD_GROUP_END",
+                        "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=" + role
+                            + " podIndex=" + i
+                            + " groupCount=" + group.Count
+                            + " launchedTotal=" + result.LaunchedPawnCount
+                            + " pending=" + tracker.PendingCount,
+                        JusticeBossTraceWriteMode.Buffered);
+                }
+            }
+
+            if (trace)
+            {
+                JusticeBossLaunchTracePatchManager.Write(
+                    "POD_LAUNCH_END",
+                    "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=" + role
+                        + " podGroups=" + podGroups.Count
+                        + " launched=" + result.LaunchedPawnCount
+                        + " failed=" + result.FailedKinds.Count
+                        + " elapsedMs="
+                        + JusticeBossTraceFormatting.FormatElapsed(launchStarted),
+                    JusticeBossTraceWriteMode.Critical);
             }
 
             return result;
@@ -443,7 +930,10 @@ namespace MAP_MechanoidMechanitor
         {
             for (int i = 0; i < pawns.Count; i++)
             {
-                if (pawnKinds.TryGetValue(pawns[i], out PawnKindDef kind) && kind != null)
+                if (pawnKinds.TryGetValue(
+                        pawns[i],
+                        out PawnKindDef kind)
+                    && kind != null)
                 {
                     result.FailedKinds.Add(kind);
                 }
@@ -454,8 +944,13 @@ namespace MAP_MechanoidMechanitor
             Map map,
             Faction? faction,
             IntVec3 cell,
-            List<Pawn> group)
+            List<Pawn> group,
+            int justiceEventId,
+            int waveIndex,
+            JusticeBossDropRole role,
+            int podIndex)
         {
+            bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
             try
             {
                 ActiveTransporterInfo info = new ActiveTransporterInfo();
@@ -468,18 +963,84 @@ namespace MAP_MechanoidMechanitor
 
                 for (int i = 0; i < group.Count; i++)
                 {
-                    if (info.innerContainer.TryAdd(group[i], 1) <= 0)
+                    Pawn pawn = group[i];
+                    string detail =
+                        "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=" + role
+                        + " podIndex=" + podIndex
+                        + " pawnInGroup=" + i
+                        + " pawnId=" + pawn.thingIDNumber
+                        + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell);
+
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "POD_CONTAINER_ADD_BEGIN",
+                            detail,
+                            JusticeBossTraceWriteMode.Critical);
+                    }
+
+                    int added = info.innerContainer.TryAdd(pawn, 1);
+
+                    if (trace)
+                    {
+                        JusticeBossLaunchTracePatchManager.Write(
+                            "POD_CONTAINER_ADD_END",
+                            detail + " added=" + added,
+                            JusticeBossTraceWriteMode.Buffered);
+                    }
+
+                    if (added <= 0)
                     {
                         return false;
                     }
                 }
 
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "DROP_POD_CREATE_BEGIN",
+                        "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=" + role
+                            + " podIndex=" + podIndex
+                            + " groupCount=" + group.Count
+                            + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell),
+                        JusticeBossTraceWriteMode.Critical);
+                }
+
                 DropPodUtility.MakeDropPodAt(cell, map, info, faction);
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "DROP_POD_CREATE_END",
+                        "event=" + justiceEventId
+                            + " wave=" + waveIndex
+                            + " role=" + role
+                            + " podIndex=" + podIndex
+                            + " groupCount=" + group.Count
+                            + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell),
+                        JusticeBossTraceWriteMode.Buffered);
+                }
+
                 return true;
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Log.Warning("[MAP JusticeBoss] Drop pod creation failed: " + e.Message);
+                JusticeBossLaunchTracePatchManager.WriteException(
+                    "MAKE_DROP_POD_EXCEPTION",
+                    "event=" + justiceEventId
+                        + " wave=" + waveIndex
+                        + " role=" + role
+                        + " podIndex=" + podIndex
+                        + " groupCount=" + group.Count
+                        + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell),
+                    exception);
+                Log.Warning(
+                    "[MAP JusticeBoss] Drop pod creation failed: "
+                        + exception.Message);
                 return false;
             }
         }
@@ -489,30 +1050,108 @@ namespace MAP_MechanoidMechanitor
             IntVec3 center,
             Faction? faction,
             List<IntVec3> reserved,
-            out IntVec3 cell)
+            int justiceEventId,
+            int waveIndex,
+            JusticeBossDropRole role,
+            int pawnIndex,
+            Pawn pawn,
+            out IntVec3 cell,
+            out int radiusUsed)
         {
+            bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
             IntVec2 size = IntVec2.One;
             for (int radius = 3; radius <= 24; radius += 2)
             {
-                if (DropCellFinder.TryFindDropSpotNear(
-                        center,
-                        map,
-                        out cell,
-                        allowFogged: false,
-                        canRoofPunch: false,
-                        radius,
-                        allowIndoors: true,
-                        size,
-                        mustBeReachableFromCenter: true)
-                    && DropCellFinder.SkyfallerCanLandAt(cell, map, size, faction)
-                    && !reserved.Contains(cell)
-                    && cell.GetRoof(map) != RoofDefOf.RoofRockThick)
+                string detail =
+                    "event=" + justiceEventId
+                    + " wave=" + waveIndex
+                    + " role=" + role
+                    + " pawnIndex=" + pawnIndex
+                    + " pawnId=" + pawn.thingIDNumber
+                    + " radius=" + radius
+                    + " reserved=" + reserved.Count
+                    + " center=" + JusticeBossTraceFormatting.DescribeCell(center);
+
+                if (trace)
                 {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "DROP_CELL_RADIUS_BEGIN",
+                        detail,
+                        JusticeBossTraceWriteMode.Critical);
+                }
+
+                bool foundSpot = DropCellFinder.TryFindDropSpotNear(
+                    center,
+                    map,
+                    out IntVec3 candidate,
+                    allowFogged: false,
+                    canRoofPunch: false,
+                    radius,
+                    allowIndoors: true,
+                    size,
+                    mustBeReachableFromCenter: true);
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "DROP_CELL_RADIUS_END",
+                        detail
+                            + " foundSpot=" + foundSpot
+                            + " candidate="
+                            + JusticeBossTraceFormatting.DescribeCell(candidate),
+                        JusticeBossTraceWriteMode.Buffered);
+                }
+
+                if (!foundSpot)
+                {
+                    continue;
+                }
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "DROP_CELL_VALIDATE_BEGIN",
+                        detail
+                            + " candidate="
+                            + JusticeBossTraceFormatting.DescribeCell(candidate),
+                        JusticeBossTraceWriteMode.Critical);
+                }
+
+                bool skyfallerCanLand =
+                    DropCellFinder.SkyfallerCanLandAt(
+                        candidate,
+                        map,
+                        size,
+                        faction);
+                bool alreadyReserved = reserved.Contains(candidate);
+                bool thickRoof =
+                    candidate.GetRoof(map) == RoofDefOf.RoofRockThick;
+
+                if (trace)
+                {
+                    JusticeBossLaunchTracePatchManager.Write(
+                        "DROP_CELL_VALIDATE_END",
+                        detail
+                            + " candidate="
+                            + JusticeBossTraceFormatting.DescribeCell(candidate)
+                            + " skyfallerCanLand=" + skyfallerCanLand
+                            + " alreadyReserved=" + alreadyReserved
+                            + " thickRoof=" + thickRoof,
+                        JusticeBossTraceWriteMode.Buffered);
+                }
+
+                if (skyfallerCanLand
+                    && !alreadyReserved
+                    && !thickRoof)
+                {
+                    cell = candidate;
+                    radiusUsed = radius;
                     return true;
                 }
             }
 
             cell = IntVec3.Invalid;
+            radiusUsed = -1;
             return false;
         }
 

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using RimWorld;
 using Verse;
 using Verse.AI.Group;
@@ -38,7 +40,8 @@ namespace MAP_MechanoidMechanitor
 
     public sealed class MapComponent_JusticeBossDropTracker : MapComponent
     {
-        private List<PendingJusticeBossDrop> pending = new List<PendingJusticeBossDrop>();
+        private List<PendingJusticeBossDrop> pending =
+            new List<PendingJusticeBossDrop>();
 
         private int landedAndAssignedCount;
 
@@ -88,37 +91,104 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            for (int i = pending.Count - 1; i >= 0; i--)
+            bool diagnostics = JusticeBossDiagnosticUtility.Enabled;
+            int pendingBefore = pending.Count;
+            int landedBefore = landedAndAssignedCount;
+            long startedTimestamp =
+                diagnostics ? Stopwatch.GetTimestamp() : 0L;
+            Dictionary<string, int>? kindCounts =
+                diagnostics ? new Dictionary<string, int>() : null;
+            HashSet<int>? eventIds =
+                diagnostics ? new HashSet<int>() : null;
+            Exception? exception = null;
+
+            try
             {
-                PendingJusticeBossDrop entry = pending[i];
-                Pawn? pawn = entry.pawn;
-                if (pawn == null || pawn.Destroyed || pawn.Dead)
+                for (int i = pending.Count - 1; i >= 0; i--)
                 {
-                    pending.RemoveAt(i);
-                    continue;
-                }
+                    PendingJusticeBossDrop entry = pending[i];
+                    Pawn? pawn = entry.pawn;
+                    if (pawn == null || pawn.Destroyed || pawn.Dead)
+                    {
+                        pending.RemoveAt(i);
+                        continue;
+                    }
 
-                if (IsInTransit(pawn))
-                {
-                    continue;
-                }
+                    if (IsInTransit(pawn))
+                    {
+                        continue;
+                    }
 
-                if (pawn.Spawned && pawn.Map == map)
-                {
-                    CompleteLanding(entry);
-                    pending.RemoveAt(i);
-                    continue;
-                }
+                    if (pawn.Spawned && pawn.Map == map)
+                    {
+                        CompleteLanding(entry);
+                        pending.RemoveAt(i);
 
-                bool inWorld = Find.WorldPawns.Contains(pawn);
-                bool held = pawn.ParentHolder is IThingHolder;
-                if (!inWorld && !held && pawn.MapHeld == null)
+                        if (diagnostics)
+                        {
+                            string key =
+                                (pawn.kindDef?.defName ?? "null")
+                                + "/"
+                                + entry.role;
+                            kindCounts!.TryGetValue(key, out int current);
+                            kindCounts[key] = current + 1;
+                            eventIds!.Add(entry.justiceEventId);
+                        }
+
+                        continue;
+                    }
+
+                    bool inWorld = Find.WorldPawns.Contains(pawn);
+                    bool held = pawn.ParentHolder is IThingHolder;
+                    if (!inWorld && !held && pawn.MapHeld == null)
+                    {
+                        Log.WarningOnce(
+                            "[MAP JusticeBoss] Pending drop pawn lost before landing: "
+                                + pawn.LabelShort,
+                            pawn.thingIDNumber ^ 0x4A05);
+                        pending.RemoveAt(i);
+                    }
+                }
+            }
+            catch (Exception caught)
+            {
+                exception = caught;
+                throw;
+            }
+            finally
+            {
+                if (diagnostics)
                 {
-                    Log.WarningOnce(
-                        "[MAP JusticeBoss] Pending drop pawn lost before landing: "
-                            + pawn.LabelShort,
-                        pawn.thingIDNumber ^ 0x4A05);
-                    pending.RemoveAt(i);
+                    int landedCount =
+                        landedAndAssignedCount - landedBefore;
+                    int pendingAfter = pending.Count;
+                    int eventCount = eventIds?.Count ?? 0;
+                    string kindCountsText =
+                        JusticeBossTraceFormatting.DescribeKindCounts(
+                            kindCounts);
+                    double elapsedMs =
+                        JusticeBossTraceFormatting.ElapsedMilliseconds(
+                            startedTimestamp);
+
+                    JusticeBossDiagnosticUtility.WriteLandingSummary(
+                        map.uniqueID,
+                        pendingBefore,
+                        pendingAfter,
+                        landedCount,
+                        eventCount,
+                        kindCountsText,
+                        elapsedMs,
+                        exception);
+
+                    JusticeBossLaunchTracePatchManager.WriteLandingBatchSummary(
+                        map.uniqueID,
+                        pendingBefore,
+                        pendingAfter,
+                        landedCount,
+                        eventCount,
+                        kindCountsText,
+                        elapsedMs,
+                        exception);
                 }
             }
         }
@@ -128,12 +198,9 @@ namespace MAP_MechanoidMechanitor
             IThingHolder? holder = pawn.ParentHolder;
             while (holder != null)
             {
-                if (holder is ActiveTransporter || holder is ActiveTransporterInfo)
-                {
-                    return true;
-                }
-
-                if (holder is Skyfaller)
+                if (holder is ActiveTransporter
+                    || holder is ActiveTransporterInfo
+                    || holder is Skyfaller)
                 {
                     return true;
                 }
@@ -147,7 +214,10 @@ namespace MAP_MechanoidMechanitor
         private void CompleteLanding(PendingJusticeBossDrop entry)
         {
             Pawn pawn = entry.pawn!;
-            Faction? faction = entry.faction ?? pawn.Faction ?? Faction.OfMechanoids;
+            Faction? faction =
+                entry.faction
+                ?? pawn.Faction
+                ?? Faction.OfMechanoids;
             if (faction != null && pawn.Faction != faction)
             {
                 pawn.SetFaction(faction);
@@ -177,8 +247,14 @@ namespace MAP_MechanoidMechanitor
         public override void ExposeData()
         {
             base.ExposeData();
-            Scribe_Collections.Look(ref pending, "pendingJusticeBossDrops", LookMode.Deep);
-            Scribe_Values.Look(ref landedAndAssignedCount, "landedAndAssignedCount", 0);
+            Scribe_Collections.Look(
+                ref pending,
+                "pendingJusticeBossDrops",
+                LookMode.Deep);
+            Scribe_Values.Look(
+                ref landedAndAssignedCount,
+                "landedAndAssignedCount",
+                0);
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 pending ??= new List<PendingJusticeBossDrop>();
