@@ -8,6 +8,10 @@ namespace MAP_MechanoidMechanitor
     {
         public const int DropOpenDelayTicks = 60;
 
+        private const int MinimumSafeDropSearchRadius = 5;
+
+        private const int MaximumDropSearchRadius = 40;
+
         /// <summary>
         /// 由主脑组件召唤一批机械族。每只机械族单独空投（以保留按 PawnKind 的失败重试粒度）。
         /// 成功装入空投舱的 Pawn 会立即加入 existingList（计入 32 只上限，含在途单位），
@@ -129,16 +133,23 @@ namespace MAP_MechanoidMechanitor
         {
             IntVec2 size = IntVec2.One;
 
-            // 优先寻找主脑附近合法位置，附近失败后逐步扩大搜索范围。
-            for (int radius = 3; radius <= 40; radius += 2)
+            // RimWorld 1.6 会使用 maxRadius / 5 计算内部搜索步长；
+            // 小于 5 的值会得到零步长，并可能在首次搜索失败后永久循环。
+            for (
+                int radius = MinimumSafeDropSearchRadius;
+                radius <= MaximumDropSearchRadius;
+                radius += 2)
             {
+                int safeRadius = radius < MinimumSafeDropSearchRadius
+                    ? MinimumSafeDropSearchRadius
+                    : radius;
                 if (DropCellFinder.TryFindDropSpotNear(
                         center,
                         map,
                         out cell,
                         allowFogged: false,
                         canRoofPunch: false,
-                        radius,
+                        safeRadius,
                         allowIndoors: true,
                         size,
                         mustBeReachableFromCenter: true)
