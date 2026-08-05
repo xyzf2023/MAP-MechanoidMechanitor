@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Patch>
-  <Operation Class="PatchOperationFindMod">
-    <mods>
-      <li>Ludeon.RimWorld.Odyssey</li>
-    </mods>
+  <Operation Class="PatchOperationConditional">
+    <xpath>Defs/ThingDef[defName="CerebrexCore"]/comps</xpath>
     <match Class="PatchOperationAdd">
       <xpath>Defs/ThingDef[defName="CerebrexCore"]/comps</xpath>
       <value>
