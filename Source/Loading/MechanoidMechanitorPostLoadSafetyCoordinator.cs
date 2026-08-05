@@ -311,9 +311,13 @@ namespace MAP_MechanoidMechanitor
                     new List<Pawn>(PendingDynamicConsciousnessRefresh);
                 for (int i = 0; i < refreshSnapshot.Count; i++)
                 {
-                    Pawn pawn = refreshSnapshot[i];
-                    if (pawn == null
-                        || pawn.Dead
+                    Pawn? pawn = refreshSnapshot[i];
+                    if (pawn == null)
+                    {
+                        continue;
+                    }
+
+                    if (pawn.Dead
                         || pawn.Destroyed
                         || pawn.Discarded
                         || pawn.health?.isBeingKilled == true)
@@ -366,8 +370,13 @@ namespace MAP_MechanoidMechanitor
                     List<Pawn> overseers = new List<Pawn>(PendingDataOverseers);
                     for (int i = 0; i < overseers.Count; i++)
                     {
-                        Pawn pawn = overseers[i];
-                        if (pawn == null || pawn.Dead || pawn.Destroyed || pawn.Discarded)
+                        Pawn? pawn = overseers[i];
+                        if (pawn == null)
+                        {
+                            continue;
+                        }
+
+                        if (pawn.Dead || pawn.Destroyed || pawn.Discarded)
                         {
                             PendingDataOverseers.Remove(pawn);
                             continue;
@@ -380,8 +389,13 @@ namespace MAP_MechanoidMechanitor
                     List<Pawn> targets = new List<Pawn>(PendingDataTargets);
                     for (int i = 0; i < targets.Count; i++)
                     {
-                        Pawn pawn = targets[i];
-                        if (pawn == null || pawn.Dead || pawn.Destroyed || pawn.Discarded)
+                        Pawn? pawn = targets[i];
+                        if (pawn == null)
+                        {
+                            continue;
+                        }
+
+                        if (pawn.Dead || pawn.Destroyed || pawn.Discarded)
                         {
                             PendingDataTargets.Remove(pawn);
                             continue;
@@ -396,8 +410,13 @@ namespace MAP_MechanoidMechanitor
                     new List<KeyValuePair<Pawn, MechWorkModeDef?>>(PendingWorkModes);
                 for (int i = 0; i < workModes.Count; i++)
                 {
-                    Pawn pawn = workModes[i].Key;
-                    if (pawn == null || pawn.Dead || pawn.Destroyed || pawn.Discarded)
+                    Pawn? pawn = workModes[i].Key;
+                    if (pawn == null)
+                    {
+                        continue;
+                    }
+
+                    if (pawn.Dead || pawn.Destroyed || pawn.Discarded)
                     {
                         PendingWorkModes.Remove(pawn);
                         continue;

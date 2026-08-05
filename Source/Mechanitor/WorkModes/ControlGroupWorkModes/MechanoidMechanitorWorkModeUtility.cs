@@ -206,12 +206,13 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            List<Hediff>? current = pawn.health?.hediffSet?.hediffs;
-            if (current == null)
+            Pawn_HealthTracker? health = pawn.health;
+            if (health?.hediffSet?.hediffs == null)
             {
                 return;
             }
 
+            List<Hediff>? current = health.hediffSet.hediffs;
             snapshot = new List<Hediff>(current);
             for (int i = snapshot.Count - 1; i >= 0; i--)
             {
@@ -225,7 +226,7 @@ namespace MAP_MechanoidMechanitor
 
                 try
                 {
-                    pawn.health.RemoveHediff(hediff);
+                    health.RemoveHediff(hediff);
                 }
                 catch (Exception ex)
                 {
