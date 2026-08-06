@@ -410,20 +410,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             bool isHaulableItem = def.category == ThingCategory.Item && def.EverHaulable;
             bool isMinifiableBuilding = def.category == ThingCategory.Building && def.Minifiable;
-            if (!isHaulableItem && !isMinifiableBuilding)
-            {
-                return false;
-            }
-
-            float marketValue = def.GetStatValueAbstract(StatDefOf.MarketValue);
-            if (marketValue <= 0f)
-            {
-                marketValue = def.BaseMarketValue;
-            }
-
-            return marketValue > 0f
-                && !float.IsNaN(marketValue)
-                && !float.IsInfinity(marketValue);
+            return isHaulableItem || isMinifiableBuilding;
         }
 
         private static bool LooksSpecialTradeItem(ThingDef def)

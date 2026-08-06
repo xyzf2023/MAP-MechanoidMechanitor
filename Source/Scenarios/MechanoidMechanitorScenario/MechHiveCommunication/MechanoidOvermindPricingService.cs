@@ -20,9 +20,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static readonly Dictionary<MechanoidOvermindThingSpec, float> thingMarketValueCache =
             new Dictionary<MechanoidOvermindThingSpec, float>();
 
+        private static readonly HashSet<MechanoidOvermindThingSpec> thingMarketValueFailureCache =
+            new HashSet<MechanoidOvermindThingSpec>();
+
         public static void ClearThingMarketValueCache()
         {
             thingMarketValueCache.Clear();
+            thingMarketValueFailureCache.Clear();
         }
 
         public static int GetMechWeightBaseCost(MechWeightClassDef? weightClass)
@@ -137,11 +141,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (thingMarketValueCache.TryGetValue(spec, out float cached))
             {
                 marketValue = cached;
-                return IsFiniteNonNegative(marketValue);
+                return IsFinitePositive(marketValue);
+            }
+
+            if (thingMarketValueFailureCache.Contains(spec))
+            {
+                return false;
             }
 
             if (!TryEvaluateThingMarketValue(spec, out marketValue))
             {
+                thingMarketValueFailureCache.Add(spec);
                 return false;
             }
 
@@ -294,69 +304,100 @@ namespace MAP_MechanoidMechanitor.Scenarios
             out float marketValue)
         {
             marketValue = 0f;
-            Thing? temp = null;
             try
             {
-                if (spec.Def.MadeFromStuff)
+                ThingDef def = spec.Def;
+                ThingDef? stuff = spec.Stuff;
+
+                if (def.MadeFromStuff)
                 {
-                    if (spec.Stuff == null || !IsAllowedStuff(spec.Def, spec.Stuff))
+                    if (stuff == null || !IsAllowedStuff(def, stuff))
                     {
                         return false;
                     }
-
-                    temp = ThingMaker.MakeThing(spec.Def, spec.Stuff);
                 }
-                else
-                {
-                    if (spec.Stuff != null)
-                    {
-                        return false;
-                    }
-
-                    temp = ThingMaker.MakeThing(spec.Def);
-                }
-
-                if (temp == null)
+                else if (stuff != null)
                 {
                     return false;
                 }
 
+                bool defHasQuality = def.HasComp(typeof(CompQuality));
+                if (spec.HasQuality != defHasQuality)
+                {
+                    return false;
+                }
+
+                QualityCategory quality = QualityCategory.Normal;
                 if (spec.HasQuality)
                 {
-                    CompQuality? qualityComp = temp.TryGetComp<CompQuality>();
-                    if (qualityComp == null)
+                    if (!Enum.IsDefined(typeof(QualityCategory), spec.Quality))
                     {
                         return false;
                     }
 
-                    qualityComp.SetQuality(spec.Quality, null);
+                    quality = spec.Quality;
                 }
 
-                if (temp.def.useHitPoints)
+                if (def.thingClass != null
+                    && typeof(IFixedBaseMarketValue).IsAssignableFrom(def.thingClass)
+                    && !def.StatBaseDefined(StatDefOf.MarketValue))
                 {
-                    temp.HitPoints = temp.MaxHitPoints;
+                    LogThingMarketValueFailure(
+                        spec,
+                        "该物品的基础市场价值依赖实体实例，无法安全进行静态定价。",
+                        null);
+                    return false;
                 }
 
-                marketValue = temp.GetStatValue(StatDefOf.MarketValue);
-                return IsFiniteNonNegative(marketValue) && marketValue > 0f;
+                StatRequest request = StatRequest.For(def, stuff, quality);
+                marketValue = StatDefOf.MarketValue.Worker.GetValue(request);
+                if (!IsFinitePositive(marketValue))
+                {
+                    LogThingMarketValueFailure(
+                        spec,
+                        "原版静态市场价值计算返回了无效或非正数结果。",
+                        null);
+                    marketValue = 0f;
+                    return false;
+                }
+
+                return true;
             }
             catch (Exception ex)
             {
-                Log.Warning(
-                    "[MAP] MechanoidOvermindPricingService failed to evaluate market value for "
-                    + spec.Def.defName
-                    + ": "
-                    + ex);
+                LogThingMarketValueFailure(
+                    spec,
+                    "原版静态市场价值计算抛出异常。",
+                    ex);
                 marketValue = 0f;
                 return false;
             }
-            finally
+        }
+
+        private static void LogThingMarketValueFailure(
+            MechanoidOvermindThingSpec spec,
+            string reason,
+            Exception? exception)
+        {
+            string stuff = spec.Stuff != null ? spec.Stuff.defName : "null";
+            string quality = spec.HasQuality ? spec.Quality.ToString() : "无品质";
+            string message =
+                "[MAP] MechanoidOvermindPricingService 无法静态计算商品市场价值。"
+                + " ThingDef="
+                + spec.Def.defName
+                + ", Stuff="
+                + stuff
+                + ", Quality="
+                + quality
+                + "。原因："
+                + reason;
+
+            if (exception != null)
             {
-                if (temp != null && !temp.Destroyed)
-                {
-                    temp.Destroy(DestroyMode.Vanish);
-                }
+                message += " " + exception;
             }
+
+            Log.Warning(message);
         }
 
         private static bool IsAllowedStuff(ThingDef def, ThingDef stuff)
@@ -396,6 +437,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             result = (int)ceiled;
             return result >= 0;
+        }
+
+        private static bool IsFinitePositive(float value)
+        {
+            return !float.IsNaN(value) && !float.IsInfinity(value) && value > 0f;
         }
 
         private static bool IsFiniteNonNegative(float value)
