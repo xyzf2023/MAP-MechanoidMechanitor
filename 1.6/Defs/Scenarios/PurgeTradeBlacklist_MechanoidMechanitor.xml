@@ -8,6 +8,12 @@
     <mechPawnKinds>
       <!-- 机械族调拨黑名单：填写 PawnKindDef 的 defName，可用 li MayRequire="Package.Id" 追加兼容项 -->
       <li>MAP_Mech_JusticeBOSS</li>
+      <li MayRequire="xyzf.glitterworlddestroyer.mk5">Mech_BlackScyther</li>
+      <li MayRequire="xyzf.glitterworlddestroyer.mk5">Mech_BlackLancer</li>
+      <li MayRequire="xyzf.glitterworlddestroyer.mk5">Mech_BlackTesseron</li>
+      <li MayRequire="xyzf.glitterworlddestroyer.mk5">Mech_BlackLegionary</li>
+      <li MayRequire="xyzf.glitterworlddestroyer.mk5">Mech_BlackMilitor</li>
+      <li MayRequire="xyzf.glitterworlddestroyer.mk5">Mech_BlackApocriton</li>
     </mechPawnKinds>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorPurgeTradeBlacklistDef>
 </Defs>
