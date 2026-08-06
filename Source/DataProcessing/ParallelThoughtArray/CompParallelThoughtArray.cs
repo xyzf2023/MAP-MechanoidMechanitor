@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
@@ -30,7 +31,7 @@ namespace MAP_MechanoidMechanitor
             => IsOperating ? configuredBoostPercent : 0;
 
         public float RequestedPowerConsumption
-            => CalculateRequestedPowerConsumption();
+            => ToFinitePowerFloat(CalculateRequestedPowerConsumption());
 
         public bool IsTargetValid
             => target != null
@@ -56,8 +57,12 @@ namespace MAP_MechanoidMechanitor
         {
             base.PostExposeData();
             Scribe_References.Look(ref target, "target");
-            Scribe_Values.Look(ref configuredBoostPercent, "configuredBoostPercent", ParallelThoughtArrayUtility.MinBoostPercent);
-            configuredBoostPercent = ClampConfiguredBoostPercent(configuredBoostPercent);
+            Scribe_Values.Look(
+                ref configuredBoostPercent,
+                "configuredBoostPercent",
+                ParallelThoughtArrayUtility.MinBoostPercent);
+            configuredBoostPercent =
+                ClampConfiguredBoostPercent(configuredBoostPercent);
         }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
@@ -65,7 +70,8 @@ namespace MAP_MechanoidMechanitor
             base.PostSpawnSetup(respawningAfterLoad);
             removalCleanupCompleted = false;
             powerTrader = parent.TryGetComp<CompPowerTrader>();
-            configuredBoostPercent = ClampConfiguredBoostPercent(configuredBoostPercent);
+            configuredBoostPercent =
+                ClampConfiguredBoostPercent(configuredBoostPercent);
             UpdateRequestedPowerDraw();
             lastEffectiveBoostPercent = EffectiveBoostPercent;
 
@@ -73,13 +79,17 @@ namespace MAP_MechanoidMechanitor
             ReevaluateOperatingState(true);
         }
 
-        public override void PostDeSpawn(Map map, DestroyMode mode = DestroyMode.Vanish)
+        public override void PostDeSpawn(
+            Map map,
+            DestroyMode mode = DestroyMode.Vanish)
         {
             HandleRemovalCleanup();
             base.PostDeSpawn(map, mode);
         }
 
-        public override void PostDestroy(DestroyMode mode, Map previousMap)
+        public override void PostDestroy(
+            DestroyMode mode,
+            Map previousMap)
         {
             HandleRemovalCleanup();
             base.PostDestroy(mode, previousMap);
@@ -100,7 +110,8 @@ namespace MAP_MechanoidMechanitor
             removalCleanupCompleted = true;
 
             Pawn? oldTarget = target;
-            int lostBoostPercent = Mathf.Max(0, lastEffectiveBoostPercent);
+            int lostBoostPercent =
+                Mathf.Max(0, lastEffectiveBoostPercent);
 
             if (oldTarget != null && lostBoostPercent > 0)
             {
@@ -147,8 +158,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            float requested = RequestedPowerConsumption;
-            powerTrader.PowerOutput = -requested;
+            powerTrader.PowerOutput = -RequestedPowerConsumption;
         }
 
         public bool IsProvidingBoostTo(Pawn pawn)
@@ -200,7 +210,8 @@ namespace MAP_MechanoidMechanitor
         private void HandlePermanentInvalidation(Pawn invalidTarget)
         {
             Pawn? oldTarget = target;
-            int lostBoostPercent = Mathf.Max(0, lastEffectiveBoostPercent);
+            int lostBoostPercent =
+                Mathf.Max(0, lastEffectiveBoostPercent);
 
             if (oldTarget != null && lostBoostPercent > 0)
             {
@@ -240,13 +251,15 @@ namespace MAP_MechanoidMechanitor
             }
 
             int previousEffective = lastEffectiveBoostPercent;
-            if (previousEffective != EffectiveBoostPercent || !IsTargetValid && target != null)
+            if (previousEffective != EffectiveBoostPercent
+                || !IsTargetValid && target != null)
             {
                 ReevaluateOperatingState(false);
             }
 
             fallbackTickCounter++;
-            if (fallbackTickCounter >= Props.fallbackRefreshIntervalTicks)
+            if (fallbackTickCounter
+                >= Mathf.Max(1, Props.fallbackRefreshIntervalTicks))
             {
                 fallbackTickCounter = 0;
                 ReevaluateOperatingState(true);
@@ -260,49 +273,63 @@ namespace MAP_MechanoidMechanitor
                 yield return gizmo;
             }
 
-            if (parent.Faction == null || !parent.Faction.IsPlayerSafe())
+            if (parent.Faction == null
+                || !parent.Faction.IsPlayerSafe())
             {
                 yield break;
             }
 
-            // 选择 / 解除增幅目标。
             yield return MakeSelectTargetCommand();
 
             if (target != null)
             {
                 Command_Action clear = new Command_Action
                 {
-                    defaultLabel = "MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget".Translate(),
-                    defaultDesc = "MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc".Translate(),
+                    defaultLabel =
+                        "MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget"
+                            .Translate(),
+                    defaultDesc =
+                        "MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc"
+                            .Translate(),
                     icon = TexCommand.ClearPrioritizedWork,
                     action = () => SetTarget(null)
                 };
                 yield return clear;
             }
 
-            // 降低增幅。
-            Command_Action lower = new Command_Action
-            {
-                defaultLabel = "MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost".Translate(),
-                defaultDesc = "MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc".Translate(),
-                icon = TexButton.Minus,
-                Disabled = configuredBoostPercent <= Props.minBoostPercent,
-                disabledReason = "MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMinBoost".Translate(),
-                action = () => AdjustBoost(-Props.boostStepPercent)
-            };
-            yield return lower;
+            yield return MakeBoostCommand(false);
+            yield return MakeBoostCommand(true);
+        }
 
-            // 提高增幅。
-            Command_Action raise = new Command_Action
+        private Command_Action MakeBoostCommand(bool increase)
+        {
+            bool atLimit = increase
+                ? configuredBoostPercent >= GetAlignedMaximumBoostPercent()
+                : configuredBoostPercent <= Props.minBoostPercent;
+
+            Command_Action command = new Command_Action
             {
-                defaultLabel = "MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost".Translate(),
-                defaultDesc = "MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc".Translate(),
-                icon = TexButton.Plus,
-                Disabled = configuredBoostPercent >= Props.maxBoostPercent,
-                disabledReason = "MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost".Translate(),
-                action = () => AdjustBoost(Props.boostStepPercent)
+                defaultLabel = increase
+                    ? "MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost"
+                        .Translate()
+                    : "MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost"
+                        .Translate(),
+                defaultDesc = BuildBoostAdjustmentDescription(increase),
+                icon = increase ? TexButton.Plus : TexButton.Minus,
+                Disabled = atLimit,
+                disabledReason = increase
+                    ? "MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost"
+                        .Translate()
+                    : "MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMinBoost"
+                        .Translate(),
+                action = () =>
+                {
+                    int amount = GetRequestedAdjustmentPercent();
+                    AdjustBoost(increase ? amount : -amount);
+                }
             };
-            yield return raise;
+
+            return command;
         }
 
         private Command_Action MakeSelectTargetCommand()
@@ -311,19 +338,27 @@ namespace MAP_MechanoidMechanitor
             bool anyCandidate = candidates.Count > 0;
             Command_Action command = new Command_Action
             {
-                defaultLabel = "MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget".Translate(),
-                defaultDesc = "MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc".Translate(),
-                icon = ContentFinder<Texture2D>.Get("UI/Gizmos/BandNodeTuning"),
+                defaultLabel =
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget"
+                        .Translate(),
+                defaultDesc =
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc"
+                        .Translate(),
+                icon =
+                    ContentFinder<Texture2D>.Get(
+                        "UI/Gizmos/BandNodeTuning"),
                 Disabled = !anyCandidate && target == null,
                 action = () =>
                 {
-                    List<FloatMenuOption> options = new List<FloatMenuOption>();
+                    List<FloatMenuOption> options =
+                        new List<FloatMenuOption>();
                     for (int i = 0; i < candidates.Count; i++)
                     {
                         Pawn candidate = candidates[i];
-                        options.Add(new FloatMenuOption(
-                            candidate.LabelShortCap,
-                            () => SetTarget(candidate)));
+                        options.Add(
+                            new FloatMenuOption(
+                                candidate.LabelShortCap,
+                                () => SetTarget(candidate)));
                     }
 
                     Find.WindowStack.Add(new FloatMenu(options));
@@ -340,11 +375,13 @@ namespace MAP_MechanoidMechanitor
                 return result;
             }
 
-            IReadOnlyList<Pawn> spawned = parent.Map.mapPawns.AllPawnsSpawned;
+            IReadOnlyList<Pawn> spawned =
+                parent.Map.mapPawns.AllPawnsSpawned;
             for (int i = 0; i < spawned.Count; i++)
             {
                 Pawn pawn = spawned[i];
-                if (DataProcessingAllocatorEligibilityUtility.IsEligibleParallelThoughtArrayTarget(pawn))
+                if (DataProcessingAllocatorEligibilityUtility
+                    .IsEligibleParallelThoughtArrayTarget(pawn))
                 {
                     result.Add(pawn);
                 }
@@ -358,7 +395,7 @@ namespace MAP_MechanoidMechanitor
         {
             int next =
                 ClampConfiguredBoostPercent(
-                    configuredBoostPercent + delta);
+                    (long)configuredBoostPercent + delta);
 
             if (next == configuredBoostPercent)
             {
@@ -392,39 +429,246 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private int ClampConfiguredBoostPercent(int value)
+        private int ClampConfiguredBoostPercent(long value)
         {
-            int min = Props.minBoostPercent;
-            int max = Props.maxBoostPercent;
-            int step = Mathf.Max(1, Props.boostStepPercent);
+            long min = Props.minBoostPercent;
+            long max = GetAlignedMaximumBoostPercent();
+            long step = Math.Max(1, Props.boostStepPercent);
 
-            int clamped = Mathf.Clamp(value, min, max);
-            int relative = clamped - min;
-            int alignedSteps =
-                Mathf.RoundToInt(relative / (float)step);
+            long clamped = Math.Max(min, Math.Min(max, value));
+            long relative = clamped - min;
+            long alignedSteps =
+                (relative + step / 2L) / step;
+            long aligned =
+                min + alignedSteps * step;
 
-            return Mathf.Clamp(
-                min + alignedSteps * step,
-                min,
-                max);
+            return (int)Math.Max(min, Math.Min(max, aligned));
         }
 
-        private float CalculateRequestedPowerConsumption()
+        private int GetAlignedMaximumBoostPercent()
+        {
+            long min = Props.minBoostPercent;
+            long rawMax = Math.Max(min, (long)Props.maxBoostPercent);
+            long step = Math.Max(1, Props.boostStepPercent);
+            long alignedMax =
+                min + ((rawMax - min) / step) * step;
+
+            return (int)Math.Min(int.MaxValue, alignedMax);
+        }
+
+        private int GetRequestedAdjustmentPercent()
+        {
+            int step = Math.Max(1, Props.boostStepPercent);
+
+            if (IsControlHeld())
+            {
+                return Math.Max(step, Props.controlBoostPercent);
+            }
+
+            if (IsShiftHeld())
+            {
+                return Math.Max(step, Props.shiftBoostPercent);
+            }
+
+            return step;
+        }
+
+        private static bool IsControlHeld()
+        {
+            Event? current = Event.current;
+            return current != null && current.control
+                   || Input.GetKey(KeyCode.LeftControl)
+                   || Input.GetKey(KeyCode.RightControl);
+        }
+
+        private static bool IsShiftHeld()
+        {
+            Event? current = Event.current;
+            return current != null && current.shift
+                   || Input.GetKey(KeyCode.LeftShift)
+                   || Input.GetKey(KeyCode.RightShift);
+        }
+
+        private string BuildBoostAdjustmentDescription(bool increase)
+        {
+            int amount = GetRequestedAdjustmentPercent();
+            int next =
+                ClampConfiguredBoostPercent(
+                    (long)configuredBoostPercent
+                    + (increase ? amount : -amount));
+
+            double currentPower =
+                CalculateActivePowerConsumptionForBoost(
+                    configuredBoostPercent);
+            double nextPower =
+                CalculateActivePowerConsumptionForBoost(next);
+            string powerChange =
+                FormatPower(Math.Abs(nextPower - currentPower));
+            string status =
+                GetLoadStateLabel(configuredBoostPercent);
+
+            return increase
+                ? "MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc"
+                    .Translate(status, powerChange)
+                : "MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc"
+                    .Translate(status, powerChange);
+        }
+
+        private double CalculateRequestedPowerConsumption()
         {
             if (target == null || !IsTargetValid)
             {
-                return Props.idlePowerConsumption;
+                return Math.Max(0d, Props.idlePowerConsumption);
             }
 
-            int step = Mathf.Max(1, Props.boostStepPercent);
-            int boostSteps =
-                Mathf.Max(
-                    0,
-                    (configuredBoostPercent
-                        - Props.minBoostPercent) / step);
+            return CalculateActivePowerConsumptionForBoost(
+                configuredBoostPercent);
+        }
 
-            return Props.basePowerConsumption
-                + boostSteps * Props.powerPerBoostStep;
+        private double CalculateActivePowerConsumptionForBoost(
+            int boostPercent)
+        {
+            int clamped =
+                ClampConfiguredBoostPercent(boostPercent);
+            long totalSteps =
+                GetPowerStepCount(clamped);
+
+            int lowLoadStepCount =
+                Math.Max(0, Props.lowLoadStepCount);
+            int standardLoadEndStep =
+                Math.Max(
+                    lowLoadStepCount,
+                    Props.standardLoadEndStep);
+
+            double lowStepPower =
+                Math.Max(0d, Props.powerPerBoostStep);
+            double highStepPower =
+                Math.Max(
+                    lowStepPower,
+                    Props.maxPowerPerBoostStep);
+
+            double total =
+                Math.Max(0d, Props.basePowerConsumption);
+
+            long lowSteps =
+                Math.Min(totalSteps, lowLoadStepCount);
+            total += lowSteps * lowStepPower;
+
+            int curveStepCount =
+                Math.Max(
+                    0,
+                    standardLoadEndStep - lowLoadStepCount);
+            long usedCurveSteps =
+                Math.Min(
+                    Math.Max(
+                        0L,
+                        totalSteps - lowLoadStepCount),
+                    curveStepCount);
+
+            for (int i = 0; i < usedCurveSteps; i++)
+            {
+                double t = curveStepCount <= 1
+                    ? 1d
+                    : i / (double)(curveStepCount - 1);
+                double smooth =
+                    t * t * (3d - 2d * t);
+                total += lowStepPower
+                    + (highStepPower - lowStepPower) * smooth;
+            }
+
+            long highSteps =
+                Math.Max(
+                    0L,
+                    totalSteps - standardLoadEndStep);
+            total += highSteps * highStepPower;
+
+            if (double.IsNaN(total) || total <= 0d)
+            {
+                return 0d;
+            }
+
+            if (double.IsInfinity(total))
+            {
+                return float.MaxValue;
+            }
+
+            return Math.Min(total, float.MaxValue);
+        }
+
+        private long GetPowerStepCount(int boostPercent)
+        {
+            long step =
+                Math.Max(1, Props.boostStepPercent);
+            long relative =
+                Math.Max(
+                    0L,
+                    (long)boostPercent - Props.minBoostPercent);
+            return relative / step;
+        }
+
+        private string GetLoadStateLabel(int boostPercent)
+        {
+            long steps = GetPowerStepCount(boostPercent);
+            int lowEnd =
+                Math.Max(0, Props.lowLoadStepCount);
+            int standardEnd =
+                Math.Max(
+                    lowEnd,
+                    Props.standardLoadEndStep);
+
+            if (steps <= lowEnd)
+            {
+                return
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusLowLoad"
+                        .Translate();
+            }
+
+            if (steps <= standardEnd)
+            {
+                return
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusStandardLoad"
+                        .Translate();
+            }
+
+            return
+                "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusHighLoad"
+                    .Translate();
+        }
+
+        private static float ToFinitePowerFloat(double watts)
+        {
+            if (double.IsNaN(watts) || watts <= 0d)
+            {
+                return 0f;
+            }
+
+            if (double.IsInfinity(watts) || watts >= float.MaxValue)
+            {
+                return float.MaxValue;
+            }
+
+            return (float)watts;
+        }
+
+        private static string FormatPower(double watts)
+        {
+            double value = Math.Max(0d, watts);
+
+            if (value >= 1000000d)
+            {
+                return
+                    (value / 1000000d).ToString("0.##")
+                    + " MW";
+            }
+
+            if (value >= 1000d)
+            {
+                return
+                    (value / 1000d).ToString("0.##")
+                    + " kW";
+            }
+
+            return Math.Round(value).ToString("0") + " W";
         }
 
         /// <summary>
@@ -433,9 +677,8 @@ namespace MAP_MechanoidMechanitor
         public void SetTarget(Pawn? newTarget)
         {
             Pawn? oldTarget = target;
-            int oldEffectiveBoost = Mathf.Max(
-                0,
-                lastEffectiveBoostPercent);
+            int oldEffectiveBoost =
+                Mathf.Max(0, lastEffectiveBoostPercent);
 
             if (oldTarget != null && oldEffectiveBoost > 0)
             {
@@ -463,9 +706,11 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         ///     外部永久失效清理入口。只有引用一致时才执行。
         /// </summary>
-        public void ClearTargetFromExternalInvalidation(Pawn targetToClear)
+        public void ClearTargetFromExternalInvalidation(
+            Pawn targetToClear)
         {
-            if (targetToClear == null || !ReferenceEquals(target, targetToClear))
+            if (targetToClear == null
+                || !ReferenceEquals(target, targetToClear))
             {
                 return;
             }
@@ -476,13 +721,18 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         ///     通过注册表的安全回收入口，按即将失去的意识偏移回收分配。
         /// </summary>
-        private void ReclaimConsciousnessLoss(Pawn overseer, float consciousnessOffsetLoss)
+        private void ReclaimConsciousnessLoss(
+            Pawn overseer,
+            float consciousnessOffsetLoss)
         {
             GameComponent_DataProcessingAllocationRegistry? registry =
-                GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
+                GameComponent_DataProcessingAllocationRegistry
+                    .CurrentRegistry;
             if (registry != null)
             {
-                registry.PrepareForExternalConsciousnessLoss(overseer, consciousnessOffsetLoss);
+                registry.PrepareForExternalConsciousnessLoss(
+                    overseer,
+                    consciousnessOffsetLoss);
             }
         }
 
@@ -494,54 +744,68 @@ namespace MAP_MechanoidMechanitor
 
             string targetLabel = target != null
                 ? target.LabelShortCap
-                : "MAP_MechanoidMechanitor.ParallelThoughtArray.TargetUnspecified".Translate();
+                : "MAP_MechanoidMechanitor.ParallelThoughtArray.TargetUnspecified"
+                    .Translate();
 
             string status;
             if (!IsTargetValid && target != null)
             {
-                status = "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusInvalidTarget".Translate();
+                status =
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusInvalidTarget"
+                        .Translate();
             }
             else if (!IsOperating && target != null)
             {
-                status = "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusNoPower".Translate();
+                status =
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusNoPower"
+                        .Translate();
             }
             else if (target == null)
             {
-                status = "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusIdle".Translate();
+                status =
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusIdle"
+                        .Translate();
             }
             else
             {
-                status = "MAP_MechanoidMechanitor.ParallelThoughtArray.StatusRunning".Translate();
+                status =
+                    GetLoadStateLabel(configuredBoostPercent);
             }
 
             List<string> lines = new List<string>
             {
-                "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Target".Translate(targetLabel)
+                "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Target"
+                    .Translate(targetLabel)
             };
 
             if (target != null)
             {
                 lines.Add(
-                    "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.ConfiguredBoost".Translate(
-                        term,
-                        configuredBoostPercent));
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.ConfiguredBoost"
+                        .Translate(
+                            term,
+                            configuredBoostPercent));
                 lines.Add(
-                    "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoost".Translate(
-                        term,
-                        EffectiveBoostPercent));
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoost"
+                        .Translate(
+                            term,
+                            EffectiveBoostPercent));
             }
             else
             {
                 lines.Add(
-                    "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoostNoTarget".Translate(
-                        EffectiveBoostPercent));
+                    "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoostNoTarget"
+                        .Translate(
+                            EffectiveBoostPercent));
             }
 
             lines.Add(
-                "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower".Translate(
-                    Mathf.RoundToInt(RequestedPowerConsumption)));
+                "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower"
+                    .Translate(
+                        FormatPower(RequestedPowerConsumption)));
             lines.Add(
-                "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Status".Translate(status));
+                "MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Status"
+                    .Translate(status));
 
             return string.Join("\n", lines);
         }
