@@ -20,10 +20,10 @@
   <MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget>解除增幅目标</MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>解除当前建立的同步连接，阵列回到待机状态。</MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost>提高增幅</MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost>
-  <MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>将运算强度提高 25%，同步提高增幅效果与电力消耗。</MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>当前{0}，下次提升运算能力将额外增加{1}耗电。&#10;&#10;按住Shift一次性增加100%处理效果。&#10;按住Ctrl一次性增加1000%处理效果。</MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost>降低增幅</MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost>
-  <MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc>将运算强度降低 25%，同步降低增幅效果与电力消耗。</MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc>
-  <MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost>已达到最高增幅（300%）。</MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc>当前{0}，下次降低运算能力将减少{1}耗电。&#10;&#10;按住Shift一次性减少100%处理效果。&#10;按住Ctrl一次性减少1000%处理效果。</MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost>已达到数值安全上限。</MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMinBoost>已达到最低增幅（100%）。</MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMinBoost>
 
   <!-- 并行思维阵列：检查栏 -->
@@ -32,11 +32,14 @@
   <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.ConfiguredBoost>设定{0}增幅：+{1}%</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.ConfiguredBoost>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoost>当前{0}增幅：+{1}%</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoost>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoostNoTarget>当前增幅：{0}%</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoostNoTarget>
-  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower>当前耗电：{0} W</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower>当前耗电：{0}</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Status>状态：{0}</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Status>
 
   <!-- 并行思维阵列：状态 -->
   <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusRunning>运行中</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusRunning>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusLowLoad>低负荷运行</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusLowLoad>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusStandardLoad>标准负荷运行</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusStandardLoad>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusHighLoad>高负荷运行</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusHighLoad>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusIdle>待机</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusIdle>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusNoPower>未通电</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusNoPower>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusInvalidTarget>目标无效</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusInvalidTarget>
