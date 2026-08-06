@@ -25,36 +25,19 @@ namespace MAP_MechanoidMechanitor
             false,
             actionType = DebugActionType.Action,
             allowedGameStates = AllowedGameStates.Playing)]
-        private static void OpenTradingStateMenu()
+        private static List<DebugActionNode> ChangePurgeDirectiveTradingState()
         {
-            GameComponent_CerebrexTakeoverState? state =
-                GameComponent_CerebrexTakeoverState.Current;
-            if (state == null)
+            return new List<DebugActionNode>
             {
-                Messages.Message(
-                    "无法更改肃清指令交易状态：主脑接管存档组件不可用。",
-                    MessageTypeDefOf.RejectInput,
-                    historical: false);
-                return;
-            }
-
-            string currentState = state.TakeoverActive
-                ? "主脑受控状态"
-                : "常态";
-            List<FloatMenuOption> options = new List<FloatMenuOption>
-            {
-                new FloatMenuOption(
+                new DebugActionNode(
                     "切换为常态",
-                    () => ExecuteSwitchToNormal()),
-                new FloatMenuOption(
+                    DebugActionType.Action,
+                    ExecuteSwitchToNormal),
+                new DebugActionNode(
                     "切换为主脑受控状态",
-                    () => ExecuteSwitchToControlled())
+                    DebugActionType.Action,
+                    ExecuteSwitchToControlled)
             };
-
-            Find.WindowStack.Add(
-                new FloatMenu(
-                    options,
-                    "更改肃清指令交易状态（当前：" + currentState + "）"));
         }
 
         private static void ExecuteSwitchToNormal()
