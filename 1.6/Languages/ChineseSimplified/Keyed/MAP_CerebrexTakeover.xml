@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_CerebrexTakeover.Option>接管主脑</MAP_CerebrexTakeover.Option>
+  <MAP_CerebrexTakeover.BeginFailed>无法启动主脑接管流程。</MAP_CerebrexTakeover.BeginFailed>
+  <MAP_CerebrexTakeover.Letter.Label>机械主脑已接管</MAP_CerebrexTakeover.Letter.Label>
+  <MAP_CerebrexTakeover.Letter.Text>{PAWN}已接管机械主脑。机械巢已接受新的控制链路，并与殖民地建立盟友关系。现在可以通过通讯台调用机械巢的资源。</MAP_CerebrexTakeover.Letter.Text>
+  <MAP_CerebrexTakeover.Credits>{PAWN}接管了机械主脑，并将机械巢的资源网络纳入殖民地的调配体系。</MAP_CerebrexTakeover.Credits>
+  <MAP_CerebrexTakeover.PurgeCreditsResponse>每日机械巢都会产生等效于2000额度的可调配资源，并增加2000额度。同时，协助建设机械节点也能帮助机械巢腾出更多可用物资，进而获取额度。</MAP_CerebrexTakeover.PurgeCreditsResponse>
+</LanguageData>
