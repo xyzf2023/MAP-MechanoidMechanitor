@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -11,23 +12,38 @@ namespace MAP_MechanoidMechanitor
     public static class ParallelThoughtArrayUtility
     {
         public const int MinBoostPercent = 100;
-        public const int MaxBoostPercent = 300;
-        public const int BoostStepPercent = 25;
-        public const float BasePowerConsumption = 1600f;
-        public const float PowerPerBoostStep = 400f;
+
+        // 仅作为 int 存档与加法的技术安全护栏，不作为平衡上限。
+        // 该值与 100% 起点、50% 档位严格对齐，并略低于 int.MaxValue。
+        public const int MaxBoostPercent = 2147483600;
+
+        public const int BoostStepPercent = 50;
+        public const int ShiftBoostPercent = 100;
+        public const int ControlBoostPercent = 1000;
+
+        public const float BasePowerConsumption = 1000f;
+        public const float PowerPerBoostStep = 600f;
+        public const float MaxPowerPerBoostStep = 12000f;
         public const float IdlePowerConsumption = 100f;
+
+        public const int LowLoadStepCount = 16;
+        public const int StandardLoadEndStep = 96;
         public const int FallbackRefreshIntervalTicks = 60;
 
         /// <summary>
-        ///     将任意档位限制到 100~300，并对齐到 25% 离散档位。
+        ///     将任意档位限制到技术安全范围，并对齐到 50% 离散档位。
         ///     存档出现异常数值时也必须自动规范化。
         /// </summary>
         public static int ClampBoostPercent(int percent)
         {
-            int clamped = percent < MinBoostPercent ? MinBoostPercent : (percent > MaxBoostPercent ? MaxBoostPercent : percent);
-            int step = BoostStepPercent;
-            int aligned = (int)System.Math.Round((double)clamped / step) * step;
-            return aligned < MinBoostPercent ? MinBoostPercent : (aligned > MaxBoostPercent ? MaxBoostPercent : aligned);
+            long min = MinBoostPercent;
+            long max = MaxBoostPercent;
+            long step = BoostStepPercent;
+            long clamped = Math.Max(min, Math.Min(max, (long)percent));
+            long relative = clamped - min;
+            long alignedSteps = (relative + step / 2L) / step;
+            long aligned = min + alignedSteps * step;
+            return (int)Math.Max(min, Math.Min(max, aligned));
         }
 
         /// <summary>
@@ -39,14 +55,50 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        ///     增幅百分数 -> 请求耗电（W）。
-        ///     100%=>1600, 125%=>2000, ... 300%=>4800。
+        ///     使用默认参数计算三阶段耗电曲线。
+        ///     第 1~16 档固定 600W；第 17~96 档平滑增长至 12000W；其后固定 12000W/档。
         /// </summary>
         public static float GetPowerConsumptionForBoost(int boostPercent)
         {
-            return BasePowerConsumption
-                   + ((ClampBoostPercent(boostPercent) - MinBoostPercent) / BoostStepPercent)
-                   * PowerPerBoostStep;
+            int clamped = ClampBoostPercent(boostPercent);
+            long totalSteps =
+                Math.Max(0L, ((long)clamped - MinBoostPercent) / BoostStepPercent);
+
+            double total = BasePowerConsumption;
+
+            long lowSteps = Math.Min(totalSteps, LowLoadStepCount);
+            total += lowSteps * PowerPerBoostStep;
+
+            int curveStepCount = Math.Max(0, StandardLoadEndStep - LowLoadStepCount);
+            long usedCurveSteps =
+                Math.Min(
+                    Math.Max(0L, totalSteps - LowLoadStepCount),
+                    curveStepCount);
+
+            for (int i = 0; i < usedCurveSteps; i++)
+            {
+                double t = curveStepCount <= 1
+                    ? 1d
+                    : i / (double)(curveStepCount - 1);
+                double smooth = t * t * (3d - 2d * t);
+                total += PowerPerBoostStep
+                    + (MaxPowerPerBoostStep - PowerPerBoostStep) * smooth;
+            }
+
+            long highSteps = Math.Max(0L, totalSteps - StandardLoadEndStep);
+            total += highSteps * MaxPowerPerBoostStep;
+
+            if (double.IsNaN(total) || total <= 0d)
+            {
+                return 0f;
+            }
+
+            if (double.IsInfinity(total) || total >= float.MaxValue)
+            {
+                return float.MaxValue;
+            }
+
+            return (float)total;
         }
 
         /// <summary>
@@ -64,7 +116,7 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         ///     遍历全部已加载地图，汇总当前正在为该目标提供增幅的阵列的总增幅百分数。
-        ///     不设叠加上限。
+        ///     不设平衡叠加上限；只在 int 返回类型达到极限时饱和，避免多建筑求和溢出。
         /// </summary>
         public static int GetTotalActiveBoostPercent(Pawn? target)
         {
@@ -73,7 +125,7 @@ namespace MAP_MechanoidMechanitor
                 return 0;
             }
 
-            int total = 0;
+            long total = 0L;
             List<Map> maps = Find.Maps;
             for (int i = 0; i < maps.Count; i++)
             {
@@ -98,11 +150,15 @@ namespace MAP_MechanoidMechanitor
                     if (comp != null && comp.IsProvidingBoostTo(target))
                     {
                         total += comp.EffectiveBoostPercent;
+                        if (total >= int.MaxValue)
+                        {
+                            return int.MaxValue;
+                        }
                     }
                 }
             }
 
-            return total;
+            return (int)total;
         }
 
         /// <summary>
