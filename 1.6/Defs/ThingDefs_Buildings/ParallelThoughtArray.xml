@@ -56,7 +56,7 @@
     <comps>
       <li Class="CompProperties_Power">
         <compClass>CompPowerTrader</compClass>
-        <basePowerConsumption>1600</basePowerConsumption>
+        <basePowerConsumption>1000</basePowerConsumption>
         <shortCircuitInRain>false</shortCircuitInRain>
       </li>
       <li Class="CompProperties_Flickable" />
@@ -69,11 +69,19 @@
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ParallelThoughtArray">
         <minBoostPercent>100</minBoostPercent>
-        <maxBoostPercent>30000</maxBoostPercent>
-        <boostStepPercent>25</boostStepPercent>
+        <!-- 仅作为 int 存档安全护栏；不是面向玩家的平衡上限。 -->
+        <maxBoostPercent>2147483600</maxBoostPercent>
+        <boostStepPercent>50</boostStepPercent>
+        <shiftBoostPercent>100</shiftBoostPercent>
+        <controlBoostPercent>1000</controlBoostPercent>
+
         <basePowerConsumption>1000</basePowerConsumption>
         <powerPerBoostStep>600</powerPerBoostStep>
+        <maxPowerPerBoostStep>12000</maxPowerPerBoostStep>
         <idlePowerConsumption>100</idlePowerConsumption>
+
+        <lowLoadStepCount>16</lowLoadStepCount>
+        <standardLoadEndStep>96</standardLoadEndStep>
         <fallbackRefreshIntervalTicks>60</fallbackRefreshIntervalTicks>
       </li>
     </comps>
