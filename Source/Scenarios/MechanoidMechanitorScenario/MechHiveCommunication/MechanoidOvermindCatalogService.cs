@@ -378,8 +378,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
+            List<PawnKindDef> allKinds = DefDatabase<PawnKindDef>.AllDefsListForReading;
+            for (int i = 0; i < allKinds.Count; i++)
+            {
+                PawnKindDef kind = allKinds[i];
+                if (HasFiniteMechPowerCell(kind))
+                {
+                    mechSet.Add(kind);
+                }
+            }
+
             thingBlacklistCache = thingSet;
             mechPawnKindBlacklistCache = mechSet;
+        }
+
+        private static bool HasFiniteMechPowerCell(PawnKindDef? kind)
+        {
+            if (kind?.race?.race == null || !kind.race.race.IsMechanoid)
+            {
+                return false;
+            }
+
+            return kind.race.GetCompProperties<CompProperties_MechPowerCell>() != null;
         }
 
         private static bool IsCatalogMech(PawnKindDef? kind)
