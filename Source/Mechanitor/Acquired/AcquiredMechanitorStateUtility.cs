@@ -28,6 +28,7 @@ namespace MAP_MechanoidMechanitor
 
             pawn.Notify_DisabledWorkTypesChanged();
             MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
+            MechanoidMechanitorSkillUtility.PromoteNonePassionsToMinor(pawn);
             InitializeRoleWorkSettingsIfNeeded(pawn, record);
             MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
                 pawn,

@@ -43,6 +43,11 @@ namespace MAP_MechanoidMechanitor
             if (!skillsInitialized || trackerWasMissing)
             {
                 ApplySkillLevels(pawn, props);
+                if (MechanoidMechanitorRoleUtility.HasNativeMechanitorMarker(pawn))
+                {
+                    MechanoidMechanitorSkillUtility.PromoteNonePassionsToMinor(pawn);
+                }
+
                 skillsInitialized = true;
             }
         }
