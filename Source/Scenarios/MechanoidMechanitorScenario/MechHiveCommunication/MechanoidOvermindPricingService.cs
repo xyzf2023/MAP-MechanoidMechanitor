@@ -108,6 +108,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            if (MechanoidOvermindCatalogService.IsMechPawnKindBlacklisted(kind))
+            {
+                return false;
+            }
+
             if (!TryGetMechBandwidthCost(kind, out float bandwidth))
             {
                 return false;

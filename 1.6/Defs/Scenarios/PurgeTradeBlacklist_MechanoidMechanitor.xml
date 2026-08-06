@@ -5,5 +5,9 @@
     <thingDefs>
       <!-- 空黑名单：可用 li MayRequire="Package.Id" 追加禁售 ThingDef -->
     </thingDefs>
+    <mechPawnKinds>
+      <!-- 机械族调拨黑名单：填写 PawnKindDef 的 defName，可用 li MayRequire="Package.Id" 追加兼容项 -->
+      <li>MAP_Mech_JusticeBOSS</li>
+    </mechPawnKinds>
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorPurgeTradeBlacklistDef>
 </Defs>

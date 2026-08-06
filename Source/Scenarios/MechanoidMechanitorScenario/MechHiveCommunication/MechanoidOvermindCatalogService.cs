@@ -85,7 +85,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static List<MechanoidOvermindThingCatalogEntry>? thingCatalog;
 
-        private static HashSet<ThingDef>? blacklistCache;
+        private static HashSet<ThingDef>? thingBlacklistCache;
+
+        private static HashSet<PawnKindDef>? mechPawnKindBlacklistCache;
 
         private static readonly Dictionary<ThingDef, List<ThingDef>> stuffCandidatesCache =
             new Dictionary<ThingDef, List<ThingDef>>();
@@ -206,14 +208,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static HashSet<ThingDef> GetMergedBlacklist()
         {
             EnsureBlacklist();
-            return blacklistCache!;
+            return thingBlacklistCache!;
+        }
+
+        public static bool IsMechPawnKindBlacklisted(PawnKindDef? kind)
+        {
+            if (kind == null)
+            {
+                return false;
+            }
+
+            EnsureBlacklist();
+            return mechPawnKindBlacklistCache!.Contains(kind);
         }
 
         public static void ClearCaches()
         {
             mechCatalog = null;
             thingCatalog = null;
-            blacklistCache = null;
+            thingBlacklistCache = null;
+            mechPawnKindBlacklistCache = null;
             stuffCandidatesCache.Clear();
             MechanoidOvermindPricingService.ClearThingMarketValueCache();
         }
@@ -225,6 +239,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            EnsureBlacklist();
             List<MechanoidOvermindMechCatalogEntry> list =
                 new List<MechanoidOvermindMechCatalogEntry>();
             List<PawnKindDef> allKinds = DefDatabase<PawnKindDef>.AllDefsListForReading;
@@ -232,6 +247,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 PawnKindDef kind = allKinds[i];
                 if (!IsCatalogMech(kind))
+                {
+                    continue;
+                }
+
+                if (mechPawnKindBlacklistCache!.Contains(kind))
                 {
                     continue;
                 }
@@ -314,33 +334,52 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static void EnsureBlacklist()
         {
-            if (blacklistCache != null)
+            if (thingBlacklistCache != null && mechPawnKindBlacklistCache != null)
             {
                 return;
             }
 
-            HashSet<ThingDef> set = new HashSet<ThingDef>();
+            HashSet<ThingDef> thingSet = new HashSet<ThingDef>();
+            HashSet<PawnKindDef> mechSet = new HashSet<PawnKindDef>();
             List<MechanoidMechanitorPurgeTradeBlacklistDef> defs =
                 DefDatabase<MechanoidMechanitorPurgeTradeBlacklistDef>.AllDefsListForReading;
             for (int i = 0; i < defs.Count; i++)
             {
-                List<ThingDef>? thingDefs = defs[i]?.thingDefs;
-                if (thingDefs == null)
+                MechanoidMechanitorPurgeTradeBlacklistDef? blacklistDef = defs[i];
+                if (blacklistDef == null)
                 {
                     continue;
                 }
 
-                for (int j = 0; j < thingDefs.Count; j++)
+                List<ThingDef>? thingDefs = blacklistDef.thingDefs;
+                if (thingDefs != null)
                 {
-                    ThingDef? thingDef = thingDefs[j];
-                    if (thingDef != null)
+                    for (int j = 0; j < thingDefs.Count; j++)
                     {
-                        set.Add(thingDef);
+                        ThingDef? thingDef = thingDefs[j];
+                        if (thingDef != null)
+                        {
+                            thingSet.Add(thingDef);
+                        }
+                    }
+                }
+
+                List<PawnKindDef>? mechPawnKinds = blacklistDef.mechPawnKinds;
+                if (mechPawnKinds != null)
+                {
+                    for (int j = 0; j < mechPawnKinds.Count; j++)
+                    {
+                        PawnKindDef? mechPawnKind = mechPawnKinds[j];
+                        if (mechPawnKind != null)
+                        {
+                            mechSet.Add(mechPawnKind);
+                        }
                     }
                 }
             }
 
-            blacklistCache = set;
+            thingBlacklistCache = thingSet;
+            mechPawnKindBlacklistCache = mechSet;
         }
 
         private static bool IsCatalogMech(PawnKindDef? kind)
@@ -360,7 +399,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (blacklistCache != null && blacklistCache.Contains(def))
+            if (thingBlacklistCache != null && thingBlacklistCache.Contains(def))
             {
                 return false;
             }

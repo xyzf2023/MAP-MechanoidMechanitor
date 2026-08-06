@@ -402,7 +402,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindOrderLine_Mech line = mechLines[i];
                 if (line?.Kind == null
                     || line.Count <= 0
-                    || line.Count > MechanoidOvermindOrder.MaxCount)
+                    || line.Count > MechanoidOvermindOrder.MaxCount
+                    || MechanoidOvermindCatalogService.IsMechPawnKindBlacklisted(line.Kind))
                 {
                     return false;
                 }
