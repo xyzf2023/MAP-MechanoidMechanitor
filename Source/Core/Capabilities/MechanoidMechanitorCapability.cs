@@ -26,6 +26,7 @@ namespace MAP_MechanoidMechanitor
         SyntheticPregnancy = 1 << 14,
 
         IdeologyMembership = 1 << 15,
-        IdeologyFullParticipation = 1 << 16
+        IdeologyFullParticipation = 1 << 16,
+        Psycasting = 1 << 17
     }
 }

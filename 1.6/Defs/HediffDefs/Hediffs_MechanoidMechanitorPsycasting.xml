@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <HediffDef MayRequire="Ludeon.RimWorld.Royalty">
+    <defName>MAP_MechanoidMechanitor_PsychicReceiver</defName>
+    <label>机械灵能接收器</label>
+    <description>机械族机械师用于接收灵能场信号的隐藏接口。</description>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_MechanoidMechanitorPsychicReceiver</hediffClass>
+    <isBad>false</isBad>
+    <initialSeverity>1</initialSeverity>
+    <stages>
+      <li>
+        <statOffsets>
+          <PsychicSensitivity>1</PsychicSensitivity>
+        </statOffsets>
+      </li>
+    </stages>
+  </HediffDef>
+</Defs>
