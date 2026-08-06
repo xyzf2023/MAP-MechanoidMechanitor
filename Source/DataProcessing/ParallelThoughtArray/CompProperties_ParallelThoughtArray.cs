@@ -7,9 +7,16 @@ namespace MAP_MechanoidMechanitor
         public int minBoostPercent = ParallelThoughtArrayUtility.MinBoostPercent;
         public int maxBoostPercent = ParallelThoughtArrayUtility.MaxBoostPercent;
         public int boostStepPercent = ParallelThoughtArrayUtility.BoostStepPercent;
+        public int shiftBoostPercent = ParallelThoughtArrayUtility.ShiftBoostPercent;
+        public int controlBoostPercent = ParallelThoughtArrayUtility.ControlBoostPercent;
+
         public float basePowerConsumption = ParallelThoughtArrayUtility.BasePowerConsumption;
         public float powerPerBoostStep = ParallelThoughtArrayUtility.PowerPerBoostStep;
+        public float maxPowerPerBoostStep = ParallelThoughtArrayUtility.MaxPowerPerBoostStep;
         public float idlePowerConsumption = ParallelThoughtArrayUtility.IdlePowerConsumption;
+
+        public int lowLoadStepCount = ParallelThoughtArrayUtility.LowLoadStepCount;
+        public int standardLoadEndStep = ParallelThoughtArrayUtility.StandardLoadEndStep;
         public int fallbackRefreshIntervalTicks = ParallelThoughtArrayUtility.FallbackRefreshIntervalTicks;
 
         public CompProperties_ParallelThoughtArray()
