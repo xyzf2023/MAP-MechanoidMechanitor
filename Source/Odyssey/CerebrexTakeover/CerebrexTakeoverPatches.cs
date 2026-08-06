@@ -474,7 +474,7 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    internal sealed class CerebrexTakeoverScopeState
+    public sealed class CerebrexTakeoverScopeState
     {
         public bool Entered;
         public bool Exited;
