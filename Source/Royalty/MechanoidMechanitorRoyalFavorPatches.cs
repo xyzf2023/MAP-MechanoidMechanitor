@@ -149,10 +149,10 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            return first.EndsWith(
+            return first!.EndsWith(
                        "." + second,
                        StringComparison.Ordinal)
-                || second.EndsWith(
+                || second!.EndsWith(
                     "." + first,
                     StringComparison.Ordinal);
         }

@@ -231,7 +231,7 @@ namespace MAP_MechanoidMechanitor
             ref Pawn pawn,
             ref bool __result)
         {
-            pawn = null;
+            pawn = null!;
             __result = false;
             if (!ModsConfig.BiotechActive || Find.CurrentMap == null)
             {
