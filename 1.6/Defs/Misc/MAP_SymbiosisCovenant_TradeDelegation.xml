@@ -181,7 +181,7 @@
     </logisticsPool>
 
     <rarePool>
-      <li>
+      <li MayRequire="Ludeon.RimWorld.Royalty">
         <minLevel>3</minLevel><maxLevel>5</maxLevel><weight>1.0</weight>
         <generator Class="StockGenerator_Techprints">
           <countChances><li><count>1</count><chance>1</chance></li></countChances>
@@ -197,7 +197,7 @@
       </li>
       <li>
         <minLevel>4</minLevel><maxLevel>5</maxLevel><weight>0.7</weight>
-        <generator Class="StockGenerator_Tag"><tradeTag>TechHediff</tradeTag><thingDefCountRange>1</thingDefCountRange><countRange>1</countRange><maxTechLevelGenerate>Spacer</maxTechLevelGenerate><maxTechLevelBuy>Spacer</maxTechLevelBuy></generator>
+        <generator Class="StockGenerator_Tag"><tradeTag>Bionic</tradeTag><thingDefCountRange>1</thingDefCountRange><countRange>1</countRange><maxTechLevelGenerate>Spacer</maxTechLevelGenerate><maxTechLevelBuy>Spacer</maxTechLevelBuy></generator>
       </li>
       <li>
         <minLevel>4</minLevel><maxLevel>5</maxLevel><weight>0.6</weight>
@@ -205,7 +205,7 @@
       </li>
       <li>
         <minLevel>4</minLevel><maxLevel>5</maxLevel><weight>0.6</weight>
-        <generator Class="StockGenerator_MarketValue"><tradeTag>WeaponRanged</tradeTag><countRange>1</countRange><maxTechLevelGenerate>Spacer</maxTechLevelGenerate><maxTechLevelBuy>Spacer</maxTechLevelBuy></generator>
+        <generator Class="StockGenerator_MarketValue"><tradeTag>WeaponRanged</tradeTag><weaponTag>SpacerGun</weaponTag><countRange>1</countRange><maxTechLevelGenerate>Spacer</maxTechLevelGenerate><maxTechLevelBuy>Spacer</maxTechLevelBuy></generator>
       </li>
       <li MayRequire="Ludeon.RimWorld.Biotech">
         <minLevel>4</minLevel><maxLevel>5</maxLevel><weight>0.5</weight>
