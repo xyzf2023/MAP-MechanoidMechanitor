@@ -12,7 +12,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         public static bool CanGenerateRepresentative(Faction faction, PlanetTile tile)
         {
-            return GetRepresentativeOptions(faction).Any(option => option.kind != null);
+            return TryGetRepresentativeOptions(
+                faction,
+                preferTraderGuards: false,
+                out _,
+                out _);
         }
 
         public static Pawn GenerateTrader(
@@ -59,64 +63,67 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool preferTraderGuards)
         {
             List<Pawn> result = new List<Pawn>();
-            if (desiredCount <= 0)
+            if (desiredCount <= 0
+                || !TryGetRepresentativeOptions(
+                    faction,
+                    preferTraderGuards,
+                    out List<PawnGenOption> options,
+                    out PawnGroupKindDef groupKind))
             {
                 return result;
             }
 
-            List<PawnGenOption> options = preferTraderGuards
-                ? GetTraderGuardOptions(faction)
-                : GetRepresentativeOptions(faction);
-            if (options.Count == 0 && preferTraderGuards)
+            float effectiveBudget = Math.Max(1f, pointBudget);
+            PawnGroupMakerParms groupParms = new PawnGroupMakerParms
             {
-                options = GetRepresentativeOptions(faction);
-            }
-            if (options.Count == 0)
-            {
-                return result;
-            }
+                groupKind = groupKind,
+                tile = tile,
+                faction = faction,
+                points = effectiveBudget
+            };
 
-            float remainingPoints = Math.Max(0f, pointBudget);
-            for (int i = 0; i < desiredCount; i++)
-            {
-                List<PawnGenOption> affordable = remainingPoints > 0f
-                    ? options
-                        .Where(option => option.kind != null
-                            && option.kind != PawnKindDefOf.Slave
-                            && !option.kind.trader
-                            && !option.kind.RaceProps.Animal
-                            && option.Cost <= remainingPoints)
-                        .ToList()
-                    : new List<PawnGenOption>();
+            // 具体 PawnKind / Xenotype 的选择继续交给原版点数选择器处理，
+            // 从而保留 maxPerGroup、Bossgroup 预留、儿童限制、xenotype 战力倍率等约束。
+            List<PawnGenOptionWithXenotype> selectedOptions =
+                PawnGroupMakerUtility.ChoosePawnGenOptionsByPoints(
+                        effectiveBudget,
+                        options,
+                        groupParms)
+                    .Take(desiredCount)
+                    .ToList();
 
-                PawnGenOption selected;
-                if (affordable.Count > 0)
+            // 分给某个参与派系的点数份额可能低于其最廉价成员。
+            // 为保证“已选中的参与派系至少有一名真实代表”，仅在原版选择器一个都选不出时
+            // 放宽一次首名代表的点数限制；仍通过 GetOptions 保留原版合法性与 Xenotype 筛选。
+            if (selectedOptions.Count == 0)
+            {
+                const float fallbackPoints = 100000f;
+                groupParms.points = fallbackPoints;
+                List<PawnGenOptionWithXenotype> fallbackOptions =
+                    PawnGroupMakerUtility.GetOptions(
+                        groupParms,
+                        faction.def,
+                        options,
+                        fallbackPoints,
+                        fallbackPoints,
+                        fallbackPoints);
+                if (fallbackOptions.Count > 0)
                 {
-                    selected = affordable.RandomElementByWeight(option => option.selectionWeight);
+                    selectedOptions.Add(
+                        fallbackOptions
+                            .OrderBy(option => option.Cost)
+                            .ThenByDescending(option => option.SelectionWeight)
+                            .First());
                 }
-                else
-                {
-                    if (result.Count > 0)
-                    {
-                        break;
-                    }
+            }
 
-                    selected = options
-                        .Where(option => option.kind != null
-                            && option.kind != PawnKindDefOf.Slave
-                            && !option.kind.trader
-                            && !option.kind.RaceProps.Animal)
-                        .OrderBy(option => option.Cost)
-                        .FirstOrDefault();
-                    if (selected == null)
-                    {
-                        break;
-                    }
-                }
-
+            for (int i = 0; i < selectedOptions.Count; i++)
+            {
+                PawnGenOptionWithXenotype selected = selectedOptions[i];
+                PawnKindDef kind = selected.Option.kind;
                 Pawn pawn = PawnGenerator.GeneratePawn(
                     new PawnGenerationRequest(
-                        selected.kind,
+                        kind,
                         faction,
                         PawnGenerationContext.NonPlayer,
                         tile,
@@ -124,15 +131,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         allowDead: false,
                         allowDowned: false,
                         canGeneratePawnRelations: true,
-                        mustBeCapableOfViolence: selected.kind.isFighter,
+                        mustBeCapableOfViolence: kind.isFighter,
                         colonistRelationChanceFactor: 1f,
                         forceAddFreeWarmLayerIfNeeded: false,
                         allowGay: true,
                         allowPregnant: false,
                         allowFood: true,
-                        allowAddictions: true));
+                        allowAddictions: true,
+                        forcedXenotype: selected.Xenotype));
                 result.Add(pawn);
-                remainingPoints = Math.Max(0f, remainingPoints - selected.Cost);
             }
 
             return result;
@@ -256,6 +263,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return result;
         }
 
+        private static bool TryGetRepresentativeOptions(
+            Faction faction,
+            bool preferTraderGuards,
+            out List<PawnGenOption> options,
+            out PawnGroupKindDef groupKind)
+        {
+            options = new List<PawnGenOption>();
+            groupKind = PawnGroupKindDefOf.Peaceful;
+            if (faction.def.pawnGroupMakers.NullOrEmpty())
+            {
+                return false;
+            }
+
+            List<PawnGenOption> traderGuards = GetTraderGuardOptions(faction);
+            if (traderGuards.Count > 0)
+            {
+                options = traderGuards;
+                groupKind = PawnGroupKindDefOf.Trader;
+                return true;
+            }
+
+            List<PawnGenOption> peaceful = faction.def.pawnGroupMakers
+                .Where(maker => maker.kindDef == PawnGroupKindDefOf.Peaceful)
+                .SelectMany(maker => maker.options)
+                .Where(IsRepresentativeOption)
+                .ToList();
+            if (peaceful.Count > 0)
+            {
+                options = peaceful;
+                groupKind = PawnGroupKindDefOf.Peaceful;
+                return true;
+            }
+
+            // 没有贸易护卫或和平访问成员时，不退化到袭击/特殊 PawnGroupMaker。
+            // 次要成员可以被跳过，避免为“联合代表”生成首领、Boss或袭击专用单位。
+            return false;
+        }
+
         private static List<PawnGenOption> GetTraderGuardOptions(Faction faction)
         {
             if (faction.def.pawnGroupMakers.NullOrEmpty())
@@ -270,39 +315,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .ToList();
         }
 
-        private static List<PawnGenOption> GetRepresentativeOptions(Faction faction)
-        {
-            List<PawnGenOption> traderGuards = GetTraderGuardOptions(faction);
-            if (traderGuards.Count > 0)
-            {
-                return traderGuards;
-            }
-
-            if (faction.def.pawnGroupMakers.NullOrEmpty())
-            {
-                return new List<PawnGenOption>();
-            }
-
-            List<PawnGenOption> peaceful = faction.def.pawnGroupMakers
-                .Where(maker => maker.kindDef == PawnGroupKindDefOf.Peaceful)
-                .SelectMany(maker => maker.options)
-                .Where(IsRepresentativeOption)
-                .ToList();
-            if (peaceful.Count > 0)
-            {
-                return peaceful;
-            }
-
-            // 没有贸易护卫或和平访问成员时，不退化到袭击/特殊 PawnGroupMaker。
-            // 次要成员可以被跳过，避免为“联合代表”生成首领、Boss或袭击专用单位。
-            return new List<PawnGenOption>();
-        }
-
         private static bool IsRepresentativeOption(PawnGenOption option)
         {
             return option?.kind != null
                 && option.kind != PawnKindDefOf.Slave
                 && !option.kind.trader
+                && !option.kind.factionLeader
                 && !option.kind.RaceProps.Animal;
         }
     }
