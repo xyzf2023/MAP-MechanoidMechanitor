@@ -149,6 +149,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public static class SymbiosisCovenant_MemberGoodwillLock_Patch
     {
         [HarmonyPostfix]
+        [HarmonyPriority(Priority.Last)]
         public static void Postfix(Faction __instance, Faction other, ref bool __result)
         {
             if (__result
@@ -183,6 +184,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public static class SymbiosisCovenant_RecalculateMemberRelations_Patch
     {
         [HarmonyPostfix]
+        [HarmonyPriority(Priority.Last)]
         public static void Postfix()
         {
             // 该方法在日常同步、团结度变化、成员加入/退出和DEV重算时都会触发。
