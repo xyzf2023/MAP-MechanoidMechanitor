@@ -7,8 +7,8 @@
     <label>指挥频段天线</label>
     <description>一种特殊的机械频段通讯设备。当它被激活时会发送一段伪造的指挥专用频段脉冲，这会吸引一个机械族指挥官前来确认情况。如果你能打败它，就能从它的残骸上收集到特殊的机械技术装置。伪造讯号脉冲会在随后被标记，所以这个设备只能一次性使用。</description>
     <graphicData>
-      <texPath>Things/Building/Misc/MechbandDish</texPath>
-      <graphicClass>Graphic_Multi</graphicClass>
+      <texPath>Buildings/CommandBandAntenna</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(2,2)</drawSize>
       <shadowData>
         <volume>(1.1, 0.75, 1.1)</volume>

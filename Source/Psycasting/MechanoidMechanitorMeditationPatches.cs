@@ -21,7 +21,7 @@ namespace MAP_MechanoidMechanitor
         protected override Job TryGiveJob(Pawn pawn)
         {
             return MechanoidMechanitorPsycastUtility.TryMakeAssignedMeditationJob(
-                pawn);
+                pawn)!;
         }
     }
 
