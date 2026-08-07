@@ -280,7 +280,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (__state == mechHive)
             {
                 GameComponent_SymbiosisCovenantState.TryAdjustTrustForAll(
-                    8,
+                    10,
                     "MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode"
                         .Translate(),
                     SymbiosisCovenantTrustSource.MechHiveNode);
@@ -296,7 +296,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     GameComponent_SymbiosisCovenantState.TryAdjustTrust(
                         covenantFaction,
-                        8,
+                        10,
                         "MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy"
                             .Translate(),
                         SymbiosisCovenantTrustSource.Other);
@@ -323,7 +323,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             GameComponent_SymbiosisCovenantState.TryAdjustTrustForAll(
-                8,
+                10,
                 "MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode".Translate(),
                 SymbiosisCovenantTrustSource.MechHiveNode);
         }
