@@ -136,7 +136,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return 0;
             }
 
-            int amount = ApplySourceLimit(requestedAmount, source, now);
+            int adjustedAmount = requestedAmount;
+            if (source == SymbiosisCovenantTrustSource.Betrayal
+                && adjustedAmount < 0
+                && trust < GameComponent_SymbiosisCovenantState.InvitationTrustThreshold)
+            {
+                adjustedAmount *= 2;
+            }
+
+            int amount = ApplySourceLimit(adjustedAmount, source, now);
             if (amount == 0)
             {
                 return 0;
@@ -197,6 +205,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             goodwillWindowStartTick = -1;
             goodwillTrustGainedInWindow = 0;
+            tradeWindowStartTick = -1;
             tradeWindowStartTick = -1;
             tradeTrustGainedInWindow = 0;
             lastBetrayalTick = -1;
@@ -387,6 +396,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         public const int MinimumTrust = -100;
         public const int MaximumTrust = 200;
+        public const int ContactTrustThreshold = 0;
+        public const int InvitationTrustThreshold = 25;
+        public const int InitialHostileTrust = -50;
         public const int SourceWindowTicks = 900000;
         public const int GoodwillTrustPerWindow = 15;
         public const int TradeTrustPerWindow = 5;
@@ -400,8 +412,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const int UnityMax = 1000;
         private const int CovenantLevelMax = 5;
         private const int CovenantExitUnityPenalty = 100;
-        private const int MemberJoinTrust = 0;
-        private const int MemberRejoinTrust = -25;
+        private const float UnityContributionMultiplier = 2f;
 
         private bool initialized;
         private bool contactUnlockedLetterSent;
@@ -621,6 +632,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             SymbiosisCovenantFactionRecord? record = GetRecord(faction);
             if (record == null
+                || record.Trust < InvitationTrustThreshold
                 || record.CovenantMember
                 || record.ProposalPending
                 || record.PermanentlyRefusesInvitation
@@ -1145,10 +1157,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             record.CovenantMember = true;
-            record.SetTrustDirect(
-                record.CovenantExitCount > 0 ? MemberRejoinTrust : MemberJoinTrust,
-                "MAP_MechanoidMechanitor.Symbiosis.TrustReason.JoinCovenant".Translate(),
-                CurrentTick);
             record.ClearProposal();
             record.ClearInvitationCooldown();
 
@@ -1329,7 +1337,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void ApplyDailyUnityDelta()
         {
-            float delta = 0f;
+            float totalContribution = 0f;
+            int memberCount = 0;
             for (int i = 0; i < factionRecords.Count; i++)
             {
                 SymbiosisCovenantFactionRecord record = factionRecords[i];
@@ -1338,17 +1347,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
+                memberCount++;
                 int trust = record.Trust;
                 if (trust > 50)
                 {
-                    delta += (trust - 50) / 10f;
+                    totalContribution += (trust - 50) / 10f;
                 }
                 else if (trust < 0)
                 {
-                    delta -= (-trust) / 5f;
+                    totalContribution -= (-trust) / 5f;
                 }
             }
 
+            float delta = memberCount > 0
+                ? totalContribution / memberCount * UnityContributionMultiplier
+                : 0f;
             unity = Mathf.Clamp(unity + delta, 0f, UnityMax);
             RecalculateCovenantLevel();
         }
@@ -1468,7 +1481,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             switch (trustLock)
             {
                 case SymbiosisPreDeclarationTrustLock.Hostile:
-                    return MinimumTrust;
+                    return InitialHostileTrust;
                 case SymbiosisPreDeclarationTrustLock.Neutral:
                     return -25;
                 default:
@@ -1526,7 +1539,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     trust = preDeclaration ? -25 : 0;
                     break;
                 default:
-                    trust = MinimumTrust;
+                    trust = InitialHostileTrust;
                     break;
             }
 
@@ -1552,40 +1565,46 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (trust >= 200)
             {
-                return "MAP_MechanoidMechanitor.Symbiosis.Stage.ReadyToSign"
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.CoexistenceConsensus"
                     .Translate();
             }
 
             if (trust >= 150)
             {
-                return "MAP_MechanoidMechanitor.Symbiosis.Stage.StrategicCooperation"
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.HighRecognition"
                     .Translate();
             }
 
             if (trust >= 100)
             {
-                return "MAP_MechanoidMechanitor.Symbiosis.Stage.CommonDefense"
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.StableMutualTrust"
                     .Translate();
             }
 
             if (trust >= 50)
             {
-                return "MAP_MechanoidMechanitor.Symbiosis.Stage.Ceasefire".Translate();
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.BasicTrust".Translate();
             }
 
-            if (trust >= 1)
+            if (trust >= InvitationTrustThreshold)
             {
-                return "MAP_MechanoidMechanitor.Symbiosis.Stage.SecretContact"
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.CooperationWillingness"
                     .Translate();
             }
 
-            if (trust >= -50)
+            if (trust >= ContactTrustThreshold)
+            {
+                return "MAP_MechanoidMechanitor.Symbiosis.Stage.InitialRecognition"
+                    .Translate();
+            }
+
+            if (trust >= InitialHostileTrust)
             {
                 return "MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation"
                     .Translate();
             }
 
-            return "MAP_MechanoidMechanitor.Symbiosis.Stage.Rejected".Translate();
+            return "MAP_MechanoidMechanitor.Symbiosis.Stage.ExplicitRejection".Translate();
         }
 
         public static int ClampTrust(int trust)
