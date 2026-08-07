@@ -162,6 +162,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
     [HarmonyPatch(
         typeof(GameComponent_SymbiosisCovenantState),
+        "EnsureNeutralAmongMembers")]
+    public static class SymbiosisCovenant_LegacyNeutralReconcile_Patch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix()
+        {
+            GameComponent_SymbiosisCovenantState? state =
+                GameComponent_SymbiosisCovenantState.CurrentComponent;
+
+            // L1-L4 继续使用原有“至少中立”逻辑；L5 由新的盟友策略一次性处理，
+            // 避免同一次同步先触发 Hostile -> Neutral，再触发 Neutral -> Ally。
+            return state == null || state.CovenantLevel != 5;
+        }
+    }
+
+    [HarmonyPatch(
+        typeof(GameComponent_SymbiosisCovenantState),
         "RecalculateCovenantLevel")]
     public static class SymbiosisCovenant_RecalculateMemberRelations_Patch
     {
