@@ -67,14 +67,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             mechHive = null!;
             if (Current.Game == null
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+                || !GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive)
             {
                 return false;
             }
 
             GameComponent_MechanoidMechanitorStoryState? storyState =
                 Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
-            if (storyState == null || !storyState.PurgeDirectiveEnabled)
+            if (storyState == null)
             {
                 return false;
             }

@@ -11,6 +11,12 @@ namespace MAP_MechanoidMechanitor
         public bool enableLoverImplants = false;
 
         /// <summary>
+        /// 默认关闭。开启后，不含机械族机械师剧本词条的普通剧本也会在新游戏流程中
+        /// 显示机械族机械师剧情风格页面。该设置只控制新游戏页面入口，不控制已建立存档的运行状态。
+        /// </summary>
+        public bool enableStoryStylesForGeneralScenarios = false;
+
+        /// <summary>
         /// 是否监听动态分配目标的征召状态切换，并在下一游戏刻立即刷新目标状态。
         /// 默认开启；关闭后继续依赖各目标原有的周期检查间隔。
         /// </summary>
@@ -92,6 +98,10 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref enableLoverImplants,
                 "enableLoverImplants",
+                false);
+            Scribe_Values.Look(
+                ref enableStoryStylesForGeneralScenarios,
+                "enableStoryStylesForGeneralScenarios",
                 false);
             Scribe_Values.Look(
                 ref enableImmediateDraftStateRefresh,

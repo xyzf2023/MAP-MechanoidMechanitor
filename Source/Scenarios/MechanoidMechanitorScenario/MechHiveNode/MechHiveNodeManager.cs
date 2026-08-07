@@ -24,7 +24,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.WorldComponentTick();
 
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (!GameComponent_MechanoidMechanitorStoryState.IsStoryConfigurationActive)
             {
                 return;
             }

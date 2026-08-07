@@ -20,7 +20,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 yield return gizmo;
             }
 
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (!GameComponent_MechanoidMechanitorStoryState.IsStoryConfigurationActive)
             {
                 yield break;
             }

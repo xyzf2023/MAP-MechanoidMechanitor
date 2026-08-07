@@ -1,5 +1,6 @@
 using System;
 using HarmonyLib;
+using MAP_MechanoidMechanitor;
 using RimWorld;
 using Verse;
 
@@ -16,8 +17,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scenario __instance,
             ref Page __result)
         {
-            if (!MechanoidMechanitorScenarioUtility
-                    .ScenarioContainsMarker(__instance))
+            bool containsScenarioMarker = MechanoidMechanitorScenarioUtility
+                .ScenarioContainsMarker(__instance);
+            bool allowGeneralScenarioStoryStyles =
+                MAPMechanitorMod.Settings?.enableStoryStylesForGeneralScenarios == true;
+
+            if (!containsScenarioMarker && !allowGeneralScenarioStoryStyles)
             {
                 return;
             }

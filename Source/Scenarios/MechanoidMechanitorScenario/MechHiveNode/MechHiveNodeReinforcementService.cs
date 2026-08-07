@@ -31,7 +31,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return;
                 }
 
-                if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+                if (!GameComponent_MechanoidMechanitorStoryState.IsStoryConfigurationActive)
                 {
                     return;
                 }

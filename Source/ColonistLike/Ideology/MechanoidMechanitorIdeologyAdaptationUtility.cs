@@ -25,8 +25,7 @@ namespace MAP_MechanoidMechanitor
                 return MechanoidMechanitorIdeologyAdaptationLevel.Disabled;
             }
 
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled
-                || !GameComponent_MechanoidMechanitorStoryState.HasActiveConfiguration)
+            if (!GameComponent_MechanoidMechanitorStoryState.IsStoryConfigurationActive)
             {
                 return MechanoidMechanitorIdeologyAdaptationLevel.Disabled;
             }

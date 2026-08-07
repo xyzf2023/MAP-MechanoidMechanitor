@@ -27,7 +27,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static MechanoidMechanitorStoryConfiguration CreateDefault()
         {
-            return new MechanoidMechanitorStoryConfiguration();
+            MechanoidMechanitorStoryConfiguration configuration =
+                new MechanoidMechanitorStoryConfiguration();
+
+            // 普通剧本开放剧情风格后，文化适配默认保持完全关闭；真正的机械族机械师
+            // 专用剧本仍沿用原有 Basic 默认值。仅在新游戏存在明确 Scenario 时分流，
+            // 避免其他非开局调用在缺少 Scenario 上下文时改变历史默认行为。
+            if (Find.Scenario != null
+                && !MechanoidMechanitorScenarioUtility.ScenarioContainsMarker(Find.Scenario))
+            {
+                configuration.ideologyAdaptationLevel =
+                    MechanoidMechanitorIdeologyAdaptationLevel.Disabled;
+            }
+
+            return configuration;
         }
 
         public MechanoidMechanitorStoryConfiguration CreateCopy()

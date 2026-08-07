@@ -300,7 +300,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (faction == null
                 || applying
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled
+                || !GameComponent_MechanoidMechanitorStoryState.IsStoryConfigurationActive
                 || Current.Game == null)
             {
                 return;

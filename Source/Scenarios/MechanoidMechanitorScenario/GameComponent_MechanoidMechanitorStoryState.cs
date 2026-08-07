@@ -6,6 +6,13 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
+    public enum MechanoidMechanitorStoryConfigurationOrigin : byte
+    {
+        None = 0,
+        MechanoidMechanitorScenario = 1,
+        GeneralScenario = 2
+    }
+
     public sealed class GameComponent_MechanoidMechanitorStoryState : GameComponent
     {
         private static readonly string[] MechanoidOvermindGreekPrefixes =
@@ -18,6 +25,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private MechanoidMechanitorStoryStyleDef? selectedStoryStyle;
 
         private MechanoidMechanitorStoryConfiguration? activeConfiguration;
+
+        private MechanoidMechanitorStoryConfigurationOrigin storyConfigurationOrigin;
 
         private bool initialOrdinaryFactionRelationsApplied;
 
@@ -111,11 +120,43 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return prefix + "-" + number.ToString("D4");
         }
 
+        public static MechanoidMechanitorStoryConfigurationOrigin CurrentConfigurationOrigin =>
+            CurrentComponent?.storyConfigurationOrigin
+            ?? MechanoidMechanitorStoryConfigurationOrigin.None;
+
+        public static bool HasActiveConfiguration
+        {
+            get
+            {
+                if (Current.Game == null)
+                {
+                    return false;
+                }
+
+                GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+                return component?.activeConfiguration != null
+                    && component.storyConfigurationOrigin
+                        != MechanoidMechanitorStoryConfigurationOrigin.None;
+            }
+        }
+
+        public static bool IsStoryConfigurationActive => HasActiveConfiguration;
+
+        public static bool IsGeneralScenarioStoryConfiguration =>
+            HasActiveConfiguration
+            && CurrentConfigurationOrigin
+                == MechanoidMechanitorStoryConfigurationOrigin.GeneralScenario;
+
+        public static bool IsMechanoidMechanitorScenarioStoryConfiguration =>
+            HasActiveConfiguration
+            && CurrentConfigurationOrigin
+                == MechanoidMechanitorStoryConfigurationOrigin.MechanoidMechanitorScenario;
+
         public static MechanoidMechanitorStoryStyleDef? CurrentStoryStyle
         {
             get
             {
-                if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+                if (!HasActiveConfiguration)
                 {
                     return null;
                 }
@@ -130,12 +171,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             get
             {
-                if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
-                {
-                    return null;
-                }
-
-                if (Current.Game == null)
+                if (!HasActiveConfiguration)
                 {
                     return null;
                 }
@@ -147,24 +183,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 return component.activeConfiguration.CreateCopy();
-            }
-        }
-
-        public static bool HasActiveConfiguration
-        {
-            get
-            {
-                if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
-                {
-                    return false;
-                }
-
-                if (Current.Game == null)
-                {
-                    return false;
-                }
-
-                return CurrentComponent?.activeConfiguration != null;
             }
         }
 
@@ -208,7 +226,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             get
             {
-                if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+                if (!HasActiveConfiguration)
                 {
                     return false;
                 }
@@ -217,6 +235,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return component != null && component.PurgeDirectiveEnabled;
             }
         }
+
+        public static bool ShouldRunPurgeFleshColonistComplianceCheck =>
+            IsPurgeDirectiveActive
+            && IsMechanoidMechanitorScenarioStoryConfiguration;
 
         private static GameComponent_MechanoidMechanitorStoryState? CurrentComponent
         {
@@ -239,6 +261,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryStyleDef storyStyle,
             MechanoidMechanitorStoryConfiguration configuration)
         {
+            storyConfigurationOrigin = MechanoidMechanitorScenarioUtility.IsScenarioActive
+                ? MechanoidMechanitorStoryConfigurationOrigin.MechanoidMechanitorScenario
+                : MechanoidMechanitorStoryConfigurationOrigin.GeneralScenario;
             selectedStoryStyle = storyStyle;
             activeConfiguration = configuration.CreateCopy();
             initialOrdinaryFactionRelationsApplied = false;
@@ -254,8 +279,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool TryAddPurgeDirectiveRewardPoints(int amount)
         {
-            if (amount <= 0
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (amount <= 0 || !IsPurgeDirectiveActive)
             {
                 return false;
             }
@@ -275,6 +299,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool TrySpendPurgeDirectiveCredits(int amount)
         {
             if (amount < 0
+                || storyConfigurationOrigin
+                    == MechanoidMechanitorStoryConfigurationOrigin.None
                 || !PurgeDirectiveEnabled
                 || purgeDirectiveRuntimeState == null)
             {
@@ -286,7 +312,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool RefundPurgeDirectiveCredits(int amount)
         {
-            if (amount < 0 || purgeDirectiveRuntimeState == null)
+            if (amount < 0
+                || storyConfigurationOrigin
+                    == MechanoidMechanitorStoryConfigurationOrigin.None
+                || !PurgeDirectiveEnabled
+                || purgeDirectiveRuntimeState == null)
             {
                 return false;
             }
@@ -296,8 +326,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool TrySpendPurgeDirectiveCredits(int amount, bool forCurrentSave = true)
         {
-            if (!forCurrentSave
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (!forCurrentSave || !IsPurgeDirectiveActive)
             {
                 return false;
             }
@@ -307,8 +336,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool RefundPurgeDirectiveCredits(int amount, bool forCurrentSave = true)
         {
-            if (!forCurrentSave
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (!forCurrentSave || !IsPurgeDirectiveActive)
             {
                 return false;
             }
@@ -461,7 +489,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             out MechanoidMechanitorFactionRelationOption option)
         {
             option = MechanoidMechanitorFactionRelationOption.Default;
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (!HasActiveConfiguration)
             {
                 return false;
             }
@@ -487,7 +515,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             out MechanoidMechanitorFactionRelationOption option)
         {
             option = MechanoidMechanitorFactionRelationOption.Default;
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            if (!HasActiveConfiguration)
             {
                 return false;
             }
@@ -528,6 +556,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             goodwill = 0;
             relationKind = FactionRelationKind.Neutral;
 
+            if (!HasActiveConfiguration)
+            {
+                return false;
+            }
+
             GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
             if (component == null
                 || !component.initialOrdinaryFactionRelationsApplied
@@ -563,6 +596,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             mechHive = null!;
             relationKind = FactionRelationKind.Neutral;
+
+            if (!HasActiveConfiguration)
+            {
+                return false;
+            }
 
             GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
             if (component == null
@@ -677,8 +715,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             RebuildRuntimeCaches();
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled
-                || activeConfiguration == null)
+            if (!HasActiveConfiguration)
             {
                 return;
             }
@@ -771,7 +808,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             ProcessPendingFactionRelationNotifications();
 
-            MechanoidMechanitorPurgeDirectiveUtility.Tick(this);
+            if (ShouldRunPurgeFleshColonistComplianceCheck)
+            {
+                MechanoidMechanitorPurgeDirectiveUtility.Tick(this);
+            }
+
             TryCaptureLockedPrimaryIdeoOnce();
             if (Find.TickManager != null
                 && Find.TickManager.TicksGame % 2500 == 0)
@@ -789,6 +830,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Deep.Look(
                 ref activeConfiguration,
                 "activeMechanoidMechanitorStoryConfiguration");
+            Scribe_Values.Look(
+                ref storyConfigurationOrigin,
+                "mechanoidMechanitorStoryConfigurationOrigin",
+                MechanoidMechanitorStoryConfigurationOrigin.None);
             Scribe_Values.Look(
                 ref initialOrdinaryFactionRelationsApplied,
                 "initialOrdinaryFactionRelationsApplied",
@@ -809,6 +854,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
+                // 历史版本只有机械族机械师专用剧本能够生成活动剧情配置，因此旧存档缺少
+                // origin 字段时可以无歧义地迁移为专用剧本来源。普通旧存档没有活动配置，
+                // 不会因本次兼容改动而自动启用剧情系统。
+                if (activeConfiguration == null)
+                {
+                    storyConfigurationOrigin =
+                        MechanoidMechanitorStoryConfigurationOrigin.None;
+                }
+                else if (storyConfigurationOrigin
+                    == MechanoidMechanitorStoryConfigurationOrigin.None)
+                {
+                    storyConfigurationOrigin =
+                        MechanoidMechanitorStoryConfigurationOrigin.MechanoidMechanitorScenario;
+                }
+
                 if (purgeDirectiveRuntimeState == null)
                 {
                     purgeDirectiveRuntimeState =
@@ -829,8 +889,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static MechanoidMechanitorIdeologyAdaptationLevel GetConfiguredIdeologyAdaptationLevel()
         {
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled
-                || Current.Game == null)
+            if (!HasActiveConfiguration)
             {
                 return MechanoidMechanitorIdeologyAdaptationLevel.Disabled;
             }
@@ -858,7 +917,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (ideo == null
                 || !ModsConfig.IdeologyActive
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled
+                || !HasActiveConfiguration
                 || activeConfiguration == null
                 || activeConfiguration.ideologyAdaptationLevel
                     < MechanoidMechanitorIdeologyAdaptationLevel.Basic)
@@ -875,7 +934,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (lockedPrimaryIdeoCaptured
                 || !ModsConfig.IdeologyActive
-                || !GameComponent_MechanoidMechanitorScenarioState.IsEnabled
+                || !HasActiveConfiguration
                 || activeConfiguration == null
                 || Current.ProgramState != ProgramState.Playing)
             {
