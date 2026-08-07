@@ -8,5 +8,12 @@
   <MAP_MechanoidMechanitor.Symbiosis.Stage.HighRecognition>高度认同</MAP_MechanoidMechanitor.Symbiosis.Stage.HighRecognition>
   <MAP_MechanoidMechanitor.Symbiosis.Stage.CoexistenceConsensus>共生共识</MAP_MechanoidMechanitor.Symbiosis.Stage.CoexistenceConsensus>
 
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.NotEstablished>盟约未成立</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.NotEstablished>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MultilateralAgreement>多方协议</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MultilateralAgreement>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.TradeCoordination>贸易协调</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.TradeCoordination>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MutualDefense>共同防卫</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MutualDefense>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.StrategicAlliance>战略同盟</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.StrategicAlliance>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.SymbiosisAlliance>共生联盟</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.SymbiosisAlliance>
+
   <MAP_MechanoidMechanitor.Symbiosis.SecretContact.TrustTooLow>当前信任不足。信任至少达到 {0}（合作意愿）后，才能提出正式的共生盟约邀请。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.TrustTooLow>
 </LanguageData>
