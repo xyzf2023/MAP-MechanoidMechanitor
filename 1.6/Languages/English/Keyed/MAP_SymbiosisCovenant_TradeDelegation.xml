@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Letter.Label>Symbiosis covenant trade delegation arrived</MAP_MechanoidMechanitor.Symbiosis.Delegation.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Letter.Text>A joint Symbiosis Covenant trade delegation organized by {0} has arrived.\n\nTrade type: {1}\nCurrent covenant level: {2}\nParticipating members: {3}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Button>DEV: Joint traders</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Button>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.SpawnNow>Spawn joint trade delegation now</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.SpawnNow>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Reschedule>Reschedule next joint caravan</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Reschedule>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.MakeDue>Make next joint caravan due now</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.MakeDue>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Unscheduled>No joint caravan is currently scheduled</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Unscheduled>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.DaysRemaining>About {0} days until the next joint caravan</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.DaysRemaining>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Success>Symbiosis Covenant joint caravan DEV action executed.</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Success>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Failed>Current conditions do not allow that joint caravan DEV action.</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Failed>
+</LanguageData>
