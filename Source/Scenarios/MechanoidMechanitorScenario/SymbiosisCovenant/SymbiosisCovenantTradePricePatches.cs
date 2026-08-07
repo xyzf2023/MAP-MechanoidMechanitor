@@ -45,8 +45,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             // 银币等货币Tradeable本身不经过普通商品买卖价格公式，避免显示误导性加成。
             if (__instance == null
-                || __instance.IsCurrency
                 || __result.NullOrEmpty()
+                || __instance.IsCurrency
                 || !SymbiosisCovenantLevelEffectUtility
                     .TryGetCurrentTradePriceImprovement(out float improvement))
             {
