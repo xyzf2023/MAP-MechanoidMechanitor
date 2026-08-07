@@ -27,6 +27,7 @@ namespace MAP_MechanoidMechanitor
 
         IdeologyMembership = 1 << 15,
         IdeologyFullParticipation = 1 << 16,
-        Psycasting = 1 << 17
+        Psycasting = 1 << 17,
+        Royalty = 1 << 18
     }
 }

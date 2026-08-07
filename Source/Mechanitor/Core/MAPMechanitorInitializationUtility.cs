@@ -28,6 +28,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
+            MechanoidMechanitorRoyaltyUtility.EnsureRoyaltyInfrastructure(pawn);
 
             Pawn_MechanitorTracker? mechanitor = pawn.mechanitor;
             if (mechanitor == null)

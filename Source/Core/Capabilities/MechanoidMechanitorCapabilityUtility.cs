@@ -132,7 +132,8 @@ namespace MAP_MechanoidMechanitor
 
             capabilities |= MechanoidMechanitorCapability.ImplantInstallation
                 | MechanoidMechanitorCapability.ShuttlePilot
-                | MechanoidMechanitorCapability.ColonistLikeSocialTab;
+                | MechanoidMechanitorCapability.ColonistLikeSocialTab
+                | MechanoidMechanitorCapability.Royalty;
 
             MechanoidMechanitorIdeologyAdaptationLevel ideologyLevel =
                 MechanoidMechanitorIdeologyAdaptationUtility.GetEffectiveLevel();
