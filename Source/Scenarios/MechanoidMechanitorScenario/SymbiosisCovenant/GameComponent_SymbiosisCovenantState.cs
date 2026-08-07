@@ -206,7 +206,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             goodwillWindowStartTick = -1;
             goodwillTrustGainedInWindow = 0;
             tradeWindowStartTick = -1;
-            tradeWindowStartTick = -1;
             tradeTrustGainedInWindow = 0;
             lastBetrayalTick = -1;
         }
