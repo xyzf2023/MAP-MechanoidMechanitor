@@ -41,7 +41,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            return record.Trust >= -25;
+            return record.Trust
+                >= GameComponent_SymbiosisCovenantState.ContactTrustThreshold;
         }
 
         public static bool CanStartSecretContact(
@@ -140,7 +141,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             DiaOption proposeOption = new DiaOption(
                 "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Propose".Translate());
-            proposeOption.link = proposalNode;
+            SymbiosisCovenantFactionRecord? record =
+                GameComponent_SymbiosisCovenantState.CurrentComponent?.GetRecord(faction);
+            if (record != null
+                && record.Trust
+                    >= GameComponent_SymbiosisCovenantState.InvitationTrustThreshold)
+            {
+                proposeOption.link = proposalNode;
+            }
+            else
+            {
+                proposeOption.Disable(
+                    "MAP_MechanoidMechanitor.Symbiosis.SecretContact.TrustTooLow"
+                        .Translate(
+                            GameComponent_SymbiosisCovenantState
+                                .InvitationTrustThreshold));
+            }
+
             DiaOption declineOption = new DiaOption(
                 "MAP_MechanoidMechanitor.Symbiosis.SecretContact.Decline".Translate())
             {
