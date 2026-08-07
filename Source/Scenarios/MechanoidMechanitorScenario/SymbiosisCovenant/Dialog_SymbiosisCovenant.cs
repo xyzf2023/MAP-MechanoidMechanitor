@@ -112,6 +112,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        private static string GetCovenantLevelLabel(int level)
+        {
+            switch (level)
+            {
+                case 1:
+                    return "MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MultilateralAgreement"
+                        .Translate();
+                case 2:
+                    return "MAP_MechanoidMechanitor.Symbiosis.CovenantStage.TradeCoordination"
+                        .Translate();
+                case 3:
+                    return "MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MutualDefense"
+                        .Translate();
+                case 4:
+                    return "MAP_MechanoidMechanitor.Symbiosis.CovenantStage.StrategicAlliance"
+                        .Translate();
+                case 5:
+                    return "MAP_MechanoidMechanitor.Symbiosis.CovenantStage.SymbiosisAlliance"
+                        .Translate();
+                default:
+                    return "MAP_MechanoidMechanitor.Symbiosis.CovenantStage.NotEstablished"
+                        .Translate();
+            }
+        }
+
         private static void DrawHeader(
             Rect rect,
             GameComponent_SymbiosisCovenantState state)
@@ -144,10 +169,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 float labelWidth = (rect.width - 28f) / 2f;
                 Text.Font = GameFont.Small;
                 GUI.color = TealColor;
+                string levelText =
+                    "MAP_MechanoidMechanitor.Symbiosis.CovenantLevel"
+                        .Translate(state.CovenantLevel, 5)
+                        .ToString()
+                    + " // "
+                    + GetCovenantLevelLabel(state.CovenantLevel);
                 Widgets.Label(
                     new Rect(rect.x + 15f, lineY, labelWidth, 22f),
-                    "MAP_MechanoidMechanitor.Symbiosis.CovenantLevel".Translate(
-                        state.CovenantLevel, 5));
+                    levelText);
                 Widgets.Label(
                     new Rect(rect.x + 15f + labelWidth, lineY, labelWidth, 22f),
                     "MAP_MechanoidMechanitor.Symbiosis.MemberCount".Translate(
@@ -854,9 +884,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             y += 38f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
-                new[] { "50", "100", "150", "200" },
+                new[] { "25", "50", "100", "150", "200" },
                 new Action[]
                 {
+                    () => state.DevSetTrust(selectedFaction, 25, DevReason()),
                     () => state.DevSetTrust(selectedFaction, 50, DevReason()),
                     () => state.DevSetTrust(selectedFaction, 100, DevReason()),
                     () => state.DevSetTrust(selectedFaction, 150, DevReason()),
