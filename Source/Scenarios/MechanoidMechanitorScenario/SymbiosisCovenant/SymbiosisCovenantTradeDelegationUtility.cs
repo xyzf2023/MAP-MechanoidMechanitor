@@ -138,7 +138,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 traderKind = requested;
             }
             else if (!eligibleTraderKinds.TryRandomElementByWeight(
-                         kind => Math.Max(0f, kind.CalculatedCommonality),
+                         kind => kind != null
+                             ? Math.Max(0f, kind.CalculatedCommonality)
+                             : 0f,
                          out traderKind))
             {
                 return false;
