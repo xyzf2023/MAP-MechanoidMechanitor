@@ -158,6 +158,8 @@ namespace MAP_MechanoidMechanitor
                     return GeneralMaxMoveSpeedOffset * progress;
                 case DataProcessingSpecialization.ProductionCoordination:
                     return ProductionMaxMoveSpeedOffset * progress;
+                case DataProcessingSpecialization.FireControlCalculation:
+                    return FireControlMaxMoveSpeedOffset * progress;
                 case DataProcessingSpecialization.AssaultProtocol:
                     return AssaultMaxMoveSpeedOffset * progress;
                 default:
@@ -299,6 +301,7 @@ namespace MAP_MechanoidMechanitor
         // 火控演算：40档，即200%时达到最终上限。
         public const float FireControlMinAimingDelayFactor = 0.20f;
         public const float FireControlMinRangedCooldownFactor = 0.20f;
+        public const float FireControlMaxMoveSpeedOffset = 2.00f;
 
         // 强袭协议的普通属性：40档，即200%时达到最终上限。
         public const float AssaultMinMeleeCooldownFactor = 0.20f;
