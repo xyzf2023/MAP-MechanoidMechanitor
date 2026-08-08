@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
     {
         public static void SyncPawn(Pawn? pawn)
         {
-            if (pawn == null || pawn.Destroyed || pawn.Dead)
+            if (!GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn))
             {
                 return;
             }
@@ -36,7 +36,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? pawn,
             ManagedResearchAbilityDescriptor descriptor)
         {
-            if (pawn == null || pawn.Destroyed || pawn.Dead || descriptor == null)
+            if (!GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn)
+                || descriptor == null)
             {
                 return;
             }
@@ -48,7 +49,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool shouldHave = ResearchFeatureUnlockUtility.ShouldPawnHaveAbility(pawn, descriptor);
-            Pawn_AbilityTracker? tracker = pawn.abilities;
+            Pawn_AbilityTracker? tracker = pawn!.abilities;
             Ability? existing = tracker?.GetAbility(abilityDef);
 
             if (shouldHave)
@@ -188,10 +189,8 @@ namespace MAP_MechanoidMechanitor
 
         private static void TryAddSyncTarget(HashSet<Pawn> result, Pawn? pawn)
         {
-            if (pawn == null
-                || pawn.Destroyed
-                || pawn.Dead
-                || pawn.Faction == null
+            if (!GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn)
+                || pawn!.Faction == null
                 || !pawn.Faction.IsPlayerSafe())
             {
                 return;

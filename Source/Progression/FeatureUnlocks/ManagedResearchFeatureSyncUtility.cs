@@ -61,7 +61,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < snapshot.Count; i++)
             {
                 Pawn pawn = snapshot[i];
-                if (pawn == null || pawn.Destroyed || pawn.Dead)
+                if (!GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn))
                 {
                     continue;
                 }
@@ -98,12 +98,12 @@ namespace MAP_MechanoidMechanitor
 
         private static void TryAddConsciousnessRefreshTarget(HashSet<Pawn> result, Pawn? pawn)
         {
-            if (pawn == null || pawn.Destroyed || pawn.Dead)
+            if (!GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn))
             {
                 return;
             }
 
-            result.Add(pawn);
+            result.Add(pawn!);
         }
 
         private static bool SyncFeatureSafe(
@@ -305,10 +305,8 @@ namespace MAP_MechanoidMechanitor
 
         private static void TryAddPlayerPawn(HashSet<Pawn> result, Pawn? pawn)
         {
-            if (pawn == null
-                || pawn.Destroyed
-                || pawn.Dead
-                || pawn.Faction == null
+            if (!GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn)
+                || pawn!.Faction == null
                 || !pawn.Faction.IsPlayerSafe())
             {
                 return;

@@ -121,12 +121,12 @@ namespace MAP_MechanoidMechanitor
 
         public static bool CanBecomeAcquiredMechanoidMechanitor(Pawn? pawn)
         {
-            if (pawn == null || pawn.Dead || pawn.Destroyed)
+            if (!GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn))
             {
                 return false;
             }
 
-            if (!ModsConfig.BiotechActive || !pawn.RaceProps.IsMechanoid)
+            if (!ModsConfig.BiotechActive || !pawn!.RaceProps.IsMechanoid)
             {
                 return false;
             }

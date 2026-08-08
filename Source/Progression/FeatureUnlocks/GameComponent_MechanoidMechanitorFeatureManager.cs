@@ -104,7 +104,7 @@ namespace MAP_MechanoidMechanitor
 
         public static void NotifyMechanitorInitialized(Pawn? pawn)
         {
-            if (pawn == null || pawn.Destroyed || pawn.Dead)
+            if (!GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn))
             {
                 return;
             }
@@ -124,20 +124,20 @@ namespace MAP_MechanoidMechanitor
                 catch (Exception ex)
                 {
                     // 立即同步失败：并入 pending，不向初始化调用链传播异常。
-                    manager.pendingPawnSyncs.Add(pawn);
+                    manager.pendingPawnSyncs.Add(pawn!);
                     TickManager? tickManager = Find.TickManager;
                     int ticksGame = tickManager?.TicksGame ?? 0;
                     manager.SchedulePendingPawnSyncRetry(ticksGame);
                     Log.Error(
                         "[MAP-机械族机械师] 机械师初始化时科研能力同步失败，已加入待处理队列并进入分级退避重试：" +
-                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                        $"pawn={pawn!.LabelShort}（{pawn.ThingID}）：{ex}");
                 }
 
                 return;
             }
 
             // 环境暂不安全：入队但不计为同步失败。
-            manager.EnqueuePendingPawnSync(pawn);
+            manager.EnqueuePendingPawnSync(pawn!);
         }
 
         public override void StartedNewGame()
@@ -411,7 +411,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < toSync.Count; i++)
             {
                 Pawn pawn = toSync[i];
-                if (pawn == null || pawn.Destroyed || pawn.Dead)
+                if (!GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn))
                 {
                     continue;
                 }

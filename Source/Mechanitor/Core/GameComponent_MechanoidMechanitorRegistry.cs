@@ -21,6 +21,7 @@ namespace MAP_MechanoidMechanitor
             new Dictionary<Pawn, MechanoidMechanitorRecord>();
         private List<Pawn>? registeredMechanitorsCache;
         private ReadOnlyCollection<Pawn>? registeredMechanitorsReadOnlyCache;
+        private bool registeredMechanitorsCacheNeedsRetry;
         private HashSet<Pawn> pendingMechanitorInitializations = new HashSet<Pawn>();
 
         public Pawn? MechanicalConsciousnessHost => mechanicalConsciousnessHost;
@@ -79,7 +80,8 @@ namespace MAP_MechanoidMechanitor
         {
             return MechanoidMechanitorScenarioUtility.IsScenarioActive
                 && pawn != null
-                && !pawn.Dead
+                && pawn.health != null
+                && !pawn.health.Dead
                 && !pawn.Destroyed
                 && pawn.RaceProps.IsMechanoid
                 && pawn.Faction != null
@@ -190,7 +192,8 @@ namespace MAP_MechanoidMechanitor
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
             if (registry == null
                 || pawn == null
-                || pawn.Dead
+                || pawn.health == null
+                || pawn.health.Dead
                 || pawn.Destroyed
                 || pawn.Discarded
                 || pawn.RaceProps == null
@@ -594,7 +597,8 @@ namespace MAP_MechanoidMechanitor
                 MechanoidMechanitorRecord record = registry.mechanitorRecords[i];
                 Pawn? pawn = record.Pawn;
                 if (pawn == null
-                    || pawn.Dead
+                    || pawn.health == null
+                    || pawn.health.Dead
                     || pawn.Destroyed
                     || !pawn.RaceProps.IsMechanoid
                     || pawn.Faction == null
@@ -779,7 +783,8 @@ namespace MAP_MechanoidMechanitor
 
         private static bool PrepareHost(Pawn pawn, bool promoteIfNeeded)
         {
-            if (pawn.Dead
+            if (pawn.health == null
+                || pawn.health.Dead
                 || pawn.Destroyed
                 || !pawn.RaceProps.IsMechanoid
                 || pawn.Faction == null
@@ -918,7 +923,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < mechanitorRecords.Count; i++)
             {
                 Pawn? pawn = mechanitorRecords[i]?.Pawn;
-                if (pawn == null || pawn.Destroyed || pawn.Dead)
+                if (!IsPawnAliveAndInitialized(pawn))
                 {
                     continue;
                 }
@@ -933,6 +938,20 @@ namespace MAP_MechanoidMechanitor
         {
             registeredMechanitorsCache = null;
             registeredMechanitorsReadOnlyCache = null;
+            registeredMechanitorsCacheNeedsRetry = false;
+        }
+
+        /// <summary>
+        /// Pawn 是否已足够初始化且活跃（health 已创建、未死亡、未销毁、未永久丢弃）。
+        /// health == null 的半初始化 Pawn 视为“暂不可用”，缓存侧会标记重试而非永久排除。
+        /// </summary>
+        internal static bool IsPawnAliveAndInitialized(Pawn? pawn)
+        {
+            return pawn != null
+                && !pawn.Destroyed
+                && !pawn.Discarded
+                && pawn.health != null
+                && !pawn.health.Dead;
         }
 
         /// <summary>
@@ -941,21 +960,42 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         private void EnsureRegisteredMechanitorsCache()
         {
-            if (registeredMechanitorsReadOnlyCache != null)
+            if (registeredMechanitorsReadOnlyCache != null
+                && !registeredMechanitorsCacheNeedsRetry)
             {
                 return;
             }
 
             registeredMechanitorsCache = new List<Pawn>();
+            bool needsRetry = false;
             for (int i = 0; i < mechanitorRecords.Count; i++)
             {
-                Pawn? pawn = mechanitorRecords[i].Pawn;
-                if (pawn != null && !pawn.Dead && !pawn.Destroyed)
+                MechanoidMechanitorRecord? record = mechanitorRecords[i];
+                Pawn? pawn = record?.Pawn;
+                if (pawn == null)
+                {
+                    continue;
+                }
+
+                if (pawn.Destroyed || pawn.Discarded)
+                {
+                    continue;
+                }
+
+                if (pawn.health == null)
+                {
+                    // 半初始化 Pawn：安全跳过，并标记需要重试，避免其被永久排除在缓存之外。
+                    needsRetry = true;
+                    continue;
+                }
+
+                if (!pawn.health.Dead)
                 {
                     registeredMechanitorsCache.Add(pawn);
                 }
             }
 
+            registeredMechanitorsCacheNeedsRetry = needsRetry;
             registeredMechanitorsReadOnlyCache =
                 new ReadOnlyCollection<Pawn>(registeredMechanitorsCache);
         }
@@ -1054,15 +1094,26 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            bool finalizedAny = false;
             List<Pawn> pending = new List<Pawn>(pendingMechanitorInitializations);
             for (int i = 0; i < pending.Count; i++)
             {
                 Pawn pawn = pending[i];
                 pendingMechanitorInitializations.Remove(pawn);
 
-                if (pawn == null
-                    || pawn.Destroyed
-                    || pawn.Dead
+                if (pawn == null || pawn.Destroyed || pawn.Discarded)
+                {
+                    continue;
+                }
+
+                if (pawn.health == null)
+                {
+                    // 半初始化：保留待处理，由下一次 GameComponentUpdate 重试，不视为永久失败。
+                    pendingMechanitorInitializations.Add(pawn);
+                    continue;
+                }
+
+                if (pawn.health.Dead
                     || !pawn.Spawned
                     || pawn.Map == null
                     || pawn.Faction == null
@@ -1073,6 +1124,12 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 MAPMechanitorInitializationUtility.FinalizeNow(pawn);
+                finalizedAny = true;
+            }
+
+            if (finalizedAny)
+            {
+                InvalidateDerivedCaches();
             }
         }
 
@@ -1095,7 +1152,8 @@ namespace MAP_MechanoidMechanitor
                 MechanoidMechanitorRecord record = mechanitorRecords[i];
                 Pawn? pawn = record.Pawn;
                 if (pawn == null
-                    || pawn.Dead
+                    || pawn.health == null
+                    || pawn.health.Dead
                     || pawn.Destroyed
                     || !pawn.RaceProps.IsMechanoid
                     || pawn.Faction == null

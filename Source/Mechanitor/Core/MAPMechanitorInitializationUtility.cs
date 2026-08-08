@@ -10,7 +10,8 @@ namespace MAP_MechanoidMechanitor
         {
             if (pawn == null
                 || pawn.Destroyed
-                || pawn.Dead
+                || pawn.health == null
+                || pawn.health.Dead
                 || !ModsConfig.BiotechActive)
             {
                 return;
