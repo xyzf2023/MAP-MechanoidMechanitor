@@ -171,25 +171,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 available.Remove(selected);
                 remainingSlots--;
 
-                IEnumerable<Thing> generated;
-                try
+                foreach (StockGenerator generator in selected.generators)
                 {
-                    generated = selected.generator!.GenerateThings(map.Tile, leadFaction).ToList();
-                }
-                catch (Exception exception)
-                {
-                    Log.Error($"[MAP] 共生盟约联合商队库存生成失败：{exception}");
-                    continue;
-                }
-
-                foreach (Thing thing in generated)
-                {
-                    if (thing is Pawn || !thing.def.tradeability.TraderCanSell())
+                    IEnumerable<Thing> generated;
+                    try
                     {
-                        thing.Destroy();
+                        generated = generator.GenerateThings(map.Tile, leadFaction).ToList();
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error($"[MAP] 共生盟约联合商队库存生成失败：{exception}");
                         continue;
                     }
-                    FinalizeExtraThing(result, thing, map, leadFaction, leadTraderKind);
+
+                    foreach (Thing thing in generated)
+                    {
+                        if (thing is Pawn || !thing.def.tradeability.TraderCanSell())
+                        {
+                            thing.Destroy();
+                            continue;
+                        }
+                        FinalizeExtraThing(result, thing, map, leadFaction, leadTraderKind);
+                    }
                 }
             }
         }

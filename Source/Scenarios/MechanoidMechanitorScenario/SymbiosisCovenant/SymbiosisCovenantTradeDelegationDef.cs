@@ -40,11 +40,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int minLevel = 2;
         public int maxLevel = 5;
         public float weight = 1f;
-        public StockGenerator? generator;
+        public List<StockGenerator> generators = new List<StockGenerator>();
 
         public bool AvailableAt(int level)
         {
-            return level >= minLevel && level <= maxLevel && weight > 0f && generator != null;
+            return level >= minLevel && level <= maxLevel && weight > 0f && generators.Count > 0;
         }
     }
 
@@ -124,7 +124,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             for (int i = 0; i < pool.Count; i++)
             {
-                pool[i].generator?.ResolveReferences(generatorContext!);
+                List<StockGenerator> generators = pool[i].generators;
+                for (int j = 0; j < generators.Count; j++)
+                {
+                    generators[j].ResolveReferences(generatorContext!);
+                }
             }
         }
 
@@ -281,15 +285,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     yield return $"{defName}: {poolName}[{i}] has non-positive weight.";
                 }
-                if (entry.generator == null)
+                if (entry.generators.Count == 0)
                 {
                     yield return $"{defName}: {poolName}[{i}] has no StockGenerator.";
                     continue;
                 }
 
-                if (generatorContext != null)
+                for (int j = 0; j < entry.generators.Count; j++)
                 {
-                    foreach (string error in entry.generator.ConfigErrors(generatorContext))
+                    StockGenerator generator = entry.generators[j];
+                    if (generator == null || generatorContext == null)
+                    {
+                        continue;
+                    }
+                    foreach (string error in generator.ConfigErrors(generatorContext))
                     {
                         yield return $"{defName}: {poolName}[{i}]: {error}";
                     }
