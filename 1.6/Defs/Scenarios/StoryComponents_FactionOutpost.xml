@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+    <defName>MAP_StoryComponent_FactionOutpost</defName>
+    <label>派系前哨</label>
+    <description>周期性在玩家殖民地附近生成由其他人类派系建立的前哨。敌对、友好和中立三个权重只在新前哨生成时决定选择哪一类当前关系；前哨生成后始终跟随所属派系与玩家的真实外交关系变化。</description>
+    <displayOrder>150</displayOrder>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_FactionOutpost</workerClass>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+</Defs>

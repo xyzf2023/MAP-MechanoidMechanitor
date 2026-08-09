@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
@@ -11,6 +12,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public List<MechanoidMechanitorFactionRelationSetting> ordinaryFactionRelationSettings =
             new List<MechanoidMechanitorFactionRelationSetting>();
+
+        public MechanoidMechanitorFactionOutpostFrequency factionOutpostFrequency =
+            MechanoidMechanitorFactionOutpostFrequency.Off;
+
+        public int hostileFactionOutpostWeight = 100;
+
+        public int allyFactionOutpostWeight = 100;
+
+        public int neutralFactionOutpostWeight = 100;
 
         public MechanoidMechanitorMechHiveRelationMode mechHiveRelationMode =
             MechanoidMechanitorMechHiveRelationMode.Default;
@@ -48,6 +58,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfiguration copy = new MechanoidMechanitorStoryConfiguration
             {
                 ordinaryFactionRelationsMode = ordinaryFactionRelationsMode,
+                factionOutpostFrequency = factionOutpostFrequency,
+                hostileFactionOutpostWeight = hostileFactionOutpostWeight,
+                allyFactionOutpostWeight = allyFactionOutpostWeight,
+                neutralFactionOutpostWeight = neutralFactionOutpostWeight,
                 mechHiveRelationMode = mechHiveRelationMode,
                 mechHiveNodeFrequency = mechHiveNodeFrequency,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
@@ -180,6 +194,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RemoveInvalidOrdinaryFactionEntries(context);
             EnsureMissingOrdinaryFactionEntries(context);
 
+            hostileFactionOutpostWeight = Mathf.Clamp(hostileFactionOutpostWeight, 0, 100);
+            allyFactionOutpostWeight = Mathf.Clamp(allyFactionOutpostWeight, 0, 100);
+            neutralFactionOutpostWeight = Mathf.Clamp(neutralFactionOutpostWeight, 0, 100);
+
             if (!context.HasMechHive || context.HasPursuingMechanoidsScenarioPart)
             {
                 mechHiveRelationMode = MechanoidMechanitorMechHiveRelationMode.Default;
@@ -217,6 +235,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref ordinaryFactionRelationSettings,
                 "ordinaryFactionRelationSettings",
                 LookMode.Deep);
+            Scribe_Values.Look(
+                ref factionOutpostFrequency,
+                "factionOutpostFrequency",
+                MechanoidMechanitorFactionOutpostFrequency.Off);
+            Scribe_Values.Look(
+                ref hostileFactionOutpostWeight,
+                "hostileFactionOutpostWeight",
+                100);
+            Scribe_Values.Look(
+                ref allyFactionOutpostWeight,
+                "allyFactionOutpostWeight",
+                100);
+            Scribe_Values.Look(
+                ref neutralFactionOutpostWeight,
+                "neutralFactionOutpostWeight",
+                100);
             Scribe_Values.Look(
                 ref mechHiveRelationMode,
                 "mechHiveRelationMode",
