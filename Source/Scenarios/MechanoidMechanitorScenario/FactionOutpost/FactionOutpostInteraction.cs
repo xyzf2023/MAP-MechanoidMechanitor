@@ -63,7 +63,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return action => Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
-                "ConfirmAttackFriendlyFaction".Translate(outpost.LabelCap, owner.Name),
+                "ConfirmAttackFriendlyFaction".Translate(outpost!.LabelCap, owner!.Name),
                 delegate
                 {
                     if ((bool)CanAttack(outpost))
