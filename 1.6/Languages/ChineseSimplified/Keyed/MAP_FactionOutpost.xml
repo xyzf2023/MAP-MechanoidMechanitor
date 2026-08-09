@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Off>关闭</MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Off>
+  <MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Low>频率：低</MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Low>
+  <MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Medium>频率：中</MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Medium>
+  <MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.High>频率：高</MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.High>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Hostile>敌对派系前哨</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Hostile>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Ally>友好派系前哨</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Ally>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Neutral>中立派系前哨</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Neutral>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Tooltip>这是新前哨生成时选择当前外交关系类别的相对权重，并非百分比，也不会锁定既有前哨的关系。没有合法候选派系的类别会在本次抽取中临时排除；权重为0表示不直接生成该关系类别的前哨。</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Tooltip>
+
+  <MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Building>{0}前哨（建设中）</MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Building>
+  <MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Completed>{0}前哨</MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Completed>
+  <MAP_MechanoidMechanitor.FactionOutpost.Attack.OutpostUnavailable>该派系前哨已经不存在或无法进攻。</MAP_MechanoidMechanitor.FactionOutpost.Attack.OutpostUnavailable>
+  <MAP_MechanoidMechanitor.FactionOutpost.Attack.RelationBlocked>该前哨所属派系与玩家的关系被剧情风格锁定，无法主动进攻。</MAP_MechanoidMechanitor.FactionOutpost.Attack.RelationBlocked>
+  <MAP_MechanoidMechanitor.FactionOutpost.Attack.TurnHostileFailed>未能将该前哨所属派系转为敌对，已取消进入。</MAP_MechanoidMechanitor.FactionOutpost.Attack.TurnHostileFailed>
+  <MAP_MechanoidMechanitor.FactionOutpost.Attack.MapInitFailed>派系前哨地图初始化失败，已取消进入。</MAP_MechanoidMechanitor.FactionOutpost.Attack.MapInitFailed>
+
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Label>派系前哨建立</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Label>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Hostile>敌对派系“{0}”正在你的殖民地附近建立一处前哨。</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Hostile>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Ally>盟友“{0}”正在你的殖民地附近建立一处前哨。</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Ally>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Neutral>中立派系“{0}”正在你的殖民地附近建立一处前哨。</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Neutral>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Label>派系前哨建设完成</MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Label>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Hostile>“{0}”的前哨已经建设完成。这个敌对据点将增加该派系从附近发动袭击的机会。</MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Hostile>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Ally>“{0}”的前哨已经建设完成。当殖民地遭到共同敌人袭击时，这个盟友据点可能派出援军。</MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Ally>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Neutral>“{0}”的前哨已经建设完成。目前它不会主动介入殖民地的战斗。</MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Neutral>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Cleaned.Label>派系前哨被摧毁</MAP_MechanoidMechanitor.FactionOutpost.Letter.Cleaned.Label>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Cleaned.Text>“{0}”的这处前哨已经失去有效守军，将从世界地图上移除。</MAP_MechanoidMechanitor.FactionOutpost.Letter.Cleaned.Text>
+</LanguageData>

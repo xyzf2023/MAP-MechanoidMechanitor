@@ -5,10 +5,10 @@ using RimWorld;
 namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
-    /// 仅针对原版敌对袭击 <see cref="IncidentWorker_RaidEnemy"/> 的窄补丁：
-    /// 在袭击成功执行后检查是否应由完整机械巢节点提供机械族盟军援军。
+    /// 针对原版敌对袭击 <see cref="IncidentWorker_RaidEnemy"/> 的统一窄补丁：
+    /// 在袭击成功执行后分别通知机械巢节点与普通派系前哨的援军系统。
     /// 以 IncidentParms 实例为去重标识（ConditionalWeakTable，随实例回收，不长期泄漏），
-    /// 同一成功执行的袭击即使 Postfix 意外多次也只检查/生成一次盟军。
+    /// 同一成功执行的袭击即使 Postfix 意外多次也只分发一次。
     /// </summary>
     [HarmonyPatch(typeof(IncidentWorker_RaidEnemy), "TryExecuteWorker")]
     public static class MechHiveNodeRaidReinforcementPatch
@@ -34,6 +34,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             ProcessedRaids.Add(parms, ProcessedMarker);
             MechHiveNodeReinforcementService.NotifyHostileRaidExecuted(parms);
+            FactionOutpostReinforcementService.NotifyHostileRaidExecuted(parms);
         }
     }
 }

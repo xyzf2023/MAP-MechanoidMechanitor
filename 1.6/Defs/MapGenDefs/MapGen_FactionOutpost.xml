@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <!--
+    普通派系前哨复用文化 DLC Work Site 的主体生成编排：
+    先用 GenStep_Outpost 交给原版 BaseGen 生成小型派系营地，再由 GenStep_Power
+    补全工业派系设施的供电。Pawn 与战利品均由本 MOD 自己管理，因此在这里关闭。
+  -->
+  <GenStepDef>
+    <defName>MAP_FactionOutpost_Building_Outpost</defName>
+    <linkWithSite>MAP_FactionOutpost_Building</linkWithSite>
+    <order>400</order>
+    <genStep Class="GenStep_Outpost">
+      <size>12</size>
+      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
+      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
+      <allowGeneratingFarms>false</allowGeneratingFarms>
+      <generateLoot>false</generateLoot>
+    </genStep>
+  </GenStepDef>
+
+  <GenStepDef>
+    <defName>MAP_FactionOutpost_Building_Power</defName>
+    <linkWithSite>MAP_FactionOutpost_Building</linkWithSite>
+    <order>410</order>
+    <genStep Class="GenStep_Power" />
+  </GenStepDef>
+
+  <GenStepDef>
+    <defName>MAP_FactionOutpost_Completed_Outpost</defName>
+    <linkWithSite>MAP_FactionOutpost_Completed</linkWithSite>
+    <order>400</order>
+    <genStep Class="GenStep_Outpost">
+      <size>18</size>
+      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
+      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
+      <allowGeneratingFarms>false</allowGeneratingFarms>
+      <generateLoot>false</generateLoot>
+    </genStep>
+  </GenStepDef>
+
+  <GenStepDef>
+    <defName>MAP_FactionOutpost_Completed_Power</defName>
+    <linkWithSite>MAP_FactionOutpost_Completed</linkWithSite>
+    <order>410</order>
+    <genStep Class="GenStep_Power" />
+  </GenStepDef>
+</Defs>

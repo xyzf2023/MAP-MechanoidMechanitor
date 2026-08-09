@@ -5,6 +5,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public MechanoidMechanitorOrdinaryFactionRelationsMode ordinaryFactionRelationsMode =
             MechanoidMechanitorOrdinaryFactionRelationsMode.Default;
 
+        public MechanoidMechanitorFactionOutpostFrequency factionOutpostFrequency =
+            MechanoidMechanitorFactionOutpostFrequency.Off;
+
+        public int hostileFactionOutpostWeight = 100;
+
+        public int allyFactionOutpostWeight = 100;
+
+        public int neutralFactionOutpostWeight = 100;
+
         public MechanoidMechanitorMechHiveRelationMode mechHiveRelationMode =
             MechanoidMechanitorMechHiveRelationMode.Default;
 
@@ -20,6 +29,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return new MechanoidMechanitorStoryConfiguration
             {
                 ordinaryFactionRelationsMode = ordinaryFactionRelationsMode,
+                factionOutpostFrequency = factionOutpostFrequency,
+                hostileFactionOutpostWeight = hostileFactionOutpostWeight,
+                allyFactionOutpostWeight = allyFactionOutpostWeight,
+                neutralFactionOutpostWeight = neutralFactionOutpostWeight,
                 mechHiveRelationMode = mechHiveRelationMode,
                 mechHiveNodeFrequency = mechHiveNodeFrequency,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,

@@ -329,6 +329,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             configurationDraft.ordinaryFactionRelationsMode =
                 snapshot.ordinaryFactionRelationsMode;
+            configurationDraft.factionOutpostFrequency = snapshot.factionOutpostFrequency;
+            configurationDraft.hostileFactionOutpostWeight = snapshot.hostileFactionOutpostWeight;
+            configurationDraft.allyFactionOutpostWeight = snapshot.allyFactionOutpostWeight;
+            configurationDraft.neutralFactionOutpostWeight = snapshot.neutralFactionOutpostWeight;
             configurationDraft.mechHiveRelationMode = snapshot.mechHiveRelationMode;
             configurationDraft.mechHiveNodeFrequency = snapshot.mechHiveNodeFrequency;
             configurationDraft.purgeDirectiveEnabled = snapshot.purgeDirectiveEnabled;
