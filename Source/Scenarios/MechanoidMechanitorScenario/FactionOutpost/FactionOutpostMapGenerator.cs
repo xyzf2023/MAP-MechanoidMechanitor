@@ -8,12 +8,15 @@ using Verse.AI.Group;
 namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
-    /// 普通派系前哨的轻量地图内容生成器：使用原派系 Combat PawnGroup 生成守军，
-    /// 配合简单钢铁路障防御圈和 DefendPoint Lord。失败会清理本轮生成内容并拒绝进入。
+    /// 普通派系前哨的军事初始化器。
+    /// 建筑主体由与文化 DLC Work Site 相同的 GenStep_Outpost -> BaseGen 流程生成；
+    /// 本类只验证前哨布局、按真实所属派系生成 Combat 守军，并建立基地防御 Lord。
     /// </summary>
     public static class FactionOutpostMapGenerator
     {
         private const int MaxPawnPlaceTries = 120;
+        private const int MaxDefendCenterSearchTries = 240;
+        private const int DefendCenterSearchRadius = 24;
 
         public static void Generate(Map map, MAPFactionOutpost outpost)
         {
@@ -30,7 +33,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            List<Thing> spawnedBarricades = new List<Thing>();
             List<Pawn> generatedPawns = new List<Pawn>();
             List<Pawn> placedPawns = new List<Pawn>();
             Lord? lord = null;
@@ -38,14 +40,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rand.PushState(Gen.HashCombineInt(outpost.LayoutSeed, 0x46A271));
             try
             {
-                IntVec3 center = ResolveCenter(map);
-                SpawnBarricadeRing(
-                    map,
-                    center,
-                    outpost.IsCompleted ? 9 : 6,
-                    outpost.IsCompleted ? 2 : 3,
-                    owner,
-                    spawnedBarricades);
+                if (!TryResolveDefendCenter(map, owner, out IntVec3 defendCenter))
+                {
+                    throw new InvalidOperationException(
+                        "GenStep_Outpost 未生成可识别的所属派系建筑，无法确定前哨防御中心。");
+                }
 
                 if (!TryGenerateCombatPawns(
                         owner,
@@ -60,7 +59,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 for (int i = 0; i < generatedPawns.Count; i++)
                 {
                     Pawn pawn = generatedPawns[i];
-                    if (TryPlacePawn(map, center, pawn))
+                    if (TryPlacePawn(map, defendCenter, pawn))
                     {
                         placedPawns.Add(pawn);
                     }
@@ -72,17 +71,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 if (placedPawns.Count == 0)
                 {
-                    throw new InvalidOperationException("所有生成守军均无法落地。");
+                    throw new InvalidOperationException("所有生成守军均无法在前哨附近落地。");
                 }
 
                 lord = LordMaker.MakeNewLord(
                     owner,
-                    new LordJob_DefendPoint(
-                        center,
-                        wanderRadius: 18f,
-                        defendRadius: 34f,
-                        isCaravanSendable: false,
-                        addFleeToil: true),
+                    new LordJob_DefendBase(owner, defendCenter, 25000),
                     map);
                 if (lord == null)
                 {
@@ -98,12 +92,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP] 普通派系前哨地图初始化失败，已回滚本轮内容: " + ex);
-                CleanupFailedGeneration(
-                    map,
-                    lord,
-                    generatedPawns,
-                    spawnedBarricades);
+                Log.Error("[MAP] 普通派系前哨地图初始化失败，已回滚本轮守军: " + ex);
+                CleanupFailedGeneration(map, lord, generatedPawns);
                 outpost.NotifyMapGarrisonInitialized(false);
             }
             finally
@@ -112,78 +102,66 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static IntVec3 ResolveCenter(Map map)
-        {
-            IntVec3 center = map.Center;
-            if (center.InBounds(map) && center.Standable(map))
-            {
-                return center;
-            }
-
-            if (CellFinder.TryFindRandomCellNear(
-                center,
-                map,
-                40,
-                c => c.InBounds(map) && c.Standable(map),
-                out IntVec3 found,
-                200))
-            {
-                return found;
-            }
-
-            return map.Center;
-        }
-
-        private static void SpawnBarricadeRing(
-            Map map,
-            IntVec3 center,
-            int radius,
-            int step,
-            Faction owner,
-            List<Thing> spawned)
-        {
-            for (int dx = -radius; dx <= radius; dx += step)
-            {
-                TrySpawnBarricade(center + new IntVec3(dx, 0, -radius), map, owner, spawned);
-                TrySpawnBarricade(center + new IntVec3(dx, 0, radius), map, owner, spawned);
-            }
-
-            for (int dz = -radius + step; dz <= radius - step; dz += step)
-            {
-                TrySpawnBarricade(center + new IntVec3(-radius, 0, dz), map, owner, spawned);
-                TrySpawnBarricade(center + new IntVec3(radius, 0, dz), map, owner, spawned);
-            }
-        }
-
-        private static void TrySpawnBarricade(
-            IntVec3 cell,
+        /// <summary>
+        /// 使用原版 BaseGen 实际生成的所属派系建筑求中心，而不是假定前哨位于 map.Center。
+        /// 这样即使 GenStep_Outpost 将营地放在地图中心附近的其他清晰区域，守军也会围绕真实基地部署。
+        /// </summary>
+        private static bool TryResolveDefendCenter(
             Map map,
             Faction owner,
-            List<Thing> spawned)
+            out IntVec3 defendCenter)
         {
-            if (!cell.InBounds(map)
-                || cell.GetEdifice(map) != null
-                || !cell.Standable(map))
+            defendCenter = IntVec3.Invalid;
+
+            long sumX = 0;
+            long sumZ = 0;
+            int count = 0;
+            foreach (Building building in map.listerThings.GetThingsOfType<Building>())
             {
-                return;
+                if (building == null
+                    || building.Destroyed
+                    || !building.Spawned
+                    || building.Faction != owner
+                    || building.def?.building == null
+                    || building.def.building.isNaturalRock)
+                {
+                    continue;
+                }
+
+                sumX += building.Position.x;
+                sumZ += building.Position.z;
+                count++;
             }
 
-            Thing barricade = ThingMaker.MakeThing(ThingDefOf.Barricade, ThingDefOf.Steel);
-            if (barricade.def.CanHaveFaction)
+            if (count == 0)
             {
-                barricade.SetFactionDirect(owner);
+                return false;
             }
 
-            Thing? result = GenSpawn.Spawn(
-                barricade,
-                cell,
+            IntVec3 approximateCenter = new IntVec3(
+                (int)(sumX / count),
+                0,
+                (int)(sumZ / count));
+            if (IsValidDefenderCell(approximateCenter, map))
+            {
+                defendCenter = approximateCenter;
+                return true;
+            }
+
+            return CellFinder.TryFindRandomCellNear(
+                approximateCenter,
                 map,
-                Rot4.North,
-                WipeMode.Vanish);
-            if (result != null && result.Spawned)
-            {
-                spawned.Add(result);
-            }
+                DefendCenterSearchRadius,
+                c => IsValidDefenderCell(c, map),
+                out defendCenter,
+                MaxDefendCenterSearchTries);
+        }
+
+        private static bool IsValidDefenderCell(IntVec3 cell, Map map)
+        {
+            return cell.InBounds(map)
+                && cell.Standable(map)
+                && cell.GetEdifice(map) == null;
         }
 
         private static bool TryGenerateCombatPawns(
@@ -239,9 +217,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 center,
                 map,
                 22,
-                c => c.InBounds(map)
-                    && c.Standable(map)
-                    && c.GetEdifice(map) == null,
+                c => IsValidDefenderCell(c, map),
                 out IntVec3 cell,
                 MaxPawnPlaceTries))
             {
@@ -262,8 +238,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static void CleanupFailedGeneration(
             Map map,
             Lord? lord,
-            List<Pawn> generated,
-            List<Thing> barricades)
+            List<Pawn> generated)
         {
             if (lord != null && map?.lordManager != null)
             {
@@ -277,26 +252,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
-            // placedPawns 始终是 generated 的子集，统一按生成列表清理一次即可。
             for (int i = 0; i < generated.Count; i++)
             {
                 MechHiveCombatPawnUtility.SafelyDiscardPawn(generated[i]);
-            }
-
-            for (int i = 0; i < barricades.Count; i++)
-            {
-                Thing thing = barricades[i];
-                if (thing != null && !thing.Destroyed)
-                {
-                    try
-                    {
-                        thing.Destroy(DestroyMode.Vanish);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Warning("[MAP] 回滚普通派系前哨路障失败: " + ex);
-                    }
-                }
             }
         }
     }
