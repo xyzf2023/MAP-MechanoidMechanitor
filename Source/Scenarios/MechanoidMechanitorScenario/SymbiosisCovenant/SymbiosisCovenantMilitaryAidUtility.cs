@@ -285,7 +285,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
             float raidPoints = Math.Max(1f, map.attackTargetsCache.TargetsHostileToColony
-                .Where(GenHostility.IsActiveThreatToPlayer)
+                .Where(target => GenHostility.IsActiveThreatToPlayer(target))
                 .OfType<Pawn>()
                 .Where(p => p.Faction == attacker)
                 .Sum(p => p.kindDef.combatPower));
@@ -446,7 +446,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 return false;
             }
-            if (faction.def.techLevel < TechLevel.Industrial && !PawnsArrivalModeDefOf.EdgeWalkIn.Worker.CanUseWith(parms))
+            if ((int)faction.def.techLevel < (int)TechLevel.Industrial
+                && !PawnsArrivalModeDefOf.EdgeWalkIn.Worker.CanUseWith(parms))
             {
                 return false;
             }
@@ -464,7 +465,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 points = supportPoints,
                 raidStrategy = RaidStrategyDefOf.ImmediateAttackFriendly
             };
-            if (faction.def.techLevel >= TechLevel.Industrial)
+            if ((int)faction.def.techLevel >= (int)TechLevel.Industrial)
             {
                 parms.raidArrivalModeForQuickMilitaryAid = true;
             }
