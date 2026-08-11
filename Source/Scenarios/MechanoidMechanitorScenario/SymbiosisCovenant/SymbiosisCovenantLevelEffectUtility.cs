@@ -34,6 +34,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return config?.GetLevelSettings(covenantLevel);
         }
 
+        public static SymbiosisCovenantMilitaryAidLevelSettings? GetMilitaryAidSettingsForLevel(
+            int covenantLevel)
+        {
+            SymbiosisCovenantMilitaryAidDef? config =
+                SymbiosisCovenantMilitaryAidDefOf.MAP_SymbiosisCovenant_MilitaryAidConfig;
+            return config?.GetLevelSettings(covenantLevel);
+        }
+
         /// <summary>
         /// 获取当前实际贸易会话可享受的共生盟约交易价格改善。
         /// 此方法必须保持纯读取：不能同步状态、创建记录或修改任何外交数据。

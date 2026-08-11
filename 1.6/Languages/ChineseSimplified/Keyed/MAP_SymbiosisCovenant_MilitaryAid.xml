@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Label>共生盟约：军事支援询问</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Text>{0}注意到你的殖民地正在遭受{1}的袭击。作为共生盟约成员，他们询问你是否需要立即派遣军事力量提供支援。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Accept>接受军事支援</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Accept>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Decline>婉拒援助</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Decline>
+
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.MapInvalid>这次军事援助所关联的殖民地已经不可用。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.MapInvalid>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.CovenantUnavailable>共生盟约当前已经无法提供共同防卫支援。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.CovenantUnavailable>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ResponderUnavailable>{0}当前已经无法履行本次军事支援。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ResponderUnavailable>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.AlreadySupported>该殖民地当前已经存在盟约援军，或仍处于共同防卫冷却期。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.AlreadySupported>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ThreatEnded>触发本次援助询问的敌对威胁已经解除。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ThreatEnded>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.DeploymentImpossible>{0}当前无法在该战场部署有效援军。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.DeploymentImpossible>
+
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Button>DEV：共同防卫</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Button>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ForceOffer>为当前威胁强制发送援助询问</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ForceOffer>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearState>清除当前地图共同防卫状态</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearState>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NoMap>当前没有可测试的玩家地图</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NoMap>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Status>待判定袭击：{0}；待处理邀请：{1}；盟约援军活动中：{2}；冷却剩余：{3}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Status>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Success>共生盟约共同防卫DEV操作已执行。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Success>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Failed>当前条件不足，共同防卫DEV操作未执行。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Failed>
+</LanguageData>

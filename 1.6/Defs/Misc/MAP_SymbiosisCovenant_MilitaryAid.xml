@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantMilitaryAidDef>
+    <defName>MAP_SymbiosisCovenant_MilitaryAidConfig</defName>
+    <label>symbiosis covenant military aid configuration</label>
+
+    <maxOfferChance>0.85</maxOfferChance>
+    <repeatedResponderWeight>0.5</repeatedResponderWeight>
+    <minimumInitialActiveThreatCombatPower>120</minimumInitialActiveThreatCombatPower>
+    <evaluationDelayTicks>600</evaluationDelayTicks>
+    <offerTimeoutTicks>5000</offerTimeoutTicks>
+    <acceptedCooldownTicks>60000</acceptedCooldownTicks>
+
+    <levels>
+      <li>
+        <level>3</level>
+        <offerChance>0.30</offerChance>
+        <supportPointsFactor>0.35</supportPointsFactor>
+      </li>
+      <li>
+        <level>4</level>
+        <offerChance>0.50</offerChance>
+        <supportPointsFactor>0.50</supportPointsFactor>
+      </li>
+      <li>
+        <level>5</level>
+        <offerChance>0.70</offerChance>
+        <supportPointsFactor>0.65</supportPointsFactor>
+      </li>
+    </levels>
+
+    <responderChanceTiers>
+      <li><eligibleResponderCount>1</eligibleResponderCount><additionalChance>0</additionalChance></li>
+      <li><eligibleResponderCount>2~3</eligibleResponderCount><additionalChance>0.05</additionalChance></li>
+      <li><eligibleResponderCount>4~6</eligibleResponderCount><additionalChance>0.10</additionalChance></li>
+      <li><eligibleResponderCount>7~999</eligibleResponderCount><additionalChance>0.15</additionalChance></li>
+    </responderChanceTiers>
+
+    <triggerRaidIncidentDefNames>
+      <li>RaidEnemy</li>
+    </triggerRaidIncidentDefNames>
+  </MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantMilitaryAidDef>
+</Defs>

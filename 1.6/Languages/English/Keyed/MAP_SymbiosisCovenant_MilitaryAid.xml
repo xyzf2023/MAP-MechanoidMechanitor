@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Label>Symbiosis Covenant: military aid offer</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Text>{0} has noticed that your colony is under attack by {1}. As a member of the Symbiosis Covenant, they are asking whether you want immediate military support.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Accept>Accept military support</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Accept>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Decline>Decline assistance</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Decline>
+
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.MapInvalid>The colony associated with this military aid offer is no longer available.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.MapInvalid>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.CovenantUnavailable>The Symbiosis Covenant can no longer provide common-defense support.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.CovenantUnavailable>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ResponderUnavailable>{0} can no longer fulfill this military aid offer.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ResponderUnavailable>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.AlreadySupported>This colony already has Covenant military support or is still under the common-defense cooldown.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.AlreadySupported>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ThreatEnded>The hostile threat that triggered this aid offer has already ended.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ThreatEnded>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.DeploymentImpossible>{0} cannot currently deploy effective military support to this battlefield.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.DeploymentImpossible>
+
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Button>DEV: Common defense</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Button>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ForceOffer>Force an aid offer for the current threat</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ForceOffer>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearState>Clear common-defense state for current map</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearState>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NoMap>No player map is currently available for testing</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NoMap>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Status>Pending raid evaluation: {0}; Pending offer: {1}; Covenant aid active: {2}; Cooldown remaining: {3}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Status>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Success>Symbiosis Covenant common-defense DEV action executed.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Success>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Failed>Current conditions do not allow that common-defense DEV action.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Failed>
+</LanguageData>
