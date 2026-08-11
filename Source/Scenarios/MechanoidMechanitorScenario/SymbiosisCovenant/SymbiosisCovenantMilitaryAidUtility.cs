@@ -144,8 +144,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            int assistLordCountBefore = CountAssistLords(map, responder);
             IncidentParms aidParms = BuildAidParms(map, responder, supportPoints);
-            if (!IncidentDefOf.RaidFriendly.Worker.TryExecute(aidParms) || !HasAssistLord(map, responder))
+            if (!IncidentDefOf.RaidFriendly.Worker.TryExecute(aidParms)
+                || CountAssistLords(map, responder) <= assistLordCountBefore)
             {
                 failureReason = "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.DeploymentImpossible".Translate(responder.NameColored);
                 return false;
@@ -532,8 +534,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return state;
         }
 
+        private static int CountAssistLords(Map map, Faction faction)
+            => map.lordManager.lords.Count(l => l.faction == faction && l.LordJob is LordJob_AssistColony && l.AnyActivePawn);
+
         private static bool HasAssistLord(Map map, Faction faction)
-            => map.lordManager.lords.Any(l => l.faction == faction && l.LordJob is LordJob_AssistColony && l.AnyActivePawn);
+            => CountAssistLords(map, faction) > 0;
 
         private static void CleanupState(GameComponent_SymbiosisCovenantState component)
         {
