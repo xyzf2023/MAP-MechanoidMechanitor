@@ -10,4 +10,15 @@
   <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.DaysRemaining>About {0} days until the next joint caravan</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.DaysRemaining>
   <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Success>Symbiosis Covenant joint caravan DEV action executed.</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Success>
   <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Failed>Current conditions do not allow that joint caravan DEV action.</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Failed>
+
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Section>Joint trade delegation</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Section>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.Level>Current covenant level</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.Level>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberCount>Member count</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberCount>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.BaseInterval>Base visit interval</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.BaseInterval>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberSpeed>Member speed multiplier</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberSpeed>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextVisit>Next visit: {0}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextVisit>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextTick>Next tick</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextTick>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.DaysUntilNext>Time remaining</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.DaysUntilNext>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.RetryCount>Short retry count</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.RetryCount>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.LastLead>Last lead faction</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.LastLead>
 </LanguageData>

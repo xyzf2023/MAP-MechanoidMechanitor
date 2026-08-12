@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <!-- 盟约效果页：页面导航 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Page.Effects>盟约效果</MAP_MechanoidMechanitor.Symbiosis.Page.Effects>
+
+  <!-- 盟约效果页：面板标题 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Current>当前效果</MAP_MechanoidMechanitor.Symbiosis.Effects.Current>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Next>下一阶段</MAP_MechanoidMechanitor.Symbiosis.Effects.Next>
+
+  <!-- 盟约效果页：L0 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished>盟约尚未成立</MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished.Body>至少一个派系正式加入共生盟约后，盟约等级效果才会开始生效。</MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished.Body>
+
+  <!-- 盟约效果页：成员关系 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Title>成员关系保障</MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral>盟约成员之间的关系最低维持为中立。</MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral.Tooltip>已经是盟友的成员不会因该规则被主动降级。</MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral.Tooltip>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Allied>盟约成员之间持续维持盟友关系。</MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Allied>
+
+  <!-- 盟约效果页：交易价格改善 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Title>交易价格改善</MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Value>+{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Value>
+
+  <!-- 盟约效果页：联合贸易代表团 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Title>联合贸易代表团</MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Description>共生盟约联合贸易代表团开始定期到访。</MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Description>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Tooltip>基础到访周期：{0}天
+参与成员：{1}个
+
+成员数量会轻度提高联合贸易网络的到访速度。</MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Tooltip>
+
+  <!-- 盟约效果页：共同防卫 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Title>共同防卫</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Description>遭遇敌对袭击时，符合条件的盟约成员可能主动提出军事支援。</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Description>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.BaseChance>基础响应概率：{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.BaseChance>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.MaxChance>最高响应概率：{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.MaxChance>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.SupportScale>援军基础规模：触发袭击点数 ×{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.SupportScale>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusHeader>合法支援成员数量会提高响应概率：</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusHeader>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusLine>{0}个：+{1}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusLine>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.OfferTimeout>援助邀请有效期：{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.OfferTimeout>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.AcceptCooldown>成功接受援助后：{0}共同防卫冷却</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.AcceptCooldown>
+
+  <!-- 盟约效果页：下一阶段预览 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.NextLevel>下一阶段：{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.NextLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.RequiredUnity>需要团结度：{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.RequiredUnity>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.CurrentUnity>当前团结度：{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.CurrentUnity>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.NextCondition.Join>条件：至少一个派系正式加入共生盟约。</MAP_MechanoidMechanitor.Symbiosis.Effects.NextCondition.Join>
+
+  <!-- 盟约效果页：最高等级 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel>已达到最高盟约阶段</MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Body>当前共生盟约已经达到“共生联盟”阶段。</MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Body>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Hint>继续维持成员间的信任有助于保持当前团结度与联盟状态。</MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Hint>
+
+  <!-- 盟约效果页：发生变化的效果 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.Trade>交易价格改善：{0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.Trade>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockDelegation>解锁：联合贸易代表团</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockDelegation>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationInterval>联合代表团基础到访周期：{0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationInterval>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationParticipants>参与成员：{0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationParticipants>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockMilitaryAid>解锁：共同防卫</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockMilitaryAid>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitaryBaseChance>基础响应概率：{0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitaryBaseChance>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitarySupportScale>援军基础规模：{0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitarySupportScale>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock>解锁：盟约成员间持续维持盟友关系</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock>
+
+</LanguageData>

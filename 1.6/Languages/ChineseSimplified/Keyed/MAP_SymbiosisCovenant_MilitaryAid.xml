@@ -19,4 +19,26 @@
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Status>待判定袭击：{0}；待处理邀请：{1}；盟约援军活动中：{2}；冷却剩余：{3}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Status>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Success>共生盟约共同防卫DEV操作已执行。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Success>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Failed>当前条件不足，共同防卫DEV操作未执行。</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Failed>
+
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Section>共同防卫</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Section>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearCooldown>仅清除共同防卫冷却</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearCooldown>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NA>N/A</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NA>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.Level>当前等级</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.Level>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.BaseChance>基础响应概率</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.BaseChance>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.MaxChance>最大响应概率</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.MaxChance>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportFactor>援军点数比例</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportFactor>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction>当前威胁派系</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatPower>当前ActiveThreat CombatPower</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatPower>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>合法响应成员</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>当前有效响应概率</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>待判定Raid</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>待处理援助信</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>上次响应派系</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>当前盟约援军派系</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidTag>Aid Tag</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidTag>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TriggerRaidPoints>触发Raid Points</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TriggerRaidPoints>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportPoints>援军Points</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportPoints>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TaggedLords>Tagged Lords</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TaggedLords>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidStartTick>援军开始Tick</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidStartTick>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.CooldownRemaining>冷却剩余</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.CooldownRemaining>
 </LanguageData>

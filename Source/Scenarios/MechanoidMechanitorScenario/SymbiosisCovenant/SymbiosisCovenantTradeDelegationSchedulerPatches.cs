@@ -224,6 +224,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
+        // M3：联合贸易代表团 DEV 实时状态快照。
+        public static SymbiosisCovenantTradeDelegationDevSnapshot? GetDevSnapshot(
+            GameComponent_SymbiosisCovenantState component)
+        {
+            if (!SymbiosisCovenantTradeDelegationUtility.IsAvailableNow(
+                    component,
+                    out SymbiosisCovenantDelegationLevelSettings? settings)
+                || settings == null)
+            {
+                return null;
+            }
+
+            SymbiosisCovenantTradeDelegationDef config =
+                SymbiosisCovenantTradeDelegationDefOf.MAP_SymbiosisCovenant_TradeDelegationConfig;
+
+            return new SymbiosisCovenantTradeDelegationDevSnapshot
+            {
+                CurrentLevel = component.CovenantLevel,
+                MemberCount = component.CovenantMemberCount,
+                BaseIntervalDays = settings.intervalDays,
+                MemberSpeedMultiplier = config.GetMemberFrequencyMultiplier(
+                    component.CovenantMemberCount),
+                NextTick = GetNextTick(component),
+                DaysUntilNext = GetDaysUntilNext(component),
+                RetryCount = GetRetryCount(component),
+                LastLeadFaction = GetLastLeadFaction(component)
+            };
+        }
+
         private static void CancelPending(SymbiosisCovenantTradeDelegationScheduleState schedule)
         {
             schedule.nextTick = -1;
@@ -275,58 +304,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
     }
 
-    [HarmonyPatch(typeof(Dialog_SymbiosisCovenantDev), nameof(Dialog_SymbiosisCovenantDev.DoWindowContents))]
-    public static class SymbiosisCovenantTradeDelegationDevDialogPatch
+    // M3：联合贸易代表团 DEV 状态快照数据结构。
+    public sealed class SymbiosisCovenantTradeDelegationDevSnapshot
     {
-        public static void Postfix(Rect inRect)
-        {
-            if (!Prefs.DevMode)
-            {
-                return;
-            }
-
-            Rect buttonRect = new Rect(inRect.xMax - 205f, inRect.y, 195f, 28f);
-            if (!Widgets.ButtonText(
-                    buttonRect,
-                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Button".Translate()))
-            {
-                return;
-            }
-
-            GameComponent_SymbiosisCovenantState? state =
-                GameComponent_SymbiosisCovenantState.CurrentComponent;
-            float days = state == null
-                ? -1f
-                : SymbiosisCovenantTradeDelegationScheduler.GetDaysUntilNext(state);
-            string status = days < 0f
-                ? "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Unscheduled".Translate()
-                : "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.DaysRemaining"
-                    .Translate(days.ToString("F1"));
-
-            List<FloatMenuOption> options = new List<FloatMenuOption>
-            {
-                new FloatMenuOption(
-                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.SpawnNow".Translate(),
-                    () => ShowDevResult(SymbiosisCovenantTradeDelegationScheduler.DevSpawnNow())),
-                new FloatMenuOption(
-                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Reschedule".Translate(),
-                    () => ShowDevResult(SymbiosisCovenantTradeDelegationScheduler.DevReschedule())),
-                new FloatMenuOption(
-                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.MakeDue".Translate(),
-                    () => ShowDevResult(SymbiosisCovenantTradeDelegationScheduler.DevMakeDueNow())),
-                new FloatMenuOption(status, null)
-            };
-            Find.WindowStack.Add(new FloatMenu(options));
-        }
-
-        private static void ShowDevResult(bool success)
-        {
-            Messages.Message(
-                success
-                    ? "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Success".Translate()
-                    : "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Failed".Translate(),
-                success ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.RejectInput,
-                historical: false);
-        }
+        public int CurrentLevel;
+        public int MemberCount;
+        public FloatRange BaseIntervalDays;
+        public float MemberSpeedMultiplier;
+        public int NextTick;
+        public float DaysUntilNext;
+        public int RetryCount;
+        public Faction? LastLeadFaction;
     }
 }

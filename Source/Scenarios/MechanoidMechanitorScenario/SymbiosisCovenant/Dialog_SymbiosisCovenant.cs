@@ -10,7 +10,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public enum SymbiosisCovenantPage
     {
         Communication,
-        Relations
+        Relations,
+        Effects
     }
 
     public sealed class Dialog_SymbiosisCovenant : Window
@@ -41,6 +42,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private SymbiosisCovenantPage currentPage = SymbiosisCovenantPage.Communication;
         private Vector2 memberScrollPosition = Vector2.zero;
         private Vector2 relationsScrollPosition = Vector2.zero;
+        private Vector2 currentEffectsScrollPosition = Vector2.zero;
+        private Vector2 nextEffectsScrollPosition = Vector2.zero;
 
         public override Vector2 InitialSize => new Vector2(1180f, 720f);
 
@@ -84,6 +87,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 case SymbiosisCovenantPage.Relations:
                     DrawRelationsPage(pageRect, state);
+                    break;
+
+                case SymbiosisCovenantPage.Effects:
+                    DrawEffectsPage(pageRect, state);
                     break;
 
                 default:
@@ -357,6 +364,381 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        private void DrawEffectsPage(Rect rect, GameComponent_SymbiosisCovenantState state)
+        {
+            Rect headerRect = new Rect(rect.x, rect.y, rect.width, HeaderHeight);
+            DrawHeader(headerRect, state);
+
+            Rect bodyRect = new Rect(
+                rect.x,
+                headerRect.yMax + MainGap,
+                rect.width,
+                Mathf.Max(0f, rect.yMax - headerRect.yMax - MainGap));
+
+            float gap = 14f;
+            Rect currentRect = new Rect(
+                bodyRect.x,
+                bodyRect.y,
+                bodyRect.width * 0.62f - gap / 2f,
+                bodyRect.height);
+            Rect nextRect = new Rect(
+                currentRect.xMax + gap,
+                bodyRect.y,
+                bodyRect.xMax - currentRect.xMax - gap,
+                bodyRect.height);
+
+            DrawEffectsCurrentPanel(currentRect, state);
+            DrawNextLevelPanel(nextRect, state);
+        }
+
+        private void DrawEffectsCurrentPanel(Rect rect, GameComponent_SymbiosisCovenantState state)
+        {
+            Widgets.DrawBoxSolid(rect, PanelColor);
+            DrawOutline(rect, 1, PanelOutlineColor);
+
+            Rect inner = rect.ContractedBy(12f);
+            DrawLabel(
+                new Rect(inner.x, inner.y, inner.width, 24f),
+                "MAP_MechanoidMechanitor.Symbiosis.Effects.Current".Translate(),
+                GameFont.Small,
+                Color.white,
+                TextAnchor.UpperLeft);
+
+            Rect listRect = new Rect(
+                inner.x,
+                inner.y + 30f,
+                inner.width,
+                inner.yMax - inner.y - 30f);
+
+            int level = state.CovenantLevel;
+            List<EffectCardInfo> cards = BuildEffectsCards(state, level);
+
+            float cardHeight = 74f;
+            float cardGap = 12f;
+            float viewHeight = Mathf.Max(0f, cards.Count * (cardHeight + cardGap) - cardGap);
+            Rect viewRect = new Rect(0f, 0f, listRect.width - 18f, viewHeight);
+
+            Widgets.BeginScrollView(listRect, ref currentEffectsScrollPosition, viewRect);
+            try
+            {
+                float y = 0f;
+                for (int i = 0; i < cards.Count; i++)
+                {
+                    Rect cardRect = new Rect(0f, y, listRect.width - 18f, cardHeight);
+                    DrawEffectCard(cardRect, cards[i].Title, cards[i].Summary, cards[i].Tooltip);
+                    y += cardHeight + cardGap;
+                }
+            }
+            finally
+            {
+                Widgets.EndScrollView();
+            }
+        }
+
+        private static List<EffectCardInfo> BuildEffectsCards(
+            GameComponent_SymbiosisCovenantState state,
+            int level)
+        {
+            SymbiosisCovenantEffectSnapshot snap =
+                SymbiosisCovenantEffectDisplayUtility.GetSnapshot(level);
+            List<EffectCardInfo> cards = new List<EffectCardInfo>();
+
+            if (level <= 0)
+            {
+                cards.Add(new EffectCardInfo
+                {
+                    Title = "MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished".Translate(),
+                    Summary = "MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished.Body".Translate()
+                });
+                return cards;
+            }
+
+            // 成员关系保障（L1+）。
+            if (snap.MemberAllianceLock)
+            {
+                cards.Add(new EffectCardInfo
+                {
+                    Title = "MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Title".Translate(),
+                    Summary = "MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Allied".Translate()
+                });
+            }
+            else
+            {
+                cards.Add(new EffectCardInfo
+                {
+                    Title = "MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Title".Translate(),
+                    Summary = "MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral".Translate(),
+                    Tooltip = "MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral.Tooltip".Translate()
+                });
+            }
+
+            // 交易价格改善（L2+）。
+            if (snap.TradePriceImprovement > 0f)
+            {
+                cards.Add(new EffectCardInfo
+                {
+                    Title = "MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Title".Translate(),
+                    Summary = "MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Value"
+                        .Translate(Percent(snap.TradePriceImprovement))
+                });
+            }
+
+            // 联合贸易代表团（L2+）。
+            if (snap.TradeDelegation != null)
+            {
+                cards.Add(new EffectCardInfo
+                {
+                    Title = "MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Title".Translate(),
+                    Summary = "MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Description".Translate(),
+                    Tooltip = "MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Tooltip".Translate(
+                        FormatRange(snap.TradeDelegation.intervalDays),
+                        FormatRange(snap.TradeDelegation.participantFactionCount))
+                });
+            }
+
+            // 共同防卫（L3+）。
+            if (snap.MilitaryAid != null)
+            {
+                cards.Add(new EffectCardInfo
+                {
+                    Title = "MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Title".Translate(),
+                    Summary = "MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Description".Translate(),
+                    Tooltip = BuildMilitaryAidTooltip(snap)
+                });
+            }
+
+            return cards;
+        }
+
+        private static string BuildMilitaryAidTooltip(SymbiosisCovenantEffectSnapshot snap)
+        {
+            SymbiosisCovenantMilitaryAidDef config =
+                SymbiosisCovenantMilitaryAidDefOf.MAP_SymbiosisCovenant_MilitaryAidConfig;
+            SymbiosisCovenantMilitaryAidLevelSettings settings = snap.MilitaryAid!;
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.BaseChance"
+                .Translate(Percent(settings.offerChance)));
+            sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.MaxChance"
+                .Translate(Percent(config.maxOfferChance)));
+            sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.SupportScale"
+                .Translate(Percent(settings.supportPointsFactor)));
+            sb.AppendLine();
+            sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusHeader"
+                .Translate());
+            for (int i = 0; i < config.responderChanceTiers.Count; i++)
+            {
+                SymbiosisCovenantMilitaryAidResponderTier tier = config.responderChanceTiers[i];
+                if (tier.additionalChance <= 0f)
+                {
+                    continue;
+                }
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusLine"
+                    .Translate(FormatRange(tier.eligibleResponderCount), Percent(tier.additionalChance)));
+            }
+            sb.AppendLine();
+            sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.OfferTimeout"
+                .Translate(GenDate.ToStringTicksToPeriod(config.offerTimeoutTicks)));
+            sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.AcceptCooldown"
+                .Translate(GenDate.ToStringTicksToPeriod(config.acceptedCooldownTicks)));
+            return sb.ToString();
+        }
+
+        private static float DrawEffectCard(
+            Rect rect,
+            string title,
+            string summary,
+            string? tooltip = null)
+        {
+            Widgets.DrawBoxSolid(rect, new Color(0.065f, 0.085f, 0.09f, 1f));
+            Widgets.DrawBoxSolid(new Rect(rect.x, rect.y, 3f, rect.height), TealColor);
+            DrawOutline(rect, 1, TealColor);
+
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            bool previousWordWrap = Text.WordWrap;
+            Color previousColor = GUI.color;
+            try
+            {
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.UpperLeft;
+                GUI.color = Color.white;
+                Widgets.Label(
+                    new Rect(rect.x + 12f, rect.y + 8f, rect.width - 24f, 22f),
+                    title);
+
+                Text.Font = GameFont.Tiny;
+                GUI.color = MutedTextColor;
+                Text.WordWrap = true;
+                Widgets.Label(
+                    new Rect(rect.x + 12f, rect.y + 32f, rect.width - 24f, rect.height - 40f),
+                    summary);
+            }
+            finally
+            {
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
+                GUI.color = previousColor;
+            }
+
+            if (!tooltip.NullOrEmpty())
+            {
+                TooltipHandler.TipRegion(rect, tooltip);
+            }
+            return rect.height;
+        }
+
+        private static void DrawNextLevelPanel(Rect rect, GameComponent_SymbiosisCovenantState state)
+        {
+            Widgets.DrawBoxSolid(rect, PanelColor);
+            DrawOutline(rect, 1, PanelOutlineColor);
+
+            Rect inner = rect.ContractedBy(12f);
+            DrawLabel(
+                new Rect(inner.x, inner.y, inner.width, 24f),
+                "MAP_MechanoidMechanitor.Symbiosis.Effects.Next".Translate(),
+                GameFont.Small,
+                Color.white,
+                TextAnchor.UpperLeft);
+
+            Rect contentRect = new Rect(
+                inner.x,
+                inner.y + 30f,
+                inner.width,
+                inner.yMax - inner.y - 30f);
+
+            int level = state.CovenantLevel;
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+            if (level >= 5)
+            {
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel".Translate());
+                sb.AppendLine();
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Body".Translate());
+                sb.AppendLine();
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Hint".Translate());
+            }
+            else
+            {
+                int nextLevel = level + 1;
+                string stageLabel = GetCovenantLevelLabel(nextLevel);
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.NextLevel".Translate(stageLabel));
+                sb.AppendLine();
+                if (level <= 0)
+                {
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.NextCondition.Join".Translate());
+                }
+                else
+                {
+                    int threshold = GetNextLevelThreshold(level);
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.RequiredUnity".Translate(threshold));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.CurrentUnity"
+                        .Translate(Mathf.FloorToInt(state.Unity)));
+                    sb.AppendLine();
+                    AppendChangedEffects(sb, level, nextLevel);
+                }
+            }
+
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            bool previousWordWrap = Text.WordWrap;
+            Color previousColor = GUI.color;
+            try
+            {
+                Text.Font = GameFont.Tiny;
+                Text.Anchor = TextAnchor.UpperLeft;
+                Text.WordWrap = true;
+                GUI.color = Color.white;
+                Widgets.Label(contentRect, sb.ToString());
+            }
+            finally
+            {
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
+                GUI.color = previousColor;
+            }
+        }
+
+        private static void AppendChangedEffects(
+            System.Text.StringBuilder sb,
+            int current,
+            int next)
+        {
+            SymbiosisCovenantEffectSnapshot cur =
+                SymbiosisCovenantEffectDisplayUtility.GetSnapshot(current);
+            SymbiosisCovenantEffectSnapshot nxt =
+                SymbiosisCovenantEffectDisplayUtility.GetSnapshot(next);
+
+            if (!Mathf.Approximately(cur.TradePriceImprovement, nxt.TradePriceImprovement))
+            {
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.Trade".Translate(
+                    Percent(cur.TradePriceImprovement), Percent(nxt.TradePriceImprovement)));
+            }
+
+            if (cur.TradeDelegation == null && nxt.TradeDelegation != null)
+            {
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockDelegation".Translate());
+            }
+            else if (cur.TradeDelegation != null && nxt.TradeDelegation != null)
+            {
+                if (!Mathf.Approximately(cur.TradeDelegation.intervalDays.min, nxt.TradeDelegation.intervalDays.min)
+                    || !Mathf.Approximately(cur.TradeDelegation.intervalDays.max, nxt.TradeDelegation.intervalDays.max))
+                {
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationInterval".Translate(
+                        FormatRange(cur.TradeDelegation.intervalDays),
+                        FormatRange(nxt.TradeDelegation.intervalDays)));
+                }
+                if (cur.TradeDelegation.participantFactionCount.min != nxt.TradeDelegation.participantFactionCount.min
+                    || cur.TradeDelegation.participantFactionCount.max != nxt.TradeDelegation.participantFactionCount.max)
+                {
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationParticipants".Translate(
+                        FormatRange(cur.TradeDelegation.participantFactionCount),
+                        FormatRange(nxt.TradeDelegation.participantFactionCount)));
+                }
+            }
+
+            if (cur.MilitaryAid == null && nxt.MilitaryAid != null)
+            {
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockMilitaryAid".Translate());
+            }
+            else if (cur.MilitaryAid != null && nxt.MilitaryAid != null)
+            {
+                if (!Mathf.Approximately(cur.MilitaryAid.offerChance, nxt.MilitaryAid.offerChance))
+                {
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitaryBaseChance".Translate(
+                        Percent(cur.MilitaryAid.offerChance), Percent(nxt.MilitaryAid.offerChance)));
+                }
+                if (!Mathf.Approximately(cur.MilitaryAid.supportPointsFactor, nxt.MilitaryAid.supportPointsFactor))
+                {
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitarySupportScale".Translate(
+                        Percent(cur.MilitaryAid.supportPointsFactor), Percent(nxt.MilitaryAid.supportPointsFactor)));
+                }
+            }
+
+            if (!cur.MemberAllianceLock && nxt.MemberAllianceLock)
+            {
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock".Translate());
+            }
+        }
+
+        private static string Percent(float value)
+            => Mathf.RoundToInt(value * 100f).ToString() + "%";
+
+        private static string FormatRange(IntRange range)
+            => range.min == range.max ? range.min.ToString() : range.min + "~" + range.max;
+
+        private static string FormatRange(FloatRange range)
+            => Mathf.RoundToInt(range.min) + "~" + Mathf.RoundToInt(range.max);
+
+        private sealed class EffectCardInfo
+        {
+            public string Title = string.Empty;
+            public string Summary = string.Empty;
+            public string Tooltip = string.Empty;
+        }
+
         private void DrawRelationCard(
             Rect rect,
             SymbiosisCovenantFactionRecord record,
@@ -599,6 +981,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 rect.y,
                 PageTabWidth,
                 PageTabHeight);
+            Rect effectsTabRect = new Rect(
+                relationsTabRect.xMax + FooterGap,
+                rect.y,
+                PageTabWidth,
+                PageTabHeight);
 
             DrawPageTab(
                 communicationTabRect,
@@ -608,6 +995,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 relationsTabRect,
                 SymbiosisCovenantPage.Relations,
                 "MAP_MechanoidMechanitor.Symbiosis.Page.Relations".Translate());
+            DrawPageTab(
+                effectsTabRect,
+                SymbiosisCovenantPage.Effects,
+                "MAP_MechanoidMechanitor.Symbiosis.Page.Effects".Translate());
 
             Rect closeRect = new Rect(rect.xMax - 150f, rect.y + 6f, 150f, 30f);
             if (Widgets.ButtonText(
@@ -757,7 +1148,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 SymbiosisCovenantFactionRecord? record = state.GetRecord(selectedFaction);
                 bool hasRecord = record != null && selectedFaction != null;
-                float contentHeight = hasRecord ? 1320f : 420f;
+                // M3：新增两个系统区，提高内容高度。
+                float contentHeight = hasRecord ? 2050f : 1150f;
                 Rect viewRect = new Rect(
                     0f,
                     0f,
@@ -785,7 +1177,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                     if (hasRecord)
                     {
-                        DrawRecordControls(state, record!, viewRect, y);
+                        y = DrawRecordControls(state, record!, viewRect, y);
                     }
                     else
                     {
@@ -793,8 +1185,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                             new Rect(0f, y, viewRect.width, 40f),
                             "MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord"
                                 .Translate());
-                        DrawGlobalState(state, viewRect, y + 46f);
+                        y += 46f;
                     }
+
+                    // M3：联合贸易代表团与共同防卫 DEV 状态区（即使未选择派系也显示）。
+                    y = DrawTradeDelegationDevSection(state, viewRect, y);
+                    y = DrawMilitaryAidDevSection(state, viewRect, y);
+
+                    DrawGlobalState(state, viewRect, y, record);
                 }
                 finally
                 {
@@ -844,7 +1242,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Find.WindowStack.Add(new FloatMenu(options));
         }
 
-        private void DrawRecordControls(
+        private float DrawRecordControls(
             GameComponent_SymbiosisCovenantState state,
             SymbiosisCovenantFactionRecord record,
             Rect inRect,
@@ -1061,10 +1459,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 });
             y += 42f;
 
-            DrawSectionLabel(
-                new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Dev.State".Translate());
-            y += 26f;
+            // M3：内部状态面板统一由 DrawGlobalState 在末尾绘制（含当前派系记录信息）。
+            return y;
+        }
+
+        private void DrawGlobalState(
+            GameComponent_SymbiosisCovenantState state,
+            Rect inRect,
+            float y,
+            SymbiosisCovenantFactionRecord? record = null)
+        {
             Text.Font = GameFont.Tiny;
             Text.WordWrap = true;
             float stateHeight = inRect.yMax - y - 10f;
@@ -1079,23 +1483,214 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private void DrawGlobalState(
+        // M3：联合贸易代表团 DEV 状态区（全局/当前地图系统，不依赖所选派系）。
+        private float DrawTradeDelegationDevSection(
             GameComponent_SymbiosisCovenantState state,
             Rect inRect,
             float y)
         {
+            DrawSectionLabel(
+                new Rect(inRect.x, y, inRect.width, 22f),
+                "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Section".Translate());
+            y += 26f;
+
+            SymbiosisCovenantTradeDelegationDevSnapshot? snap =
+                SymbiosisCovenantTradeDelegationScheduler.GetDevSnapshot(state);
+
             Text.Font = GameFont.Tiny;
             Text.WordWrap = true;
-            float stateHeight = inRect.yMax - y - 10f;
-            if (stateHeight > 20f)
+            Color previousColor = GUI.color;
+            GUI.color = Color.white;
+            try
             {
-                Widgets.DrawBoxSolid(
-                    new Rect(inRect.x, y, inRect.width, stateHeight),
-                    new Color(0.06f, 0.08f, 0.085f, 0.96f));
-                Widgets.Label(
-                    new Rect(inRect.x + 10f, y + 8f, inRect.width - 20f, stateHeight - 16f),
-                    BuildStateText(state, null));
+                if (snap == null)
+                {
+                    Widgets.Label(
+                        new Rect(inRect.x, y, inRect.width, 40f),
+                        "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Unscheduled".Translate());
+                    y += 46f;
+                }
+                else
+                {
+                    System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.Level"
+                        .Translate(snap.CurrentLevel));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberCount"
+                        .Translate(snap.MemberCount));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.BaseInterval"
+                        .Translate(FormatFloatRange(snap.BaseIntervalDays)));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberSpeed"
+                        .Translate(snap.MemberSpeedMultiplier.ToString("F2")));
+                    if (snap.NextTick < 0)
+                    {
+                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextVisit"
+                            .Translate("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Unscheduled".Translate()));
+                    }
+                    else
+                    {
+                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextTick"
+                            .Translate(snap.NextTick));
+                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.DaysUntilNext"
+                            .Translate(snap.DaysUntilNext.ToString("F1")));
+                    }
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.RetryCount"
+                        .Translate(snap.RetryCount));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.LastLead"
+                        .Translate(snap.LastLeadFaction?.Name ?? "—"));
+                    Widgets.Label(
+                        new Rect(inRect.x, y, inRect.width, 150f),
+                        sb.ToString());
+                    y += 156f;
+                }
             }
+            finally
+            {
+                GUI.color = previousColor;
+            }
+
+            // 操作按钮：立即生成 / 重新安排 / 立即到期。
+            DrawButtonRow(
+                new Rect(inRect.x, y, inRect.width, 32f),
+                new[]
+                {
+                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.SpawnNow".Translate().ToString(),
+                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Reschedule".Translate().ToString(),
+                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.MakeDue".Translate().ToString()
+                },
+                new Action[]
+                {
+                    () => ShowDelegationMessage(SymbiosisCovenantTradeDelegationScheduler.DevSpawnNow()),
+                    () => ShowDelegationMessage(SymbiosisCovenantTradeDelegationScheduler.DevReschedule()),
+                    () => ShowDelegationMessage(SymbiosisCovenantTradeDelegationScheduler.DevMakeDueNow())
+                });
+            y += 40f;
+
+            return y;
+        }
+
+        // M3：共同防卫 DEV 状态区（全局/当前地图系统，不依赖所选派系）。
+        private float DrawMilitaryAidDevSection(
+            GameComponent_SymbiosisCovenantState state,
+            Rect inRect,
+            float y)
+        {
+            DrawSectionLabel(
+                new Rect(inRect.x, y, inRect.width, 22f),
+                "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Section".Translate());
+            y += 26f;
+
+            Map? map = Find.CurrentMap;
+            SymbiosisCovenantMilitaryAidUtility.SymbiosisCovenantMilitaryAidDevSnapshot snap =
+                SymbiosisCovenantMilitaryAidUtility.GetDevSnapshot(state, map);
+
+            Text.Font = GameFont.Tiny;
+            Text.WordWrap = true;
+            Color previousColor = GUI.color;
+            GUI.color = Color.white;
+            try
+            {
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.Level"
+                    .Translate(snap.CovenantLevel));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.BaseChance"
+                    .Translate(Percent(snap.BaseOfferChance)));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.MaxChance"
+                    .Translate(Percent(snap.MaxOfferChance)));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportFactor"
+                    .Translate(Percent(snap.SupportPointsFactor)));
+
+                if (snap.CurrentThreatFaction != null)
+                {
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction"
+                        .Translate(snap.CurrentThreatFaction.Name));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatPower"
+                        .Translate(snap.CurrentThreatCombatPower.ToString("F0")));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders"
+                        .Translate(snap.EligibleResponderCount));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance"
+                        .Translate(Percent(snap.EffectiveOfferChance)));
+                }
+                else
+                {
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction"
+                        .Translate("—"));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance"
+                        .Translate("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NA".Translate()));
+                }
+
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid"
+                    .Translate(snap.PendingEvaluation.ToString()));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer"
+                    .Translate(snap.PendingOffer.ToString()));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder"
+                    .Translate(snap.LastResponderFaction?.Name ?? "—"));
+
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction"
+                    .Translate(snap.ActiveAidFaction?.Name ?? "—"));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidTag"
+                    .Translate(snap.ActiveAidTag ?? "—"));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TriggerRaidPoints"
+                    .Translate(snap.ActiveAidTriggerRaidPoints.ToString("F0")));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportPoints"
+                    .Translate(snap.ActiveAidSupportPoints.ToString("F0")));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TaggedLords"
+                    .Translate(snap.TaggedAssistLordCount));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidStartTick"
+                    .Translate(snap.ActiveAidStartTick));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.CooldownRemaining"
+                    .Translate(snap.CooldownRemainingTicks));
+
+                Widgets.Label(
+                    new Rect(inRect.x, y, inRect.width, 360f),
+                    sb.ToString());
+                y += 366f;
+            }
+            finally
+            {
+                GUI.color = previousColor;
+            }
+
+            // 操作按钮：强制发送援助询问 / 清除当前地图状态 / 仅清除冷却。
+            DrawButtonRow(
+                new Rect(inRect.x, y, inRect.width, 32f),
+                new[]
+                {
+                    "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ForceOffer".Translate().ToString(),
+                    "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearState".Translate().ToString(),
+                    "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearCooldown".Translate().ToString()
+                },
+                new Action[]
+                {
+                    () => ShowMessage(SymbiosisCovenantMilitaryAidUtility.DevForceOfferForCurrentThreat()),
+                    () => ShowMessage(SymbiosisCovenantMilitaryAidUtility.DevClearCurrentMapState()),
+                    () => ShowMessage(SymbiosisCovenantMilitaryAidUtility.DevClearCurrentMapCooldown())
+                });
+            y += 40f;
+
+            return y;
+        }
+
+        private static string FormatFloatRange(FloatRange range)
+            => Mathf.RoundToInt(range.min) + "~" + Mathf.RoundToInt(range.max);
+
+        private static void ShowMessage(bool success)
+        {
+            Messages.Message(
+                success
+                    ? "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Success".Translate()
+                    : "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Failed".Translate(),
+                success ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.RejectInput,
+                historical: false);
+        }
+
+        private static void ShowDelegationMessage(bool success)
+        {
+            Messages.Message(
+                success
+                    ? "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Success".Translate()
+                    : "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Failed".Translate(),
+                success ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.RejectInput,
+                historical: false);
         }
 
         private static string DevReason()

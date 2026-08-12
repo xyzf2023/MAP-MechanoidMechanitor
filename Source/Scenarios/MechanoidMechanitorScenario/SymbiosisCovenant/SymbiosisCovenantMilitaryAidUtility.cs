@@ -31,7 +31,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         public Map? map;
         public int cooldownEndTick;
+
+        // M1：以下字段中，activeAidFaction 仅用于显示、外交检查与查询辅助筛选。
+        // 共同防卫援军的唯一身份依据是 activeAidTag。
         public Faction? activeAidFaction;
+        public string? activeAidTag;
+        public float activeAidSupportPoints;
+        public float activeAidTriggerRaidPoints;
+        public int activeAidStartTick;
 
         public SymbiosisCovenantMilitaryAidMapState() { }
 
@@ -40,6 +47,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_References.Look(ref map, "map");
             Scribe_Values.Look(ref cooldownEndTick, "cooldownEndTick", 0);
             Scribe_References.Look(ref activeAidFaction, "activeAidFaction");
+            Scribe_Values.Look(ref activeAidTag, "activeAidTag");
+            Scribe_Values.Look(
+                ref activeAidSupportPoints,
+                "activeAidSupportPoints",
+                0f);
+            Scribe_Values.Look(
+                ref activeAidTriggerRaidPoints,
+                "activeAidTriggerRaidPoints",
+                0f);
+            Scribe_Values.Look(
+                ref activeAidStartTick,
+                "activeAidStartTick",
+                0);
         }
     }
 
@@ -144,16 +164,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            int assistLordCountBefore = CountAssistLords(map, responder);
-            IncidentParms aidParms = BuildAidParms(map, responder, supportPoints);
-            if (!IncidentDefOf.RaidFriendly.Worker.TryExecute(aidParms)
-                || CountAssistLords(map, responder) <= assistLordCountBefore)
+            // M1：生成唯一 questTag，写入 RaidFriendly，再用 Tag 精确确认援军 Lord。
+            string aidTag = MakeAidTag(map, responder);
+            IncidentParms aidParms = BuildAidParms(map, responder, supportPoints, aidTag);
+            bool executed = IncidentDefOf.RaidFriendly.Worker.TryExecute(aidParms);
+            List<Lord> taggedLords = FindTaggedAidLords(map, aidTag, responder);
+            if (!executed || taggedLords.Count == 0)
             {
                 failureReason = "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.DeploymentImpossible".Translate(responder.NameColored);
                 return false;
             }
 
-            MarkAidAccepted(component, map, responder);
+            MarkAidAccepted(
+                component,
+                map,
+                responder,
+                aidTag,
+                letter.triggerRaidPoints,
+                supportPoints);
             return true;
         }
 
@@ -212,15 +240,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool HasActiveCovenantAid(GameComponent_SymbiosisCovenantState component, Map map)
         {
             SymbiosisCovenantMilitaryAidMapState? state = FindMapState(component, map, false);
-            if (state?.activeAidFaction == null)
+            if (state == null || string.IsNullOrEmpty(state.activeAidTag))
             {
                 return false;
             }
-            if (HasAssistLord(map, state.activeAidFaction))
+
+            if (FindTaggedAidLords(map, state.activeAidTag, state.activeAidFaction).Count > 0)
             {
                 return true;
             }
-            state.activeAidFaction = null;
+
+            ClearActiveAidState(state);
             return false;
         }
 
@@ -256,6 +286,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (runtime.lastResponderFaction != null && runtime.lastResponderFaction.defeated)
             {
                 runtime.lastResponderFaction = null;
+            }
+
+            // M1 旧存档兼容：升级前只记录了 activeAidFaction，没有唯一 activeAidTag。
+            // 无法可靠判断当前地图哪个同派系 AssistColony 是旧盟约援军，
+            // 因此直接清除活动援军身份（保留 cooldownEndTick）。
+            for (int i = 0; i < runtime.mapStates.Count; i++)
+            {
+                SymbiosisCovenantMilitaryAidMapState state = runtime.mapStates[i];
+                if (state.activeAidFaction != null
+                    && string.IsNullOrEmpty(state.activeAidTag))
+                {
+                    ClearActiveAidState(state);
+                }
             }
         }
 
@@ -332,22 +375,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        public static string GetDevStatus()
+        // M3：仅清除共同防卫冷却，不影响活动援军、信件、pending raid 或 activeAidTag。
+        public static bool DevClearCurrentMapCooldown()
         {
-            Map? map = Find.CurrentMap;
-            GameComponent_SymbiosisCovenantState? component = GameComponent_SymbiosisCovenantState.CurrentComponent;
-            if (map == null || component == null)
+            if (!Prefs.DevMode || Find.CurrentMap == null)
             {
-                return "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NoMap".Translate();
+                return false;
             }
-            CleanupState(component);
-            SymbiosisCovenantMilitaryAidMapState? state = FindMapState(component, map, false);
-            int remaining = state == null || Find.TickManager == null ? 0 : Math.Max(0, state.cooldownEndTick - Find.TickManager.TicksGame);
-            return "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Status".Translate(
-                HasPendingEvaluation(component, map).ToString(),
-                HasPendingOffer(map).ToString(),
-                HasActiveCovenantAid(component, map).ToString(),
-                remaining.ToStringTicksToPeriod());
+            Map map = Find.CurrentMap;
+            GameComponent_SymbiosisCovenantState? component = GameComponent_SymbiosisCovenantState.CurrentComponent;
+            if (component == null)
+            {
+                return false;
+            }
+
+            SymbiosisCovenantMilitaryAidMapState state = FindMapState(component, map, true)!;
+            state.cooldownEndTick = 0;
+            return true;
         }
 
         private static void ProcessPendingRaids(GameComponent_SymbiosisCovenantState component, int now)
@@ -456,14 +500,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return PawnGroupMakerUtility.TryGetRandomPawnGroupMaker(makerParms, out _);
         }
 
-        private static IncidentParms BuildAidParms(Map map, Faction faction, float supportPoints)
+        private static IncidentParms BuildAidParms(
+            Map map,
+            Faction faction,
+            float supportPoints,
+            string? questTag = null)
         {
             IncidentParms parms = new()
             {
                 target = map,
                 faction = faction,
                 points = supportPoints,
-                raidStrategy = RaidStrategyDefOf.ImmediateAttackFriendly
+                raidStrategy = RaidStrategyDefOf.ImmediateAttackFriendly,
+                questTag = questTag
             };
             if ((int)faction.def.techLevel >= (int)TechLevel.Industrial)
             {
@@ -513,12 +562,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static bool HasPendingEvaluation(GameComponent_SymbiosisCovenantState component, Map map)
             => GetState(component).pendingRaids.Any(p => p.map == map);
 
-        private static void MarkAidAccepted(GameComponent_SymbiosisCovenantState component, Map map, Faction responder)
+        private static void MarkAidAccepted(
+            GameComponent_SymbiosisCovenantState component,
+            Map map,
+            Faction responder,
+            string aidTag,
+            float triggerRaidPoints,
+            float supportPoints)
         {
             SymbiosisCovenantMilitaryAidDef config = SymbiosisCovenantMilitaryAidDefOf.MAP_SymbiosisCovenant_MilitaryAidConfig;
+
             SymbiosisCovenantMilitaryAidMapState state = FindMapState(component, map, true)!;
-            state.cooldownEndTick = Find.TickManager.TicksGame + Math.Max(0, config.acceptedCooldownTicks);
+
+            int now = Find.TickManager?.TicksGame ?? 0;
+
+            state.cooldownEndTick = now + Math.Max(0, config.acceptedCooldownTicks);
+
             state.activeAidFaction = responder;
+            state.activeAidTag = aidTag;
+            state.activeAidSupportPoints = supportPoints;
+            state.activeAidTriggerRaidPoints = triggerRaidPoints;
+            state.activeAidStartTick = now;
+
             GetState(component).lastResponderFaction = responder;
         }
 
@@ -535,11 +600,59 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return state;
         }
 
-        private static int CountAssistLords(Map map, Faction faction)
-            => map.lordManager.lords.Count(l => l.faction == faction && l.LordJob is LordJob_AssistColony && l.AnyActivePawn);
+        // M1：唯一共同防卫 questTag 前缀。不使用派系显示名/翻译字符串，保证稳定且可读。
+        private const string AidQuestTagPrefix = "MAP_SymbiosisCovenantMilitaryAid";
 
-        private static bool HasAssistLord(Map map, Faction faction)
-            => CountAssistLords(map, faction) > 0;
+        private static string MakeAidTag(Map map, Faction responder)
+        {
+            int tick = Find.TickManager?.TicksGame ?? 0;
+            return AidQuestTagPrefix
+                + "_"
+                + map.GetUniqueLoadID()
+                + "_"
+                + tick
+                + "_"
+                + responder.GetUniqueLoadID();
+        }
+
+        // M1：清除活动援军身份，但不得清除 cooldownEndTick（援军离场≠冷却立即结束）。
+        private static void ClearActiveAidState(
+            SymbiosisCovenantMilitaryAidMapState state)
+        {
+            state.activeAidFaction = null;
+            state.activeAidTag = null;
+            state.activeAidSupportPoints = 0f;
+            state.activeAidTriggerRaidPoints = 0f;
+            state.activeAidStartTick = 0;
+        }
+
+        private static bool LordHasAidTag(Lord lord, string tag)
+        {
+            return lord.LordJob is LordJob_AssistColony
+                && lord.questTags != null
+                && lord.questTags.Contains(tag);
+        }
+
+        private static List<Lord> FindTaggedAidLords(
+            Map map,
+            string tag,
+            Faction? faction = null)
+        {
+            if (string.IsNullOrEmpty(tag))
+            {
+                return new List<Lord>();
+            }
+
+            return map.lordManager.lords
+                .Where(lord =>
+                    lord != null
+                    && lord.LordJob is LordJob_AssistColony
+                    && lord.AnyActivePawn
+                    && (faction == null || lord.faction == faction)
+                    && lord.questTags != null
+                    && lord.questTags.Contains(tag))
+                .ToList();
+        }
 
         private static void CleanupState(GameComponent_SymbiosisCovenantState component)
         {
@@ -558,15 +671,135 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     state.cooldownEndTick = 0;
                 }
-                if (state.activeAidFaction != null && !HasAssistLord(state.map, state.activeAidFaction))
+
+                // M1：活动援军身份以唯一 activeAidTag 为准。
+                if (!string.IsNullOrEmpty(state.activeAidTag))
                 {
+                    if (state.map == null
+                        || FindTaggedAidLords(state.map, state.activeAidTag, state.activeAidFaction).Count == 0)
+                    {
+                        ClearActiveAidState(state);
+                    }
+                }
+                else if (state.activeAidFaction != null)
+                {
+                    // 旧存档兜底：无 Tag 时不再把同派系 Lord 当作盟约援军。
                     state.activeAidFaction = null;
                 }
-                if (state.cooldownEndTick <= 0 && state.activeAidFaction == null)
+
+                if (state.cooldownEndTick <= 0
+                    && string.IsNullOrEmpty(state.activeAidTag)
+                    && state.activeAidFaction == null)
                 {
                     runtime.mapStates.RemoveAt(i);
                 }
             }
+        }
+
+        // M3：共同防卫 DEV 实时状态快照。M1 的 activeAidTag 也在此进入 DEV 校验入口。
+        public sealed class SymbiosisCovenantMilitaryAidDevSnapshot
+        {
+            public Map? Map;
+            public int CovenantLevel;
+
+            public float BaseOfferChance;
+            public float MaxOfferChance;
+            public float SupportPointsFactor;
+
+            public Faction? CurrentThreatFaction;
+            public float CurrentThreatCombatPower;
+
+            public int EligibleResponderCount;
+            public float ResponderChanceBonus;
+            public float EffectiveOfferChance;
+
+            public bool PendingEvaluation;
+            public bool PendingOffer;
+
+            public Faction? LastResponderFaction;
+
+            public Faction? ActiveAidFaction;
+            public string? ActiveAidTag;
+
+            public float ActiveAidTriggerRaidPoints;
+            public float ActiveAidSupportPoints;
+            public int ActiveAidStartTick;
+
+            public int TaggedAssistLordCount;
+
+            public int CooldownRemainingTicks;
+        }
+
+        public static SymbiosisCovenantMilitaryAidDevSnapshot GetDevSnapshot(
+            GameComponent_SymbiosisCovenantState component,
+            Map? map)
+        {
+            SymbiosisCovenantMilitaryAidDef config = SymbiosisCovenantMilitaryAidDefOf.MAP_SymbiosisCovenant_MilitaryAidConfig;
+            SymbiosisCovenantMilitaryAidLevelSettings? settings = GetCurrentSettings(component);
+
+            SymbiosisCovenantMilitaryAidDevSnapshot snap = new SymbiosisCovenantMilitaryAidDevSnapshot
+            {
+                Map = map,
+                CovenantLevel = component.CovenantLevel,
+                MaxOfferChance = config.maxOfferChance,
+                LastResponderFaction = GetState(component).lastResponderFaction
+            };
+
+            if (settings != null)
+            {
+                snap.BaseOfferChance = settings.offerChance;
+                snap.SupportPointsFactor = settings.supportPointsFactor;
+            }
+
+            if (map != null)
+            {
+                snap.PendingEvaluation = HasPendingEvaluation(component, map);
+                snap.PendingOffer = HasPendingOffer(map);
+
+                SymbiosisCovenantMilitaryAidMapState? state = FindMapState(component, map, false);
+                if (state != null)
+                {
+                    snap.ActiveAidFaction = state.activeAidFaction;
+                    snap.ActiveAidTag = state.activeAidTag;
+                    snap.ActiveAidTriggerRaidPoints = state.activeAidTriggerRaidPoints;
+                    snap.ActiveAidSupportPoints = state.activeAidSupportPoints;
+                    snap.ActiveAidStartTick = state.activeAidStartTick;
+                    snap.CooldownRemainingTicks = Find.TickManager != null
+                        ? Math.Max(0, state.cooldownEndTick - Find.TickManager.TicksGame)
+                        : 0;
+                    if (!string.IsNullOrEmpty(state.activeAidTag))
+                    {
+                        snap.TaggedAssistLordCount =
+                            FindTaggedAidLords(map, state.activeAidTag, state.activeAidFaction).Count;
+                    }
+                }
+            }
+
+            // 实时威胁与合法响应成员（仅 L3+ 且存在当前威胁时计算有效概率）。
+            if (map != null && settings != null && component.CovenantLevel >= 3)
+            {
+                Faction? attacker = FindActiveHostileFaction(map);
+                if (attacker != null)
+                {
+                    snap.CurrentThreatFaction = attacker;
+                    if (HasActiveThreatFromFaction(map, attacker, out float combatPower))
+                    {
+                        snap.CurrentThreatCombatPower = combatPower;
+                    }
+
+                    // 注意：DEV 估算用的援军点数 = 当前威胁 CombatPower × supportPointsFactor，
+                    // 仅用于资格检查候选，不代表真实触发 Raid Points。
+                    float estimatedSupport = snap.CurrentThreatCombatPower * settings.supportPointsFactor;
+                    List<Faction> responders = GetEligibleResponders(component, map, attacker, estimatedSupport);
+                    snap.EligibleResponderCount = responders.Count;
+                    snap.ResponderChanceBonus = config.GetResponderChanceBonus(responders.Count);
+                    snap.EffectiveOfferChance = Mathf.Min(
+                        config.maxOfferChance,
+                        snap.BaseOfferChance + snap.ResponderChanceBonus);
+                }
+            }
+
+            return snap;
         }
     }
 }
