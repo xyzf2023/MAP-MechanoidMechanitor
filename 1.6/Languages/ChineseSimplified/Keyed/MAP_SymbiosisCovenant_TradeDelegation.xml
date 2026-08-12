@@ -12,13 +12,13 @@
   <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Failed>当前条件不足，联合商队DEV操作未执行。</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Failed>
 
   <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Section>联合贸易代表团</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Section>
-  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.Level>当前盟约等级</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.Level>
-  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberCount>成员数量</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberCount>
-  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.BaseInterval>基础到访周期</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.BaseInterval>
-  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberSpeed>成员规模速度倍率</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberSpeed>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.Level>当前盟约等级：{0}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.Level>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberCount>成员数量：{0}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberCount>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.BaseInterval>基础到访周期：{0} 天</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.BaseInterval>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberSpeed>成员规模速度倍率：×{0}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberSpeed>
   <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextVisit>下一次到访：{0}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextVisit>
-  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextTick>下一次Tick</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextTick>
-  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.DaysUntilNext>剩余时间</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.DaysUntilNext>
-  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.RetryCount>短期重试次数</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.RetryCount>
-  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.LastLead>上次主导派系</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.LastLead>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextTick>下一次Tick：{0}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextTick>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.DaysUntilNext>剩余时间：{0} 天</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.DaysUntilNext>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.RetryCount>短期重试次数：{0}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.RetryCount>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.LastLead>上次主导派系：{0}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.LastLead>
 </LanguageData>

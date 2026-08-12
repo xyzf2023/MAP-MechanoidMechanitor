@@ -23,22 +23,22 @@
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Section>Common defense</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Section>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearCooldown>Clear common-defense cooldown only</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearCooldown>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NA>N/A</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NA>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.Level>Current level</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.Level>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.BaseChance>Base response chance</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.BaseChance>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.MaxChance>Max response chance</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.MaxChance>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportFactor>Aid points factor</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportFactor>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction>Current threat faction</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatPower>Current ActiveThreat CombatPower</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatPower>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>Eligible responders</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>Effective response chance</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>Pending raid evaluation</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>Pending aid offer</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>Last responder faction</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>Current covenant aid faction</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidTag>Aid Tag</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidTag>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TriggerRaidPoints>Trigger Raid Points</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TriggerRaidPoints>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportPoints>Support Points</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportPoints>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TaggedLords>Tagged Lords</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TaggedLords>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidStartTick>Aid start tick</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidStartTick>
-  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.CooldownRemaining>Cooldown remaining</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.CooldownRemaining>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.Level>Current level: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.Level>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.BaseChance>Base response chance: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.BaseChance>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.MaxChance>Max response chance: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.MaxChance>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportFactor>Aid points factor: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportFactor>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction>Current threat faction: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatPower>Current ActiveThreat CombatPower: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatPower>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>Eligible responders: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>Effective response chance: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>Pending raid evaluation: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>Pending aid offer: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>Last responder faction: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>Current covenant aid faction: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidTag>Aid Tag: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidTag>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TriggerRaidPoints>Trigger Raid Points: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TriggerRaidPoints>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportPoints>Support Points: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportPoints>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TaggedLords>Tagged Lords: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TaggedLords>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidStartTick>Aid start tick: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidStartTick>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.CooldownRemaining>Cooldown remaining (ticks): {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.CooldownRemaining>
 </LanguageData>
