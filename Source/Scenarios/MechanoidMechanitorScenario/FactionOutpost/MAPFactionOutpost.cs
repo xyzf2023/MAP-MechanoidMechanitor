@@ -58,6 +58,50 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         protected override bool UseGenericEnterMapFloatMenuOption => false;
 
+        public override IEnumerable<Gizmo> GetGizmos()
+        {
+            foreach (Gizmo gizmo in base.GetGizmos())
+            {
+                yield return gizmo;
+            }
+
+            if (!DebugSettings.ShowDevGizmos || !IsBuilding || cleaned)
+            {
+                yield break;
+            }
+
+            Command_Action completeConstruction = new Command_Action
+            {
+                defaultLabel =
+                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.Label"
+                        .Translate(),
+                defaultDesc =
+                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.Desc"
+                        .Translate(),
+                icon = TexButton.Plus,
+                action = DevForceCompleteConstruction
+            };
+
+            if (base.HasMap)
+            {
+                completeConstruction.Disable(
+                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.MapLoaded"
+                        .Translate());
+            }
+
+            yield return completeConstruction;
+        }
+
+        private void DevForceCompleteConstruction()
+        {
+            if (!DebugSettings.ShowDevGizmos || !IsBuilding || cleaned || base.HasMap)
+            {
+                return;
+            }
+
+            SwitchToCompleted();
+        }
+
         public void InitializeNewOutpost(int createdTick, int layoutSeed)
         {
             phase = MechanoidMechanitorFactionOutpostPhase.Building;
