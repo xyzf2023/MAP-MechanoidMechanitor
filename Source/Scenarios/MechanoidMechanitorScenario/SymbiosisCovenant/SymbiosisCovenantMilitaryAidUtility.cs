@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.AI;
 using Verse.AI.Group;
 
 namespace MAP_MechanoidMechanitor.Scenarios
@@ -635,7 +636,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static List<Lord> FindTaggedAidLords(
             Map map,
-            string tag,
+            string? tag,
             Faction? faction = null)
         {
             if (string.IsNullOrEmpty(tag))
