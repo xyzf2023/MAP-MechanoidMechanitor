@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.Label>DEV：立即完成建设</MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.Label>
+  <MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.Desc>立即将这个建设中的机械巢节点切换为建设完成状态。仅用于开发者测试。</MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.Desc>
+  <MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.MapLoaded>节点地图已加载，无法安全切换建设阶段。请先离开该地图。</MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.MapLoaded>
+</LanguageData>
