@@ -15,6 +15,7 @@
   <MAP_MechanoidMechanitor.FactionOutpost.Attack.RelationBlocked>该前哨所属派系与玩家的关系被剧情风格锁定，无法主动进攻。</MAP_MechanoidMechanitor.FactionOutpost.Attack.RelationBlocked>
   <MAP_MechanoidMechanitor.FactionOutpost.Attack.TurnHostileFailed>未能将该前哨所属派系转为敌对，已取消进入。</MAP_MechanoidMechanitor.FactionOutpost.Attack.TurnHostileFailed>
   <MAP_MechanoidMechanitor.FactionOutpost.Attack.MapInitFailed>派系前哨地图初始化失败，已取消进入。</MAP_MechanoidMechanitor.FactionOutpost.Attack.MapInitFailed>
+  <MAP_MechanoidMechanitor.FactionOutpost.Dev.GenerationDisabled>派系前哨生成当前已关闭。</MAP_MechanoidMechanitor.FactionOutpost.Dev.GenerationDisabled>
 
   <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Label>派系前哨建立</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Label>
   <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Hostile>敌对派系“{0}”正在你的殖民地附近建立一处前哨。</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Hostile>

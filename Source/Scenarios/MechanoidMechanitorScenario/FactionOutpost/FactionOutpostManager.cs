@@ -1,3 +1,4 @@
+using RimWorld;
 using RimWorld.Planet;
 using Verse;
 
@@ -53,6 +54,68 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     + MechanoidMechanitorFactionOutpostFrequencyExtensions.TicksPerDay;
                 FactionOutpostRaidUtility.RunDailyExtraRaidCheck();
             }
+        }
+
+        /// <summary>
+        /// 开发者入口：完全复用自然生成的派系权重、候选资格与选址规则。
+        /// 与机械巢节点 DEV 行为一致，生成关闭时不强行绕过设置；无论成功失败都会重置自然生成计时。
+        /// </summary>
+        public void DevTryNaturalGenerationAttempt()
+        {
+            if (!CanRunDevGeneration())
+            {
+                return;
+            }
+
+            if (!CurrentFrequency().IsEnabled())
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.GenerationDisabled".Translate(),
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+            }
+            else
+            {
+                FactionOutpostGenerationUtility.TryRunGenerationAttempt();
+            }
+
+            ResetGenerationTimer();
+        }
+
+        /// <summary>
+        /// 开发者入口：优先选择指定实时关系的合法派系，并完全无视三个关系权重；
+        /// 若指定关系没有任何合法候选，则回退到普通权重选择。其余数量、距离、地块等规则均不绕过。
+        /// </summary>
+        public void DevTryGenerationAttemptForRelation(FactionRelationKind preferredRelation)
+        {
+            if (!CanRunDevGeneration())
+            {
+                return;
+            }
+
+            if (!CurrentFrequency().IsEnabled())
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.GenerationDisabled".Translate(),
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+            }
+            else
+            {
+                FactionOutpostGenerationUtility.TryRunGenerationAttemptForRelation(preferredRelation);
+            }
+
+            ResetGenerationTimer();
+        }
+
+        private static bool CanRunDevGeneration()
+        {
+            return Current.Game != null && Find.World != null && Find.TickManager != null;
+        }
+
+        private void ResetGenerationTimer()
+        {
+            nextGenerationAttemptTick = Find.TickManager.TicksGame + ScheduleIntervalTicks();
         }
 
         private static MechanoidMechanitorFactionOutpostFrequency CurrentFrequency()

@@ -81,42 +81,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return false;
                 }
 
-                List<Settlement> colonies = GetPlayerSurfaceColonies();
-                if (colonies.Count == 0)
-                {
-                    return false;
-                }
-
-                List<MAPFactionOutpost> existing = new List<MAPFactionOutpost>();
-                GetAllOutposts(existing);
-                List<ColonyProximityCache> caches = BuildColonyProximityCaches(colonies, existing);
-
-                List<ColonyProximityCache> availableCaches = new List<ColonyProximityCache>();
-                for (int i = 0; i < caches.Count; i++)
-                {
-                    if (caches[i].ExistingUncleanedOutpostCount < MaxOutpostsPerColony)
-                    {
-                        availableCaches.Add(caches[i]);
-                    }
-                }
-
-                if (availableCaches.Count == 0)
-                {
-                    return false;
-                }
-
-                ColonyProximityCache targetCache = availableCaches.RandomElement();
-                if (!TryFindOutpostTile(targetCache, existing, caches, out PlanetTile tile))
-                {
-                    return false;
-                }
-
-                CreateOutpost(tile, faction);
-                return true;
+                return TryGenerateWithFaction(faction);
             }
             catch (Exception ex)
             {
                 Log.Warning("[MAP] 普通派系前哨生成尝试异常: " + ex);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// DEV 指定关系生成：指定关系池非空时直接在该池内等权选派系，完全忽略三项生成权重；
+        /// 指定池为空时回退普通权重抽取。之后仍复用完整的自然选址、数量和间距检查。
+        /// </summary>
+        public static bool TryRunGenerationAttemptForRelation(FactionRelationKind preferredRelation)
+        {
+            try
+            {
+                MechanoidMechanitorStoryConfiguration? configuration =
+                    GameComponent_MechanoidMechanitorStoryState.CurrentConfiguration;
+                if (configuration == null || !configuration.factionOutpostFrequency.IsEnabled())
+                {
+                    return false;
+                }
+
+                Faction? faction;
+                if (!TrySelectFactionForRelation(preferredRelation, out faction) || faction == null)
+                {
+                    if (!TrySelectFaction(configuration, out faction) || faction == null)
+                    {
+                        return false;
+                    }
+                }
+
+                return TryGenerateWithFaction(faction);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("[MAP] 普通派系前哨指定关系生成尝试异常: " + ex);
                 return false;
             }
         }
@@ -145,22 +147,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Faction> hostile = new List<Faction>();
             List<Faction> ally = new List<Faction>();
             List<Faction> neutral = new List<Faction>();
-            for (int i = 0; i < eligible.Count; i++)
-            {
-                Faction faction = eligible[i];
-                switch (faction.PlayerRelationKind)
-                {
-                    case FactionRelationKind.Hostile:
-                        hostile.Add(faction);
-                        break;
-                    case FactionRelationKind.Ally:
-                        ally.Add(faction);
-                        break;
-                    case FactionRelationKind.Neutral:
-                        neutral.Add(faction);
-                        break;
-                }
-            }
+            PartitionByRelation(eligible, hostile, ally, neutral);
 
             int hostileWeight = hostile.Count > 0
                 ? Mathf.Max(0, configuration.hostileFactionOutpostWeight)
@@ -199,6 +186,102 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return false;
+        }
+
+        public static bool TrySelectFactionForRelation(
+            FactionRelationKind relation,
+            out Faction? selected)
+        {
+            selected = null;
+            List<Faction> eligible = new List<Faction>();
+            FactionOutpostFactionUtility.CollectEligibleFactions(eligible);
+            if (eligible.Count == 0)
+            {
+                return false;
+            }
+
+            List<Faction> matching = new List<Faction>();
+            for (int i = 0; i < eligible.Count; i++)
+            {
+                Faction faction = eligible[i];
+                if (faction.PlayerRelationKind == relation)
+                {
+                    matching.Add(faction);
+                }
+            }
+
+            if (matching.Count == 0)
+            {
+                return false;
+            }
+
+            selected = matching.RandomElement();
+            return true;
+        }
+
+        private static void PartitionByRelation(
+            List<Faction> eligible,
+            List<Faction> hostile,
+            List<Faction> ally,
+            List<Faction> neutral)
+        {
+            for (int i = 0; i < eligible.Count; i++)
+            {
+                Faction faction = eligible[i];
+                switch (faction.PlayerRelationKind)
+                {
+                    case FactionRelationKind.Hostile:
+                        hostile.Add(faction);
+                        break;
+                    case FactionRelationKind.Ally:
+                        ally.Add(faction);
+                        break;
+                    case FactionRelationKind.Neutral:
+                        neutral.Add(faction);
+                        break;
+                }
+            }
+        }
+
+        private static bool TryGenerateWithFaction(Faction faction)
+        {
+            if (!FactionOutpostFactionUtility.IsEligibleFaction(faction))
+            {
+                return false;
+            }
+
+            List<Settlement> colonies = GetPlayerSurfaceColonies();
+            if (colonies.Count == 0)
+            {
+                return false;
+            }
+
+            List<MAPFactionOutpost> existing = new List<MAPFactionOutpost>();
+            GetAllOutposts(existing);
+            List<ColonyProximityCache> caches = BuildColonyProximityCaches(colonies, existing);
+
+            List<ColonyProximityCache> availableCaches = new List<ColonyProximityCache>();
+            for (int i = 0; i < caches.Count; i++)
+            {
+                if (caches[i].ExistingUncleanedOutpostCount < MaxOutpostsPerColony)
+                {
+                    availableCaches.Add(caches[i]);
+                }
+            }
+
+            if (availableCaches.Count == 0)
+            {
+                return false;
+            }
+
+            ColonyProximityCache targetCache = availableCaches.RandomElement();
+            if (!TryFindOutpostTile(targetCache, existing, caches, out PlanetTile tile))
+            {
+                return false;
+            }
+
+            CreateOutpost(tile, faction);
+            return true;
         }
 
         private static List<ColonyProximityCache> BuildColonyProximityCaches(
