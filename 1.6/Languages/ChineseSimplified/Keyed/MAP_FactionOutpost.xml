@@ -16,6 +16,9 @@
   <MAP_MechanoidMechanitor.FactionOutpost.Attack.TurnHostileFailed>未能将该前哨所属派系转为敌对，已取消进入。</MAP_MechanoidMechanitor.FactionOutpost.Attack.TurnHostileFailed>
   <MAP_MechanoidMechanitor.FactionOutpost.Attack.MapInitFailed>派系前哨地图初始化失败，已取消进入。</MAP_MechanoidMechanitor.FactionOutpost.Attack.MapInitFailed>
   <MAP_MechanoidMechanitor.FactionOutpost.Dev.GenerationDisabled>派系前哨生成当前已关闭。</MAP_MechanoidMechanitor.FactionOutpost.Dev.GenerationDisabled>
+  <MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.Label>DEV：立即完成建设</MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.Label>
+  <MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.Desc>立即将这个建设中的派系前哨切换为建设完成状态。仅用于开发者测试。</MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.Desc>
+  <MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.MapLoaded>前哨地图已加载，无法安全切换建设阶段。请先离开该地图。</MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.MapLoaded>
 
   <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Label>派系前哨建立</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Label>
   <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Hostile>敌对派系“{0}”正在你的殖民地附近建立一处前哨。</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Hostile>
