@@ -392,6 +392,16 @@ namespace MAP_MechanoidMechanitor
                 message = succeeded ? "剧本状态切换完成。" : "剧本状态切换失败。";
             }
 
+            if (succeeded)
+            {
+                // 剧本永久关系锁通过 GoodwillSituationWorker_PermanentEnemy 动态判断。
+                // 从“永久敌对”切换为普通“敌对”等情况下，FactionRelationKind 本身不变，
+                // 因而不会自然触发关系类型变化通知；这里显式刷新原版 GoodwillSituation 缓存，
+                // 确保永久敌人/永久中立/永久盟友的锁定与解除在本次控制台动作结束时立即生效。
+                Find.GoodwillSituationManager?.RecalculateAll(
+                    canSendHostilityChangedLetter: false);
+            }
+
             Messages.Message(
                 message,
                 succeeded
