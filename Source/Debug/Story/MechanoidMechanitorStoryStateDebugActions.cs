@@ -11,6 +11,7 @@ namespace MAP_MechanoidMechanitor
     /// 纯原生 LudeonTK 开发者控制台剧情状态切换树。
     /// 不创建 Window/FloatMenu，不接管 Dialog_Debug；所有层级均由 DebugActionNode.childGetter 提供。
     /// 所有固定菜单项都使用稳定 label，便于人工操作以及后续自动测试按控制台路径调用。
+    /// 无活动剧情配置的既有存档同样可以进入完整菜单；真正执行有效叶子动作时才惰性建立配置。
     /// </summary>
     public static class MechanoidMechanitorStoryStateDebugActions
     {
@@ -83,25 +84,10 @@ namespace MAP_MechanoidMechanitor
             allowedGameStates = AllowedGameStates.Playing)]
         private static List<DebugActionNode> ChangeStoryState()
         {
-            MechanoidMechanitorStoryConfiguration? configuration =
-                GameComponent_MechanoidMechanitorStoryState.CurrentConfiguration;
-            if (configuration == null)
-            {
-                return new List<DebugActionNode>
-                {
-                    new DebugActionNode(
-                        "当前没有活动剧情配置",
-                        DebugActionType.Action,
-                        () => Execute(
-                            (out string message) =>
-                            {
-                                message =
-                                    "无法切换剧本状态：当前存档没有活动的机械族机械师剧情配置。";
-                                return false;
-                            }))
-                };
-            }
-
+            // 没有活动配置时只构造一份不写入存档的中性快照，用于生成完整原生菜单。
+            MechanoidMechanitorStoryConfiguration configuration =
+                MechanoidMechanitorStoryRuntimeBootstrapUtility
+                    .CreateMenuConfigurationSnapshot();
             MechanoidMechanitorStoryConfigurationContext context =
                 MechanoidMechanitorStoryConfigurationContext.Create(configuration);
             List<DebugActionNode> nodes = new List<DebugActionNode>();
@@ -272,7 +258,8 @@ namespace MAP_MechanoidMechanitor
                 new List<DebugActionNode>(MechHiveRelationModes.Length);
             for (int i = 0; i < MechHiveRelationModes.Length; i++)
             {
-                MechanoidMechanitorMechHiveRelationMode captured = MechHiveRelationModes[i];
+                MechanoidMechanitorMechHiveRelationMode captured =
+                    MechHiveRelationModes[i];
                 nodes.Add(CreateActionOption(
                     MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured),
                     (out string message) =>
@@ -369,7 +356,19 @@ namespace MAP_MechanoidMechanitor
             return new DebugActionNode(
                 label,
                 DebugActionType.Action,
-                () => Execute(action));
+                () => Execute(
+                    (out string message) =>
+                        ExecuteWithRuntimeConfiguration(action, out message)));
+        }
+
+        private static bool ExecuteWithRuntimeConfiguration(
+            TryStoryStateAction action,
+            out string message)
+        {
+            return MechanoidMechanitorStoryRuntimeBootstrapUtility
+                .TryExecuteWithRuntimeConfiguration(
+                    (out string innerMessage) => action(out innerMessage),
+                    out message);
         }
 
         private static void Execute(TryStoryStateAction action)
@@ -382,7 +381,9 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP-StoryStateDebug] 控制台剧情状态切换发生未处理异常。\n" + ex);
+                Log.Error(
+                    "[MAP-StoryStateDebug] 控制台剧情状态切换发生未处理异常。\n"
+                    + ex);
                 succeeded = false;
                 message = "切换剧本状态时发生异常；请查看日志。";
             }
