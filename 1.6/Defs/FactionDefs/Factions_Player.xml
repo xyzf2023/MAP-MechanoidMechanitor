@@ -10,8 +10,8 @@
     <isPlayer>true</isPlayer>
 
     <basicMemberKind>Colonist</basicMemberKind>
-    <pawnSingular>mechanoid</pawnSingular>
-    <pawnsPlural>mechanoids</pawnsPlural>
+    <pawnSingular>机械族</pawnSingular>
+    <pawnsPlural>机械族</pawnsPlural>
 
     <techLevel>Archotech</techLevel>
 
