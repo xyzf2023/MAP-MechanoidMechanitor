@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 纯原生 LudeonTK 开发者控制台剧情状态切换树。
     /// 不创建 Window/FloatMenu，不接管 Dialog_Debug；所有层级均由 DebugActionNode.childGetter 提供。
-    /// 固定 label 用于稳定的 DebugAction 路径，labelGetter 仅追加当前值显示，便于后续自动测试调用。
+    /// 所有固定菜单项都使用稳定 label，便于人工操作以及后续自动测试按控制台路径调用。
     /// </summary>
     public static class MechanoidMechanitorStoryStateDebugActions
     {
@@ -74,6 +74,8 @@ namespace MAP_MechanoidMechanitor
 
         private delegate bool TryStoryStateAction(out string message);
 
+        private delegate bool TryBooleanStoryStateAction(bool value, out string message);
+
         [DebugAction(
             "MAP-机械族机械师",
             "切换剧本状态",
@@ -81,7 +83,8 @@ namespace MAP_MechanoidMechanitor
             allowedGameStates = AllowedGameStates.Playing)]
         private static List<DebugActionNode> ChangeStoryState()
         {
-            MechanoidMechanitorStoryConfiguration? configuration = CurrentConfiguration();
+            MechanoidMechanitorStoryConfiguration? configuration =
+                GameComponent_MechanoidMechanitorStoryState.CurrentConfiguration;
             if (configuration == null)
             {
                 return new List<DebugActionNode>
@@ -107,9 +110,6 @@ namespace MAP_MechanoidMechanitor
             {
                 nodes.Add(CreateSubmenuNode(
                     "普通派系关系",
-                    () => CurrentValue(
-                        current => MechanoidMechanitorStoryConfigurationLabels.LabelFor(
-                            current.ordinaryFactionRelationsMode)),
                     BuildOrdinaryFactionRelationsMenu));
             }
 
@@ -117,26 +117,17 @@ namespace MAP_MechanoidMechanitor
             {
                 nodes.Add(CreateSubmenuNode(
                     "派系前哨生成频率",
-                    () => CurrentValue(
-                        current => LabelForFactionOutpostFrequency(
-                            current.factionOutpostFrequency)),
                     BuildFactionOutpostFrequencyMenu));
                 nodes.Add(CreateSubmenuNode(
                     "派系前哨：敌对权重",
-                    () => CurrentValue(
-                        current => current.hostileFactionOutpostWeight.ToString()),
                     () => BuildFactionOutpostWeightMenu(
                         MechanoidMechanitorFactionOutpostWeightKind.Hostile)));
                 nodes.Add(CreateSubmenuNode(
                     "派系前哨：中立权重",
-                    () => CurrentValue(
-                        current => current.neutralFactionOutpostWeight.ToString()),
                     () => BuildFactionOutpostWeightMenu(
                         MechanoidMechanitorFactionOutpostWeightKind.Neutral)));
                 nodes.Add(CreateSubmenuNode(
                     "派系前哨：盟友权重",
-                    () => CurrentValue(
-                        current => current.allyFactionOutpostWeight.ToString()),
                     () => BuildFactionOutpostWeightMenu(
                         MechanoidMechanitorFactionOutpostWeightKind.Ally)));
             }
@@ -145,20 +136,12 @@ namespace MAP_MechanoidMechanitor
             {
                 nodes.Add(CreateSubmenuNode(
                     "与机械巢关系",
-                    () => CurrentValue(
-                        current => MechanoidMechanitorStoryConfigurationLabels.LabelFor(
-                            current.mechHiveRelationMode)),
                     BuildMechHiveRelationMenu));
                 nodes.Add(CreateSubmenuNode(
                     "机械巢节点生成频率",
-                    () => CurrentValue(
-                        current => MechanoidMechanitorStoryConfigurationLabels.LabelFor(
-                            current.mechHiveNodeFrequency)),
                     BuildMechHiveNodeFrequencyMenu));
                 nodes.Add(CreateSubmenuNode(
                     "肃清指令",
-                    () => CurrentValue(
-                        current => LabelForBoolean(current.purgeDirectiveEnabled)),
                     BuildPurgeDirectiveMenu));
             }
 
@@ -166,8 +149,6 @@ namespace MAP_MechanoidMechanitor
             {
                 nodes.Add(CreateSubmenuNode(
                     "共生盟约",
-                    () => CurrentValue(
-                        current => LabelForBoolean(current.symbiosisCovenantEnabled)),
                     BuildSymbiosisCovenantMenu));
             }
 
@@ -175,9 +156,6 @@ namespace MAP_MechanoidMechanitor
             {
                 nodes.Add(CreateSubmenuNode(
                     "文化适配等级",
-                    () => CurrentValue(
-                        current => MechanoidMechanitorStoryConfigurationLabels.LabelFor(
-                            current.ideologyAdaptationLevel)),
                     BuildIdeologyAdaptationMenu));
             }
 
@@ -191,38 +169,17 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanoidMechanitorOrdinaryFactionRelationsMode captured =
                     OrdinaryFactionRelationModes[i];
-                string label =
-                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured);
                 nodes.Add(CreateActionOption(
-                    label,
-                    () => IsCurrent(
-                        current => current.ordinaryFactionRelationsMode == captured),
+                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured),
                     (out string message) =>
                         MechanoidMechanitorStoryRuntimeConfigurationUtility
                             .TrySetOrdinaryFactionRelationsMode(captured, out message)));
             }
 
-            DebugActionNode customNode = CreateSubmenuNode(
+            nodes.Add(CreateSubmenuNode(
                 MechanoidMechanitorStoryConfigurationLabels.LabelFor(
                     MechanoidMechanitorOrdinaryFactionRelationsMode.Custom),
-                () => CurrentValue(
-                    current => current.ordinaryFactionRelationsMode
-                            == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom
-                        ? "当前"
-                        : "逐派系设置"),
-                BuildCustomOrdinaryFactionMenu,
-                appendCurrentPrefix: false);
-            customNode.labelGetter = () =>
-                IsCurrent(
-                    current => current.ordinaryFactionRelationsMode
-                        == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom)
-                    ? MechanoidMechanitorStoryConfigurationLabels.LabelFor(
-                        MechanoidMechanitorOrdinaryFactionRelationsMode.Custom)
-                        + " [当前]..."
-                    : MechanoidMechanitorStoryConfigurationLabels.LabelFor(
-                        MechanoidMechanitorOrdinaryFactionRelationsMode.Custom)
-                        + "...";
-            nodes.Add(customNode);
+                BuildCustomOrdinaryFactionMenu));
             return nodes;
         }
 
@@ -234,12 +191,8 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < factions.Count; i++)
             {
                 Faction capturedFaction = factions[i];
-                string fixedLabel = capturedFaction.Name;
                 nodes.Add(CreateSubmenuNode(
-                    fixedLabel,
-                    () => CurrentValue(
-                        current => MechanoidMechanitorStoryConfigurationLabels.LabelFor(
-                            current.GetRelationOptionFor(capturedFaction))),
+                    capturedFaction.Name,
                     () => BuildSingleFactionRelationMenu(capturedFaction)));
             }
 
@@ -265,14 +218,8 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanoidMechanitorFactionRelationOption captured =
                     OrdinaryFactionRelationOptions[i];
-                string label =
-                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured);
                 nodes.Add(CreateActionOption(
-                    label,
-                    () => IsCurrent(
-                        current => current.ordinaryFactionRelationsMode
-                                == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom
-                            && current.GetRelationOptionFor(faction) == captured),
+                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured),
                     (out string message) =>
                         MechanoidMechanitorStoryRuntimeConfigurationUtility
                             .TrySetOrdinaryFactionRelationOption(
@@ -292,11 +239,8 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanoidMechanitorFactionOutpostFrequency captured =
                     FactionOutpostFrequencies[i];
-                string label = LabelForFactionOutpostFrequency(captured);
                 nodes.Add(CreateActionOption(
-                    label,
-                    () => IsCurrent(
-                        current => current.factionOutpostFrequency == captured),
+                    LabelForFactionOutpostFrequency(captured),
                     (out string message) =>
                         MechanoidMechanitorStoryRuntimeConfigurationUtility
                             .TrySetFactionOutpostFrequency(captured, out message)));
@@ -312,11 +256,8 @@ namespace MAP_MechanoidMechanitor
             for (int value = 0; value <= 100; value++)
             {
                 int captured = value;
-                string label = captured.ToString();
                 nodes.Add(CreateActionOption(
-                    label,
-                    () => IsCurrent(
-                        current => GetFactionOutpostWeight(current, kind) == captured),
+                    captured.ToString(),
                     (out string message) =>
                         MechanoidMechanitorStoryRuntimeConfigurationUtility
                             .TrySetFactionOutpostWeight(kind, captured, out message)));
@@ -332,10 +273,8 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < MechHiveRelationModes.Length; i++)
             {
                 MechanoidMechanitorMechHiveRelationMode captured = MechHiveRelationModes[i];
-                string label = MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured);
                 nodes.Add(CreateActionOption(
-                    label,
-                    () => IsCurrent(current => current.mechHiveRelationMode == captured),
+                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured),
                     (out string message) =>
                         MechanoidMechanitorStoryRuntimeConfigurationUtility
                             .TrySetMechHiveRelationMode(captured, out message)));
@@ -352,10 +291,8 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanoidMechanitorMechHiveNodeFrequency captured =
                     MechHiveNodeFrequencies[i];
-                string label = MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured);
                 nodes.Add(CreateActionOption(
-                    label,
-                    () => IsCurrent(current => current.mechHiveNodeFrequency == captured),
+                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured),
                     (out string message) =>
                         MechanoidMechanitorStoryRuntimeConfigurationUtility
                             .TrySetMechHiveNodeFrequency(captured, out message)));
@@ -367,7 +304,6 @@ namespace MAP_MechanoidMechanitor
         private static List<DebugActionNode> BuildPurgeDirectiveMenu()
         {
             return BuildBooleanMenu(
-                current => current.purgeDirectiveEnabled,
                 (bool value, out string message) =>
                     MechanoidMechanitorStoryRuntimeConfigurationUtility
                         .TrySetPurgeDirectiveEnabled(value, out message));
@@ -376,14 +312,12 @@ namespace MAP_MechanoidMechanitor
         private static List<DebugActionNode> BuildSymbiosisCovenantMenu()
         {
             return BuildBooleanMenu(
-                current => current.symbiosisCovenantEnabled,
                 (bool value, out string message) =>
                     MechanoidMechanitorStoryRuntimeConfigurationUtility
                         .TrySetSymbiosisCovenantEnabled(value, out message));
         }
 
         private static List<DebugActionNode> BuildBooleanMenu(
-            Func<MechanoidMechanitorStoryConfiguration, bool> getCurrent,
             TryBooleanStoryStateAction action)
         {
             List<DebugActionNode> nodes = new List<DebugActionNode>(2);
@@ -393,14 +327,11 @@ namespace MAP_MechanoidMechanitor
                 bool captured = values[i];
                 nodes.Add(CreateActionOption(
                     LabelForBoolean(captured),
-                    () => IsCurrent(current => getCurrent(current) == captured),
                     (out string message) => action(captured, out message)));
             }
 
             return nodes;
         }
-
-        private delegate bool TryBooleanStoryStateAction(bool value, out string message);
 
         private static List<DebugActionNode> BuildIdeologyAdaptationMenu()
         {
@@ -410,10 +341,8 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanoidMechanitorIdeologyAdaptationLevel captured =
                     IdeologyAdaptationLevels[i];
-                string label = MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured);
                 nodes.Add(CreateActionOption(
-                    label,
-                    () => IsCurrent(current => current.ideologyAdaptationLevel == captured),
+                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured),
                     (out string message) =>
                         MechanoidMechanitorStoryRuntimeConfigurationUtility
                             .TrySetIdeologyAdaptationLevel(captured, out message)));
@@ -424,32 +353,23 @@ namespace MAP_MechanoidMechanitor
 
         private static DebugActionNode CreateSubmenuNode(
             string label,
-            Func<string> currentValueGetter,
-            Func<List<DebugActionNode>> childGetter,
-            bool appendCurrentPrefix = true)
+            Func<List<DebugActionNode>> childGetter)
         {
-            DebugActionNode node = new DebugActionNode(label)
+            return new DebugActionNode(label)
             {
                 actionType = DebugActionType.Action,
                 childGetter = childGetter
             };
-            node.labelGetter = appendCurrentPrefix
-                ? () => label + " [当前：" + currentValueGetter() + "]..."
-                : () => label + "...";
-            return node;
         }
 
         private static DebugActionNode CreateActionOption(
             string label,
-            Func<bool> isCurrent,
             TryStoryStateAction action)
         {
-            DebugActionNode node = new DebugActionNode(
+            return new DebugActionNode(
                 label,
                 DebugActionType.Action,
                 () => Execute(action));
-            node.labelGetter = () => isCurrent() ? label + " [当前]" : label;
-            return node;
         }
 
         private static void Execute(TryStoryStateAction action)
@@ -486,42 +406,6 @@ namespace MAP_MechanoidMechanitor
             else
             {
                 Log.Warning("[MAP-StoryStateDebug] REJECT " + message);
-            }
-        }
-
-        private static MechanoidMechanitorStoryConfiguration? CurrentConfiguration()
-        {
-            return GameComponent_MechanoidMechanitorStoryState.CurrentConfiguration;
-        }
-
-        private static string CurrentValue(
-            Func<MechanoidMechanitorStoryConfiguration, string> getter)
-        {
-            MechanoidMechanitorStoryConfiguration? current = CurrentConfiguration();
-            return current == null ? "不可用" : getter(current);
-        }
-
-        private static bool IsCurrent(
-            Func<MechanoidMechanitorStoryConfiguration, bool> predicate)
-        {
-            MechanoidMechanitorStoryConfiguration? current = CurrentConfiguration();
-            return current != null && predicate(current);
-        }
-
-        private static int GetFactionOutpostWeight(
-            MechanoidMechanitorStoryConfiguration configuration,
-            MechanoidMechanitorFactionOutpostWeightKind kind)
-        {
-            switch (kind)
-            {
-                case MechanoidMechanitorFactionOutpostWeightKind.Hostile:
-                    return configuration.hostileFactionOutpostWeight;
-                case MechanoidMechanitorFactionOutpostWeightKind.Neutral:
-                    return configuration.neutralFactionOutpostWeight;
-                case MechanoidMechanitorFactionOutpostWeightKind.Ally:
-                    return configuration.allyFactionOutpostWeight;
-                default:
-                    return -1;
             }
         }
 
