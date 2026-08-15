@@ -143,9 +143,57 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// MainTabWindow_Quests 的接受按钮只从 FreeColonists 枚举候选。
-    /// 用 ThreadStatic 上下文把候选扩展严格限制在当前 Royal Favor accepter UI 调用链，
-    /// 同时覆盖正常接受和同一方法中的 DEV“立即接受”路径。
+    /// 正常任务接受与奖励选项接受最终都会进入 AcceptQuestByInterface。
+    /// 在该统一入口建立 Royal Favor accepter 上下文，从而同时覆盖：
+    /// - 无 QuestPart_Choice 的普通任务；
+    /// - DoRewards 中选择某一奖励方案后再指定接受者的任务。
+    /// </summary>
+    [HarmonyPatch(typeof(MainTabWindow_Quests), "AcceptQuestByInterface")]
+    internal static class Patch_MainTabWindow_Quests_AcceptQuestByInterface_RoyalFavorContext
+    {
+        [HarmonyPrefix]
+        internal static void Prefix(
+            Quest ___selected,
+            bool requiresAccepter,
+            out Quest? __state)
+        {
+            __state = MechanoidMechanitorRoyalFavorAccepterUtility
+                .CurrentAccepterSelectionQuest;
+
+            MechanoidMechanitorRoyalFavorAccepterUtility
+                .CurrentAccepterSelectionQuest =
+                requiresAccepter
+                && MechanoidMechanitorRoyalFavorAccepterUtility
+                    .IsRoyalFavorAccepterQuest(___selected)
+                    ? ___selected
+                    : null;
+        }
+
+        [HarmonyPostfix]
+        internal static void Postfix(Quest? __state)
+        {
+            RestoreContext(__state);
+        }
+
+        [HarmonyFinalizer]
+        internal static Exception? Finalizer(
+            Exception? __exception,
+            Quest? __state)
+        {
+            RestoreContext(__state);
+            return __exception;
+        }
+
+        private static void RestoreContext(Quest? previous)
+        {
+            MechanoidMechanitorRoyalFavorAccepterUtility
+                .CurrentAccepterSelectionQuest = previous;
+        }
+    }
+
+    /// <summary>
+    /// DEV“立即接受”不经过 AcceptQuestByInterface，而是直接从 FreeColonists
+    /// 随机选择接受者，因此单独建立相同上下文以保持纯机械殖民地调试行为一致。
     /// </summary>
     [HarmonyPatch(typeof(MainTabWindow_Quests), "DoAcceptButton")]
     internal static class Patch_MainTabWindow_Quests_DoAcceptButton_RoyalFavorContext
