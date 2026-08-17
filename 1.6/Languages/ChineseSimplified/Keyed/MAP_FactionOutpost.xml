@@ -9,6 +9,12 @@
   <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Neutral>中立派系前哨</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Neutral>
   <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Tooltip>这是新前哨生成时选择当前外交关系类别的相对权重，并非百分比，也不会锁定既有前哨的关系。没有合法候选派系的类别会在本次抽取中临时排除；权重为0表示不直接生成该关系类别的前哨。</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Tooltip>
 
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.SectionTitle>生成关系权重</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.SectionTitle>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Strategic.SectionTitle>战略效果</MAP_MechanoidMechanitor.Story.FactionOutpost.Strategic.SectionTitle>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Strategic.RaidChance>单个敌对前哨袭击概率</MAP_MechanoidMechanitor.Story.FactionOutpost.Strategic.RaidChance>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Strategic.SupportChance>单个盟友前哨支援概率</MAP_MechanoidMechanitor.Story.FactionOutpost.Strategic.SupportChance>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Strategic.Tooltip>设置每座符合条件的完整派系前哨独立提供战略效果的基础概率。多个前哨的最终概率按 1-(1-p)^n 合并，而不是直接相加。敌对前哨的袭击概率每日检查一次；盟友前哨的支援概率在殖民地遭遇符合条件的敌对袭击后检查。0%表示关闭对应效果，100%表示只要至少存在一座符合条件的完整前哨就必定触发。</MAP_MechanoidMechanitor.Story.FactionOutpost.Strategic.Tooltip>
+
   <MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Building>{0}前哨（建设中）</MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Building>
   <MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Completed>{0}前哨</MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Completed>
   <MAP_MechanoidMechanitor.FactionOutpost.Attack.OutpostUnavailable>该派系前哨已经不存在或无法进攻。</MAP_MechanoidMechanitor.FactionOutpost.Attack.OutpostUnavailable>

@@ -17,8 +17,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const int MaxReinforcementPoints = 5000;
 
-        private const float PerNodeSupportChance = 0.10f;
-
         /// <summary>
         /// 敌对 RaidEnemy 成功执行后由补丁回调。检查是否满足盟军条件并至多部署一支盟军。
         /// </summary>
@@ -69,7 +67,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return;
                 }
 
-                float probability = 1f - Mathf.Pow(1f - PerNodeSupportChance, count);
+                // 概率按独立事件合并：1 - (1 - p)^count，p 来自当前剧情配置。
+                float probability =
+                    MechanoidMechanitorStrategicChanceUtility.CombineIndependentChance(
+                        MechanoidMechanitorStrategicChanceUtility
+                            .GetMechHiveNodeSupportChancePerNode(),
+                        count);
+
+                if (probability <= 0f)
+                {
+                    return;
+                }
+
                 if (!Rand.Chance(probability))
                 {
                     return;

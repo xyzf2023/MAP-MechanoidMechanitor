@@ -13,8 +13,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// </summary>
     public static class MechHiveNodeRaidUtility
     {
-        private const float PerNodeRaidChance = 0.01f;
-
         /// <summary>
         /// 每日额外袭击检查。仅在玩家与机械巢敌对（含永久敌对）时进行；
         /// 对每张已加载的殖民地图各掷一次骰，成功则触发一次机械巢 RaidEnemy。
@@ -56,8 +54,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         continue;
                     }
 
-                    // 概率按独立事件合并：1 - (1 - 0.01)^count。
-                    float probability = 1f - Mathf.Pow(1f - PerNodeRaidChance, count);
+                    // 概率按独立事件合并：1 - (1 - p)^count，p 来自当前剧情配置。
+                    float probability =
+                        MechanoidMechanitorStrategicChanceUtility.CombineIndependentChance(
+                            MechanoidMechanitorStrategicChanceUtility
+                                .GetMechHiveNodeRaidChancePerNode(),
+                            count);
+
+                    if (probability <= 0f)
+                    {
+                        continue;
+                    }
+
                     if (Rand.Chance(probability))
                     {
                         TryFireExtraRaid(map, mechHive);

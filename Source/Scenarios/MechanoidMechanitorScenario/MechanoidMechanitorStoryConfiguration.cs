@@ -7,6 +7,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed class MechanoidMechanitorStoryConfiguration : IExposable
     {
+        public const int DefaultFactionOutpostRaidChancePercent = 1;
+        public const int DefaultFactionOutpostSupportChancePercent = 10;
+        public const int DefaultMechHiveNodeRaidChancePercent = 1;
+        public const int DefaultMechHiveNodeSupportChancePercent = 10;
+
         public MechanoidMechanitorOrdinaryFactionRelationsMode ordinaryFactionRelationsMode =
             MechanoidMechanitorOrdinaryFactionRelationsMode.Default;
 
@@ -22,11 +27,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public int neutralFactionOutpostWeight = 100;
 
+        public int factionOutpostRaidChancePercent =
+            DefaultFactionOutpostRaidChancePercent;
+
+        public int factionOutpostSupportChancePercent =
+            DefaultFactionOutpostSupportChancePercent;
+
         public MechanoidMechanitorMechHiveRelationMode mechHiveRelationMode =
             MechanoidMechanitorMechHiveRelationMode.Default;
 
         public MechanoidMechanitorMechHiveNodeFrequency mechHiveNodeFrequency =
             MechanoidMechanitorMechHiveNodeFrequency.Off;
+
+        public int mechHiveNodeRaidChancePercent =
+            DefaultMechHiveNodeRaidChancePercent;
+
+        public int mechHiveNodeSupportChancePercent =
+            DefaultMechHiveNodeSupportChancePercent;
 
         public bool purgeDirectiveEnabled;
 
@@ -62,8 +79,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 hostileFactionOutpostWeight = hostileFactionOutpostWeight,
                 allyFactionOutpostWeight = allyFactionOutpostWeight,
                 neutralFactionOutpostWeight = neutralFactionOutpostWeight,
+                factionOutpostRaidChancePercent = factionOutpostRaidChancePercent,
+                factionOutpostSupportChancePercent = factionOutpostSupportChancePercent,
                 mechHiveRelationMode = mechHiveRelationMode,
                 mechHiveNodeFrequency = mechHiveNodeFrequency,
+                mechHiveNodeRaidChancePercent = mechHiveNodeRaidChancePercent,
+                mechHiveNodeSupportChancePercent = mechHiveNodeSupportChancePercent,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
                 symbiosisCovenantEnabled = symbiosisCovenantEnabled,
                 ideologyAdaptationLevel = ideologyAdaptationLevel
@@ -198,6 +219,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             allyFactionOutpostWeight = Mathf.Clamp(allyFactionOutpostWeight, 0, 100);
             neutralFactionOutpostWeight = Mathf.Clamp(neutralFactionOutpostWeight, 0, 100);
 
+            // 概率字段保存为 0～100 的整数百分比，与外交关系动态变化无关，
+            // 不应因关系或节点频率被清零，以免破坏玩家原先填写的数值。
+            factionOutpostRaidChancePercent =
+                Mathf.Clamp(factionOutpostRaidChancePercent, 0, 100);
+            factionOutpostSupportChancePercent =
+                Mathf.Clamp(factionOutpostSupportChancePercent, 0, 100);
+            mechHiveNodeRaidChancePercent =
+                Mathf.Clamp(mechHiveNodeRaidChancePercent, 0, 100);
+            mechHiveNodeSupportChancePercent =
+                Mathf.Clamp(mechHiveNodeSupportChancePercent, 0, 100);
+
             if (!context.HasMechHive || context.HasPursuingMechanoidsScenarioPart)
             {
                 mechHiveRelationMode = MechanoidMechanitorMechHiveRelationMode.Default;
@@ -252,6 +284,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "neutralFactionOutpostWeight",
                 100);
             Scribe_Values.Look(
+                ref factionOutpostRaidChancePercent,
+                "factionOutpostRaidChancePercent",
+                DefaultFactionOutpostRaidChancePercent);
+            Scribe_Values.Look(
+                ref factionOutpostSupportChancePercent,
+                "factionOutpostSupportChancePercent",
+                DefaultFactionOutpostSupportChancePercent);
+            Scribe_Values.Look(
                 ref mechHiveRelationMode,
                 "mechHiveRelationMode",
                 MechanoidMechanitorMechHiveRelationMode.Default);
@@ -259,6 +299,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref mechHiveNodeFrequency,
                 "mechHiveNodeFrequency",
                 MechanoidMechanitorMechHiveNodeFrequency.Off);
+            Scribe_Values.Look(
+                ref mechHiveNodeRaidChancePercent,
+                "mechHiveNodeRaidChancePercent",
+                DefaultMechHiveNodeRaidChancePercent);
+            Scribe_Values.Look(
+                ref mechHiveNodeSupportChancePercent,
+                "mechHiveNodeSupportChancePercent",
+                DefaultMechHiveNodeSupportChancePercent);
             Scribe_Values.Look(ref purgeDirectiveEnabled, "purgeDirectiveEnabled", false);
             Scribe_Values.Look(ref symbiosisCovenantEnabled, "symbiosisCovenantEnabled", false);
             Scribe_Values.Look(

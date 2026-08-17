@@ -12,8 +12,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// </summary>
     public static class FactionOutpostRaidUtility
     {
-        private const float PerOutpostRaidChance = 0.01f;
-
         public static void RunDailyExtraRaidCheck()
         {
             try
@@ -65,7 +63,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         continue;
                     }
 
-                    float probability = 1f - Mathf.Pow(1f - PerOutpostRaidChance, total);
+                    // 概率按独立事件合并：1 - (1 - p)^total，p 来自当前剧情配置。
+                    float probability =
+                        MechanoidMechanitorStrategicChanceUtility.CombineIndependentChance(
+                            MechanoidMechanitorStrategicChanceUtility
+                                .GetFactionOutpostRaidChancePerNode(),
+                            total);
+
+                    if (probability <= 0f)
+                    {
+                        continue;
+                    }
+
                     if (!Rand.Chance(probability)
                         || !TryChooseFactionByCount(counts, total, out Faction? attacker)
                         || attacker == null)
