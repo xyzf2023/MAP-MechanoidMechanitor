@@ -59,7 +59,7 @@
         </li>
         <li Class="ScenPart_StartingMech">
           <def>StartingMech</def>
-          <mechKind>MAP_Mech_Lover</mechKind>
+          <mechKind>MAP_Mech_Moon</mechKind>
           <overseenByPlayerPawnChance>1</overseenByPlayerPawnChance>
         </li>
 
