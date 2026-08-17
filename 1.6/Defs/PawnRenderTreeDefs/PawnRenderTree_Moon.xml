@@ -12,11 +12,9 @@
 
         <li>
           <debugLabel>Body</debugLabel>
-          <nodeClass>PawnRenderNode_Body</nodeClass>
-          <workerClass>PawnRenderNodeWorker_Body</workerClass>
+          <nodeClass>PawnRenderNode_AnimalPart</nodeClass>
           <tagDef>Body</tagDef>
-          <skipFlag>Body</skipFlag>
-          <pawnType>Any</pawnType>
+          <useRottenColor>true</useRottenColor>
 
           <children>
 
@@ -24,7 +22,7 @@
               <debugLabel>Wounds - pre apparel</debugLabel>
               <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
               <overlayLayer>Body</overlayLayer>
-              <baseLayer>8</baseLayer>
+              <baseLayer>10</baseLayer>
             </li>
 
             <li Class="PawnRenderNodeProperties_Parent">
@@ -45,7 +43,7 @@
               <debugLabel>Firefoam</debugLabel>
               <workerClass>PawnRenderNodeWorker_OverlayFirefoam</workerClass>
               <overlayLayer>Body</overlayLayer>
-              <baseLayer>40</baseLayer>
+              <baseLayer>20</baseLayer>
             </li>
 
           </children>
@@ -70,6 +68,25 @@
           <skipFlag>Head</skipFlag>
           <pawnType>Any</pawnType>
           <baseLayer>50</baseLayer>
+          <useRottenColor>true</useRottenColor>
+          <drawSize>1</drawSize>
+          <drawData>
+            <dataNorth>
+              <rotationOffset>0</rotationOffset>
+              <offset>(0, 0, 0)</offset>
+            </dataNorth>
+            <dataEast>
+              <offset>(0, 0, 0)</offset>
+            </dataEast>
+            <dataSouth>
+              <rotationOffset>0</rotationOffset>
+              <offset>(0, 0, 0)</offset>
+              <flip>true</flip>
+            </dataSouth>
+            <dataWest>
+              <flip>true</flip>
+            </dataWest>
+          </drawData>
 
           <children>
 

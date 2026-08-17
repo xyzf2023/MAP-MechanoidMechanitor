@@ -117,7 +117,7 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeSocialTabUser" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
         <profileVersion>1</profileVersion>
-        <bodyType>MAP_MoonFemale</bodyType>
+        <bodyType>Male</bodyType>
         <headType>MAP_MoonHead</headType>
         <hairDef>MAP_MoonHair</hairDef>
         <setHairColor>true</setHairColor>
@@ -160,7 +160,6 @@
         <allowRemoveApparel>true</allowRemoveApparel>
         <ensureApparelTracker>true</ensureApparelTracker>
         <enableHumanApparelRendering>true</enableHumanApparelRendering>
-        <apparelBodyType>Female</apparelBodyType>
       </li>
 
       <li Class="MAP_MechanoidMechanitor.CompProperties_HumanWeaponUser">
@@ -196,9 +195,13 @@
       <li>
         <bodyGraphicData>
           <texPath>Moon/MoonBody</texPath>
-          <shaderType>Cutout</shaderType>
+          <shaderType>CutoutComplex</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
-          <drawSize>1</drawSize>
+          <drawSize>1.6</drawSize>
+          <shadowData>
+            <volume>(0.35,1,0.35)</volume>
+            <offset>(0,0,0)</offset>
+          </shadowData>
         </bodyGraphicData>
       </li>
     </lifeStages>
