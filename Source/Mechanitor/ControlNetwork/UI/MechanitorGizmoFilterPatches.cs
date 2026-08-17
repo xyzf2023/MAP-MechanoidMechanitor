@@ -55,4 +55,39 @@ namespace MAP_MechanoidMechanitor
             return command.defaultLabel == "CommandSelectOverseer".Translate();
         }
     }
+
+    // 隐者（MAP_Mech_Hermit）使用 Vanilla mechanitor backend，因此会从原版
+    // Pawn_MechanitorTracker.GetGizmos() 获得 Command_CallBossgroup（召唤机械族首领）。
+    // 但该按钮对隐者不可用，故仅对隐者过滤此 Gizmo。
+    // 其他机械师（含正义 MAP_Mech_Justice）一律保持原逻辑，不删除该按钮。
+    // 不修改现有 Bossgroup 菜单/召唤合法性相关补丁，也不影响任何其它机械师 Gizmo。
+    [HarmonyPatch(typeof(Pawn_MechanitorTracker), nameof(Pawn_MechanitorTracker.GetGizmos))]
+    public static class Patch_Pawn_MechanitorTracker_GetGizmos_HermitBossgroupFilter
+    {
+        private const string HermitDefName = "MAP_Mech_Hermit";
+
+        [HarmonyPostfix]
+        public static IEnumerable<Gizmo> Postfix(
+            IEnumerable<Gizmo> __result,
+            Pawn_MechanitorTracker __instance)
+        {
+            if (__result == null)
+            {
+                yield break;
+            }
+
+            Pawn? pawn = __instance?.Pawn;
+            bool isHermit = pawn?.def?.defName == HermitDefName;
+
+            foreach (Gizmo gizmo in __result)
+            {
+                if (isHermit && gizmo is Command_CallBossgroup)
+                {
+                    continue;
+                }
+
+                yield return gizmo;
+            }
+        }
+    }
 }
