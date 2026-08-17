@@ -119,9 +119,6 @@
         <profileVersion>1</profileVersion>
         <bodyType>Male</bodyType>
         <headType>MAP_MoonHead</headType>
-        <hairDef>MAP_MoonHair</hairDef>
-        <setHairColor>true</setHairColor>
-        <hairColor>(0.82, 0.84, 0.88)</hairColor>
         <skillLevels>
           <li>
             <skill>Shooting</skill>

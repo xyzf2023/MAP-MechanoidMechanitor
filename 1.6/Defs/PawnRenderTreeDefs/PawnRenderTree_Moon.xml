@@ -90,17 +90,6 @@
 
           <children>
 
-            <li>
-              <debugLabel>Hair</debugLabel>
-              <nodeClass>PawnRenderNode_Hair</nodeClass>
-              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass>
-              <pawnType>Any</pawnType>
-              <colorType>Hair</colorType>
-              <skipFlag>Hair</skipFlag>
-              <baseLayer>62</baseLayer>
-              <rotDrawMode>Fresh, Rotting</rotDrawMode>
-            </li>
-
             <li Class="PawnRenderNodeProperties_Overlay">
               <debugLabel>Head wounds</debugLabel>
               <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
