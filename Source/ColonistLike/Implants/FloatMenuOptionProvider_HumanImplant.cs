@@ -155,36 +155,65 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            // 多个部位（含可能的歧义部位）：打开第二级部位选择菜单。
-            List<FloatMenuOption> partOptions = new List<FloatMenuOption>();
+            // 多个部位（含可能的歧义部位）：外层先只返回一个“安装 XXX”，
+            // 由玩家点击后通过 OpenPartMenu 打开第二级身体部位选择菜单。
+            if (!pawn.CanReach(clickedThing, PathEndMode.Touch, Danger.Deadly))
+            {
+                yield return new FloatMenuOption(
+                    "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount)
+                        + "：" + "NoPath".Translate().CapitalizeFirst(),
+                    null);
+                yield break;
+            }
+
+            if (!pawn.CanReserve(clickedThing))
+            {
+                yield return new FloatMenuOption(
+                    "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount)
+                        + "：" + "Reserved".Translate().CapitalizeFirst(),
+                    null);
+                yield break;
+            }
+
+            yield return FloatMenuUtility.DecoratePrioritizedTask(
+                new FloatMenuOption(
+                    "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount),
+                    () => OpenPartMenu(pawn, clickedThing, recipesByPart)),
+                pawn,
+                clickedThing,
+                reservedText: "Reserved");
+        }
+
+        private static void OpenPartMenu(
+            Pawn pawn,
+            Thing item,
+            Dictionary<BodyPartRecord, List<RecipeDef>> recipesByPart)
+        {
+            List<FloatMenuOption> partOptions =
+                new List<FloatMenuOption>();
 
             foreach (KeyValuePair<BodyPartRecord, List<RecipeDef>> kvp in recipesByPart)
             {
                 BodyPartRecord part = kvp.Key;
+                List<RecipeDef> recipes = kvp.Value;
 
-                if (kvp.Value.Count == 1)
+                if (recipes.Count == 1)
                 {
                     // 唯一可解析部位：正常可点击。
-                    FloatMenuOption option = new FloatMenuOption(
-                        "MAP_MechanoidMechanitor.HumanImplant.InstallToPart".Translate(
-                            clickedThing.LabelNoCount,
-                            part.LabelCap),
-                        () => StartJob(pawn, clickedThing, part));
-
-                    partOptions.Add(
-                        FloatMenuUtility.DecoratePrioritizedTask(
-                            option,
-                            pawn,
-                            clickedThing,
-                            reservedText: "Reserved"));
-                }
-                else
-                {
-                    // 同一部位存在多个可用配方：禁用项，提示歧义。
                     partOptions.Add(
                         new FloatMenuOption(
                             "MAP_MechanoidMechanitor.HumanImplant.InstallToPart".Translate(
-                                clickedThing.LabelNoCount,
+                                item.LabelNoCount,
+                                part.LabelCap),
+                            () => StartJob(pawn, item, part)));
+                }
+                else
+                {
+                    // 同一部位存在多个可用配方：禁用项，提示歧义，绝不随机选一个。
+                    partOptions.Add(
+                        new FloatMenuOption(
+                            "MAP_MechanoidMechanitor.HumanImplant.InstallToPart".Translate(
+                                item.LabelNoCount,
                                 part.LabelCap)
                                 + "：" + "MAP_MechanoidMechanitor.HumanImplant.AmbiguousRecipe".Translate(),
                             null));
@@ -196,6 +225,56 @@ namespace MAP_MechanoidMechanitor
 
         private static void StartJob(Pawn pawn, Thing item, BodyPartRecord selectedPart)
         {
+            // 轻量二次验证：玩家从一级菜单点开二级菜单再选择部位期间，物品/Pawn 状态可能变化。
+            // 完成时仍未通过则直接放弃，不在非法状态下解除 Forbidden。
+            if (!HumanImplantUtility.CanUseHumanImplants(pawn))
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.HumanImplant.InvalidSelection".Translate(),
+                    pawn,
+                    MessageTypeDefOf.RejectInput);
+                return;
+            }
+
+            if (item == null || item.Destroyed || item.stackCount <= 0)
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.HumanImplant.InstallFailed".Translate(),
+                    pawn,
+                    MessageTypeDefOf.RejectInput);
+                return;
+            }
+
+            if (selectedPart == null
+                || !pawn.RaceProps.body.AllParts.Contains(selectedPart))
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.HumanImplant.InvalidSelection".Translate(),
+                    pawn,
+                    MessageTypeDefOf.RejectInput);
+                return;
+            }
+
+            if (!pawn.CanReach(item, PathEndMode.Touch, Danger.Deadly))
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(item.LabelNoCount)
+                        + "：" + "NoPath".Translate().CapitalizeFirst(),
+                    pawn,
+                    MessageTypeDefOf.RejectInput);
+                return;
+            }
+
+            if (!pawn.CanReserve(item))
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(item.LabelNoCount)
+                        + "：" + "Reserved".Translate().CapitalizeFirst(),
+                    pawn,
+                    MessageTypeDefOf.RejectInput);
+                return;
+            }
+
             item.SetForbidden(false, false);
 
             List<BodyPartRecord> allParts = pawn.RaceProps.body.AllParts;
