@@ -72,6 +72,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     + "已阻止异常继续中断地图生成。\n"
                     + ex);
             }
+
+            try
+            {
+                if (!storyState.InitialInsectRelationApplied)
+                {
+                    MechanoidMechanitorInsectRelationApplier
+                        .ApplyInitialInsectRelation(
+                            storyState,
+                            MechanoidMechanitorFactionRelationNotificationMode.Deferred);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] PreMapGenerate 阶段应用虫巢初始关系失败。"
+                    + "已继续执行其他剧情关系初始化。\n"
+                    + ex);
+            }
         }
     }
 }

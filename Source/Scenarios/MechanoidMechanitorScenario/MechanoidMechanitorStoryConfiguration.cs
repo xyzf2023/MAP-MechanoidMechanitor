@@ -25,6 +25,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public MechanoidMechanitorMechHiveRelationMode mechHiveRelationMode =
             MechanoidMechanitorMechHiveRelationMode.Default;
 
+        public MechanoidMechanitorInsectRelationMode insectRelationMode =
+            MechanoidMechanitorInsectRelationMode.Default;
+
         public MechanoidMechanitorMechHiveNodeFrequency mechHiveNodeFrequency =
             MechanoidMechanitorMechHiveNodeFrequency.Off;
 
@@ -63,6 +66,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 allyFactionOutpostWeight = allyFactionOutpostWeight,
                 neutralFactionOutpostWeight = neutralFactionOutpostWeight,
                 mechHiveRelationMode = mechHiveRelationMode,
+                insectRelationMode = insectRelationMode,
                 mechHiveNodeFrequency = mechHiveNodeFrequency,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
                 symbiosisCovenantEnabled = symbiosisCovenantEnabled,
@@ -204,6 +208,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 purgeDirectiveEnabled = false;
             }
 
+            if (!context.HasInsectFaction)
+            {
+                insectRelationMode = MechanoidMechanitorInsectRelationMode.Default;
+            }
+
             if (!context.HasMechHive)
             {
                 mechHiveNodeFrequency = MechanoidMechanitorMechHiveNodeFrequency.Off;
@@ -260,6 +269,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref mechHiveRelationMode,
                 "mechHiveRelationMode",
                 MechanoidMechanitorMechHiveRelationMode.Default);
+            Scribe_Values.Look(
+                ref insectRelationMode,
+                "insectRelationMode",
+                MechanoidMechanitorInsectRelationMode.Default);
             Scribe_Values.Look(
                 ref mechHiveNodeFrequency,
                 "mechHiveNodeFrequency",

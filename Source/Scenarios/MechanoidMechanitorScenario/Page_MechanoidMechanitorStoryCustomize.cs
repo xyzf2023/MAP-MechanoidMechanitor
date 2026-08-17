@@ -348,6 +348,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             configurationDraft.allyFactionOutpostWeight = snapshot.allyFactionOutpostWeight;
             configurationDraft.neutralFactionOutpostWeight = snapshot.neutralFactionOutpostWeight;
             configurationDraft.mechHiveRelationMode = snapshot.mechHiveRelationMode;
+            configurationDraft.insectRelationMode = snapshot.insectRelationMode;
             configurationDraft.mechHiveNodeFrequency = snapshot.mechHiveNodeFrequency;
             configurationDraft.purgeDirectiveEnabled = snapshot.purgeDirectiveEnabled;
             configurationDraft.symbiosisCovenantEnabled = snapshot.symbiosisCovenantEnabled;

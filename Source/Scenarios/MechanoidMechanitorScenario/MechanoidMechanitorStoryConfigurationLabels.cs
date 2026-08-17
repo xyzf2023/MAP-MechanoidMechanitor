@@ -74,6 +74,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             };
         }
 
+        public static string LabelFor(MechanoidMechanitorInsectRelationMode mode)
+        {
+            return mode switch
+            {
+                MechanoidMechanitorInsectRelationMode.Default =>
+                    "MAP_MechanoidMechanitor.Story.InsectRelationMode.Default".Translate(),
+
+                MechanoidMechanitorInsectRelationMode.PermanentNeutral =>
+                    "MAP_MechanoidMechanitor.Story.InsectRelationMode.PermanentNeutral"
+                        .Translate(),
+
+                MechanoidMechanitorInsectRelationMode.Ally =>
+                    "MAP_MechanoidMechanitor.Story.InsectRelationMode.Ally".Translate(),
+
+                _ => mode.ToString()
+            };
+        }
+
         public static string LabelFor(MechanoidMechanitorMechHiveNodeFrequency frequency)
         {
             return frequency switch

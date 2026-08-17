@@ -36,6 +36,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool hasLockedMechHiveRelation;
 
+        private bool initialInsectRelationApplied;
+
+        private bool hasLockedInsectRelation;
+
+        private Faction? cachedInsectFaction;
+
         private Faction? cachedMechHive;
 
         private MechanoidMechanitorPurgeDirectiveRuntimeState? purgeDirectiveRuntimeState;
@@ -61,6 +67,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public Faction? CachedMechHive => cachedMechHive;
 
+        public Faction? CachedInsectFaction => cachedInsectFaction;
+
         public MechanoidMechanitorPurgeDirectiveRuntimeState? PurgeDirectiveRuntimeState =>
             purgeDirectiveRuntimeState;
 
@@ -72,6 +80,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             initialOrdinaryFactionRelationsApplied;
 
         public bool InitialMechHiveRelationApplied => initialMechHiveRelationApplied;
+
+        public bool InitialInsectRelationApplied => initialInsectRelationApplied;
 
         public bool PurgeDirectiveEnabled =>
             activeConfiguration != null && activeConfiguration.purgeDirectiveEnabled;
@@ -222,6 +232,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public static bool HasAppliedInitialInsectRelation
+        {
+            get
+            {
+                GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+                return component != null && component.initialInsectRelationApplied;
+            }
+        }
+
+        public static bool HasLockedInsectRelation
+        {
+            get
+            {
+                GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+                return component != null && component.hasLockedInsectRelation;
+            }
+        }
+
         public static bool IsPurgeDirectiveActive
         {
             get
@@ -268,6 +296,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             activeConfiguration = configuration.CreateCopy();
             initialOrdinaryFactionRelationsApplied = false;
             initialMechHiveRelationApplied = false;
+            initialInsectRelationApplied = false;
             pendingFactionRelationNotifications.Clear();
             lockedPrimaryIdeo = null;
             lockedPrimaryIdeoCaptured = false;
@@ -356,6 +385,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RebuildRuntimeCaches();
         }
 
+        public void MarkInitialInsectRelationApplied()
+        {
+            initialInsectRelationApplied = true;
+            RebuildRuntimeCaches();
+        }
+
         internal void QueueFactionRelationNotification(
             Faction subject,
             Faction other,
@@ -414,6 +449,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return faction != null && cachedMechHive != null && faction == cachedMechHive;
         }
 
+        public bool IsCurrentInsectFaction(Faction? faction)
+        {
+            return faction != null
+                && cachedInsectFaction != null
+                && faction == cachedInsectFaction;
+        }
+
         /// <summary>
         /// 玩家主动进攻普通中立/普通盟友的机械巢节点时，通过统一关系接口把机械巢转为敌对。
         /// 永久（锁定）关系不允许此操作，直接返回 false，由调用方在更早阶段拦截。
@@ -451,6 +493,132 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             mode = activeConfiguration.mechHiveRelationMode;
             return true;
+        }
+
+        public bool TryGetInsectRelationMode(
+            out MechanoidMechanitorInsectRelationMode mode)
+        {
+            if (activeConfiguration == null)
+            {
+                mode = MechanoidMechanitorInsectRelationMode.Default;
+                return false;
+            }
+
+            mode = activeConfiguration.insectRelationMode;
+            return true;
+        }
+
+        private bool TryGetPlayerAndCachedInsect(
+            Faction a,
+            Faction b,
+            out Faction player,
+            out Faction insectFaction)
+        {
+            player = null!;
+            insectFaction = null!;
+
+            if (a == null || b == null || a == b || cachedInsectFaction == null)
+            {
+                return false;
+            }
+
+            if (a.IsPlayer && b == cachedInsectFaction)
+            {
+                player = a;
+                insectFaction = b;
+                return true;
+            }
+
+            if (b.IsPlayer && a == cachedInsectFaction)
+            {
+                player = b;
+                insectFaction = a;
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool TryGetLockedInsectRelation(
+            Faction a,
+            Faction b,
+            out Faction insectFaction,
+            out FactionRelationKind relationKind)
+        {
+            insectFaction = null!;
+            relationKind = FactionRelationKind.Neutral;
+
+            if (!HasActiveConfiguration)
+            {
+                return false;
+            }
+
+            GameComponent_MechanoidMechanitorStoryState? component =
+                CurrentComponent;
+
+            if (component == null
+                || !component.initialInsectRelationApplied
+                || !component.hasLockedInsectRelation
+                || component.activeConfiguration == null
+                || component.cachedInsectFaction == null
+                || a == null
+                || b == null)
+            {
+                return false;
+            }
+
+            if (!component.TryGetPlayerAndCachedInsect(
+                    a,
+                    b,
+                    out _,
+                    out insectFaction))
+            {
+                return false;
+            }
+
+            return MechanoidMechanitorInsectRelationPolicy.TryGetLockedTarget(
+                component.activeConfiguration.insectRelationMode,
+                out relationKind);
+        }
+
+        public static bool ShouldSuppressInsectPermanentHostility(
+            FactionDef a,
+            FactionDef b)
+        {
+            if (!HasActiveConfiguration || a == null || b == null)
+            {
+                return false;
+            }
+
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null)
+            {
+                return false;
+            }
+
+            bool isPlayerInsectPair =
+                (a == FactionDefOf.Insect && b == player.def)
+                || (b == FactionDefOf.Insect && a == player.def);
+
+            if (!isPlayerInsectPair)
+            {
+                return false;
+            }
+
+            GameComponent_MechanoidMechanitorStoryState? component =
+                CurrentComponent;
+
+            if (component?.activeConfiguration == null
+                || component.cachedInsectFaction == null)
+            {
+                return false;
+            }
+
+            MechanoidMechanitorInsectRelationMode mode =
+                component.activeConfiguration.insectRelationMode;
+
+            return mode == MechanoidMechanitorInsectRelationMode.PermanentNeutral
+                || mode == MechanoidMechanitorInsectRelationMode.Ally;
         }
 
         public bool TryGetPlayerAndCachedOrdinary(
@@ -696,6 +864,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            if (faction.def == FactionDefOf.Insect
+                || factionManager.OfInsects == faction)
+            {
+                RebuildRuntimeCaches();
+                return;
+            }
+
             List<Faction> currentFactions = factionManager.AllFactionsListForReading;
             if (MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(
                     faction,
@@ -770,6 +945,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "[MAP-机械族机械师] 加载存档时恢复或校准普通派系关系失败。\n"
                     + ex);
             }
+
+            try
+            {
+                if (!initialInsectRelationApplied)
+                {
+                    MechanoidMechanitorInsectRelationApplier
+                        .ApplyInitialInsectRelation(
+                            this,
+                            MechanoidMechanitorFactionRelationNotificationMode.Deferred);
+                }
+                else
+                {
+                    MechanoidMechanitorInsectRelationApplier
+                        .CalibrateLockedInsectRelation(
+                            this,
+                            MechanoidMechanitorFactionRelationNotificationMode.Deferred);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 加载存档时恢复或校准虫巢关系失败。\n"
+                    + ex);
+            }
         }
 
         private void ProcessPendingFactionRelationNotifications()
@@ -841,6 +1040,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(
                 ref initialMechHiveRelationApplied,
                 "initialMechHiveRelationApplied",
+                false);
+            Scribe_Values.Look(
+                ref initialInsectRelationApplied,
+                "initialInsectRelationApplied",
                 false);
             Scribe_Deep.Look(
                 ref purgeDirectiveRuntimeState,
@@ -1003,14 +1206,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
             customFactionOptionCache.Clear();
             ordinaryFactionCache.Clear();
             cachedMechHive = null;
+            cachedInsectFaction = null;
             hasLockedOrdinaryFactionRelations = false;
             hasLockedMechHiveRelation = false;
+            hasLockedInsectRelation = false;
 
             cachedMechHive = ResolveCachedMechHive();
+            cachedInsectFaction = ResolveCachedInsectFaction();
             RebuildOrdinaryFactionCache();
             RebuildCustomFactionOptionCache();
             hasLockedOrdinaryFactionRelations = ComputeHasLockedOrdinaryFactionRelations();
             hasLockedMechHiveRelation = ComputeHasLockedMechHiveRelation();
+            hasLockedInsectRelation = ComputeHasLockedInsectRelation();
         }
 
         private static Faction? ResolveCachedMechHive()
@@ -1024,6 +1231,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive(
                 factionManager,
                 factionManager.AllFactionsListForReading);
+        }
+
+        private static Faction? ResolveCachedInsectFaction()
+        {
+            return MechanoidMechanitorInsectFactionUtility.TryGetInsectFaction();
         }
 
         private void RebuildOrdinaryFactionCache()
@@ -1112,6 +1324,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             return MechanoidMechanitorMechHiveRelationPolicy.IsLockedMode(
                 activeConfiguration.mechHiveRelationMode);
+        }
+
+        private bool ComputeHasLockedInsectRelation()
+        {
+            if (cachedInsectFaction == null || activeConfiguration == null)
+            {
+                return false;
+            }
+
+            return MechanoidMechanitorInsectRelationPolicy.IsLockedMode(
+                activeConfiguration.insectRelationMode);
         }
 
         private bool CustomSettingsContainLockedOption()

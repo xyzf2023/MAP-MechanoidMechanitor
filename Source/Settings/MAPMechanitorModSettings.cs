@@ -55,6 +55,14 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool enableJusticeBossDiagnosticLogging = false;
 
+        /// <summary>
+        /// 默认开启。开启后，当当前存档的机械族机械师剧情配置将虫巢设为盟友时，
+        /// 阻止普通虫灾、深钻虫袭和废料虫袭事件发生。关闭后，即使虫巢为盟友，
+        /// 这些原版事件仍可正常发生。此设置不影响“永久中立”模式，也不会删除
+        /// 自然生成、任务生成或已经存在的虫巢。
+        /// </summary>
+        public bool blockInfestationIncidentsWhenInsectsAllied = true;
+
         public bool justiceBossEnableMortarShield =
             JusticeBossDifficultyValues.DefaultEnableMortarShield;
 
@@ -162,6 +170,11 @@ namespace MAP_MechanoidMechanitor
                 ref enableJusticeBossDiagnosticLogging,
                 "enableJusticeBossDiagnosticLogging",
                 false);
+
+            Scribe_Values.Look(
+                ref blockInfestationIncidentsWhenInsectsAllied,
+                "blockInfestationIncidentsWhenInsectsAllied",
+                true);
 
             Scribe_Values.Look(
                 ref justiceBossEnableMortarShield,

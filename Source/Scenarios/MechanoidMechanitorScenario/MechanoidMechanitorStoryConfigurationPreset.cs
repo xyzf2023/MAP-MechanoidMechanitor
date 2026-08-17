@@ -17,6 +17,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public MechanoidMechanitorMechHiveRelationMode mechHiveRelationMode =
             MechanoidMechanitorMechHiveRelationMode.Default;
 
+        public MechanoidMechanitorInsectRelationMode insectRelationMode =
+            MechanoidMechanitorInsectRelationMode.Default;
+
         public MechanoidMechanitorMechHiveNodeFrequency mechHiveNodeFrequency =
             MechanoidMechanitorMechHiveNodeFrequency.Off;
 
@@ -34,6 +37,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 allyFactionOutpostWeight = allyFactionOutpostWeight,
                 neutralFactionOutpostWeight = neutralFactionOutpostWeight,
                 mechHiveRelationMode = mechHiveRelationMode,
+                insectRelationMode = insectRelationMode,
                 mechHiveNodeFrequency = mechHiveNodeFrequency,
                 purgeDirectiveEnabled = purgeDirectiveEnabled,
                 symbiosisCovenantEnabled = symbiosisCovenantEnabled

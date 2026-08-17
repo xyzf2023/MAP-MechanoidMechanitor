@@ -61,6 +61,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying
                 || MechanoidMechanitorMechHiveRelationApplier.IsApplying
+                || MechanoidMechanitorInsectRelationApplier.IsApplying
                 || relation?.other == null)
             {
                 return;
@@ -92,6 +93,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (faction == null
                 || MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying
                 || MechanoidMechanitorMechHiveRelationApplier.IsApplying
+                || MechanoidMechanitorInsectRelationApplier.IsApplying
                 || Current.Game == null)
             {
                 return;
@@ -108,6 +110,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorOrdinaryFactionRelationApplier
                 .ApplyPolicyToNewOrdinaryFaction(faction);
             MechanoidMechanitorMechHiveRelationApplier.ApplyPolicyToNewMechHive(faction);
+            MechanoidMechanitorInsectRelationApplier.ApplyPolicyToNewInsectFaction(faction);
         }
     }
 }

@@ -69,4 +69,9 @@
   <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>每级效能核心工作速度偏移</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>
   <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>设置每级效能核心给予的机械族工作速度偏移。允许输入0至10000；超出范围的数值会在输入框失去焦点或离开设置页面时调整。</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>
 
+  <!-- 模块：虫巢剧情 -->
+  <MAP_MechanoidMechanitor.Settings.Insects.Section>虫巢剧情</MAP_MechanoidMechanitor.Settings.Insects.Section>
+  <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>阻止与虫巢为盟友时发生虫巢袭击事件</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>开启后，当当前存档的机械族机械师剧情配置将虫巢设为盟友时，阻止普通虫灾、深钻虫袭和废料虫袭事件发生。关闭后，即使虫巢为盟友，这些原版事件仍可正常发生。此设置不影响永久中立模式，也不会删除自然生成、任务生成或已经存在的虫巢。</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>
+
 </LanguageData>

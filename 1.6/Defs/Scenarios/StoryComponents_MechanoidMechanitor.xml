@@ -17,6 +17,14 @@
   </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
 
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+    <defName>MAP_StoryComponent_InsectRelation</defName>
+    <label>与虫巢关系</label>
+    <description>配置本局与虫巢派系的关系模式。</description>
+    <displayOrder>225</displayOrder>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentWorker_InsectRelation</workerClass>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
+
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorStoryComponentDef>
     <defName>MAP_StoryComponent_MechHiveNode</defName>
     <label>是否生成机械巢节点</label>
     <description>开启后，每隔一段时间尝试生成一个机械巢节点（建设中）。</description>

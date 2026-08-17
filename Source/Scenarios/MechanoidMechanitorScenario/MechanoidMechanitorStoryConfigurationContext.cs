@@ -14,9 +14,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public Faction? MechHive { get; }
 
+        public Faction? InsectFaction { get; }
+
         public bool HasOrdinaryFactions => ordinaryFactions.Count > 0;
 
         public bool HasMechHive => MechHive != null;
+
+        public bool HasInsectFaction => InsectFaction != null;
 
         public bool HasPursuingMechanoidsScenarioPart { get; }
 
@@ -24,11 +28,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfiguration configuration,
             List<Faction> ordinaryFactions,
             Faction? mechHive,
+            Faction? insectFaction,
             bool hasPursuingMechanoidsScenarioPart)
         {
             Configuration = configuration;
             this.ordinaryFactions = ordinaryFactions;
             MechHive = mechHive;
+            InsectFaction = insectFaction;
             HasPursuingMechanoidsScenarioPart = hasPursuingMechanoidsScenarioPart;
         }
 
@@ -41,6 +47,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 configuration,
                 ordinaryFactions,
                 MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive(),
+                MechanoidMechanitorInsectFactionUtility.TryGetInsectFaction(),
                 DetectPursuingMechanoidsScenarioPart());
         }
 
@@ -52,6 +59,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static Faction? TryGetMechHive()
         {
             return MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive();
+        }
+
+        public static Faction? TryGetInsectFaction()
+        {
+            return MechanoidMechanitorInsectFactionUtility.TryGetInsectFaction();
         }
 
         public static bool IsOrdinaryFaction(Faction? faction)

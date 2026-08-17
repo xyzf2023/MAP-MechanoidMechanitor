@@ -55,6 +55,14 @@ namespace MAP_MechanoidMechanitor
                 MechanoidMechanitorMechHiveRelationMode.Ally
             };
 
+        private static readonly MechanoidMechanitorInsectRelationMode[]
+            InsectRelationModes =
+            {
+                MechanoidMechanitorInsectRelationMode.Default,
+                MechanoidMechanitorInsectRelationMode.PermanentNeutral,
+                MechanoidMechanitorInsectRelationMode.Ally
+            };
+
         private static readonly MechanoidMechanitorMechHiveNodeFrequency[]
             MechHiveNodeFrequencies =
             {
@@ -129,6 +137,13 @@ namespace MAP_MechanoidMechanitor
                 nodes.Add(CreateSubmenuNode(
                     "肃清指令",
                     BuildPurgeDirectiveMenu));
+            }
+
+            if (context.HasInsectFaction)
+            {
+                nodes.Add(CreateSubmenuNode(
+                    "与虫巢关系",
+                    BuildInsectRelationMenu));
             }
 
             if (context.HasOrdinaryFactions)
@@ -265,6 +280,24 @@ namespace MAP_MechanoidMechanitor
                     (out string message) =>
                         MechanoidMechanitorStoryRuntimeConfigurationUtility
                             .TrySetMechHiveRelationMode(captured, out message)));
+            }
+
+            return nodes;
+        }
+
+        private static List<DebugActionNode> BuildInsectRelationMenu()
+        {
+            List<DebugActionNode> nodes =
+                new List<DebugActionNode>(InsectRelationModes.Length);
+            for (int i = 0; i < InsectRelationModes.Length; i++)
+            {
+                MechanoidMechanitorInsectRelationMode captured =
+                    InsectRelationModes[i];
+                nodes.Add(CreateActionOption(
+                    MechanoidMechanitorStoryConfigurationLabels.LabelFor(captured),
+                    (out string message) =>
+                        MechanoidMechanitorStoryRuntimeConfigurationUtility
+                            .TrySetInsectRelationMode(captured, out message)));
             }
 
             return nodes;

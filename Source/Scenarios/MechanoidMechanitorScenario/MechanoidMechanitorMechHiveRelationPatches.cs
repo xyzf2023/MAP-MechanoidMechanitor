@@ -36,6 +36,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (MechanoidMechanitorMechHiveRelationApplier.IsApplying
                 || MechanoidMechanitorOrdinaryFactionRelationApplier.IsApplying
+                || MechanoidMechanitorInsectRelationApplier.IsApplying
                 || relation?.other == null)
             {
                 return;

@@ -9,6 +9,7 @@
     <presetConfiguration>
       <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
       <mechHiveRelationMode>Default</mechHiveRelationMode>
+      <insectRelationMode>Default</insectRelationMode>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
       <symbiosisCovenantEnabled>false</symbiosisCovenantEnabled>
     </presetConfiguration>
@@ -23,6 +24,7 @@
     <presetConfiguration>
       <ordinaryFactionRelationsMode>AllHostile</ordinaryFactionRelationsMode>
       <mechHiveRelationMode>Neutral</mechHiveRelationMode>
+      <insectRelationMode>Default</insectRelationMode>
       <mechHiveNodeFrequency>Medium</mechHiveNodeFrequency>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
       <symbiosisCovenantEnabled>true</symbiosisCovenantEnabled>
@@ -38,6 +40,7 @@
     <presetConfiguration>
       <ordinaryFactionRelationsMode>AllPermanentHostile</ordinaryFactionRelationsMode>
       <mechHiveRelationMode>Ally</mechHiveRelationMode>
+      <insectRelationMode>Default</insectRelationMode>
       <mechHiveNodeFrequency>Medium</mechHiveNodeFrequency>
       <purgeDirectiveEnabled>true</purgeDirectiveEnabled>
       <symbiosisCovenantEnabled>false</symbiosisCovenantEnabled>
@@ -54,6 +57,7 @@
     <presetConfiguration>
       <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
       <mechHiveRelationMode>Default</mechHiveRelationMode>
+      <insectRelationMode>Default</insectRelationMode>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
       <symbiosisCovenantEnabled>false</symbiosisCovenantEnabled>
     </presetConfiguration>

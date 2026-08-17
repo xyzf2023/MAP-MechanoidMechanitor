@@ -44,6 +44,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static readonly AccessTools.FieldRef<
             GameComponent_MechanoidMechanitorStoryState,
+            bool> InitialInsectRelationAppliedField =
+                AccessTools.FieldRefAccess<
+                    GameComponent_MechanoidMechanitorStoryState,
+                    bool>("initialInsectRelationApplied");
+
+        private static readonly AccessTools.FieldRef<
+            GameComponent_MechanoidMechanitorStoryState,
             MechanoidMechanitorPurgeDirectiveRuntimeState> PurgeRuntimeStateField =
                 AccessTools.FieldRefAccess<
                     GameComponent_MechanoidMechanitorStoryState,
@@ -91,6 +98,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ConfigurationOriginField(storyState);
             bool originalInitialOrdinary = InitialOrdinaryRelationsAppliedField(storyState);
             bool originalInitialMechHive = InitialMechHiveRelationAppliedField(storyState);
+            bool originalInitialInsect = InitialInsectRelationAppliedField(storyState);
             MechanoidMechanitorPurgeDirectiveRuntimeState? originalPurgeRuntime =
                 PurgeRuntimeStateField(storyState);
 
@@ -114,6 +122,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 不能把它重新当成“新游戏初始关系”执行一遍。
             InitialOrdinaryRelationsAppliedField(storyState) = true;
             InitialMechHiveRelationAppliedField(storyState) = true;
+            InitialInsectRelationAppliedField(storyState) = true;
 
             // 原本没有剧情配置的存档不应继承任何潜在的旧肃清运行痕迹。
             // 临时引导失败时会恢复原引用；只有实际配置变更成功后才保留这份干净状态。
@@ -137,6 +146,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     originalOrigin,
                     originalInitialOrdinary,
                     originalInitialMechHive,
+                    originalInitialInsect,
                     originalPurgeRuntime);
                 throw;
             }
@@ -149,6 +159,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     originalOrigin,
                     originalInitialOrdinary,
                     originalInitialMechHive,
+                    originalInitialInsect,
                     originalPurgeRuntime);
                 message = actionMessage;
                 return false;
@@ -164,6 +175,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     originalOrigin,
                     originalInitialOrdinary,
                     originalInitialMechHive,
+                    originalInitialInsect,
                     originalPurgeRuntime);
                 message = "切换剧本状态失败：运行时配置在动作完成后丢失。";
                 return false;
@@ -179,6 +191,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     originalOrigin,
                     originalInitialOrdinary,
                     originalInitialMechHive,
+                    originalInitialInsect,
                     originalPurgeRuntime);
                 message = actionMessage;
                 return true;
@@ -203,6 +216,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 neutralFactionOutpostWeight = 100,
                 allyFactionOutpostWeight = 100,
                 mechHiveRelationMode = MechanoidMechanitorMechHiveRelationMode.Default,
+                insectRelationMode = MechanoidMechanitorInsectRelationMode.Default,
                 mechHiveNodeFrequency = MechanoidMechanitorMechHiveNodeFrequency.Off,
                 purgeDirectiveEnabled = false,
                 symbiosisCovenantEnabled = false,
@@ -217,12 +231,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfigurationOrigin originalOrigin,
             bool originalInitialOrdinary,
             bool originalInitialMechHive,
+            bool originalInitialInsect,
             MechanoidMechanitorPurgeDirectiveRuntimeState? originalPurgeRuntime)
         {
             ActiveConfigurationField(storyState) = originalConfiguration!;
             ConfigurationOriginField(storyState) = originalOrigin;
             InitialOrdinaryRelationsAppliedField(storyState) = originalInitialOrdinary;
             InitialMechHiveRelationAppliedField(storyState) = originalInitialMechHive;
+            InitialInsectRelationAppliedField(storyState) = originalInitialInsect;
             PurgeRuntimeStateField(storyState) = originalPurgeRuntime!;
             storyState.RebuildRuntimeCaches();
         }
@@ -237,6 +253,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || left.neutralFactionOutpostWeight != right.neutralFactionOutpostWeight
                 || left.allyFactionOutpostWeight != right.allyFactionOutpostWeight
                 || left.mechHiveRelationMode != right.mechHiveRelationMode
+                || left.insectRelationMode != right.insectRelationMode
                 || left.mechHiveNodeFrequency != right.mechHiveNodeFrequency
                 || left.purgeDirectiveEnabled != right.purgeDirectiveEnabled
                 || left.symbiosisCovenantEnabled != right.symbiosisCovenantEnabled

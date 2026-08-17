@@ -131,6 +131,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 out message);
         }
 
+        public static bool TrySetInsectRelationMode(
+            MechanoidMechanitorInsectRelationMode mode,
+            out string message)
+        {
+            return TryApplyMutation(
+                "insectRelationMode=" + mode,
+                configuration => configuration.insectRelationMode = mode,
+                out message);
+        }
+
         public static bool TrySetMechHiveNodeFrequency(
             MechanoidMechanitorMechHiveNodeFrequency frequency,
             out string message)
@@ -394,6 +404,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     || previous.neutralFactionOutpostWeight != next.neutralFactionOutpostWeight
                     || previous.allyFactionOutpostWeight != next.allyFactionOutpostWeight,
                 MechHiveRelation = previous.mechHiveRelationMode != next.mechHiveRelationMode,
+                InsectRelation = previous.insectRelationMode != next.insectRelationMode,
                 MechHiveNodeFrequency =
                     previous.mechHiveNodeFrequency != next.mechHiveNodeFrequency,
                 PurgeDirective = previous.purgeDirectiveEnabled != next.purgeDirectiveEnabled,
@@ -478,6 +489,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (!ApplyCurrentMechHiveRelation(storyState))
                 {
                     warnings.Add("机械巢关系未能即时校准");
+                }
+            }
+
+            if (changes.InsectRelation)
+            {
+                if (!ApplyCurrentInsectRelation(storyState))
+                {
+                    warnings.Add("虫巢关系未能即时校准");
                 }
             }
 
@@ -572,6 +591,45 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             return MechanoidMechanitorMechHiveRelationApplier.ApplyExactMechHiveRelation(
                 mechHive,
+                relationKind,
+                hostileOnHarmByPlayer,
+                MechanoidMechanitorFactionRelationNotificationMode.Immediate);
+        }
+
+        private static bool ApplyCurrentInsectRelation(
+            GameComponent_MechanoidMechanitorStoryState storyState)
+        {
+            if (!storyState.InitialInsectRelationApplied)
+            {
+                MechanoidMechanitorInsectRelationApplier
+                    .ApplyInitialInsectRelation(
+                        storyState,
+                        MechanoidMechanitorFactionRelationNotificationMode.Immediate);
+
+                return storyState.InitialInsectRelationApplied;
+            }
+
+            Faction? insectFaction = storyState.CachedInsectFaction;
+            if (insectFaction == null)
+            {
+                return true;
+            }
+
+            if (!MechanoidMechanitorInsectRelationPolicy
+                .TryGetEffectiveInitialTarget(
+                    storyState,
+                    out FactionRelationKind relationKind,
+                    out bool hostileOnHarmByPlayer))
+            {
+                // Default：
+                // 释放本 MOD 的关系锁。
+                // 与现有 MechHive Runtime Utility 保持同一语义：
+                // 不强行猜测或回滚已经发生的当前 FactionRelation。
+                return true;
+            }
+
+            return MechanoidMechanitorInsectRelationApplier.ApplyExactInsectRelation(
+                insectFaction,
                 relationKind,
                 hostileOnHarmByPlayer,
                 MechanoidMechanitorFactionRelationNotificationMode.Immediate);
@@ -697,6 +755,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             public bool FactionOutpostFrequency;
             public bool FactionOutpostWeights;
             public bool MechHiveRelation;
+            public bool InsectRelation;
             public bool MechHiveNodeFrequency;
             public bool PurgeDirective;
             public bool SymbiosisCovenant;
@@ -707,6 +766,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || FactionOutpostFrequency
                 || FactionOutpostWeights
                 || MechHiveRelation
+                || InsectRelation
                 || MechHiveNodeFrequency
                 || PurgeDirective
                 || SymbiosisCovenant

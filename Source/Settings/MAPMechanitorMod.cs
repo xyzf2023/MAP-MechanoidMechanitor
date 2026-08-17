@@ -123,6 +123,8 @@ namespace MAP_MechanoidMechanitor
 
             DrawStrategicNodeSettings(listing);
 
+            DrawInsectStorySettings(listing);
+
             DrawJusticeBossDifficultySettings(listing);
 
             settingsContentHeight =
@@ -133,6 +135,26 @@ namespace MAP_MechanoidMechanitor
             listing.End();
 
             Widgets.EndScrollView();
+        }
+
+        private static void DrawInsectStorySettings(Listing_Standard listing)
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            listing.GapLine();
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.Insects.Section".Translate());
+
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label"
+                    .Translate(),
+                ref Settings.blockInfestationIncidentsWhenInsectsAllied,
+                "MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description"
+                    .Translate());
         }
 
         private static void DrawJusticeBossDifficultySettings(
