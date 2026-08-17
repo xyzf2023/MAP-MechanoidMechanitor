@@ -400,7 +400,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // （例如空投 Raid 尚未形成满足条件的 ActiveThreat 时，可稍后再次尝试）。
         public static bool DevForcePendingOfferForCurrentMap()
         {
-            if (!Prefs.DevMode || Find.CurrentMap == null)
+            if (!Prefs.DevMode || Find.CurrentMap == null || Find.TickManager == null)
             {
                 return false;
             }
@@ -422,6 +422,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 runtime.pendingRaids.FirstOrDefault(item => item.map == map);
 
             if (pending == null)
+            {
+                return false;
+            }
+
+            int now = Find.TickManager.TicksGame;
+
+            // DEV 仍保留正式的 600 tick 等待；forceOffer 只用于跳过 Rand.Chance，
+            // 不能提前到 evaluateAtTick 之前评估。
+            if (now < pending.evaluateAtTick)
             {
                 return false;
             }

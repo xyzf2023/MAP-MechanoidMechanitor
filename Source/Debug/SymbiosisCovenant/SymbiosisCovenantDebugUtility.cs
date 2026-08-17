@@ -59,7 +59,27 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            state.SynchronizeNow();
+            // 仅首次未完成初始化时建立必要记录；已初始化后，
+            // Debug 动作不得为“获取状态”而主动推进提案、团结度日更、
+            // 成员退出等正式业务。
+            if (!state.Initialized)
+            {
+                state.SynchronizeNow();
+            }
+
+            message = string.Empty;
+            return true;
+        }
+
+        // ===== 统一 DevMode 检查（写状态 API 必须先过此关） =====
+
+        private static bool TryRequireDevMode(out string message)
+        {
+            if (!Prefs.DevMode)
+            {
+                message = "当前未启用开发者模式。";
+                return false;
+            }
 
             message = string.Empty;
             return true;
@@ -103,6 +123,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TrySetUnity(float value, out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -125,6 +150,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryChangeUnity(float delta, out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -150,6 +180,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryUpdateUnityDaily(out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -172,6 +207,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryRecalculateLevel(out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -198,6 +238,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryBroadcastDeclaration(out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -235,12 +280,18 @@ namespace MAP_MechanoidMechanitor
             GameComponent_SymbiosisCovenantState? state =
                 GameComponent_SymbiosisCovenantState.CurrentComponent;
 
-            if (state == null)
+            if (state == null
+                || !GameComponent_SymbiosisCovenantState.IsActive)
             {
                 return new List<Faction>();
             }
 
-            state.SynchronizeNow();
+            // 仅首次未完成初始化时建立必要记录；已初始化后，
+            // 展开 Debug 菜单不应推动正式系统。
+            if (!state.Initialized)
+            {
+                state.SynchronizeNow();
+            }
 
             return state.GetRecordsSorted()
                 .Where(record => record.Faction != null)
@@ -268,6 +319,11 @@ namespace MAP_MechanoidMechanitor
             if (faction == null)
             {
                 message = "指定派系为空。";
+                return false;
+            }
+
+            if (!TryRequireDevMode(out message))
+            {
                 return false;
             }
 
@@ -308,6 +364,11 @@ namespace MAP_MechanoidMechanitor
             if (faction == null)
             {
                 message = "指定派系为空。";
+                return false;
+            }
+
+            if (!TryRequireDevMode(out message))
+            {
                 return false;
             }
 
@@ -359,6 +420,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -393,6 +459,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -424,6 +495,11 @@ namespace MAP_MechanoidMechanitor
             if (faction == null)
             {
                 message = "指定派系为空。";
+                return false;
+            }
+
+            if (!TryRequireDevMode(out message))
+            {
                 return false;
             }
 
@@ -486,6 +562,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -520,6 +601,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -546,6 +632,11 @@ namespace MAP_MechanoidMechanitor
             if (faction == null)
             {
                 message = "指定派系为空。";
+                return false;
+            }
+
+            if (!TryRequireDevMode(out message))
+            {
                 return false;
             }
 
@@ -578,6 +669,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -604,6 +700,11 @@ namespace MAP_MechanoidMechanitor
             if (faction == null)
             {
                 message = "指定派系为空。";
+                return false;
+            }
+
+            if (!TryRequireDevMode(out message))
+            {
                 return false;
             }
 
@@ -642,6 +743,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(
                     out GameComponent_SymbiosisCovenantState? state,
                     out message)
@@ -670,14 +776,13 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TrySpawnTradeDelegationNow(out string message)
         {
-            if (!TryGetActiveState(out _, out message))
+            if (!TryRequireDevMode(out message))
             {
                 return false;
             }
 
-            if (!Prefs.DevMode)
+            if (!TryGetActiveState(out _, out message))
             {
-                message = "当前未启用开发者模式。";
                 return false;
             }
 
@@ -700,6 +805,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryRescheduleTradeDelegation(out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(out _, out message))
             {
                 return false;
@@ -718,6 +828,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryMakeTradeDelegationDueNow(out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(out _, out message))
             {
                 return false;
@@ -738,6 +853,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryForceCurrentThreatAidOffer(out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(out _, out message))
             {
                 return false;
@@ -759,29 +879,73 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryForcePendingRaidAidOffer(out string message)
         {
-            if (!TryGetActiveState(out _, out message))
+            if (!TryRequireDevMode(out message))
             {
                 return false;
             }
 
-            if (SymbiosisCovenantMilitaryAidUtility.DevForcePendingOfferForCurrentMap())
+            if (!TryGetActiveState(
+                    out GameComponent_SymbiosisCovenantState? state,
+                    out message)
+                || state == null)
+            {
+                return false;
+            }
+
+            Map? map = Find.CurrentMap;
+            if (map == null)
+            {
+                message = "当前没有地图。";
+                return false;
+            }
+
+            // 先读取 Snapshot，给出更精确的失败原因。
+            SymbiosisCovenantMilitaryAidUtility
+                .SymbiosisCovenantMilitaryAidDevSnapshot snap =
+                    SymbiosisCovenantMilitaryAidUtility.GetDevSnapshot(
+                        state,
+                        map);
+
+            if (!snap.PendingEvaluation)
+            {
+                message = "当前地图没有待判定的共生盟约 Pending Raid。";
+                return false;
+            }
+
+            if (snap.PendingRaidTicksRemaining > 0)
+            {
+                message =
+                    "当前 Pending Raid 尚未到正式判定时间；剩余 "
+                    + snap.PendingRaidTicksRemaining
+                    + " ticks。"
+                    + "该 DEV 操作只跳过援助概率，不跳过 600 tick 判定延迟；"
+                    + "Pending 已保留，请等待延迟结束后再试。";
+                return false;
+            }
+
+            if (SymbiosisCovenantMilitaryAidUtility
+                    .DevForcePendingOfferForCurrentMap())
             {
                 message =
                     "已使用真实 Pending Raid 数据强制发送共同防卫援助询问；"
-                    + "随机概率已跳过。";
+                    + "随机概率已跳过（仍保留 600 tick 判定延迟与其他资格检查）。";
                 return true;
             }
 
             message =
-                "当前没有可处理的 Pending Raid，或 ActiveThreat / 响应Faction / "
-                + "冷却等条件尚不满足。"
-                + "（若为空投 Raid 尚未形成满足条件的 ActiveThreat，"
-                + "Pending 已被保留，可稍后重试。）";
+                "Pending Raid 已到判定时间，但 ActiveThreat、合法响应派系、"
+                + "冷却、已有援助信或活动援军等条件不满足；"
+                + "Pending 已保留，可在条件变化后重试。";
             return false;
         }
 
         public static bool TryClearMilitaryAidState(out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(out _, out message))
             {
                 return false;
@@ -789,7 +953,10 @@ namespace MAP_MechanoidMechanitor
 
             if (SymbiosisCovenantMilitaryAidUtility.DevClearCurrentMapState())
             {
-                message = "已清除当前地图的共同防卫状态（pending / 援军 / 信件）。";
+                message =
+                    "已清除当前地图的共同防卫 Pending、援助信、冷却"
+                    + "以及活动援军追踪状态；"
+                    + "已经生成在地图上的援军不会被移除。";
                 return true;
             }
 
@@ -799,6 +966,11 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryClearMilitaryAidCooldown(out string message)
         {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
             if (!TryGetActiveState(out _, out message))
             {
                 return false;
@@ -822,9 +994,8 @@ namespace MAP_MechanoidMechanitor
             Faction? faction,
             out string message)
         {
-            if (!Prefs.DevMode)
+            if (!TryRequireDevMode(out message))
             {
-                message = "当前未启用开发者模式。";
                 return false;
             }
 
