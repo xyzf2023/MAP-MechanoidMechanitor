@@ -24,8 +24,8 @@
     <defName>MAP_MechHiveNode_Building</defName>
     <label>机械巢节点（建设中）</label>
     <description>一个正在建设中的机械巢节点。其中的机械族与防御设施尚未完全部署，但仍具备一定的防御力量。</description>
-    <siteTexture>Faction/MechHiveNode_Completed</siteTexture>
-    <expandingIconTexture>World/WorldObjects/Expanding/Sites/SleepingPawns</expandingIconTexture>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>Faction/NewMechHive</expandingIconTexture>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_MechHiveNode</workerClass>
     <wantsThreatPoints>false</wantsThreatPoints>
     <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
@@ -38,8 +38,8 @@
     <defName>MAP_MechHiveNode_Completed</defName>
     <label>机械巢节点</label>
     <description>一个建设完毕的机械巢节点，部署了大量休眠的机械族守军与重型防御设施。</description>
-    <siteTexture>Faction/NewMechHiveNode</siteTexture>
-    <expandingIconTexture>World/WorldObjects/Expanding/Sites/SleepingPawns</expandingIconTexture>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>Faction/NewMechHive</expandingIconTexture>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_MechHiveNode</workerClass>
     <wantsThreatPoints>false</wantsThreatPoints>
     <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>

@@ -21,8 +21,8 @@
     <defName>MAP_FactionOutpost_Building</defName>
     <label>派系前哨（建设中）</label>
     <description>一个正在建设中的派系军事前哨。防御工事尚不完善，但已经部署了守军。</description>
-    <siteTexture>World/WorldObjects/Sites/GenericSite</siteTexture>
-    <expandingIconTexture>World/WorldObjects/Expanding/Sites/SleepingPawns</expandingIconTexture>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/Outpost</expandingIconTexture>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
     <wantsThreatPoints>false</wantsThreatPoints>
     <considerEnteringAsAttack>true</considerEnteringAsAttack>
@@ -35,8 +35,8 @@
     <defName>MAP_FactionOutpost_Completed</defName>
     <label>派系前哨</label>
     <description>一处建设完成的派系军事前哨，部署了完整守军与防御工事。</description>
-    <siteTexture>World/WorldObjects/Sites/GenericSite</siteTexture>
-    <expandingIconTexture>World/WorldObjects/Expanding/Sites/SleepingPawns</expandingIconTexture>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/Outpost</expandingIconTexture>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
     <wantsThreatPoints>false</wantsThreatPoints>
     <considerEnteringAsAttack>true</considerEnteringAsAttack>
