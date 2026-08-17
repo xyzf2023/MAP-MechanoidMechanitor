@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -101,7 +102,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             string itemLabel = item.LabelNoCount;
-            string partLabel = selectedPart.LabelCap;
+            string partLabel = selectedPart!.LabelCap;
 
             if (!HumanImplantUtility.TryInstall(pawn, item, recipe, selectedPart, out string? failureReason))
             {
