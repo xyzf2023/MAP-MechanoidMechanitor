@@ -255,6 +255,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 symbiosisCovenantEnabled = false;
             }
+
+            if (!FactionOutpostFactionUtility.HasAnyEligibleFaction())
+            {
+                factionOutpostFrequency = MechanoidMechanitorFactionOutpostFrequency.Off;
+            }
         }
 
         public void ExposeData()

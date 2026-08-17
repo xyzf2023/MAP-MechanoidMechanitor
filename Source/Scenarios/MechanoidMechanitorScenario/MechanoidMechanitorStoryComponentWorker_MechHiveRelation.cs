@@ -16,24 +16,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override bool ShouldShow(MechanoidMechanitorStoryConfigurationContext context)
         {
-            return context.HasMechHive;
+            return true;
         }
 
         public override bool CanInteract(MechanoidMechanitorStoryConfigurationContext context)
         {
-            return !context.HasPursuingMechanoidsScenarioPart;
+            return context.HasMechHive && !context.HasPursuingMechanoidsScenarioPart;
         }
 
         public override string? GetDisabledReason(
             MechanoidMechanitorStoryConfigurationContext context)
         {
-            if (CanInteract(context))
+            if (!context.HasMechHive)
             {
-                return null;
+                return "MAP_MechanoidMechanitor.Story.NoMechHive".Translate();
             }
 
-            return "MAP_MechanoidMechanitor.Story.MechHiveRelation.PursuingMechanoidsDisabledReason"
-                .Translate();
+            if (context.HasPursuingMechanoidsScenarioPart)
+            {
+                return "MAP_MechanoidMechanitor.Story.MechHiveRelation.PursuingMechanoidsDisabledReason"
+                    .Translate();
+            }
+
+            return null;
         }
 
         public override string? GetSummaryValue(

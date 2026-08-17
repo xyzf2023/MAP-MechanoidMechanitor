@@ -33,6 +33,7 @@
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>自由调整本局启用的剧情组件。部分选项会根据其他组件的设置自动禁用。</MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>载入预设</MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>
   <MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>开始游戏</MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.NoComponentsAvailable>当前世界条件下没有可配置的剧情组件。你仍可以直接开始游戏。</MAP_MechanoidMechanitor.Scenario.CustomizePage.NoComponentsAvailable>
 
   <!-- 模块：普通派系关系 -->
   <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>默认</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>

@@ -112,7 +112,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool useTwoColumns = availableWidth >= TwoColumnMinWidth;
 
             float contentHeight;
-            if (useTwoColumns)
+            if (components.Count == 0)
+            {
+                contentHeight = 0f;
+            }
+            else if (useTwoColumns)
             {
                 float leftWidth = availableWidth * LeftColumnRatio;
                 float rightWidth = availableWidth - leftWidth - ColumnGap;
@@ -165,7 +169,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 viewHeight);
             Widgets.BeginScrollView(scrollOutRect, ref scrollPosition, scrollViewRect);
 
-            if (useTwoColumns)
+            if (components.Count == 0)
+            {
+                DrawNoComponentsMessage(scrollViewRect.ContractedBy(HorizontalPadding));
+            }
+            else if (useTwoColumns)
             {
                 float leftWidth = availableWidth * LeftColumnRatio;
                 float rightWidth = availableWidth - leftWidth - ColumnGap;
@@ -411,6 +419,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .ThenBy(def => def.defName, StringComparer.Ordinal)
                 .Where(def => def.Worker.ShouldShow(context))
                 .ToList();
+        }
+
+        private static void DrawNoComponentsMessage(Rect rect)
+        {
+            GameFont previousFont = Text.Font;
+            TextAnchor previousAnchor = Text.Anchor;
+            bool previousWordWrap = Text.WordWrap;
+            Color previousColor = GUI.color;
+            try
+            {
+                Text.Font = GameFont.Small;
+                Text.WordWrap = true;
+                Text.Anchor = TextAnchor.MiddleCenter;
+                GUI.color = DescriptionColor;
+                Widgets.Label(
+                    rect,
+                    "MAP_MechanoidMechanitor.Scenario.CustomizePage.NoComponentsAvailable".Translate());
+            }
+            finally
+            {
+                GUI.color = previousColor;
+                Text.Font = previousFont;
+                Text.Anchor = previousAnchor;
+                Text.WordWrap = previousWordWrap;
+            }
         }
     }
 }

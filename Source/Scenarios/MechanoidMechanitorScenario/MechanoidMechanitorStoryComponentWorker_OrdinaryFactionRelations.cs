@@ -41,7 +41,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override bool ShouldShow(MechanoidMechanitorStoryConfigurationContext context)
         {
+            return true;
+        }
+
+        public override bool CanInteract(MechanoidMechanitorStoryConfigurationContext context)
+        {
             return context.HasOrdinaryFactions;
+        }
+
+        public override string? GetDisabledReason(
+            MechanoidMechanitorStoryConfigurationContext context)
+        {
+            if (context.HasOrdinaryFactions)
+            {
+                return null;
+            }
+
+            return "MAP_MechanoidMechanitor.Story.NoOrdinaryFactions".Translate();
         }
 
         public override string? GetSummaryValue(
@@ -72,13 +88,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfiguration configuration = context.Configuration;
             bool drawFactionListThisFrame = configuration.ordinaryFactionRelationsMode
                 == MechanoidMechanitorOrdinaryFactionRelationsMode.Custom;
+            bool canInteract = CanInteract(context);
 
             float contentY = DrawCardHeaderAndDropdown(
                 rect,
                 context,
                 MechanoidMechanitorStoryConfigurationLabels.LabelFor(
                     configuration.ordinaryFactionRelationsMode),
-                enabled: true,
+                canInteract,
                 () => OpenDropdownMenu(
                     GlobalModes,
                     MechanoidMechanitorStoryConfigurationLabels.LabelFor,
