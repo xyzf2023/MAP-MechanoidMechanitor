@@ -74,7 +74,6 @@
 
   <!-- 模块：肃清指令 -->
   <MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>派系：机械巢不存在</MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>
-  <MAP_MechanoidMechanitor.PurgeDirective.Scenario.DisabledReason>需要与机械巢的关系为盟友才能启用。</MAP_MechanoidMechanitor.PurgeDirective.Scenario.DisabledReason>
 
   <!-- 模块：共生盟约 -->
   <MAP_MechanoidMechanitor.Symbiosis.Scenario.NoEligibleFactionDisabledReason>不存在可以加入盟约的派系</MAP_MechanoidMechanitor.Symbiosis.Scenario.NoEligibleFactionDisabledReason>
