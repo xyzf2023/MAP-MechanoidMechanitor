@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
 
-  <!-- 模块：恋人植入体安装 -->
-  <MAP_MechanoidMechanitor.Lover.Implant.Install>安装{0}</MAP_MechanoidMechanitor.Lover.Implant.Install>
-  <MAP_MechanoidMechanitor.Lover.Implant.InstallToPart>安装{0}：{1}</MAP_MechanoidMechanitor.Lover.Implant.InstallToPart>
-  <MAP_MechanoidMechanitor.Lover.Implant.NoValidPart>没有可安装的身体部位</MAP_MechanoidMechanitor.Lover.Implant.NoValidPart>
-  <MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection>选定的身体部位已无法安装该植入体</MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection>
-  <MAP_MechanoidMechanitor.Lover.Implant.InstallFailed>植入体安装失败</MAP_MechanoidMechanitor.Lover.Implant.InstallFailed>
-  <MAP_MechanoidMechanitor.Lover.Implant.InstallSucceeded>{0}已将{1}安装至{2}。</MAP_MechanoidMechanitor.Lover.Implant.InstallSucceeded>
-
   <!-- 模块：配偶与婚姻关系 -->
   <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button>指定配偶……</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button>
   <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>选择一名殖民者成为当前授权机械体的配偶。更换配偶时会与旧配偶离婚。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>

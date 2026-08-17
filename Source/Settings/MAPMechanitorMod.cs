@@ -77,13 +77,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             listing.CheckboxLabeled(
-                "MAP_MechanoidMechanitor.Settings.LoverImplants.Label".Translate(),
-                ref Settings!.enableLoverImplants,
-                "MAP_MechanoidMechanitor.Settings.LoverImplants.Description".Translate());
-            if (LoverImplantFeatureState.RestartRequired)
+                "MAP_MechanoidMechanitor.Settings.MoonImplants.Label".Translate(),
+                ref Settings!.enableMoonImplants,
+                "MAP_MechanoidMechanitor.Settings.MoonImplants.Description".Translate());
+            if (HumanImplantFeatureState.RestartRequired)
             {
                 listing.Label(
-                    "MAP_MechanoidMechanitor.Settings.LoverImplants.RestartRequired".Translate());
+                    "MAP_MechanoidMechanitor.Settings.MoonImplants.RestartRequired".Translate());
             }
 
             DrawProductivityCoreWorkSpeedSetting(listing);

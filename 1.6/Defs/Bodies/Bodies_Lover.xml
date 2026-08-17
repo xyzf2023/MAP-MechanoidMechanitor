@@ -64,11 +64,11 @@
 
               <parts>
 
-                <!-- 颅骨 -->
+                <!-- 大脑（原属颅骨，移除颅骨后直接挂到头部，显式声明内部深度） -->
                 <li>
-                  <def>Skull</def>
-                  <customLabel>仿生颅骨</customLabel>
-                  <coverage>0.18</coverage>
+                  <def>Brain</def>
+                  <customLabel>仿生大脑</customLabel>
+                  <coverage>0.8</coverage>
                   <depth>Inside</depth>
 
                   <groups>
@@ -76,23 +76,6 @@
                     <li>Eyes</li>
                     <li>FullHead</li>
                   </groups>
-
-                  <parts>
-
-                    <!-- 大脑 -->
-                    <li>
-                      <def>Brain</def>
-                      <customLabel>仿生大脑</customLabel>
-                      <coverage>0.8</coverage>
-
-                      <groups>
-                        <li>UpperHead</li>
-                        <li>Eyes</li>
-                        <li>FullHead</li>
-                      </groups>
-                    </li>
-
-                  </parts>
                 </li>
 
                 <!-- 左眼 -->
@@ -173,6 +156,7 @@
                 <!-- 下巴 -->
                 <li>
                   <def>Jaw</def>
+                  <customLabel>仿生下巴</customLabel>
                   <coverage>0.15</coverage>
 
                   <groups>
@@ -218,20 +202,6 @@
 
           <parts>
 
-            <!-- 左锁骨 -->
-            <li>
-              <def>Clavicle</def>
-              <customLabel>仿生左锁骨</customLabel>
-              <coverage>0.09</coverage>
-              <height>Top</height>
-              <depth>Inside</depth>
-              <flipGraphic>true</flipGraphic>
-
-              <groups>
-                <li>Torso</li>
-              </groups>
-            </li>
-
             <!-- 左臂 -->
             <li>
               <def>Arm</def>
@@ -245,31 +215,7 @@
 
               <parts>
 
-                <!-- 左肱骨 -->
-                <li>
-                  <def>Humerus</def>
-                  <customLabel>仿生左肱骨</customLabel>
-                  <coverage>0.1</coverage>
-                  <depth>Inside</depth>
-
-                  <groups>
-                    <li>Arms</li>
-                  </groups>
-                </li>
-
-                <!-- 左桡骨 -->
-                <li>
-                  <def>Radius</def>
-                  <customLabel>仿生左桡骨</customLabel>
-                  <coverage>0.1</coverage>
-                  <depth>Inside</depth>
-
-                  <groups>
-                    <li>Arms</li>
-                  </groups>
-                </li>
-
-                <!-- 左手 -->
+                <!-- 左手（LeftHand 组直接挂在 Hand 上） -->
                 <li>
                   <def>Hand</def>
                   <customLabel>左手</customLabel>
@@ -279,62 +225,8 @@
 
                   <groups>
                     <li>Hands</li>
+                    <li>LeftHand</li>
                   </groups>
-
-                  <parts>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>左小指</customLabel>
-                      <coverage>0.06</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>LeftHand</li>
-                      </groups>
-                    </li>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>左无名指</customLabel>
-                      <coverage>0.07</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>LeftHand</li>
-                      </groups>
-                    </li>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>左中指</customLabel>
-                      <coverage>0.08</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>LeftHand</li>
-                        <li>MiddleFingers</li>
-                      </groups>
-                    </li>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>左食指</customLabel>
-                      <coverage>0.07</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>LeftHand</li>
-                      </groups>
-                    </li>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>左拇指</customLabel>
-                      <coverage>0.08</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>LeftHand</li>
-                      </groups>
-                    </li>
-
-                  </parts>
                 </li>
 
               </parts>
@@ -356,19 +248,6 @@
 
           <parts>
 
-            <!-- 右锁骨 -->
-            <li>
-              <def>Clavicle</def>
-              <customLabel>仿生右锁骨</customLabel>
-              <coverage>0.09</coverage>
-              <height>Top</height>
-              <depth>Inside</depth>
-
-              <groups>
-                <li>Torso</li>
-              </groups>
-            </li>
-
             <!-- 右臂 -->
             <li>
               <def>Arm</def>
@@ -381,31 +260,7 @@
 
               <parts>
 
-                <!-- 右肱骨 -->
-                <li>
-                  <def>Humerus</def>
-                  <customLabel>仿生右肱骨</customLabel>
-                  <coverage>0.1</coverage>
-                  <depth>Inside</depth>
-
-                  <groups>
-                    <li>Arms</li>
-                  </groups>
-                </li>
-
-                <!-- 右桡骨 -->
-                <li>
-                  <def>Radius</def>
-                  <customLabel>仿生右桡骨</customLabel>
-                  <coverage>0.1</coverage>
-                  <depth>Inside</depth>
-
-                  <groups>
-                    <li>Arms</li>
-                  </groups>
-                </li>
-
-                <!-- 右手 -->
+                <!-- 右手（RightHand 组直接挂在 Hand 上） -->
                 <li>
                   <def>Hand</def>
                   <customLabel>右手</customLabel>
@@ -414,62 +269,8 @@
 
                   <groups>
                     <li>Hands</li>
+                    <li>RightHand</li>
                   </groups>
-
-                  <parts>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>右小指</customLabel>
-                      <coverage>0.06</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>RightHand</li>
-                      </groups>
-                    </li>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>右无名指</customLabel>
-                      <coverage>0.07</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>RightHand</li>
-                      </groups>
-                    </li>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>右中指</customLabel>
-                      <coverage>0.08</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>RightHand</li>
-                        <li>MiddleFingers</li>
-                      </groups>
-                    </li>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>右食指</customLabel>
-                      <coverage>0.07</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>RightHand</li>
-                      </groups>
-                    </li>
-
-                    <li>
-                      <def>Finger</def>
-                      <customLabel>右拇指</customLabel>
-                      <coverage>0.08</coverage>
-                      <groups>
-                        <li>Hands</li>
-                        <li>RightHand</li>
-                      </groups>
-                    </li>
-
-                  </parts>
                 </li>
 
               </parts>
@@ -505,30 +306,6 @@
 
           <parts>
 
-            <!-- 左股骨 -->
-            <li>
-              <def>Femur</def>
-              <customLabel>仿生左股骨</customLabel>
-              <coverage>0.1</coverage>
-              <depth>Inside</depth>
-
-              <groups>
-                <li>Legs</li>
-              </groups>
-            </li>
-
-            <!-- 左胫骨 -->
-            <li>
-              <def>Tibia</def>
-              <customLabel>仿生左胫骨</customLabel>
-              <coverage>0.1</coverage>
-              <depth>Inside</depth>
-
-              <groups>
-                <li>Legs</li>
-              </groups>
-            </li>
-
             <!-- 左脚 -->
             <li>
               <def>Foot</def>
@@ -539,55 +316,6 @@
               <groups>
                 <li>Feet</li>
               </groups>
-
-              <parts>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>左小趾</customLabel>
-                  <coverage>0.06</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>左第四趾</customLabel>
-                  <coverage>0.07</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>左中趾</customLabel>
-                  <coverage>0.08</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>左第二趾</customLabel>
-                  <coverage>0.09</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>左大趾</customLabel>
-                  <coverage>0.09</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-              </parts>
             </li>
 
           </parts>
@@ -607,30 +335,6 @@
 
           <parts>
 
-            <!-- 右股骨 -->
-            <li>
-              <def>Femur</def>
-              <customLabel>仿生右股骨</customLabel>
-              <coverage>0.1</coverage>
-              <depth>Inside</depth>
-
-              <groups>
-                <li>Legs</li>
-              </groups>
-            </li>
-
-            <!-- 右胫骨 -->
-            <li>
-              <def>Tibia</def>
-              <customLabel>仿生右胫骨</customLabel>
-              <coverage>0.1</coverage>
-              <depth>Inside</depth>
-
-              <groups>
-                <li>Legs</li>
-              </groups>
-            </li>
-
             <!-- 右脚 -->
             <li>
               <def>Foot</def>
@@ -640,55 +344,6 @@
               <groups>
                 <li>Feet</li>
               </groups>
-
-              <parts>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>右小趾</customLabel>
-                  <coverage>0.06</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>右第四趾</customLabel>
-                  <coverage>0.07</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>右中趾</customLabel>
-                  <coverage>0.08</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>右第二趾</customLabel>
-                  <coverage>0.09</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-                <li>
-                  <def>Toe</def>
-                  <customLabel>右大趾</customLabel>
-                  <coverage>0.09</coverage>
-                  <groups>
-                    <li>Feet</li>
-                  </groups>
-                </li>
-
-              </parts>
             </li>
 
           </parts>

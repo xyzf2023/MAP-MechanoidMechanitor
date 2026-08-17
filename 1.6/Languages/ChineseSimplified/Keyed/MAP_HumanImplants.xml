@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：类人植入体安装（恋人旧系统已迁移为组件驱动的通用能力） -->
+  <MAP_MechanoidMechanitor.HumanImplant.Install>安装{0}</MAP_MechanoidMechanitor.HumanImplant.Install>
+  <MAP_MechanoidMechanitor.HumanImplant.InstallToPart>安装{0}：{1}</MAP_MechanoidMechanitor.HumanImplant.InstallToPart>
+  <MAP_MechanoidMechanitor.HumanImplant.NoValidPart>没有可安装的身体部位</MAP_MechanoidMechanitor.HumanImplant.NoValidPart>
+  <MAP_MechanoidMechanitor.HumanImplant.InvalidSelection>选定的身体部位已无法安装该植入体</MAP_MechanoidMechanitor.HumanImplant.InvalidSelection>
+  <MAP_MechanoidMechanitor.HumanImplant.InstallFailed>植入体安装失败</MAP_MechanoidMechanitor.HumanImplant.InstallFailed>
+  <MAP_MechanoidMechanitor.HumanImplant.InstallSucceeded>{0}已将{1}安装至{2}。</MAP_MechanoidMechanitor.HumanImplant.InstallSucceeded>
+  <MAP_MechanoidMechanitor.HumanImplant.AmbiguousRecipe>存在多个可用安装配方</MAP_MechanoidMechanitor.HumanImplant.AmbiguousRecipe>
+
+</LanguageData>

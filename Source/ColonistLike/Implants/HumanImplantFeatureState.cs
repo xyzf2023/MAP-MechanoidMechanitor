@@ -4,14 +4,13 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 恋人植入体功能的状态控制。
-    /// 与机械族机械师脑部植入体功能（MechanoidMechanitorBrainImplantFeatureState）完全独立，
-    /// 两个状态类互不直接依赖。
+    /// 类人植入体（月亮等授权机械体）功能的状态控制。
+    /// 与恋人旧植入体系统（LoverImplantFeatureState）以及机械族机械师脑部植入体系统相互独立。
     /// </summary>
-    public static class LoverImplantFeatureState
+    public static class HumanImplantFeatureState
     {
         private const string LogPrefix =
-            "[MAP-机械族机械师] LoverImplantFeatureState：";
+            "[MAP-机械族机械师] HumanImplantFeatureState：";
 
         public static bool IsInitialized { get; private set; }
 
@@ -27,7 +26,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 bool configured =
-                    MAPMechanitorMod.Settings?.enableLoverImplants == true;
+                    MAPMechanitorMod.Settings?.enableMoonImplants == true;
 
                 return configured != EnabledForSession;
             }
@@ -42,7 +41,7 @@ namespace MAP_MechanoidMechanitor
 
             IsInitialized = true;
             EnabledForSession =
-                MAPMechanitorMod.Settings?.enableLoverImplants == true;
+                MAPMechanitorMod.Settings?.enableMoonImplants == true;
 
             if (!EnabledForSession)
             {
@@ -51,13 +50,13 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
-                LoverRecipeImplantRegistrar.Register();
+                HumanImplantRecipeRegistrar.Register();
             }
             catch (Exception ex)
             {
                 EnabledForSession = false;
                 Log.Error(
-                    $"{LogPrefix}初始化恋人植入体功能失败：{ex}");
+                    $"{LogPrefix}初始化类人植入体功能失败：{ex}");
             }
         }
     }

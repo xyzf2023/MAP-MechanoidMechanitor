@@ -2,11 +2,11 @@
 <Defs>
 
   <BodyTypeDef>
-    <defName>MAP_LoverFemale</defName>
+    <defName>MAP_MoonFemale</defName>
     <headOffset>(0.10, 0.34)</headOffset>
     <bodyGraphicScale>(1, 1)</bodyGraphicScale>
-    <bodyNakedGraphicPath>Lover/Lover_FullBody/LoverFullBody</bodyNakedGraphicPath>
-    <bodyDessicatedGraphicPath>Lover/Lover_FullBody/LoverFullBody</bodyDessicatedGraphicPath>
+    <bodyNakedGraphicPath>Moon/MoonBody</bodyNakedGraphicPath>
+    <bodyDessicatedGraphicPath>Moon/MoonBody</bodyDessicatedGraphicPath>
     <attachPoints>
       <li>
         <offset>(-.2, 0, .05)</offset>

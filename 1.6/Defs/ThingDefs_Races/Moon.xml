@@ -2,9 +2,9 @@
 <Defs>
 
   <ThingDef ParentName="BaseMechanoid">
-    <defName>MAP_Mech_Lover</defName>
-    <label>「恋人」</label>
-    <description>一台具有仿生结构的特殊机械体。</description>
+    <defName>MAP_Mech_Moon</defName>
+    <label>「月亮」</label>
+    <description>一台采用类人结构并保留完整人类式着装与自维护能力的特殊机械体。</description>
 
     <statBases>
       <MarketValue>1200</MarketValue>
@@ -60,10 +60,10 @@
     </tools>
 
     <race>
-      <body>MAP_Body_Lover</body>
+      <body>MAP_Body_Moon</body>
       <intelligence>ToolUser</intelligence>
       <thinkTreeMain>Mechanoid</thinkTreeMain>
-      <renderTree>MAP_Lover</renderTree>
+      <renderTree>MAP_Moon</renderTree>
       <baseBodySize>1.0</baseBodySize>
       <baseHealthScale>1.32</baseHealthScale>
 
@@ -101,8 +101,8 @@
       <Steel>20</Steel>
       <Plasteel>10</Plasteel>
     </butcherProducts>
-    
-    <uiIconPath>Lover/Lover_fullbody</uiIconPath>
+
+    <uiIconPath>Moon/Moon_fullbody</uiIconPath>
 
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_WardenWorkUser">
@@ -115,16 +115,13 @@
         <defaultPriority>1</defaultPriority>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeSocialTabUser" />
-      <li Class="MAP_MechanoidMechanitor.CompProperties_SyntheticCompanionUser" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
         <profileVersion>1</profileVersion>
-        <bodyType>MAP_LoverFemale</bodyType>
-        <headType>MAP_LoverHead</headType>
-        <hairDef>MAP_LoverHair</hairDef>
+        <bodyType>MAP_MoonFemale</bodyType>
+        <headType>MAP_MoonHead</headType>
+        <hairDef>MAP_MoonHair</hairDef>
         <setHairColor>true</setHairColor>
         <hairColor>(0.82, 0.84, 0.88)</hairColor>
-        <childhoodBackstory>MAP_Lover_Childhood</childhoodBackstory>
-        <adulthoodBackstory>MAP_Lover_Adulthood</adulthoodBackstory>
         <skillLevels>
           <li>
             <skill>Shooting</skill>
@@ -158,20 +155,30 @@
         <ensureWorkSettings>true</ensureWorkSettings>
         <ensureGeneTracker>true</ensureGeneTracker>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_HumanApparelUser">
+        <allowWearFloatMenu>true</allowWearFloatMenu>
+        <allowRemoveApparel>true</allowRemoveApparel>
+        <ensureApparelTracker>true</ensureApparelTracker>
+        <enableHumanApparelRendering>true</enableHumanApparelRendering>
+        <apparelBodyType>Female</apparelBodyType>
+      </li>
+
       <li Class="MAP_MechanoidMechanitor.CompProperties_HumanWeaponUser">
         <allowEquipFloatMenu>true</allowEquipFloatMenu>
         <allowDropEquipmentFloatMenu>true</allowDropEquipmentFloatMenu>
         <ensureEquipmentTracker>true</ensureEquipmentTracker>
       </li>
 
+      <li Class="MAP_MechanoidMechanitor.CompProperties_HumanImplantUser" />
+
     </comps>
 
   </ThingDef>
 
   <PawnKindDef ParentName="BaseMechanoidKind">
-    <defName>MAP_Mech_Lover</defName>
-    <label>「恋人」</label>
-    <race>MAP_Mech_Lover</race>
+    <defName>MAP_Mech_Moon</defName>
+    <label>「月亮」</label>
+    <race>MAP_Mech_Moon</race>
 
     <fixedGender>Female</fixedGender>
 
@@ -181,27 +188,14 @@
     <allowInMechClusters>false</allowInMechClusters>
     <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
 
-    <!-- <weaponMoney>1000~1200</weaponMoney>
-
-    <weaponTags>
-      <li>Gun</li>
-    </weaponTags> -->
-
     <controlGroupPortraitZoom>1.2</controlGroupPortraitZoom>
     <destroyGearOnDrop>false</destroyGearOnDrop>
     <canStrip>true</canStrip>
 
-    <fixedChildBackstories>
-      <li>MAP_Lover_Childhood</li>
-    </fixedChildBackstories>
-    <fixedAdultBackstories>
-      <li>MAP_Lover_Adulthood</li>
-    </fixedAdultBackstories>
-
     <lifeStages Inherit="False">
       <li>
         <bodyGraphicData>
-          <texPath>Lover/Lover_FullBody/LoverFullBody</texPath>
+          <texPath>Moon/MoonBody</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>1</drawSize>

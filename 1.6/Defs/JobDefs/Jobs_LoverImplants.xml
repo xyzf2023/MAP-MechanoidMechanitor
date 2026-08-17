@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
+  <!--
+    兼容性 JobDef：仅用于让旧存档中已保存、尚未完成的 MAP_LoverInstallImplant 任务能够正常 resolve。
+    新代码不再主动创建该 JobDef；任何新安装任务都使用 MAP_HumanImplantInstall。
+    旧恋人（已无 CompHumanImplantUser）加载旧任务时，新 JobDriver 的 FailCondition 会自然终止任务，不会继续安装。
+  -->
   <JobDef>
     <defName>MAP_LoverInstallImplant</defName>
     <label>安装植入体</label>
-    <driverClass>MAP_MechanoidMechanitor.JobDriver_LoverInstallImplant</driverClass>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_HumanImplantInstall</driverClass>
     <reportString>正在安装植入体。</reportString>
   </JobDef>
 </Defs>

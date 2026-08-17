@@ -16,7 +16,7 @@ namespace MAP_MechanoidMechanitor
             new Harmony(HarmonyId).PatchAll();
             PawnNameValidationUtility.ExtendPawnNameRegex();
             MechanoidMechanitorBrainImplantFeatureState.InitializeFromSettings();
-            LoverImplantFeatureState.InitializeFromSettings();
+            HumanImplantFeatureState.InitializeFromSettings();
 
             if (Prefs.DevMode)
             {

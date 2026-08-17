@@ -2,19 +2,18 @@
 <Defs>
 
   <PawnRenderTreeDef>
-    <defName>MAP_Lover</defName>
+    <defName>MAP_Moon</defName>
 
     <root Class="PawnRenderNodeProperties_Parent">
-      <debugLabel>Lover root</debugLabel>
+      <debugLabel>Moon root</debugLabel>
       <tagDef>Root</tagDef>
 
       <children>
 
-        <!-- 整身机械体贴图：正常情况下显示；真正躺床 Lovin 时隐藏 -->
         <li>
-          <debugLabel>Full Body</debugLabel>
+          <debugLabel>Body</debugLabel>
           <nodeClass>PawnRenderNode_Body</nodeClass>
-          <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_LoverFullBody</workerClass>
+          <workerClass>PawnRenderNodeWorker_Body</workerClass>
           <tagDef>Body</tagDef>
           <skipFlag>Body</skipFlag>
           <pawnType>Any</pawnType>
@@ -26,6 +25,12 @@
               <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
               <overlayLayer>Body</overlayLayer>
               <baseLayer>8</baseLayer>
+            </li>
+
+            <li Class="PawnRenderNodeProperties_Parent">
+              <debugLabel>Apparel root</debugLabel>
+              <tagDef>ApparelBody</tagDef>
+              <baseLayer>20</baseLayer>
             </li>
 
             <li Class="PawnRenderNodeProperties_Overlay">
@@ -57,11 +62,10 @@
           <rotDrawMode>Fresh, Rotting</rotDrawMode>
         </li>
 
-        <!-- Lovin 专用头部：仅在真正躺床 Lovin 时显示 -->
         <li>
-          <debugLabel>Lovin Head</debugLabel>
+          <debugLabel>Head</debugLabel>
           <nodeClass>PawnRenderNode_Head</nodeClass>
-          <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_LoverLovinHead</workerClass>
+          <workerClass>PawnRenderNodeWorker_Head</workerClass>
           <tagDef>Head</tagDef>
           <skipFlag>Head</skipFlag>
           <pawnType>Any</pawnType>
@@ -69,11 +73,10 @@
 
           <children>
 
-            <!-- Lovin 专用头发：仅在真正躺床 Lovin 时显示 -->
             <li>
-              <debugLabel>Lovin Hair</debugLabel>
+              <debugLabel>Hair</debugLabel>
               <nodeClass>PawnRenderNode_Hair</nodeClass>
-              <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_LoverLovinHair</workerClass>
+              <workerClass>PawnRenderNodeWorker_FlipWhenCrawling</workerClass>
               <pawnType>Any</pawnType>
               <colorType>Hair</colorType>
               <skipFlag>Hair</skipFlag>
@@ -86,6 +89,12 @@
               <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
               <overlayLayer>Head</overlayLayer>
               <baseLayer>65</baseLayer>
+            </li>
+
+            <li Class="PawnRenderNodeProperties_Parent">
+              <debugLabel>Apparel root</debugLabel>
+              <tagDef>ApparelHead</tagDef>
+              <baseLayer>70</baseLayer>
             </li>
 
             <li Class="PawnRenderNodeProperties_Overlay">

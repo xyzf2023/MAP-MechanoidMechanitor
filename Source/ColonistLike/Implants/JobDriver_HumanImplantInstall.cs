@@ -6,11 +6,12 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 恋人专用安装 JobDriver。恋人自己走到物品旁，经过一段安装时间后使用。
+    /// 通用类人植入体安装 JobDriver。被授权的机械 Pawn 自己走到物品旁，经过一段安装时间后使用。
     /// 不创建医生手术账单，不调用完整医疗手术流程。
     /// 通过 job.count 保存具体身体部位在身体树中的索引，以支持存读档与左右部位区分。
+    /// 同时兼容旧存档中的 MAP_LoverInstallImplant JobDef（其 driverClass 已重定向到此 Driver）。
     /// </summary>
-    public class JobDriver_LoverInstallImplant : JobDriver
+    public class JobDriver_HumanImplantInstall : JobDriver
     {
         private const int InstallDurationTicks = 600;
 
@@ -34,8 +35,7 @@ namespace MAP_MechanoidMechanitor
             this.FailOnIncapable(PawnCapacityDefOf.Manipulation);
 
             AddFailCondition(
-                () => !LoverImplantFeatureState.EnabledForSession
-                    || !LoverImplantUtility.IsLover(pawn));
+                () => !HumanImplantUtility.CanUseHumanImplants(pawn));
 
             yield return Toils_Goto.GotoThing(
                 TargetIndex.A,
@@ -60,16 +60,16 @@ namespace MAP_MechanoidMechanitor
             if (item == null || item.Destroyed || item.stackCount <= 0)
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate(),
+                    "MAP_MechanoidMechanitor.HumanImplant.InstallFailed".Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
             }
 
-            if (!LoverRecipeImplantRegistrar.TryGetRecipe(item.def, out RecipeDef recipe))
+            if (!HumanImplantRecipeRegistrar.TryGetSingleRecipe(item.def, out RecipeDef? recipe) || recipe == null)
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection".Translate(),
+                    "MAP_MechanoidMechanitor.HumanImplant.InvalidSelection".Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
@@ -79,7 +79,22 @@ namespace MAP_MechanoidMechanitor
             if (selectedPart == null)
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.Lover.Implant.InvalidSelection".Translate(),
+                    "MAP_MechanoidMechanitor.HumanImplant.InvalidSelection".Translate(),
+                    pawn,
+                    MessageTypeDefOf.RejectInput);
+                return;
+            }
+
+            // 执行前再次验证：组件、功能、物品、配方、部位索引与配方当前仍合法。
+            if (!HumanImplantUtility.CanUseHumanImplants(pawn)
+                || !HumanImplantRecipeRegistrar.IsRegistered(item.def, recipe)
+                || selectedPart == null
+                || !pawn.RaceProps.body.AllParts.Contains(selectedPart)
+                || recipe.Worker == null
+                || !recipe.Worker.GetPartsToApplyOn(pawn, recipe).Contains(selectedPart))
+            {
+                Messages.Message(
+                    "MAP_MechanoidMechanitor.HumanImplant.InvalidSelection".Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
@@ -88,17 +103,17 @@ namespace MAP_MechanoidMechanitor
             string itemLabel = item.LabelNoCount;
             string partLabel = selectedPart.LabelCap;
 
-            if (!LoverImplantUtility.TryInstall(pawn, item, recipe, selectedPart, out string? failureReason))
+            if (!HumanImplantUtility.TryInstall(pawn, item, recipe, selectedPart, out string? failureReason))
             {
                 Messages.Message(
-                    failureReason ?? "MAP_MechanoidMechanitor.Lover.Implant.InstallFailed".Translate(),
+                    failureReason ?? "MAP_MechanoidMechanitor.HumanImplant.InstallFailed".Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput);
                 return;
             }
 
             Messages.Message(
-                "MAP_MechanoidMechanitor.Lover.Implant.InstallSucceeded".Translate(
+                "MAP_MechanoidMechanitor.HumanImplant.InstallSucceeded".Translate(
                     pawn.LabelShort,
                     itemLabel,
                     partLabel),

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>MAP_HumanImplantInstall</defName>
+    <label>安装植入体</label>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_HumanImplantInstall</driverClass>
+    <reportString>正在安装植入体。</reportString>
+  </JobDef>
+</Defs>

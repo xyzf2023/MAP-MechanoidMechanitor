@@ -7,16 +7,18 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 恋人专用植入体配方注册表。
-    /// 仅保存“物品 Def → 安装配方”的对应关系，绝不在物品上添加任何 Comp。
+    /// 类人植入体配方注册表（组件驱动，不再绑定任何特定 BodyDef / 种族）。
+    /// 仅保存“物品 Def → 可能适用的安装 RecipeDef 列表”的对应关系，绝不在物品上添加任何 Comp。
+    /// 真正的身体部位合法性在玩家点击时通过 recipe.Worker.GetPartsToApplyOn(pawn, recipe) 解决。
     /// 与机械族机械师脑部植入体系统（MechanoidMechanitorRecipeImplantRegistrar）相互独立。
     /// </summary>
-    public static class LoverRecipeImplantRegistrar
+    public static class HumanImplantRecipeRegistrar
     {
-        private const string LogPrefix = "[MAP-机械族机械师] 恋人植入体：";
+        private const string LogPrefix = "[MAP-机械族机械师] 类人植入体：";
 
-        private static readonly Dictionary<ThingDef, RecipeDef> recipesByItem =
-            new Dictionary<ThingDef, RecipeDef>();
+        // 一个物品可能对应多个合法 RecipeDef（例如附着与替换并存），因此用 List。
+        private static readonly Dictionary<ThingDef, List<RecipeDef>> recipesByItem =
+            new Dictionary<ThingDef, List<RecipeDef>>();
 
         private static readonly HashSet<ThingDef> ambiguousItems =
             new HashSet<ThingDef>();
@@ -25,7 +27,7 @@ namespace MAP_MechanoidMechanitor
 
         public static void Register()
         {
-            if (!LoverImplantFeatureState.EnabledForSession)
+            if (!HumanImplantFeatureState.EnabledForSession)
             {
                 return;
             }
@@ -37,25 +39,11 @@ namespace MAP_MechanoidMechanitor
 
             initialized = true;
 
-            BodyDef loverBody =
-                DefDatabase<BodyDef>.GetNamedSilentFail("MAP_Body_Lover");
-
-            if (loverBody == null)
-            {
-                Log.Error("[MAP-机械族机械师] 未找到 MAP_Body_Lover，恋人植入体注册已停止。");
-                return;
-            }
-
             foreach (RecipeDef recipe in DefDatabase<RecipeDef>.AllDefsListForReading)
             {
                 try
                 {
                     if (!IsSupportedRecipe(recipe))
-                    {
-                        continue;
-                    }
-
-                    if (!TargetsLoverBody(recipe, loverBody))
                     {
                         continue;
                     }
@@ -66,7 +54,7 @@ namespace MAP_MechanoidMechanitor
                         if (Prefs.DevMode)
                         {
                             Log.Message(
-                                $"[MAP-机械族机械师] 恋人植入体：跳过配方 {recipe.defName}，无法唯一识别安装物品。");
+                                $"{LogPrefix}跳过配方 {recipe.defName}，无法唯一识别安装物品。");
                         }
 
                         continue;
@@ -77,41 +65,76 @@ namespace MAP_MechanoidMechanitor
                 catch (Exception ex)
                 {
                     Log.Error(
-                        $"[MAP-机械族机械师] 恋人植入体：处理配方 {recipe?.defName ?? "null"} 时发生异常，已跳过：{ex}");
+                        $"{LogPrefix}处理配方 {recipe?.defName ?? "null"} 时发生异常，已跳过：{ex}");
                 }
             }
 
             if (Prefs.DevMode)
             {
                 Log.Message(
-                    $"[MAP-机械族机械师] 恋人植入体：注册完成，有效物品 {recipesByItem.Count} 个，歧义物品 {ambiguousItems.Count} 个。");
+                    $"{LogPrefix}注册完成，有效物品 {recipesByItem.Count} 个，歧义物品 {ambiguousItems.Count} 个。");
             }
         }
 
         /// <summary>
-        /// 仅对非歧义物品返回配方。
+        /// 返回该物品当前所有非歧义候选 RecipeDef。歧义或未知物品返回空列表。
         /// </summary>
-        public static bool TryGetRecipe(ThingDef itemDef, out RecipeDef recipe)
+        public static List<RecipeDef> GetCandidateRecipes(ThingDef itemDef)
         {
-            recipe = null!;
+            List<RecipeDef> result = new List<RecipeDef>();
 
-            if (!LoverImplantFeatureState.EnabledForSession)
+            if (!HumanImplantFeatureState.EnabledForSession
+                || itemDef == null
+                || ambiguousItems.Contains(itemDef)
+                || !recipesByItem.TryGetValue(itemDef, out List<RecipeDef>? found))
+            {
+                return result;
+            }
+
+            result.AddRange(found);
+            return result;
+        }
+
+        /// <summary>
+        /// 该物品 + 配方是否为已注册的非歧义组合。
+        /// </summary>
+        public static bool IsRegistered(ThingDef itemDef, RecipeDef recipe)
+        {
+            if (!HumanImplantFeatureState.EnabledForSession
+                || itemDef == null
+                || recipe == null
+                || ambiguousItems.Contains(itemDef)
+                || !recipesByItem.TryGetValue(itemDef, out List<RecipeDef>? found))
             {
                 return false;
             }
 
-            if (itemDef != null
-                && !ambiguousItems.Contains(itemDef)
-                && recipesByItem.TryGetValue(itemDef, out RecipeDef found))
-            {
-                recipe = found;
-                return true;
-            }
-
-            return false;
+            return found.Contains(recipe);
         }
 
-        private static bool IsSupportedRecipe(RecipeDef recipe)
+        /// <summary>
+        /// 该物品是否恰好对应一个非歧义安装配方。JobDriver 在运行时仅凭物品解析配方使用。
+        /// 歧义或未知物品返回 false。
+        /// </summary>
+        public static bool TryGetSingleRecipe(ThingDef itemDef, out RecipeDef? recipe)
+        {
+            recipe = null;
+
+            if (!HumanImplantFeatureState.EnabledForSession
+                || itemDef == null
+                || ambiguousItems.Contains(itemDef)
+                || !recipesByItem.TryGetValue(itemDef, out List<RecipeDef>? found)
+                || found == null
+                || found.Count != 1)
+            {
+                return false;
+            }
+
+            recipe = found[0];
+            return true;
+        }
+
+        public static bool IsSupportedRecipe(RecipeDef recipe)
         {
             if (!IsAttachmentRecipe(recipe) && !IsReplacementRecipe(recipe))
             {
@@ -158,41 +181,6 @@ namespace MAP_MechanoidMechanitor
             Type hediffClass = recipe.addsHediff.hediffClass;
             return hediffClass != null
                 && typeof(Hediff_AddedPart).IsAssignableFrom(hediffClass);
-        }
-
-        private static bool TargetsLoverBody(RecipeDef recipe, BodyDef loverBody)
-        {
-            if (!recipe.appliedOnFixedBodyParts.NullOrEmpty())
-            {
-                for (int i = 0; i < recipe.appliedOnFixedBodyParts.Count; i++)
-                {
-                    BodyPartDef targetDef = recipe.appliedOnFixedBodyParts[i];
-                    if (targetDef != null
-                        && loverBody.AllParts.Any(part => part.def == targetDef))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            if (!recipe.appliedOnFixedBodyPartGroups.NullOrEmpty())
-            {
-                for (int i = 0; i < recipe.appliedOnFixedBodyPartGroups.Count; i++)
-                {
-                    BodyPartGroupDef targetGroup =
-                        recipe.appliedOnFixedBodyPartGroups[i];
-
-                    if (targetGroup != null
-                        && loverBody.AllParts.Any(
-                            part => part.groups != null
-                                && part.groups.Contains(targetGroup)))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
 
         private static bool TryResolveImplantThing(
@@ -269,25 +257,32 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!recipesByItem.TryGetValue(itemDef, out RecipeDef existing))
+            if (!recipesByItem.TryGetValue(itemDef, out List<RecipeDef>? existing))
             {
-                recipesByItem.Add(itemDef, recipe);
+                existing = new List<RecipeDef>();
+                recipesByItem.Add(itemDef, existing);
+            }
+            else if (existing.Contains(recipe))
+            {
                 return;
             }
 
-            if (existing == recipe)
+            if (existing.Count >= 1)
             {
+                // 同一物品已对应不同配方，标记为歧义并禁用自动注册，避免错误安装。
+                recipesByItem.Remove(itemDef);
+                ambiguousItems.Add(itemDef);
+
+                if (Prefs.DevMode)
+                {
+                    Log.Warning(
+                        $"{LogPrefix}物品 {itemDef.defName} 同时对应多个安装配方，为避免错误安装，已禁用该物品的自动注册。");
+                }
+
                 return;
             }
 
-            recipesByItem.Remove(itemDef);
-            ambiguousItems.Add(itemDef);
-
-            if (Prefs.DevMode)
-            {
-                Log.Warning(
-                    $"[MAP-机械族机械师] 恋人植入体：物品 {itemDef.defName} 同时对应配方 {existing.defName} 与 {recipe.defName}，为避免错误安装，已禁用该物品的自动注册。");
-            }
+            existing.Add(recipe);
         }
     }
 }

@@ -8,7 +8,9 @@ namespace MAP_MechanoidMechanitor
         public bool addMechanoidMechanitorsToWorkTab = false;
         public bool enablePortraitDisplayForAllSaves = false;
         public bool enableMechanoidMechanitorBrainImplants = false;
-        public bool enableLoverImplants = false;
+
+        // 字段名已改为 enableMoonImplants；序列化 key 仍沿用旧 "enableLoverImplants" 以保证旧设置兼容。
+        public bool enableMoonImplants = false;
 
         /// <summary>
         /// 默认关闭。开启后，不含机械族机械师剧本词条的普通剧本也会在新游戏流程中
@@ -96,7 +98,7 @@ namespace MAP_MechanoidMechanitor
                 "enableMechanoidMechanitorBrainImplants",
                 false);
             Scribe_Values.Look(
-                ref enableLoverImplants,
+                ref enableMoonImplants,
                 "enableLoverImplants",
                 false);
             Scribe_Values.Look(
