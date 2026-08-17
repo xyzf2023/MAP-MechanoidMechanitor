@@ -168,13 +168,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (selectedStoryStyle.opensCustomizePage)
+            MechanoidMechanitorStoryStyleDef storyStyle = selectedStoryStyle;
+
+            if (storyStyle.opensCustomizePage)
             {
                 OpenCustomizePage();
                 return;
             }
 
-            if (!TryCommitPresetConfiguration(selectedStoryStyle))
+            MechanoidMechanitorScenarioStartConfirmationUtility.Show(
+                () => ConfirmPresetAndStart(storyStyle));
+        }
+
+        private void ConfirmPresetAndStart(MechanoidMechanitorStoryStyleDef storyStyle)
+        {
+            if (!TryCommitPresetConfiguration(storyStyle))
             {
                 return;
             }

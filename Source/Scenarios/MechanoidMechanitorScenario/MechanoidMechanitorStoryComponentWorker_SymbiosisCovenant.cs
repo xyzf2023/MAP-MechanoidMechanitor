@@ -12,7 +12,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override bool ShouldShow(MechanoidMechanitorStoryConfigurationContext context)
         {
-            return context.HasOrdinaryFactions;
+            return true;
         }
 
         public override bool CanInteract(MechanoidMechanitorStoryConfigurationContext context)
@@ -28,7 +28,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return null;
             }
 
-            return "MAP_MechanoidMechanitor.Symbiosis.Scenario.DisabledReason".Translate();
+            return "MAP_MechanoidMechanitor.Symbiosis.Scenario.NoEligibleFactionDisabledReason"
+                .Translate();
         }
 
         public override string? GetSummaryValue(

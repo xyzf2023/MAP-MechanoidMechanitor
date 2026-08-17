@@ -67,4 +67,16 @@
   <MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>手动切换该机械族机械师的意识形态。确定度将保持为100%，且不会触发传教成功或文化改革点数。</MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>
   <MAP_MechanoidMechanitor.Scenario.Ideology.CurrentIdeoSuffix>（当前）</MAP_MechanoidMechanitor.Scenario.Ideology.CurrentIdeoSuffix>
 
+  <!-- 模块：开始游戏确认 -->
+  <MAP_MechanoidMechanitor.Scenario.StartConfirmation.Text>以当前设置开始游戏？</MAP_MechanoidMechanitor.Scenario.StartConfirmation.Text>
+  <MAP_MechanoidMechanitor.Scenario.StartConfirmation.Confirm>确定</MAP_MechanoidMechanitor.Scenario.StartConfirmation.Confirm>
+  <MAP_MechanoidMechanitor.Scenario.StartConfirmation.Cancel>取消</MAP_MechanoidMechanitor.Scenario.StartConfirmation.Cancel>
+
+  <!-- 模块：肃清指令 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>派系：机械巢不存在</MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>
+  <MAP_MechanoidMechanitor.PurgeDirective.Scenario.DisabledReason>需要与机械巢的关系为盟友才能启用。</MAP_MechanoidMechanitor.PurgeDirective.Scenario.DisabledReason>
+
+  <!-- 模块：共生盟约 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Scenario.NoEligibleFactionDisabledReason>不存在可以加入盟约的派系</MAP_MechanoidMechanitor.Symbiosis.Scenario.NoEligibleFactionDisabledReason>
+
 </LanguageData>

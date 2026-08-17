@@ -241,6 +241,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         protected override void DoNext()
         {
+            MechanoidMechanitorScenarioStartConfirmationUtility.Show(
+                ConfirmCustomConfigurationAndStart);
+        }
+
+        private void ConfirmCustomConfigurationAndStart()
+        {
             if (!TryCommitConfigurationAndStart())
             {
                 return;
