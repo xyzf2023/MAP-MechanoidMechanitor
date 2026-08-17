@@ -43,11 +43,12 @@ namespace MAP_MechanoidMechanitor
     }
 
     // CompUsable normally rejects every non-flesh pawn before running its other checks.
-    // This transpiler keeps the vanilla Pawn.RaceProps getter and replaces only the
-    // RaceProperties.IsFlesh value production with a helper that ORs in authorized player
-    // mechanoids. Full colonist-like users retain their existing access, while implant-only
-    // users are admitted only when the current item is a supported mechanitor implant.
-    // Power, path, reservation, required hediffs and every CompUseEffect check remain vanilla.
+    // Keep the vanilla RaceProperties.IsFlesh getter intact, then OR its produced bool with
+    // MAP's authorized mechanical-user rule. Keeping the getter makes this transpiler
+    // composable with later patches (notably Fortified/FFF) that also rewrite IsFlesh.
+    // Full colonist-like users retain their existing access, while implant-only users are
+    // admitted only when the current item is a supported mechanitor implant. Power, path,
+    // reservation, required hediffs and every CompUseEffect check remain vanilla.
     [HarmonyPatch]
     public static class Patch_CompUsable_CanBeUsedBy_ColonistLikeMechanoid
     {
@@ -97,17 +98,18 @@ namespace MAP_MechanoidMechanitor
             return cachedCanBeUsedByMethod;
         }
 
-        private static bool IsFleshOrAuthorizedCompUsableUser(
-            RaceProperties raceProps,
+        private static bool OrAuthorizedCompUsableUser(
+            bool existingResult,
             Pawn pawn,
             CompUsable usable)
         {
-            return raceProps.IsFlesh
+            return existingResult
                 || ColonistLikeCompUsableUtility.IsAuthorizedMechanicalCompUsableUser(
                     pawn,
                     usable);
         }
 
+        [HarmonyBefore("Fortified")]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpiler(
             IEnumerable<CodeInstruction> instructions)
@@ -122,7 +124,7 @@ namespace MAP_MechanoidMechanitor
                 nameof(RaceProperties.IsFlesh));
             MethodInfo? helperMethod = AccessTools.Method(
                 typeof(Patch_CompUsable_CanBeUsedBy_ColonistLikeMechanoid),
-                nameof(IsFleshOrAuthorizedCompUsableUser));
+                nameof(OrAuthorizedCompUsableUser));
 
             if (racePropsGetter == null || isFleshGetter == null || helperMethod == null)
             {
@@ -145,10 +147,10 @@ namespace MAP_MechanoidMechanitor
                 return codes;
             }
 
-            if (!TryExpandIsFleshGetter(codes, isFleshIndex, helperMethod))
+            if (!TryAppendAuthorizedUserGate(codes, isFleshIndex, helperMethod))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}无法安全扩展 IsFlesh 值生产点（目标 getter 上存在 exception block），补丁未应用。",
+                    $"{LogPrefix}无法安全扩展 IsFlesh 值生产点（getter 或后继指令存在 exception block，或不存在安全插入位置），补丁未应用。",
                     ErrorKeyExpandFailed);
                 return codes;
             }
@@ -217,30 +219,31 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static bool TryExpandIsFleshGetter(
+        private static bool TryAppendAuthorizedUserGate(
             List<CodeInstruction> codes,
             int isFleshIndex,
             MethodInfo helperMethod)
         {
-            if (!CanSafelyInsertBefore(codes, isFleshIndex))
+            int continuationIndex = isFleshIndex + 1;
+            if (!CanSafelyInsertAfter(codes, isFleshIndex))
             {
                 return false;
             }
 
-            CodeInstruction getterInstruction = codes[isFleshIndex];
+            CodeInstruction continuationInstruction = codes[continuationIndex];
             CodeInstruction loadPawn = CreateLoadPawnParameterInstruction();
             CodeInstruction loadUsable = new CodeInstruction(OpCodes.Ldarg_0);
+            CodeInstruction helperCall = new CodeInstruction(OpCodes.Call, helperMethod);
 
-            // Stack before expansion: RaceProperties.
-            // Inserted loads push Pawn and CompUsable -> RaceProperties, Pawn, CompUsable.
-            TransferEntryLabels(getterInstruction, loadPawn);
+            // Stack after the preserved IsFlesh getter: bool existingResult.
+            // Push Pawn and CompUsable, then fold the three values through the MAP OR helper.
+            // Any branch that previously entered the continuation must enter the helper first
+            // so the stack/branch semantics remain consistent.
+            TransferEntryLabels(continuationInstruction, loadPawn);
 
-            codes.Insert(isFleshIndex, loadPawn);
-            codes.Insert(isFleshIndex + 1, loadUsable);
-
-            CodeInstruction helperCall = codes[isFleshIndex + 2];
-            helperCall.opcode = OpCodes.Call;
-            helperCall.operand = helperMethod;
+            codes.Insert(continuationIndex, loadPawn);
+            codes.Insert(continuationIndex + 1, loadUsable);
+            codes.Insert(continuationIndex + 2, helperCall);
 
             return true;
         }
@@ -283,16 +286,20 @@ namespace MAP_MechanoidMechanitor
             source.labels.Clear();
         }
 
-        private static bool CanSafelyInsertBefore(
+        private static bool CanSafelyInsertAfter(
             List<CodeInstruction> codes,
-            int insertIndex)
+            int sourceIndex)
         {
-            if (insertIndex < 0 || insertIndex >= codes.Count)
+            int continuationIndex = sourceIndex + 1;
+            if (sourceIndex < 0
+                || sourceIndex >= codes.Count
+                || continuationIndex >= codes.Count)
             {
                 return false;
             }
 
-            return codes[insertIndex].blocks.Count == 0;
+            return codes[sourceIndex].blocks.Count == 0
+                && codes[continuationIndex].blocks.Count == 0;
         }
     }
 
