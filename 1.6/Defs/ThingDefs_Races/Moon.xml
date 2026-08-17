@@ -176,8 +176,6 @@
     <label>「月亮」</label>
     <race>MAP_Mech_Moon</race>
 
-    <fixedGender>Female</fixedGender>
-
     <defaultFactionDef>PlayerColony</defaultFactionDef>
 
     <combatPower>200</combatPower>
