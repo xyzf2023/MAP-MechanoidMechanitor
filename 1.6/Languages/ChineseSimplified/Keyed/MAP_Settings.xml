@@ -27,6 +27,20 @@
   <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>启用肃清指令UI加载界面</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>
   <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>开启后，每次打开肃清指令UI时都会先显示通讯连接与进度条界面。关闭后，将跳过加载界面并直接进入主界面。</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>
 
+  <!-- 模块：战略节点概率 -->
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>战略节点概率</MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>以下概率为全局MOD设置，所有存档共享，并会在后续对应事件检查时直接读取。设置的是每座符合条件的完整节点的独立基础概率；多个节点的最终概率按 1-(1-p)^n 合并，而不是直接相加。</MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost>普通派系前哨</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Label>单个敌对前哨每日袭击概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>每座符合条件的完整敌对派系前哨，每日进行额外袭击检查时使用的独立基础概率。0%表示禁用由普通派系前哨额外产生的袭击；100%表示只要至少存在一座符合条件的完整敌对前哨，该次检查就必定通过概率判定。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Label>单个盟友前哨支援概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Description>每座符合条件的完整盟友派系前哨，在殖民地遭遇敌对袭击后提供援军的独立基础概率。原有共同敌人和派系敌对关系判定保持不变。0%表示不提供这种自动援军。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode>机械巢节点</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Label>单个敌对节点每日袭击概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>每座符合条件的完整敌对机械巢节点，每日进行额外袭击检查时使用的独立基础概率。0%表示禁用由机械巢节点额外产生的袭击；100%表示只要至少存在一座符合条件的完整敌对节点，该次检查就必定通过概率判定。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>单个盟友节点支援概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>每座符合条件的完整盟友机械巢节点，在殖民地遭遇敌对袭击后提供机械巢援军的独立基础概率。0%表示不提供这种自动援军。此设置不改变援军点数、派系归属、带宽或其他部署规则。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>
+
   <!-- 模块：正义 BOSS 难度 -->
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>正义 BOSS 战难度</MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」作为敌对 BOSS 到达地图后使用的战斗参数。战斗参数会在每场 BOSS 战开始时锁定；战斗过程中修改只会影响下一场 BOSS 战。详细诊断日志开关不属于战斗参数，会实时生效。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>

@@ -10,10 +10,15 @@ namespace MAP_MechanoidMechanitor
         private const string ProductivityCoreWorkSpeedControlName =
             "MAP_ProductivityCoreWorkSpeedOffsetPercentPerLevel";
 
+        private const float SettingsScrollbarReserve = 20f;
+        private const float SettingsBottomPadding = 12f;
+
         public static MAPMechanitorModSettings? Settings;
 
         private string? productivityCoreWorkSpeedBuffer;
         private bool productivityCoreWorkSpeedFieldWasFocused;
+        private Vector2 settingsScrollPosition;
+        private float settingsContentHeight = 1200f;
 
         public MAPMechanitorMod(ModContentPack content) : base(content)
         {
@@ -27,8 +32,26 @@ namespace MAP_MechanoidMechanitor
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
+            float viewWidth =
+                Mathf.Max(1f, inRect.width - SettingsScrollbarReserve);
+
+            float viewHeight =
+                Mathf.Max(inRect.height, settingsContentHeight);
+
+            Rect viewRect = new Rect(
+                0f,
+                0f,
+                viewWidth,
+                viewHeight);
+
+            Widgets.BeginScrollView(
+                inRect,
+                ref settingsScrollPosition,
+                viewRect);
+
             Listing_Standard listing = new Listing_Standard();
-            listing.Begin(inRect);
+            listing.Begin(viewRect);
+
             listing.CheckboxLabeled(
                 "将机械族机械师显示在工作标签页",
                 ref Settings!.addMechanoidMechanitorsToWorkTab,
@@ -98,9 +121,18 @@ namespace MAP_MechanoidMechanitor
                 ref Settings.enablePurgeDirectiveUiLoadingScreen,
                 "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description".Translate());
 
+            DrawStrategicNodeSettings(listing);
+
             DrawJusticeBossDifficultySettings(listing);
 
+            settingsContentHeight =
+                Mathf.Max(
+                    inRect.height,
+                    listing.CurHeight + SettingsBottomPadding);
+
             listing.End();
+
+            Widgets.EndScrollView();
         }
 
         private static void DrawJusticeBossDifficultySettings(
@@ -207,6 +239,75 @@ namespace MAP_MechanoidMechanitor
                 ref settings.justiceBossAllowBossReplacement,
                 "MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description"
                     .Translate());
+        }
+
+        private static void DrawStrategicNodeSettings(
+            Listing_Standard listing)
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            MAPMechanitorModSettings settings = Settings;
+
+            listing.GapLine();
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.StrategicNodes.Section"
+                    .Translate());
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.StrategicNodes.Description"
+                    .Translate());
+
+            listing.Gap(6f);
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost"
+                    .Translate());
+
+            settings.factionOutpostRaidChancePercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Label",
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description",
+                    settings.factionOutpostRaidChancePercent,
+                    0,
+                    100);
+
+            settings.factionOutpostSupportChancePercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Label",
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Description",
+                    settings.factionOutpostSupportChancePercent,
+                    0,
+                    100);
+
+            listing.Gap(6f);
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode"
+                    .Translate());
+
+            settings.mechHiveNodeRaidChancePercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Label",
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description",
+                    settings.mechHiveNodeRaidChancePercent,
+                    0,
+                    100);
+
+            settings.mechHiveNodeSupportChancePercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label",
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description",
+                    settings.mechHiveNodeSupportChancePercent,
+                    0,
+                    100);
         }
 
         private static int DrawIntSliderSetting(

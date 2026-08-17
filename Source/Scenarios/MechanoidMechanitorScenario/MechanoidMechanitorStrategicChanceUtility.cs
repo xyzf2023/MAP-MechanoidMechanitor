@@ -4,19 +4,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 普通派系前哨与机械巢节点的战略事件概率统一入口。
-    /// 配置值保存为 0～100 的整数百分比；
+    /// 概率值来自全局 MOD 设置，以 0～100 的整数百分比保存；
+    /// 所有存档共享同一组值。
     /// 多节点事件继续按独立概率 1 - (1 - p)^n 合并。
     /// </summary>
     internal static class MechanoidMechanitorStrategicChanceUtility
     {
         public static float GetFactionOutpostRaidChancePerNode()
         {
-            MechanoidMechanitorStoryConfiguration? configuration =
-                GameComponent_MechanoidMechanitorStoryState.CurrentConfiguration;
-
             int percent =
-                configuration?.factionOutpostRaidChancePercent
-                ?? MechanoidMechanitorStoryConfiguration
+                MAPMechanitorMod.Settings?.factionOutpostRaidChancePercent
+                ?? MAPMechanitorModSettings
                     .DefaultFactionOutpostRaidChancePercent;
 
             return PercentToChance(percent);
@@ -24,12 +22,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static float GetFactionOutpostSupportChancePerNode()
         {
-            MechanoidMechanitorStoryConfiguration? configuration =
-                GameComponent_MechanoidMechanitorStoryState.CurrentConfiguration;
-
             int percent =
-                configuration?.factionOutpostSupportChancePercent
-                ?? MechanoidMechanitorStoryConfiguration
+                MAPMechanitorMod.Settings?.factionOutpostSupportChancePercent
+                ?? MAPMechanitorModSettings
                     .DefaultFactionOutpostSupportChancePercent;
 
             return PercentToChance(percent);
@@ -37,12 +32,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static float GetMechHiveNodeRaidChancePerNode()
         {
-            MechanoidMechanitorStoryConfiguration? configuration =
-                GameComponent_MechanoidMechanitorStoryState.CurrentConfiguration;
-
             int percent =
-                configuration?.mechHiveNodeRaidChancePercent
-                ?? MechanoidMechanitorStoryConfiguration
+                MAPMechanitorMod.Settings?.mechHiveNodeRaidChancePercent
+                ?? MAPMechanitorModSettings
                     .DefaultMechHiveNodeRaidChancePercent;
 
             return PercentToChance(percent);
@@ -50,12 +42,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static float GetMechHiveNodeSupportChancePerNode()
         {
-            MechanoidMechanitorStoryConfiguration? configuration =
-                GameComponent_MechanoidMechanitorStoryState.CurrentConfiguration;
-
             int percent =
-                configuration?.mechHiveNodeSupportChancePercent
-                ?? MechanoidMechanitorStoryConfiguration
+                MAPMechanitorMod.Settings?.mechHiveNodeSupportChancePercent
+                ?? MAPMechanitorModSettings
                     .DefaultMechHiveNodeSupportChancePercent;
 
             return PercentToChance(percent);

@@ -82,6 +82,39 @@ namespace MAP_MechanoidMechanitor
         public bool justiceBossAllowBossReplacement =
             JusticeBossDifficultyValues.DefaultAllowBossReplacement;
 
+        /// <summary>
+        /// 每座符合条件的完整敌对普通派系前哨每日触发额外袭击的基础概率百分比。
+        /// 全局设置，所有存档共享。
+        /// </summary>
+        public int factionOutpostRaidChancePercent =
+            DefaultFactionOutpostRaidChancePercent;
+
+        /// <summary>
+        /// 每座符合条件的完整盟友普通派系前哨，在敌对袭击发生后提供援军的基础概率百分比。
+        /// 全局设置，所有存档共享。
+        /// </summary>
+        public int factionOutpostSupportChancePercent =
+            DefaultFactionOutpostSupportChancePercent;
+
+        /// <summary>
+        /// 每座符合条件的完整敌对机械巢节点每日触发额外袭击的基础概率百分比。
+        /// 全局设置，所有存档共享。
+        /// </summary>
+        public int mechHiveNodeRaidChancePercent =
+            DefaultMechHiveNodeRaidChancePercent;
+
+        /// <summary>
+        /// 每座符合条件的完整盟友机械巢节点，在敌对袭击发生后提供援军的基础概率百分比。
+        /// 全局设置，所有存档共享。
+        /// </summary>
+        public int mechHiveNodeSupportChancePercent =
+            DefaultMechHiveNodeSupportChancePercent;
+
+        public const int DefaultFactionOutpostRaidChancePercent = 1;
+        public const int DefaultFactionOutpostSupportChancePercent = 10;
+        public const int DefaultMechHiveNodeRaidChancePercent = 1;
+        public const int DefaultMechHiveNodeSupportChancePercent = 10;
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -175,6 +208,23 @@ namespace MAP_MechanoidMechanitor
                 "justiceBossAllowBossReplacement",
                 JusticeBossDifficultyValues.DefaultAllowBossReplacement);
 
+            Scribe_Values.Look(
+                ref factionOutpostRaidChancePercent,
+                "factionOutpostRaidChancePercent",
+                DefaultFactionOutpostRaidChancePercent);
+            Scribe_Values.Look(
+                ref factionOutpostSupportChancePercent,
+                "factionOutpostSupportChancePercent",
+                DefaultFactionOutpostSupportChancePercent);
+            Scribe_Values.Look(
+                ref mechHiveNodeRaidChancePercent,
+                "mechHiveNodeRaidChancePercent",
+                DefaultMechHiveNodeRaidChancePercent);
+            Scribe_Values.Look(
+                ref mechHiveNodeSupportChancePercent,
+                "mechHiveNodeSupportChancePercent",
+                DefaultMechHiveNodeSupportChancePercent);
+
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 productivityCoreWorkSpeedOffsetPercentPerLevel = Mathf.Clamp(
@@ -205,6 +255,15 @@ namespace MAP_MechanoidMechanitor
                 justiceBossMechsPerWave =
                     JusticeBossDifficultyValues.ClampMechsPerWave(
                         justiceBossMechsPerWave);
+
+                factionOutpostRaidChancePercent =
+                    Mathf.Clamp(factionOutpostRaidChancePercent, 0, 100);
+                factionOutpostSupportChancePercent =
+                    Mathf.Clamp(factionOutpostSupportChancePercent, 0, 100);
+                mechHiveNodeRaidChancePercent =
+                    Mathf.Clamp(mechHiveNodeRaidChancePercent, 0, 100);
+                mechHiveNodeSupportChancePercent =
+                    Mathf.Clamp(mechHiveNodeSupportChancePercent, 0, 100);
             }
         }
     }

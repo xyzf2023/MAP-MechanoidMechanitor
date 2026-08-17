@@ -32,11 +32,6 @@
   <!-- 模块：进攻限制 -->
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.NodeUnavailable>目标机械巢节点已不可进攻。</MAP_MechanoidMechanitor.MechHiveNode.Attack.NodeUnavailable>
 
-  <!-- 模块：自定义剧情战略概率 -->
-  <MAP_MechanoidMechanitor.Story.MechHiveNode.Strategic.SectionTitle>战略效果</MAP_MechanoidMechanitor.Story.MechHiveNode.Strategic.SectionTitle>
-  <MAP_MechanoidMechanitor.Story.MechHiveNode.Strategic.RaidChance>单个敌对节点袭击概率</MAP_MechanoidMechanitor.Story.MechHiveNode.Strategic.RaidChance>
-  <MAP_MechanoidMechanitor.Story.MechHiveNode.Strategic.SupportChance>单个盟友节点支援概率</MAP_MechanoidMechanitor.Story.MechHiveNode.Strategic.SupportChance>
-  <MAP_MechanoidMechanitor.Story.MechHiveNode.Strategic.Tooltip>设置每座符合条件的完整机械巢节点独立提供战略效果的基础概率。多个节点的最终概率按 1-(1-p)^n 合并，而不是直接相加。敌对机械巢节点的袭击概率每日检查一次；盟友机械巢节点的支援概率在殖民地遭遇符合条件的敌对袭击后检查。0%表示关闭对应效果，100%表示只要至少存在一座符合条件的完整节点就必定触发。</MAP_MechanoidMechanitor.Story.MechHiveNode.Strategic.Tooltip>
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>当前与机械巢的关系不允许进攻该节点。</MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>无法将机械巢转为敌对，进攻已取消。</MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed>机械巢节点防御设施初始化失败，本次进入已取消。</MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed>
