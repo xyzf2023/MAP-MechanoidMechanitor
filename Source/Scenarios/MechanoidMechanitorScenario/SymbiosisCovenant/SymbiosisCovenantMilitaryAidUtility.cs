@@ -395,6 +395,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
+        // M3：DEV 入口。使用当前地图真实 Pending Raid 中保存的真实 raidPoints 强制发送援助询问。
+        // 保留所有正常资格检查，只跳过 Rand.Chance(chance)。成功才删除 pending；失败保留 pending
+        // （例如空投 Raid 尚未形成满足条件的 ActiveThreat 时，可稍后再次尝试）。
+        public static bool DevForcePendingOfferForCurrentMap()
+        {
+            if (!Prefs.DevMode || Find.CurrentMap == null)
+            {
+                return false;
+            }
+
+            GameComponent_SymbiosisCovenantState? component =
+                GameComponent_SymbiosisCovenantState.CurrentComponent;
+            if (component == null)
+            {
+                return false;
+            }
+
+            Map map = Find.CurrentMap;
+
+            CleanupState(component);
+
+            SymbiosisCovenantMilitaryAidRuntimeState runtime = GetState(component);
+
+            SymbiosisCovenantMilitaryAidPendingRaid? pending =
+                runtime.pendingRaids.FirstOrDefault(item => item.map == map);
+
+            if (pending == null)
+            {
+                return false;
+            }
+
+            if (!EvaluatePendingRaid(component, pending, forceOffer: true))
+            {
+                // 失败时保留 pending，便于敌人成为 ActiveThreat 后再次尝试。
+                return false;
+            }
+
+            runtime.pendingRaids.Remove(pending);
+            return true;
+        }
+
         private static void ProcessPendingRaids(GameComponent_SymbiosisCovenantState component, int now)
         {
             List<SymbiosisCovenantMilitaryAidPendingRaid> pending = GetState(component).pendingRaids;
@@ -406,11 +447,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
                 SymbiosisCovenantMilitaryAidPendingRaid item = pending[i];
                 pending.RemoveAt(i);
-                EvaluatePendingRaid(component, item);
+                EvaluatePendingRaid(component, item, forceOffer: false);
             }
         }
 
-        private static void EvaluatePendingRaid(GameComponent_SymbiosisCovenantState component, SymbiosisCovenantMilitaryAidPendingRaid pending)
+        // M3：DEV 可通过 forceOffer=true 跳过随机概率；正常游戏调用 forceOffer: false。
+        // 除新增参数与返回值外，原有业务条件（ActiveThreat 阈值、Responders、SupportPoints、
+        // SelectResponder、Letter 生成）均保持不变。
+        private static bool EvaluatePendingRaid(
+            GameComponent_SymbiosisCovenantState component,
+            SymbiosisCovenantMilitaryAidPendingRaid pending,
+            bool forceOffer = false)
         {
             Map? map = pending.map;
             Faction? attacker = pending.attackerFaction;
@@ -418,43 +465,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (map == null || attacker == null || settings == null || !Find.Maps.Contains(map) || !map.IsPlayerHome
                 || !attacker.HostileTo(Faction.OfPlayer) || pending.raidPoints <= 0f)
             {
-                return;
+                return false;
             }
 
             CleanupState(component);
             if (HasPendingOffer(map) || IsInCooldown(component, map) || HasActiveCovenantAid(component, map))
             {
-                return;
+                return false;
             }
 
             SymbiosisCovenantMilitaryAidDef config = SymbiosisCovenantMilitaryAidDefOf.MAP_SymbiosisCovenant_MilitaryAidConfig;
             if (!HasActiveThreatFromFaction(map, attacker, out float activeCombatPower)
                 || activeCombatPower <= config.minimumInitialActiveThreatCombatPower)
             {
-                return;
+                return false;
             }
 
             float supportPoints = pending.raidPoints * settings.supportPointsFactor;
             if (supportPoints <= 0f)
             {
-                return;
+                return false;
             }
             List<Faction> responders = GetEligibleResponders(component, map, attacker, supportPoints);
             if (responders.Count == 0)
             {
-                return;
+                return false;
             }
 
             float chance = Mathf.Min(config.maxOfferChance, settings.offerChance + config.GetResponderChanceBonus(responders.Count));
-            if (!Rand.Chance(chance))
+            if (!forceOffer && !Rand.Chance(chance))
             {
-                return;
+                return false;
             }
+
             Faction? responder = SelectResponder(component, responders, config.repeatedResponderWeight);
-            if (responder != null)
+            if (responder == null)
             {
-                new ChoiceLetter_SymbiosisCovenantMilitaryAidOffer(map, responder, attacker, pending.raidPoints, supportPoints).Send();
+                return false;
             }
+
+            new ChoiceLetter_SymbiosisCovenantMilitaryAidOffer(map, responder, attacker, pending.raidPoints, supportPoints).Send();
+            return true;
         }
 
         private static SymbiosisCovenantMilitaryAidLevelSettings? GetCurrentSettings(GameComponent_SymbiosisCovenantState? component)
@@ -715,6 +766,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             public float EffectiveOfferChance;
 
             public bool PendingEvaluation;
+
+            // M3：真实监听到的 Pending Raid 数据（由 RaidEnemy Harmony Postfix 写入）。
+            // 供 DEV 快照、DEV 窗口与未来 AutoTest 直接确认监听结果与真实 Raid Points。
+            public Faction? PendingRaidAttackerFaction;
+            public float PendingRaidPoints;
+            public int PendingRaidEvaluateAtTick;
+            public int PendingRaidTicksRemaining;
+
             public bool PendingOffer;
 
             public Faction? LastResponderFaction;
@@ -754,7 +813,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (map != null)
             {
-                snap.PendingEvaluation = HasPendingEvaluation(component, map);
+                SymbiosisCovenantMilitaryAidPendingRaid? pending =
+                    GetState(component).pendingRaids
+                        .FirstOrDefault(item => item.map == map);
+
+                snap.PendingEvaluation = pending != null;
+                if (pending != null)
+                {
+                    snap.PendingRaidAttackerFaction = pending.attackerFaction;
+                    snap.PendingRaidPoints = pending.raidPoints;
+                    snap.PendingRaidEvaluateAtTick = pending.evaluateAtTick;
+                    snap.PendingRaidTicksRemaining = Find.TickManager != null
+                        ? Math.Max(0, pending.evaluateAtTick - Find.TickManager.TicksGame)
+                        : 0;
+                }
+
                 snap.PendingOffer = HasPendingOffer(map);
 
                 SymbiosisCovenantMilitaryAidMapState? state = FindMapState(component, map, false);
@@ -794,9 +867,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     List<Faction> responders = GetEligibleResponders(component, map, attacker, estimatedSupport);
                     snap.EligibleResponderCount = responders.Count;
                     snap.ResponderChanceBonus = config.GetResponderChanceBonus(responders.Count);
-                    snap.EffectiveOfferChance = Mathf.Min(
-                        config.maxOfferChance,
-                        snap.BaseOfferChance + snap.ResponderChanceBonus);
+                    // M3：合法响应成员为 0 时，正式 EvaluatePendingRaid 会直接退出，
+                    // 因此有效响应概率必须为 0%（原先由独立 Harmony Patch 修正，现收回此处）。
+                    snap.EffectiveOfferChance = responders.Count > 0
+                        ? Mathf.Min(
+                            config.maxOfferChance,
+                            snap.BaseOfferChance + snap.ResponderChanceBonus)
+                        : 0f;
                 }
             }
 

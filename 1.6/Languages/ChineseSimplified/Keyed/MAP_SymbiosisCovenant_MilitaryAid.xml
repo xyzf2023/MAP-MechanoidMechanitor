@@ -32,6 +32,10 @@
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>合法响应成员：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>当前有效响应概率：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>待判定Raid：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidAttacker>待判定Raid攻击派系：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidAttacker>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidPoints>待判定Raid点数：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidPoints>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidEvaluateTick>待判定Raid判定Tick：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidEvaluateTick>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidTicksRemaining>待判定Raid剩余Tick：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidTicksRemaining>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>待处理援助信：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>上次响应派系：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>当前盟约援军派系：{0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>

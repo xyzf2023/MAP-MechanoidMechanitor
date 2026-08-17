@@ -32,6 +32,10 @@
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>Eligible responders: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>Effective response chance: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>Pending raid evaluation: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidAttacker>Pending raid attacker faction: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidAttacker>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidPoints>Pending raid points: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidPoints>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidEvaluateTick>Pending raid evaluate tick: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidEvaluateTick>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidTicksRemaining>Pending raid ticks remaining: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidTicksRemaining>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>Pending aid offer: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>Last responder faction: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder>
   <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>Current covenant aid faction: {0}</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction>

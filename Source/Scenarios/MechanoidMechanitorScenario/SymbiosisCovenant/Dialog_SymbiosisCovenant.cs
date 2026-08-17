@@ -1620,6 +1620,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid"
                     .Translate(snap.PendingEvaluation.ToString()));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidAttacker"
+                    .Translate(snap.PendingRaidAttackerFaction?.Name ?? "-"));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidPoints"
+                    .Translate(snap.PendingRaidPoints.ToString("F0")));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidEvaluateTick"
+                    .Translate(snap.PendingRaidEvaluateAtTick));
+                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidTicksRemaining"
+                    .Translate(snap.PendingRaidTicksRemaining));
                 sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer"
                     .Translate(snap.PendingOffer.ToString()));
                 sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder"
@@ -1641,9 +1649,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     .Translate(snap.CooldownRemainingTicks));
 
                 Widgets.Label(
-                    new Rect(inRect.x, y, inRect.width, 360f),
+                    new Rect(inRect.x, y, inRect.width, 440f),
                     sb.ToString());
-                y += 366f;
+                y += 446f;
             }
             finally
             {
