@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -67,15 +66,6 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!HumanImplantRecipeRegistrar.TryGetSingleRecipe(item.def, out RecipeDef? recipe) || recipe == null)
-            {
-                Messages.Message(
-                    "MAP_MechanoidMechanitor.HumanImplant.InvalidSelection".Translate(),
-                    pawn,
-                    MessageTypeDefOf.RejectInput);
-                return;
-            }
-
             BodyPartRecord? selectedPart = ResolvePart();
             if (selectedPart == null)
             {
@@ -86,13 +76,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 执行前再次验证：组件、功能、物品、配方、部位索引与配方当前仍合法。
             if (!HumanImplantUtility.CanUseHumanImplants(pawn)
-                || !HumanImplantRecipeRegistrar.IsRegistered(item.def, recipe)
-                || selectedPart == null
-                || !pawn.RaceProps.body.AllParts.Contains(selectedPart)
-                || recipe.Worker == null
-                || !recipe.Worker.GetPartsToApplyOn(pawn, recipe).Contains(selectedPart))
+                || !pawn.RaceProps.body.AllParts.Contains(selectedPart))
             {
                 Messages.Message(
                     "MAP_MechanoidMechanitor.HumanImplant.InvalidSelection".Translate(),
@@ -101,8 +86,35 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 根据 Pawn + 物品 + 具体部位重新唯一解析 Recipe；天然支持存读档（Job 仅保存部位索引）。
+            if (!HumanImplantUtility.TryResolveUniqueRecipeForPart(
+                    pawn,
+                    item.def,
+                    selectedPart,
+                    out RecipeDef? recipe,
+                    out bool ambiguous)
+                || recipe == null)
+            {
+                if (ambiguous)
+                {
+                    Messages.Message(
+                        "MAP_MechanoidMechanitor.HumanImplant.AmbiguousRecipe".Translate(),
+                        pawn,
+                        MessageTypeDefOf.RejectInput);
+                }
+                else
+                {
+                    Messages.Message(
+                        "MAP_MechanoidMechanitor.HumanImplant.InvalidSelection".Translate(),
+                        pawn,
+                        MessageTypeDefOf.RejectInput);
+                }
+
+                return;
+            }
+
             string itemLabel = item.LabelNoCount;
-            string partLabel = selectedPart!.LabelCap;
+            string partLabel = selectedPart.LabelCap;
 
             if (!HumanImplantUtility.TryInstall(pawn, item, recipe, selectedPart, out string? failureReason))
             {

@@ -75,6 +75,58 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
+        /// 针对“具体 Pawn + 具体植入体物品 + 玩家选择的具体身体部位”，重新唯一解析可用的 RecipeDef。
+        /// 通过原版 RecipeWorker.GetPartsToApplyOn 判断每个候选配方是否作用于该具体部位，
+        /// 只有恰好一个候选配方认为该部位合法时才返回 true（且 recipe 非空）。
+        /// 若两个及以上候选配方同时认为该部位合法，则 ambiguous = true、recipe = null、返回 false。
+        /// </summary>
+        public static bool TryResolveUniqueRecipeForPart(
+            Pawn pawn,
+            ThingDef itemDef,
+            BodyPartRecord selectedPart,
+            out RecipeDef? recipe,
+            out bool ambiguous)
+        {
+            recipe = null;
+            ambiguous = false;
+
+            if (!CanUseHumanImplants(pawn)
+                || itemDef == null
+                || selectedPart == null
+                || !pawn.RaceProps.body.AllParts.Contains(selectedPart))
+            {
+                return false;
+            }
+
+            List<RecipeDef> candidates =
+                HumanImplantRecipeRegistrar.GetCandidateRecipes(itemDef);
+
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                RecipeDef candidate = candidates[i];
+
+                List<BodyPartRecord> validParts =
+                    GetValidParts(pawn, candidate);
+
+                if (!validParts.Contains(selectedPart))
+                {
+                    continue;
+                }
+
+                if (recipe != null && recipe != candidate)
+                {
+                    recipe = null;
+                    ambiguous = true;
+                    return false;
+                }
+
+                recipe = candidate;
+            }
+
+            return recipe != null;
+        }
+
+        /// <summary>
         /// 统一安装入口。会再次验证授权组件、功能启用、物品、注册的配方、具体部位与配方类型，
         /// 只有全部通过才执行安装并消耗一件物品。
         /// </summary>

@@ -45,7 +45,7 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            // 1. 查询注册表候选 Recipe；真正针对 Pawn 的合法性在点击时解决。
+            // 1. 查询注册表候选 Recipe（同一物品可能对应多个 Recipe）。
             List<RecipeDef> candidates =
                 HumanImplantRecipeRegistrar.GetCandidateRecipes(clickedThing.def);
 
@@ -54,29 +54,40 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            // 2. 对每个候选获取实际合法部位，仅保留存在合法部位的配方。
-            RecipeDef? chosenRecipe = null;
-            List<BodyPartRecord> chosenParts = new List<BodyPartRecord>();
-            int validRecipeCount = 0;
+            // 2. 按“具体部位”分组候选 Recipe：只有对同一具体部位同时有多个合法 Recipe 才是真正歧义。
+            Dictionary<BodyPartRecord, List<RecipeDef>> recipesByPart =
+                new Dictionary<BodyPartRecord, List<RecipeDef>>();
 
             for (int i = 0; i < candidates.Count; i++)
             {
-                RecipeDef recipe = candidates[i];
+                RecipeDef candidate = candidates[i];
                 List<BodyPartRecord> validParts =
-                    HumanImplantUtility.GetValidParts(pawn, recipe);
+                    HumanImplantUtility.GetValidParts(pawn, candidate);
 
                 if (validParts.NullOrEmpty())
                 {
                     continue;
                 }
 
-                validRecipeCount++;
-                chosenRecipe = recipe;
-                chosenParts = validParts;
+                for (int j = 0; j < validParts.Count; j++)
+                {
+                    BodyPartRecord part = validParts[j];
+
+                    if (!recipesByPart.TryGetValue(part, out List<RecipeDef>? list))
+                    {
+                        list = new List<RecipeDef>();
+                        recipesByPart.Add(part, list);
+                    }
+
+                    if (!list.Contains(candidate))
+                    {
+                        list.Add(candidate);
+                    }
+                }
             }
 
-            // 0 个合法配方：提示没有可安装部位。
-            if (validRecipeCount == 0 || chosenRecipe == null)
+            // 没有任何合法部位。
+            if (recipesByPart.Count == 0)
             {
                 yield return new FloatMenuOption(
                     "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount)
@@ -85,8 +96,57 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            // 多个不同 Recipe 对同一物品、同一 Pawn 同时合法：判定为歧义，不执行安装。
-            if (validRecipeCount > 1)
+            // 区分唯一可解析部位与歧义部位（同一部位多个 Recipe 合法）。
+            List<BodyPartRecord> uniqueParts = new List<BodyPartRecord>();
+            List<BodyPartRecord> ambiguousParts = new List<BodyPartRecord>();
+
+            foreach (KeyValuePair<BodyPartRecord, List<RecipeDef>> kvp in recipesByPart)
+            {
+                if (kvp.Value.Count == 1)
+                {
+                    uniqueParts.Add(kvp.Key);
+                }
+                else
+                {
+                    ambiguousParts.Add(kvp.Key);
+                }
+            }
+
+            // 仅一个合法且唯一部位：直接显示安装项。
+            if (uniqueParts.Count == 1 && ambiguousParts.Count == 0)
+            {
+                BodyPartRecord selectedPart = uniqueParts[0];
+
+                if (!pawn.CanReach(clickedThing, PathEndMode.Touch, Danger.Deadly))
+                {
+                    yield return new FloatMenuOption(
+                        "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount)
+                            + "：" + "NoPath".Translate().CapitalizeFirst(),
+                        null);
+                    yield break;
+                }
+
+                if (!pawn.CanReserve(clickedThing))
+                {
+                    yield return new FloatMenuOption(
+                        "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount)
+                            + "：" + "Reserved".Translate().CapitalizeFirst(),
+                        null);
+                    yield break;
+                }
+
+                yield return FloatMenuUtility.DecoratePrioritizedTask(
+                    new FloatMenuOption(
+                        "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount),
+                        () => StartJob(pawn, clickedThing, selectedPart)),
+                    pawn,
+                    clickedThing,
+                    reservedText: "Reserved");
+                yield break;
+            }
+
+            // 仅一个部位但它是歧义部位：直接显示禁用项，绝不随机选一个。
+            if (recipesByPart.Count == 1)
             {
                 yield return new FloatMenuOption(
                     "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount)
@@ -95,78 +155,46 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            if (!pawn.CanReach(clickedThing, PathEndMode.Touch, Danger.Deadly))
+            // 多个部位（含可能的歧义部位）：打开第二级部位选择菜单。
+            List<FloatMenuOption> partOptions = new List<FloatMenuOption>();
+
+            foreach (KeyValuePair<BodyPartRecord, List<RecipeDef>> kvp in recipesByPart)
             {
-                yield return new FloatMenuOption(
-                    "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount)
-                        + "：" + "NoPath".Translate().CapitalizeFirst(),
-                    null);
-                yield break;
-            }
+                BodyPartRecord part = kvp.Key;
 
-            if (!pawn.CanReserve(clickedThing))
-            {
-                yield return new FloatMenuOption(
-                    "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount)
-                        + "：" + "Reserved".Translate().CapitalizeFirst(),
-                    null);
-                yield break;
-            }
+                if (kvp.Value.Count == 1)
+                {
+                    // 唯一可解析部位：正常可点击。
+                    FloatMenuOption option = new FloatMenuOption(
+                        "MAP_MechanoidMechanitor.HumanImplant.InstallToPart".Translate(
+                            clickedThing.LabelNoCount,
+                            part.LabelCap),
+                        () => StartJob(pawn, clickedThing, part));
 
-            if (chosenParts.Count == 1)
-            {
-                BodyPartRecord selectedPart = chosenParts[0];
-                yield return FloatMenuUtility.DecoratePrioritizedTask(
-                    new FloatMenuOption(
-                        "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount),
-                        () => StartJob(pawn, clickedThing, chosenRecipe, selectedPart)),
-                    pawn,
-                    clickedThing,
-                    reservedText: "Reserved");
-                yield break;
-            }
-
-            // 多个合法部位：主选项点击后创建第二级 FloatMenu 选择具体部位。
-            yield return FloatMenuUtility.DecoratePrioritizedTask(
-                new FloatMenuOption(
-                    "MAP_MechanoidMechanitor.HumanImplant.Install".Translate(clickedThing.LabelNoCount),
-                    () => OpenPartMenu(pawn, clickedThing, chosenRecipe, chosenParts)),
-                pawn,
-                clickedThing,
-                reservedText: "Reserved");
-        }
-
-        private static void OpenPartMenu(
-            Pawn pawn,
-            Thing item,
-            RecipeDef recipe,
-            List<BodyPartRecord> validParts)
-        {
-            List<FloatMenuOption> partOptions =
-                new List<FloatMenuOption>();
-
-            for (int i = 0; i < validParts.Count; i++)
-            {
-                BodyPartRecord selectedPart = validParts[i];
-
-                FloatMenuOption option = new FloatMenuOption(
-                    "MAP_MechanoidMechanitor.HumanImplant.InstallToPart".Translate(
-                        item.LabelNoCount,
-                        selectedPart.LabelCap),
-                    () => StartJob(pawn, item, recipe, selectedPart));
-
-                partOptions.Add(
-                    FloatMenuUtility.DecoratePrioritizedTask(
-                        option,
-                        pawn,
-                        item,
-                        reservedText: "Reserved"));
+                    partOptions.Add(
+                        FloatMenuUtility.DecoratePrioritizedTask(
+                            option,
+                            pawn,
+                            clickedThing,
+                            reservedText: "Reserved"));
+                }
+                else
+                {
+                    // 同一部位存在多个可用配方：禁用项，提示歧义。
+                    partOptions.Add(
+                        new FloatMenuOption(
+                            "MAP_MechanoidMechanitor.HumanImplant.InstallToPart".Translate(
+                                clickedThing.LabelNoCount,
+                                part.LabelCap)
+                                + "：" + "MAP_MechanoidMechanitor.HumanImplant.AmbiguousRecipe".Translate(),
+                            null));
+                }
             }
 
             Find.WindowStack.Add(new FloatMenu(partOptions));
         }
 
-        private static void StartJob(Pawn pawn, Thing item, RecipeDef recipe, BodyPartRecord selectedPart)
+        private static void StartJob(Pawn pawn, Thing item, BodyPartRecord selectedPart)
         {
             item.SetForbidden(false, false);
 
@@ -186,6 +214,7 @@ namespace MAP_MechanoidMechanitor
                 item);
 
             // 使用 partIndex + 1 避免零值与未设置值混淆，该索引随 Job 一起被原版存档系统保存。
+            // Job 中不保存任何 Recipe 对象；执行时由 Pawn + 物品 + 具体部位重新唯一解析。
             job.count = partIndex + 1;
 
             pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);

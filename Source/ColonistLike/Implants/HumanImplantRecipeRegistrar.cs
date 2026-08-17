@@ -20,9 +20,6 @@ namespace MAP_MechanoidMechanitor
         private static readonly Dictionary<ThingDef, List<RecipeDef>> recipesByItem =
             new Dictionary<ThingDef, List<RecipeDef>>();
 
-        private static readonly HashSet<ThingDef> ambiguousItems =
-            new HashSet<ThingDef>();
-
         private static bool initialized;
 
         public static void Register()
@@ -71,13 +68,20 @@ namespace MAP_MechanoidMechanitor
 
             if (Prefs.DevMode)
             {
+                int mappingCount = recipesByItem.Values.Sum(x => x.Count);
+                int multiRecipeItemCount =
+                    recipesByItem.Values.Count(x => x.Count > 1);
+
                 Log.Message(
-                    $"{LogPrefix}注册完成，有效物品 {recipesByItem.Count} 个，歧义物品 {ambiguousItems.Count} 个。");
+                    $"{LogPrefix}注册完成，植入体物品 {recipesByItem.Count} 个，" +
+                    $"候选配方映射 {mappingCount} 条，" +
+                    $"多配方物品 {multiRecipeItemCount} 个。");
             }
         }
 
         /// <summary>
-        /// 返回该物品当前所有非歧义候选 RecipeDef。歧义或未知物品返回空列表。
+        /// 返回该物品当前所有已注册候选 RecipeDef。未知物品或未启用时返回空列表。
+        /// 是否在“具体 Pawn + 具体部位”上真正合法，由调用方通过 GetPartsToApplyOn 判定。
         /// </summary>
         public static List<RecipeDef> GetCandidateRecipes(ThingDef itemDef)
         {
@@ -85,7 +89,6 @@ namespace MAP_MechanoidMechanitor
 
             if (!HumanImplantFeatureState.EnabledForSession
                 || itemDef == null
-                || ambiguousItems.Contains(itemDef)
                 || !recipesByItem.TryGetValue(itemDef, out List<RecipeDef>? found))
             {
                 return result;
@@ -96,42 +99,19 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 该物品 + 配方是否为已注册的非歧义组合。
+        /// 该物品 + 配方是否为已注册组合。
         /// </summary>
         public static bool IsRegistered(ThingDef itemDef, RecipeDef recipe)
         {
             if (!HumanImplantFeatureState.EnabledForSession
                 || itemDef == null
                 || recipe == null
-                || ambiguousItems.Contains(itemDef)
                 || !recipesByItem.TryGetValue(itemDef, out List<RecipeDef>? found))
             {
                 return false;
             }
 
             return found.Contains(recipe);
-        }
-
-        /// <summary>
-        /// 该物品是否恰好对应一个非歧义安装配方。JobDriver 在运行时仅凭物品解析配方使用。
-        /// 歧义或未知物品返回 false。
-        /// </summary>
-        public static bool TryGetSingleRecipe(ThingDef itemDef, out RecipeDef? recipe)
-        {
-            recipe = null;
-
-            if (!HumanImplantFeatureState.EnabledForSession
-                || itemDef == null
-                || ambiguousItems.Contains(itemDef)
-                || !recipesByItem.TryGetValue(itemDef, out List<RecipeDef>? found)
-                || found == null
-                || found.Count != 1)
-            {
-                return false;
-            }
-
-            recipe = found[0];
-            return true;
         }
 
         public static bool IsSupportedRecipe(RecipeDef recipe)
@@ -247,12 +227,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void RegisterMapping(ThingDef? itemDef, RecipeDef recipe)
         {
-            if (itemDef == null)
-            {
-                return;
-            }
-
-            if (ambiguousItems.Contains(itemDef))
+            if (itemDef == null || recipe == null)
             {
                 return;
             }
@@ -262,27 +237,11 @@ namespace MAP_MechanoidMechanitor
                 existing = new List<RecipeDef>();
                 recipesByItem.Add(itemDef, existing);
             }
-            else if (existing.Contains(recipe))
+
+            if (!existing.Contains(recipe))
             {
-                return;
+                existing.Add(recipe);
             }
-
-            if (existing.Count >= 1)
-            {
-                // 同一物品已对应不同配方，标记为歧义并禁用自动注册，避免错误安装。
-                recipesByItem.Remove(itemDef);
-                ambiguousItems.Add(itemDef);
-
-                if (Prefs.DevMode)
-                {
-                    Log.Warning(
-                        $"{LogPrefix}物品 {itemDef.defName} 同时对应多个安装配方，为避免错误安装，已禁用该物品的自动注册。");
-                }
-
-                return;
-            }
-
-            existing.Add(recipe);
         }
     }
 }
