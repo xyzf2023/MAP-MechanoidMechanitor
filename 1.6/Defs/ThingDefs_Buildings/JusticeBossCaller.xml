@@ -32,6 +32,7 @@
       <Flammability>0.5</Flammability>
     </statBases>
     <size>(2,2)</size>
+    <rotatable>false</rotatable>
     <costList>
       <Steel>100</Steel>
       <Plasteel>50</Plasteel>
