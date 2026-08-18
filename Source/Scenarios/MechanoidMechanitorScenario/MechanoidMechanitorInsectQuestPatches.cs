@@ -24,7 +24,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MechanoidMechanitorInsectBlockLogUtility
                 .WarnQuestInfestationBlocked(
-                    "QuestNode_Infestation",
+                    "尝试生成任务型虫灾（QuestNode_Infestation）",
                     "QuestNode_Infestation.TestRunInt",
                     throttled: true);
 
@@ -61,7 +61,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MechanoidMechanitorInsectBlockLogUtility
                 .WarnQuestInfestationBlocked(
-                    "QuestPart_Infestation",
+                    "尝试执行任务型虫灾（QuestPart_Infestation）",
                     "QuestPart_Infestation.Notify_QuestSignalReceived",
                     throttled: false);
 

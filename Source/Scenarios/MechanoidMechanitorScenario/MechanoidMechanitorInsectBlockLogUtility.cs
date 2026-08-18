@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using RimWorld;
+using RimWorld.QuestGen;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
@@ -65,7 +66,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         public static void WarnQuestInfestationBlocked(
-            string componentName,
+            string actionDescription,
             string interceptionPoint,
             bool throttled)
         {
@@ -78,8 +79,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             string caller = ResolveCallerDescription();
             Log.Warning(
                 Prefix + " " + caller
-                + " 尝试生成任务型虫灾"
-                + (string.IsNullOrEmpty(componentName) ? "" : "（" + componentName + "）")
+                + " "
+                + actionDescription
                 + "，已阻止。拦截点："
                 + interceptionPoint
                 + "。");
@@ -103,6 +104,99 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             LastThrottledWarningTickByKey[key] = now;
             return true;
+        }
+
+        /// <summary>
+        /// 集中判断某一调用栈帧是否应被跳过。
+        /// 覆盖：本 MOD 日志/Policy/四个 Harmony Prefix 基础设施类型、
+        /// Harmony/反射/运行时包装命名空间，以及被本 MOD Patch 的
+        /// 原版目标方法与其 Harmony wrapper（如 IncidentWorker.CanFireNow_Patch1）。
+        /// 不会跳过第三方 MOD 或本 MOD 的非基础设施组件。
+        /// </summary>
+        private static bool ShouldSkipFrame(
+            Type type,
+            string typeName,
+            MethodBase method)
+        {
+            if (SkippedTypeNames.Contains(typeName))
+            {
+                return true;
+            }
+
+            for (int i = 0; i < SkippedNamespacePrefixes.Count; i++)
+            {
+                if (typeName.StartsWith(
+                        SkippedNamespacePrefixes[i],
+                        StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            if (IsPatchedTargetInfrastructureFrame(type, method))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 精确识别被本 MOD Patch 的原版目标方法及其 Harmony 生成的 wrapper。
+        /// 只有当 DeclaringType 是我们明确 Patch 的目标类型时才跳过，
+        /// 避免误伤第三方 MOD 中恰好名字含 “_Patch” 的真实业务方法。
+        /// </summary>
+        private static bool IsPatchedTargetInfrastructureFrame(
+            Type type,
+            MethodBase method)
+        {
+            string methodName = method.Name;
+
+            if (type == typeof(IncidentWorker))
+            {
+                if (methodName == nameof(IncidentWorker.CanFireNow)
+                    || methodName.StartsWith(
+                        nameof(IncidentWorker.CanFireNow) + "_Patch",
+                        StringComparison.Ordinal))
+                {
+                    return true;
+                }
+
+                if (methodName == nameof(IncidentWorker.TryExecute)
+                    || methodName.StartsWith(
+                        nameof(IncidentWorker.TryExecute) + "_Patch",
+                        StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            if (type == typeof(QuestNode_Infestation))
+            {
+                if (methodName == "TestRunInt"
+                    || methodName.StartsWith(
+                        "TestRunInt_Patch",
+                        StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            if (type == typeof(QuestPart_Infestation))
+            {
+                string targetMethod =
+                    nameof(QuestPart_Infestation.Notify_QuestSignalReceived);
+
+                if (methodName == targetMethod
+                    || methodName.StartsWith(
+                        targetMethod + "_Patch",
+                        StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string ResolveCallerDescription()
@@ -134,32 +228,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                     string typeName = type.FullName ?? type.ToString();
 
-                    // 跳过本 MOD 拦截基础设施帧。
-                    if (SkippedTypeNames.Contains(typeName))
+                    if (ShouldSkipFrame(type, typeName, method))
                     {
                         continue;
                     }
-
-                    // 跳过 Harmony / System.Reflection / System.Runtime / MonoMod 包装层。
-                    bool skipNamespace = false;
-                    for (int j = 0; j < SkippedNamespacePrefixes.Count; j++)
-                    {
-                        if (typeName.StartsWith(
-                                SkippedNamespacePrefixes[j],
-                                StringComparison.Ordinal))
-                        {
-                            skipNamespace = true;
-                            break;
-                        }
-                    }
-
-                    if (skipNamespace)
-                    {
-                        continue;
-                    }
-
-                    // 容忍 Harmony 对原始方法的包装类型名（通常形如 <Type>_PatchN）。
-                    // 这里只按类型 FullName 判断，不依赖 DeclaringType 链。
 
                     Assembly assembly = method.Module.Assembly;
                     ModContentPack? mod = TryFindOwningMod(assembly);
