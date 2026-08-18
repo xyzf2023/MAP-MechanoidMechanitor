@@ -158,9 +158,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return null;
             }
 
-            candidates.Sort(
-                (left, right) => GetTargetPriority(right).CompareTo(GetTargetPriority(left)));
-            int bestPriority = GetTargetPriority(candidates[0]);
+            // 严格按优先级选择：只从优先级最高（数值最小）的合格候选中抽取。
+            // 不使用容易读反的降序 CompareTo 排序。
+            int bestPriority = candidates.Min(GetTargetPriority);
             List<WorldObject> bestClass = candidates
                 .Where(c => GetTargetPriority(c) == bestPriority)
                 .ToList();
@@ -279,7 +279,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 构造邀请说明文本（作为 Quest.description）。完整句子模板在语言文件中，
-        /// C# 只负责把动态占位符（首领、目标派系、目标地点、参与派系）填入。
+        /// C# 只负责把动态占位符（发起派系、首领描述、目标派系、目标地点、参与派系）填入。
+        /// 首领描述由 BuildProposerLeaderLabel 提供（称谓+名，或“{派系}的代表”兜底）。
         /// </summary>
         public static TaggedString BuildOfferDescription(
             Faction? proposer,
@@ -292,6 +293,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ", ",
                 participants.Select(f => f.Name));
             return "MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text".Translate(
+                proposer?.Name ?? "???",
                 leaderLabel,
                 targetFaction?.Name ?? "???",
                 targetWorldObject?.Label ?? "???",
@@ -311,6 +313,56 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             float raw = threatEstimate * def.rewardValueFactor;
             return (int)Mathf.Clamp(raw, def.minRewardValue, def.maxRewardValue);
+        }
+
+        /// <summary>
+        /// 计算“联合行动援军规模”所使用的真实目标威胁点（H）。
+        /// 不再使用 StorytellerUtility.DefaultThreatPointsNow（那是按玩家殖民地规模估算的）。
+        /// - Site / Outpost / WorkSite：优先读取站点自己保存的真实威胁点 Site.ActualThreatPoints；
+        ///   不可用时以目标派系当前实际敌对 Pawn 的战斗力总和作为可解释 fallback。
+        /// - Settlement：原版没有可靠的预存点数，直接以目标派系当前实际敌对 Pawn 的战斗力总和计算。
+        /// 计算结果保存为 targetThreatPointsAtDeployment，之后不得因地图敌人死亡/读档而改变。
+        /// </summary>
+        public static int TryGetTargetThreatPointsAtDeployment(
+            WorldObject? target,
+            Map? map)
+        {
+            if (target is Site site)
+            {
+                float actual = site.ActualThreatPoints;
+                if (actual > 0f)
+                {
+                    return Mathf.RoundToInt(actual);
+                }
+
+                return EstimateFromMapHostiles(map, site.Faction);
+            }
+
+            if (target is Settlement settlement)
+            {
+                return EstimateFromMapHostiles(map, settlement.Faction);
+            }
+
+            return EstimateFromMapHostiles(map, target?.Faction);
+        }
+
+        private static int EstimateFromMapHostiles(Map? map, Faction? faction)
+        {
+            if (map == null || faction == null)
+            {
+                return 1000;
+            }
+
+            float sum = 0f;
+            foreach (Pawn pawn in map.mapPawns.SpawnedPawnsInFaction(faction))
+            {
+                if (!pawn.Dead && pawn.Spawned)
+                {
+                    sum += pawn.kindDef.combatPower;
+                }
+            }
+
+            return Mathf.Max(1, Mathf.RoundToInt(sum));
         }
 
         public static bool ViolentQuestsAllowed =>

@@ -23,13 +23,15 @@
     <successTrustDeltaPerValidParticipant>12</successTrustDeltaPerValidParticipant>
     <failTrustDeltaPerValidParticipant>-8</failTrustDeltaPerValidParticipant>
 
-    <!-- 援军规模：每个参与派系按目标地图威胁点 × supportPointsFactor 提供支援。 -->
+    <!-- 援军规模：所有参与派系“合计”的援军点数 = 目标威胁点 × supportPointsFactor
+         （不是每个派系各算一次；点数再平均分配给仍有效且能生成战斗编组的参与派系）。 -->
     <supportPointsFactor>0.50</supportPointsFactor>
     <maxParticipants>3</maxParticipants>
-    <!-- 达到该科技等级使用快速空投抵达，否则从地图边缘步行进入。 -->
+    <!-- 达到该科技等级使用快速空投抵达，否则从地图边缘步行进入（由实际参与援军生成的派系最高科技统一决定）。 -->
     <industrialArrivalThreshold>Industrial</industrialArrivalThreshold>
 
-    <!-- 奖励：以标准任务奖励生成器生成实物奖励。 -->
+    <!-- 奖励：实物奖励本次暂不发放（见 QuestPart.GrantReward 注释）；
+         rewardValueFactor / minRewardValue / maxRewardValue 仅保留供未来以原版 Quest reward 路径扩展。 -->
     <rewardValueFactor>0.5</rewardValueFactor>
     <minRewardValue>300</minRewardValue>
     <maxRewardValue>3000</maxRewardValue>

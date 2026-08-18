@@ -257,8 +257,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            // 3）奖励估值：以玩家家园地图当前威胁点为基准（目标地图尚未生成），
-            //    再用配置系数钳制到 [minRewardValue, maxRewardValue]。
+            // 3）奖励估值：仅用于（当前已禁用的）实物奖励价值估算，不影响援军规模。
+            //    援军规模由 QuestPart 在部署时使用真实目标威胁点（TryGetTargetThreatPointsAtDeployment），
+            //    绝不在此处用 StorytellerUtility.DefaultThreatPointsNow 估算。
             float threat = EstimateThreatPoints();
             int rewardValue = SymbiosisCovenantJointOperationUtility.ComputeRewardValue(threat, def);
 
@@ -365,9 +366,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             public int CooldownRemainingTicks;
             public bool Ongoing;
             public string? TargetLabel;
+            public string? TargetQuestTag;
             public string Stage = "-";
             public int ParticipantsCount;
             public int RewardValue;
+            public int TargetThreatPointsAtDeployment;
+            public float TotalSupportPointsAtDeployment;
+            public int TrackedLordCount;
+            public List<string>? PerFactionSupport;
         }
 
         public static SymbiosisCovenantJointOperationDevSnapshot? GetDevSnapshot(
@@ -382,6 +388,37 @@ namespace MAP_MechanoidMechanitor.Scenarios
             QuestPart_SymbiosisCovenantJointOperation? part =
                 SymbiosisCovenantJointOperationUtility.FindActiveOperationPart();
 
+            int lordCount = 0;
+            List<string>? perFaction = null;
+            if (part != null)
+            {
+                Map? targetMap = (part.targetWorldObject as MapParent)?.Map;
+                if (targetMap != null && part.spawnedAidTags != null)
+                {
+                    foreach (string tag in part.spawnedAidTags)
+                    {
+                        lordCount += QuestPart_SymbiosisCovenantJointOperation
+                            .CountTaggedJointOpLordsPublic(targetMap, tag);
+                    }
+                }
+
+                if (part.supportRecords != null)
+                {
+                    perFaction = new List<string>();
+                    foreach (SymbiosisCovenantJointOperationFactionSupportRecord record in part.supportRecords)
+                    {
+                        perFaction.Add(
+                            (record.faction?.Name ?? "???")
+                            + " | points="
+                            + record.supportPoints.ToString("F0")
+                            + " | pawns="
+                            + record.pawnCount
+                            + " | aidTag="
+                            + (record.aidTag ?? "-"));
+                    }
+                }
+            }
+
             return new SymbiosisCovenantJointOperationDevSnapshot
             {
                 CovenantLevel = component.CovenantLevel,
@@ -391,9 +428,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 CooldownRemainingTicks = GetCooldownRemainingTicks(),
                 Ongoing = part != null,
                 TargetLabel = part?.targetWorldObject?.Label ?? null,
+                TargetQuestTag = part?.targetQuestTag ?? null,
                 Stage = part?.stage.ToString() ?? "-",
                 ParticipantsCount = part?.participantFactions?.Count ?? 0,
-                RewardValue = part?.rewardValue ?? 0
+                RewardValue = part?.rewardValue ?? 0,
+                TargetThreatPointsAtDeployment = part?.targetThreatPointsAtDeployment ?? 0,
+                TotalSupportPointsAtDeployment = part?.totalSupportPointsAtDeployment ?? 0f,
+                TrackedLordCount = lordCount,
+                PerFactionSupport = perFaction
             };
         }
 

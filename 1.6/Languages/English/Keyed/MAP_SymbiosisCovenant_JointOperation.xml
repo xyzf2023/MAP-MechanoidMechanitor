@@ -5,8 +5,11 @@
   <!-- Fallback leader label when proposer has no leader: {0}=faction name. -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>representative of {0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
 
-  <!-- Offer text: {0}=leader label, {1}=target faction name, {2}=target site, {3}=participant list. -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0} proposes a joint military operation with your colony against {1}, targeting {2}. The following covenant members will send real mixed reinforcements to fight alongside you: {3}. Will you accept this joint operation?</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>
+  <!-- Offer text: {0}=proposer faction name, {1}=leader descriptor (title+name or representative), {2}=target faction name, {3}=target site, {4}=participant list. -->
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}'s {1} has issued a call to the covenant for a joint military operation against {2}'s {3}. The following covenant members have agreed to join this operation: {4}. Will you take part in this joint operation?</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>
+
+  <!-- Aid leaving notice: {0}=faction name. -->
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>{0}'s reinforcements are withdrawing from the battlefield.</MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>
 
   <!-- Quest name: {0}=target faction name, {1}=target site. -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>Joint Operation: assault {1} (against {0})</MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>

@@ -25,12 +25,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int successTrustDeltaPerValidParticipant = 12;
         public int failTrustDeltaPerValidParticipant = -8;
 
-        // 援军规模
+        // 援军规模：所有参与派系“合计”的援军点数 = 目标威胁点 × supportPointsFactor
+        //（不是每个派系各算一次；点数再平均分配给仍有效且能生成战斗编组的参与派系）。
         public float supportPointsFactor = 0.50f;
         public int maxParticipants = 3;                   // 含发起者，玩家不计入
         public TechLevel industrialArrivalThreshold = TechLevel.Industrial;
 
-        // 奖励（以标准任务奖励生成器生成实物奖励）
+        // 奖励：实物奖励本次暂不发放（见 QuestPart.GrantReward 注释）。
+        // rewardValueFactor / minRewardValue / maxRewardValue 仅保留供未来以原版 Quest reward 路径扩展。
         public float rewardValueFactor = 0.5f;
         public int minRewardValue = 300;
         public int maxRewardValue = 3000;
@@ -114,12 +116,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
     /// <summary>
     /// 单个参与派系在援军生成时的支持记录，随 QuestPart 存档。
+    /// 用于恢复追踪本行动自己的援军 Lord（actionId + aidTag + 自定义 LordJob）。
     /// </summary>
     public sealed class SymbiosisCovenantJointOperationFactionSupportRecord : IExposable
     {
         public Faction? faction;
         public float supportPoints;
         public int pawnCount;
+        public string? aidTag;
 
         public SymbiosisCovenantJointOperationFactionSupportRecord()
         {
@@ -128,11 +132,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public SymbiosisCovenantJointOperationFactionSupportRecord(
             Faction faction,
             float supportPoints,
-            int pawnCount)
+            int pawnCount,
+            string? aidTag)
         {
             this.faction = faction;
             this.supportPoints = supportPoints;
             this.pawnCount = pawnCount;
+            this.aidTag = aidTag;
         }
 
         public void ExposeData()
@@ -140,6 +146,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_References.Look(ref faction, "faction");
             Scribe_Values.Look(ref supportPoints, "supportPoints", 0f);
             Scribe_Values.Look(ref pawnCount, "pawnCount", 0);
+            Scribe_Values.Look(ref aidTag, "aidTag");
         }
     }
 }

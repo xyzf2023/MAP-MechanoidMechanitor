@@ -69,12 +69,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
             quest.description = questDescription;
             QuestGen.slate.Set("resolvedQuestDescription", questDescription);
 
+            // 为目标 WorldObject / MapParent 添加本任务专属 targetQuestTag（F1）。
+            // 之后玩家进入目标地图会发出 <targetQuestTag>.MapGenerated，
+            // 站点清除后会发出 <targetQuestTag>.NoActiveThreats / .AllEnemiesDefeated，
+            // 由 QuestPart.ProcessQuestSignal 精确处理。
+            string targetQuestTag =
+                "MAP_SymbiosisCovenantJointOp_Target_" + quest.id;
+
+            if (target is MapParent mapParent)
+            {
+                QuestUtility.AddQuestTag(mapParent, targetQuestTag);
+            }
+
             QuestPart_SymbiosisCovenantJointOperation part =
                 new QuestPart_SymbiosisCovenantJointOperation
                 {
                     // 接取任务时由 InitiateSignal 启用本状态机，之后才开始自检与部署援军。
                     inSignalEnable = QuestGen.slate.Get<string>("inSignal"),
                     actionId = actionId,
+                    targetQuestTag = targetQuestTag,
                     targetWorldObject = target,
                     targetFaction = targetFaction,
                     proposerFaction = proposer,

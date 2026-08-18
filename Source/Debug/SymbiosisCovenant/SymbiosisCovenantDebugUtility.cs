@@ -1098,9 +1098,20 @@ namespace MAP_MechanoidMechanitor
             sb.AppendLine("CooldownRemainingTicks = " + snap.CooldownRemainingTicks);
             sb.AppendLine("Ongoing = " + snap.Ongoing);
             sb.AppendLine("Target = " + (snap.TargetLabel ?? "-"));
+            sb.AppendLine("TargetQuestTag = " + (snap.TargetQuestTag ?? "-"));
             sb.AppendLine("Stage = " + snap.Stage);
             sb.AppendLine("Participants = " + snap.ParticipantsCount);
             sb.AppendLine("RewardValue = " + snap.RewardValue);
+            sb.AppendLine("TargetThreatPointsAtDeployment = " + snap.TargetThreatPointsAtDeployment);
+            sb.AppendLine("TotalSupportPointsAtDeployment = " + snap.TotalSupportPointsAtDeployment.ToString("F1"));
+            sb.AppendLine("TrackedLordCount = " + snap.TrackedLordCount);
+            if (snap.PerFactionSupport != null)
+            {
+                for (int i = 0; i < snap.PerFactionSupport.Count; i++)
+                {
+                    sb.AppendLine("  Support[" + i + "] = " + snap.PerFactionSupport[i]);
+                }
+            }
             sb.AppendLine();
 
             return sb.ToString();

@@ -12,7 +12,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// 联合军事行动的唯一权威状态机。随 Quest 存档，所有行动状态
     /// （目标、参与派系、阶段、倒计时、援军生成状态）只存在于此，
     /// 不写入 GameComponent，避免 Quest 与 GameComponent 两套状态漂移。
-    /// 继承 QuestPartActivable：接取任务（InitiateSignal）时启用，之后每 tick 自检。
+    /// 继承 QuestPartActivable：接取任务（InitiateSignal）时启用，之后每 tick 自检，
+    /// 并通过 ProcessQuestSignal 处理目标地图的 MapGenerated / NoActiveThreats / AllEnemiesDefeated 信号。
     /// </summary>
     public class QuestPart_SymbiosisCovenantJointOperation : QuestPartActivable
     {
@@ -28,6 +29,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         public string? actionId;
+        public string? targetQuestTag;
         public SymbiosisCovenantJointOperationStage stage = SymbiosisCovenantJointOperationStage.OfferPending;
         public WorldObject? targetWorldObject;
         public Faction? targetFaction;
@@ -58,6 +60,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             stage != SymbiosisCovenantJointOperationStage.Succeeded
             && stage != SymbiosisCovenantJointOperationStage.Failed
             && stage != SymbiosisCovenantJointOperationStage.InvalidEnded;
+
+        /// <summary>
+        /// 是否已接取（OfferPending 不算；仅 OperationActive 及之后阶段算）。
+        /// 用于 Settlement 窄范围 Patch 只在已接取且尚未结束的行动上生效。
+        /// </summary>
+        public bool IsOperationAccepted =>
+            stage == SymbiosisCovenantJointOperationStage.OperationActive
+            || stage == SymbiosisCovenantJointOperationStage.TargetMapEntered
+            || stage == SymbiosisCovenantJointOperationStage.ReinforcementsDeployed;
 
         public override IEnumerable<GlobalTargetInfo> QuestLookTargets
         {
@@ -98,7 +109,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 玩家接取任务时调用：OfferPending → OperationActive，并设置行动超时。
+        /// 玩家接取任务时调用：OfferPending → OperationActive，并设置行动超时（15 天）。
         /// </summary>
         public override void PreQuestAccept()
         {
@@ -106,7 +117,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (stage == SymbiosisCovenantJointOperationStage.OfferPending)
             {
                 stage = SymbiosisCovenantJointOperationStage.OperationActive;
-                SymbiosisCovenantJointOperationDef def = ResolveDef()!;
+                SymbiosisCovenantJointOperationDef? def = ResolveDef();
                 operationExpireTick = Find.TickManager.TicksGame
                     + (def?.operationTimeoutTicks ?? 900000);
             }
@@ -142,11 +153,50 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        /// <summary>
+        /// 处理目标地图的原版 QuestTag 信号（F1）。
+        /// 信号由 Site/MapParent 通过 questTags 自动发出：
+        /// - &lt;targetQuestTag&gt;.MapGenerated：玩家已进入目标地图 → 部署援军（仅一次）。
+        /// - &lt;targetQuestTag&gt;.NoActiveThreats / .AllEnemiesDefeated：站点敌人已清除 → 成功结算。
+        /// Settlement 的成功不在此处理，由 SymbiosisCovenantJointOperationSettlementPatch 专用 Patch 触发。
+        /// </summary>
+        protected override void ProcessQuestSignal(Signal signal)
+        {
+            base.ProcessQuestSignal(signal);
+            if (!IsActive || targetQuestTag == null)
+            {
+                return;
+            }
+
+            string tag = signal.tag;
+
+            if (tag == targetQuestTag + ".MapGenerated")
+            {
+                // 玩家进入目标地图：部署联合援军（reinforcementsGenerated 防止重复/读档后重复）。
+                EnsureDeployedIfMapReady();
+                return;
+            }
+
+            if (tag == targetQuestTag + ".NoActiveThreats"
+                || tag == targetQuestTag + ".AllEnemiesDefeated")
+            {
+                // 仅对 Site / Outpost / WorkSite 生效；必须已接取且援军已部署阶段。
+                if (targetWorldObject is Site && IsOperationAccepted)
+                {
+                    BeginSuccess();
+                }
+            }
+        }
+
         private void TickActiveOrDeployed(int now)
         {
-            // 接取后、部署前的无效结束：目标被第三方移除、目标不再敌对玩家、参与派系全部失效、盟约降级。
+            // 部署（读档后地图已存在但尚未部署时也会在此触发，最多延迟一个检查间隔）。
+            EnsureDeployedIfMapReady();
+
             if (!reinforcementsGenerated)
             {
+                // 未部署阶段的无效结束：目标被第三方移除、目标不再敌对玩家、
+                // 参与派系全部失效、盟约降到 L3 以下。
                 if (targetWorldObject == null || targetWorldObject.Destroyed)
                 {
                     BeginInvalidEnd("targetRemoved");
@@ -173,85 +223,144 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     BeginInvalidEnd("covenantLevelTooLow");
                     return;
                 }
+
+                return;
             }
 
             Map? targetMap = (targetWorldObject as MapParent)?.Map;
             if (targetMap == null || !Find.Maps.Contains(targetMap))
             {
-                return;
-            }
-
-            bool playerOnMap = targetMap.mapPawns.FreeColonistsSpawnedCount > 0
-                || targetMap.mapPawns.AnyColonistSpawned;
-
-            if (!reinforcementsGenerated)
-            {
-                if (playerOnMap)
+                // 目标地图已不存在：成功应由 NoActiveThreats / AllEnemiesDefeated（Site）
+                // 或 SettlementDefeatUtility Patch（Settlement）在更早时机结算；
+                // 若目标仍存活但地图消失，按无效结束处理。
+                if (targetWorldObject != null && !targetWorldObject.Destroyed)
                 {
-                    // 玩家进入目标地图：进入阶段 → 生成真实混编联合援军 → 已部署阶段。
-                    stage = SymbiosisCovenantJointOperationStage.TargetMapEntered;
-                    playerEngaged = true;
-                    DeployReinforcements(targetMap);
-                    stage = SymbiosisCovenantJointOperationStage.ReinforcementsDeployed;
+                    BeginInvalidEnd("targetMapRemovedTargetAlive");
                 }
 
                 return;
             }
 
-            // 已部署：检测成功（目标移除/摧毁即视为清剿完成）。
+            // 已部署：目标被第三方移除 / 不再敌对 → 无效结束。
             if (targetWorldObject == null || targetWorldObject.Destroyed)
             {
-                BeginSuccess();
+                BeginInvalidEnd("targetRemoved");
                 return;
             }
 
-            if (playerEngaged && !AnyLivingTargetCombatant(targetMap))
+            if (targetFaction == null || !targetFaction.HostileTo(Faction.OfPlayer))
             {
-                BeginSuccess();
+                BeginInvalidEnd("targetNoLongerHostile");
+                return;
+            }
+
+            // E：目标地图已无对玩家有效的敌对威胁时，命令本行动援军撤离。
+            // （成功结算由 NoActiveThreats / AllEnemiesDefeated / Settlement Patch 另行触发。）
+            if (!GenHostility.AnyHostileActiveThreatToPlayer(targetMap))
+            {
+                CommandReinforcementsLeave();
             }
         }
 
-        private void DeployReinforcements(Map targetMap)
+        /// <summary>
+        /// 若本次行动尚未部署、且目标地图已存在，则部署联合援军。
+        /// 被 MapGenerated 信号与每 tick 自检共用，保证读档后也能正确部署（不依赖 FreeColonistsSpawnedCount）。
+        /// </summary>
+        private void EnsureDeployedIfMapReady()
         {
-            SymbiosisCovenantJointOperationDef def = ResolveDef()!;
-            if (def == null)
+            if (reinforcementsGenerated)
             {
                 return;
             }
 
-            targetThreatPointsAtDeployment = (int)StorytellerUtility.DefaultThreatPointsNow(targetMap);
+            if (stage != SymbiosisCovenantJointOperationStage.OperationActive
+                && stage != SymbiosisCovenantJointOperationStage.TargetMapEntered)
+            {
+                return;
+            }
+
+            Map? map = (targetWorldObject as MapParent)?.Map;
+            if (map == null || !Find.Maps.Contains(map))
+            {
+                return;
+            }
+
+            stage = SymbiosisCovenantJointOperationStage.TargetMapEntered;
+            DeployReinforcements(map);
+            stage = SymbiosisCovenantJointOperationStage.ReinforcementsDeployed;
+        }
+
+        // ===== 援军生成（B / C / D / H） =====
+
+        private void DeployReinforcements(Map targetMap)
+        {
+            SymbiosisCovenantJointOperationDef? def = ResolveDef();
+            if (def == null)
+            {
+                reinforcementsGenerated = true;
+                return;
+            }
+
+            // H：真实目标威胁点（不再使用 StorytellerUtility.DefaultThreatPointsNow）。
+            int threat = SymbiosisCovenantJointOperationUtility.TryGetTargetThreatPointsAtDeployment(
+                targetWorldObject, targetMap);
+            targetThreatPointsAtDeployment = threat;
+
+            // B：所有参与派系“合计”的援军点数 = 目标威胁点 × supportPointsFactor。
+            float total = threat * def.supportPointsFactor;
+            totalSupportPointsAtDeployment = total;
+
             supportRecords ??= new List<SymbiosisCovenantJointOperationFactionSupportRecord>();
             spawnedAidTags ??= new List<string>();
 
-            float total = 0f;
-            if (participantFactions != null)
+            // 只将点数分给部署时仍有效、且能生成战斗编组的参与派系（最多 maxParticipants）。
+            List<Faction> valid = ValidParticipantsNow();
+            if (valid.Count == 0)
             {
-                foreach (Faction participant in participantFactions)
-                {
-                    if (!IsParticipantStillValid(participant))
-                    {
-                        continue;
-                    }
-
-                    float support = targetThreatPointsAtDeployment * def.supportPointsFactor;
-                    string tag = MakeAidTag(targetMap, participant);
-                    IncidentParms parms = BuildAidParms(targetMap, participant, support, tag, def);
-                    bool executed = IncidentDefOf.RaidFriendly.Worker.TryExecute(parms);
-                    List<Lord> lords = FindTaggedAidLords(targetMap, tag, participant);
-                    if (executed && lords.Count > 0)
-                    {
-                        int pawnCount = lords.Sum(lord => lord.ownedPawns.Count);
-                        supportRecords.Add(
-                            new SymbiosisCovenantJointOperationFactionSupportRecord(
-                                participant, support, pawnCount));
-                        spawnedAidTags.Add(tag);
-                        total += support;
-                    }
-                }
+                reinforcementsGenerated = true; // 已尝试部署，避免重复
+                BeginInvalidEnd("noDeployableParticipant");
+                return;
             }
 
-            totalSupportPointsAtDeployment = total;
+            float[] assigned = AllocatePoints(valid, total);
+
+            // C：是否使用快速空投，由“本次实际参与援军生成的派系”的最高科技统一决定。
+            bool useQuick = valid
+                .Where((faction, index) => assigned[index] > 0f && faction != null)
+                .Any(faction => (int)faction.def.techLevel >= (int)def.industrialArrivalThreshold);
+
+            int generated = 0;
+            for (int i = 0; i < valid.Count; i++)
+            {
+                Faction participant = valid[i];
+                float points = assigned[i];
+                if (points <= 0f)
+                {
+                    continue;
+                }
+
+                List<Pawn>? pawns = GenerateCombatGroup(participant, points, targetMap, def);
+                if (pawns == null || pawns.Count == 0)
+                {
+                    continue;
+                }
+
+                string aidTag = MakeAidTag(targetMap, participant);
+                DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction);
+                supportRecords.Add(new SymbiosisCovenantJointOperationFactionSupportRecord(
+                    participant, points, pawns.Count, aidTag));
+                spawnedAidTags.Add(aidTag);
+                generated++;
+            }
+
             reinforcementsGenerated = true;
+
+            if (generated == 0)
+            {
+                // 没有任何可生成援军的参与派系：不要误设为“成功部署”，按无效结束安全收尾。
+                BeginInvalidEnd("noReinforcementsGenerated");
+                return;
+            }
 
             if (spawnedAidTags.Count > 0 && targetWorldObject != null)
             {
@@ -265,6 +374,187 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        /// <summary>
+        /// B：将总援军点数平均分配给“能生成有效战斗编组”的参与派系；
+        /// 不能生成的派系份额为 0（其预算被其余可生成派系均分）；
+        /// 最后一个可生成派系吸收浮点余量，保证总和 == total。
+        /// </summary>
+        private float[] AllocatePoints(List<Faction> participants, float total)
+        {
+            float[] assigned = new float[participants.Count];
+            bool[] canGenerate = new bool[participants.Count];
+            int generatable = 0;
+            for (int i = 0; i < participants.Count; i++)
+            {
+                canGenerate[i] = CanGenerateCombatGroup(participants[i]);
+                if (canGenerate[i])
+                {
+                    generatable++;
+                }
+            }
+
+            if (generatable == 0)
+            {
+                return assigned; // 全为 0
+            }
+
+            float per = total / generatable;
+            float used = 0f;
+            int lastIndex = -1;
+            for (int i = 0; i < participants.Count; i++)
+            {
+                if (!canGenerate[i])
+                {
+                    assigned[i] = 0f;
+                    continue;
+                }
+
+                assigned[i] = per;
+                used += per;
+                lastIndex = i;
+            }
+
+            // 最后一派吸收浮点余量，保证总和 == total。
+            if (lastIndex >= 0)
+            {
+                assigned[lastIndex] += total - used;
+            }
+
+            return assigned;
+        }
+
+        /// <summary>
+        /// 使用原版 PawnGroupMaker 链路为某个参与派系生成真实战斗编组（D）。
+        /// 不调用 RaidFriendly，不直接创建 Lord。
+        /// </summary>
+        private static List<Pawn>? GenerateCombatGroup(
+            Faction faction,
+            float points,
+            Map map,
+            SymbiosisCovenantJointOperationDef def)
+        {
+            IncidentParms parms = new IncidentParms
+            {
+                target = map,
+                faction = faction,
+                points = points,
+                raidStrategy = RaidStrategyDefOf.ImmediateAttackFriendly,
+                spawnCenter = map.Center
+            };
+
+            PawnGroupMakerParms makerParms = IncidentParmsUtility.GetDefaultPawnGroupMakerParms(
+                PawnGroupKindDefOf.Combat, parms, ensureCanGenerateAtLeastOnePawn: true);
+            if (!PawnGroupMakerUtility.TryGetRandomPawnGroupMaker(makerParms, out _))
+            {
+                return null;
+            }
+
+            List<Pawn> pawns = PawnGroupMakerUtility.GeneratePawns(makerParms, warnOnZeroResults: false)
+                .ToList();
+            if (pawns.Count == 0)
+            {
+                return null;
+            }
+
+            return pawns;
+        }
+
+        /// <summary>
+        /// 把生成的援军送入目标地图并创建本 MOD 自定义 Lord（D / C）。
+        /// 抵达方式（快速空投或边缘步行）由 useQuick 统一决定。
+        /// 每只援军写入唯一 aidTag，并通过 QuestUtility.AddQuestTag 标记到 Lord，
+        /// 之后只通过 LordJob 类型 + aidTag 精确追踪，不误伤其他援军。
+        /// </summary>
+        private static void DeployGroup(
+            Faction faction,
+            List<Pawn> pawns,
+            float points,
+            Map map,
+            bool useQuick,
+            string aidTag,
+            Faction? enemyFaction)
+        {
+            PawnsArrivalModeDef arrivalMode = useQuick
+                ? PawnsArrivalModeDefOf.CenterDrop
+                : PawnsArrivalModeDefOf.EdgeWalkIn;
+
+            IncidentParms parms = new IncidentParms
+            {
+                target = map,
+                faction = faction,
+                points = points,
+                raidStrategy = RaidStrategyDefOf.ImmediateAttackFriendly,
+                spawnCenter = map.Center,
+                raidArrivalMode = arrivalMode,
+                raidArrivalModeForQuickMilitaryAid = useQuick
+            };
+
+            // 步行抵达需要先解析边缘出生点；空投抵达使用中心落点。
+            if (!useQuick)
+            {
+                arrivalMode.Worker.TryResolveRaidSpawnCenter(parms);
+            }
+
+            arrivalMode.Worker.Arrive(pawns, parms);
+
+            LordJob_SymbiosisCovenantJointOperation job =
+                new LordJob_SymbiosisCovenantJointOperation(faction, enemyFaction, map.Center);
+            Lord? lord = LordMaker.MakeNewLord(faction, job, map, pawns);
+            if (lord != null)
+            {
+                QuestUtility.AddQuestTag(lord, aidTag);
+            }
+        }
+
+        /// <summary>
+        /// E：仅向本行动自己的援军 Lord 发出专用撤离 memo（不 Destroy / Kill 任何 Pawn）。
+        /// </summary>
+        private void CommandReinforcementsLeave()
+        {
+            if (spawnedAidTags == null || spawnedAidTags.Count == 0)
+            {
+                return;
+            }
+
+            Map? map = (targetWorldObject as MapParent)?.Map;
+            if (map == null || !Find.Maps.Contains(map))
+            {
+                return;
+            }
+
+            foreach (string tag in spawnedAidTags)
+            {
+                foreach (Lord lord in FindTaggedJointOpLords(map, tag))
+                {
+                    LordJob_SymbiosisCovenantJointOperation.SendLeave(lord);
+                }
+            }
+        }
+
+        private static List<Lord> FindTaggedJointOpLords(Map map, string? tag)
+        {
+            if (string.IsNullOrEmpty(tag) || map?.lordManager == null)
+            {
+                return new List<Lord>();
+            }
+
+            return map.lordManager.lords
+                .Where(lord =>
+                    lord != null
+                    && lord.LordJob is LordJob_SymbiosisCovenantJointOperation
+                    && lord.questTags != null
+                    && lord.questTags.Contains(tag))
+                .ToList();
+        }
+
+        /// <summary>
+        /// DEV 用：统计某个 aidTag 对应的本行动援军 Lord 数量（供状态快照展示）。
+        /// </summary>
+        public static int CountTaggedJointOpLordsPublic(Map map, string? tag)
+        {
+            return FindTaggedJointOpLords(map, tag).Count;
+        }
+
         private void BeginSuccess()
         {
             if (successApplied || failureApplied || invalidEndApplied)
@@ -273,8 +563,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             stage = SymbiosisCovenantJointOperationStage.Succeeded;
+            CommandReinforcementsLeave();
             ApplySuccessOutcome();
-            GrantReward();
+            // J：实物奖励本次暂不发放，仅保留 Unity / Trust 成功奖励（见 GrantReward 注释）。
             quest?.End(QuestEndOutcome.Success);
         }
 
@@ -286,6 +577,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             stage = SymbiosisCovenantJointOperationStage.Failed;
+            CommandReinforcementsLeave();
             ApplyFailOutcome();
             quest?.End(QuestEndOutcome.Fail);
         }
@@ -298,13 +590,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             stage = SymbiosisCovenantJointOperationStage.InvalidEnded;
+            CommandReinforcementsLeave();
             ApplyInvalidOutcome();
             quest?.End(QuestEndOutcome.Unknown);
         }
 
         /// <summary>
-        /// 任务清理（无论何种原因结束都会调用）。这是未显式结算时的兜底：
-        /// 邀请被拒绝/过期 → 5 天冷却；已接取但未明确结算 → 按失败处理。
+        /// F2：由 SymbiosisCovenantJointOperationSettlementPatch 在据点被原版正确摧毁后调用。
+        /// 仅当引用一致且已接取、尚未结束时结算成功。
+        /// </summary>
+        public void NotifySettlementDestroyed(Settlement factionBase)
+        {
+            if (!IsOperationAccepted)
+            {
+                return;
+            }
+
+            if (targetWorldObject == null || !ReferenceEquals(targetWorldObject, factionBase))
+            {
+                return;
+            }
+
+            BeginSuccess();
+        }
+
+        /// <summary>
+        /// 任务清理（无论何种原因结束都会调用）。这是未显式结算时的兜底（G7）：
+        /// 邀请被拒绝/过期 → 5 天冷却，无奖惩；
+        /// 已接取但未由本系统显式结算（非 timeout 失败）→ 默认无效结束（不加不减 Unity/Trust），
+        /// 绝不因外部中断/未知原因误扣惩罚。
         /// </summary>
         public override void Notify_PreCleanup()
         {
@@ -315,7 +629,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             int now = Find.TickManager?.TicksGame ?? 0;
-            SymbiosisCovenantJointOperationDef def = ResolveDef()!;
+            SymbiosisCovenantJointOperationDef? def = ResolveDef();
             if (stage == SymbiosisCovenantJointOperationStage.OfferPending)
             {
                 declinedOrExpiredApplied = true;
@@ -327,31 +641,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             else
             {
-                failureApplied = true;
-                if (def != null)
-                {
-                    GameComponent_SymbiosisCovenantState.TryAdjustUnity(
-                        def.failUnityDelta,
-                        "MAP_MechanoidMechanitor.Symbiosis.TrustReason.JointOperation");
-                    foreach (Faction faction in ValidParticipantsNow())
-                    {
-                        GameComponent_SymbiosisCovenantState.TryAdjustTrust(
-                            faction,
-                            def.failTrustDeltaPerValidParticipant,
-                            "MAP_MechanoidMechanitor.Symbiosis.TrustReason.JointOperation",
-                            SymbiosisCovenantTrustSource.Quest);
-                    }
-
-                    SymbiosisCovenantJointOperationScheduler
-                        .SetCooldownEndTick(now + def.completedOrFailedCooldownTicks);
-                }
+                BeginInvalidEnd("preCleanupUnknown");
             }
         }
 
         private void ApplySuccessOutcome()
         {
             successApplied = true;
-            SymbiosisCovenantJointOperationDef def = ResolveDef()!;
+            SymbiosisCovenantJointOperationDef? def = ResolveDef();
             if (def == null)
             {
                 return;
@@ -376,7 +673,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void ApplyFailOutcome()
         {
             failureApplied = true;
-            SymbiosisCovenantJointOperationDef def = ResolveDef()!;
+            SymbiosisCovenantJointOperationDef? def = ResolveDef();
             if (def == null)
             {
                 return;
@@ -401,7 +698,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void ApplyInvalidOutcome()
         {
             invalidEndApplied = true;
-            SymbiosisCovenantJointOperationDef def = ResolveDef()!;
+            SymbiosisCovenantJointOperationDef? def = ResolveDef();
             if (def == null)
             {
                 return;
@@ -412,52 +709,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .SetCooldownEndTick(now + def.invalidEndCooldownTicks);
         }
 
+        /// <summary>
+        /// J：实物奖励本次暂不发放。
+        /// 原实现用 ThingSetMakerDefOf.Reward_ItemsStandard + GenPlace 直接放置物品，
+        /// 不是完整的原版 Quest 奖励流程，可能在纯机械殖民地/目标地图移除等情况下错发。
+        /// 本次修复优先保证行动/目标/援军/结算正确，实物奖励保留 Def 字段供未来以原版
+        /// Quest reward 路径单独实现，此处故意留空。
+        /// </summary>
         private void GrantReward()
         {
-            SymbiosisCovenantJointOperationDef def = ResolveDef()!;
-            if (def == null || rewardValue <= 0)
-            {
-                return;
-            }
-
-            ThingSetMakerParams makerParams = new ThingSetMakerParams
-            {
-                totalMarketValueRange = new FloatRange(rewardValue, rewardValue)
-            };
-            List<Thing> things = ThingSetMakerDefOf.Reward_ItemsStandard.root.Generate(makerParams);
-            if (things == null || things.Count == 0)
-            {
-                return;
-            }
-
-            Map? dropMap = ChooseRewardDropMap();
-            if (dropMap == null)
-            {
-                return;
-            }
-
-            IntVec3 center = DropCellFinder.FindRaidDropCenterDistant(dropMap);
-            foreach (Thing thing in things)
-            {
-                GenPlace.TryPlaceThing(
-                    thing,
-                    center,
-                    dropMap,
-                    ThingPlaceMode.Near);
-            }
-
-            Find.LetterStack.ReceiveLetter(
-                "MAP_MechanoidMechanitor.Symbiosis.JointOp.Reward.Letter.Label".Translate(),
-                "MAP_MechanoidMechanitor.Symbiosis.JointOp.Reward.Letter.Text"
-                    .Translate(dropMap.Parent.Label),
-                LetterDefOf.PositiveEvent,
-                new GlobalTargetInfo(dropMap.Parent));
         }
 
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Values.Look(ref actionId, "actionId");
+            Scribe_Values.Look(ref targetQuestTag, "targetQuestTag");
             Scribe_Values.Look(ref stage, "stage", SymbiosisCovenantJointOperationStage.OfferPending);
             Scribe_References.Look(ref targetWorldObject, "targetWorldObject");
             Scribe_References.Look(ref targetFaction, "targetFaction");
@@ -491,7 +758,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        // ===== 静态入口：供调度器在盟约降级时取消进行中的行动 =====
+        // ===== 静态入口：供调度器在盟约降级时取消进行中的行动（G6） =====
 
         public static void NotifyCovenantLevelChanged(int level)
         {
@@ -573,75 +840,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        private bool AnyLivingTargetCombatant(Map map)
+        private static bool CanGenerateCombatGroup(Faction faction)
         {
-            if (map?.mapPawns == null)
+            if (faction.def?.raidsForbidden == true)
             {
                 return false;
             }
 
-            foreach (Pawn pawn in map.mapPawns.AllPawns)
+            // 仅做能力判定，不真正生成；使用安全的最小参数（与共同防卫判定一致）。
+            PawnGroupMakerParms makerParms = new PawnGroupMakerParms
             {
-                if (pawn.Faction == null || pawn.Dead || !pawn.Spawned)
-                {
-                    continue;
-                }
-
-                if (pawn.Faction == targetFaction && !pawn.Downed)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private Map? ChooseRewardDropMap()
-        {
-            Map? targetMap = (targetWorldObject as MapParent)?.Map;
-            if (targetMap != null && Find.Maps.Contains(targetMap)
-                && (targetMap.mapPawns.FreeColonistsSpawnedCount > 0
-                    || targetMap.mapPawns.AnyColonistSpawned))
-            {
-                return targetMap;
-            }
-
-            foreach (Map map in Find.Maps)
-            {
-                if (map.IsPlayerHome && map.mapPawns.FreeColonistsSpawnedCount > 0)
-                {
-                    return map;
-                }
-            }
-
-            return null;
-        }
-
-        private static IncidentParms BuildAidParms(
-            Map map,
-            Faction faction,
-            float support,
-            string tag,
-            SymbiosisCovenantJointOperationDef def)
-        {
-            IncidentParms parms = new IncidentParms
-            {
-                target = map,
                 faction = faction,
-                points = support,
-                raidStrategy = RaidStrategyDefOf.ImmediateAttackFriendly,
-                questTag = tag
+                groupKind = PawnGroupKindDefOf.Combat,
+                points = 1000f
             };
-            if ((int)faction.def.techLevel >= (int)def.industrialArrivalThreshold)
-            {
-                parms.raidArrivalModeForQuickMilitaryAid = true;
-            }
-            else
-            {
-                parms.raidArrivalMode = PawnsArrivalModeDefOf.EdgeWalkIn;
-            }
-
-            return parms;
+            return PawnGroupMakerUtility.TryGetRandomPawnGroupMaker(makerParms, out _);
         }
 
         private static string MakeAidTag(Map map, Faction responder)
@@ -654,24 +867,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 + tick
                 + "_"
                 + responder.GetUniqueLoadID();
-        }
-
-        private static List<Lord> FindTaggedAidLords(Map map, string? tag, Faction? faction = null)
-        {
-            if (string.IsNullOrEmpty(tag) || map?.lordManager == null)
-            {
-                return new List<Lord>();
-            }
-
-            return map.lordManager.lords
-                .Where(lord =>
-                    lord != null
-                    && lord.LordJob is LordJob_AssistColony
-                    && lord.AnyActivePawn
-                    && (faction == null || lord.faction == faction)
-                    && lord.questTags != null
-                    && lord.questTags.Contains(tag))
-                .ToList();
         }
     }
 }
