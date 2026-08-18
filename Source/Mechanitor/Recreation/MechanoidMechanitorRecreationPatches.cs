@@ -125,5 +125,36 @@ namespace MAP_MechanoidMechanitor
                         sendLetter: true);
             }
         }
+
+        /// <summary>
+        /// 禁止本系统产生的机械族机械师娱乐 Job 触发 opportunistic prefix。
+        /// 原版多个白名单娱乐 JobDef 开启了 allowOpportunisticPrefix = true，
+        /// 启动这些 Job 时 Pawn_JobTracker.TryOpportunisticJob 可能插入顺路搬运，
+        /// 使原娱乐 Job 先入队、后续由 ThinkNode_QueuedJob 取出并改写 jobGiver，
+        /// 导致 job.jobGiver 不再是我们自己的 JobGiver，从而 JoyTick 兼容与灵感 Roll 失效。
+        /// 这里只对 IsManagedRecreationJob 为 true 的 Job 跳过 opportunistic prefix，
+        /// 其他 Job 完全走原版。
+        /// </summary>
+        [HarmonyPatch(
+            typeof(Pawn_JobTracker),
+            nameof(Pawn_JobTracker.TryOpportunisticJob))]
+        public static class Patch_Pawn_JobTracker_TryOpportunisticJob_MechanoidMechanitorRecreation
+        {
+            [HarmonyPrefix]
+            public static bool Prefix(
+                Pawn ___pawn,
+                Job job,
+                ref Job? __result)
+            {
+                if (!MechanoidMechanitorRecreationUtility
+                        .IsManagedRecreationJob(___pawn, job))
+                {
+                    return true;
+                }
+
+                __result = null;
+                return false;
+            }
+        }
     }
 }
