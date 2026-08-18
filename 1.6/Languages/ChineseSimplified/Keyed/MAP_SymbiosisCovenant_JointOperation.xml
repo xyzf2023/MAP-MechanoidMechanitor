@@ -2,8 +2,8 @@
 <LanguageData>
   <!-- 联合军事行动（L4 独立机制）文本。C# 只传入动态占位符，完整句子模板在此处。 -->
 
-  <!-- 发起者首领标签缺失时的兜底：{0}=派系名。 -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>{0}的代表</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
+  <!-- 发起者没有首领时的首领描述兜底。外层模板已包含“{派系}的”。 -->
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>代表</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
 
   <!-- 邀请说明：{0}=发起派系名，{1}=首领描述（称谓+名 或“{派系}的代表”），{2}=目标派系名，{3}=目标地点，{4}=参与派系列表。 -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}的{1}向联盟发出军事行动邀请，共同进攻{2}的{3}。目前同意加入本次军事行动的派系有：{4}。我们要参与本次军事行动吗？</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>

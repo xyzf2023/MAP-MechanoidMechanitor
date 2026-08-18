@@ -2,8 +2,8 @@
 <LanguageData>
   <!-- Joint military operation (L4 standalone mechanic). C# only passes placeholders; full sentences live here. -->
 
-  <!-- Fallback leader label when proposer has no leader: {0}=faction name. -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>representative of {0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
+  <!-- Fallback leader descriptor when the proposer has no leader. The outer template already contains the faction name. -->
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>representative</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
 
   <!-- Offer text: {0}=proposer faction name, {1}=leader descriptor (title+name or representative), {2}=target faction name, {3}=target site, {4}=participant list. -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}'s {1} has issued a call to the covenant for a joint military operation against {2}'s {3}. The following covenant members have agreed to join this operation: {4}. Will you take part in this joint operation?</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>

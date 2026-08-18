@@ -346,7 +346,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 string aidTag = MakeAidTag(targetMap, participant);
-                DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction);
+                if (!DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction))
+                {
+                    continue;
+                }
+
                 supportRecords.Add(new SymbiosisCovenantJointOperationFactionSupportRecord(
                     participant, points, pawns.Count, aidTag));
                 spawnedAidTags.Add(aidTag);
@@ -465,7 +469,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// 每只援军写入唯一 aidTag，并通过 QuestUtility.AddQuestTag 标记到 Lord，
         /// 之后只通过 LordJob 类型 + aidTag 精确追踪，不误伤其他援军。
         /// </summary>
-        private static void DeployGroup(
+        private static bool DeployGroup(
             Faction faction,
             List<Pawn> pawns,
             float points,
@@ -484,15 +488,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 faction = faction,
                 points = points,
                 raidStrategy = RaidStrategyDefOf.ImmediateAttackFriendly,
-                spawnCenter = map.Center,
+                // EdgeWalkIn 只有在 spawnCenter 无效时才会寻找地图边缘入口。
+                // 因此低科技步行援军必须从 Invalid 开始，不能预填 map.Center。
+                spawnCenter = useQuick ? map.Center : IntVec3.Invalid,
                 raidArrivalMode = arrivalMode,
                 raidArrivalModeForQuickMilitaryAid = useQuick
             };
 
-            // 步行抵达需要先解析边缘出生点；空投抵达使用中心落点。
-            if (!useQuick)
+            // 步行抵达必须成功解析合法的地图边缘入口；失败时不得继续在中心生成。
+            if (!useQuick && !arrivalMode.Worker.TryResolveRaidSpawnCenter(parms))
             {
-                arrivalMode.Worker.TryResolveRaidSpawnCenter(parms);
+                return false;
             }
 
             arrivalMode.Worker.Arrive(pawns, parms);
@@ -500,10 +506,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             LordJob_SymbiosisCovenantJointOperation job =
                 new LordJob_SymbiosisCovenantJointOperation(faction, enemyFaction, map.Center);
             Lord? lord = LordMaker.MakeNewLord(faction, job, map, pawns);
-            if (lord != null)
+            if (lord == null)
             {
-                QuestUtility.AddQuestTag(lord, aidTag);
+                return false;
             }
+
+            QuestUtility.AddQuestTag(lord, aidTag);
+            return true;
         }
 
         /// <summary>
@@ -516,17 +525,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Map? map = (targetWorldObject as MapParent)?.Map;
-            if (map == null || !Find.Maps.Contains(map))
+            // 不依赖 targetWorldObject.Map：据点被原版摧毁时，旧 Settlement 已被
+            // DestroyedSettlement 替换，旧目标引用将不再能找到原地图。
+            // 通过 aidTag 在当前所有地图中寻找本行动自己的 Lord，才能保证结算后仍会撤离。
+            foreach (Map map in Find.Maps)
             {
-                return;
-            }
-
-            foreach (string tag in spawnedAidTags)
-            {
-                foreach (Lord lord in FindTaggedJointOpLords(map, tag))
+                foreach (string tag in spawnedAidTags)
                 {
-                    LordJob_SymbiosisCovenantJointOperation.SendLeave(lord);
+                    foreach (Lord lord in FindTaggedJointOpLords(map, tag))
+                    {
+                        LordJob_SymbiosisCovenantJointOperation.SendLeave(lord);
+                    }
                 }
             }
         }
@@ -641,7 +650,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             else
             {
-                BeginInvalidEnd("preCleanupUnknown");
+                // 此处已在 Quest.End → CleanupQuestParts 调用链内，绝不能再次调用 quest.End，
+                // 否则会重入清理并造成重复 Cleanup / 重复结束信件。
+                stage = SymbiosisCovenantJointOperationStage.InvalidEnded;
+                CommandReinforcementsLeave();
+                ApplyInvalidOutcome();
             }
         }
 
