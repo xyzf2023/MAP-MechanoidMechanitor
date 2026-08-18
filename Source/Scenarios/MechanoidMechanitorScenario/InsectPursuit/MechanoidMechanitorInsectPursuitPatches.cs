@@ -21,8 +21,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static class MechanoidMechanitorInsectPursuit_InfestationCanFireNow_Patch
         {
             [HarmonyPrefix]
-            public static void Prefix(IncidentParms parms)
+            public static void Prefix(
+                IncidentParms parms,
+                out bool __state)
             {
+                __state = false;
+
                 // Quest 类型的虫灾完全不受“允许无厚岩顶”功能影响：
                 // 不进入 fallback scope，避免污染其 infestationLocOverride。
                 if (parms == null || parms.quest != null)
@@ -30,17 +34,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return;
                 }
 
-                if (MechanoidMechanitorInsectPursuitInfestationUtility
+                if (!MechanoidMechanitorInsectPursuitInfestationUtility
                     .CanUseNoThickRoofFallback())
                 {
-                    MechanoidMechanitorInsectPursuitInfestationUtility
-                        .BeginStandardInfestationCanFireScope(parms);
+                    return;
                 }
+
+                MechanoidMechanitorInsectPursuitInfestationUtility
+                    .BeginStandardInfestationCanFireScope(parms);
+
+                __state = true;
             }
 
             [HarmonyFinalizer]
-            public static void Finalizer()
+            public static void Finalizer(bool __state)
             {
+                // 只有本次 Prefix 真正调用过 Begin 时，才对应调用一次 End，
+                // 严格一一对应，避免本次未 Begin 却因无条件 End 破坏外层 scope。
+                if (!__state)
+                {
+                    return;
+                }
+
                 MechanoidMechanitorInsectPursuitInfestationUtility
                     .EndStandardInfestationCanFireScope();
             }
