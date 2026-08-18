@@ -112,14 +112,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 地图是否可以用来承载一次标准虫灾。
-        /// 原版 InfestationCellFinder 有合法位置，或（Pursuit 设置允许时）存在无厚岩顶 fallback 位置。
-        /// 此处的 InfestationCellFinder.TryFindCell 调用发生在 CanFireNowSub 作用域之外，
+        /// 当前地图是否有资格“此刻开始一次 Pursuit 追猎”（仅用于 Hunt Warning 阶段筛选）。
+        /// 至少检查：
+        /// 1. 原版虫灾自身资格：虫族派系存在；
+        /// 2. 原版虫灾自身资格：已有 Hive 数量 &lt; 30；
+        /// 3. 原版 InfestationCellFinder 有合法位置，或（Pursuit 设置允许时）存在无厚岩顶 fallback 位置。
+        ///
+        /// 注意：此处的 InfestationCellFinder.TryFindCell 调用发生在 CanFireNowSub 作用域之外，
         /// 不会触发 fallback postfix，因此返回的是原版真实结果。
+        /// 真正攻击阶段仍必须重新调用 TryPrepareManagedInfestation，因为 8~12 小时内地图可能变化。
         /// </summary>
-        public static bool CanMapHostInfestation(Map map)
+        public static bool CanCurrentlyHostManagedInfestation(Map map)
         {
             if (map == null)
+            {
+                return false;
+            }
+
+            // 原版虫灾自身资格：虫族派系必须存在。
+            if (Faction.OfInsects == null)
+            {
+                return false;
+            }
+
+            // 原版虫灾自身资格：已有 Hive 数量必须小于 30。
+            if (HiveUtility.TotalSpawnedHivesCount(map) >= 30)
             {
                 return false;
             }

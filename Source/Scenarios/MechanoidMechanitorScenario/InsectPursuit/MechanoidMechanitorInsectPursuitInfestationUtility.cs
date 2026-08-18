@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RimWorld;
 using Verse;
 
@@ -19,12 +20,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [ThreadStatic]
         private static int standardInfestationCanFireScopeDepth;
 
+        // 在 CanFireNowSub 作用域期间，记录当前正在评估的 IncidentParms，
+        // 使得 fallback 找到的 cell 能直接缓存进同一个 parms，
+        // 避免“资格检查找到一次、真正执行又重新随机一次”的不一致。
+        [ThreadStatic]
+        private static IncidentParms? standardInfestationCanFireParms;
+
         public static bool InStandardInfestationCanFireScope =>
             standardInfestationCanFireScopeDepth > 0;
 
-        public static void BeginStandardInfestationCanFireScope()
+        public static IncidentParms? StandardInfestationCanFireParms =>
+            InStandardInfestationCanFireScope
+                ? standardInfestationCanFireParms
+                : null;
+
+        public static void BeginStandardInfestationCanFireScope(
+            IncidentParms parms)
         {
             standardInfestationCanFireScopeDepth++;
+
+            // 只在第一层进入时记录 parms，嵌套调用不直接覆盖。
+            if (standardInfestationCanFireScopeDepth == 1)
+            {
+                standardInfestationCanFireParms = parms;
+            }
         }
 
         public static void EndStandardInfestationCanFireScope()
@@ -32,6 +51,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (standardInfestationCanFireScopeDepth > 0)
             {
                 standardInfestationCanFireScopeDepth--;
+            }
+
+            // 防止负数，并在作用域完全退出时清空 parms（异常安全由调用方 Finalizer 保证）。
+            if (standardInfestationCanFireScopeDepth <= 0)
+            {
+                standardInfestationCanFireScopeDepth = 0;
+                standardInfestationCanFireParms = null;
             }
         }
 
@@ -56,54 +82,142 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 为即将执行的 IncidentWorker_Infestation 准备 parms：
-        /// 仅当原版 cell 不存在时，才把 infestationLocOverride 写入 fallback 位置。
-        /// 有原版 cell 时完全不修改 parms，山地地图仍按原版选点。
-        ///
-        /// 注意：本调用内部的 InfestationCellFinder.TryFindCell 发生在 CanFireNowSub 作用域之外，
-        /// 不会触发本模块的 fallback postfix，因此观察到的是原版真实结果（不递归、不误判）。
-        ///
-        /// 任务型虫灾（parms.quest != null）不应用 fallback，保留其原版独立生成资格。
+        /// 是否应该由本模块接管一次标准虫灾的 TryExecute 准备/拦截。
+        /// 仅当：非任务虫灾 + 当前允许无厚岩顶 fallback（即 Pursuit 模式 + 设置开启）。
+        /// 其他模式（Default / Ally / PermanentNeutral）、Quest，以及设置关闭时一律返回 false，
+        /// TryExecuteWorker Prefix 对此直接放行，不改变原版行为。
         /// </summary>
-        public static void PrepareInfestationParmsForExecution(
-            Map map,
+        public static bool ShouldManageStandardInfestationExecution(
             IncidentParms parms)
         {
-            if (parms == null || map == null)
+            if (parms == null)
             {
-                return;
+                return false;
             }
 
             // 任务型虫灾：保留原版行为，不被追杀 fallback 改变。
             if (parms.quest != null)
             {
-                return;
+                return false;
             }
 
-            if (!CanUseNoThickRoofFallback())
+            return CanUseNoThickRoofFallback();
+        }
+
+        /// <summary>
+        /// Pursuit Manager 自己触发标准虫灾的 authoritative 准备方法。
+        /// 同时解决：原版虫族 faction 是否存在、原版 30 Hive 上限、
+        /// vanilla-first、fallback、并把 fallback cell 直接写入 parms.infestationLocOverride。
+        ///
+        /// 资格检查与实际执行使用同一次解析，避免二次随机导致
+        /// “检查成功但执行时第二次找不到位置、最终 IncidentWorker 返回 true 却没有实际生成”。
+        ///
+        /// 返回 true 表示 parms 已准备好（或无需 override）可以执行；
+        /// 返回 false 表示不满足原版虫灾自身资格，不应触发。
+        /// </summary>
+        public static bool TryPrepareManagedInfestation(
+            Map map,
+            IncidentParms parms)
+        {
+            if (map == null || parms == null)
             {
-                return;
+                return false;
             }
 
+            // 原版虫灾自身资格 1：虫族派系必须存在。
+            if (Faction.OfInsects == null)
+            {
+                return false;
+            }
+
+            // 原版虫灾自身资格 2：已有 Hive 数量必须小于 30。
+            if (HiveUtility.TotalSpawnedHivesCount(map) >= 30)
+            {
+                return false;
+            }
+
+            // 已有 override（例如 Manager 已写入或 CanFireNowSub 已缓存）：直接复用，不重新找。
             if (parms.infestationLocOverride != null)
             {
-                return;
+                return true;
             }
 
-            // 原版优先：此处调用在 CanFireNowSub 作用域之外，postfix 不会改写结果。
+            // 原版优先：此处调用在 CanFireNowSub 作用域之外，postfix 不会改写结果，不递归。
             if (InfestationCellFinder.TryFindCell(out _, map))
             {
-                return;
+                return true;
+            }
+
+            // 原版失败以后才尝试一次 fallback。
+            if (!CanUseNoThickRoofFallback())
+            {
+                return false;
             }
 
             if (TryFindFallbackCell(map, out IntVec3 fallbackCell))
             {
                 parms.infestationLocOverride = fallbackCell;
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
-        /// 在殖民地实际活动范围附近寻找一个适合 TunnelHiveSpawner 的备用格。
+        /// 为即将执行的 IncidentWorker_Infestation 准备 parms.infestationLocOverride。
+        /// 返回 true 表示可以继续原版 TryExecuteWorker；false 表示当前既无 vanilla cell
+        /// 也无法获得 fallback，不应继续执行（原版 TryExecuteWorker 即使无实际 Tunnel 也可能 return true）。
+        ///
+        /// 只有 Pursuit + fallback 设置 ON + 非 quest 标准 Infestation 才会走到“失败阻止”分支；
+        /// 其他模式与设置关闭时一律返回 true，不改变原版行为。
+        /// </summary>
+        public static bool PrepareInfestationParmsForExecution(
+            Map map,
+            IncidentParms parms)
+        {
+            if (parms == null || map == null)
+            {
+                return true;
+            }
+
+            // 任务型虫灾：保留原版行为，不被追杀 fallback 改变。
+            if (parms.quest != null)
+            {
+                return true;
+            }
+
+            if (!CanUseNoThickRoofFallback())
+            {
+                return true;
+            }
+
+            // 已有 override（例如 CanFireNowSub 作用域中已缓存，或 Manager 已写入）：
+            // 直接复用，不重新找 cell。
+            if (parms.infestationLocOverride != null)
+            {
+                return true;
+            }
+
+            // 原版优先：此处调用在 CanFireNowSub 作用域之外，postfix 不会改写结果，不递归。
+            if (InfestationCellFinder.TryFindCell(out _, map))
+            {
+                return true;
+            }
+
+            // 原版失败：只尝试一次 fallback。
+            if (TryFindFallbackCell(map, out IntVec3 fallbackCell))
+            {
+                parms.infestationLocOverride = fallbackCell;
+                return true;
+            }
+
+            // fallback 也失败：当前 Pursuit fallback 路径不应让 SpawnTunnels 空执行。
+            return false;
+        }
+
+        /// <summary>
+        /// 在玩家殖民地实际活动范围附近寻找一个适合 TunnelHiveSpawner 的备用格。
+        /// 只以玩家 faction 的人工建筑为 anchor（排除遗迹 / 敌方建筑 / 中立建筑 / 任务建筑），
         /// 不要求 ThickRoof、不要求 mountainousness >= 0.17。
         /// 仅对事件资格/执行需要时调用，不每 tick 扫描大量地图格。
         /// </summary>
@@ -116,11 +230,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            // 优先以玩家建筑群作为 anchor，在附近一定半径内寻找合法格。
-            var buildings = map.listerThings.ThingsInGroup(
+            List<Thing> allBuildings = map.listerThings.ThingsInGroup(
                 ThingRequestGroup.BuildingArtificial);
-            if (buildings.Count == 0)
+
+            // 只保留玩家 faction 的建筑作为殖民地 anchor。
+            List<Thing> playerBuildings = new List<Thing>(allBuildings.Count);
+            for (int i = 0; i < allBuildings.Count; i++)
             {
+                Thing building = allBuildings[i];
+                if (building.Faction == Faction.OfPlayer)
+                {
+                    playerBuildings.Add(building);
+                }
+            }
+
+            if (playerBuildings.Count == 0)
+            {
+                // 没有玩家建筑：不 fallback 到全部世界建筑。
                 return false;
             }
 
@@ -129,7 +255,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             while (attempts < maxAttempts)
             {
                 attempts++;
-                Thing anchor = buildings[Rand.Range(0, buildings.Count)];
+                Thing anchor = playerBuildings[Rand.Range(0, playerBuildings.Count)];
                 IntVec3 center = anchor.Position;
 
                 int radius = Rand.RangeInclusive(4, 10);

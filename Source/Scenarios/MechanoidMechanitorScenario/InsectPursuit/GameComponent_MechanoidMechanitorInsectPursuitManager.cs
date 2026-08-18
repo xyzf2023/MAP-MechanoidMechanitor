@@ -89,13 +89,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // A. 检查追杀模式是否仍启用
             if (!MechanoidMechanitorInsectPursuitUtility.IsPursuitActive())
             {
-                // 离开追杀模式：立即取消挂起/进行中的追猎，但保留共享冷却，
+                // 离开追杀模式：立即取消隐藏预约与进行中的追猎，但保留共享冷却，
                 // 防止运行时切出再切回时刷掉冷却。不发送取消信件。
                 if (pendingEvent != MechanoidMechanitorInsectPursuitPendingEvent.None
+                    || pendingTriggerTick >= 0
                     || activeHuntMap != null
-                    || activeHuntAttackTick != -1)
+                    || activeHuntAttackTick >= 0)
                 {
-                    ClearActiveHunt();
+                    ClearScheduledAndActiveState();
                 }
 
                 return;
@@ -103,6 +104,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             // 先处理旧 pending / active，再考虑新的每日抽签，
             // 避免同一轮更新中“旧预约刚到期”又“立即产生新预约”。
+            //
+            // 记录本轮开始时是否存在 blocking 状态（隐藏预约或公开追猎），
+            // 用于决定当天是否允许补抽：只要进入当天时存在，当天就不再补抽
+            // （即使它在这一轮更新中刚好到期/被取消）。
+            bool hadBlockingPursuitStateAtStart =
+                pendingEvent != MechanoidMechanitorInsectPursuitPendingEvent.None
+                || pendingTriggerTick >= 0
+                || activeHuntMap != null
+                || activeHuntAttackTick >= 0;
 
             // B. 清理失效的 active hunt
             CleanupInvalidActiveHunt();
@@ -126,7 +136,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (currentDay != lastDailyCheckDay)
             {
                 lastDailyCheckDay = currentDay;
-                TryDailyRoll(currentDay);
+
+                // 只要进入当天时存在 blocking 状态，当天就不补抽新的 Pursuit 事件，
+                // 即使它在本轮更新中已到期/被执行/被取消。
+                if (!hadBlockingPursuitStateAtStart)
+                {
+                    TryDailyRoll(currentDay);
+                }
             }
         }
 
@@ -213,12 +229,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (!MechanoidMechanitorInsectPursuitUtility.CanMapHostInfestation(map))
-            {
-                // 没有合法地图：本次作废，不刷新共享冷却，不继续延后追着玩家。
-                return;
-            }
-
             IncidentParms parms = new IncidentParms
             {
                 target = map,
@@ -226,6 +236,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 points = StorytellerUtility.DefaultThreatPointsNow(map),
                 sendLetter = true
             };
+
+            // 资格检查与实际执行使用同一次解析（TryPrepareManagedInfestation 内部
+            // 找到的 fallback cell 直接写入 parms.infestationLocOverride），避免二次随机。
+            if (!MechanoidMechanitorInsectPursuitInfestationUtility
+                    .TryPrepareManagedInfestation(map, parms))
+            {
+                // 不满足原版虫灾资格（虫族缺失 / Hive>=30 / 无落点）：本次作废，不刷新共享冷却。
+                return;
+            }
 
             bool ok = IncidentDefOf.Infestation.Worker.TryExecute(parms);
             if (ok && refreshCooldown)
@@ -241,7 +260,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (!MechanoidMechanitorInsectPursuitUtility.CanMapHostInfestation(map))
+            if (!MechanoidMechanitorInsectPursuitUtility
+                    .CanCurrentlyHostManagedInfestation(map))
             {
                 return;
             }
@@ -326,10 +346,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     sendLetter = false
                 };
 
-                MechanoidMechanitorInsectPursuitInfestationUtility
-                    .PrepareInfestationParmsForExecution(map, infestParms);
-
-                if (!IncidentDefOf.Infestation.Worker.TryExecute(infestParms))
+                // 攻击阶段重新准备（地图状态可能已变化：Hive 增加 / fallback 格被占据等）。
+                // 失败只记录 warning 并跳过地下路线，不阻止已经成功的地面路线。
+                if (!MechanoidMechanitorInsectPursuitInfestationUtility
+                        .TryPrepareManagedInfestation(map, infestParms))
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 虫族追猎：地下虫灾准备失败（地图="
+                        + map
+                        + "）。");
+                }
+                else if (!IncidentDefOf.Infestation.Worker.TryExecute(infestParms))
                 {
                     Log.Warning(
                         "[MAP-机械族机械师] 虫族追猎：地下虫灾生成失败（地图="
@@ -413,6 +440,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             activeHuntStartedWithGravEngine = false;
         }
 
+        /// <summary>
+        /// 统一清除“隐藏预约 + 公开追猎倒计时”的全部状态字段。
+        /// 用于离开 Pursuit 模式与 DEV 清除运行时状态。
+        ///
+        /// 绝对不能修改 lastPursuitEventTriggerDay：运行时切出 Pursuit 再切回
+        /// 不应刷掉共享冷却。
+        /// </summary>
+        private void ClearScheduledAndActiveState()
+        {
+            pendingEvent =
+                MechanoidMechanitorInsectPursuitPendingEvent.None;
+            pendingTriggerTick = -1;
+
+            activeHuntMap = null;
+            activeHuntAttackTick = -1;
+            activeHuntStartedWithGravEngine = false;
+        }
+
         public int GetActiveHuntRemainingHours()
         {
             if (activeHuntMap == null)
@@ -487,9 +532,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public void DevClearRuntimeState()
         {
-            ClearActiveHunt();
-            pendingEvent = MechanoidMechanitorInsectPursuitPendingEvent.None;
-            pendingTriggerTick = -1;
+            ClearScheduledAndActiveState();
         }
     }
 }
