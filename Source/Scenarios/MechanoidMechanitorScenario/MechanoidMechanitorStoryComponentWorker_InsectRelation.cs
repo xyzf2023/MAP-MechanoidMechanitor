@@ -10,7 +10,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             MechanoidMechanitorInsectRelationMode.Default,
             MechanoidMechanitorInsectRelationMode.PermanentNeutral,
-            MechanoidMechanitorInsectRelationMode.Ally
+            MechanoidMechanitorInsectRelationMode.Ally,
+            MechanoidMechanitorInsectRelationMode.Pursuit
         };
 
         public override bool ShouldShow(

@@ -8,7 +8,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorInsectRelationMode mode)
         {
             return mode == MechanoidMechanitorInsectRelationMode.PermanentNeutral
-                || mode == MechanoidMechanitorInsectRelationMode.Ally;
+                || mode == MechanoidMechanitorInsectRelationMode.Ally
+                || mode == MechanoidMechanitorInsectRelationMode.Pursuit;
         }
 
         public static bool TryGetInitialTarget(
@@ -25,6 +26,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 case MechanoidMechanitorInsectRelationMode.Ally:
                     relationKind = FactionRelationKind.Ally;
+                    hostileOnHarmByPlayer = false;
+                    return true;
+
+                case MechanoidMechanitorInsectRelationMode.Pursuit:
+                    relationKind = FactionRelationKind.Hostile;
                     hostileOnHarmByPlayer = false;
                     return true;
 
@@ -47,6 +53,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 case MechanoidMechanitorInsectRelationMode.Ally:
                     relationKind = FactionRelationKind.Ally;
+                    return true;
+
+                case MechanoidMechanitorInsectRelationMode.Pursuit:
+                    relationKind = FactionRelationKind.Hostile;
                     return true;
 
                 default:

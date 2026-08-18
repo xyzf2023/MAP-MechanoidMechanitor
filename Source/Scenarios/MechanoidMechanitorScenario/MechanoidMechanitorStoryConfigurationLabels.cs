@@ -88,6 +88,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidMechanitorInsectRelationMode.Ally =>
                     "MAP_MechanoidMechanitor.Story.InsectRelationMode.Ally".Translate(),
 
+                MechanoidMechanitorInsectRelationMode.Pursuit =>
+                    "MAP_MechanoidMechanitor.Story.InsectRelationMode.Pursuit".Translate(),
+
                 _ => mode.ToString()
             };
         }

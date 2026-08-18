@@ -61,6 +61,15 @@
   <MAP_MechanoidMechanitor.Story.InsectRelationMode.Default>默认</MAP_MechanoidMechanitor.Story.InsectRelationMode.Default>
   <MAP_MechanoidMechanitor.Story.InsectRelationMode.PermanentNeutral>永久中立</MAP_MechanoidMechanitor.Story.InsectRelationMode.PermanentNeutral>
   <MAP_MechanoidMechanitor.Story.InsectRelationMode.Ally>盟友</MAP_MechanoidMechanitor.Story.InsectRelationMode.Ally>
+  <MAP_MechanoidMechanitor.Story.InsectRelationMode.Pursuit>追杀</MAP_MechanoidMechanitor.Story.InsectRelationMode.Pursuit>
+
+  <!-- 模块：虫巢追杀 -->
+  <MAP_MechanoidMechanitor.InsectPursuit.Hunt.Warning.Label>虫族追猎</MAP_MechanoidMechanitor.InsectPursuit.Hunt.Warning.Label>
+  <MAP_MechanoidMechanitor.InsectPursuit.Hunt.Warning.Text>一群虫族正在接近殖民地，它们将通过地下和地面两条路线同时发动进攻。做好防御准备！</MAP_MechanoidMechanitor.InsectPursuit.Hunt.Warning.Text>
+  <MAP_MechanoidMechanitor.InsectPursuit.Attack.Label>虫族进攻</MAP_MechanoidMechanitor.InsectPursuit.Attack.Label>
+  <MAP_MechanoidMechanitor.InsectPursuit.Attack.Text>虫族已到达殖民地！</MAP_MechanoidMechanitor.InsectPursuit.Attack.Text>
+  <MAP_MechanoidMechanitor.InsectPursuit.Alert.Label>虫群接近：{0}小时</MAP_MechanoidMechanitor.InsectPursuit.Alert.Label>
+  <MAP_MechanoidMechanitor.InsectPursuit.Alert.Explanation>虫群正在接近当前殖民地。倒计时结束后，它们将同时从地图边缘和地下发动攻击。</MAP_MechanoidMechanitor.InsectPursuit.Alert.Explanation>
   <MAP_MechanoidMechanitor.Story.NoInsectFaction>当前世界中没有虫巢派系。</MAP_MechanoidMechanitor.Story.NoInsectFaction>
   <MAP_MechanoidMechanitor.Story.MechHiveRelation.PursuingMechanoidsDisabledReason>无法修改此选项。我们正在被机械族追杀！</MAP_MechanoidMechanitor.Story.MechHiveRelation.PursuingMechanoidsDisabledReason>
 

@@ -155,6 +155,69 @@ namespace MAP_MechanoidMechanitor
                 ref Settings.blockInfestationIncidentsWhenInsectsAllied,
                 "MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description"
                     .Translate());
+
+            listing.Gap(6f);
+
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Label"
+                    .Translate(),
+                ref Settings.pursuitAllowInfestationWithoutThickRoof,
+                "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Description"
+                    .Translate());
+
+            Settings.pursuitGracePeriodDays =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Label",
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Description",
+                    Settings.pursuitGracePeriodDays,
+                    0,
+                    30);
+
+            Settings.pursuitHuntDailyChancePercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Label",
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Description",
+                    Settings.pursuitHuntDailyChancePercent,
+                    0,
+                    100);
+
+            Settings.pursuitExtraInfestationDailyChancePercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Label",
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Description",
+                    Settings.pursuitExtraInfestationDailyChancePercent,
+                    0,
+                    100);
+
+            Settings.pursuitSharedCooldownDays =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Label",
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Description",
+                    Settings.pursuitSharedCooldownDays,
+                    0,
+                    15);
+
+            Settings.pursuitHuntSurfacePointsPercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Label",
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Description",
+                    Settings.pursuitHuntSurfacePointsPercent,
+                    0,
+                    1000);
+
+            Settings.pursuitHuntInfestationPointsPercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Label",
+                    "MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description",
+                    Settings.pursuitHuntInfestationPointsPercent,
+                    0,
+                    1000);
         }
 
         private static void DrawJusticeBossDifficultySettings(

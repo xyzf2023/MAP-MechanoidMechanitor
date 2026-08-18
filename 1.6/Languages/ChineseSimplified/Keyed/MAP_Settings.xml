@@ -74,4 +74,20 @@
   <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>阻止与虫巢为盟友时发生虫巢袭击事件</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>
   <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>开启后，当当前存档的机械族机械师剧情配置将虫巢设为盟友时，阻止普通虫灾、深钻虫袭、废料虫袭，以及原版任务系统生成的标准任务型虫灾。关闭后，即使虫巢为盟友，这些虫灾仍可正常发生。此设置不影响永久中立模式，也不会删除自然生成、其他特殊机制生成或已经存在的虫巢。每次实际阻止虫灾时会在日志中输出黄色警告，并尽可能标注调用来源。</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>
 
+  <!-- 模块：虫巢追杀 -->
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Label>允许追杀模式虫灾无视厚岩顶</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Description>开启后，追杀模式中的标准普通虫灾会优先使用原版虫灾落点；只有原版找不到合法位置时，才允许在殖民地附近使用不要求厚岩顶的备用位置。此设置不会修改默认、永久中立或盟友模式，也不会改变深钻虫袭、废料虫袭、虫胶事件或其他特殊虫灾。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Label>追杀模式开局保护期：{0}天</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Description>开局前 N 个完整游戏日内，不进行 Pursuit 专属额外事件判定。0 表示不提供开局保护。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Label>虫族追猎每日触发概率：{0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Description>每天符合资格时优先进行该概率判定。命中后不会继续判定当天的额外虫灾。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Label>额外虫灾每日触发概率：{0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Description>只有当天虫族追猎判定失败后才进行。所以两个默认都是 10% 时：追猎实际概率 10%，额外虫灾实际概率 9%。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Label>追杀事件重复触发间隔：{0}天</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Description>任意一种 Pursuit 专属事件真正开始后，N 天内两种事件都不再进行新的概率判定。0 表示没有额外冷却，但 pending / active 互斥规则仍存在。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Label>虫族追猎地面虫群点数倍率：{0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Description>以攻击真正发生时 StorytellerUtility.DefaultThreatPointsNow(map) 为基础，乘对应百分比。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Label>虫族追猎地下虫灾点数倍率：{0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>以攻击真正发生时 StorytellerUtility.DefaultThreatPointsNow(map) 为基础，乘对应百分比。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>
+
 </LanguageData>

@@ -64,6 +64,55 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool blockInfestationIncidentsWhenInsectsAllied = true;
 
+        // ===== 虫巢追杀（Pursuit）模式全局设置（所有存档共享） =====
+
+        /// <summary>
+        /// 默认开启。开启后，追杀模式中标准普通虫灾优先使用原版虫灾落点；
+        /// 只有原版找不到合法位置时，才允许在殖民地附近使用不要求厚岩顶的备用位置。
+        /// 此设置不会修改默认 / 永久中立 / 盟友模式，也不会改变深钻虫袭、废料虫袭、
+        /// 虫胶事件或其他特殊虫灾。
+        /// </summary>
+        public bool pursuitAllowInfestationWithoutThickRoof = true;
+
+        /// <summary>
+        /// 开局保护期（游戏日）。0～30。0 表示不提供开局保护。
+        /// </summary>
+        public int pursuitGracePeriodDays = DefaultPursuitGracePeriodDays;
+
+        /// <summary>
+        /// 虫族追猎每日触发概率百分比。0～100。
+        /// </summary>
+        public int pursuitHuntDailyChancePercent = DefaultPursuitHuntDailyChancePercent;
+
+        /// <summary>
+        /// 额外虫灾每日触发概率百分比。0～100。
+        /// </summary>
+        public int pursuitExtraInfestationDailyChancePercent =
+            DefaultPursuitExtraInfestationDailyChancePercent;
+
+        /// <summary>
+        /// 追杀事件重复触发间隔（游戏日）。0～15。两种专属事件共用同一冷却。
+        /// </summary>
+        public int pursuitSharedCooldownDays = DefaultPursuitSharedCooldownDays;
+
+        /// <summary>
+        /// 虫族追猎地面虫群点数倍率百分比。0～1000。0% 表示不生成地面路线。
+        /// </summary>
+        public int pursuitHuntSurfacePointsPercent = DefaultPursuitHuntSurfacePointsPercent;
+
+        /// <summary>
+        /// 虫族追猎地下虫灾点数倍率百分比。0～1000。0% 表示不生成地下路线。
+        /// </summary>
+        public int pursuitHuntInfestationPointsPercent =
+            DefaultPursuitHuntInfestationPointsPercent;
+
+        public const int DefaultPursuitGracePeriodDays = 15;
+        public const int DefaultPursuitHuntDailyChancePercent = 10;
+        public const int DefaultPursuitExtraInfestationDailyChancePercent = 10;
+        public const int DefaultPursuitSharedCooldownDays = 5;
+        public const int DefaultPursuitHuntSurfacePointsPercent = 30;
+        public const int DefaultPursuitHuntInfestationPointsPercent = 30;
+
         public bool justiceBossEnableMortarShield =
             JusticeBossDifficultyValues.DefaultEnableMortarShield;
 
@@ -178,6 +227,35 @@ namespace MAP_MechanoidMechanitor
                 true);
 
             Scribe_Values.Look(
+                ref pursuitAllowInfestationWithoutThickRoof,
+                "pursuitAllowInfestationWithoutThickRoof",
+                true);
+            Scribe_Values.Look(
+                ref pursuitGracePeriodDays,
+                "pursuitGracePeriodDays",
+                DefaultPursuitGracePeriodDays);
+            Scribe_Values.Look(
+                ref pursuitHuntDailyChancePercent,
+                "pursuitHuntDailyChancePercent",
+                DefaultPursuitHuntDailyChancePercent);
+            Scribe_Values.Look(
+                ref pursuitExtraInfestationDailyChancePercent,
+                "pursuitExtraInfestationDailyChancePercent",
+                DefaultPursuitExtraInfestationDailyChancePercent);
+            Scribe_Values.Look(
+                ref pursuitSharedCooldownDays,
+                "pursuitSharedCooldownDays",
+                DefaultPursuitSharedCooldownDays);
+            Scribe_Values.Look(
+                ref pursuitHuntSurfacePointsPercent,
+                "pursuitHuntSurfacePointsPercent",
+                DefaultPursuitHuntSurfacePointsPercent);
+            Scribe_Values.Look(
+                ref pursuitHuntInfestationPointsPercent,
+                "pursuitHuntInfestationPointsPercent",
+                DefaultPursuitHuntInfestationPointsPercent);
+
+            Scribe_Values.Look(
                 ref justiceBossEnableMortarShield,
                 "justiceBossEnableMortarShield",
                 JusticeBossDifficultyValues.DefaultEnableMortarShield);
@@ -278,6 +356,19 @@ namespace MAP_MechanoidMechanitor
                     Mathf.Clamp(mechHiveNodeRaidChancePercent, 0, 100);
                 mechHiveNodeSupportChancePercent =
                     Mathf.Clamp(mechHiveNodeSupportChancePercent, 0, 100);
+
+                pursuitGracePeriodDays =
+                    Mathf.Clamp(pursuitGracePeriodDays, 0, 30);
+                pursuitHuntDailyChancePercent =
+                    Mathf.Clamp(pursuitHuntDailyChancePercent, 0, 100);
+                pursuitExtraInfestationDailyChancePercent =
+                    Mathf.Clamp(pursuitExtraInfestationDailyChancePercent, 0, 100);
+                pursuitSharedCooldownDays =
+                    Mathf.Clamp(pursuitSharedCooldownDays, 0, 15);
+                pursuitHuntSurfacePointsPercent =
+                    Mathf.Clamp(pursuitHuntSurfacePointsPercent, 0, 1000);
+                pursuitHuntInfestationPointsPercent =
+                    Mathf.Clamp(pursuitHuntInfestationPointsPercent, 0, 1000);
             }
         }
     }

@@ -4,6 +4,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         Default = 0,
         PermanentNeutral = 1,
-        Ally = 2
+        Ally = 2,
+        Pursuit = 3
     }
 }

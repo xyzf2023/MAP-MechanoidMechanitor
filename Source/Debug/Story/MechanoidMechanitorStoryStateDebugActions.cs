@@ -60,7 +60,8 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanoidMechanitorInsectRelationMode.Default,
                 MechanoidMechanitorInsectRelationMode.PermanentNeutral,
-                MechanoidMechanitorInsectRelationMode.Ally
+                MechanoidMechanitorInsectRelationMode.Ally,
+                MechanoidMechanitorInsectRelationMode.Pursuit
             };
 
         private static readonly MechanoidMechanitorMechHiveNodeFrequency[]
