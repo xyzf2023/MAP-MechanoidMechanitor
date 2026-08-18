@@ -17,6 +17,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return true;
             }
 
+            MechanoidMechanitorInsectBlockLogUtility.WarnIncidentBlocked(
+                __instance.def,
+                "IncidentWorker.CanFireNow",
+                throttled: true);
+
             __result = false;
             return false;
         }
@@ -35,6 +40,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 return true;
             }
+
+            MechanoidMechanitorInsectBlockLogUtility.WarnIncidentBlocked(
+                __instance.def,
+                "IncidentWorker.TryExecute",
+                throttled: false);
 
             __result = false;
             return false;

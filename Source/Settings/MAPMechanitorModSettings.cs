@@ -57,9 +57,10 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 默认开启。开启后，当当前存档的机械族机械师剧情配置将虫巢设为盟友时，
-        /// 阻止普通虫灾、深钻虫袭和废料虫袭事件发生。关闭后，即使虫巢为盟友，
-        /// 这些原版事件仍可正常发生。此设置不影响“永久中立”模式，也不会删除
-        /// 自然生成、任务生成或已经存在的虫巢。
+        /// 阻止普通虫灾、深钻虫袭、废料虫袭，以及原版任务系统通过
+        /// QuestNode_Infestation / QuestPart_Infestation 生成的标准任务型虫灾。
+        /// 此设置不影响“永久中立”模式，不删除自然生成、任务之外生成或已经存在的虫巢。
+        /// 被本功能阻止的调用会向日志输出黄色警告。
         /// </summary>
         public bool blockInfestationIncidentsWhenInsectsAllied = true;
 

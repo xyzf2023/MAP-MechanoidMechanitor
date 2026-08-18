@@ -615,17 +615,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return true;
             }
 
-            if (!MechanoidMechanitorInsectRelationPolicy
-                .TryGetEffectiveInitialTarget(
-                    storyState,
+            if (!storyState.TryGetInsectRelationMode(
+                    out MechanoidMechanitorInsectRelationMode mode))
+            {
+                return false;
+            }
+
+            if (mode == MechanoidMechanitorInsectRelationMode.Default)
+            {
+                // Runtime 从 MOD 管理的虫巢关系模式切回原版 Default 时，
+                // 虫族的原版稳定关系基线就是 Hostile。
+                // 与 MechHive 不同，这里不能仅释放关系锁后保留 Ally/Neutral，
+                // 否则 FactionRelation 与 FactionDef 永久敌对判定会互相矛盾。
+                return MechanoidMechanitorInsectRelationApplier
+                    .ApplyExactInsectRelation(
+                        insectFaction,
+                        FactionRelationKind.Hostile,
+                        hostileOnHarmByPlayer: false,
+                        MechanoidMechanitorFactionRelationNotificationMode.Immediate);
+            }
+
+            if (!MechanoidMechanitorInsectRelationPolicy.TryGetInitialTarget(
+                    mode,
                     out FactionRelationKind relationKind,
                     out bool hostileOnHarmByPlayer))
             {
-                // Default：
-                // 释放本 MOD 的关系锁。
-                // 与现有 MechHive Runtime Utility 保持同一语义：
-                // 不强行猜测或回滚已经发生的当前 FactionRelation。
-                return true;
+                return false;
             }
 
             return MechanoidMechanitorInsectRelationApplier.ApplyExactInsectRelation(

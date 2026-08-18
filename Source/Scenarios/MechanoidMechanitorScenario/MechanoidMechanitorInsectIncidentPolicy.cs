@@ -21,6 +21,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            return IsAlliedInsectAttackBlockingActive();
+        }
+
+        /// <summary>
+        /// 标准任务型虫灾（QuestNode_Infestation / QuestPart_Infestation）是否应被拦截。
+        /// 与 Incident 判定共用同一套开关，避免设置逻辑分叉。
+        /// </summary>
+        public static bool ShouldBlockQuestInfestation()
+        {
+            return IsAlliedInsectAttackBlockingActive();
+        }
+
+        /// <summary>
+        /// 统一的“盟友虫灾拦截是否启用”判定。
+        /// 只有同时存在活动配置、当前虫巢关系为 Ally、且全局设置开启时才返回 true。
+        /// </summary>
+        public static bool IsAlliedInsectAttackBlockingActive()
+        {
             MAPMechanitorModSettings? settings =
                 MAPMechanitorMod.Settings;
 
@@ -31,12 +49,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             if (!GameComponent_MechanoidMechanitorStoryState
-                .HasActiveConfiguration)
-            {
-                return false;
-            }
-
-            if (Current.Game == null)
+                .HasActiveConfiguration
+                || Current.Game == null)
             {
                 return false;
             }
