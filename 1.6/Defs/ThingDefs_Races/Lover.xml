@@ -102,7 +102,7 @@
       <Plasteel>10</Plasteel>
     </butcherProducts>
     
-    <uiIconPath>Lover/Lover_fullbody</uiIconPath>
+    <uiIconPath>Lover/Lover_south</uiIconPath>
 
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_WardenWorkUser">
@@ -119,8 +119,8 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
         <profileVersion>1</profileVersion>
         <bodyType>MAP_LoverFemale</bodyType>
-        <headType>MAP_LoverHead</headType>
-        <hairDef>MAP_LoverHair</hairDef>
+        <!-- <headType>MAP_LoverHead</headType> -->
+        <!-- <hairDef>MAP_LoverHair</hairDef> -->
         <setHairColor>true</setHairColor>
         <hairColor>(0.82, 0.84, 0.88)</hairColor>
         <childhoodBackstory>MAP_Lover_Childhood</childhoodBackstory>
@@ -201,7 +201,7 @@
     <lifeStages Inherit="False">
       <li>
         <bodyGraphicData>
-          <texPath>Lover/Lover_FullBody/LoverFullBody</texPath>
+          <texPath>Lover/Lover</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>1</drawSize>

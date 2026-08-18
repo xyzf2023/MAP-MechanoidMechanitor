@@ -5,8 +5,8 @@
     <defName>MAP_LoverFemale</defName>
     <headOffset>(0.10, 0.34)</headOffset>
     <bodyGraphicScale>(1, 1)</bodyGraphicScale>
-    <bodyNakedGraphicPath>Lover/Lover_FullBody/LoverFullBody</bodyNakedGraphicPath>
-    <bodyDessicatedGraphicPath>Lover/Lover_FullBody/LoverFullBody</bodyDessicatedGraphicPath>
+    <bodyNakedGraphicPath>Lover/Lover</bodyNakedGraphicPath>
+    <bodyDessicatedGraphicPath>Lover/Lover</bodyDessicatedGraphicPath>
     <attachPoints>
       <li>
         <offset>(-.2, 0, .05)</offset>
