@@ -229,6 +229,7 @@ namespace MAP_MechanoidMechanitor
             PawnComponentsUtility.AddAndRemoveDynamicComponents(
                 pawn,
                 actAsIfSpawned: true);
+            MechanoidMechanitorRecreationUtility.EnsureReadingTracker(pawn);
             MAPMechanitorInitializationUtility.FinalizeNow(pawn);
             ColonistLikeSocialTrackerUtility.EnsureTrackers(pawn);
             MechanoidMechanitorIdeologyAdaptationUtility.EnsureIdeologyState(pawn);

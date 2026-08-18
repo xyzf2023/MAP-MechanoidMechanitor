@@ -173,6 +173,17 @@ namespace MAP_MechanoidMechanitor
         public const int DefaultMechHiveNodeRaidChancePercent = 1;
         public const int DefaultMechHiveNodeSupportChancePercent = 10;
 
+        public const int DefaultMechanoidMechanitorIdleRecreationChancePercent = 25;
+        public const int DefaultMechanoidMechanitorInspirationChancePercent = 5;
+
+        public bool enableMechanoidMechanitorRecreation = true;
+
+        public int mechanoidMechanitorIdleRecreationChancePercent =
+            DefaultMechanoidMechanitorIdleRecreationChancePercent;
+
+        public int mechanoidMechanitorInspirationChancePercent =
+            DefaultMechanoidMechanitorInspirationChancePercent;
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -317,6 +328,21 @@ namespace MAP_MechanoidMechanitor
                 "mechHiveNodeSupportChancePercent",
                 DefaultMechHiveNodeSupportChancePercent);
 
+            Scribe_Values.Look(
+                ref enableMechanoidMechanitorRecreation,
+                "enableMechanoidMechanitorRecreation",
+                true);
+
+            Scribe_Values.Look(
+                ref mechanoidMechanitorIdleRecreationChancePercent,
+                "mechanoidMechanitorIdleRecreationChancePercent",
+                DefaultMechanoidMechanitorIdleRecreationChancePercent);
+
+            Scribe_Values.Look(
+                ref mechanoidMechanitorInspirationChancePercent,
+                "mechanoidMechanitorInspirationChancePercent",
+                DefaultMechanoidMechanitorInspirationChancePercent);
+
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 productivityCoreWorkSpeedOffsetPercentPerLevel = Mathf.Clamp(
@@ -356,6 +382,18 @@ namespace MAP_MechanoidMechanitor
                     Mathf.Clamp(mechHiveNodeRaidChancePercent, 0, 100);
                 mechHiveNodeSupportChancePercent =
                     Mathf.Clamp(mechHiveNodeSupportChancePercent, 0, 100);
+
+                mechanoidMechanitorIdleRecreationChancePercent =
+                    Mathf.Clamp(
+                        mechanoidMechanitorIdleRecreationChancePercent,
+                        0,
+                        100);
+
+                mechanoidMechanitorInspirationChancePercent =
+                    Mathf.Clamp(
+                        mechanoidMechanitorInspirationChancePercent,
+                        0,
+                        100);
 
                 pursuitGracePeriodDays =
                     Mathf.Clamp(pursuitGracePeriodDays, 0, 30);

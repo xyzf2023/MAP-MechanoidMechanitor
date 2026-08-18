@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+  <Operation Class="PatchOperationInsert">
+    <xpath>
+      Defs/ThinkTreeDef[defName="Mechanoid"]/thinkRoot/subNodes/li[@Class="ThinkNode_ConditionalPlayerControlledMech"]/subNodes/li[@Class="ThinkNode_Tagger"][tagToGive="Idle"]/subNodes/li[@Class="JobGiver_WanderColony"][maxDanger="None"]
+    </xpath>
+    <order>Prepend</order>
+    <value>
+      <li Class="MAP_MechanoidMechanitor.JobGiver_MechanoidMechanitorRecreation" />
+    </value>
+  </Operation>
+</Patch>

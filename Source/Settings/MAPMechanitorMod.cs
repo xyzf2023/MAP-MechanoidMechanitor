@@ -121,6 +121,8 @@ namespace MAP_MechanoidMechanitor
                 ref Settings.enablePurgeDirectiveUiLoadingScreen,
                 "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description".Translate());
 
+            DrawRecreationSettings(listing);
+
             DrawStrategicNodeSettings(listing);
 
             DrawInsectStorySettings(listing);
@@ -391,6 +393,46 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label",
                     "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description",
                     settings.mechHiveNodeSupportChancePercent,
+                    0,
+                    100);
+        }
+
+        private static void DrawRecreationSettings(Listing_Standard listing)
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            listing.GapLine();
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.Recreation.Section".Translate());
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.Recreation.Description".Translate());
+
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.Recreation.Enable.Label".Translate(),
+                ref Settings.enableMechanoidMechanitorRecreation,
+                "MAP_MechanoidMechanitor.Settings.Recreation.Enable.Description"
+                    .Translate());
+
+            Settings.mechanoidMechanitorIdleRecreationChancePercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Label",
+                    "MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Description",
+                    Settings.mechanoidMechanitorIdleRecreationChancePercent,
+                    0,
+                    100);
+
+            Settings.mechanoidMechanitorInspirationChancePercent =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Label",
+                    "MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Description",
+                    Settings.mechanoidMechanitorInspirationChancePercent,
                     0,
                     100);
         }

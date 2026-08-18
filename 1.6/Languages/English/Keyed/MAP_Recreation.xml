@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- Module: Mechanoid Mechanitor recreation & inspiration -->
+  <MAP_MechanoidMechanitor.Settings.Recreation.Section>Mechanoid Mechanitor Recreation and Inspiration</MAP_MechanoidMechanitor.Settings.Recreation.Section>
+  <MAP_MechanoidMechanitor.Settings.Recreation.Description>Allows mechanoid mechanitors to perform selected vanilla recreation activities when they have no other work, and lets them gain an eligible vanilla inspiration after fully completing such recreation.</MAP_MechanoidMechanitor.Settings.Recreation.Description>
+
+  <MAP_MechanoidMechanitor.Settings.Recreation.Enable.Label>Allow mechanoid mechanitors to recreate and gain inspiration</MAP_MechanoidMechanitor.Settings.Recreation.Enable.Label>
+  <MAP_MechanoidMechanitor.Settings.Recreation.Enable.Description>When enabled, a mechanoid mechanitor has a chance to pick a compatibility-checked vanilla recreation activity while idle. After completing it, it may also gain a currently-eligible vanilla inspiration. This feature does not add a vanilla joy need to mechanoid mechanitors.</MAP_MechanoidMechanitor.Settings.Recreation.Enable.Description>
+
+  <MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Label>Idle recreation chance: {0}%</MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Label>
+  <MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Description>The chance a mechanoid mechanitor attempts recreation each time it reaches the idle behavior selection. On failure or when no legal recreation is available, it falls back to the vanilla mechanoid idle behavior.</MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Description>
+
+  <MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Label>Inspiration after recreation chance: {0}%</MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Label>
+  <MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Description>The chance a mechanoid mechanitor gains an eligible vanilla inspiration after fully completing a recreation activity assigned by this system. Interrupted or failed recreation does not trigger this.</MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Description>
+
+  <MAP_MechanoidMechanitor.Recreation.InspirationReason>A new inspiration arises after finishing a recreation activity.</MAP_MechanoidMechanitor.Recreation.InspirationReason>
+
+</LanguageData>
