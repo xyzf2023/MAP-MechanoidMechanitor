@@ -23,6 +23,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             [HarmonyPrefix]
             public static void Prefix(IncidentParms parms)
             {
+                // Quest 类型的虫灾完全不受“允许无厚岩顶”功能影响：
+                // 不进入 fallback scope，避免污染其 infestationLocOverride。
+                if (parms == null || parms.quest != null)
+                {
+                    return;
+                }
+
                 if (MechanoidMechanitorInsectPursuitInfestationUtility
                     .CanUseNoThickRoofFallback())
                 {
