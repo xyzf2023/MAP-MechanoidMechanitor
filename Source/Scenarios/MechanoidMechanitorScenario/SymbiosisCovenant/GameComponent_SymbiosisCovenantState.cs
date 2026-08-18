@@ -553,6 +553,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return state.AdjustTrustInternal(faction, amount, reason, source);
         }
 
+        /// <summary>
+        /// 调整团结度（受盟约激活限制，并在 [0, UnityMax] 内钳制）。
+        /// 供联合军事行动在成功/失败时结算团结度增减，与 TryAdjustTrust 对等。
+        /// reason 仅用于记录与调试追溯。
+        /// </summary>
+        public static bool TryAdjustUnity(float delta, string reason)
+        {
+            GameComponent_SymbiosisCovenantState? state = CurrentComponent;
+            if (!IsActive || state == null)
+            {
+                return false;
+            }
+
+            state.TryInitializeOrSynchronize();
+            state.unity = Mathf.Clamp(state.unity + delta, 0f, UnityMax);
+            return true;
+        }
+
         public static int TryAdjustTrustForAll(
             int amount,
             string reason,

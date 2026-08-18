@@ -987,6 +987,125 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
+        // ===== 联合军事行动（L4） =====
+
+        public static bool TrySpawnJointOperationNow(out string message)
+        {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
+            if (!TryGetActiveState(out _, out message))
+            {
+                return false;
+            }
+
+            if (SymbiosisCovenantJointOperationScheduler.DevSpawnNow())
+            {
+                message =
+                    "已立即尝试生成联合军事行动邀请"
+                    + "（需 L4 / 无进行中行动 / 暴力任务许可 / 存在可用目标）。";
+                return true;
+            }
+
+            message =
+                "未能生成联合军事行动邀请（盟约等级不足 L4、已有进行中行动、"
+                + "无可用真实敌方目标或暴力任务被禁用）。";
+            return false;
+        }
+
+        public static bool TryMakeJointOperationDueNow(out string message)
+        {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
+            if (!TryGetActiveState(out _, out message))
+            {
+                return false;
+            }
+
+            if (SymbiosisCovenantJointOperationScheduler.DevMakeDueNow())
+            {
+                message = "已使联合军事行动调度立即到期（下一次 Tick 即尝试生成）。";
+                return true;
+            }
+
+            message = "无法使联合军事行动调度到期（盟约等级不足 L4）。";
+            return false;
+        }
+
+        public static bool TryClearJointOperationCooldown(out string message)
+        {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
+            if (!TryGetActiveState(out _, out message))
+            {
+                return false;
+            }
+
+            if (SymbiosisCovenantJointOperationScheduler.DevClearCooldown())
+            {
+                message = "已清除联合军事行动冷却。";
+                return true;
+            }
+
+            message = "无法清除联合军事行动冷却。";
+            return false;
+        }
+
+        public static bool TryLogJointOperationStatus(out string message)
+        {
+            Log.Message(BuildJointOperationStatus());
+            message = "联合军事行动状态已写入 RimWorld 日志。";
+            return true;
+        }
+
+        public static string BuildJointOperationStatus()
+        {
+            GameComponent_SymbiosisCovenantState? state =
+                GameComponent_SymbiosisCovenantState.CurrentComponent;
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("[MAP-SymbiosisDebug] ===== JointOperation =====");
+
+            if (state == null)
+            {
+                sb.AppendLine("Available = False");
+                sb.AppendLine();
+                return sb.ToString();
+            }
+
+            SymbiosisCovenantJointOperationScheduler
+                .SymbiosisCovenantJointOperationDevSnapshot? snap =
+                SymbiosisCovenantJointOperationScheduler.GetDevSnapshot(state);
+
+            if (snap == null)
+            {
+                sb.AppendLine("Available = False (level < L4)");
+                sb.AppendLine();
+                return sb.ToString();
+            }
+
+            sb.AppendLine("Level = " + snap.CovenantLevel);
+            sb.AppendLine("NextTick = " + snap.NextTick);
+            sb.AppendLine("DaysUntilNext = " + snap.DaysUntilNext.ToString("F1"));
+            sb.AppendLine("CooldownRemainingTicks = " + snap.CooldownRemainingTicks);
+            sb.AppendLine("Ongoing = " + snap.Ongoing);
+            sb.AppendLine("Target = " + (snap.TargetLabel ?? "-"));
+            sb.AppendLine("Stage = " + snap.Stage);
+            sb.AppendLine("Participants = " + snap.ParticipantsCount);
+            sb.AppendLine("RewardValue = " + snap.RewardValue);
+            sb.AppendLine();
+
+            return sb.ToString();
+        }
+
         // ===== 标准测试 Raid =====
 
         public static bool TrySpawnTestRaid(
@@ -1119,6 +1238,7 @@ namespace MAP_MechanoidMechanitor
 
             sb.Append(BuildTradeDelegationStatus());
             sb.Append(BuildMilitaryAidStatus());
+            sb.Append(BuildJointOperationStatus());
 
             return sb.ToString();
         }

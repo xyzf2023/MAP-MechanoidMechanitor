@@ -1148,8 +1148,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 SymbiosisCovenantFactionRecord? record = state.GetRecord(selectedFaction);
                 bool hasRecord = record != null && selectedFaction != null;
-                // M3：新增两个系统区，提高内容高度。
-                float contentHeight = hasRecord ? 2050f : 1150f;
+                // M3：新增两个系统区，L4 联合军事行动再增一区，提高内容高度。
+                float contentHeight = hasRecord ? 2350f : 1450f;
                 Rect viewRect = new Rect(
                     0f,
                     0f,
@@ -1191,6 +1191,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     // M3：联合贸易代表团与共同防卫 DEV 状态区（即使未选择派系也显示）。
                     y = DrawTradeDelegationDevSection(state, viewRect, y);
                     y = DrawMilitaryAidDevSection(state, viewRect, y);
+                    // L4 独立机制：联合军事行动 DEV 状态区（即使未选择派系也显示）。
+                    y = DrawJointOperationDevSection(state, viewRect, y);
 
                     DrawGlobalState(state, viewRect, y, record);
                 }
@@ -1676,6 +1678,109 @@ namespace MAP_MechanoidMechanitor.Scenarios
             y += 40f;
 
             return y;
+        }
+
+        // L4：联合军事行动 DEV 状态区（全局系统，不依赖所选派系）。
+        private float DrawJointOperationDevSection(
+            GameComponent_SymbiosisCovenantState state,
+            Rect inRect,
+            float y)
+        {
+            DrawSectionLabel(
+                new Rect(inRect.x, y, inRect.width, 22f),
+                "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Section".Translate());
+            y += 26f;
+
+            SymbiosisCovenantJointOperationScheduler
+                .SymbiosisCovenantJointOperationDevSnapshot? snap =
+                SymbiosisCovenantJointOperationScheduler.GetDevSnapshot(state);
+
+            Text.Font = GameFont.Tiny;
+            Text.WordWrap = true;
+            Color previousColor = GUI.color;
+            GUI.color = Color.white;
+            try
+            {
+                if (snap == null)
+                {
+                    Widgets.Label(
+                        new Rect(inRect.x, y, inRect.width, 40f),
+                        "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled".Translate());
+                    y += 46f;
+                }
+                else
+                {
+                    System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Level"
+                        .Translate((NamedArgument)snap.CovenantLevel));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Available"
+                        .Translate((NamedArgument)(snap.Available ? "True" : "False")));
+                    if (snap.NextTick < 0)
+                    {
+                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.NextTick"
+                            .Translate("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled".Translate()));
+                    }
+                    else
+                    {
+                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.NextTick"
+                            .Translate((NamedArgument)snap.NextTick));
+                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.DaysUntilNext"
+                            .Translate((NamedArgument)snap.DaysUntilNext.ToString("F1")));
+                    }
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CooldownRemaining"
+                        .Translate((NamedArgument)snap.CooldownRemainingTicks));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Ongoing"
+                        .Translate((NamedArgument)(snap.Ongoing ? "True" : "False")));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Target"
+                        .Translate((NamedArgument)(snap.TargetLabel ?? "—")));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Stage"
+                        .Translate((NamedArgument)snap.Stage));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Participants"
+                        .Translate((NamedArgument)snap.ParticipantsCount));
+                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.RewardValue"
+                        .Translate(snap.RewardValue));
+                    Widgets.Label(
+                        new Rect(inRect.x, y, inRect.width, 250f),
+                        sb.ToString());
+                    y += 256f;
+                }
+            }
+            finally
+            {
+                GUI.color = previousColor;
+            }
+
+            // 操作按钮：立即生成邀请 / 立即到期 / 清除冷却。
+            DrawButtonRow(
+                new Rect(inRect.x, y, inRect.width, 32f),
+                new[]
+                {
+                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.SpawnNow".Translate().ToString(),
+                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.MakeDue".Translate().ToString(),
+                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearCooldown".Translate().ToString()
+                },
+                new Action[]
+                {
+                    () => ShowJointOpMessage(
+                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TrySpawnJointOperationNow(out string _)),
+                    () => ShowJointOpMessage(
+                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TryMakeJointOperationDueNow(out string _)),
+                    () => ShowJointOpMessage(
+                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TryClearJointOperationCooldown(out string _))
+                });
+            y += 40f;
+
+            return y;
+        }
+
+        private static void ShowJointOpMessage(bool success)
+        {
+            Messages.Message(
+                success
+                    ? "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Success".Translate()
+                    : "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Failed".Translate(),
+                success ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.RejectInput,
+                historical: false);
         }
 
         private static string FormatFloatRange(FloatRange range)

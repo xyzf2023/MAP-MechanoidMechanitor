@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- 联合军事行动（L4 独立机制）的可读取配置入口。所有天数/数值集中在此，不硬编码。 -->
+  <MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantJointOperationDef>
+    <defName>MAP_SymbiosisCovenant_JointOperationConfig</defName>
+    <label>symbiosis covenant joint operation configuration</label>
+
+    <!-- 邀请等待玩家决定的时限（ticks）。真实过期由 QuestScriptDef 的 expireDaysRange 控制，此处仅作记录与一致性参考。 -->
+    <offerTimeoutTicks>180000</offerTimeoutTicks>
+    <!-- 接取后完成行动的时限（ticks）。 -->
+    <operationTimeoutTicks>900000</operationTimeoutTicks>
+    <!-- 拒绝/过期后的冷却（ticks）。 -->
+    <declinedOrExpiredCooldownTicks>300000</declinedOrExpiredCooldownTicks>
+    <!-- 成功或失败后的冷却（ticks）。 -->
+    <completedOrFailedCooldownTicks>720000</completedOrFailedCooldownTicks>
+    <!-- 无效结束（目标移除/参与派系失效/盟约降级）后的冷却（ticks）。 -->
+    <invalidEndCooldownTicks>300000</invalidEndCooldownTicks>
+
+    <!-- 团结度与参与派系信任变化。 -->
+    <successUnityDelta>35</successUnityDelta>
+    <failUnityDelta>-30</failUnityDelta>
+    <successTrustDeltaPerValidParticipant>12</successTrustDeltaPerValidParticipant>
+    <failTrustDeltaPerValidParticipant>-8</failTrustDeltaPerValidParticipant>
+
+    <!-- 援军规模：每个参与派系按目标地图威胁点 × supportPointsFactor 提供支援。 -->
+    <supportPointsFactor>0.50</supportPointsFactor>
+    <maxParticipants>3</maxParticipants>
+    <!-- 达到该科技等级使用快速空投抵达，否则从地图边缘步行进入。 -->
+    <industrialArrivalThreshold>Industrial</industrialArrivalThreshold>
+
+    <!-- 奖励：以标准任务奖励生成器生成实物奖励。 -->
+    <rewardValueFactor>0.5</rewardValueFactor>
+    <minRewardValue>300</minRewardValue>
+    <maxRewardValue>3000</maxRewardValue>
+  </MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantJointOperationDef>
+
+  <!-- 联合军事行动的 QuestScriptDef。根节点负责构造 Quest 与唯一的 QuestPart 状态机。 -->
+  <QuestScriptDef>
+    <defName>MAP_SymbiosisCovenantJointOperation</defName>
+    <label>symbiosis covenant joint operation</label>
+    <autoAccept>false</autoAccept>
+    <defaultHidden>false</defaultHidden>
+    <everAcceptableInSpace>true</everAcceptableInSpace>
+    <!-- 玩家邀请等待时限：3 天（与 offerTimeoutTicks 一致）。 -->
+    <expireDaysRange>3</expireDaysRange>
+    <root Class="MAP_MechanoidMechanitor.Scenarios.QuestNode_Root_SymbiosisCovenantJointOperation" />
+  </QuestScriptDef>
+
+</Defs>
