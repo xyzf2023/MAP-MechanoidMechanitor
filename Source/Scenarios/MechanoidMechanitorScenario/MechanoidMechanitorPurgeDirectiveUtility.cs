@@ -126,7 +126,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (!pawn.RaceProps.Humanlike || !pawn.RaceProps.IsFlesh)
+            // 种族判断统一复用人口策略，避免重复 Humanlike && IsFlesh 逻辑。
+            if (!MechanoidMechanitorPurgeDirectivePopulationPolicy
+                    .IsFleshHumanlike(pawn))
             {
                 return false;
             }

@@ -15,6 +15,9 @@
   <MAP_MechanoidMechanitor.PurgeDirective.Scenario.DisabledReason>仅在与机械巢结盟时可用。</MAP_MechanoidMechanitor.PurgeDirective.Scenario.DisabledReason>
   <MAP_MechanoidMechanitor.PurgeDirective.Bossgroup.DisabledReason>与机械巢未敌对。我们可以直接向主脑请求所需物资。</MAP_MechanoidMechanitor.PurgeDirective.Bossgroup.DisabledReason>
 
+  <!-- 模块：肃清指令人口限制 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Population.DisabledReason>肃清指令禁止接纳新的血肉智慧生物。</MAP_MechanoidMechanitor.PurgeDirective.Population.DisabledReason>
+
   <!-- 模块：肃清指令通用功能 -->
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactOvermind>联络机械主脑</MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactOvermind>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactUnlockedLetter.Label>可以联络机械主脑</MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactUnlockedLetter.Label>

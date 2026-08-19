@@ -29,8 +29,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [HarmonyPrefix]
         public static void Prefix()
         {
-            if (!MechanoidMechanitorPurgeDirectiveRelationUtility
-                    .ShouldApplyNonHostileMechHiveRestrictions())
+            if (!MechanoidMechanitorPurgeDirectivePopulationPolicy
+                    .RestrictionActive)
             {
                 return;
             }
@@ -94,8 +94,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<PrisonerInteractionModeDef> modes)
         {
             if (modes == null
-                || !MechanoidMechanitorPurgeDirectiveRelationUtility
-                    .ShouldApplyNonHostileMechHiveRestrictions())
+                || !MechanoidMechanitorPurgeDirectivePopulationPolicy
+                    .RestrictionActive)
             {
                 return;
             }
