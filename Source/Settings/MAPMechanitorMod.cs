@@ -50,6 +50,9 @@ namespace MAP_MechanoidMechanitor
                 viewRect);
 
             Listing_Standard listing = new Listing_Standard();
+            // Keep settings in one vertical column so the scroll view can measure
+            // the full content height instead of letting Listing auto-create columns.
+            listing.maxOneColumn = true;
             listing.Begin(viewRect);
 
             listing.CheckboxLabeled(
