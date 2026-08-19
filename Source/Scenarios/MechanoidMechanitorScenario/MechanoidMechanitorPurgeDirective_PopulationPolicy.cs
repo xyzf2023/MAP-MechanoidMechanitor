@@ -10,10 +10,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public static class MechanoidMechanitorPurgeDirectivePopulationPolicy
     {
         /// <summary>
-        /// 人口限制是否生效。统一复用关系工具，不在本类另写一套独立逻辑。
+        /// 人口限制是否生效。
+        /// 必须同时满足：
+        /// 1. 当前是机械族机械师专用剧本（GeneralScenario 普通剧本即使开启肃清也不启用人口限制）；
+        /// 2. 机械巢与玩家仍非敌对（复用关系工具的既有判定）。
+        /// 注意：不修改 ShouldApplyNonHostileMechHiveRestrictions 本身，
+        /// 它仍可能被其他肃清逻辑复用；这里只是收窄 PopulationPolicy 的作用域。
         /// </summary>
         public static bool RestrictionActive =>
-            MechanoidMechanitorPurgeDirectiveRelationUtility
+            GameComponent_MechanoidMechanitorStoryState
+                .IsMechanoidMechanitorScenarioStoryConfiguration
+            && MechanoidMechanitorPurgeDirectiveRelationUtility
                 .ShouldApplyNonHostileMechHiveRestrictions();
 
         public static TaggedString BlockReason =>

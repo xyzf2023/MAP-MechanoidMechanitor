@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using RimWorld;
@@ -152,6 +153,124 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     __result = 0f;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 胚胎代孕植入（根源入口）：阻止玩家创建新的 ImplantEmbryo 手术 Bill。
+        /// 仅当胚胎会生成被禁止的血肉 Humanlike 时，给原版 AcceptanceReport 追加拒绝原因，
+        /// 不覆盖原版已有的拒绝（如未满 16 岁、已怀孕、已被预约等）。
+        /// </summary>
+        [HarmonyPatch("RimWorld.HumanEmbryo", "CanImplantReport")]
+        public static class
+            MechanoidMechanitorPurgeDirective_HumanEmbryo_CanImplantReport_Patch
+        {
+            [HarmonyPostfix]
+            public static void Postfix(
+                object __instance,
+                ref AcceptanceReport __result)
+            {
+                if (!ModsConfig.BiotechActive)
+                {
+                    return;
+                }
+
+                if (!MechanoidMechanitorPurgeDirectivePopulationPolicy
+                        .RestrictionActive)
+                {
+                    return;
+                }
+
+                // 原版已拒绝时保留原因为准。
+                if (!__result.Accepted)
+                {
+                    return;
+                }
+
+                Pawn? geneticMother = GetEmbryoMother(__instance);
+                if (MechanoidMechanitorPurgeDirectivePopulationPolicy
+                        .WouldCreateForbiddenFleshFromEmbryo(geneticMother))
+                {
+                    __result =
+                        MechanoidMechanitorPurgeDirectivePopulationPolicy.BlockReason;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 已排队 ImplantEmbryo Bill 的底层保险。
+        /// 关键点：Toils_Recipe 在 ApplyOnPawn 之前已经 ConsumeIngredients，
+        /// 因此若在 ApplyOnPawn 直接 return false，胚胎会被当作手术材料消耗掉（D5 明令禁止）。
+        /// 选择在 CompletableEver（医生派工之前、尚未消耗任何材料）返回 false，
+        /// 使该植入 Bill 永不可被执行，从而安全保留胚胎。
+        /// 仅对 ImplantEmbryo 这一种 recipe 生效，不影响其他手术。
+        /// </summary>
+        [HarmonyPatch("RimWorld.Recipe_ImplantEmbryo", "CompletableEver")]
+        public static class
+            MechanoidMechanitorPurgeDirective_RecipeImplantEmbryo_CompletableEver_Patch
+        {
+            [HarmonyPrefix]
+            public static bool Prefix(Pawn surgeryTarget, ref bool __result)
+            {
+                if (!ModsConfig.BiotechActive)
+                {
+                    return true;
+                }
+
+                if (!MechanoidMechanitorPurgeDirectivePopulationPolicy
+                        .RestrictionActive)
+                {
+                    return true;
+                }
+
+                if (surgeryTarget?.BillStack == null)
+                {
+                    return true;
+                }
+
+                List<Bill> bills = surgeryTarget.BillStack.Bills;
+                for (int i = 0; i < bills.Count; i++)
+                {
+                    Bill bill = bills[i];
+                    if (bill?.recipe == null
+                        || bill.recipe.defName != "ImplantEmbryo")
+                    {
+                        continue;
+                    }
+
+                    // uniqueRequiredIngredients 仅存在于 Bill_Medical。
+                    if (bill.GetType().FullName != "RimWorld.Bill_Medical")
+                    {
+                        continue;
+                    }
+
+                    FieldInfo? uniqueField = bill.GetType().GetField(
+                        "uniqueRequiredIngredients",
+                        BindingFlags.Public | BindingFlags.Instance);
+                    if (uniqueField?.GetValue(bill) is not System.Collections.IEnumerable uniqueList)
+                    {
+                        continue;
+                    }
+
+                    foreach (object ingredient in uniqueList)
+                    {
+                        if (ingredient == null
+                            || ingredient.GetType().FullName != "RimWorld.HumanEmbryo")
+                        {
+                            continue;
+                        }
+
+                        if (MechanoidMechanitorPurgeDirectivePopulationPolicy
+                                .WouldCreateForbiddenFleshFromEmbryo(
+                                    GetEmbryoMother(ingredient)))
+                        {
+                            __result = false;
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
             }
         }
     }

@@ -112,8 +112,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 最终保险：仅过滤 Creepjoiner Pawn，不影响其他 QuestPart_SetFaction 用法。
-        /// 用与 QuestPart_JoinPlayer 相同的临时过滤列表方式。
+        /// 最终保险：仅过滤明确的永久加入路线 Pawn，不影响其他 QuestPart_SetFaction 用法。
+        /// 覆盖两类：Creepjoiner，以及 root 为 WandererJoinAbasia / WandererJoins 的
+        /// 永久加入任务（M09 / M12）。用与 QuestPart_JoinPlayer 相同的临时过滤列表方式。
+        /// 注意：绝不“只要目标是玩家派系就过滤所有血肉 Humanlike”，SetFaction 是通用组件，
+        /// 还承担临时 faction 切换、特殊剧情等逻辑。
         /// </summary>
         [HarmonyPatch(
             typeof(QuestPart_SetFaction),
@@ -121,6 +124,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static class
             MechanoidMechanitorPurgeDirective_QuestPartSetFaction_Patch
         {
+            // 经此 SetFaction 永久加入玩家、且属于本限制范围的 QuestScriptDef.root 白名单。
+            private static readonly HashSet<string> PermanentJoinSetFactionQuestRoots =
+                new HashSet<string>
+            {
+                "WandererJoinAbasia",
+                "WandererJoins"
+            };
+
             public sealed class PatchState
             {
                 public List<Thing>? OriginalThings;
@@ -128,6 +139,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             private static readonly FieldInfo? CreepjoinerField =
                 AccessTools.Field(typeof(Pawn), "creepjoiner");
+
+            private static bool IsKnownPermanentJoinSetFactionQuest(
+                QuestPart_SetFaction part)
+            {
+                string? rootDefName = part.quest?.root?.defName;
+                return rootDefName != null
+                    && PermanentJoinSetFactionQuestRoots.Contains(rootDefName);
+            }
 
             [HarmonyPrefix]
             public static void Prefix(
@@ -156,12 +175,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     Thing thing = original[i];
                     if (thing is Pawn pawn
-                        && CreepjoinerField != null
-                        && CreepjoinerField.GetValue(pawn) != null
                         && MechanoidMechanitorPurgeDirectivePopulationPolicy
                             .WouldAddForbiddenFreeColonist(
                                 pawn,
-                                __instance.faction))
+                                __instance.faction)
+                        && (CreepjoinerField != null
+                            && CreepjoinerField.GetValue(pawn) != null
+                            || IsKnownPermanentJoinSetFactionQuest(__instance)))
                     {
                         blockedAny = true;
                         continue;
