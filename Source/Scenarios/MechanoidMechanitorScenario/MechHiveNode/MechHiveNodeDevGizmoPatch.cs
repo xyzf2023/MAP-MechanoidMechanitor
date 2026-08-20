@@ -51,7 +51,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 defaultDesc =
                     "MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.Desc"
                         .Translate(),
-                icon = TexButton.Plus,
                 action = () => DevForceCompleteConstruction(node)
             };
 

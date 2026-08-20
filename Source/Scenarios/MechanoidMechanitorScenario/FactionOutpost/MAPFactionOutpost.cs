@@ -78,7 +78,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 defaultDesc =
                     "MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.Desc"
                         .Translate(),
-                icon = TexButton.Plus,
                 action = DevForceCompleteConstruction
             };
 
