@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
@@ -179,8 +180,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                             .WouldAddForbiddenFreeColonist(
                                 pawn,
                                 __instance.faction)
-                        && (CreepjoinerField != null
-                            && CreepjoinerField.GetValue(pawn) != null
+                        && (
+                            (CreepjoinerField != null
+                                && CreepjoinerField.GetValue(pawn) != null)
                             || IsKnownPermanentJoinSetFactionQuest(__instance)))
                     {
                         blockedAny = true;
@@ -208,10 +210,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 QuestPart_SetFaction __instance,
                 PatchState? __state)
             {
-                if (__state?.OriginalThings != null)
+                Restore(__instance, __state);
+            }
+
+            [HarmonyFinalizer]
+            public static Exception? Finalizer(
+                QuestPart_SetFaction __instance,
+                PatchState? __state,
+                Exception? __exception)
+            {
+                Restore(__instance, __state);
+
+                // 必须把原异常继续交还 Harmony/原调用方，绝对不要吞掉原版异常。
+                return __exception;
+            }
+
+            private static void Restore(
+                QuestPart_SetFaction instance,
+                PatchState? state)
+            {
+                if (state?.OriginalThings == null)
                 {
-                    __instance.things = __state.OriginalThings;
+                    return;
                 }
+
+                instance.things = state.OriginalThings;
+
+                // 防止 Postfix + Finalizer 重复恢复。
+                state.OriginalThings = null;
             }
         }
     }

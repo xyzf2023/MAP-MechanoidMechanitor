@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using RimWorld;
@@ -76,16 +77,45 @@ namespace MAP_MechanoidMechanitor.Scenarios
             QuestPart_JoinPlayer __instance,
             PatchState? __state)
         {
-            if (__state?.OriginalPawns != null)
+            Restore(__instance, __state);
+        }
+
+        [HarmonyFinalizer]
+        public static Exception? Finalizer(
+            QuestPart_JoinPlayer __instance,
+            PatchState? __state,
+            Exception? __exception)
+        {
+            Restore(__instance, __state);
+
+            // 必须把原异常继续交还 Harmony/原调用方，绝对不要吞掉原版异常。
+            return __exception;
+        }
+
+        private static void Restore(
+            QuestPart_JoinPlayer instance,
+            PatchState? state)
+        {
+            if (state?.OriginalPawns == null)
             {
-                __instance.pawns = __state.OriginalPawns;
+                return;
             }
+
+            instance.pawns = state.OriginalPawns;
+
+            // 防止 Postfix + Finalizer 重复恢复。
+            state.OriginalPawns = null;
         }
     }
 
     /// <summary>
     /// QuestPart_PawnsArrive 入口拦截（仅白名单永久人口路线）：
-    /// M03 倒地难民 / M04 囚犯救援 / M10 逃兵。
+    /// 当前仅处理 M10 Royalty 逃兵永久加入（Intro_Deserter）。
+    /// M03 倒地难民 / M04 囚犯救援 的永久加入路径并非经由这两个 Quest root 的
+    /// QuestPart_PawnsArrive 完成，而是走 GenStep 设置 WillJoinColonyIfRescued
+    /// → JoinColonyBecauseRescuedBy → InteractionWorker_RecruitAttempt.DoRecruit
+    /// → RecruitUtility.Recruit 路线，已由 RecruitmentPatches 中的 DoRecruit /
+    /// RecruitUtility.Recruit 底层保险正确兜底，因此不再列入本白名单。
     /// 仅当 quest.root.defName 属于白名单时才临时过滤会被禁止的血肉 Pawn，
     /// 其余 Pawn（含机器人）照常走原版流程；绝不拦截临时 lodger 类 joinPlayer 任务
     /// （例如 Intro_Wimp、Hospitality_Refugee 初次到来）。
@@ -99,9 +129,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static readonly HashSet<string> PermanentJoinQuestRoots =
             new HashSet<string>
         {
-            "Intro_Deserter",
-            "OpportunitySite_DownedRefugee",
-            "OpportunitySite_PrisonerWillingToJoin"
+            "Intro_Deserter"
         };
 
         public sealed class PatchState
@@ -175,10 +203,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
             QuestPart_PawnsArrive __instance,
             PatchState? __state)
         {
-            if (__state?.OriginalPawns != null)
+            Restore(__instance, __state);
+        }
+
+        [HarmonyFinalizer]
+        public static Exception? Finalizer(
+            QuestPart_PawnsArrive __instance,
+            PatchState? __state,
+            Exception? __exception)
+        {
+            Restore(__instance, __state);
+
+            // 必须把原异常继续交还 Harmony/原调用方，绝对不要吞掉原版异常。
+            return __exception;
+        }
+
+        private static void Restore(
+            QuestPart_PawnsArrive instance,
+            PatchState? state)
+        {
+            if (state?.OriginalPawns == null)
             {
-                __instance.pawns = __state.OriginalPawns;
+                return;
             }
+
+            instance.pawns = state.OriginalPawns;
+
+            // 防止 Postfix + Finalizer 重复恢复。
+            state.OriginalPawns = null;
         }
     }
 }

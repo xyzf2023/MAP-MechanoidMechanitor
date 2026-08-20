@@ -95,16 +95,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 通过成长槽胚胎培育是否会产生被禁止的新血肉人口。
-        /// 传入胚胎的 genetic mother（基因母亲）Pawn；为 null 时回退为 Colonist。
-        /// 只处理血肉 Humanlike 胚胎，不限制已有 Pawn 进入成长槽加速成长。
+        /// 这个胚胎如果从指定 Faction 的分娩者/成长槽出生，是否会产生被肃清政策禁止的
+        /// “新增玩家自由血肉智慧人口”。
+        /// 仅当下列全部成立时才返回 true：
+        /// 1. RestrictionActive 生效；
+        /// 2. Faction.OfPlayerSilentFail 存在（玩家派系存在）；
+        /// 3. 出生派系 birthFaction 正是玩家派系（只有“出生归入玩家”的胚胎才属于本限制范围，
+        ///    把血肉胚胎植入一个仍属于其他派系的囚犯不应被肃清政策禁止）；
+        /// 4. 根据 geneticMother 推断的 PawnKind 是血肉 Humanlike（非血肉 Humanlike 不受限）。
+        /// geneticMother 用于判断生成 PawnKind（为 null 时回退 Colonist）；
+        /// birthFaction 用于判断出生后是否属于玩家派系。
         /// 注意：HumanEmbryo 是 Biotech DLC 类型，本项目编译期不可见，
         /// 因此由 Biotech 补丁通过反射取出基因母亲后调用本方法，避免直接依赖 DLC 程序集。
         /// </summary>
         public static bool WouldCreateForbiddenFleshFromEmbryo(
-            Pawn? geneticMother)
+            Pawn? geneticMother,
+            Faction? birthFaction)
         {
             if (!RestrictionActive)
+            {
+                return false;
+            }
+
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null
+                || birthFaction != player)
             {
                 return false;
             }

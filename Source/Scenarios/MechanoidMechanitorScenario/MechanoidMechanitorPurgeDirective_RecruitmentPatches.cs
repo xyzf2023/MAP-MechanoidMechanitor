@@ -25,6 +25,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// InteractionWorker_RecruitAttempt.DoRecruit 保险：
     /// 即使有人绕过 UI 直接走 RecruitAttempt，也不要执行原版内的
     /// 招募成功信 / Tale / 招募统计 / RecruitedMe thought / RecruitUtility.Recruit。
+    /// 这条底层保险同时覆盖 M03 倒地难民 / M04 囚犯救援 的永久加入路线：
+    /// GenStep 设置 WillJoinColonyIfRescued=true →
+    /// JobDriver_OfferHelp → Pawn_MindState.JoinColonyBecauseRescuedBy →
+    /// InteractionWorker_RecruitAttempt.DoRecruit → RecruitUtility.Recruit。
+    /// 因此 M03/M04 不依赖 QuestPart_PawnsArrive 白名单，最终在此处被拦截。
     /// </summary>
     [HarmonyPatch]
     public static class

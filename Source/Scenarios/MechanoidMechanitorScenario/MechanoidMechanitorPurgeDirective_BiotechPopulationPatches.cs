@@ -104,7 +104,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 Pawn? geneticMother = GetEmbryoMother(embryo);
                 if (MechanoidMechanitorPurgeDirectivePopulationPolicy
-                        .WouldCreateForbiddenFleshFromEmbryo(geneticMother))
+                        .WouldCreateForbiddenFleshFromEmbryo(
+                            geneticMother,
+                            vat.Faction))
                 {
                     Messages.Message(
                         MechanoidMechanitorPurgeDirectivePopulationPolicy.BlockReason,
@@ -158,8 +160,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 胚胎代孕植入（根源入口）：阻止玩家创建新的 ImplantEmbryo 手术 Bill。
-        /// 仅当胚胎会生成被禁止的血肉 Humanlike 时，给原版 AcceptanceReport 追加拒绝原因，
-        /// 不覆盖原版已有的拒绝（如未满 16 岁、已怀孕、已被预约等）。
+        /// 以代孕者 pawn 的实际 Faction（原版出生实际使用的 birtherThing.Faction）判断；
+        /// 仅当该 Faction 为玩家且胚胎会生成被禁止的血肉 Humanlike 时，给原版
+        /// AcceptanceReport 追加拒绝原因，不覆盖原版已有的拒绝（如未满 16 岁、已怀孕、已被预约等）。
+        /// 不检查 HostFaction：把血肉胚胎植入仍属于其他派系的囚犯不该被肃清政策禁止。
         /// </summary>
         [HarmonyPatch("RimWorld.HumanEmbryo", "CanImplantReport")]
         public static class
@@ -168,6 +172,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             [HarmonyPostfix]
             public static void Postfix(
                 object __instance,
+                Pawn pawn,
                 ref AcceptanceReport __result)
             {
                 if (!ModsConfig.BiotechActive)
@@ -189,7 +194,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 Pawn? geneticMother = GetEmbryoMother(__instance);
                 if (MechanoidMechanitorPurgeDirectivePopulationPolicy
-                        .WouldCreateForbiddenFleshFromEmbryo(geneticMother))
+                        .WouldCreateForbiddenFleshFromEmbryo(
+                            geneticMother,
+                            pawn?.Faction))
                 {
                     __result =
                         MechanoidMechanitorPurgeDirectivePopulationPolicy.BlockReason;
@@ -262,7 +269,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                         if (MechanoidMechanitorPurgeDirectivePopulationPolicy
                                 .WouldCreateForbiddenFleshFromEmbryo(
-                                    GetEmbryoMother(ingredient)))
+                                    GetEmbryoMother(ingredient),
+                                    surgeryTarget.Faction))
                         {
                             __result = false;
                             return false;
@@ -271,6 +279,75 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 return true;
+            }
+        }
+
+        /// <summary>
+        /// 成长槽植入 UI 根源拦截：正常玩家 UI 上直接把成长槽植入按钮灰掉，
+        /// 避免点击后执行 bestVat.SelectEmbryo(this); implantTarget = bestVat;
+        /// 造成的瞬时非法 implantTarget 状态。底层保险仍由
+        /// Building_GrowthVat.SelectEmbryo Prefix 承担（MOD/反射/dev 调用绕路）。
+        /// 只禁用成长槽植入 Command_Action，不影响代孕植入、取消植入与基类 Gizmo。
+        /// </summary>
+        [HarmonyPatch(
+            "RimWorld.HumanEmbryo",
+            "GetGizmos")]
+        public static class
+            MechanoidMechanitorPurgeDirective_HumanEmbryo_GetGizmos_Patch
+        {
+            [HarmonyPostfix]
+            public static void Postfix(
+                object __instance,
+                ref IEnumerable<Gizmo> __result)
+            {
+                if (!ModsConfig.BiotechActive)
+                {
+                    return;
+                }
+
+                if (!MechanoidMechanitorPurgeDirectivePopulationPolicy
+                        .RestrictionActive)
+                {
+                    return;
+                }
+
+                __result = FilterGrowthVatGizmos(
+                    __instance,
+                    __result);
+            }
+        }
+
+        /// <summary>
+        /// 从原始 Gizmo 序列中滤出 HumanEmbryo 的成长槽植入按钮并按出生派系禁用。
+        /// 采用惰性 iterator，不提前 materialize 原版序列，保留原版 GetGizmos 的迭代行为。
+        /// 仅当“出生归入玩家派系”且为血肉 Humanlike 胚胎时才禁用成长槽按钮；
+        /// 非血肉 Humanlike 或其他派系代孕者不受本人口限制。
+        /// </summary>
+        private static IEnumerable<Gizmo> FilterGrowthVatGizmos(
+            object embryo,
+            IEnumerable<Gizmo> original)
+        {
+            Pawn? geneticMother = GetEmbryoMother(embryo);
+
+            bool blockGrowthVat =
+                MechanoidMechanitorPurgeDirectivePopulationPolicy
+                    .WouldCreateForbiddenFleshFromEmbryo(
+                        geneticMother,
+                        Faction.OfPlayerSilentFail);
+
+            foreach (Gizmo gizmo in original)
+            {
+                if (blockGrowthVat
+                    && gizmo is Command_Action command
+                    && command.defaultLabel.Contains(
+                        "InsertGrowthVatLabel".Translate()))
+                {
+                    command.Disable(
+                        MechanoidMechanitorPurgeDirectivePopulationPolicy
+                            .BlockReason);
+                }
+
+                yield return gizmo;
             }
         }
     }
