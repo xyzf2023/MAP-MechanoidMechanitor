@@ -83,7 +83,7 @@
     <researchPrerequisite>MAP_BionicMechanicalStructure</researchPrerequisite>
     <displayPriority>300</displayPriority>
     <workAmount>1800</workAmount>
-    <gestationCycles>5</gestationCycles>
+    <gestationCycles>4</gestationCycles>
     <formingTicks>120000</formingTicks>
     <mechanitorOnlyRecipe>true</mechanitorOnlyRecipe>
     <workSpeedStat>MechFormingSpeed</workSpeedStat>
@@ -103,7 +103,7 @@
             <li>Steel</li>
           </thingDefs>
         </filter>
-        <count>75</count>
+        <count>100</count>
       </li>
       <li>
         <filter>
@@ -111,7 +111,7 @@
             <li>Plasteel</li>
           </thingDefs>
         </filter>
-        <count>100</count>
+        <count>50</count>
       </li>
       <li>
         <filter>
@@ -119,7 +119,7 @@
             <li>ComponentIndustrial</li>
           </thingDefs>
         </filter>
-        <count>8</count>
+        <count>4</count>
       </li>
       <li>
         <filter>
@@ -127,23 +127,7 @@
             <li>ComponentSpacer</li>
           </thingDefs>
         </filter>
-        <count>4</count>
-      </li>
-      <li>
-        <filter>
-          <thingDefs>
-            <li>Gold</li>
-          </thingDefs>
-        </filter>
-        <count>50</count>
-      </li>
-      <li>
-        <filter>
-          <thingDefs>
-            <li>ArchiteCapsule</li>
-          </thingDefs>
-        </filter>
-        <count>5</count>
+        <count>2</count>
       </li>
     </ingredients>
     <fixedIngredientFilter>
@@ -153,8 +137,6 @@
         <li>Plasteel</li>
         <li>ComponentIndustrial</li>
         <li>ComponentSpacer</li>
-        <li>Gold</li>
-        <li>ArchiteCapsule</li>
       </thingDefs>
     </fixedIngredientFilter>
     <products>
