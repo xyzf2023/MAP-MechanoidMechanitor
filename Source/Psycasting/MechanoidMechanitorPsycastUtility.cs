@@ -82,6 +82,7 @@ namespace MAP_MechanoidMechanitor
                 && !pawn.Dead
                 && pawn.RaceProps.IsMechanoid
                 && HasPsycastingCapability(pawn)
+                && PsychicCoreUtility.HasPsychicCore(pawn)
                 && pawn.def.GetStatValueAbstract(StatDefOf.PsychicSensitivity)
                     <= float.Epsilon;
 
@@ -103,18 +104,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        public static bool IsPsylinkNeuroformer(Thing? item)
-        {
-            if (!ModsConfig.RoyaltyActive || item is not ThingWithComps thingWithComps)
-            {
-                return false;
-            }
-
-            CompUseEffect_InstallImplant? installComp =
-                thingWithComps.TryGetComp<CompUseEffect_InstallImplant>();
-            return installComp?.Props.hediffDef == HediffDefOf.PsychicAmplifier;
-        }
-
         public static bool IsPsytrainer(Thing? item)
         {
             if (!ModsConfig.RoyaltyActive || item is not ThingWithComps thingWithComps)
@@ -127,12 +116,7 @@ namespace MAP_MechanoidMechanitor
             return gainAbilityComp?.Props.ability?.IsPsycast == true;
         }
 
-        public static bool IsSupportedPsycastConsumable(Thing? item)
-        {
-            return IsPsylinkNeuroformer(item) || IsPsytrainer(item);
-        }
-
-        public static bool CanUsePsycastConsumable(Pawn? pawn, Thing? item)
+        public static bool CanUsePsytrainer(Pawn? pawn, Thing? item)
         {
             if (!ModsConfig.RoyaltyActive
                 || pawn == null
@@ -154,7 +138,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return IsSupportedPsycastConsumable(item);
+            return IsPsytrainer(item);
         }
 
         public static bool CanBeMeditationSpotCandidate(Pawn? pawn, Map? map)

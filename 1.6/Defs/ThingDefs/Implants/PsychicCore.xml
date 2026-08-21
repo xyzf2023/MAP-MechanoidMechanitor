@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="MechanitorImplantCraftableBase"
+            MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
+    <defName>MAP_PsychicCore</defName>
+    <label>心灵中枢</label>
+    <description>TODO</description>
+    <descriptionHyperlinks>
+      <HediffDef>MAP_PsychicCore</HediffDef>
+    </descriptionHyperlinks>
+    <costList>
+      <PsychicAmplifier>1</PsychicAmplifier>
+      <ComponentSpacer>4</ComponentSpacer>
+      <Gold>1</Gold>
+      <Plasteel>5</Plasteel>
+    </costList>
+    <statBases>
+      <MaxInstallCount>10</MaxInstallCount>
+      <MarketValue>3500</MarketValue>
+      <WorkToMake>12000</WorkToMake>
+    </statBases>
+    <recipeMaker>
+      <researchPrerequisite>MAP_PsychicCoreIntegration</researchPrerequisite>
+      <skillRequirements Inherit="False">
+        <Crafting>12</Crafting>
+      </skillRequirements>
+    </recipeMaker>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechanoidMechanitorImplantMarker" />
+      <li Class="CompProperties_Usable">
+        <compClass>CompUsableImplant</compClass>
+        <useJob>UseItem</useJob>
+        <useLabel>植入心灵中枢</useLabel>
+      </li>
+      <li Class="CompProperties_UseEffectInstallImplant">
+        <hediffDef>MAP_PsychicCore</hediffDef>
+        <bodyPart>Brain</bodyPart>
+        <canUpgrade>true</canUpgrade>
+        <requiresExistingHediff>false</requiresExistingHediff>
+        <maxSeverity>10</maxSeverity>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>

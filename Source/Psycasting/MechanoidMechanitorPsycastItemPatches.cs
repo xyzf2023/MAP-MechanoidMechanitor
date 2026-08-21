@@ -5,28 +5,6 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     [HarmonyPatch(
-        typeof(MechanoidMechanitorImplantUtility),
-        nameof(MechanoidMechanitorImplantUtility.CanUseMechanitorImplant))]
-    public static class Patch_MechanoidMechanitorImplantUtility_CanUseMechanitorImplant_Psylink
-    {
-        [HarmonyPostfix]
-        public static void Postfix(
-            Pawn? pawn,
-            Thing? implant,
-            ref bool __result)
-        {
-            if (!__result
-                && MechanoidMechanitorPsycastUtility.IsPsylinkNeuroformer(implant)
-                && MechanoidMechanitorPsycastUtility.CanUsePsycastConsumable(
-                    pawn,
-                    implant))
-            {
-                __result = true;
-            }
-        }
-    }
-
-    [HarmonyPatch(
         typeof(ColonistLikeCompUsableUtility),
         nameof(ColonistLikeCompUsableUtility.IsAuthorizedMechanicalCompUsableUser))]
     public static class Patch_ColonistLikeCompUsableUtility_IsAuthorized_Psycasting
@@ -39,47 +17,11 @@ namespace MAP_MechanoidMechanitor
         {
             if (!__result
                 && usable != null
-                && MechanoidMechanitorPsycastUtility.CanUsePsycastConsumable(
+                && MechanoidMechanitorPsycastUtility.CanUsePsytrainer(
                     pawn,
                     usable.parent))
             {
                 __result = true;
-            }
-        }
-    }
-
-    [HarmonyPatch(
-        typeof(CompUseEffect_InstallImplant),
-        nameof(CompUseEffect_InstallImplant.CanBeUsedBy))]
-    public static class Patch_CompUseEffect_InstallImplant_CanBeUsedBy_Psycasting
-    {
-        [HarmonyPrefix]
-        public static void Prefix(
-            CompUseEffect_InstallImplant __instance,
-            Pawn p)
-        {
-            if (MechanoidMechanitorPsycastUtility.IsPsylinkNeuroformer(
-                    __instance.parent))
-            {
-                MechanoidMechanitorPsycastUtility.EnsurePsycastInfrastructure(p);
-            }
-        }
-    }
-
-    [HarmonyPatch(
-        typeof(CompUseEffect_InstallImplant),
-        nameof(CompUseEffect_InstallImplant.DoEffect))]
-    public static class Patch_CompUseEffect_InstallImplant_DoEffect_Psycasting
-    {
-        [HarmonyPrefix]
-        public static void Prefix(
-            CompUseEffect_InstallImplant __instance,
-            Pawn user)
-        {
-            if (MechanoidMechanitorPsycastUtility.IsPsylinkNeuroformer(
-                    __instance.parent))
-            {
-                MechanoidMechanitorPsycastUtility.EnsurePsycastInfrastructure(user);
             }
         }
     }

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <HediffDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
+    <defName>MAP_PsychicCore</defName>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_PsychicCore</hediffClass>
+    <descriptionHyperlinks>
+      <ThingDef>MAP_PsychicCore</ThingDef>
+    </descriptionHyperlinks>
+    <label>心灵中枢</label>
+    <description>TODO</description>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>true</priceImpact>
+    <initialSeverity>1</initialSeverity>
+    <minSeverity>1</minSeverity>
+    <maxSeverity>10</maxSeverity>
+    <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
+    <levelIsQuantity>false</levelIsQuantity>
+    <duplicationAllowed>false</duplicationAllowed>
+    <comps>
+      <li Class="HediffCompProperties_GiveAbility">
+        <abilityDefs>
+          <li>MAP_PsychicActivation</li>
+        </abilityDefs>
+      </li>
+    </comps>
+    <stages>
+      <li>
+        <minSeverity>1</minSeverity>
+        <statOffsets><PsychicSensitivity>0.25</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.90</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>2</minSeverity>
+        <statOffsets><PsychicSensitivity>0.50</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.85</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>3</minSeverity>
+        <statOffsets><PsychicSensitivity>0.75</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.80</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>4</minSeverity>
+        <statOffsets><PsychicSensitivity>1.00</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.75</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>5</minSeverity>
+        <statOffsets><PsychicSensitivity>1.50</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.70</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>6</minSeverity>
+        <statOffsets><PsychicSensitivity>2.00</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.65</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>7</minSeverity>
+        <statOffsets><PsychicSensitivity>2.75</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.55</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>8</minSeverity>
+        <statOffsets><PsychicSensitivity>3.50</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.45</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>9</minSeverity>
+        <statOffsets><PsychicSensitivity>4.25</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.30</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>10</minSeverity>
+        <statOffsets><PsychicSensitivity>5.00</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.15</PsychicEntropyGain></statFactors>
+        <blocksMentalBreaks>true</blocksMentalBreaks>
+      </li>
+    </stages>
+  </HediffDef>
+
+  <HediffDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
+    <defName>MAP_PsychicActivationActive</defName>
+    <hediffClass>HediffWithComps</hediffClass>
+    <label>心灵活化</label>
+    <description>TODO</description>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>false</priceImpact>
+    <initialSeverity>1</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>1</maxSeverity>
+    <duplicationAllowed>false</duplicationAllowed>
+    <comps>
+      <li Class="HediffCompProperties_Disappears">
+        <disappearsAfterTicks>15000~15000</disappearsAfterTicks>
+        <showRemainingTime>true</showRemainingTime>
+      </li>
+    </comps>
+    <stages>
+      <li>
+        <minSeverity>1</minSeverity>
+        <statFactors>
+          <PsychicSensitivity>2.00</PsychicSensitivity>
+          <PsychicEntropyGain>0</PsychicEntropyGain>
+        </statFactors>
+      </li>
+    </stages>
+  </HediffDef>
+</Defs>

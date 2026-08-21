@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <AbilityDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
+    <defName>MAP_PsychicActivation</defName>
+    <label>心灵活化</label>
+    <description>TODO</description>
+    <iconPath>UI/Abilities/EntropyDump</iconPath>
+    <cooldownTicksRange>180000~180000</cooldownTicksRange>
+    <jobDef>CastAbilityOnThingWithoutWeapon</jobDef>
+    <targetRequired>false</targetRequired>
+    <showWhenDrafted>true</showWhenDrafted>
+    <displayGizmoWhileUndrafted>true</displayGizmoWhileUndrafted>
+    <disableGizmoWhileUndrafted>false</disableGizmoWhileUndrafted>
+    <canUseAoeToGetTargets>false</canUseAoeToGetTargets>
+    <verbProperties>
+      <verbClass>Verb_CastAbility</verbClass>
+      <warmupTime>0</warmupTime>
+      <range>-1</range>
+      <drawAimPie>false</drawAimPie>
+      <onlyManualCast>true</onlyManualCast>
+      <nonInterruptingSelfCast>true</nonInterruptingSelfCast>
+      <targetParams>
+        <canTargetSelf>true</canTargetSelf>
+      </targetParams>
+    </verbProperties>
+    <comps>
+      <li Class="CompProperties_AbilityEffect">
+        <compClass>MAP_MechanoidMechanitor.CompAbilityEffect_PsychicCoreActivation</compClass>
+      </li>
+    </comps>
+  </AbilityDef>
+</Defs>
