@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
 using RimWorld;
@@ -200,30 +201,52 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// 生成一次联合军事行动邀请。所有资格判定（L4、无进行中行动、暴力任务许可、
         /// 真实存在的敌方世界目标、发起者与参与派系）均在此处与 Utility 中完成。
         /// 绝不凭空生成敌方据点。
+        ///
+        /// 正式调度传 null/false；DEV 可传精确目标与参与派系以跳过自然随机与概率。
         /// </summary>
         public static bool TryGenerateOffer()
         {
+            return TryGenerateOffer(null, null, false, out _);
+        }
+
+        /// <summary>
+        /// 可指定精确目标与参与派系的邀请生成入口。
+        /// devForced=true 时跳过自然等待时间、随机选择、自然概率、普通前哨生成频率/数量限制，
+        /// 但仍保留 target 类型合法性、参与派系能生成援军、目标尚未被销毁、当前无另一项活动行动等硬性校验。
+        /// </summary>
+        public static bool TryGenerateOffer(
+            WorldObject? forcedTarget,
+            IReadOnlyList<Faction>? forcedParticipants,
+            bool devForced,
+            out string reason)
+        {
+            reason = string.Empty;
+
             GameComponent_SymbiosisCovenantState? component =
                 GameComponent_SymbiosisCovenantState.CurrentComponent;
             if (component == null || !GameComponent_SymbiosisCovenantState.IsActive)
             {
+                reason = "covenantInactive";
                 return false;
             }
 
             if (component.CovenantLevel < 4)
             {
+                reason = "covenantLevelBelowL4";
                 return false;
             }
 
             // 已有进行中行动则不重复生成。
             if (SymbiosisCovenantJointOperationUtility.IsJointOperationOngoing())
             {
+                reason = "operationOngoing";
                 return false;
             }
 
-            // 暴力军事行动需世界设定允许。
+            // 暴力军事行动需世界设定允许（DEV 强制也尊重此设定）。
             if (!SymbiosisCovenantJointOperationUtility.ViolentQuestsAllowed)
             {
+                reason = "violentQuestsDisallowed";
                 return false;
             }
 
@@ -231,30 +254,84 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 SymbiosisCovenantJointOperationDefOf.MAP_SymbiosisCovenant_JointOperationConfig;
             if (def == null)
             {
+                reason = "missingDef";
                 return false;
             }
 
-            // 1）从真实存在的敌方世界对象中按优先级选目标。
-            WorldObject? target = SymbiosisCovenantJointOperationUtility.SelectTargetWorldObject(
-                out Faction? targetFaction);
+            // 1）目标：DEV 可指定精确目标，否则从真实存在的敌方世界对象中按优先级选目标。
+            WorldObject? target;
+            Faction? targetFaction;
+            if (forcedTarget != null)
+            {
+                if (!SymbiosisCovenantJointOperationUtility.IsEligibleTarget(
+                        forcedTarget,
+                        out Faction? eligibleFaction,
+                        out string invalidReason))
+                {
+                    reason = "targetIneligible:" + invalidReason;
+                    return false;
+                }
+
+                target = forcedTarget;
+                targetFaction = eligibleFaction;
+            }
+            else
+            {
+                target = SymbiosisCovenantJointOperationUtility.SelectTargetWorldObject(
+                    out targetFaction);
+            }
+
             if (target == null || targetFaction == null)
             {
+                reason = "noTarget";
                 return false;
             }
 
-            // 2）选择发起者（Trust 加权 + 随机扰动）与参与派系（含发起者，玩家不计入）。
-            if (!SymbiosisCovenantJointOperationUtility.SelectProposerAndParticipants(
-                    def,
-                    targetFaction,
-                    out Faction? proposer,
-                    out List<Faction> participants))
+            // 2）参与派系：DEV 可指定精确参与者（含发起者），否则按 Trust 加权选择。
+            List<Faction> participants;
+            Faction? proposer;
+            if (forcedParticipants != null && forcedParticipants.Count > 0)
             {
+                participants = forcedParticipants.ToList();
+                // 校验每个参与者资格（与目标不同派系、非玩家、能生成 Combat 编组、
+                // 与目标敌对、非战败/隐藏/临时）。
+                foreach (Faction participant in participants)
+                {
+                    if (!SymbiosisCovenantJointOperationUtility.IsEligibleParticipant(
+                            participant,
+                            targetFaction))
+                    {
+                        reason = "participantIneligible:" + participant.Name;
+                        return false;
+                    }
+                }
+
+                proposer = participants[0];
+            }
+            else
+            {
+                if (!SymbiosisCovenantJointOperationUtility.SelectProposerAndParticipants(
+                        def,
+                        targetFaction,
+                        out proposer,
+                        out participants))
+                {
+                    reason = "noParticipants";
+                    return false;
+                }
+            }
+
+            if (proposer ==  null || participants.Count == 0)
+            {
+                reason = "noParticipants";
                 return false;
             }
 
-            if (proposer == null || participants.Count == 0)
+            // 参与派系最多 maxParticipants，包括发起者。
+            if (participants.Count > def.maxParticipants)
             {
-                return false;
+                participants = participants.Take(def.maxParticipants).ToList();
+                proposer = participants[0];
             }
 
             // 3）奖励估值：仅用于（当前已禁用的）实物奖励价值估算，不影响援军规模。
@@ -283,12 +360,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 SymbiosisCovenantJointOperationQuestScriptDefOf.MAP_SymbiosisCovenantJointOperation;
             if (questScriptDef == null)
             {
+                reason = "missingQuestScriptDef";
                 return false;
             }
 
             Quest? quest = QuestUtility.GenerateQuestAndMakeAvailable(questScriptDef, slate);
             if (quest == null)
             {
+                reason = "questGenerateFailed";
                 return false;
             }
 
@@ -319,6 +398,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             // 无视冷却，但尊重「已有进行中行动」与 L4 条件。
             return TryGenerateOffer();
+        }
+
+        /// <summary>
+        /// DEV 专用：针对精确目标与已准备好的参与派系立即生成邀请。
+        /// 仅绕过自然等待时间、随机选择、自然概率、普通前哨生成频率/数量限制，
+        /// 不绕过目标合法性、参与者资格、目标未被销毁、当前无活动行动等硬性校验。
+        /// </summary>
+        public static bool DevSpawnNowForTarget(
+            WorldObject target,
+            IReadOnlyList<Faction> preparedParticipants,
+            out string reason)
+        {
+            reason = string.Empty;
+            if (!Prefs.DevMode)
+            {
+                reason = "devModeRequired";
+                return false;
+            }
+
+            if (target == null || preparedParticipants == null || preparedParticipants.Count == 0)
+            {
+                reason = "invalidArguments";
+                return false;
+            }
+
+            return TryGenerateOffer(target, preparedParticipants, true, out reason);
         }
 
         public static bool DevMakeDueNow()

@@ -6,13 +6,16 @@
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>representative</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
 
   <!-- Offer text: {0}=proposer faction name, {1}=leader descriptor (title+name or representative), {2}=target faction name, {3}=target site, {4}=participant list. -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}'s {1} has issued a call to the covenant for a joint military operation against {2}'s {3}. The following covenant members have agreed to join this operation: {4}. Will you take part in this joint operation?</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}'s {1} has invited the Covenant to participate in a military operation against {2}'s {3}. The factions currently participating in this operation are: {4}. Joining the operation and successfully destroying the target will increase Covenant unity and the participating factions' trust in us. Will we participate?</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>
 
   <!-- Aid leaving notice: {0}=faction name. -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>{0}'s reinforcements are withdrawing from the battlefield.</MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>
 
-  <!-- Quest name: {0}=target faction name, {1}=target site. -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>Joint Operation: assault {1} (against {0})</MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>
+  <!-- Quest name (no placeholders). -->
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>Joint military operation invitation</MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>
+
+  <!-- World target inspect label. -->
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.TargetInspectLabel>Joint military operation target</MAP_MechanoidMechanitor.Symbiosis.JointOp.TargetInspectLabel>
 
   <!-- Reinforcements arrived letter. -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Label>Joint Operation: reinforcements arrived</MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Label>

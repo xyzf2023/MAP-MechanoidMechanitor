@@ -82,6 +82,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 yield break;
             }
 
+            // 建成、非敌对、无地图的前哨允许远行队交易或赠送礼物。
+            if (outpost.IsCompleted
+                && !outpost.HasMap
+                && outpost.Faction != null
+                && outpost.Faction != Faction.OfPlayer
+                && !outpost.Faction.def.permanentEnemy
+                && !outpost.Faction.HostileTo(Faction.OfPlayer))
+            {
+                foreach (FloatMenuOption option in
+                    MAPCaravanArrivalAction_TradeFactionOutpost.GetFloatMenuOptions(caravan, outpost))
+                {
+                    yield return option;
+                }
+
+                foreach (FloatMenuOption option in
+                    MAPCaravanArrivalAction_OfferGiftsFactionOutpost.GetFloatMenuOptions(caravan, outpost))
+                {
+                    yield return option;
+                }
+            }
+
+            // 攻击选项始终保留（即使非敌对也可通过确认发动攻击）。
             Action<Action>? confirm = GetAttackConfirmProxy(outpost);
             foreach (FloatMenuOption option in CaravanArrivalActionUtility.GetFloatMenuOptions(
                 () => CanAttack(outpost),

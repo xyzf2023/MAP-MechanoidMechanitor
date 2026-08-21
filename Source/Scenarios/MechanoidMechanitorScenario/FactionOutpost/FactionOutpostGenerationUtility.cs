@@ -482,6 +482,98 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return result;
         }
 
+        /// <summary>
+        /// DEV 专用：生成一个「建成」状态的普通派系前哨，并返回精确引用。
+        /// 允许绕过自然生成概率与普通前哨数量上限；仍保留基本的合法 tile 校验与不可覆盖已有 WorldObject。
+        /// 正式游戏路径不得调用。
+        /// </summary>
+        public static bool TryDevGenerateCompletedOutpost(
+            Faction targetFaction,
+            out MAPFactionOutpost outpost,
+            out string message)
+        {
+            outpost = null!;
+            message = string.Empty;
+
+            if (!Prefs.DevMode)
+            {
+                message = "非开发者模式";
+                return false;
+            }
+
+            if (targetFaction == null)
+            {
+                message = "目标派系为空";
+                return false;
+            }
+
+            if (!FactionOutpostFactionUtility.IsEligibleFaction(targetFaction))
+            {
+                message = "目标派系不符合前哨生成资格";
+                return false;
+            }
+
+            List<Settlement> colonies = GetPlayerSurfaceColonies();
+            if (colonies.Count == 0)
+            {
+                message = "找不到玩家地表殖民地作为距离参考";
+                return false;
+            }
+
+            List<MAPFactionOutpost> existing = new List<MAPFactionOutpost>();
+            GetAllOutposts(existing);
+            List<ColonyProximityCache> caches = BuildColonyProximityCaches(colonies, existing);
+
+            // DEV 允许放宽到全部殖民地缓存（不强制 MaxOutpostsPerColony，但仍要求 tile 合法）。
+            ColonyProximityCache? chosen = null;
+            foreach (ColonyProximityCache cache in caches)
+            {
+                if (cache.TileDistances.Count > 0)
+                {
+                    chosen = cache;
+                    break;
+                }
+            }
+
+            if (chosen == null)
+            {
+                message = "找不到合法生成 tile";
+                return false;
+            }
+
+            List<MAPFactionOutpost> tmpExisting = new List<MAPFactionOutpost>(existing);
+            if (!TryFindOutpostTile(
+                    chosen,
+                    tmpExisting,
+                    caches,
+                    out PlanetTile tile))
+            {
+                message = "找不到合法生成 tile";
+                return false;
+            }
+
+            MAPFactionOutpost created =
+                (MAPFactionOutpost)WorldObjectMaker.MakeWorldObject(
+                    FactionOutpostDefOf.MAP_FactionOutpost);
+            created.Tile = tile;
+            if (created.def.canHaveFaction)
+            {
+                created.SetFaction(targetFaction);
+            }
+
+            created.AddPart(new SitePart(
+                created,
+                FactionOutpostDefOf.MAP_FactionOutpost_Building,
+                new SitePartParams()));
+            created.InitializeNewOutpost(Find.TickManager.TicksGame, Rand.Int);
+            created.DevForceCompleteConstructionForTest();
+
+            Find.WorldObjects.Add(created);
+            outpost = created;
+            message = "已生成建成前哨 @ tile " + tile;
+            return true;
+        }
+
         public static bool IsWithinTraversal(PlanetTile a, PlanetTile b, int maxDist)
         {
             if (!a.Valid || !b.Valid)

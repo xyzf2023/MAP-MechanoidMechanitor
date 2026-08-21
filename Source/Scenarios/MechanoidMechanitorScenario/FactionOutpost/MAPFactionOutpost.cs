@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using RimWorld;
@@ -15,8 +16,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// <summary>
     /// 普通派系前哨世界对象。只保存真实所属 Faction，不保存出生时敌对/盟友/中立标签。
     /// 后续袭击、援军与显示全部读取 Faction 当前实际外交关系。
+    /// 建成且非敌对、无地图的前哨可作为 ITrader 供远行队交易/赠礼。
     /// </summary>
-    public sealed class MAPFactionOutpost : Site
+    public sealed class MAPFactionOutpost : Site, ITrader, ITraderRestockingInfoProvider
     {
         public const int NaturalBuildDurationTicks = 900000;
         public const int BuildingGarrisonThreatPoints = 2000;
@@ -33,6 +35,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool completionLetterSent;
         private bool cleanedLetterSent;
         private bool mapGarrisonInitialized;
+
+        // 交易库存追踪器：建成非敌对、无地图前哨可向远行队提供交易/赠礼。
+        private FactionOutpost_TraderTracker? trader;
+
+        private FactionOutpost_TraderTracker TraderTracker
+            => trader ??= new FactionOutpost_TraderTracker(this);
 
         public MechanoidMechanitorFactionOutpostPhase Phase => phase;
         public bool IsBuilding => phase == MechanoidMechanitorFactionOutpostPhase.Building;
@@ -101,6 +109,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
             SwitchToCompleted();
         }
 
+        /// <summary>
+        /// DEV 专用：跳过自然建造时间，直接切换为建成状态。正式游戏路径不得调用。
+        /// 仅创建方便测试的前哨，避免重复发送完成信件。
+        /// </summary>
+        public void DevForceCompleteConstructionForTest()
+        {
+            if (!Prefs.DevMode || !IsBuilding || cleaned || base.HasMap)
+            {
+                return;
+            }
+
+            phase = MechanoidMechanitorFactionOutpostPhase.Completed;
+            mapGarrisonInitialized = false;
+
+            parts.Clear();
+            AddPart(new SitePart(
+                this,
+                FactionOutpostDefOf.MAP_FactionOutpost_Completed,
+                new SitePartParams()));
+
+            completionLetterSent = true;
+        }
+
         public void InitializeNewOutpost(int createdTick, int layoutSeed)
         {
             phase = MechanoidMechanitorFactionOutpostPhase.Building;
@@ -121,6 +152,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         protected override void Tick()
         {
             base.Tick();
+
+            // 交易库存周期性刷新/清理（仅在未生成地图时，与 Site 类似）。
+            if (Spawned && !base.HasMap)
+            {
+                TraderTracker.TraderTrackerTick();
+            }
 
             if (!cleaned
                 && !base.HasMap
@@ -400,6 +437,73 @@ namespace MAP_MechanoidMechanitor.Scenarios
             mapGarrisonInitialized = false;
         }
 
+        // ===== ITrader / ITraderRestockingInfoProvider（仅建成、非敌对、无地图的前哨可交易） =====
+
+        public TraderKindDef TraderKind => TraderTracker.TraderKind;
+
+        public IEnumerable<Thing> Goods => TraderTracker.StockListForReading;
+
+        public int RandomPriceFactorSeed => TraderTracker.RandomPriceFactorSeed;
+
+        public string TraderName => TraderTracker.TraderName;
+
+        public TradeCurrency TradeCurrency => TradeCurrency.Silver;
+
+        public IEnumerable<Thing> ColonyThingsWillingToBuy(Pawn playerNegotiator)
+            => TraderTracker.ColonyThingsWillingToBuy(playerNegotiator);
+
+        public void GiveSoldThingToTrader(Thing toGive, int countToGive, Pawn playerNegotiator)
+            => TraderTracker.GiveSoldThingToTrader(toGive, countToGive, playerNegotiator);
+
+        public void GiveSoldThingToPlayer(Thing toGive, int countToGive, Pawn playerNegotiator)
+            => TraderTracker.GiveSoldThingToPlayer(toGive, countToGive, playerNegotiator);
+
+        public bool EverVisited => TraderTracker.EverVisited;
+
+        public bool RestockedSinceLastVisit => TraderTracker.RestockedSinceLastVisit;
+
+        public int NextRestockTick => TraderTracker.NextRestockTick;
+
+        /// <summary>
+        /// 综合前哨状态与追踪器库存判断是否可交易：必须建成、未被清理、已生成、无地图、
+        /// 所属派系有效且不对玩家敌对，且追踪器中有可交易库存种类。
+        /// </summary>
+        public bool CanTradeNow
+        {
+            get
+            {
+                if (!IsCompleted
+                    || cleaned
+                    || !Spawned
+                    || base.HasMap
+                    || Faction == null
+                    || Faction == Faction.OfPlayer
+                    || Faction.def.permanentEnemy
+                    || Faction.HostileTo(Faction.OfPlayer))
+                {
+                    return false;
+                }
+
+                TraderKindDef kind = TraderKind;
+                if (kind == null)
+                {
+                    return false;
+                }
+
+                List<Thing> stock = TraderTracker.StockListForReading;
+                return stock.Any(t => kind.WillTrade(t.def));
+            }
+        }
+
+        public float TradePriceImprovementOffsetForPlayer
+            => TraderTracker.TradePriceImprovementOffsetForPlayer;
+
+        public override void GetChildHolders(List<IThingHolder> outChildren)
+        {
+            base.GetChildHolders(outChildren);
+            TraderTracker.GetChildHolders(outChildren);
+        }
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -426,6 +530,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref mapGarrisonInitialized,
                 "MAP_factionOutpost_mapGarrisonInitialized",
                 false);
+
+            // 交易库存追踪器存读档；旧存档无此项时，运行时首次访问会自动创建空 tracker。
+            Scribe_Deep.Look(ref trader, "trader", this);
+            if (Scribe.mode == LoadSaveMode.PostLoadInit && trader == null)
+            {
+                trader = new FactionOutpost_TraderTracker(this);
+            }
         }
     }
 }

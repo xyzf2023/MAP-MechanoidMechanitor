@@ -33,6 +33,7 @@ namespace MAP_MechanoidMechanitor
                 CreateSubmenuNode("联合贸易代表团", BuildTradeDelegationMenu),
                 CreateSubmenuNode("共同防卫", BuildMilitaryAidMenu),
                 CreateSubmenuNode("标准测试袭击", BuildTestRaidMenu),
+                CreateSubmenuNode("联合军事行动", BuildJointOperationMenu),
                 CreateSubmenuNode("状态与日志", BuildStatusMenu)
             };
         }
@@ -379,6 +380,35 @@ namespace MAP_MechanoidMechanitor
                 CreateActionNode(
                     "输出共同防卫状态到日志",
                     SymbiosisCovenantDebugUtility.TryLogMilitaryAidStatus)
+            };
+        }
+
+        // ===== 联合军事行动 =====
+
+        private static List<DebugActionNode> BuildJointOperationMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                CreateActionNode(
+                    "一键准备并生成测试邀请",
+                    SymbiosisCovenantDebugUtility.TryPrepareAndSpawnJointOperationTest),
+                CreateActionNode(
+                    "立即生成邀请",
+                    (out string msg) =>
+                    {
+                        bool ok = SymbiosisCovenantJointOperationScheduler.DevSpawnNow();
+                        msg = ok ? "已生成邀请" : "生成失败（条件不足）";
+                        return ok;
+                    }),
+                CreateActionNode(
+                    "立即到期",
+                    SymbiosisCovenantDebugUtility.TryMakeJointOperationDueNow),
+                CreateActionNode(
+                    "清除联合军事行动状态",
+                    SymbiosisCovenantDebugUtility.TryClearJointOperation),
+                CreateActionNode(
+                    "输出联合军事行动状态",
+                    SymbiosisCovenantDebugUtility.TryLogJointOperationStatus)
             };
         }
 

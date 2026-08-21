@@ -105,6 +105,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>
         /// 使用原版 BaseGen 实际生成的所属派系建筑求中心，而不是假定前哨位于 map.Center。
         /// 这样即使 GenStep_Outpost 将营地放在地图中心附近的其他清晰区域，守军也会围绕真实基地部署。
+        /// 当存在多个建筑群时（如建成前哨的主/次级建筑群），优先选择最大建筑群的中心，
+        /// 避免守军被分配到两个建筑群中间的空地从而失去 Lord 协调。
         /// </summary>
         private static bool TryResolveDefendCenter(
             Map map,
@@ -113,9 +115,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             defendCenter = IntVec3.Invalid;
 
-            long sumX = 0;
-            long sumZ = 0;
-            int count = 0;
+            List<Building> owned = new List<Building>();
             foreach (Building building in map.listerThings.GetThingsOfType<Building>())
             {
                 if (building == null
@@ -128,20 +128,76 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                sumX += building.Position.x;
-                sumZ += building.Position.z;
-                count++;
+                owned.Add(building);
             }
 
-            if (count == 0)
+            if (owned.Count == 0)
             {
                 return false;
             }
 
+            // 按建筑位置邻近关系分组：相距不超过 GroupThreshold 视为同一建筑群。
+            const int GroupThreshold = 12;
+            List<List<Building>> groups = new List<List<Building>>();
+            foreach (Building building in owned)
+            {
+                bool placed = false;
+                foreach (List<Building> group in groups)
+                {
+                    foreach (Building member in group)
+                    {
+                        if (Mathf.Abs(building.Position.x - member.Position.x) <= GroupThreshold
+                            && Mathf.Abs(building.Position.z - member.Position.z) <= GroupThreshold)
+                        {
+                            group.Add(building);
+                            placed = true;
+                            break;
+                        }
+                    }
+
+                    if (placed)
+                    {
+                        break;
+                    }
+                }
+
+                if (!placed)
+                {
+                    groups.Add(new List<Building> { building });
+                }
+            }
+
+            // 选择建筑数量最多（并列时占地面积最大）的组作为防守中心来源。
+            List<Building> bestGroup = owned;
+            int bestScore = -1;
+            foreach (List<Building> group in groups)
+            {
+                int score = group.Count;
+                foreach (Building member in group)
+                {
+                    score += member.OccupiedRect().Area > 1 ? 1 : 0;
+                }
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestGroup = group;
+                }
+            }
+
+            long sumX = 0;
+            long sumZ = 0;
+            foreach (Building building in bestGroup)
+            {
+                sumX += building.Position.x;
+                sumZ += building.Position.z;
+            }
+
             IntVec3 approximateCenter = new IntVec3(
-                (int)(sumX / count),
+                (int)(sumX / bestGroup.Count),
                 0,
-                (int)(sumZ / count));
+                (int)(sumZ / bestGroup.Count));
+
             if (IsValidDefenderCell(approximateCenter, map))
             {
                 defendCenter = approximateCenter;

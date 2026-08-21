@@ -41,6 +41,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 仅当行动已进入真正的战斗就绪状态时才允许结算成功：
+            // 玩家已进入、目标威胁曾被确认、援军实际生成并已部署。
+            if (!part.playerEngaged
+                || !part.targetThreatConfirmed
+                || !part.reinforcementsGenerated
+                || part.stage
+                    != QuestPart_SymbiosisCovenantJointOperation
+                        .SymbiosisCovenantJointOperationStage.ReinforcementsDeployed)
+            {
+                return;
+            }
+
             part.NotifySettlementDestroyed(factionBase);
         }
     }

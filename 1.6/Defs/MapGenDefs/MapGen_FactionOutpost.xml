@@ -10,7 +10,7 @@
     <linkWithSite>MAP_FactionOutpost_Building</linkWithSite>
     <order>400</order>
     <genStep Class="GenStep_Outpost">
-      <size>12</size>
+      <size>20</size>
       <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
       <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
       <allowGeneratingFarms>false</allowGeneratingFarms>
@@ -26,11 +26,25 @@
   </GenStepDef>
 
   <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Outpost</defName>
+    <defName>MAP_FactionOutpost_Completed_MainOutpost</defName>
     <linkWithSite>MAP_FactionOutpost_Completed</linkWithSite>
     <order>400</order>
     <genStep Class="GenStep_Outpost">
-      <size>18</size>
+      <size>24</size>
+      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
+      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
+      <allowGeneratingFarms>false</allowGeneratingFarms>
+      <generateLoot>false</generateLoot>
+    </genStep>
+  </GenStepDef>
+
+  <!-- 建成前哨的次级建筑群：增加规模，与主建筑群分开生成，避免与主体重叠。 -->
+  <GenStepDef>
+    <defName>MAP_FactionOutpost_Completed_SecondaryOutpost</defName>
+    <linkWithSite>MAP_FactionOutpost_Completed</linkWithSite>
+    <order>401</order>
+    <genStep Class="GenStep_Outpost">
+      <size>16</size>
       <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
       <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
       <allowGeneratingFarms>false</allowGeneratingFarms>

@@ -53,7 +53,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int rewardValue;
         public bool playerEngaged;
 
+        // 延迟部署与威胁确认状态（随存档）。用于在 MapGenerated 信号内避免过早判定，
+        // 等待 SitePartWorker / 守军初始化完成后，再由下一 tick 真正部署援军。
+        private int deploymentDueTick = -1;
+        private int threatInitializationDeadlineTick = -1;
+        public bool targetThreatConfirmed;
+
         private const int ActiveCheckInterval = 2500;
+        // 地图生成后允许守军初始化的最大保护窗口（不是玩家战斗限时）。
+        private const int ThreatInitializationDeadlineTicks = 600;
         private const string AidQuestTagPrefix = "MAP_SymbiosisCovenantJointOp";
 
         public bool IsActive =>
@@ -137,6 +145,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || stage == SymbiosisCovenantJointOperationStage.TargetMapEntered
                 || stage == SymbiosisCovenantJointOperationStage.ReinforcementsDeployed)
             {
+                // 每个 tick 都可执行的轻量部署检查：进入地图后尽快部署援军，
+                // 不等待 ActiveCheckInterval（约 2500 tick）的广泛状态检查。
+                QuestPartTickLight(now);
+
                 // 行动超时（15 天）直接判失败；邀请超时由 Quest 原生 acceptanceExpireTick 处理。
                 if (operationExpireTick > 0 && now > operationExpireTick)
                 {
@@ -156,8 +168,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>
         /// 处理目标地图的原版 QuestTag 信号（F1）。
         /// 信号由 Site/MapParent 通过 questTags 自动发出：
-        /// - &lt;targetQuestTag&gt;.MapGenerated：玩家已进入目标地图 → 部署援军（仅一次）。
-        /// - &lt;targetQuestTag&gt;.NoActiveThreats / .AllEnemiesDefeated：站点敌人已清除 → 成功结算。
+        /// - &lt;targetQuestTag&gt;.MapGenerated：玩家已进入目标地图 → 仅登记，下一 tick 再部署援军。
+        /// - &lt;targetQuestTag&gt;.NoActiveThreats / .AllEnemiesDefeated：站点敌人已清除 → 严格校验后成功结算。
         /// Settlement 的成功不在此处理，由 SymbiosisCovenantJointOperationSettlementPatch 专用 Patch 触发。
         /// </summary>
         protected override void ProcessQuestSignal(Signal signal)
@@ -172,26 +184,53 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (tag == targetQuestTag + ".MapGenerated")
             {
-                // 玩家进入目标地图：部署联合援军（reinforcementsGenerated 防止重复/读档后重复）。
-                EnsureDeployedIfMapReady();
+                // 只登记：目标地图已生成，但此时 SitePartWorker / 守军尚未完成初始化。
+                // 不在本信号调用链里生成援军或判定成功，交由下一 tick 的轻量部署检查处理。
+                NotifyTargetMapGenerated();
                 return;
             }
 
             if (tag == targetQuestTag + ".NoActiveThreats"
                 || tag == targetQuestTag + ".AllEnemiesDefeated")
             {
-                // 仅对 Site / Outpost / WorkSite 生效；必须已接取且援军已部署阶段。
-                if (targetWorldObject is Site && IsOperationAccepted)
+                // 仅对 Site / Outpost / WorkSite 生效。必须已到达战斗就绪状态，否则忽略一次性信号。
+                if (targetWorldObject is Site && IsOperationAccepted && HasReachedCombatReadyState)
                 {
                     BeginSuccess();
                 }
             }
         }
 
+        /// <summary>
+        /// 地图生成信号登记：设置进入地图阶段与延迟部署/威胁初始化窗口。
+        /// 不在此处生成援军、不在此处判定成功、不在此处设置 ReinforcementsDeployed。
+        /// </summary>
+        private void NotifyTargetMapGenerated()
+        {
+            if (!IsOperationAccepted || targetWorldObject == null)
+            {
+                return;
+            }
+
+            Map? map = (targetWorldObject as MapParent)?.Map;
+            if (map == null)
+            {
+                return;
+            }
+
+            stage = SymbiosisCovenantJointOperationStage.TargetMapEntered;
+            targetMapWasGeneratedByThisOperation = true;
+
+            int now = Find.TickManager.TicksGame;
+            deploymentDueTick = Math.Max(deploymentDueTick, now + 1);
+            threatInitializationDeadlineTick =
+                Math.Max(threatInitializationDeadlineTick, now + ThreatInitializationDeadlineTicks);
+        }
+
         private void TickActiveOrDeployed(int now)
         {
-            // 部署（读档后地图已存在但尚未部署时也会在此触发，最多延迟一个检查间隔）。
-            EnsureDeployedIfMapReady();
+            // 部署由 QuestPartTick 每 tick 的轻量检查（TryDeployReinforcementsWhenReady）处理，
+            // 此处不再重复；只做广泛状态校验。
 
             if (!reinforcementsGenerated)
             {
@@ -263,18 +302,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 若本次行动尚未部署、且目标地图已存在，则部署联合援军。
-        /// 被 MapGenerated 信号与每 tick 自检共用，保证读档后也能正确部署（不依赖 FreeColonistsSpawnedCount）。
+        /// 每个 tick 执行的轻量部署检查：当到达部署时刻即尝试部署；不等待 ActiveCheckInterval。
         /// </summary>
-        private void EnsureDeployedIfMapReady()
+        private void QuestPartTickLight(int now)
+        {
+            if (stage != SymbiosisCovenantJointOperationStage.TargetMapEntered)
+            {
+                return;
+            }
+
+            if (now < deploymentDueTick)
+            {
+                return;
+            }
+
+            TryDeployReinforcementsWhenReady(now);
+        }
+
+        /// <summary>
+        /// 进入地图阶段后，下一 tick 起确认玩家单位已进入且目标守军已初始化，
+        /// 满足条件才真正部署援军；若初始化窗口内从未确认目标威胁，按无效结束收尾。
+        /// </summary>
+        private void TryDeployReinforcementsWhenReady(int now)
         {
             if (reinforcementsGenerated)
             {
                 return;
             }
 
-            if (stage != SymbiosisCovenantJointOperationStage.OperationActive
-                && stage != SymbiosisCovenantJointOperationStage.TargetMapEntered)
+            if (stage != SymbiosisCovenantJointOperationStage.TargetMapEntered)
             {
                 return;
             }
@@ -285,20 +341,143 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            stage = SymbiosisCovenantJointOperationStage.TargetMapEntered;
-            DeployReinforcements(map);
-            stage = SymbiosisCovenantJointOperationStage.ReinforcementsDeployed;
+            // 必须确认玩家单位确实在目标地图（兼容纯机械族殖民地：pawn.Faction == OfPlayer）。
+            if (!HasPlayerControlledPawnOnTargetMap(map))
+            {
+                return;
+            }
+
+            // 必须观察到真实目标威胁（守军/敌对单位曾经生成）。
+            if (!TryConfirmTargetThreat(map))
+            {
+                // 初始化窗口内尚未观察到目标威胁：继续等待，超出窗口则无效结束。
+                if (now >= threatInitializationDeadlineTick)
+                {
+                    Log.Warning(
+                        "[MAP-MechanoidMechanitor] 联合军事行动：目标防御在 "
+                        + threatInitializationDeadlineTick
+                        + " tick 内未能正确初始化，行动无效结束（target="
+                        + (targetWorldObject?.Label ?? "null") + "）。");
+                    BeginInvalidEnd("targetThreatNeverInitialized");
+                }
+
+                return;
+            }
+
+            // 真正部署援军：只有成功才进入 ReinforcementsDeployed，否则进入无效结束，
+            // 绝不能把失败的部署覆盖成“已部署”状态。
+            if (TryDeployReinforcements(map))
+            {
+                reinforcementsGenerated = true;
+                stage = SymbiosisCovenantJointOperationStage.ReinforcementsDeployed;
+            }
+            else
+            {
+                BeginInvalidEnd("reinforcementsDeployFailed");
+            }
         }
+
+        /// <summary>
+        /// 兼容纯机械族殖民地：玩家控制的、已生成且未死亡的单位（含自由殖民者、
+        /// 玩家机械体，以及通过 HostFaction 归属玩家的单位）都算玩家单位。
+        /// </summary>
+        private static bool HasPlayerControlledPawnOnTargetMap(Map map)
+        {
+            if (Faction.OfPlayer == null)
+            {
+                return false;
+            }
+
+            foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
+            {
+                if (pawn == null || pawn.Destroyed || pawn.Dead)
+                {
+                    continue;
+                }
+
+                if (pawn.Faction == Faction.OfPlayer)
+                {
+                    return true;
+                }
+
+                // 通过 HostFaction 归属玩家的单位（如被玩家俘获/奴役的单位）。
+                if (pawn.HostFaction == Faction.OfPlayer)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 确认目标地图中存在真实目标威胁（守军/敌对单位曾经生成）。
+        /// 对 MAPFactionOutpost 优先确认守军初始化并用 FactionOutpostThreatUtility 检查；
+        /// 对普通 Site / 文化 DLC WorkSite / Settlement 使用 AnyHostileActiveThreatToPlayer。
+        /// 只有观察到了目标威胁才设置 targetThreatConfirmed。
+        /// </summary>
+        private bool TryConfirmTargetThreat(Map map)
+        {
+            if (targetThreatConfirmed)
+            {
+                return true;
+            }
+
+            // 目标仍存活才可确认威胁（已被移除无法确认）。
+            if (targetWorldObject == null || targetWorldObject.Destroyed)
+            {
+                return false;
+            }
+
+            bool hasThreat = false;
+            if (targetWorldObject is MAPFactionOutpost outpost)
+            {
+                if (outpost.MapGarrisonInitialized
+                    && map == outpost.Map
+                    && FactionOutpostThreatUtility.AnyStandingDefender(map, outpost.Faction))
+                {
+                    hasThreat = true;
+                }
+            }
+            else if (targetWorldObject is Site)
+            {
+                // 普通 Site / 文化 DLC WorkSite：考虑休眠/迷雾中的敌对目标。
+                hasThreat = GenHostility.AnyHostileActiveThreatToPlayer(map, canBeFogged: true);
+            }
+            else if (targetWorldObject is Settlement)
+            {
+                // Settlement 地图已生成，且存在目标派系的 hostile 守军。
+                // 具体“是否彻底清除”由 SettlementDefeatUtility Patch 另行判定成功，
+                // 此处只确认“曾经存在威胁”。
+                hasThreat = GenHostility.AnyHostileActiveThreatToPlayer(map, canBeFogged: true);
+            }
+
+            if (hasThreat)
+            {
+                targetThreatConfirmed = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 统一成功前置条件：必须已进入战斗就绪状态，才能允许任何成功路径。
+        /// </summary>
+        private bool HasReachedCombatReadyState =>
+            stage == SymbiosisCovenantJointOperationStage.ReinforcementsDeployed
+            && reinforcementsGenerated
+            && playerEngaged
+            && targetThreatConfirmed;
 
         // ===== 援军生成（B / C / D / H） =====
 
-        private void DeployReinforcements(Map targetMap)
+        private bool TryDeployReinforcements(Map targetMap)
         {
             SymbiosisCovenantJointOperationDef? def = ResolveDef();
             if (def == null)
             {
-                reinforcementsGenerated = true;
-                return;
+                return false;
             }
 
             // H：真实目标威胁点（不再使用 StorytellerUtility.DefaultThreatPointsNow）。
@@ -317,9 +496,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Faction> valid = ValidParticipantsNow();
             if (valid.Count == 0)
             {
-                reinforcementsGenerated = true; // 已尝试部署，避免重复
-                BeginInvalidEnd("noDeployableParticipant");
-                return;
+                return false;
             }
 
             float[] assigned = AllocatePoints(valid, total);
@@ -346,24 +523,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 string aidTag = MakeAidTag(targetMap, participant);
-                if (!DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction))
+                if (DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction))
                 {
-                    continue;
+                    supportRecords.Add(new SymbiosisCovenantJointOperationFactionSupportRecord(
+                        participant, points, pawns.Count, aidTag));
+                    spawnedAidTags.Add(aidTag);
+                    generated++;
                 }
-
-                supportRecords.Add(new SymbiosisCovenantJointOperationFactionSupportRecord(
-                    participant, points, pawns.Count, aidTag));
-                spawnedAidTags.Add(aidTag);
-                generated++;
+                else
+                {
+                    // 失败：清理本次已创建但未成功部署的 Pawn，避免泄漏。
+                    foreach (Pawn p in pawns)
+                    {
+                        MechHiveCombatPawnUtility.SafelyDiscardPawn(p);
+                    }
+                }
             }
-
-            reinforcementsGenerated = true;
 
             if (generated == 0)
             {
-                // 没有任何可生成援军的参与派系：不要误设为“成功部署”，按无效结束安全收尾。
-                BeginInvalidEnd("noReinforcementsGenerated");
-                return;
+                return false;
             }
 
             if (spawnedAidTags.Count > 0 && targetWorldObject != null)
@@ -376,6 +555,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     LetterDefOf.PositiveEvent,
                     new GlobalTargetInfo(targetWorldObject));
             }
+
+            return true;
         }
 
         /// <summary>
@@ -606,7 +787,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// F2：由 SymbiosisCovenantJointOperationSettlementPatch 在据点被原版正确摧毁后调用。
-        /// 仅当引用一致且已接取、尚未结束时结算成功。
+        /// 仅当引用一致且已接取、尚未结束时，重新校验战斗就绪状态后结算成功。
+        /// 若尚未到达战斗就绪状态（玩家未进入/援军未生成/目标威胁未确认），则按无效结束收尾，
+        /// 不依赖被摧毁事件本身自动成功。
         /// </summary>
         public void NotifySettlementDestroyed(Settlement factionBase)
         {
@@ -620,7 +803,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            if (!HasReachedCombatReadyState)
+            {
+                BeginInvalidEnd("settlementDestroyedBeforeCombatReady");
+                return;
+            }
+
             BeginSuccess();
+        }
+
+        /// <summary>
+        /// DEV 专用：立即清除当前活动联合军事行动（按无效结束，不加不减 Unity/Trust）。
+        /// 正式游戏路径不得调用。
+        /// </summary>
+        public void DevEndOperation()
+        {
+            BeginInvalidEnd("devClear");
         }
 
         /// <summary>
@@ -747,6 +945,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref operationExpireTick, "operationExpireTick", 0);
             Scribe_Values.Look(ref targetMapWasGeneratedByThisOperation, "targetMapWasGeneratedByThisOperation", false);
             Scribe_Values.Look(ref reinforcementsGenerated, "reinforcementsGenerated", false);
+            Scribe_Values.Look(ref deploymentDueTick, "deploymentDueTick", -1);
+            Scribe_Values.Look(ref threatInitializationDeadlineTick, "threatInitializationDeadlineTick", -1);
+            Scribe_Values.Look(ref targetThreatConfirmed, "targetThreatConfirmed", false);
             Scribe_Values.Look(ref successApplied, "successApplied", false);
             Scribe_Values.Look(ref failureApplied, "failureApplied", false);
             Scribe_Values.Look(ref invalidEndApplied, "invalidEndApplied", false);

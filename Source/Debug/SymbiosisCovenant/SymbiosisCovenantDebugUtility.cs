@@ -234,6 +234,189 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
+        /// <summary>
+        /// DEV 专用一键测试：准备盟约/派系状态并生成一个精确的「联合军事行动」邀请。
+        /// 点击后只执行与本次测试准备有关的修改，不触发正式调度结算（如每日 Unity、提案）。
+        /// </summary>
+        public static bool TryPrepareAndSpawnJointOperationTest(out string message)
+        {
+            message = string.Empty;
+
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
+            if (Current.Game == null || Find.World == null)
+            {
+                message = "没有活动存档。";
+                return false;
+            }
+
+            if (!GameComponent_SymbiosisCovenantState.IsActive
+                || (GameComponent_SymbiosisCovenantState.CurrentComponent?.Initialized != true))
+            {
+                message = "共生盟约尚未初始化。";
+                return false;
+            }
+
+            // 已有进行中行动：不擅自结束，提示先清除。
+            if (SymbiosisCovenantJointOperationUtility.IsJointOperationOngoing())
+            {
+                message = "已有一个活动联合军事行动，请先清除现有联合行动。";
+                return false;
+            }
+
+            // 暴力军事行动需世界设定允许。
+            if (!SymbiosisCovenantJointOperationUtility.ViolentQuestsAllowed)
+            {
+                message = "暴力军事行动被当前世界设定禁用。";
+                return false;
+            }
+
+            GameComponent_SymbiosisCovenantState state =
+                GameComponent_SymbiosisCovenantState.CurrentComponent!;
+            Faction? playerFaction = Faction.OfPlayer;
+            if (playerFaction == null)
+            {
+                message = "找不到玩家派系。";
+                return false;
+            }
+
+            // 选择能正常生成 Combat PawnGroup 的正常派系作为目标；优先已敌对玩家的。
+            List<Faction> candidates = new List<Faction>();
+            foreach (Faction faction in Find.FactionManager.AllFactionsListForReading)
+            {
+                if (faction == null
+                    || faction.IsPlayer
+                    || faction.def.permanentEnemy
+                    || faction.Hidden
+                    || faction.temporary
+                    || faction.defeated
+                    || faction.deactivated)
+                {
+                    continue;
+                }
+
+                if (!SymbiosisCovenantJointOperationUtility.CanGenerateCombatGroup(faction))
+                {
+                    continue;
+                }
+
+                candidates.Add(faction);
+            }
+
+            if (candidates.Count == 0)
+            {
+                message = "找不到能生成战斗编组的合法目标派系。";
+                return false;
+            }
+
+            Faction? targetFaction = candidates
+                .FirstOrDefault(f => f.HostileTo(playerFaction));
+            if (targetFaction == null)
+            {
+                // 没有现成敌对派系：强制将一个有效派系设为敌对（仅 DEV）。
+                targetFaction = candidates[0];
+                targetFaction.TryAffectGoodwillWith(
+                    playerFaction,
+                    -100,
+                    canSendMessage: false,
+                    canSendHostilityLetter: false);
+            }
+
+            // 选择 1~3 个其它有效派系作为参与派系：非玩家、非目标、可生成 Combat、
+            // 非战败/隐藏/临时、非敌对玩家、与目标敌对。
+            List<Faction> participantCandidates = candidates
+                .Where(f => f != targetFaction
+                    && !f.HostileTo(playerFaction)
+                    && f.HostileTo(targetFaction))
+                .ToList();
+
+            if (participantCandidates.Count == 0)
+            {
+                message = "找不到可参与的合法派系（需与目标敌对且不敌对玩家）。";
+                return false;
+            }
+
+            // 取前至多 3 个作为参与者（含发起者）。
+            List<Faction> participants = participantCandidates
+                .Take(3)
+                .ToList();
+
+            // 将参与派系准备为盟约成员：Trust≥25、CovenantMember=true、保持对玩家非敌对。
+            foreach (Faction participant in participants)
+            {
+                if (state.GetRecord(participant) == null)
+                {
+                    state.DevForceJoinCovenant(participant);
+                }
+
+                if (!state.GetRecord(participant)!.CovenantMember)
+                {
+                    state.DevForceJoinCovenant(participant);
+                }
+
+                if (state.GetRecord(participant)!.Trust < 25)
+                {
+                    state.DevSetTrust(participant, 25, DevTrustReason.Translate());
+                }
+
+                if (participant.HostileTo(playerFaction))
+                {
+                    participant.TryAffectGoodwillWith(
+                        playerFaction,
+                        100,
+                        canSendMessage: false,
+                        canSendHostilityLetter: false);
+                }
+            }
+
+            // 确保盟约等级至少 L4：团结度设为 450 并重新计算。
+            state.DevSetUnity(450f);
+            state.DevRecalculateCovenantLevel();
+
+            if (state.CovenantLevel < 4)
+            {
+                message = "盟约等级不足 L4（当前 L" + state.CovenantLevel + "）。";
+                return false;
+            }
+
+            // 为目标派系生成一个「建成」的机械族前哨并获得精确引用。
+            if (!FactionOutpostGenerationUtility.TryDevGenerateCompletedOutpost(
+                    targetFaction,
+                    out MAPFactionOutpost outpost,
+                    out string outpostMessage))
+            {
+                message = "前哨生成失败：" + outpostMessage;
+                return false;
+            }
+
+            // 清除调度冷却（仅保证下次自然调度可用，不影响下面的立即生成）。
+            SymbiosisCovenantJointOperationScheduler.DevClearCooldown();
+
+            // 针对精确前哨与准备好的参与派系立即生成邀请。
+            if (!SymbiosisCovenantJointOperationScheduler.DevSpawnNowForTarget(
+                    outpost,
+                    participants,
+                    out string spawnReason))
+            {
+                message = "邀请创建失败：" + spawnReason;
+                return false;
+            }
+
+            message =
+                "已生成联合军事行动测试邀请。\n"
+                + "目标派系：" + targetFaction.Name + "\n"
+                + "目标前哨：" + outpost.Label + "\n"
+                + "发起派系：" + participants[0].Name + "\n"
+                + "参与派系：" + string.Join("、", participants.Select(f => f.Name)) + "\n"
+                + "盟约等级：L" + state.CovenantLevel + "\n"
+                + "团结度：" + state.Unity.ToString("F0");
+
+            return true;
+        }
+
         // ===== 公开宣言 =====
 
         public static bool TryBroadcastDeclaration(out string message)
@@ -1057,6 +1240,25 @@ namespace MAP_MechanoidMechanitor
 
             message = "无法清除联合军事行动冷却。";
             return false;
+        }
+
+        public static bool TryClearJointOperation(out string message)
+        {
+            if (!TryRequireDevMode(out message))
+            {
+                return false;
+            }
+
+            if (!TryGetActiveState(out _, out message))
+            {
+                return false;
+            }
+
+            SymbiosisCovenantJointOperationUtility.FindActiveOperationPart()
+                ?.DevEndOperation();
+
+            message = "已清除当前联合军事行动状态（按无效结束，不加不减）。";
+            return true;
         }
 
         public static bool TryLogJointOperationStatus(out string message)

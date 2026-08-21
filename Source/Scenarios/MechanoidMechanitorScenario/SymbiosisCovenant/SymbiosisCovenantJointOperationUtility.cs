@@ -302,9 +302,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static string BuildQuestName(Faction? targetFaction, WorldObject? targetWorldObject)
         {
-            return "MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name".Translate(
-                targetFaction?.Name ?? "???",
-                targetWorldObject?.Label ?? "???");
+            // Quest.Name 翻译键不含占位符，保留方法签名以减少调用方改动，但不传入无意义参数。
+            return "MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name".Translate();
         }
 
         public static int ComputeRewardValue(
@@ -382,6 +381,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool IsJointOperationOngoing()
         {
             return FindActiveOperationPart() != null;
+        }
+
+        /// <summary>
+        /// 判断给定世界对象是否为当前仍活动的「联合军事行动」目标。
+        /// 标识从当前活动 QuestPart 动态查询，任务结束后自动消失，不会在 WorldObject 上持久保存标志。
+        /// </summary>
+        public static bool IsAcceptedJointOperationTarget(WorldObject? worldObject)
+        {
+            if (worldObject == null)
+            {
+                return false;
+            }
+
+            QuestPart_SymbiosisCovenantJointOperation? part = FindActiveOperationPart();
+            if (part == null)
+            {
+                return false;
+            }
+
+            // FindActiveOperationPart 已保证 IsActive；再确认引用相等且已接取（已进入/已部署）。
+            if (!part.IsOperationAccepted)
+            {
+                return false;
+            }
+
+            return ReferenceEquals(part.targetWorldObject, worldObject);
         }
 
         public static QuestPart_SymbiosisCovenantJointOperation? FindActiveOperationPart()
@@ -463,7 +488,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return picked;
         }
 
-        private static bool CanGenerateCombatGroup(Faction faction)
+        public static bool CanGenerateCombatGroup(Faction faction)
         {
             if (faction.def?.raidsForbidden == true)
             {

@@ -1750,35 +1750,52 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 GUI.color = previousColor;
             }
 
-            // 操作按钮：立即生成邀请 / 立即到期 / 清除冷却。
+            // 操作按钮：一键准备测试 / 立即生成邀请 / 立即到期 / 清除冷却 / 清除行动。
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
+                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.PrepareTest".Translate().ToString(),
                     "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.SpawnNow".Translate().ToString(),
                     "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.MakeDue".Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearCooldown".Translate().ToString()
+                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearCooldown".Translate().ToString(),
+                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearOperation".Translate().ToString()
                 },
                 new Action[]
                 {
+                    () =>
+                    {
+                        bool ok = MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility
+                            .TryPrepareAndSpawnJointOperationTest(out string msg);
+                        ShowJointOpMessage(ok, msg);
+                    },
                     () => ShowJointOpMessage(
-                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TrySpawnJointOperationNow(out string _)),
+                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TrySpawnJointOperationNow(out string msg), msg),
                     () => ShowJointOpMessage(
-                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TryMakeJointOperationDueNow(out string _)),
+                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TryMakeJointOperationDueNow(out string msg), msg),
                     () => ShowJointOpMessage(
-                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TryClearJointOperationCooldown(out string _))
+                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TryClearJointOperationCooldown(out string msg), msg),
+                    () => ShowJointOpMessage(
+                        MAP_MechanoidMechanitor.SymbiosisCovenantDebugUtility.TryClearJointOperation(out string msg), msg)
                 });
             y += 40f;
 
             return y;
         }
 
-        private static void ShowJointOpMessage(bool success)
+        private static void ShowJointOpMessage(bool success, string message = "")
         {
+            string text = success
+                ? "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Success".Translate()
+                : "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Failed".Translate();
+
+            if (!string.IsNullOrEmpty(message))
+            {
+                text += "\n" + message;
+            }
+
             Messages.Message(
-                success
-                    ? "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Success".Translate()
-                    : "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Failed".Translate(),
+                text,
                 success ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.RejectInput,
                 historical: false);
         }

@@ -11,8 +11,15 @@
   <!-- 援军撤离通知：{0}=派系名。 -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>{0} 的援军正在撤离战场。</MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>
 
-  <!-- 任务名称：{0}=目标派系名，{1}=目标地点。 -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>联合军事行动：进攻 {1}（敌对方：{0}）</MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>
+  <!-- 任务名称（无占位符）。 -->
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>联合军事行动邀请</MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>
+
+  <!-- 世界界面目标标识。 -->
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.TargetInspectLabel>联合军事行动目标</MAP_MechanoidMechanitor.Symbiosis.JointOp.TargetInspectLabel>
+
+  <!-- DEV 按钮：一键准备并生成测试邀请 / 清除行动。 -->
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.PrepareTest>一键准备测试</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.PrepareTest>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearOperation>清除行动</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearOperation>
 
   <!-- 援军抵达信件。 -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Label>联合军事行动：援军抵达</MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Label>
