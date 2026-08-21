@@ -6,6 +6,14 @@ namespace MAP_MechanoidMechanitor
     public class MAPMechanitorModSettings : ModSettings
     {
         public bool addMechanoidMechanitorsToWorkTab = false;
+
+        /// <summary>
+        /// 默认关闭。开启后，玩家所属的机械族可以通过原版右键菜单中的 WorkGivers
+        /// 执行「优先工作」指令。本设置只解除右键菜单层面的禁用，不会赋予机械族
+        /// 新的工作类型或工作能力，也不会影响其它机械族控制逻辑。
+        /// </summary>
+        public bool enableMechanoidPrioritizedWorkOrders = false;
+
         public bool enablePortraitDisplayForAllSaves = false;
         public bool enableMechanoidMechanitorBrainImplants = false;
 
@@ -190,6 +198,10 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref addMechanoidMechanitorsToWorkTab,
                 "addMechanoidMechanitorsToWorkTab",
+                false);
+            Scribe_Values.Look(
+                ref enableMechanoidPrioritizedWorkOrders,
+                "enableMechanoidPrioritizedWorkOrders",
                 false);
             Scribe_Values.Look(
                 ref enablePortraitDisplayForAllSaves,

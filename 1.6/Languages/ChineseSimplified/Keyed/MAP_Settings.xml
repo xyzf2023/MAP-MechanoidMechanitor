@@ -90,4 +90,8 @@
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Label>虫族追猎地下虫灾点数倍率：{0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Label>
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>以攻击真正发生时 StorytellerUtility.DefaultThreatPointsNow(map) 为基础，乘对应百分比。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>
 
+  <!-- 模块：机械族优先工作指令 -->
+  <MAP_MechanoidPrioritizedWorkOrders_Label>允许机械族被下达优先工作指令</MAP_MechanoidPrioritizedWorkOrders_Label>
+  <MAP_MechanoidPrioritizedWorkOrders_Description>开启后，玩家所属的机械族可以通过右键直接被命令优先执行其本身能够进行的工作。不会赋予机械族新的工作类型或工作能力。</MAP_MechanoidPrioritizedWorkOrders_Description>
+
 </LanguageData>

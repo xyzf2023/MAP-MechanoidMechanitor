@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- Module: Mechanoid prioritized work orders -->
+  <MAP_MechanoidPrioritizedWorkOrders_Label>Allow mechanoids to be given prioritized work orders</MAP_MechanoidPrioritizedWorkOrders_Label>
+  <MAP_MechanoidPrioritizedWorkOrders_Description>When enabled, your colony mechanoids can be ordered via the right-click menu to prioritize a work they are already able to perform. This does not grant mechanoids any new work type or work ability.</MAP_MechanoidPrioritizedWorkOrders_Description>
+
+</LanguageData>
