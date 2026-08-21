@@ -66,6 +66,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const int ThreatInitializationDeadlineTicks = 600;
         private const string AidQuestTagPrefix = "MAP_SymbiosisCovenantJointOp";
 
+        // 联合军事行动诊断日志统一前缀。
+        private const string JointOpLogPrefix = "[MAP-JointOperation]";
+
+        // 诊断日志辅助（仅运行期低噪音；不参与任何正式业务/存档逻辑）。
+        private string? lastDeploymentWaitReason;
+
         public bool IsActive =>
             stage != SymbiosisCovenantJointOperationStage.Succeeded
             && stage != SymbiosisCovenantJointOperationStage.Failed
@@ -130,6 +136,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 SymbiosisCovenantJointOperationDef? def = ResolveDef();
                 operationExpireTick = Find.TickManager.TicksGame
                     + (def?.operationTimeoutTicks ?? 900000);
+
+                int preTick = Find.TickManager.TicksGame;
+                LogDeploymentDiagnostic(
+                    "QuestAccepted",
+                    "actionId=" + (actionId ?? "-")
+                    + " | stage=" + stage
+                    + " | currentTick=" + preTick
+                    + " | operationExpireTick=" + operationExpireTick
+                    + " | operationExpireTickNote=15DayTimeoutNotReinforceWait"
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | targetFaction=" + (targetFaction?.Name ?? "-")
+                    + " | participantCount=" + (participantFactions?.Count ?? 0)
+                    + " | targetIsMapParent=" + (targetWorldObject is MapParent)
+                    + " | targetHasMap=" + (((targetWorldObject as MapParent)?.HasMap) ?? false));
             }
         }
 
@@ -186,6 +206,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (tag == targetQuestTag + ".MapGenerated")
             {
+                LogDeploymentDiagnostic(
+                    "MapGeneratedSignalReceived",
+                    "signalTag=" + tag
+                    + " | actionId=" + (actionId ?? "-")
+                    + " | stage=" + stage
+                    + " | targetQuestTag=" + (targetQuestTag ?? "-")
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | currentTick=" + (Find.TickManager?.TicksGame ?? 0)
+                    + " | questAccepted=" + IsOperationAccepted);
+
                 // 只登记：目标地图已生成，但此时 SitePartWorker / 守军尚未完成初始化。
                 // 不在本信号调用链里生成援军或判定成功，交由下一 tick 的轻量部署检查处理。
                 NotifyTargetMapGenerated();
@@ -212,22 +242,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (!IsOperationAccepted || targetWorldObject == null)
             {
+                // 主要用于“先进入地图，再接任务”的复现证据。
+                LogDeploymentDiagnostic(
+                    "MapGeneratedIgnoredNotAccepted",
+                    "stage=" + stage
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | currentTick=" + (Find.TickManager?.TicksGame ?? 0));
                 return;
             }
 
             Map? map = (targetWorldObject as MapParent)?.Map;
             if (map == null)
             {
+                LogDeploymentDiagnostic(
+                    "MapGeneratedIgnoredNoMap",
+                    "stage=" + stage
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | targetIsMapParent=" + (targetWorldObject is MapParent)
+                    + " | currentTick=" + (Find.TickManager?.TicksGame ?? 0));
                 return;
             }
 
+            SymbiosisCovenantJointOperationStage previousStage = stage;
             stage = SymbiosisCovenantJointOperationStage.TargetMapEntered;
             targetMapWasGeneratedByThisOperation = true;
+            ClearDeploymentWaitReason();
 
             int now = Find.TickManager.TicksGame;
             deploymentDueTick = Math.Max(deploymentDueTick, now + 1);
             threatInitializationDeadlineTick =
                 Math.Max(threatInitializationDeadlineTick, now + ThreatInitializationDeadlineTicks);
+
+            LogDeploymentDiagnostic(
+                "TargetMapRegistered",
+                "previousStage=" + previousStage
+                + " | newStage=" + stage
+                + " | map=" + map.GetUniqueLoadID()
+                + " | deploymentDueTick=" + deploymentDueTick
+                + " | threatInitializationDeadlineTick=" + threatInitializationDeadlineTick
+                + " | currentTick=" + now
+                + " | targetMapWasGeneratedByThisOperation="
+                + targetMapWasGeneratedByThisOperation);
         }
 
         private void TickActiveOrDeployed(int now)
@@ -375,37 +430,167 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Map? map = (targetWorldObject as MapParent)?.Map;
-            if (map == null || !Find.Maps.Contains(map))
+            if (map == null)
             {
+                LogDeploymentWaitOnce(
+                    "WaitingForTargetMap",
+                    "reason=MapNull"
+                    + " | stage=" + stage
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | tick=" + now);
+                return;
+            }
+
+            if (map.Disposed)
+            {
+                LogDeploymentWaitOnce(
+                    "WaitingForTargetMap",
+                    "reason=MapDisposed"
+                    + " | stage=" + stage
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | tick=" + now);
+                return;
+            }
+
+            if (!Find.Maps.Contains(map))
+            {
+                LogDeploymentWaitOnce(
+                    "WaitingForTargetMap",
+                    "reason=MapNotInFindMaps"
+                    + " | stage=" + stage
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | tick=" + now);
                 return;
             }
 
             // 必须确认玩家单位确实在目标地图（兼容纯机械族殖民地：pawn.Faction == OfPlayer）。
             if (!HasPlayerControlledPawnOnTargetMap(map))
             {
+                int allSpawned = map.mapPawns.AllPawnsSpawned.Count;
+                bool playerFactionNull = Faction.OfPlayer == null;
+                int playerPawnCount = 0;
+                int hostPlayerPawnCount = 0;
+                Faction? playerF = Faction.OfPlayer;
+                if (playerF != null)
+                {
+                    foreach (Pawn p in map.mapPawns.AllPawnsSpawned)
+                    {
+                        if (p == null)
+                        {
+                            continue;
+                        }
+
+                        if (p.Faction == playerF)
+                        {
+                            playerPawnCount++;
+                        }
+                        else if (p.HostFaction == playerF)
+                        {
+                            hostPlayerPawnCount++;
+                        }
+                    }
+                }
+
+                LogDeploymentWaitOnce(
+                    "WaitingForPlayerPawn",
+                    "reason=NoPlayerControlledPawnOnTargetMap"
+                    + " | stage=" + stage
+                    + " | map=" + map.GetUniqueLoadID()
+                    + " | allSpawnedPawnCount=" + allSpawned
+                    + " | playerFactionNull=" + playerFactionNull
+                    + " | playerFactionPawnCount=" + playerPawnCount
+                    + " | hostFactionIsPlayerPawnCount=" + hostPlayerPawnCount
+                    + " | tick=" + now);
                 return;
             }
 
             // 玩家单位确已到场：设置 playerEngaged，否则任何成功路径都无法通过。
             // 普通友军、盟约援军、敌方单位都不算玩家到场。
+            ClearDeploymentWaitReason();
+            if (!playerEngaged)
+            {
+                LogDeploymentDiagnostic(
+                    "PlayerPawnConfirmed",
+                    "stage=" + stage
+                    + " | map=" + map.GetUniqueLoadID()
+                    + " | tick=" + now);
+            }
+
             playerEngaged = true;
 
             // 必须观察到真实目标威胁（守军/敌对单位曾经生成）。
             if (!TryConfirmTargetThreat(map))
             {
+                // 统计（仅用于诊断日志，不改变 FactionOutpostThreatUtility 的业务判断）。
+                int targetPawnTotal = 0;
+                int targetPawnStanding = 0;
+                Faction? tf = targetFaction;
+                if (tf != null)
+                {
+                    foreach (Pawn p in map.mapPawns.AllPawnsSpawned)
+                    {
+                        if (p == null || p.Faction != tf)
+                        {
+                            continue;
+                        }
+
+                        targetPawnTotal++;
+                        if (!p.Dead && !p.Downed)
+                        {
+                            targetPawnStanding++;
+                        }
+                    }
+                }
+
+                bool garrisonInit = targetWorldObject is MAPFactionOutpost gOutpost
+                    && gOutpost.MapGarrisonInitialized;
+                string targetType = targetWorldObject?.GetType().Name ?? "-";
+
+                LogDeploymentWaitOnce(
+                    "WaitingForTargetThreat",
+                    "reason=TargetThreatNotConfirmed"
+                    + " | stage=" + stage
+                    + " | targetType=" + targetType
+                    + " | targetFaction=" + (tf?.Name ?? "-")
+                    + " | garrisonInitialized=" + garrisonInit
+                    + " | targetThreatConfirmed=" + targetThreatConfirmed
+                    + " | targetPawnTotal=" + targetPawnTotal
+                    + " | targetPawnStanding=" + targetPawnStanding
+                    + " | tick=" + now
+                    + " | deadline=" + threatInitializationDeadlineTick);
+
                 // 初始化窗口内尚未观察到目标威胁：继续等待，超出窗口则无效结束。
                 if (now >= threatInitializationDeadlineTick)
                 {
                     Log.Warning(
-                        "[MAP-MechanoidMechanitor] 联合军事行动：目标防御在 "
-                        + threatInitializationDeadlineTick
-                        + " tick 内未能正确初始化，行动无效结束（target="
-                        + (targetWorldObject?.Label ?? "null") + "）。");
+                        JointOpLogPrefix + " Event=TargetThreatInitializationTimedOut"
+                        + " | actionId=" + (actionId ?? "-")
+                        + " | stage=" + stage
+                        + " | target=" + (targetWorldObject?.Label ?? "-")
+                        + " | map=" + map.GetUniqueLoadID()
+                        + " | playerEngaged=" + playerEngaged
+                        + " | garrisonInitialized=" + garrisonInit
+                        + " | targetThreatConfirmed=" + targetThreatConfirmed
+                        + " | targetPawnTotal=" + targetPawnTotal
+                        + " | targetPawnStanding=" + targetPawnStanding
+                        + " | currentTick=" + now
+                        + " | deadlineTick=" + threatInitializationDeadlineTick);
+
                     BeginInvalidEnd("targetThreatNeverInitialized");
                 }
 
                 return;
             }
+
+            // 已确认目标威胁，即将真正部署援军。
+            ClearDeploymentWaitReason();
+            LogDeploymentDiagnostic(
+                "DeploymentStarted",
+                "actionId=" + (actionId ?? "-")
+                + " | stage=" + stage
+                + " | target=" + (targetWorldObject?.Label ?? "-")
+                + " | targetThreatPointsAtDeployment=pending"
+                + " | currentTick=" + now);
 
             // 真正部署援军：只有成功才进入 ReinforcementsDeployed，否则进入无效结束，
             // 绝不能把失败的部署覆盖成“已部署”状态。
@@ -593,7 +778,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return false;
                 }
 
-                outpost.TryMarkCleanedIfNoDefenders();
+                outpost.TryMarkCleanedIfNoActiveThreats();
 
                 if (outpost.Cleaned)
                 {
@@ -633,6 +818,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             SymbiosisCovenantJointOperationDef? def = ResolveDef();
             if (def == null)
             {
+                Log.Warning(
+                    JointOpLogPrefix + " Event=DeploymentFailed"
+                    + " | reason=JointOperationDefNull"
+                    + " | actionId=" + (actionId ?? "-")
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
                 return false;
             }
 
@@ -645,13 +836,50 @@ namespace MAP_MechanoidMechanitor.Scenarios
             float total = threat * def.supportPointsFactor;
             totalSupportPointsAtDeployment = total;
 
+            LogDeploymentDiagnostic(
+                "SupportPointsCalculated",
+                "targetThreatPoints=" + threat
+                + " | supportPointsFactor=" + def.supportPointsFactor.ToString("F3")
+                + " | totalSupportPoints=" + total.ToString("F1")
+                + " | target=" + (targetWorldObject?.Label ?? "-")
+                + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
+
             supportRecords ??= new List<SymbiosisCovenantJointOperationFactionSupportRecord>();
             spawnedAidTags ??= new List<string>();
 
+            // 仅诊断：对每个原始参与派系逐项校验并输出（不改变业务合法性）。
+            if (participantFactions != null)
+            {
+                foreach (Faction participant in participantFactions)
+                {
+                    bool validNow = TryGetParticipantValidity(participant, out string reason);
+                    LogDeploymentDiagnostic(
+                        "ParticipantValidation",
+                        "faction=" + (participant?.Name ?? "-")
+                        + " | loadId=" + (participant?.loadID.ToString() ?? "-")
+                        + " | valid=" + validNow
+                        + " | reason=" + reason);
+                }
+            }
+
             // 只将点数分给部署时仍有效、且能生成战斗编组的参与派系（最多 maxParticipants）。
             List<Faction> valid = ValidParticipantsNow();
+
+            LogDeploymentDiagnostic(
+                "ParticipantsValidated",
+                "configuredParticipantCount=" + (participantFactions?.Count ?? 0)
+                + " | validParticipantCount=" + valid.Count
+                + " | validFactionNames=" + string.Join(",", valid.Select(f => f.Name))
+                + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
+
             if (valid.Count == 0)
             {
+                Log.Warning(
+                    JointOpLogPrefix + " Event=DeploymentFailed"
+                    + " | reason=NoValidParticipants"
+                    + " | actionId=" + (actionId ?? "-")
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
                 return false;
             }
 
@@ -661,6 +889,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool useQuick = valid
                 .Where((faction, index) => assigned[index] > 0f && faction != null)
                 .Any(faction => (int)faction.def.techLevel >= (int)def.industrialArrivalThreshold);
+
+            for (int i = 0; i < valid.Count; i++)
+            {
+                Faction participant = valid[i];
+                float points = assigned[i];
+                LogDeploymentDiagnostic(
+                    "SupportAllocated",
+                    "faction=" + participant.Name
+                    + " | assignedPoints=" + points.ToString("F1")
+                    + " | canGenerateCombatGroup=" + CanGenerateCombatGroup(participant)
+                    + " | arrivalModePlanned=" + (useQuick
+                        ? PawnsArrivalModeDefOf.CenterDrop.defName
+                        : PawnsArrivalModeDefOf.EdgeWalkIn.defName));
+            }
 
             int generated = 0;
             for (int i = 0; i < valid.Count; i++)
@@ -673,10 +915,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 List<Pawn>? pawns = GenerateCombatGroup(participant, points, targetMap, def);
-                if (pawns == null || pawns.Count == 0)
+                if (pawns == null)
                 {
+                    LogDeploymentDiagnostic(
+                        "PawnGenerationSkipped",
+                        "reason=GenerateCombatGroupReturnedNull"
+                        + " | faction=" + participant.Name
+                        + " | points=" + points.ToString("F1"));
                     continue;
                 }
+
+                if (pawns.Count == 0)
+                {
+                    LogDeploymentDiagnostic(
+                        "PawnGenerationSkipped",
+                        "reason=GenerateCombatGroupReturnedZero"
+                        + " | faction=" + participant.Name
+                        + " | points=" + points.ToString("F1"));
+                    continue;
+                }
+
+                LogDeploymentDiagnostic(
+                    "PawnGroupGenerated",
+                    "faction=" + participant.Name
+                    + " | points=" + points.ToString("F1")
+                    + " | pawnCount=" + pawns.Count);
 
                 string aidTag = MakeAidTag(targetMap, participant);
                 if (DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction))
@@ -685,9 +948,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         participant, points, pawns.Count, aidTag));
                     spawnedAidTags.Add(aidTag);
                     generated++;
+                    LogDeploymentDiagnostic(
+                        "FactionAidDeployed",
+                        "faction=" + participant.Name
+                        + " | aidTag=" + aidTag
+                        + " | pawnCount=" + pawns.Count
+                        + " | arrivalMode=" + (useQuick
+                            ? PawnsArrivalModeDefOf.CenterDrop.defName
+                            : PawnsArrivalModeDefOf.EdgeWalkIn.defName));
                 }
                 else
                 {
+                    Log.Warning(
+                        JointOpLogPrefix + " Event=FactionAidDeployFailed"
+                        + " | faction=" + participant.Name
+                        + " | points=" + points.ToString("F1")
+                        + " | arrivalMode=" + (useQuick
+                            ? PawnsArrivalModeDefOf.CenterDrop.defName
+                            : PawnsArrivalModeDefOf.EdgeWalkIn.defName)
+                        + " | aidTag=" + aidTag
+                        + " | actionId=" + (actionId ?? "-"));
                     // 失败：清理本次已创建但未成功部署的 Pawn，避免泄漏。
                     foreach (Pawn p in pawns)
                     {
@@ -698,16 +978,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (generated == 0)
             {
+                Log.Warning(
+                    JointOpLogPrefix + " Event=DeploymentFailed"
+                    + " | reason=NoFactionAidGenerated"
+                    + " | actionId=" + (actionId ?? "-")
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | validParticipantCount=" + valid.Count
+                    + " | totalSupportPoints=" + total.ToString("F1")
+                    + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
                 return false;
             }
 
-            if (spawnedAidTags.Count > 0 && targetWorldObject != null)
+            LogDeploymentDiagnostic(
+                "DeploymentSucceeded",
+                "generatedFactionCount=" + generated
+                + " | spawnedAidTagCount=" + (spawnedAidTags?.Count ?? 0)
+                + " | supportRecordCount=" + (supportRecords?.Count ?? 0)
+                + " | target=" + (targetWorldObject?.Label ?? "-")
+                + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
+
+            if (spawnedAidTags != null && spawnedAidTags.Count > 0 && targetWorldObject != null)
             {
                 Find.LetterStack.ReceiveLetter(
                     "MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Label"
                         .Translate(),
                     "MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Text"
-                        .Translate(targetMap.Parent.Label),
+                        .Translate(targetMap.Parent?.Label ?? "-"),
                     LetterDefOf.PositiveEvent,
                     new GlobalTargetInfo(targetWorldObject));
             }
@@ -819,6 +1115,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ? PawnsArrivalModeDefOf.CenterDrop
                 : PawnsArrivalModeDefOf.EdgeWalkIn;
 
+            LogDeploymentDiagnostic(
+                "DeployGroupStarted",
+                "faction=" + (faction?.Name ?? "-")
+                + " | pawnCount=" + (pawns?.Count ?? 0)
+                + " | points=" + points.ToString("F1")
+                + " | useQuick=" + useQuick
+                + " | arrivalMode=" + arrivalMode.defName
+                + " | spawnCenter=" + (useQuick ? "Center" : "Invalid")
+                + " | map=" + map.GetUniqueLoadID()
+                + " | aidTag=" + (aidTag ?? "-"));
+
             IncidentParms parms = new IncidentParms
             {
                 target = map,
@@ -835,21 +1142,56 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 步行抵达必须成功解析合法的地图边缘入口；失败时不得继续在中心生成。
             if (!useQuick && !arrivalMode.Worker.TryResolveRaidSpawnCenter(parms))
             {
+                Log.Warning(
+                    JointOpLogPrefix + " Event=DeployGroupFailed"
+                    + " | reason=EdgeSpawnCenterResolveFailed"
+                    + " | faction=" + (faction?.Name ?? "-")
+                    + " | map=" + map.GetUniqueLoadID()
+                    + " | points=" + points.ToString("F1")
+                    + " | aidTag=" + (aidTag ?? "-"));
                 return false;
             }
 
-            arrivalMode.Worker.Arrive(pawns, parms);
-
-            LordJob_SymbiosisCovenantJointOperation job =
-                new LordJob_SymbiosisCovenantJointOperation(faction, enemyFaction, map.Center);
-            Lord? lord = LordMaker.MakeNewLord(faction, job, map, pawns);
-            if (lord == null)
+            try
             {
-                return false;
-            }
+                arrivalMode.Worker.Arrive(pawns, parms);
 
-            QuestUtility.AddQuestTag(lord, aidTag);
-            return true;
+                LordJob_SymbiosisCovenantJointOperation job =
+                    new LordJob_SymbiosisCovenantJointOperation(faction!, enemyFaction, map.Center);
+                Lord? lord = LordMaker.MakeNewLord(faction, job, map, pawns);
+                if (lord == null)
+                {
+                    Log.Warning(
+                        JointOpLogPrefix + " Event=DeployGroupFailed"
+                        + " | reason=LordCreationReturnedNull"
+                        + " | faction=" + (faction?.Name ?? "-")
+                        + " | aidTag=" + (aidTag ?? "-"));
+                    return false;
+                }
+
+                QuestUtility.AddQuestTag(lord, aidTag);
+
+                LogDeploymentDiagnostic(
+                    "LordCreated",
+                    "faction=" + (faction?.Name ?? "-")
+                    + " | lord=" + lord.GetUniqueLoadID()
+                    + " | aidTag=" + (aidTag ?? "-")
+                    + " | ownedPawnCount=" + (lord.ownedPawns?.Count ?? 0));
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    JointOpLogPrefix + " Event=DeployGroupException"
+                    + " | faction=" + (faction?.Name ?? "-")
+                    + " | pawnCount=" + (pawns?.Count ?? 0)
+                    + " | useQuick=" + useQuick
+                    + " | map=" + map.GetUniqueLoadID()
+                    + " | aidTag=" + (aidTag ?? "-")
+                    + " | ex=" + ex);
+                throw;
+            }
         }
 
         /// <summary>
@@ -911,6 +1253,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             stage = SymbiosisCovenantJointOperationStage.Succeeded;
             CommandReinforcementsLeave();
             ApplySuccessOutcome();
+
+            LogDeploymentDiagnostic(
+                "OperationSucceeded",
+                "actionId=" + (actionId ?? "-")
+                + " | target=" + (targetWorldObject?.Label ?? "-")
+                + " | spawnedAidTagCount=" + (spawnedAidTags?.Count ?? 0)
+                + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
+
             // J：实物奖励本次暂不发放，仅保留 Unity / Trust 成功奖励（见 GrantReward 注释）。
             quest?.End(QuestEndOutcome.Success);
         }
@@ -935,9 +1285,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            SymbiosisCovenantJointOperationStage stageBeforeEnd = stage;
             stage = SymbiosisCovenantJointOperationStage.InvalidEnded;
+            ClearDeploymentWaitReason();
             CommandReinforcementsLeave();
             ApplyInvalidOutcome();
+
+            Log.Warning(
+                JointOpLogPrefix + " Event=OperationInvalidEnded"
+                + " | reason=" + reason
+                + " | actionId=" + (actionId ?? "-")
+                + " | stageBeforeEnd=" + stageBeforeEnd
+                + " | target=" + (targetWorldObject?.Label ?? "-")
+                + " | reinforcementsGenerated=" + reinforcementsGenerated
+                + " | playerEngaged=" + playerEngaged
+                + " | targetThreatConfirmed=" + targetThreatConfirmed
+                + " | targetThreatPointsAtDeployment=" + targetThreatPointsAtDeployment
+                + " | totalSupportPointsAtDeployment="
+                + totalSupportPointsAtDeployment.ToString("F1")
+                + " | spawnedAidTagCount=" + (spawnedAidTags?.Count ?? 0)
+                + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
+
             quest?.End(QuestEndOutcome.Unknown);
         }
 
@@ -1147,6 +1515,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         // ===== 内部辅助 =====
 
+        /// <summary>
+        /// 正常流程的详细诊断日志：仅在开发者模式下输出，统一前缀 [MAP-JointOperation]。
+        /// </summary>
+        private static void LogDeploymentDiagnostic(string eventName, string details)
+        {
+            if (!Prefs.DevMode)
+            {
+                return;
+            }
+
+            Log.Message(JointOpLogPrefix + " Event=" + eventName + " | " + details);
+        }
+
+        /// <summary>
+        /// 等待类日志：同一种 eventName（即同一种等待原因）连续出现只记录一次，
+        /// 原因改变后才允许再次输出，避免每 tick 刷屏。仅在开发者模式下输出。
+        /// </summary>
+        private void LogDeploymentWaitOnce(string eventName, string details)
+        {
+            if (!Prefs.DevMode)
+            {
+                return;
+            }
+
+            if (lastDeploymentWaitReason == eventName)
+            {
+                return;
+            }
+
+            lastDeploymentWaitReason = eventName;
+            Log.Message(JointOpLogPrefix + " Event=" + eventName + " | " + details);
+        }
+
+        private void ClearDeploymentWaitReason()
+        {
+            lastDeploymentWaitReason = null;
+        }
+
         private SymbiosisCovenantJointOperationDef? ResolveDef()
         {
             return jointOperationDef
@@ -1179,18 +1585,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool IsParticipantStillValid(Faction? faction)
         {
+            return TryGetParticipantValidity(faction, out _);
+        }
+
+        /// <summary>
+        /// 提取参与派系合法性判断，供 IsParticipantStillValid 复用，也供诊断日志逐项输出原因。
+        /// 不新增任何合法性条件，必须与原逻辑逐项一致。
+        /// </summary>
+        private bool TryGetParticipantValidity(Faction? faction, out string reason)
+        {
+            reason = string.Empty;
+
             if (faction == null)
             {
+                reason = "FactionNull";
                 return false;
             }
 
             if (faction.defeated || faction.deactivated || faction.Hidden || faction.temporary)
             {
+                reason = "DefeatedOrDeactivatedOrHiddenOrTemporary";
                 return false;
             }
 
             if (Faction.OfPlayer != null && faction.HostileTo(Faction.OfPlayer))
             {
+                reason = "HostileToPlayer";
                 return false;
             }
 
@@ -1198,12 +1618,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 GameComponent_SymbiosisCovenantState.CurrentComponent;
             if (state == null || state.GetRecord(faction)?.CovenantMember != true)
             {
+                reason = "NotCovenantMember";
                 return false;
             }
 
             // 参与派系必须对本次行动的目标派系保持敌对。
             if (targetFaction == null || !faction.HostileTo(targetFaction))
             {
+                reason = "NotHostileToTargetFaction";
                 return false;
             }
 

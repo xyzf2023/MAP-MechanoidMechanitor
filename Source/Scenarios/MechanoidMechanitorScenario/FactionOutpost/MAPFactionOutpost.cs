@@ -173,7 +173,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && mapGarrisonInitialized
                 && Find.TickManager.TicksGame % ThreatClearCheckIntervalTicks == 0)
             {
-                TryMarkCleanedIfNoDefenders();
+                TryMarkCleanedIfNoActiveThreats();
             }
         }
 
@@ -276,7 +276,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 owner);
         }
 
-        public bool TryMarkCleanedIfNoDefenders()
+        /// <summary>
+        /// 判断前哨是否可以标记为“已清理”并发出“派系哨点被摧毁”信件。
+        /// 以 RimWorld 原版 FormCaravanComp.AnyActiveThreatNow 相同的 GenHostility 标准判断：
+        /// 只有当前地图没有任何“活动敌对威胁”时，前哨才会标记为 Cleaned 并发送清理信件。
+        /// 因此第三方敌对事件、敌对炮塔、休眠敌对单位等也会阻止清理（这是预期行为，
+        /// 与原版“地图已无活动敌对威胁才允许重组远行队/清理”保持一致）。
+        /// 同时统一了联合军事行动对 outpost.Cleaned 的成功判定：任务与原版标准一致，不另加例外。
+        /// </summary>
+        public bool TryMarkCleanedIfNoActiveThreats()
         {
             if (cleaned || !base.HasMap || !mapGarrisonInitialized || Faction == null)
             {
@@ -284,8 +292,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Map map = base.Map;
-            if (map == null || map.Disposed
-                || FactionOutpostThreatUtility.AnyStandingDefender(map, Faction))
+            if (map == null || map.Disposed)
+            {
+                return false;
+            }
+
+            // 与原版 FormCaravanComp.AnyActiveThreatNow 完全等价的“整张地图活动敌对威胁”判定：
+            // 不限于前哨所属派系。countDormantPawnsAsHostile=true 与 canBeFogged=!CanReformFoggedEnemies
+            // 与原版保持一致。
+            if (GenHostility.AnyHostileActiveThreatToPlayer(
+                    map,
+                    countDormantPawnsAsHostile: true,
+                    canBeFogged: !CanReformFoggedEnemies))
             {
                 return false;
             }
@@ -398,7 +416,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            TryMarkCleanedIfNoDefenders();
+            TryMarkCleanedIfNoActiveThreats();
 
             if (map.mapPawns.AnyPawnBlockingMapRemoval)
             {
