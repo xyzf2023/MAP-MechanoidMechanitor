@@ -28,6 +28,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // CheckDefeated 只是“执行检查”：原版在确认据点尚未被击败时会直接 return，
+            // 不会调用 factionBase.Destroy()。只有当原版已经真正摧毁该 Settlement（
+            // factionBase.Destroyed 变为 true）时，才允许联合行动结算。
+            // 仅凭 CheckDefeated 被调用就结算会导致击倒部分守军即提前完成任务。
+            if (!factionBase.Destroyed)
+            {
+                return;
+            }
+
             QuestPart_SymbiosisCovenantJointOperation? part =
                 SymbiosisCovenantJointOperationUtility.FindActiveOperationPart();
             if (part == null || !part.IsOperationAccepted)

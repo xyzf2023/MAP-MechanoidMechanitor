@@ -83,12 +83,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             // 建成、非敌对、无地图的前哨允许远行队交易或赠送礼物。
-            if (outpost.IsCompleted
-                && !outpost.HasMap
-                && outpost.Faction != null
-                && outpost.Faction != Faction.OfPlayer
-                && !outpost.Faction.def.permanentEnemy
-                && !outpost.Faction.HostileTo(Faction.OfPlayer))
+            // 交易选项是否实际可用由 CanTradeWith（要求库存）决定；
+            // 赠礼选项由 CanOfferGiftsTo（只要求友好服务可用）决定，
+            // 因此买空库存后交易被禁用但赠礼仍可用。
+            if (outpost.CanInteractAsFriendlyCompletedOutpost)
             {
                 foreach (FloatMenuOption option in
                     MAPCaravanArrivalAction_TradeFactionOutpost.GetFloatMenuOptions(caravan, outpost))

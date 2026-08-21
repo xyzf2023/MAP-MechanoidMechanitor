@@ -465,21 +465,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int NextRestockTick => TraderTracker.NextRestockTick;
 
         /// <summary>
-        /// 综合前哨状态与追踪器库存判断是否可交易：必须建成、未被清理、已生成、无地图、
-        /// 所属派系有效且不对玩家敌对，且追踪器中有可交易库存种类。
+        /// 判断这个前哨是否允许玩家进行“非敌对服务”（交易/赠礼的共用资格）。
+        /// 仅判断前哨自身状态与所属派系关系，不访问库存；库存状态由具体交互自行决定。
+        /// </summary>
+        public bool CanInteractAsFriendlyCompletedOutpost
+        {
+            get
+            {
+                return IsCompleted
+                    && !cleaned
+                    && Spawned
+                    && !base.HasMap
+                    && Faction != null
+                    && Faction != Faction.OfPlayer
+                    && !Faction.def.permanentEnemy
+                    && !Faction.HostileTo(Faction.OfPlayer);
+            }
+        }
+
+        /// <summary>
+        /// 综合前哨服务资格与追踪器库存判断是否可交易：必须允许非敌对服务，且追踪器中有可交易库存种类。
+        /// 交易确实需要商人存在可售/可交易库存，因此仍读取库存；赠礼不读取库存。
         /// </summary>
         public bool CanTradeNow
         {
             get
             {
-                if (!IsCompleted
-                    || cleaned
-                    || !Spawned
-                    || base.HasMap
-                    || Faction == null
-                    || Faction == Faction.OfPlayer
-                    || Faction.def.permanentEnemy
-                    || Faction.HostileTo(Faction.OfPlayer))
+                if (!CanInteractAsFriendlyCompletedOutpost)
                 {
                     return false;
                 }

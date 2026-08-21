@@ -312,13 +312,16 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // A. 目标派系候选：还需符合前哨生成资格（普通派系）。
+            // A. 目标派系候选：还需符合前哨生成资格（普通派系），且不能是当前盟约成员。
+            // 没有盟约记录（record == null）的派系仍可作为目标；只排除已是成员者。
             List<Faction> targetCandidates = baseCandidates
-                .Where(f => FactionOutpostFactionUtility.IsEligibleFaction(f))
+                .Where(f => IsValidJointOperationTestTarget(state, f))
                 .ToList();
             if (targetCandidates.Count == 0)
             {
-                message = "找不到符合前哨生成资格的合法目标派系。";
+                message =
+                    "找不到可作为敌方目标的非盟约普通派系。"
+                    + "需要至少一个未加入盟约、能够生成战斗编组且符合前哨生成资格的普通派系。";
                 return false;
             }
 
@@ -328,6 +331,13 @@ namespace MAP_MechanoidMechanitor
             if (targetFaction == null)
             {
                 targetFaction = targetCandidates[0];
+            }
+
+            // 选出再次验证：目标不能是盟约成员（不为自动退出成员，避免破坏用户成员状态）。
+            if (state.GetRecord(targetFaction)?.CovenantMember == true)
+            {
+                message = "选中的目标派系仍是盟约成员，已停止一键测试：" + targetFaction.Name;
+                return false;
             }
 
             // 将目标派系与玩家设为敌对（-100），并验证。
@@ -388,6 +398,14 @@ namespace MAP_MechanoidMechanitor
             if (state.CovenantMemberCount < 1)
             {
                 message = "盟约成员数量不足（当前 " + state.CovenantMemberCount + "）。";
+                return false;
+            }
+
+            // 生成前哨前再验证：目标派系在此期间不应成为盟约成员
+            // （不自动让其退出盟约，避免破坏用户已有成员状态）。
+            if (state.GetRecord(targetFaction)?.CovenantMember == true)
+            {
+                message = "目标派系在测试准备期间加入了盟约，已停止生成前哨：" + targetFaction.Name;
                 return false;
             }
 
@@ -456,6 +474,29 @@ namespace MAP_MechanoidMechanitor
                 + "团结度：" + state.Unity.ToString("F0");
 
             return true;
+        }
+
+        /// <summary>
+        /// 判断一个派系是否可作为一键联合军事行动的“敌方目标”候选：
+        /// 必须符合前哨生成资格（普通派系），且当前不是盟约成员。
+        /// 没有盟约记录（record == null）是允许的，只排除已是成员者。
+        /// </summary>
+        private static bool IsValidJointOperationTestTarget(
+            GameComponent_SymbiosisCovenantState state,
+            Faction faction)
+        {
+            if (faction == null)
+            {
+                return false;
+            }
+
+            if (!FactionOutpostFactionUtility.IsEligibleFaction(faction))
+            {
+                return false;
+            }
+
+            SymbiosisCovenantFactionRecord? record = state.GetRecord(faction);
+            return record?.CovenantMember != true;
         }
 
         /// <summary>

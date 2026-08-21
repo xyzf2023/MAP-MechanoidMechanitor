@@ -71,14 +71,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Caravan caravan,
             MAPFactionOutpost? outpost)
         {
+            // 赠礼只需要前哨允许非敌对服务且有可用 TraderKind，不要求商人库存非空
+            // （买空库存后仍可赠礼）。
             if (outpost == null
-                || !outpost.Spawned
-                || outpost.HasMap
-                || outpost.Faction == null
-                || outpost.Faction == Faction.OfPlayer
-                || outpost.Faction.def.permanentEnemy
-                || outpost.Faction.HostileTo(Faction.OfPlayer)
-                || !outpost.CanTradeNow)
+                || !outpost.CanInteractAsFriendlyCompletedOutpost
+                || outpost.TraderKind == null)
             {
                 return false;
             }
