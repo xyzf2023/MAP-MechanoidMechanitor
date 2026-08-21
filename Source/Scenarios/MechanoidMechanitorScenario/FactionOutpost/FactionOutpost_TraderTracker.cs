@@ -35,7 +35,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             get
             {
-                if (stock == null || stock.InnerListForReading.Empty())
+                if (stock == null)
                 {
                     RegenerateStock();
                 }

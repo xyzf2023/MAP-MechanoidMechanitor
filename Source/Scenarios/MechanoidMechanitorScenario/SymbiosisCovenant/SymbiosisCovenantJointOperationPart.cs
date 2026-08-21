@@ -60,6 +60,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool targetThreatConfirmed;
 
         private const int ActiveCheckInterval = 2500;
+        // 已部署后周期性直接轮询目标是否清除的间隔（避免完全依赖一次性信号）。
+        private const int TargetClearCheckInterval = 60;
         // 地图生成后允许守军初始化的最大保护窗口（不是玩家战斗限时）。
         private const int ThreatInitializationDeadlineTicks = 600;
         private const string AidQuestTagPrefix = "MAP_SymbiosisCovenantJointOp";
@@ -193,10 +195,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (tag == targetQuestTag + ".NoActiveThreats"
                 || tag == targetQuestTag + ".AllEnemiesDefeated")
             {
-                // 仅对 Site / Outpost / WorkSite 生效。必须已到达战斗就绪状态，否则忽略一次性信号。
+                // 仅对 Site / Outpost / WorkSite 生效。信号只负责提醒状态机立即重新检查，
+                // 不能独立决定任务成功：必须已到达战斗就绪状态，再由统一轮询兜底判定。
                 if (targetWorldObject is Site && IsOperationAccepted && HasReachedCombatReadyState)
                 {
-                    BeginSuccess();
+                    TryCompleteOperationIfTargetCleared();
                 }
             }
         }
@@ -266,24 +269,36 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            Map? targetMap = (targetWorldObject as MapParent)?.Map;
-            if (targetMap == null || !Find.Maps.Contains(targetMap))
+            // 先检查目标 WorldObject 是否已不存在（被摧毁 / 移除）。
+            if (targetWorldObject == null)
             {
-                // 目标地图已不存在：成功应由 NoActiveThreats / AllEnemiesDefeated（Site）
-                // 或 SettlementDefeatUtility Patch（Settlement）在更早时机结算；
-                // 若目标仍存活但地图消失，按无效结束处理。
-                if (targetWorldObject != null && !targetWorldObject.Destroyed)
+                BeginInvalidEnd("targetMissing");
+                return;
+            }
+
+            if (targetWorldObject.Destroyed)
+            {
+                // 仅在已到达战斗就绪状态后，才把目标销毁视为成功兜底；
+                // 否则（玩家尚未进入/援军未生成/威胁未确认）按无效结束。
+                if (HasReachedCombatReadyState)
                 {
-                    BeginInvalidEnd("targetMapRemovedTargetAlive");
+                    BeginSuccess();
+                }
+                else
+                {
+                    BeginInvalidEnd("targetRemovedBeforeCombatReady");
                 }
 
                 return;
             }
 
-            // 已部署：目标被第三方移除 / 不再敌对 → 无效结束。
-            if (targetWorldObject == null || targetWorldObject.Destroyed)
+            Map? targetMap = (targetWorldObject as MapParent)?.Map;
+            if (targetMap == null || targetMap.Disposed || !Find.Maps.Contains(targetMap))
             {
-                BeginInvalidEnd("targetRemoved");
+                // 目标仍存活但地图已消失：成功应由 NoActiveThreats / AllEnemiesDefeated（Site）
+                // 或 SettlementDefeatUtility Patch（Settlement）在更早时机结算；
+                // 否则按无效结束处理。
+                BeginInvalidEnd("targetMapRemovedTargetAlive");
                 return;
             }
 
@@ -293,11 +308,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            // E：目标地图已无对玩家有效的敌对威胁时，命令本行动援军撤离。
-            // （成功结算由 NoActiveThreats / AllEnemiesDefeated / Settlement Patch 另行触发。）
-            if (!GenHostility.AnyHostileActiveThreatToPlayer(targetMap))
+            // E：目标地图已无“目标派系”站立防御者时，先尝试直接结算成功；
+            // 若目标尚未清除（例如仍存在非目标派系的敌对事件），则命令援军撤离提醒。
+            if (!AnyStandingTargetFactionDefender(targetMap))
             {
-                CommandReinforcementsLeave();
+                if (!TryCompleteOperationIfTargetCleared())
+                {
+                    CommandReinforcementsLeave();
+                }
             }
         }
 
@@ -306,17 +324,38 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         private void QuestPartTickLight(int now)
         {
-            if (stage != SymbiosisCovenantJointOperationStage.TargetMapEntered)
+            if (stage == SymbiosisCovenantJointOperationStage.TargetMapEntered)
             {
+                if (now >= deploymentDueTick)
+                {
+                    TryDeployReinforcementsWhenReady(now);
+                }
+
                 return;
             }
 
-            if (now < deploymentDueTick)
+            if (stage == SymbiosisCovenantJointOperationStage.ReinforcementsDeployed)
             {
-                return;
-            }
+                // 旧存档恢复：若玩家单位仍在目标地图但 playerEngaged 未置位，重新置位，
+                // 避免读档后任务永久卡死。
+                if (!playerEngaged)
+                {
+                    Map? recoverMap = (targetWorldObject as MapParent)?.Map;
+                    if (recoverMap != null
+                        && !recoverMap.Disposed
+                        && Find.Maps.Contains(recoverMap)
+                        && HasPlayerControlledPawnOnTargetMap(recoverMap))
+                    {
+                        playerEngaged = true;
+                    }
+                }
 
-            TryDeployReinforcementsWhenReady(now);
+                // 周期性直接检查目标是否已经清除，避免完全依赖一次性信号。
+                if (now % TargetClearCheckInterval == 0)
+                {
+                    TryCompleteOperationIfTargetCleared();
+                }
+            }
         }
 
         /// <summary>
@@ -346,6 +385,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 return;
             }
+
+            // 玩家单位确已到场：设置 playerEngaged，否则任何成功路径都无法通过。
+            // 普通友军、盟约援军、敌方单位都不算玩家到场。
+            playerEngaged = true;
 
             // 必须观察到真实目标威胁（守军/敌对单位曾经生成）。
             if (!TryConfirmTargetThreat(map))
@@ -411,9 +454,48 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
+        /// 判断目标地图中是否仍存在“任务目标派系”的真实站立防御者。
+        /// 不依赖“地图上所有敌人”的判定，避免其他敌对事件/派系的敌人干扰。
+        /// 自然包含：休眠但仍活着的守军、处于迷雾中的守军、尚未开始攻击但真实存在的守军。
+        /// </summary>
+        private bool AnyStandingTargetFactionDefender(Map map)
+        {
+            if (map == null || map.Disposed || targetFaction == null)
+            {
+                return false;
+            }
+
+            Faction player = Faction.OfPlayer;
+            foreach (Pawn pawn in map.mapPawns.SpawnedPawnsInFaction(targetFaction))
+            {
+                if (pawn == null
+                    || pawn.Destroyed
+                    || pawn.Dead
+                    || !pawn.Spawned
+                    || pawn.Map != map)
+                {
+                    continue;
+                }
+
+                if (pawn.Downed)
+                {
+                    continue;
+                }
+
+                if (player == null || pawn.HostileTo(player))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// 确认目标地图中存在真实目标威胁（守军/敌对单位曾经生成）。
         /// 对 MAPFactionOutpost 优先确认守军初始化并用 FactionOutpostThreatUtility 检查；
-        /// 对普通 Site / 文化 DLC WorkSite / Settlement 使用 AnyHostileActiveThreatToPlayer。
+        /// 对普通 Site / 文化 DLC WorkSite / Settlement 使用 AnyStandingTargetFactionDefender
+        /// （精确按目标派系判断，兼容休眠/迷雾守军）。
         /// 只有观察到了目标威胁才设置 targetThreatConfirmed。
         /// </summary>
         private bool TryConfirmTargetThreat(Map map)
@@ -441,15 +523,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             else if (targetWorldObject is Site)
             {
-                // 普通 Site / 文化 DLC WorkSite：考虑休眠/迷雾中的敌对目标。
-                hasThreat = GenHostility.AnyHostileActiveThreatToPlayer(map, canBeFogged: true);
+                // 普通 Site / 文化 DLC WorkSite：精确判断目标派系站立防御者，
+                // 兼容休眠/迷雾中的守军，避免其他敌对事件干扰。
+                hasThreat = AnyStandingTargetFactionDefender(map);
             }
             else if (targetWorldObject is Settlement)
             {
                 // Settlement 地图已生成，且存在目标派系的 hostile 守军。
                 // 具体“是否彻底清除”由 SettlementDefeatUtility Patch 另行判定成功，
                 // 此处只确认“曾经存在威胁”。
-                hasThreat = GenHostility.AnyHostileActiveThreatToPlayer(map, canBeFogged: true);
+                hasThreat = AnyStandingTargetFactionDefender(map);
             }
 
             if (hasThreat)
@@ -469,6 +552,79 @@ namespace MAP_MechanoidMechanitor.Scenarios
             && reinforcementsGenerated
             && playerEngaged
             && targetThreatConfirmed;
+
+        /// <summary>
+        /// 统一成功轮询：仅在已到达战斗就绪状态后，根据目标 WorldObject 类型精确判断目标是否已清除，
+        /// 成功时调用一次 BeginSuccess。即使在 MapGenerated 早期 NoActiveThreats 信号已发过、
+        /// 或原版 Site 后续不再重复发送信号，任务仍能通过真实地图状态完成。
+        /// </summary>
+        private bool TryCompleteOperationIfTargetCleared()
+        {
+            if (!HasReachedCombatReadyState)
+            {
+                return false;
+            }
+
+            WorldObject? target = targetWorldObject;
+            if (target == null)
+            {
+                return false;
+            }
+
+            // 目标在玩家进入、威胁确认、援军部署之后被摧毁，可作为成功兜底，
+            // 避免 WorldObject 替换后任务卡死。
+            if (target.Destroyed)
+            {
+                BeginSuccess();
+                return true;
+            }
+
+            Map? map = (target as MapParent)?.Map;
+            if (map == null || map.Disposed || !Find.Maps.Contains(map))
+            {
+                return false;
+            }
+
+            // MAPFactionOutpost 本身是 Site，必须先判断，再判断普通 Site。
+            if (target is MAPFactionOutpost outpost)
+            {
+                if (!outpost.MapGarrisonInitialized)
+                {
+                    return false;
+                }
+
+                outpost.TryMarkCleanedIfNoDefenders();
+
+                if (outpost.Cleaned)
+                {
+                    BeginSuccess();
+                    return true;
+                }
+
+                return false;
+            }
+
+            if (target is Settlement)
+            {
+                // Settlement 的正式成功仍以 SettlementDefeatUtility.CheckDefeated Patch
+                // 或目标被原版替换/摧毁为准。
+                // 不要仅因所有守军暂时倒地就直接完成据点摧毁任务。
+                return false;
+            }
+
+            if (target is Site)
+            {
+                if (!AnyStandingTargetFactionDefender(map))
+                {
+                    BeginSuccess();
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
+        }
 
         // ===== 援军生成（B / C / D / H） =====
 

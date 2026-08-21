@@ -283,8 +283,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 选择能正常生成 Combat PawnGroup 的正常派系作为目标；优先已敌对玩家的。
-            List<Faction> candidates = new List<Faction>();
+            // 基础候选：非玩家、非永久敌对、非隐藏/临时、未战败/停用、能生成 Combat 编组。
+            List<Faction> baseCandidates = new List<Faction>();
             foreach (Faction faction in Find.FactionManager.AllFactionsListForReading)
             {
                 if (faction == null
@@ -303,72 +303,75 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                candidates.Add(faction);
+                baseCandidates.Add(faction);
             }
 
-            if (candidates.Count == 0)
+            if (baseCandidates.Count == 0)
             {
-                message = "找不到能生成战斗编组的合法目标派系。";
+                message = "找不到能生成战斗编组的合法派系。";
                 return false;
             }
 
-            Faction? targetFaction = candidates
+            // A. 目标派系候选：还需符合前哨生成资格（普通派系）。
+            List<Faction> targetCandidates = baseCandidates
+                .Where(f => FactionOutpostFactionUtility.IsEligibleFaction(f))
+                .ToList();
+            if (targetCandidates.Count == 0)
+            {
+                message = "找不到符合前哨生成资格的合法目标派系。";
+                return false;
+            }
+
+            // 优先已敌对玩家的；否则取第一个并在 DEV 中转为敌对。
+            Faction? targetFaction = targetCandidates
                 .FirstOrDefault(f => f.HostileTo(playerFaction));
             if (targetFaction == null)
             {
-                // 没有现成敌对派系：强制将一个有效派系设为敌对（仅 DEV）。
-                targetFaction = candidates[0];
-                targetFaction.TryAffectGoodwillWith(
-                    playerFaction,
-                    -100,
-                    canSendMessage: false,
-                    canSendHostilityLetter: false);
+                targetFaction = targetCandidates[0];
             }
 
-            // 选择 1~3 个其它有效派系作为参与派系：非玩家、非目标、可生成 Combat、
-            // 非战败/隐藏/临时、非敌对玩家、与目标敌对。
-            List<Faction> participantCandidates = candidates
-                .Where(f => f != targetFaction
-                    && !f.HostileTo(playerFaction)
-                    && f.HostileTo(targetFaction))
-                .ToList();
-
-            if (participantCandidates.Count == 0)
+            // 将目标派系与玩家设为敌对（-100），并验证。
+            if (!TrySetDevGoodwill(targetFaction, playerFaction, -100, out string targetRelReason))
             {
-                message = "找不到可参与的合法派系（需与目标敌对且不敌对玩家）。";
+                message = "无法将目标派系与玩家设为敌对：" + targetRelReason;
                 return false;
             }
 
-            // 取前至多 3 个作为参与者（含发起者）。
+            if (!targetFaction.HostileTo(playerFaction))
+            {
+                message = "目标派系与玩家未成功变为敌对（关系可能被锁定）。";
+                return false;
+            }
+
+            // B. 参与派系候选：非玩家、非目标、普通可记录派系；
+            //    不在此要求已与目标敌对（关系将在下面准备）。
+            List<Faction> participantCandidates = baseCandidates
+                .Where(f => f != targetFaction
+                    && MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction(f))
+                .ToList();
+            if (participantCandidates.Count == 0)
+            {
+                message = "找不到可作为参与派系的合法普通派系。";
+                return false;
+            }
+
+            // 取前至多 3 个作为参与者（含发起者，participants[0] 即发起者）。
             List<Faction> participants = participantCandidates
                 .Take(3)
                 .ToList();
 
-            // 将参与派系准备为盟约成员：Trust≥25、CovenantMember=true、保持对玩家非敌对。
+            // 为每个参与派系准备：记录、关系、信任、盟约成员。
             foreach (Faction participant in participants)
             {
-                if (state.GetRecord(participant) == null)
-                {
-                    state.DevForceJoinCovenant(participant);
-                }
-
-                if (!state.GetRecord(participant)!.CovenantMember)
-                {
-                    state.DevForceJoinCovenant(participant);
-                }
-
-                if (state.GetRecord(participant)!.Trust < 25)
-                {
-                    state.DevSetTrust(participant, 25, DevTrustReason.Translate());
-                }
-
-                if (participant.HostileTo(playerFaction))
-                {
-                    participant.TryAffectGoodwillWith(
+                if (!PrepareParticipantForJointOperation(
+                        state,
+                        participant,
+                        targetFaction,
                         playerFaction,
-                        100,
-                        canSendMessage: false,
-                        canSendHostilityLetter: false);
+                        out string prepMessage))
+                {
+                    message = prepMessage;
+                    return false;
                 }
             }
 
@@ -382,13 +385,40 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 为目标派系生成一个「建成」的机械族前哨并获得精确引用。
+            if (state.CovenantMemberCount < 1)
+            {
+                message = "盟约成员数量不足（当前 " + state.CovenantMemberCount + "）。";
+                return false;
+            }
+
+            // 为目标派系生成一个「建成」的前哨并获得精确引用。
             if (!FactionOutpostGenerationUtility.TryDevGenerateCompletedOutpost(
                     targetFaction,
                     out MAPFactionOutpost outpost,
                     out string outpostMessage))
             {
-                message = "前哨生成失败：" + outpostMessage;
+                message =
+                    "前哨生成失败：" + outpostMessage
+                    + "（已为以下派系准备关系：" + targetFaction.Name + "；"
+                    + "已加入成员：" + string.Join("、", participants.Select(f => f.Name)) + "）";
+                return false;
+            }
+
+            // 立即生成前哨后需验证引用与状态。
+            if (outpost == null
+                || !outpost.Spawned
+                || !outpost.IsCompleted
+                || outpost.Faction != targetFaction
+                || !targetFaction.HostileTo(playerFaction))
+            {
+                message =
+                    "前哨生成后状态校验失败（Spawned="
+                    + (outpost?.Spawned ?? false)
+                    + "；Completed="
+                    + (outpost?.IsCompleted ?? false)
+                    + "；前哨派系匹配="
+                    + (outpost?.Faction == targetFaction)
+                    + "）。";
                 return false;
             }
 
@@ -396,12 +426,23 @@ namespace MAP_MechanoidMechanitor
             SymbiosisCovenantJointOperationScheduler.DevClearCooldown();
 
             // 针对精确前哨与准备好的参与派系立即生成邀请。
+            // 防御性去重并限制数量，避免重复援军。
+            participants = participants
+                .Where(f => f != null)
+                .Distinct()
+                .Take(SymbiosisCovenantJointOperationDefOf
+                    .MAP_SymbiosisCovenant_JointOperationConfig.maxParticipants)
+                .ToList();
+
             if (!SymbiosisCovenantJointOperationScheduler.DevSpawnNowForTarget(
                     outpost,
                     participants,
                     out string spawnReason))
             {
-                message = "邀请创建失败：" + spawnReason;
+                message =
+                    "邀请创建失败：" + spawnReason
+                    + "（前哨已生成：" + outpost.Label + "；"
+                    + "已准备参与派系：" + string.Join("、", participants.Select(f => f.Name)) + "）";
                 return false;
             }
 
@@ -413,6 +454,158 @@ namespace MAP_MechanoidMechanitor
                 + "参与派系：" + string.Join("、", participants.Select(f => f.Name)) + "\n"
                 + "盟约等级：L" + state.CovenantLevel + "\n"
                 + "团结度：" + state.Unity.ToString("F0");
+
+            return true;
+        }
+
+        /// <summary>
+        /// 为一个参与派系可靠地准备联合军事行动所需状态：
+        /// 确保记录存在、与玩家非敌对、与目标敌对、信任≥25、并加入盟约。
+        /// 不依赖可能为 null 的 GetRecord 结果，缺失记录会创建并重新读取。
+        /// </summary>
+        private static bool PrepareParticipantForJointOperation(
+            GameComponent_SymbiosisCovenantState state,
+            Faction participant,
+            Faction targetFaction,
+            Faction playerFaction,
+            out string message)
+        {
+            message = string.Empty;
+
+            // 1. 确保记录存在（缺失则创建并重新读取）。
+            SymbiosisCovenantFactionRecord? record = state.GetRecord(participant);
+            if (record == null)
+            {
+                if (!state.DevRecreateRecord(participant))
+                {
+                    message = "无法为参与派系创建盟约记录：" + participant.Name;
+                    return false;
+                }
+
+                record = state.GetRecord(participant);
+            }
+
+            if (record == null)
+            {
+                message = "参与派系的盟约记录创建后仍为空：" + participant.Name;
+                return false;
+            }
+
+            // 2. 参与派系与玩家设为非敌对（至少 0 好感）。
+            if (participant.HostileTo(playerFaction))
+            {
+                if (!TrySetDevGoodwill(participant, playerFaction, 0, out string ppReason))
+                {
+                    message = "无法将参与派系与玩家设为非敌对："
+                        + participant.Name + "（" + ppReason + "）";
+                    return false;
+                }
+
+                if (participant.HostileTo(playerFaction))
+                {
+                    message = "参与派系与玩家未成功解除敌对：" + participant.Name;
+                    return false;
+                }
+            }
+
+            // 3. 参与派系与目标设为敌对（-100 好感）。
+            if (!participant.HostileTo(targetFaction))
+            {
+                if (!TrySetDevGoodwill(participant, targetFaction, -100, out string ptReason))
+                {
+                    message = "无法将参与派系与目标设为敌对："
+                        + participant.Name + "（" + ptReason + "）";
+                    return false;
+                }
+
+                if (!participant.HostileTo(targetFaction))
+                {
+                    message = "参与派系与目标未成功变为敌对：" + participant.Name;
+                    return false;
+                }
+            }
+
+            // 4. 信任至少 25。
+            record = state.GetRecord(participant);
+            if (record == null)
+            {
+                message = "参与派系记录在读回时为空：" + participant.Name;
+                return false;
+            }
+
+            if (record.Trust < 25)
+            {
+                if (!state.DevSetTrust(participant, 25, DevTrustReason.Translate()))
+                {
+                    message = "无法设置参与派系信任度：" + participant.Name;
+                    return false;
+                }
+            }
+
+            // 5. 若尚未加入，加入盟约。
+            record = state.GetRecord(participant);
+            if (record == null)
+            {
+                message = "参与派系记录在读回时为空：" + participant.Name;
+                return false;
+            }
+
+            if (!record.CovenantMember)
+            {
+                if (!state.DevForceJoinCovenant(participant))
+                {
+                    message = "无法让派系加入盟约：" + participant.Name;
+                    return false;
+                }
+            }
+
+            // 6. 重新读取并验证 CovenantMember 已生效。
+            record = state.GetRecord(participant);
+            if (record?.CovenantMember != true)
+            {
+                message = "派系加入盟约后状态仍未生效：" + participant.Name;
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// DEV 内部：读取当前实际好感，计算差值并以正式关系 API 应用，
+        /// 之后重新读取验证变更是否生效。不使用反射、不修改 FactionRelation 私有字段。
+        /// </summary>
+        private static bool TrySetDevGoodwill(
+            Faction a,
+            Faction b,
+            int desiredGoodwill,
+            out string reason)
+        {
+            reason = string.Empty;
+            int current = a.GoodwillWith(b);
+            int delta = desiredGoodwill - current;
+            if (delta == 0)
+            {
+                return true;
+            }
+
+            if (!a.TryAffectGoodwillWith(
+                    b,
+                    delta,
+                    canSendMessage: false,
+                    canSendHostilityLetter: false))
+            {
+                reason = "TryAffectGoodwillWith 未能应用好感变化（delta=" + delta + "）";
+                return false;
+            }
+
+            // 重新读取实际关系，确认变更生效。
+            int actual = a.GoodwillWith(b);
+            if (Math.Abs(actual - desiredGoodwill) > 1)
+            {
+                reason = "实际好感 " + actual + " 与目标 " + desiredGoodwill
+                    + " 不一致（可能受关系锁限制）";
+                return false;
+            }
 
             return true;
         }

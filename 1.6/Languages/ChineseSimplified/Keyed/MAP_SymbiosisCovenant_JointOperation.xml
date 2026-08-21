@@ -6,7 +6,11 @@
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>代表</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
 
   <!-- 邀请说明：{0}=发起派系名，{1}=首领描述（称谓+名 或“{派系}的代表”），{2}=目标派系名，{3}=目标地点，{4}=参与派系列表。 -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}的{1}向联盟发出军事行动邀请，共同进攻{2}的{3}。目前同意加入本次军事行动的派系有：{4}。我们要参与本次军事行动吗？</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}的{1}向联盟发出军事行动邀请，共同进攻{2}的{3}。
+
+目前加入本次军事行动的派系有：{4}。
+
+加入本次军事行动并成功摧毁目标能提升盟约团结度和参与派系对我们的信任度。我们要参与本次军事行动吗？</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>
 
   <!-- 援军撤离通知：{0}=派系名。 -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>{0} 的援军正在撤离战场。</MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>

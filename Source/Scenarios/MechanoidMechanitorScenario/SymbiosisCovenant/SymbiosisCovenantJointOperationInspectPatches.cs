@@ -8,9 +8,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// <summary>
     /// 在世界界面左下角详细信息中为「联合军事行动」目标追加标识。
     /// 标识完全由当前活动 QuestPart 动态查询决定，任务结束后自动消失，不在 WorldObject 上持久保存标志。
-    /// - Site 及其子类（机械族前哨 MAPFactionOutpost、文化 DLC WorkSite）由 Site.GetInspectString 处理；
-    /// - Settlement 由 Settlement.GetInspectString 处理（Settlement 重写了 GetInspectString，
-    ///   因此 WorldObject.GetInspectString 的 Patch 不会被 Settlement 实例触发）。
+    /// - Site 及其子类（机械族前哨 MAPFactionOutpost、文化 DLC WorkSite）由 Patch_Site_GetInspectString 处理；
+    /// - Settlement 由 Patch_WorldObject_GetInspectString 处理（RimWorld 1.6 的 Settlement
+    ///   未声明自己的 GetInspectString，而是继承 WorldObject.GetInspectString，因此必须 Patch
+    ///   WorldObject 才能覆盖 Settlement；该 Patch 内部只处理 Settlement，Site 实例会直接跳过，
+    ///   不会重复追加）。
     /// </summary>
     [StaticConstructorOnStartup]
     public static class SymbiosisCovenantJointOperationInspectPatches
@@ -36,18 +38,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        [HarmonyPatch(typeof(Settlement), "GetInspectString")]
-        public static class Patch_Settlement_GetInspectString
+        [HarmonyPatch(typeof(WorldObject), nameof(WorldObject.GetInspectString))]
+        public static class Patch_WorldObject_GetInspectString
         {
             [HarmonyPostfix]
-            public static void Postfix(Settlement __instance, ref string __result)
+            public static void Postfix(WorldObject __instance, ref string __result)
             {
                 if (__instance == null)
                 {
                     return;
                 }
 
-                if (SymbiosisCovenantJointOperationUtility.IsAcceptedJointOperationTarget(__instance))
+                // 只处理 Settlement；Site 由 Patch_Site_GetInspectString 单独处理，避免重复追加。
+                Settlement? settlement = __instance as Settlement;
+                if (settlement == null)
+                {
+                    return;
+                }
+
+                if (SymbiosisCovenantJointOperationUtility.IsAcceptedJointOperationTarget(settlement))
                 {
                     AppendTargetLabel(ref __result);
                 }
