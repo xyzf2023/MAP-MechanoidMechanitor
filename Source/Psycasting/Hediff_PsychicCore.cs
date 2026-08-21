@@ -15,6 +15,7 @@ namespace MAP_MechanoidMechanitor
             base.PostAdd(dinfo);
             Severity = level;
 
+            ClearExistingDisruptorFlash();
             MechanoidMechanitorPsycastUtility.SyncPsychicReceiver(pawn);
             if (pawn?.RaceProps.IsMechanoid == true)
             {
@@ -72,7 +73,40 @@ namespace MAP_MechanoidMechanitor
         public override void PostRemoved()
         {
             base.PostRemoved();
+            ClearPsychicActivation();
             MechanoidMechanitorPsycastUtility.SyncPsychicReceiver(pawn);
+        }
+
+        private void ClearExistingDisruptorFlash()
+        {
+            if (pawn?.health?.hediffSet == null || HediffDefOf.DisruptorFlash == null)
+            {
+                return;
+            }
+
+            Hediff? existing =
+                pawn.health.hediffSet.GetFirstHediffOfDef(HediffDefOf.DisruptorFlash);
+            while (existing != null)
+            {
+                pawn.health.RemoveHediff(existing);
+                existing =
+                    pawn.health.hediffSet.GetFirstHediffOfDef(HediffDefOf.DisruptorFlash);
+            }
+        }
+
+        private void ClearPsychicActivation()
+        {
+            HediffDef? activationDef = PsychicCoreUtility.PsychicActivationHediffDef;
+            if (pawn?.health?.hediffSet == null || activationDef == null)
+            {
+                return;
+            }
+
+            Hediff? active = pawn.health.hediffSet.GetFirstHediffOfDef(activationDef);
+            if (active != null)
+            {
+                pawn.health.RemoveHediff(active);
+            }
         }
     }
 }
