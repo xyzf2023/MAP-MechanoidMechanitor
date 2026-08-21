@@ -3,7 +3,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 仿生伴侣可变状态的统一抽象；业务代码不依赖状态的具体存储来源。
+    /// 仿生伴侣可变状态的统一抽象；当前由动态授权记录实现。
     /// </summary>
     public interface ISyntheticCompanionState
     {
@@ -23,22 +23,13 @@ namespace MAP_MechanoidMechanitor
     public static class SyntheticCompanionStateUtility
     {
         /// <summary>
-        /// 窄范围仿生伴侣身份查询：静态 Comp「恋人」或动态授权注册表。
+        /// 窄范围仿生伴侣身份查询：仅查询动态授权注册表。
         /// 不走完整能力汇总，供高频路径使用。
         /// </summary>
         public static bool IsSyntheticCompanion(Pawn? pawn)
         {
-            if (pawn == null)
-            {
-                return false;
-            }
-
-            if (pawn.GetComp<CompSyntheticCompanionUser>() != null)
-            {
-                return true;
-            }
-
-            return GameComponent_SyntheticCompanionRegistry.IsAuthorized(pawn);
+            return pawn != null
+                && GameComponent_SyntheticCompanionRegistry.IsAuthorized(pawn);
         }
 
         public static bool TryGetState(
@@ -49,14 +40,6 @@ namespace MAP_MechanoidMechanitor
             if (pawn == null)
             {
                 return false;
-            }
-
-            // 真实组件优先；同时存在动态授权时也以 Comp 为状态来源。
-            CompSyntheticCompanionUser? comp = pawn.GetComp<CompSyntheticCompanionUser>();
-            if (comp != null)
-            {
-                state = comp;
-                return true;
             }
 
             return GameComponent_SyntheticCompanionRegistry.TryGetRecord(pawn, out state);

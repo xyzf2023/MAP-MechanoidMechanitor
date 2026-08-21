@@ -77,7 +77,6 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         /// 动态授权记录快照：新集合，不暴露内部可变列表。
         /// 包含死亡、尸体中、远行队、未生成与暂时离图；排除空记录与 Discarded。
-        /// 原生「恋人」静态 Comp 不出现于此快照，除非另有动态授权记录。
         /// </summary>
         public static IReadOnlyList<SyntheticCompanionAuthorizationRecord>
             GetAuthorizationRecordSnapshot()
@@ -136,7 +135,6 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 撤销动态授权：删除全部对应记录与索引。不销毁 tracker、关系、床位、子女或孕期。
-        /// 不修改原生「恋人」静态 Comp。
         /// </summary>
         public static bool TryRevokeAuthorization(Pawn? pawn)
         {

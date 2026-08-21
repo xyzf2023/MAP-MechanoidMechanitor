@@ -100,18 +100,10 @@ namespace MAP_MechanoidMechanitor
 
             bool hasCompanionRecord =
                 GameComponent_SyntheticCompanionRegistry.HasAuthorizationRecord(clickedPawn);
-            bool hasStaticCompanionComp =
-                clickedPawn.GetComp<CompSyntheticCompanionUser>() != null;
             if (hasCompanionRecord)
             {
                 options.Add(new FloatMenuOption(
                     "加入仿生伴侣注册表（已经注册）",
-                    null));
-            }
-            else if (hasStaticCompanionComp)
-            {
-                options.Add(new FloatMenuOption(
-                    "加入仿生伴侣注册表（已拥有静态仿生伴侣能力，无需加入动态注册表）",
                     null));
             }
             else

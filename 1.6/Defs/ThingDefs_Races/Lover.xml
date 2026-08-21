@@ -115,7 +115,6 @@
         <defaultPriority>1</defaultPriority>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeSocialTabUser" />
-      <li Class="MAP_MechanoidMechanitor.CompProperties_SyntheticCompanionUser" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
         <profileVersion>1</profileVersion>
         <bodyType>MAP_LoverFemale</bodyType>

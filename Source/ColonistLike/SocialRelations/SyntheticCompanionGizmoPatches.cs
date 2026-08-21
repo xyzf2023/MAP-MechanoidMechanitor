@@ -5,7 +5,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 统一在 Pawn.GetGizmos 之后追加仿生伴侣 Gizmo，覆盖真实 Comp 与动态授权两种来源。
+    /// 统一在 Pawn.GetGizmos 之后追加动态授权仿生伴侣 Gizmo。
     /// </summary>
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.GetGizmos))]
     public static class SyntheticCompanionGizmoPatches

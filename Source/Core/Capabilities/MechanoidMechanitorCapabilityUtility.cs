@@ -15,7 +15,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 仿生伴侣能力仅来自静态 Comp / 动态授权注册表，避免完整能力汇总。
+            // 仿生伴侣能力仅来自动态授权注册表，避免完整能力汇总。
             if (capability == MechanoidMechanitorCapability.SyntheticSpouseInteraction
                 || capability == MechanoidMechanitorCapability.SyntheticPregnancy)
             {
@@ -110,12 +110,6 @@ namespace MAP_MechanoidMechanitor
             if (pawn.GetComp<CompColonistLikeSocialTabUser>() != null)
             {
                 capabilities |= MechanoidMechanitorCapability.ColonistLikeSocialTab;
-            }
-
-            if (pawn.GetComp<CompSyntheticCompanionUser>() != null)
-            {
-                capabilities |= MechanoidMechanitorCapability.SyntheticSpouseInteraction
-                    | MechanoidMechanitorCapability.SyntheticPregnancy;
             }
         }
 

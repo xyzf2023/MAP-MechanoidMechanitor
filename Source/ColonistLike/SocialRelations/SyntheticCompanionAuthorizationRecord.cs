@@ -3,7 +3,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 动态仿生伴侣授权记录：独立于真实 Comp，保存 Lovin 开关与生育方式。
+    /// 仿生伴侣动态授权记录：保存 Lovin 开关与生育方式。
     /// </summary>
     public sealed class SyntheticCompanionAuthorizationRecord
         : IExposable, ISyntheticCompanionState
