@@ -74,8 +74,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 之后玩家进入目标地图会发出 <targetQuestTag>.MapGenerated，
             // 站点清除后会发出 <targetQuestTag>.NoActiveThreats / .AllEnemiesDefeated，
             // 由 QuestPart.ProcessQuestSignal 精确处理。
+            //
+            // 关键：tag 必须以 "Quest{quest.id}." 开头。原版 Quest.Notify_SignalReceived
+            // 对非 global 信号有硬性接收规则——仅接收以 "Quest{id}." 开头的信号，否则在
+            // 分发给任何 QuestPart 之前直接 return。原版 MapParent.PostMapGenerate 会在此 tag
+            // 后追加 ".MapGenerated" 再发送；若 tag 不以 Quest 前缀开头，则完整信号
+            // （如 "MAP_SymbiosisCovenantJointOp_Target_0.MapGenerated"）会被原版丢弃，
+            // 导致 QuestPart 永远收不到 MapGenerated，援军流程无法启动。
+            // 因此必须把 quest.id 放在前缀而非末尾。
             string targetQuestTag =
-                "MAP_SymbiosisCovenantJointOp_Target_" + quest.id;
+                "Quest" + quest.id + ".MAP_SymbiosisCovenantJointOp_Target";
 
             bool targetIsMapParent = target is MapParent;
             MapParent? mapParent = target as MapParent;
