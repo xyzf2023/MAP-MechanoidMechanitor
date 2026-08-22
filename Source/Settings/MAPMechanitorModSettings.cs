@@ -1,5 +1,6 @@
 using UnityEngine;
 using Verse;
+using MAP_MechanoidMechanitor.Scenarios;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -161,6 +162,15 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public int factionOutpostSupportChancePercent =
             DefaultFactionOutpostSupportChancePercent;
+
+        /// <summary>
+        /// 普通派系前哨防卫强度倍率百分比（10～500，步进 10，默认 100）。
+        /// 仅影响之后新创建的前哨：前哨创建时按来源殖民地当前原版威胁点数乘以此倍率
+        /// 保存守军预算快照；已存在的前哨不会因调整本设置而改变。
+        /// 联合军事行动以此类前哨为目标时，也会读取该前哨保存的守军预算。
+        /// </summary>
+        public int factionOutpostGarrisonThreatScalePercent =
+            FactionOutpostThreatPointsUtility.DefaultScalePercent;
 
         /// <summary>
         /// 每座符合条件的完整敌对机械巢节点每日触发额外袭击的基础概率百分比。
@@ -332,6 +342,10 @@ namespace MAP_MechanoidMechanitor
                 "factionOutpostSupportChancePercent",
                 DefaultFactionOutpostSupportChancePercent);
             Scribe_Values.Look(
+                ref factionOutpostGarrisonThreatScalePercent,
+                "factionOutpostGarrisonThreatScalePercent",
+                FactionOutpostThreatPointsUtility.DefaultScalePercent);
+            Scribe_Values.Look(
                 ref mechHiveNodeRaidChancePercent,
                 "mechHiveNodeRaidChancePercent",
                 DefaultMechHiveNodeRaidChancePercent);
@@ -390,6 +404,9 @@ namespace MAP_MechanoidMechanitor
                     Mathf.Clamp(factionOutpostRaidChancePercent, 0, 100);
                 factionOutpostSupportChancePercent =
                     Mathf.Clamp(factionOutpostSupportChancePercent, 0, 100);
+                factionOutpostGarrisonThreatScalePercent =
+                    FactionOutpostThreatPointsUtility.ClampScalePercent(
+                        factionOutpostGarrisonThreatScalePercent);
                 mechHiveNodeRaidChancePercent =
                     Mathf.Clamp(mechHiveNodeRaidChancePercent, 0, 100);
                 mechHiveNodeSupportChancePercent =

@@ -380,6 +380,16 @@ namespace MAP_MechanoidMechanitor
                     0,
                     100);
 
+            settings.factionOutpostGarrisonThreatScalePercent =
+                DrawSteppedIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Label",
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Description",
+                    settings.factionOutpostGarrisonThreatScalePercent,
+                    FactionOutpostThreatPointsUtility.MinScalePercent,
+                    FactionOutpostThreatPointsUtility.MaxScalePercent,
+                    FactionOutpostThreatPointsUtility.ScaleStepPercent);
+
             listing.Gap(6f);
 
             listing.Label(
@@ -467,6 +477,34 @@ namespace MAP_MechanoidMechanitor
                 Mathf.RoundToInt(sliderValue),
                 min,
                 max);
+        }
+
+        /// <summary>
+        /// 与 DrawIntSliderSetting 相同的展示风格，但最终值按 step 对齐后再钳制到合法范围。
+        /// 用于“按固定百分比步进”的设置（如普通派系前哨防卫强度 10% 步进）。
+        /// </summary>
+        private static int DrawSteppedIntSliderSetting(
+            Listing_Standard listing,
+            string labelKey,
+            string descriptionKey,
+            int value,
+            int min,
+            int max,
+            int step)
+        {
+            int clamped = Mathf.Clamp(value, min, max);
+
+            float sliderValue = listing.SliderLabeled(
+                labelKey.Translate(clamped).ToString(),
+                clamped,
+                min,
+                max,
+                0.62f,
+                descriptionKey.Translate().ToString());
+
+            int stepped =
+                Mathf.RoundToInt(sliderValue / step) * step;
+            return Mathf.Clamp(stepped, min, max);
         }
 
         private static int DrawTickIntervalSliderSetting(

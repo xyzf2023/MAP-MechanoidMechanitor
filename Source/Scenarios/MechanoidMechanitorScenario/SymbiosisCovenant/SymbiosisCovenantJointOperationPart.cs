@@ -493,15 +493,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            // E：目标地图已无“目标派系”站立防御者时，先尝试直接结算成功；
-            // 若目标尚未清除（例如仍存在非目标派系的敌对事件），则命令援军撤离提醒。
-            if (!AnyStandingTargetFactionDefender(targetMap))
-            {
-                if (!TryCompleteOperationIfTargetCleared())
-                {
-                    CommandReinforcementsLeave();
-                }
-            }
+            // 联合援军的离场与任务成功必须以既有的原版活动威胁清除标准为准：
+            // 由 QuestPartTickLight 周期性调用 TryCompleteOperationIfTargetCleared 判定，
+            // 以及 Site 发出的 <targetQuestTag>.NoActiveThreats / .AllEnemiesDefeated 信号触发。
+            // 目标派系是否还有站立 Pawn 不能单独决定离场：地图可能仍存在原版活动威胁
+            // （敌对炮塔、倒地敌人、其他敌对派系单位等），此时援军不得提前撤离。
+            // 本分支不再调用 CommandReinforcementsLeave()。
         }
 
         /// <summary>
@@ -971,6 +968,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "targetThreatPoints=" + threat
                 + " | supportPointsFactor=" + def.supportPointsFactor.ToString("F3")
                 + " | totalSupportPoints=" + total.ToString("F1")
+                + " | targetThreatSource=" + SymbiosisCovenantJointOperationUtility.GetTargetThreatSourceName(targetWorldObject)
+                + (targetWorldObject is MAPFactionOutpost outpost
+                    ? " | targetOutpostPhase=" + (outpost.IsCompleted ? "Completed" : "Building")
+                      + " | targetGarrisonBudget=" + outpost.GarrisonThreatPoints
+                      + " | targetHasSavedSnapshot=" + outpost.HasGarrisonThreatPointsSnapshot
+                    : string.Empty)
                 + " | target=" + (targetWorldObject?.Label ?? "-")
                 + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
 

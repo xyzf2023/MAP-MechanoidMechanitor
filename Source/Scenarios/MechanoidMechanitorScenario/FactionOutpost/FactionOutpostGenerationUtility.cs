@@ -28,6 +28,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private sealed class ColonyProximityCache
         {
             public PlanetTile ColonyTile;
+            public Settlement? SourceColony;
             public readonly Dictionary<PlanetTile, int> TileDistances =
                 new Dictionary<PlanetTile, int>();
             public int ExistingUncleanedOutpostCount;
@@ -280,7 +281,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            CreateOutpost(tile, faction);
+            Map? referenceMap = ResolveOutpostReferenceMap(targetCache.SourceColony, out bool fellBack);
+            if (fellBack)
+            {
+                Log.Warning(
+                    "[MAP] 普通派系前哨来源殖民地地图未加载，回退使用其他玩家殖民地地图计算守军预算。");
+            }
+
+            CreateOutpost(tile, faction, referenceMap);
             return true;
         }
 
@@ -299,7 +307,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 ColonyProximityCache cache = new ColonyProximityCache
                 {
-                    ColonyTile = colony.Tile
+                    ColonyTile = colony.Tile,
+                    SourceColony = colony
                 };
                 CollectTilesWithinTraversal(colony.Tile, ColonyProximityTiles, cache.TileDistances);
 
@@ -437,7 +446,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        private static MAPFactionOutpost CreateOutpost(PlanetTile tile, Faction faction)
+        private static MAPFactionOutpost CreateOutpost(
+            PlanetTile tile,
+            Faction faction,
+            Map? referenceMap)
         {
             MAPFactionOutpost outpost =
                 (MAPFactionOutpost)WorldObjectMaker.MakeWorldObject(
@@ -452,10 +464,61 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 outpost,
                 FactionOutpostDefOf.MAP_FactionOutpost_Building,
                 new SitePartParams()));
-            outpost.InitializeNewOutpost(Find.TickManager.TicksGame, Rand.Int);
+            outpost.InitializeNewOutpost(Find.TickManager.TicksGame, Rand.Int, referenceMap);
             Find.WorldObjects.Add(outpost);
             outpost.SendCreationLetter();
             return outpost;
+        }
+
+        /// <summary>
+        /// 解析“用于挑选该前哨 tile 的来源玩家殖民地”地图，作为守军点数的参考地图。
+        /// 优先使用来源殖民地自身地图；仅在确实未加载时才回退到其他已加载的玩家殖民地地图；
+        /// 两者都不可用时返回 null，由计算工具使用旧默认值（并已在调用处告警）。
+        /// </summary>
+        private static Map? ResolveOutpostReferenceMap(
+            Settlement? colony,
+            out bool fellBackToOtherColony)
+        {
+            fellBackToOtherColony = false;
+
+            Map? sourceMap = colony?.Map;
+            if (sourceMap != null && !sourceMap.Disposed)
+            {
+                return sourceMap;
+            }
+
+            Map? homeMap = GetAnyLoadedPlayerHomeMap();
+            if (homeMap != null)
+            {
+                fellBackToOtherColony = true;
+                return homeMap;
+            }
+
+            return null;
+        }
+
+        private static Map? GetAnyLoadedPlayerHomeMap()
+        {
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null)
+            {
+                return null;
+            }
+
+            List<Settlement> settlements = Find.WorldObjects.Settlements;
+            for (int i = 0; i < settlements.Count; i++)
+            {
+                Settlement settlement = settlements[i];
+                if (settlement != null
+                    && settlement.Faction == player
+                    && settlement.Map != null
+                    && !settlement.Map.Disposed)
+                {
+                    return settlement.Map;
+                }
+            }
+
+            return null;
         }
 
         private static List<Settlement> GetPlayerSurfaceColonies()
@@ -565,7 +628,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 created,
                 FactionOutpostDefOf.MAP_FactionOutpost_Building,
                 new SitePartParams()));
-            created.InitializeNewOutpost(Find.TickManager.TicksGame, Rand.Int);
+
+            Map? referenceMap = ResolveOutpostReferenceMap(chosen.SourceColony, out bool fellBack);
+            if (fellBack)
+            {
+                Log.Warning(
+                    "[MAP] DEV 生成前哨：来源殖民地地图未加载，回退使用其他玩家殖民地地图计算守军预算。");
+            }
+
+            created.InitializeNewOutpost(Find.TickManager.TicksGame, Rand.Int, referenceMap);
             created.DevForceCompleteConstructionForTest();
 
             Find.WorldObjects.Add(created);

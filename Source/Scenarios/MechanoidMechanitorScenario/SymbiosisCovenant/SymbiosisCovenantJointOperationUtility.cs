@@ -326,6 +326,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             WorldObject? target,
             Map? map)
         {
+            // MAPFactionOutpost 是 Site 子类，必须在本分支之前先行判定。
+            // 联合援军基准 = 前哨创建时保存的守军预算快照（GarrisonThreatPoints），
+            // 而非开始任务时的当前财富，也非地图敌人实际 combatPower 合计。
+            if (target is MAPFactionOutpost factionOutpost)
+            {
+                return factionOutpost.GarrisonThreatPoints;
+            }
+
             if (target is Site site)
             {
                 float actual = site.ActualThreatPoints;
@@ -343,6 +351,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return EstimateFromMapHostiles(map, target?.Faction);
+        }
+
+        /// <summary>
+        /// 供诊断日志使用的、本次部署目标威胁点来源标识。
+        /// 不影响业务：仅描述 TryGetTargetThreatPointsAtDeployment 实际采用的数据来源。
+        /// </summary>
+        public static string GetTargetThreatSourceName(WorldObject? target)
+        {
+            if (target is MAPFactionOutpost)
+            {
+                return "MAPFactionOutpostSavedGarrisonBudget";
+            }
+
+            if (target is Site)
+            {
+                return "SiteActualThreatPoints";
+            }
+
+            if (target is Settlement)
+            {
+                return "Settlement";
+            }
+
+            return "MapHostilePawnCombatPowerFallback";
         }
 
         private static int EstimateFromMapHostiles(Map? map, Faction? faction)

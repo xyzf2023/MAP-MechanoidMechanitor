@@ -21,8 +21,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public sealed class MAPFactionOutpost : Site, ITrader, ITraderRestockingInfoProvider
     {
         public const int NaturalBuildDurationTicks = 900000;
-        public const int BuildingGarrisonThreatPoints = 2000;
-        public const int CompletedGarrisonThreatPoints = 10000;
+
+        // 旧存档回退值：仅用于无可读快照的旧前哨。
+        // 新前哨的守军预算由 FactionOutpostThreatPointsUtility 按财富与设置计算并保存为快照，
+        // 之后不再使用固定值。
+        public const int LegacyBuildingGarrisonThreatPoints = 2000;
+        public const int LegacyCompletedGarrisonThreatPoints = 10000;
 
         private const int ThreatClearCheckIntervalTicks = 250;
 
@@ -48,8 +52,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool Cleaned => cleaned;
         public int LayoutSeed => layoutSeed;
         public bool MapGarrisonInitialized => mapGarrisonInitialized;
+
+        // 守军点数快照：-1 表示旧存档没有该字段。
+        // 创建时一次性计算并保存，之后不再随财富/设置变化。
+        private int buildingGarrisonThreatPointsSnapshot = -1;
+        private int completedGarrisonThreatPointsSnapshot = -1;
+
         public int GarrisonThreatPoints =>
-            IsCompleted ? CompletedGarrisonThreatPoints : BuildingGarrisonThreatPoints;
+            IsCompleted
+                ? (completedGarrisonThreatPointsSnapshot > 0
+                    ? completedGarrisonThreatPointsSnapshot
+                    : LegacyCompletedGarrisonThreatPoints)
+                : (buildingGarrisonThreatPointsSnapshot > 0
+                    ? buildingGarrisonThreatPointsSnapshot
+                    : LegacyBuildingGarrisonThreatPoints);
+
+        /// <summary>
+        /// 是否持有创建时保存的守军点数快照（新建前哨为 true，旧存档为 false）。
+        /// </summary>
+        public bool HasGarrisonThreatPointsSnapshot =>
+            buildingGarrisonThreatPointsSnapshot > 0
+            || completedGarrisonThreatPointsSnapshot > 0;
+
+        /// <summary>
+        /// 完成态守军点数快照；旧存档无可读快照时回退到旧固定完成态值。
+        /// </summary>
+        public int CompletedGarrisonThreatPointsSnapshot =>
+            completedGarrisonThreatPointsSnapshot > 0
+                ? completedGarrisonThreatPointsSnapshot
+                : LegacyCompletedGarrisonThreatPoints;
 
         public override string Label
         {
@@ -132,7 +163,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             completionLetterSent = true;
         }
 
-        public void InitializeNewOutpost(int createdTick, int layoutSeed)
+        /// <summary>
+        /// 初始化一座新建前哨。referenceMap 为实际用于挑选该前哨 tile 的来源玩家殖民地地图，
+        /// 用于按当前财富与设置一次性计算并保存守军点数快照。
+        /// 旧存档不会调用本方法（其快照字段保持 -1，回退固定值）。
+        /// </summary>
+        public void InitializeNewOutpost(int createdTick, int layoutSeed, Map? referenceMap)
         {
             phase = MechanoidMechanitorFactionOutpostPhase.Building;
             this.createdTick = createdTick;
@@ -142,6 +178,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             completionLetterSent = false;
             cleanedLetterSent = false;
             mapGarrisonInitialized = false;
+
+            int completed =
+                FactionOutpostThreatPointsUtility.CalculateCompletedGarrisonPoints(referenceMap);
+            int building =
+                FactionOutpostThreatPointsUtility.CalculateBuildingGarrisonPoints(completed);
+            completedGarrisonThreatPointsSnapshot = completed;
+            buildingGarrisonThreatPointsSnapshot = building;
         }
 
         public void NotifyMapGarrisonInitialized(bool success)
@@ -560,6 +603,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref mapGarrisonInitialized,
                 "MAP_factionOutpost_mapGarrisonInitialized",
                 false);
+
+            // 守军点数快照：默认 -1 表示旧存档没有该字段，必须继续回退固定值，不得重新计算。
+            Scribe_Values.Look(
+                ref buildingGarrisonThreatPointsSnapshot,
+                "MAP_factionOutpost_buildingGarrisonThreatPointsSnapshot",
+                -1);
+            Scribe_Values.Look(
+                ref completedGarrisonThreatPointsSnapshot,
+                "MAP_factionOutpost_completedGarrisonThreatPointsSnapshot",
+                -1);
 
             // 交易库存追踪器存读档；旧存档无此项时，运行时首次访问会自动创建空 tracker。
             Scribe_Deep.Look(ref trader, "trader", this);
