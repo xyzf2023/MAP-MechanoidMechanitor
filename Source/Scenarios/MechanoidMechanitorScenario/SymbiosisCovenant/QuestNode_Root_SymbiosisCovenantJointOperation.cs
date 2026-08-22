@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using RimWorld.Planet;
@@ -76,9 +77,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
             string targetQuestTag =
                 "MAP_SymbiosisCovenantJointOp_Target_" + quest.id;
 
-            if (target is MapParent mapParent)
+            bool targetIsMapParent = target is MapParent;
+            MapParent? mapParent = target as MapParent;
+            if (mapParent != null)
             {
                 QuestUtility.AddQuestTag(mapParent, targetQuestTag);
+            }
+
+            // 诊断（只读）：确认任务生成时 targetQuestTag 是否写入目标 MapParent 的 questTags。
+            {
+                List<string>? attachedTags = mapParent?.questTags;
+                bool tagPresentAfterAttach = SymbiosisCovenantJointOperationDiagnostics
+                    .QuestTagContains(attachedTags, targetQuestTag);
+                SymbiosisCovenantJointOperationDiagnostics.Log(
+                    "TargetQuestTagAttached",
+                    "actionId=" + (actionId ?? "-")
+                    + " | questId=" + quest.id.ToString()
+                    + " | target=" + (target?.Label ?? "-")
+                    + " | targetLoadId=" + (target?.GetUniqueLoadID() ?? "-")
+                    + " | targetType=" + (target?.GetType().Name ?? "-")
+                    + " | targetIsMapParent=" + targetIsMapParent
+                    + " | mapParentHasMap=" + (mapParent?.HasMap ?? false)
+                    + " | targetQuestTag=" + (targetQuestTag ?? "-")
+                    + " | questTags=" + SymbiosisCovenantJointOperationDiagnostics.FormatQuestTags(attachedTags)
+                    + " | tagPresentAfterAttach=" + tagPresentAfterAttach);
             }
 
             QuestPart_SymbiosisCovenantJointOperation part =
@@ -99,6 +121,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         .SymbiosisCovenantJointOperationStage.OfferPending
                 };
             quest.AddPart(part);
+
+            // 诊断（只读）：确认 Part 创建时的启用信号与初始状态。
+            {
+                int partIndex = -1;
+                try
+                {
+                    partIndex = part.Index;
+                }
+                catch
+                {
+                    partIndex = -1;
+                }
+
+                string inSignal = part.inSignalEnable ?? "-";
+                string initiateSignal = quest.InitiateSignal ?? "-";
+                bool enableMatches = string.Equals(
+                    inSignal, initiateSignal, StringComparison.Ordinal);
+                SymbiosisCovenantJointOperationDiagnostics.Log(
+                    "QuestPartCreated",
+                    "actionId=" + (actionId ?? "-")
+                    + " | questId=" + quest.id.ToString()
+                    + " | partIndex=" + partIndex
+                    + " | inSignalEnable=" + inSignal
+                    + " | questInitiateSignal=" + initiateSignal
+                    + " | enableSignalMatchesInitiateSignal=" + enableMatches
+                    + " | state=" + part.State
+                    + " | stage=" + part.stage
+                    + " | targetQuestTag=" + (targetQuestTag ?? "-"));
+            }
 
             // 标记为「尚未接受」，玩家在任务面板接受后才会真正进入 OperationActive。
             quest.SetNotYetAccepted();

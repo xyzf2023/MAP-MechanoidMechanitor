@@ -72,6 +72,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // 诊断日志辅助（仅运行期低噪音；不参与任何正式业务/存档逻辑）。
         private string? lastDeploymentWaitReason;
 
+        // ===== 自动诊断日志运行期字段（不参与任何正式业务 / 不存档 / 不改变行为） =====
+
+        // 接取后自动启用检查的一次性调度（运行期）。
+        private int activationDiagnosticDueTick = -1;
+        private bool activationDiagnosticLogged;
+
+        // OperationActive 下观察到目标地图已存在的一次性观测标记（运行期）。
+        private bool operationActiveTargetMapObservedLogged;
+
+        // 相关信号日志节流（运行期；只记录每种 tag 的首次出现，避免 NoActiveThreats /
+        // AllEnemiesDefeated 等重复信号刷屏）。仅影响日志，不影响游戏逻辑。
+        private HashSet<string>? loggedRelevantSignals;
+
         public bool IsActive =>
             stage != SymbiosisCovenantJointOperationStage.Succeeded
             && stage != SymbiosisCovenantJointOperationStage.Failed
@@ -130,14 +143,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public override void PreQuestAccept()
         {
             base.PreQuestAccept();
+
+            // 诊断调度：在接取后的下一 tick 输出一次 PostAcceptActivationCheck。
+            // 此刻仍可能是 NeverEnabled（原版 Accept 顺序：先 PreQuestAccept 再 Initiate），
+            // 因此此处只记录时刻、设定 due tick，不判断 State 是否 Enabled。
+            TickManager? tickManager = Find.TickManager;
+            if (tickManager != null)
+            {
+                activationDiagnosticDueTick = tickManager.TicksGame + 1;
+                activationDiagnosticLogged = false;
+            }
+
             if (stage == SymbiosisCovenantJointOperationStage.OfferPending)
             {
                 stage = SymbiosisCovenantJointOperationStage.OperationActive;
                 SymbiosisCovenantJointOperationDef? def = ResolveDef();
-                operationExpireTick = Find.TickManager.TicksGame
+                operationExpireTick = (tickManager?.TicksGame ?? 0)
                     + (def?.operationTimeoutTicks ?? 900000);
 
-                int preTick = Find.TickManager.TicksGame;
+                int preTick = tickManager?.TicksGame ?? 0;
                 LogDeploymentDiagnostic(
                     "QuestAccepted",
                     "actionId=" + (actionId ?? "-")
@@ -163,10 +187,36 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             int now = Find.TickManager.TicksGame;
 
+            // 诊断（只读）：接取后下一 tick 一次性检查 Part 是否被正确启用。
+            if (activationDiagnosticDueTick >= 0
+                && now >= activationDiagnosticDueTick
+                && !activationDiagnosticLogged
+                && stage != SymbiosisCovenantJointOperationStage.OfferPending)
+            {
+                activationDiagnosticLogged = true;
+                activationDiagnosticDueTick = -1;
+                LogPostAcceptActivationCheck(now);
+            }
+
             if (stage == SymbiosisCovenantJointOperationStage.OperationActive
                 || stage == SymbiosisCovenantJointOperationStage.TargetMapEntered
                 || stage == SymbiosisCovenantJointOperationStage.ReinforcementsDeployed)
             {
+                // 诊断（只读）：OperationActive 下若目标地图已存在却尚未通过信号路径
+                // 登记为 TargetMapEntered，记录一次。绝不调用 NotifyTargetMapGenerated、
+                // 绝不改 stage、绝不部署援军、绝不完成任务。
+                if (stage == SymbiosisCovenantJointOperationStage.OperationActive
+                    && !operationActiveTargetMapObservedLogged)
+                {
+                    MapParent? observeParent = targetWorldObject as MapParent;
+                    Map? observeMap = observeParent?.Map;
+                    if (observeParent != null && (observeParent.HasMap || observeMap != null))
+                    {
+                        operationActiveTargetMapObservedLogged = true;
+                        LogOperationActiveTargetMapObserved(now, observeParent, observeMap);
+                    }
+                }
+
                 // 每个 tick 都可执行的轻量部署检查：进入地图后尽快部署援军，
                 // 不等待 ActiveCheckInterval（约 2500 tick）的广泛状态检查。
                 QuestPartTickLight(now);
@@ -184,6 +234,86 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 TickActiveOrDeployed(now);
+            }
+        }
+
+        /// <summary>
+        /// 精确观察本 Part 收到的相关信号（只读诊断）。
+        /// 在调用 base 分发逻辑前后各记录一次，用于区分：
+        /// - Part 根本没收到信号；
+        /// - Part 收到 MapGenerated 但 State 仍是 NeverEnabled；
+        /// - Part 收到 MapGenerated 且已 Enabled；
+        /// - Part 已进入 ProcessQuestSignal 但登记地图失败。
+        /// 不改动原版分发逻辑，必须调用一次 base.Notify_QuestSignalReceived。
+        /// </summary>
+        public override void Notify_QuestSignalReceived(Signal signal)
+        {
+            if (targetQuestTag == null || quest == null)
+            {
+                base.Notify_QuestSignalReceived(signal);
+                return;
+            }
+
+            string tag = signal.tag ?? string.Empty;
+            string mapGeneratedTag = targetQuestTag + ".MapGenerated";
+            bool relevant =
+                tag == quest.InitiateSignal
+                || tag == inSignalEnable
+                || tag == mapGeneratedTag
+                || tag == targetQuestTag + ".NoActiveThreats"
+                || tag == targetQuestTag + ".AllEnemiesDefeated";
+
+            // 信号日志节流：每种相关 tag 只记录首次出现，避免重复信号刷屏。
+            bool shouldLog = relevant;
+            if (relevant)
+            {
+                loggedRelevantSignals ??= new HashSet<string>();
+                if (loggedRelevantSignals.Contains(tag))
+                {
+                    shouldLog = false;
+                }
+                else
+                {
+                    loggedRelevantSignals.Add(tag);
+                }
+            }
+
+            QuestPartState stateBefore = State;
+            SymbiosisCovenantJointOperationStage stageBefore = stage;
+
+            if (shouldLog)
+            {
+                SymbiosisCovenantJointOperationDiagnostics.Log(
+                    "RelevantSignalReceivedBeforeBase",
+                    "actionId=" + (actionId ?? "-")
+                    + " | questId=" + quest.id.ToString()
+                    + " | signalTag=" + tag
+                    + " | signalIsInitiate=" + (tag == quest.InitiateSignal)
+                    + " | signalIsEnable=" + (tag == inSignalEnable)
+                    + " | signalIsMapGenerated=" + (tag == mapGeneratedTag)
+                    + " | stateBefore=" + stateBefore
+                    + " | stageBefore=" + stageBefore
+                    + " | inSignalEnable=" + (inSignalEnable ?? "-")
+                    + " | questInitiateSignal=" + (quest.InitiateSignal ?? "-")
+                    + " | targetQuestTag=" + (targetQuestTag ?? "-")
+                    + " | currentTick=" + (Find.TickManager?.TicksGame ?? 0));
+            }
+
+            // 不改动原版分发逻辑。
+            base.Notify_QuestSignalReceived(signal);
+
+            if (shouldLog)
+            {
+                SymbiosisCovenantJointOperationDiagnostics.Log(
+                    "RelevantSignalReceivedAfterBase",
+                    "actionId=" + (actionId ?? "-")
+                    + " | questId=" + quest.id.ToString()
+                    + " | signalTag=" + tag
+                    + " | stateAfter=" + State
+                    + " | stageAfter=" + stage
+                    + " | stateChanged=" + (State != stateBefore)
+                    + " | stageChanged=" + (stage != stageBefore)
+                    + " | currentTick=" + (Find.TickManager?.TicksGame ?? 0));
             }
         }
 
@@ -1551,6 +1681,102 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void ClearDeploymentWaitReason()
         {
             lastDeploymentWaitReason = null;
+        }
+
+        /// <summary>
+        /// 诊断（只读）：接取后下一 tick 检查 Part 是否被正确启用。不修复状态、
+        /// 不调用任何启用方法；若 State 仍不是 Enabled，仅额外输出一条 Warning。
+        /// </summary>
+        private void LogPostAcceptActivationCheck(int now)
+        {
+            MapParent? mapParent = targetWorldObject as MapParent;
+            bool targetHasMap = mapParent != null && mapParent.HasMap;
+            string inSignal = inSignalEnable ?? "-";
+            string initiateSignal = quest?.InitiateSignal ?? "-";
+            bool enableMatches = string.Equals(
+                inSignal, initiateSignal, StringComparison.Ordinal);
+            string tags = SymbiosisCovenantJointOperationDiagnostics.FormatQuestTags(mapParent?.questTags);
+            bool tagPresent = SymbiosisCovenantJointOperationDiagnostics.QuestTagContains(
+                mapParent?.questTags, targetQuestTag);
+
+            SymbiosisCovenantJointOperationDiagnostics.Log(
+                "PostAcceptActivationCheck",
+                "actionId=" + (actionId ?? "-")
+                + " | questId=" + (quest != null ? quest.id.ToString() : "-")
+                + " | currentTick=" + now
+                + " | stage=" + stage
+                + " | state=" + State
+                + " | inSignalEnable=" + inSignal
+                + " | questInitiateSignal=" + initiateSignal
+                + " | enableSignalMatchesInitiateSignal=" + enableMatches
+                + " | stateIsEnabled=" + (State == QuestPartState.Enabled)
+                + " | target=" + (targetWorldObject?.Label ?? "-")
+                + " | targetQuestTag=" + (targetQuestTag ?? "-")
+                + " | targetHasMap=" + targetHasMap
+                + " | questTags=" + tags
+                + " | targetTagPresent=" + tagPresent);
+
+            if (State != QuestPartState.Enabled)
+            {
+                // 仅警告，不结束任务、不修复状态、不调用任何启用方法。
+                SymbiosisCovenantJointOperationDiagnostics.LogWarning(
+                    "QuestPartNotEnabledAfterAccept",
+                    "actionId=" + (actionId ?? "-")
+                    + " | questId=" + (quest != null ? quest.id.ToString() : "-")
+                    + " | state=" + State
+                    + " | stage=" + stage
+                    + " | inSignalEnable=" + inSignal
+                    + " | questInitiateSignal=" + initiateSignal
+                    + " | targetQuestTag=" + (targetQuestTag ?? "-"));
+            }
+        }
+
+        /// <summary>
+        /// 诊断（只读）：OperationActive 下目标地图已存在却尚未通过正常信号路径登记为
+        /// TargetMapEntered。只观察、只记录，绝不修复：不调用 NotifyTargetMapGenerated、
+        /// 不改 stage、不部署援军、不完成任务。
+        /// </summary>
+        private void LogOperationActiveTargetMapObserved(int now, MapParent mapParent, Map? map)
+        {
+            string tags = SymbiosisCovenantJointOperationDiagnostics.FormatQuestTags(mapParent.questTags);
+            bool tagPresent = SymbiosisCovenantJointOperationDiagnostics.QuestTagContains(
+                mapParent.questTags, targetQuestTag);
+            string mapInfo = SymbiosisCovenantJointOperationDiagnostics.DescribeMapParent(mapParent);
+            string pawnInfo = SymbiosisCovenantJointOperationDiagnostics.DescribePlayerPawnCounts(map);
+
+            SymbiosisCovenantJointOperationDiagnostics.Log(
+                "OperationActiveTargetMapObserved",
+                "actionId=" + (actionId ?? "-")
+                + " | questId=" + (quest != null ? quest.id.ToString() : "-")
+                + " | currentTick=" + now
+                + " | stage=" + stage
+                + " | state=" + State
+                + " | target=" + (targetWorldObject?.Label ?? "-")
+                + " | targetLoadId=" + (targetWorldObject?.GetUniqueLoadID() ?? "-")
+                + " | targetQuestTag=" + (targetQuestTag ?? "-")
+                + " | " + mapInfo
+                + " | questTags=" + tags
+                + " | targetTagPresent=" + tagPresent
+                + " | targetMapWasGeneratedByThisOperation=" + targetMapWasGeneratedByThisOperation
+                + " | deploymentDueTick=" + deploymentDueTick
+                + " | threatInitializationDeadlineTick=" + threatInitializationDeadlineTick
+                + " | playerEngaged=" + playerEngaged
+                + " | targetThreatConfirmed=" + targetThreatConfirmed
+                + " | reinforcementsGenerated=" + reinforcementsGenerated
+                + " | " + pawnInfo);
+
+            // 代表「目标地图已经存在，但联合行动没有通过正常信号路径登记为 TargetMapEntered」。
+            // 仅警告，不修复。
+            SymbiosisCovenantJointOperationDiagnostics.LogWarning(
+                "TargetMapExistsButOperationStillActive",
+                "actionId=" + (actionId ?? "-")
+                + " | questId=" + (quest != null ? quest.id.ToString() : "-")
+                + " | stage=" + stage
+                + " | state=" + State
+                + " | target=" + (targetWorldObject?.Label ?? "-")
+                + " | targetQuestTag=" + (targetQuestTag ?? "-")
+                + " | targetTagPresent=" + tagPresent
+                + " | currentTick=" + now);
         }
 
         private SymbiosisCovenantJointOperationDef? ResolveDef()
