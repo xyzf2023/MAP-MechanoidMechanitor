@@ -47,4 +47,91 @@
     <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
     <showFactionInInspectString>true</showFactionInInspectString>
   </SitePartDef>
+
+  <!-- 分档布局 SitePartDef：由前哨创建时的完成态守军预算选择，Baseline 复用上方两个旧 Def。
+       均关闭原版自动 Pawn / Loot（wantsThreatPoints=false），守军与战利品由本 MOD 自行管理。 -->
+
+  <SitePartDef>
+    <defName>MAP_FactionOutpost_Building_Expanded</defName>
+    <label>派系前哨（建设中·扩张）</label>
+    <description>一个正在建设中的派系军事前哨（扩张布局）。防御工事尚不完善，但已经部署了守军。</description>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/Outpost</expandingIconTexture>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
+    <wantsThreatPoints>false</wantsThreatPoints>
+    <considerEnteringAsAttack>true</considerEnteringAsAttack>
+    <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
+    <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
+    <showFactionInInspectString>true</showFactionInInspectString>
+  </SitePartDef>
+
+  <SitePartDef>
+    <defName>MAP_FactionOutpost_Building_Large</defName>
+    <label>派系前哨（建设中·大型）</label>
+    <description>一个正在建设中的派系军事前哨（大型布局）。防御工事尚不完善，但已经部署了守军。</description>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/Outpost</expandingIconTexture>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
+    <wantsThreatPoints>false</wantsThreatPoints>
+    <considerEnteringAsAttack>true</considerEnteringAsAttack>
+    <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
+    <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
+    <showFactionInInspectString>true</showFactionInInspectString>
+  </SitePartDef>
+
+  <SitePartDef>
+    <defName>MAP_FactionOutpost_Building_Fortress</defName>
+    <label>派系前哨（建设中·要塞）</label>
+    <description>一个正在建设中的派系军事前哨（要塞布局）。防御工事尚不完善，但已经部署了守军。</description>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/Outpost</expandingIconTexture>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
+    <wantsThreatPoints>false</wantsThreatPoints>
+    <considerEnteringAsAttack>true</considerEnteringAsAttack>
+    <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
+    <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
+    <showFactionInInspectString>true</showFactionInInspectString>
+  </SitePartDef>
+
+  <SitePartDef>
+    <defName>MAP_FactionOutpost_Completed_Expanded</defName>
+    <label>派系前哨（扩张）</label>
+    <description>一处建设完成的派系军事前哨（扩张布局），部署了完整守军与防御工事。</description>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/Outpost</expandingIconTexture>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
+    <wantsThreatPoints>false</wantsThreatPoints>
+    <considerEnteringAsAttack>true</considerEnteringAsAttack>
+    <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
+    <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
+    <showFactionInInspectString>true</showFactionInInspectString>
+  </SitePartDef>
+
+  <SitePartDef>
+    <defName>MAP_FactionOutpost_Completed_Large</defName>
+    <label>派系前哨（大型）</label>
+    <description>一处建设完成的派系军事前哨（大型布局），部署了完整守军与防御工事。</description>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/Outpost</expandingIconTexture>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
+    <wantsThreatPoints>false</wantsThreatPoints>
+    <considerEnteringAsAttack>true</considerEnteringAsAttack>
+    <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
+    <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
+    <showFactionInInspectString>true</showFactionInInspectString>
+  </SitePartDef>
+
+  <SitePartDef>
+    <defName>MAP_FactionOutpost_Completed_Fortress</defName>
+    <label>派系前哨（要塞）</label>
+    <description>一处建设完成的派系军事前哨（要塞布局），部署了完整守军与防御工事。</description>
+    <siteTexture>World/WorldObjects/Sites/Outpost</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/Outpost</expandingIconTexture>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.SitePartWorker_FactionOutpost</workerClass>
+    <wantsThreatPoints>false</wantsThreatPoints>
+    <considerEnteringAsAttack>true</considerEnteringAsAttack>
+    <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
+    <applyFactionColorToSiteTexture>true</applyFactionColorToSiteTexture>
+    <showFactionInInspectString>true</showFactionInInspectString>
+  </SitePartDef>
 </Defs>

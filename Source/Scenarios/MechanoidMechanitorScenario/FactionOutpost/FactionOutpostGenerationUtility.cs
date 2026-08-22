@@ -460,10 +460,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 outpost.SetFaction(faction);
             }
 
-            outpost.AddPart(new SitePart(
-                outpost,
-                FactionOutpostDefOf.MAP_FactionOutpost_Building,
-                new SitePartParams()));
             outpost.InitializeNewOutpost(Find.TickManager.TicksGame, Rand.Int, referenceMap);
             Find.WorldObjects.Add(outpost);
             outpost.SendCreationLetter();
@@ -623,11 +619,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 created.SetFaction(targetFaction);
             }
-
-            created.AddPart(new SitePart(
-                created,
-                FactionOutpostDefOf.MAP_FactionOutpost_Building,
-                new SitePartParams()));
 
             Map? referenceMap = ResolveOutpostReferenceMap(chosen.SourceColony, out bool fellBack);
             if (fellBack)

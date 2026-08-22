@@ -40,6 +40,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool cleanedLetterSent;
         private bool mapGarrisonInitialized;
 
+        // 布局档位：由创建前哨时保存的完成态守军预算决定，保存后不再随财富或设置变化。
+        // 旧存档无此字段时由 ExposeData 自然回退 Baseline。
+        private FactionOutpostLayoutTier layoutTier =
+            FactionOutpostLayoutTier.Baseline;
+
         // 交易库存追踪器：建成非敌对、无地图前哨可向远行队提供交易/赠礼。
         private FactionOutpost_TraderTracker? trader;
 
@@ -52,6 +57,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool Cleaned => cleaned;
         public int LayoutSeed => layoutSeed;
         public bool MapGarrisonInitialized => mapGarrisonInitialized;
+
+        /// <summary>
+        /// 当前前哨的布局档位；新前哨在创建时按完成态守军预算决定并保存，旧存档回退 Baseline。
+        /// </summary>
+        public FactionOutpostLayoutTier LayoutTier => layoutTier;
 
         // 守军点数快照：-1 表示旧存档没有该字段。
         // 创建时一次性计算并保存，之后不再随财富/设置变化。
@@ -153,13 +163,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             phase = MechanoidMechanitorFactionOutpostPhase.Completed;
             mapGarrisonInitialized = false;
-
-            parts.Clear();
-            AddPart(new SitePart(
-                this,
-                FactionOutpostDefOf.MAP_FactionOutpost_Completed,
-                new SitePartParams()));
-
+            ReplaceSitePartForCurrentPhase();
             completionLetterSent = true;
         }
 
@@ -185,6 +189,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 FactionOutpostThreatPointsUtility.CalculateBuildingGarrisonPoints(completed);
             completedGarrisonThreatPointsSnapshot = completed;
             buildingGarrisonThreatPointsSnapshot = building;
+
+            // 布局档位由创建时保存的完成态预算决定，之后不再随财富/设置变化。
+            layoutTier =
+                FactionOutpostLayoutUtility.GetTierForCompletedPoints(
+                    completedGarrisonThreatPointsSnapshot);
+
+            // InitializeNewOutpost 成为唯一负责初始化布局 Part 的入口。
+            ReplaceSitePartForCurrentPhase();
+        }
+
+        /// <summary>
+        /// 按当前 phase 与布局档位重建 SitePart 列表（清空后只附加当前应使用的 Part）。
+        /// 创建路径、自然建成路径、DEV 建成路径都通过本方法切换 Part，不在此打开
+        /// 原版自动 Pawn / Loot（SitePartParams 保持为空）。
+        /// </summary>
+        private void ReplaceSitePartForCurrentPhase()
+        {
+            parts.Clear();
+
+            SitePartDef partDef = IsCompleted
+                ? FactionOutpostLayoutUtility.GetCompletedSitePartDef(layoutTier)
+                : FactionOutpostLayoutUtility.GetBuildingSitePartDef(layoutTier);
+
+            AddPart(new SitePart(this, partDef, new SitePartParams()));
         }
 
         public void NotifyMapGarrisonInitialized(bool success)
@@ -237,12 +265,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             phase = MechanoidMechanitorFactionOutpostPhase.Completed;
             mapGarrisonInitialized = false;
-
-            parts.Clear();
-            AddPart(new SitePart(
-                this,
-                FactionOutpostDefOf.MAP_FactionOutpost_Completed,
-                new SitePartParams()));
+            ReplaceSitePartForCurrentPhase();
 
             if (!completionLetterSent)
             {
@@ -603,6 +626,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref mapGarrisonInitialized,
                 "MAP_factionOutpost_mapGarrisonInitialized",
                 false);
+
+            // 布局档位：旧存档无此字段时自然回退 Baseline，不重新计算布局、不重建地图。
+            Scribe_Values.Look(
+                ref layoutTier,
+                "MAP_factionOutpost_layoutTier",
+                FactionOutpostLayoutTier.Baseline);
 
             // 守军点数快照：默认 -1 表示旧存档没有该字段，必须继续回退固定值，不得重新计算。
             Scribe_Values.Look(

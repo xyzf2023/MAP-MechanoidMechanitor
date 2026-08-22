@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -11,12 +12,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// 普通派系前哨的军事初始化器。
     /// 建筑主体由与文化 DLC Work Site 相同的 GenStep_Outpost -> BaseGen 流程生成；
     /// 本类只验证前哨布局、按真实所属派系生成 Combat 守军，并建立基地防御 Lord。
+    /// 守军按真实建筑群分散驻守，每个有 Pawn 落地的建筑群拥有独立 LordJob_DefendBase。
     /// </summary>
     public static class FactionOutpostMapGenerator
     {
         private const int MaxPawnPlaceTries = 120;
         private const int MaxDefendCenterSearchTries = 240;
         private const int DefendCenterSearchRadius = 24;
+
+        // 建筑群邻近分组阈值：两栋建筑在 x / z 方向上均不超过该距离视为可连通同一群。
+        private const int GroupThreshold = 12;
 
         public static void Generate(Map map, MAPFactionOutpost outpost)
         {
@@ -35,12 +40,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             List<Pawn> generatedPawns = new List<Pawn>();
             List<Pawn> placedPawns = new List<Pawn>();
-            Lord? lord = null;
+            List<Lord> lords = new List<Lord>();
+
+            // 每个真实生成的建筑群：其成功落地的 Pawn 列表，用于创建独立 Lord。
+            Dictionary<BuildingCluster, List<Pawn>> clusterPawns =
+                new Dictionary<BuildingCluster, List<Pawn>>();
+            List<BuildingCluster> clusters = new List<BuildingCluster>();
 
             Rand.PushState(Gen.HashCombineInt(outpost.LayoutSeed, 0x46A271));
             try
             {
-                if (!TryResolveDefendCenter(map, owner, out IntVec3 defendCenter))
+                if (!TryResolveBuildingClusters(map, owner, clusters))
                 {
                     throw new InvalidOperationException(
                         "GenStep_Outpost 未生成可识别的所属派系建筑，无法确定前哨防御中心。");
@@ -56,11 +66,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     throw new InvalidOperationException("所属派系没有生成任何有效 Combat 守军。");
                 }
 
-                for (int i = 0; i < generatedPawns.Count; i++)
+                // 将守军分配到各建筑群（在 PushState 作用域内，保证同一 LayoutSeed 下稳定）。
+                AllocatePawnsToClusters(generatedPawns, clusters, clusterPawns);
+
+                // 第一遍：在各自分配的建筑群附近落地。
+                List<Pawn> unplaced = new List<Pawn>();
+                foreach (KeyValuePair<BuildingCluster, List<Pawn>> kvp in clusterPawns)
                 {
-                    Pawn pawn = generatedPawns[i];
-                    if (TryPlacePawn(map, defendCenter, pawn))
+                    BuildingCluster cluster = kvp.Key;
+                    foreach (Pawn pawn in kvp.Value)
                     {
+                        if (TryPlacePawnNearCluster(map, cluster, pawn))
+                        {
+                            placedPawns.Add(pawn);
+                        }
+                        else
+                        {
+                            unplaced.Add(pawn);
+                        }
+                    }
+                }
+
+                // 第二遍：未落地 Pawn 尝试其他建筑群，尽量不浪费守军；全部失败才安全丢弃。
+                foreach (Pawn pawn in unplaced)
+                {
+                    BuildingCluster? landed = TryPlacePawnOnAnyCluster(map, clusters, pawn);
+                    if (landed != null)
+                    {
+                        clusterPawns[landed].Add(pawn);
                         placedPawns.Add(pawn);
                     }
                     else
@@ -74,26 +107,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     throw new InvalidOperationException("所有生成守军均无法在前哨附近落地。");
                 }
 
-                lord = LordMaker.MakeNewLord(
-                    owner,
-                    new LordJob_DefendBase(owner, defendCenter, 25000),
-                    map);
-                if (lord == null)
+                // 为每个实际成功落地至少一名 Pawn 的建筑群创建独立 Lord。
+                foreach (KeyValuePair<BuildingCluster, List<Pawn>> kvp in clusterPawns)
                 {
-                    throw new InvalidOperationException("无法创建前哨守军 Lord。");
+                    List<Pawn> landed = kvp.Value;
+                    if (landed.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    Lord lord = LordMaker.MakeNewLord(
+                        owner,
+                        new LordJob_DefendBase(owner, kvp.Key.Center, 25000),
+                        map);
+                    if (lord == null)
+                    {
+                        throw new InvalidOperationException("无法创建前哨守军 Lord。");
+                    }
+
+                    lords.Add(lord);
+                    for (int i = 0; i < landed.Count; i++)
+                    {
+                        lord.AddPawn(landed[i]);
+                    }
                 }
 
-                for (int i = 0; i < placedPawns.Count; i++)
+                if (lords.Count == 0)
                 {
-                    lord.AddPawn(placedPawns[i]);
+                    throw new InvalidOperationException("前哨守军 Lord 创建失败。");
                 }
 
                 outpost.NotifyMapGarrisonInitialized(true);
+
+                if (Prefs.DevMode)
+                {
+                    LogDevGenerationSummary(outpost, clusters, clusterPawns);
+                }
             }
             catch (Exception ex)
             {
                 Log.Error("[MAP] 普通派系前哨地图初始化失败，已回滚本轮守军: " + ex);
-                CleanupFailedGeneration(map, lord, generatedPawns);
+                CleanupFailedGeneration(map, lords, generatedPawns);
                 outpost.NotifyMapGarrisonInitialized(false);
             }
             finally
@@ -103,17 +157,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 使用原版 BaseGen 实际生成的所属派系建筑求中心，而不是假定前哨位于 map.Center。
-        /// 这样即使 GenStep_Outpost 将营地放在地图中心附近的其他清晰区域，守军也会围绕真实基地部署。
-        /// 当存在多个建筑群时（如建成前哨的主/次级建筑群），优先选择最大建筑群的中心，
-        /// 避免守军被分配到两个建筑群中间的空地从而失去 Lord 协调。
+        /// 一个真实生成的所属派系建筑群，包含其成员建筑、防守中心与守军分配用评分。
         /// </summary>
-        private static bool TryResolveDefendCenter(
+        private sealed class BuildingCluster
+        {
+            public readonly List<Building> Buildings = new List<Building>();
+
+            public IntVec3 Center;
+            public int Score;
+        }
+
+        /// <summary>
+        /// 使用原版 BaseGen 实际生成的所属派系建筑，按真正的连通关系分组为多个建筑群。
+        /// 采用从任一未处理建筑出发、吸收所有通过传递邻近关系可达建筑的连通分量算法，
+        /// 避免 A 接近 B、B 接近 C 时被错误拆成多个群。
+        /// 每个有效群计算中心并存入 result（按 Score 从高到低排序，并列时稳定排序）。
+        /// 至少需有一个有效建筑群，否则返回 false 触发现有回滚。
+        /// </summary>
+        private static bool TryResolveBuildingClusters(
             Map map,
             Faction owner,
-            out IntVec3 defendCenter)
+            List<BuildingCluster> result)
         {
-            defendCenter = IntVec3.Invalid;
+            result.Clear();
 
             List<Building> owned = new List<Building>();
             foreach (Building building in map.listerThings.GetThingsOfType<Building>())
@@ -136,71 +202,119 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            // 按建筑位置邻近关系分组：相距不超过 GroupThreshold 视为同一建筑群。
-            const int GroupThreshold = 12;
-            List<List<Building>> groups = new List<List<Building>>();
-            foreach (Building building in owned)
+            // 连通分量分组：BFS 吸收所有相距不超过 GroupThreshold 且通过传递关系可达的建筑。
+            bool[] visited = new bool[owned.Count];
+            for (int start = 0; start < owned.Count; start++)
             {
-                bool placed = false;
-                foreach (List<Building> group in groups)
+                if (visited[start])
                 {
-                    foreach (Building member in group)
+                    continue;
+                }
+
+                List<Building> clusterBuildings = new List<Building>();
+                Queue<int> queue = new Queue<int>();
+                queue.Enqueue(start);
+                visited[start] = true;
+                while (queue.Count > 0)
+                {
+                    int current = queue.Dequeue();
+                    clusterBuildings.Add(owned[current]);
+                    for (int other = 0; other < owned.Count; other++)
                     {
-                        if (Mathf.Abs(building.Position.x - member.Position.x) <= GroupThreshold
-                            && Mathf.Abs(building.Position.z - member.Position.z) <= GroupThreshold)
+                        if (visited[other])
                         {
-                            group.Add(building);
-                            placed = true;
-                            break;
+                            continue;
+                        }
+
+                        Building a = owned[current];
+                        Building b = owned[other];
+                        if (Mathf.Abs(a.Position.x - b.Position.x) <= GroupThreshold
+                            && Mathf.Abs(a.Position.z - b.Position.z) <= GroupThreshold)
+                        {
+                            visited[other] = true;
+                            queue.Enqueue(other);
                         }
                     }
+                }
 
-                    if (placed)
+                BuildingCluster cluster = new BuildingCluster();
+                foreach (Building b in clusterBuildings)
+                {
+                    cluster.Buildings.Add(b);
+                }
+
+                int score = clusterBuildings.Count;
+                foreach (Building b in clusterBuildings)
+                {
+                    if (b.OccupiedRect().Area > 1)
                     {
-                        break;
+                        score++;
                     }
                 }
 
-                if (!placed)
+                cluster.Score = score < 1 ? 1 : score;
+
+                if (!TryResolveClusterCenter(clusterBuildings, map, out IntVec3 center))
                 {
-                    groups.Add(new List<Building> { building });
+                    continue;
                 }
+
+                cluster.Center = center;
+                result.Add(cluster);
             }
 
-            // 选择建筑数量最多（并列时占地面积最大）的组作为防守中心来源。
-            List<Building> bestGroup = owned;
-            int bestScore = -1;
-            foreach (List<Building> group in groups)
+            if (result.Count == 0)
             {
-                int score = group.Count;
-                foreach (Building member in group)
+                return false;
+            }
+
+            result.Sort((a, b) =>
+            {
+                int cmp = b.Score.CompareTo(a.Score);
+                if (cmp != 0)
                 {
-                    score += member.OccupiedRect().Area > 1 ? 1 : 0;
+                    return cmp;
                 }
 
-                if (score > bestScore)
+                cmp = b.Buildings.Count.CompareTo(a.Buildings.Count);
+                if (cmp != 0)
                 {
-                    bestScore = score;
-                    bestGroup = group;
+                    return cmp;
                 }
-            }
+
+                return (a.Center.x + a.Center.z).CompareTo(b.Center.x + b.Center.z);
+            });
+
+            return true;
+        }
+
+        /// <summary>
+        /// 计算一个建筑群的中心：先取成员建筑平均位置，可站立则直接使用；
+        /// 否则在该位置附近寻找可站立格。无法找到有效中心时返回 false。
+        /// </summary>
+        private static bool TryResolveClusterCenter(
+            List<Building> buildings,
+            Map map,
+            out IntVec3 center)
+        {
+            center = IntVec3.Invalid;
 
             long sumX = 0;
             long sumZ = 0;
-            foreach (Building building in bestGroup)
+            foreach (Building b in buildings)
             {
-                sumX += building.Position.x;
-                sumZ += building.Position.z;
+                sumX += b.Position.x;
+                sumZ += b.Position.z;
             }
 
             IntVec3 approximateCenter = new IntVec3(
-                (int)(sumX / bestGroup.Count),
+                (int)(sumX / buildings.Count),
                 0,
-                (int)(sumZ / bestGroup.Count));
+                (int)(sumZ / buildings.Count));
 
             if (IsValidDefenderCell(approximateCenter, map))
             {
-                defendCenter = approximateCenter;
+                center = approximateCenter;
                 return true;
             }
 
@@ -209,8 +323,91 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 map,
                 DefendCenterSearchRadius,
                 c => IsValidDefenderCell(c, map),
-                out defendCenter,
+                out center,
                 MaxDefendCenterSearchTries);
+        }
+
+        /// <summary>
+        /// 将守军分配到各建筑群。
+        /// - 仅一个群：全部 Pawn 分配给它。
+        /// - Pawn 数 &gt;= 群数：每群先分 1 名，剩余按 Score 权重分配。
+        /// - Pawn 数 &lt; 群数：分给 Score 最高的若干群，不额外生成 Pawn。
+        /// </summary>
+        private static void AllocatePawnsToClusters(
+            List<Pawn> pawns,
+            List<BuildingCluster> clusters,
+            Dictionary<BuildingCluster, List<Pawn>> result)
+        {
+            result.Clear();
+            foreach (BuildingCluster cluster in clusters)
+            {
+                result[cluster] = new List<Pawn>();
+            }
+
+            if (clusters.Count == 0 || pawns.Count == 0)
+            {
+                return;
+            }
+
+            if (clusters.Count == 1)
+            {
+                result[clusters[0]].AddRange(pawns);
+                return;
+            }
+
+            if (pawns.Count >= clusters.Count)
+            {
+                // 每个建筑群先分配 1 名 Pawn。
+                for (int i = 0; i < clusters.Count; i++)
+                {
+                    result[clusters[i]].Add(pawns[i]);
+                }
+
+                // 剩余 Pawn 按各群 Score 的权重分配。
+                int remaining = pawns.Count - clusters.Count;
+                int totalScore = 0;
+                foreach (BuildingCluster cluster in clusters)
+                {
+                    totalScore += cluster.Score;
+                }
+
+                for (int r = 0; r < remaining; r++)
+                {
+                    BuildingCluster target = PickWeightedCluster(clusters, totalScore);
+                    result[target].Add(pawns[clusters.Count + r]);
+                }
+            }
+            else
+            {
+                // 守军不足以覆盖全部建筑群：分给 Score 最高的若干群。
+                for (int i = 0; i < pawns.Count; i++)
+                {
+                    result[clusters[i]].Add(pawns[i]);
+                }
+            }
+        }
+
+        private static BuildingCluster PickWeightedCluster(
+            List<BuildingCluster> clusters,
+            int totalScore)
+        {
+            if (totalScore <= 0)
+            {
+                return clusters.RandomElement();
+            }
+
+            int roll = Rand.Range(0, totalScore);
+            int acc = 0;
+            foreach (BuildingCluster cluster in clusters)
+            {
+                acc += cluster.Score;
+                if (roll < acc)
+                {
+                    return cluster;
+                }
+            }
+
+            return clusters[clusters.Count - 1];
         }
 
         private static bool IsValidDefenderCell(IntVec3 cell, Map map)
@@ -218,6 +415,75 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return cell.InBounds(map)
                 && cell.Standable(map)
                 && cell.GetEdifice(map) == null;
+        }
+
+        /// <summary>
+        /// 在该建筑群附近落地：先随机选一栋建筑作锚点在其周围 8 格寻找，
+        /// 找不到再在该群 Center 周围 16 格寻找。
+        /// </summary>
+        private static bool TryPlacePawnNearCluster(Map map, BuildingCluster cluster, Pawn pawn)
+        {
+            if (pawn == null || pawn.Destroyed)
+            {
+                return false;
+            }
+
+            if (cluster.Buildings.Count > 0
+                && TryPlacePawnNear(map, cluster.Buildings.RandomElement().Position, pawn, 8))
+            {
+                return true;
+            }
+
+            if (cluster.Center.IsValid
+                && TryPlacePawnNear(map, cluster.Center, pawn, 16))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 在任一建筑群附近落地（用于第一遍失败后的兜底，尽量不浪费守军）。
+        /// </summary>
+        private static BuildingCluster? TryPlacePawnOnAnyCluster(
+            Map map,
+            List<BuildingCluster> clusters,
+            Pawn pawn)
+        {
+            for (int i = 0; i < clusters.Count; i++)
+            {
+                if (TryPlacePawnNearCluster(map, clusters[i], pawn))
+                {
+                    return clusters[i];
+                }
+            }
+
+            return null;
+        }
+
+        private static bool TryPlacePawnNear(Map map, IntVec3 origin, Pawn pawn, int radius)
+        {
+            if (!CellFinder.TryFindRandomCellNear(
+                origin,
+                map,
+                radius,
+                c => IsValidDefenderCell(c, map),
+                out IntVec3 cell,
+                MaxPawnPlaceTries))
+            {
+                return false;
+            }
+
+            try
+            {
+                Thing? spawned = GenSpawn.Spawn(pawn, cell, map, Rot4.Random);
+                return ReferenceEquals(spawned, pawn) && pawn.Spawned && pawn.Map == map;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static bool TryGenerateCombatPawns(
@@ -262,55 +528,77 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return result.Count > 0;
         }
 
-        private static bool TryPlacePawn(Map map, IntVec3 center, Pawn pawn)
-        {
-            if (pawn == null || pawn.Destroyed)
-            {
-                return false;
-            }
-
-            if (!CellFinder.TryFindRandomCellNear(
-                center,
-                map,
-                22,
-                c => IsValidDefenderCell(c, map),
-                out IntVec3 cell,
-                MaxPawnPlaceTries))
-            {
-                return false;
-            }
-
-            try
-            {
-                Thing? spawned = GenSpawn.Spawn(pawn, cell, map, Rot4.Random);
-                return ReferenceEquals(spawned, pawn) && pawn.Spawned && pawn.Map == map;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
+        /// <summary>
+        /// 回滚本轮生成：移除所有本轮创建的 Lord（不影响其他 MOD / 原版 / 联合行动创建的 Lord），
+        /// 并安全丢弃全部本轮生成的 Pawn（含已成功 Spawn 的）。
+        /// </summary>
         private static void CleanupFailedGeneration(
             Map map,
-            Lord? lord,
+            List<Lord> lords,
             List<Pawn> generated)
         {
-            if (lord != null && map?.lordManager != null)
+            if (lords != null && map?.lordManager != null)
             {
-                try
+                for (int i = 0; i < lords.Count; i++)
                 {
-                    map.lordManager.RemoveLord(lord);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning("[MAP] 回滚普通派系前哨 Lord 失败: " + ex);
+                    Lord lord = lords[i];
+                    if (lord == null)
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        map.lordManager.RemoveLord(lord);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning("[MAP] 回滚普通派系前哨 Lord 失败: " + ex);
+                    }
                 }
             }
 
             for (int i = 0; i < generated.Count; i++)
             {
                 MechHiveCombatPawnUtility.SafelyDiscardPawn(generated[i]);
+            }
+        }
+
+        /// <summary>
+        /// DEV 专用诊断日志：仅在 DevMode 下、每次生成完成后记录一次，不污染玩家日志。
+        /// </summary>
+        private static void LogDevGenerationSummary(
+            MAPFactionOutpost outpost,
+            List<BuildingCluster> clusters,
+            Dictionary<BuildingCluster, List<Pawn>> clusterPawns)
+        {
+            MechanoidMechanitorFactionOutpostPhase phase =
+                outpost.IsCompleted
+                    ? MechanoidMechanitorFactionOutpostPhase.Completed
+                    : MechanoidMechanitorFactionOutpostPhase.Building;
+            int expected = FactionOutpostLayoutUtility.GetExpectedClusterCount(
+                phase,
+                outpost.LayoutTier);
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("[MAP-FactionOutpost] ");
+            sb.Append("Outpost=").Append(outpost.Label);
+            sb.Append(", Phase=").Append(outpost.IsCompleted ? "Completed" : "Building");
+            sb.Append(", GarrisonBudget=").Append(outpost.GarrisonThreatPoints);
+            sb.Append(", LayoutTier=").Append(outpost.LayoutTier);
+            sb.Append(", ExpectedClusters=").Append(expected);
+            sb.Append(", DetectedClusters=").Append(clusters.Count);
+            Log.Message(sb.ToString());
+
+            for (int i = 0; i < clusters.Count; i++)
+            {
+                BuildingCluster cluster = clusters[i];
+                int landed = clusterPawns.TryGetValue(cluster, out List<Pawn>? list) ? list.Count : 0;
+                Log.Message(
+                    "[MAP-FactionOutpost] Cluster[" + i + "]=Buildings:" + cluster.Buildings.Count
+                    + ", Score:" + cluster.Score
+                    + ", Pawns:" + landed
+                    + ", Center:" + cluster.Center);
             }
         }
     }
