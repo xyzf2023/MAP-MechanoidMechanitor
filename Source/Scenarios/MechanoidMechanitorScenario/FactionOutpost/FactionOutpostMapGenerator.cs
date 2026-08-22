@@ -42,8 +42,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Pawn> placedPawns = new List<Pawn>();
             List<Lord> lords = new List<Lord>();
 
-            // 每个真实生成的建筑群：其成功落地的 Pawn 列表，用于创建独立 Lord。
-            Dictionary<BuildingCluster, List<Pawn>> clusterPawns =
+            // 计划分配表：只表示「该 Pawn 第一遍应尝试在哪个建筑群附近落地」。
+            Dictionary<BuildingCluster, List<Pawn>> plannedClusterPawns =
+                new Dictionary<BuildingCluster, List<Pawn>>();
+            // 实际落地表：只表示「该 Pawn 最终实际在哪个建筑群附近成功落地」。
+            Dictionary<BuildingCluster, List<Pawn>> landedClusterPawns =
                 new Dictionary<BuildingCluster, List<Pawn>>();
             List<BuildingCluster> clusters = new List<BuildingCluster>();
 
@@ -66,18 +69,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     throw new InvalidOperationException("所属派系没有生成任何有效 Combat 守军。");
                 }
 
-                // 将守军分配到各建筑群（在 PushState 作用域内，保证同一 LayoutSeed 下稳定）。
-                AllocatePawnsToClusters(generatedPawns, clusters, clusterPawns);
+                // 每个建筑群初始化计划表与实际落地表的空列表。
+                foreach (BuildingCluster cluster in clusters)
+                {
+                    plannedClusterPawns[cluster] = new List<Pawn>();
+                    landedClusterPawns[cluster] = new List<Pawn>();
+                }
 
-                // 第一遍：在各自分配的建筑群附近落地。
+                // 将守军分配到各建筑群（写入计划表；在 PushState 作用域内，保证同一 LayoutSeed 下稳定）。
+                AllocatePawnsToClusters(generatedPawns, clusters, plannedClusterPawns);
+
+                // 第一遍：按预定建筑群尝试落地。只写入实际落地表，不在第一遍修改计划表。
                 List<Pawn> unplaced = new List<Pawn>();
-                foreach (KeyValuePair<BuildingCluster, List<Pawn>> kvp in clusterPawns)
+                foreach (KeyValuePair<BuildingCluster, List<Pawn>> kvp in plannedClusterPawns)
                 {
                     BuildingCluster cluster = kvp.Key;
                     foreach (Pawn pawn in kvp.Value)
                     {
                         if (TryPlacePawnNearCluster(map, cluster, pawn))
                         {
+                            landedClusterPawns[cluster].Add(pawn);
                             placedPawns.Add(pawn);
                         }
                         else
@@ -88,12 +99,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 // 第二遍：未落地 Pawn 尝试其他建筑群，尽量不浪费守军；全部失败才安全丢弃。
+                // 成功只写入实际落地表，绝不再写入计划表。
                 foreach (Pawn pawn in unplaced)
                 {
                     BuildingCluster? landed = TryPlacePawnOnAnyCluster(map, clusters, pawn);
                     if (landed != null)
                     {
-                        clusterPawns[landed].Add(pawn);
+                        landedClusterPawns[landed].Add(pawn);
                         placedPawns.Add(pawn);
                     }
                     else
@@ -107,8 +119,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     throw new InvalidOperationException("所有生成守军均无法在前哨附近落地。");
                 }
 
+                // 创建 Lord 前校验：每个实际落地 Pawn 只能属于一个建筑群、且确实在地图上。
+                ValidateLandedPawnAssignments(map, landedClusterPawns);
+
                 // 为每个实际成功落地至少一名 Pawn 的建筑群创建独立 Lord。
-                foreach (KeyValuePair<BuildingCluster, List<Pawn>> kvp in clusterPawns)
+                foreach (KeyValuePair<BuildingCluster, List<Pawn>> kvp in landedClusterPawns)
                 {
                     List<Pawn> landed = kvp.Value;
                     if (landed.Count == 0)
@@ -141,7 +156,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 if (Prefs.DevMode)
                 {
-                    LogDevGenerationSummary(outpost, clusters, clusterPawns);
+                    LogDevGenerationSummary(outpost, clusters, landedClusterPawns);
                 }
             }
             catch (Exception ex)
@@ -387,6 +402,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        /// <summary>
+        /// 校验实际落地表：每个 Pawn 只能属于一个建筑群、且确实已在地图上 Spawn。
+        /// 任意 Pawn 为 null / 已销毁 / 未 Spawn / 不在当前 map / 被重复加入时，
+        /// 抛出 InvalidOperationException，交由 Generate 的 catch 走回滚路径，
+        /// 绝不留下一个 Pawn 被多个 Lord 管理的半损坏状态。正常成功路径不受影响。
+        /// </summary>
+        private static void ValidateLandedPawnAssignments(
+            Map map,
+            Dictionary<BuildingCluster, List<Pawn>> landedClusterPawns)
+        {
+            HashSet<Pawn> seen = new HashSet<Pawn>();
+            foreach (KeyValuePair<BuildingCluster, List<Pawn>> kvp in landedClusterPawns)
+            {
+                foreach (Pawn pawn in kvp.Value)
+                {
+                    if (pawn == null
+                        || pawn.Destroyed
+                        || !pawn.Spawned
+                        || pawn.Map != map
+                        || !seen.Add(pawn))
+                    {
+                        throw new InvalidOperationException(
+                            "前哨守军落地分配存在重复或无效 Pawn，拒绝创建 Lord。");
+                    }
+                }
+            }
+        }
+
         private static BuildingCluster PickWeightedCluster(
             List<BuildingCluster> clusters,
             int totalScore)
@@ -570,7 +613,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static void LogDevGenerationSummary(
             MAPFactionOutpost outpost,
             List<BuildingCluster> clusters,
-            Dictionary<BuildingCluster, List<Pawn>> clusterPawns)
+            Dictionary<BuildingCluster, List<Pawn>> landedClusterPawns)
         {
             MechanoidMechanitorFactionOutpostPhase phase =
                 outpost.IsCompleted
@@ -593,7 +636,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             for (int i = 0; i < clusters.Count; i++)
             {
                 BuildingCluster cluster = clusters[i];
-                int landed = clusterPawns.TryGetValue(cluster, out List<Pawn>? list) ? list.Count : 0;
+                int landed = landedClusterPawns.TryGetValue(cluster, out List<Pawn>? list) ? list.Count : 0;
                 Log.Message(
                     "[MAP-FactionOutpost] Cluster[" + i + "]=Buildings:" + cluster.Buildings.Count
                     + ", Score:" + cluster.Score

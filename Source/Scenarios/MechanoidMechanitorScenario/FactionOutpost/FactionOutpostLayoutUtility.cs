@@ -72,14 +72,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case FactionOutpostLayoutTier.Expanded:
                     return ResolveOrFallback(
                         FactionOutpostDefOf.MAP_FactionOutpost_Building_Expanded,
+                        FactionOutpostDefOf.MAP_FactionOutpost_Building,
                         nameof(FactionOutpostDefOf.MAP_FactionOutpost_Building_Expanded));
                 case FactionOutpostLayoutTier.Large:
                     return ResolveOrFallback(
                         FactionOutpostDefOf.MAP_FactionOutpost_Building_Large,
+                        FactionOutpostDefOf.MAP_FactionOutpost_Building,
                         nameof(FactionOutpostDefOf.MAP_FactionOutpost_Building_Large));
                 case FactionOutpostLayoutTier.Fortress:
                     return ResolveOrFallback(
                         FactionOutpostDefOf.MAP_FactionOutpost_Building_Fortress,
+                        FactionOutpostDefOf.MAP_FactionOutpost_Building,
                         nameof(FactionOutpostDefOf.MAP_FactionOutpost_Building_Fortress));
                 default:
                     return FactionOutpostDefOf.MAP_FactionOutpost_Building;
@@ -97,21 +100,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case FactionOutpostLayoutTier.Expanded:
                     return ResolveOrFallback(
                         FactionOutpostDefOf.MAP_FactionOutpost_Completed_Expanded,
+                        FactionOutpostDefOf.MAP_FactionOutpost_Completed,
                         nameof(FactionOutpostDefOf.MAP_FactionOutpost_Completed_Expanded));
                 case FactionOutpostLayoutTier.Large:
                     return ResolveOrFallback(
                         FactionOutpostDefOf.MAP_FactionOutpost_Completed_Large,
+                        FactionOutpostDefOf.MAP_FactionOutpost_Completed,
                         nameof(FactionOutpostDefOf.MAP_FactionOutpost_Completed_Large));
                 case FactionOutpostLayoutTier.Fortress:
                     return ResolveOrFallback(
                         FactionOutpostDefOf.MAP_FactionOutpost_Completed_Fortress,
+                        FactionOutpostDefOf.MAP_FactionOutpost_Completed,
                         nameof(FactionOutpostDefOf.MAP_FactionOutpost_Completed_Fortress));
                 default:
                     return FactionOutpostDefOf.MAP_FactionOutpost_Completed;
             }
         }
 
-        private static SitePartDef ResolveOrFallback(SitePartDef? def, string defName)
+        private static SitePartDef ResolveOrFallback(
+            SitePartDef? def,
+            SitePartDef fallback,
+            string defName)
         {
             if (def != null)
             {
@@ -124,7 +133,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "[MAP] 普通派系前哨布局 Def 缺失，已回退 Baseline 布局: " + defName);
             }
 
-            return FactionOutpostDefOf.MAP_FactionOutpost_Building;
+            return fallback;
         }
 
         /// <summary>
