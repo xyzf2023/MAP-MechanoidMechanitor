@@ -44,6 +44,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool failureApplied;
         public bool invalidEndApplied;
         public bool declinedOrExpiredApplied;
+        // 联合行动部署完成后，目标派系守军是否已转入主动进攻（随存档）。
+        public bool targetDefenderAssaultTriggered;
         public int targetThreatPointsAtDeployment;
         public float totalSupportPointsAtDeployment;
         public List<SymbiosisCovenantJointOperationFactionSupportRecord>? supportRecords;
@@ -65,6 +67,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const int TargetClearCheckInterval = 60;
         // 地图生成后允许守军初始化的最大保护窗口（不是玩家战斗限时）。
         private const int ThreatInitializationDeadlineTicks = 600;
+        // 目标地图登记为“已进入”后，到首次尝试部署援军的最小缓冲（ticks）；
+        // 实际部署仍受玩家单位到场与目标威胁确认双重门控，此处只避免极端 tick 竞态。
+        private const int TargetMapRegistrationDeploymentDelayTicks = 250;
         private const string AidQuestTagPrefix = "MAP_SymbiosisCovenantJointOp";
 
         // 联合军事行动诊断日志统一前缀。
@@ -192,7 +197,69 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     + " | participantCount=" + (participantFactions?.Count ?? 0)
                     + " | targetIsMapParent=" + (targetWorldObject is MapParent)
                     + " | targetHasMap=" + (((targetWorldObject as MapParent)?.HasMap) ?? false));
+
+                // 接取时若目标地图已经存在（玩家先进入/生成地图后接取任务），
+                // 正式补登记为已进入地图阶段。该地图并非本次行动生成，generatedAfterAcceptance=false。
+                MapParent? preAcceptMapParent = targetWorldObject as MapParent;
+                Map? preAcceptMap = preAcceptMapParent?.Map;
+                if (preAcceptMapParent != null && preAcceptMap != null && !preAcceptMap.Disposed && Find.Maps.Contains(preAcceptMap))
+                {
+                    TryRegisterAvailableTargetMap(
+                        preAcceptMap,
+                        generatedAfterAcceptance: false,
+                        registrationSource: "PreQuestAcceptExistingMap");
+                }
             }
+        }
+
+        /// <summary>
+        /// 统一登记“目标地图已可用 / 已进入”的入口：OfferPending→OperationActive 之后，
+        /// 当目标地图首次出现（玩家先进入后接取、tick 中确认、或 SouthMapEntered 信号生成）
+        /// 都汇聚到此处，把阶段推进到 TargetMapEntered 并设置援军部署计时与守军初始化窗口。
+        /// generatedAfterAcceptance 标记该地图是否由本次行动生成（用于旧存档恢复与清理判断）。
+        /// registrationSource 仅用于诊断日志，便于排查登记来源。
+        /// 幂等：若已经是 TargetMapEntered 阶段，不重置部署计时，避免重复登记导致援军永远延后。
+        /// </summary>
+        private void TryRegisterAvailableTargetMap(Map map, bool generatedAfterAcceptance, string registrationSource)
+        {
+            if (map == null || map.Disposed || !Find.Maps.Contains(map))
+            {
+                return;
+            }
+
+            bool alreadyEntered = stage == SymbiosisCovenantJointOperationStage.TargetMapEntered;
+            if (stage != SymbiosisCovenantJointOperationStage.OperationActive && !alreadyEntered)
+            {
+                // 仅在尚未进入战斗部署阶段前登记；已部署/成功/失败/无效结束不再登记。
+                return;
+            }
+
+            int now = Find.TickManager?.TicksGame ?? 0;
+
+            if (!alreadyEntered)
+            {
+                targetMapWasGeneratedByThisOperation = generatedAfterAcceptance;
+                deploymentDueTick = now + TargetMapRegistrationDeploymentDelayTicks;
+                threatInitializationDeadlineTick = now + ThreatInitializationDeadlineTicks;
+                stage = SymbiosisCovenantJointOperationStage.TargetMapEntered;
+            }
+            else
+            {
+                // 已登记过：仅在本次登记为“本次行动生成”时补全标记（理论上首次登记
+                // 若 generatedAfterAcceptance=false，后续不会变成 true，这里用 |= 兜底）。
+                targetMapWasGeneratedByThisOperation |= generatedAfterAcceptance;
+            }
+
+            LogDeploymentDiagnostic(
+                "TargetMapRegistered",
+                "actionId=" + (actionId ?? "-")
+                + " | stage=" + stage
+                + " | registrationSource=" + (registrationSource ?? "-")
+                + " | generatedAfterAcceptance=" + generatedAfterAcceptance
+                + " | targetMapWasGeneratedByThisOperation=" + targetMapWasGeneratedByThisOperation
+                + " | deploymentDueTick=" + deploymentDueTick
+                + " | threatInitializationDeadlineTick=" + threatInitializationDeadlineTick
+                + " | target=" + (targetWorldObject?.Label ?? "-"));
         }
 
         public override void QuestPartTick()
@@ -220,18 +287,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || stage == SymbiosisCovenantJointOperationStage.TargetMapEntered
                 || stage == SymbiosisCovenantJointOperationStage.ReinforcementsDeployed)
             {
-                // 诊断（只读）：OperationActive 下若目标地图已存在却尚未通过信号路径
-                // 登记为 TargetMapEntered，记录一次。绝不调用 NotifyTargetMapGenerated、
-                // 绝不改 stage、绝不部署援军、绝不完成任务。
+                // OperationActive 下若目标地图已存在却尚未登记为 TargetMapEntered，
+                // 使用正式补登记路径（generatedAfterAcceptance=false）修复，
+                // 替换原本“只观察不修复”的行为。
                 if (stage == SymbiosisCovenantJointOperationStage.OperationActive
                     && !operationActiveTargetMapObservedLogged)
                 {
                     MapParent? observeParent = targetWorldObject as MapParent;
                     Map? observeMap = observeParent?.Map;
-                    if (observeParent != null && (observeParent.HasMap || observeMap != null))
+                    operationActiveTargetMapObservedLogged = true;
+                    if (observeParent != null && observeMap != null && !observeMap.Disposed && Find.Maps.Contains(observeMap))
                     {
-                        operationActiveTargetMapObservedLogged = true;
-                        LogOperationActiveTargetMapObserved(now, observeParent, observeMap);
+                        TryRegisterAvailableTargetMap(
+                            observeMap,
+                            generatedAfterAcceptance: false,
+                            registrationSource: "QuestPartTickExistingMapReconcile");
                     }
                 }
 
@@ -320,6 +390,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 不改动原版分发逻辑。
             base.Notify_QuestSignalReceived(signal);
 
+            // 未接取（OfferPending）期间允许识别精确目标的 NoActiveThreats / AllEnemiesDefeated，
+            // 直接按“目标已清除”成功结算（不生成援军）。必须再次核对真实清除状态。
+            if (stage == SymbiosisCovenantJointOperationStage.OfferPending
+                && targetQuestTag != null
+                && (tag == targetQuestTag + ".NoActiveThreats"
+                    || tag == targetQuestTag + ".AllEnemiesDefeated"))
+            {
+                TryCompleteOfferPendingTarget(targetWorldObject, "TargetClearSignal:" + tag);
+            }
+
             if (shouldLog)
             {
                 SymbiosisCovenantJointOperationDiagnostics.Log(
@@ -388,17 +468,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         private void NotifyTargetMapGenerated()
         {
-            if (!IsOperationAccepted || targetWorldObject == null)
-            {
-                // 主要用于“先进入地图，再接任务”的复现证据。
-                LogDeploymentDiagnostic(
-                    "MapGeneratedIgnoredNotAccepted",
-                    "stage=" + stage
-                    + " | target=" + (targetWorldObject?.Label ?? "-")
-                    + " | currentTick=" + (Find.TickManager?.TicksGame ?? 0));
-                return;
-            }
-
+            // 与 ProcessQuestSignal 中其它信号处理一致：统一走登记入口。
             Map? map = (targetWorldObject as MapParent)?.Map;
             if (map == null)
             {
@@ -411,26 +481,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            SymbiosisCovenantJointOperationStage previousStage = stage;
-            stage = SymbiosisCovenantJointOperationStage.TargetMapEntered;
-            targetMapWasGeneratedByThisOperation = true;
-            ClearDeploymentWaitReason();
-
-            int now = Find.TickManager.TicksGame;
-            deploymentDueTick = Math.Max(deploymentDueTick, now + 1);
-            threatInitializationDeadlineTick =
-                Math.Max(threatInitializationDeadlineTick, now + ThreatInitializationDeadlineTicks);
-
-            LogDeploymentDiagnostic(
-                "TargetMapRegistered",
-                "previousStage=" + previousStage
-                + " | newStage=" + stage
-                + " | map=" + map.GetUniqueLoadID()
-                + " | deploymentDueTick=" + deploymentDueTick
-                + " | threatInitializationDeadlineTick=" + threatInitializationDeadlineTick
-                + " | currentTick=" + now
-                + " | targetMapWasGeneratedByThisOperation="
-                + targetMapWasGeneratedByThisOperation);
+            // 接取后由 MapGenerated 信号触发，视为本次行动生成的地图。
+            TryRegisterAvailableTargetMap(
+                map,
+                generatedAfterAcceptance: true,
+                registrationSource: "MapGeneratedSignal");
         }
 
         private void TickActiveOrDeployed(int now)
@@ -551,6 +606,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 // 周期性直接检查目标是否已经清除，避免完全依赖一次性信号。
+                // 旧存档兼容：部署完成后若守军主动进攻尚未触发，补触发一次（仅精确目标/派系）。
+                if (!targetDefenderAssaultTriggered)
+                {
+                    Map? assaultMap = (targetWorldObject as MapParent)?.Map;
+                    if (assaultMap != null && !assaultMap.Disposed && Find.Maps.Contains(assaultMap))
+                    {
+                        TriggerTargetDefendersAssault(assaultMap);
+                    }
+                }
+
                 if (now % TargetClearCheckInterval == 0)
                 {
                     TryCompleteOperationIfTargetCleared();
@@ -743,6 +808,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 reinforcementsGenerated = true;
                 stage = SymbiosisCovenantJointOperationStage.ReinforcementsDeployed;
+                // 部署完成后，立即让目标派系前哨守军转入主动进攻（仅精确目标/派系）。
+                TriggerTargetDefendersAssault(map);
             }
             else
             {
@@ -1036,28 +1103,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             float[] assigned = AllocatePoints(valid, total);
 
-            // C：是否使用快速空投，由“参与派系自身”的科技等级决定（判定阈值 industrialArrivalThreshold 不变）。
-            // 低科技派系继续走边缘步行（EdgeWalkIn）；高科技派系走专用安全室外空投（优先），
-            // 找不到完整安全区时由 DeployGroup 内部整体回退为边缘步行。不再使用 CenterDrop。
-            bool IsHighTechForQuickDrop(Faction f) =>
-                (int)f.def.techLevel >= (int)def.industrialArrivalThreshold;
+            // C：统一抵达方式由“全部有效参与派系中的最高科技等级”决定（阈值 industrialArrivalThreshold 不变）。
+            // 只要至少一个有效参与派系达到阈值，全部援军统一空投；否则全部援军统一边缘步行。
+            // 严禁同一次行动中一部分派系空投、另一部分派系步行（每个派系的 arrivalModePlanned 来自同一判定）。
+            bool operationQuickDropRequested = valid.Any(
+                faction =>
+                    faction != null
+                    && (int)faction.def.techLevel >= (int)def.industrialArrivalThreshold);
 
-            for (int i = 0; i < valid.Count; i++)
+            TechLevel highestParticipantTechLevel = TechLevel.Animal;
+            foreach (Faction validFaction in valid)
             {
-                Faction participant = valid[i];
-                float points = assigned[i];
-                bool plannedQuick = IsHighTechForQuickDrop(participant);
-                LogDeploymentDiagnostic(
-                    "SupportAllocated",
-                    "faction=" + participant.Name
-                    + " | assignedPoints=" + points.ToString("F1")
-                    + " | canGenerateCombatGroup=" + CanGenerateCombatGroup(participant)
-                    + " | arrivalModePlanned=" + (plannedQuick
-                        ? SafeOutdoorExactDropModeName
-                        : PawnsArrivalModeDefOf.EdgeWalkIn.defName));
+                if (validFaction == null)
+                {
+                    continue;
+                }
+
+                if ((int)validFaction.def.techLevel > (int)highestParticipantTechLevel)
+                {
+                    highestParticipantTechLevel = validFaction.def.techLevel;
+                }
             }
 
-            int generated = 0;
+            string plannedArrivalMode = operationQuickDropRequested
+                ? SafeOutdoorExactDropModeName
+                : PawnsArrivalModeDefOf.EdgeWalkIn.defName;
+
+            // 阶段1：生成但不部署。严禁在此阶段调用 Arrive / MakeDropPodAt / MakeNewLord。
+            List<PendingJointOperationAidGroup> pendingGroups = new List<PendingJointOperationAidGroup>();
+            List<Pawn> allPendingPawns = new List<Pawn>();
             for (int i = 0; i < valid.Count; i++)
             {
                 Faction participant = valid[i];
@@ -1068,61 +1142,169 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 List<Pawn>? pawns = GenerateCombatGroup(participant, points, targetMap, def);
-                if (pawns == null)
+                if (pawns == null || pawns.Count == 0)
                 {
                     LogDeploymentDiagnostic(
                         "PawnGenerationSkipped",
-                        "reason=GenerateCombatGroupReturnedNull"
-                        + " | faction=" + participant.Name
-                        + " | points=" + points.ToString("F1"));
-                    continue;
-                }
-
-                if (pawns.Count == 0)
-                {
-                    LogDeploymentDiagnostic(
-                        "PawnGenerationSkipped",
-                        "reason=GenerateCombatGroupReturnedZero"
+                        "reason=" + (pawns == null ? "GenerateCombatGroupReturnedNull" : "GenerateCombatGroupReturnedZero")
                         + " | faction=" + participant.Name
                         + " | points=" + points.ToString("F1"));
                     continue;
                 }
 
                 LogDeploymentDiagnostic(
-                    "PawnGroupGenerated",
+                    "SupportAllocated",
                     "faction=" + participant.Name
-                    + " | points=" + points.ToString("F1")
+                    + " | assignedPoints=" + points.ToString("F1")
+                    + " | canGenerateCombatGroup=" + CanGenerateCombatGroup(participant)
+                    + " | arrivalModePlanned=" + plannedArrivalMode
                     + " | pawnCount=" + pawns.Count);
 
                 string aidTag = MakeAidTag(targetMap, participant);
-                bool useQuick = IsHighTechForQuickDrop(participant);
-                if (DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction, out string actualArrivalMode))
+                pendingGroups.Add(new PendingJointOperationAidGroup(participant, points, pawns, aidTag));
+                allPendingPawns.AddRange(pawns);
+            }
+
+            if (pendingGroups.Count == 0)
+            {
+                Log.Warning(
+                    JointOpLogPrefix + " Event=DeploymentFailed"
+                    + " | reason=NoPawnsGeneratedForAnyParticipant"
+                    + " | actionId=" + (actionId ?? "-")
+                    + " | target=" + (targetWorldObject?.Label ?? "-")
+                    + " | validParticipantCount=" + valid.Count
+                    + " | totalSupportPoints=" + total.ToString("F1")
+                    + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
+                return false;
+            }
+
+            // 阶段2：统一决定实际抵达方式（在任何 Pawn 进入地图前确定）。
+            string actualOperationArrivalMode;
+            string fallbackReason = "None";
+            bool safeCellsResolved = false;
+            bool preparedPodsResolved = false;
+            List<IntVec3> allDropCells = new List<IntVec3>();
+            List<ActiveTransporterInfo> allPreparedPods = new List<ActiveTransporterInfo>();
+
+            if (!operationQuickDropRequested)
+            {
+                actualOperationArrivalMode = PawnsArrivalModeDefOf.EdgeWalkIn.defName;
+            }
+            else
+            {
+                safeCellsResolved = TryFindSafeJointOperationDropCells(
+                    targetMap, allPendingPawns.Count, out allDropCells);
+
+                if (safeCellsResolved && allDropCells.Count == allPendingPawns.Count)
                 {
-                    supportRecords.Add(new SymbiosisCovenantJointOperationFactionSupportRecord(
-                        participant, points, pawns.Count, aidTag));
-                    spawnedAidTags.Add(aidTag);
-                    generated++;
-                    LogDeploymentDiagnostic(
-                        "FactionAidDeployed",
-                        "faction=" + participant.Name
-                        + " | aidTag=" + aidTag
-                        + " | pawnCount=" + pawns.Count
-                        + " | arrivalMode=" + actualArrivalMode);
+                    preparedPodsResolved = TryPrepareExactDropPods(allPendingPawns, out allPreparedPods);
+                }
+
+                if (safeCellsResolved
+                    && allDropCells.Count == allPendingPawns.Count
+                    && preparedPodsResolved
+                    && allPreparedPods.Count == allPendingPawns.Count)
+                {
+                    actualOperationArrivalMode = SafeOutdoorExactDropModeName;
                 }
                 else
                 {
-                    Log.Warning(
-                        JointOpLogPrefix + " Event=FactionAidDeployFailed"
-                        + " | faction=" + participant.Name
-                        + " | points=" + points.ToString("F1")
-                        + " | arrivalMode=" + actualArrivalMode
-                        + " | aidTag=" + aidTag
-                        + " | actionId=" + (actionId ?? "-"));
-                    // 失败：清理本次已创建但未成功部署的 Pawn，避免泄漏。
-                    foreach (Pawn p in pawns)
+                    // 整批回退边缘步行，严禁部分空投、部分步行。
+                    fallbackReason =
+                        (!safeCellsResolved
+                            ? "SafeCellsNotResolved"
+                            : (!preparedPodsResolved
+                                ? "DropPodsNotPrepared"
+                                : "MismatchedCounts"));
+                    ReleasePreparedDropPods(allPendingPawns, allPreparedPods);
+                    allDropCells.Clear();
+                    allPreparedPods.Clear();
+                    actualOperationArrivalMode = PawnsArrivalModeDefOf.EdgeWalkIn.defName;
+                }
+
+                LogDeploymentDiagnostic(
+                    "OperationArrivalModeResolved",
+                    "actionId=" + (actionId ?? "-")
+                    + " | validParticipantCount=" + valid.Count
+                    + " | pendingGroupCount=" + pendingGroups.Count
+                    + " | totalPawnCount=" + allPendingPawns.Count
+                    + " | highestParticipantTechLevel=" + highestParticipantTechLevel
+                    + " | industrialArrivalThreshold=" + def.industrialArrivalThreshold
+                    + " | quickDropRequested=" + operationQuickDropRequested
+                    + " | safeCellsResolved=" + safeCellsResolved
+                    + " | preparedPodsResolved=" + preparedPodsResolved
+                    + " | plannedArrivalMode=" + plannedArrivalMode
+                    + " | actualArrivalMode=" + actualOperationArrivalMode
+                    + " | fallbackReason=" + fallbackReason
+                    + " | map=" + targetMap.GetUniqueLoadID());
+            }
+
+            // 阶段3：统一部署。单个派系仅执行已确定的抵达方式。
+            int generated = 0;
+            if (actualOperationArrivalMode == SafeOutdoorExactDropModeName)
+            {
+                int cursor = 0;
+                foreach (PendingJointOperationAidGroup group in pendingGroups)
+                {
+                    List<IntVec3> groupCells = new List<IntVec3>();
+                    List<ActiveTransporterInfo> groupPods = new List<ActiveTransporterInfo>();
+                    for (int k = 0; k < group.Pawns.Count; k++)
                     {
-                        MechHiveCombatPawnUtility.SafelyDiscardPawn(p);
+                        groupCells.Add(allDropCells[cursor]);
+                        groupPods.Add(allPreparedPods[cursor]);
+                        cursor++;
                     }
+
+                    if (!DeploySafeDropGroup(group.Faction, group.Pawns, groupCells, groupPods, targetMap, group.AidTag, targetFaction))
+                    {
+                        Log.Warning(
+                            JointOpLogPrefix + " Event=FactionAidDeployFailed"
+                            + " | faction=" + group.Faction.Name
+                            + " | arrivalMode=" + actualOperationArrivalMode
+                            + " | aidTag=" + group.AidTag
+                            + " | actionId=" + (actionId ?? "-"));
+                        SafelyDiscardPawns(group.Pawns);
+                        continue;
+                    }
+
+                    supportRecords.Add(new SymbiosisCovenantJointOperationFactionSupportRecord(
+                        group.Faction, group.Points, group.Pawns.Count, group.AidTag));
+                    spawnedAidTags.Add(group.AidTag);
+                    generated++;
+                    LogDeploymentDiagnostic(
+                        "FactionAidDeployed",
+                        "faction=" + group.Faction.Name
+                        + " | aidTag=" + group.AidTag
+                        + " | pawnCount=" + group.Pawns.Count
+                        + " | arrivalMode=" + actualOperationArrivalMode);
+                }
+            }
+            else
+            {
+                foreach (PendingJointOperationAidGroup group in pendingGroups)
+                {
+                    if (!DeployEdgeWalkInGroup(group.Faction, group.Pawns, group.Points, targetMap, def, targetFaction, group.AidTag))
+                    {
+                        Log.Warning(
+                            JointOpLogPrefix + " Event=FactionAidDeployFailed"
+                            + " | faction=" + group.Faction.Name
+                            + " | arrivalMode=" + actualOperationArrivalMode
+                            + " | aidTag=" + group.AidTag
+                            + " | actionId=" + (actionId ?? "-"));
+                        SafelyDiscardPawns(group.Pawns);
+                        continue;
+                    }
+
+                    supportRecords.Add(new SymbiosisCovenantJointOperationFactionSupportRecord(
+                        group.Faction, group.Points, group.Pawns.Count, group.AidTag));
+                    spawnedAidTags.Add(group.AidTag);
+                    generated++;
+                    LogDeploymentDiagnostic(
+                        "FactionAidDeployed",
+                        "faction=" + group.Faction.Name
+                        + " | aidTag=" + group.AidTag
+                        + " | pawnCount=" + group.Pawns.Count
+                        + " | arrivalMode=" + actualOperationArrivalMode);
                 }
             }
 
@@ -1596,230 +1778,173 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// 每只援军写入唯一 aidTag，并通过 QuestUtility.AddQuestTag 标记到 Lord，
         /// 之后只通过 LordJob 类型 + aidTag 精确追踪，不误伤其他援军。
         /// </summary>
-        private static bool DeployGroup(
+        /// <summary>
+        /// 安全室外空投部署：全部安全格与全部空投容器已在修改地图前完成准备，此处仅生成空投舱并创建 Lord。
+        /// </summary>
+        private static bool DeploySafeDropGroup(
+            Faction faction,
+            List<Pawn> pawns,
+            List<IntVec3> dropCells,
+            List<ActiveTransporterInfo> preparedPods,
+            Map map,
+            string aidTag,
+            Faction? enemyFaction)
+        {
+            try
+            {
+                SpawnPreparedExactDropPods(faction, preparedPods, dropCells, map);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    JointOpLogPrefix + " Event=SafeDropSpawnException"
+                    + " | faction=" + (faction?.Name ?? "-")
+                    + " | aidTag=" + (aidTag ?? "-")
+                    + " | map=" + map.GetUniqueLoadID()
+                    + " | ex=" + ex);
+                return false;
+            }
+
+            if (!TryCreateJointLord(faction, pawns, map, aidTag, enemyFaction))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 边缘步行部署：从 Invalid 由 Worker.TryResolveRaidSpawnCenter 解析地图边缘入口，再 Arrive。
+        /// 同一行动级实际抵达方式已确定为 EdgeWalkIn，因此本方法只执行步行。
+        /// </summary>
+        private static bool DeployEdgeWalkInGroup(
             Faction faction,
             List<Pawn> pawns,
             float points,
             Map map,
-            bool useQuick,
-            string aidTag,
-            Faction? enemyFaction,
-            out string actualArrivalMode)
+            SymbiosisCovenantJointOperationDef def,
+            Faction? targetFaction,
+            string aidTag)
         {
-            // useQuick 表示“本参与派系请求快速空投”，不直接等于“已确定能够空投”。
-            // 低科技派系传入 false，直接走边缘步行；高科技派系传入 true，优先寻找安全室外空投区。
-            bool quickDropRequested = useQuick;
-            bool safeDropCellsResolved = false;
-            bool preparedDropPodsResolved = false;
-            bool safeQuickDropResolved = false;
-            List<IntVec3>? quickDropCells = null;
-            List<ActiveTransporterInfo>? preparedDropPods = null;
-
-            // 回退 / 低科技抵达方式固定为边缘步行；不使用 CenterDrop（仍可能自行重选室内落点）。
-            PawnsArrivalModeDef fallbackArrivalMode =
-                PawnsArrivalModeDefOf.EdgeWalkIn;
-
-            // actualArrivalMode 必须在所有正常 return 路径前都有明确值；默认即回退方式。
-            actualArrivalMode = fallbackArrivalMode.defName;
-
-            if (quickDropRequested)
-            {
-                safeDropCellsResolved =
-                    TryFindSafeJointOperationDropCells(
-                        map,
-                        pawns.Count,
-                        out List<IntVec3> resolvedCells);
-
-                if (safeDropCellsResolved)
-                {
-                    // 找到完整安全落点后，再整体准备全部空投容器（不生成任何空投舱）。
-                    preparedDropPodsResolved =
-                        TryPrepareExactDropPods(
-                            pawns,
-                            out List<ActiveTransporterInfo> resolvedPods);
-
-                    if (preparedDropPodsResolved
-                        && resolvedPods.Count == resolvedCells.Count)
-                    {
-                        quickDropCells = resolvedCells;
-                        preparedDropPods = resolvedPods;
-                        safeQuickDropResolved = true;
-                        actualArrivalMode = SafeOutdoorExactDropModeName;
-
-                        LogDeploymentDiagnostic(
-                            "SafeQuickDropResolved",
-                            "faction=" + (faction?.Name ?? "-")
-                            + " | pawnCount=" + (pawns?.Count ?? 0)
-                            + " | dropCellCount=" + resolvedCells.Count
-                            + " | preparedPodCount=" + resolvedPods.Count
-                            + " | firstCell=" + (resolvedCells.Count > 0
-                                ? resolvedCells[0].ToString()
-                                : "Invalid")
-                            + " | map=" + map.GetUniqueLoadID()
-                            + " | aidTag=" + (aidTag ?? "-"));
-                    }
-                    else
-                    {
-                        // 容器准备失败或数量不一致：回滚已准备容器，整支回退 EdgeWalkIn。
-                        ReleasePreparedDropPods(pawns!, resolvedPods);
-                        resolvedPods.Clear();
-                        safeQuickDropResolved = false;
-                        quickDropCells = null;
-                        preparedDropPods = null;
-                        actualArrivalMode = fallbackArrivalMode.defName;
-
-                        Log.Warning(
-                            JointOpLogPrefix + " Event=QuickDropFallbackToEdgeWalkIn"
-                            + " | reason=DropPodContainerPreparationFailed"
-                            + " | faction=" + (faction?.Name ?? "-")
-                            + " | pawnCount=" + (pawns?.Count ?? 0)
-                            + " | preparedPodCount=" + resolvedPods.Count
-                            + " | resolvedCellCount=" + resolvedCells.Count
-                            + " | map=" + map.GetUniqueLoadID()
-                            + " | aidTag=" + (aidTag ?? "-"));
-                    }
-                }
-                else
-                {
-                    Log.Warning(
-                        JointOpLogPrefix + " Event=QuickDropFallbackToEdgeWalkIn"
-                        + " | reason=NoCompleteSafeOutdoorDropZone"
-                        + " | faction=" + (faction?.Name ?? "-")
-                        + " | pawnCount=" + (pawns?.Count ?? 0)
-                        + " | map=" + map.GetUniqueLoadID()
-                        + " | aidTag=" + (aidTag ?? "-"));
-                }
-            }
-
             IncidentParms parms = new IncidentParms
             {
                 target = map,
                 faction = faction,
                 points = points,
                 raidStrategy = RaidStrategyDefOf.ImmediateAttackFriendly,
-                // EdgeWalkIn 只有在 spawnCenter 无效时才会寻找地图边缘入口。
-                // 因此步行援军必须从 Invalid 开始，由 Worker.TryResolveRaidSpawnCenter 解析。
                 spawnCenter = IntVec3.Invalid,
-                raidArrivalMode = fallbackArrivalMode,
+                raidArrivalMode = PawnsArrivalModeDefOf.EdgeWalkIn,
                 raidArrivalModeForQuickMilitaryAid = false
             };
 
-            // 步行抵达（包括高科技回退）必须成功解析合法的地图边缘入口；失败时不得继续生成。
-            if (!safeQuickDropResolved
-                && !fallbackArrivalMode.Worker.TryResolveRaidSpawnCenter(parms))
+            if (!parms.raidArrivalMode.Worker.TryResolveRaidSpawnCenter(parms))
             {
-                // 静态保护：回退 EdgeWalkIn 时 preparedDropPods 必须为空；若异常持有则释放，
-                // 避免 Pawn 被临时容器持有导致外层 SafelyDiscardPawn 处理出错。
-                if (preparedDropPods != null && preparedDropPods.Count > 0)
-                {
-                    if (Prefs.DevMode)
-                    {
-                        Log.Error(
-                            JointOpLogPrefix + " Event=EdgeWalkInCleanupUnexpectedPreparedPods"
-                            + " | faction=" + (faction?.Name ?? "-")
-                            + " | preparedPodCount=" + preparedDropPods.Count
-                            + " | aidTag=" + (aidTag ?? "-"));
-                    }
-
-                    ReleasePreparedDropPods(pawns!, preparedDropPods);
-                    preparedDropPods = null;
-                }
-
                 Log.Warning(
                     JointOpLogPrefix + " Event=DeployGroupFailed"
                     + " | reason=EdgeSpawnCenterResolveFailed"
-                    + " | quickDropRequested=" + quickDropRequested
-                    + " | safeDropCellsResolved=" + safeDropCellsResolved
-                    + " | preparedDropPodsResolved=" + preparedDropPodsResolved
-                    + " | safeQuickDropResolved=" + safeQuickDropResolved
-                    + " | actualArrivalMode=" + actualArrivalMode
                     + " | faction=" + (faction?.Name ?? "-")
-                    + " | map=" + map.GetUniqueLoadID()
-                    + " | points=" + points.ToString("F1")
-                    + " | aidTag=" + (aidTag ?? "-"));
+                    + " | aidTag=" + (aidTag ?? "-")
+                    + " | map=" + map.GetUniqueLoadID());
                 return false;
             }
 
-            // DeployGroupStarted 必须在：安全落点搜索完成、容器准备或回退完成、actualArrivalMode 确定、
-            // 且 EdgeWalkIn 的 spawnCenter 已解析完成之后输出。
-            LogDeploymentDiagnostic(
-                "DeployGroupStarted",
-                "faction=" + (faction?.Name ?? "-")
-                + " | pawnCount=" + (pawns?.Count ?? 0)
-                + " | points=" + points.ToString("F1")
-                + " | quickDropRequested=" + quickDropRequested
-                + " | safeDropCellsResolved=" + safeDropCellsResolved
-                + " | preparedDropPodsResolved=" + preparedDropPodsResolved
-                + " | safeQuickDropResolved=" + safeQuickDropResolved
-                + " | actualArrivalMode=" + actualArrivalMode
-                + " | resolvedDropCellCount=" + (quickDropCells?.Count ?? 0)
-                + " | preparedDropPodCount=" + (preparedDropPods?.Count ?? 0)
-                + " | spawnCenter=" + (safeQuickDropResolved
-                    ? (quickDropCells != null && quickDropCells.Count > 0
-                        ? quickDropCells[0].ToString()
-                        : "Invalid")
-                    : parms.spawnCenter.ToString())
-                + " | map=" + map.GetUniqueLoadID()
-                + " | aidTag=" + (aidTag ?? "-"));
-
             try
             {
-                if (safeQuickDropResolved
-                    && quickDropCells != null
-                    && preparedDropPods != null)
-                {
-                    // 全部容器和全部安全格已在修改地图前完成准备，避免因落点不足或容器准备失败造成部分部署。
-                    // MakeDropPodAt 等外部生成调用若发生异常，仍由现有异常日志处理。
-                    SpawnPreparedExactDropPods(
-                        faction!,
-                        preparedDropPods,
-                        quickDropCells,
-                        map);
-                }
-                else
-                {
-                    fallbackArrivalMode.Worker.Arrive(pawns, parms);
-                }
-
-                LordJob_SymbiosisCovenantJointOperation job =
-                    new LordJob_SymbiosisCovenantJointOperation(faction!, enemyFaction, map.Center);
-                Lord? lord = LordMaker.MakeNewLord(faction, job, map, pawns);
-                if (lord == null)
-                {
-                    Log.Warning(
-                        JointOpLogPrefix + " Event=DeployGroupFailed"
-                        + " | reason=LordCreationReturnedNull"
-                        + " | faction=" + (faction?.Name ?? "-")
-                        + " | aidTag=" + (aidTag ?? "-"));
-                    return false;
-                }
-
-                QuestUtility.AddQuestTag(lord, aidTag);
-
-                LogDeploymentDiagnostic(
-                    "LordCreated",
-                    "faction=" + (faction?.Name ?? "-")
-                    + " | lord=" + lord.GetUniqueLoadID()
-                    + " | aidTag=" + (aidTag ?? "-")
-                    + " | ownedPawnCount=" + (lord.ownedPawns?.Count ?? 0));
-
-                return true;
+                parms.raidArrivalMode.Worker.Arrive(pawns, parms);
             }
             catch (Exception ex)
             {
                 Log.Error(
-                    JointOpLogPrefix + " Event=DeployGroupException"
+                    JointOpLogPrefix + " Event=EdgeArriveException"
                     + " | faction=" + (faction?.Name ?? "-")
-                    + " | pawnCount=" + (pawns?.Count ?? 0)
-                    + " | quickDropRequested=" + quickDropRequested
-                    + " | safeDropCellsResolved=" + safeDropCellsResolved
-                    + " | preparedDropPodsResolved=" + preparedDropPodsResolved
-                    + " | safeQuickDropResolved=" + safeQuickDropResolved
-                    + " | actualArrivalMode=" + actualArrivalMode
-                    + " | map=" + map.GetUniqueLoadID()
                     + " | aidTag=" + (aidTag ?? "-")
+                    + " | map=" + map.GetUniqueLoadID()
                     + " | ex=" + ex);
-                throw;
+                return false;
+            }
+
+            if (!TryCreateJointLord(faction, pawns, map, aidTag, targetFaction))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 为本 MOD 自定义援军 Lord 创建 Lord 并写入唯一 aidTag（与 DeployGroup 原有行为一致）。
+        /// </summary>
+        private static bool TryCreateJointLord(
+            Faction faction,
+            List<Pawn> pawns,
+            Map map,
+            string aidTag,
+            Faction? enemyFaction)
+        {
+            LordJob_SymbiosisCovenantJointOperation job =
+                new LordJob_SymbiosisCovenantJointOperation(faction, enemyFaction, map.Center);
+            Lord? lord = LordMaker.MakeNewLord(faction, job, map, pawns);
+            if (lord == null)
+            {
+                Log.Warning(
+                    JointOpLogPrefix + " Event=DeployGroupFailed"
+                    + " | reason=LordCreationReturnedNull"
+                    + " | faction=" + (faction?.Name ?? "-")
+                    + " | aidTag=" + (aidTag ?? "-"));
+                return false;
+            }
+
+            foreach (Pawn p in pawns)
+            {
+                if (p != null && !p.Dead)
+                {
+                    Find.TickManager?.RegisterAllTickabilityFor(p);
+                }
+            }
+
+            QuestUtility.AddQuestTag(lord, aidTag);
+
+            LogDeploymentDiagnostic(
+                "LordCreated",
+                "faction=" + (faction?.Name ?? "-")
+                + " | lord=" + lord.GetUniqueLoadID()
+                + " | aidTag=" + (aidTag ?? "-")
+                + " | ownedPawnCount=" + (lord.ownedPawns?.Count ?? 0));
+
+            return true;
+        }
+
+        private static void SafelyDiscardPawns(List<Pawn> pawns)
+        {
+            if (pawns == null)
+            {
+                return;
+            }
+
+            foreach (Pawn p in pawns)
+            {
+                MechHiveCombatPawnUtility.SafelyDiscardPawn(p);
+            }
+        }
+
+        /// <summary>
+        /// 仅运行期使用的私有嵌套类：在一次部署调用内暂存“已生成但尚未部署”的各派系援军。
+        /// 不保存为存档字段；行动级实际抵达方式在统一决定后才下发到每个派系。
+        /// </summary>
+        private sealed class PendingJointOperationAidGroup
+        {
+            public Faction Faction = null!;
+            public float Points;
+            public List<Pawn> Pawns = new List<Pawn>();
+            public string AidTag = string.Empty;
+
+            public PendingJointOperationAidGroup(
+                Faction faction, float points, List<Pawn> pawns, string aidTag)
+            {
+                Faction = faction;
+                Points = points;
+                Pawns = pawns ?? new List<Pawn>();
+                AidTag = aidTag;
             }
         }
 
@@ -1872,12 +1997,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return FindTaggedJointOpLords(map, tag).Count;
         }
 
-        private void BeginSuccess()
+        private void BeginSuccess(string reason = "TargetCleared", bool completionBeforeAcceptance = false)
         {
             if (successApplied || failureApplied || invalidEndApplied)
             {
                 return;
             }
+
+            SymbiosisCovenantJointOperationStage stageBeforeSuccess = stage;
+            bool reinforcementsGeneratedSnapshot = reinforcementsGenerated;
+            bool playerEngagedSnapshot = playerEngaged;
+            bool targetThreatConfirmedSnapshot = targetThreatConfirmed;
 
             stage = SymbiosisCovenantJointOperationStage.Succeeded;
             CommandReinforcementsLeave();
@@ -1886,8 +2016,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             LogDeploymentDiagnostic(
                 "OperationSucceeded",
                 "actionId=" + (actionId ?? "-")
+                + " | questId=" + (quest?.id.ToString() ?? "-")
                 + " | target=" + (targetWorldObject?.Label ?? "-")
+                + " | reason=" + reason
+                + " | completionBeforeAcceptance=" + completionBeforeAcceptance
+                + " | stageBeforeSuccess=" + stageBeforeSuccess
+                + " | reinforcementsGenerated=" + reinforcementsGeneratedSnapshot
+                + " | playerEngaged=" + playerEngagedSnapshot
+                + " | targetThreatConfirmed=" + targetThreatConfirmedSnapshot
                 + " | spawnedAidTagCount=" + (spawnedAidTags?.Count ?? 0)
+                + " | hasReachedCombatReady=" + HasReachedCombatReadyState
                 + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
 
             // J：实物奖励本次暂不发放，仅保留 Unity / Trust 成功奖励（见 GrantReward 注释）。
@@ -1939,30 +2077,283 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// F2：由 SymbiosisCovenantJointOperationSettlementPatch 在据点被原版正确摧毁后调用。
-        /// 仅当引用一致且已接取、尚未结束时，重新校验战斗就绪状态后结算成功。
-        /// 若尚未到达战斗就绪状态（玩家未进入/援军未生成/目标威胁未确认），则按无效结束收尾，
-        /// 不依赖被摧毁事件本身自动成功。
+        /// 外部目标清除的统一入口：Settlement、MAPFactionOutpost 及其它精确目标通知都走这里。
+        /// 严格校验引用相等与尚未结束，再根据 OfferPending / 已接取 / 已结束分支决定行为。
         /// </summary>
-        public void NotifySettlementDestroyed(Settlement factionBase)
+        public void NotifyTargetClearedExternally(WorldObject clearedTarget, string reason)
         {
-            if (!IsOperationAccepted)
+            if (clearedTarget == null || targetWorldObject == null || quest == null)
             {
                 return;
             }
 
-            if (targetWorldObject == null || !ReferenceEquals(targetWorldObject, factionBase))
+            if (!ReferenceEquals(targetWorldObject, clearedTarget))
             {
                 return;
             }
 
-            if (!HasReachedCombatReadyState)
+            if (successApplied || failureApplied || invalidEndApplied)
             {
-                BeginInvalidEnd("settlementDestroyedBeforeCombatReady");
                 return;
             }
 
-            BeginSuccess();
+            TryCompleteOfferPendingTarget(clearedTarget, reason);
+        }
+
+        /// <summary>
+        /// 据点（Settlement）被原版 SettlementDefeatUtility 真正摧毁时由窄范围 Patch 调用。
+        /// 直接复用外部目标清除结算路径：内部会再次核对引用相等、是否已结束、
+        /// 目标是否真实清除（Settlement 取 settlement.Destroyed），以及是否已接取且战斗就绪；
+        /// 满足全部条件才会 BeginSuccess，避免误结算。
+        /// </summary>
+        public void NotifySettlementDestroyed(Settlement settlement)
+        {
+            if (settlement == null)
+            {
+                return;
+            }
+
+            NotifyTargetClearedExternally(settlement, "SettlementDestroyedPatch");
+        }
+
+        /// <summary>
+        /// 统一成功判定：未接取的成功不要求战斗就绪、不生成援军、直接 Success；
+        /// 已接取的成功必须战斗就绪；已结束阶段直接返回，不重复奖励。
+        /// 不能仅凭信号字符串成功，必须再次核对真实目标状态。
+        /// </summary>
+        private bool TryCompleteOfferPendingTarget(WorldObject? candidate, string reason)
+        {
+            if (candidate == null || targetWorldObject == null || quest == null)
+            {
+                return false;
+            }
+
+            if (!ReferenceEquals(targetWorldObject, candidate))
+            {
+                return false;
+            }
+
+            if (successApplied || failureApplied || invalidEndApplied)
+            {
+                return false;
+            }
+
+            if (!IsActive)
+            {
+                return false;
+            }
+
+            if (!IsTargetWorldObjectTrulyCleared(candidate))
+            {
+                return false;
+            }
+
+            if (stage == SymbiosisCovenantJointOperationStage.OfferPending)
+            {
+                BeginSuccess(reason: reason, completionBeforeAcceptance: true);
+                return true;
+            }
+
+            if (IsOperationAccepted)
+            {
+                if (!HasReachedCombatReadyState)
+                {
+                    // 已接取但尚未战斗就绪：不要因为外部通知提前成功。
+                    return false;
+                }
+
+                BeginSuccess(reason: reason, completionBeforeAcceptance: false);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 严格核对目标是否真实清除（按类型区分，避免误结算）。
+        /// </summary>
+        private bool IsTargetWorldObjectTrulyCleared(WorldObject target)
+        {
+            if (target == null || !ReferenceEquals(targetWorldObject, target))
+            {
+                return false;
+            }
+
+            if (target is MAPFactionOutpost outpost)
+            {
+                return outpost.Cleaned;
+            }
+
+            if (target is Settlement settlement)
+            {
+                return settlement.Destroyed;
+            }
+
+            if (target is Site site)
+            {
+                if (site.Destroyed)
+                {
+                    return true;
+                }
+
+                // 地图仍存在时：仅在无可站立目标派系守军时成功。
+                MapParent? siteParent = target as MapParent;
+                if (siteParent?.Map != null && AnyStandingTargetFactionDefender(siteParent.Map))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            // 其他 WorldObject 默认不成功，除非已有明确、安全的真实清除规则。
+            return false;
+        }
+
+        /// <summary>
+        /// 联合行动部署完成后，让目标前哨中处于建筑内的守军立即转入主动进攻。
+        /// 只激活本次目标地图、本次目标派系的守军 Lord（自定义 LordJob 发 memo，
+        /// 或兼容迁移旧存档中的原版 LordJob_DefendBase）。
+        /// </summary>
+        private void TriggerTargetDefendersAssault(Map map)
+        {
+            if (targetDefenderAssaultTriggered)
+            {
+                return;
+            }
+
+            if (map == null || map.Disposed || !Find.Maps.Contains(map))
+            {
+                return;
+            }
+
+            if (targetFaction == null)
+            {
+                return;
+            }
+
+            if (stage != SymbiosisCovenantJointOperationStage.ReinforcementsDeployed || !reinforcementsGenerated)
+            {
+                return;
+            }
+
+            int customLordMemoCount = 0;
+            int legacyDefendLordMigratedCount = 0;
+            int pawnCount = 0;
+
+            List<Lord> lordsSnapshot = new List<Lord>(map.lordManager.lords);
+            foreach (Lord lord in lordsSnapshot)
+            {
+                if (lord == null || lord.faction != targetFaction || lord.Map != map)
+                {
+                    continue;
+                }
+
+                if (lord.LordJob is LordJob_MAPFactionOutpostDefendBase)
+                {
+                    if (LordJob_MAPFactionOutpostDefendBase.TryStartJointOperationAssault(lord))
+                    {
+                        customLordMemoCount++;
+                        pawnCount += lord.ownedPawns.Count;
+                    }
+
+                    continue;
+                }
+
+                if (lord.LordJob is LordJob_DefendBase)
+                {
+                    // 旧存档兼容：将本目标地图、本 targetFaction 的原版 DefendBase 守军
+                    // 迁移为新建的主动进攻 Lord，不迁移其他 LordJob 类型。
+                    List<Pawn> ownedSnapshot = new List<Pawn>(lord.ownedPawns);
+                    List<Pawn> validDefenders = new List<Pawn>();
+                    foreach (Pawn p in ownedSnapshot)
+                    {
+                        if (p != null && !p.Destroyed && p.Spawned && p.Map == map && p.Faction == targetFaction)
+                        {
+                            validDefenders.Add(p);
+                        }
+                    }
+
+                    if (validDefenders.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    foreach (Pawn p in validDefenders)
+                    {
+                        lord.RemovePawn(p);
+                    }
+
+                    Lord? newLord = null;
+                    try
+                    {
+                        newLord = LordMaker.MakeNewLord(
+                            targetFaction,
+                            new LordJob_AssaultColony(
+                                targetFaction,
+                                canKidnap: false,
+                                canTimeoutOrFlee: false,
+                                sappers: false,
+                                useAvoidGridSmart: true,
+                                canSteal: false,
+                                breachers: false,
+                                canPickUpOpportunisticWeapons: false),
+                            map,
+                            validDefenders);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(
+                            JointOpLogPrefix + " Event=TargetDefendersAssaultMigrateFailed"
+                            + " | reason=MakeNewLordException"
+                            + " | targetFaction=" + (targetFaction?.GetUniqueLoadID() ?? "null")
+                            + " | map=" + map.GetUniqueLoadID()
+                            + " | ex=" + ex);
+                        newLord = null;
+                    }
+
+                    if (newLord != null)
+                    {
+                        pawnCount += validDefenders.Count;
+                        legacyDefendLordMigratedCount++;
+
+                        if (lord.ownedPawns.Count == 0)
+                        {
+                            try
+                            {
+                                map.lordManager.RemoveLord(lord);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Warning(
+                                    JointOpLogPrefix + " Event=TargetDefendersAssaultRemoveLegacyLordFailed"
+                                    + " | map=" + map.GetUniqueLoadID()
+                                    + " | ex=" + ex);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 迁移失败：尽量把守军放回旧 Lord，避免无主 Pawn。
+                        foreach (Pawn p in validDefenders)
+                        {
+                            lord.AddPawn(p);
+                        }
+                    }
+                }
+            }
+
+            targetDefenderAssaultTriggered = true;
+
+            LogDeploymentDiagnostic(
+                "TargetDefendersAssaultTriggered",
+                "targetFaction=" + (targetFaction?.GetUniqueLoadID() ?? "null")
+                + " | map=" + map.GetUniqueLoadID()
+                + " | customLordMemoCount=" + customLordMemoCount
+                + " | legacyDefendLordMigratedCount=" + legacyDefendLordMigratedCount
+                + " | pawnCount=" + pawnCount
+                + " | stage=" + stage
+                + " | actionId=" + (actionId ?? "-"));
         }
 
         /// <summary>
@@ -2115,6 +2506,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Defs.Look(ref jointOperationDef, "jointOperationDef");
             Scribe_Values.Look(ref rewardValue, "rewardValue", 0);
             Scribe_Values.Look(ref playerEngaged, "playerEngaged", false);
+            Scribe_Values.Look(ref targetDefenderAssaultTriggered, "targetDefenderAssaultTriggered", false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -2122,6 +2514,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 participantFactions.RemoveAll(f => f == null);
                 supportRecords ??= new List<SymbiosisCovenantJointOperationFactionSupportRecord>();
                 spawnedAidTags ??= new List<string>();
+                // 兼容旧存档：确保本 Part 在 OfferPending 阶段也能监听目标完成信号。
+                signalListenMode = QuestPart.SignalListenMode.OngoingOrNotYetAccepted;
             }
         }
 

@@ -473,6 +473,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return null;
         }
 
+        /// <summary>
+        /// 通知当前活动的联合行动：其锁定目标已被清除。
+        /// 会自动定位活动 QuestPart 并转发到目标清除逻辑；若 worldObject 不是当前活动目标则忽略。
+        /// reason 用于日志与结算标记，便于排查来源。
+        /// </summary>
+        public static void NotifyJointOperationTargetCleared(WorldObject? worldObject, string reason)
+        {
+            if (worldObject == null)
+            {
+                return;
+            }
+
+            QuestPart_SymbiosisCovenantJointOperation? part = FindActiveOperationPart();
+            if (part == null)
+            {
+                return;
+            }
+
+            // FindActiveOperationPart 已保证 part 处于活动状态；
+            // 转发前再次确认引用相等，避免误通知其它无关目标。
+            if (!ReferenceEquals(part.targetWorldObject, worldObject))
+            {
+                return;
+            }
+
+            part.NotifyTargetClearedExternally(worldObject, reason);
+        }
+
         private static bool IsTargetAlreadyInUse(WorldObject obj)
         {
             QuestPart_SymbiosisCovenantJointOperation? active = FindActiveOperationPart();
