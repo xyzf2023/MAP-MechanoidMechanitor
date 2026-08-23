@@ -81,6 +81,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const int QuickDropAnchorAttemptLimit = 300;
         // 使用明确的空投舱打开延迟，不依赖未初始化的 IncidentParms 默认值。
         private const int QuickDropPodOpenDelay = 110;
+        // 高科技派系“实际采用”的安全室外精确空投方式名称（用于日志与返回值，避免各处散写字符串）。
+        private const string SafeOutdoorExactDropModeName = "SafeOutdoorExactDrop";
 
         // 诊断日志辅助（仅运行期低噪音；不参与任何正式业务/存档逻辑）。
         private string? lastDeploymentWaitReason;
@@ -1048,7 +1050,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     + " | assignedPoints=" + points.ToString("F1")
                     + " | canGenerateCombatGroup=" + CanGenerateCombatGroup(participant)
                     + " | arrivalModePlanned=" + (plannedQuick
-                        ? "SafeOutdoorExactDrop"
+                        ? SafeOutdoorExactDropModeName
                         : PawnsArrivalModeDefOf.EdgeWalkIn.defName));
             }
 
@@ -1091,7 +1093,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 string aidTag = MakeAidTag(targetMap, participant);
                 bool useQuick = IsHighTechForQuickDrop(participant);
-                if (DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction))
+                if (DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction, out string actualArrivalMode))
                 {
                     supportRecords.Add(new SymbiosisCovenantJointOperationFactionSupportRecord(
                         participant, points, pawns.Count, aidTag));
@@ -1102,9 +1104,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         "faction=" + participant.Name
                         + " | aidTag=" + aidTag
                         + " | pawnCount=" + pawns.Count
-                        + " | arrivalMode=" + (useQuick
-                            ? "SafeOutdoorExactDrop"
-                            : PawnsArrivalModeDefOf.EdgeWalkIn.defName));
+                        + " | arrivalMode=" + actualArrivalMode);
                 }
                 else
                 {
@@ -1112,9 +1112,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         JointOpLogPrefix + " Event=FactionAidDeployFailed"
                         + " | faction=" + participant.Name
                         + " | points=" + points.ToString("F1")
-                        + " | arrivalMode=" + (useQuick
-                            ? "SafeOutdoorExactDrop"
-                            : PawnsArrivalModeDefOf.EdgeWalkIn.defName)
+                        + " | arrivalMode=" + actualArrivalMode
                         + " | aidTag=" + aidTag
                         + " | actionId=" + (actionId ?? "-"));
                     // 失败：清理本次已创建但未成功部署的 Pawn，避免泄漏。
@@ -1251,29 +1249,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// 墙体、不穿过关闭门地抵达地图边缘。
         /// 该方法只读，不修改 Pawn / 地图 / Quest 状态。
         /// </summary>
-        private static bool IsSafeJointOperationDropCell(Map map, IntVec3 cell)
+        private static bool IsSafeJointOperationDropCell(
+            Map map,
+            IntVec3 cell,
+            Dictionary<Region, bool> regionCanReachEdgeCache)
         {
-            if (map == null || !cell.IsValid || !cell.InBounds(map))
+            if (map == null
+                || regionCanReachEdgeCache == null
+                || !cell.IsValid
+                || !cell.InBounds(map))
             {
                 return false;
             }
 
-            if (!cell.Standable(map))
-            {
-                return false;
-            }
-
-            if (cell.Fogged(map))
-            {
-                return false;
-            }
-
-            if (cell.Roofed(map))
-            {
-                return false;
-            }
-
-            if (cell.GetEdifice(map) != null)
+            // 廉价 / 局部判断优先，尽早短路，避免不必要的可达性搜索。
+            if (!cell.Standable(map)
+                || cell.Fogged(map)
+                || cell.Roofed(map)
+                || cell.GetEdifice(map) != null)
             {
                 return false;
             }
@@ -1300,13 +1293,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             // 连通性校验：不允许破墙、不允许穿过关闭门，必须用普通路径抵达地图边缘。
-            TraverseParms traverseParms = TraverseParms.For(TraverseMode.NoPassClosedDoors);
-            if (!map.reachability.CanReachMapEdge(cell, traverseParms))
+            // 同一 Region 在“一次搜索”内只执行一次 CanReachMapEdge，后续同区域格子直接复用缓存结果。
+            Region? region = cell.GetRegion(map, RegionType.Set_Passable);
+            if (region == null)
             {
                 return false;
             }
 
-            return true;
+            if (!regionCanReachEdgeCache.TryGetValue(region, out bool canReachEdge))
+            {
+                TraverseParms traverseParms =
+                    TraverseParms.For(TraverseMode.NoPassClosedDoors);
+
+                canReachEdge =
+                    map.reachability.CanReachMapEdge(cell, traverseParms);
+
+                regionCanReachEdgeCache[region] = canReachEdge;
+            }
+
+            return canReachEdge;
         }
 
         /// <summary>
@@ -1326,29 +1331,54 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            int maxDistanceSquared =
-                (int)(QuickDropAnchorSearchRadius * QuickDropAnchorSearchRadius);
+            // 本次搜索专用缓存：同一 Region 只执行一次边缘可达性检查。
+            // 缓存只存在于一次方法调用内，不跨地图、不跨部署、不写入存档。
+            Dictionary<Region, bool> regionCanReachEdgeCache =
+                new Dictionary<Region, bool>();
 
-            // 候选锚点：距地图中心不超过搜索半径，且自身即为安全格；按距中心从近到远排序。
-            List<IntVec3> anchors = map.AllCells
-                .Where(cell =>
-                    cell.DistanceToSquared(map.Center) <= maxDistanceSquared
-                    && IsSafeJointOperationDropCell(map, cell))
-                .OrderBy(cell => cell.DistanceToSquared(map.Center))
-                .Take(QuickDropAnchorAttemptLimit)
-                .ToList();
+            int attemptedSafeAnchors = 0;
 
-            foreach (IntVec3 anchor in anchors)
+            // 候选锚点按从地图中心向外的顺序枚举（GenRadial 本身由近到远），不再扫描全图或排序。
+            foreach (IntVec3 anchor in GenRadial.RadialCellsAround(
+                         map.Center,
+                         QuickDropAnchorSearchRadius,
+                         useCenter: true))
             {
+                if (!anchor.InBounds(map))
+                {
+                    continue;
+                }
+
+                // 只有通过安全校验的锚点才计入 QuickDropAnchorAttemptLimit
+                // （无效 / 屋顶 / 室内 / 建筑格不计入尝试上限）。
+                if (!IsSafeJointOperationDropCell(
+                        map,
+                        anchor,
+                        regionCanReachEdgeCache))
+                {
+                    continue;
+                }
+
+                attemptedSafeAnchors++;
+
                 List<IntVec3> selected = new List<IntVec3>();
 
                 // 在锚点周围枚举径向格子，再次逐一校验安全条件；不足则清空本次临时结果继续下一个锚点。
+                // 内外两层共享同一个 regionCanReachEdgeCache，避免同一区域内重复可达性搜索。
                 foreach (IntVec3 candidate in GenRadial.RadialCellsAround(
                              anchor,
                              QuickDropZoneRadius,
                              useCenter: true))
                 {
-                    if (!IsSafeJointOperationDropCell(map, candidate))
+                    if (!candidate.InBounds(map))
+                    {
+                        continue;
+                    }
+
+                    if (!IsSafeJointOperationDropCell(
+                            map,
+                            candidate,
+                            regionCanReachEdgeCache))
                     {
                         continue;
                     }
@@ -1367,58 +1397,156 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (selected.Count >= requiredCount)
                     {
                         dropCells = selected;
+
+                        LogDeploymentDiagnostic(
+                            "SafeJointOperationDropZoneResolved",
+                            "faction=-"
+                            + " | requiredCount=" + requiredCount
+                            + " | attemptedSafeAnchors=" + attemptedSafeAnchors
+                            + " | cachedRegionCount=" + regionCanReachEdgeCache.Count
+                            + " | success=true"
+                            + " | dropCellCount=" + dropCells.Count
+                            + " | map=" + map.GetUniqueLoadID());
+
                         return true;
                     }
+                }
+
+                // QuickDropAnchorAttemptLimit 限制“已验证安全并实际尝试建立空投区的锚点数量”。
+                if (attemptedSafeAnchors >= QuickDropAnchorAttemptLimit)
+                {
+                    break;
                 }
             }
 
             dropCells.Clear();
+
+            LogDeploymentDiagnostic(
+                "SafeJointOperationDropZoneResolved",
+                "faction=-"
+                + " | requiredCount=" + requiredCount
+                + " | attemptedSafeAnchors=" + attemptedSafeAnchors
+                + " | cachedRegionCount=" + regionCanReachEdgeCache.Count
+                + " | success=false"
+                + " | dropCellCount=0"
+                + " | map=" + map.GetUniqueLoadID());
+
             return false;
         }
 
         /// <summary>
-        /// 将援军精确空投到已经验证过的确定格子（不使用 CenterDrop，也不使用会随机重选室内格的
-        /// DropThingsNear）。每个 Pawn 对应一个验证过的 dropCells[i]，逐个生成空投舱。
-        /// 调用前必须已经取得完整的 dropCells 列表，因此不会出现“部分空投、部分步行”。
+        /// 仅为全部 Pawn 准备空投容器（ActiveTransporterInfo），不生成任何空投舱、不修改地图。
+        /// 只有“全部” Pawn 都成功放入各自容器时才返回 true；任一 TryAdd 失败时回滚此前已准备的容器，
+        /// 使整支援军可以安全地回退 EdgeWalkIn（不破坏、不生成、不 Spawn Pawn）。
         /// </summary>
-        private static void DropPawnsAtExactCells(
-            Faction faction,
+        private static bool TryPrepareExactDropPods(
             List<Pawn> pawns,
-            List<IntVec3> dropCells,
-            Map map)
+            out List<ActiveTransporterInfo> preparedPods)
         {
-            if (pawns == null
-                || dropCells == null
-                || pawns.Count == 0
-                || pawns.Count != dropCells.Count)
+            preparedPods = new List<ActiveTransporterInfo>();
+
+            if (pawns == null || pawns.Count == 0)
             {
-                throw new ArgumentException(
-                    "Joint operation safe drop requires one validated cell per pawn.");
+                return false;
             }
 
             for (int i = 0; i < pawns.Count; i++)
             {
                 Pawn pawn = pawns[i];
-                IntVec3 cell = dropCells[i];
 
-                ActiveTransporterInfo info = new ActiveTransporterInfo();
-                if (!info.innerContainer.TryAdd(pawn))
+                if (pawn == null || pawn.Destroyed || pawn.Spawned)
                 {
-                    throw new InvalidOperationException(
-                        "Joint operation safe drop failed to place pawn into drop pod container.");
+                    ReleasePreparedDropPods(pawns, preparedPods);
+                    preparedPods.Clear();
+                    return false;
                 }
 
-                info.openDelay = QuickDropPodOpenDelay;
-                info.leaveSlag = true;
+                ActiveTransporterInfo info = new ActiveTransporterInfo
+                {
+                    openDelay = QuickDropPodOpenDelay,
+                    leaveSlag = true
+                };
 
-                DropPodUtility.MakeDropPodAt(cell, map, info, faction);
+                if (!info.innerContainer.TryAdd(pawn))
+                {
+                    ReleasePreparedDropPods(pawns, preparedPods);
+                    preparedPods.Clear();
+                    return false;
+                }
+
+                preparedPods.Add(info);
+            }
+
+            return preparedPods.Count == pawns.Count;
+        }
+
+        /// <summary>
+        /// 仅用于“尚未调用 MakeDropPodAt”的准备阶段回滚：把已进入临时容器的 Pawn 安全移出，
+        /// 不 Destroy、不 Spawn、不加入 WorldPawns，使同一批 Pawn 可被 EdgeWalkIn 复用。
+        /// </summary>
+        private static void ReleasePreparedDropPods(
+            List<Pawn> pawns,
+            List<ActiveTransporterInfo> preparedPods)
+        {
+            if (pawns == null || preparedPods == null)
+            {
+                return;
+            }
+
+            int count = Math.Min(pawns.Count, preparedPods.Count);
+
+            for (int i = 0; i < count; i++)
+            {
+                Pawn pawn = pawns[i];
+                ActiveTransporterInfo info = preparedPods[i];
+
+                if (pawn != null
+                    && info?.innerContainer != null
+                    && info.innerContainer.Contains(pawn))
+                {
+                    info.innerContainer.Remove(pawn);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 在“全部安全格”与“全部空投容器”已准备好的前提下，逐个生成空投舱到确定格子上。
+        /// 本方法不再执行 TryAdd；全部容器和全部安全格已在修改地图前完成准备，
+        /// 避免因落点不足或容器准备失败造成部分部署。
+        /// 注意：MakeDropPodAt 等外部生成调用若发生异常仍可能留下部分 Skyfaller，
+        /// 该异常由 DeployGroup 现有异常日志处理，本方法不作强行销毁回滚。
+        /// </summary>
+        private static void SpawnPreparedExactDropPods(
+            Faction faction,
+            List<ActiveTransporterInfo> preparedPods,
+            List<IntVec3> dropCells,
+            Map map)
+        {
+            if (faction == null
+                || preparedPods == null
+                || dropCells == null
+                || preparedPods.Count == 0
+                || preparedPods.Count != dropCells.Count)
+            {
+                throw new ArgumentException(
+                    "Joint operation prepared drop pods must match validated drop cells.");
+            }
+
+            for (int i = 0; i < preparedPods.Count; i++)
+            {
+                DropPodUtility.MakeDropPodAt(
+                    dropCells[i],
+                    map,
+                    preparedPods[i],
+                    faction);
             }
         }
 
         /// <summary>
         /// 把生成的援军送入目标地图并创建本 MOD 自定义 Lord（D / C）。
         /// 低科技参与派系继续走边缘步行（EdgeWalkIn）；
-        /// 高科技参与派系优先使用专用安全室外空投，找不到完整安全区时整体回退为边缘步行。
+        /// 高科技参与派系优先使用专用安全室外空投，找不到完整安全区或容器准备失败时整体回退为边缘步行。
+        /// 实际采用的抵达方式通过 out actualArrivalMode 返回给调用方，供外层日志如实记录。
         /// 每只援军写入唯一 aidTag，并通过 QuestUtility.AddQuestTag 标记到 Lord，
         /// 之后只通过 LordJob 类型 + aidTag 精确追踪，不误伤其他援军。
         /// </summary>
@@ -1429,36 +1557,81 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map,
             bool useQuick,
             string aidTag,
-            Faction? enemyFaction)
+            Faction? enemyFaction,
+            out string actualArrivalMode)
         {
             // useQuick 表示“本参与派系请求快速空投”，不直接等于“已确定能够空投”。
             // 低科技派系传入 false，直接走边缘步行；高科技派系传入 true，优先寻找安全室外空投区。
             bool quickDropRequested = useQuick;
+            bool safeDropCellsResolved = false;
+            bool preparedDropPodsResolved = false;
             bool safeQuickDropResolved = false;
             List<IntVec3>? quickDropCells = null;
+            List<ActiveTransporterInfo>? preparedDropPods = null;
+
+            // 回退 / 低科技抵达方式固定为边缘步行；不使用 CenterDrop（仍可能自行重选室内落点）。
+            PawnsArrivalModeDef fallbackArrivalMode =
+                PawnsArrivalModeDefOf.EdgeWalkIn;
+
+            // actualArrivalMode 必须在所有正常 return 路径前都有明确值；默认即回退方式。
+            actualArrivalMode = fallbackArrivalMode.defName;
 
             if (quickDropRequested)
             {
-                safeQuickDropResolved =
+                safeDropCellsResolved =
                     TryFindSafeJointOperationDropCells(
                         map,
                         pawns.Count,
                         out List<IntVec3> resolvedCells);
 
-                if (safeQuickDropResolved)
+                if (safeDropCellsResolved)
                 {
-                    quickDropCells = resolvedCells;
+                    // 找到完整安全落点后，再整体准备全部空投容器（不生成任何空投舱）。
+                    preparedDropPodsResolved =
+                        TryPrepareExactDropPods(
+                            pawns,
+                            out List<ActiveTransporterInfo> resolvedPods);
 
-                    LogDeploymentDiagnostic(
-                        "SafeQuickDropResolved",
-                        "faction=" + (faction?.Name ?? "-")
-                        + " | pawnCount=" + (pawns?.Count ?? 0)
-                        + " | dropCellCount=" + resolvedCells.Count
-                        + " | firstCell=" + (resolvedCells.Count > 0
-                            ? resolvedCells[0].ToString()
-                            : "Invalid")
-                        + " | map=" + map.GetUniqueLoadID()
-                        + " | aidTag=" + (aidTag ?? "-"));
+                    if (preparedDropPodsResolved
+                        && resolvedPods.Count == resolvedCells.Count)
+                    {
+                        quickDropCells = resolvedCells;
+                        preparedDropPods = resolvedPods;
+                        safeQuickDropResolved = true;
+                        actualArrivalMode = SafeOutdoorExactDropModeName;
+
+                        LogDeploymentDiagnostic(
+                            "SafeQuickDropResolved",
+                            "faction=" + (faction?.Name ?? "-")
+                            + " | pawnCount=" + (pawns?.Count ?? 0)
+                            + " | dropCellCount=" + resolvedCells.Count
+                            + " | preparedPodCount=" + resolvedPods.Count
+                            + " | firstCell=" + (resolvedCells.Count > 0
+                                ? resolvedCells[0].ToString()
+                                : "Invalid")
+                            + " | map=" + map.GetUniqueLoadID()
+                            + " | aidTag=" + (aidTag ?? "-"));
+                    }
+                    else
+                    {
+                        // 容器准备失败或数量不一致：回滚已准备容器，整支回退 EdgeWalkIn。
+                        ReleasePreparedDropPods(pawns!, resolvedPods);
+                        resolvedPods.Clear();
+                        safeQuickDropResolved = false;
+                        quickDropCells = null;
+                        preparedDropPods = null;
+                        actualArrivalMode = fallbackArrivalMode.defName;
+
+                        Log.Warning(
+                            JointOpLogPrefix + " Event=QuickDropFallbackToEdgeWalkIn"
+                            + " | reason=DropPodContainerPreparationFailed"
+                            + " | faction=" + (faction?.Name ?? "-")
+                            + " | pawnCount=" + (pawns?.Count ?? 0)
+                            + " | preparedPodCount=" + resolvedPods.Count
+                            + " | resolvedCellCount=" + resolvedCells.Count
+                            + " | map=" + map.GetUniqueLoadID()
+                            + " | aidTag=" + (aidTag ?? "-"));
+                    }
                 }
                 else
                 {
@@ -1471,29 +1644,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         + " | aidTag=" + (aidTag ?? "-"));
                 }
             }
-
-            // 回退 / 低科技抵达方式固定为边缘步行；不使用 CenterDrop（仍可能自行重选室内落点）。
-            PawnsArrivalModeDef fallbackArrivalMode =
-                PawnsArrivalModeDefOf.EdgeWalkIn;
-
-            LogDeploymentDiagnostic(
-                "DeployGroupStarted",
-                "faction=" + (faction?.Name ?? "-")
-                + " | pawnCount=" + (pawns?.Count ?? 0)
-                + " | points=" + points.ToString("F1")
-                + " | quickDropRequested=" + quickDropRequested
-                + " | safeQuickDropResolved=" + safeQuickDropResolved
-                + " | actualArrivalMode=" + (safeQuickDropResolved
-                    ? "SafeOutdoorExactDrop"
-                    : fallbackArrivalMode.defName)
-                + " | resolvedDropCellCount=" + (quickDropCells?.Count ?? 0)
-                + " | spawnCenter=" + (safeQuickDropResolved
-                    ? (quickDropCells != null && quickDropCells.Count > 0
-                        ? quickDropCells[0].ToString()
-                        : "Invalid")
-                    : "Invalid")
-                + " | map=" + map.GetUniqueLoadID()
-                + " | aidTag=" + (aidTag ?? "-"));
 
             IncidentParms parms = new IncidentParms
             {
@@ -1512,11 +1662,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!safeQuickDropResolved
                 && !fallbackArrivalMode.Worker.TryResolveRaidSpawnCenter(parms))
             {
+                // 静态保护：回退 EdgeWalkIn 时 preparedDropPods 必须为空；若异常持有则释放，
+                // 避免 Pawn 被临时容器持有导致外层 SafelyDiscardPawn 处理出错。
+                if (preparedDropPods != null && preparedDropPods.Count > 0)
+                {
+                    if (Prefs.DevMode)
+                    {
+                        Log.Error(
+                            JointOpLogPrefix + " Event=EdgeWalkInCleanupUnexpectedPreparedPods"
+                            + " | faction=" + (faction?.Name ?? "-")
+                            + " | preparedPodCount=" + preparedDropPods.Count
+                            + " | aidTag=" + (aidTag ?? "-"));
+                    }
+
+                    ReleasePreparedDropPods(pawns!, preparedDropPods);
+                    preparedDropPods = null;
+                }
+
                 Log.Warning(
                     JointOpLogPrefix + " Event=DeployGroupFailed"
                     + " | reason=EdgeSpawnCenterResolveFailed"
                     + " | quickDropRequested=" + quickDropRequested
+                    + " | safeDropCellsResolved=" + safeDropCellsResolved
+                    + " | preparedDropPodsResolved=" + preparedDropPodsResolved
                     + " | safeQuickDropResolved=" + safeQuickDropResolved
+                    + " | actualArrivalMode=" + actualArrivalMode
                     + " | faction=" + (faction?.Name ?? "-")
                     + " | map=" + map.GetUniqueLoadID()
                     + " | points=" + points.ToString("F1")
@@ -1524,12 +1694,41 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            // DeployGroupStarted 必须在：安全落点搜索完成、容器准备或回退完成、actualArrivalMode 确定、
+            // 且 EdgeWalkIn 的 spawnCenter 已解析完成之后输出。
+            LogDeploymentDiagnostic(
+                "DeployGroupStarted",
+                "faction=" + (faction?.Name ?? "-")
+                + " | pawnCount=" + (pawns?.Count ?? 0)
+                + " | points=" + points.ToString("F1")
+                + " | quickDropRequested=" + quickDropRequested
+                + " | safeDropCellsResolved=" + safeDropCellsResolved
+                + " | preparedDropPodsResolved=" + preparedDropPodsResolved
+                + " | safeQuickDropResolved=" + safeQuickDropResolved
+                + " | actualArrivalMode=" + actualArrivalMode
+                + " | resolvedDropCellCount=" + (quickDropCells?.Count ?? 0)
+                + " | preparedDropPodCount=" + (preparedDropPods?.Count ?? 0)
+                + " | spawnCenter=" + (safeQuickDropResolved
+                    ? (quickDropCells != null && quickDropCells.Count > 0
+                        ? quickDropCells[0].ToString()
+                        : "Invalid")
+                    : parms.spawnCenter.ToString())
+                + " | map=" + map.GetUniqueLoadID()
+                + " | aidTag=" + (aidTag ?? "-"));
+
             try
             {
-                if (safeQuickDropResolved && quickDropCells != null)
+                if (safeQuickDropResolved
+                    && quickDropCells != null
+                    && preparedDropPods != null)
                 {
-                    // 整支援军一次性精确空投到已验证的安全格，不存在“部分空投”。
-                    DropPawnsAtExactCells(faction!, pawns!, quickDropCells, map);
+                    // 全部容器和全部安全格已在修改地图前完成准备，避免因落点不足或容器准备失败造成部分部署。
+                    // MakeDropPodAt 等外部生成调用若发生异常，仍由现有异常日志处理。
+                    SpawnPreparedExactDropPods(
+                        faction!,
+                        preparedDropPods,
+                        quickDropCells,
+                        map);
                 }
                 else
                 {
@@ -1567,10 +1766,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     + " | faction=" + (faction?.Name ?? "-")
                     + " | pawnCount=" + (pawns?.Count ?? 0)
                     + " | quickDropRequested=" + quickDropRequested
+                    + " | safeDropCellsResolved=" + safeDropCellsResolved
+                    + " | preparedDropPodsResolved=" + preparedDropPodsResolved
                     + " | safeQuickDropResolved=" + safeQuickDropResolved
-                    + " | actualArrivalMode=" + (safeQuickDropResolved
-                        ? "SafeOutdoorExactDrop"
-                        : fallbackArrivalMode.defName)
+                    + " | actualArrivalMode=" + actualArrivalMode
                     + " | map=" + map.GetUniqueLoadID()
                     + " | aidTag=" + (aidTag ?? "-")
                     + " | ex=" + ex);
