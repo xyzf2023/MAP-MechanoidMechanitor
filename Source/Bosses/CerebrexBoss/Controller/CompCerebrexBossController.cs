@@ -85,6 +85,9 @@ namespace MAP_MechanoidMechanitor
         private List<Pawn> bandwidthBerserkPawns = new List<Pawn>();
         private List<Pawn> bandwidthTargetsUsedThisBattle = new List<Pawn>();
 
+        // 纯客户端瞬态视觉状态：不写入存档，不参与任何目标、狂暴或结束判定。
+        private readonly CerebrexBandwidthVisuals bandwidthVisuals = new CerebrexBandwidthVisuals();
+
         public Lord? GetAssaultLord() => assaultLord;
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
@@ -171,6 +174,7 @@ namespace MAP_MechanoidMechanitor
             bandwidthBerserkPawns ??= new List<Pawn>();
             bandwidthTargetsUsedThisBattle ??= new List<Pawn>();
             disabledPowerBuildings ??= new Dictionary<Thing, int>();
+            bandwidthVisuals.ResetTransientState();
 
             // 注意：bandwidthBerserkPawns / bandwidthTargetsUsedThisBattle 不得因 Pawn
             // 死亡、倒地或离开地图而在此处删除（死亡 Pawn 可能复活，目标死亡后
@@ -949,6 +953,7 @@ namespace MAP_MechanoidMechanitor
             bandwidthInterferenceEndTick = Find.TickManager.TicksGame + BandwidthDurationTicks;
 
             overseer.mechanitor.Notify_BandwidthChanged();
+            bandwidthVisuals.Start(parent, target);
 
             List<Pawn> afterControlled = overseer.mechanitor.ControlledPawns;
             foreach (Pawn p in beforeControlled)
@@ -1081,6 +1086,8 @@ namespace MAP_MechanoidMechanitor
             {
                 bandwidthBerserkPawns.Add(p);
             }
+
+            bandwidthVisuals.NotifyBerserk(p);
         }
 
         // 本轮狂暴 Pawn 是否“失去行动能力”。仅包括：null、倒地、死亡、摧毁、离开当前地图。
@@ -1214,6 +1221,7 @@ namespace MAP_MechanoidMechanitor
             }
             else
             {
+                bandwidthVisuals.Tick(parent, bandwidthTarget);
                 CleanupDownedBerserkMarkers();
             }
         }
@@ -1286,6 +1294,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             bandwidthOverseer?.mechanitor?.Notify_BandwidthChanged();
+
+            bool playRecoveryVisual = startCooldown
+                && reason != "loadfix"
+                && parent.Spawned
+                && !parent.Destroyed
+                && parent.Map != null;
+            bandwidthVisuals.Stop(bandwidthTarget, bandwidthBerserkPawns, playRecoveryVisual);
 
             bandwidthBerserkPawns.Clear();
             bandwidthTarget = null;
