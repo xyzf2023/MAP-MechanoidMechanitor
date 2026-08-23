@@ -1,4 +1,5 @@
 using HarmonyLib;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -13,7 +14,9 @@ namespace MAP_MechanoidMechanitor
 
         static ModInit()
         {
-            new Harmony(HarmonyId).PatchAll();
+            Harmony harmony = new Harmony(HarmonyId);
+            harmony.PatchAll();
+            ThirdPartyCompatibilityBootstrap.ApplyAll(harmony);
             PawnNameValidationUtility.ExtendPawnNameRegex();
             MechanoidMechanitorBrainImplantFeatureState.InitializeFromSettings();
             HumanImplantFeatureState.InitializeFromSettings();
