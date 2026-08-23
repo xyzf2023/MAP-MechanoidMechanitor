@@ -154,19 +154,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            JobDef? jobDef = DefDatabase<JobDef>.GetNamedSilentFail(
-                DeclarationJobDefName);
+            JobDef? jobDef =
+                MAPMechanitor_JobDefOf.MAP_BroadcastSymbiosisDeclarationPortable;
             if (jobDef == null)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 无法广播脱离声明：缺少 "
-                    + DeclarationJobDefName
-                    + "。");
+                    "[MAP-机械族机械师] 无法通过微型通讯器广播脱离声明："
+                    + "缺少 MAP_BroadcastSymbiosisDeclarationPortable。");
                 return;
             }
 
-            Job job = JobMaker.MakeJob(
-                MAPMechanitor_JobDefOf.MAP_BroadcastSymbiosisDeclarationPortable);
+            Job job = JobMaker.MakeJob(jobDef);
             pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
             PlayerKnowledgeDatabase.KnowledgeDemonstrated(
                 ConceptDefOf.OpeningComms,

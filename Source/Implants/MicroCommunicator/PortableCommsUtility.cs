@@ -70,6 +70,47 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
+        // 所有由微型通讯器产生的菜单动作在真正执行前，
+        // 统一再次校验植入体 / 地图 / 耀斑等状态。
+        private static bool TryRevalidatePortableComms(Pawn pawn)
+        {
+            if (CanUsePortableComms(pawn, out string reason))
+            {
+                return true;
+            }
+
+            Messages.Message(
+                reason,
+                pawn,
+                MessageTypeDefOf.RejectInput,
+                historical: false);
+
+            return false;
+        }
+
+        // 复制原版 Faction.LeaderIsAvailableToTalk() 的纯显示/可用判断。
+        // 该方法为 Faction 私有，这里严格内联其等价逻辑，不调用反射。
+        private static bool IsFactionLeaderAvailableToTalk(Faction faction)
+        {
+            Pawn? leader = faction.leader;
+
+            if (leader == null)
+            {
+                return false;
+            }
+
+            if (leader.Spawned
+                && (leader.Downed
+                    || leader.IsPrisoner
+                    || !leader.Awake()
+                    || leader.InMentalState))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public static void OpenCommsMenu(Pawn pawn)
         {
             if (!CanUsePortableComms(pawn, out string reason))
@@ -155,27 +196,76 @@ namespace MAP_MechanoidMechanitor
         {
             string label = "CallOnRadio".Translate(ship.GetCallLabel());
 
-            FloatMenuOption option = new FloatMenuOption(
-                label,
-                () =>
+            // 菜单创建时即计算 AcceptanceReport，严格镜像原版
+            // PassingShip.CommFloatMenuOption 的拒绝语义。
+            AcceptanceReport initialReport =
+                pawn.CanTradeWith(ship.Faction, ship.TraderKind);
+
+            System.Action? action = null;
+
+            if (!initialReport.Accepted)
+            {
+                if (!initialReport.Reason.NullOrEmpty())
                 {
-                    // 镜像 TradeShip.CanCommunicateWith 的核心限制
-                    // （base.WasAccepted + negotiator.CanTradeWith）。
-                    AcceptanceReport report =
-                        pawn.CanTradeWith(ship.Faction, ship.TraderKind);
-                    if (!report.Accepted)
+                    string initialReason = initialReport.Reason;
+
+                    action = () =>
                     {
+                        if (!TryRevalidatePortableComms(pawn))
+                        {
+                            return;
+                        }
+
                         Messages.Message(
-                            report.Reason,
+                            initialReason,
                             pawn,
                             MessageTypeDefOf.RejectInput,
                             historical: false);
+                    };
+                }
+                // Rejected 且 Reason 为空 -> action 保持 null，菜单项 disabled。
+            }
+            else
+            {
+                action = () =>
+                {
+                    if (!TryRevalidatePortableComms(pawn))
+                    {
+                        return;
+                    }
+
+                    if (!ship.CanTradeNow)
+                    {
+                        return;
+                    }
+
+                    // 菜单打开后派系关系 / 能力 / permit 等可能变化，
+                    // 点击时重新计算一次。
+                    AcceptanceReport currentReport =
+                        pawn.CanTradeWith(ship.Faction, ship.TraderKind);
+                    if (!currentReport.Accepted)
+                    {
+                        if (!currentReport.Reason.NullOrEmpty())
+                        {
+                            Messages.Message(
+                                currentReport.Reason,
+                                pawn,
+                                MessageTypeDefOf.RejectInput,
+                                historical: false);
+                        }
+
+                        return;
+                    }
+
+                    Map? map = pawn.Map;
+                    if (map == null)
+                    {
                         return;
                     }
 
                     // 微型通讯器只替代通讯台，绝不替代轨道贸易信标。
                     if (!Building_OrbitalTradeBeacon
-                            .AllPowered(pawn.Map)
+                            .AllPowered(map)
                             .Any())
                     {
                         Messages.Message(
@@ -189,9 +279,10 @@ namespace MAP_MechanoidMechanitor
                     // 最终动作直接复用 TradeShip.TryOpenComms(pawn)，
                     // 不自行 new Dialog_Trade（保留原版教程/信件等附带行为）。
                     ship.TryOpenComms(pawn);
-                });
+                };
+            }
 
-            options.Add(option);
+            options.Add(new FloatMenuOption(label, action));
         }
 
         private static void AddFactionOptions(
@@ -212,16 +303,8 @@ namespace MAP_MechanoidMechanitor
                     + faction.PlayerGoodwill.ToStringWithSign() + ")";
 
                 // 复制原版 Faction.CommFloatMenuOption 的纯显示逻辑。
-                // LeaderIsAvailableToTalk() 是 Faction 私有方法，这里内联其判断。
-                bool leaderAvailable =
-                    faction.leader != null
-                    && !(faction.leader.Spawned
-                        && (faction.leader.Downed
-                            || faction.leader.IsPrisoner
-                            || !faction.leader.Awake()
-                            || faction.leader.InMentalState));
-
-                if (!leaderAvailable)
+                // LeaderIsAvailableToTalk() 是 Faction 私有方法，这里复用等价判断。
+                if (!IsFactionLeaderAvailableToTalk(faction))
                 {
                     string text2 = (faction.leader == null)
                         ? "LeaderUnavailableNoLeader".Translate()
@@ -239,7 +322,21 @@ namespace MAP_MechanoidMechanitor
 
                 FloatMenuOption option = new FloatMenuOption(
                     text,
-                    () => faction.TryOpenComms(pawn),
+                    () =>
+                    {
+                        if (!TryRevalidatePortableComms(pawn))
+                        {
+                            return;
+                        }
+
+                        // 菜单打开后领袖状态也可能变化，点击时再次验证。
+                        if (!IsFactionLeaderAvailableToTalk(faction))
+                        {
+                            return;
+                        }
+
+                        faction.TryOpenComms(pawn);
+                    },
                     faction.def.FactionIcon,
                     faction.Color,
                     MenuOptionPriority.InitiateSocial);
@@ -260,10 +357,23 @@ namespace MAP_MechanoidMechanitor
                         MechanoidMechanitorMechHiveCommunicationUtility
                             .ContactOvermindLabel,
                         () =>
+                        {
+                            if (!TryRevalidatePortableComms(pawn))
+                            {
+                                return;
+                            }
+
+                            if (!MechanoidMechanitorMechHiveCommunicationUtility
+                                    .TryGetContactableMechHive(out _))
+                            {
+                                return;
+                            }
+
                             MechanoidMechanitorMechHiveCommunicationUtility
                                 .TryOpenContactOvermindDialog(
                                     pawn,
-                                    pawn.Map)));
+                                    pawn.Map);
+                        }));
             }
 
             // 2. 接入共生盟约
@@ -273,8 +383,21 @@ namespace MAP_MechanoidMechanitor
                     new FloatMenuOption(
                         SymbiosisCovenantCommunicationUtility.AccessLabel,
                         () =>
+                        {
+                            if (!TryRevalidatePortableComms(pawn))
+                            {
+                                return;
+                            }
+
+                            if (!SymbiosisCovenantCommunicationUtility
+                                    .CanAccessCovenant())
+                            {
+                                return;
+                            }
+
                             SymbiosisCovenantCommunicationUtility
-                                .TryOpenDialog(pawn)));
+                                .TryOpenDialog(pawn);
+                        }));
             }
 
             // 3. 广播脱离声明（便携专用确认入口，无 console）
@@ -286,8 +409,21 @@ namespace MAP_MechanoidMechanitor
                         SymbiosisCovenantCommunicationUtility
                             .DeclarationLabel,
                         () =>
+                        {
+                            if (!TryRevalidatePortableComms(pawn))
+                            {
+                                return;
+                            }
+
+                            if (!SymbiosisCovenantCommunicationUtility
+                                    .CanBroadcastDeclaration())
+                            {
+                                return;
+                            }
+
                             SymbiosisCovenantCommunicationUtility
-                                .ShowPortableDeclarationConfirmation(pawn)));
+                                .ShowPortableDeclarationConfirmation(pawn);
+                        }));
             }
         }
     }
