@@ -13,8 +13,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// - 不 Patch WorldObject.Destroy() 等过于宽泛的入口。
     /// - 只在原版 CheckDefeated 正常返回后检查。
     /// - 只查当前正在进行的联合军事行动 QuestPart。
-    /// - 仅当 operation.targetWorldObject == 本次传入的 factionBase
-    ///   且 operation 已接取、尚未成功/失败/无效结束时，才通知该 QuestPart 成功。
+    /// - 仅当 operation.targetWorldObject == 本次传入的 factionBase（引用相等）时才通知。
+    /// - 不限制是否已接取：未接取（OfferPending）但据点确实被摧毁也允许成功结算；
+    ///   是否允许成功由 QuestPart 内部统一判定（OfferPending+真摧毁 / 已接取且战斗就绪 /
+    ///   已接取未就绪则拒绝），本 Patch 不复制状态机。
     /// - 绝不因其他派系据点被摧毁、任何普通任务、任何其他 MOD 世界对象而误结算本任务。
     /// </summary>
     [HarmonyPatch(typeof(SettlementDefeatUtility), nameof(SettlementDefeatUtility.CheckDefeated))]
@@ -39,7 +41,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             QuestPart_SymbiosisCovenantJointOperation? part =
                 SymbiosisCovenantJointOperationUtility.FindActiveOperationPart();
-            if (part == null || !part.IsOperationAccepted)
+            if (part == null)
             {
                 return;
             }
@@ -50,18 +52,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            // 仅当行动已进入真正的战斗就绪状态时才允许结算成功：
-            // 玩家已进入、目标威胁曾被确认、援军实际生成并已部署。
-            if (!part.playerEngaged
-                || !part.targetThreatConfirmed
-                || !part.reinforcementsGenerated
-                || part.stage
-                    != QuestPart_SymbiosisCovenantJointOperation
-                        .SymbiosisCovenantJointOperationStage.ReinforcementsDeployed)
-            {
-                return;
-            }
-
+            // 本 Patch 只负责报告“原版已经真正摧毁了这个 Settlement”。
+            // 是否允许成功（OfferPending + 真摧毁 / 已接取且战斗就绪 / 已接取未就绪则拒绝）
+            // 全部交由 QuestPart 内部统一判定，不在 Patch 中复制状态机。
             part.NotifySettlementDestroyed(factionBase);
         }
     }

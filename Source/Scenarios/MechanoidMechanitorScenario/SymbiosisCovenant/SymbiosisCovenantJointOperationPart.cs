@@ -67,9 +67,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const int TargetClearCheckInterval = 60;
         // 地图生成后允许守军初始化的最大保护窗口（不是玩家战斗限时）。
         private const int ThreatInitializationDeadlineTicks = 600;
-        // 目标地图登记为“已进入”后，到首次尝试部署援军的最小缓冲（ticks）；
-        // 实际部署仍受玩家单位到场与目标威胁确认双重门控，此处只避免极端 tick 竞态。
-        private const int TargetMapRegistrationDeploymentDelayTicks = 250;
+        // 目标地图登记只负责延迟一 tick 让地图完全进入 Find.Maps；
+        // 真正部署仍受玩家单位到场与目标威胁确认双重门控，不可用此延迟代替正式门控。
+        private const int TargetMapRegistrationDeploymentDelayTicks = 1;
+        // OfferPending 普通 Site：收到 NoActiveThreats / AllEnemiesDefeated 信号后，到真正
+        // 用原版活动威胁标准复查之间的延迟窗口，避免守军未初始化即被误判为已清除。
+        private const int OfferPendingClearVerificationDelayTicks = 250;
         private const string AidQuestTagPrefix = "MAP_SymbiosisCovenantJointOp";
 
         // 联合军事行动诊断日志统一前缀。
@@ -103,6 +106,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         // OperationActive 下观察到目标地图已存在的一次性观测标记（运行期）。
         private bool operationActiveTargetMapObservedLogged;
+
+        // —— 普通 Site 在 OfferPending 期间的延迟验证状态（防止据点刚生成、守军未初始化，
+        // 或一时找不到站立守军就被误判为“彻底清除”而过早成功）——
+        // OfferPending 期间首次观察到目标地图有效（且含目标派系守军）的时间。
+        private int offerPendingTargetMapFirstObservedTick = -1;
+        // 延迟验证到期 tick；< 0 表示尚未排定验证。
+        private int offerPendingClearVerificationDueTick = -1;
+        // 是否曾观察到目标原本确实存在威胁（守军站场），一旦变 true 不再回退。
+        private bool offerPendingTargetThreatObserved;
+        // 仅用于诊断：记录最近一次排定验证的原因。
+        private string? offerPendingClearVerificationReason;
 
         // 相关信号日志节流（运行期；只记录每种 tag 的首次出现，避免 NoActiveThreats /
         // AllEnemiesDefeated 等重复信号刷屏）。仅影响日志，不影响游戏逻辑。
@@ -227,6 +241,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 收紧登记目标：只接受当前任务的精确目标地图（引用相等），禁止其他地图被误登记。
+            if (targetWorldObject is not MapParent targetParent
+                || !ReferenceEquals(targetParent.Map, map))
+            {
+                return;
+            }
+
             bool alreadyEntered = stage == SymbiosisCovenantJointOperationStage.TargetMapEntered;
             if (stage != SymbiosisCovenantJointOperationStage.OperationActive && !alreadyEntered)
             {
@@ -240,8 +261,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 targetMapWasGeneratedByThisOperation = generatedAfterAcceptance;
                 deploymentDueTick = now + TargetMapRegistrationDeploymentDelayTicks;
-                threatInitializationDeadlineTick = now + ThreatInitializationDeadlineTicks;
+                // 威胁初始化期限从部署检查时刻继续计算，避免从 now 直接叠加缩短有效初始化窗口。
+                threatInitializationDeadlineTick = deploymentDueTick + ThreatInitializationDeadlineTicks;
                 stage = SymbiosisCovenantJointOperationStage.TargetMapEntered;
+                // 首次登记成功：清除可能存在的等待原因记录。
+                ClearDeploymentWaitReason();
             }
             else
             {
@@ -272,6 +296,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             int now = Find.TickManager.TicksGame;
 
+            // OfferPending（尚未接取）期间：观察目标地图与真实威胁，并运行延迟验证，
+            // 以便在玩家已彻底清除目标时（不生成援军）成功结算。这条分支独立于正式行动逻辑，
+            // 且必须在 targetWorldObject.Destroyed 等无效结束判断之前处理。
+            if (stage == SymbiosisCovenantJointOperationStage.OfferPending)
+            {
+                ObserveOfferPendingTargetMap(now);
+                TryRunOfferPendingClearVerification(now);
+                return;
+            }
+
             // 诊断（只读）：接取后下一 tick 一次性检查 Part 是否被正确启用。
             if (activationDiagnosticDueTick >= 0
                 && now >= activationDiagnosticDueTick
@@ -288,20 +322,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || stage == SymbiosisCovenantJointOperationStage.ReinforcementsDeployed)
             {
                 // OperationActive 下若目标地图已存在却尚未登记为 TargetMapEntered，
-                // 使用正式补登记路径（generatedAfterAcceptance=false）修复，
-                // 替换原本“只观察不修复”的行为。
-                if (stage == SymbiosisCovenantJointOperationStage.OperationActive
-                    && !operationActiveTargetMapObservedLogged)
+                // 每 tick 轻量确认并补登记（只检查 MapParent.Map / Disposed / Find.Maps，
+                // 不做全图 Pawn 扫描）。登记成功后 stage 会变为 TargetMapEntered，自然停止。
+                // 一次性日志标志只限制日志，绝不允许它阻断业务重试。
+                if (stage == SymbiosisCovenantJointOperationStage.OperationActive)
                 {
                     MapParent? observeParent = targetWorldObject as MapParent;
                     Map? observeMap = observeParent?.Map;
-                    operationActiveTargetMapObservedLogged = true;
-                    if (observeParent != null && observeMap != null && !observeMap.Disposed && Find.Maps.Contains(observeMap))
+                    if (observeParent != null
+                        && observeMap != null
+                        && !observeMap.Disposed
+                        && Find.Maps.Contains(observeMap))
                     {
                         TryRegisterAvailableTargetMap(
                             observeMap,
                             generatedAfterAcceptance: false,
                             registrationSource: "QuestPartTickExistingMapReconcile");
+
+                        if (!operationActiveTargetMapObservedLogged)
+                        {
+                            operationActiveTargetMapObservedLogged = true;
+                        }
                     }
                 }
 
@@ -390,14 +431,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 不改动原版分发逻辑。
             base.Notify_QuestSignalReceived(signal);
 
-            // 未接取（OfferPending）期间允许识别精确目标的 NoActiveThreats / AllEnemiesDefeated，
-            // 直接按“目标已清除”成功结算（不生成援军）。必须再次核对真实清除状态。
+            // 未接取（OfferPending）期间允许识别精确目标的 NoActiveThreats / AllEnemiesDefeated。
+            // 必须按目标类型区分，绝不在收到信号时立即成功，以防守军尚未初始化被误判：
+            // - MAPFactionOutpost：只有 outpost.Cleaned == true 才能成功，否则等待其明确通知。
+            // - Settlement：不依赖这些 Site 信号，以 SettlementDefeatUtility Patch 确认 Destroyed 为准。
+            // - 其他普通 Site / WorkSite：不立即成功，排定延迟真实验证（可重复收到但不推迟早期限）。
             if (stage == SymbiosisCovenantJointOperationStage.OfferPending
                 && targetQuestTag != null
                 && (tag == targetQuestTag + ".NoActiveThreats"
                     || tag == targetQuestTag + ".AllEnemiesDefeated"))
             {
-                TryCompleteOfferPendingTarget(targetWorldObject, "TargetClearSignal:" + tag);
+                ScheduleOfferPendingClearVerification(
+                    "TargetClearSignal:" + tag,
+                    Find.TickManager?.TicksGame ?? 0);
             }
 
             if (shouldLog)
@@ -486,6 +532,169 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 map,
                 generatedAfterAcceptance: true,
                 registrationSource: "MapGeneratedSignal");
+        }
+
+        // ===== OfferPending（尚未接取）期间：观察目标地图与真实威胁 =====
+
+        /// <summary>
+        /// 仅观察目标地图并判定目标派系是否原本确实存在威胁（守军站场）。
+        /// 只处理 Site / WorkSite（MAPFactionOutpost 的正式成功仍优先以其 Cleaned 为准）；
+        /// 不在此处做任何成功结算。第一次观察到有效地图时记录 firstObservedTick；
+        /// 一旦观察到目标派系守军，offerPendingTargetThreatObserved 置 true 且不再回退。
+        /// </summary>
+        private void ObserveOfferPendingTargetMap(int now)
+        {
+            if (targetWorldObject == null || targetWorldObject is Settlement)
+            {
+                // Settlement 的成功以 SettlementDefeatUtility Patch 确认 Destroyed 为准，不在此观察。
+                return;
+            }
+
+            if (targetWorldObject is MAPFactionOutpost)
+            {
+                // 前哨可观察，但其成功以 outpost.Cleaned 为准，这里不预先设置威胁证据
+                // （前哨清理逻辑会独立通知）；若前哨确实有守军也可作为威胁证据，但不强求。
+                return;
+            }
+
+            if (targetWorldObject is not Site)
+            {
+                return;
+            }
+
+            Map? map = (targetWorldObject as MapParent)?.Map;
+            if (map == null || map.Disposed || !Find.Maps.Contains(map))
+            {
+                return;
+            }
+
+            if (offerPendingTargetMapFirstObservedTick < 0)
+            {
+                offerPendingTargetMapFirstObservedTick = now;
+            }
+
+            if (!offerPendingTargetThreatObserved
+                && AnyStandingTargetFactionDefender(map))
+            {
+                offerPendingTargetThreatObserved = true;
+            }
+        }
+
+        /// <summary>
+        /// 收到 NoActiveThreats / AllEnemiesDefeated 信号时为普通 Site 排定延迟真实验证。
+        /// MAPFactionOutpost / Settlement 不走此处（各自有独立成功入口）。
+        /// 重复收到信号时不会不断把期限向后推迟；若已排定则保留较早期限。
+        /// </summary>
+        private void ScheduleOfferPendingClearVerification(string reason, int now)
+        {
+            if (targetWorldObject == null
+                || targetWorldObject is MAPFactionOutpost
+                || targetWorldObject is Settlement)
+            {
+                return;
+            }
+
+            if (targetWorldObject is not Site)
+            {
+                return;
+            }
+
+            int due = now + OfferPendingClearVerificationDelayTicks;
+            if (offerPendingTargetMapFirstObservedTick >= 0)
+            {
+                // 验证时间不得早于“地图首次观察 + 延迟窗口”，避免守军未初始化即被复查。
+                due = Math.Max(
+                    due,
+                    offerPendingTargetMapFirstObservedTick + OfferPendingClearVerificationDelayTicks);
+            }
+
+            if (offerPendingClearVerificationDueTick < 0)
+            {
+                offerPendingClearVerificationDueTick = due;
+            }
+
+            offerPendingClearVerificationReason = reason;
+        }
+
+        /// <summary>
+        /// 延迟到期后用原版活动威胁标准复查普通 Site，确认目标被真实清除后才成功。
+        /// 只在 stage == OfferPending 时执行；未到期或尚未排定直接返回。
+        /// 验证失败后清除本次 dueTick，等待下一次真实信号，不做每 tick 重复昂贵检查。
+        /// </summary>
+        private void TryRunOfferPendingClearVerification(int now)
+        {
+            if (stage != SymbiosisCovenantJointOperationStage.OfferPending)
+            {
+                return;
+            }
+
+            if (offerPendingClearVerificationDueTick < 0 || now < offerPendingClearVerificationDueTick)
+            {
+                return;
+            }
+
+            WorldObject? target = targetWorldObject;
+            if (target == null)
+            {
+                offerPendingClearVerificationDueTick = -1;
+                return;
+            }
+
+            // Settlement 不在此处理；前哨以 Cleaned 为准（由独立通知触发）。
+            if (target is MAPFactionOutpost outpost)
+            {
+                if (outpost.Cleaned)
+                {
+                    TryCompleteOfferPendingTarget(outpost, offerPendingClearVerificationReason ?? "OutpostCleaned");
+                }
+
+                offerPendingClearVerificationDueTick = -1;
+                return;
+            }
+
+            if (target is not Site site)
+            {
+                offerPendingClearVerificationDueTick = -1;
+                return;
+            }
+
+            if (site.Destroyed)
+            {
+                // 已销毁可直接视为真实清除。
+                TryCompleteOfferPendingTarget(site, offerPendingClearVerificationReason ?? "SiteDestroyed");
+                offerPendingClearVerificationDueTick = -1;
+                return;
+            }
+
+            Map? map = (target as MapParent)?.Map;
+            if (map == null || map.Disposed || !Find.Maps.Contains(map))
+            {
+                // 地图不存在/已释放/不在 Find.Maps：不视为清除。
+                offerPendingClearVerificationDueTick = -1;
+                return;
+            }
+
+            // 必须有“目标原本确实存在威胁”的证据，避免守军尚未初始化即被误判为无威胁。
+            bool hadThreatEvidence = offerPendingTargetThreatObserved || (site.ActualThreatPoints > 0);
+            if (!hadThreatEvidence)
+            {
+                offerPendingClearVerificationDueTick = -1;
+                return;
+            }
+
+            // 使用原版活动威胁标准重新检查（包含休眠/可雾化的敌方 Pawn）。
+            if (GenHostility.AnyHostileActiveThreatToPlayer(
+                    map,
+                    countDormantPawnsAsHostile: true,
+                    canBeFogged: true))
+            {
+                // 仍有活动敌对威胁：不成功，清除本次期限等待下一次真实信号。
+                offerPendingClearVerificationDueTick = -1;
+                return;
+            }
+
+            TryCompleteOfferPendingTarget(site, offerPendingClearVerificationReason ?? "VerifiedNoThreat");
+            offerPendingClearVerificationDueTick = -1;
         }
 
         private void TickActiveOrDeployed(int now)
@@ -1221,23 +1430,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     allPreparedPods.Clear();
                     actualOperationArrivalMode = PawnsArrivalModeDefOf.EdgeWalkIn.defName;
                 }
-
-                LogDeploymentDiagnostic(
-                    "OperationArrivalModeResolved",
-                    "actionId=" + (actionId ?? "-")
-                    + " | validParticipantCount=" + valid.Count
-                    + " | pendingGroupCount=" + pendingGroups.Count
-                    + " | totalPawnCount=" + allPendingPawns.Count
-                    + " | highestParticipantTechLevel=" + highestParticipantTechLevel
-                    + " | industrialArrivalThreshold=" + def.industrialArrivalThreshold
-                    + " | quickDropRequested=" + operationQuickDropRequested
-                    + " | safeCellsResolved=" + safeCellsResolved
-                    + " | preparedPodsResolved=" + preparedPodsResolved
-                    + " | plannedArrivalMode=" + plannedArrivalMode
-                    + " | actualArrivalMode=" + actualOperationArrivalMode
-                    + " | fallbackReason=" + fallbackReason
-                    + " | map=" + targetMap.GetUniqueLoadID());
             }
+
+            // 统一抵达方式完成判定后输出日志：覆盖纯低科技 EdgeWalkIn、高科技空投成功、
+            // 以及高科技整批回退 EdgeWalkIn 三种情况，便于排查抵达方式分歧。
+            LogDeploymentDiagnostic(
+                "OperationArrivalModeResolved",
+                "actionId=" + (actionId ?? "-")
+                + " | validParticipantCount=" + valid.Count
+                + " | pendingGroupCount=" + pendingGroups.Count
+                + " | totalPawnCount=" + allPendingPawns.Count
+                + " | highestParticipantTechLevel=" + highestParticipantTechLevel
+                + " | industrialArrivalThreshold=" + def.industrialArrivalThreshold
+                + " | quickDropRequested=" + operationQuickDropRequested
+                + " | safeCellsResolved=" + safeCellsResolved
+                + " | preparedPodsResolved=" + preparedPodsResolved
+                + " | plannedArrivalMode=" + plannedArrivalMode
+                + " | actualArrivalMode=" + actualOperationArrivalMode
+                + " | fallbackReason=" + fallbackReason
+                + " | map=" + targetMap.GetUniqueLoadID());
 
             // 阶段3：统一部署。单个派系仅执行已确定的抵达方式。
             int generated = 0;
@@ -2008,6 +2219,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool reinforcementsGeneratedSnapshot = reinforcementsGenerated;
             bool playerEngagedSnapshot = playerEngaged;
             bool targetThreatConfirmedSnapshot = targetThreatConfirmed;
+            // 在 stage 改为 Succeeded 之前保存战斗就绪快照，否则后续读取会固定为 false。
+            bool hasReachedCombatReadySnapshot = HasReachedCombatReadyState;
 
             stage = SymbiosisCovenantJointOperationStage.Succeeded;
             CommandReinforcementsLeave();
@@ -2025,7 +2238,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 + " | playerEngaged=" + playerEngagedSnapshot
                 + " | targetThreatConfirmed=" + targetThreatConfirmedSnapshot
                 + " | spawnedAidTagCount=" + (spawnedAidTags?.Count ?? 0)
-                + " | hasReachedCombatReady=" + HasReachedCombatReadyState
+                + " | hasReachedCombatReady=" + hasReachedCombatReadySnapshot
                 + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
 
             // J：实物奖励本次暂不发放，仅保留 Unity / Trust 成功奖励（见 GrantReward 注释）。
@@ -2196,9 +2409,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return true;
                 }
 
-                // 地图仍存在时：仅在无可站立目标派系守军时成功。
+                // 普通 Site：禁止“地图不存在 / 找不到站立守军就默认清除”的宽松规则。
                 MapParent? siteParent = target as MapParent;
-                if (siteParent?.Map != null && AnyStandingTargetFactionDefender(siteParent.Map))
+                Map? map = siteParent?.Map;
+                if (map == null || map.Disposed || !Find.Maps.Contains(map))
+                {
+                    return false;
+                }
+
+                // 必须存在“目标原本确实有威胁”的证据，否则可能是守军尚未初始化。
+                // OfferPending 期间已通过 ObserveOfferPendingTargetMap 记录；已接取路径依赖
+                // targetThreatConfirmed / 部署阶段威胁观察。此处兜底：站场守军或实际威胁点数。
+                bool hadThreatEvidence =
+                    offerPendingTargetThreatObserved
+                    || site.ActualThreatPoints > 0
+                    || AnyStandingTargetFactionDefender(map);
+                if (!hadThreatEvidence)
+                {
+                    return false;
+                }
+
+                // 仍有原版活动敌对威胁（含休眠/可雾化）则不算清除。
+                if (GenHostility.AnyHostileActiveThreatToPlayer(
+                        map,
+                        countDormantPawnsAsHostile: true,
+                        canBeFogged: true))
                 {
                     return false;
                 }
@@ -2237,121 +2472,117 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            int customLordMemoCount = 0;
-            int legacyDefendLordMigratedCount = 0;
-            int pawnCount = 0;
+            int customLordCount = 0;
+            int legacyDefendLordCount = 0;
+            int migratedPawnCount = 0;
+            int failedLordCount = 0;
 
+            // 统一筛选：本目标地图、本 targetFaction、且守军 Lord 为允许迁移的 DefendBase 类型。
             List<Lord> lordsSnapshot = new List<Lord>(map.lordManager.lords);
+            List<Lord> candidateLords = new List<Lord>();
             foreach (Lord lord in lordsSnapshot)
             {
-                if (lord == null || lord.faction != targetFaction || lord.Map != map)
+                if (lord == null
+                    || lord.faction != targetFaction
+                    || lord.Map != map
+                    || lord.LordJob is not LordJob_DefendBase)
+                {
+                    continue;
+                }
+
+                // 至少拥有一个仍有效、已生成、属于 targetFaction 且位于该地图的 Pawn。
+                bool hasValidDefender = false;
+                foreach (Pawn p in lord.ownedPawns)
+                {
+                    if (p != null && !p.Destroyed && p.Spawned && p.Map == map && p.Faction == targetFaction)
+                    {
+                        hasValidDefender = true;
+                        break;
+                    }
+                }
+
+                if (!hasValidDefender)
                 {
                     continue;
                 }
 
                 if (lord.LordJob is LordJob_MAPFactionOutpostDefendBase)
                 {
-                    if (LordJob_MAPFactionOutpostDefendBase.TryStartJointOperationAssault(lord))
-                    {
-                        customLordMemoCount++;
-                        pawnCount += lord.ownedPawns.Count;
-                    }
-
-                    continue;
+                    customLordCount++;
+                }
+                else
+                {
+                    legacyDefendLordCount++;
                 }
 
-                if (lord.LordJob is LordJob_DefendBase)
-                {
-                    // 旧存档兼容：将本目标地图、本 targetFaction 的原版 DefendBase 守军
-                    // 迁移为新建的主动进攻 Lord，不迁移其他 LordJob 类型。
-                    List<Pawn> ownedSnapshot = new List<Pawn>(lord.ownedPawns);
-                    List<Pawn> validDefenders = new List<Pawn>();
-                    foreach (Pawn p in ownedSnapshot)
-                    {
-                        if (p != null && !p.Destroyed && p.Spawned && p.Map == map && p.Faction == targetFaction)
-                        {
-                            validDefenders.Add(p);
-                        }
-                    }
+                candidateLords.Add(lord);
+            }
 
-                    if (validDefenders.Count == 0)
+            // 没有发现需要处理的守军 Lord：保持 false，等待后续重试（可能尚未创建）。
+            if (candidateLords.Count == 0)
+            {
+                return;
+            }
+
+            // 统一调用迁移方法（处理自定义与旧原版 DefendBase 两种 LordJob）。
+            foreach (Lord lord in candidateLords)
+            {
+                int migrated = 0;
+                if (LordJob_MAPFactionOutpostDefendBase.TryStartJointOperationAssault(lord, out migrated))
+                {
+                    migratedPawnCount += migrated;
+                }
+                else
+                {
+                    failedLordCount++;
+                }
+            }
+
+            // 只有全部候选 Lord 均迁移成功（无失败），且迁移后重新扫描不再存在仍拥有
+            // 有效目标守军的 DefendBase Lord，才置为已触发，否则保持 false 以允许重试。
+            if (failedLordCount == 0)
+            {
+                bool stillHasDefendLord = false;
+                foreach (Lord lord in map.lordManager.lords)
+                {
+                    if (lord == null
+                        || lord.faction != targetFaction
+                        || lord.Map != map
+                        || lord.LordJob is not LordJob_DefendBase)
                     {
                         continue;
                     }
 
-                    foreach (Pawn p in validDefenders)
+                    foreach (Pawn p in lord.ownedPawns)
                     {
-                        lord.RemovePawn(p);
-                    }
-
-                    Lord? newLord = null;
-                    try
-                    {
-                        newLord = LordMaker.MakeNewLord(
-                            targetFaction,
-                            new LordJob_AssaultColony(
-                                targetFaction,
-                                canKidnap: false,
-                                canTimeoutOrFlee: false,
-                                sappers: false,
-                                useAvoidGridSmart: true,
-                                canSteal: false,
-                                breachers: false,
-                                canPickUpOpportunisticWeapons: false),
-                            map,
-                            validDefenders);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(
-                            JointOpLogPrefix + " Event=TargetDefendersAssaultMigrateFailed"
-                            + " | reason=MakeNewLordException"
-                            + " | targetFaction=" + (targetFaction?.GetUniqueLoadID() ?? "null")
-                            + " | map=" + map.GetUniqueLoadID()
-                            + " | ex=" + ex);
-                        newLord = null;
-                    }
-
-                    if (newLord != null)
-                    {
-                        pawnCount += validDefenders.Count;
-                        legacyDefendLordMigratedCount++;
-
-                        if (lord.ownedPawns.Count == 0)
+                        if (p != null && !p.Destroyed && p.Spawned && p.Map == map && p.Faction == targetFaction)
                         {
-                            try
-                            {
-                                map.lordManager.RemoveLord(lord);
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Warning(
-                                    JointOpLogPrefix + " Event=TargetDefendersAssaultRemoveLegacyLordFailed"
-                                    + " | map=" + map.GetUniqueLoadID()
-                                    + " | ex=" + ex);
-                            }
+                            stillHasDefendLord = true;
+                            break;
                         }
                     }
-                    else
+
+                    if (stillHasDefendLord)
                     {
-                        // 迁移失败：尽量把守军放回旧 Lord，避免无主 Pawn。
-                        foreach (Pawn p in validDefenders)
-                        {
-                            lord.AddPawn(p);
-                        }
+                        break;
                     }
                 }
-            }
 
-            targetDefenderAssaultTriggered = true;
+                if (!stillHasDefendLord)
+                {
+                    targetDefenderAssaultTriggered = true;
+                }
+            }
 
             LogDeploymentDiagnostic(
                 "TargetDefendersAssaultTriggered",
                 "targetFaction=" + (targetFaction?.GetUniqueLoadID() ?? "null")
                 + " | map=" + map.GetUniqueLoadID()
-                + " | customLordMemoCount=" + customLordMemoCount
-                + " | legacyDefendLordMigratedCount=" + legacyDefendLordMigratedCount
-                + " | pawnCount=" + pawnCount
+                + " | customLordCount=" + customLordCount
+                + " | legacyDefendLordCount=" + legacyDefendLordCount
+                + " | migratedPawnCount=" + migratedPawnCount
+                + " | failedLordCount=" + failedLordCount
+                + " | targetDefenderAssaultTriggered=" + targetDefenderAssaultTriggered
                 + " | stage=" + stage
                 + " | actionId=" + (actionId ?? "-"));
         }
@@ -2507,6 +2738,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref rewardValue, "rewardValue", 0);
             Scribe_Values.Look(ref playerEngaged, "playerEngaged", false);
             Scribe_Values.Look(ref targetDefenderAssaultTriggered, "targetDefenderAssaultTriggered", false);
+
+            // OfferPending 普通 Site 延迟验证状态（参与存档，保证旧存档读档后能继续验证）。
+            Scribe_Values.Look(ref offerPendingTargetMapFirstObservedTick, "offerPendingTargetMapFirstObservedTick", -1);
+            Scribe_Values.Look(ref offerPendingClearVerificationDueTick, "offerPendingClearVerificationDueTick", -1);
+            Scribe_Values.Look(ref offerPendingTargetThreatObserved, "offerPendingTargetThreatObserved", false);
+            Scribe_Values.Look(ref offerPendingClearVerificationReason, "offerPendingClearVerificationReason");
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {

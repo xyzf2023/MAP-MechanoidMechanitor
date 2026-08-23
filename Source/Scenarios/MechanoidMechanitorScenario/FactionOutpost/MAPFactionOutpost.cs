@@ -375,6 +375,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             cleaned = true;
+
+            // 前哨确认无活动敌对威胁后，向联合军事行动系统发送一次精确清除通知。
+            // 仅当本前哨恰好是某个活动联合行动的精确目标时，Utility 内部才会真正结算；
+            // 普通（非联合行动）前哨调用不会产生任何任务影响。不在此处操作 Quest / 发奖励。
+            SymbiosisCovenantJointOperationUtility.NotifyJointOperationTargetCleared(
+                this,
+                "MAPFactionOutpostCleaned");
+
             if (!cleanedLetterSent)
             {
                 cleanedLetterSent = true;

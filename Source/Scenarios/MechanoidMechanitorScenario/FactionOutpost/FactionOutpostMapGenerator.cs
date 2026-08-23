@@ -133,7 +133,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                     Lord lord = LordMaker.MakeNewLord(
                         owner,
-                        new LordJob_DefendBase(owner, kvp.Key.Center, 25000),
+                        new LordJob_MAPFactionOutpostDefendBase(owner, kvp.Key.Center, 25000),
                         map);
                     if (lord == null)
                     {
