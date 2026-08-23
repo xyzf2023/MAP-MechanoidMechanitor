@@ -11,7 +11,7 @@ namespace MAP_MechanoidMechanitor
 
         private static Texture2D Icon =>
             cachedIcon ??=
-                ContentFinder<Texture2D>.Get("UI/Commands/LaunchShip");
+                ContentFinder<Texture2D>.Get("UI/Commands/LaunchReport");
 
         public override IEnumerable<Gizmo> CompGetGizmos()
         {
