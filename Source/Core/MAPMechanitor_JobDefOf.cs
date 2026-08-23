@@ -17,6 +17,8 @@ namespace MAP_MechanoidMechanitor
         // 新任务使用此 JobDef。
         public static JobDef MAP_HumanImplantInstall = null!;
 
+        public static JobDef MAP_BroadcastSymbiosisDeclarationPortable = null!;
+
         // 仅供旧存档 Def 兼容，新任务不再使用。
         // 旧存档中保存的 MAP_LoverInstallImplant 任务通过 Jobs_LoverImplants.xml 的 driverClass
         // 重定向到 JobDriver_HumanImplantInstall，可正常 resolve。

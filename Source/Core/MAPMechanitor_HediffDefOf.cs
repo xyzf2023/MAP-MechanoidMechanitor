@@ -19,6 +19,8 @@ namespace MAP_MechanoidMechanitor
         public static HediffDef MAP_BattlefieldRepairProtocolActive = null!;
         public static HediffDef MAP_QuantumCommunicator = null!;
 
+        public static HediffDef MAP_MicroCommunicator = null!;
+
         public static HediffDef MAP_ParallelThoughtInterface = null!;
 
         static MAPMechanitor_HediffDefOf()

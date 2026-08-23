@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="MechanitorImplantCraftableBase"
+            MayRequire="ludeon.rimworld.biotech">
+
+    <defName>MAP_MicroCommunicator</defName>
+    <label>微型通讯器</label>
+    <description>TODO</description>
+
+    <descriptionHyperlinks>
+      <HediffDef>MAP_MicroCommunicator</HediffDef>
+    </descriptionHyperlinks>
+
+    <costList>
+      <Plasteel>10</Plasteel>
+      <ComponentIndustrial>2</ComponentIndustrial>
+    </costList>
+
+    <statBases>
+      <MaxInstallCount>1</MaxInstallCount>
+    </statBases>
+
+    <recipeMaker>
+      <researchPrerequisites>
+        <li>MicroelectronicsBasics</li>
+        <li>StandardMechtech</li>
+      </researchPrerequisites>
+    </recipeMaker>
+
+    <comps>
+      <li Class="CompProperties_Usable">
+        <compClass>CompUsableImplant</compClass>
+        <useJob>UseItem</useJob>
+        <useLabel>植入微型通讯器</useLabel>
+      </li>
+
+      <li Class="CompProperties_UseEffectInstallImplant">
+        <hediffDef>MAP_MicroCommunicator</hediffDef>
+        <bodyPart>Brain</bodyPart>
+        <canUpgrade>false</canUpgrade>
+        <requiresExistingHediff>false</requiresExistingHediff>
+        <maxSeverity>1</maxSeverity>
+      </li>
+    </comps>
+
+  </ThingDef>
+</Defs>

@@ -123,6 +123,56 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 KnowledgeAmount.Total);
         }
 
+        public static void ShowPortableDeclarationConfirmation(Pawn pawn)
+        {
+            if (!IsValidContactPawn(pawn) || !CanBroadcastDeclaration())
+            {
+                return;
+            }
+
+            Find.WindowStack.Add(
+                new Dialog_MessageBox(
+                    "MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Text"
+                        .Translate(),
+                    "MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Continue"
+                        .Translate(),
+                    () => TryOrderPortableDeclarationJob(pawn),
+                    "MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Cancel"
+                        .Translate(),
+                    null,
+                    "MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Title"
+                        .Translate()));
+        }
+
+        public static void TryOrderPortableDeclarationJob(Pawn? pawn)
+        {
+            if (!IsValidContactPawn(pawn)
+                || pawn!.Map == null
+                || !CanBroadcastDeclaration()
+                || !PortableCommsUtility.CanUsePortableComms(pawn, out _))
+            {
+                return;
+            }
+
+            JobDef? jobDef = DefDatabase<JobDef>.GetNamedSilentFail(
+                DeclarationJobDefName);
+            if (jobDef == null)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 无法广播脱离声明：缺少 "
+                    + DeclarationJobDefName
+                    + "。");
+                return;
+            }
+
+            Job job = JobMaker.MakeJob(
+                MAPMechanitor_JobDefOf.MAP_BroadcastSymbiosisDeclarationPortable);
+            pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+            PlayerKnowledgeDatabase.KnowledgeDemonstrated(
+                ConceptDefOf.OpeningComms,
+                KnowledgeAmount.Total);
+        }
+
         public static void TryOrderAccessJob(
             Pawn? pawn,
             Building_CommsConsole? console)
