@@ -12,7 +12,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
 
         private static readonly IThirdPartyCompatibilityModule[] Modules =
         {
-            new GlitterworldDestroyer5Compatibility()
+            new GlitterworldDestroyer5Compatibility(),
+            new GlitterworldDestroyer5DryseaCompatibility()
         };
 
         public static void ApplyAll(Harmony harmony)
