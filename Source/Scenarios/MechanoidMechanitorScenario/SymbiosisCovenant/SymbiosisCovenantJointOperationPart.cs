@@ -4,6 +4,7 @@ using System.Linq;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
+using Verse.AI;
 using Verse.AI.Group;
 
 namespace MAP_MechanoidMechanitor.Scenarios
@@ -68,6 +69,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         // 联合军事行动诊断日志统一前缀。
         private const string JointOpLogPrefix = "[MAP-JointOperation]";
+
+        // ===== 高科技援军专用安全室外空投参数（不使用原版 CenterDrop，避免落入前哨建筑 / 封闭院落） =====
+        // 只在地图中心附近一定范围内寻找空投区，避免援军散落到地图极远处。
+        private const float QuickDropAnchorSearchRadius = 80f;
+        // 同一派系的空投格必须集中在一个空投区锚点周围。
+        private const float QuickDropZoneRadius = 18f;
+        // 两个实际空投格的距离平方至少为 4，即大致保持 2 格距离，避免空投舱重叠。
+        private const int QuickDropMinimumSpacingSquared = 4;
+        // 防止在大地图中遍历过多候选锚点。
+        private const int QuickDropAnchorAttemptLimit = 300;
+        // 使用明确的空投舱打开延迟，不依赖未初始化的 IncidentParms 默认值。
+        private const int QuickDropPodOpenDelay = 110;
 
         // 诊断日志辅助（仅运行期低噪音；不参与任何正式业务/存档逻辑）。
         private string? lastDeploymentWaitReason;
@@ -1018,22 +1031,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             float[] assigned = AllocatePoints(valid, total);
 
-            // C：是否使用快速空投，由“本次实际参与援军生成的派系”的最高科技统一决定。
-            bool useQuick = valid
-                .Where((faction, index) => assigned[index] > 0f && faction != null)
-                .Any(faction => (int)faction.def.techLevel >= (int)def.industrialArrivalThreshold);
+            // C：是否使用快速空投，由“参与派系自身”的科技等级决定（判定阈值 industrialArrivalThreshold 不变）。
+            // 低科技派系继续走边缘步行（EdgeWalkIn）；高科技派系走专用安全室外空投（优先），
+            // 找不到完整安全区时由 DeployGroup 内部整体回退为边缘步行。不再使用 CenterDrop。
+            bool IsHighTechForQuickDrop(Faction f) =>
+                (int)f.def.techLevel >= (int)def.industrialArrivalThreshold;
 
             for (int i = 0; i < valid.Count; i++)
             {
                 Faction participant = valid[i];
                 float points = assigned[i];
+                bool plannedQuick = IsHighTechForQuickDrop(participant);
                 LogDeploymentDiagnostic(
                     "SupportAllocated",
                     "faction=" + participant.Name
                     + " | assignedPoints=" + points.ToString("F1")
                     + " | canGenerateCombatGroup=" + CanGenerateCombatGroup(participant)
-                    + " | arrivalModePlanned=" + (useQuick
-                        ? PawnsArrivalModeDefOf.CenterDrop.defName
+                    + " | arrivalModePlanned=" + (plannedQuick
+                        ? "SafeOutdoorExactDrop"
                         : PawnsArrivalModeDefOf.EdgeWalkIn.defName));
             }
 
@@ -1075,6 +1090,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     + " | pawnCount=" + pawns.Count);
 
                 string aidTag = MakeAidTag(targetMap, participant);
+                bool useQuick = IsHighTechForQuickDrop(participant);
                 if (DeployGroup(participant, pawns, points, targetMap, useQuick, aidTag, targetFaction))
                 {
                     supportRecords.Add(new SymbiosisCovenantJointOperationFactionSupportRecord(
@@ -1087,7 +1103,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         + " | aidTag=" + aidTag
                         + " | pawnCount=" + pawns.Count
                         + " | arrivalMode=" + (useQuick
-                            ? PawnsArrivalModeDefOf.CenterDrop.defName
+                            ? "SafeOutdoorExactDrop"
                             : PawnsArrivalModeDefOf.EdgeWalkIn.defName));
                 }
                 else
@@ -1097,7 +1113,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         + " | faction=" + participant.Name
                         + " | points=" + points.ToString("F1")
                         + " | arrivalMode=" + (useQuick
-                            ? PawnsArrivalModeDefOf.CenterDrop.defName
+                            ? "SafeOutdoorExactDrop"
                             : PawnsArrivalModeDefOf.EdgeWalkIn.defName)
                         + " | aidTag=" + aidTag
                         + " | actionId=" + (actionId ?? "-"));
@@ -1230,8 +1246,179 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
+        /// 判断一个格子能否作为联合行动援军“实际”空投格：必须满足全部安全条件，
+        /// 不得位于室内、不得穿透屋顶、不得被建筑/Pawn/Skyfaller 占用，且能不破坏
+        /// 墙体、不穿过关闭门地抵达地图边缘。
+        /// 该方法只读，不修改 Pawn / 地图 / Quest 状态。
+        /// </summary>
+        private static bool IsSafeJointOperationDropCell(Map map, IntVec3 cell)
+        {
+            if (map == null || !cell.IsValid || !cell.InBounds(map))
+            {
+                return false;
+            }
+
+            if (!cell.Standable(map))
+            {
+                return false;
+            }
+
+            if (cell.Fogged(map))
+            {
+                return false;
+            }
+
+            if (cell.Roofed(map))
+            {
+                return false;
+            }
+
+            if (cell.GetEdifice(map) != null)
+            {
+                return false;
+            }
+
+            // 显式禁止穿透屋顶、禁止室内：排除没有屋顶但被墙完全封闭的结构。
+            if (!DropCellFinder.IsGoodDropSpot(
+                    cell,
+                    map,
+                    allowFogged: false,
+                    canRoofPunch: false,
+                    allowIndoors: false))
+            {
+                return false;
+            }
+
+            // 排除会与非本批空投舱 / 已落下的 Skyfaller / 现有 Pawn / 建筑冲突的 Thing。
+            // 窄范围：只拦截 Pawn / Building / Skyfaller，不拦截草、普通物品等可自然覆盖的小物体。
+            foreach (Thing thing in cell.GetThingList(map))
+            {
+                if (thing is Pawn || thing is Building || thing is Skyfaller)
+                {
+                    return false;
+                }
+            }
+
+            // 连通性校验：不允许破墙、不允许穿过关闭门，必须用普通路径抵达地图边缘。
+            TraverseParms traverseParms = TraverseParms.For(TraverseMode.NoPassClosedDoors);
+            if (!map.reachability.CanReachMapEdge(cell, traverseParms))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 在地图中心附近寻找一片能容纳 requiredCount 个援军的安全室外空投区。
+        /// 只有找到“完整”的 requiredCount 个不重叠、保持最小间距的格子时才返回 true。
+        /// 不返回不完整列表；找不到时清空 dropCells 并返回 false（由调用方回退 EdgeWalkIn）。
+        /// </summary>
+        private static bool TryFindSafeJointOperationDropCells(
+            Map map,
+            int requiredCount,
+            out List<IntVec3> dropCells)
+        {
+            dropCells = new List<IntVec3>();
+
+            if (map == null || requiredCount <= 0)
+            {
+                return false;
+            }
+
+            int maxDistanceSquared =
+                (int)(QuickDropAnchorSearchRadius * QuickDropAnchorSearchRadius);
+
+            // 候选锚点：距地图中心不超过搜索半径，且自身即为安全格；按距中心从近到远排序。
+            List<IntVec3> anchors = map.AllCells
+                .Where(cell =>
+                    cell.DistanceToSquared(map.Center) <= maxDistanceSquared
+                    && IsSafeJointOperationDropCell(map, cell))
+                .OrderBy(cell => cell.DistanceToSquared(map.Center))
+                .Take(QuickDropAnchorAttemptLimit)
+                .ToList();
+
+            foreach (IntVec3 anchor in anchors)
+            {
+                List<IntVec3> selected = new List<IntVec3>();
+
+                // 在锚点周围枚举径向格子，再次逐一校验安全条件；不足则清空本次临时结果继续下一个锚点。
+                foreach (IntVec3 candidate in GenRadial.RadialCellsAround(
+                             anchor,
+                             QuickDropZoneRadius,
+                             useCenter: true))
+                {
+                    if (!IsSafeJointOperationDropCell(map, candidate))
+                    {
+                        continue;
+                    }
+
+                    bool tooClose = selected.Any(
+                        existing => existing.DistanceToSquared(candidate)
+                                   < QuickDropMinimumSpacingSquared);
+
+                    if (tooClose)
+                    {
+                        continue;
+                    }
+
+                    selected.Add(candidate);
+
+                    if (selected.Count >= requiredCount)
+                    {
+                        dropCells = selected;
+                        return true;
+                    }
+                }
+            }
+
+            dropCells.Clear();
+            return false;
+        }
+
+        /// <summary>
+        /// 将援军精确空投到已经验证过的确定格子（不使用 CenterDrop，也不使用会随机重选室内格的
+        /// DropThingsNear）。每个 Pawn 对应一个验证过的 dropCells[i]，逐个生成空投舱。
+        /// 调用前必须已经取得完整的 dropCells 列表，因此不会出现“部分空投、部分步行”。
+        /// </summary>
+        private static void DropPawnsAtExactCells(
+            Faction faction,
+            List<Pawn> pawns,
+            List<IntVec3> dropCells,
+            Map map)
+        {
+            if (pawns == null
+                || dropCells == null
+                || pawns.Count == 0
+                || pawns.Count != dropCells.Count)
+            {
+                throw new ArgumentException(
+                    "Joint operation safe drop requires one validated cell per pawn.");
+            }
+
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                Pawn pawn = pawns[i];
+                IntVec3 cell = dropCells[i];
+
+                ActiveTransporterInfo info = new ActiveTransporterInfo();
+                if (!info.innerContainer.TryAdd(pawn))
+                {
+                    throw new InvalidOperationException(
+                        "Joint operation safe drop failed to place pawn into drop pod container.");
+                }
+
+                info.openDelay = QuickDropPodOpenDelay;
+                info.leaveSlag = true;
+
+                DropPodUtility.MakeDropPodAt(cell, map, info, faction);
+            }
+        }
+
+        /// <summary>
         /// 把生成的援军送入目标地图并创建本 MOD 自定义 Lord（D / C）。
-        /// 抵达方式（快速空投或边缘步行）由 useQuick 统一决定。
+        /// 低科技参与派系继续走边缘步行（EdgeWalkIn）；
+        /// 高科技参与派系优先使用专用安全室外空投，找不到完整安全区时整体回退为边缘步行。
         /// 每只援军写入唯一 aidTag，并通过 QuestUtility.AddQuestTag 标记到 Lord，
         /// 之后只通过 LordJob 类型 + aidTag 精确追踪，不误伤其他援军。
         /// </summary>
@@ -1244,18 +1431,67 @@ namespace MAP_MechanoidMechanitor.Scenarios
             string aidTag,
             Faction? enemyFaction)
         {
-            PawnsArrivalModeDef arrivalMode = useQuick
-                ? PawnsArrivalModeDefOf.CenterDrop
-                : PawnsArrivalModeDefOf.EdgeWalkIn;
+            // useQuick 表示“本参与派系请求快速空投”，不直接等于“已确定能够空投”。
+            // 低科技派系传入 false，直接走边缘步行；高科技派系传入 true，优先寻找安全室外空投区。
+            bool quickDropRequested = useQuick;
+            bool safeQuickDropResolved = false;
+            List<IntVec3>? quickDropCells = null;
+
+            if (quickDropRequested)
+            {
+                safeQuickDropResolved =
+                    TryFindSafeJointOperationDropCells(
+                        map,
+                        pawns.Count,
+                        out List<IntVec3> resolvedCells);
+
+                if (safeQuickDropResolved)
+                {
+                    quickDropCells = resolvedCells;
+
+                    LogDeploymentDiagnostic(
+                        "SafeQuickDropResolved",
+                        "faction=" + (faction?.Name ?? "-")
+                        + " | pawnCount=" + (pawns?.Count ?? 0)
+                        + " | dropCellCount=" + resolvedCells.Count
+                        + " | firstCell=" + (resolvedCells.Count > 0
+                            ? resolvedCells[0].ToString()
+                            : "Invalid")
+                        + " | map=" + map.GetUniqueLoadID()
+                        + " | aidTag=" + (aidTag ?? "-"));
+                }
+                else
+                {
+                    Log.Warning(
+                        JointOpLogPrefix + " Event=QuickDropFallbackToEdgeWalkIn"
+                        + " | reason=NoCompleteSafeOutdoorDropZone"
+                        + " | faction=" + (faction?.Name ?? "-")
+                        + " | pawnCount=" + (pawns?.Count ?? 0)
+                        + " | map=" + map.GetUniqueLoadID()
+                        + " | aidTag=" + (aidTag ?? "-"));
+                }
+            }
+
+            // 回退 / 低科技抵达方式固定为边缘步行；不使用 CenterDrop（仍可能自行重选室内落点）。
+            PawnsArrivalModeDef fallbackArrivalMode =
+                PawnsArrivalModeDefOf.EdgeWalkIn;
 
             LogDeploymentDiagnostic(
                 "DeployGroupStarted",
                 "faction=" + (faction?.Name ?? "-")
                 + " | pawnCount=" + (pawns?.Count ?? 0)
                 + " | points=" + points.ToString("F1")
-                + " | useQuick=" + useQuick
-                + " | arrivalMode=" + arrivalMode.defName
-                + " | spawnCenter=" + (useQuick ? "Center" : "Invalid")
+                + " | quickDropRequested=" + quickDropRequested
+                + " | safeQuickDropResolved=" + safeQuickDropResolved
+                + " | actualArrivalMode=" + (safeQuickDropResolved
+                    ? "SafeOutdoorExactDrop"
+                    : fallbackArrivalMode.defName)
+                + " | resolvedDropCellCount=" + (quickDropCells?.Count ?? 0)
+                + " | spawnCenter=" + (safeQuickDropResolved
+                    ? (quickDropCells != null && quickDropCells.Count > 0
+                        ? quickDropCells[0].ToString()
+                        : "Invalid")
+                    : "Invalid")
                 + " | map=" + map.GetUniqueLoadID()
                 + " | aidTag=" + (aidTag ?? "-"));
 
@@ -1266,18 +1502,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 points = points,
                 raidStrategy = RaidStrategyDefOf.ImmediateAttackFriendly,
                 // EdgeWalkIn 只有在 spawnCenter 无效时才会寻找地图边缘入口。
-                // 因此低科技步行援军必须从 Invalid 开始，不能预填 map.Center。
-                spawnCenter = useQuick ? map.Center : IntVec3.Invalid,
-                raidArrivalMode = arrivalMode,
-                raidArrivalModeForQuickMilitaryAid = useQuick
+                // 因此步行援军必须从 Invalid 开始，由 Worker.TryResolveRaidSpawnCenter 解析。
+                spawnCenter = IntVec3.Invalid,
+                raidArrivalMode = fallbackArrivalMode,
+                raidArrivalModeForQuickMilitaryAid = false
             };
 
-            // 步行抵达必须成功解析合法的地图边缘入口；失败时不得继续在中心生成。
-            if (!useQuick && !arrivalMode.Worker.TryResolveRaidSpawnCenter(parms))
+            // 步行抵达（包括高科技回退）必须成功解析合法的地图边缘入口；失败时不得继续生成。
+            if (!safeQuickDropResolved
+                && !fallbackArrivalMode.Worker.TryResolveRaidSpawnCenter(parms))
             {
                 Log.Warning(
                     JointOpLogPrefix + " Event=DeployGroupFailed"
                     + " | reason=EdgeSpawnCenterResolveFailed"
+                    + " | quickDropRequested=" + quickDropRequested
+                    + " | safeQuickDropResolved=" + safeQuickDropResolved
                     + " | faction=" + (faction?.Name ?? "-")
                     + " | map=" + map.GetUniqueLoadID()
                     + " | points=" + points.ToString("F1")
@@ -1287,7 +1526,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             try
             {
-                arrivalMode.Worker.Arrive(pawns, parms);
+                if (safeQuickDropResolved && quickDropCells != null)
+                {
+                    // 整支援军一次性精确空投到已验证的安全格，不存在“部分空投”。
+                    DropPawnsAtExactCells(faction!, pawns!, quickDropCells, map);
+                }
+                else
+                {
+                    fallbackArrivalMode.Worker.Arrive(pawns, parms);
+                }
 
                 LordJob_SymbiosisCovenantJointOperation job =
                     new LordJob_SymbiosisCovenantJointOperation(faction!, enemyFaction, map.Center);
@@ -1319,7 +1566,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     JointOpLogPrefix + " Event=DeployGroupException"
                     + " | faction=" + (faction?.Name ?? "-")
                     + " | pawnCount=" + (pawns?.Count ?? 0)
-                    + " | useQuick=" + useQuick
+                    + " | quickDropRequested=" + quickDropRequested
+                    + " | safeQuickDropResolved=" + safeQuickDropResolved
+                    + " | actualArrivalMode=" + (safeQuickDropResolved
+                        ? "SafeOutdoorExactDrop"
+                        : fallbackArrivalMode.defName)
                     + " | map=" + map.GetUniqueLoadID()
                     + " | aidTag=" + (aidTag ?? "-")
                     + " | ex=" + ex);
