@@ -73,6 +73,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // ===== 高科技援军专用安全室外空投参数（不使用原版 CenterDrop，避免落入前哨建筑 / 封闭院落） =====
         // 只在地图中心附近一定范围内寻找空投区，避免援军散落到地图极远处。
         private const float QuickDropAnchorSearchRadius = 80f;
+        // GenRadial 要求实际半径严格小于 MaxRadialPatternRadius；
+        // 保留少量安全余量，避免触发原版“Not enough squares...”错误。
+        private const float QuickDropRadialPatternSafetyMargin = 0.1f;
         // 同一派系的空投格必须集中在一个空投区锚点周围。
         private const float QuickDropZoneRadius = 18f;
         // 两个实际空投格的距离平方至少为 4，即大致保持 2 格距离，避免空投舱重叠。
@@ -1331,6 +1334,37 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            // 根据原版运行时提供的径向格表实际上限动态限制搜索半径，
+            // 避免把超过 MaxRadialPatternRadius 的半径直接传给 GenRadial.RadialCellsAround。
+            float maximumSupportedRadius =
+                GenRadial.MaxRadialPatternRadius
+                - QuickDropRadialPatternSafetyMargin;
+
+            float effectiveSearchRadius =
+                Math.Min(
+                    QuickDropAnchorSearchRadius,
+                    maximumSupportedRadius);
+
+            if (effectiveSearchRadius <= 0f)
+            {
+                dropCells.Clear();
+
+                Log.Warning(
+                    JointOpLogPrefix
+                    + " Event=SafeJointOperationDropZoneResolveFailed"
+                    + " | reason=InvalidEffectiveSearchRadius"
+                    + " | configuredSearchRadius="
+                    + QuickDropAnchorSearchRadius.ToString("F2")
+                    + " | maxRadialPatternRadius="
+                    + GenRadial.MaxRadialPatternRadius.ToString("F2")
+                    + " | effectiveSearchRadius="
+                    + effectiveSearchRadius.ToString("F2")
+                    + " | requiredCount=" + requiredCount
+                    + " | map=" + map.GetUniqueLoadID());
+
+                return false;
+            }
+
             // 本次搜索专用缓存：同一 Region 只执行一次边缘可达性检查。
             // 缓存只存在于一次方法调用内，不跨地图、不跨部署、不写入存档。
             Dictionary<Region, bool> regionCanReachEdgeCache =
@@ -1341,7 +1375,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 候选锚点按从地图中心向外的顺序枚举（GenRadial 本身由近到远），不再扫描全图或排序。
             foreach (IntVec3 anchor in GenRadial.RadialCellsAround(
                          map.Center,
-                         QuickDropAnchorSearchRadius,
+                         effectiveSearchRadius,
                          useCenter: true))
             {
                 if (!anchor.InBounds(map))
@@ -1406,6 +1440,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                             + " | cachedRegionCount=" + regionCanReachEdgeCache.Count
                             + " | success=true"
                             + " | dropCellCount=" + dropCells.Count
+                            + " | configuredSearchRadius="
+                            + QuickDropAnchorSearchRadius.ToString("F2")
+                            + " | maxRadialPatternRadius="
+                            + GenRadial.MaxRadialPatternRadius.ToString("F2")
+                            + " | effectiveSearchRadius="
+                            + effectiveSearchRadius.ToString("F2")
                             + " | map=" + map.GetUniqueLoadID());
 
                         return true;
@@ -1429,6 +1469,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 + " | cachedRegionCount=" + regionCanReachEdgeCache.Count
                 + " | success=false"
                 + " | dropCellCount=0"
+                + " | configuredSearchRadius="
+                + QuickDropAnchorSearchRadius.ToString("F2")
+                + " | maxRadialPatternRadius="
+                + GenRadial.MaxRadialPatternRadius.ToString("F2")
+                + " | effectiveSearchRadius="
+                + effectiveSearchRadius.ToString("F2")
                 + " | map=" + map.GetUniqueLoadID());
 
             return false;
