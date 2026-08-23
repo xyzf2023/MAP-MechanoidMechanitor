@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor
     public static class CommandRangePatches
     {
         [HarmonyPrefix]
-        public static bool Prefix(Pawn mech, ref bool __result)
+        public static bool Prefix(Pawn mech, LocalTargetInfo target, ref bool __result)
         {
             if (mech == null || !ModsConfig.BiotechActive)
             {
@@ -36,6 +36,18 @@ namespace MAP_MechanoidMechanitor
             if (MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(mech))
             {
                 __result = true;
+                return false;
+            }
+
+            if (ProxySubchainUtility.TryGetHeldCommandOrigin(
+                    mech,
+                    out Map? commandMap,
+                    out IntVec3 commandOrigin))
+            {
+                __result = commandMap != null
+                    && mech.MapHeld == commandMap
+                    && target.Cell.InBounds(commandMap)
+                    && (float)commandOrigin.DistanceToSquared(target.Cell) < 620.01f;
                 return false;
             }
 

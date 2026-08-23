@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_ProxySubchain</defName>
+    <label>代理子链</label>
+    <description>TODO</description>
+    <descriptionHyperlinks>
+      <HediffDef>MAP_ProxySubchain</HediffDef>
+    </descriptionHyperlinks>
+    <costList>
+      <Plasteel>30</Plasteel>
+      <Gold>15</Gold>
+      <ComponentSpacer>2</ComponentSpacer>
+    </costList>
+    <statBases>
+      <MaxInstallCount>1</MaxInstallCount>
+      <MarketValue>1800</MarketValue>
+      <Mass>0.01</Mass>
+      <WorkToMake>12000</WorkToMake>
+    </statBases>
+    <recipeMaker>
+      <researchPrerequisite>UltraMechtech</researchPrerequisite>
+      <skillRequirements Inherit="False">
+        <Crafting>10</Crafting>
+      </skillRequirements>
+    </recipeMaker>
+    <comps>
+      <li Class="CompProperties_Usable">
+        <compClass>CompUsableImplant</compClass>
+        <useJob>UseItem</useJob>
+        <useLabel>植入代理子链</useLabel>
+        <userMustHaveHediff>MechlinkImplant</userMustHaveHediff>
+      </li>
+      <li Class="CompProperties_UseEffectInstallImplant">
+        <hediffDef>MAP_ProxySubchain</hediffDef>
+        <bodyPart>Brain</bodyPart>
+        <canUpgrade>false</canUpgrade>
+        <requiresExistingHediff>false</requiresExistingHediff>
+        <maxSeverity>1</maxSeverity>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>

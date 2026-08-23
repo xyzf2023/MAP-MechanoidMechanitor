@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <HediffDef MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_ProxySubchain</defName>
+    <hediffClass>HediffWithComps</hediffClass>
+    <descriptionHyperlinks>
+      <ThingDef>MAP_ProxySubchain</ThingDef>
+    </descriptionHyperlinks>
+    <label>代理子链</label>
+    <labelNoun>代理子链</labelNoun>
+    <description>TODO</description>
+    <descriptionShort>TODO</descriptionShort>
+    <defaultLabelColor>(0.4, 0.75, 1.0)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>true</priceImpact>
+    <initialSeverity>1</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>1</maxSeverity>
+    <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
+    <levelIsQuantity>false</levelIsQuantity>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ProxySubchain"/>
+    </comps>
+    <stages>
+      <li>
+        <minSeverity>1</minSeverity>
+      </li>
+    </stages>
+    <duplicationAllowed>false</duplicationAllowed>
+  </HediffDef>
+</Defs>
