@@ -47,4 +47,28 @@ namespace MAP_MechanoidMechanitor
             __instance?.parent?.TryGetComp<CompCerebrexBossController>()?.Notify_CoreDeactivationStarted();
         }
     }
+
+    /// <summary>
+    /// 在最后一个稳定器失效、原版主脑正式解除防御并允许互动后，
+    /// 通知本MOD主脑战斗控制器结束BOSS战斗并清理仍在运行的技能。
+    /// 不修改原版稳定器计数、信件、互动条件或结局逻辑。
+    /// 仅在奥德赛DLC启用时应用。
+    /// </summary>
+    [HarmonyPatch]
+    public static class CompCerebrexCore_LowerDefences_Patch
+    {
+        public static bool Prepare() => ModsConfig.OdysseyActive;
+
+        public static MethodBase? TargetMethod()
+        {
+            return AccessTools.Method(typeof(CompCerebrexCore), "LowerDefences");
+        }
+
+        public static void Postfix(CompCerebrexCore __instance)
+        {
+            __instance?.parent?
+                .TryGetComp<CompCerebrexBossController>()?
+                .Notify_CoreDefencesLowered();
+        }
+    }
 }

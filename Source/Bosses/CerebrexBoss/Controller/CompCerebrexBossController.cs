@@ -90,13 +90,37 @@ namespace MAP_MechanoidMechanitor
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
-            if (initialized)
+
+            if (!initialized)
+            {
+                InitializeTimers();
+                initialized = true;
+            }
+
+            if (respawningAfterLoad)
+            {
+                ReconcileCoreCombatStateAfterLoad();
+            }
+        }
+
+        private void ReconcileCoreCombatStateAfterLoad()
+        {
+            if (!ModsConfig.OdysseyActive || parent == null || parent.Destroyed)
             {
                 return;
             }
 
-            InitializeTimers();
-            initialized = true;
+            CompCerebrexCore? core = parent.TryGetComp<CompCerebrexCore>();
+            if (core == null)
+            {
+                return;
+            }
+
+            AcceptanceReport canInteract = core.CanInteract();
+            if (canInteract.Accepted)
+            {
+                Notify_CoreDefencesLowered();
+            }
         }
 
         private void InitializeTimers()
@@ -1122,12 +1146,8 @@ namespace MAP_MechanoidMechanitor
             int now = Find.TickManager.TicksGame;
             bool shouldEnd = false;
 
-            // 1. 无条件结束原因：主脑停止/失效、关系非敌对、监管者失效、目标引用损坏、翻倍健康状态丢失。
+            // 1. 无条件结束原因：主脑停止/失效、监管者失效、目标引用损坏、翻倍健康状态丢失。
             if (stopped || !parent.Spawned || parent.Destroyed)
-            {
-                shouldEnd = true;
-            }
-            else if (parent.Faction == null || Faction.OfPlayer == null || !parent.Faction.HostileTo(Faction.OfPlayer))
             {
                 shouldEnd = true;
             }
@@ -1283,15 +1303,25 @@ namespace MAP_MechanoidMechanitor
         // 主脑关闭 / 销毁清理
         // ----------------------------------------------------------------
 
-        public void Notify_CoreDeactivationStarted()
+        private void StopBossCombat(string reason)
         {
             stopped = true;
             ResetEmpWarningState();
-            EndBandwidthInterference(startCooldown: false, reason: "deactivation");
+            EndBandwidthInterference(startCooldown: false, reason: reason);
             pendingEmpHits.Clear();
             bandwidthTargetsUsedThisBattle.Clear();
             pendingSummonKinds.Clear();
             summonDropRetryCount = 0;
+        }
+
+        public void Notify_CoreDeactivationStarted()
+        {
+            StopBossCombat("deactivation");
+        }
+
+        public void Notify_CoreDefencesLowered()
+        {
+            StopBossCombat("defencesLowered");
         }
 
         private void FullCleanup(string reason)
