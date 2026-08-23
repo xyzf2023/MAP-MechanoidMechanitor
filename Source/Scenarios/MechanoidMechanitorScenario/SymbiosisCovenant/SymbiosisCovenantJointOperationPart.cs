@@ -44,8 +44,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool failureApplied;
         public bool invalidEndApplied;
         public bool declinedOrExpiredApplied;
-        // 联合行动部署完成后，目标派系守军是否已转入主动进攻（随存档）。
-        public bool targetDefenderAssaultTriggered;
         public int targetThreatPointsAtDeployment;
         public float totalSupportPointsAtDeployment;
         public List<SymbiosisCovenantJointOperationFactionSupportRecord>? supportRecords;
@@ -75,9 +73,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const int OfferPendingClearVerificationDelayTicks = 250;
         // OfferPending 的目标守军观察只需低频执行；到期验证仍由每 tick 的廉价整数比较保证准时。
         private const int OfferPendingTargetObservationIntervalTicks = 60;
-        // 守军主动进攻：部署后立即尝试一次，随后每秒重试，最多持续十秒。
-        private const int TargetDefenderAssaultRetryIntervalTicks = 60;
-        private const int TargetDefenderAssaultRetryWindowTicks = 600;
         private const string AidQuestTagPrefix = "MAP_SymbiosisCovenantJointOp";
 
         // 联合军事行动诊断日志统一前缀。
@@ -124,11 +119,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private string? offerPendingClearVerificationReason;
         // 纯运行期节流：读档后保持 -1，使下一 tick 立即观察一次；不影响结算结果，无需存档。
         private int nextOfferPendingTargetObservationTick = -1;
-
-        // 守军主动进攻的有限重试状态（随存档，避免读档后重新开启已耗尽的重试窗口）。
-        private int nextTargetDefenderAssaultRetryTick = -1;
-        private int targetDefenderAssaultRetryDeadlineTick = -1;
-        private bool targetDefenderAssaultRetryExhausted;
 
         // 相关信号日志节流（运行期；只记录每种 tag 的首次出现，避免 NoActiveThreats /
         // AllEnemiesDefeated 等重复信号刷屏）。仅影响日志，不影响游戏逻辑。
@@ -834,40 +824,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                 }
 
-                // 守军主动进攻使用有限、低频重试：首次部署立即尝试；旧存档首次进入本分支
-                // 时补开十秒窗口；之后每 60 tick 尝试一次，超时后停止扫描且不伪装成成功。
-                EnsureTargetDefenderAssaultRetryWindow(now);
-                if (!targetDefenderAssaultTriggered && !targetDefenderAssaultRetryExhausted)
-                {
-                    if (targetDefenderAssaultRetryDeadlineTick >= 0
-                        && now > targetDefenderAssaultRetryDeadlineTick)
-                    {
-                        targetDefenderAssaultRetryExhausted = true;
-                        nextTargetDefenderAssaultRetryTick = -1;
-                        Log.Warning(
-                            JointOpLogPrefix + " Event=TargetDefendersAssaultRetryExpired"
-                            + " | reason=NoApplicableOrMigratableDefendLord"
-                            + " | actionId=" + (actionId ?? "-")
-                            + " | target=" + (targetWorldObject?.Label ?? "-")
-                            + " | targetFaction=" + (targetFaction?.GetUniqueLoadID() ?? "null")
-                            + " | stage=" + stage
-                            + " | tick=" + now);
-                    }
-                    else if (nextTargetDefenderAssaultRetryTick >= 0
-                        && now >= nextTargetDefenderAssaultRetryTick)
-                    {
-                        nextTargetDefenderAssaultRetryTick =
-                            now + TargetDefenderAssaultRetryIntervalTicks;
-                        Map? assaultMap = (targetWorldObject as MapParent)?.Map;
-                        if (assaultMap != null
-                            && !assaultMap.Disposed
-                            && Find.Maps.Contains(assaultMap))
-                        {
-                            TriggerTargetDefendersAssault(assaultMap);
-                        }
-                    }
-                }
-
                 if (now % TargetClearCheckInterval == 0)
                 {
                     TryCompleteOperationIfTargetCleared();
@@ -1060,9 +1016,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 reinforcementsGenerated = true;
                 stage = SymbiosisCovenantJointOperationStage.ReinforcementsDeployed;
-                // 部署完成后立即尝试一次；若暂时没有可迁移 Lord，后续按低频有限窗口重试。
-                StartTargetDefenderAssaultRetryWindow(now);
-                TriggerTargetDefendersAssault(map);
+                // 目标守军继续使用文化 DLC Work Site 的原版 DefendBase 状态机；
+                // 联合行动只部署援军，不强制改写或迁移守军 Lord。
             }
             else
             {
@@ -2490,228 +2445,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 联合行动部署完成后，让目标前哨中处于建筑内的守军立即转入主动进攻。
-        /// 只激活本次目标地图、本次目标派系的守军 Lord（自定义 LordJob 发 memo，
-        /// 或兼容迁移旧存档中的原版 LordJob_DefendBase）。
-        /// </summary>
-        private void TriggerTargetDefendersAssault(Map map)
-        {
-            if (targetDefenderAssaultTriggered)
-            {
-                return;
-            }
-
-            if (map == null || map.Disposed || !Find.Maps.Contains(map))
-            {
-                return;
-            }
-
-            if (targetFaction == null)
-            {
-                return;
-            }
-
-            if (stage != SymbiosisCovenantJointOperationStage.ReinforcementsDeployed || !reinforcementsGenerated)
-            {
-                return;
-            }
-
-            int customLordCount = 0;
-            int legacyDefendLordCount = 0;
-            int migratedPawnCount = 0;
-            int failedLordCount = 0;
-
-            // 统一筛选：本目标地图、本 targetFaction、且守军 Lord 为允许迁移的 DefendBase 类型。
-            List<Lord> lordsSnapshot = new List<Lord>(map.lordManager.lords);
-            List<Lord> candidateLords = new List<Lord>();
-            foreach (Lord lord in lordsSnapshot)
-            {
-                if (lord == null
-                    || lord.faction != targetFaction
-                    || lord.Map != map
-                    || lord.LordJob is not LordJob_DefendBase)
-                {
-                    continue;
-                }
-
-                // 至少拥有一个仍有效、已生成、属于 targetFaction 且位于该地图的 Pawn。
-                bool hasValidDefender = false;
-                foreach (Pawn p in lord.ownedPawns)
-                {
-                    if (p != null && !p.Destroyed && p.Spawned && p.Map == map && p.Faction == targetFaction)
-                    {
-                        hasValidDefender = true;
-                        break;
-                    }
-                }
-
-                if (!hasValidDefender)
-                {
-                    continue;
-                }
-
-                if (lord.LordJob is LordJob_MAPFactionOutpostDefendBase)
-                {
-                    customLordCount++;
-                }
-                else
-                {
-                    legacyDefendLordCount++;
-                }
-
-                candidateLords.Add(lord);
-            }
-
-            // 没有 DefendBase 候选时，先识别旧存档中“已经迁移为主动进攻”的情况；
-            // 否则保持 false，交给有限重试窗口继续等待可能尚未创建的守军 Lord。
-            if (candidateLords.Count == 0)
-            {
-                if (HasTargetFactionAssaultLord(map))
-                {
-                    targetDefenderAssaultTriggered = true;
-                    CompleteTargetDefenderAssaultRetry();
-                    LogDeploymentDiagnostic(
-                        "TargetDefendersAssaultAlreadyActive",
-                        "targetFaction=" + (targetFaction?.GetUniqueLoadID() ?? "null")
-                        + " | map=" + map.GetUniqueLoadID()
-                        + " | stage=" + stage
-                        + " | actionId=" + (actionId ?? "-"));
-                }
-
-                return;
-            }
-
-            // 统一调用迁移方法（处理自定义与旧原版 DefendBase 两种 LordJob）。
-            foreach (Lord lord in candidateLords)
-            {
-                int migrated = 0;
-                if (LordJob_MAPFactionOutpostDefendBase.TryStartJointOperationAssault(lord, out migrated))
-                {
-                    migratedPawnCount += migrated;
-                }
-                else
-                {
-                    failedLordCount++;
-                }
-            }
-
-            // 只有全部候选 Lord 均迁移成功（无失败），且迁移后重新扫描不再存在仍拥有
-            // 有效目标守军的 DefendBase Lord，才置为已触发，否则保持 false 以允许重试。
-            if (failedLordCount == 0)
-            {
-                bool stillHasDefendLord = false;
-                foreach (Lord lord in map.lordManager.lords)
-                {
-                    if (lord == null
-                        || lord.faction != targetFaction
-                        || lord.Map != map
-                        || lord.LordJob is not LordJob_DefendBase)
-                    {
-                        continue;
-                    }
-
-                    foreach (Pawn p in lord.ownedPawns)
-                    {
-                        if (p != null && !p.Destroyed && p.Spawned && p.Map == map && p.Faction == targetFaction)
-                        {
-                            stillHasDefendLord = true;
-                            break;
-                        }
-                    }
-
-                    if (stillHasDefendLord)
-                    {
-                        break;
-                    }
-                }
-
-                if (!stillHasDefendLord)
-                {
-                    targetDefenderAssaultTriggered = true;
-                    CompleteTargetDefenderAssaultRetry();
-                }
-            }
-
-            LogDeploymentDiagnostic(
-                "TargetDefendersAssaultTriggered",
-                "targetFaction=" + (targetFaction?.GetUniqueLoadID() ?? "null")
-                + " | map=" + map.GetUniqueLoadID()
-                + " | customLordCount=" + customLordCount
-                + " | legacyDefendLordCount=" + legacyDefendLordCount
-                + " | migratedPawnCount=" + migratedPawnCount
-                + " | failedLordCount=" + failedLordCount
-                + " | targetDefenderAssaultTriggered=" + targetDefenderAssaultTriggered
-                + " | stage=" + stage
-                + " | actionId=" + (actionId ?? "-"));
-        }
-
-        private void StartTargetDefenderAssaultRetryWindow(int now)
-        {
-            targetDefenderAssaultRetryExhausted = false;
-            targetDefenderAssaultRetryDeadlineTick =
-                now + TargetDefenderAssaultRetryWindowTicks;
-            // 首次由部署调用方立即执行；下一次失败重试安排在一个间隔之后。
-            nextTargetDefenderAssaultRetryTick =
-                now + TargetDefenderAssaultRetryIntervalTicks;
-        }
-
-        private void EnsureTargetDefenderAssaultRetryWindow(int now)
-        {
-            if (targetDefenderAssaultTriggered || targetDefenderAssaultRetryExhausted)
-            {
-                return;
-            }
-
-            // 旧存档没有这些调度字段：首次进入已部署阶段时补开一次有限窗口并立即尝试。
-            if (targetDefenderAssaultRetryDeadlineTick < 0)
-            {
-                targetDefenderAssaultRetryDeadlineTick =
-                    now + TargetDefenderAssaultRetryWindowTicks;
-                nextTargetDefenderAssaultRetryTick = now;
-            }
-        }
-
-        private void CompleteTargetDefenderAssaultRetry()
-        {
-            nextTargetDefenderAssaultRetryTick = -1;
-            targetDefenderAssaultRetryDeadlineTick = -1;
-            targetDefenderAssaultRetryExhausted = false;
-        }
-
-        private bool HasTargetFactionAssaultLord(Map map)
-        {
-            if (map == null || targetFaction == null)
-            {
-                return false;
-            }
-
-            foreach (Lord lord in map.lordManager.lords)
-            {
-                if (lord == null
-                    || lord.faction != targetFaction
-                    || lord.Map != map
-                    || lord.LordJob is not LordJob_AssaultColony)
-                {
-                    continue;
-                }
-
-                foreach (Pawn pawn in lord.ownedPawns)
-                {
-                    if (pawn != null
-                        && !pawn.Destroyed
-                        && pawn.Spawned
-                        && pawn.Map == map
-                        && pawn.Faction == targetFaction)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// DEV 专用：立即清除当前活动联合军事行动（按无效结束，不加不减 Unity/Trust）。
         /// 正式游戏路径不得调用。
         /// </summary>
@@ -2861,10 +2594,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Defs.Look(ref jointOperationDef, "jointOperationDef");
             Scribe_Values.Look(ref rewardValue, "rewardValue", 0);
             Scribe_Values.Look(ref playerEngaged, "playerEngaged", false);
-            Scribe_Values.Look(ref targetDefenderAssaultTriggered, "targetDefenderAssaultTriggered", false);
-            Scribe_Values.Look(ref nextTargetDefenderAssaultRetryTick, "nextTargetDefenderAssaultRetryTick", -1);
-            Scribe_Values.Look(ref targetDefenderAssaultRetryDeadlineTick, "targetDefenderAssaultRetryDeadlineTick", -1);
-            Scribe_Values.Look(ref targetDefenderAssaultRetryExhausted, "targetDefenderAssaultRetryExhausted", false);
 
             // OfferPending 普通 Site 延迟验证状态（参与存档，保证旧存档读档后能继续验证）。
             Scribe_Values.Look(ref offerPendingTargetMapFirstObservedTick, "offerPendingTargetMapFirstObservedTick", -1);

@@ -12,7 +12,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// 普通派系前哨的军事初始化器。
     /// 建筑主体由与文化 DLC Work Site 相同的 GenStep_Outpost -> BaseGen 流程生成；
     /// 本类只验证前哨布局、按真实所属派系生成 Combat 守军，并建立基地防御 Lord。
-    /// 守军按真实建筑群分散驻守，每个有 Pawn 落地的建筑群拥有独立 LordJob_DefendBase。
+    /// 守军仍按真实建筑群分散落地，但与文化 DLC Work Site 一致：
+    /// 所有守军共用一个 LordJob_DefendBase，并只生成在可经门正常到达地图边缘的格子。
     /// </summary>
     public static class FactionOutpostMapGenerator
     {
@@ -122,34 +123,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 // 创建 Lord 前校验：每个实际落地 Pawn 只能属于一个建筑群、且确实在地图上。
                 ValidateLandedPawnAssignments(map, landedClusterPawns);
 
-                // 为每个实际成功落地至少一名 Pawn 的建筑群创建独立 Lord。
-                foreach (KeyValuePair<BuildingCluster, List<Pawn>> kvp in landedClusterPawns)
-                {
-                    List<Pawn> landed = kvp.Value;
-                    if (landed.Count == 0)
-                    {
-                        continue;
-                    }
-
-                    Lord lord = LordMaker.MakeNewLord(
-                        owner,
-                        new LordJob_MAPFactionOutpostDefendBase(owner, kvp.Key.Center, 25000),
-                        map);
-                    if (lord == null)
-                    {
-                        throw new InvalidOperationException("无法创建前哨守军 Lord。");
-                    }
-
-                    lords.Add(lord);
-                    for (int i = 0; i < landed.Count; i++)
-                    {
-                        lord.AddPawn(landed[i]);
-                    }
-                }
-
-                if (lords.Count == 0)
+                // 与文化 DLC Work Site 的 GenStep_WorkSitePawns 保持一致：
+                // 所有守军共用一个 LordJob_DefendBase，以地图中心为防守中心，
+                // 25000 tick 后必定由原版状态机从守卫基地转入主动进攻。
+                // 建筑群只决定 Pawn 的初始分散落地位置，不再拆成多个互不联动的 Lord。
+                Lord lord = LordMaker.MakeNewLord(
+                    owner,
+                    new LordJob_MAPFactionOutpostDefendBase(owner, map.Center, 25000),
+                    map);
+                if (lord == null)
                 {
                     throw new InvalidOperationException("前哨守军 Lord 创建失败。");
+                }
+
+                // 先登记 Lord 再逐个加入 Pawn；若任一步骤抛出异常，现有回滚路径
+                // 能同时移除该 Lord 并安全丢弃本轮生成的全部守军。
+                lords.Add(lord);
+                for (int i = 0; i < placedPawns.Count; i++)
+                {
+                    lord.AddPawn(placedPawns[i]);
                 }
 
                 outpost.NotifyMapGarrisonInitialized(true);
@@ -327,7 +319,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 0,
                 (int)(sumZ / buildings.Count));
 
-            if (IsValidDefenderCell(approximateCenter, map))
+            if (IsValidDefendCenterCell(approximateCenter, map))
             {
                 center = approximateCenter;
                 return true;
@@ -337,7 +329,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 approximateCenter,
                 map,
                 DefendCenterSearchRadius,
-                c => IsValidDefenderCell(c, map),
+                c => IsValidDefendCenterCell(c, map),
                 out center,
                 MaxDefendCenterSearchTries);
         }
@@ -406,7 +398,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// 校验实际落地表：每个 Pawn 只能属于一个建筑群、且确实已在地图上 Spawn。
         /// 任意 Pawn 为 null / 已销毁 / 未 Spawn / 不在当前 map / 被重复加入时，
         /// 抛出 InvalidOperationException，交由 Generate 的 catch 走回滚路径，
-        /// 绝不留下一个 Pawn 被多个 Lord 管理的半损坏状态。正常成功路径不受影响。
+        /// 绝不把同一 Pawn 重复加入统一守军 Lord。正常成功路径不受影响。
         /// </summary>
         private static void ValidateLandedPawnAssignments(
             Map map,
@@ -453,11 +445,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return clusters[clusters.Count - 1];
         }
 
-        private static bool IsValidDefenderCell(IntVec3 cell, Map map)
+        private static bool IsValidDefendCenterCell(IntVec3 cell, Map map)
         {
             return cell.InBounds(map)
                 && cell.Standable(map)
                 && cell.GetEdifice(map) == null;
+        }
+
+        /// <summary>
+        /// 与文化 DLC Work Site 的 singlePawnSpawnCellExtraPredicate 一致：
+        /// 守军可以生成在建筑内，但必须能以正常通过门的方式到达地图边缘，
+        /// 防止落入真正密封的房间或封闭院落。
+        /// </summary>
+        private static bool IsValidDefenderSpawnCell(IntVec3 cell, Map map)
+        {
+            return IsValidDefendCenterCell(cell, map)
+                && map.reachability.CanReachMapEdge(
+                    cell,
+                    TraverseParms.For(TraverseMode.PassDoors));
         }
 
         /// <summary>
@@ -511,7 +516,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 origin,
                 map,
                 radius,
-                c => IsValidDefenderCell(c, map),
+                c => IsValidDefenderSpawnCell(c, map),
                 out IntVec3 cell,
                 MaxPawnPlaceTries))
             {
