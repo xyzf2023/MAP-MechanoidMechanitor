@@ -333,9 +333,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return (false, false, null);
             }
 
-            // 重新分配整波点数给实际能生成战斗编组的派系，保证总和等于整波点数。
+            // 实际生成时每个派系使用的点数 = 整波点数 / 选择派系数；记录值须与之相等。
             List<Faction> successFacs = factionPawns.Keys.ToList();
-            List<(Faction faction, float points)> allocations = AllocatePoints(total, successFacs);
+            float perFactionPoints = total / chosen.Count;
+
+            // 为生成失败的派系重生替代派系（最多一次），提高波次生成成功率。
+            if (factionPawns.Count < chosen.Count && factionPawns.Count > 0)
+            {
+                List<Faction> failed = chosen.Where(f => !factionPawns.ContainsKey(f)).ToList();
+                List<Faction> pool = eligible.Where(f => !chosen.Contains(f)).ToList();
+                foreach (Faction f in failed)
+                {
+                    Faction? repl = pool.FirstOrDefault();
+                    if (repl == null)
+                    {
+                        break;
+                    }
+
+                    pool.Remove(repl);
+                    List<Pawn> gen = GenerateCombatGroup(repl, map, perFactionPoints);
+                    List<Pawn> valid = new List<Pawn>();
+                    foreach (Pawn p in gen)
+                    {
+                        if (TryEquipVacsuit(p))
+                        {
+                            valid.Add(p);
+                        }
+                        else
+                        {
+                            p.Destroy(DestroyMode.Vanish);
+                        }
+                    }
+
+                    if (valid.Count > 0)
+                    {
+                        factionPawns[repl] = valid;
+                    }
+                }
+            }
 
             List<Pawn> allPawns = factionPawns.Values.SelectMany(x => x).ToList();
 
@@ -361,7 +396,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 List<Pawn> pawns = factionPawns[fac];
                 string aidTag = $"{questId}_{waveIndex}_{fac.loadID}";
-                float pts = allocations.First(a => a.faction == fac).points;
+                float pts = perFactionPoints;
 
                 foreach (Pawn p in pawns)
                 {
@@ -450,6 +485,66 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         // ───────────────────────── 安全落点（边缘） ─────────────────────────
 
+        /// <summary>
+        /// 在地图中定位真正的 CompCerebrexCore。绝不对 IEnumerable&lt;Thing&gt; 使用
+        /// OfType&lt;CompCerebrexCore&gt;()——AllThings 中是 Thing，不是 ThingComp。
+        /// 先按已知主脑建筑 Def 缩小范围，再安全回退到全图 TryGetComp 扫描（非高频调用）。
+        /// </summary>
+        public static CompCerebrexCore? FindCerebrexCore(Map map)
+        {
+            if (map == null)
+            {
+                return null;
+            }
+
+            ThingDef? coreDef = DefDatabase<ThingDef>.GetNamedSilentFail("Building_CerebrexCore");
+            if (coreDef != null)
+            {
+                foreach (Thing t in map.listerThings.ThingsOfDef(coreDef))
+                {
+                    CompCerebrexCore? comp = t.TryGetComp<CompCerebrexCore>();
+                    if (comp != null)
+                    {
+                        return comp;
+                    }
+                }
+            }
+
+            // 安全回退：遍历地图 Thing，取第一个有效组件。
+            foreach (Thing t in map.listerThings.AllThings)
+            {
+                CompCerebrexCore? comp = t.TryGetComp<CompCerebrexCore>();
+                if (comp != null)
+                {
+                    return comp;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsPlatformEdge(IntVec3 c, Map map)
+        {
+            foreach (IntVec3 n in GenAdj.CardinalDirections.Select(d => c + d))
+            {
+                if (!n.InBounds(map) || !n.Standable(map))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 分层、有上限、可补充的空投落点搜索：
+        /// 1) 原版 EdgeDrop 解析 spawn center 作为搜索锚点之一；
+        /// 2) 平台外缘合法格（可站立且相邻不可站立/太空）；
+        /// 3) 锚点附近 GenRadial 回退补充（有限尝试）；
+        /// 4) 剩余平台合法格回退（有限数量，优先远离地图中心）。
+        /// 所有候选必须满足 IsSafeDropCell，且同批互不冲突。
+        /// 只有 result.Count == requiredCount 才返回 true。
+        /// </summary>
         private static bool TryFindSafeEdgeDropCells(
             Map map,
             int requiredCount,
@@ -458,7 +553,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             result = new List<IntVec3>();
 
-            // 1) 优先尝试原版 EdgeDrop 的 spawn center 解析。
+            // 寻路目标仅在方法内计算一次，避免每个候选重复全图扫描。
+            IntVec3 target = FindCerebrexCore(map)?.parent?.Position ?? map.Center;
+
+            // 1) 原版 EdgeDrop 锚点（仅作搜索锚点之一，解析失败不中断）。
             IntVec3 anchor = map.Center;
             IncidentParms edgeParms = new IncidentParms
             {
@@ -471,8 +569,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 anchor = edgeParms.spawnCenter;
             }
 
-            // 2) 外缘候选格（有上限）。
             List<IntVec3> candidates = new List<IntVec3>();
+
+            // 2) 平台外缘合法格（有上限）。
             int edgeCount = 0;
             foreach (IntVec3 c in CellRect.WholeMap(map).EdgeCells)
             {
@@ -481,30 +580,58 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     break;
                 }
 
-                if (IsSafeDropCell(c, map))
+                if (IsPlatformEdge(c, map) && IsSafeDropCell(c, map, target))
                 {
                     candidates.Add(c);
                 }
             }
 
-            if (candidates.Count == 0)
+            // 3) 锚点附近补充（GenRadial.RadialPattern，明确上限）。
+            if (candidates.Count < requiredCount)
             {
-                // 外缘无安全格：退化为以 anchor 为中心、有限半径内的安全格。
                 int attempt = 0;
-                while (attempt++ < cfg.dropCellAnchorAttemptLimit && candidates.Count < requiredCount)
+                while (attempt < cfg.dropCellAnchorAttemptLimit && candidates.Count < requiredCount)
                 {
                     IntVec3 c = anchor + GenRadial.RadialPattern[attempt % GenRadial.RadialPattern.Length];
-                    if (c.InBounds(map) && IsSafeDropCell(c, map))
+                    if (c.InBounds(map)
+                        && IsSafeDropCell(c, map, target)
+                        && !candidates.Contains(c))
                     {
                         candidates.Add(c);
                     }
+
+                    attempt++;
                 }
             }
 
-            // 优先选择距离地图中心较远（外缘）的安全格。
+            // 4) 有限平台合法格回退：优先距离地图中心较远者。
+            if (candidates.Count < requiredCount)
+            {
+                List<IntVec3> remaining = new List<IntVec3>();
+                foreach (IntVec3 c in map.AllCells)
+                {
+                    if (candidates.Contains(c))
+                    {
+                        continue;
+                    }
+
+                    if (IsSafeDropCell(c, map, target))
+                    {
+                        remaining.Add(c);
+                    }
+                }
+
+                remaining.SortByDescending(c => c.DistanceTo(map.Center));
+                int cap = Mathf.Min(remaining.Count, cfg.dropCellEdgeCandidateLimit);
+                for (int i = 0; i < cap && candidates.Count < requiredCount; i++)
+                {
+                    candidates.Add(remaining[i]);
+                }
+            }
+
             candidates.SortByDescending(c => c.DistanceTo(map.Center));
 
-            // 3) 按最小间距挑选所需数量。
+            // 按最小间距挑选所需数量。
             foreach (IntVec3 c in candidates)
             {
                 if (result.Count >= requiredCount)
@@ -531,7 +658,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return result.Count == requiredCount;
         }
 
-        private static bool IsSafeDropCell(IntVec3 c, Map map)
+        private static bool IsSafeDropCell(IntVec3 c, Map map, IntVec3 target)
         {
             if (!c.InBounds(map))
             {
@@ -579,14 +706,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     return false;
                 }
-            }
-
-            // 能使用正常通行或 PassDoors 路径抵达主脑战斗区域/玩家主要可达区域。
-            IntVec3 target = map.Center;
-            CompCerebrexCore? core = map.listerThings.AllThings.OfType<CompCerebrexCore>().FirstOrDefault();
-            if (core != null && core.parent != null)
-            {
-                target = core.parent.Position;
             }
 
             if (!map.reachability.CanReach(
@@ -683,7 +802,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     Map map = site.Map;
                     bool playerEntered = map.mapPawns.AllPawns.Any(p => p.Faction == Faction.OfPlayer);
-                    CompCerebrexCore? core = map.listerThings.AllThings.OfType<CompCerebrexCore>().FirstOrDefault();
+                    CompCerebrexCore? core = FindCerebrexCore(map);
                     bool hasCore = core != null;
                     bool coreLowered = hasCore && core!.CanInteract().Accepted;
 
@@ -861,7 +980,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             else if (part.evacMode == CerebrexSupportEvacMode.OdysseyMechPod)
             {
-                TickMechPodEvacuation(part, map, now);
+                // 缺少可用撤离载具定义（如 Odyssey 未启用）时直接完成，避免援军卡死。
+                if (EvacPodDef() == null)
+                {
+                    foreach (SymbiosisCovenantCerebrexSupportEvacVehicle v in part.evacVehicles)
+                    {
+                        v.stage = CerebrexSupportEvacVehicleStage.Completed;
+                    }
+                }
+                else
+                {
+                    TickMechPodEvacuation(part, map, now);
+                }
+            }
+
+            if (part.evacVehicles.Count > 0 && part.evacVehicles.All(v => v.IsCompleted))
+            {
+                part.MarkSupportCompleted();
             }
         }
 
@@ -872,67 +1007,168 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map,
             int now)
         {
-            bool allGone = part.evacVehicles.Count > 0;
+            // 1) 收集需要生成穿梭机的记录（仅 NotRequested，且已过重试节流）。
+            List<SymbiosisCovenantCerebrexSupportEvacVehicle> pending = part.evacVehicles
+                .Where(v => v.stage == CerebrexSupportEvacVehicleStage.NotRequested
+                            && (v.nextRetryTick < 0 || now >= v.nextRetryTick))
+                .ToList();
 
-            foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in part.evacVehicles)
+            if (pending.Count > 0)
             {
-                if (rec.vehicleThing == null)
+                // 整批预验证落点：全部找到才生成，否则本批一艘也不生成。
+                List<IntVec3> spots = new List<IntVec3>();
+                foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in pending)
                 {
-                    if (!TryCreateRoyaltyShuttle(part, map, rec))
+                    IntVec3 spot = FindShuttleLandingSpot(map, spots);
+                    if (!spot.IsValid)
                     {
-                        allGone = false;
-                        continue;
+                        spots.Clear();
+                        break;
                     }
+
+                    spots.Add(spot);
                 }
 
-                CompShuttle? compShuttle = rec.vehicleThing?.TryGetComp<CompShuttle>();
-                TransportShip? ship = compShuttle?.shipParent;
-                if (ship == null)
+                if (spots.Count < pending.Count)
                 {
-                    allGone = false;
+                    int retry = now + Config.evacuationRetryTicks;
+                    foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in pending)
+                    {
+                        rec.stage = CerebrexSupportEvacVehicleStage.FailedRetryable;
+                        rec.nextRetryTick = retry;
+                    }
+
+                    Log.Warning($"{LogPrefix} 皇权穿梭机整批落点预验证失败，延迟重试（site={part.site?.Label}）。");
+                    return;
+                }
+
+                for (int i = 0; i < pending.Count; i++)
+                {
+                    pending[i].landingCell = spots[i];
+                    pending[i].stage = CerebrexSupportEvacVehicleStage.LandingRequested;
+                    pending[i].stateChangedTick = now;
+                    TryCreateRoyaltyShuttle(part, map, pending[i], spots[i]);
+                }
+
+                return; // 等待穿梭机到达
+            }
+
+            // 2) 处理已生成 / 正在装载 / 正在离开 / 失败重试 的记录。
+            foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in part.evacVehicles)
+            {
+                if (rec.IsCompleted)
+                {
                     continue;
                 }
 
-                if (compShuttle!.AllRequiredThingsLoaded)
+                if (rec.stage == CerebrexSupportEvacVehicleStage.FailedRetryable)
                 {
-                    ship.ForceJob(ShipJobDefOf.FlyAway);
-                    rec.vehicleThing = null;
-                }
-                else
-                {
-                    allGone = false;
-                }
-            }
+                    if (rec.nextRetryTick >= 0 && now >= rec.nextRetryTick)
+                    {
+                        rec.stage = CerebrexSupportEvacVehicleStage.NotRequested;
+                    }
 
-            if (allGone && part.evacVehicles.All(v => v.vehicleThing == null))
-            {
-                part.stage = QuestPart_SymbiosisCovenantCerebrexSupport.CerebrexSupportStage.Completed;
-                Messages.Message(
-                    "MAP_SymbiosisCovenant_CerebrexSupport_EvacDone".Translate(),
-                    MessageTypeDefOf.PositiveEvent);
-                Log.Message($"{LogPrefix} 穿梭机撤离完成（site={part.site?.Label}）。");
+                    continue;
+                }
+
+                if (rec.stage == CerebrexSupportEvacVehicleStage.LandingRequested
+                    || rec.stage == CerebrexSupportEvacVehicleStage.Landed
+                    || rec.stage == CerebrexSupportEvacVehicleStage.Loading)
+                {
+                    CompShuttle? compShuttle = rec.vehicleThing?.TryGetComp<CompShuttle>();
+                    TransportShip? ship = compShuttle?.shipParent;
+                    if (ship == null)
+                    {
+                        // 载具仍未就绪（生成/到达中）。vehicleThing 一旦丢失则标记失败重试。
+                        if (rec.vehicleThing == null && rec.stage != CerebrexSupportEvacVehicleStage.LandingRequested)
+                        {
+                            rec.stage = CerebrexSupportEvacVehicleStage.FailedRetryable;
+                            rec.nextRetryTick = now + Config.evacuationRetryTicks;
+                        }
+
+                        continue;
+                    }
+
+                    rec.stage = CerebrexSupportEvacVehicleStage.Landed;
+
+                    if (compShuttle!.AllRequiredThingsLoaded
+                        && rec.stage != CerebrexSupportEvacVehicleStage.Departing)
+                    {
+                        // 仅发射一次：切换 Departing，绝不把 vehicleThing 置空。
+                        ship.ForceJob(ShipJobDefOf.FlyAway);
+                        rec.stage = CerebrexSupportEvacVehicleStage.Departing;
+                        rec.stateChangedTick = now;
+                    }
+
+                    continue;
+                }
+
+                if (rec.stage == CerebrexSupportEvacVehicleStage.Departing)
+                {
+                    bool shipLeft = rec.vehicleThing == null
+                        || !rec.vehicleThing.Spawned
+                        || rec.vehicleThing.Map != map;
+                    bool pawnsGone = !rec.IsTrackedPawnStillOnSupportMap(map);
+
+                    if (!rec.HasLivingTrackedPawns || (shipLeft && pawnsGone))
+                    {
+                        rec.stage = CerebrexSupportEvacVehicleStage.Completed;
+                        rec.stateChangedTick = now;
+                        Log.Message($"{LogPrefix} 皇权穿梭机撤离记录完成（site={part.site?.Label}）。");
+                    }
+                }
             }
         }
 
-        private static bool TryCreateRoyaltyShuttle(
+        private static IntVec3 FindShuttleLandingSpot(Map map, List<IntVec3> taken)
+        {
+            IntVec3 best = DropCellFinder.GetBestShuttleLandingSpot(map, Faction.OfPlayer);
+            if (best.IsValid
+                && RoyalTitlePermitWorker_CallShuttle.ShuttleCanLandHere(best, map).Accepted
+                && !taken.Any(s => s.DistanceToSquared(best) < Config.dropCellMinimumSpacingSquared))
+            {
+                return best;
+            }
+
+            int attempt = 0;
+            while (attempt < Config.dropCellAnchorAttemptLimit)
+            {
+                IntVec3 c = (best.IsValid ? best : map.Center)
+                    + GenRadial.RadialPattern[attempt % GenRadial.RadialPattern.Length];
+                if (c.InBounds(map)
+                    && RoyalTitlePermitWorker_CallShuttle.ShuttleCanLandHere(c, map).Accepted
+                    && !taken.Any(s => s.DistanceToSquared(c) < Config.dropCellMinimumSpacingSquared))
+                {
+                    return c;
+                }
+
+                attempt++;
+            }
+
+            return IntVec3.Invalid;
+        }
+
+        private static void TryCreateRoyaltyShuttle(
             QuestPart_SymbiosisCovenantCerebrexSupport part,
             Map map,
-            SymbiosisCovenantCerebrexSupportEvacVehicle rec)
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec,
+            IntVec3 spot)
         {
             List<Pawn> pawns = rec.pawns
                 .Where(p => p != null && !p.Dead && !p.Destroyed && !p.Discarded)
                 .ToList();
             if (pawns.Count == 0)
             {
-                rec.vehicleThing = null;
-                return true;
+                // 无存活 Pawn：直接完成，不生成空穿梭机。
+                rec.stage = CerebrexSupportEvacVehicleStage.Completed;
+                return;
             }
 
-            IntVec3 spot = DropCellFinder.GetBestShuttleLandingSpot(map, rec.faction ?? Faction.OfPlayer);
-            if (!spot.IsValid || !RoyalTitlePermitWorker_CallShuttle.ShuttleCanLandHere(spot, map))
+            if (!RoyalTitlePermitWorker_CallShuttle.ShuttleCanLandHere(spot, map).Accepted)
             {
-                part.evacuationRetryTick = Find.TickManager.TicksGame + Config.evacuationRetryTicks;
-                return false;
+                rec.stage = CerebrexSupportEvacVehicleStage.FailedRetryable;
+                rec.nextRetryTick = Find.TickManager.TicksGame + Config.evacuationRetryTicks;
+                return;
             }
 
             Thing shuttle = ThingMaker.MakeThing(ThingDefOf.Shuttle);
@@ -944,13 +1180,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ship.ArriveAt(spot, map.Parent);
 
             rec.vehicleThing = shuttle;
+            rec.stage = CerebrexSupportEvacVehicleStage.Landed;
+            rec.stateChangedTick = Find.TickManager.TicksGame;
+
             LordMaker.MakeNewLord(
                 rec.faction ?? Faction.OfPlayer,
                 new LordJob_ExitOnShuttle(shuttle, addFleeToil: false),
                 map,
                 pawns);
-
-            return true;
         }
 
         // ── 奥德赛机械空投仓撤离 ──
@@ -962,51 +1199,51 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             ThingDef? podDef = EvacPodDef();
 
-            // 1) 尚未发出空仓的载具：先为全部寻找完整安全落点（all-or-nothing），再让空仓从天空落下。
-            List<SymbiosisCovenantCerebrexSupportEvacVehicle> needSpot =
-                part.evacVehicles.Where(v => !v.podRequested && v.vehicleThing == null).ToList();
-            if (needSpot.Count > 0)
+            // 1) 收集 NotRequested 记录，整批预验证落点；全部找到才生成，否则一个舱也不生成。
+            List<SymbiosisCovenantCerebrexSupportEvacVehicle> pending = part.evacVehicles
+                .Where(v => v.stage == CerebrexSupportEvacVehicleStage.NotRequested
+                            && (v.nextRetryTick < 0 || now >= v.nextRetryTick))
+                .ToList();
+
+            if (pending.Count > 0)
             {
-                List<IntVec3> spots = new List<IntVec3>();
-                bool ok = true;
-                foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in needSpot)
+                if (!TryFindSafeEdgeDropCells(map, pending.Count, Config, out List<IntVec3> spots)
+                    || spots.Count < pending.Count)
                 {
-                    if (!TryFindSafeEdgeDropCells(map, 1, Config, out List<IntVec3> one)
-                        || one.Count == 0)
+                    int retry = now + Config.evacuationRetryTicks;
+                    foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in pending)
                     {
-                        ok = false;
-                        break;
+                        rec.stage = CerebrexSupportEvacVehicleStage.FailedRetryable;
+                        rec.nextRetryTick = retry;
                     }
 
-                    IntVec3 c = one[0];
-                    if (spots.Any(s => s.DistanceToSquared(c) < Config.dropCellMinimumSpacingSquared))
-                    {
-                        ok = false;
-                        break;
-                    }
-
-                    spots.Add(c);
-                }
-
-                if (!ok)
-                {
-                    part.evacuationRetryTick = now + Config.evacuationRetryTicks;
                     return;
                 }
 
-                for (int i = 0; i < needSpot.Count; i++)
+                for (int i = 0; i < pending.Count; i++)
                 {
-                    needSpot[i].landingCell = spots[i];
-                    needSpot[i].podRequested = true;
-                    SpawnEmptyEvacPod(map, needSpot[i], spots[i], podDef);
+                    pending[i].landingCell = spots[i];
+                    pending[i].stage = CerebrexSupportEvacVehicleStage.LandingRequested;
+                    pending[i].stateChangedTick = now;
+                    SpawnEmptyEvacPod(map, pending[i], spots[i], podDef);
                 }
 
-                return; // 等待空仓建筑实际落地
+                return; // 等待建筑落地
             }
 
-            // 2) 已发出空仓但尚未取到建筑：尝试在落点附近找回已 Spawn 的建筑。
+            // 2) 失败重试 -> NotRequested。
+            foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in part.evacVehicles)
+            {
+                if (rec.stage == CerebrexSupportEvacVehicleStage.FailedRetryable
+                    && rec.nextRetryTick >= 0 && now >= rec.nextRetryTick)
+                {
+                    rec.stage = CerebrexSupportEvacVehicleStage.NotRequested;
+                }
+            }
+
+            // 3) LandingRequested 但建筑尚未找回：等待落地建筑，超时则失败重试（不删除 Pawn）。
             foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in part.evacVehicles
-                         .Where(v => v.podRequested && v.vehicleThing == null && v.groupID < 0))
+                         .Where(v => v.stage == CerebrexSupportEvacVehicleStage.LandingRequested))
             {
                 Thing? building = FindSpawnedPod(map, rec.landingCell, podDef);
                 if (building != null)
@@ -1017,27 +1254,40 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
 
                     rec.vehicleThing = building;
+                    rec.stage = CerebrexSupportEvacVehicleStage.Landed;
+                    rec.stateChangedTick = now;
+                }
+                else if (rec.stateChangedTick >= 0
+                         && now - rec.stateChangedTick > Config.evacuationLoadingTimeoutTicks)
+                {
+                    rec.stage = CerebrexSupportEvacVehicleStage.FailedRetryable;
+                    rec.nextRetryTick = now + Config.evacuationRetryTicks;
                 }
             }
 
-            // 3) 装载与发射。
-            bool allGone = part.evacVehicles.Count > 0;
+            // 4) 装载与发射。
             foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in part.evacVehicles)
             {
+                if (rec.IsCompleted
+                    || rec.stage == CerebrexSupportEvacVehicleStage.FailedRetryable
+                    || rec.stage == CerebrexSupportEvacVehicleStage.NotRequested
+                    || rec.stage == CerebrexSupportEvacVehicleStage.LandingRequested)
+                {
+                    continue;
+                }
+
                 if (rec.vehicleThing == null)
                 {
-                    allGone = false;
                     continue;
                 }
 
                 CompTransporter? ct = rec.vehicleThing.TryGetComp<CompTransporter>();
                 if (ct == null)
                 {
-                    allGone = false;
                     continue;
                 }
 
-                if (rec.groupID < 0)
+                if (rec.stage == CerebrexSupportEvacVehicleStage.Landed)
                 {
                     BeginPodLoading(rec, ct, map);
                 }
@@ -1047,23 +1297,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     .Where(p => p != null && !p.Dead && !p.Destroyed && !p.Discarded)
                     .All(p => stillIn.Contains(p));
 
-                if (allLoaded)
+                if (allLoaded && rec.stage == CerebrexSupportEvacVehicleStage.Loading)
                 {
                     LaunchMechEvacPod(part, rec, map);
                 }
-                else
+                else if (!allLoaded
+                         && rec.stage == CerebrexSupportEvacVehicleStage.Loading
+                         && rec.stateChangedTick >= 0
+                         && now - rec.stateChangedTick > Config.evacuationLoadingTimeoutTicks)
                 {
-                    allGone = false;
+                    // 装载超时：不删除 Pawn、不销毁载具；标记失败重试，后续可重建装载 Lord。
+                    rec.stage = CerebrexSupportEvacVehicleStage.FailedRetryable;
+                    rec.nextRetryTick = now + Config.evacuationRetryTicks;
                 }
             }
 
-            if (allGone && part.evacVehicles.All(v => v.vehicleThing == null))
+            // 5) Departing -> Completed。
+            foreach (SymbiosisCovenantCerebrexSupportEvacVehicle rec in part.evacVehicles
+                         .Where(v => v.stage == CerebrexSupportEvacVehicleStage.Departing))
             {
-                part.stage = QuestPart_SymbiosisCovenantCerebrexSupport.CerebrexSupportStage.Completed;
-                Messages.Message(
-                    "MAP_SymbiosisCovenant_CerebrexSupport_EvacDone".Translate(),
-                    MessageTypeDefOf.PositiveEvent);
-                Log.Message($"{LogPrefix} 机械空投仓撤离完成（site={part.site?.Label}）。");
+                bool left = rec.vehicleThing == null || !rec.vehicleThing.Spawned || rec.vehicleThing.Map != map;
+                bool pawnsGone = !rec.IsTrackedPawnStillOnSupportMap(map);
+
+                if (!rec.HasLivingTrackedPawns || (left && pawnsGone))
+                {
+                    rec.stage = CerebrexSupportEvacVehicleStage.Completed;
+                    rec.stateChangedTick = now;
+                }
             }
         }
 
@@ -1094,14 +1354,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (podDef == null)
             {
+                rec.stage = CerebrexSupportEvacVehicleStage.FailedRetryable;
+                rec.nextRetryTick = Find.TickManager.TicksGame + Config.evacuationRetryTicks;
                 return;
             }
 
             // 只让装人的空仓从天空落下；不把盟军直接塞入尚未落地的撤离仓。
-            ActiveTransporter at = (ActiveTransporter)ThingMaker.MakeThing(ThingDefOf.ActiveDropPod);
-            at.Contents.sentTransporterDef = podDef;
-            at.Contents.openDelay = Config.dropPodOpenDelayTicks;
-            DropPodUtility.MakeDropPodAt(spot, map, at.Contents, Faction.OfMechanoids);
+            ActiveTransporterInfo info = new ActiveTransporterInfo();
+            info.sentTransporterDef = podDef;
+            info.openDelay = Config.dropPodOpenDelayTicks;
+            DropPodUtility.MakeDropPodAt(spot, map, info, Faction.OfMechanoids);
+            rec.stage = CerebrexSupportEvacVehicleStage.LandingRequested;
+            rec.stateChangedTick = Find.TickManager.TicksGame;
         }
 
         private static void BeginPodLoading(
@@ -1114,8 +1378,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .ToList();
             if (pawns.Count == 0)
             {
-                rec.groupID = -2;
+                // 无存活 Pawn：直接完成此撤离记录，不发射空仓。
+                rec.stage = CerebrexSupportEvacVehicleStage.Completed;
                 return;
+            }
+
+            if (rec.stage == CerebrexSupportEvacVehicleStage.Loading)
+            {
+                return; // InitiateLoading 只能执行一次。
             }
 
             ct.leftToLoad = new List<TransferableOneWay>();
@@ -1128,6 +1398,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             rec.groupID = TransporterUtility.InitiateLoading(new List<CompTransporter> { ct });
+            rec.stage = CerebrexSupportEvacVehicleStage.Loading;
+            rec.stateChangedTick = Find.TickManager.TicksGame;
+
             LordMaker.MakeNewLord(
                 rec.faction ?? Faction.OfPlayer,
                 new LordJob_LoadAndEnterTransporters(rec.groupID),
@@ -1167,7 +1440,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ct.CleanUpLoadingVars(map);
             rec.vehicleThing.Destroy();
             GenSpawn.Spawn(fly, pos, map);
-            rec.vehicleThing = null;
+            rec.vehicleThing = fly; // 指向正在离开的 FlyShipLeaving，不置空、不重复发射
+            rec.stage = CerebrexSupportEvacVehicleStage.Departing;
+            rec.stateChangedTick = Find.TickManager.TicksGame;
         }
     }
 }

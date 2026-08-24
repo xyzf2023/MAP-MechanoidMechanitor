@@ -139,7 +139,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     break;
 
                 case CerebrexSupportStage.WaitingFirstWave:
-                    if (now >= firstWaveDueTick)
+                    if (now >= firstWaveDueTick
+                        && (nextDeploymentRetryTick < 0 || now >= nextDeploymentRetryTick))
                     {
                         TryDeployNextWave(map, now);
                     }
@@ -595,14 +596,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 waves ??= new List<SymbiosisCovenantCerebrexSupportWaveRecord>();
                 evacVehicles ??= new List<SymbiosisCovenantCerebrexSupportEvacVehicle>();
                 waves.RemoveAll(w => w == null);
+                foreach (SymbiosisCovenantCerebrexSupportEvacVehicle v in evacVehicles)
+                {
+                    v.PostLoadInit();
+                }
 
                 // 主脑已允许互动但存档未保存该状态：无副作用恢复。
                 Map? map = SupportMap;
                 if (map != null && !coreDefencesLowered)
                 {
-                    CompCerebrexCore? core = map.listerThings.AllThings
-                        .OfType<CompCerebrexCore>()
-                        .FirstOrDefault();
+                    CompCerebrexCore? core = SymbiosisCovenantCerebrexSupportUtility.FindCerebrexCore(map);
                     if (core != null && core.CanInteract().Accepted)
                     {
                         coreDefencesLowered = true;
@@ -629,9 +632,82 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.Cleanup();
 
+            // 移除尚未处理的邀请信，避免残留。
+            if (!offerResolved)
+            {
+                SymbiosisCovenantCerebrexSupportUtility.RemoveLetterByOfferId(offerId);
+            }
+
             if (stage == CerebrexSupportStage.Invalid)
             {
                 return;
+            }
+        }
+
+        /// <summary>
+        /// 撤离完成统一出口：防重复、设置阶段、发送一次完成消息，并仅完成本 Part（不结束原版任务）。
+        /// </summary>
+        public void MarkSupportCompleted()
+        {
+            if (stage == CerebrexSupportStage.Completed)
+            {
+                return;
+            }
+
+            stage = CerebrexSupportStage.Completed;
+            Messages.Message(
+                "MAP_SymbiosisCovenant_CerebrexSupport_EvacDone".Translate(),
+                MessageTypeDefOf.PositiveEvent);
+            Log.Message($"{LogPrefix} 援军已安全撤离（site={site?.Label}）。");
+
+            Complete();
+        }
+
+        /// <summary>
+        /// 原版任务结束后由 GameComponent 续跑：仅进行威胁稳定判定与撤离，
+        /// 绝不重新发送邀请或生成新波次。避免与 Ongoing 时的 QuestPartTick 双重驱动。
+        /// </summary>
+        public void ContinueAfterQuestHistorical(Map map, int now)
+        {
+            if (stage != CerebrexSupportStage.CoreDefencesLowered
+                && stage != CerebrexSupportStage.ThreatClearStabilizing
+                && stage != CerebrexSupportStage.EvacuationPreparing
+                && stage != CerebrexSupportStage.EvacuationLoading)
+            {
+                return;
+            }
+
+            SymbiosisCovenantCerebrexSupportDef cfg = Config;
+            if (stage == CerebrexSupportStage.CoreDefencesLowered)
+            {
+                if (now >= nextThreatCheckTick)
+                {
+                    nextThreatCheckTick = now + cfg.threatCheckIntervalTicks;
+                    bool anyThreat = GenHostility.AnyHostileActiveThreatToPlayer(
+                        map,
+                        countDormantPawnsAsHostile: true,
+                        canBeFogged: true);
+                    if (!anyThreat)
+                    {
+                        if (threatClearStartTick < 0)
+                        {
+                            threatClearStartTick = now;
+                        }
+
+                        if (now - threatClearStartTick >= cfg.threatClearStableTicks)
+                        {
+                            BeginEvacuation(map, now);
+                        }
+                    }
+                    else
+                    {
+                        threatClearStartTick = -1;
+                    }
+                }
+            }
+            else
+            {
+                SymbiosisCovenantCerebrexSupportUtility.TickEvacuation(this, map, now);
             }
         }
 

@@ -479,6 +479,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             SymbiosisCovenantCerebrexSupportUtility.BackfillMissingSupportQuestParts();
         }
 
+        private int postQuestContinuationTick = -1;
+
         public override void GameComponentTick()
         {
             base.GameComponentTick();
@@ -490,6 +492,48 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             TryInitializeOrSynchronize();
             CalibrateMechHiveHostility();
+            TickPostQuestContinuation();
+        }
+
+        /// <summary>
+        /// 原版主脑任务结束后（Historical），其内部仍持有本支援 QuestPart（约 31 天内不清空），
+        /// 这里续跑撤离逻辑，避免援军在主脑任务结束后卡死。
+        /// 仅处理已 Historical 的 quest；Ongoing 时由 QuestPart.QuestPartTick 驱动，不重复。
+        /// </summary>
+        private void TickPostQuestContinuation()
+        {
+            int now = Find.TickManager.TicksGame;
+            SymbiosisCovenantCerebrexSupportDef cfg =
+                SymbiosisCovenantCerebrexSupportDefOf.MAP_SymbiosisCovenant_CerebrexSupportConfig;
+            if (postQuestContinuationTick >= 0
+                && now - postQuestContinuationTick < cfg.threatCheckIntervalTicks)
+            {
+                return;
+            }
+
+            postQuestContinuationTick = now;
+
+            if (!GameComponent_SymbiosisCovenantState.IsActive)
+            {
+                return;
+            }
+
+            foreach (Quest quest in Find.QuestManager.QuestsListForReading)
+            {
+                if (!quest.Historical)
+                {
+                    continue;
+                }
+
+                foreach (QuestPart part in quest.PartsListForReading)
+                {
+                    if (part is QuestPart_SymbiosisCovenantCerebrexSupport support
+                        && support.site?.Map != null)
+                    {
+                        support.ContinueAfterQuestHistorical(support.site.Map, now);
+                    }
+                }
+            }
         }
 
         public void SynchronizeNow()
@@ -1637,6 +1681,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.ExposeData();
             Scribe_Values.Look(ref initialized, "initialized", false);
+            Scribe_Values.Look(
+                ref postQuestContinuationTick,
+                "postQuestContinuationTick",
+                -1);
             Scribe_Values.Look(
                 ref contactUnlockedLetterSent,
                 "contactUnlockedLetterSent",

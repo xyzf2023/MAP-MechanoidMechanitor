@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using Verse;
 
@@ -260,6 +261,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
     }
 
     /// <summary>
+    /// 撤离载具的明确、可存档状态机。不得再用 vehicleThing == null 同时表达
+    /// “未生成 / 正在到达 / 已发射 / 已离开”。
+    /// </summary>
+    public enum CerebrexSupportEvacVehicleStage : byte
+    {
+        NotRequested = 0,
+        LandingRequested = 1,
+        Landed = 2,
+        Loading = 3,
+        Departing = 4,
+        Completed = 5,
+        FailedRetryable = 6
+    }
+
+    /// <summary>
     /// 撤离载具记录，随 QuestPart 存档。不同派系分别建立各自载具，避免混淆。
     /// </summary>
     public sealed class SymbiosisCovenantCerebrexSupportEvacVehicle : IExposable
@@ -267,13 +283,57 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public CerebrexSupportEvacMode mode = CerebrexSupportEvacMode.None;
         public Faction? faction;
         public List<Pawn> pawns = new List<Pawn>();
-        public Thing? vehicleThing;   // 穿梭机 Thing 或 机械撤离仓建筑
+        public Thing? vehicleThing;   // 穿梭机 Thing / 机械撤离仓建筑 / 正在离开的 FlyShipLeaving
         public int groupID = -1;
-        public IntVec3 landingCell = IntVec3.Invalid; // 撤离仓落点（机械空投仓用）
-        public bool podRequested;                     // 空仓是否已从天空发出
+        public IntVec3 landingCell = IntVec3.Invalid;
+
+        // 新状态机字段（全部需存档）
+        public CerebrexSupportEvacVehicleStage stage = CerebrexSupportEvacVehicleStage.NotRequested;
+        public int stateChangedTick = -1;
+        public int nextRetryTick = -1;
+
+        // 旧存档兼容字段：读档后由 PostLoadInit 迁移并清除。
+        public bool podRequested;
+
+        public bool IsCompleted => stage == CerebrexSupportEvacVehicleStage.Completed;
+
+        public bool HasLivingTrackedPawns =>
+            pawns != null && pawns.Any(p => p != null && !p.Destroyed && p.Spawned);
+
+        public bool IsTrackedPawnStillOnSupportMap(Map map) =>
+            pawns != null && pawns.Any(p => p != null && !p.Destroyed && p.Spawned && p.Map == map);
 
         public SymbiosisCovenantCerebrexSupportEvacVehicle()
         {
+        }
+
+        /// <summary>
+        /// 旧存档补装：修复空列表、移除空引用、将 podRequested/vehicleThing 推断为新状态，
+        /// 并清除 podRequested，避免重复生成或重复发射。
+        /// </summary>
+        public void PostLoadInit()
+        {
+            if (pawns == null)
+            {
+                pawns = new List<Pawn>();
+            }
+
+            pawns.RemoveAll(p => p == null || p.Destroyed);
+
+            if (stage == CerebrexSupportEvacVehicleStage.NotRequested && podRequested)
+            {
+                // 旧存档只记录了“请求过”。若已有实体则推断为已落地/已离开，
+                // 否则保持 NotRequested，由正常流程重新（生成）一次。
+                if (vehicleThing != null)
+                {
+                    stage = (vehicleThing is FlyShipLeaving)
+                        ? CerebrexSupportEvacVehicleStage.Departing
+                        : CerebrexSupportEvacVehicleStage.Landed;
+                    stateChangedTick = GenTicks.TicksGame;
+                }
+            }
+
+            podRequested = false;
         }
 
         public void ExposeData()
@@ -285,11 +345,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref groupID, "groupID", -1);
             Scribe_Values.Look(ref landingCell, "landingCell", IntVec3.Invalid);
             Scribe_Values.Look(ref podRequested, "podRequested", false);
+            Scribe_Values.Look(ref stage, "stage", CerebrexSupportEvacVehicleStage.NotRequested);
+            Scribe_Values.Look(ref stateChangedTick, "stateChangedTick", -1);
+            Scribe_Values.Look(ref nextRetryTick, "nextRetryTick", -1);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 pawns ??= new List<Pawn>();
-                pawns.RemoveAll(p => p == null);
+                PostLoadInit();
             }
         }
     }
