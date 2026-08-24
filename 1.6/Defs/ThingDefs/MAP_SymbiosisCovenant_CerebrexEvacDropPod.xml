@@ -18,6 +18,8 @@
   <building>
     <isEdifice>false</isEdifice>
     <canPlaceOverWall>true</canPlaceOverWall>
+    <deconstructible>false</deconstructible>
+    <claimable>false</claimable>
   </building>
   <statBases>
     <MaxHitPoints>120</MaxHitPoints>
@@ -27,22 +29,18 @@
   <comps>
     <li Class="CompProperties_Transporter">
       <massCapacity>320</massCapacity>
+      <max1PerGroup>true</max1PerGroup>
+      <canChangeAssignedThingsAfterStarting>true</canChangeAssignedThingsAfterStarting>
     </li>
     <li Class="CompProperties_Launchable_TransportPod">
-      <requiresFuelingPort>false</requiresFuelingPort>
-      <requireShipSetup>false</requireShipSetup>
       <skyfallerLeaving>DropPodLeavingMechanoid</skyfallerLeaving>
-      <transitFromFixedLaunchDistance>true</transitFromFixedLaunchDistance>
       <fixedLaunchDistanceMax>9999</fixedLaunchDistanceMax>
-      <allowIncapablePilots>true</allowIncapablePilots>
-      <leaveExistentThingsBehind>true</leaveExistentThingsBehind>
+      <requiresFuelingPort>false</requiresFuelingPort>
     </li>
   </comps>
   <dropPodFaller>DropPodIncomingMechanoidSoft</dropPodFaller>
   <dropPodActive>ActiveDropPodMechanoid</dropPodActive>
   <selectable>false</selectable>
-  <deconstructible>false</deconstructible>
-  <claimable>false</claimable>
   <tutorBuildable>false</tutorBuildable>
   <neverStored>true</neverStored>
   <notForCover>true</notForCover>
