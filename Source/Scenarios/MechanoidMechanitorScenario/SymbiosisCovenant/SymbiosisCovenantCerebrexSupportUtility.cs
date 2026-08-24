@@ -266,15 +266,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // ───────────────────────── 波次部署 ─────────────────────────
 
         public static (bool success, bool stopScheduling, SymbiosisCovenantCerebrexSupportWaveRecord? record) TryDeployWave(
-            QuestPart_SymbiosisCovenantCerebrexSupport part,
-            Map map,
-            int now)
+            QuestPart_SymbiosisCovenantCerebrexSupport part, Map map, int now)
         {
             SymbiosisCovenantCerebrexSupportDef cfg = Config;
             GameComponent_SymbiosisCovenantState? comp = GameComponent_SymbiosisCovenantState.CurrentComponent;
             if (comp == null || !GameComponent_SymbiosisCovenantState.IsActive || comp.CovenantLevel < 2)
             {
-                // 盟约被关闭或等级降到 L2 以下：停止生成后续新波次。
                 return (false, true, null);
             }
 
@@ -285,105 +282,61 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             List<Faction> prev = part.waves.LastOrDefault()?.factionRecords
-                .Select(f => f.faction)
-                .Where(f => f != null)
-                .Cast<Faction>()
-                .ToList() ?? new List<Faction>();
-
-            List<Faction> chosen = SelectWaveFactions(prev, eligible, comp, cfg);
-            if (chosen.Count == 0)
+                .Select(f => f.faction).Where(f => f != null).Cast<Faction>().ToList()
+                ?? new List<Faction>();
+            List<Faction> attemptFactions = SelectWaveFactions(prev, eligible, comp, cfg);
+            if (attemptFactions.Count == 0)
             {
                 return (false, true, null);
             }
 
             float total = part.perWaveSupportPoints;
+            Dictionary<Faction, List<Pawn>>? factionPawns = null;
 
-            // 生成并装备真空服；无法装备的未 Spawn Pawn 安全清理。
-            Dictionary<Faction, List<Pawn>> factionPawns = new Dictionary<Faction, List<Pawn>>();
-            foreach (Faction fac in chosen)
+            // 整波生成必须使用最终参与派系重新分配全部点数：任何一派失败时，回收本轮
+            // 尚未落图的 Pawn，再缩减派系并重试，绝不留下“只生成了部分点数”的波次。
+            for (int attempt = 0; attempt < 3 && attemptFactions.Count > 0; attempt++)
             {
-                List<Pawn> generated = GenerateCombatGroup(fac, map, total / chosen.Count);
-                if (generated.Count == 0)
+                float perFactionPoints = total / attemptFactions.Count;
+                Dictionary<Faction, List<Pawn>> generated = new Dictionary<Faction, List<Pawn>>();
+                List<Faction> failed = new List<Faction>();
+                foreach (Faction fac in attemptFactions)
                 {
-                    continue;
+                    List<Pawn> valid = new List<Pawn>();
+                    foreach (Pawn pawn in GenerateCombatGroup(fac, map, perFactionPoints))
+                    {
+                        if (TryEquipVacsuit(pawn)) valid.Add(pawn);
+                        else pawn.Destroy(DestroyMode.Vanish);
+                    }
+
+                    if (valid.Count == 0) failed.Add(fac);
+                    else generated[fac] = valid;
                 }
 
-                List<Pawn> valid = new List<Pawn>();
-                foreach (Pawn p in generated)
+                if (failed.Count == 0)
                 {
-                    if (TryEquipVacsuit(p))
-                    {
-                        valid.Add(p);
-                    }
-                    else
-                    {
-                        p.Destroy(DestroyMode.Vanish);
-                    }
+                    factionPawns = generated;
+                    break;
                 }
 
-                if (valid.Count > 0)
+                foreach (Pawn pawn in generated.Values.SelectMany(pawns => pawns))
                 {
-                    factionPawns[fac] = valid;
+                    pawn.Destroy(DestroyMode.Vanish);
                 }
+                attemptFactions = attemptFactions.Where(f => !failed.Contains(f)).ToList();
             }
 
-            if (factionPawns.Count == 0)
+            if (factionPawns == null || factionPawns.Count == 0)
             {
-                // 生成失败：延迟后重试，不计入波数。
                 return (false, false, null);
             }
 
-            // 实际生成时每个派系使用的点数 = 整波点数 / 选择派系数；记录值须与之相等。
-            float perFactionPoints = total / chosen.Count;
-
-            // 为生成失败的派系重生替代派系（最多一次），提高波次生成成功率。
-            if (factionPawns.Count < chosen.Count && factionPawns.Count > 0)
-            {
-                List<Faction> failed = chosen.Where(f => !factionPawns.ContainsKey(f)).ToList();
-                List<Faction> pool = eligible.Where(f => !chosen.Contains(f)).ToList();
-                foreach (Faction f in failed)
-                {
-                    Faction? repl = pool.FirstOrDefault();
-                    if (repl == null)
-                    {
-                        break;
-                    }
-
-                    pool.Remove(repl);
-                    List<Pawn> gen = GenerateCombatGroup(repl, map, perFactionPoints);
-                    List<Pawn> valid = new List<Pawn>();
-                    foreach (Pawn p in gen)
-                    {
-                        if (TryEquipVacsuit(p))
-                        {
-                            valid.Add(p);
-                        }
-                        else
-                        {
-                            p.Destroy(DestroyMode.Vanish);
-                        }
-                    }
-
-                    if (valid.Count > 0)
-                    {
-                        factionPawns[repl] = valid;
-                    }
-                }
-            }
-
-            // 重生后的替代派系必须加入实际部署与点数记录，否则其 Pawn 被计入人数/落点却不会真正空投。
             List<Faction> successFacs = factionPawns.Keys.ToList();
-
+            List<(Faction faction, float points)> pointAllocations = AllocatePoints(total, successFacs);
             List<Pawn> allPawns = factionPawns.Values.SelectMany(x => x).ToList();
-
-            // 先为整波所有 Pawn 找齐安全落点（all-or-nothing）。
             if (!TryFindSafeEdgeDropCells(map, allPawns.Count, cfg, out List<IntVec3> cells))
             {
-                foreach (Pawn p in allPawns)
-                {
-                    p.Destroy(DestroyMode.Vanish);
-                }
-
+                foreach (Pawn pawn in allPawns) pawn.Destroy(DestroyMode.Vanish);
                 Log.Message($"{LogPrefix} 落点准备失败，整波回滚并重试（site={part.site?.Label}）。");
                 return (false, false, null);
             }
@@ -392,44 +345,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
             string questId = part.quest?.id.ToString() ?? "q";
             List<SymbiosisCovenantCerebrexSupportFactionRecord> factionRecords =
                 new List<SymbiosisCovenantCerebrexSupportFactionRecord>();
-
             int cellIdx = 0;
-            foreach (Faction fac in successFacs)
+            foreach ((Faction fac, float points) allocation in pointAllocations)
             {
+                Faction fac = allocation.fac;
                 List<Pawn> pawns = factionPawns[fac];
                 string aidTag = $"{questId}_{waveIndex}_{fac.loadID}";
-                float pts = perFactionPoints;
-
-                foreach (Pawn p in pawns)
+                foreach (Pawn pawn in pawns)
                 {
-                    IntVec3 cell = cells[cellIdx++];
-                    ActiveTransporter at = (ActiveTransporter)ThingMaker.MakeThing(ThingDefOf.ActiveDropPod);
-                    at.Contents.innerContainer.TryAdd(p);
-                    at.Contents.sentTransporterDef = ThingDefOf.ActiveDropPod;
-                    at.Contents.openDelay = cfg.dropPodOpenDelayTicks;
-                    DropPodUtility.MakeDropPodAt(cell, map, at.Contents, null);
+                    ActiveTransporter transporter = (ActiveTransporter)ThingMaker.MakeThing(ThingDefOf.ActiveDropPod);
+                    transporter.Contents.innerContainer.TryAdd(pawn);
+                    transporter.Contents.sentTransporterDef = ThingDefOf.ActiveDropPod;
+                    transporter.Contents.openDelay = cfg.dropPodOpenDelayTicks;
+                    DropPodUtility.MakeDropPodAt(cells[cellIdx++], map, transporter.Contents, null);
                 }
 
-                factionRecords.Add(new SymbiosisCovenantCerebrexSupportFactionRecord(fac, pts, pawns.Count, aidTag));
-                LordMaker.MakeNewLord(
-                    fac,
-                    new LordJob_SymbiosisCovenantCerebrexSupport(map.Center),
-                    map,
-                    pawns);
+                factionRecords.Add(new SymbiosisCovenantCerebrexSupportFactionRecord(fac, allocation.points, pawns.Count, aidTag));
+                LordMaker.MakeNewLord(fac, new LordJob_SymbiosisCovenantCerebrexSupport(map.Center), map, pawns);
             }
 
-            SymbiosisCovenantCerebrexSupportWaveRecord record = new SymbiosisCovenantCerebrexSupportWaveRecord
+            return (true, false, new SymbiosisCovenantCerebrexSupportWaveRecord
             {
-                waveIndex = waveIndex,
-                deployedTick = now,
-                initialPawnCount = allPawns.Count,
-                pawns = allPawns,
-                factionRecords = factionRecords,
-                aidTag = $"{questId}_{waveIndex}",
-                nextWaveTriggered = false
-            };
-
-            return (true, false, record);
+                waveIndex = waveIndex, deployedTick = now, initialPawnCount = allPawns.Count, pawns = allPawns,
+                factionRecords = factionRecords, aidTag = $"{questId}_{waveIndex}", nextWaveTriggered = false
+            });
         }
 
         private static List<Pawn> GenerateCombatGroup(Faction faction, Map map, float points)
@@ -887,40 +826,79 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Dictionary<Faction, List<Pawn>> groups = GatherEvacPawns(part, map);
             if (groups.Count == 0)
             {
-                // 统一完成入口：即使无可用援军，也通过 MarkSupportCompleted 收尾，不得直接置内部 stage（#13）。
                 Log.Message($"{LogPrefix} 没有合法存活援军，直接完成撤离（site={part.site?.Label}）。");
-                part.MarkSupportCompleted();
+                part.MarkSupportCompleted(sendEvacDoneMessage: false);
                 return;
             }
 
-            foreach (KeyValuePair<Faction, List<Pawn>> kvp in groups)
+            foreach (KeyValuePair<Faction, List<Pawn>> pair in groups)
             {
-                int vehicleCount = ComputeVehicleCount(part.evacMode, kvp.Value);
-                int per = Mathf.CeilToInt((float)kvp.Value.Count / vehicleCount);
-                for (int i = 0; i < vehicleCount; i++)
+                float capacity = GetEvacVehicleMassCapacity(part.evacMode);
+                if (!TryPackPawnsByMass(pair.Value, capacity, out List<List<Pawn>> loads))
                 {
-                    List<Pawn> subset = kvp.Value.Skip(i * per).Take(per).ToList();
-                    if (subset.Count == 0)
-                    {
-                        continue;
-                    }
+                    part.MarkInvalid("存在超过撤离载具质量上限的盟约援军，已停止自动撤离以避免丢失 Pawn。");
+                    return;
+                }
 
+                foreach (List<Pawn> load in loads)
+                {
                     part.evacVehicles.Add(new SymbiosisCovenantCerebrexSupportEvacVehicle
                     {
-                        mode = part.evacMode,
-                        faction = kvp.Key,
-                        pawns = subset
+                        mode = part.evacMode, faction = pair.Key, pawns = load
                     });
                 }
             }
 
             Find.LetterStack.ReceiveLetter(
                 "MAP_SymbiosisCovenant_CerebrexSupport_EvacTitle".Translate(),
-                "MAP_SymbiosisCovenant_CerebrexSupport_EvacBody".Translate(),
-                LetterDefOf.PositiveEvent);
-
+                "MAP_SymbiosisCovenant_CerebrexSupport_EvacBody".Translate(), LetterDefOf.PositiveEvent);
             part.stage = QuestPart_SymbiosisCovenantCerebrexSupport.CerebrexSupportStage.EvacuationPreparing;
             part.loadingStartTick = now;
+        }
+
+        private static float GetEvacVehicleMassCapacity(CerebrexSupportEvacMode mode)
+        {
+            if (mode == CerebrexSupportEvacMode.RoyaltyShuttle)
+            {
+                return ThingDefOf.Shuttle.GetCompProperties<CompProperties_Transporter>()?.massCapacity ?? 150f;
+            }
+
+            ThingDef? podDef = EvacPodDef();
+            float fallback = Config.evacPodMassCapacityFallback;
+            float capacity = podDef?.GetCompProperties<CompProperties_Transporter>()?.massCapacity ?? fallback;
+            return capacity > 0f ? capacity : fallback;
+        }
+
+        private static bool TryPackPawnsByMass(List<Pawn> pawns, float capacity, out List<List<Pawn>> loads)
+        {
+            loads = new List<List<Pawn>>();
+            if (capacity <= 0f) return false;
+            List<float> loadMasses = new List<float>();
+            foreach (Pawn pawn in pawns)
+            {
+                float mass = CollectionsMassCalculator.MassUsage(new List<Thing> { pawn },
+                    IgnorePawnsInventoryMode.IgnoreIfAssignedToUnload, includePawnsMass: true);
+                if (mass > capacity)
+                {
+                    Log.Error($"{LogPrefix} Pawn {pawn.LabelShortCap} 质量 {mass:0.##} 超过撤离载具上限 {capacity:0.##}，不生成不可能装载的载具。");
+                    return false;
+                }
+
+                int index = -1;
+                for (int i = 0; i < loads.Count; i++)
+                {
+                    if (loadMasses[i] + mass <= capacity) { index = i; break; }
+                }
+                if (index < 0)
+                {
+                    loads.Add(new List<Pawn>());
+                    loadMasses.Add(0f);
+                    index = loads.Count - 1;
+                }
+                loads[index].Add(pawn);
+                loadMasses[index] += mass;
+            }
+            return loads.Count > 0;
         }
 
         private static Dictionary<Faction, List<Pawn>> GatherEvacPawns(
@@ -1037,9 +1015,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             // 1) 收集需要生成穿梭机的记录（NotRequested / 生成重试 / 失败重试，且已过重试节流）。
             List<SymbiosisCovenantCerebrexSupportEvacVehicle> pending = part.evacVehicles
-                .Where(v => (v.stage == CerebrexSupportEvacVehicleStage.NotRequested
-                             || v.stage == CerebrexSupportEvacVehicleStage.SpawnRetryWaiting
-                             || v.stage == CerebrexSupportEvacVehicleStage.FailedRetryable)
+                .Where(v => v.vehicleThing == null
+                            && (v.stage == CerebrexSupportEvacVehicleStage.NotRequested
+                                || v.stage == CerebrexSupportEvacVehicleStage.SpawnRetryWaiting
+                                || v.stage == CerebrexSupportEvacVehicleStage.FailedRetryable)
                             && (v.nextRetryTick < 0 || now >= v.nextRetryTick))
                 .ToList();
 
@@ -1155,42 +1134,41 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static IntVec3 FindShuttleLandingSpot(Map map, List<IntVec3> taken)
         {
-            // 已占用穿梭机的完整占地（按占地而非中心距离判断间隔，避免重叠，#7）。
-            HashSet<IntVec3> takenFootprint = new HashSet<IntVec3>();
-            foreach (IntVec3 t in taken)
+            Rot4 rotation = ThingDefOf.Shuttle.defaultPlacingRot;
+            HashSet<IntVec3> reserved = new HashSet<IntVec3>();
+            foreach (IntVec3 center in taken)
             {
-                if (t.IsValid)
-                {
-                    takenFootprint.UnionWith(GenAdj.CellsOccupiedBy(t, Rot4.North, ThingDefOf.Shuttle.size));
-                }
+                if (!center.IsValid) continue;
+                reserved.UnionWith(GenAdj.CellsOccupiedBy(center, rotation, ThingDefOf.Shuttle.size));
+                reserved.Add(ThingUtility.InteractionCellWhenAt(ThingDefOf.Shuttle, center, rotation, map));
             }
 
-            int maxRadius = Mathf.RoundToInt(
-                Config.dropCellSearchRadius * (1f - Config.dropCellRadialPatternSafetyMargin));
-            bool FootprintFree(IntVec3 c) =>
-                !takenFootprint.Overlaps(GenAdj.CellsOccupiedBy(c, Rot4.North, ThingDefOf.Shuttle.size));
+            bool IsFree(IntVec3 center)
+            {
+                if (reserved.Contains(ThingUtility.InteractionCellWhenAt(ThingDefOf.Shuttle, center, rotation, map)))
+                {
+                    return false;
+                }
+
+                return !GenAdj.CellsOccupiedBy(center, rotation, ThingDefOf.Shuttle.size).Any(reserved.Contains);
+            }
 
             IntVec3 best = DropCellFinder.GetBestShuttleLandingSpot(map, Faction.OfPlayer);
-            if (best.IsValid
-                && RoyalTitlePermitWorker_CallShuttle.ShuttleCanLandHere(best, map).Accepted
-                && FootprintFree(best))
+            if (best.IsValid && RoyalTitlePermitWorker_CallShuttle.ShuttleCanLandHere(best, map).Accepted && IsFree(best))
             {
                 return best;
             }
 
-            int attempt = 0;
-            while (attempt < Config.dropCellAnchorAttemptLimit)
+            for (int attempt = 0; attempt < Config.dropCellAnchorAttemptLimit; attempt++)
             {
-                IntVec3 c = (best.IsValid ? best : map.Center)
+                IntVec3 cell = (best.IsValid ? best : map.Center)
                     + GenRadial.RadialPattern[attempt % GenRadial.RadialPattern.Length];
-                if (c.InBounds(map)
-                    && RoyalTitlePermitWorker_CallShuttle.ShuttleCanLandHere(c, map).Accepted
-                    && FootprintFree(c))
+                if (cell.InBounds(map)
+                    && RoyalTitlePermitWorker_CallShuttle.ShuttleCanLandHere(cell, map).Accepted
+                    && IsFree(cell))
                 {
-                    return c;
+                    return cell;
                 }
-
-                attempt++;
             }
 
             return IntVec3.Invalid;
@@ -1246,12 +1224,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int now)
         {
             ThingDef? podDef = EvacPodDef();
+            if (podDef == null)
+            {
+                part.MarkInvalid("撤离舱 Def 缺失，未生成载具且未移除任何盟约援军。");
+                return;
+            }
 
             // 1) 收集需要生成空舱的记录（NotRequested / 生成重试 / 失败重试），整批预验证落点。
             List<SymbiosisCovenantCerebrexSupportEvacVehicle> pending = part.evacVehicles
-                .Where(v => (v.stage == CerebrexSupportEvacVehicleStage.NotRequested
-                             || v.stage == CerebrexSupportEvacVehicleStage.SpawnRetryWaiting
-                             || v.stage == CerebrexSupportEvacVehicleStage.FailedRetryable)
+                .Where(v => v.vehicleThing == null
+                            && (v.stage == CerebrexSupportEvacVehicleStage.NotRequested
+                                || v.stage == CerebrexSupportEvacVehicleStage.SpawnRetryWaiting
+                                || v.stage == CerebrexSupportEvacVehicleStage.FailedRetryable)
                             && (v.nextRetryTick < 0 || now >= v.nextRetryTick))
                 .ToList();
 
@@ -1293,7 +1277,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (rec.nextRetryTick >= 0 && now >= rec.nextRetryTick)
                     {
                         rec.nextRetryTick = -1;
-                        rec.stage = CerebrexSupportEvacVehicleStage.NotRequested;
+                        if (rec.vehicleThing != null && rec.vehicleThing.Spawned
+                            && rec.vehicleThing.Map == map
+                            && rec.vehicleThing.TryGetComp<CompTransporter>() != null)
+                        {
+                            rec.stage = CerebrexSupportEvacVehicleStage.Landed;
+                        }
+                        else
+                        {
+                            rec.vehicleThing = null;
+                            rec.stage = CerebrexSupportEvacVehicleStage.NotRequested;
+                        }
                     }
 
                     continue;
@@ -1304,9 +1298,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (rec.nextRetryTick >= 0 && now >= rec.nextRetryTick)
                     {
                         rec.nextRetryTick = -1;
-                        // 复用同一撤离舱，重新进入装载流程（不重复生成、不覆盖记录，#1/#15）。
-                        rec.groupID = -1;
-                        rec.stage = CerebrexSupportEvacVehicleStage.Landed;
+                        // 复用同一撤离舱。旧装载 Lord 必须先移除，否则会出现两个 Lord。
+                        CompTransporter? retryTransporter = rec.vehicleThing?.TryGetComp<CompTransporter>();
+                        if (rec.vehicleThing != null && rec.vehicleThing.Spawned
+                            && rec.vehicleThing.Map == map && retryTransporter != null)
+                        {
+                            RemoveLoadingLord(retryTransporter, rec.groupID, map);
+                            rec.stage = CerebrexSupportEvacVehicleStage.Landed;
+                        }
+                        else
+                        {
+                            rec.vehicleThing = null;
+                            rec.stage = CerebrexSupportEvacVehicleStage.SpawnRetryWaiting;
+                            rec.nextRetryTick = now + Config.evacuationRetryTicks;
+                        }
                     }
 
                     continue;
@@ -1385,7 +1390,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     // 舱体丢失则重新生成。绝不重复生成新舱、绝不谎报完成（#1/#12/#15）。
                     if (rec.vehicleThing != null && rec.vehicleThing.Spawned && rec.vehicleThing.Map == map)
                     {
-                        rec.groupID = -1;
+                        // 保留同一舱体及已在 innerContainer 的 Pawn；仅结束旧装载 Lord，下一次只重派仍在地图上的 Pawn。
+                        RemoveLoadingLord(ct, rec.groupID, map);
                         rec.stage = CerebrexSupportEvacVehicleStage.LoadingRetryWaiting;
                     }
                     else
@@ -1439,19 +1445,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (podDef == null)
             {
-                // 撤离舱 Def 缺失：不谎报完成，进入生成重试（仍留在地图的援军不会被标记已撤离，#12）。
-                rec.stage = CerebrexSupportEvacVehicleStage.SpawnRetryWaiting;
-                rec.nextRetryTick = Find.TickManager.TicksGame + Config.evacuationRetryTicks;
+                rec.stage = CerebrexSupportEvacVehicleStage.Invalid;
+                Log.Error($"{LogPrefix} 撤离舱 Def 缺失，停止该记录以避免把仍在地图的 Pawn 误报为已撤离。");
                 return;
             }
 
-            // 只让装人的空仓从天空落下；不把盟军直接塞入尚未落地的撤离仓。
-            ActiveTransporterInfo info = new ActiveTransporterInfo();
-            info.sentTransporterDef = podDef;
-            info.openDelay = Config.dropPodOpenDelayTicks;
+            ActiveTransporterInfo info = new ActiveTransporterInfo
+            {
+                sentTransporterDef = podDef,
+                openDelay = Config.dropPodOpenDelayTicks
+            };
             DropPodUtility.MakeDropPodAt(spot, map, info, Faction.OfMechanoids);
             rec.stage = CerebrexSupportEvacVehicleStage.LandingRequested;
             rec.stateChangedTick = Find.TickManager.TicksGame;
+        }
+
+        private static void RemoveLoadingLord(CompTransporter transporter, int recordedGroupID, Map map)
+        {
+            int groupID = recordedGroupID >= 0 ? recordedGroupID : transporter.groupID;
+            if (groupID >= 0)
+            {
+                Lord? lord = TransporterUtility.FindLord(groupID, map);
+                if (lord != null)
+                {
+                    map.lordManager.RemoveLord(lord);
+                }
+            }
+
+            transporter.groupID = -1;
+            transporter.leftToLoad = new List<TransferableOneWay>();
         }
 
         private static void BeginPodLoading(
@@ -1459,43 +1481,41 @@ namespace MAP_MechanoidMechanitor.Scenarios
             CompTransporter ct,
             Map map)
         {
-            List<Pawn> pawns = rec.pawns
+            List<Pawn> living = rec.pawns
                 .Where(p => p != null && !p.Dead && !p.Destroyed && !p.Discarded)
                 .ToList();
-            if (pawns.Count == 0)
+            if (living.Count == 0)
             {
-                // 无存活 Pawn：直接完成此撤离记录，不发射空仓。
                 rec.stage = CerebrexSupportEvacVehicleStage.Completed;
                 return;
             }
 
-            if (rec.stage == CerebrexSupportEvacVehicleStage.Loading)
-            {
-                return; // InitiateLoading 只能执行一次。
-            }
+            HashSet<Pawn> alreadyLoaded = new HashSet<Pawn>(ct.innerContainer.OfType<Pawn>());
+            List<Pawn> pawnsToLoad = living
+                .Where(p => !alreadyLoaded.Contains(p) && p.Spawned && p.Map == map)
+                .ToList();
 
+            // 不调用 CleanUpLoadingVars：它会把 innerContainer 中已经装好的 Pawn 丢回地图。
+            RemoveLoadingLord(ct, rec.groupID, map);
             ct.leftToLoad = new List<TransferableOneWay>();
-            foreach (Pawn p in pawns)
+            foreach (Pawn pawn in pawnsToLoad)
             {
-                TransferableOneWay t = new TransferableOneWay();
-                t.things.Add(p);
-                t.ForceTo(1);
-                ct.leftToLoad.Add(t);
+                TransferableOneWay transferable = new TransferableOneWay();
+                transferable.things.Add(pawn);
+                transferable.ForceTo(1);
+                ct.leftToLoad.Add(transferable);
             }
 
-            // 仅每组首次装载建立一次 Lord；重试时 groupID 已被重置为 -1，避免重复建立 Lord（#14）。
-            bool firstTime = rec.groupID < 0;
             rec.groupID = TransporterUtility.InitiateLoading(new List<CompTransporter> { ct });
             rec.stage = CerebrexSupportEvacVehicleStage.Loading;
             rec.stateChangedTick = Find.TickManager.TicksGame;
-
-            if (firstTime && rec.groupID >= 0)
+            if (pawnsToLoad.Count > 0 && rec.groupID >= 0)
             {
                 LordMaker.MakeNewLord(
                     rec.faction ?? Faction.OfPlayer,
                     new LordJob_LoadAndEnterTransporters(rec.groupID),
                     map,
-                    pawns);
+                    pawnsToLoad);
             }
         }
 
