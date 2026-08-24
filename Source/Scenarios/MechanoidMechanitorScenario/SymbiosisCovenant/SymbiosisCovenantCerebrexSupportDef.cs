@@ -272,7 +272,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         Loading = 3,
         Departing = 4,
         Completed = 5,
-        FailedRetryable = 6
+        FailedRetryable = 6,
+        LoadingRetryWaiting = 7,
+        SpawnRetryWaiting = 8,
+        Invalid = 9,
     }
 
     /// <summary>
@@ -297,11 +300,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public bool IsCompleted => stage == CerebrexSupportEvacVehicleStage.Completed;
 
+        // Pawn 进入载具后不再 Spawned，但仍存活；故此处只判断“已死亡/已销毁”，
+        // 是否在地图由 IsTrackedPawnStillOnSupportMap 判定。
         public bool HasLivingTrackedPawns =>
-            pawns != null && pawns.Any(p => p != null && !p.Destroyed && p.Spawned);
+            pawns != null && pawns.Any(p => p != null && !p.Dead && !p.Destroyed && !p.Discarded);
 
         public bool IsTrackedPawnStillOnSupportMap(Map map) =>
-            pawns != null && pawns.Any(p => p != null && !p.Destroyed && p.Spawned && p.Map == map);
+            pawns != null && pawns.Any(
+                p => p != null
+                     && !p.Dead
+                     && !p.Destroyed
+                     && p.Spawned
+                     && p.Map == map);
 
         public SymbiosisCovenantCerebrexSupportEvacVehicle()
         {

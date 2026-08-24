@@ -484,14 +484,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public override void GameComponentTick()
         {
             base.GameComponentTick();
-            if (Find.TickManager == null
-                || Find.TickManager.TicksGame % SynchronizeIntervalTicks != 0)
+            if (Find.TickManager == null)
             {
                 return;
             }
 
-            TryInitializeOrSynchronize();
-            CalibrateMechHiveHostility();
+            if (Find.TickManager.TicksGame % SynchronizeIntervalTicks == 0)
+            {
+                TryInitializeOrSynchronize();
+                CalibrateMechHiveHostility();
+            }
+
+            // 历史任务续跑必须每 tick 参与，内部再按威胁检查间隔节流，
+            // 否则 2500 tick 的常规同步节流会让 120 tick 威胁检查与 1000 tick 稳定期失效。
             TickPostQuestContinuation();
         }
 
@@ -513,11 +518,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             postQuestContinuationTick = now;
 
-            if (!GameComponent_SymbiosisCovenantState.IsActive)
-            {
-                return;
-            }
-
+            // 注意：不得受 IsActive 限制。盟约关闭后，已部署的援军仍需完成撤离。
             foreach (Quest quest in Find.QuestManager.QuestsListForReading)
             {
                 if (!quest.Historical)
