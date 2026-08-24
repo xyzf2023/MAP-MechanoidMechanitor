@@ -80,23 +80,40 @@ namespace MAP_MechanoidMechanitor
                 && parentBuilding.Spawned;
         }
 
-        // 文化 DLC 未加载时直接返回 false，避免对类型或 Def 的引用引发错误。
-        private static bool IsSupportedBiosculpterPodHolder(Pawn pawn)
+        // 统一判断：指定塑形仓是否为代理子链可认可的受支持容器。
+        // 仅当文化 DLC 已启用、组件与父建筑有效、父建筑已生成且与期望地图一致时才返回 true。
+        public static bool IsSupportedBiosculpterPod(CompBiosculpterPod? pod, Map? expectedMap)
         {
             if (!ModsConfig.IdeologyActive)
             {
                 return false;
             }
 
-            if (pawn.ParentHolder is not CompBiosculpterPod pod)
+            if (pod == null)
             {
                 return false;
             }
 
             Thing? parentBuilding = pod.parent;
-            return parentBuilding != null
-                && parentBuilding.Spawned
-                && parentBuilding.Map == pawn.MapHeld;
+            if (parentBuilding == null
+                || !parentBuilding.Spawned
+                || parentBuilding.Map == null)
+            {
+                return false;
+            }
+
+            return expectedMap == null || parentBuilding.Map == expectedMap;
+        }
+
+        // Pawn 当前是否位于受支持的塑形仓内。
+        private static bool IsSupportedBiosculpterPodHolder(Pawn pawn)
+        {
+            if (pawn.ParentHolder is not CompBiosculpterPod pod)
+            {
+                return false;
+            }
+
+            return IsSupportedBiosculpterPod(pod, pawn.MapHeld);
         }
 
         // 收集本次发射组中、位于原版空投舱发射器内、且为有效代理子链机械师的 Pawn。
@@ -128,9 +145,17 @@ namespace MAP_MechanoidMechanitor
                 return result;
             }
 
-            // TransportersInGroup 返回原版内部共享的临时列表，复制一份以避免遍历期间被复用污染。
-            List<CompTransporter> group = new List<CompTransporter>(
-                ownTransporter.TransportersInGroup(map));
+            // 原版 TransportersInGroup 在运输组尚未建立、发射条件不成立等拒绝发射路径中可能返回 null。
+            // 代理子链 Prefix 先于原版 CompLaunchable.TryLaunch 执行，必须先判空，
+            // 避免让原版本来只会拒绝发射的操作变成空引用报错。
+            List<CompTransporter>? originalGroup = ownTransporter.TransportersInGroup(map);
+            if (originalGroup == null)
+            {
+                return result;
+            }
+
+            // 复制原版内部共享的临时列表后再遍历，避免遍历期间被复用污染。
+            List<CompTransporter> group = new List<CompTransporter>(originalGroup);
             foreach (CompTransporter comp in group)
             {
                 if (!IsOriginalTransportPodTransporter(comp))

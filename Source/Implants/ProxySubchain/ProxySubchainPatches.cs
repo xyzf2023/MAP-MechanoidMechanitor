@@ -98,8 +98,14 @@ namespace MAP_MechanoidMechanitor
     public static class ProxySubchainBiosculpterPatches
     {
         [HarmonyPrefix]
-        public static void Prefix(Pawn pawn, out Pawn? __state)
+        public static void Prefix(CompBiosculpterPod __instance, Pawn pawn, out Pawn? __state)
         {
+            __state = null;
+            if (!ProxySubchainUtility.IsSupportedBiosculpterPod(__instance, pawn.Map))
+            {
+                return;
+            }
+
             __state = ProxySubchainUtility.BeginSupportedHolderTransition(pawn);
         }
 
