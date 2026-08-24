@@ -940,52 +940,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return dict;
         }
 
-        private static int ComputeVehicleCount(CerebrexSupportEvacMode mode, List<Pawn> pawns)
-        {
-            if (mode == CerebrexSupportEvacMode.RoyaltyShuttle)
-            {
-                CompProperties_Transporter? tp = ThingDefOf.Shuttle.GetCompProperties<CompProperties_Transporter>();
-                float shuttleMassCap = tp?.massCapacity ?? 150f;
-                float shuttleTotalMass = 0f;
-                foreach (Pawn p in pawns)
-                {
-                    shuttleTotalMass += CollectionsMassCalculator.MassUsage(
-                        new List<Thing> { p },
-                        IgnorePawnsInventoryMode.IgnoreIfAssignedToUnload,
-                        includePawnsMass: true);
-                }
 
-                return Mathf.Max(1, Mathf.CeilToInt(shuttleTotalMass / shuttleMassCap));
-            }
-
-            // Odyssey 机械空投仓：按实际运输质量分配。
-            ThingDef? podDef = EvacPodDef();
-            float massCap = Config.evacPodMassCapacityFallback;
-            if (podDef != null)
-            {
-                CompProperties_Transporter? tp = podDef.GetCompProperties<CompProperties_Transporter>();
-                if (tp != null && tp.massCapacity > 0f)
-                {
-                    massCap = tp.massCapacity;
-                }
-            }
-
-            if (massCap <= 0f)
-            {
-                massCap = Config.evacPodMassCapacityFallback;
-            }
-
-            float totalMass = 0f;
-            foreach (Pawn p in pawns)
-            {
-                totalMass += CollectionsMassCalculator.MassUsage(
-                    new List<Thing> { p },
-                    IgnorePawnsInventoryMode.IgnoreIfAssignedToUnload,
-                    includePawnsMass: true);
-            }
-
-            return Mathf.Max(1, Mathf.CeilToInt(totalMass / massCap));
-        }
 
         public static void TickEvacuation(QuestPart_SymbiosisCovenantCerebrexSupport part, Map map, int now)
         {
@@ -1076,7 +1031,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (rec.nextRetryTick >= 0 && now >= rec.nextRetryTick)
                     {
                         rec.nextRetryTick = -1;
-                        rec.stage = CerebrexSupportEvacVehicleStage.NotRequested;
+                        rec.stage = rec.vehicleThing != null
+                            ? CerebrexSupportEvacVehicleStage.Landed
+                            : CerebrexSupportEvacVehicleStage.NotRequested;
                     }
 
                     continue;
