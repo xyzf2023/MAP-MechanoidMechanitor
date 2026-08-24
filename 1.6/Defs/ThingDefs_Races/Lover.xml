@@ -118,10 +118,6 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
         <profileVersion>1</profileVersion>
         <bodyType>MAP_LoverFemale</bodyType>
-        <!-- <headType>MAP_LoverHead</headType> -->
-        <!-- <hairDef>MAP_LoverHair</hairDef> -->
-        <setHairColor>true</setHairColor>
-        <hairColor>(0.82, 0.84, 0.88)</hairColor>
         <childhoodBackstory>MAP_Lover_Childhood</childhoodBackstory>
         <adulthoodBackstory>MAP_Lover_Adulthood</adulthoodBackstory>
         <skillLevels>

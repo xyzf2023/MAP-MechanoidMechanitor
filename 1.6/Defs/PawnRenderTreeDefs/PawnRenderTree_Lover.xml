@@ -10,10 +10,12 @@
 
       <children>
 
-        <!-- 整身机械体贴图：正常情况下显示；真正躺床 Lovin 时隐藏 -->
+        <!-- 完整机械体：正常状态显示；真正躺床 Lovin 时隐藏。
+             图像由 PawnRenderNode_AnimalPart_Body 从 PawnKind.bodyGraphicData（Lover/Lover）获取，
+             不再依赖 story.bodyType.bodyNakedGraphicPath。 -->
         <li>
           <debugLabel>Full Body</debugLabel>
-          <nodeClass>PawnRenderNode_Body</nodeClass>
+          <nodeClass>PawnRenderNode_AnimalPart_Body</nodeClass>
           <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_LoverFullBody</workerClass>
           <tagDef>Body</tagDef>
           <skipFlag>Body</skipFlag>
@@ -21,65 +23,41 @@
 
           <children>
 
-            <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Wounds - pre apparel</debugLabel>
+            <li>
+              <debugLabel>Wounds</debugLabel>
+              <nodeClass>PawnRenderNode_AnimalPart</nodeClass>
               <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
               <overlayLayer>Body</overlayLayer>
-              <baseLayer>8</baseLayer>
+              <useGraphic>false</useGraphic>
+              <baseLayer>3</baseLayer>
             </li>
 
-            <li Class="PawnRenderNodeProperties_Overlay">
-              <debugLabel>Wounds - post apparel</debugLabel>
-              <workerClass>PawnRenderNodeWorker_OverlayWounds</workerClass>
-              <overlayOverApparel>true</overlayOverApparel>
-              <overlayLayer>Body</overlayLayer>
-              <baseLayer>30</baseLayer>
-            </li>
-
-            <li Class="PawnRenderNodeProperties_Overlay">
+            <li>
               <debugLabel>Firefoam</debugLabel>
+              <nodeClass>PawnRenderNode_AnimalPart</nodeClass>
               <workerClass>PawnRenderNodeWorker_OverlayFirefoam</workerClass>
               <overlayLayer>Body</overlayLayer>
-              <baseLayer>40</baseLayer>
+              <useGraphic>false</useGraphic>
+              <baseLayer>5</baseLayer>
             </li>
 
           </children>
         </li>
 
-        <li>
-          <debugLabel>Head stump</debugLabel>
-          <nodeClass>PawnRenderNode_Stump</nodeClass>
-          <workerClass>PawnRenderNodeWorker_Stump</workerClass>
-          <texPath>Things/Pawn/Humanlike/Heads/None_Average_Stump</texPath>
-          <baseLayer>50</baseLayer>
-          <skipFlag>Head</skipFlag>
-          <pawnType>Any</pawnType>
-          <rotDrawMode>Fresh, Rotting</rotDrawMode>
-        </li>
-
-        <!-- Lovin 专用头部：仅在真正躺床 Lovin 时显示 -->
+        <!-- Lovin 专用头部贴图：仅在真正躺床 Lovin 时显示。
+             图像直接由 RenderTree 的 Lover/Loverhead Graphic_Multi 提供，不依赖 Humanlike HeadType。 -->
         <li>
           <debugLabel>Lovin Head</debugLabel>
-          <nodeClass>PawnRenderNode_Head</nodeClass>
+          <nodeClass>PawnRenderNode</nodeClass>
           <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_LoverLovinHead</workerClass>
+          <texPath>Lover/Loverhead</texPath>
           <tagDef>Head</tagDef>
           <skipFlag>Head</skipFlag>
           <pawnType>Any</pawnType>
           <baseLayer>50</baseLayer>
+          <overrideMeshSize>(1,1)</overrideMeshSize>
 
           <children>
-
-            <!-- Lovin 专用头发：仅在真正躺床 Lovin 时显示 -->
-            <li>
-              <debugLabel>Lovin Hair</debugLabel>
-              <nodeClass>PawnRenderNode_Hair</nodeClass>
-              <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_LoverLovinHair</workerClass>
-              <pawnType>Any</pawnType>
-              <colorType>Hair</colorType>
-              <skipFlag>Hair</skipFlag>
-              <baseLayer>62</baseLayer>
-              <rotDrawMode>Fresh, Rotting</rotDrawMode>
-            </li>
 
             <li Class="PawnRenderNodeProperties_Overlay">
               <debugLabel>Head wounds</debugLabel>
