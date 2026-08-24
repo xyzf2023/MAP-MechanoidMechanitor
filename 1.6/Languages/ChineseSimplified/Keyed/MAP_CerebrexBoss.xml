@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_CerebrexBoss.Discovery.Letter.Label>机械主脑防御升级</MAP_CerebrexBoss.Discovery.Letter.Label>
+  <MAP_CerebrexBoss.Discovery.Letter.Common>我们已确认机械主脑完成了一次针对性的防御升级。\n\n与常规型号相比，它能够呼叫机械族增援、释放大范围电磁冲击，并直接干扰机械师的带宽控制网络。若预留的冗余带宽不足，受控机械族可能因连接受到干扰而出现敌我识别异常，甚至暂时脱离控制。\n\n进攻前务必做好准备。</MAP_CerebrexBoss.Discovery.Letter.Common>
+  <MAP_CerebrexBoss.Discovery.Letter.Symbiosis>联盟情报显示，机械主脑已经完成了一次针对性的防御升级。\n\n除了整体防护能力进一步提升外，机械主脑现在还能够呼叫机械族增援，并释放大范围电磁冲击。同时，它能够直接干扰机械师的带宽控制网络。若预留的冗余带宽不足，受控机械族可能因控制连接受到干扰而出现敌我识别异常，甚至暂时脱离控制。\n\n如果你决定发起进攻，联盟成员将在战斗开始后陆续派出支援部队。这将是一场艰难的战斗——在发动攻击前，务必做好充分准备。</MAP_CerebrexBoss.Discovery.Letter.Symbiosis>
+  <MAP_CerebrexBoss.Discovery.Letter.Purge>通过对机械主巢信号的持续分析，我们推测机械主脑已经完成了一次针对性的防御升级。\n\n除了驻守部队的整体战斗力进一步提升外，机械主脑现在还能够呼叫机械族增援，并释放大范围电磁冲击。同时，它能够直接干扰机械师的带宽控制网络。若预留的冗余带宽不足，受控机械族可能因控制连接受到干扰而出现敌我识别异常，甚至暂时脱离控制。\n\n这些升级无疑进一步提高了与机械主脑正面交战的风险。倘若日后我们决定与之兵戎相向，必须做好万全准备。</MAP_CerebrexBoss.Discovery.Letter.Purge>
+</LanguageData>
