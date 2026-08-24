@@ -123,4 +123,19 @@
   <MAP_MechanoidMechanitor.Symbiosis.Dev.UnityPlus100>团结度+100</MAP_MechanoidMechanitor.Symbiosis.Dev.UnityPlus100>
   <MAP_MechanoidMechanitor.Symbiosis.Dev.MechHiveNone>(无机械巢)</MAP_MechanoidMechanitor.Symbiosis.Dev.MechHiveNone>
 
+  <!-- 模块：共生盟约支援玩家进攻奥德赛机械主巢 -->
+  <MAP_SymbiosisCovenant_CerebrexSupport_Description>共生盟约正在为机械主巢攻势提供援军。</MAP_SymbiosisCovenant_CerebrexSupport_Description>
+  <MAP_SymbiosisCovenant_CerebrexSupport_OfferTitle>盟约来信</MAP_SymbiosisCovenant_CerebrexSupport_OfferTitle>
+  <MAP_SymbiosisCovenant_CerebrexSupport_OfferBody>盟友们注意到你已经开始向机械主巢发起进攻。他们询问你是否需要援军。</MAP_SymbiosisCovenant_CerebrexSupport_OfferBody>
+  <MAP_SymbiosisCovenant_CerebrexSupport_Accept>接受援助</MAP_SymbiosisCovenant_CerebrexSupport_Accept>
+  <MAP_SymbiosisCovenant_CerebrexSupport_Decline>婉拒援助</MAP_SymbiosisCovenant_CerebrexSupport_Decline>
+  <MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailInvalid>无法接受援军：任务或地图已无效。</MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailInvalid>
+  <MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailCovenant>无法接受援军：共生盟约当前不可用。</MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailCovenant>
+  <MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailNoAlly>无法接受援军：当前没有可参战的盟友。</MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailNoAlly>
+  <MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle>第 {0} 波盟约援军抵达</MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle>
+  <MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody>第 {0} 波盟约援军已经抵达机械主巢平台，共 {1} 名战斗人员加入进攻。</MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody>
+  <MAP_SymbiosisCovenant_CerebrexSupport_EvacTitle>盟约援军开始撤离</MAP_SymbiosisCovenant_CerebrexSupport_EvacTitle>
+  <MAP_SymbiosisCovenant_CerebrexSupport_EvacBody>机械主巢防御已解除，盟约援军正在撤离平台。</MAP_SymbiosisCovenant_CerebrexSupport_EvacBody>
+  <MAP_SymbiosisCovenant_CerebrexSupport_EvacDone>盟约援军已安全撤离机械主巢平台。</MAP_SymbiosisCovenant_CerebrexSupport_EvacDone>
+
 </LanguageData>

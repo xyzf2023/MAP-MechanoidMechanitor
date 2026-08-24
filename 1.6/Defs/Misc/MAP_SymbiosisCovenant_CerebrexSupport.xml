@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantCerebrexSupportDef>
+  <defName>MAP_SymbiosisCovenant_CerebrexSupportConfig</defName>
+  <label>机械主巢盟约援军配置</label>
+  <description>玩家进攻奥德赛机械主巢时，共生盟约附加援军的节奏、波次与落点搜索配置。</description>
+
+  <!-- 询问与触发节奏（ticks） -->
+  <offerDelayTicks>1200</offerDelayTicks>
+  <offerTimeoutTicks>5000</offerTimeoutTicks>
+  <firstWaveDelayTicks>900</firstWaveDelayTicks>
+  <maxWaves>5</maxWaves>
+  <remainingCombatCapableThreshold>0.3</remainingCombatCapableThreshold>
+  <minimumWaveAgeTicks>2500</minimumWaveAgeTicks>
+  <minimumWaveIntervalTicks>3000</minimumWaveIntervalTicks>
+  <failedDeploymentRetryTicks>600</failedDeploymentRetryTicks>
+
+  <!-- 每波点数（整波合计） -->
+  <minWavePoints>10000</minWavePoints>
+  <maxWavePoints>25000</maxWavePoints>
+  <level2ThreatOffsetFactor>0.15</level2ThreatOffsetFactor>
+  <level3ThreatOffsetFactor>0.25</level3ThreatOffsetFactor>
+  <level4ThreatOffsetFactor>0.35</level4ThreatOffsetFactor>
+  <level5ThreatOffsetFactor>0.5</level5ThreatOffsetFactor>
+
+  <!-- 每波最多参与派系数与空投仓开盖延迟 -->
+  <maxParticipantsPerWave>3</maxParticipantsPerWave>
+  <dropPodOpenDelayTicks>140</dropPodOpenDelayTicks>
+
+  <!-- 主脑战斗结束后的威胁稳定判定 -->
+  <threatCheckIntervalTicks>120</threatCheckIntervalTicks>
+  <threatClearStableTicks>1000</threatClearStableTicks>
+
+  <!-- 撤离 -->
+  <evacuationRetryTicks>600</evacuationRetryTicks>
+  <evacuationLoadingTimeoutTicks>15000</evacuationLoadingTimeoutTicks>
+
+  <!-- 边缘空投落点搜索（全部有上限，禁止全图无限扫描） -->
+  <dropCellSearchRadius>80</dropCellSearchRadius>
+  <dropCellRadialPatternSafetyMargin>0.1</dropCellRadialPatternSafetyMargin>
+  <dropCellZoneRadius>18</dropCellZoneRadius>
+  <dropCellMinimumSpacingSquared>4</dropCellMinimumSpacingSquared>
+  <dropCellAnchorAttemptLimit>300</dropCellAnchorAttemptLimit>
+  <dropCellEdgeCandidateStep>7</dropCellEdgeCandidateStep>
+  <dropCellEdgeCandidateLimit>400</dropCellEdgeCandidateLimit>
+  <evacPodMassCapacityFallback>200</evacPodMassCapacityFallback>
+</MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantCerebrexSupportDef>

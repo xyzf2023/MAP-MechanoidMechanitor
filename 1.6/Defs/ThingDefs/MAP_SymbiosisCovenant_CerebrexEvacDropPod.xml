@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ThingDef ParentName="BuildingBase" MayRequire="Ludeon.RimWorld.Odyssey">
+  <defName>MAP_SymbiosisCovenant_CerebrexEvacDropPod</defName>
+  <label>盟约机械撤离舱</label>
+  <description>共生盟约用于从机械主巢平台撤离盟军的机械空投舱。由代码控制，玩家不可操作。</description>
+  <category>Buildings</category>
+  <thingClass>Building</thingClass>
+  <graphicData>
+    <texPath>Things/Building/MechDropPod</texPath>
+    <graphicClass>Graphic_Single</graphicClass>
+  </graphicData>
+  <altitudeLayer>Building</altitudeLayer>
+  <passability>PassThroughOnly</passability>
+  <castEdgeShadows>false</castEdgeShadows>
+  <fillPercent>0.35</fillPercent>
+  <useHitPoints>true</useHitPoints>
+  <size>(1,1)</size>
+  <building>
+    <isEdifice>false</isEdifice>
+    <canPlaceOverWall>true</canPlaceOverWall>
+  </building>
+  <statBases>
+    <MaxHitPoints>120</MaxHitPoints>
+    <WorkToBuild>2000</WorkToBuild>
+    <Mass>5</Mass>
+  </statBases>
+  <comps>
+    <li Class="CompProperties_Transporter">
+      <massCapacity>320</massCapacity>
+      <Properties>
+        <allowFactionDistribution>false</allowFactionDistribution>
+      </Properties>
+    </li>
+    <li Class="CompProperties_Launchable_TransportPod">
+      <requireShipSetup>false</requireShipSetup>
+      <skyfallerLeaving>DropPodLeavingMechanoid</skyfallerLeaving>
+      <transitFromFixedLaunchDistance>true</transitFromFixedLaunchDistance>
+      <fixedLaunchDistanceMax>9999</fixedLaunchDistanceMax>
+      <allowIncapablePilots>true</allowIncapablePilots>
+    </li>
+  </comps>
+  <dropPodFaller>DropPodIncomingMechanoidSoft</dropPodFaller>
+  <dropPodActive>ActiveDropPodMechanoid</dropPodActive>
+  <requiresFuelingPort>false</requiresFuelingPort>
+  <selectable>false</selectable>
+  <deconstructible>false</deconstructible>
+  <claimable>false</claimable>
+  <tutorBuildable>false</tutorBuildable>
+  <neverStored>true</neverStored>
+  <leaveExistentThingsBehind>true</leaveExistentThingsBehind>
+  <notForCover>true</notForCover>
+  <canBeSchooled>false</canBeSchooled>
+</ThingDef>

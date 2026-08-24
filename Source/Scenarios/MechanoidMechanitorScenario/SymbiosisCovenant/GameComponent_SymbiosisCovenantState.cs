@@ -475,6 +475,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             base.LoadedGame();
             TryInitializeOrSynchronize();
             RecalculateGoodwillSituations();
+            // 旧存档兼容：为已存在但尚未拥有自定义支援 QuestPart 的进行中 Gravcore_Mechhive 任务补装。
+            SymbiosisCovenantCerebrexSupportUtility.BackfillMissingSupportQuestParts();
         }
 
         public override void GameComponentTick()

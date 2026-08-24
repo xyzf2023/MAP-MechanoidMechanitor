@@ -2,6 +2,7 @@ using System.Reflection;
 using HarmonyLib;
 using RimWorld;
 using Verse;
+using MAP_MechanoidMechanitor.Scenarios;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -69,6 +70,12 @@ namespace MAP_MechanoidMechanitor
             __instance?.parent?
                 .TryGetComp<CompCerebrexBossController>()?
                 .Notify_CoreDefencesLowered();
+
+            // 窄范围转发：仅定位该地图对应的进行中 Gravcore_Mechhive 支援 QuestPart。
+            if (__instance?.parent?.Map != null)
+            {
+                SymbiosisCovenantCerebrexSupportUtility.NotifyCoreDefencesLowered(__instance.parent.Map);
+            }
         }
     }
 }
