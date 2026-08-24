@@ -647,7 +647,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>
         /// 撤离完成统一出口：防重复、设置阶段、发送一次完成消息，并仅完成本 Part（不结束原版任务）。
         /// </summary>
-        public void MarkSupportCompleted()
+        public void MarkSupportCompleted(bool sendEvacDoneMessage = true)
         {
             if (stage == CerebrexSupportStage.Completed)
             {
@@ -655,11 +655,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             stage = CerebrexSupportStage.Completed;
-            Messages.Message(
-                "MAP_SymbiosisCovenant_CerebrexSupport_EvacDone".Translate(),
-                MessageTypeDefOf.PositiveEvent);
-            Log.Message($"{LogPrefix} 援军已安全撤离（site={site?.Label}）。");
+            if (sendEvacDoneMessage)
+            {
+                Messages.Message(
+                    "MAP_SymbiosisCovenant_CerebrexSupport_EvacDone".Translate(),
+                    MessageTypeDefOf.PositiveEvent);
+            }
 
+            Log.Message($"{LogPrefix} 援军撤离流程已完成（site={site?.Label}，发送撤离提示={sendEvacDoneMessage}）。");
             Complete();
         }
 
