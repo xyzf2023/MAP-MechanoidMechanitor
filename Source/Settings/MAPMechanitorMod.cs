@@ -418,7 +418,7 @@ namespace MAP_MechanoidMechanitor
                     CerebrexBossDifficultyValues.MinMaxLivingSummonedMechs,
                     CerebrexBossDifficultyValues.MaxMaxLivingSummonedMechs);
 
-            GUI.enabled = outerEnabled && extraSkills;
+            GUI.enabled = outerEnabled && extraSkills && settings.cerebrexBossEnableSummoning;
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label"
                     .Translate(),

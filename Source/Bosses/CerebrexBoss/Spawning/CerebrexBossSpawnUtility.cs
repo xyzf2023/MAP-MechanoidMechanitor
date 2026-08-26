@@ -63,19 +63,19 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                reserved.Add(cell);
-
-                // 第一只成功落点成为本批次集中空投中心。
-                if (!clusterCenter.IsValid && cell.IsValid)
-                {
-                    clusterCenter = cell;
-                }
-
+                // 必须先成功创建空投舱，才允许登记本批次集中中心与占用记录。
                 if (!TryMakeDropPod(map, faction, cell, new List<Pawn> { pawn }))
                 {
                     controller.RegisterPendingSummonKind(kind);
                     DiscardPawn(pawn);
                     continue;
+                }
+
+                // 仅第一只成功落点成为本批次集中空投中心（不跨波次、不存档）。
+                reserved.Add(cell);
+                if (!clusterCenter.IsValid && cell.IsValid)
+                {
+                    clusterCenter = cell;
                 }
 
                 existingList.Add(pawn);
@@ -148,8 +148,6 @@ namespace MAP_MechanoidMechanitor
             List<IntVec3> reserved,
             out IntVec3 cell)
         {
-            IntVec2 size = IntVec2.One;
-
             // 1. 若本批次已有集中落点，先围绕 clusterCenter 使用较小安全半径搜索。
             if (clusterCenter.IsValid)
             {

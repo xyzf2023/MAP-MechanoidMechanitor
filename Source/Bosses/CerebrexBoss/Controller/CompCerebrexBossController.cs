@@ -531,10 +531,12 @@ namespace MAP_MechanoidMechanitor
 
             if (!bandwidthInterferenceActive)
             {
-                // 残留清理：移除可能的干扰 Hediff 与隐藏狂暴标记，清空全部记录，
-                // 不允许残留干扰永久存在。
+                // 残留清理：移除可能的干扰 Hediff 与隐藏狂暴标记，尝试恢复本 MOD 技能导致的狂暴，
+                // 然后去重通知所有相关原监管者刷新带宽。不得播放恢复视觉、不得启动冷却。
                 HediffDef? leftoverDef = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
                 HediffDef? leftoverMarker = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthBerserkMarker");
+
+                // 1/2. 安全移除目标记录的干扰 Hediff（避免访问 null / Destroyed / 无 health 的 Pawn）。
                 foreach (CerebrexBandwidthTargetRecord? rec in bandwidthTargetRecords)
                 {
                     Pawn? p = rec?.target;
@@ -548,22 +550,71 @@ namespace MAP_MechanoidMechanitor
                     }
                 }
 
+                // 3. 只对带本 MOD 隐藏标记、且当前确为 BerserkMechanoid 的机械族恢复精神状态，随后移除标记。
                 foreach (CerebrexBandwidthBerserkRecord? rec in bandwidthBerserkRecords)
                 {
                     Pawn? p = rec?.pawn;
-                    if (p != null && !p.Destroyed && p.health != null && leftoverMarker != null)
+                    if (p == null || p.Destroyed || p.health == null || leftoverMarker == null)
                     {
-                        Hediff? m = p.health.hediffSet.GetFirstHediffOfDef(leftoverMarker);
-                        if (m != null)
+                        continue;
+                    }
+
+                    Hediff? m = p.health.hediffSet.GetFirstHediffOfDef(leftoverMarker);
+                    if (m == null)
+                    {
+                        // 没有本 MOD 隐藏标记：不处理，避免误伤普通狂暴。
+                        continue;
+                    }
+
+                    MentalState? curState = p.mindState?.mentalStateHandler?.CurState;
+                    if (curState?.def == MentalStateDefOf.BerserkMechanoid)
+                    {
+                        p.mindState?.mentalStateHandler?.Reset();
+                    }
+
+                    p.health.RemoveHediff(m);
+                }
+
+                // 4. 收集不同的原监管者（来源：受影响监管者、目标记录、狂暴记录），去重通知带宽变化。
+                HashSet<Pawn> cleanupOverseers = new HashSet<Pawn>();
+                if (bandwidthAffectedOverseers != null)
+                {
+                    foreach (Pawn ov in bandwidthAffectedOverseers)
+                    {
+                        if (ov != null && ov.mechanitor != null)
                         {
-                            p.health.RemoveHediff(m);
+                            cleanupOverseers.Add(ov);
                         }
                     }
                 }
 
+                foreach (CerebrexBandwidthTargetRecord? rec in bandwidthTargetRecords)
+                {
+                    Pawn? ov = rec?.originalOverseer;
+                    if (ov != null && ov.mechanitor != null)
+                    {
+                        cleanupOverseers.Add(ov);
+                    }
+                }
+
+                foreach (CerebrexBandwidthBerserkRecord? rec in bandwidthBerserkRecords)
+                {
+                    Pawn? ov = rec?.originalOverseer;
+                    if (ov != null && ov.mechanitor != null)
+                    {
+                        cleanupOverseers.Add(ov);
+                    }
+                }
+
+                foreach (Pawn ov in cleanupOverseers)
+                {
+                    ov.mechanitor?.Notify_BandwidthChanged();
+                }
+
+                // 5. 最后清空记录；保留本场已使用目标的去脏版本（不在此处清空有效记录）。
                 bandwidthTargetRecords.Clear();
                 bandwidthBerserkRecords.Clear();
-                bandwidthAffectedOverseers.Clear();
+                bandwidthAffectedOverseers?.Clear();
                 bandwidthTargetsUsedThisBattle.RemoveAll(p => p == null || p.Discarded);
             }
 
@@ -1257,11 +1308,13 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            // 3~5. 给目标添加干扰 Hediff；只有添加成功的才算本轮生效目标，
-            // 并保存原监管者、加入本轮已使用目标与受影响监管者列表。
+            // 3~5. 给目标添加干扰 Hediff；先确认实际添加成功，才登记为生效目标，
+            // 并保存原监管者、加入本轮已使用目标、受影响监管者与成功监管者集合。
             List<Pawn> applied = new List<Pawn>();
+            HashSet<Pawn> appliedOverseers = new HashSet<Pawn>();
             foreach (Pawn t in originalOverseerByTarget.Keys)
             {
+                // 已经处于带宽干扰中的目标直接跳过（FindBandwidthTargets 理论上已排除）。
                 if (t.health.hediffSet.GetFirstHediffOfDef(interferenceDef) != null)
                 {
                     continue;
@@ -1269,6 +1322,14 @@ namespace MAP_MechanoidMechanitor
 
                 Hediff hediff = HediffMaker.MakeHediff(interferenceDef, t);
                 t.health.AddHediff(hediff);
+
+                // 仅当目标身上确实出现了 MAP_CerebrexBandwidthInterference 才算成功；
+                // 添加失败的目标不登记任何状态，继续尝试其他候选目标。
+                Hediff? appliedHediff = t.health.hediffSet.GetFirstHediffOfDef(interferenceDef);
+                if (appliedHediff == null)
+                {
+                    continue;
+                }
 
                 Pawn ov = originalOverseerByTarget[t];
                 bandwidthTargetsUsedThisBattle.Add(t);
@@ -1279,6 +1340,10 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 applied.Add(t);
+                if (!appliedOverseers.Contains(ov))
+                {
+                    appliedOverseers.Add(ov);
+                }
             }
 
             if (applied.Count == 0)
@@ -1291,16 +1356,16 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 4. 每个不同原监管者只调用一次 Notify_BandwidthChanged。
-            foreach (Pawn ov in validOverseers)
+            // 4. 每个成功目标的原监管者只调用一次 Notify_BandwidthChanged。
+            foreach (Pawn ov in appliedOverseers)
             {
                 ov.mechanitor?.Notify_BandwidthChanged();
             }
 
             bandwidthVisuals.Start(parent, applied);
 
-            // 5/6/7/8. 读取变化后受控列表，对变化前受控、变化后不再受控的玩家机械族执行狂暴。
-            foreach (Pawn ov in validOverseers)
+            // 5/6/7/8. 仅对成功目标的原监管者读取变化后受控列表，对变化前受控、变化后不再受控的玩家机械族执行狂暴。
+            foreach (Pawn ov in appliedOverseers)
             {
                 if (ov.mechanitor == null)
                 {
