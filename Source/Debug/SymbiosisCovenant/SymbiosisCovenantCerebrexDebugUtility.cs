@@ -196,21 +196,26 @@ namespace MAP_MechanoidMechanitor
                         enterMessage = "进入主巢地图时发生异常，详见日志"
                             + "（未删除任何 Pawn，也未销毁仍持有 Pawn 的商队）。";
                     }
-
-                    // 必须在本长事件 Action 内部注册回调：
-                    // 此时 currentEvent 非空，ExecuteWhenFinished 会将其推迟到本次长事件
-                    // 真正结束后执行；若在本方法同步返回后再调用，反而会立即执行
-                    //（currentEvent 已为空），导致“尚未生成就读 enterSucceeded”的错位。
-                    LongEventHandler.ExecuteWhenFinished(
-                        () => FinalizePreparedCerebrexEntry(
-                            site,
-                            supportPart,
-                            state,
-                            pawns,
-                            preparedMembers,
-                            points,
-                            enterSucceeded,
-                            enterMessage));
+                    finally
+                    {
+                        // 必须在本长事件 Action 内部、finally 中注册回调：
+                        // 此时 currentEvent 非空，ExecuteWhenFinished 会将其推迟到本次长事件
+                        // 真正结束后执行；若在本方法同步返回后再调用，反而会立即执行
+                        //（currentEvent 已为空），导致“尚未生成就读 enterSucceeded”的错位。
+                        // finally 保证无论 try 内正常成功、targetMap 为 null、caravan 为 null
+                        // 还是发生已捕获异常，都会注册且只注册一次最终回调，
+                        // 玩家最终都能收到一次真实、明确的结果消息。
+                        LongEventHandler.ExecuteWhenFinished(
+                            () => FinalizePreparedCerebrexEntry(
+                                site,
+                                supportPart,
+                                state,
+                                pawns,
+                                preparedMembers,
+                                points,
+                                enterSucceeded,
+                                enterMessage));
+                    }
                 },
                 MapGenKey,
                 doAsynchronously: false,
@@ -230,7 +235,8 @@ namespace MAP_MechanoidMechanitor
                 + "主巢任务、支援 QuestPart 与临时玩家商队已创建，地图正在生成中；"
                 + "请勿重复点击“一键准备并进入”（重复点击会被已有主巢任务 / 世界目标拦截）。\n"
                 + "进入完成与最终验证结果将通过游戏消息反馈；"
-                + "盟约来信会按正式 offerDelayTicks 流程出现。";
+                + "进入完成后将继续进行最终验证；"
+                + "只有验证通过，盟约来信才会按正式 offerDelayTicks 流程出现。";
 
             return true;
         }
