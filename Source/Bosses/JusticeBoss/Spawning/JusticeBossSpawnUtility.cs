@@ -139,6 +139,7 @@ namespace MAP_MechanoidMechanitor
             IntVec3 fallbackAnchor,
             int justiceEventId,
             List<PawnKindDef> kinds,
+            bool applyMobileCombat,
             out Lord? assaultLordCache)
         {
             assaultLordCache = null;
@@ -235,7 +236,8 @@ namespace MAP_MechanoidMechanitor
                         waveIndex,
                         JusticeBossDropRole.Assault,
                         i,
-                        attempt: 1);
+                        attempt: 1,
+                        applyMobileCombat);
 
                     if (pawn == null && wantBoss)
                     {
@@ -252,7 +254,8 @@ namespace MAP_MechanoidMechanitor
                                 waveIndex,
                                 JusticeBossDropRole.Assault,
                                 i,
-                                attempt: 2);
+                                attempt: 2,
+                                applyMobileCombat);
                         }
                     }
                     else if (pawn != null && wantBoss)
@@ -293,7 +296,8 @@ namespace MAP_MechanoidMechanitor
                     JusticeBossDropRole.Assault,
                     pawns,
                     pawnKinds,
-                    bossPawns);
+                    bossPawns,
+                    applyMobileCombat);
                 result.LaunchedPawnCount = launchResult.LaunchedPawnCount;
                 result.BossReplacementCount = launchResult.BossReplacementCount;
                 result.FatalFailure = launchResult.FatalFailure;
@@ -335,6 +339,7 @@ namespace MAP_MechanoidMechanitor
             IntVec3 anchor,
             int justiceEventId,
             int count,
+            bool applyMobileCombat,
             out Lord? guardLord)
         {
             List<PawnGenOption> combat =
@@ -370,6 +375,7 @@ namespace MAP_MechanoidMechanitor
                 anchor,
                 justiceEventId,
                 kinds,
+                applyMobileCombat,
                 out guardLord);
         }
 
@@ -379,6 +385,7 @@ namespace MAP_MechanoidMechanitor
             IntVec3 anchor,
             int justiceEventId,
             List<PawnKindDef> kinds,
+            bool applyMobileCombat,
             out Lord? guardLord)
         {
             guardLord = null;
@@ -442,7 +449,8 @@ namespace MAP_MechanoidMechanitor
                         0,
                         JusticeBossDropRole.Guard,
                         i,
-                        1);
+                        1,
+                        applyMobileCombat);
                     if (pawn == null)
                     {
                         result.FailedKinds.Add(kind);
@@ -463,7 +471,8 @@ namespace MAP_MechanoidMechanitor
                     JusticeBossDropRole.Guard,
                     pawns,
                     pawnKinds,
-                    bossPawns: null);
+                    bossPawns: null,
+                    applyMobileCombat);
                 result.LaunchedPawnCount = launchResult.LaunchedPawnCount;
                 result.FatalFailure = launchResult.FatalFailure;
                 result.FailedKinds.AddRange(launchResult.FailedKinds);
@@ -520,7 +529,8 @@ namespace MAP_MechanoidMechanitor
             int waveIndex,
             JusticeBossDropRole role,
             int pawnIndex,
-            int attempt)
+            int attempt,
+            bool applyMobileCombat)
         {
             bool traceSession = JusticeBossLaunchTracePatchManager.Active;
             bool trace = JusticeBossLaunchTracePatchManager.CanWriteNormal;
@@ -605,7 +615,12 @@ namespace MAP_MechanoidMechanitor
                         JusticeBossTraceWriteMode.Critical);
                 }
 
-                MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff(pawn);
+                // 机动作战是否添加由本场正义战斗快照决定；关闭时只不主动添加，
+                // 不移除该 Pawn 通过其他来源已经获得的机动作战。
+                if (applyMobileCombat)
+                {
+                    MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff(pawn);
+                }
 
                 if (trace)
                 {
@@ -663,7 +678,8 @@ namespace MAP_MechanoidMechanitor
             JusticeBossDropRole role,
             List<Pawn> pawns,
             Dictionary<Pawn, PawnKindDef> pawnKinds,
-            HashSet<Pawn>? bossPawns)
+            HashSet<Pawn>? bossPawns,
+            bool applyMobileCombat)
         {
             JusticeBossDropLaunchResult result =
                 new JusticeBossDropLaunchResult(pawns.Count);
@@ -857,6 +873,7 @@ namespace MAP_MechanoidMechanitor
                             anchorCell = anchor,
                             registeredTick =
                                 Current.Game?.tickManager?.TicksGame ?? -1,
+                            applyMobileCombat = applyMobileCombat,
                         });
 
                     if (trace)

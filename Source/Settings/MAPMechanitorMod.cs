@@ -331,6 +331,13 @@ namespace MAP_MechanoidMechanitor
                     JusticeBossDifficultyValues.MaxMechsPerWave);
 
             listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Label"
+                    .Translate(),
+                ref settings.justiceBossApplyMobileCombatToSummons,
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Description"
+                    .Translate());
+
+            listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label"
                     .Translate(),
                 ref settings.justiceBossAllowBossReplacement,
@@ -341,12 +348,15 @@ namespace MAP_MechanoidMechanitor
         private static void DrawCerebrexBossDifficultySettings(
             Listing_Standard listing)
         {
-            if (Settings == null)
+            if (Settings == null || !ModsConfig.OdysseyActive)
             {
                 return;
             }
 
             MAPMechanitorModSettings settings = Settings;
+
+            // 进入方法前保存原始 GUI.enabled，方法结束前恢复，避免影响后续其他 MOD 设置整体变灰。
+            bool outerEnabled = GUI.enabled;
 
             listing.GapLine();
             listing.Label(
@@ -355,6 +365,7 @@ namespace MAP_MechanoidMechanitor
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description".Translate());
 
+            // 总开关自身始终可操作。
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Label"
                     .Translate(),
@@ -362,11 +373,15 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description"
                     .Translate());
 
+            bool extraSkills = settings.cerebrexBossEnableExtraSkills;
+
             listing.Gap(6f);
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection"
                     .Translate());
 
+            // 子开关在总开关开启时可操作；子开关自身不因自己关闭而被锁死。
+            GUI.enabled = outerEnabled && extraSkills;
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Label"
                     .Translate(),
@@ -374,6 +389,7 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description"
                     .Translate());
 
+            GUI.enabled = outerEnabled && extraSkills && settings.cerebrexBossEnableSummoning;
             settings.cerebrexBossSummonIntervalTicks =
                 DrawNamedTickIntervalSliderSetting(
                     listing,
@@ -381,7 +397,8 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description",
                     settings.cerebrexBossSummonIntervalTicks,
                     CerebrexBossDifficultyValues.MinSummonIntervalTicks,
-                    CerebrexBossDifficultyValues.MaxSummonIntervalTicks);
+                    CerebrexBossDifficultyValues.MaxSummonIntervalTicks,
+                    CerebrexBossDifficultyValues.SummonIntervalStepTicks);
 
             settings.cerebrexBossMechsPerWave =
                 DrawIntSliderSetting(
@@ -401,6 +418,7 @@ namespace MAP_MechanoidMechanitor
                     CerebrexBossDifficultyValues.MinMaxLivingSummonedMechs,
                     CerebrexBossDifficultyValues.MaxMaxLivingSummonedMechs);
 
+            GUI.enabled = outerEnabled && extraSkills;
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label"
                     .Translate(),
@@ -408,11 +426,13 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description"
                     .Translate());
 
+            GUI.enabled = outerEnabled && extraSkills;
             listing.Gap(6f);
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Bandwidth.Subsection"
                     .Translate());
 
+            GUI.enabled = outerEnabled && extraSkills;
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Label"
                     .Translate(),
@@ -420,6 +440,7 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description"
                     .Translate());
 
+            GUI.enabled = outerEnabled && extraSkills && settings.cerebrexBossEnableBandwidthInterference;
             settings.cerebrexBossBandwidthCooldownMinTicks =
                 DrawNamedTickIntervalSliderSetting(
                     listing,
@@ -427,7 +448,8 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description",
                     settings.cerebrexBossBandwidthCooldownMinTicks,
                     CerebrexBossDifficultyValues.MinBandwidthCooldownTicks,
-                    CerebrexBossDifficultyValues.MaxBandwidthCooldownTicks);
+                    CerebrexBossDifficultyValues.MaxBandwidthCooldownTicks,
+                    CerebrexBossDifficultyValues.BandwidthCooldownStepTicks);
 
             settings.cerebrexBossBandwidthCooldownMaxTicks =
                 DrawNamedTickIntervalSliderSetting(
@@ -436,7 +458,8 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description",
                     settings.cerebrexBossBandwidthCooldownMaxTicks,
                     CerebrexBossDifficultyValues.MinBandwidthCooldownTicks,
-                    CerebrexBossDifficultyValues.MaxBandwidthCooldownTicks);
+                    CerebrexBossDifficultyValues.MaxBandwidthCooldownTicks,
+                    CerebrexBossDifficultyValues.BandwidthCooldownStepTicks);
 
             (settings.cerebrexBossBandwidthCooldownMinTicks,
                 settings.cerebrexBossBandwidthCooldownMaxTicks) =
@@ -451,7 +474,8 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description",
                     settings.cerebrexBossBandwidthDurationTicks,
                     CerebrexBossDifficultyValues.MinBandwidthDurationTicks,
-                    CerebrexBossDifficultyValues.MaxBandwidthDurationTicks);
+                    CerebrexBossDifficultyValues.MaxBandwidthDurationTicks,
+                    CerebrexBossDifficultyValues.BandwidthDurationStepTicks);
 
             settings.cerebrexBossBandwidthMaxTargets =
                 DrawIntSliderSetting(
@@ -462,11 +486,13 @@ namespace MAP_MechanoidMechanitor
                     CerebrexBossDifficultyValues.MinBandwidthMaxTargets,
                     CerebrexBossDifficultyValues.MaxBandwidthMaxTargets);
 
+            GUI.enabled = outerEnabled && extraSkills;
             listing.Gap(6f);
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Emp.Subsection"
                     .Translate());
 
+            GUI.enabled = outerEnabled && extraSkills;
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Label"
                     .Translate(),
@@ -474,6 +500,7 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Description"
                     .Translate());
 
+            GUI.enabled = outerEnabled && extraSkills && settings.cerebrexBossEnableEmp;
             settings.cerebrexBossEmpCooldownMinTicks =
                 DrawNamedTickIntervalSliderSetting(
                     listing,
@@ -481,7 +508,8 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Description",
                     settings.cerebrexBossEmpCooldownMinTicks,
                     CerebrexBossDifficultyValues.MinEmpCooldownTicks,
-                    CerebrexBossDifficultyValues.MaxEmpCooldownTicks);
+                    CerebrexBossDifficultyValues.MaxEmpCooldownTicks,
+                    CerebrexBossDifficultyValues.EmpCooldownStepTicks);
 
             settings.cerebrexBossEmpCooldownMaxTicks =
                 DrawNamedTickIntervalSliderSetting(
@@ -490,7 +518,8 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Description",
                     settings.cerebrexBossEmpCooldownMaxTicks,
                     CerebrexBossDifficultyValues.MinEmpCooldownTicks,
-                    CerebrexBossDifficultyValues.MaxEmpCooldownTicks);
+                    CerebrexBossDifficultyValues.MaxEmpCooldownTicks,
+                    CerebrexBossDifficultyValues.EmpCooldownStepTicks);
 
             (settings.cerebrexBossEmpCooldownMinTicks,
                 settings.cerebrexBossEmpCooldownMaxTicks) =
@@ -505,7 +534,8 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description",
                     settings.cerebrexBossEmpBaseDurationTicks,
                     CerebrexBossDifficultyValues.MinEmpBaseDurationTicks,
-                    CerebrexBossDifficultyValues.MaxEmpBaseDurationTicks);
+                    CerebrexBossDifficultyValues.MaxEmpBaseDurationTicks,
+                    CerebrexBossDifficultyValues.EmpBaseDurationStepTicks);
 
             settings.cerebrexBossEmpRadius =
                 DrawFloatSliderSetting(
@@ -514,7 +544,10 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description",
                     settings.cerebrexBossEmpRadius,
                     CerebrexBossDifficultyValues.MinEmpRadius,
-                    CerebrexBossDifficultyValues.MaxEmpRadius);
+                    CerebrexBossDifficultyValues.MaxEmpRadius,
+                    CerebrexBossDifficultyValues.EmpRadiusStep);
+
+            GUI.enabled = outerEnabled;
         }
 
         private static void DrawStrategicNodeSettings(
@@ -732,9 +765,11 @@ namespace MAP_MechanoidMechanitor
             string descriptionKey,
             int value,
             int min,
-            int max)
+            int max,
+            int step)
         {
             int clamped = Mathf.Clamp(value, min, max);
+            int safeStep = step <= 0 ? 1 : step;
 
             string secondsText =
                 (clamped / 60f).ToString(
@@ -749,14 +784,13 @@ namespace MAP_MechanoidMechanitor
                 0.62f,
                 descriptionKey.Translate().ToString());
 
-            return Mathf.Clamp(
-                Mathf.RoundToInt(sliderValue),
-                min,
-                max);
+            int stepped =
+                Mathf.RoundToInt(sliderValue / safeStep) * safeStep;
+            return Mathf.Clamp(stepped, min, max);
         }
 
         /// <summary>
-        /// 通用浮点滑块：标签显示当前浮点值（保留一位小数）。
+        /// 通用浮点滑块：标签显示当前浮点值（保留一位小数），最终值按 step 对齐后再钳制。
         /// </summary>
         private static float DrawFloatSliderSetting(
             Listing_Standard listing,
@@ -764,9 +798,11 @@ namespace MAP_MechanoidMechanitor
             string descriptionKey,
             float value,
             float min,
-            float max)
+            float max,
+            float step)
         {
             float clamped = Mathf.Clamp(value, min, max);
+            float safeStep = step <= 0f ? 1f : step;
 
             float sliderValue = listing.SliderLabeled(
                 labelKey.Translate(clamped.ToString("0.#", CultureInfo.CurrentCulture))
@@ -777,13 +813,17 @@ namespace MAP_MechanoidMechanitor
                 0.62f,
                 descriptionKey.Translate().ToString());
 
-            return Mathf.Clamp(sliderValue, min, max);
+            float stepped =
+                Mathf.Round(sliderValue / safeStep) * safeStep;
+            return Mathf.Clamp(stepped, min, max);
         }
 
         public override void WriteSettings()
         {
             CommitProductivityCoreWorkSpeedBuffer();
             JusticeBossDiagnosticsRuntime.Refresh();
+            Settings?.NormalizeJusticeBossSettings();
+            Settings?.NormalizeCerebrexBossSettings();
             base.WriteSettings();
         }
 

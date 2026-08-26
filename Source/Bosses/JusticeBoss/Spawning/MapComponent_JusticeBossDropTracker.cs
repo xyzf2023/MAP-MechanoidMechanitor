@@ -27,6 +27,11 @@ namespace MAP_MechanoidMechanitor
 
         public int registeredTick;
 
+        // 落地阶段是否补充机动作战由待落地记录决定（来自本场正义战斗快照）。
+        // 默认 true：保证旧存档中已存在的待落地空投继续旧版行为。
+        // 关闭正义机动作战开关的记录不再补加，但不会移除单位通过其他来源已获得的机动作战。
+        public bool applyMobileCombat = true;
+
         public void ExposeData()
         {
             Scribe_References.Look(ref pawn, "pawn");
@@ -35,6 +40,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_References.Look(ref faction, "faction");
             Scribe_Values.Look(ref anchorCell, "anchorCell");
             Scribe_Values.Look(ref registeredTick, "registeredTick", 0);
+            Scribe_Values.Look(ref applyMobileCombat, "applyMobileCombat", true);
         }
     }
 
@@ -223,7 +229,12 @@ namespace MAP_MechanoidMechanitor
                 pawn.SetFaction(faction);
             }
 
-            MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff(pawn);
+            // 落地阶段是否补充机动作战由待落地记录决定：关闭正义机动作战开关的记录不再补加，
+            // 但不会移除该 Pawn 通过其他来源已经获得的机动作战。
+            if (entry.applyMobileCombat)
+            {
+                MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff(pawn);
+            }
 
             Lord lord = entry.role == JusticeBossDropRole.Guard
                 ? JusticeBossLordUtility.EnsureGuardLord(

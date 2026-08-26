@@ -17,6 +17,8 @@ namespace MAP_MechanoidMechanitor
 
         public const bool DefaultAllowBossReplacement = true;
 
+        public const bool DefaultApplyMobileCombatToSummons = true;
+
         public const int MinTurretCount = 0;
         public const int MaxTurretCount = 20;
 

@@ -133,7 +133,10 @@ namespace MAP_MechanoidMechanitor
 
         public static float ClampEmpRadius(float value)
         {
-            return Mathf.Clamp(value, MinEmpRadius, MaxEmpRadius);
+            float clamped = Mathf.Clamp(value, MinEmpRadius, MaxEmpRadius);
+            // 与 UI 5 格步进保持一致：读取、界面、战斗快照三层都得到一致值。
+            float stepped = Mathf.Round(clamped / EmpRadiusStep) * EmpRadiusStep;
+            return Mathf.Clamp(stepped, MinEmpRadius, MaxEmpRadius);
         }
 
         /// <summary>

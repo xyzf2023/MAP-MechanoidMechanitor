@@ -66,6 +66,8 @@
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>第二波及以后每波召唤的机械族数量。第一波会召唤该数值两倍的机械族。每波约 40% 的位置会从重型机械族池中抽取。</MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label>允许生成 BOSS 机械族</MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>启用后，每个正常波次会进行一次 2% 概率判定。判定成功时，随机将本波的一个机械族替换为现有候选池中的 BOSS 机械族。开发者模式的强制替换指令不受此开关限制。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Label>为召唤单位添加机动作战</MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Description>默认开启。开启后，「正义」会为其召唤的守卫和波次机械族添加机动作战。关闭后，正义 BOSS 不会主动添加该状态，但不会移除单位通过其他机制已经获得的机动作战。该参数会在每场正义 BOSS 战开始时锁定。</MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Description>
 
   <!-- 模块：机械主脑 BOSS 战难度 -->
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section>机械主脑 BOSS 战难度</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section>
@@ -74,22 +76,22 @@
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>默认开启。机械主脑额外 BOSS 技能的总开关。关闭后，主脑不会自动发动召唤机械族、EMP 冲击波和带宽干扰等额外技能（已经在进行中的整轮技能仍会自然结束）。战斗中修改只影响下一场战斗。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection>召唤机械族</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Label>启用召唤机械族</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>默认开启。开启后，主脑会定期从地图边缘空投机械族增援。关闭后主脑不会主动召唤增援，但仍会保留已经进入重试流程的空投。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>默认开启。开启后，主脑优先在自身附近集中空投机械族增援；附近没有合法落点时才会扩大搜索范围，地图边缘仅作为最终保障。关闭后，主脑不会自动发起新的召唤或自动推进失败空投重试；DEV 强制测试不受此开关限制。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Label>召唤间隔：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Label>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description>两次正常机械族召唤波次之间的等待时间。该设置不影响第一波的初始等待时间，也不影响空投失败后的重试间隔。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Label>每波机械族数量：{0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>每次正常召唤波次尝试召唤的机械族数量。若当前同时存活的召唤机械族已达上限，本波会跳过或进入空投重试而不超过上限。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>每次正常召唤波次尝试召唤的机械族数量。实际生成数量受最大同时存活数量限制，且空投途中的单位也计入上限；若已达上限，本波会跳过或进入空投重试而不超过上限。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Label>最大同时存活数量：{0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Label>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Description>主脑通过召唤维持的玩家敌对机械族同时存活上限（含正在空投途中的单位）。达到上限时不再发起新的正常召唤，但已在进行中的空投重试仍会完成。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label>召唤机械族施加机动作战</MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>默认开启。开启后，主脑召唤的机械族会获得机动作战 Hediff。关闭后，召唤出的机械族不会获得该 Hediff。该设置会纳入每场战斗开始时的难度快照。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>默认开启。开启后，主脑召唤的机械族会获得机动作战 Hediff。关闭时只是不由 BOSS 主动添加，不会移除单位通过其他来源已有的机动作战；该设置会纳入每场战斗开始时的难度快照。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Bandwidth.Subsection>带宽干扰</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Bandwidth.Subsection>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Label>启用带宽干扰</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Label>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description>默认开启。开启后，主脑会周期性对玩家监管者麾下、非持久化记录的机械族发动带宽干扰：使部分受控机械族脱离监管者并狂暴，持续一段时间后恢复。关闭后主脑不会主动发动带宽干扰。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Label>带宽干扰冷却下限：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>每次带宽干扰结束（或自动发动失败时）到下一次自动发动之间的冷却时间下限。实际冷却时间在上下限之间随机取值；若下限大于上限会自动交换二者。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>每次带宽干扰结束后到下一次自动发动之间的冷却时间下限。实际冷却时间在上下限之间随机取值；若下限大于上限会自动交换二者。若一次发动未找到合法目标，仅延迟 60 游戏刻后重试，不会进入完整随机冷却。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Label>带宽干扰冷却上限：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>每次带宽干扰结束（或自动发动失败时）到下一次自动发动之间的冷却时间上限。实际冷却时间在上下限之间随机取值；若上限小于下限会自动交换二者。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>每次带宽干扰结束后到下一次自动发动之间的冷却时间上限。实际冷却时间在上下限之间随机取值；若上限小于下限会自动交换二者。若一次发动未找到合法目标，仅延迟 60 游戏刻后重试，不会进入完整随机冷却。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Label>带宽干扰持续时间：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Label>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description>一次带宽干扰整轮的持续时间。达到该时间后，无论是否仍有有效目标或狂暴中的机械族，本次干扰都会结束并恢复所有受影响的机械族。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Label>带宽干扰最大目标数：{0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Label>
@@ -104,7 +106,7 @@
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Label>EMP 眩晕基础时长：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Label>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description>EMP 冲击波对目标造成的眩晕基础时长。实际眩晕时长会按目标的 EMP 抗性（EMPResistance）向下调整，抗性越高眩晕越短。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Label>EMP 冲击波半径：{0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>EMP 冲击波影响的最大半径。半径内的玩家非机械族pawn与耗电建筑会被选中并短暂瘫痪；主脑自身与机械巢派系单位不受影响。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>EMP 冲击波影响的最大半径。半径内不属于机械巢派系的机械族，以及符合条件的耗电建筑会被选中并短暂瘫痪；机械巢派系单位不受影响。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>
 
   <!-- 模块：效能核心 -->
   <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>每级效能核心工作速度偏移</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>

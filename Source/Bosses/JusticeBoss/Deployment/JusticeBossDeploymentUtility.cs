@@ -22,6 +22,7 @@ namespace MAP_MechanoidMechanitor
             int autoInfernoCount,
             bool enableMortarShield,
             bool enableBulletShield,
+            bool applyMobileCombat,
             out List<Thing> deployedInfrastructure,
             out List<PawnKindDef> failedGuardKinds,
             out Lord? guardLord)
@@ -129,6 +130,7 @@ namespace MAP_MechanoidMechanitor
                         anchorCell,
                         justiceEventId,
                         5,
+                        applyMobileCombat,
                         out guardLord);
                 failedGuardKinds.AddRange(guardResult.FailedKinds);
             }

@@ -149,6 +149,14 @@ namespace MAP_MechanoidMechanitor
         public bool justiceBossAllowBossReplacement =
             JusticeBossDifficultyValues.DefaultAllowBossReplacement;
 
+        /// <summary>
+        /// 默认开启。开启后，「正义」会为其召唤的守卫和波次机械族添加机动作战。
+        /// 关闭后，正义 BOSS 不会主动添加该状态，但不会移除单位通过其他机制已经获得的机动作战。
+        /// 该参数会在每场正义 BOSS 战开始时锁定到本场难度快照。
+        /// </summary>
+        public bool justiceBossApplyMobileCombatToSummons =
+            JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons;
+
         // ===== 机械主脑（CerebrexCore）额外 BOSS 技能全局设置（所有存档共享） =====
 
         /// <summary>
@@ -259,6 +267,69 @@ namespace MAP_MechanoidMechanitor
 
         public int mechanoidMechanitorInspirationChancePercent =
             DefaultMechanoidMechanitorInspirationChancePercent;
+
+        /// <summary>
+        /// 统一钳制正义 BOSS 难度设置：供 ExposeData 的 PostLoadInit 与
+        /// MAPMechanitorMod.WriteSettings 共同调用，确保读取、界面、战斗快照三层一致。
+        /// </summary>
+        public void NormalizeJusticeBossSettings()
+        {
+            justiceBossAutoMortarCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    justiceBossAutoMortarCount);
+            justiceBossAutoChargeBlasterCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    justiceBossAutoChargeBlasterCount);
+            justiceBossAutoInfernoCount =
+                JusticeBossDifficultyValues.ClampTurretCount(
+                    justiceBossAutoInfernoCount);
+            justiceBossTotalWaves =
+                JusticeBossDifficultyValues.ClampTotalWaves(
+                    justiceBossTotalWaves);
+            justiceBossWaveIntervalTicks =
+                JusticeBossDifficultyValues.ClampWaveIntervalTicks(
+                    justiceBossWaveIntervalTicks);
+            justiceBossMechsPerWave =
+                JusticeBossDifficultyValues.ClampMechsPerWave(
+                    justiceBossMechsPerWave);
+        }
+
+        /// <summary>
+        /// 统一钳制机械主脑 BOSS 难度设置：供 ExposeData 的 PostLoadInit 与
+        /// MAPMechanitorMod.WriteSettings 共同调用，确保读取、界面、战斗快照三层一致。
+        /// </summary>
+        public void NormalizeCerebrexBossSettings()
+        {
+            cerebrexBossSummonIntervalTicks =
+                CerebrexBossDifficultyValues.ClampSummonIntervalTicks(
+                    cerebrexBossSummonIntervalTicks);
+            cerebrexBossMechsPerWave =
+                CerebrexBossDifficultyValues.ClampMechsPerWave(
+                    cerebrexBossMechsPerWave);
+            cerebrexBossMaxLivingSummonedMechs =
+                CerebrexBossDifficultyValues.ClampMaxLivingSummonedMechs(
+                    cerebrexBossMaxLivingSummonedMechs);
+            (cerebrexBossBandwidthCooldownMinTicks, cerebrexBossBandwidthCooldownMaxTicks) =
+                CerebrexBossDifficultyValues.ClampBandwidthCooldownRange(
+                    cerebrexBossBandwidthCooldownMinTicks,
+                    cerebrexBossBandwidthCooldownMaxTicks);
+            cerebrexBossBandwidthDurationTicks =
+                CerebrexBossDifficultyValues.ClampBandwidthDurationTicks(
+                    cerebrexBossBandwidthDurationTicks);
+            cerebrexBossBandwidthMaxTargets =
+                CerebrexBossDifficultyValues.ClampBandwidthMaxTargets(
+                    cerebrexBossBandwidthMaxTargets);
+            (cerebrexBossEmpCooldownMinTicks, cerebrexBossEmpCooldownMaxTicks) =
+                CerebrexBossDifficultyValues.ClampEmpCooldownRange(
+                    cerebrexBossEmpCooldownMinTicks,
+                    cerebrexBossEmpCooldownMaxTicks);
+            cerebrexBossEmpBaseDurationTicks =
+                CerebrexBossDifficultyValues.ClampEmpBaseDurationTicks(
+                    cerebrexBossEmpBaseDurationTicks);
+            cerebrexBossEmpRadius =
+                CerebrexBossDifficultyValues.ClampEmpRadius(
+                    cerebrexBossEmpRadius);
+        }
 
         public override void ExposeData()
         {
@@ -392,6 +463,11 @@ namespace MAP_MechanoidMechanitor
                 JusticeBossDifficultyValues.DefaultAllowBossReplacement);
 
             Scribe_Values.Look(
+                ref justiceBossApplyMobileCombatToSummons,
+                "justiceBossApplyMobileCombatToSummons",
+                JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons);
+
+            Scribe_Values.Look(
                 ref cerebrexBossEnableExtraSkills,
                 "cerebrexBossEnableExtraSkills",
                 CerebrexBossDifficultyValues.DefaultEnableExtraSkills);
@@ -499,59 +575,8 @@ namespace MAP_MechanoidMechanitor
                     ProductivityCoreUtility.MinWorkSpeedOffsetPercentPerLevel,
                     ProductivityCoreUtility.MaxWorkSpeedOffsetPercentPerLevel);
 
-                justiceBossAutoMortarCount =
-                    JusticeBossDifficultyValues.ClampTurretCount(
-                        justiceBossAutoMortarCount);
-
-                justiceBossAutoChargeBlasterCount =
-                    JusticeBossDifficultyValues.ClampTurretCount(
-                        justiceBossAutoChargeBlasterCount);
-
-                justiceBossAutoInfernoCount =
-                    JusticeBossDifficultyValues.ClampTurretCount(
-                        justiceBossAutoInfernoCount);
-
-                justiceBossTotalWaves =
-                    JusticeBossDifficultyValues.ClampTotalWaves(
-                        justiceBossTotalWaves);
-
-                justiceBossWaveIntervalTicks =
-                    JusticeBossDifficultyValues.ClampWaveIntervalTicks(
-                        justiceBossWaveIntervalTicks);
-
-                justiceBossMechsPerWave =
-                    JusticeBossDifficultyValues.ClampMechsPerWave(
-                        justiceBossMechsPerWave);
-
-                cerebrexBossSummonIntervalTicks =
-                    CerebrexBossDifficultyValues.ClampSummonIntervalTicks(
-                        cerebrexBossSummonIntervalTicks);
-                cerebrexBossMechsPerWave =
-                    CerebrexBossDifficultyValues.ClampMechsPerWave(
-                        cerebrexBossMechsPerWave);
-                cerebrexBossMaxLivingSummonedMechs =
-                    CerebrexBossDifficultyValues.ClampMaxLivingSummonedMechs(
-                        cerebrexBossMaxLivingSummonedMechs);
-                (cerebrexBossBandwidthCooldownMinTicks, cerebrexBossBandwidthCooldownMaxTicks) =
-                    CerebrexBossDifficultyValues.ClampBandwidthCooldownRange(
-                        cerebrexBossBandwidthCooldownMinTicks,
-                        cerebrexBossBandwidthCooldownMaxTicks);
-                cerebrexBossBandwidthDurationTicks =
-                    CerebrexBossDifficultyValues.ClampBandwidthDurationTicks(
-                        cerebrexBossBandwidthDurationTicks);
-                cerebrexBossBandwidthMaxTargets =
-                    CerebrexBossDifficultyValues.ClampBandwidthMaxTargets(
-                        cerebrexBossBandwidthMaxTargets);
-                (cerebrexBossEmpCooldownMinTicks, cerebrexBossEmpCooldownMaxTicks) =
-                    CerebrexBossDifficultyValues.ClampEmpCooldownRange(
-                        cerebrexBossEmpCooldownMinTicks,
-                        cerebrexBossEmpCooldownMaxTicks);
-                cerebrexBossEmpBaseDurationTicks =
-                    CerebrexBossDifficultyValues.ClampEmpBaseDurationTicks(
-                        cerebrexBossEmpBaseDurationTicks);
-                cerebrexBossEmpRadius =
-                    CerebrexBossDifficultyValues.ClampEmpRadius(
-                        cerebrexBossEmpRadius);
+                NormalizeJusticeBossSettings();
+                NormalizeCerebrexBossSettings();
 
                 factionOutpostRaidChancePercent =
                     Mathf.Clamp(factionOutpostRaidChancePercent, 0, 100);

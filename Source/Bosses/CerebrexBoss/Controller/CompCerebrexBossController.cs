@@ -94,7 +94,12 @@ namespace MAP_MechanoidMechanitor
         private List<Pawn> bandwidthTargetsUsedThisBattle = new List<Pawn>();
         private int bandwidthInterferenceEndTick;
 
-        // 旧存档单目标状态（仅用于读档迁移，迁移后清空）
+        // 本轮带宽干扰曾经影响过的全部原监管者。整轮结束后统一清空；
+        // 单个目标失效时不移除，不依赖当前目标仍存在来决定是否需要通知监管者。
+        private List<Pawn> bandwidthAffectedOverseers = new List<Pawn>();
+
+        // 旧存档单目标状态（仅用于读档迁移）。这些键仍通过 Scribe 写出（迁移后为空），
+        // 读档时若旧存档携带有效值则迁移为多目标记录并清空。
         private Pawn? legacyBandwidthTarget;
         private Pawn? legacyBandwidthOverseer;
         private List<Pawn>? legacyBandwidthBerserkPawns;
@@ -316,6 +321,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref bandwidthInterferenceEndTick, "bandwidthInterferenceEndTick", 0);
             Scribe_Collections.Look(ref legacyBandwidthBerserkPawns, "bandwidthBerserkPawns", LookMode.Reference);
             Scribe_Collections.Look(ref bandwidthTargetsUsedThisBattle, "bandwidthTargetsUsedThisBattle", LookMode.Reference);
+            Scribe_Collections.Look(ref bandwidthAffectedOverseers, "bandwidthAffectedOverseers", LookMode.Reference);
 
             // 新多目标带宽状态
             Scribe_Collections.Look(ref bandwidthTargetRecords, "bandwidthTargetRecords", LookMode.Deep);
@@ -357,6 +363,18 @@ namespace MAP_MechanoidMechanitor
             disabledPowerBuildings ??= new Dictionary<Thing, int>();
             bandwidthVisuals.ResetTransientState();
 
+            // 旧存档未捕获战斗快照时锁定为默认值；已捕获的新存档只钳制，不重新读取全局设置。
+            if (!cerebrexBossSettingsCaptured)
+            {
+                ApplyDefaultDifficultySnapshot();
+            }
+            else
+            {
+                ClampDifficultySnapshot();
+            }
+
+            bandwidthAffectedOverseers ??= new List<Pawn>();
+
             // 旧存档单目标状态迁移为多目标记录。
             if (bandwidthInterferenceActive
                 && bandwidthTargetRecords.Count == 0
@@ -387,11 +405,33 @@ namespace MAP_MechanoidMechanitor
             legacyBandwidthOverseer = null;
             legacyBandwidthBerserkPawns = null;
 
+            // 从迁移后的记录补全受影响监管者列表（旧单目标原监管者一并纳入），
+            // 供整轮结束前统一通知，避免目标记录提前清理后丢失监管者。
+            foreach (CerebrexBandwidthTargetRecord? rec in bandwidthTargetRecords)
+            {
+                if (rec?.originalOverseer != null
+                    && !bandwidthAffectedOverseers.Contains(rec.originalOverseer))
+                {
+                    bandwidthAffectedOverseers.Add(rec.originalOverseer);
+                }
+            }
+
+            foreach (CerebrexBandwidthBerserkRecord? rec in bandwidthBerserkRecords)
+            {
+                if (rec?.originalOverseer != null
+                    && !bandwidthAffectedOverseers.Contains(rec.originalOverseer))
+                {
+                    bandwidthAffectedOverseers.Add(rec.originalOverseer);
+                }
+            }
+
             // 注意：bandwidthBerserkRecords / bandwidthTargetsUsedThisBattle 不得因 Pawn
             // 死亡、倒地或离开地图而在此处删除（死亡 Pawn 可能复活，目标死亡后
             // 仍属于“本场战斗已选择过”记录）。仅移除明确为 null 或永久 Discarded 的引用。
             summonedMechs.RemoveAll(p => p == null || p.Dead || p.Destroyed || p.Discarded);
-            bandwidthBerserkRecords.RemoveAll(r => r.pawn == null || r.pawn.Discarded);
+            bandwidthTargetRecords.RemoveAll(r => r == null);
+            bandwidthBerserkRecords.RemoveAll(r => r == null || r.pawn == null || r.pawn.Discarded);
+            bandwidthAffectedOverseers.RemoveAll(p => p == null || p.Discarded);
             bandwidthTargetsUsedThisBattle.RemoveAll(p => p == null || p.Discarded);
             pendingEmpHits.RemoveAll(h => h == null || h.target == null || h.target.Destroyed || h.target.Discarded);
 
@@ -460,52 +500,71 @@ namespace MAP_MechanoidMechanitor
                     || stopped
                     || !parent.Spawned
                     || parent.Destroyed
+                    || parent.Map == null
                     || bandwidthTargetRecords.Count == 0;
 
                 if (baseBroken)
                 {
+                    // 基础条件不满足：直接结束整轮，不启动新冷却。
                     EndBandwidthInterference(startCooldown: false, reason: "loadfix");
                 }
                 else
                 {
-                    bool anyTargetBroken = false;
-                    foreach (CerebrexBandwidthTargetRecord rec in bandwidthTargetRecords)
-                    {
-                        Pawn? t = rec.target;
-                        if (t == null || t.Discarded || !t.Spawned || t.Map != parent.Map)
-                        {
-                            anyTargetBroken = true;
-                            break;
-                        }
+                    // 与正常 Tick 共用的逐目标清理：保留其他有效目标，仅清理失效目标并通知其监管者；
+                    // 不得因为单个目标失效而结束全部目标。
+                    CleanupInvalidTargetRecords();
 
-                        if (rec.originalOverseer == null || rec.originalOverseer.mechanitor == null)
-                        {
-                            anyTargetBroken = true;
-                            break;
-                        }
+                    // 清理不可恢复的 null / Discarded 狂暴记录（不通知）。
+                    bandwidthBerserkRecords.RemoveAll(r => r == null || r.pawn == null || r.pawn.Discarded);
 
-                        HediffDef? def = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
-                        if (def != null && t.health.hediffSet.GetFirstHediffOfDef(def) == null)
-                        {
-                            anyTargetBroken = true;
-                            break;
-                        }
-                    }
-
-                    if (anyTargetBroken)
+                    if (ShouldEndBandwidthInterferenceForPawnState())
                     {
-                        EndBandwidthInterference(startCooldown: false, reason: "loadfix");
-                    }
-                    else if (ShouldEndBandwidthInterferenceForPawnState())
-                    {
+                        // 全部目标与本轮狂暴单位均无行动能力：正常结束并进入冷却。
                         EndBandwidthInterference(startCooldown: true, reason: "loadfix");
+                    }
+                    else
+                    {
+                        // 仍有有效状态：保持整轮运行，瞬态视觉将在 Tick 中重建。
                     }
                 }
             }
 
             if (!bandwidthInterferenceActive)
             {
+                // 残留清理：移除可能的干扰 Hediff 与隐藏狂暴标记，清空全部记录，
+                // 不允许残留干扰永久存在。
+                HediffDef? leftoverDef = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
+                HediffDef? leftoverMarker = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthBerserkMarker");
+                foreach (CerebrexBandwidthTargetRecord? rec in bandwidthTargetRecords)
+                {
+                    Pawn? p = rec?.target;
+                    if (p != null && !p.Destroyed && p.health != null && leftoverDef != null)
+                    {
+                        Hediff? h = p.health.hediffSet.GetFirstHediffOfDef(leftoverDef);
+                        if (h != null)
+                        {
+                            p.health.RemoveHediff(h);
+                        }
+                    }
+                }
+
+                foreach (CerebrexBandwidthBerserkRecord? rec in bandwidthBerserkRecords)
+                {
+                    Pawn? p = rec?.pawn;
+                    if (p != null && !p.Destroyed && p.health != null && leftoverMarker != null)
+                    {
+                        Hediff? m = p.health.hediffSet.GetFirstHediffOfDef(leftoverMarker);
+                        if (m != null)
+                        {
+                            p.health.RemoveHediff(m);
+                        }
+                    }
+                }
+
+                bandwidthTargetRecords.Clear();
                 bandwidthBerserkRecords.Clear();
+                bandwidthAffectedOverseers.Clear();
+                bandwidthTargetsUsedThisBattle.RemoveAll(p => p == null || p.Discarded);
             }
 
             // 读档后发现没有待重试单位但重试计数残留，重置以免新一波继承旧计数。
@@ -1164,19 +1223,33 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 1. 收集涉及的不同监管者；2. 在添加任何干扰 Hediff 前复制每个监管者受控前快照。
-            HashSet<Pawn> overseers = new HashSet<Pawn>();
+            // 1~3. 在添加任何干扰 Hediff 之前，记录每个目标与其原监管者的对应关系；
+            // 只保留具有有效原监管者（且具备 mechanitor tracker）的目标。
+            Dictionary<Pawn, Pawn> originalOverseerByTarget = new Dictionary<Pawn, Pawn>();
+            HashSet<Pawn> validOverseers = new HashSet<Pawn>();
             foreach (Pawn t in targets)
             {
                 Pawn? ov = t.GetOverseer();
-                if (ov != null)
+                if (ov != null && ov.mechanitor != null)
                 {
-                    overseers.Add(ov);
+                    originalOverseerByTarget[t] = ov;
+                    validOverseers.Add(ov);
                 }
             }
 
+            if (originalOverseerByTarget.Count == 0)
+            {
+                if (force)
+                {
+                    Messages.Message("目标缺少有效的监管者。", MessageTypeDefOf.RejectInput);
+                }
+
+                return false;
+            }
+
+            // 2. 按不同监管者保存受控机械族变化前快照。
             Dictionary<Pawn, List<Pawn>> beforeControlled = new Dictionary<Pawn, List<Pawn>>();
-            foreach (Pawn ov in overseers)
+            foreach (Pawn ov in validOverseers)
             {
                 if (ov.mechanitor != null)
                 {
@@ -1184,9 +1257,10 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            // 3. 给全部选中目标添加干扰 Hediff（排除已存在的目标）。
+            // 3~5. 给目标添加干扰 Hediff；只有添加成功的才算本轮生效目标，
+            // 并保存原监管者、加入本轮已使用目标与受影响监管者列表。
             List<Pawn> applied = new List<Pawn>();
-            foreach (Pawn t in targets)
+            foreach (Pawn t in originalOverseerByTarget.Keys)
             {
                 if (t.health.hediffSet.GetFirstHediffOfDef(interferenceDef) != null)
                 {
@@ -1196,9 +1270,14 @@ namespace MAP_MechanoidMechanitor
                 Hediff hediff = HediffMaker.MakeHediff(interferenceDef, t);
                 t.health.AddHediff(hediff);
 
-                Pawn? ov = t.GetOverseer();
+                Pawn ov = originalOverseerByTarget[t];
                 bandwidthTargetsUsedThisBattle.Add(t);
                 bandwidthTargetRecords.Add(new CerebrexBandwidthTargetRecord(t, ov));
+                if (!bandwidthAffectedOverseers.Contains(ov))
+                {
+                    bandwidthAffectedOverseers.Add(ov);
+                }
+
                 applied.Add(t);
             }
 
@@ -1212,8 +1291,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 4. 每个不同监管者只调用一次 Notify_BandwidthChanged。
-            foreach (Pawn ov in overseers)
+            // 4. 每个不同原监管者只调用一次 Notify_BandwidthChanged。
+            foreach (Pawn ov in validOverseers)
             {
                 ov.mechanitor?.Notify_BandwidthChanged();
             }
@@ -1221,7 +1300,7 @@ namespace MAP_MechanoidMechanitor
             bandwidthVisuals.Start(parent, applied);
 
             // 5/6/7/8. 读取变化后受控列表，对变化前受控、变化后不再受控的玩家机械族执行狂暴。
-            foreach (Pawn ov in overseers)
+            foreach (Pawn ov in validOverseers)
             {
                 if (ov.mechanitor == null)
                 {
@@ -1411,9 +1490,10 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool hasActiveBerserk = false;
-            foreach (CerebrexBandwidthBerserkRecord rec in bandwidthBerserkRecords)
+            foreach (CerebrexBandwidthBerserkRecord? rec in bandwidthBerserkRecords)
             {
-                if (rec.pawn != null && !IsBandwidthBerserkPawnIncapacitated(rec.pawn))
+                Pawn? bp = rec?.pawn;
+                if (bp != null && !IsBandwidthBerserkPawnIncapacitated(bp))
                 {
                     hasActiveBerserk = true;
                     break;
@@ -1423,8 +1503,13 @@ namespace MAP_MechanoidMechanitor
             return !hasActiveBerserk;
         }
 
-        private bool IsTargetRecordActionable(CerebrexBandwidthTargetRecord rec)
+        private bool IsTargetRecordActionable(CerebrexBandwidthTargetRecord? rec)
         {
+            if (rec == null)
+            {
+                return false;
+            }
+
             Pawn? t = rec.target;
             if (t == null || t.Dead || t.Destroyed || t.Discarded)
             {
@@ -1448,33 +1533,63 @@ namespace MAP_MechanoidMechanitor
         private void CleanupInvalidTargetRecords()
         {
             HediffDef? interferenceDef = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
+            HashSet<Pawn> affectedOverseers = new HashSet<Pawn>();
+
             for (int i = bandwidthTargetRecords.Count - 1; i >= 0; i--)
             {
-                CerebrexBandwidthTargetRecord rec = bandwidthTargetRecords[i];
+                CerebrexBandwidthTargetRecord? rec = bandwidthTargetRecords[i];
+                if (rec == null)
+                {
+                    // 损坏的空记录直接移除，禁止 NullReference。
+                    bandwidthTargetRecords.RemoveAt(i);
+                    continue;
+                }
+
                 Pawn? t = rec.target;
-                bool invalid = t == null
+                Pawn? ov = rec.originalOverseer;
+                bool invalid =
+                    t == null
                     || t.Dead
                     || t.Destroyed
                     || t.Discarded
                     || !t.Spawned
-                    || t.Map != parent.Map
+                    || (parent.Map != null && t.Map != parent.Map)
                     || t.Downed
-                    || (interferenceDef != null && t.health.hediffSet.GetFirstHediffOfDef(interferenceDef) == null);
+                    || (interferenceDef != null && t.health.hediffSet.GetFirstHediffOfDef(interferenceDef) == null)
+                    || ov == null
+                    || ov.Discarded
+                    || ov.mechanitor == null;
 
-                if (invalid)
+                if (!invalid)
                 {
-                    // 仍尝试移除目标身上可能残留的干扰 Hediff。
-                    if (t != null && interferenceDef != null)
-                    {
-                        Hediff? h = t.health.hediffSet.GetFirstHediffOfDef(interferenceDef);
-                        if (h != null)
-                        {
-                            t.health.RemoveHediff(h);
-                        }
-                    }
-
-                    bandwidthTargetRecords.RemoveAt(i);
+                    continue;
                 }
+
+                // 仅在 Pawn 仍可安全访问健康状态时移除残留干扰 Hediff。
+                if (t != null && !t.Destroyed && t.health != null && interferenceDef != null)
+                {
+                    Hediff? h = t.health.hediffSet.GetFirstHediffOfDef(interferenceDef);
+                    if (h != null)
+                    {
+                        t.health.RemoveHediff(h);
+                    }
+                }
+
+                if (ov != null && ov.mechanitor != null)
+                {
+                    affectedOverseers.Add(ov);
+                }
+
+                // 删除该目标记录；不结束其他仍有效目标的干扰，
+                // 不从 bandwidthTargetsUsedThisBattle 删除（确保复活后不会再次被选），
+                // 也不从 bandwidthAffectedOverseers 删除监管者。
+                bandwidthTargetRecords.RemoveAt(i);
+            }
+
+            // 一次性对涉及的不同有效监管者各通知一次。
+            foreach (Pawn ov in affectedOverseers)
+            {
+                ov.mechanitor?.Notify_BandwidthChanged();
             }
         }
 
@@ -1525,7 +1640,7 @@ namespace MAP_MechanoidMechanitor
                 bandwidthVisuals.Tick(
                     parent,
                     bandwidthTargetRecords
-                        .Select(r => r.target)
+                        .Select(r => r?.target)
                         .Where(t => t != null));
                 CleanupDownedBerserkMarkers();
             }
@@ -1533,9 +1648,9 @@ namespace MAP_MechanoidMechanitor
 
         private bool HasBerserkPawnReturnedToOverseer()
         {
-            foreach (CerebrexBandwidthBerserkRecord rec in bandwidthBerserkRecords)
+            foreach (CerebrexBandwidthBerserkRecord? rec in bandwidthBerserkRecords)
             {
-                if (rec.pawn == null || rec.originalOverseer == null)
+                if (rec == null || rec.pawn == null || rec.originalOverseer == null)
                 {
                     continue;
                 }
@@ -1586,14 +1701,33 @@ namespace MAP_MechanoidMechanitor
         private void EndBandwidthInterference(bool startCooldown, string reason)
         {
             List<Pawn?> allTargets = bandwidthTargetRecords
-                .Select(r => r.target)
+                .Select(r => r?.target)
                 .Where(p => p != null)
                 .ToList();
 
             HashSet<Pawn> distinctOverseers = new HashSet<Pawn>();
-            foreach (CerebrexBandwidthBerserkRecord rec in bandwidthBerserkRecords)
+            if (bandwidthAffectedOverseers != null)
             {
-                if (rec.originalOverseer != null)
+                foreach (Pawn ov in bandwidthAffectedOverseers)
+                {
+                    if (ov != null)
+                    {
+                        distinctOverseers.Add(ov);
+                    }
+                }
+            }
+
+            foreach (CerebrexBandwidthTargetRecord? rec in bandwidthTargetRecords)
+            {
+                if (rec?.originalOverseer != null)
+                {
+                    distinctOverseers.Add(rec.originalOverseer);
+                }
+            }
+
+            foreach (CerebrexBandwidthBerserkRecord? rec in bandwidthBerserkRecords)
+            {
+                if (rec?.originalOverseer != null)
                 {
                     distinctOverseers.Add(rec.originalOverseer);
                 }
@@ -1602,7 +1736,14 @@ namespace MAP_MechanoidMechanitor
             // 1. 只恢复带隐藏标记的狂暴单位。
             for (int i = bandwidthBerserkRecords.Count - 1; i >= 0; i--)
             {
-                Pawn? p = bandwidthBerserkRecords[i].pawn;
+                CerebrexBandwidthBerserkRecord? rec = bandwidthBerserkRecords[i];
+                if (rec == null)
+                {
+                    bandwidthBerserkRecords.RemoveAt(i);
+                    continue;
+                }
+
+                Pawn? p = rec.pawn;
                 if (p == null)
                 {
                     continue;
@@ -1651,6 +1792,7 @@ namespace MAP_MechanoidMechanitor
 
             bandwidthBerserkRecords.Clear();
             bandwidthTargetRecords.Clear();
+            bandwidthAffectedOverseers?.Clear();
             bandwidthInterferenceEndTick = 0;
             bandwidthInterferenceActive = false;
 

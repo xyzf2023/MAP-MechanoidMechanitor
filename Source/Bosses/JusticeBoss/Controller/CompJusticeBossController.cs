@@ -110,6 +110,9 @@ namespace MAP_MechanoidMechanitor
         private bool difficultyAllowBossReplacement =
             JusticeBossDifficultyValues.DefaultAllowBossReplacement;
 
+        private bool difficultyApplyMobileCombatToSummons =
+            JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons;
+
         private Pawn Pawn => (Pawn)parent;
 
         public int WaveCount => waveCount;
@@ -245,6 +248,9 @@ namespace MAP_MechanoidMechanitor
             difficultyAllowBossReplacement =
                 settings.justiceBossAllowBossReplacement;
 
+            difficultyApplyMobileCombatToSummons =
+                settings.justiceBossApplyMobileCombatToSummons;
+
             bossDifficultyCaptured = true;
         }
 
@@ -276,6 +282,9 @@ namespace MAP_MechanoidMechanitor
 
             difficultyAllowBossReplacement =
                 JusticeBossDifficultyValues.DefaultAllowBossReplacement;
+
+            difficultyApplyMobileCombatToSummons =
+                JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons;
 
             bossDifficultyCaptured = true;
         }
@@ -434,6 +443,7 @@ namespace MAP_MechanoidMechanitor
                 difficultyAutoInfernoCount,
                 difficultyEnableMortarShield,
                 difficultyEnableBulletShield,
+                difficultyApplyMobileCombatToSummons,
                 out deployedInfrastructure,
                 out pendingGuardKinds,
                 out guardLord);
@@ -518,6 +528,7 @@ namespace MAP_MechanoidMechanitor
                     anchorCell,
                     justiceEventId,
                     pendingGuardKinds,
+                    difficultyApplyMobileCombatToSummons,
                     out Lord? retryGuardLord);
             if (retryGuardLord != null)
             {
@@ -612,6 +623,7 @@ namespace MAP_MechanoidMechanitor
                     anchorCell,
                     justiceEventId,
                     pendingWaveKinds,
+                    difficultyApplyMobileCombatToSummons,
                     out Lord? assaultLord);
             if (assaultLord != null)
             {
@@ -735,7 +747,8 @@ namespace MAP_MechanoidMechanitor
                 + $"bulletShield={difficultyEnableBulletShield} "
                 + $"interval={difficultyWaveIntervalTicks} "
                 + $"mechsPerWave={difficultyMechsPerWave} "
-                + $"allowBoss={difficultyAllowBossReplacement}]";
+                + $"allowBoss={difficultyAllowBossReplacement} "
+                + $"mobileCombat={difficultyApplyMobileCombatToSummons}]";
         }
 
         public override void PostExposeData()
@@ -829,6 +842,11 @@ namespace MAP_MechanoidMechanitor
                 ref difficultyAllowBossReplacement,
                 "justiceBossDifficultyAllowBossReplacement",
                 JusticeBossDifficultyValues.DefaultAllowBossReplacement);
+
+            Scribe_Values.Look(
+                ref difficultyApplyMobileCombatToSummons,
+                "justiceBossDifficultyApplyMobileCombatToSummons",
+                JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
