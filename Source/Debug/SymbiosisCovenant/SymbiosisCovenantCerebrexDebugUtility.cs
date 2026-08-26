@@ -45,8 +45,8 @@ namespace MAP_MechanoidMechanitor
         private const float ThreatMid = 6000f;
         private const float ThreatHigh = 10000f;
 
-        private const string NoSelectedPawnMessage =
-            "请先在当前地图选中至少一个需要进入主巢测试的玩家 Pawn。";
+        private const string NoTransferCandidateMessage =
+            "当前地图没有可进入主巢测试的自由玩家殖民者或玩家方机械族。";
 
         private const string ExistingTargetMessage =
             "当前已经存在机械主巢任务或世界目标，请使用“定位现有主脑测试目标”，"
@@ -94,8 +94,14 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 先收集选中 Pawn（在任何状态修改之前失败，避免污染存档）。
-            if (!TryCollectSelectedTransferPawns(out List<Pawn> pawns, out message))
+            // 自动收集当前地图的待传送 Pawn（自由玩家殖民者 + 玩家方机械族），
+            // 完全不依赖 Find.Selector / 手动选中状态；在任何状态修改之前失败，避免污染存档。
+            if (!TryCollectCurrentMapTransferPawns(
+                    sourceMap,
+                    out List<Pawn> transferPawns,
+                    out List<Pawn> colonistPawns,
+                    out int colonyMechCount,
+                    out message))
             {
                 return false;
             }
@@ -139,8 +145,21 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 将选中 Pawn 安全转为临时玩家商队。
-            if (!TryCreateTransferCaravan(sourceMap, pawns, out Caravan? caravan, out message))
+            // 为本次自动收集到的自由玩家殖民者永久添加真空 / 耐寒测试基因：
+            // Biotech 前置、原版 GeneDef 存在性、GeneTracker 完整预检都在方法内部完成；
+            // 必须发生在创建临时 Caravan 之前、进入 LongEvent 之前，且绝不处理玩家机械族。
+            if (!TryPrepareColonistsForCerebrexVacuum(
+                    sourceMap,
+                    colonistPawns,
+                    out int breathlessAddedCount,
+                    out int coldToleranceAddedCount,
+                    out message))
+            {
+                return false;
+            }
+
+            // 将收集到的 Pawn 安全转为临时玩家商队。
+            if (!TryCreateTransferCaravan(sourceMap, transferPawns, out Caravan? caravan, out message))
             {
                 return false;
             }
@@ -210,11 +229,13 @@ namespace MAP_MechanoidMechanitor
                                 site,
                                 supportPart,
                                 state,
-                                pawns,
+                                transferPawns,
                                 preparedMembers,
                                 points,
                                 enterSucceeded,
-                                enterMessage));
+                                enterMessage,
+                                colonistPawns,
+                                colonyMechCount));
                     }
                 },
                 MapGenKey,
@@ -225,13 +246,8 @@ namespace MAP_MechanoidMechanitor
             // 前置准备已成功且地图生成长事件已排队：立即返回 true，
             // 不在本同步调用内读取 enterSucceeded 决定成败。
             message =
-                "已开始生成并进入机械主巢地图（威胁点数 "
-                + points.ToString("F0")
-                + "，团结度 "
-                + state.Unity.ToString("F0")
-                + "，L"
-                + state.CovenantLevel
-                + "）。\n"
+                "已收集当前地图的自由殖民者 " + colonistPawns.Count + " 名与玩家机械族 " + colonyMechCount + " 名。\n"
+                + "已为殖民者永久添加测试基因：无需呼吸 " + breathlessAddedCount + " 名、超耐寒 " + coldToleranceAddedCount + " 名（已有者未重复添加；该基因作为 DEV 测试准备已永久写入当前存档）。\n"
                 + "主巢任务、支援 QuestPart 与临时玩家商队已创建，地图正在生成中；"
                 + "请勿重复点击“一键准备并进入”（重复点击会被已有主巢任务 / 世界目标拦截）。\n"
                 + "进入完成与最终验证结果将通过游戏消息反馈；"
@@ -254,7 +270,9 @@ namespace MAP_MechanoidMechanitor
             List<Faction> preparedMembers,
             float points,
             bool enterSucceeded,
-            string enterMessage)
+            string enterMessage,
+            List<Pawn> colonistPawns,
+            int colonyMechCount)
         {
             if (!enterSucceeded)
             {
@@ -334,6 +352,11 @@ namespace MAP_MechanoidMechanitor
                 + "已进入玩家 Pawn："
                 + pawns.Count(p => p != null && p.Spawned && p.Map == site.Map)
                 + " 名。\n"
+                + "本次传送计划：自由殖民者 "
+                + colonistPawns.Count
+                + " 名（已永久获得 DEV 测试基因）、玩家机械族 "
+                + colonyMechCount
+                + " 名（机械族未获得任何基因）。\n"
                 + "盟约来信预计将在 offerDelayTicks 后按正式逻辑出现，"
                 + "请继续人工测试（接受 / 拒绝 / 超时 / 分波支援 / 主脑技能 / "
                 + "稳定器 / 主脑防御解除 / 清空威胁 / 撤离）。",
@@ -697,25 +720,38 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        // ===== 选中 Pawn 收集 =====
+        // ===== 当前地图自动收集（不依赖 Find.Selector） =====
 
-        private static bool TryCollectSelectedTransferPawns(
-            out List<Pawn> pawns,
+        /// <summary>
+        /// 自动收集“当前源地图”中应被传送进入主巢测试的候选 Pawn，完全不读取
+        /// Find.Selector / 手动选中状态。候选仅来自两个原版列表：
+        ///   1) sourceMap.mapPawns.FreeColonistsSpawned（自由玩家殖民者）
+        ///   2) sourceMap.mapPawns.SpawnedColonyMechs（玩家方殖民地机械族）
+        /// 两者分别复制到自己的集合，再用 HashSet&lt;Pawn&gt; 去重，生成稳定的 List。
+        /// 每个候选再次通过安全条件过滤：
+        ///   pawn != null / Faction == Faction.OfPlayer / Spawned / Map == sourceMap
+        ///   / !Dead / !Destroyed / !Discarded / ParentHolder == null
+        /// 返回：
+        ///   transferPawns   —— 所有最终待传送 Pawn（去重后）
+        ///   colonistPawns   —— 其中属于自由玩家殖民者、需要添加基因的 Pawn
+        ///   colonyMechCount —— 玩家机械族数量（仅用于提示，不添加基因）
+        ///   message         —— 失败原因
+        /// </summary>
+        private static bool TryCollectCurrentMapTransferPawns(
+            Map sourceMap,
+            out List<Pawn> transferPawns,
+            out List<Pawn> colonistPawns,
+            out int colonyMechCount,
             out string message)
         {
-            pawns = new List<Pawn>();
+            transferPawns = new List<Pawn>();
+            colonistPawns = new List<Pawn>();
+            colonyMechCount = 0;
             message = string.Empty;
 
-            Map currentMap = Find.CurrentMap;
-            if (currentMap == null)
+            if (sourceMap == null)
             {
-                message = "当前没有地图，无法读取选中的 Pawn。";
-                return false;
-            }
-
-            if (Find.Selector == null || Find.Selector.SelectedPawns == null)
-            {
-                message = "无法读取选中 Pawn。";
+                message = "源地图为空，无法收集待传送 Pawn。";
                 return false;
             }
 
@@ -726,55 +762,204 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            HashSet<Pawn> seen = new HashSet<Pawn>();
-            foreach (Pawn pawn in Find.Selector.SelectedPawns)
+            // 去重集合，保证同一 Pawn 即使理论上出现在多个来源也只传送一次。
+            HashSet<Pawn> dedupe = new HashSet<Pawn>();
+
+            // 1) 自由玩家殖民者：复制到自己的集合，不直接修改原版返回的临时列表。
+            foreach (Pawn pawn in sourceMap.mapPawns.FreeColonistsSpawned)
             {
-                if (pawn == null)
+                if (!IsValidTransferCandidate(pawn, sourceMap, player))
                 {
                     continue;
                 }
 
-                // 只接受玩家派系、未死亡/销毁/丢弃、当前地图 Spawn 的 Pawn。
-                if (pawn.Faction != player)
+                if (dedupe.Add(pawn))
                 {
-                    continue;
+                    transferPawns.Add(pawn);
+                    colonistPawns.Add(pawn);
                 }
-
-                if (pawn.Dead || pawn.Destroyed || pawn.Discarded)
-                {
-                    continue;
-                }
-
-                if (!pawn.Spawned)
-                {
-                    continue;
-                }
-
-                if (pawn.Map != currentMap)
-                {
-                    continue;
-                }
-
-                // 排除运输容器 / 休眠舱 / 其他 ThingOwner 中的 Pawn，
-                // 以及被另一个 Pawn 搬运的对象。
-                if (pawn.ParentHolder != null)
-                {
-                    continue;
-                }
-
-                if (seen.Contains(pawn))
-                {
-                    continue;
-                }
-
-                seen.Add(pawn);
-                pawns.Add(pawn);
             }
 
-            if (pawns.Count == 0)
+            // 2) 玩家方殖民地机械族：优先复用原版“玩家殖民地机械族”语义，
+            //    不使用 RaceProps.IsMechanoid 自扫描整张地图。
+            foreach (Pawn pawn in sourceMap.mapPawns.SpawnedColonyMechs)
             {
-                message = NoSelectedPawnMessage;
+                if (!IsValidTransferCandidate(pawn, sourceMap, player))
+                {
+                    continue;
+                }
+
+                if (dedupe.Add(pawn))
+                {
+                    transferPawns.Add(pawn);
+                    colonyMechCount++;
+                }
+            }
+
+            if (transferPawns.Count == 0)
+            {
+                message = NoTransferCandidateMessage;
                 return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 候选 Pawn 安全过滤：非空、玩家派系、已 Spawn、位于源地图、未死亡 /
+        /// 未销毁 / 未 Discard、且不在任何 ThingOwner 容器（运输舱 / 休眠舱 / 库存）中。
+        /// </summary>
+        private static bool IsValidTransferCandidate(Pawn pawn, Map sourceMap, Faction player)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (pawn.Faction != player)
+            {
+                return false;
+            }
+
+            if (!pawn.Spawned)
+            {
+                return false;
+            }
+
+            if (pawn.Map != sourceMap)
+            {
+                return false;
+            }
+
+            if (pawn.Dead || pawn.Destroyed || pawn.Discarded)
+            {
+                return false;
+            }
+
+            if (pawn.ParentHolder != null)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        // ===== 殖民者 DEV 测试基因准备（永久写入存档） =====
+
+        /// <summary>
+        /// 为本次自动收集到的“自由玩家殖民者”永久添加原版 Biotech 测试基因
+        /// （无需呼吸 VacuumResistance_Total、超耐寒 MinTemp_LargeDecrease）。
+        /// 这两个基因是 DEV 测试额外赋予的环境适应，使用 xenogene 语义，
+        /// 不改变 Pawn 原始种族定义或创建自定义 Xenotype；不处理玩家机械族
+        /// （机械族已不受真空伤害，也不依赖 Pawn_GeneTracker）。
+        /// 必须在创建临时 Caravan 之前、进入 LongEvent 之前完成。
+        /// 失败时安全返回 false，不创建 Caravan，也不添加任何部分基因。
+        /// </summary>
+        private static bool TryPrepareColonistsForCerebrexVacuum(
+            Map sourceMap,
+            List<Pawn> colonistPawns,
+            out int breathlessAddedCount,
+            out int coldToleranceAddedCount,
+            out string message)
+        {
+            breathlessAddedCount = 0;
+            coldToleranceAddedCount = 0;
+            message = string.Empty;
+
+            // 没有自由殖民者需要准备：视为成功，不添加任何基因。
+            if (colonistPawns == null || colonistPawns.Count == 0)
+            {
+                return true;
+            }
+
+            // 1) Biotech 前置检查。
+            if (!ModsConfig.BiotechActive)
+            {
+                message = "主脑快速测试需要生物科技 DLC 才能为殖民者添加真空与耐寒测试基因。";
+                return false;
+            }
+
+            // 2) 两个原版 GeneDef 必须存在（RimWorld 1.6 的 GeneDefOf
+            //    不含这两个静态成员，使用 DefDatabase 安全获取）。
+            GeneDef breathlessDef = DefDatabase<GeneDef>.GetNamedSilentFail("VacuumResistance_Total");
+            if (breathlessDef == null)
+            {
+                message = "找不到原版基因定义：VacuumResistance_Total（无需呼吸）。";
+                return false;
+            }
+
+            GeneDef coldDef = DefDatabase<GeneDef>.GetNamedSilentFail("MinTemp_LargeDecrease");
+            if (coldDef == null)
+            {
+                message = "找不到原版基因定义：MinTemp_LargeDecrease（超耐寒）。";
+                return false;
+            }
+
+            Faction player = Faction.OfPlayer;
+
+            // 3) 完整预检：所有殖民者仍有效、有 GeneTracker、两个 Def 已确认。
+            //    任一殖民者不能接受基因时，整个一键进入返回 false，不创建 Caravan、
+            //    不添加任何基因。此处不回滚任何已生成任务 / Site / 盟约记录。
+            foreach (Pawn p in colonistPawns)
+            {
+                if (p == null)
+                {
+                    message = "存在空的自由殖民者引用，无法添加测试基因。";
+                    return false;
+                }
+
+                if (player != null && p.Faction != player)
+                {
+                    message = "自由殖民者 " + p.LabelShort + " 已不属于玩家派系，无法添加测试基因。";
+                    return false;
+                }
+
+                if (!p.Spawned)
+                {
+                    message = "自由殖民者 " + p.LabelShort + " 已不在地图上，无法添加测试基因。";
+                    return false;
+                }
+
+                if (sourceMap != null && p.Map != sourceMap)
+                {
+                    message = "自由殖民者 " + p.LabelShort + " 已不在原地图，无法添加测试基因。";
+                    return false;
+                }
+
+                if (p.Dead || p.Destroyed || p.Discarded)
+                {
+                    message = "自由殖民者 " + p.LabelShort + " 状态异常（死亡/销毁/丢弃），无法添加测试基因。";
+                    return false;
+                }
+
+                if (p.genes == null)
+                {
+                    message = "自由殖民者 " + p.LabelShort + " 缺少基因追踪器（pawn.genes 为空），无法添加测试基因。";
+                    return false;
+                }
+            }
+
+            // 4) 预检通过后再逐个永久添加。已有该活跃基因的 Pawn 不重复添加；
+            //    不移除任何已有基因，不创建自定义 Xenotype，交由原版 AddGene
+            //    处理其自身基因冲突规则。
+            foreach (Pawn p in colonistPawns)
+            {
+                if (p.genes == null)
+                {
+                    continue;
+                }
+
+                if (!p.genes.HasActiveGene(breathlessDef))
+                {
+                    p.genes.AddGene(breathlessDef, xenogene: true);
+                    breathlessAddedCount++;
+                }
+
+                if (!p.genes.HasActiveGene(coldDef))
+                {
+                    p.genes.AddGene(coldDef, xenogene: true);
+                    coldToleranceAddedCount++;
+                }
             }
 
             return true;
