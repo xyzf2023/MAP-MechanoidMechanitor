@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<Defs>
+  
 <MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantCerebrexSupportDef>
   <defName>MAP_SymbiosisCovenant_CerebrexSupportConfig</defName>
   <label>机械主巢盟约援军配置</label>
@@ -44,3 +47,5 @@
   <dropCellEdgeCandidateLimit>400</dropCellEdgeCandidateLimit>
   <evacPodMassCapacityFallback>200</evacPodMassCapacityFallback>
 </MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantCerebrexSupportDef>
+
+</Defs>

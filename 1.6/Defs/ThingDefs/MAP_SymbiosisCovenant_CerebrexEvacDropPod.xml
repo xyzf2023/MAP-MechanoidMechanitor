@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<Defs>
+
 <ThingDef ParentName="BuildingBase" MayRequire="Ludeon.RimWorld.Odyssey">
   <defName>MAP_SymbiosisCovenant_CerebrexEvacDropPod</defName>
   <label>盟约机械撤离舱</label>
@@ -45,3 +48,5 @@
   <neverStored>true</neverStored>
   <notForCover>true</notForCover>
 </ThingDef>
+
+</Defs>
