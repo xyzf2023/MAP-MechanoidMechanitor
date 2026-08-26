@@ -841,6 +841,43 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 lord.AddPawn(spawnedPawns[i]);
             }
+
+            // 全部守军加入 Lord 后，统一调用原版即时休眠（与完整机械巢节点顺序一致）。
+            if (spawnedPawns.Count > 0)
+            {
+                GenStep_SleepingMechanoids.SendMechanoidsToSleepImmediately(spawnedPawns);
+                ValidateInProgressGarrisonDormant(map, lord, spawnedPawns);
+            }
+        }
+
+        /// <summary>建设中节点守军初始休眠的轻量校验：仅记录明确错误，不引入事务回滚体系。</summary>
+        private static void ValidateInProgressGarrisonDormant(
+            Map map,
+            Lord lord,
+            List<Pawn> spawnedPawns)
+        {
+            if (spawnedPawns == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < spawnedPawns.Count; i++)
+            {
+                Pawn pawn = spawnedPawns[i];
+                CompCanBeDormant dormantComp = pawn.TryGetComp<CompCanBeDormant>();
+                if (pawn == null
+                    || pawn.Destroyed
+                    || !pawn.Spawned
+                    || pawn.Map != map
+                    || pawn.GetLord() != lord
+                    || dormantComp == null
+                    || dormantComp.Awake)
+                {
+                    Log.Error(
+                        "[MAP] 建设中机械巢节点守军休眠校验失败："
+                            + (pawn != null ? pawn.ToString() : "null"));
+                }
+            }
         }
 
         private static IntVec3 ResolveCenter(Map map)
@@ -961,7 +998,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 GenSpawn.Spawn(pawn, cell, map, Rot4.Random);
-                pawn.TryGetComp<CompCanBeDormant>()?.ToSleep();
                 spawned.Add(pawn);
             }
 
