@@ -12,6 +12,7 @@
 
   <!-- 模块：机械体骇入 -->
   <MAP_MechanoidMechanitor.Justice.Ability.MechHack.InvalidTarget>只能选择非玩家阵营的活体机械体。</MAP_MechanoidMechanitor.Justice.Ability.MechHack.InvalidTarget>
+  <MAP_MechanoidMechanitor.Justice.Ability.MechHack.BossRestrictedTarget>该机械体的核心控制协议无法通过机体骇入接管。</MAP_MechanoidMechanitor.Justice.Ability.MechHack.BossRestrictedTarget>
   <MAP_MechanoidMechanitor.Justice.Ability.MechHack.NonHostileConfirm>目标机械体属于非敌对阵营，继续骇入会被视作敌对行为。\n\n确定要这么做？</MAP_MechanoidMechanitor.Justice.Ability.MechHack.NonHostileConfirm>
   <MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportWithTarget>正在骇入{0}。</MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportWithTarget>
   <MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportDefault>正在执行机体骇入。</MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportDefault>

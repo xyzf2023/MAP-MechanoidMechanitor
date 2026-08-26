@@ -43,6 +43,11 @@
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>单个盟友节点支援概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>每座符合条件的完整盟友机械巢节点，在殖民地遭遇敌对袭击后提供机械巢援军的独立基础概率。0%表示不提供这种自动援军。此设置不改变援军点数、派系归属、带宽或其他部署规则。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>
 
+  <!-- 模块：正义能力 -->
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>正义能力</MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label>限制机体骇入 BOSS 目标</MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>默认开启。开启后，机体骇入无法以除炼狱魔王、战争女皇之外的机械族 BOSS 为目标。关闭后恢复原有目标规则。「正义」-重装指挥单元始终无法被机体骇入。</MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>
+
   <!-- 模块：正义 BOSS 难度 -->
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>正义 BOSS 战难度</MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」作为敌对 BOSS 到达地图后使用的战斗参数。战斗参数会在每场 BOSS 战开始时锁定；战斗过程中修改只会影响下一场 BOSS 战。详细诊断日志开关不属于战斗参数，会实时生效。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>

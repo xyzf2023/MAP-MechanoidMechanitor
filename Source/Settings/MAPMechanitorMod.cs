@@ -135,6 +135,8 @@ namespace MAP_MechanoidMechanitor
 
             DrawInsectStorySettings(listing);
 
+            DrawJusticeAbilitySettings(listing);
+
             DrawJusticeBossDifficultySettings(listing);
 
             DrawCerebrexBossDifficultySettings(listing);
@@ -230,6 +232,26 @@ namespace MAP_MechanoidMechanitor
                     Settings.pursuitHuntInfestationPointsPercent,
                     0,
                     1000);
+        }
+
+        private static void DrawJusticeAbilitySettings(Listing_Standard listing)
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            listing.GapLine();
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section".Translate());
+
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label"
+                    .Translate(),
+                ref Settings.restrictMechHackBossTargets,
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description"
+                    .Translate());
         }
 
         private static void DrawJusticeBossDifficultySettings(

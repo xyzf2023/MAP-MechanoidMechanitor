@@ -6,6 +6,9 @@ namespace MAP_MechanoidMechanitor
 {
     public class CompAbilityEffect_MechHack : CompAbilityEffect
     {
+        private const string DiabolusPawnKindDefName = "Mech_Diabolus";
+        private const string WarqueenPawnKindDefName = "Mech_Warqueen";
+
         public new CompProperties_AbilityMechHack Props =>
             (CompProperties_AbilityMechHack)props;
 
@@ -31,13 +34,28 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (throwMessages)
+            if (throwMessages
+                && target.HasThing
+                && target.Thing is Pawn targetPawnForMessage)
             {
-                Messages.Message(
-                    Props.invalidTargetMessageKey.Translate(),
-                    parent.pawn,
-                    MessageTypeDefOf.RejectInput,
-                    historical: false);
+                // 「正义」-重装指挥单元命中的是旧规则永久禁止，应保留原有无效提示。
+                if (IsBossBlockedByHackRestriction(targetPawnForMessage)
+                    && !JusticePawnUtility.IsBossJustice(targetPawnForMessage))
+                {
+                    Messages.Message(
+                        Props.bossRestrictedTargetMessageKey.Translate(),
+                        parent.pawn,
+                        MessageTypeDefOf.RejectInput,
+                        historical: false);
+                }
+                else
+                {
+                    Messages.Message(
+                        Props.invalidTargetMessageKey.Translate(),
+                        parent.pawn,
+                        MessageTypeDefOf.RejectInput,
+                        historical: false);
+                }
             }
 
             return false;
@@ -75,7 +93,45 @@ namespace MAP_MechanoidMechanitor
                 && targetPawn.RaceProps.IsMechanoid
                 && targetPawn.Faction != Faction.OfPlayer
                 && targetPawn.OverseerSubject != null
-                && !JusticePawnUtility.IsBossJustice(targetPawn);
+                && !JusticePawnUtility.IsBossJustice(targetPawn)
+                && !IsBossBlockedByHackRestriction(targetPawn);
+        }
+
+        /// <summary>
+        /// 仅代表“是否被新增的 BOSS 限制拦截”，与「正义」-重装指挥单元的永久禁止规则相互独立。
+        /// 「正义」BOSS 由 JusticePawnUtility.IsBossJustice 永久拦截，不受此设置影响。
+        /// </summary>
+        private bool IsBossBlockedByHackRestriction(Pawn targetPawn)
+        {
+            // 设置实例不存在时不意外阻止目标；只有明确开启限制时才拦截。
+            if (MAPMechanitorMod.Settings?.restrictMechHackBossTargets != true)
+            {
+                return false;
+            }
+
+            PawnKindDef? targetKind = targetPawn.kindDef;
+            if (targetKind == null)
+            {
+                return false;
+            }
+
+            if (!targetKind.isBoss)
+            {
+                return false;
+            }
+
+            // 炼狱魔王与战争女皇为明确允许的两个例外。
+            if (targetKind.defName == DiabolusPawnKindDefName)
+            {
+                return false;
+            }
+
+            if (targetKind.defName == WarqueenPawnKindDefName)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public override void Apply(LocalTargetInfo target, LocalTargetInfo dest)

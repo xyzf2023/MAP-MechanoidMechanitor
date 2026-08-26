@@ -269,6 +269,14 @@ namespace MAP_MechanoidMechanitor
             DefaultMechanoidMechanitorInspirationChancePercent;
 
         /// <summary>
+        /// 默认开启。开启后，机体骇入禁止以除炼狱魔王(Mech_Diabolus)、战争女皇(Mech_Warqueen)
+        /// 之外的机械族 BOSS 为目标。关闭后，恢复原有骇入目标规则，不再因通用 isBoss 规则
+        /// 拦截其他 BOSS。
+        /// 注意：「正义」-重装指挥单元(MAP_Mech_JusticeBOSS)始终受现有永久限制，不受此开关影响。
+        /// </summary>
+        public bool restrictMechHackBossTargets = true;
+
+        /// <summary>
         /// 统一钳制正义 BOSS 难度设置：供 ExposeData 的 PostLoadInit 与
         /// MAPMechanitorMod.WriteSettings 共同调用，确保读取、界面、战斗快照三层一致。
         /// </summary>
@@ -567,6 +575,11 @@ namespace MAP_MechanoidMechanitor
                 ref mechanoidMechanitorInspirationChancePercent,
                 "mechanoidMechanitorInspirationChancePercent",
                 DefaultMechanoidMechanitorInspirationChancePercent);
+
+            Scribe_Values.Look(
+                ref restrictMechHackBossTargets,
+                "restrictMechHackBossTargets",
+                true);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {

@@ -7,6 +7,9 @@ namespace MAP_MechanoidMechanitor
         public string invalidTargetMessageKey =
             "MAP_MechanoidMechanitor.Justice.Ability.MechHack.InvalidTarget";
 
+        public string bossRestrictedTargetMessageKey =
+            "MAP_MechanoidMechanitor.Justice.Ability.MechHack.BossRestrictedTarget";
+
         public string nonHostileConfirmMessageKey =
             "MAP_MechanoidMechanitor.Justice.Ability.MechHack.NonHostileConfirm";
 

@@ -118,6 +118,7 @@
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_AbilityMechHack">
         <invalidTargetMessageKey>MAP_MechanoidMechanitor.Justice.Ability.MechHack.InvalidTarget</invalidTargetMessageKey>
+        <bossRestrictedTargetMessageKey>MAP_MechanoidMechanitor.Justice.Ability.MechHack.BossRestrictedTarget</bossRestrictedTargetMessageKey>
         <nonHostileConfirmMessageKey>MAP_MechanoidMechanitor.Justice.Ability.MechHack.NonHostileConfirm</nonHostileConfirmMessageKey>
         <hackDurationTicks>900</hackDurationTicks>
         <cooldownTicks>300000</cooldownTicks>
