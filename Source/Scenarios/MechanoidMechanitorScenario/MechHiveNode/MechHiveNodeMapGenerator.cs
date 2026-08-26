@@ -306,6 +306,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
+            // 全部守军加入正确 Lord 后，统一调用原版即时休眠（与 Sleeping Mechanoids 任务地图一致）。
+            // 若此方法抛出异常，会被外层 GenerateCompleted 捕获并进入 FailCompletedInit 统一回滚。
+            session.FailureStage = "守军初始休眠";
+            GenStep_SleepingMechanoids.SendMechanoidsToSleepImmediately(session.PlacedPawns);
+
             session.FailureStage = "最终验证";
             if (!ValidateCompletedGarrison(session, expectedCount))
             {
@@ -346,6 +351,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 if (expected.GetLord() != lord)
+                {
+                    return false;
+                }
+
+                // 守军必须确实处于休眠状态（且具备休眠能力）。
+                CompCanBeDormant dormantComp = expected.TryGetComp<CompCanBeDormant>();
+                if (dormantComp == null || dormantComp.Awake)
                 {
                     return false;
                 }
@@ -484,7 +496,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     try
                     {
                         GenSpawn.Spawn(pawn, cell, map, Rot4.Random);
-                        pawn.TryGetComp<CompCanBeDormant>()?.ToSleep();
                         if (pawn.Spawned && pawn.Map == map)
                         {
                             placed.Add(pawn);
