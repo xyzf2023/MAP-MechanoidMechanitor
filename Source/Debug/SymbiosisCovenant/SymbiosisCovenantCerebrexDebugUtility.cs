@@ -730,7 +730,9 @@ namespace MAP_MechanoidMechanitor
         /// 两者分别复制到自己的集合，再用 HashSet&lt;Pawn&gt; 去重，生成稳定的 List。
         /// 每个候选再次通过安全条件过滤：
         ///   pawn != null / Faction == Faction.OfPlayer / Spawned / Map == sourceMap
-        ///   / !Dead / !Destroyed / !Discarded / ParentHolder == null
+        ///   / !Dead / !Destroyed / !Discarded
+        /// 已 Spawn 且 Map == sourceMap 即自然排除位于运输舱、休眠舱、库存或其他
+        /// 容器中的 Pawn，不依赖 ParentHolder / holdingOwner 判断。
         /// 返回：
         ///   transferPawns   —— 所有最终待传送 Pawn（去重后）
         ///   colonistPawns   —— 其中属于自由玩家殖民者、需要添加基因的 Pawn
@@ -807,7 +809,10 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 候选 Pawn 安全过滤：非空、玩家派系、已 Spawn、位于源地图、未死亡 /
-        /// 未销毁 / 未 Discard、且不在任何 ThingOwner 容器（运输舱 / 休眠舱 / 库存）中。
+        /// 未销毁 / 未 Discard。已 Spawn 且 Map == sourceMap 的当前地图 Pawn 自然
+        /// 排除了仍位于运输舱、休眠舱、库存或其他 ThingOwner 容器中的 Pawn，因此
+        /// 不依赖 ParentHolder / holdingOwner 做额外判断（地图上正常 Spawn 的 Pawn
+        /// 也可能具有非空 ParentHolder）。
         /// </summary>
         private static bool IsValidTransferCandidate(Pawn pawn, Map sourceMap, Faction player)
         {
@@ -832,11 +837,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (pawn.Dead || pawn.Destroyed || pawn.Discarded)
-            {
-                return false;
-            }
-
-            if (pawn.ParentHolder != null)
             {
                 return false;
             }
