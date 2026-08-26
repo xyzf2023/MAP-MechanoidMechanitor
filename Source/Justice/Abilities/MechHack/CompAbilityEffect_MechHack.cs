@@ -34,28 +34,22 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (throwMessages
-                && target.HasThing
-                && target.Thing is Pawn targetPawnForMessage)
+            if (throwMessages)
             {
-                // 「正义」-重装指挥单元命中的是旧规则永久禁止，应保留原有无效提示。
-                if (IsBossBlockedByHackRestriction(targetPawnForMessage)
-                    && !JusticePawnUtility.IsBossJustice(targetPawnForMessage))
-                {
-                    Messages.Message(
-                        Props.bossRestrictedTargetMessageKey.Translate(),
-                        parent.pawn,
-                        MessageTypeDefOf.RejectInput,
-                        historical: false);
-                }
-                else
-                {
-                    Messages.Message(
-                        Props.invalidTargetMessageKey.Translate(),
-                        parent.pawn,
-                        MessageTypeDefOf.RejectInput,
-                        historical: false);
-                }
+                // 仅当目标满足全部旧版规则、唯一失败原因就是新增 BOSS 限制时，
+                // 才显示 BOSS 专属提示；否则继续沿用普通无效提示。
+                bool showBossRestrictedMessage = target.HasThing
+                    && target.Thing is Pawn targetPawnForMessage
+                    && CanHackUnderOriginalRules(targetPawnForMessage, parent.pawn)
+                    && IsBossBlockedByHackRestriction(targetPawnForMessage);
+
+                Messages.Message(
+                    (showBossRestrictedMessage
+                        ? Props.bossRestrictedTargetMessageKey
+                        : Props.invalidTargetMessageKey).Translate(),
+                    parent.pawn,
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
             }
 
             return false;
@@ -80,7 +74,11 @@ namespace MAP_MechanoidMechanitor
             return null!;
         }
 
-        public bool CanHack(Pawn? targetPawn, Pawn? caster)
+        /// <summary>
+        /// 仅包含“新增 BOSS 限制出现之前”的全部实际骇入条件。
+        /// 不含 IsBossBlockedByHackRestriction；包含 JusticePawnUtility.IsBossJustice 旧有永久规则。
+        /// </summary>
+        private bool CanHackUnderOriginalRules(Pawn? targetPawn, Pawn? caster)
         {
             if (targetPawn == null || caster == null || caster.Map == null)
             {
@@ -93,8 +91,18 @@ namespace MAP_MechanoidMechanitor
                 && targetPawn.RaceProps.IsMechanoid
                 && targetPawn.Faction != Faction.OfPlayer
                 && targetPawn.OverseerSubject != null
-                && !JusticePawnUtility.IsBossJustice(targetPawn)
-                && !IsBossBlockedByHackRestriction(targetPawn);
+                && !JusticePawnUtility.IsBossJustice(targetPawn);
+        }
+
+        public bool CanHack(Pawn? targetPawn, Pawn? caster)
+        {
+            if (!CanHackUnderOriginalRules(targetPawn, caster))
+            {
+                return false;
+            }
+
+            // CanHackUnderOriginalRules 已保证 targetPawn 非空。
+            return !IsBossBlockedByHackRestriction(targetPawn!);
         }
 
         /// <summary>
