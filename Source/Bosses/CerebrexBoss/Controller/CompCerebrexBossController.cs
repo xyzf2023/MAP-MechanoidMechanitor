@@ -569,7 +569,7 @@ namespace MAP_MechanoidMechanitor
                     MentalState? curState = p.mindState?.mentalStateHandler?.CurState;
                     if (curState?.def == MentalStateDefOf.BerserkMechanoid)
                     {
-                        p.mindState?.mentalStateHandler?.Reset();
+                        curState.RecoverFromState();
                     }
 
                     p.health.RemoveHediff(m);
