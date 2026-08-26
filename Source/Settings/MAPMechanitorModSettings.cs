@@ -149,6 +149,64 @@ namespace MAP_MechanoidMechanitor
         public bool justiceBossAllowBossReplacement =
             JusticeBossDifficultyValues.DefaultAllowBossReplacement;
 
+        // ===== 机械主脑（CerebrexCore）额外 BOSS 技能全局设置（所有存档共享） =====
+
+        /// <summary>
+        /// 默认开启。机械主脑额外 BOSS 技能总开关。关闭后，主脑不会自动发动召唤、EMP、
+        /// 带宽干扰等额外技能（已在进行中的整轮技能仍会自然结束）。战斗中修改仅影响下一场战斗。
+        /// </summary>
+        public bool cerebrexBossEnableExtraSkills =
+            CerebrexBossDifficultyValues.DefaultEnableExtraSkills;
+
+        public bool cerebrexBossEnableSummoning =
+            CerebrexBossDifficultyValues.DefaultEnableSummoning;
+
+        public int cerebrexBossSummonIntervalTicks =
+            CerebrexBossDifficultyValues.DefaultSummonIntervalTicks;
+
+        public int cerebrexBossMechsPerWave =
+            CerebrexBossDifficultyValues.DefaultMechsPerWave;
+
+        public int cerebrexBossMaxLivingSummonedMechs =
+            CerebrexBossDifficultyValues.DefaultMaxLivingSummonedMechs;
+
+        /// <summary>
+        /// 默认开启。开启后，主脑召唤的机械族会施加机动作战 Hediff。
+        /// 此设置实时影响每场战斗开始时锁定的快照，不纳入单场战斗中途变更。
+        /// </summary>
+        public bool cerebrexBossApplyMobileCombatToSummons =
+            CerebrexBossDifficultyValues.DefaultApplyMobileCombatToSummons;
+
+        public bool cerebrexBossEnableBandwidthInterference =
+            CerebrexBossDifficultyValues.DefaultEnableBandwidthInterference;
+
+        public int cerebrexBossBandwidthCooldownMinTicks =
+            CerebrexBossDifficultyValues.DefaultBandwidthCooldownMinTicks;
+
+        public int cerebrexBossBandwidthCooldownMaxTicks =
+            CerebrexBossDifficultyValues.DefaultBandwidthCooldownMaxTicks;
+
+        public int cerebrexBossBandwidthDurationTicks =
+            CerebrexBossDifficultyValues.DefaultBandwidthDurationTicks;
+
+        public int cerebrexBossBandwidthMaxTargets =
+            CerebrexBossDifficultyValues.DefaultBandwidthMaxTargets;
+
+        public bool cerebrexBossEnableEmp =
+            CerebrexBossDifficultyValues.DefaultEnableEmp;
+
+        public int cerebrexBossEmpCooldownMinTicks =
+            CerebrexBossDifficultyValues.DefaultEmpCooldownMinTicks;
+
+        public int cerebrexBossEmpCooldownMaxTicks =
+            CerebrexBossDifficultyValues.DefaultEmpCooldownMaxTicks;
+
+        public int cerebrexBossEmpBaseDurationTicks =
+            CerebrexBossDifficultyValues.DefaultEmpBaseDurationTicks;
+
+        public float cerebrexBossEmpRadius =
+            CerebrexBossDifficultyValues.DefaultEmpRadius;
+
         /// <summary>
         /// 每座符合条件的完整敌对普通派系前哨每日触发额外袭击的基础概率百分比。
         /// 全局设置，所有存档共享。
@@ -334,6 +392,71 @@ namespace MAP_MechanoidMechanitor
                 JusticeBossDifficultyValues.DefaultAllowBossReplacement);
 
             Scribe_Values.Look(
+                ref cerebrexBossEnableExtraSkills,
+                "cerebrexBossEnableExtraSkills",
+                CerebrexBossDifficultyValues.DefaultEnableExtraSkills);
+            Scribe_Values.Look(
+                ref cerebrexBossEnableSummoning,
+                "cerebrexBossEnableSummoning",
+                CerebrexBossDifficultyValues.DefaultEnableSummoning);
+            Scribe_Values.Look(
+                ref cerebrexBossSummonIntervalTicks,
+                "cerebrexBossSummonIntervalTicks",
+                CerebrexBossDifficultyValues.DefaultSummonIntervalTicks);
+            Scribe_Values.Look(
+                ref cerebrexBossMechsPerWave,
+                "cerebrexBossMechsPerWave",
+                CerebrexBossDifficultyValues.DefaultMechsPerWave);
+            Scribe_Values.Look(
+                ref cerebrexBossMaxLivingSummonedMechs,
+                "cerebrexBossMaxLivingSummonedMechs",
+                CerebrexBossDifficultyValues.DefaultMaxLivingSummonedMechs);
+            Scribe_Values.Look(
+                ref cerebrexBossApplyMobileCombatToSummons,
+                "cerebrexBossApplyMobileCombatToSummons",
+                CerebrexBossDifficultyValues.DefaultApplyMobileCombatToSummons);
+            Scribe_Values.Look(
+                ref cerebrexBossEnableBandwidthInterference,
+                "cerebrexBossEnableBandwidthInterference",
+                CerebrexBossDifficultyValues.DefaultEnableBandwidthInterference);
+            Scribe_Values.Look(
+                ref cerebrexBossBandwidthCooldownMinTicks,
+                "cerebrexBossBandwidthCooldownMinTicks",
+                CerebrexBossDifficultyValues.DefaultBandwidthCooldownMinTicks);
+            Scribe_Values.Look(
+                ref cerebrexBossBandwidthCooldownMaxTicks,
+                "cerebrexBossBandwidthCooldownMaxTicks",
+                CerebrexBossDifficultyValues.DefaultBandwidthCooldownMaxTicks);
+            Scribe_Values.Look(
+                ref cerebrexBossBandwidthDurationTicks,
+                "cerebrexBossBandwidthDurationTicks",
+                CerebrexBossDifficultyValues.DefaultBandwidthDurationTicks);
+            Scribe_Values.Look(
+                ref cerebrexBossBandwidthMaxTargets,
+                "cerebrexBossBandwidthMaxTargets",
+                CerebrexBossDifficultyValues.DefaultBandwidthMaxTargets);
+            Scribe_Values.Look(
+                ref cerebrexBossEnableEmp,
+                "cerebrexBossEnableEmp",
+                CerebrexBossDifficultyValues.DefaultEnableEmp);
+            Scribe_Values.Look(
+                ref cerebrexBossEmpCooldownMinTicks,
+                "cerebrexBossEmpCooldownMinTicks",
+                CerebrexBossDifficultyValues.DefaultEmpCooldownMinTicks);
+            Scribe_Values.Look(
+                ref cerebrexBossEmpCooldownMaxTicks,
+                "cerebrexBossEmpCooldownMaxTicks",
+                CerebrexBossDifficultyValues.DefaultEmpCooldownMaxTicks);
+            Scribe_Values.Look(
+                ref cerebrexBossEmpBaseDurationTicks,
+                "cerebrexBossEmpBaseDurationTicks",
+                CerebrexBossDifficultyValues.DefaultEmpBaseDurationTicks);
+            Scribe_Values.Look(
+                ref cerebrexBossEmpRadius,
+                "cerebrexBossEmpRadius",
+                CerebrexBossDifficultyValues.DefaultEmpRadius);
+
+            Scribe_Values.Look(
                 ref factionOutpostRaidChancePercent,
                 "factionOutpostRaidChancePercent",
                 DefaultFactionOutpostRaidChancePercent);
@@ -399,6 +522,36 @@ namespace MAP_MechanoidMechanitor
                 justiceBossMechsPerWave =
                     JusticeBossDifficultyValues.ClampMechsPerWave(
                         justiceBossMechsPerWave);
+
+                cerebrexBossSummonIntervalTicks =
+                    CerebrexBossDifficultyValues.ClampSummonIntervalTicks(
+                        cerebrexBossSummonIntervalTicks);
+                cerebrexBossMechsPerWave =
+                    CerebrexBossDifficultyValues.ClampMechsPerWave(
+                        cerebrexBossMechsPerWave);
+                cerebrexBossMaxLivingSummonedMechs =
+                    CerebrexBossDifficultyValues.ClampMaxLivingSummonedMechs(
+                        cerebrexBossMaxLivingSummonedMechs);
+                (cerebrexBossBandwidthCooldownMinTicks, cerebrexBossBandwidthCooldownMaxTicks) =
+                    CerebrexBossDifficultyValues.ClampBandwidthCooldownRange(
+                        cerebrexBossBandwidthCooldownMinTicks,
+                        cerebrexBossBandwidthCooldownMaxTicks);
+                cerebrexBossBandwidthDurationTicks =
+                    CerebrexBossDifficultyValues.ClampBandwidthDurationTicks(
+                        cerebrexBossBandwidthDurationTicks);
+                cerebrexBossBandwidthMaxTargets =
+                    CerebrexBossDifficultyValues.ClampBandwidthMaxTargets(
+                        cerebrexBossBandwidthMaxTargets);
+                (cerebrexBossEmpCooldownMinTicks, cerebrexBossEmpCooldownMaxTicks) =
+                    CerebrexBossDifficultyValues.ClampEmpCooldownRange(
+                        cerebrexBossEmpCooldownMinTicks,
+                        cerebrexBossEmpCooldownMaxTicks);
+                cerebrexBossEmpBaseDurationTicks =
+                    CerebrexBossDifficultyValues.ClampEmpBaseDurationTicks(
+                        cerebrexBossEmpBaseDurationTicks);
+                cerebrexBossEmpRadius =
+                    CerebrexBossDifficultyValues.ClampEmpRadius(
+                        cerebrexBossEmpRadius);
 
                 factionOutpostRaidChancePercent =
                     Mathf.Clamp(factionOutpostRaidChancePercent, 0, 100);

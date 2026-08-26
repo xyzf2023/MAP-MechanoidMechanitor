@@ -22,21 +22,16 @@ namespace MAP_MechanoidMechanitor
     /// 主脑（CerebrexCore）独立战斗控制器。所有战斗状态都由本组件保存在主脑建筑实例上，
     /// 不写入 MapComponent / GameComponent / WorldComponent / 任务组件。
     /// 对原版主脑的地图生成、稳定器、900 tick 互动、结局逻辑一律不修改。
+    /// 额外战斗技能参数在每场 BOSS 战开始时锁定为 difficulty 快照，
+    /// 战斗中修改 MOD 设置只影响下一场战斗。
     /// </summary>
     public sealed class CompCerebrexBossController : ThingComp
     {
         public const int FirstSummonDelayTicks = 1200;
-        public const int SummonIntervalTicks = 900;
-        public const int MechsPerWave = 8;
-        public const int MaxLivingSummonedMechs = 32;
 
         public const int DropRetryDelayTicks = 250;
         public const int MaxDropRetryAttempts = 20;
 
-        public const int EmpCooldownMinTicks = 2400;
-        public const int EmpCooldownMaxTicks = 3600;
-        public const int EmpBaseDurationTicks = 1200;
-        public const float EmpRadius = 75f;
         public const float EmpPropagationSpeed = 1f;
         public const float OriginalShockwaveRadius = 30.9f;
 
@@ -50,11 +45,24 @@ namespace MAP_MechanoidMechanitor
         public const float OriginalBrainBobHeight = 0.35f;
         public const int OriginalBrainBobPeriodTicks = 300;
 
-        public const int BandwidthCooldownMinTicks = 3000;
-        public const int BandwidthCooldownMaxTicks = 4500;
-        public const int BandwidthDurationTicks = 1800;
-
-        public const int MobileCombatCheckIntervalTicks = 60;
+        // ===== 本场 BOSS 战难度快照（每场战斗开始时锁定，读取 ModSettings） =====
+        private bool cerebrexBossSettingsCaptured;
+        private bool difficultyEnableExtraSkills;
+        private bool difficultyEnableSummoning;
+        private int difficultySummonIntervalTicks;
+        private int difficultyMechsPerWave;
+        private int difficultyMaxLivingSummonedMechs;
+        private bool difficultyApplyMobileCombatToSummons;
+        private bool difficultyEnableBandwidthInterference;
+        private int difficultyBandwidthCooldownMinTicks;
+        private int difficultyBandwidthCooldownMaxTicks;
+        private int difficultyBandwidthDurationTicks;
+        private int difficultyBandwidthMaxTargets;
+        private bool difficultyEnableEmp;
+        private int difficultyEmpCooldownMinTicks;
+        private int difficultyEmpCooldownMaxTicks;
+        private int difficultyEmpBaseDurationTicks;
+        private float difficultyEmpRadius;
 
         private bool initialized;
         private bool stopped;
@@ -62,7 +70,6 @@ namespace MAP_MechanoidMechanitor
         private int nextSummonTick;
         private int nextEmpTick;
         private int nextBandwidthTick;
-        private int mobileCombatTickCounter;
 
         private List<Pawn> summonedMechs = new List<Pawn>();
         private List<PawnKindDef> pendingSummonKinds = new List<PawnKindDef>();
@@ -78,12 +85,19 @@ namespace MAP_MechanoidMechanitor
         private int empWarningEndTick;
         private bool empShockwaveReleased;
 
+        // 多目标带宽干扰状态（本场战斗）
         private bool bandwidthInterferenceActive;
-        private Pawn? bandwidthTarget;
-        private Pawn? bandwidthOverseer;
-        private int bandwidthInterferenceEndTick;
-        private List<Pawn> bandwidthBerserkPawns = new List<Pawn>();
+        private List<CerebrexBandwidthTargetRecord> bandwidthTargetRecords =
+            new List<CerebrexBandwidthTargetRecord>();
+        private List<CerebrexBandwidthBerserkRecord> bandwidthBerserkRecords =
+            new List<CerebrexBandwidthBerserkRecord>();
         private List<Pawn> bandwidthTargetsUsedThisBattle = new List<Pawn>();
+        private int bandwidthInterferenceEndTick;
+
+        // 旧存档单目标状态（仅用于读档迁移，迁移后清空）
+        private Pawn? legacyBandwidthTarget;
+        private Pawn? legacyBandwidthOverseer;
+        private List<Pawn>? legacyBandwidthBerserkPawns;
 
         // 纯客户端瞬态视觉状态：不写入存档，不参与任何目标、狂暴或结束判定。
         private readonly CerebrexBandwidthVisuals bandwidthVisuals = new CerebrexBandwidthVisuals();
@@ -128,10 +142,151 @@ namespace MAP_MechanoidMechanitor
 
         private void InitializeTimers()
         {
+            CaptureDifficultySnapshot();
+
             int now = Find.TickManager.TicksGame;
             nextSummonTick = now + FirstSummonDelayTicks;
-            nextEmpTick = now + Rand.RangeInclusive(EmpCooldownMinTicks, EmpCooldownMaxTicks);
-            nextBandwidthTick = now + Rand.RangeInclusive(BandwidthCooldownMinTicks, BandwidthCooldownMaxTicks);
+            nextEmpTick = now + Rand.RangeInclusive(
+                difficultyEmpCooldownMinTicks,
+                difficultyEmpCooldownMaxTicks);
+            nextBandwidthTick = now + Rand.RangeInclusive(
+                difficultyBandwidthCooldownMinTicks,
+                difficultyBandwidthCooldownMaxTicks);
+        }
+
+        // ----------------------------------------------------------------
+        // 本场难度快照
+        // ----------------------------------------------------------------
+
+        private void CaptureDifficultySnapshot()
+        {
+            MAPMechanitorModSettings? settings = MAPMechanitorMod.Settings;
+            if (settings == null)
+            {
+                ApplyDefaultDifficultySnapshot();
+                return;
+            }
+
+            difficultyEnableExtraSkills = settings.cerebrexBossEnableExtraSkills;
+            difficultyEnableSummoning = settings.cerebrexBossEnableSummoning;
+            difficultySummonIntervalTicks =
+                CerebrexBossDifficultyValues.ClampSummonIntervalTicks(
+                    settings.cerebrexBossSummonIntervalTicks);
+            difficultyMechsPerWave =
+                CerebrexBossDifficultyValues.ClampMechsPerWave(
+                    settings.cerebrexBossMechsPerWave);
+            difficultyMaxLivingSummonedMechs =
+                CerebrexBossDifficultyValues.ClampMaxLivingSummonedMechs(
+                    settings.cerebrexBossMaxLivingSummonedMechs);
+            difficultyApplyMobileCombatToSummons =
+                settings.cerebrexBossApplyMobileCombatToSummons;
+            difficultyEnableBandwidthInterference =
+                settings.cerebrexBossEnableBandwidthInterference;
+
+            (int bwMin, int bwMax) = CerebrexBossDifficultyValues.ClampBandwidthCooldownRange(
+                settings.cerebrexBossBandwidthCooldownMinTicks,
+                settings.cerebrexBossBandwidthCooldownMaxTicks);
+            difficultyBandwidthCooldownMinTicks = bwMin;
+            difficultyBandwidthCooldownMaxTicks = bwMax;
+
+            difficultyBandwidthDurationTicks =
+                CerebrexBossDifficultyValues.ClampBandwidthDurationTicks(
+                    settings.cerebrexBossBandwidthDurationTicks);
+            difficultyBandwidthMaxTargets =
+                CerebrexBossDifficultyValues.ClampBandwidthMaxTargets(
+                    settings.cerebrexBossBandwidthMaxTargets);
+            difficultyEnableEmp = settings.cerebrexBossEnableEmp;
+
+            (int empMin, int empMax) = CerebrexBossDifficultyValues.ClampEmpCooldownRange(
+                settings.cerebrexBossEmpCooldownMinTicks,
+                settings.cerebrexBossEmpCooldownMaxTicks);
+            difficultyEmpCooldownMinTicks = empMin;
+            difficultyEmpCooldownMaxTicks = empMax;
+
+            difficultyEmpBaseDurationTicks =
+                CerebrexBossDifficultyValues.ClampEmpBaseDurationTicks(
+                    settings.cerebrexBossEmpBaseDurationTicks);
+            difficultyEmpRadius =
+                CerebrexBossDifficultyValues.ClampEmpRadius(
+                    settings.cerebrexBossEmpRadius);
+
+            cerebrexBossSettingsCaptured = true;
+        }
+
+        private void ApplyDefaultDifficultySnapshot()
+        {
+            difficultyEnableExtraSkills =
+                CerebrexBossDifficultyValues.DefaultEnableExtraSkills;
+            difficultyEnableSummoning =
+                CerebrexBossDifficultyValues.DefaultEnableSummoning;
+            difficultySummonIntervalTicks =
+                CerebrexBossDifficultyValues.DefaultSummonIntervalTicks;
+            difficultyMechsPerWave =
+                CerebrexBossDifficultyValues.DefaultMechsPerWave;
+            difficultyMaxLivingSummonedMechs =
+                CerebrexBossDifficultyValues.DefaultMaxLivingSummonedMechs;
+            difficultyApplyMobileCombatToSummons =
+                CerebrexBossDifficultyValues.DefaultApplyMobileCombatToSummons;
+            difficultyEnableBandwidthInterference =
+                CerebrexBossDifficultyValues.DefaultEnableBandwidthInterference;
+            difficultyBandwidthCooldownMinTicks =
+                CerebrexBossDifficultyValues.DefaultBandwidthCooldownMinTicks;
+            difficultyBandwidthCooldownMaxTicks =
+                CerebrexBossDifficultyValues.DefaultBandwidthCooldownMaxTicks;
+            difficultyBandwidthDurationTicks =
+                CerebrexBossDifficultyValues.DefaultBandwidthDurationTicks;
+            difficultyBandwidthMaxTargets =
+                CerebrexBossDifficultyValues.DefaultBandwidthMaxTargets;
+            difficultyEnableEmp =
+                CerebrexBossDifficultyValues.DefaultEnableEmp;
+            difficultyEmpCooldownMinTicks =
+                CerebrexBossDifficultyValues.DefaultEmpCooldownMinTicks;
+            difficultyEmpCooldownMaxTicks =
+                CerebrexBossDifficultyValues.DefaultEmpCooldownMaxTicks;
+            difficultyEmpBaseDurationTicks =
+                CerebrexBossDifficultyValues.DefaultEmpBaseDurationTicks;
+            difficultyEmpRadius =
+                CerebrexBossDifficultyValues.DefaultEmpRadius;
+
+            cerebrexBossSettingsCaptured = true;
+        }
+
+        private void ClampDifficultySnapshot()
+        {
+            difficultySummonIntervalTicks =
+                CerebrexBossDifficultyValues.ClampSummonIntervalTicks(
+                    difficultySummonIntervalTicks);
+            difficultyMechsPerWave =
+                CerebrexBossDifficultyValues.ClampMechsPerWave(
+                    difficultyMechsPerWave);
+            difficultyMaxLivingSummonedMechs =
+                CerebrexBossDifficultyValues.ClampMaxLivingSummonedMechs(
+                    difficultyMaxLivingSummonedMechs);
+
+            (int bwMin, int bwMax) = CerebrexBossDifficultyValues.ClampBandwidthCooldownRange(
+                difficultyBandwidthCooldownMinTicks,
+                difficultyBandwidthCooldownMaxTicks);
+            difficultyBandwidthCooldownMinTicks = bwMin;
+            difficultyBandwidthCooldownMaxTicks = bwMax;
+
+            difficultyBandwidthDurationTicks =
+                CerebrexBossDifficultyValues.ClampBandwidthDurationTicks(
+                    difficultyBandwidthDurationTicks);
+            difficultyBandwidthMaxTargets =
+                CerebrexBossDifficultyValues.ClampBandwidthMaxTargets(
+                    difficultyBandwidthMaxTargets);
+
+            (int empMin, int empMax) = CerebrexBossDifficultyValues.ClampEmpCooldownRange(
+                difficultyEmpCooldownMinTicks,
+                difficultyEmpCooldownMaxTicks);
+            difficultyEmpCooldownMinTicks = empMin;
+            difficultyEmpCooldownMaxTicks = empMax;
+
+            difficultyEmpBaseDurationTicks =
+                CerebrexBossDifficultyValues.ClampEmpBaseDurationTicks(
+                    difficultyEmpBaseDurationTicks);
+            difficultyEmpRadius =
+                CerebrexBossDifficultyValues.ClampEmpRadius(difficultyEmpRadius);
         }
 
         public override void PostExposeData()
@@ -153,12 +308,37 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref empShockwaveReleaseTick, "empShockwaveReleaseTick", 0);
             Scribe_Values.Look(ref empWarningEndTick, "empWarningEndTick", 0);
             Scribe_Values.Look(ref empShockwaveReleased, "empShockwaveReleased", false);
+
+            // 旧存档单目标带宽状态（仅用于迁移；新存档不写入这些键）
             Scribe_Values.Look(ref bandwidthInterferenceActive, "bandwidthInterferenceActive", false);
-            Scribe_References.Look(ref bandwidthTarget, "bandwidthTarget");
-            Scribe_References.Look(ref bandwidthOverseer, "bandwidthOverseer");
+            Scribe_References.Look(ref legacyBandwidthTarget, "bandwidthTarget");
+            Scribe_References.Look(ref legacyBandwidthOverseer, "bandwidthOverseer");
             Scribe_Values.Look(ref bandwidthInterferenceEndTick, "bandwidthInterferenceEndTick", 0);
-            Scribe_Collections.Look(ref bandwidthBerserkPawns, "bandwidthBerserkPawns", LookMode.Reference);
+            Scribe_Collections.Look(ref legacyBandwidthBerserkPawns, "bandwidthBerserkPawns", LookMode.Reference);
             Scribe_Collections.Look(ref bandwidthTargetsUsedThisBattle, "bandwidthTargetsUsedThisBattle", LookMode.Reference);
+
+            // 新多目标带宽状态
+            Scribe_Collections.Look(ref bandwidthTargetRecords, "bandwidthTargetRecords", LookMode.Deep);
+            Scribe_Collections.Look(ref bandwidthBerserkRecords, "bandwidthBerserkRecords", LookMode.Deep);
+
+            // 本场难度快照
+            Scribe_Values.Look(ref cerebrexBossSettingsCaptured, "cerebrexBossSettingsCaptured", false);
+            Scribe_Values.Look(ref difficultyEnableExtraSkills, "difficultyEnableExtraSkills", CerebrexBossDifficultyValues.DefaultEnableExtraSkills);
+            Scribe_Values.Look(ref difficultyEnableSummoning, "difficultyEnableSummoning", CerebrexBossDifficultyValues.DefaultEnableSummoning);
+            Scribe_Values.Look(ref difficultySummonIntervalTicks, "difficultySummonIntervalTicks", CerebrexBossDifficultyValues.DefaultSummonIntervalTicks);
+            Scribe_Values.Look(ref difficultyMechsPerWave, "difficultyMechsPerWave", CerebrexBossDifficultyValues.DefaultMechsPerWave);
+            Scribe_Values.Look(ref difficultyMaxLivingSummonedMechs, "difficultyMaxLivingSummonedMechs", CerebrexBossDifficultyValues.DefaultMaxLivingSummonedMechs);
+            Scribe_Values.Look(ref difficultyApplyMobileCombatToSummons, "difficultyApplyMobileCombatToSummons", CerebrexBossDifficultyValues.DefaultApplyMobileCombatToSummons);
+            Scribe_Values.Look(ref difficultyEnableBandwidthInterference, "difficultyEnableBandwidthInterference", CerebrexBossDifficultyValues.DefaultEnableBandwidthInterference);
+            Scribe_Values.Look(ref difficultyBandwidthCooldownMinTicks, "difficultyBandwidthCooldownMinTicks", CerebrexBossDifficultyValues.DefaultBandwidthCooldownMinTicks);
+            Scribe_Values.Look(ref difficultyBandwidthCooldownMaxTicks, "difficultyBandwidthCooldownMaxTicks", CerebrexBossDifficultyValues.DefaultBandwidthCooldownMaxTicks);
+            Scribe_Values.Look(ref difficultyBandwidthDurationTicks, "difficultyBandwidthDurationTicks", CerebrexBossDifficultyValues.DefaultBandwidthDurationTicks);
+            Scribe_Values.Look(ref difficultyBandwidthMaxTargets, "difficultyBandwidthMaxTargets", CerebrexBossDifficultyValues.DefaultBandwidthMaxTargets);
+            Scribe_Values.Look(ref difficultyEnableEmp, "difficultyEnableEmp", CerebrexBossDifficultyValues.DefaultEnableEmp);
+            Scribe_Values.Look(ref difficultyEmpCooldownMinTicks, "difficultyEmpCooldownMinTicks", CerebrexBossDifficultyValues.DefaultEmpCooldownMinTicks);
+            Scribe_Values.Look(ref difficultyEmpCooldownMaxTicks, "difficultyEmpCooldownMaxTicks", CerebrexBossDifficultyValues.DefaultEmpCooldownMaxTicks);
+            Scribe_Values.Look(ref difficultyEmpBaseDurationTicks, "difficultyEmpBaseDurationTicks", CerebrexBossDifficultyValues.DefaultEmpBaseDurationTicks);
+            Scribe_Values.Look(ref difficultyEmpRadius, "difficultyEmpRadius", CerebrexBossDifficultyValues.DefaultEmpRadius);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -171,16 +351,47 @@ namespace MAP_MechanoidMechanitor
             summonedMechs ??= new List<Pawn>();
             pendingSummonKinds ??= new List<PawnKindDef>();
             pendingEmpHits ??= new List<PendingCerebrexEmpHit>();
-            bandwidthBerserkPawns ??= new List<Pawn>();
+            bandwidthTargetRecords ??= new List<CerebrexBandwidthTargetRecord>();
+            bandwidthBerserkRecords ??= new List<CerebrexBandwidthBerserkRecord>();
             bandwidthTargetsUsedThisBattle ??= new List<Pawn>();
             disabledPowerBuildings ??= new Dictionary<Thing, int>();
             bandwidthVisuals.ResetTransientState();
 
-            // 注意：bandwidthBerserkPawns / bandwidthTargetsUsedThisBattle 不得因 Pawn
+            // 旧存档单目标状态迁移为多目标记录。
+            if (bandwidthInterferenceActive
+                && bandwidthTargetRecords.Count == 0
+                && legacyBandwidthTarget != null)
+            {
+                bandwidthTargetRecords.Add(
+                    new CerebrexBandwidthTargetRecord(
+                        legacyBandwidthTarget,
+                        legacyBandwidthOverseer));
+            }
+
+            if (legacyBandwidthBerserkPawns != null)
+            {
+                foreach (Pawn p in legacyBandwidthBerserkPawns)
+                {
+                    if (p != null
+                        && !bandwidthBerserkRecords.Any(r => r.pawn == p))
+                    {
+                        bandwidthBerserkRecords.Add(
+                            new CerebrexBandwidthBerserkRecord(
+                                p,
+                                legacyBandwidthOverseer));
+                    }
+                }
+            }
+
+            legacyBandwidthTarget = null;
+            legacyBandwidthOverseer = null;
+            legacyBandwidthBerserkPawns = null;
+
+            // 注意：bandwidthBerserkRecords / bandwidthTargetsUsedThisBattle 不得因 Pawn
             // 死亡、倒地或离开地图而在此处删除（死亡 Pawn 可能复活，目标死亡后
             // 仍属于“本场战斗已选择过”记录）。仅移除明确为 null 或永久 Discarded 的引用。
             summonedMechs.RemoveAll(p => p == null || p.Dead || p.Destroyed || p.Discarded);
-            bandwidthBerserkPawns.RemoveAll(p => p == null || p.Discarded);
+            bandwidthBerserkRecords.RemoveAll(r => r.pawn == null || r.pawn.Discarded);
             bandwidthTargetsUsedThisBattle.RemoveAll(p => p == null || p.Discarded);
             pendingEmpHits.RemoveAll(h => h == null || h.target == null || h.target.Destroyed || h.target.Discarded);
 
@@ -232,7 +443,9 @@ namespace MAP_MechanoidMechanitor
                     ResetEmpWarningState();
                     if (!stopped && ModsConfig.OdysseyActive && parent.Spawned && !parent.Destroyed && parent.Map != null)
                     {
-                        nextEmpTick = nowTicks + Rand.RangeInclusive(EmpCooldownMinTicks, EmpCooldownMaxTicks);
+                        nextEmpTick = nowTicks + Rand.RangeInclusive(
+                            difficultyEmpCooldownMinTicks,
+                            difficultyEmpCooldownMaxTicks);
                     }
                 }
             }
@@ -243,17 +456,11 @@ namespace MAP_MechanoidMechanitor
 
             if (bandwidthInterferenceActive)
             {
-                // 基础状态损坏：无法恢复的有效技能状态（如未启用 DLC、主脑停止/销毁、
-                // 目标或监管者引用永久失效、核心翻倍健康状态丢失）。这些必须立即完整清理。
-                // 目标死亡/倒地/被摧毁/离开地图本身不属于基础损坏，交由共享结束判断处理。
                 bool baseBroken = !ModsConfig.OdysseyActive
                     || stopped
                     || !parent.Spawned
                     || parent.Destroyed
-                    || bandwidthTarget == null
-                    || bandwidthTarget.Discarded
-                    || bandwidthOverseer == null
-                    || bandwidthOverseer.mechanitor == null;
+                    || bandwidthTargetRecords.Count == 0;
 
                 if (baseBroken)
                 {
@@ -261,25 +468,44 @@ namespace MAP_MechanoidMechanitor
                 }
                 else
                 {
-                    HediffDef? def = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
-                    if (def != null && bandwidthTarget!.health.hediffSet.GetFirstHediffOfDef(def) == null)
+                    bool anyTargetBroken = false;
+                    foreach (CerebrexBandwidthTargetRecord rec in bandwidthTargetRecords)
                     {
-                        // 核心翻倍健康状态无故丢失 -> 损坏，完整清理。
+                        Pawn? t = rec.target;
+                        if (t == null || t.Discarded || !t.Spawned || t.Map != parent.Map)
+                        {
+                            anyTargetBroken = true;
+                            break;
+                        }
+
+                        if (rec.originalOverseer == null || rec.originalOverseer.mechanitor == null)
+                        {
+                            anyTargetBroken = true;
+                            break;
+                        }
+
+                        HediffDef? def = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
+                        if (def != null && t.health.hediffSet.GetFirstHediffOfDef(def) == null)
+                        {
+                            anyTargetBroken = true;
+                            break;
+                        }
+                    }
+
+                    if (anyTargetBroken)
+                    {
                         EndBandwidthInterference(startCooldown: false, reason: "loadfix");
                     }
                     else if (ShouldEndBandwidthInterferenceForPawnState())
                     {
-                        // 基础状态有效但战斗结束条件（目标 / 本轮狂暴者行动能力）已满足
-                        // -> 属于正常战斗结束，启动正常冷却，避免下一 tick 立刻重新发动。
                         EndBandwidthInterference(startCooldown: true, reason: "loadfix");
                     }
                 }
             }
 
-            // 带宽干扰已不在运行时，本轮临时狂暴名单应保持为空（死亡/复活等残留引用清理掉）。
             if (!bandwidthInterferenceActive)
             {
-                bandwidthBerserkPawns.Clear();
+                bandwidthBerserkRecords.Clear();
             }
 
             // 读档后发现没有待重试单位但重试计数残留，重置以免新一波继承旧计数。
@@ -307,7 +533,8 @@ namespace MAP_MechanoidMechanitor
             // 2. 清理过期的建筑瘫痪记录。
             CleanExpiredDisabledPowerBuildings();
 
-            // 3. 检查正在进行的带宽干扰。
+            // 3. 检查正在进行的带宽干扰（即使总开关/技能开关在战斗中关闭，
+            //    已开始的整轮状态仍由这里维护到自然结束）。
             if (bandwidthInterferenceActive)
             {
                 TickBandwidthInterference();
@@ -331,34 +558,51 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 7. 每 60 tick 为全部机械巢单位补充机动作战。
-            mobileCombatTickCounter++;
-            if (mobileCombatTickCounter >= MobileCombatCheckIntervalTicks)
-            {
-                mobileCombatTickCounter = 0;
-                EnsureMobileCombatForAllMechanoids();
-            }
-
-            // 8. 检查增援计时。
+            // 7. 检查增援计时（受总开关 + 召唤技能开关门控）。
             int now = Find.TickManager.TicksGame;
             if (now >= nextSummonTick)
             {
-                TrySummonWave(force: false);
+                if (difficultyEnableExtraSkills && difficultyEnableSummoning)
+                {
+                    TrySummonWave(force: false);
+                }
+                else
+                {
+                    nextSummonTick = now + difficultySummonIntervalTicks;
+                }
             }
 
-            // 9. 检查 EMP 计时。冷却从冲击波真正释放时开始，而不是从预警开始。
+            // 8. 检查 EMP 计时（受总开关 + EMP 开关门控）。
             if (!empWarningActive && now >= nextEmpTick)
             {
-                StartEmpWarning(force: false);
+                if (difficultyEnableExtraSkills && difficultyEnableEmp)
+                {
+                    StartEmpWarning(force: false);
+                }
+                else
+                {
+                    nextEmpTick = now + Rand.RangeInclusive(
+                        difficultyEmpCooldownMinTicks,
+                        difficultyEmpCooldownMaxTicks);
+                }
             }
 
-            // 10. 若没有正在进行的带宽干扰，检查带宽干扰计时。
+            // 9. 检查带宽干扰计时（受总开关 + 带宽技能开关门控）。
             if (!bandwidthInterferenceActive && now >= nextBandwidthTick)
             {
-                // 自动尝试失败（如无合法目标）仅延迟 60 tick 再次尝试，不进入完整冷却。
-                if (!TryStartBandwidthInterference(force: false))
+                if (difficultyEnableExtraSkills && difficultyEnableBandwidthInterference)
                 {
-                    nextBandwidthTick = now + 60;
+                    // 自动尝试失败（如无合法目标）仅延迟 60 tick 再次尝试，不进入完整冷却。
+                    if (!TryStartBandwidthInterference(force: false))
+                    {
+                        nextBandwidthTick = now + 60;
+                    }
+                }
+                else
+                {
+                    nextBandwidthTick = now + Rand.RangeInclusive(
+                        difficultyBandwidthCooldownMinTicks,
+                        difficultyBandwidthCooldownMaxTicks);
                 }
             }
         }
@@ -378,22 +622,6 @@ namespace MAP_MechanoidMechanitor
 
             return parent.Map.mapPawns.AllPawnsSpawned.Any(
                 p => p != null && !p.Dead && p.Faction == Faction.OfPlayer);
-        }
-
-        private void EnsureMobileCombatForAllMechanoids()
-        {
-            if (parent.Map == null)
-            {
-                return;
-            }
-
-            foreach (Pawn pawn in parent.Map.mapPawns.AllPawnsSpawned)
-            {
-                if (pawn != null && !pawn.Dead && pawn.RaceProps.IsMechanoid && pawn.Faction == Faction.OfMechanoids)
-                {
-                    MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff(pawn);
-                }
-            }
         }
 
         // ----------------------------------------------------------------
@@ -448,13 +676,13 @@ namespace MAP_MechanoidMechanitor
                 {
                     pendingSummonKinds.Clear();
                     summonDropRetryCount = 0;
-                    nextSummonTick = now + SummonIntervalTicks;
+                    nextSummonTick = now + difficultySummonIntervalTicks;
                     return 0;
                 }
 
                 EnsureAssaultLord();
                 int living = CountLivingSummonedMechs();
-                int avail = MaxLivingSummonedMechs - living;
+                int avail = difficultyMaxLivingSummonedMechs - living;
                 if (avail <= 0)
                 {
                     summonDropRetryCount++;
@@ -474,7 +702,14 @@ namespace MAP_MechanoidMechanitor
                     pendingSummonKinds.Add(retryKinds[i]);
                 }
 
-                int spawned = CerebrexBossSpawnUtility.SpawnSummonWave(parent.Map, toRetry, summonedMechs, parent.Position, mechFaction, this);
+                int spawned = CerebrexBossSpawnUtility.SpawnSummonWave(
+                    parent.Map,
+                    toRetry,
+                    summonedMechs,
+                    parent.Position,
+                    mechFaction,
+                    this,
+                    difficultyApplyMobileCombatToSummons);
                 summonDropRetryCount++;
 
                 // 当前批次全部成功或彻底放弃后，重置本批次重试计数，下一波拥有完整20次机会。
@@ -485,7 +720,7 @@ namespace MAP_MechanoidMechanitor
 
                 nextSummonTick = pendingSummonKinds.Count > 0
                     ? now + DropRetryDelayTicks
-                    : now + SummonIntervalTicks;
+                    : now + difficultySummonIntervalTicks;
                 return spawned;
             }
 
@@ -493,11 +728,11 @@ namespace MAP_MechanoidMechanitor
             summonDropRetryCount = 0;
 
             int livingCount = CountLivingSummonedMechs();
-            int availableSlots = MaxLivingSummonedMechs - livingCount;
-            int count = Mathf.Min(MechsPerWave, availableSlots);
+            int availableSlots = difficultyMaxLivingSummonedMechs - livingCount;
+            int count = Mathf.Min(difficultyMechsPerWave, availableSlots);
             if (count <= 0)
             {
-                nextSummonTick = now + SummonIntervalTicks;
+                nextSummonTick = now + difficultySummonIntervalTicks;
                 return 0;
             }
 
@@ -514,16 +749,23 @@ namespace MAP_MechanoidMechanitor
 
             if (chosen.Count == 0)
             {
-                nextSummonTick = now + SummonIntervalTicks;
+                nextSummonTick = now + difficultySummonIntervalTicks;
                 return 0;
             }
 
             EnsureAssaultLord();
-            int spawnedNormal = CerebrexBossSpawnUtility.SpawnSummonWave(parent.Map, chosen, summonedMechs, parent.Position, mechFaction, this);
+            int spawnedNormal = CerebrexBossSpawnUtility.SpawnSummonWave(
+                parent.Map,
+                chosen,
+                summonedMechs,
+                parent.Position,
+                mechFaction,
+                this,
+                difficultyApplyMobileCombatToSummons);
 
             nextSummonTick = pendingSummonKinds.Count > 0
                 ? now + DropRetryDelayTicks
-                : now + SummonIntervalTicks;
+                : now + difficultySummonIntervalTicks;
             return spawnedNormal;
         }
 
@@ -585,7 +827,9 @@ namespace MAP_MechanoidMechanitor
             {
                 TriggerEmpShockwave();
                 empShockwaveReleased = true;
-                nextEmpTick = now + Rand.RangeInclusive(EmpCooldownMinTicks, EmpCooldownMaxTicks);
+                nextEmpTick = now + Rand.RangeInclusive(
+                    difficultyEmpCooldownMinTicks,
+                    difficultyEmpCooldownMaxTicks);
             }
 
             if (now >= empWarningEndTick)
@@ -677,7 +921,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 float distance = parent.Position.DistanceTo(p.Position);
-                if (distance > EmpRadius)
+                if (distance > difficultyEmpRadius)
                 {
                     continue;
                 }
@@ -692,7 +936,7 @@ namespace MAP_MechanoidMechanitor
                 if (thing is Building b && !addedThisRelease.Contains(b) && IsValidEmpTarget(b))
                 {
                     float distance = parent.Position.DistanceTo(b.Position);
-                    if (distance > EmpRadius)
+                    if (distance > difficultyEmpRadius)
                     {
                         continue;
                     }
@@ -734,7 +978,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 float distance = parent.Position.DistanceTo(t.Position);
-                if (distance > EmpRadius)
+                if (distance > difficultyEmpRadius)
                 {
                     pendingEmpHits.RemoveAt(i);
                     continue;
@@ -803,7 +1047,7 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static int CalculateEmpDuration(Thing target)
+        private int CalculateEmpDuration(Thing target)
         {
             float resistance = 0f;
             StatDef? stat = DefDatabase<StatDef>.GetNamedSilentFail("EMPResistance");
@@ -812,7 +1056,8 @@ namespace MAP_MechanoidMechanitor
                 resistance = target.GetStatValue(stat);
             }
 
-            return Mathf.RoundToInt(EmpBaseDurationTicks * Mathf.Clamp01(1f - resistance));
+            return Mathf.RoundToInt(
+                difficultyEmpBaseDurationTicks * Mathf.Clamp01(1f - resistance));
         }
 
         private void ApplyEmpToTarget(Thing target)
@@ -841,7 +1086,7 @@ namespace MAP_MechanoidMechanitor
         {
             EffecterDef? effecterDef = DefDatabase<EffecterDef>.GetNamedSilentFail("BlastMechBandShockwave");
             SoundDef? soundDef = DefDatabase<SoundDef>.GetNamedSilentFail("Explosion_MechBandShockwave");
-            float visualScale = EmpRadius / OriginalShockwaveRadius;
+            float visualScale = difficultyEmpRadius / OriginalShockwaveRadius;
             Effecter? effecter = effecterDef?.Spawn(parent.Position, parent.Map, visualScale);
             effecter?.Cleanup();
             soundDef?.PlayOneShot(new TargetInfo(parent.Position, parent.Map));
@@ -887,7 +1132,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         // ----------------------------------------------------------------
-        // 带宽干扰
+        // 带宽干扰（多目标）
         // ----------------------------------------------------------------
 
         private bool TryStartBandwidthInterference(bool force)
@@ -902,23 +1147,12 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            Pawn? target = FindBandwidthTarget();
-            if (target == null)
+            List<Pawn> targets = FindBandwidthTargets(difficultyBandwidthMaxTargets);
+            if (targets.Count == 0)
             {
                 if (force)
                 {
                     Messages.Message("未找到合适的带宽干扰目标。", MessageTypeDefOf.RejectInput);
-                }
-
-                return false;
-            }
-
-            Pawn? overseer = target.GetOverseer();
-            if (overseer == null || overseer.mechanitor == null)
-            {
-                if (force)
-                {
-                    Messages.Message("目标监管者无效。", MessageTypeDefOf.RejectInput);
                 }
 
                 return false;
@@ -930,7 +1164,45 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (target.health.hediffSet.GetFirstHediffOfDef(interferenceDef) != null)
+            // 1. 收集涉及的不同监管者；2. 在添加任何干扰 Hediff 前复制每个监管者受控前快照。
+            HashSet<Pawn> overseers = new HashSet<Pawn>();
+            foreach (Pawn t in targets)
+            {
+                Pawn? ov = t.GetOverseer();
+                if (ov != null)
+                {
+                    overseers.Add(ov);
+                }
+            }
+
+            Dictionary<Pawn, List<Pawn>> beforeControlled = new Dictionary<Pawn, List<Pawn>>();
+            foreach (Pawn ov in overseers)
+            {
+                if (ov.mechanitor != null)
+                {
+                    beforeControlled[ov] = new List<Pawn>(ov.mechanitor.ControlledPawns);
+                }
+            }
+
+            // 3. 给全部选中目标添加干扰 Hediff（排除已存在的目标）。
+            List<Pawn> applied = new List<Pawn>();
+            foreach (Pawn t in targets)
+            {
+                if (t.health.hediffSet.GetFirstHediffOfDef(interferenceDef) != null)
+                {
+                    continue;
+                }
+
+                Hediff hediff = HediffMaker.MakeHediff(interferenceDef, t);
+                t.health.AddHediff(hediff);
+
+                Pawn? ov = t.GetOverseer();
+                bandwidthTargetsUsedThisBattle.Add(t);
+                bandwidthTargetRecords.Add(new CerebrexBandwidthTargetRecord(t, ov));
+                applied.Add(t);
+            }
+
+            if (applied.Count == 0)
             {
                 if (force)
                 {
@@ -940,56 +1212,63 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            List<Pawn> beforeControlled = new List<Pawn>(overseer.mechanitor.ControlledPawns);
-
-            Hediff hediff = HediffMaker.MakeHediff(interferenceDef, target);
-            target.health.AddHediff(hediff);
-
-            bandwidthTargetsUsedThisBattle.Add(target);
-
-            bandwidthInterferenceActive = true;
-            bandwidthTarget = target;
-            bandwidthOverseer = overseer;
-            bandwidthInterferenceEndTick = Find.TickManager.TicksGame + BandwidthDurationTicks;
-
-            overseer.mechanitor.Notify_BandwidthChanged();
-            bandwidthVisuals.Start(parent, target);
-
-            List<Pawn> afterControlled = overseer.mechanitor.ControlledPawns;
-            foreach (Pawn p in beforeControlled)
+            // 4. 每个不同监管者只调用一次 Notify_BandwidthChanged。
+            foreach (Pawn ov in overseers)
             {
-                if (p == null || p.Dead || p.Destroyed || p.Discarded)
-                {
-                    continue;
-                }
-
-                if (afterControlled.Contains(p))
-                {
-                    continue;
-                }
-
-                if (p.Faction != Faction.OfPlayer || !p.RaceProps.IsMechanoid || !p.Spawned || p.Downed)
-                {
-                    continue;
-                }
-
-                TryBerserk(p);
+                ov.mechanitor?.Notify_BandwidthChanged();
             }
 
+            bandwidthVisuals.Start(parent, applied);
+
+            // 5/6/7/8. 读取变化后受控列表，对变化前受控、变化后不再受控的玩家机械族执行狂暴。
+            foreach (Pawn ov in overseers)
+            {
+                if (ov.mechanitor == null)
+                {
+                    continue;
+                }
+
+                List<Pawn> before = beforeControlled.TryGetValue(ov, out List<Pawn>? b)
+                    ? b
+                    : new List<Pawn>();
+                List<Pawn> after = ov.mechanitor.ControlledPawns;
+                foreach (Pawn p in before)
+                {
+                    if (p == null || p.Dead || p.Destroyed || p.Discarded)
+                    {
+                        continue;
+                    }
+
+                    if (after.Contains(p))
+                    {
+                        continue;
+                    }
+
+                    if (p.Faction != Faction.OfPlayer || !p.RaceProps.IsMechanoid || !p.Spawned || p.Downed)
+                    {
+                        continue;
+                    }
+
+                    TryBerserk(p, ov);
+                }
+            }
+
+            bandwidthInterferenceActive = true;
+            bandwidthInterferenceEndTick =
+                Find.TickManager.TicksGame + difficultyBandwidthDurationTicks;
             return true;
         }
 
-        private Pawn? FindBandwidthTarget()
+        private List<Pawn> FindBandwidthTargets(int maxTargets)
         {
             if (parent.Map == null)
             {
-                return null;
+                return new List<Pawn>();
             }
 
             Map map = parent.Map;
             HediffDef? interferenceDef = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
-            float bestCost = -1f;
-            List<Pawn> candidates = new List<Pawn>();
+            List<(Pawn pawn, float cost)> candidates = new List<(Pawn, float)>();
 
             foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
             {
@@ -1039,27 +1318,28 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 float cost = pawn.GetStatValue(StatDefOf.BandwidthCost);
-                if (cost > bestCost)
-                {
-                    bestCost = cost;
-                    candidates.Clear();
-                    candidates.Add(pawn);
-                }
-                else if (cost == bestCost)
-                {
-                    candidates.Add(pawn);
-                }
+                candidates.Add((pawn, cost));
             }
 
-            if (candidates.Count == 0)
+            // 按带宽消耗从高到低选择；同消耗目标之间随机。
+            candidates = candidates
+                .OrderByDescending(x => x.cost)
+                .ThenBy(x => Rand.Int)
+                .ToList();
+
+            int take = Mathf.Min(maxTargets, candidates.Count);
+            if (take <= 0)
             {
-                return null;
+                return new List<Pawn>();
             }
 
-            return candidates[Rand.Range(0, candidates.Count)];
+            return candidates
+                .GetRange(0, take)
+                .Select(x => x.pawn)
+                .ToList();
         }
 
-        private void TryBerserk(Pawn p)
+        private void TryBerserk(Pawn p, Pawn? originalOverseer)
         {
             bool started = p.mindState.mentalStateHandler.TryStartMentalState(
                 MentalStateDefOf.BerserkMechanoid,
@@ -1079,12 +1359,12 @@ namespace MAP_MechanoidMechanitor
 
             if (p.MentalState != null)
             {
-                p.MentalState.forceRecoverAfterTicks = BandwidthDurationTicks;
+                p.MentalState.forceRecoverAfterTicks = difficultyBandwidthDurationTicks;
             }
 
-            if (!bandwidthBerserkPawns.Contains(p))
+            if (!bandwidthBerserkRecords.Any(r => r.pawn == p))
             {
-                bandwidthBerserkPawns.Add(p);
+                bandwidthBerserkRecords.Add(new CerebrexBandwidthBerserkRecord(p, originalOverseer));
             }
 
             bandwidthVisuals.NotifyBerserk(p);
@@ -1110,42 +1390,92 @@ namespace MAP_MechanoidMechanitor
         // 无副作用的辅助方法：正常 tick 与读档校验共用，仅判断“目标 / 本轮狂暴者”的
         // 行动能力结束条件（不含主脑停止、派系、监管者引用损坏、结束时间等基础状态）。
         // 规则：
-        //  - 本轮产生过至少一个狂暴者时，只要名单中还有能行动的狂暴者就不结束；
-        //    全部失能则结束（与目标是否属于狂暴名单无关）。
-        //  - 目标属于狂暴名单且仍有其他狂暴者能行动时，不结束（目标本人死亡/倒地不连累他人）。
-        //  - 目标不属于狂暴名单时，目标本人失能即结束整轮。
+        //  - 仍存在至少一个能行动的有效干扰目标时，技能继续。
+        //  - 本轮产生过狂暴单位时，只要名单中还有能行动的狂暴者，技能继续。
+        //  - 全部有效目标与全部能行动的狂暴者均失去行动能力时，结束整轮。
         private bool ShouldEndBandwidthInterferenceForPawnState()
         {
-            if (bandwidthTarget == null)
+            bool hasValidTarget = false;
+            foreach (CerebrexBandwidthTargetRecord rec in bandwidthTargetRecords)
             {
-                return true;
-            }
-
-            // 第二步：本轮是否曾经产生过狂暴者（死亡/倒地/离图记录仍保留在名单中）。
-            bool hasBerserkPawnRecords = bandwidthBerserkPawns != null
-                && bandwidthBerserkPawns.Count > 0;
-
-            // 第三步：只要曾经产生过狂暴者，就独立检查是否仍有能行动的狂暴者。
-            if (hasBerserkPawnRecords)
-            {
-                bool hasActiveBerserkPawn = bandwidthBerserkPawns.Any(
-                    pawn => !IsBandwidthBerserkPawnIncapacitated(pawn));
-                if (!hasActiveBerserkPawn)
+                if (IsTargetRecordActionable(rec))
                 {
-                    return true;
+                    hasValidTarget = true;
+                    break;
                 }
             }
 
-            // 第四步：目标本人属于本轮狂暴名单，且仍有狂暴者能行动 -> 不结束。
-            bool targetIsBerserkPawn = bandwidthBerserkPawns != null
-                && bandwidthBerserkPawns.Contains(bandwidthTarget);
-            if (targetIsBerserkPawn)
+            if (hasValidTarget)
             {
                 return false;
             }
 
-            // 第五步：目标不属于狂暴名单时，目标本人失能即结束；否则继续。
-            return IsBandwidthBerserkPawnIncapacitated(bandwidthTarget);
+            bool hasActiveBerserk = false;
+            foreach (CerebrexBandwidthBerserkRecord rec in bandwidthBerserkRecords)
+            {
+                if (rec.pawn != null && !IsBandwidthBerserkPawnIncapacitated(rec.pawn))
+                {
+                    hasActiveBerserk = true;
+                    break;
+                }
+            }
+
+            return !hasActiveBerserk;
+        }
+
+        private bool IsTargetRecordActionable(CerebrexBandwidthTargetRecord rec)
+        {
+            Pawn? t = rec.target;
+            if (t == null || t.Dead || t.Destroyed || t.Discarded)
+            {
+                return false;
+            }
+
+            if (parent.Map == null || !t.Spawned || t.Map != parent.Map || t.Downed)
+            {
+                return false;
+            }
+
+            HediffDef? def = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
+            if (def != null && t.health.hediffSet.GetFirstHediffOfDef(def) == null)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private void CleanupInvalidTargetRecords()
+        {
+            HediffDef? interferenceDef = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
+            for (int i = bandwidthTargetRecords.Count - 1; i >= 0; i--)
+            {
+                CerebrexBandwidthTargetRecord rec = bandwidthTargetRecords[i];
+                Pawn? t = rec.target;
+                bool invalid = t == null
+                    || t.Dead
+                    || t.Destroyed
+                    || t.Discarded
+                    || !t.Spawned
+                    || t.Map != parent.Map
+                    || t.Downed
+                    || (interferenceDef != null && t.health.hediffSet.GetFirstHediffOfDef(interferenceDef) == null);
+
+                if (invalid)
+                {
+                    // 仍尝试移除目标身上可能残留的干扰 Hediff。
+                    if (t != null && interferenceDef != null)
+                    {
+                        Hediff? h = t.health.hediffSet.GetFirstHediffOfDef(interferenceDef);
+                        if (h != null)
+                        {
+                            t.health.RemoveHediff(h);
+                        }
+                    }
+
+                    bandwidthTargetRecords.RemoveAt(i);
+                }
+            }
         }
 
         private void TickBandwidthInterference()
@@ -1153,32 +1483,19 @@ namespace MAP_MechanoidMechanitor
             int now = Find.TickManager.TicksGame;
             bool shouldEnd = false;
 
-            // 1. 无条件结束原因：主脑停止/失效、监管者失效、目标引用损坏、翻倍健康状态丢失。
+            // 1. 无条件结束原因：主脑停止 / 失效。
             if (stopped || !parent.Spawned || parent.Destroyed)
             {
                 shouldEnd = true;
             }
-            else if (bandwidthOverseer == null || bandwidthOverseer.Dead || bandwidthOverseer.Destroyed || bandwidthOverseer.mechanitor == null)
-            {
-                shouldEnd = true;
-            }
-            else if (bandwidthTarget == null || bandwidthTarget.Discarded)
-            {
-                shouldEnd = true;
-            }
-            else
-            {
-                HediffDef? interferenceDef = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
-                if (interferenceDef != null && bandwidthTarget.health.hediffSet.GetFirstHediffOfDef(interferenceDef) == null)
-                {
-                    shouldEnd = true;
-                }
-            }
 
-            // 2. 清除已经倒地或已结束狂暴的 Pawn 身上的隐藏标记（不从列表删除，死亡/倒地 Pawn 可能复活）。
             if (!shouldEnd)
             {
-                CleanupDownedBerserkMarkers();
+                // 清理已失效的目标记录（死亡 / 倒地 / 离开地图 / Hediff 丢失），
+                // 不直接结束其他目标的整轮干扰。
+                CleanupInvalidTargetRecords();
+                // 清理已彻底失效（null / Discarded）的狂暴记录。
+                bandwidthBerserkRecords.RemoveAll(r => r.pawn == null || r.pawn.Discarded);
             }
 
             // 3/4. 目标与本轮狂暴者的行动能力判断（与读档校验共用，无副作用）。
@@ -1187,26 +1504,10 @@ namespace MAP_MechanoidMechanitor
                 shouldEnd = true;
             }
 
-            // 5. 某个本轮狂暴者本人重新出现在原监管者的受控列表中 -> 结束整轮（逐 Pawn 匹配）。
-            if (!shouldEnd && bandwidthBerserkPawns.Count > 0 && bandwidthOverseer != null)
+            // 5. 某个本轮狂暴单位重新出现在原监管者的受控列表中 -> 结束整轮。
+            if (!shouldEnd && HasBerserkPawnReturnedToOverseer())
             {
-                var tracker = bandwidthOverseer.mechanitor;
-                if (tracker != null)
-                {
-                    foreach (Pawn p in bandwidthBerserkPawns)
-                    {
-                        if (p == null)
-                        {
-                            continue;
-                        }
-
-                        if (tracker.ControlledPawns.Contains(p))
-                        {
-                            shouldEnd = true;
-                            break;
-                        }
-                    }
-                }
+                shouldEnd = true;
             }
 
             // 6. 达到持续时间。
@@ -1221,17 +1522,40 @@ namespace MAP_MechanoidMechanitor
             }
             else
             {
-                bandwidthVisuals.Tick(parent, bandwidthTarget);
+                bandwidthVisuals.Tick(
+                    parent,
+                    bandwidthTargetRecords
+                        .Select(r => r.target)
+                        .Where(t => t != null));
                 CleanupDownedBerserkMarkers();
             }
         }
 
-        // 仅移除隐藏狂暴标记；绝不可因此把 Pawn 从 bandwidthBerserkPawns 删除。
+        private bool HasBerserkPawnReturnedToOverseer()
+        {
+            foreach (CerebrexBandwidthBerserkRecord rec in bandwidthBerserkRecords)
+            {
+                if (rec.pawn == null || rec.originalOverseer == null)
+                {
+                    continue;
+                }
+
+                var tracker = rec.originalOverseer.mechanitor;
+                if (tracker != null && tracker.ControlledPawns.Contains(rec.pawn))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // 仅移除隐藏狂暴标记；绝不可因此把 Pawn 从 bandwidthBerserkRecords 删除。
         private void CleanupDownedBerserkMarkers()
         {
-            for (int i = bandwidthBerserkPawns.Count - 1; i >= 0; i--)
+            for (int i = bandwidthBerserkRecords.Count - 1; i >= 0; i--)
             {
-                Pawn? p = bandwidthBerserkPawns[i];
+                Pawn? p = bandwidthBerserkRecords[i].pawn;
                 if (p == null || p.Dead || p.Destroyed || p.Discarded || p.Downed)
                 {
                     RemoveBerserkMarker(p);
@@ -1261,9 +1585,24 @@ namespace MAP_MechanoidMechanitor
 
         private void EndBandwidthInterference(bool startCooldown, string reason)
         {
-            for (int i = bandwidthBerserkPawns.Count - 1; i >= 0; i--)
+            List<Pawn?> allTargets = bandwidthTargetRecords
+                .Select(r => r.target)
+                .Where(p => p != null)
+                .ToList();
+
+            HashSet<Pawn> distinctOverseers = new HashSet<Pawn>();
+            foreach (CerebrexBandwidthBerserkRecord rec in bandwidthBerserkRecords)
             {
-                Pawn? p = bandwidthBerserkPawns[i];
+                if (rec.originalOverseer != null)
+                {
+                    distinctOverseers.Add(rec.originalOverseer);
+                }
+            }
+
+            // 1. 只恢复带隐藏标记的狂暴单位。
+            for (int i = bandwidthBerserkRecords.Count - 1; i >= 0; i--)
+            {
+                Pawn? p = bandwidthBerserkRecords[i].pawn;
                 if (p == null)
                 {
                     continue;
@@ -1280,37 +1619,46 @@ namespace MAP_MechanoidMechanitor
                 RemoveBerserkMarker(p);
             }
 
-            if (bandwidthTarget != null)
+            // 2. 删除所有目标身上的干扰 Hediff。
+            HediffDef? interferenceDef = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
+            foreach (Pawn? t in allTargets)
             {
-                HediffDef? interferenceDef = DefDatabase<HediffDef>.GetNamedSilentFail("MAP_CerebrexBandwidthInterference");
-                if (interferenceDef != null)
+                if (t != null && interferenceDef != null)
                 {
-                    Hediff? h = bandwidthTarget.health.hediffSet.GetFirstHediffOfDef(interferenceDef);
+                    Hediff? h = t.health.hediffSet.GetFirstHediffOfDef(interferenceDef);
                     if (h != null)
                     {
-                        bandwidthTarget.health.RemoveHediff(h);
+                        t.health.RemoveHediff(h);
                     }
                 }
             }
 
-            bandwidthOverseer?.mechanitor?.Notify_BandwidthChanged();
+            // 3. 对每个不同且仍有效的原监管者各通知一次。
+            foreach (Pawn ov in distinctOverseers)
+            {
+                ov.mechanitor?.Notify_BandwidthChanged();
+            }
 
             bool playRecoveryVisual = startCooldown
                 && reason != "loadfix"
                 && parent.Spawned
                 && !parent.Destroyed
                 && parent.Map != null;
-            bandwidthVisuals.Stop(bandwidthTarget, bandwidthBerserkPawns, playRecoveryVisual);
+            bandwidthVisuals.Stop(
+                allTargets,
+                bandwidthBerserkRecords.Select(r => r.pawn).Where(p => p != null),
+                playRecoveryVisual);
 
-            bandwidthBerserkPawns.Clear();
-            bandwidthTarget = null;
-            bandwidthOverseer = null;
+            bandwidthBerserkRecords.Clear();
+            bandwidthTargetRecords.Clear();
             bandwidthInterferenceEndTick = 0;
             bandwidthInterferenceActive = false;
 
             if (startCooldown)
             {
-                nextBandwidthTick = Find.TickManager.TicksGame + Rand.RangeInclusive(BandwidthCooldownMinTicks, BandwidthCooldownMaxTicks);
+                nextBandwidthTick = Find.TickManager.TicksGame + Rand.RangeInclusive(
+                    difficultyBandwidthCooldownMinTicks,
+                    difficultyBandwidthCooldownMaxTicks);
             }
         }
 
@@ -1447,6 +1795,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // force=true 绕过主脑总开关与带宽单项技能开关（仍受基础条件约束）。
             TryStartBandwidthInterference(force: true);
         }
 
@@ -1473,6 +1822,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // force=true 绕过主脑总开关与 EMP 单项技能开关（仍受基础条件约束）。
             StartEmpWarning(force: true);
         }
     }

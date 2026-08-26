@@ -137,6 +137,8 @@ namespace MAP_MechanoidMechanitor
 
             DrawJusticeBossDifficultySettings(listing);
 
+            DrawCerebrexBossDifficultySettings(listing);
+
             settingsContentHeight =
                 Mathf.Max(
                     inRect.height,
@@ -334,6 +336,185 @@ namespace MAP_MechanoidMechanitor
                 ref settings.justiceBossAllowBossReplacement,
                 "MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description"
                     .Translate());
+        }
+
+        private static void DrawCerebrexBossDifficultySettings(
+            Listing_Standard listing)
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            MAPMechanitorModSettings settings = Settings;
+
+            listing.GapLine();
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section".Translate());
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description".Translate());
+
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Label"
+                    .Translate(),
+                ref settings.cerebrexBossEnableExtraSkills,
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description"
+                    .Translate());
+
+            listing.Gap(6f);
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection"
+                    .Translate());
+
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Label"
+                    .Translate(),
+                ref settings.cerebrexBossEnableSummoning,
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description"
+                    .Translate());
+
+            settings.cerebrexBossSummonIntervalTicks =
+                DrawNamedTickIntervalSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description",
+                    settings.cerebrexBossSummonIntervalTicks,
+                    CerebrexBossDifficultyValues.MinSummonIntervalTicks,
+                    CerebrexBossDifficultyValues.MaxSummonIntervalTicks);
+
+            settings.cerebrexBossMechsPerWave =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description",
+                    settings.cerebrexBossMechsPerWave,
+                    CerebrexBossDifficultyValues.MinMechsPerWave,
+                    CerebrexBossDifficultyValues.MaxMechsPerWave);
+
+            settings.cerebrexBossMaxLivingSummonedMechs =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Description",
+                    settings.cerebrexBossMaxLivingSummonedMechs,
+                    CerebrexBossDifficultyValues.MinMaxLivingSummonedMechs,
+                    CerebrexBossDifficultyValues.MaxMaxLivingSummonedMechs);
+
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label"
+                    .Translate(),
+                ref settings.cerebrexBossApplyMobileCombatToSummons,
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description"
+                    .Translate());
+
+            listing.Gap(6f);
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Bandwidth.Subsection"
+                    .Translate());
+
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Label"
+                    .Translate(),
+                ref settings.cerebrexBossEnableBandwidthInterference,
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description"
+                    .Translate());
+
+            settings.cerebrexBossBandwidthCooldownMinTicks =
+                DrawNamedTickIntervalSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description",
+                    settings.cerebrexBossBandwidthCooldownMinTicks,
+                    CerebrexBossDifficultyValues.MinBandwidthCooldownTicks,
+                    CerebrexBossDifficultyValues.MaxBandwidthCooldownTicks);
+
+            settings.cerebrexBossBandwidthCooldownMaxTicks =
+                DrawNamedTickIntervalSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description",
+                    settings.cerebrexBossBandwidthCooldownMaxTicks,
+                    CerebrexBossDifficultyValues.MinBandwidthCooldownTicks,
+                    CerebrexBossDifficultyValues.MaxBandwidthCooldownTicks);
+
+            (settings.cerebrexBossBandwidthCooldownMinTicks,
+                settings.cerebrexBossBandwidthCooldownMaxTicks) =
+                CerebrexBossDifficultyValues.ClampBandwidthCooldownRange(
+                    settings.cerebrexBossBandwidthCooldownMinTicks,
+                    settings.cerebrexBossBandwidthCooldownMaxTicks);
+
+            settings.cerebrexBossBandwidthDurationTicks =
+                DrawNamedTickIntervalSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description",
+                    settings.cerebrexBossBandwidthDurationTicks,
+                    CerebrexBossDifficultyValues.MinBandwidthDurationTicks,
+                    CerebrexBossDifficultyValues.MaxBandwidthDurationTicks);
+
+            settings.cerebrexBossBandwidthMaxTargets =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Description",
+                    settings.cerebrexBossBandwidthMaxTargets,
+                    CerebrexBossDifficultyValues.MinBandwidthMaxTargets,
+                    CerebrexBossDifficultyValues.MaxBandwidthMaxTargets);
+
+            listing.Gap(6f);
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Emp.Subsection"
+                    .Translate());
+
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Label"
+                    .Translate(),
+                ref settings.cerebrexBossEnableEmp,
+                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Description"
+                    .Translate());
+
+            settings.cerebrexBossEmpCooldownMinTicks =
+                DrawNamedTickIntervalSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Description",
+                    settings.cerebrexBossEmpCooldownMinTicks,
+                    CerebrexBossDifficultyValues.MinEmpCooldownTicks,
+                    CerebrexBossDifficultyValues.MaxEmpCooldownTicks);
+
+            settings.cerebrexBossEmpCooldownMaxTicks =
+                DrawNamedTickIntervalSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Description",
+                    settings.cerebrexBossEmpCooldownMaxTicks,
+                    CerebrexBossDifficultyValues.MinEmpCooldownTicks,
+                    CerebrexBossDifficultyValues.MaxEmpCooldownTicks);
+
+            (settings.cerebrexBossEmpCooldownMinTicks,
+                settings.cerebrexBossEmpCooldownMaxTicks) =
+                CerebrexBossDifficultyValues.ClampEmpCooldownRange(
+                    settings.cerebrexBossEmpCooldownMinTicks,
+                    settings.cerebrexBossEmpCooldownMaxTicks);
+
+            settings.cerebrexBossEmpBaseDurationTicks =
+                DrawNamedTickIntervalSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description",
+                    settings.cerebrexBossEmpBaseDurationTicks,
+                    CerebrexBossDifficultyValues.MinEmpBaseDurationTicks,
+                    CerebrexBossDifficultyValues.MaxEmpBaseDurationTicks);
+
+            settings.cerebrexBossEmpRadius =
+                DrawFloatSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Label",
+                    "MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description",
+                    settings.cerebrexBossEmpRadius,
+                    CerebrexBossDifficultyValues.MinEmpRadius,
+                    CerebrexBossDifficultyValues.MaxEmpRadius);
         }
 
         private static void DrawStrategicNodeSettings(
@@ -539,6 +720,64 @@ namespace MAP_MechanoidMechanitor
 
             return JusticeBossDifficultyValues.ClampWaveIntervalTicks(
                 stepped);
+        }
+
+        /// <summary>
+        /// 通用“按秒显示”的 tick 间隔滑块：内部以游戏刻为单位存储与钳制，
+        /// 标签显示换算后的秒数（保留两位有效数字）。
+        /// </summary>
+        private static int DrawNamedTickIntervalSliderSetting(
+            Listing_Standard listing,
+            string labelKey,
+            string descriptionKey,
+            int value,
+            int min,
+            int max)
+        {
+            int clamped = Mathf.Clamp(value, min, max);
+
+            string secondsText =
+                (clamped / 60f).ToString(
+                    "0.##",
+                    CultureInfo.CurrentCulture);
+
+            float sliderValue = listing.SliderLabeled(
+                labelKey.Translate(secondsText).ToString(),
+                clamped,
+                min,
+                max,
+                0.62f,
+                descriptionKey.Translate().ToString());
+
+            return Mathf.Clamp(
+                Mathf.RoundToInt(sliderValue),
+                min,
+                max);
+        }
+
+        /// <summary>
+        /// 通用浮点滑块：标签显示当前浮点值（保留一位小数）。
+        /// </summary>
+        private static float DrawFloatSliderSetting(
+            Listing_Standard listing,
+            string labelKey,
+            string descriptionKey,
+            float value,
+            float min,
+            float max)
+        {
+            float clamped = Mathf.Clamp(value, min, max);
+
+            float sliderValue = listing.SliderLabeled(
+                labelKey.Translate(clamped.ToString("0.#", CultureInfo.CurrentCulture))
+                    .ToString(),
+                clamped,
+                min,
+                max,
+                0.62f,
+                descriptionKey.Translate().ToString());
+
+            return Mathf.Clamp(sliderValue, min, max);
         }
 
         public override void WriteSettings()

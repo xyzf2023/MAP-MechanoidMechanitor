@@ -24,7 +24,8 @@ namespace MAP_MechanoidMechanitor
             List<Pawn> existingList,
             IntVec3 center,
             Faction faction,
-            CompCerebrexBossController controller)
+            CompCerebrexBossController controller,
+            bool applyMobileCombat)
         {
             if (map == null || kinds == null || kinds.Count == 0 || faction == null || controller == null)
             {
@@ -43,7 +44,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                Pawn? pawn = TryGeneratePawn(kind, faction);
+                Pawn? pawn = TryGeneratePawn(kind, faction, applyMobileCombat);
                 if (pawn == null)
                 {
                     controller.RegisterPendingSummonKind(kind);
@@ -74,7 +75,7 @@ namespace MAP_MechanoidMechanitor
             return success;
         }
 
-        private static Pawn? TryGeneratePawn(PawnKindDef kind, Faction faction)
+        private static Pawn? TryGeneratePawn(PawnKindDef kind, Faction faction, bool applyMobileCombat)
         {
             try
             {
@@ -85,7 +86,11 @@ namespace MAP_MechanoidMechanitor
                     forceGenerateNewPawn: true);
                 Pawn pawn = PawnGenerator.GeneratePawn(request);
                 pawn.SetFaction(faction);
-                MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff(pawn);
+                if (applyMobileCombat)
+                {
+                    MechanoidMechanitorWorkModeUtility.EnsureMobileCombatHediff(pawn);
+                }
+
                 return pawn;
             }
             catch (System.Exception e)

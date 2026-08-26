@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -10,6 +11,7 @@ namespace MAP_MechanoidMechanitor
     /// 主脑带宽干扰的纯视觉层。只复用原版 Mote / Fleck / Effecter / SoundDef，
     /// 不保存状态，也不参与技能的目标选择、带宽计算、狂暴或结束判定。
     /// 原版 Mote 不写入存档，因此读档后由 Tick 自动重建持续链路。
+    /// 现支持同时维护多个目标的瞬态视觉状态。
     /// </summary>
     internal sealed class CerebrexBandwidthVisuals
     {
@@ -19,74 +21,104 @@ namespace MAP_MechanoidMechanitor
 
         private static readonly Color InterferenceColor = new Color(1f, 0.12f, 0.08f, 0.95f);
 
-        private MoteDualAttached? linkMote;
-        private int nextLinkPulseTick;
-        private int nextTargetPulseTick;
-        private int nextElectricityArcTick;
+        private sealed class TargetVisualState
+        {
+            public MoteDualAttached? linkMote;
+            public int nextLinkPulseTick;
+            public int nextTargetPulseTick;
+            public int nextElectricityArcTick;
+        }
+
+        private readonly Dictionary<Pawn, TargetVisualState> states =
+            new Dictionary<Pawn, TargetVisualState>();
 
         public void ResetTransientState()
         {
             // 不主动销毁旧 Mote：停止 Maintain 后，原版会按自身 fadeOutTime 自然淡出。
-            linkMote = null;
-            nextLinkPulseTick = 0;
-            nextTargetPulseTick = 0;
-            nextElectricityArcTick = 0;
+            states.Clear();
         }
 
-        public void Start(Thing core, Pawn target)
+        public void Start(Thing core, IEnumerable<Pawn?> targets)
         {
             ResetTransientState();
-            if (!TryGetSharedMap(core, target, out Map map))
+            if (!TryGetSharedMap(core, targets, out Map map))
             {
                 return;
             }
 
             int now = Find.TickManager.TicksGame;
-            EnsureLink(core, target, map);
-            linkMote?.Maintain();
+            foreach (Pawn? target in targets)
+            {
+                if (target == null || target.Destroyed || !target.Spawned || target.Map != map)
+                {
+                    continue;
+                }
 
-            SpawnLinkPulse(core, target);
-            SpawnRedFlash(core, map, 2f);
-            SpawnRedFlash(target, map, 1.2f);
-            SpawnBandPulse(target, map, recovery: false);
-            SpawnElectricityArc(target, map);
+                TargetVisualState state = GetOrCreateState(target);
+                EnsureLink(core, target, map, state);
+                state.linkMote?.Maintain();
+                SpawnLinkPulse(core, target);
+                SpawnRedFlash(core, map, 2f);
+                SpawnRedFlash(target, map, 1.2f);
+                SpawnBandPulse(target, map, recovery: false);
+                SpawnElectricityArc(target, map);
+                state.nextLinkPulseTick = now + LinkPulseIntervalTicks;
+                state.nextTargetPulseTick = now + TargetPulseIntervalTicks;
+                state.nextElectricityArcTick = now + ElectricityArcIntervalTicks;
+            }
 
             SoundDef? signalSound = DefDatabase<SoundDef>.GetNamedSilentFail("MechbandDishUsed");
             signalSound?.PlayOneShot(new TargetInfo(core.Position, map));
-
-            nextLinkPulseTick = now + LinkPulseIntervalTicks;
-            nextTargetPulseTick = now + TargetPulseIntervalTicks;
-            nextElectricityArcTick = now + ElectricityArcIntervalTicks;
         }
 
-        public void Tick(Thing core, Pawn? target)
+        public void Tick(Thing core, IEnumerable<Pawn?> targets)
         {
-            if (target == null || !TryGetSharedMap(core, target, out Map map))
+            if (!TryGetSharedMap(core, targets, out Map map))
             {
                 ResetTransientState();
                 return;
             }
 
-            EnsureLink(core, target, map);
-            linkMote?.Maintain();
-
+            HashSet<Pawn> valid = new HashSet<Pawn>();
             int now = Find.TickManager.TicksGame;
-            if (now >= nextLinkPulseTick)
+            foreach (Pawn? target in targets)
             {
-                SpawnLinkPulse(core, target);
-                nextLinkPulseTick = now + LinkPulseIntervalTicks;
+                if (target == null || target.Destroyed || !target.Spawned || target.Map != map)
+                {
+                    continue;
+                }
+
+                valid.Add(target);
+                TargetVisualState state = GetOrCreateState(target);
+                EnsureLink(core, target, map, state);
+                state.linkMote?.Maintain();
+
+                if (now >= state.nextLinkPulseTick)
+                {
+                    SpawnLinkPulse(core, target);
+                    state.nextLinkPulseTick = now + LinkPulseIntervalTicks;
+                }
+
+                if (now >= state.nextTargetPulseTick)
+                {
+                    SpawnBandPulse(target, map, recovery: false);
+                    state.nextTargetPulseTick = now + TargetPulseIntervalTicks;
+                }
+
+                if (now >= state.nextElectricityArcTick)
+                {
+                    SpawnElectricityArc(target, map);
+                    state.nextElectricityArcTick = now + ElectricityArcIntervalTicks;
+                }
             }
 
-            if (now >= nextTargetPulseTick)
+            // 目标失效或离开地图时移除其瞬态视觉记录，让旧 Mote 自然淡出。
+            List<Pawn> removeKeys = states.Keys
+                .Where(p => p == null || p.Destroyed || !valid.Contains(p))
+                .ToList();
+            foreach (Pawn key in removeKeys)
             {
-                SpawnBandPulse(target, map, recovery: false);
-                nextTargetPulseTick = now + TargetPulseIntervalTicks;
-            }
-
-            if (now >= nextElectricityArcTick)
-            {
-                SpawnElectricityArc(target, map);
-                nextElectricityArcTick = now + ElectricityArcIntervalTicks;
+                states.Remove(key);
             }
         }
 
@@ -103,7 +135,10 @@ namespace MAP_MechanoidMechanitor
             SpawnElectricityArc(pawn, map);
         }
 
-        public void Stop(Pawn? target, IEnumerable<Pawn> berserkPawns, bool playRecovery)
+        public void Stop(
+            IEnumerable<Pawn?> targets,
+            IEnumerable<Pawn?> berserkPawns,
+            bool playRecovery)
         {
             ResetTransientState();
             if (!playRecovery)
@@ -112,14 +147,20 @@ namespace MAP_MechanoidMechanitor
             }
 
             HashSet<Pawn> recoveryPawns = new HashSet<Pawn>();
-            if (target != null)
+            if (targets != null)
             {
-                recoveryPawns.Add(target);
+                foreach (Pawn? pawn in targets)
+                {
+                    if (pawn != null)
+                    {
+                        recoveryPawns.Add(pawn);
+                    }
+                }
             }
 
             if (berserkPawns != null)
             {
-                foreach (Pawn pawn in berserkPawns)
+                foreach (Pawn? pawn in berserkPawns)
                 {
                     if (pawn != null)
                     {
@@ -139,28 +180,42 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void EnsureLink(Thing core, Pawn target, Map map)
+        private TargetVisualState GetOrCreateState(Pawn target)
         {
-            if (linkMote != null && !linkMote.Destroyed && linkMote.Spawned && linkMote.Map == map)
+            if (!states.TryGetValue(target, out TargetVisualState? state) || state == null)
             {
-                linkMote.UpdateTargets(core, target, Vector3.zero, Vector3.zero);
+                state = new TargetVisualState();
+                states[target] = state;
+            }
+
+            return state;
+        }
+
+        private void EnsureLink(Thing core, Pawn target, Map map, TargetVisualState state)
+        {
+            if (state.linkMote != null
+                && !state.linkMote.Destroyed
+                && state.linkMote.Spawned
+                && state.linkMote.Map == map)
+            {
+                state.linkMote.UpdateTargets(core, target, Vector3.zero, Vector3.zero);
                 return;
             }
 
             ThingDef? linkDef = DefDatabase<ThingDef>.GetNamedSilentFail("Mote_PsychicLinkLine");
             if (linkDef == null)
             {
-                linkMote = null;
+                state.linkMote = null;
                 return;
             }
 
-            linkMote = MoteMaker.MakeInteractionOverlay(linkDef, core, target);
-            linkMote.instanceColor = InterferenceColor;
+            state.linkMote = MoteMaker.MakeInteractionOverlay(linkDef, core, target);
+            state.linkMote.instanceColor = InterferenceColor;
         }
 
         private static void SpawnLinkPulse(Thing core, Pawn target)
         {
-            if (!TryGetSharedMap(core, target, out _))
+            if (!TryGetSharedMap(core, new[] { target }, out _))
             {
                 return;
             }
@@ -222,17 +277,31 @@ namespace MAP_MechanoidMechanitor
             arc?.Cleanup();
         }
 
-        private static bool TryGetSharedMap(Thing core, Pawn target, out Map map)
+        private static bool TryGetSharedMap(
+            Thing core,
+            IEnumerable<Pawn?> targets,
+            out Map map)
         {
             map = core.Map;
-            return core != null
-                && target != null
-                && !core.Destroyed
-                && !target.Destroyed
-                && core.Spawned
-                && target.Spawned
-                && map != null
-                && target.Map == map;
+            if (core == null || core.Destroyed || !core.Spawned || map == null)
+            {
+                return false;
+            }
+
+            if (targets == null)
+            {
+                return false;
+            }
+
+            foreach (Pawn? target in targets)
+            {
+                if (target == null || target.Destroyed || !target.Spawned || target.Map != map)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }
