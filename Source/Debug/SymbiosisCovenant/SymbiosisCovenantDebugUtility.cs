@@ -615,7 +615,7 @@ namespace MAP_MechanoidMechanitor
         /// DEV 内部：读取当前实际好感，计算差值并以正式关系 API 应用，
         /// 之后重新读取验证变更是否生效。不使用反射、不修改 FactionRelation 私有字段。
         /// </summary>
-        private static bool TrySetDevGoodwill(
+        internal static bool TrySetDevGoodwill(
             Faction a,
             Faction b,
             int desiredGoodwill,

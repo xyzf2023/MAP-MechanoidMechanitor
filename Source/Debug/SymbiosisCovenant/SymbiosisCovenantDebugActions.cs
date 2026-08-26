@@ -25,7 +25,7 @@ namespace MAP_MechanoidMechanitor
             allowedGameStates = AllowedGameStates.PlayingOnMap)]
         private static List<DebugActionNode> BuildRootMenu()
         {
-            return new List<DebugActionNode>
+            List<DebugActionNode> nodes = new List<DebugActionNode>
             {
                 CreateSubmenuNode("窗口与基础状态", BuildWindowMenu),
                 CreateSubmenuNode("团结度与等级", BuildUnityMenu),
@@ -33,8 +33,79 @@ namespace MAP_MechanoidMechanitor
                 CreateSubmenuNode("联合贸易代表团", BuildTradeDelegationMenu),
                 CreateSubmenuNode("共同防卫", BuildMilitaryAidMenu),
                 CreateSubmenuNode("标准测试袭击", BuildTestRaidMenu),
-                CreateSubmenuNode("联合军事行动", BuildJointOperationMenu),
-                CreateSubmenuNode("状态与日志", BuildStatusMenu)
+                CreateSubmenuNode("联合军事行动", BuildJointOperationMenu)
+            };
+
+            // 主脑 BOSS 战：仅当启用奥德赛 DLC 时才加入菜单节点。
+            // 未启用时完全不显示，不出现灰色/报错按钮或空子菜单。
+            if (ModsConfig.OdysseyActive)
+            {
+                nodes.Add(CreateSubmenuNode("主脑 BOSS 战", BuildCerebrexBossTestMenu));
+            }
+
+            nodes.Add(CreateSubmenuNode("状态与日志", BuildStatusMenu));
+
+            return nodes;
+        }
+
+        // ===== 主脑 BOSS 战（仅奥德赛 DLC） =====
+
+        private static List<DebugActionNode> BuildCerebrexBossTestMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                CreateSubmenuNode("一键准备并进入", BuildCerebrexQuickEnterMenu),
+                CreateSubmenuNode("仅生成世界目标", BuildCerebrexWorldTargetMenu),
+                CreateActionNode(
+                    "定位现有主脑测试目标",
+                    SymbiosisCovenantCerebrexDebugUtility.TryFocusExistingTestTarget),
+                CreateActionNode(
+                    "输出主脑测试状态",
+                    SymbiosisCovenantCerebrexDebugUtility.TryLogTestStatus)
+            };
+        }
+
+        private static List<DebugActionNode> BuildCerebrexQuickEnterMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                CreateActionNode(
+                    "低威胁：3000 点",
+                    (out string message) =>
+                        SymbiosisCovenantCerebrexDebugUtility
+                            .TryPrepareAndEnterTest(3000f, out message)),
+                CreateActionNode(
+                    "中威胁：6000 点",
+                    (out string message) =>
+                        SymbiosisCovenantCerebrexDebugUtility
+                            .TryPrepareAndEnterTest(6000f, out message)),
+                CreateActionNode(
+                    "高威胁：10000 点",
+                    (out string message) =>
+                        SymbiosisCovenantCerebrexDebugUtility
+                            .TryPrepareAndEnterTest(10000f, out message))
+            };
+        }
+
+        private static List<DebugActionNode> BuildCerebrexWorldTargetMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                CreateActionNode(
+                    "低威胁：3000 点",
+                    (out string message) =>
+                        SymbiosisCovenantCerebrexDebugUtility
+                            .TryPrepareAndGenerateTarget(3000f, out message)),
+                CreateActionNode(
+                    "中威胁：6000 点",
+                    (out string message) =>
+                        SymbiosisCovenantCerebrexDebugUtility
+                            .TryPrepareAndGenerateTarget(6000f, out message)),
+                CreateActionNode(
+                    "高威胁：10000 点",
+                    (out string message) =>
+                        SymbiosisCovenantCerebrexDebugUtility
+                            .TryPrepareAndGenerateTarget(10000f, out message))
             };
         }
 
