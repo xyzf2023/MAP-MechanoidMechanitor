@@ -146,17 +146,19 @@ namespace MAP_MechanoidMechanitor
             }
 
             // LongEvent：生成主巢地图并进入（避免同步生成大地图卡住 UI）。
+            // 该 Action 只负责“生成地图 + 进入”，并把结果写入局部变量；
+            // 最终的成功/失败反馈由 LongEventHandler.ExecuteWhenFinished 在本次长事件
+            // 结束后回调处理（见 FinalizePreparedCerebrexEntry）。
             bool enterSucceeded = false;
             string enterMessage = string.Empty;
             bool wasGenerated = !site.HasMap;
-            Map? targetMap = null;
 
             LongEventHandler.QueueLongEvent(
                 () =>
                 {
                     try
                     {
-                        targetMap = GetOrGenerateMapUtility.GetOrGenerateMap(
+                        Map? targetMap = GetOrGenerateMapUtility.GetOrGenerateMap(
                             site.Tile,
                             site.PreferredMapSize,
                             null);
@@ -194,21 +196,86 @@ namespace MAP_MechanoidMechanitor
                         enterMessage = "进入主巢地图时发生异常，详见日志"
                             + "（未删除任何 Pawn，也未销毁仍持有 Pawn 的商队）。";
                     }
+
+                    // 必须在本长事件 Action 内部注册回调：
+                    // 此时 currentEvent 非空，ExecuteWhenFinished 会将其推迟到本次长事件
+                    // 真正结束后执行；若在本方法同步返回后再调用，反而会立即执行
+                    //（currentEvent 已为空），导致“尚未生成就读 enterSucceeded”的错位。
+                    LongEventHandler.ExecuteWhenFinished(
+                        () => FinalizePreparedCerebrexEntry(
+                            site,
+                            supportPart,
+                            state,
+                            pawns,
+                            preparedMembers,
+                            points,
+                            enterSucceeded,
+                            enterMessage));
                 },
                 MapGenKey,
                 doAsynchronously: false,
                 ex => Log.Error(
                     "[MAP-CerebrexDebug] 进入主巢地图长事件未捕获异常：\n" + ex));
 
+            // 前置准备已成功且地图生成长事件已排队：立即返回 true，
+            // 不在本同步调用内读取 enterSucceeded 决定成败。
+            message =
+                "已开始生成并进入机械主巢地图（威胁点数 "
+                + points.ToString("F0")
+                + "，团结度 "
+                + state.Unity.ToString("F0")
+                + "，L"
+                + state.CovenantLevel
+                + "）。\n"
+                + "主巢任务、支援 QuestPart 与临时玩家商队已创建，地图正在生成中；"
+                + "请勿重复点击“一键准备并进入”（重复点击会被已有主巢任务 / 世界目标拦截）。\n"
+                + "进入完成与最终验证结果将通过游戏消息反馈；"
+                + "盟约来信会按正式 offerDelayTicks 流程出现。";
+
+            return true;
+        }
+
+        /// <summary>
+        /// 长事件（生成主巢地图 + 进入）结束后由 LongEventHandler.ExecuteWhenFinished 调用。
+        /// 仅读取闭包传入的结果，不新增任何全局 / 存档状态，不修改任务 / 支援 Part / 盟约成员。
+        /// 无论成败都不删除或伪造撤销任何 Pawn、Caravan、任务、Site 或地图。
+        /// </summary>
+        private static void FinalizePreparedCerebrexEntry(
+            Site? site,
+            QuestPart_SymbiosisCovenantCerebrexSupport? supportPart,
+            GameComponent_SymbiosisCovenantState? state,
+            List<Pawn> pawns,
+            List<Faction> preparedMembers,
+            float points,
+            bool enterSucceeded,
+            string enterMessage)
+        {
             if (!enterSucceeded)
             {
-                message = enterMessage.NullOrEmpty()
-                    ? "进入主巢地图失败。"
-                    : enterMessage;
-                return false;
+                Messages.Message(
+                    "主脑地图生成 / 进入失败："
+                    + (enterMessage.NullOrEmpty() ? "未知原因（详见日志）。" : enterMessage),
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                Log.Error(
+                    "[MAP-CerebrexDebug] 一键准备并进入：长事件未能成功进入主巢地图。"
+                    + (enterMessage.NullOrEmpty() ? string.Empty : " 原因：" + enterMessage));
+                return;
             }
 
-            // 进入后验证（只读断言，不修改支援 Part 字段）。
+            // 进入成功，但仍需最终验证（只读断言）。
+            if (site == null || supportPart == null || state == null)
+            {
+                Messages.Message(
+                    "已完成进入主脑地图，但测试环境引用不完整，无法完成最终验证。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                Log.Error(
+                    "[MAP-CerebrexDebug] 一键准备并进入：已进入但 site/supportPart/state "
+                    + "引用为空，跳过最终验证（未删除任何任务、Site、地图、Caravan 或 Pawn）。");
+                return;
+            }
+
             if (!TryVerifyEnteredCerebrex(
                     state,
                     site,
@@ -217,27 +284,37 @@ namespace MAP_MechanoidMechanitor
                     preparedMembers,
                     out string verifyMessage))
             {
-                message = verifyMessage;
-                return false;
+                Messages.Message(
+                    "已完成进入主脑地图，但测试环境验证失败：" + verifyMessage,
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                Log.Error(
+                    "[MAP-CerebrexDebug] 一键准备并进入：已进入但验证失败。原因："
+                    + verifyMessage
+                    + "（未删除任何任务、Site、地图、Caravan 或 Pawn）。");
+                return;
             }
 
-            // 切换镜头到主巢地图，并定位第一个成功进入的玩家 Pawn。
+            // 验证成功：切换镜头到主巢地图，并定位第一个成功进入的玩家 Pawn。
             Pawn firstEntered = pawns.FirstOrDefault(
                 p => p != null && p.Spawned && p.Map == site.Map
                     && p.Faction == Faction.OfPlayer);
 
             Map? enteredMap = site.Map;
-            Current.Game.CurrentMap = enteredMap!;
-            if (firstEntered != null)
+            if (enteredMap != null)
             {
-                CameraJumper.TryJumpAndSelect(firstEntered);
-            }
-            else if (enteredMap != null)
-            {
-                CameraJumper.TryJumpAndSelect(new GlobalTargetInfo(enteredMap.Center, enteredMap));
+                Current.Game.CurrentMap = enteredMap;
+                if (firstEntered != null)
+                {
+                    CameraJumper.TryJumpAndSelect(firstEntered);
+                }
+                else
+                {
+                    CameraJumper.TryJumpAndSelect(new GlobalTargetInfo(enteredMap.Center, enteredMap));
+                }
             }
 
-            message =
+            Messages.Message(
                 "已进入机械主巢地图（威胁点数 "
                 + points.ToString("F0")
                 + "，团结度 "
@@ -253,9 +330,9 @@ namespace MAP_MechanoidMechanitor
                 + " 名。\n"
                 + "盟约来信预计将在 offerDelayTicks 后按正式逻辑出现，"
                 + "请继续人工测试（接受 / 拒绝 / 超时 / 分波支援 / 主脑技能 / "
-                + "稳定器 / 主脑防御解除 / 清空威胁 / 撤离）。";
-
-            return true;
+                + "稳定器 / 主脑防御解除 / 清空威胁 / 撤离）。",
+                MessageTypeDefOf.PositiveEvent,
+                historical: false);
         }
 
         /// <summary>
