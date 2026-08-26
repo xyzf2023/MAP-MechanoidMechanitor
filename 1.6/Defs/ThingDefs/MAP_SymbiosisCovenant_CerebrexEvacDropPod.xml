@@ -11,13 +11,16 @@
   <graphicData>
     <texPath>Things/Special/DropPod</texPath>
     <graphicClass>Graphic_Single</graphicClass>
+    <drawSize>(2,2)</drawSize>
   </graphicData>
-  <altitudeLayer>Building</altitudeLayer>
+  <size>(1,1)</size>
+  <rotatable>false</rotatable>
+  <tickerType>Normal</tickerType>
+  <altitudeLayer>BuildingOnTop</altitudeLayer>
   <passability>PassThroughOnly</passability>
   <castEdgeShadows>false</castEdgeShadows>
-  <fillPercent>0.35</fillPercent>
+  <fillPercent>0.5</fillPercent>
   <useHitPoints>true</useHitPoints>
-  <size>(1,1)</size>
   <building>
     <isEdifice>false</isEdifice>
     <canPlaceOverWall>true</canPlaceOverWall>
@@ -44,9 +47,6 @@
   <dropPodFaller>DropPodIncomingMechanoidSoft</dropPodFaller>
   <dropPodActive>ActiveDropPodMechanoid</dropPodActive>
   <selectable>false</selectable>
-  <tutorBuildable>false</tutorBuildable>
-  <neverStored>true</neverStored>
-  <notForCover>true</notForCover>
 </ThingDef>
 
 </Defs>
