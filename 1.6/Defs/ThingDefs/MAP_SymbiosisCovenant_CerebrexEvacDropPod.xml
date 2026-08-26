@@ -4,12 +4,12 @@
 
 <ThingDef ParentName="BuildingBase" MayRequire="Ludeon.RimWorld.Odyssey">
   <defName>MAP_SymbiosisCovenant_CerebrexEvacDropPod</defName>
-  <label>盟约机械撤离舱</label>
-  <description>共生盟约用于从机械主巢平台撤离盟军的机械空投舱。由代码控制，玩家不可操作。</description>
-  <category>Buildings</category>
+  <label>盟约空投舱</label>
+  <description>共生盟约用于撤离的空投舱。</description>
+  <category>Building</category>
   <thingClass>Building</thingClass>
   <graphicData>
-    <texPath>Things/Building/MechDropPod</texPath>
+    <texPath>Things/Special/DropPod</texPath>
     <graphicClass>Graphic_Single</graphicClass>
   </graphicData>
   <altitudeLayer>Building</altitudeLayer>
