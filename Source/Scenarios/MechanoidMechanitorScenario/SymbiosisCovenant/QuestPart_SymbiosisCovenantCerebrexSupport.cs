@@ -325,7 +325,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             letter.quest = quest;
             letter.offerId = offerId;
             letter.targetSite = site;
-            letter.title = "MAP_SymbiosisCovenant_CerebrexSupport_OfferTitle".Translate();
+            TaggedString offerTitle = "MAP_SymbiosisCovenant_CerebrexSupport_OfferTitle".Translate();
+            letter.title = offerTitle;
+            letter.Label = offerTitle;
             letter.Text = "MAP_SymbiosisCovenant_CerebrexSupport_OfferBody".Translate();
             letter.def = LetterDefOf.PositiveEvent;
 

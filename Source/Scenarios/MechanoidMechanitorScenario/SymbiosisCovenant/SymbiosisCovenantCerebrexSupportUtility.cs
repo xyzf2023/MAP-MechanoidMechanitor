@@ -309,8 +309,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         else pawn.Destroy(DestroyMode.Vanish);
                     }
 
-                    if (valid.Count == 0) failed.Add(fac);
-                    else generated[fac] = valid;
+                    if (valid.Count == 0)
+                    {
+                        Log.Warning(LogPrefix + " 盟约派系 "
+                            + (fac != null ? fac.Name + "(loadID=" + fac.loadID + ")" : "?")
+                            + " 在 site=" + (part.site?.Label)
+                            + " wave=" + part.waves.Count
+                            + " 的全部战斗 Pawn 均因无法穿戴真空服被淘汰，本次尝试移除该派系。");
+                        failed.Add(fac!);
+                    }
+                    else generated[fac!] = valid;
                 }
 
                 if (failed.Count == 0)
@@ -328,16 +336,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (factionPawns == null || factionPawns.Count == 0)
             {
+                Log.Warning(LogPrefix + " site=" + (part.site?.Label)
+                    + " wave=" + part.waves.Count
+                    + " 整波没有任何可用 Pawn（所有派系援军均被淘汰），放弃本波空投。");
                 return (false, false, null);
             }
 
             List<Faction> successFacs = factionPawns.Keys.ToList();
             List<(Faction faction, float points)> pointAllocations = AllocatePoints(total, successFacs);
             List<Pawn> allPawns = factionPawns.Values.SelectMany(x => x).ToList();
-            if (!TryFindSafeEdgeDropCells(map, allPawns.Count, cfg, out List<IntVec3> cells))
+            if (!TryFindSafeEdgeDropCells(map, allPawns.Count, cfg, out List<IntVec3> cells, part.site, part.waves.Count))
             {
                 foreach (Pawn pawn in allPawns) pawn.Destroy(DestroyMode.Vanish);
-                Log.Message($"{LogPrefix} 落点准备失败，整波回滚并重试（site={part.site?.Label}）。");
+                Log.Message($"{LogPrefix} 落点准备失败，整波 {allPawns.Count} 名援军 Pawn 回滚（site={part.site?.Label}，已选落点={cells.Count}）。");
                 return (false, false, null);
             }
 
@@ -353,11 +364,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 string aidTag = $"{questId}_{waveIndex}_{fac.loadID}";
                 foreach (Pawn pawn in pawns)
                 {
-                    ActiveTransporter transporter = (ActiveTransporter)ThingMaker.MakeThing(ThingDefOf.ActiveDropPod);
-                    transporter.Contents.innerContainer.TryAdd(pawn);
-                    transporter.Contents.sentTransporterDef = ThingDefOf.ActiveDropPod;
-                    transporter.Contents.openDelay = cfg.dropPodOpenDelayTicks;
-                    DropPodUtility.MakeDropPodAt(cells[cellIdx++], map, transporter.Contents, null);
+                    ActiveTransporterInfo info = new ActiveTransporterInfo();
+                    info.innerContainer.TryAdd(pawn);
+                    info.sentTransporterDef = ThingDefOf.ActiveDropPod;
+                    info.openDelay = cfg.dropPodOpenDelayTicks;
+                    info.leaveSlag = false;
+                    info.despawnPodBeforeSpawningThing = true;
+                    info.spawnWipeMode = WipeMode.Vanish;
+                    DropPodUtility.MakeDropPodAt(cells[cellIdx++], map, info, fac);
                 }
 
                 factionRecords.Add(new SymbiosisCovenantCerebrexSupportFactionRecord(fac, allocation.points, pawns.Count, aidTag));
@@ -438,7 +452,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return null;
             }
 
-            ThingDef? coreDef = DefDatabase<ThingDef>.GetNamedSilentFail("Building_CerebrexCore");
+            ThingDef coreDef = ThingDefOf.CerebrexCore;
             if (coreDef != null)
             {
                 foreach (Thing t in map.listerThings.ThingsOfDef(coreDef))
@@ -490,12 +504,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map,
             int requiredCount,
             SymbiosisCovenantCerebrexSupportDef cfg,
-            out List<IntVec3> result)
+            out List<IntVec3> result,
+            Site? site = null,
+            int waveIndex = -1)
         {
             result = new List<IntVec3>();
 
             // 寻路目标仅在方法内计算一次，避免每个候选重复全图扫描。
-            IntVec3 target = FindCerebrexCore(map)?.parent?.Position ?? map.Center;
+            // 取得完整主脑核心建筑 Thing（而非仅位置），用于可达性 Touch 判定。
+            CompCerebrexCore? coreComp = FindCerebrexCore(map);
+            Thing? coreThing = coreComp?.parent;
+            IntVec3 target = coreThing?.Position ?? map.Center;
+
+            if (coreThing == null || !coreThing.Spawned || coreThing.Map != map)
+            {
+                Log.Warning(LogPrefix + " 主脑核心缺失/未生成/不属于当前地图，无法安全生成援军空投落点。"
+                    + " site=" + (site != null ? site.ID.ToString() : "?")
+                    + " wave=" + waveIndex
+                    + " required=" + requiredCount);
+                return false;
+            }
 
             // 1) 原版 EdgeDrop 解析 spawn center 作为搜索锚点之一。
             IntVec3 anchor = map.Center;
@@ -522,7 +550,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 for (int z = 0; z < map.Size.z && scanned < scanBudget; z += step, scanned++)
                 {
                     IntVec3 c = new IntVec3(x, 0, z);
-                    if (IsPlatformEdge(c, map) && IsSafeDropCell(c, map, target))
+                    if (IsPlatformEdge(c, map) && IsSafeDropCell(c, map, coreThing))
                     {
                         candidates.Add(c);
                     }
@@ -550,7 +578,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     IntVec3 c = anchor + GenRadial.RadialPattern[attempt % GenRadial.RadialPattern.Length];
                     if (c.InBounds(map)
                         && c.DistanceToSquared(anchor) <= r2
-                        && IsSafeDropCell(c, map, target)
+                        && IsSafeDropCell(c, map, coreThing)
                         && !candidates.Contains(c))
                     {
                         candidates.Add(c);
@@ -569,7 +597,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     IntVec3 c = target + off;
                     if (c.InBounds(map)
                         && c.DistanceToSquared(target) <= zoneR2
-                        && IsSafeDropCell(c, map, target)
+                        && IsSafeDropCell(c, map, coreThing)
                         && !candidates.Contains(c))
                     {
                         candidates.Add(c);
@@ -586,7 +614,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     for (int z = 0; z < map.Size.z && scanned < scanBudget; z += step, scanned++)
                     {
                         IntVec3 c = new IntVec3(x, 0, z);
-                        if (!candidates.Contains(c) && IsSafeDropCell(c, map, target))
+                        if (!candidates.Contains(c) && IsSafeDropCell(c, map, coreThing))
                         {
                             candidates.Add(c);
                         }
@@ -630,10 +658,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
+            if (result.Count < requiredCount)
+            {
+                Log.Warning(LogPrefix + " 落点不足：site=" + (site != null ? site.ID.ToString() : "?")
+                    + " wave=" + waveIndex
+                    + " required=" + requiredCount
+                    + " candidates=" + candidates.Count
+                    + " final=" + result.Count
+                    + "，放弃本波空投。");
+            }
+
             return result.Count == requiredCount;
         }
 
-        private static bool IsSafeDropCell(IntVec3 c, Map map, IntVec3 target)
+        private static bool IsSafeDropCell(IntVec3 c, Map map, Thing? coreThing)
         {
             if (!c.InBounds(map))
             {
@@ -683,12 +721,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
-            if (!map.reachability.CanReach(
-                    c,
-                    target,
-                    PathEndMode.OnCell,
-                    TraverseParms.For(TraverseMode.PassDoors)))
+            if (coreThing != null && coreThing.Spawned && coreThing.Map == map)
             {
+                if (!map.reachability.CanReach(
+                        c,
+                        coreThing,
+                        PathEndMode.Touch,
+                        TraverseParms.For(TraverseMode.PassDoors)))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // 核心缺失 / 未生成 / 不在当前地图：不把 map.Center 当作主脑可达性替代目标，
+                // 也不绕过可达性校验，直接拒绝该候选。
                 return false;
             }
 
