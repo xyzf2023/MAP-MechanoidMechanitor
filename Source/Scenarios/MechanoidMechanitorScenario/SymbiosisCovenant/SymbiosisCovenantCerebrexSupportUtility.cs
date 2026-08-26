@@ -345,10 +345,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Faction> successFacs = factionPawns.Keys.ToList();
             List<(Faction faction, float points)> pointAllocations = AllocatePoints(total, successFacs);
             List<Pawn> allPawns = factionPawns.Values.SelectMany(x => x).ToList();
-            if (!TryFindSafeEdgeDropCells(map, allPawns.Count, cfg, out List<IntVec3> cells, part.site, part.waves.Count))
+
+            // 改为复用原版“友军空投”到达链：只解析一次投放中心，整波援军围绕同一中心密集落下。
+            // 不再使用主脑援军专用的整波精确落点预选（TryFindSafeEdgeDropCells / cells / cellIdx）。
+            IncidentParms arrivalParms = new IncidentParms
+            {
+                target = map,
+                faction = successFacs[0],
+                raidArrivalMode = PawnsArrivalModeDefOf.CenterDrop,
+                raidArrivalModeForQuickMilitaryAid = true,
+                podOpenDelay = cfg.dropPodOpenDelayTicks
+            };
+
+            bool resolvedCenter = arrivalParms.raidArrivalMode.Worker.TryResolveRaidSpawnCenter(arrivalParms);
+            PawnsArrivalModeDef? resolvedArrivalMode = arrivalParms.raidArrivalMode;
+            if (!resolvedCenter || !arrivalParms.spawnCenter.IsValid || resolvedArrivalMode == null)
             {
                 foreach (Pawn pawn in allPawns) pawn.Destroy(DestroyMode.Vanish);
-                Log.Message($"{LogPrefix} 落点准备失败，整波 {allPawns.Count} 名援军 Pawn 回滚（site={part.site?.Label}，已选落点={cells.Count}）。");
+                Log.Warning(LogPrefix + " 原版空投中心解析失败，整波 " + allPawns.Count
+                    + " 名援军 Pawn 回滚（site=" + (part.site?.Label)
+                    + " wave=" + part.waves.Count
+                    + " plannedMode=CenterDrop"
+                    + " resolvedMode=" + (resolvedArrivalMode != null ? resolvedArrivalMode.defName : "?")
+                    + " spawnCenterValid=" + arrivalParms.spawnCenter.IsValid + "）。");
                 return (false, false, null);
             }
 
@@ -356,27 +375,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             string questId = part.quest?.id.ToString() ?? "q";
             List<SymbiosisCovenantCerebrexSupportFactionRecord> factionRecords =
                 new List<SymbiosisCovenantCerebrexSupportFactionRecord>();
-            int cellIdx = 0;
             foreach ((Faction fac, float points) allocation in pointAllocations)
             {
                 Faction fac = allocation.fac;
                 List<Pawn> pawns = factionPawns[fac];
                 string aidTag = $"{questId}_{waveIndex}_{fac.loadID}";
-                foreach (Pawn pawn in pawns)
-                {
-                    ActiveTransporterInfo info = new ActiveTransporterInfo();
-                    info.innerContainer.TryAdd(pawn);
-                    info.sentTransporterDef = ThingDefOf.ActiveDropPod;
-                    info.openDelay = cfg.dropPodOpenDelayTicks;
-                    info.leaveSlag = false;
-                    info.despawnPodBeforeSpawningThing = true;
-                    info.spawnWipeMode = WipeMode.Vanish;
-                    DropPodUtility.MakeDropPodAt(cells[cellIdx++], map, info, fac);
-                }
+
+                // 所有派系共享同一个已解析的投放中心；仅更新 faction，不再重新解析、也不各自选中心。
+                arrivalParms.faction = fac;
+                resolvedArrivalMode.Worker.Arrive(pawns, arrivalParms);
 
                 factionRecords.Add(new SymbiosisCovenantCerebrexSupportFactionRecord(fac, allocation.points, pawns.Count, aidTag));
                 LordMaker.MakeNewLord(fac, new LordJob_SymbiosisCovenantCerebrexSupport(map.Center), map, pawns);
             }
+
+            Log.Message($"{LogPrefix} 援军已抵达：site={part.site?.Label} wave={waveIndex} pawns={allPawns.Count} factions={successFacs.Count} mode={resolvedArrivalMode.defName} spawnCenter={arrivalParms.spawnCenter}。");
 
             return (true, false, new SymbiosisCovenantCerebrexSupportWaveRecord
             {
