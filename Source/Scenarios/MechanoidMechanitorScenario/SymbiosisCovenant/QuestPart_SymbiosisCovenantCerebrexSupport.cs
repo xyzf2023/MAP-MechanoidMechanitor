@@ -473,14 +473,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             nextThreatCheckTick = -1;
             threatClearStartTick = -1;
 
-            if (ModsConfig.RoyaltyActive)
-            {
-                evacMode = CerebrexSupportEvacMode.RoyaltyShuttle;
-            }
-            else
-            {
-                evacMode = CerebrexSupportEvacMode.OdysseyMechPod;
-            }
+            // 仅当皇权 DLC 启用、帝国派系存在且帝国当前是共生盟约成员时，才使用原版帝国穿梭机；
+            // 否则（即便皇权已启用但帝国并非盟约成员）一律使用自定义奥德赛撤离舱。撤离模式在撤离开始时确定并持久化。
+            bool useEmpireShuttle = ModsConfig.RoyaltyActive
+                && Faction.OfEmpire != null
+                && GameComponent_SymbiosisCovenantState.CurrentComponent?.GetRecord(Faction.OfEmpire)?.CovenantMember == true;
+            evacMode = useEmpireShuttle
+                ? CerebrexSupportEvacMode.RoyaltyShuttle
+                : CerebrexSupportEvacMode.OdysseyMechPod;
 
             SymbiosisCovenantCerebrexSupportUtility.BeginEvacuation(this, map, now);
             Log.Message($"{LogPrefix} 主脑战斗结束，开始撤离（模式={evacMode}，site={site?.Label}）。");

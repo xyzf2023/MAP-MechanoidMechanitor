@@ -881,6 +881,151 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static ThingDef? EvacPodDef()
             => DefDatabase<ThingDef>.GetNamed(EvacPodDefName, false);
 
+        // ─────────────────────────────────────────────────────────────────────
+        // 撤离辅助方法
+        // ─────────────────────────────────────────────────────────────────────
+
+        /// <summary>统一的可用撤离 Pawn 判定：非空、未死亡、未销毁、未丢弃。</summary>
+        private static bool IsUsableEvacPawn(Pawn? p)
+            => p != null && !p.Dead && !p.Destroyed && !p.Discarded;
+
+        /// <summary>
+        /// 在把 Pawn 加入新的撤离 Lord 之前，先从它们当前的旧 Lord（战斗 Lord）正式移除，
+        /// 避免同一 Pawn 同时隶属两个 Lord 导致原版报错。仅移除本次名单中的 Pawn，
+        /// 并在旧 Lord 不再拥有任何 Pawn 时从地图 LordManager 清理空 Lord。
+        /// 已在目标载具内部容器中的 Pawn 不重复加入新的装载 Lord（由调用方名单排除）。
+        /// </summary>
+        private static void DetachPawnsFromOldLords(IEnumerable<Pawn> pawns, Map map)
+        {
+            if (map == null)
+            {
+                return;
+            }
+
+            HashSet<Lord> touchedLords = new HashSet<Lord>();
+            foreach (Pawn pawn in pawns)
+            {
+                if (pawn == null)
+                {
+                    continue;
+                }
+
+                Lord? oldLord = pawn.GetLord();
+                if (oldLord != null)
+                {
+                    oldLord.RemovePawn(pawn);
+                    touchedLords.Add(oldLord);
+                }
+            }
+
+            foreach (Lord lord in touchedLords)
+            {
+                if (lord.ownedPawns.Count == 0 && map.lordManager.lords.Contains(lord))
+                {
+                    map.lordManager.RemoveLord(lord);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 为本载具当前名单调度“存活援军搬运倒地存活援军”的搬运任务。
+        /// 仅针对当前这艘载具的当前名单；不改动玩家搬运系统，也不给玩家 Pawn 下达任务。
+        /// </summary>
+        private static void TryAssignHaulersForDowned(
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec,
+            Map map,
+            Thing? transporterThing)
+        {
+            if (rec == null || map == null || transporterThing == null)
+            {
+                return;
+            }
+
+            // 装载中或已落地待装载阶段才调度搬运。
+            if (rec.stage != CerebrexSupportEvacVehicleStage.Loading
+                && rec.stage != CerebrexSupportEvacVehicleStage.Landed)
+            {
+                return;
+            }
+
+            Thing t = transporterThing;
+
+            // 当前仍需撤离的倒地存活援军（仍在地图、已生成、尚未进入载具容器）。
+            List<Pawn> downedTargets = rec.pawns
+                .Where(p => IsUsableEvacPawn(p)
+                            && p.Spawned && p.Map == map && p.Downed
+                            && !IsInTransporterContainer(p, t))
+                .ToList();
+            if (downedTargets.Count == 0)
+            {
+                return;
+            }
+
+            // 已被本载具搬运任务占用的倒地目标与搬运者。
+            HashSet<Pawn> claimedTargets = new HashSet<Pawn>();
+            HashSet<Pawn> busyHaulers = new HashSet<Pawn>();
+            foreach (Pawn other in map.mapPawns.AllPawnsSpawned)
+            {
+                if (other.CurJobDef != JobDefOf.HaulToTransporter)
+                {
+                    continue;
+                }
+
+                JobDriver_HaulToTransporter? drv = other.jobs.curDriver as JobDriver_HaulToTransporter;
+                if (drv == null || drv.Transporter?.parent != t)
+                {
+                    continue;
+                }
+
+                busyHaulers.Add(other);
+                if (drv.ThingToCarry is Pawn carried && downedTargets.Contains(carried))
+                {
+                    claimedTargets.Add(carried);
+                }
+            }
+
+            // 候选搬运者：本记录中存活、在地图、未倒地、非玩家殖民者/机械族、能操作并能到达目标与载具的盟友。
+            List<Pawn> candidates = rec.pawns
+                .Where(p => IsUsableEvacPawn(p)
+                            && p.Spawned && p.Map == map && !p.Downed
+                            && !p.IsColonist && !p.IsColonyMech
+                            && !busyHaulers.Contains(p))
+                .ToList();
+
+            foreach (Pawn target in downedTargets)
+            {
+                if (claimedTargets.Contains(target))
+                {
+                    continue;
+                }
+
+                Pawn? hauler = candidates.FirstOrDefault(h => HaulerCanReach(h, target, t));
+                if (hauler == null)
+                {
+                    continue;
+                }
+
+                Job job = JobMaker.MakeJob(JobDefOf.HaulToTransporter, target, t);
+                job.ignoreForbidden = true;
+                hauler.jobs.TryTakeOrderedJob(job);
+                claimedTargets.Add(target);
+                candidates.Remove(hauler);
+            }
+        }
+
+        private static bool IsInTransporterContainer(Pawn p, Thing transporterThing)
+        {
+            CompTransporter? ct = transporterThing.TryGetComp<CompTransporter>();
+            return ct != null && ct.innerContainer.Contains(p);
+        }
+
+        private static bool HaulerCanReach(Pawn hauler, Pawn target, Thing transporterThing)
+        {
+            return hauler.health.capacities.CapableOf(PawnCapacityDefOf.Manipulation)
+                && hauler.CanReach(target, PathEndMode.Touch, Danger.Deadly)
+                && hauler.CanReach(transporterThing, PathEndMode.Touch, Danger.Deadly);
+        }
+
         public static void BeginEvacuation(QuestPart_SymbiosisCovenantCerebrexSupport part, Map map, int now)
         {
             Dictionary<Faction, List<Pawn>> groups = GatherEvacPawns(part, map);
@@ -970,7 +1115,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 foreach (Pawn p in wave.pawns)
                 {
-                    if (p == null || p.Dead || p.Destroyed || p.Discarded)
+                    if (!IsUsableEvacPawn(p))
                     {
                         continue;
                     }
@@ -1017,7 +1162,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (part.evacVehicles.Count > 0 && part.evacVehicles.All(v => v.IsCompleted))
             {
-                part.MarkSupportCompleted();
+                // 仅当至少一名被追踪援军仍存活时，才发送“安全撤离”成功提示；若全部死亡/销毁/丢弃，则仅完成清理，不谎报撤离成功。
+                bool anySurvivor = part.waves.Any(w => w.pawns.Any(p => p != null && !p.Dead && !p.Destroyed && !p.Discarded));
+                part.MarkSupportCompleted(sendEvacDoneMessage: anySurvivor);
             }
         }
 
@@ -1119,7 +1266,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                     rec.stage = CerebrexSupportEvacVehicleStage.Landed;
 
-                    if (compShuttle!.AllRequiredThingsLoaded
+                    // 调度存活援军搬运倒地存活援军；并在发射前刷新实际名单，避免死亡/销毁/丢弃 Pawn 阻塞离图。
+                    if (compShuttle != null)
+                    {
+                        TryAssignHaulersForDowned(rec, map, rec.vehicleThing);
+                        compShuttle.requiredPawns = rec.pawns.Where(p => IsUsableEvacPawn(p)).ToList();
+                    }
+
+                    if (compShuttle != null && compShuttle.AllRequiredThingsLoaded
                         && rec.stage != CerebrexSupportEvacVehicleStage.Departing)
                     {
                         // 仅发射一次：切换 Departing，绝不把 vehicleThing 置空。
@@ -1198,7 +1352,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             IntVec3 spot)
         {
             List<Pawn> pawns = rec.pawns
-                .Where(p => p != null && !p.Dead && !p.Destroyed && !p.Discarded)
+                .Where(p => IsUsableEvacPawn(p))
                 .ToList();
             if (pawns.Count == 0)
             {
@@ -1216,9 +1370,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             Thing shuttle = ThingMaker.MakeThing(ThingDefOf.Shuttle);
             CompShuttle compShuttle = shuttle.TryGetComp<CompShuttle>();
-            compShuttle.permitShuttle = true;
+            compShuttle.permitShuttle = false;
             compShuttle.acceptChildren = true;
             compShuttle.requiredPawns = pawns;
+            shuttle.SetFaction(Faction.OfEmpire);
             TransportShip ship = TransportShipMaker.MakeTransportShip(TransportShipDefOf.Ship_Shuttle, null, shuttle);
             ship.ArriveAt(spot, map.Parent);
 
@@ -1226,6 +1381,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             rec.stage = CerebrexSupportEvacVehicleStage.Landed;
             rec.stateChangedTick = Find.TickManager.TicksGame;
 
+            // 加入原版穿梭机撤离 Lord 前，先从战斗 Lord 正式移除这些 Pawn，避免“同时属于两个 Lord”报错。
+            DetachPawnsFromOldLords(pawns, map);
             LordMaker.MakeNewLord(
                 rec.faction ?? Faction.OfPlayer,
                 new LordJob_ExitOnShuttle(shuttle, addFleeToil: false),
@@ -1389,9 +1546,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     BeginPodLoading(rec, ct, map);
                 }
 
+                if (rec.stage == CerebrexSupportEvacVehicleStage.Loading)
+                {
+                    TryAssignHaulersForDowned(rec, map, rec.vehicleThing);
+                }
+
                 List<Pawn> stillIn = ct.innerContainer.OfType<Pawn>().ToList();
                 bool allLoaded = rec.pawns
-                    .Where(p => p != null && !p.Dead && !p.Destroyed && !p.Discarded)
+                    .Where(p => IsUsableEvacPawn(p))
                     .All(p => stillIn.Contains(p));
 
                 if (allLoaded && rec.stage == CerebrexSupportEvacVehicleStage.Loading)
@@ -1499,7 +1661,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map)
         {
             List<Pawn> living = rec.pawns
-                .Where(p => p != null && !p.Dead && !p.Destroyed && !p.Discarded)
+                .Where(p => IsUsableEvacPawn(p))
                 .ToList();
             if (living.Count == 0)
             {
@@ -1528,6 +1690,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             rec.stateChangedTick = Find.TickManager.TicksGame;
             if (pawnsToLoad.Count > 0 && rec.groupID >= 0)
             {
+                // 加入装载 Lord 前，先从战斗 Lord 正式移除这些 Pawn，避免“同时属于两个 Lord”报错。
+                DetachPawnsFromOldLords(pawnsToLoad, map);
                 LordMaker.MakeNewLord(
                     rec.faction ?? Faction.OfPlayer,
                     new LordJob_LoadAndEnterTransporters(rec.groupID),
