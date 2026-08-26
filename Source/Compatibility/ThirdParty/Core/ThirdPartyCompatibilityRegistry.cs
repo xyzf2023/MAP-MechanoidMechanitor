@@ -1,6 +1,7 @@
 using System;
 using HarmonyLib;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
@@ -13,7 +14,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
         private static readonly IThirdPartyCompatibilityModule[] Modules =
         {
             new GlitterworldDestroyer5Compatibility(),
-            new GlitterworldDestroyer5DryseaCompatibility()
+            new GlitterworldDestroyer5DryseaCompatibility(),
+            new GlitterworldDestroyer5ExpansionMechFusionCompatibility()
         };
 
         public static void ApplyAll(Harmony harmony)
