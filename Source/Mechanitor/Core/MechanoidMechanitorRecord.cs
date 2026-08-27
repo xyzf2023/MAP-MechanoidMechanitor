@@ -12,6 +12,12 @@ namespace MAP_MechanoidMechanitor
         public MechWorkModeDef? SelfWorkMode;
         public bool RoleWorkSettingsInitialized;
 
+        // 每个机械族机械师自己的充电阈值（0~1 比例）。
+        // 默认值必须直接来自原版 MechanitorControlGroup.DefaultMechRechargeThresholds，
+        // 不复制另一份“权威默认值”。旧存档没有该字段时由 Scribe 默认值自动补齐。
+        public FloatRange RechargeThresholds =
+            MechanitorControlGroup.DefaultMechRechargeThresholds;
+
         public MechanoidMechanitorRecord()
         {
         }
@@ -33,6 +39,13 @@ namespace MAP_MechanoidMechanitor
                 "roleWorkSettingsInitialized",
                 false);
 
+            // 个人充电阈值：使用与原版 MechanitorControlGroup 保存
+            // mechRechargeThresholds 相同的 Scribe_Values 方式，旧档缺字段时自动取默认值。
+            Scribe_Values.Look(
+                ref RechargeThresholds,
+                "rechargeThresholds",
+                MechanitorControlGroup.DefaultMechRechargeThresholds);
+
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 SanitizeAfterLoad();
@@ -53,6 +66,34 @@ namespace MAP_MechanoidMechanitor
             }
 
             SelfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(SelfWorkMode);
+
+            RechargeThresholds = SanitizeRechargeThresholds(RechargeThresholds);
+        }
+
+        // 防御非法存档值：min/max 钳制到 0~1、保证 min<=max、拦截 NaN/Infinity。
+        // 数据完全非法时回退原版 DefaultMechRechargeThresholds，不抛异常。
+        private static FloatRange SanitizeRechargeThresholds(FloatRange value)
+        {
+            FloatRange fallback = MechanitorControlGroup.DefaultMechRechargeThresholds;
+
+            if (float.IsNaN(value.min)
+                || float.IsNaN(value.max)
+                || float.IsInfinity(value.min)
+                || float.IsInfinity(value.max))
+            {
+                return fallback;
+            }
+
+            float min = Mathf.Clamp(value.min, 0f, 1f);
+            float max = Mathf.Clamp(value.max, 0f, 1f);
+
+            // 若越界则交换，避免下游充电判定进入 min>max 的非法区间。
+            if (min > max)
+            {
+                (min, max) = (max, min);
+            }
+
+            return new FloatRange(min, max);
         }
 
         public static int GetMaxChipBandwidthBonus(

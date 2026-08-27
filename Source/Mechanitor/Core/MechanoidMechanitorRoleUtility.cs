@@ -233,6 +233,39 @@ namespace MAP_MechanoidMechanitor
             MAPMechanitorInitializationUtility.FinalizeNow(pawn);
             ColonistLikeSocialTrackerUtility.EnsureTrackers(pawn);
             MechanoidMechanitorIdeologyAdaptationUtility.EnsureIdeologyState(pawn);
+
+            // 接入原版 Pawn_TimetableTracker：仅对机械族机械师补齐，
+            // 普通机械族 / 人类殖民者不受影响。
+            EnsureTimetableState(pawn);
+        }
+
+        /// <summary>
+        /// 为机械族机械师补齐原版 Pawn_TimetableTracker。
+        /// 规则：timetable 已存在则绝不重新初始化（避免覆盖玩家设置或旧档数据）；
+        /// 仅当为 null 时新建，并把 0~23 共 24 小时全部置为 Anything。
+        /// 原因：原版构造器默认夜间为 Sleep，而机械族机械师历史上不存在 timetable，
+        /// 旧档升级时不能突然获得夜间 Sleep 行为。
+        /// </summary>
+        public static void EnsureTimetableState(Pawn? pawn)
+        {
+            if (pawn == null || !IsMechanoidMechanitor(pawn))
+            {
+                return;
+            }
+
+            if (pawn.timetable != null)
+            {
+                // 已存在则什么都不做，绝对不得覆盖已有 24 小时数据。
+                return;
+            }
+
+            pawn.timetable = new Pawn_TimetableTracker(pawn);
+
+            // 新建 tracker 必须 24 小时 Anything，不使用原版默认的夜间 Sleep。
+            for (int hour = 0; hour < 24; hour++)
+            {
+                pawn.timetable.SetAssignment(hour, TimeAssignmentDefOf.Anything);
+            }
         }
 
         public static bool UsesVanillaControlPath(Pawn? pawn)

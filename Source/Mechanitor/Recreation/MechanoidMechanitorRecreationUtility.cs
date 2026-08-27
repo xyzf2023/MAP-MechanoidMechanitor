@@ -264,8 +264,22 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return job.jobGiver
-                is JobGiver_MechanoidMechanitorRecreation;
+            return IsManagedRecreationJobGiver(job.jobGiver as ThinkNode_JobGiver);
+        }
+
+        /// <summary>
+        /// 判断一个 JobGiver 是否属于本 MOD 的娱乐入口。
+        /// 目前包括：
+        /// - Idle 随机娱乐 JobGiver_MechanoidMechanitorRecreation
+        /// - Joy 作息调度 JobGiver_MechanoidMechanitorScheduledRecreation
+        /// 两者都被认为是本 MOD 管理的娱乐 Job，
+        /// 现有 JoyUtility.JoyTickCheckEnd / EndCurrentJob 灵感 Roll / TryOpportunisticJob
+        /// 三套兼容仍能正确作用。
+        /// </summary>
+        public static bool IsManagedRecreationJobGiver(ThinkNode_JobGiver? jobGiver)
+        {
+            return jobGiver is JobGiver_MechanoidMechanitorRecreation
+                || jobGiver is JobGiver_MechanoidMechanitorScheduledRecreation;
         }
 
         /// <summary>

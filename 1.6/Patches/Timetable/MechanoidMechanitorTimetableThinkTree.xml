@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+  <!--
+    Sleep 作息充电：插入到原版普通自动充电 JobGiver_GetEnergy_Charger 之前（位于
+    ThinkNode_ConditionalNotFormingCaravan 顶部），使 Sleep 产生的 MechCharge 被识别为
+    “由 Sleep 作息发起”，而非被原版普通自动充电抢先生成成普通充电。
+  -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/ThinkTreeDef[defName="Mechanoid"]/thinkRoot/subNodes/li[@Class="ThinkNode_ConditionalPlayerControlledMech"]/subNodes/li[@Class="ThinkNode_ConditionalNotFormingCaravan"]/subNodes/li[@Class="JobGiver_GetEnergy_Charger"][1]</xpath>
+    <order>Prepend</order>
+    <value>
+      <li Class="MAP_MechanoidMechanitor.JobGiver_MechanoidMechanitorScheduledRecharge" />
+    </value>
+  </Operation>
+
+  <!--
+    Scheduled Meditation：位于紧急/普通 JobGiver_Work 之后。
+    普通自动冥想已移动到 JobGiver_Work 之后（见 Psycasting 补丁文件），
+    本节点用于 Meditate 作息时段的高优先级冥想。
+  -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/ThinkTreeDef[defName="Mechanoid"]/thinkRoot/subNodes/li[@Class="ThinkNode_ConditionalPlayerControlledMech"]/subNodes/li[@Class="ThinkNode_ConditionalNotFormingCaravan"]/subNodes/li[@Class="ThinkNode_ConditionalWorkMode" and workMode="Work"]/subNodes/li[@Class="JobGiver_Work"][1]</xpath>
+    <order>Append</order>
+    <value>
+      <li Class="MAP_MechanoidMechanitor.JobGiver_MechanoidMechanitorScheduledMeditate" />
+    </value>
+  </Operation>
+
+  <!--
+    Scheduled Recreation：Joy 时段优先娱乐，位于 JobGiver_Work 之后。
+    不 Roll IdleRecreationChance，由 JobGiver 内部直接尝试现有白名单娱乐。
+  -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/ThinkTreeDef[defName="Mechanoid"]/thinkRoot/subNodes/li[@Class="ThinkNode_ConditionalPlayerControlledMech"]/subNodes/li[@Class="ThinkNode_ConditionalNotFormingCaravan"]/subNodes/li[@Class="ThinkNode_ConditionalWorkMode" and workMode="Work"]/subNodes/li[@Class="JobGiver_Work"][1]</xpath>
+    <order>Append</order>
+    <value>
+      <li Class="MAP_MechanoidMechanitor.JobGiver_MechanoidMechanitorScheduledRecreation" />
+    </value>
+  </Operation>
+
+  <!--
+    PostSleep Recharge：位于普通 JobGiver_Work 之后，作为 Sleep 结束无工作时的续充兜底。
+    “有工作 -> Work 在前面拿走 Job；没工作 -> 才续充”由 ThinkTree 自然达成。
+  -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/ThinkTreeDef[defName="Mechanoid"]/thinkRoot/subNodes/li[@Class="ThinkNode_ConditionalPlayerControlledMech"]/subNodes/li[@Class="ThinkNode_ConditionalNotFormingCaravan"]/subNodes/li[@Class="ThinkNode_ConditionalWorkMode" and workMode="Work"]/subNodes/li[@Class="JobGiver_Work"][1]</xpath>
+    <order>Append</order>
+    <value>
+      <li Class="MAP_MechanoidMechanitor.JobGiver_MechanoidMechanitorPostSleepRecharge" />
+    </value>
+  </Operation>
+
+</Patch>

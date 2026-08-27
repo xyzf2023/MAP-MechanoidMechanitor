@@ -303,6 +303,10 @@ namespace MAP_MechanoidMechanitor
                         && !pawn.Discarded
                         && pawn.health?.isBeingKilled != true)
                     {
+                        // 读档安全协调阶段统一为所有已注册机械师补齐 timetable，
+                        // 覆盖非宿主先天机械师等不会走 EnsureRoleState 的路径，
+                        // 不建立每 Tick 轮询，仅在读档时一次性执行。
+                        MechanoidMechanitorRoleUtility.EnsureTimetableState(pawn);
                         PendingDynamicConsciousnessRefresh.Add(pawn);
                     }
                 }

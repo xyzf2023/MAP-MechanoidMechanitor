@@ -68,9 +68,11 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 无原版控制组的机械族机械师本体，应使用本 MOD 的默认充电阈值。
+        /// 是否应对该机械族机械师应用本 MOD 的个人充电阈值。
+        /// 仅当“无原版控制组 + 可自律”时成立——即本 MOD 自己管理充电阈值记录的机械师。
+        /// 原版控制组下的机械师仍由原版机制处理，避免覆盖玩家在原版 UI 上的自定义阈值。
         /// </summary>
-        public static bool ShouldApplyDefaultRechargeThresholds(Pawn? pawn)
+        public static bool ShouldApplySelfRechargeThresholds(Pawn? pawn)
         {
             if (pawn == null || pawn.Destroyed || pawn.Dead)
             {
