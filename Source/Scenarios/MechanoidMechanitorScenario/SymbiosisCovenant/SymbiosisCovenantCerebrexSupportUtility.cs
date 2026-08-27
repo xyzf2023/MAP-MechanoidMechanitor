@@ -2027,11 +2027,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             // 只中断与本载具相关的登机任务，不得粗暴打断其无关 Job。
+            // 必须通过对象身份核对当前 Job 的目标载具就是正在强制发射的 vehicleThing。
             Job? cur = pawn.jobs?.curJob;
-            if (cur != null && (cur.def == JobDefOf.EnterTransporter || cur.def == JobDefOf.HaulToTransporter))
+            if (cur != null && vehicleThing != null)
             {
-                pawn.jobs?.EndCurrentJob(JobCondition.InterruptForced);
+                Thing? targetVehicle = null;
+                if (cur.def == JobDefOf.EnterTransporter)
+                {
+                    JobDriver_EnterTransporter? enterDrv = pawn.jobs?.curDriver as JobDriver_EnterTransporter;
+                    targetVehicle = enterDrv?.Transporter?.parent;
+                    if (targetVehicle == null && cur.GetTarget(TargetIndex.A).Thing is Thing enterFallback)
+                    {
+                        targetVehicle = enterFallback;
+                    }
+                }
+                else if (cur.def == JobDefOf.HaulToTransporter)
+                {
+                    JobDriver_HaulToTransporter? haulDrv = pawn.jobs?.curDriver as JobDriver_HaulToTransporter;
+                    targetVehicle = haulDrv?.Transporter?.parent;
+                }
+
+                if (targetVehicle != null && targetVehicle == vehicleThing)
+                {
+                    pawn.jobs?.EndCurrentJob(JobCondition.InterruptForced);
+                }
             }
+
+            // 释放即退出本载具破墙候选，避免存档继续保留已脱离撤离逻辑的 Pawn。
+            rec.breachEligiblePawns.Remove(pawn);
         }
 
         private static void RemoveEvacLordForVehicle(
@@ -2242,10 +2265,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                // 后来普通可达：从破墙候选移除，保留在已分类集合，永久不再破墙。
+                // 2. 已经在处理一堵仍有效的墙：加入已占用集合并直接跳过本 Pawn 后续昂贵逻辑。
+                //    不重复 CanReach / FindPathNow / 重新下发 Job，避免反复重置拆墙任务或重复抢墙。
+                Thing? handledWall = CurrentBreachTarget(pawn, vehicleThing);
+                if (handledWall != null)
+                {
+                    targetedWalls.Add(handledWall);
+                    continue;
+                }
+
+                // 3. 后来普通可达：从破墙候选移除，保留在已分类集合，永久不再破墙。
                 if (pawn.CanReach(vehicleThing, PathEndMode.Touch, Danger.Deadly))
                 {
                     rec.breachEligiblePawns.Remove(pawn);
+                    if (!rec.breachRouteCheckedPawns.Contains(pawn))
+                    {
+                        rec.breachRouteCheckedPawns.Add(pawn);
+                    }
+
                     continue;
                 }
 
@@ -2269,6 +2306,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         continue;
                     }
 
+                    // 已有人（含本轮前面或本载具其他 Pawn）在处理这堵墙，不再抢。
                     if (targetedWalls.Contains(blocker))
                     {
                         continue;
@@ -2281,40 +2319,50 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         continue;
                     }
 
-                    // 不得每 120 tick 强制重置正在执行的同一破墙 Job。
-                    Job? cur = pawn.jobs?.curJob;
-                    if (cur != null && cur.targetA.Thing == blocker
-                        && (cur.def == JobDefOf.Mine
-                            || cur.def == JobDefOf.AttackStatic
-                            || cur.def == JobDefOf.UseVerbOnThing))
-                    {
-                        continue;
-                    }
-
                     pawn.jobs?.TryTakeOrderedJob(job);
                     targetedWalls.Add(blocker);
                 }
             }
         }
 
+        // 判定某 JobDef 是否属于撤离破墙系统允许分发的破墙任务类型。
+        // 所有相关判断（CurrentBreachTarget、重复破墙占用判定）必须统一走这里，
+        // 避免 Mine / AttackMelee / AttackStatic / UseVerbOnThing 在多处判断中不一致。
+        private static bool IsEvacuationBreachJob(JobDef jobDef)
+        {
+            return jobDef == JobDefOf.Mine
+                || jobDef == JobDefOf.AttackMelee
+                || jobDef == JobDefOf.AttackStatic
+                || jobDef == JobDefOf.UseVerbOnThing;
+        }
+
+        // 返回 Pawn 当前正在处理的有效破墙目标墙；否则返回 null。
+        // 要求：Pawn 与当前 Job 有效；targetA 指向 Thing；目标是墙；
+        // 墙仍 Spawned 且仍在该 Pawn 当前地图（销毁或离图的旧墙目标不再当作有效墙）。
         private static Thing? CurrentBreachTarget(Pawn pawn, Thing vehicleThing)
         {
-            Job? cur = pawn.jobs?.curJob;
-            if (cur == null)
+            if (pawn == null || !pawn.Spawned || pawn.Map == null)
             {
                 return null;
             }
 
-            if ((cur.def == JobDefOf.Mine
-                    || cur.def == JobDefOf.AttackStatic
-                    || cur.def == JobDefOf.UseVerbOnThing)
-                && cur.targetA.Thing is Thing target
-                && target.def.IsWall)
+            Job? cur = pawn.jobs?.curJob;
+            if (cur == null || !IsEvacuationBreachJob(cur.def))
             {
-                return target;
+                return null;
             }
 
-            return null;
+            if (cur.targetA.Thing is not Thing target || !target.def.IsWall)
+            {
+                return null;
+            }
+
+            if (!target.Spawned || target.Map != pawn.Map)
+            {
+                return null;
+            }
+
+            return target;
         }
     }
 }
