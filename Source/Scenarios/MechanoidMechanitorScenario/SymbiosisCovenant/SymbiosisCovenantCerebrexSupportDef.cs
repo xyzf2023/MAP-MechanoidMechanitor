@@ -56,6 +56,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // 无皇权机械撤离仓所需数量估算：每仓按实际 MassCapacity 分配，但给一个软上限避免极端数量
         public int evacPodMassCapacityFallback = 200;        // 读取不到 CompTransporter.MassCapacity 时使用的估算质量
 
+        // 半数登机后强制发射（每艘载具独立计时、独立发射）
+        public int partialLoadDepartureDelayTicks = 60000;     // 半数登机后到强制发射的延迟（60000 tick ≈ 24 小时）
+
+        // 首次路线分类与破墙（限制性能消耗）
+        public int evacuationBreachCheckIntervalTicks = 120;   // 破墙分类 / 调度检查间隔（tick）
+        public int evacuationBreachInitialChecksPerInterval = 8; // 每批初步分类的 Pawn 数量
+
         public override IEnumerable<string> ConfigErrors()
         {
             foreach (string error in base.ConfigErrors())
@@ -165,6 +172,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 yield return $"{defName}: evacPodMassCapacityFallback must be positive.";
             }
+
+            if (partialLoadDepartureDelayTicks <= 0)
+            {
+                yield return $"{defName}: partialLoadDepartureDelayTicks must be positive.";
+            }
+
+            if (evacuationBreachCheckIntervalTicks <= 0)
+            {
+                yield return $"{defName}: evacuationBreachCheckIntervalTicks must be positive.";
+            }
+
+            if (evacuationBreachInitialChecksPerInterval <= 0)
+            {
+                yield return $"{defName}: evacuationBreachInitialChecksPerInterval must be positive.";
+            }
         }
     }
 
@@ -176,6 +198,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
         static SymbiosisCovenantCerebrexSupportDefOf()
         {
             DefOfHelper.EnsureInitializedInCtor(typeof(SymbiosisCovenantCerebrexSupportDefOf));
+        }
+    }
+
+    [DefOf]
+    public static class MAP_SymbiosisCovenantCerebrexSupportThoughtDefOf
+    {
+        public static ThoughtDef MAP_SymbiosisCovenant_CerebrexSupport_SenseOfMission = null!;
+
+        static MAP_SymbiosisCovenantCerebrexSupportThoughtDefOf()
+        {
+            DefOfHelper.EnsureInitializedInCtor(typeof(MAP_SymbiosisCovenantCerebrexSupportThoughtDefOf));
         }
     }
 
@@ -298,7 +331,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // 旧存档兼容字段：读档后由 PostLoadInit 迁移并清除。
         public bool podRequested;
 
+        // 半数登机后强制发射计时（不依赖 stateChangedTick，独立计时、独立发射）
+        public int partialLoadDepartureTick = -1;
+        public List<Pawn> releasedPawns = new List<Pawn>();
+        public int launchedPawnCount;
+
+        // 首次路线分类与破墙：三种状态（未分类 / 普通可达 / 破墙候选），全部需存档
+        public List<Pawn> breachRouteCheckedPawns = new List<Pawn>();
+        public List<Pawn> breachEligiblePawns = new List<Pawn>();
+        public int nextBreachCheckTick = -1;
+        public int breachClassificationCursor = 0;
+
         public bool IsCompleted => stage == CerebrexSupportEvacVehicleStage.Completed;
+
 
         // Pawn 进入载具后不再 Spawned，但仍存活；故此处只判断“已死亡/已销毁”，
         // 是否在地图由 IsTrackedPawnStillOnSupportMap 判定。
@@ -312,6 +357,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
                      && !p.Destroyed
                      && p.Spawned
                      && p.Map == map);
+
+        /// <summary>
+        /// 仍停留在支援地图且未被释放（计时发射时已离开载具）的撤离对象。releasedPawns
+        /// 不再阻塞本载具完成。
+        /// </summary>
+        public bool HasUnreleasedTrackedPawnStillOnSupportMap(Map map) =>
+            pawns != null && pawns.Any(
+                p => p != null
+                     && !p.Dead
+                     && !p.Destroyed
+                     && !p.Discarded
+                     && p.Spawned
+                     && p.Map == map
+                     && (releasedPawns == null || !releasedPawns.Contains(p)));
+
+        /// <summary>
+        /// 新载具生成时清空破墙分类与半数计时；同一载具只是装载重试时不得调用此方法。
+        /// </summary>
+        public void ResetEvacuationBreachClassification()
+        {
+            breachRouteCheckedPawns = new List<Pawn>();
+            breachEligiblePawns = new List<Pawn>();
+            breachClassificationCursor = 0;
+            nextBreachCheckTick = -1;
+            partialLoadDepartureTick = -1;
+        }
 
         public SymbiosisCovenantCerebrexSupportEvacVehicle()
         {
@@ -329,6 +400,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             pawns.RemoveAll(p => p == null || p.Destroyed);
+
+            releasedPawns ??= new List<Pawn>();
+            releasedPawns.RemoveAll(p => p == null || p.Destroyed || p.Discarded);
+            breachRouteCheckedPawns ??= new List<Pawn>();
+            breachRouteCheckedPawns.RemoveAll(p => p == null || p.Destroyed || p.Discarded);
+            breachEligiblePawns ??= new List<Pawn>();
+            breachEligiblePawns.RemoveAll(p => p == null || p.Destroyed || p.Discarded);
+            if (breachClassificationCursor < 0)
+            {
+                breachClassificationCursor = 0;
+            }
 
             if (stage == CerebrexSupportEvacVehicleStage.NotRequested && podRequested)
             {
@@ -358,6 +440,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref stage, "stage", CerebrexSupportEvacVehicleStage.NotRequested);
             Scribe_Values.Look(ref stateChangedTick, "stateChangedTick", -1);
             Scribe_Values.Look(ref nextRetryTick, "nextRetryTick", -1);
+            Scribe_Values.Look(ref partialLoadDepartureTick, "partialLoadDepartureTick", -1);
+            Scribe_Collections.Look(ref releasedPawns, "releasedPawns", LookMode.Reference);
+            Scribe_Values.Look(ref launchedPawnCount, "launchedPawnCount", 0);
+            Scribe_Collections.Look(ref breachRouteCheckedPawns, "breachRouteCheckedPawns", LookMode.Reference);
+            Scribe_Collections.Look(ref breachEligiblePawns, "breachEligiblePawns", LookMode.Reference);
+            Scribe_Values.Look(ref nextBreachCheckTick, "nextBreachCheckTick", -1);
+            Scribe_Values.Look(ref breachClassificationCursor, "breachClassificationCursor", 0);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {

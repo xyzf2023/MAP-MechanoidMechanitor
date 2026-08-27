@@ -383,6 +383,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 // 所有派系共享同一个已解析的投放中心；仅更新 faction，不再重新解析、也不各自选中心。
                 arrivalParms.faction = fac;
+
+                // 盟约援军“使命感”心情记忆：仅在整波成功生成且即将实际落地的这批 Pawn 上添加；
+                // 失败派系/回滚 Pawn 已在前面销毁，不会获得无意义状态。
+                foreach (Pawn deployed in pawns)
+                {
+                    deployed.needs?.mood?.thoughts?.memories?.TryGainMemory(
+                        MAP_SymbiosisCovenantCerebrexSupportThoughtDefOf
+                            .MAP_SymbiosisCovenant_CerebrexSupport_SenseOfMission);
+                }
+
                 resolvedArrivalMode.Worker.Arrive(pawns, arrivalParms);
 
                 factionRecords.Add(new SymbiosisCovenantCerebrexSupportFactionRecord(fac, allocation.points, pawns.Count, aidTag));
@@ -1163,8 +1173,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (part.evacVehicles.Count > 0 && part.evacVehicles.All(v => v.IsCompleted))
             {
                 // 仅当至少一名被追踪援军仍存活时，才发送“安全撤离”成功提示；若全部死亡/销毁/丢弃，则仅完成清理，不谎报撤离成功。
-                bool anySurvivor = part.waves.Any(w => w.pawns.Any(p => p != null && !p.Dead && !p.Destroyed && !p.Discarded));
-                part.MarkSupportCompleted(sendEvacDoneMessage: anySurvivor);
+                bool anyEvacuated = part.evacVehicles.Any(v => v.launchedPawnCount > 0);
+                part.MarkSupportCompleted(sendEvacDoneMessage: anyEvacuated);
             }
         }
 
@@ -1286,10 +1296,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     TryAssignHaulersForDowned(rec, map, rec.vehicleThing);
                     compShuttle.requiredPawns = rec.pawns.Where(p => IsUsableEvacPawn(p)).ToList();
 
+                    // 首次路线分类与破墙（限制性能消耗），以及半数登机后强制发射。
+                    TickEvacuationBreach(part, rec, rec.vehicleThing!, map, now);
+                    TickPartialLoadDeparture(part, rec, rec.vehicleThing!, map, now);
+
                     if (compShuttle.AllRequiredThingsLoaded
                         && rec.stage != CerebrexSupportEvacVehicleStage.Departing)
                     {
                         // 仅发射一次：切换 Departing，绝不把 vehicleThing 置空。
+                        // 记录实际已装入的有效 Pawn，供“安全撤离”提示判定使用。
+                        rec.launchedPawnCount = compShuttle.Transporter.innerContainer
+                            .OfType<Pawn>()
+                            .Count(p => IsUsableEvacPawn(p) && rec.pawns.Contains(p));
                         ship.ForceJob(ShipJobDefOf.FlyAway);
                         rec.stage = CerebrexSupportEvacVehicleStage.Departing;
                         rec.stateChangedTick = now;
@@ -1303,7 +1321,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     bool shipLeft = rec.vehicleThing == null
                         || !rec.vehicleThing.Spawned
                         || rec.vehicleThing.Map != map;
-                    bool pawnsGone = !rec.IsTrackedPawnStillOnSupportMap(map);
+                    bool pawnsGone = !rec.HasUnreleasedTrackedPawnStillOnSupportMap(map);
 
                     // 严格判定：载具已离图且所有被追踪 Pawn 均不在支援地图（#16）。
                     if (shipLeft && pawnsGone)
@@ -1421,6 +1439,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 仅记录载具与状态；撤离 Lord 的创建推迟到穿梭机实际落地（见 TickRoyaltyEvacuation 的落地判定），
             // 避免在 ShipJob_Arrive 异步抵达期间就让援军对未落地载具寻路/登船。
             rec.vehicleThing = shuttle;
+            rec.ResetEvacuationBreachClassification();
             rec.stateChangedTick = Find.TickManager.TicksGame;
         }
 
@@ -1585,6 +1604,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     TryAssignHaulersForDowned(rec, map, rec.vehicleThing);
                 }
 
+                if (rec.stage == CerebrexSupportEvacVehicleStage.Loading
+                    || rec.stage == CerebrexSupportEvacVehicleStage.LoadingRetryWaiting)
+                {
+                    // 首次路线分类与破墙，以及半数登机后强制发射。
+                    TickEvacuationBreach(part, rec, rec.vehicleThing!, map, now);
+                    TickPartialLoadDeparture(part, rec, rec.vehicleThing!, map, now);
+                }
+
                 List<Pawn> stillIn = ct.innerContainer.OfType<Pawn>().ToList();
                 bool allLoaded = rec.pawns
                     .Where(p => IsUsableEvacPawn(p))
@@ -1621,7 +1648,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                          .Where(v => v.stage == CerebrexSupportEvacVehicleStage.Departing))
             {
                 bool left = rec.vehicleThing == null || !rec.vehicleThing.Spawned || rec.vehicleThing.Map != map;
-                bool pawnsGone = !rec.IsTrackedPawnStillOnSupportMap(map);
+                bool pawnsGone = !rec.HasUnreleasedTrackedPawnStillOnSupportMap(map);
 
                 if (left && pawnsGone)
                 {
@@ -1669,6 +1696,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 openDelay = Config.dropPodOpenDelayTicks
             };
             DropPodUtility.MakeDropPodAt(spot, map, info, Faction.OfMechanoids);
+            rec.ResetEvacuationBreachClassification();
             rec.stage = CerebrexSupportEvacVehicleStage.LandingRequested;
             rec.stateChangedTick = Find.TickManager.TicksGame;
         }
@@ -1746,6 +1774,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 记录实际装入并随舱体离图的有效 Pawn 数（普通满载与计时发射共用）。
+            rec.launchedPawnCount = ct.innerContainer
+                .OfType<Pawn>()
+                .Count(p => IsUsableEvacPawn(p) && rec.pawns.Contains(p));
+
             ThingDef sentDef = EvacPodDef() ?? rec.vehicleThing.def;
 
             ActiveTransporter activeTransporter = (ActiveTransporter)ThingMaker.MakeThing(ThingDefOf.ActiveDropPod);
@@ -1769,6 +1802,519 @@ namespace MAP_MechanoidMechanitor.Scenarios
             rec.vehicleThing = fly; // 指向正在离开的 FlyShipLeaving，不置空、不重复发射
             rec.stage = CerebrexSupportEvacVehicleStage.Departing;
             rec.stateChangedTick = Find.TickManager.TicksGame;
+        }
+
+        // ── 半数登机强制发射与破墙 ──
+
+        private static bool IsMechPodLandedAndLoadable(
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec, Map map)
+        {
+            if (rec == null || map == null || rec.vehicleThing == null)
+            {
+                return false;
+            }
+
+            if (!rec.vehicleThing.Spawned || rec.vehicleThing.Map != map)
+            {
+                return false;
+            }
+
+            if (rec.vehicleThing.TryGetComp<CompTransporter>() == null)
+            {
+                return false;
+            }
+
+            return rec.stage == CerebrexSupportEvacVehicleStage.Landed
+                || rec.stage == CerebrexSupportEvacVehicleStage.Loading
+                || rec.stage == CerebrexSupportEvacVehicleStage.LoadingRetryWaiting;
+        }
+
+        private static int CountLoadedUsablePawns(
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec, Thing vehicleThing)
+        {
+            CompTransporter? ct = vehicleThing.TryGetComp<CompTransporter>();
+            if (ct == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            foreach (Thing t in ct.innerContainer)
+            {
+                if (t is Pawn p && IsUsableEvacPawn(p) && rec.pawns.Contains(p))
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        /// <summary>
+        /// 半数登机后的强制发射计时：每艘载具独立计时、独立发射。未落地、未达装载状态、
+        /// 或尚未半数登机时绝不计时；计时开始后因人数变化或装载重试均不重置。
+        /// </summary>
+        private static void TickPartialLoadDeparture(
+            QuestPart_SymbiosisCovenantCerebrexSupport part,
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec,
+            Thing vehicleThing, Map map, int now)
+        {
+            if (rec == null || vehicleThing == null || map == null)
+            {
+                return;
+            }
+
+            if (rec.stage == CerebrexSupportEvacVehicleStage.Departing
+                || rec.stage == CerebrexSupportEvacVehicleStage.Completed
+                || rec.stage == CerebrexSupportEvacVehicleStage.NotRequested
+                || rec.stage == CerebrexSupportEvacVehicleStage.LandingRequested)
+            {
+                return;
+            }
+
+            bool canLoad = rec.mode == CerebrexSupportEvacMode.RoyaltyShuttle
+                ? (rec.stage == CerebrexSupportEvacVehicleStage.Landed
+                    || rec.stage == CerebrexSupportEvacVehicleStage.Loading)
+                : (rec.stage == CerebrexSupportEvacVehicleStage.Landed
+                    || rec.stage == CerebrexSupportEvacVehicleStage.Loading
+                    || rec.stage == CerebrexSupportEvacVehicleStage.LoadingRetryWaiting);
+            if (!canLoad)
+            {
+                return;
+            }
+
+            if (rec.mode == CerebrexSupportEvacMode.RoyaltyShuttle && !IsShuttleLandedAndLoadable(rec, map))
+            {
+                return;
+            }
+
+            if (rec.mode == CerebrexSupportEvacMode.OdysseyMechPod && !IsMechPodLandedAndLoadable(rec, map))
+            {
+                return;
+            }
+
+            // 当前有效需求 Pawn 数：复用 IsUsableEvacPawn，并排除已被计时发射释放者。
+            int requiredCount = rec.pawns.Count(p => IsUsableEvacPawn(p)
+                && (rec.releasedPawns == null || !rec.releasedPawns.Contains(p)));
+            if (requiredCount <= 0)
+            {
+                return;
+            }
+
+            int loadedCount = CountLoadedUsablePawns(rec, vehicleThing);
+            int threshold = (requiredCount + 1) / 2;
+
+            // 半数登机后启动 24h 倒计时；已启动则不被人数变化或装载重试重置。
+            if (loadedCount >= threshold && rec.partialLoadDepartureTick < 0)
+            {
+                rec.partialLoadDepartureTick = now + Config.partialLoadDepartureDelayTicks;
+            }
+
+            if (rec.partialLoadDepartureTick >= 0 && now >= rec.partialLoadDepartureTick)
+            {
+                if (rec.mode == CerebrexSupportEvacMode.RoyaltyShuttle)
+                {
+                    ForceDepartPartialLoadShuttle(part, rec, vehicleThing, map);
+                }
+                else
+                {
+                    ForceDepartPartialLoadMechPod(part, rec, vehicleThing, map);
+                }
+            }
+        }
+
+        private static void ForceDepartPartialLoadShuttle(
+            QuestPart_SymbiosisCovenantCerebrexSupport part,
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec,
+            Thing vehicleThing, Map map)
+        {
+            CompShuttle? compShuttle = vehicleThing.TryGetComp<CompShuttle>();
+            if (compShuttle == null)
+            {
+                return;
+            }
+
+            TransportShip? ship = compShuttle.shipParent;
+            if (ship == null)
+            {
+                return;
+            }
+
+            List<Pawn> loaded = compShuttle.Transporter.innerContainer
+                .Where(t => t is Pawn p && IsUsableEvacPawn(p) && rec.pawns.Contains(p))
+                .Cast<Pawn>()
+                .ToList();
+            rec.launchedPawnCount = loaded.Count;
+
+            // 释放仍在地图且未装入的有效 Pawn：不杀死、不销毁、不传送、不强塞入载具。
+            List<Pawn> onMap = rec.pawns
+                .Where(p => IsUsableEvacPawn(p)
+                            && p.Spawned && p.Map == map
+                            && !loaded.Contains(p))
+                .ToList();
+            foreach (Pawn p in onMap)
+            {
+                ReleasePawnFromEvacuation(rec, p, vehicleThing, map);
+            }
+
+            // 刷新 requiredPawns 为实际已登机者，避免 FlyAway.TryStart 在 AllRequiredThingsLoaded==false
+            // 且容器非空时转入卸货。
+            compShuttle.requiredPawns = loaded;
+
+            // 移除撤离 Lord 并清除未完成装载需求；禁止 CleanUpLoadingVars，避免把已登机 Pawn 扔回地图。
+            RemoveEvacLordForVehicle(rec, vehicleThing, map);
+
+            if (rec.stage != CerebrexSupportEvacVehicleStage.Departing && ship.Waiting)
+            {
+                ship.ForceJob(ShipJobDefOf.FlyAway);
+            }
+
+            rec.stage = CerebrexSupportEvacVehicleStage.Departing;
+            rec.stateChangedTick = Find.TickManager.TicksGame;
+        }
+
+        private static void ForceDepartPartialLoadMechPod(
+            QuestPart_SymbiosisCovenantCerebrexSupport part,
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec,
+            Thing vehicleThing, Map map)
+        {
+            CompTransporter? ct = vehicleThing.TryGetComp<CompTransporter>();
+            if (ct == null)
+            {
+                return;
+            }
+
+            List<Pawn> loaded = ct.innerContainer
+                .Where(t => t is Pawn p && IsUsableEvacPawn(p) && rec.pawns.Contains(p))
+                .Cast<Pawn>()
+                .ToList();
+            rec.launchedPawnCount = loaded.Count;
+
+            List<Pawn> onMap = rec.pawns
+                .Where(p => IsUsableEvacPawn(p)
+                            && p.Spawned && p.Map == map
+                            && !loaded.Contains(p))
+                .ToList();
+            foreach (Pawn p in onMap)
+            {
+                ReleasePawnFromEvacuation(rec, p, vehicleThing, map);
+            }
+
+            // 复用同一舱体：清空装载 Lord 与 leftToLoad，保留 innerContainer 内容，
+            // 由 LaunchMechEvacPod 把容器内容转入 FlyShipLeaving（不重复生成新舱）。
+            RemoveLoadingLord(ct, rec.groupID, map);
+            LaunchMechEvacPod(part, rec, map);
+        }
+
+        private static void ReleasePawnFromEvacuation(
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec, Pawn pawn, Thing? vehicleThing, Map map)
+        {
+            if (pawn == null || rec.releasedPawns.Contains(pawn))
+            {
+                return;
+            }
+
+            rec.releasedPawns.Add(pawn);
+
+            Lord? lord = pawn.GetLord();
+            if (lord != null)
+            {
+                lord.RemovePawn(pawn);
+                if (lord.ownedPawns.Count == 0 && map.lordManager.lords.Contains(lord))
+                {
+                    map.lordManager.RemoveLord(lord);
+                }
+            }
+
+            // 只中断与本载具相关的登机任务，不得粗暴打断其无关 Job。
+            Job? cur = pawn.jobs?.curJob;
+            if (cur != null && (cur.def == JobDefOf.EnterTransporter || cur.def == JobDefOf.HaulToTransporter))
+            {
+                pawn.jobs?.EndCurrentJob(JobCondition.InterruptForced);
+            }
+        }
+
+        private static void RemoveEvacLordForVehicle(
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec, Thing vehicleThing, Map map)
+        {
+            if (rec.mode == CerebrexSupportEvacMode.RoyaltyShuttle)
+            {
+                Lord? lord = map.lordManager.lords.FirstOrDefault(l =>
+                    l.LordJob is LordJob_ExitOnShuttle && l.ownedPawns.Any(p => rec.pawns.Contains(p)));
+                if (lord != null)
+                {
+                    foreach (Pawn p in lord.ownedPawns.ToList())
+                    {
+                        lord.RemovePawn(p);
+                    }
+
+                    if (lord.ownedPawns.Count == 0 && map.lordManager.lords.Contains(lord))
+                    {
+                        map.lordManager.RemoveLord(lord);
+                    }
+                }
+            }
+            else
+            {
+                CompTransporter? ct = vehicleThing.TryGetComp<CompTransporter>();
+                if (ct != null)
+                {
+                    RemoveLoadingLord(ct, rec.groupID, map);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 首次路线分类与破墙：仅在地载具真正落地、处于装载阶段时运行。未落地绝不路线分类、
+        /// 绝不破墙、绝不计时。
+        /// </summary>
+        private static void TickEvacuationBreach(
+            QuestPart_SymbiosisCovenantCerebrexSupport part,
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec,
+            Thing vehicleThing, Map map, int now)
+        {
+            if (rec == null || vehicleThing == null || map == null)
+            {
+                return;
+            }
+
+            bool landedAndLoadable = rec.mode == CerebrexSupportEvacMode.RoyaltyShuttle
+                ? IsShuttleLandedAndLoadable(rec, map)
+                : IsMechPodLandedAndLoadable(rec, map);
+            if (!landedAndLoadable)
+            {
+                return;
+            }
+
+            if (rec.stage == CerebrexSupportEvacVehicleStage.Departing
+                || rec.stage == CerebrexSupportEvacVehicleStage.Completed)
+            {
+                return;
+            }
+
+            if (now < rec.nextBreachCheckTick)
+            {
+                return;
+            }
+
+            rec.nextBreachCheckTick = now + Config.evacuationBreachCheckIntervalTicks;
+
+            ClassifyBreachRoutes(rec, vehicleThing, map);
+            TryAssignEvacuationBreachJobs(part, rec, vehicleThing, map);
+        }
+
+        private static void ClassifyBreachRoutes(
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec, Thing vehicleThing, Map map)
+        {
+            int processed = 0;
+            int capacity = Config.evacuationBreachInitialChecksPerInterval;
+            foreach (Pawn pawn in rec.pawns)
+            {
+                if (processed >= capacity)
+                {
+                    break;
+                }
+
+                if (!EligibleForBreachClassification(pawn, rec, vehicleThing, map))
+                {
+                    continue;
+                }
+
+                if (rec.breachRouteCheckedPawns.Contains(pawn))
+                {
+                    continue;
+                }
+
+                ClassifySingleBreachRoute(pawn, rec, vehicleThing, map);
+                processed++;
+            }
+        }
+
+        private static bool EligibleForBreachClassification(
+            Pawn pawn, SymbiosisCovenantCerebrexSupportEvacVehicle rec, Thing vehicleThing, Map map)
+        {
+            if (!IsUsableEvacPawn(pawn))
+            {
+                return false;
+            }
+
+            if (!pawn.Spawned || pawn.Map != map)
+            {
+                return false;
+            }
+
+            if (pawn.Downed)
+            {
+                return false;
+            }
+
+            if (IsInTransporterContainer(pawn, vehicleThing))
+            {
+                return false;
+            }
+
+            if (pawn.IsColonist)
+            {
+                return false;
+            }
+
+            if (pawn.IsColonyMech)
+            {
+                return false;
+            }
+
+            if (!rec.pawns.Contains(pawn))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void ClassifySingleBreachRoute(
+            Pawn pawn, SymbiosisCovenantCerebrexSupportEvacVehicle rec, Thing vehicleThing, Map map)
+        {
+            // 标记已分类，避免重复昂贵搜索。
+            rec.breachRouteCheckedPawns.Add(pawn);
+
+            // 先尝试普通可达（不破坏任何物）。
+            if (pawn.CanReach(vehicleThing, PathEndMode.Touch, Danger.Deadly))
+            {
+                rec.breachEligiblePawns.Remove(pawn);
+                return;
+            }
+
+            // 普通不可达：用原版访客破墙思路做一次受限制路径搜索，找第一阻挡建筑。
+            using (PawnPath path = map.pathFinder.FindPathNow(
+                       pawn.Position,
+                       vehicleThing,
+                       TraverseParms.For(pawn, Danger.Deadly, TraverseMode.PassAllDestroyableThings),
+                       null,
+                       PathEndMode.Touch))
+            {
+                if (path == null)
+                {
+                    return;
+                }
+
+                IntVec3 cellBefore;
+                Thing? blocker = path.FirstBlockingBuilding(out cellBefore, pawn);
+                if (blocker != null && blocker.def.IsWall)
+                {
+                    rec.breachEligiblePawns.Add(pawn);
+                }
+                else
+                {
+                    rec.breachEligiblePawns.Remove(pawn);
+                }
+            }
+        }
+
+        private static void TryAssignEvacuationBreachJobs(
+            QuestPart_SymbiosisCovenantCerebrexSupport part,
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec, Thing vehicleThing, Map map)
+        {
+            if (rec.breachEligiblePawns.Count == 0)
+            {
+                return;
+            }
+
+            // 本载具已有人在处理的目标墙，避免重复抢同一堵墙。
+            HashSet<Thing> targetedWalls = new HashSet<Thing>();
+            foreach (Pawn other in rec.pawns)
+            {
+                Thing? wall = CurrentBreachTarget(other, vehicleThing);
+                if (wall != null)
+                {
+                    targetedWalls.Add(wall);
+                }
+            }
+
+            foreach (Pawn pawn in rec.breachEligiblePawns.ToList())
+            {
+                if (!IsUsableEvacPawn(pawn)
+                    || !pawn.Spawned
+                    || pawn.Map != map
+                    || pawn.Downed
+                    || IsInTransporterContainer(pawn, vehicleThing))
+                {
+                    rec.breachEligiblePawns.Remove(pawn);
+                    continue;
+                }
+
+                // 后来普通可达：从破墙候选移除，保留在已分类集合，永久不再破墙。
+                if (pawn.CanReach(vehicleThing, PathEndMode.Touch, Danger.Deadly))
+                {
+                    rec.breachEligiblePawns.Remove(pawn);
+                    continue;
+                }
+
+                using (PawnPath path = map.pathFinder.FindPathNow(
+                           pawn.Position,
+                           vehicleThing,
+                           TraverseParms.For(pawn, Danger.Deadly, TraverseMode.PassAllDestroyableThings),
+                           null,
+                           PathEndMode.Touch))
+                {
+                    if (path == null)
+                    {
+                        continue;
+                    }
+
+                    IntVec3 cellBefore;
+                    Thing? blocker = path.FirstBlockingBuilding(out cellBefore, pawn);
+                    if (blocker == null || !blocker.def.IsWall)
+                    {
+                        rec.breachEligiblePawns.Remove(pawn);
+                        continue;
+                    }
+
+                    if (targetedWalls.Contains(blocker))
+                    {
+                        continue;
+                    }
+
+                    Job? job = DigUtility.PassBlockerJob(
+                        pawn, blocker, cellBefore, canMineMineables: true, canMineNonMineables: true);
+                    if (job == null)
+                    {
+                        continue;
+                    }
+
+                    // 不得每 120 tick 强制重置正在执行的同一破墙 Job。
+                    Job? cur = pawn.jobs?.curJob;
+                    if (cur != null && cur.targetA.Thing == blocker
+                        && (cur.def == JobDefOf.Mine
+                            || cur.def == JobDefOf.AttackStatic
+                            || cur.def == JobDefOf.UseVerbOnThing))
+                    {
+                        continue;
+                    }
+
+                    pawn.jobs?.TryTakeOrderedJob(job);
+                    targetedWalls.Add(blocker);
+                }
+            }
+        }
+
+        private static Thing? CurrentBreachTarget(Pawn pawn, Thing vehicleThing)
+        {
+            Job? cur = pawn.jobs?.curJob;
+            if (cur == null)
+            {
+                return null;
+            }
+
+            if ((cur.def == JobDefOf.Mine
+                    || cur.def == JobDefOf.AttackStatic
+                    || cur.def == JobDefOf.UseVerbOnThing)
+                && cur.targetA.Thing is Thing target
+                && target.def.IsWall)
+            {
+                return target;
+            }
+
+            return null;
         }
     }
 }

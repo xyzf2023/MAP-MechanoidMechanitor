@@ -450,6 +450,98 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    [HarmonyPatch(typeof(Faction), nameof(Faction.Notify_RelationKindChanged))]
+    public static class CerebrexTakeoverRelationNotify_Patch
+    {
+        public static void Postfix(Faction __instance, Faction other)
+        {
+            if (!GameComponent_CerebrexTakeoverState.IsActive
+                || CerebrexTakeoverRelationUtility.IsApplying)
+            {
+                return;
+            }
+
+            CerebrexTakeoverRelationSyncHelpers.QueueRelationChange(__instance, other);
+        }
+    }
+
+    [HarmonyPatch(typeof(Faction), nameof(Faction.SetRelation))]
+    public static class CerebrexTakeoverRelationSetRelation_Patch
+    {
+        public static void Postfix(Faction __instance, FactionRelation relation)
+        {
+            if (!GameComponent_CerebrexTakeoverState.IsActive
+                || CerebrexTakeoverRelationUtility.IsApplying
+                || relation?.other == null)
+            {
+                return;
+            }
+
+            CerebrexTakeoverRelationSyncHelpers.QueueRelationChange(__instance, relation.other);
+        }
+    }
+
+    [HarmonyPatch(typeof(Faction), nameof(Faction.SetRelationDirect))]
+    public static class CerebrexTakeoverRelationSetRelationDirect_Patch
+    {
+        public static void Postfix(Faction __instance, Faction other)
+        {
+            if (!GameComponent_CerebrexTakeoverState.IsActive
+                || CerebrexTakeoverRelationUtility.IsApplying)
+            {
+                return;
+            }
+
+            CerebrexTakeoverRelationSyncHelpers.QueueRelationChange(__instance, other);
+        }
+    }
+
+    internal static class CerebrexTakeoverRelationSyncHelpers
+    {
+        /// <summary>
+        /// 只负责把受影响的派系加入待同步队列，绝不在原关系方法尚未结束或双向关系更新
+        /// 的中间状态内直接写关系，避免递归。
+        /// </summary>
+        internal static void QueueRelationChange(Faction a, Faction b)
+        {
+            if (a == null || b == null)
+            {
+                return;
+            }
+
+            if (CerebrexTakeoverRelationUtility.IsPlayerAndMechHivePair(a, b))
+            {
+                GameComponent_CerebrexTakeoverState.Current?.RequestPlayerMechHiveRecalibration();
+                return;
+            }
+
+            Faction? player = Faction.OfPlayerSilentFail;
+            Faction? mechHive = Faction.OfMechanoids;
+            if (player == null || mechHive == null)
+            {
+                return;
+            }
+
+            if (ReferenceEquals(a, player) && !ReferenceEquals(b, mechHive))
+            {
+                GameComponent_CerebrexTakeoverState.Current?.QueueMechHiveRelationSyncFor(b);
+            }
+            else if (ReferenceEquals(b, player) && !ReferenceEquals(a, mechHive))
+            {
+                GameComponent_CerebrexTakeoverState.Current?.QueueMechHiveRelationSyncFor(a);
+            }
+            else if (ReferenceEquals(a, mechHive) && !ReferenceEquals(b, player))
+            {
+                // 机械巢侧被改：用玩家关系重新校正机械巢。
+                GameComponent_CerebrexTakeoverState.Current?.QueueMechHiveRelationSyncFor(b);
+            }
+            else if (ReferenceEquals(b, mechHive) && !ReferenceEquals(a, player))
+            {
+                GameComponent_CerebrexTakeoverState.Current?.QueueMechHiveRelationSyncFor(a);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(MechHiveNodeDeliveryUtility),
         nameof(MechHiveNodeDeliveryUtility.TryAddPurgeQuota))]
     public static class MechHiveNodeQuota_TakeoverPatch

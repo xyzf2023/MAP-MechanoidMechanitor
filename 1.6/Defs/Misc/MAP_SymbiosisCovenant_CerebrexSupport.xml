@@ -46,6 +46,30 @@
   <dropCellEdgeCandidateStep>7</dropCellEdgeCandidateStep>
   <dropCellEdgeCandidateLimit>400</dropCellEdgeCandidateLimit>
   <evacPodMassCapacityFallback>200</evacPodMassCapacityFallback>
+
+  <!-- 半数登机后强制发射（每艘载具独立计时、独立发射） -->
+  <partialLoadDepartureDelayTicks>60000</partialLoadDepartureDelayTicks>
+
+  <!-- 首次路线分类与破墙（限制性能消耗） -->
+  <evacuationBreachCheckIntervalTicks>120</evacuationBreachCheckIntervalTicks>
+  <evacuationBreachInitialChecksPerInterval>8</evacuationBreachInitialChecksPerInterval>
 </MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantCerebrexSupportDef>
+
+  <!-- 共生盟约主脑战援军：使命感心情记忆 -->
+  <ThoughtDef>
+    <defName>MAP_SymbiosisCovenant_CerebrexSupport_SenseOfMission</defName>
+    <thoughtClass>Thought_Memory</thoughtClass>
+    <label>使命感</label>
+    <description>这位战士充满了决心。</description>
+    <durationDays>3</durationDays>
+    <stackLimit>1</stackLimit>
+    <stages>
+      <li>
+        <label>使命感</label>
+        <description>这位战士充满了决心。</description>
+        <baseMoodEffect>30</baseMoodEffect>
+      </li>
+    </stages>
+  </ThoughtDef>
 
 </Defs>

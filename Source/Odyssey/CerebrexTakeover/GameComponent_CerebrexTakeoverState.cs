@@ -26,6 +26,10 @@ namespace MAP_MechanoidMechanitor
         private Thing? pendingCore;
         private Pawn? pendingPawn;
 
+        // 不存档的、当前游戏实例级别的待同步派系列表（接管主脑后的关系同步）。
+        private readonly HashSet<Faction> pendingRelationSyncFactions = new HashSet<Faction>();
+        private bool playerMechHiveRecalibrationRequested;
+
         public bool TakeoverActive => takeoverActive;
         public int ResourceCredits => resourceCredits;
         public int TakeoverCompletedTick => takeoverCompletedTick;
@@ -88,7 +92,7 @@ namespace MAP_MechanoidMechanitor
             {
                 pendingCore = null;
                 pendingPawn = null;
-                CerebrexTakeoverRelationUtility.EnsureMutualAllies();
+                CerebrexTakeoverRelationUtility.EnsureTakeoverRelations();
                 return true;
             }
 
@@ -102,14 +106,7 @@ namespace MAP_MechanoidMechanitor
             pendingCore = null;
             pendingPawn = null;
 
-            bool relationApplied = CerebrexTakeoverRelationUtility.EnsureMutualAllies();
-            if (!relationApplied)
-            {
-                Log.Error(
-                    "[MAP-机械族机械师] 主脑接管已写入存档，但机械巢盟友关系暂未成功应用。"
-                    + "后续将按低频自动重试。操作者="
-                    + (resolvedPawn?.LabelShort ?? "null"));
-            }
+            CerebrexTakeoverRelationUtility.EnsureTakeoverRelations();
 
             return true;
         }
@@ -118,6 +115,66 @@ namespace MAP_MechanoidMechanitor
         {
             pendingCore = null;
             pendingPawn = null;
+        }
+
+        internal void QueueMechHiveRelationSyncFor(Faction other)
+        {
+            if (!IsActive || other == null)
+            {
+                return;
+            }
+
+            pendingRelationSyncFactions.Add(other);
+        }
+
+        internal void RequestPlayerMechHiveRecalibration()
+        {
+            if (!IsActive)
+            {
+                return;
+            }
+
+            playerMechHiveRecalibrationRequested = true;
+        }
+
+        internal void ProcessPendingRelationSyncQueue()
+        {
+            if (!IsActive)
+            {
+                pendingRelationSyncFactions.Clear();
+                playerMechHiveRecalibrationRequested = false;
+                return;
+            }
+
+            if (pendingRelationSyncFactions.Count == 0 && !playerMechHiveRecalibrationRequested)
+            {
+                return;
+            }
+
+            // 复制并清空当前队列，防止处理期间新通知破坏枚举。
+            HashSet<Faction> batch = new HashSet<Faction>(pendingRelationSyncFactions);
+            bool recalibrate = playerMechHiveRecalibrationRequested;
+            pendingRelationSyncFactions.Clear();
+            playerMechHiveRecalibrationRequested = false;
+
+            if (recalibrate)
+            {
+                CerebrexTakeoverRelationUtility.EnsureMutualAllies();
+            }
+
+            foreach (Faction other in batch)
+            {
+                try
+                {
+                    CerebrexTakeoverRelationUtility.AlignMechHiveRelationToPlayerRelation(other);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 处理待同步机械巢关系失败："
+                        + (other?.GetUniqueLoadID() ?? "null") + "\n" + ex);
+                }
+            }
         }
 
         public bool TryAddCredits(int amount)
@@ -164,7 +221,7 @@ namespace MAP_MechanoidMechanitor
             pendingCore = null;
             pendingPawn = null;
             ProcessElapsedDays();
-            CerebrexTakeoverRelationUtility.EnsureMutualAllies();
+            CerebrexTakeoverRelationUtility.EnsureTakeoverRelations();
         }
 
         public override void GameComponentTick()
@@ -176,9 +233,10 @@ namespace MAP_MechanoidMechanitor
             }
 
             ProcessElapsedDays();
+            ProcessPendingRelationSyncQueue();
             if (Find.TickManager.TicksGame % RelationCalibrationIntervalTicks == 0)
             {
-                CerebrexTakeoverRelationUtility.EnsureMutualAllies();
+                CerebrexTakeoverRelationUtility.EnsureTakeoverRelations();
             }
         }
 
@@ -378,6 +436,197 @@ namespace MAP_MechanoidMechanitor
             finally
             {
                 applying = false;
+            }
+        }
+
+        /// <summary>
+        /// 接管主脑后的全量关系同步：先确保玩家—机械巢固定盟友，再把机械巢与其余派系
+        /// 的关系精确同步为玩家与这些派系的三档关系。该方法会复用现有防重入标记。
+        /// </summary>
+        public static void EnsureTakeoverRelations()
+        {
+            EnsureMutualAllies();
+            AlignAllMechHiveRelationsToPlayer();
+        }
+
+        /// <summary>
+        /// 遍历世界中除玩家与机械巢自身外的每个有效派系，把它们与机械巢的关系同步为
+        /// 玩家与这些派系的关系类别。新加入世界、尚未被即时捕获的派系由 2500 tick 的
+        /// 全量兜底覆盖。
+        /// </summary>
+        public static void AlignAllMechHiveRelationsToPlayer()
+        {
+            if (!ModsConfig.OdysseyActive || Current.Game == null || applying)
+            {
+                return;
+            }
+
+            Faction? player = Faction.OfPlayerSilentFail;
+            Faction? mechHive = MechHive;
+            if (player == null || mechHive == null)
+            {
+                return;
+            }
+
+            if (!GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                return;
+            }
+
+            foreach (Faction other in Find.FactionManager.AllFactionsListForReading)
+            {
+                if (other == null || other == player || other == mechHive)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    AlignMechHiveRelationToPlayerRelation(other);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 校准机械巢与派系关系失败："
+                        + (other?.GetUniqueLoadID() ?? "null") + "\n" + ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 把机械巢与目标派系的关系双向同步为玩家与目标派系当前的 FactionRelationKind。
+        /// 只写入 FactionRelationKind，不复制 baseGoodwill，也不改玩家与其余派系本身的关系。
+        /// </summary>
+        public static void AlignMechHiveRelationToPlayerRelation(Faction other)
+        {
+            if (!ModsConfig.OdysseyActive || Current.Game == null || !GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                return;
+            }
+
+            Faction? player = Faction.OfPlayerSilentFail;
+            Faction? mechHive = MechHive;
+            if (player == null || mechHive == null || other == null)
+            {
+                return;
+            }
+
+            if (ReferenceEquals(other, player) || ReferenceEquals(other, mechHive))
+            {
+                return;
+            }
+
+            if (!TryGetPlayerRelationTemplate(other, out FactionRelationKind playerKind))
+            {
+                return;
+            }
+
+            if (applying)
+            {
+                return;
+            }
+
+            applying = true;
+            try
+            {
+                EnsureBidirectionalMechHiveRelation(mechHive, other);
+
+                FactionRelation? mhRel = mechHive.RelationWith(other, allowNull: true);
+                FactionRelation? oRel = other.RelationWith(mechHive, allowNull: true);
+                if (mhRel == null || oRel == null)
+                {
+                    return;
+                }
+
+                FactionRelationKind previousMh = mhRel.kind;
+                FactionRelationKind previousOther = oRel.kind;
+
+                mhRel.kind = playerKind;
+                oRel.kind = playerKind;
+
+                if (previousMh != playerKind)
+                {
+                    MechanoidMechanitorFactionRelationNotificationUtility.NotifySafely(
+                        mechHive, other, previousMh, playerKind, "奥德赛主脑接管：机械巢侧");
+                }
+
+                if (previousOther != playerKind)
+                {
+                    MechanoidMechanitorFactionRelationNotificationUtility.NotifySafely(
+                        other, mechHive, previousOther, playerKind, "奥德赛主脑接管：派系侧");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 同步机械巢与派系关系失败："
+                    + (other?.GetUniqueLoadID() ?? "null") + "\n" + ex);
+            }
+            finally
+            {
+                applying = false;
+            }
+        }
+
+        /// <summary>
+        /// 取得玩家与目标派系当前的关系类别；玩家与该派系尚未建立关系记录时返回 false，
+        /// 此时不改动机械巢与该派系的关系。
+        /// </summary>
+        public static bool TryGetPlayerRelationTemplate(Faction other, out FactionRelationKind kind)
+        {
+            kind = FactionRelationKind.Neutral;
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null || other == null || ReferenceEquals(other, player))
+            {
+                return false;
+            }
+
+            FactionRelation? relation = player.RelationWith(other, allowNull: true);
+            if (relation == null)
+            {
+                return false;
+            }
+
+            kind = relation.kind;
+            return true;
+        }
+
+        /// <summary>
+        /// 安全补齐机械巢与目标派系之间的双向 FactionRelation 记录。部分隐藏派系可能只与
+        /// 玩家一方建立了关系，需在此补齐缺失方向后再写入，避免假定记录一定存在。
+        /// </summary>
+        private static void EnsureBidirectionalMechHiveRelation(Faction mechHive, Faction other)
+        {
+            FactionRelation? a = mechHive.RelationWith(other, allowNull: true);
+            FactionRelation? b = other.RelationWith(mechHive, allowNull: true);
+            if (a != null && b != null)
+            {
+                return;
+            }
+
+            if (a == null && b == null)
+            {
+                mechHive.TryMakeInitialRelationsWith(other);
+                return;
+            }
+
+            if (a != null)
+            {
+                other.SetRelation(new FactionRelation
+                {
+                    other = mechHive,
+                    kind = a.kind,
+                    baseGoodwill = a.baseGoodwill
+                });
+            }
+            else
+            {
+                mechHive.SetRelation(new FactionRelation
+                {
+                    other = other,
+                    kind = b!.kind,
+                    baseGoodwill = b.baseGoodwill
+                });
             }
         }
     }
