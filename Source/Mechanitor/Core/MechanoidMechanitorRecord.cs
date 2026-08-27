@@ -67,33 +67,10 @@ namespace MAP_MechanoidMechanitor
 
             SelfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(SelfWorkMode);
 
-            RechargeThresholds = SanitizeRechargeThresholds(RechargeThresholds);
-        }
-
-        // 防御非法存档值：min/max 钳制到 0~1、保证 min<=max、拦截 NaN/Infinity。
-        // 数据完全非法时回退原版 DefaultMechRechargeThresholds，不抛异常。
-        private static FloatRange SanitizeRechargeThresholds(FloatRange value)
-        {
-            FloatRange fallback = MechanitorControlGroup.DefaultMechRechargeThresholds;
-
-            if (float.IsNaN(value.min)
-                || float.IsNaN(value.max)
-                || float.IsInfinity(value.min)
-                || float.IsInfinity(value.max))
-            {
-                return fallback;
-            }
-
-            float min = Mathf.Clamp(value.min, 0f, 1f);
-            float max = Mathf.Clamp(value.max, 0f, 1f);
-
-            // 若越界则交换，避免下游充电判定进入 min>max 的非法区间。
-            if (min > max)
-            {
-                (min, max) = (max, min);
-            }
-
-            return new FloatRange(min, max);
+            // 阈值合法化规则唯一实现在 MechanoidMechanitorRechargeUtility，
+            // 与 UI 写入入口 TrySetRechargeThresholds 共用同一套规则，禁止在此复制第二份。
+            RechargeThresholds =
+                MechanoidMechanitorRechargeUtility.SanitizeRechargeThresholds(RechargeThresholds);
         }
 
         public static int GetMaxChipBandwidthBonus(
