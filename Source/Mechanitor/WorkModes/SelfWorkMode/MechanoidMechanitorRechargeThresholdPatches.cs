@@ -36,12 +36,15 @@ namespace MAP_MechanoidMechanitor
 
             // Sleep 结束后的续充探测阶段：暂时抑制原版普通自动充电抢在 Work 前面，
             // 让 JobGiver_Work 在每轮 override 重评估时优先拿到工作。
+            // 原版 ShouldAutoRecharge 判断 energy + 0.1 < GetMinAutorechargeThreshold；
+            // 把 min 设成 0 会使该式恒为 false，从而普通 JobGiver_GetEnergy_Charger 不产生 Job。
+            // 注意：明确 Recharge 本体模式的判定已在上方优先返回 maxMechEnergy，不受此处影响。
             // 该状态完全由 CurJob 派生，不会残留为永久脏标记。
             if (MechanoidMechanitorTimetableUtility.IsExecutingManagedScheduledRecharge(pawn)
                 && MechanoidMechanitorTimetableUtility.GetCurrentIntent(pawn)
                     != MechanoidMechanitorScheduleIntent.Recharge)
             {
-                __result = pawn.RaceProps.maxMechEnergy;
+                __result = 0;
                 return;
             }
 
@@ -61,18 +64,70 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 明确 Recharge 本体模式：充至 100%。
+            // 明确 Recharge 本体模式：充至 100%（绝对能量值，不是 0~1 比例）。
             if (MechanoidMechanitorSelfWorkModeUtility.TryGetCurrentMode(
                     pawn,
                     out MechWorkModeDef? mode)
                 && MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(mode))
             {
-                __result = 1f;
+                __result = pawn.RaceProps.maxMechEnergy;
                 return;
             }
 
-            // 普通自律状态：读取个人 RechargeThresholds.max（0~1 比例）。
-            __result = MechanoidMechanitorRechargeUtility.GetStopRechargeThreshold(pawn);
+            // 普通自律状态：读取个人 RechargeThresholds.max 换算为“绝对能量值”。
+            // 原版 GetMaxRechargeLimit 返回的是绝对 mech energy，不是百分比。
+            // 例：maxMechEnergy=100、max=0.8 -> 返回 80，而非 0.8。
+            __result = MechanoidMechanitorRechargeUtility.GetStopRechargeEnergy(pawn);
+        }
+    }
+
+    /// <summary>
+    /// 精准绕过原版 ThinkNode_ConditionalRecharging：Sleep 结束后让 WorkMode 获得一次正常评估。
+    /// 仅当“当前 Job 是作息时间充电 giver 发起的 MechCharge + 当前已不是 Sleep + 本体非明确 Recharge”
+    /// 时才把 Satisfied 改为 false，使原版“保持当前充电”分支暂时失效，让工作有机会抢占续充。
+    /// 普通机械族 / 普通机械族机械师正常自动充电 / 明确 Recharge 模式 / 仍在 Sleep 均不受影响。
+    /// </summary>
+    [HarmonyPatch(typeof(ThinkNode_ConditionalRecharging), "Satisfied")]
+    public static class Patch_ThinkNode_ConditionalRecharging_Satisfied
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Pawn pawn, ref bool __result)
+        {
+            // 1. 原版本就判定为“正在充电”（Satisfied == true）。
+            if (!__result)
+            {
+                return;
+            }
+
+            // 2. 是机械族机械师。
+            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            {
+                return;
+            }
+
+            // 3. 当前 Job 由本 MOD 作息充电 giver 发起（managed scheduled recharge）。
+            if (!MechanoidMechanitorTimetableUtility.IsExecutingManagedScheduledRecharge(pawn))
+            {
+                return;
+            }
+
+            // 4. 当前作息已不是 Sleep（Sleep 已结束）。
+            if (MechanoidMechanitorTimetableUtility.GetCurrentIntent(pawn)
+                == MechanoidMechanitorScheduleIntent.Recharge)
+            {
+                return;
+            }
+
+            // 5. 本体模式不是明确 Recharge（明确 Recharge 模式不得被强制 false）。
+            if (MechanoidMechanitorSelfWorkModeUtility.TryGetCurrentMode(
+                    pawn,
+                    out MechWorkModeDef? mode)
+                && MechanoidMechanitorSelfWorkModeUtility.IsRechargeMode(mode))
+            {
+                return;
+            }
+
+            __result = false;
         }
     }
 }

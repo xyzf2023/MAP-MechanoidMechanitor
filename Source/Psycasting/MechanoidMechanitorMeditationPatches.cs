@@ -9,19 +9,41 @@ namespace MAP_MechanoidMechanitor
 {
     public class JobGiver_MechanoidMechanitorMeditate : ThinkNode_JobGiver
     {
-        public override float GetPriority(Pawn pawn)
+        /// <summary>
+        /// 普通 Neutral 时段的自动冥想入口。
+        /// 仅当当前为 Neutral 时段（Anything / Work / 未知第三方 Assignment）才允许；
+        /// Sleep/Joy/Meditate 时段分别由各自的 scheduled giver 处理，不在此处冥想。
+        /// GetPriority 与 TryGiveJob 共用 CanRun，避免资格漂移。
+        /// </summary>
+        private static bool CanRun(Pawn pawn)
         {
-            return MechanoidMechanitorPsycastUtility.ShouldAutoMeditate(
-                pawn,
-                out _)
-                ? 7.1f
-                : 0f;
+            if (pawn == null || pawn.Dead || pawn.Destroyed)
+            {
+                return false;
+            }
+
+            // 非 Neutral 时段（Sleep/Joy/Meditate）交由各自 scheduled giver，不在此自动冥想。
+            if (!MechanoidMechanitorTimetableUtility.IsNeutralTime(pawn))
+            {
+                return false;
+            }
+
+            return MechanoidMechanitorPsycastUtility.ShouldAutoMeditate(pawn, out _);
         }
 
-        protected override Job TryGiveJob(Pawn pawn)
+        public override float GetPriority(Pawn pawn)
         {
-            return MechanoidMechanitorPsycastUtility.TryMakeAssignedMeditationJob(
-                pawn)!;
+            return CanRun(pawn) ? 7.1f : 0f;
+        }
+
+        protected override Job? TryGiveJob(Pawn pawn)
+        {
+            if (!CanRun(pawn))
+            {
+                return null;
+            }
+
+            return MechanoidMechanitorPsycastUtility.TryMakeAssignedMeditationJob(pawn);
         }
     }
 
