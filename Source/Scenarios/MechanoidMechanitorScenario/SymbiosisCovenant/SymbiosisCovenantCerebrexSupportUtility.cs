@@ -1250,11 +1250,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     || rec.stage == CerebrexSupportEvacVehicleStage.Landed
                     || rec.stage == CerebrexSupportEvacVehicleStage.Loading)
                 {
-                    CompShuttle? compShuttle = rec.vehicleThing?.TryGetComp<CompShuttle>();
-                    TransportShip? ship = compShuttle?.shipParent;
-                    if (ship == null)
+                    // 严格区分“已创建运输船”与“穿梭机实际落地可装载”：未真正落地前保持等待，
+                    // 不安排搬运、不刷新 requiredPawns、不判断装载、不触发离场、不创建 Lord、不标记完成/装载/离图。
+                    if (!IsShuttleLandedAndLoadable(rec, map))
                     {
-                        // 载具仍未就绪（生成/到达中）。vehicleThing 一旦丢失则标记失败重试。
+                        // 载具仍在生成 / 异步抵达中：vehicleThing 一旦丢失则标记失败重试，否则仅等待。
                         if (rec.vehicleThing == null && rec.stage != CerebrexSupportEvacVehicleStage.LandingRequested)
                         {
                             rec.stage = CerebrexSupportEvacVehicleStage.FailedRetryable;
@@ -1264,16 +1264,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         continue;
                     }
 
+                    CompShuttle compShuttle = rec.vehicleThing!.TryGetComp<CompShuttle>()!;
+                    TransportShip ship = compShuttle.shipParent!;
+
+                    // 穿梭机首次实际落地：先从战斗 Lord 正式移除这些 Pawn，再创建撤离 Lord（仅一次），
+                    // 避免“同时属于两个 Lord”报错，且不在 ShipJob_Arrive 抵达期间就让援军登船。
+                    if (rec.stage == CerebrexSupportEvacVehicleStage.LandingRequested)
+                    {
+                        List<Pawn> evacPawns = rec.pawns.Where(p => IsUsableEvacPawn(p)).ToList();
+                        DetachPawnsFromOldLords(evacPawns, map);
+                        LordMaker.MakeNewLord(
+                            rec.faction ?? Faction.OfPlayer,
+                            new LordJob_ExitOnShuttle(compShuttle.parent, addFleeToil: false),
+                            map,
+                            evacPawns);
+                    }
+
                     rec.stage = CerebrexSupportEvacVehicleStage.Landed;
 
                     // 调度存活援军搬运倒地存活援军；并在发射前刷新实际名单，避免死亡/销毁/丢弃 Pawn 阻塞离图。
-                    if (compShuttle != null)
-                    {
-                        TryAssignHaulersForDowned(rec, map, rec.vehicleThing);
-                        compShuttle.requiredPawns = rec.pawns.Where(p => IsUsableEvacPawn(p)).ToList();
-                    }
+                    TryAssignHaulersForDowned(rec, map, rec.vehicleThing);
+                    compShuttle.requiredPawns = rec.pawns.Where(p => IsUsableEvacPawn(p)).ToList();
 
-                    if (compShuttle != null && compShuttle.AllRequiredThingsLoaded
+                    if (compShuttle.AllRequiredThingsLoaded
                         && rec.stage != CerebrexSupportEvacVehicleStage.Departing)
                     {
                         // 仅发射一次：切换 Departing，绝不把 vehicleThing 置空。
@@ -1301,6 +1314,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 严格区分“已创建运输船”与“穿梭机实际落地可装载”。
+        /// 必须：载具已生成到当前主脑地图、能取得 CompShuttle、shipParent 已就绪，
+        /// 且原版 TransportShip 已进入 ShipJob_Wait（抵达完成、停在地图等待装载），
+        /// 而非仍处于 ShipJob_Arrive 异步抵达（此时载具只是作为天空坠落物在飞行，尚未可装载）。
+        /// </summary>
+        private static bool IsShuttleLandedAndLoadable(
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec, Map map)
+        {
+            Thing? vehicle = rec.vehicleThing;
+            if (vehicle == null || !vehicle.Spawned || vehicle.Map != map)
+            {
+                return false;
+            }
+
+            CompShuttle? compShuttle = vehicle.TryGetComp<CompShuttle>();
+            TransportShip? ship = compShuttle?.shipParent;
+            if (ship == null)
+            {
+                return false;
+            }
+
+            // Waiting == ShipExistsAndIsSpawned && curJob is ShipJob_Wait：
+            // 仅在抵达完成、停在地图等待装载时才视为可装载，排除 ShipJob_Arrive 飞行中状态。
+            return ship.Waiting;
         }
 
         private static IntVec3 FindShuttleLandingSpot(Map map, List<IntVec3> taken)
@@ -1371,23 +1411,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Thing shuttle = ThingMaker.MakeThing(ThingDefOf.Shuttle);
             CompShuttle compShuttle = shuttle.TryGetComp<CompShuttle>();
             compShuttle.permitShuttle = false;
-            compShuttle.acceptChildren = true;
+            // 仅由严格的援军 requiredPawns 名单控制，不额外开启儿童接纳。
+            compShuttle.acceptChildren = false;
             compShuttle.requiredPawns = pawns;
             shuttle.SetFaction(Faction.OfEmpire);
             TransportShip ship = TransportShipMaker.MakeTransportShip(TransportShipDefOf.Ship_Shuttle, null, shuttle);
             ship.ArriveAt(spot, map.Parent);
 
+            // 仅记录载具与状态；撤离 Lord 的创建推迟到穿梭机实际落地（见 TickRoyaltyEvacuation 的落地判定），
+            // 避免在 ShipJob_Arrive 异步抵达期间就让援军对未落地载具寻路/登船。
             rec.vehicleThing = shuttle;
-            rec.stage = CerebrexSupportEvacVehicleStage.Landed;
             rec.stateChangedTick = Find.TickManager.TicksGame;
-
-            // 加入原版穿梭机撤离 Lord 前，先从战斗 Lord 正式移除这些 Pawn，避免“同时属于两个 Lord”报错。
-            DetachPawnsFromOldLords(pawns, map);
-            LordMaker.MakeNewLord(
-                rec.faction ?? Faction.OfPlayer,
-                new LordJob_ExitOnShuttle(shuttle, addFleeToil: false),
-                map,
-                pawns);
         }
 
         // ── 奥德赛机械空投仓撤离 ──
