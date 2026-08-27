@@ -83,9 +83,9 @@
               <offset>(0, 0, 0)</offset>
               <flip>true</flip>
             </dataSouth>
-            <dataWest>
+            <!-- <dataWest>
               <flip>true</flip>
-            </dataWest>
+            </dataWest> -->
           </drawData>
 
           <children>
