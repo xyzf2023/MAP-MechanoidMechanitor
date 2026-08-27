@@ -731,6 +731,34 @@ namespace MAP_MechanoidMechanitor
                 mechanitorRecords ??= new List<MechanoidMechanitorRecord>();
                 CleanupRecords();
                 RebuildRecordIndex();
+
+                // 读档后立即补齐 timetable，保证机械族机械师在进入首个游戏 Tick /
+                // 打开 Schedule UI 之前已拥有合法 24 格。
+                // 顺序必须在 RebuildRecordIndex 之后：recordByPawn 已重建，
+                // IsMechanoidMechanitor 才能正确命中。详见 EnsureTimetableStateForAllRecords。
+                EnsureTimetableStateForAllRecords();
+            }
+        }
+
+        /// <summary>
+        /// 读档 PostLoadInit 后遍历权威持久化记录，立即补齐 timetable。
+        /// 必须在 RebuildRecordIndex 之后调用（recordByPawn 已重建，IsMechanoidMechanitor 才能命中）。
+        /// </summary>
+        private void EnsureTimetableStateForAllRecords()
+        {
+            for (int i = 0; i < mechanitorRecords.Count; i++)
+            {
+                MechanoidMechanitorRecord? record = mechanitorRecords[i];
+                Pawn? pawn = record?.Pawn;
+                if (record == null || pawn == null || pawn.Discarded)
+                {
+                    continue;
+                }
+
+                // Destroyed 尸体 InnerPawn 不适合补 tracker；EnsureTimetableState 内部对
+                // Destroyed 也会因 IsMechanoidMechanitor 返回 false 而安全 no-op。
+                // 活体（含死亡但可复活尸体）机械族机械师全部立即拥有合法 24 格 timetable。
+                MechanoidMechanitorRoleUtility.EnsureTimetableState(pawn);
             }
         }
 
@@ -824,6 +852,10 @@ namespace MAP_MechanoidMechanitor
             recordByPawn[record.Pawn] = record;
             InvalidateDerivedCaches();
             GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorRosterChanged();
+
+            // 记录正式进入 Registry 后立即保证 timetable（在 recordByPawn 写入之后，
+            // 确保 IsMechanoidMechanitor 能命中）。方法幂等，不会覆盖玩家已设置作息。
+            MechanoidMechanitorRoleUtility.EnsureTimetableState(record.Pawn);
         }
 
         private void RemoveRecordForPawnInternal(Pawn pawn)

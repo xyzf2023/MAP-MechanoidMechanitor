@@ -82,8 +82,11 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                // timetable 必须由生命周期（EnsureRoleState）提前保证存在；
-                // 极端异常下若仍为 null，安全跳过，不让 UI 崩溃。
+                // 防御性判断：仅控制“本 Patch 是否把该 Pawn 追加进 Schedule 列表”，
+                // 不保证 Pawn 不会由 base.MainTabWindow_Schedule.Pawns / FreeColonists 等
+                // 其它集合进入 Schedule。timetable 非空应由 Registry 生命周期
+                // （AddRecord / PostLoadInit / EnsureRoleState）保证，而非 UI 层创建。
+                // 极端异常下若 timetable 仍为 null，这里安全跳过，不让本 Patch 崩溃。
                 if (pawn.timetable == null)
                 {
                     continue;
