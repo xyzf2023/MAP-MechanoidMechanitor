@@ -13,9 +13,6 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public class JobDriver_InstallMechanoidModule : JobDriver
     {
-        private const string LogPrefix =
-            "[MAP-机械族机械师] JobDriver_InstallMechanoidModule：";
-
         private Thing Module => TargetThingA;
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
@@ -33,6 +30,9 @@ namespace MAP_MechanoidMechanitor
         {
             AddFailCondition(() => !CanInstallNow());
 
+            // 兼容旧存档：旧版安装 JobDriver 的索引 0 同样是 Reserve toil。
+            // 即使 TryMakePreToilReservations 已完成预留，此处也必须保留，以免改变
+            // 后续 Goto、Wait 和安装 toil 的索引。相同 Pawn、Job 和目标的重复预留是幂等的。
             yield return Toils_Reserve.Reserve(TargetIndex.A);
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
 
