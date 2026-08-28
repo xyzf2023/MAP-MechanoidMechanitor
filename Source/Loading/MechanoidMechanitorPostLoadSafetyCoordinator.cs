@@ -105,6 +105,7 @@ namespace MAP_MechanoidMechanitor
             Reset(game);
             activeGame = game;
             loadInProgress = true;
+            MechanoidMechanitorLoadDeathGuard.BeginLoad(game);
         }
 
         internal static void BeginLoadedGamePass()
@@ -130,6 +131,7 @@ namespace MAP_MechanoidMechanitor
         internal static void AbortLoad()
         {
             Reset(Current.Game);
+            MechanoidMechanitorLoadDeathGuard.AbortLoad();
         }
 
         internal static void QueueWorkMode(Pawn? pawn, MechWorkModeDef? workMode)
@@ -245,6 +247,7 @@ namespace MAP_MechanoidMechanitor
             deferredEffectsApplied = true;
             loadInProgress = false;
             ClearQueues();
+            MechanoidMechanitorLoadDeathGuard.EndLoad();
         }
 
         private static bool TryRestorePositiveSources()
@@ -617,6 +620,7 @@ namespace MAP_MechanoidMechanitor
             invokingDeferredEffects = false;
             earliestCoordinatorTick = 0;
             ClearQueues();
+            MechanoidMechanitorLoadDeathGuard.Reset(game);
         }
 
         private static void ClearQueues()

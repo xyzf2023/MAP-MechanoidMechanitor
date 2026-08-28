@@ -10,6 +10,8 @@
   <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>开启后，受动态分配管理的机械族在征召或取消征召时，会在下一游戏刻立即重新评估当前状态、特化模式和请求额度。批量征召会按监管者合并预算重算。关闭后，征召状态变化将在目标原有的状态检查间隔到期时处理。</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>
   <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>启用加载期死亡诊断日志（临时）</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>
   <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>默认关闭。仅用于诊断旧存档加载时机械族机械师突然死亡。开启后会在加载期间记录健康状态、意识、Hediff、数据处理记录与关键调用栈，可能产生较多日志。诊断完成后应关闭。此选项不会阻止死亡或修改存档。</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>
+  <MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Label>阻止机械族机械师在存档加载时死亡</MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Label>
+  <MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>开启后，阻止加载存档期间原本存活的机械族机械师意外死亡。该保护仅作用于存档加载及读档安全恢复流程完成之前，不依赖 Hediff、不改变意识值、不赋予真正的不死状态、不修改存档 Pawn 数据、不主动复活已死亡 Pawn、不影响正常游戏，也不阻止带有真实伤害来源的死亡，仅作为旧存档加载期间的防误杀保险层。</MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>
 
   <!-- 模块：植入体功能 -->
   <MAP_MechanoidMechanitor.Settings.BrainImplants.Label>启用机械族机械师使用并安装脑部植入体</MAP_MechanoidMechanitor.Settings.BrainImplants.Label>

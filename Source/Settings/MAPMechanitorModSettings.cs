@@ -42,6 +42,15 @@ namespace MAP_MechanoidMechanitor
         public bool enableLoadDeathDiagnosticLogging = false;
 
         /// <summary>
+        /// 默认开启。开启后，阻止加载存档期间原本存活的机械族机械师意外死亡。
+        /// 该保护仅作用于存档加载及现有读档安全恢复流程完成之前，不依赖 Hediff、
+        /// 不改变意识值、不赋予真正的不死状态、不修改存档 Pawn 数据、不主动复活已死亡
+        /// Pawn、不影响正常游戏，也不阻止带有真实伤害来源的死亡，仅作为旧存档加载期间的
+        /// 防误杀保险层。
+        /// </summary>
+        public bool preventMechanoidMechanitorDeathDuringLoad = true;
+
+        /// <summary>
         /// 是否在打开肃清指令机械主脑通讯 UI 时显示连接加载界面。
         /// 默认开启。
         /// </summary>
@@ -405,6 +414,10 @@ namespace MAP_MechanoidMechanitor
                 ref enableLoadDeathDiagnosticLogging,
                 "enableLoadDeathDiagnosticLogging",
                 false);
+            Scribe_Values.Look(
+                ref preventMechanoidMechanitorDeathDuringLoad,
+                "preventMechanoidMechanitorDeathDuringLoad",
+                true);
             Scribe_Values.Look(
                 ref enablePurgeDirectiveUiLoadingScreen,
                 "enablePurgeDirectiveUiLoadingScreen",
