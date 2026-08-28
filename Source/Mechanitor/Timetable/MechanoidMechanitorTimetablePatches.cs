@@ -50,14 +50,17 @@ namespace MAP_MechanoidMechanitor
     /// （含正式机械族机械师，以及挂载 CompColonistLikeTimetableUser 的非机械师机械族）。
     /// 只 Patch Pawns getter，不改动 MapPawns.FreeColonists 等全局集合，
     /// 也不改动 MainTabWindow_PawnTable 的全局行为。
-    /// 候选从当前 Map 已生成 Pawn 中按能力层筛选，不再仅依赖 Registry。
+    /// 候选来自双来源：正式机械族机械师优先走权威 Registry，
+    /// 非机械师机械族（如恋人）走真实 CompColonistLikeTimetableUser 标记。
     /// UI getter 不承担初始化副作用：timetable 非空应由对应生命周期保证，
     /// 极端异常下若 timetable 仍为 null，这里安全跳过，绝不在此 new Pawn_TimetableTracker。
     /// </summary>
     [HarmonyPatch(typeof(MainTabWindow_Schedule), "get_Pawns")]
     public static class Patch_MainTabWindow_Schedule_Pawns
     {
-        private const int WarningKeyScheduleTimetableNull = unchecked((int)0x5449_0001);
+        // WarningOnce key 基准：与 pawn.thingIDNumber 异或，做到“每个 Pawn 一次”，
+        // 而不是整个游戏只有一个 Pawn 能打印 Dev 警告。
+        private const int WarningKeyScheduleTimetableNullBase = unchecked((int)0x5449_0001);
 
         [HarmonyPostfix]
         public static void Postfix(ref IEnumerable<Pawn> __result)
@@ -68,66 +71,41 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            List<Pawn>? additions = null;
+            // 双来源枚举：
+            //  A. 正式机械族机械师来自权威 Registry，避免对地图全部 Pawn 做 capability 聚合查询；
+            //  B. 挂载真实 CompColonistLikeTimetableUser 的非机械师机械族（如恋人），
+            //     仅作廉价 Race/Faction 过滤 + GetComp 标记，再对命中极少数 Pawn
+            //     做 capability 一致性断言，显著降低昂贵查询次数。
+            // 使用 HashSet 去重，避免升格后的恋人同时出现在两来源中而重复加入。
+            HashSet<Pawn> additions = new HashSet<Pawn>();
+
+            foreach (Pawn pawn in
+                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors)
+            {
+                if (IsRegistryScheduleCandidate(pawn, currentMap))
+                {
+                    additions.Add(pawn);
+                }
+            }
+
             IReadOnlyList<Pawn> spawnedPawns = currentMap.mapPawns.AllPawnsSpawned;
             for (int i = 0; i < spawnedPawns.Count; i++)
             {
                 Pawn pawn = spawnedPawns[i];
-                if (pawn == null
-                    || pawn.Destroyed
-                    || pawn.Dead
-                    || pawn.Map != currentMap)
+                if (IsCompScheduleCandidate(pawn, currentMap))
                 {
-                    continue;
+                    additions.Add(pawn);
                 }
-
-                if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
-                {
-                    continue;
-                }
-
-                if (pawn.RaceProps?.IsMechanoid != true)
-                {
-                    continue;
-                }
-
-                if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                        pawn,
-                        MechanoidMechanitorCapability.ColonistLikeTimetable))
-                {
-                    continue;
-                }
-
-                // 防御性判断：仅控制“本 Patch 是否把该 Pawn 追加进 Schedule 列表”，
-                // 不保证 Pawn 不会由 base.MainTabWindow_Schedule.Pawns / FreeColonists 等
-                // 其它集合进入 Schedule。timetable 非空应由生命周期保证，而非 UI 层创建。
-                // 极端异常下若 timetable 仍为 null，这里安全跳过，不让本 Patch 崩溃。
-                if (pawn.timetable == null)
-                {
-                    if (Prefs.DevMode)
-                    {
-                        Log.WarningOnce(
-                            "[MAP-机械族机械师] Schedule UI 跳过 timetable 为 null 的 "
-                            + "ColonistLikeTimetable 机械族（生命周期异常，不在 UI 层初始化）："
-                            + $"{pawn.LabelShort}（{pawn.ThingID}）。",
-                            WarningKeyScheduleTimetableNull);
-                    }
-
-                    continue;
-                }
-
-                additions ??= new List<Pawn>();
-                additions.Add(pawn);
             }
 
-            if (additions == null || additions.Count == 0)
+            if (additions.Count == 0)
             {
                 return;
             }
 
-            // 去重：避免重复加入原版 FreeColonists 列表中已存在的 Pawn。
-            HashSet<Pawn> existing = new HashSet<Pawn>(__result);
+            // 单次 materialize 原 __result，再用 HashSet 去重后合并，避免对 __result 重复枚举。
             List<Pawn> merged = __result as List<Pawn> ?? __result.ToList();
+            HashSet<Pawn> existing = new HashSet<Pawn>(merged);
             foreach (Pawn pawn in additions)
             {
                 if (!existing.Contains(pawn))
@@ -137,6 +115,99 @@ namespace MAP_MechanoidMechanitor
             }
 
             __result = merged;
+        }
+
+        private static bool IsRegistryScheduleCandidate(Pawn? pawn, Map currentMap)
+        {
+            if (pawn == null || pawn.Destroyed || pawn.Dead)
+            {
+                return false;
+            }
+
+            if (!pawn.Spawned || pawn.Map != currentMap)
+            {
+                return false;
+            }
+
+            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
+            {
+                return false;
+            }
+
+            if (pawn.RaceProps?.IsMechanoid != true)
+            {
+                return false;
+            }
+
+            if (pawn.timetable == null)
+            {
+                WarnScheduleTimetableNull(pawn);
+                return false;
+            }
+
+            // 一致性断言：正式机械族机械师天然具备该能力；仅在异常情况下才跳过。
+            return MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.ColonistLikeTimetable);
+        }
+
+        private static bool IsCompScheduleCandidate(Pawn? pawn, Map currentMap)
+        {
+            if (pawn == null || pawn.Destroyed || pawn.Dead)
+            {
+                return false;
+            }
+
+            if (pawn.Map != currentMap)
+            {
+                return false;
+            }
+
+            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
+            {
+                return false;
+            }
+
+            if (pawn.RaceProps?.IsMechanoid != true)
+            {
+                return false;
+            }
+
+            // 廉价标记过滤：优先用真实 ThingComp 而非完整 capability 聚合。
+            if (pawn.GetComp<CompColonistLikeTimetableUser>() == null)
+            {
+                return false;
+            }
+
+            // 仅对命中 Comp 的极少数 Pawn 做 capability 一致性断言。
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn,
+                    MechanoidMechanitorCapability.ColonistLikeTimetable))
+            {
+                return false;
+            }
+
+            if (pawn.timetable == null)
+            {
+                WarnScheduleTimetableNull(pawn);
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void WarnScheduleTimetableNull(Pawn pawn)
+        {
+            if (!Prefs.DevMode)
+            {
+                return;
+            }
+
+            Log.WarningOnce(
+                "[MAP-机械族机械师] Schedule UI 跳过 timetable 为 null 的 "
+                + "ColonistLikeTimetable 机械族（生命周期异常，不在 UI 层初始化）："
+                + $"{pawn.LabelShort}（{pawn.ThingID}）。",
+                WarningKeyScheduleTimetableNullBase ^ pawn.thingIDNumber);
         }
     }
 }

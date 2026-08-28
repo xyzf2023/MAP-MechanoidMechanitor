@@ -18,7 +18,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
         private const string LogPrefix =
             "[MAP-机械族机械师] Progression: Education 兼容：";
 
-        private const int WarningKeyInfrastructureNull = unchecked((int)0x5046_0001);
+        private const int WarningKeyInfrastructureNullBase = unchecked((int)0x5046_0001);
 
         /// <summary>
         /// 枚举当前 Map 上具备 ClassroomTeaching 与 ColonistLikeTimetable 能力、
@@ -92,7 +92,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                         LogPrefix
                         + "候选枚举跳过教学基础设施不完整（生命周期异常，不在 UI 层初始化）的"
                         + $"ColonistLikeTimetable 机械族：{pawn.LabelShort}（{pawn.ThingID}）。",
-                        WarningKeyInfrastructureNull);
+                        WarningKeyInfrastructureNullBase ^ pawn.thingIDNumber);
                 }
 
                 return false;

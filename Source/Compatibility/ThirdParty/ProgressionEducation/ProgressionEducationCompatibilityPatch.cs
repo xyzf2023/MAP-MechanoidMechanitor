@@ -24,6 +24,23 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
         private const int ErrorKeyAssignmentsCandidates = unchecked((int)0x5045_0006);
         private const int ErrorKeyTeacherRead = unchecked((int)0x5045_0007);
 
+        // MAP 主动施加拒绝时统一使用的 AcceptanceReport Reason 来源。
+        // 禁止散装字符串；所有由本兼容层覆盖为 Reject 的路径都必须提供非空 Reason，
+        // 否则 Progression: Education 的 CanParticipate 可能因 Reason 为空而误判 Pawn 整体可参与。
+        private const string ReasonStudentRole =
+            "该机械族仅被允许作为课堂教师，不能作为学生。";
+        private const string ReasonMissingTeachingInfrastructure =
+            "该机械族缺少课堂教学所需的作息基础设施。";
+        private const string ReasonUnsupportedClassType =
+            "该机械族当前仅支持普通技能课程和托儿课程教学。";
+        private const string ReasonCompatibilityReflectionFailure =
+            "该机械族课堂兼容层读取课程信息失败，暂时无法担任该角色。";
+
+        private static AcceptanceReport RejectWithReason(string reason)
+        {
+            return new AcceptanceReport(reason);
+        }
+
         private static MethodInfo? addPawnMethod;
         private static FieldInfo? allPawnsField;
         private static FieldInfo? studyGroupField;
@@ -238,7 +255,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                     MechanoidMechanitorCapability.ColonistLikeTimetable)
                 || __0.timetable == null)
             {
-                __result = AcceptanceReport.WasRejected;
+                __result = RejectWithReason(ReasonMissingTeachingInfrastructure);
                 return;
             }
 
@@ -260,13 +277,13 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                     + "TeacherRole.CanAcceptPawn Postfix 读取 studyGroup 失败，"
                     + $"Pawn={__0.LabelShort}（{__0.ThingID}），异常：{ex}",
                     ErrorKeyTeacherRead);
-                __result = AcceptanceReport.WasRejected;
+                __result = RejectWithReason(ReasonCompatibilityReflectionFailure);
                 return;
             }
 
             if (studyGroup == null)
             {
-                __result = AcceptanceReport.WasRejected;
+                __result = RejectWithReason(ReasonMissingTeachingInfrastructure);
                 return;
             }
 
@@ -282,7 +299,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                     + "TeacherRole.CanAcceptPawn Postfix 读取 subjectLogic 失败，"
                     + $"Pawn={__0.LabelShort}（{__0.ThingID}），异常：{ex}",
                     ErrorKeyTeacherRead);
-                __result = AcceptanceReport.WasRejected;
+                __result = RejectWithReason(ReasonCompatibilityReflectionFailure);
                 return;
             }
 
@@ -290,7 +307,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                 || (!skillClassLogicType!.IsInstanceOfType(subjectLogic)
                     && !daycareClassLogicType!.IsInstanceOfType(subjectLogic)))
             {
-                __result = AcceptanceReport.WasRejected;
+                __result = RejectWithReason(ReasonUnsupportedClassType);
             }
         }
 
@@ -322,7 +339,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                 return;
             }
 
-            __result = AcceptanceReport.WasRejected;
+            // 具备 ClassroomTeaching 能力的机械族 Pawn（正式机械族机械师 / 挂载
+            // CompClassroomTeachingUser 的非机械师机械族）无论课程类型，StudentRole 一律拒绝，
+            // 且必须提供非空 Reason，避免 Progression: Education 的 CanParticipate 误判。
+            // 普通 Pawn 完全保持 Education 原结果。
+            __result = RejectWithReason(ReasonStudentRole);
         }
 
         private static bool IsConfigured()
