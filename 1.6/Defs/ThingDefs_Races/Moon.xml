@@ -7,12 +7,12 @@
     <description>一台采用类人结构并保留完整人类式着装与自维护能力的特殊机械体。</description>
 
     <statBases>
-      <MarketValue>1200</MarketValue>
+      <MarketValue>2500</MarketValue>
       <MoveSpeed>5.2</MoveSpeed>
-      <BandwidthCost>2</BandwidthCost>
+      <BandwidthCost>3</BandwidthCost>
       <ControlTakingTime>18</ControlTakingTime>
-      <ArmorRating_Blunt>0.30</ArmorRating_Blunt>
-      <ArmorRating_Sharp>0.50</ArmorRating_Sharp>
+      <ArmorRating_Blunt>1.0</ArmorRating_Blunt>
+      <ArmorRating_Sharp>1.0</ArmorRating_Sharp>
       <ShootingAccuracyFactor_Short>1.5</ShootingAccuracyFactor_Short>
       <RangedWeapon_Cooldown>0.75</RangedWeapon_Cooldown>
       <WorkSpeedGlobal>1</WorkSpeedGlobal>
@@ -26,9 +26,9 @@
         <capacities>
           <li>Blunt</li>
         </capacities>
-        <power>9</power>
-        <armorPenetration>0.12</armorPenetration>
-        <cooldownTime>1.8</cooldownTime>
+        <power>12</power>
+        <armorPenetration>0.18</armorPenetration>
+        <cooldownTime>1.2</cooldownTime>
         <linkedBodyPartsGroup>LeftHand</linkedBodyPartsGroup>
       </li>
 
@@ -38,9 +38,9 @@
         <capacities>
           <li>Blunt</li>
         </capacities>
-        <power>9</power>
-        <armorPenetration>0.12</armorPenetration>
-        <cooldownTime>1.8</cooldownTime>
+        <power>12</power>
+        <armorPenetration>0.18</armorPenetration>
+        <cooldownTime>1.2</cooldownTime>
         <linkedBodyPartsGroup>RightHand</linkedBodyPartsGroup>
       </li>
 
@@ -64,8 +64,8 @@
       <intelligence>ToolUser</intelligence>
       <thinkTreeMain>Mechanoid</thinkTreeMain>
       <renderTree>MAP_Moon</renderTree>
-      <baseBodySize>1.0</baseBodySize>
-      <baseHealthScale>1.32</baseHealthScale>
+      <baseBodySize>1.8</baseBodySize>
+      <baseHealthScale>2.5</baseHealthScale>
 
       <soundMeleeHitPawn>Pawn_Melee_MechanoidBash_HitPawn</soundMeleeHitPawn>
       <soundMeleeHitBuilding>Pawn_Melee_MechanoidBash_HitBuilding</soundMeleeHitBuilding>
@@ -83,17 +83,6 @@
         </li>
       </lifeStageAges>
 
-      <mechFixedSkillLevel>12</mechFixedSkillLevel>
-
-      <mechEnabledWorkTypes>
-        <li>Firefighter</li> <!-- 灭火 -->
-        <li>Doctor</li> <!-- 医生 -->
-        <li>BasicWorker</li> <!-- 杂项 -->
-        <li>Warden</li> <!-- 监管 -->
-        <li>Handling</li> <!-- 驯兽 -->
-        <li>Cooking</li> <!-- 烹饪 -->
-        <li>Childcare</li> <!-- 育儿 -->
-      </mechEnabledWorkTypes>
 
     </race>
 
@@ -105,15 +94,6 @@
     <uiIconPath>Moon/Moon_fullbody</uiIconPath>
 
     <comps>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_WardenWorkUser">
-        <defaultPriority>3</defaultPriority>
-      </li>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_AnimalHandlingWorkUser">
-        <defaultPriority>3</defaultPriority>
-      </li>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_MechanicalChildcareUser">
-        <defaultPriority>1</defaultPriority>
-      </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeSocialTabUser" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeMechProfile">
         <profileVersion>1</profileVersion>
@@ -127,22 +107,6 @@
           <li>
             <skill>Melee</skill>
             <level>20</level>
-          </li>
-          <li>
-            <skill>Social</skill>
-            <level>12</level>
-          </li>
-          <li>
-            <skill>Animals</skill>
-            <level>10</level>
-          </li>
-          <li>
-            <skill>Medicine</skill>
-            <level>10</level>
-          </li>
-          <li>
-            <skill>Cooking</skill>
-            <level>10</level>
           </li>
         </skillLevels>
         <ensureRelationsTracker>false</ensureRelationsTracker>
@@ -178,7 +142,7 @@
 
     <defaultFactionDef>PlayerColony</defaultFactionDef>
 
-    <combatPower>200</combatPower>
+    <combatPower>350</combatPower>
     <allowInMechClusters>false</allowInMechClusters>
     <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
 
