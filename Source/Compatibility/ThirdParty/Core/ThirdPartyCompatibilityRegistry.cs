@@ -2,6 +2,7 @@ using System;
 using HarmonyLib;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
@@ -15,7 +16,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
         {
             new GlitterworldDestroyer5Compatibility(),
             new GlitterworldDestroyer5DryseaCompatibility(),
-            new GlitterworldDestroyer5ExpansionMechFusionCompatibility()
+            new GlitterworldDestroyer5ExpansionMechFusionCompatibility(),
+            new ProgressionEducationCompatibility()
         };
 
         public static void ApplyAll(Harmony harmony)
