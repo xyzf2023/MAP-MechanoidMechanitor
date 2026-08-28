@@ -13,6 +13,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// 完整节点建筑总预算 = 节点创建时保存的完成态守军点数快照（与 Pawn 守军预算独立，不互相扣减）；
     /// 超过单张草图上限时拆成多张蓝图，分别寻找独立合法落点后统一合并。
     /// 完整节点采用事务式初始化：失败时统一回滚本轮创建内容，严格要求全部守军落地后才 Succeeded。
+    /// 事务记录（MechHiveNodeInitAttemptRecord）只用于失败回滚，建筑落地即登记；
+    /// 成功后记录会被释放清空，因此交给共享 LordJob 的建筑列表必须是一个独立的 List 实例。
     /// </summary>
     public static class MechHiveNodeMapGenerator
     {
@@ -53,13 +55,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             public float LayoutRadius;
 
-            /// <summary>本蓝图建筑在地图上的实际占用范围。</summary>
+            /// <summary>
+            /// 本蓝图建筑在地图上的实际占用范围。
+            /// 初始按原始 Sketch 计算（仅用于落点验证），蓝图完整落地后由
+            /// TryRecalculateClusterBounds 按实际建筑（含 SpawnNear 补位与补充建筑）重算。
+            /// </summary>
             public CellRect OccupiedRect;
 
-            /// <summary>含 <see cref="ClusterSeparationPadding"/> 的保留范围，供后续蓝图避让。</summary>
+            /// <summary>
+            /// 含 <see cref="ClusterSeparationPadding"/> 的保留范围，供后续蓝图避让。
+            /// 始终等于最终 <see cref="OccupiedRect"/> 向外扩展后的结果。
+            /// </summary>
             public CellRect ReservedRect;
 
-            /// <summary>本蓝图局部落地的全部建筑（含后续补充建筑）。</summary>
+            /// <summary>
+            /// 本蓝图局部落地的全部有效建筑（含 SpawnNear 补位建筑与后续补充建筑）。
+            /// 与事务记录互为补充：事务记录负责回滚，本列表负责本蓝图的必需建筑检查、
+            /// 实际范围重算与守军分散。
+            /// </summary>
             public readonly List<Thing> SpawnedThings = new List<Thing>();
         }
 
@@ -74,9 +87,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             public readonly MechHiveNodeInitAttemptRecord Record;
 
+            /// <summary>
+            /// 本轮事务追踪列表：只用于失败回滚，建筑落地即登记。
+            /// 成功后会被 AbandonTrackingKeepContent() 清空，因此不得把它直接交给 LordJob。
+            /// </summary>
             public List<Thing> SpawnedThings => Record.ThingsListForRegistration;
 
-            /// <summary>本轮已成功落地的全部蓝图（按生成顺序）。</summary>
+            /// <summary>本轮已成功落地的全部蓝图（按生成顺序，范围均为重算后的实际范围）。</summary>
             public readonly List<CompletedClusterInstance> Clusters = new List<CompletedClusterInstance>();
 
             /// <summary>全部蓝图中心，供共享防守范围计算与守军分散放置使用。</summary>
@@ -232,8 +249,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             session.FailureStage = "Lord与建筑公共初始化";
-            List<Thing> allSpawnedThings = session.SpawnedThings;
-            if (!HasUsableNodeBuilding(allSpawnedThings, map))
+            // 事务追踪列表只服务于失败回滚；LordJob 必须使用另一个独立的 List 实例，
+            // 这样成功后释放事务追踪（AbandonTrackingKeepContent 清空自己的列表）
+            // 也不会影响 LordJob 正在监听的建筑集合。
+            List<Thing> lordJobThings = BuildLordJobThingList(session, map);
+            if (!HasUsableNodeBuilding(lordJobThings, map))
             {
                 return FailCompletedInit(
                     session,
@@ -247,7 +267,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 因此任意一个集群被攻击、或任意一名共享 Lord 守军受伤时，
             // 原版同一次状态转换会把全部集群的全部守军一起唤醒——无需任何额外广播或轮询。
             LordJob_SleepThenMechanoidsDefend lordJob = new LordJob_SleepThenMechanoidsDefend(
-                allSpawnedThings,
+                lordJobThings,
                 mechHive,
                 sharedDefendRadius,
                 sharedDefSpot,
@@ -263,7 +283,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             record.RegisterLord(lord);
 
             MechClusterBuildingInitUtility.InitializeSpawnedBuildings(
-                allSpawnedThings,
+                lordJobThings,
                 mechHive,
                 lordJob,
                 lord,
@@ -361,10 +381,45 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map = session.Map;
             Faction mechHive = session.MechHive;
 
+            // 两个列表各自内部都不允许出现 null / Destroyed / 同一个 Pawn 重复出现。
+            // 注意：ExpectedPawns 与 PlacedPawns 本来就应当包含同一批 Pawn，
+            // 跨列表的“重复”是正确状态，绝不能据此判定失败，因此必须分别建两个集合，
+            // 不能把两个列表的元素塞进同一个 HashSet 做去重计数。
+            HashSet<Pawn> expectedSet = new HashSet<Pawn>();
             for (int i = 0; i < session.ExpectedPawns.Count; i++)
             {
                 Pawn expected = session.ExpectedPawns[i];
-                if (expected == null || expected.Destroyed || !expected.Spawned || expected.Map != map)
+                if (expected == null || expected.Destroyed || !expectedSet.Add(expected))
+                {
+                    return false;
+                }
+            }
+
+            HashSet<Pawn> placedSet = new HashSet<Pawn>();
+            for (int i = 0; i < session.PlacedPawns.Count; i++)
+            {
+                Pawn placed = session.PlacedPawns[i];
+                if (placed == null || placed.Destroyed || !placedSet.Add(placed))
+                {
+                    return false;
+                }
+            }
+
+            if (expectedSet.Count != expectedCount || placedSet.Count != expectedCount)
+            {
+                return false;
+            }
+
+            // 去重完成后，两个列表必须包含完全相同的一组守军。
+            if (!expectedSet.SetEquals(placedSet))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < session.ExpectedPawns.Count; i++)
+            {
+                Pawn expected = session.ExpectedPawns[i];
+                if (!expected.Spawned || expected.Map != map)
                 {
                     return false;
                 }
@@ -387,33 +442,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
-            for (int i = 0; i < session.PlacedPawns.Count; i++)
-            {
-                if (!session.ExpectedPawns.Contains(session.PlacedPawns[i]))
-                {
-                    return false;
-                }
-            }
-
-            // 不允许同一 Pawn 被重复登记或重复落地（重复加入同一 Lord 会破坏守军计数）。
-            HashSet<Pawn> uniquePawns = new HashSet<Pawn>();
-            for (int i = 0; i < session.ExpectedPawns.Count; i++)
-            {
-                if (!uniquePawns.Add(session.ExpectedPawns[i]))
-                {
-                    return false;
-                }
-            }
-
-            for (int i = 0; i < session.PlacedPawns.Count; i++)
-            {
-                if (!uniquePawns.Add(session.PlacedPawns[i]))
-                {
-                    return false;
-                }
-            }
-
             return true;
+        }
+
+        /// <summary>本次目标地图上仍然有效的节点建筑（非 null、未销毁、已生成、在当前地图）。</summary>
+        private static bool IsValidNodeBuilding(Thing? thing, Map map)
+        {
+            return thing != null
+                && !thing.Destroyed
+                && thing.Spawned
+                && thing.Map == map;
+        }
+
+        /// <summary>
+        /// 构造交给唯一 LordJob_SleepThenMechanoidsDefend 的稳定建筑列表。
+        /// 必须是一个新的 List 实例，绝不与 <see cref="MechHiveNodeInitAttemptRecord"/> 的
+        /// 事务追踪列表共用实例：成功后 AbandonTrackingKeepContent() 会清空自己的追踪列表，
+        /// LordJob 持有的建筑集合必须不受影响，否则共享状态机的唤醒监听集合会被清空。
+        /// 结果只包含未销毁、已生成、位于本次地图的有效建筑，且不含重复项。
+        /// </summary>
+        private static List<Thing> BuildLordJobThingList(CompletedInitSession session, Map map)
+        {
+            List<Thing> result = new List<Thing>();
+            HashSet<Thing> seen = new HashSet<Thing>();
+            List<Thing> tracked = session.SpawnedThings;
+            for (int i = 0; i < tracked.Count; i++)
+            {
+                Thing thing = tracked[i];
+                if (!IsValidNodeBuilding(thing, map))
+                {
+                    continue;
+                }
+
+                if (!seen.Add(thing))
+                {
+                    continue;
+                }
+
+                result.Add(thing);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -456,6 +525,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Sketch = sketch,
                 BuildingPoints = buildingPoints,
                 Center = center,
+
+                // 原始草图范围只是“初始落点验证依据”，不是本集群的最终范围：
+                // SpawnNear 补位建筑、后续补充的低角护盾/高角护盾/状态建筑都可能落在它之外。
+                // 最终 OccupiedRect / ReservedRect / LayoutRadius 由
+                // TryRecalculateClusterBounds() 在全部建筑落地后按实际建筑重算。
                 OccupiedRect = buildings.OccupiedRect.MovedBy(center),
                 ReservedRect = buildings.OccupiedRect.MovedBy(center).ExpandedBy(ClusterSeparationPadding),
                 LayoutRadius = Mathf.Max(
@@ -470,16 +544,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             EnforceSteelStuffOnSpawnedThings(instance.SpawnedThings);
             record.RegisterThingsFromList(instance.SpawnedThings);
-            if (instance.SpawnedThings.Count == 0)
-            {
-                return false;
-            }
 
             // 每张蓝图各自补齐低角护盾、高角护盾与合法状态建筑：
             // 不把本蓝图缺少的建筑补到其它蓝图附近，任意一张仍缺则整个节点初始化失败。
             if (ModsConfig.RoyaltyActive
                 && !EnsureRequiredRoyaltyBuildingsOnMap(
-                    map,
+                    session,
                     instance.Center,
                     instance.LayoutRadius,
                     instance.BuildingPoints,
@@ -490,14 +560,116 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            // 按本张蓝图实际落地的建筑重算范围；完全没有有效建筑则本张蓝图失败并统一回滚。
+            if (!TryRecalculateClusterBounds(session, instance, out string? boundsFailure))
+            {
+                record.RegisterThingsFromList(instance.SpawnedThings);
+                Log.Warning(
+                    "[MAP] 完整机械巢节点蓝图实际范围重算失败（预算 "
+                        + buildingPoints
+                        + "）："
+                        + boundsFailure);
+                return false;
+            }
+
             record.RegisterThingsFromList(instance.SpawnedThings);
             cluster = instance;
             return true;
         }
 
         /// <summary>
+        /// 把事务列表中本次新增的对象补入蓝图局部列表（去重，且忽略已销毁对象）。
+        /// 即使 Sketch.Spawn 中途抛出异常也会执行，保证局部列表与事务记录一致。
+        /// </summary>
+        private static void SyncClusterLocalList(
+            CompletedClusterInstance instance,
+            List<Thing> registrationList,
+            HashSet<Thing> preExisting)
+        {
+            List<Thing> clusterThings = instance.SpawnedThings;
+            for (int i = 0; i < registrationList.Count; i++)
+            {
+                Thing thing = registrationList[i];
+                if (thing == null
+                    || thing.Destroyed
+                    || preExisting.Contains(thing)
+                    || clusterThings.Contains(thing))
+                {
+                    continue;
+                }
+
+                clusterThings.Add(thing);
+            }
+        }
+
+        /// <summary>
+        /// 按本张蓝图实际落地的建筑重算 OccupiedRect / ReservedRect / LayoutRadius。
+        /// 必须覆盖原始蓝图建筑、SpawnNear 补位建筑、低角护盾、高角护盾与状态建筑，
+        /// 否则后续集群间距会不足，共享防守范围也无法覆盖实际建筑。
+        /// </summary>
+        private static bool TryRecalculateClusterBounds(
+            CompletedInitSession session,
+            CompletedClusterInstance instance,
+            out string? failureReason)
+        {
+            failureReason = null;
+            Map map = session.Map;
+            List<Thing> localThings = instance.SpawnedThings;
+
+            // 本蓝图有效建筑最终确认：剔除 null / 已销毁 / 未生成 / 不在本次地图上的对象。
+            for (int i = localThings.Count - 1; i >= 0; i--)
+            {
+                if (!IsValidNodeBuilding(localThings[i], map))
+                {
+                    localThings.RemoveAt(i);
+                }
+            }
+
+            if (localThings.Count == 0)
+            {
+                failureReason = "本张蓝图最终没有任何有效建筑";
+                return false;
+            }
+
+            // 每个建筑按其真实 Position、Rotation 与 def.Size 计算占用矩形，再合并成集群范围。
+            CellRect occupied = GenAdj.OccupiedRect(
+                localThings[0].Position,
+                localThings[0].Rotation,
+                localThings[0].def.Size);
+            for (int i = 1; i < localThings.Count; i++)
+            {
+                occupied = occupied.Encapsulate(
+                    GenAdj.OccupiedRect(
+                        localThings[i].Position,
+                        localThings[i].Rotation,
+                        localThings[i].def.Size));
+            }
+
+            instance.OccupiedRect = occupied;
+            instance.ReservedRect = occupied.ExpandedBy(ClusterSeparationPadding);
+
+            // 布局半径保持原有最小值约束，且不得小于实际建筑范围：
+            // 既保留原始半对角线口径，也保证覆盖相对蓝图中心最远的建筑角。
+            float halfDiagonal =
+                Mathf.Sqrt((float)occupied.Width * occupied.Width
+                    + (float)occupied.Height * occupied.Height)
+                / 2f;
+            float maxCornerDistance = 0f;
+            foreach (IntVec3 corner in occupied.Corners)
+            {
+                maxCornerDistance = Mathf.Max(maxCornerDistance, corner.DistanceTo(instance.Center));
+            }
+
+            instance.LayoutRadius = Mathf.Max(12f, halfDiagonal, maxCornerDistance);
+            return true;
+        }
+
+        /// <summary>
         /// 落地单张蓝图。禁止擦除先前已登记的节点建筑：wipeIfCollides=false，
         /// 并通过 canSpawnThing / SpawnNear validator 再次拒绝会覆盖已登记建筑的格子。
+        /// “落地即登记”：Sketch.Spawn 与 SpawnNear 直接把新对象写入本轮事务记录列表，
+        /// 任何一个建筑生成后立刻可被精确回滚；蓝图局部列表在 finally 中同步，
+        /// 即使 Sketch.Spawn 中途抛异常也不会漏掉已生成的对象（异常继续向外抛出统一回滚）。
         /// </summary>
         private static void SpawnClusterSketch(
             CompletedInitSession session,
@@ -506,46 +678,60 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map = session.Map;
             Faction mechHive = session.MechHive;
             MechClusterSketch sketch = instance.Sketch;
-            List<Thing> clusterThings = instance.SpawnedThings;
 
-            sketch.buildingsSketch.Spawn(
-                map,
-                instance.Center,
-                mechHive,
-                Sketch.SpawnPosType.Unchanged,
-                Sketch.SpawnMode.Normal,
-                wipeIfCollides: false,
-                forceTerrainAffordance: false,
-                clearEdificeWhereFloor: false,
-                clusterThings,
-                sketch.startDormant,
-                buildRoofsInstantly: false,
-                canSpawnThing: (SketchEntity entity, IntVec3 cell) =>
-                    CanSpawnClusterEntity(session, entity, cell),
-                onFailedToSpawnThing: (IntVec3 spot, SketchEntity entity) =>
-                {
-                    if (entity is SketchThing sketchThing
-                        && sketchThing.def != ThingDefOf.Wall
-                        && sketchThing.def != ThingDefOf.Barricade)
+            // 事务追踪列表直接作为 Sketch.Spawn 的 spawnedThings，
+            // 保证每个建筑实例化后立刻进入事务记录（不等整张蓝图生成结束）。
+            List<Thing> registrationList = session.Record.ThingsListForRegistration;
+            HashSet<Thing> preExisting = new HashSet<Thing>(registrationList);
+
+            try
+            {
+                sketch.buildingsSketch.Spawn(
+                    map,
+                    instance.Center,
+                    mechHive,
+                    Sketch.SpawnPosType.Unchanged,
+                    Sketch.SpawnMode.Normal,
+                    wipeIfCollides: false,
+                    forceTerrainAffordance: false,
+                    clearEdificeWhereFloor: false,
+                    registrationList,
+                    sketch.startDormant,
+                    buildRoofsInstantly: false,
+                    canSpawnThing: (SketchEntity entity, IntVec3 cell) =>
+                        CanSpawnClusterEntity(session, entity, cell),
+                    onFailedToSpawnThing: (IntVec3 spot, SketchEntity entity) =>
                     {
-                        entity.SpawnNear(
-                            spot,
-                            map,
-                            12f,
-                            mechHive,
-                            Sketch.SpawnMode.Normal,
-                            wipeIfCollides: false,
-                            forceTerrainAffordance: false,
-                            clusterThings,
-                            sketch.startDormant,
-                            validator: (SketchEntity candidate, IntVec3 cell) =>
-                                CanSpawnClusterEntity(session, candidate, cell)
-                                && !OverlapsAcceptedClusterReservedRect(session, candidate, cell));
-                    }
-                });
+                        if (entity is SketchThing sketchThing
+                            && sketchThing.def != ThingDefOf.Wall
+                            && sketchThing.def != ThingDefOf.Barricade)
+                        {
+                            // 补位生成同样写入同一个事务记录目标，保证失败时可精确回滚。
+                            entity.SpawnNear(
+                                spot,
+                                map,
+                                12f,
+                                mechHive,
+                                Sketch.SpawnMode.Normal,
+                                wipeIfCollides: false,
+                                forceTerrainAffordance: false,
+                                registrationList,
+                                sketch.startDormant,
+                                validator: (SketchEntity candidate, IntVec3 cell) =>
+                                    CanSpawnClusterEntity(session, candidate, cell)
+                                    && !OverlapsAcceptedClusterReservedRect(session, candidate, cell));
+                        }
+                    });
+            }
+            finally
+            {
+                // 无论成功还是中途异常，都要把本次新增的对象补入蓝图局部列表，
+                // 供必需建筑补充、实际范围重算与失败信息使用。
+                SyncClusterLocalList(instance, registrationList, preExisting);
+            }
         }
 
-        /// <summary>蓝图实体不得落在已登记的节点建筑上，也不得越出地图范围。</summary>
+        /// <summary>蓝图实体不得落在已登记的节点建筑上；任意占用格越出地图范围必须直接拒绝。</summary>
         private static bool CanSpawnClusterEntity(
             CompletedInitSession session,
             SketchEntity entity,
@@ -554,9 +740,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map map = session.Map;
             foreach (IntVec3 target in entity.OccupiedRect.MovedBy(cell))
             {
+                // 越界格不能跳过：只要有一格越出地图，本实体就不得在此生成。
                 if (!target.InBounds(map))
                 {
-                    continue;
+                    return false;
                 }
 
                 List<Thing> things = target.GetThingList(map);
@@ -578,7 +765,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
             SketchEntity entity,
             IntVec3 cell)
         {
-            CellRect rect = entity.OccupiedRect.MovedBy(cell);
+            return OverlapsAcceptedClusterReservedRect(session, entity.OccupiedRect.MovedBy(cell));
+        }
+
+        /// <summary>
+        /// 本蓝图后续补充建筑（低角护盾、高角护盾、状态建筑）的完整占用矩形
+        /// 不得落入任何已接受蓝图的保留范围。只检查目标格是否空闲是不够的。
+        /// </summary>
+        private static bool OverlapsAcceptedClusterReservedRect(
+            CompletedInitSession session,
+            ThingDef def,
+            IntVec3 cell)
+        {
+            if (def == null)
+            {
+                return false;
+            }
+
+            return OverlapsAcceptedClusterReservedRect(
+                session,
+                GenAdj.OccupiedRect(cell, Rot4.North, def.Size));
+        }
+
+        private static bool OverlapsAcceptedClusterReservedRect(
+            CompletedInitSession session,
+            CellRect rect)
+        {
             for (int i = 0; i < session.Clusters.Count; i++)
             {
                 if (rect.Overlaps(session.Clusters[i].ReservedRect))
@@ -942,7 +1154,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// buildingPoints 为该蓝图自己的预算，候选状态建筑按该预算筛选，与其它蓝图互不借用。
         /// </summary>
         private static bool EnsureRequiredRoyaltyBuildingsOnMap(
-            Map map,
+            CompletedInitSession session,
             IntVec3 center,
             float layoutRadius,
             int buildingPoints,
@@ -977,7 +1189,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         out _))
                 {
                     TryPlaceRequiredBuilding(
-                        map,
+                        session,
                         center,
                         layoutRadius,
                         low,
@@ -993,7 +1205,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         out _))
                 {
                     TryPlaceRequiredBuilding(
-                        map,
+                        session,
                         center,
                         layoutRadius,
                         high,
@@ -1004,7 +1216,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (!hasCauser)
                 {
                     TryPlaceAnyConditionCauserOnMap(
-                        map,
+                        session,
                         center,
                         layoutRadius,
                         points,
@@ -1023,7 +1235,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         private static bool TryPlaceAnyConditionCauserOnMap(
-            Map map,
+            CompletedInitSession session,
             IntVec3 center,
             float layoutRadius,
             int points,
@@ -1041,7 +1253,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 ThingDef def = causers[i];
                 if (TryPlaceRequiredBuilding(
-                        map,
+                        session,
                         center,
                         layoutRadius,
                         def,
@@ -1119,13 +1331,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         private static bool TryPlaceRequiredBuilding(
-            Map map,
+            CompletedInitSession session,
             IntVec3 center,
             float layoutRadius,
             ThingDef def,
             Faction mechHive,
             List<Thing> spawnedThings)
         {
+            Map map = session.Map;
             if (!MechClusterBuildingUtility.TryResolveBuildingStuff(
                     def,
                     forceSteelStuff: true,
@@ -1142,18 +1355,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         center,
                         map,
                         radius,
-                        c => CanPlaceBuilding(map, def, c),
+                        c => CanPlaceBuilding(map, def, c)
+                            && !OverlapsAcceptedClusterReservedRect(session, def, c),
                         out IntVec3 cell))
                 {
                     continue;
                 }
 
-                if (!TrySpawnAt(map, cell, def, stuff, mechHive, out Thing spawned))
+                // 传入事务记录：补充建筑成功落地后立刻登记，不等整个补充流程结束再批量登记。
+                if (!TrySpawnAt(map, cell, def, stuff, mechHive, out Thing spawned, session.Record))
                 {
                     continue;
                 }
 
                 spawnedThings.Add(spawned);
+                session.Record.RegisterThing(spawned);
                 return true;
             }
 
@@ -1485,15 +1701,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return TrySpawnAt(map, cell, def, stuff, mechHive, out spawned);
         }
 
+        /// <summary>
+        /// 生成并落地一座建筑。
+        /// record 非空表示“完整节点事务路径”：对象成功落地后立即登记进事务记录，
+        /// 后续步骤（如设置派系）再抛异常也能被精确回滚。
+        /// record 为空表示“建设中节点非事务路径”：保持原有规则，
+        /// 已落地但未能返回的对象在 catch 中就地安全销毁，绝不留未登记的地图对象。
+        /// </summary>
         private static bool TrySpawnAt(
             Map map,
             IntVec3 cell,
             ThingDef def,
             ThingDef? stuff,
             Faction mechHive,
-            out Thing spawned)
+            out Thing spawned,
+            MechHiveNodeInitAttemptRecord? record = null)
         {
             spawned = null!;
+            Thing? thing = null;
             try
             {
                 if (def.MadeFromStuff)
@@ -1511,8 +1736,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     stuff = null;
                 }
 
-                Thing thing = ThingMaker.MakeThing(def, stuff);
+                thing = ThingMaker.MakeThing(def, stuff);
                 GenSpawn.Spawn(thing, cell, map, Rot4.North, WipeMode.Vanish);
+
+                // 事务路径：落地即登记，之后任何异常都由 FailCompletedInit 精确清理。
+                record?.RegisterThing(thing);
+
                 if (thing.def.CanHaveFaction)
                 {
                     thing.SetFaction(mechHive);
@@ -1524,7 +1753,54 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Warning("[MAP] 机械巢节点建筑生成失败（" + def.defName + "）: " + ex);
+
+                // 已实例化但本次调用不会返回的对象：已登记的交给统一回滚，未登记的就地销毁，
+                // 避免留下“既未返回、也未登记/清理”的地图对象。
+                if (thing != null && !thing.Destroyed && !IsTrackedByRecord(record, thing))
+                {
+                    SafelyDestroyThing(thing, def);
+                }
+
                 return false;
+            }
+        }
+
+        private static bool IsTrackedByRecord(MechHiveNodeInitAttemptRecord? record, Thing thing)
+        {
+            if (record == null)
+            {
+                return false;
+            }
+
+            IReadOnlyList<Thing> tracked = record.TrackedThings;
+            for (int i = 0; i < tracked.Count; i++)
+            {
+                if (tracked[i] == thing)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void SafelyDestroyThing(Thing thing, ThingDef def)
+        {
+            try
+            {
+                // 原版 Thing.Destroy 内部会在 Spawned 时先 DeSpawn，无需手工 DeSpawn。
+                if (!thing.Destroyed && thing.def.destroyable)
+                {
+                    thing.Destroy(DestroyMode.Vanish);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(
+                    "[MAP] 机械巢节点建筑异常残留清理失败（"
+                        + (def?.defName ?? "?")
+                        + "）: "
+                        + ex);
             }
         }
 
