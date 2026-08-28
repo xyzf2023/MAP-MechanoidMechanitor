@@ -57,7 +57,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int evacPodMassCapacityFallback = 200;        // 读取不到 CompTransporter.MassCapacity 时使用的估算质量
 
         // 半数登机后强制发射（每艘载具独立计时、独立发射）
-        public int partialLoadDepartureDelayTicks = 60000;     // 半数登机后到强制发射的延迟（60000 tick ≈ 24 小时）
+        public int partialLoadDepartureDelayTicks = 30000;     // 半数登机后到强制发射的延迟（30000 tick ≈ 12 小时）
 
         // 首次路线分类与破墙（限制性能消耗）
         public int evacuationBreachCheckIntervalTicks = 120;   // 破墙分类 / 调度检查间隔（tick）

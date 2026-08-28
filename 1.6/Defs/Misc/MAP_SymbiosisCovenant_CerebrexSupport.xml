@@ -47,8 +47,8 @@
   <dropCellEdgeCandidateLimit>400</dropCellEdgeCandidateLimit>
   <evacPodMassCapacityFallback>200</evacPodMassCapacityFallback>
 
-  <!-- 半数登机后强制发射（每艘载具独立计时、独立发射） -->
-  <partialLoadDepartureDelayTicks>60000</partialLoadDepartureDelayTicks>
+  <!-- 半数登机后强制发射（每艘载具独立计时、独立发射，30000 tick ≈ 12 小时） -->
+  <partialLoadDepartureDelayTicks>30000</partialLoadDepartureDelayTicks>
 
   <!-- 首次路线分类与破墙（限制性能消耗） -->
   <evacuationBreachCheckIntervalTicks>120</evacuationBreachCheckIntervalTicks>

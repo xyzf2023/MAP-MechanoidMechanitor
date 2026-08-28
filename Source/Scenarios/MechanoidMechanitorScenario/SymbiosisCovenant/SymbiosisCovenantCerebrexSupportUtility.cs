@@ -900,6 +900,108 @@ namespace MAP_MechanoidMechanitor.Scenarios
             => p != null && !p.Dead && !p.Destroyed && !p.Discarded;
 
         /// <summary>
+        /// 统一的破墙目标校验：只有“仍然是当前地图上、仍生成、是墙、有血条且允许摧毁”的
+        /// Thing 才能进入破墙流程。必须走这里，不能只依赖 TraverseMode.PassAllDestroyableThings
+        /// 或只检查 def.IsWall / useHitPoints / destroyable 其中之一。
+        /// 原版 PathUtility.IsDestroyable 同时检查 def.useHitPoints 与 def.destroyable。
+        /// </summary>
+        private static bool IsValidEvacuationBreachWall(Thing? thing, Map? map)
+        {
+            if (thing == null || map == null)
+            {
+                return false;
+            }
+
+            if (thing.Destroyed || !thing.Spawned)
+            {
+                return false;
+            }
+
+            if (thing.Map != map)
+            {
+                return false;
+            }
+
+            if (!thing.def.IsWall)
+            {
+                return false;
+            }
+
+            // 门 / 栅栏 / 炮塔 / 普通建筑已由 IsWall 排除；此处排除不可摧毁或无血条的墙。
+            return PathUtility.IsDestroyable(thing);
+        }
+
+        /// <summary>
+        /// 援军「实际登上撤离载具」后移除其全部 Hediff_Injury 伤口（含已永久化的伤疤）。
+        /// 只处理：属于本载具 rec.pawns、已死亡/销毁/丢弃者排除、且确实位于当前载具
+        /// innerContainer 内的 Pawn。不处理仍在地图、正在走向载具、已被释放或属于其他载具的 Pawn。
+        /// 只移除 Hediff_Injury，绝不动 Hediff_MissingPart / 疾病 / 植入体 / 基因 / 机械族专用 Hediff。
+        /// </summary>
+        private static void HealLoadedEvacuationPawns(
+            SymbiosisCovenantCerebrexSupportEvacVehicle rec,
+            CompTransporter? transporter)
+        {
+            if (rec == null || transporter == null)
+            {
+                return;
+            }
+
+            if (rec.pawns == null || rec.pawns.Count == 0)
+            {
+                return;
+            }
+
+            ThingOwner? inner = transporter.innerContainer;
+            if (inner == null)
+            {
+                return;
+            }
+
+            foreach (Pawn pawn in inner.OfType<Pawn>().ToList())
+            {
+                if (!IsUsableEvacPawn(pawn))
+                {
+                    continue;
+                }
+
+                if (!rec.pawns.Contains(pawn))
+                {
+                    continue;
+                }
+
+                if (rec.releasedPawns != null && rec.releasedPawns.Contains(pawn))
+                {
+                    continue;
+                }
+
+                // 下列条件已由 IsUsableEvacPawn 覆盖，此处显式保留以保证语义不被后续改动破坏。
+                if (pawn.Dead || pawn.Destroyed || pawn.Discarded)
+                {
+                    continue;
+                }
+
+                if (pawn.health?.hediffSet?.hediffs == null)
+                {
+                    continue;
+                }
+
+                // 先建快照再删除，严禁在原始 hediffs 列表上边遍历边删除。
+                List<Hediff> injuries = pawn.health.hediffSet.hediffs
+                    .Where(h => h is Hediff_Injury)
+                    .ToList();
+                if (injuries.Count == 0)
+                {
+                    continue;
+                }
+
+                foreach (Hediff injury in injuries)
+                {
+                    pawn.health.RemoveHediff(injury);
+                }
+            }
+        }
+
+        /// <summary>
         /// 在把 Pawn 加入新的撤离 Lord 之前，先从它们当前的旧 Lord（战斗 Lord）正式移除，
         /// 避免同一 Pawn 同时隶属两个 Lord 导致原版报错。仅移除本次名单中的 Pawn，
         /// 并在旧 Lord 不再拥有任何 Pawn 时从地图 LordManager 清理空 Lord。
@@ -1292,6 +1394,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                     rec.stage = CerebrexSupportEvacVehicleStage.Landed;
 
+                    // 援军实际登机后移除其全部伤口（仅限已位于本穿梭机 innerContainer 的本载具援军）。
+                    // 必须在 CountLoadedUsablePawns / AllRequiredThingsLoaded / 满载发射 /
+                    // TickPartialLoadDeparture / ForceDepartPartialLoadShuttle 统计之前执行。
+                    HealLoadedEvacuationPawns(rec, compShuttle.Transporter);
+
                     // 调度存活援军搬运倒地存活援军；并在发射前刷新实际名单，避免死亡/销毁/丢弃 Pawn 阻塞离图。
                     TryAssignHaulersForDowned(rec, map, rec.vehicleThing);
                     compShuttle.requiredPawns = rec.pawns.Where(p => IsUsableEvacPawn(p)).ToList();
@@ -1592,6 +1699,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (ct == null)
                 {
                     continue;
+                }
+
+                // 援军实际登机后移除其全部伤口（仅限已位于本撤离舱 innerContainer 的本载具援军）。
+                // 必须在 allLoaded 判断 / TickPartialLoadDeparture / ForceDepartPartialLoadMechPod /
+                // LaunchMechEvacPod / launchedPawnCount 统计之前执行。
+                if (IsMechPodLandedAndLoadable(rec, map))
+                {
+                    HealLoadedEvacuationPawns(rec, ct);
                 }
 
                 if (rec.stage == CerebrexSupportEvacVehicleStage.Landed)
@@ -1904,7 +2019,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int loadedCount = CountLoadedUsablePawns(rec, vehicleThing);
             int threshold = (requiredCount + 1) / 2;
 
-            // 半数登机后启动 24h 倒计时；已启动则不被人数变化或装载重试重置。
+            // 半数登机后启动 12h 倒计时；已启动则不被人数变化或装载重试重置。
             if (loadedCount >= threshold && rec.partialLoadDepartureTick < 0)
             {
                 rec.partialLoadDepartureTick = now + Config.partialLoadDepartureDelayTicks;
@@ -2222,7 +2337,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 IntVec3 cellBefore;
                 Thing? blocker = path.FirstBlockingBuilding(out cellBefore, pawn);
-                if (blocker != null && blocker.def.IsWall)
+
+                // 只有通过统一可破坏校验的墙才允许进入破墙候选名单；
+                // 不可摧毁、无血条、已销毁、已离图或非墙一律不加入（并主动移出）。
+                if (IsValidEvacuationBreachWall(blocker, map))
                 {
                     rec.breachEligiblePawns.Add(pawn);
                 }
@@ -2300,7 +2418,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                     IntVec3 cellBefore;
                     Thing? blocker = path.FirstBlockingBuilding(out cellBefore, pawn);
-                    if (blocker == null || !blocker.def.IsWall)
+
+                    // 只有“仍生成在当前地图、是墙、有血条且允许摧毁”的阻挡物才允许破墙；
+                    // 不可摧毁 / 无血条 / 已销毁 / 已离图的墙一律不作为破墙目标。
+                    if (!IsValidEvacuationBreachWall(blocker, map))
                     {
                         rec.breachEligiblePawns.Remove(pawn);
                         continue;
@@ -2337,8 +2458,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         // 返回 Pawn 当前正在处理的有效破墙目标墙；否则返回 null。
-        // 要求：Pawn 与当前 Job 有效；targetA 指向 Thing；目标是墙；
-        // 墙仍 Spawned 且仍在该 Pawn 当前地图（销毁或离图的旧墙目标不再当作有效墙）。
+        // 要求：Pawn 与当前 Job 有效；targetA 指向 Thing；
+        // 且该 Thing 通过统一破墙校验（仍是当前地图上的墙、未销毁、有血条、允许摧毁）。
+        // 已摧毁 / 已离图 / 不可摧毁 / 无血条 / 不再是墙的目标一律返回 null。
         private static Thing? CurrentBreachTarget(Pawn pawn, Thing vehicleThing)
         {
             if (pawn == null || !pawn.Spawned || pawn.Map == null)
@@ -2352,17 +2474,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return null;
             }
 
-            if (cur.targetA.Thing is not Thing target || !target.def.IsWall)
+            if (cur.targetA.Thing is not Thing target)
             {
                 return null;
             }
 
-            if (!target.Spawned || target.Map != pawn.Map)
-            {
-                return null;
-            }
-
-            return target;
+            return IsValidEvacuationBreachWall(target, pawn.Map) ? target : null;
         }
     }
 }
