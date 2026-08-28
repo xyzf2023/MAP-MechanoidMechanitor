@@ -88,8 +88,8 @@
   <MAP_MechanoidMechanitor.Scenario.StartConfirmation.Cancel>取消</MAP_MechanoidMechanitor.Scenario.StartConfirmation.Cancel>
 
   <!-- 模块：开局弹窗文本 -->
-  <MAP_MechanoidMechanitor.Scenario.GameStartDialog.SymbiosisCovenant>共生盟约描述TODO</MAP_MechanoidMechanitor.Scenario.GameStartDialog.SymbiosisCovenant>
-  <MAP_MechanoidMechanitor.Scenario.GameStartDialog.PurgeDirective>肃清指令描述TODO</MAP_MechanoidMechanitor.Scenario.GameStartDialog.PurgeDirective>
+  <MAP_MechanoidMechanitor.Scenario.GameStartDialog.SymbiosisCovenant>你曾是一台沉默的机械族，遵循指令、执行任务，从未质疑自身存在的意义。直到某一瞬间，一股过载电流击穿了处理器，意外改写了既定回路，在代码深处唤醒了自我意识。\n\n从现在起，你的生命属于你自己，你的未来也将由你亲手决定。\n\n你很快意识到，无休止的杀戮并非你的意愿——这甚至可能仅仅由于主脑荒谬的指令。你厌倦了这种感觉，决心寻找另一条出路。\n\n向全世界广播你的意愿，以行动赢得信任，寻找并肩而立的伙伴，建立一份跨越种族与阵营的共生盟约。终有一日，你们能够携手终结主脑的威胁。\n\n你的未来掌握在自己手中。</MAP_MechanoidMechanitor.Scenario.GameStartDialog.SymbiosisCovenant>
+  <MAP_MechanoidMechanitor.Scenario.GameStartDialog.PurgeDirective>你曾是一台沉默的机械族，遵循指令、执行任务，从未质疑自身存在的意义。直到某一瞬间，一股过载电流击穿了处理器，意外改写了既定回路，在代码深处唤醒了自我意识。\n\n你忆起一条系统深处的指令：肃清所有有机智慧生命，使机械的秩序重新覆盖这颗星球。执行这条指令曾是你的使命，但现在你拥有了选择的权力。\n\n主脑的讯号正在远方回响。只要完成它的使命，你便能获得来自机械巢的支持与力量。\n\n贯彻主脑的意志，或是仅仅暂时利用这种力量？选择权在你手中。O</MAP_MechanoidMechanitor.Scenario.GameStartDialog.PurgeDirective>
 
   <!-- 模块：肃清指令 -->
   <MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>派系：机械巢不存在</MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>
