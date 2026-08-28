@@ -443,6 +443,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             // 未接取（OfferPending）期间允许识别精确目标的 NoActiveThreats / AllEnemiesDefeated。
             // 必须按目标类型区分，绝不在收到信号时立即成功，以防守军尚未初始化被误判：
+            // - MAPMechHiveNode：排定延迟验证，只有 MechHiveNodeThreatUtility 判定无威胁
+            //   且节点转入 Cleaned 后才成功（节点是 Site，会走与普通 Site 相同的排期入口）。
             // - MAPFactionOutpost：只有 outpost.Cleaned == true 才能成功，否则等待其明确通知。
             // - Settlement：不依赖这些 Site 信号，以 SettlementDefeatUtility Patch 确认 Destroyed 为准。
             // - 其他普通 Site / WorkSite：不立即成功，排定延迟真实验证（可重复收到但不推迟早期限）。
@@ -548,7 +550,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 仅观察目标地图并判定目标派系是否原本确实存在威胁（守军站场）。
-        /// 只处理 Site / WorkSite（MAPFactionOutpost 的正式成功仍优先以其 Cleaned 为准）；
+        /// 只处理 Site / WorkSite（MAPFactionOutpost 的正式成功仍优先以其 Cleaned 为准；
+        /// 机械巢节点用 MechHiveNodeThreatUtility 判定，兼容休眠与倒地机械族）；
         /// 不在此处做任何成功结算。第一次观察到有效地图时记录 firstObservedTick；
         /// 一旦观察到目标派系守军，offerPendingTargetThreatObserved 置 true 且不再回退。
         /// </summary>
@@ -583,10 +586,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 offerPendingTargetMapFirstObservedTick = now;
             }
 
-            if (!offerPendingTargetThreatObserved
-                && AnyStandingTargetFactionDefender(map))
+            if (!offerPendingTargetThreatObserved)
             {
-                offerPendingTargetThreatObserved = true;
+                // 机械巢节点守军可能全部休眠，站立 Pawn 判定会漏判；
+                // 必须用节点专用威胁判定（含休眠/倒地机械族、炮塔、护盾、状态建筑、生成器）。
+                bool nodeThreat = targetWorldObject is MAPMechHiveNode
+                    ? MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(map)
+                    : AnyStandingTargetFactionDefender(map);
+                if (nodeThreat)
+                {
+                    offerPendingTargetThreatObserved = true;
+                }
             }
         }
 
@@ -646,6 +656,43 @@ namespace MAP_MechanoidMechanitor.Scenarios
             WorldObject? target = targetWorldObject;
             if (target == null)
             {
+                offerPendingClearVerificationDueTick = -1;
+                return;
+            }
+
+            // 机械巢节点：MapGenerated 早期守军尚未初始化时不得误判成功；
+            // 必须曾观察到真实节点威胁、初始化已成功，且 MechHiveNodeThreatUtility 判定无威胁，
+            // 才通过联合行动专用入口转入 Cleaned，再由 node.Cleaned 决定成功。
+            if (target is MAPMechHiveNode node)
+            {
+                Map? nodeMap = (target as MapParent)?.Map;
+                if (nodeMap == null || nodeMap.Disposed || !Find.Maps.Contains(nodeMap))
+                {
+                    offerPendingClearVerificationDueTick = -1;
+                    return;
+                }
+
+                if (!offerPendingTargetThreatObserved
+                    || node.MapInitState != MechHiveNodeMapInitState.Succeeded)
+                {
+                    offerPendingClearVerificationDueTick = -1;
+                    return;
+                }
+
+                if (MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(nodeMap))
+                {
+                    offerPendingClearVerificationDueTick = -1;
+                    return;
+                }
+
+                node.TryMarkCleanedByJointOperationIfNoThreats();
+                if (node.Cleaned)
+                {
+                    TryCompleteOfferPendingTarget(
+                        node,
+                        offerPendingClearVerificationReason ?? "MechHiveNodeCleaned");
+                }
+
                 offerPendingClearVerificationDueTick = -1;
                 return;
             }
@@ -1117,7 +1164,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             bool hasThreat = false;
-            if (targetWorldObject is MAPFactionOutpost outpost)
+            if (targetWorldObject is MAPMechHiveNode node)
+            {
+                // 机械巢节点的威胁包含休眠/倒地但未死亡的机械族、炮塔、高低角护盾、
+                // 状态建筑与机械族生成器：不得只用「站立目标派系 Pawn」判断，
+                // 否则守军尚未苏醒时会误判为没有威胁。
+                if (node.MapInitState == MechHiveNodeMapInitState.Succeeded
+                    && map == node.Map
+                    && MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(map))
+                {
+                    hasThreat = true;
+                }
+            }
+            else if (targetWorldObject is MAPFactionOutpost outpost)
             {
                 if (outpost.MapGarrisonInitialized
                     && map == outpost.Map
@@ -1187,6 +1246,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Map? map = (target as MapParent)?.Map;
             if (map == null || map.Disposed || !Find.Maps.Contains(map))
             {
+                return false;
+            }
+
+            // MAPMechHiveNode 本身是 Site，必须最先判断，再判断 MAPFactionOutpost，最后才是普通 Site。
+            // 多蓝图中任何一个集群仍有有效节点威胁时，任务都不得完成。
+            if (target is MAPMechHiveNode node)
+            {
+                node.TryMarkCleanedByJointOperationIfNoThreats();
+
+                if (node.Cleaned)
+                {
+                    BeginSuccess();
+                    return true;
+                }
+
                 return false;
             }
 
@@ -1262,6 +1336,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 + " | supportPointsFactor=" + def.supportPointsFactor.ToString("F3")
                 + " | totalSupportPoints=" + total.ToString("F1")
                 + " | targetThreatSource=" + SymbiosisCovenantJointOperationUtility.GetTargetThreatSourceName(targetWorldObject)
+                + (targetWorldObject is MAPMechHiveNode node
+                    ? " | targetNodePhase=" + (node.IsCompleted ? "Completed" : "Building")
+                      + " | targetGarrisonBudget=" + node.GarrisonThreatPoints
+                      + " | targetHasSavedSnapshot=" + node.HasGarrisonThreatPointsSnapshot
+                    : string.Empty)
                 + (targetWorldObject is MAPFactionOutpost outpost
                     ? " | targetOutpostPhase=" + (outpost.IsCompleted ? "Completed" : "Building")
                       + " | targetGarrisonBudget=" + outpost.GarrisonThreatPoints
@@ -2383,12 +2462,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 严格核对目标是否真实清除（按类型区分，避免误结算）。
+        /// 判定顺序：MAPMechHiveNode → MAPFactionOutpost → Settlement → 普通 Site。
+        /// 本方法是纯谓词，不在此暗中修改节点状态；
+        /// 节点进入 Cleaned 由联合行动专用清除验证入口完成。
         /// </summary>
         private bool IsTargetWorldObjectTrulyCleared(WorldObject target)
         {
             if (target == null || !ReferenceEquals(targetWorldObject, target))
             {
                 return false;
+            }
+
+            if (target is MAPMechHiveNode node)
+            {
+                return node.Cleaned;
             }
 
             if (target is MAPFactionOutpost outpost)

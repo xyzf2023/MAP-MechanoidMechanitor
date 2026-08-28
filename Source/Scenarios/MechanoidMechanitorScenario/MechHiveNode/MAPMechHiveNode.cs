@@ -39,11 +39,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>材料需求衰减所跨越的完整游戏日数。</summary>
         public const int DemandDecayFullDays = 12;
 
-        /// <summary>建设中节点守军威胁点数。</summary>
-        public const int BuildingGarrisonThreatPoints = 2000;
+        /// <summary>
+        /// 旧存档回退值：建设中节点守军威胁点数。
+        /// 新节点的守军预算由 <see cref="MechHiveNodeThreatPointsUtility"/> 在节点创建时
+        /// 按来源玩家殖民地当时的叙事者威胁点数计算并保存为快照，之后不再使用固定值。
+        /// </summary>
+        public const int LegacyBuildingGarrisonThreatPoints = 2000;
 
-        /// <summary>完整节点守军威胁点数。</summary>
-        public const int CompletedGarrisonThreatPoints = 10000;
+        /// <summary>旧存档回退值：完整节点守军威胁点数。新节点使用创建时保存的快照。</summary>
+        public const int LegacyCompletedGarrisonThreatPoints = 10000;
 
         /// <summary>地图加载期间威胁清空检查间隔（tick）。</summary>
         private const int ThreatClearCheckIntervalTicks = 250;
@@ -66,6 +70,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private ThingDef? demandMaterialDef;
 
         private int initialDemandCount;
+
+        // 守军点数快照：-1 表示旧存档没有该字段。
+        // 节点创建时一次性计算并保存（建设态与完成态各保存一份），
+        // 使建设中节点自然升级为完成态后仍使用创建时保存的完成态预算。
+        private int buildingGarrisonThreatPointsSnapshot = -1;
+
+        private int completedGarrisonThreatPointsSnapshot = -1;
 
         private bool cleaned;
 
@@ -114,7 +125,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return mapInitState == MechHiveNodeMapInitState.Succeeded;
                 }
 
-                // 建设中节点：不套用完整节点的草图/护盾/10000 守军成功条件，
+                // 建设中节点：不套用完整节点的草图/护盾/多蓝图守军成功条件，
                 // 但也不把 None/Failed 当成可进入。
                 return mapInitState == MechHiveNodeMapInitState.Succeeded;
             }
@@ -123,9 +134,34 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>完整节点地图初始化明确失败。</summary>
         public bool IsMapContentFailed => mapInitState == MechHiveNodeMapInitState.Failed;
 
-        /// <summary>守军威胁点数：建设中 2000，完整 10000。建筑布局不占用该预算。</summary>
+        /// <summary>
+        /// 守军威胁点数：优先返回节点创建时保存的快照；旧存档无快照时回退旧固定值
+        /// （建设中 2000，完整 10000）。建筑布局预算与守军预算独立，不互相扣减。
+        /// </summary>
         public int GarrisonThreatPoints =>
-            IsCompleted ? CompletedGarrisonThreatPoints : BuildingGarrisonThreatPoints;
+            IsCompleted
+                ? (completedGarrisonThreatPointsSnapshot > 0
+                    ? completedGarrisonThreatPointsSnapshot
+                    : LegacyCompletedGarrisonThreatPoints)
+                : (buildingGarrisonThreatPointsSnapshot > 0
+                    ? buildingGarrisonThreatPointsSnapshot
+                    : LegacyBuildingGarrisonThreatPoints);
+
+        /// <summary>
+        /// 是否持有创建时保存的守军点数快照（新建节点为 true，旧存档为 false）。
+        /// </summary>
+        public bool HasGarrisonThreatPointsSnapshot =>
+            buildingGarrisonThreatPointsSnapshot > 0
+            || completedGarrisonThreatPointsSnapshot > 0;
+
+        /// <summary>
+        /// 完成态守军点数快照；旧存档无可读快照时回退旧固定完成态值。
+        /// 完整节点地图的建筑总预算与守军总预算都以此为准。
+        /// </summary>
+        public int CompletedGarrisonThreatPointsSnapshot =>
+            completedGarrisonThreatPointsSnapshot > 0
+                ? completedGarrisonThreatPointsSnapshot
+                : LegacyCompletedGarrisonThreatPoints;
 
         /// <summary>节点已存在的 tick 数。</summary>
         public int AgeTicks =>
@@ -183,12 +219,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 初始化一个新生成的建设中节点。仅在世界对象创建时调用一次。
+        /// referenceMap 为实际用于挑选该节点 tile 的来源玩家殖民地地图，
+        /// 用于按当时的叙事者威胁点数一次性计算并保存守军点数快照。
+        /// 旧存档不会调用本方法（其快照字段保持 -1，自然回退 Legacy 固定值）。
         /// </summary>
         public void InitializeNewNode(
             int createdTick,
             int layoutSeed,
             ThingDef? demandMaterialDef,
-            int initialDemandCount)
+            int initialDemandCount,
+            Map? referenceMap)
         {
             this.phase = MechanoidMechanitorMechHiveNodePhase.Building;
             this.createdTick = createdTick;
@@ -204,6 +244,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             this.cleanedLetterSent = false;
             this.mapInitState = MechHiveNodeMapInitState.None;
             this.initAttemptRecord = null;
+
+            // 建设态与完成态各保存一份快照：建设中节点自然升级为完成态后，
+            // 仍使用创建时保存的完成态预算，而不是升级时刻的当前财富。
+            int completed =
+                MechHiveNodeThreatPointsUtility.CalculateCompletedGarrisonPoints(referenceMap);
+            int building =
+                MechHiveNodeThreatPointsUtility.CalculateBuildingGarrisonPoints(completed);
+            this.completedGarrisonThreatPointsSnapshot = completed;
+            this.buildingGarrisonThreatPointsSnapshot = building;
         }
 
         /// <summary>开始新一轮完整节点初始化登记（立即绑定到本节点）。</summary>
@@ -442,6 +491,46 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             Map map = base.Map;
             if (map == null || map.Disposed)
+            {
+                return false;
+            }
+
+            if (MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(map))
+            {
+                return false;
+            }
+
+            MarkCleaned();
+            return true;
+        }
+
+        /// <summary>
+        /// 联合军事行动专用攻克入口：同时允许建设中与完成态节点进入 Cleaned。
+        /// 普通进攻路径仍只使用 <see cref="TryMarkCleanedIfNoThreats"/>，
+        /// 不得因为本方法放宽了阶段限制就把全局清理条件一起放宽。
+        /// 只在地图有效、初始化已明确成功、且 <see cref="MechHiveNodeThreatUtility"/>
+        /// 判定全部节点威胁（含休眠/倒地机械族、炮塔、护盾、状态建筑、生成器）都消失时成立。
+        /// </summary>
+        public bool TryMarkCleanedByJointOperationIfNoThreats()
+        {
+            if (cleaned)
+            {
+                return false;
+            }
+
+            // 初始化失败或仍在 Generating 的节点绝不可被攻克结算。
+            if (mapInitState != MechHiveNodeMapInitState.Succeeded)
+            {
+                return false;
+            }
+
+            if (!base.HasMap)
+            {
+                return false;
+            }
+
+            Map map = base.Map;
+            if (map == null || map.Disposed || !Find.Maps.Contains(map))
             {
                 return false;
             }
@@ -887,6 +976,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref layoutSeed, "MAP_layoutSeed", 0);
             Scribe_Defs.Look(ref demandMaterialDef, "MAP_demandMaterialDef");
             Scribe_Values.Look(ref initialDemandCount, "MAP_initialDemandCount", 0);
+            Scribe_Values.Look(
+                ref buildingGarrisonThreatPointsSnapshot,
+                "MAP_mechHiveNode_buildingGarrisonThreatPointsSnapshot",
+                -1);
+            Scribe_Values.Look(
+                ref completedGarrisonThreatPointsSnapshot,
+                "MAP_mechHiveNode_completedGarrisonThreatPointsSnapshot",
+                -1);
             Scribe_Values.Look(ref cleaned, "MAP_cleaned", false);
             Scribe_Values.Look(ref completionLetterSent, "MAP_completionLetterSent", false);
             Scribe_Values.Look(ref cleanedLetterSent, "MAP_cleanedLetterSent", false);

@@ -26,8 +26,35 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // 原版机械集群自动迫击炮；从可选/生成的状态建筑中排除。
         public const string ExcludedAutoMortarDefName = "Turret_AutoMortar";
 
-        /// <summary>完整节点建筑草图预算（与守军预算独立，不互相扣减）。</summary>
-        public const float CompletedNodeBuildingPoints = 10000f;
+        /// <summary>
+        /// 单张机械集群草图允许的最大建筑点数（等于原版 MechClusterGenerator.MaxPoints）。
+        /// 只作为「多蓝图拆分阈值」与「旧存档回退值」使用；
+        /// 新完整节点的建筑总预算来自节点创建时保存的完成态点数快照，不再固定为 10000。
+        /// </summary>
+        public const int MaxNodeClusterSketchPoints = 10000;
+
+        /// <summary>
+        /// 纯函数：把完整节点的总建筑预算平均拆分到多张机械集群蓝图。
+        /// 规则：总点数至少按 1 处理；单张蓝图不超过 <see cref="MaxNodeClusterSketchPoints"/>；
+        /// 余数逐个摊到前几张蓝图，保证结果之和严格等于 totalPoints，且每一项都大于 0。
+        /// 例：6000→[6000]；10001→[5001,5000]；25000→[8334,8333,8333]。
+        /// </summary>
+        public static List<int> SplitBuildingPointsIntoSketchBudgets(int totalPoints)
+        {
+            List<int> budgets = new List<int>();
+            int total = Mathf.Max(1, totalPoints);
+
+            // 先减 1 再除，避免 totalPoints 接近 int.MaxValue 时溢出。
+            int clusterCount = 1 + (total - 1) / MaxNodeClusterSketchPoints;
+            int basePoints = total / clusterCount;
+            int remainder = total % clusterCount;
+            for (int i = 0; i < clusterCount; i++)
+            {
+                budgets.Add(basePoints + (i < remainder ? 1 : 0));
+            }
+
+            return budgets;
+        }
 
         private static readonly FloatRange FallbackSizeRandomFactorRange = new FloatRange(0.8f, 2f);
 
@@ -615,7 +642,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 为完整机械巢节点生成机械集群式建筑草图（不含守军 Pawn）。
+        /// 为完整机械巢节点生成单张机械集群式建筑草图（不含守军 Pawn）。
+        /// buildingPoints 是该蓝图自己的预算：由完整节点总预算拆分而来，
+        /// 内部仍按原版安全边界钳制到 [400, MechClusterGenerator.MaxPoints]。
         /// Royalty 启用时使用原版 MechClusterGenerator，并确保高低角护盾与一种状态建筑；
         /// Royalty 关闭时使用战斗威胁建筑草图，绝不访问 Royalty Def。
         /// </summary>

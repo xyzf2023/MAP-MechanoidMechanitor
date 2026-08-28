@@ -18,7 +18,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public static class SymbiosisCovenantJointOperationUtility
     {
         /// <summary>
-        /// 目标优先级：1=敌对哨站，2=Ideology 工作站，3=普通派系据点，0=不是合格目标。
+        /// 目标优先级：1=机械巢节点，2=敌对哨站，3=Ideology 工作站，4=普通派系据点，0=不是合格目标。
+        /// 数值越小优先级越高：只要存在至少一个合法机械巢节点，就不会选择其它目标。
         /// </summary>
         public static int GetTargetPriority(WorldObject obj)
         {
@@ -27,20 +28,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return 0;
             }
 
+            // MAPMechHiveNode 继承 Site，必须在所有普通 Site 分类之前判定，
+            // 否则会落入普通 Site 分支被判为 0 而永远选不到。
+            if (obj is MAPMechHiveNode)
+            {
+                return 1;
+            }
+
             if (obj is Site site)
             {
                 SitePartDef? mainDef = site.MainSitePartDef;
                 SitePartWorker? worker = mainDef?.Worker;
                 if (worker is SitePartWorker_Outpost)
                 {
-                    return 1;
+                    return 2;
                 }
 
                 if (worker is SitePartWorker_WorkSite
                     && mainDef?.tags != null
                     && mainDef.tags.Contains("WorkSite"))
                 {
-                    return 2;
+                    return 3;
                 }
 
                 return 0;
@@ -48,7 +56,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (obj is Settlement)
             {
-                return 3;
+                return 4;
             }
 
             return 0;
@@ -67,6 +75,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 invalidReason = "worldObjectInvalid";
                 return false;
+            }
+
+            // MAPMechHiveNode 继承 Site，但其资格规则与普通 Site 不同，必须先行判定：
+            // 机械巢按设计不是「普通派系」，不能因为 IsOrdinaryFaction 为 false 就被拒绝。
+            if (obj is MAPMechHiveNode node)
+            {
+                return IsEligibleMechHiveNodeTarget(node, out targetFaction, out invalidReason);
             }
 
             Faction? faction = obj.Faction;
@@ -127,8 +142,82 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
+        /// 机械巢节点专用目标资格。
+        /// 不套用 <see cref="MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction"/>：
+        /// 机械巢是本 MOD 的明确派系，只要节点类型、实际机械巢派系引用与敌对关系成立即为合法目标。
+        /// 也不因机械巢派系可能带有 Hidden 等特殊属性而误拒绝一个真实存在的合法节点。
+        /// 建设中与完成态节点适用同一套规则。
+        /// </summary>
+        public static bool IsEligibleMechHiveNodeTarget(
+            MAPMechHiveNode node,
+            out Faction? targetFaction,
+            out string invalidReason)
+        {
+            targetFaction = null;
+            invalidReason = string.Empty;
+
+            if (node == null || !node.Spawned || node.Destroyed)
+            {
+                invalidReason = "worldObjectInvalid";
+                return false;
+            }
+
+            if (node.Cleaned)
+            {
+                invalidReason = "nodeAlreadyCleaned";
+                return false;
+            }
+
+            // 目标不得已有生成地图（玩家尚未进攻）。
+            if (node.HasMap)
+            {
+                invalidReason = "mapAlreadyGenerated";
+                return false;
+            }
+
+            Faction? mechHive = MechHiveNodeRelationUtility.GetMechHive();
+            Faction? faction = node.Faction;
+            if (faction == null || mechHive == null || faction != mechHive)
+            {
+                invalidReason = "noMechHiveFaction";
+                return false;
+            }
+
+            if (faction.IsPlayer || faction.defeated || faction.deactivated)
+            {
+                invalidReason = "factionUnavailable";
+                return false;
+            }
+
+            if (Faction.OfPlayer == null || !faction.HostileTo(Faction.OfPlayer))
+            {
+                invalidReason = "notHostileToPlayer";
+                return false;
+            }
+
+            // 已经是本系统其它行动的目标则跳过，避免重复派发。
+            if (IsTargetAlreadyInUse(node))
+            {
+                invalidReason = "alreadyInUse";
+                return false;
+            }
+
+            // 至少一名当前 CovenantMember 同时敌对机械巢，行动才有意义；
+            // 没有合法参与派系时该节点不是可执行目标，绝不凭空修改派系关系。
+            if (!AnyCovenantMemberHostileTo(faction))
+            {
+                invalidReason = "noHostileMember";
+                return false;
+            }
+
+            targetFaction = faction;
+            return true;
+        }
+
+        /// <summary>
         /// 按优先级从真实世界对象中挑选一个目标：
-        /// 有第一类候选就只从第一类抽取，没有才看第二类，没有才看第三类。
+        /// 先找出全部合格候选中的最小优先级（数值最小＝优先级最高），
+        /// 再只在最高优先级候选中随机。有多个合法机械巢节点时在节点之间随机。
         /// </summary>
         public static WorldObject? SelectTargetWorldObject(
             out Faction? targetFaction)
@@ -317,6 +406,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>
         /// 计算“联合行动援军规模”所使用的真实目标威胁点（H）。
         /// 不再使用 StorytellerUtility.DefaultThreatPointsNow（那是按玩家殖民地规模估算的）。
+        /// - 机械巢节点：读取节点创建时保存的守军点数快照（GarrisonThreatPoints）。
+        /// - MAPFactionOutpost：读取前哨创建时保存的守军预算快照（GarrisonThreatPoints）。
         /// - Site / Outpost / WorkSite：优先读取站点自己保存的真实威胁点 Site.ActualThreatPoints；
         ///   不可用时以目标派系当前实际敌对 Pawn 的战斗力总和作为可解释 fallback。
         /// - Settlement：原版没有可靠的预存点数，直接以目标派系当前实际敌对 Pawn 的战斗力总和计算。
@@ -326,6 +417,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             WorldObject? target,
             Map? map)
         {
+            // MAPMechHiveNode 是 Site 子类，必须在普通 Site 分支之前先行判定。
+            // 联合援军基准 = 节点创建时保存的守军预算快照（GarrisonThreatPoints），
+            // 而非开始任务时的当前叙事者点数，也非地图敌人实际 combatPower 合计。
+            // 旧存档节点会由 GarrisonThreatPoints 自动回退 2000 / 10000。
+            if (target is MAPMechHiveNode mechHiveNode)
+            {
+                return mechHiveNode.GarrisonThreatPoints;
+            }
+
             // MAPFactionOutpost 是 Site 子类，必须在本分支之前先行判定。
             // 联合援军基准 = 前哨创建时保存的守军预算快照（GarrisonThreatPoints），
             // 而非开始任务时的当前财富，也非地图敌人实际 combatPower 合计。
@@ -359,6 +459,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         public static string GetTargetThreatSourceName(WorldObject? target)
         {
+            // MAPMechHiveNode 是 Site 子类，必须先行判定。
+            if (target is MAPMechHiveNode)
+            {
+                return "MAPMechHiveNodeSavedGarrisonBudget";
+            }
+
             if (target is MAPFactionOutpost)
             {
                 return "MAPFactionOutpostSavedGarrisonBudget";

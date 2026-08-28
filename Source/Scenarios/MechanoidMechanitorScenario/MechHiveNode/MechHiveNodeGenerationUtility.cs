@@ -131,7 +131,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return false;
                 }
 
-                CreateNode(tile, mechHive);
+                // 快照点数必须来自本次真正选中并用于节点选址的殖民地，
+                // 不得用 Find.AnyPlayerHomeMap 代替；该殖民地当前没有已加载地图则安全传 null。
+                CreateNode(tile, mechHive, colony.HasMap ? colony.Map : null);
                 return true;
             }
             catch (Exception ex)
@@ -336,7 +338,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        private static MAPMechHiveNode CreateNode(PlanetTile tile, Faction mechHive)
+        /// <summary>
+        /// 创建一座新节点。referenceMap 为实际用于挑选该节点 tile 的来源玩家殖民地地图，
+        /// 用于按当时叙事者威胁点数保存守军点数快照；确实拿不到时传 null 走安全回退。
+        /// </summary>
+        private static MAPMechHiveNode CreateNode(PlanetTile tile, Faction mechHive, Map? referenceMap)
         {
             MAPMechHiveNode node =
                 (MAPMechHiveNode)WorldObjectMaker.MakeWorldObject(MechHiveNodeDefOf.MAP_MechHiveNode);
@@ -358,7 +364,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Find.TickManager.TicksGame,
                 Rand.Int,
                 demandDef,
-                initialCount);
+                initialCount,
+                referenceMap);
 
             Find.WorldObjects.Add(node);
             node.SendCreationLetter();
