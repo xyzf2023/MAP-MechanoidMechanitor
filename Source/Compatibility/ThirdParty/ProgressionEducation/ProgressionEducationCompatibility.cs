@@ -8,8 +8,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
 {
     /// <summary>
     /// 为第三方 MOD《Progression: Education》（ferny.ProgressionEducation）提供第一阶段教师兼容。
-    /// 仅允许机械族机械师担任 SkillClassLogic / DaycareClassLogic 教师；
-    /// 机械族机械师不得作为任何课程学生，不得担任 ProficiencyClassLogic 或未知课程教师。
+    /// 仅允许具备 ClassroomTeaching 能力的机械族 Pawn（正式机械族机械师，或挂载
+    /// CompClassroomTeachingUser 的非机械师机械族）担任 SkillClassLogic / DaycareClassLogic 教师；
+    /// 上述 Pawn 不得作为任何课程学生，不得担任 ProficiencyClassLogic 或未知课程教师。
     /// 仅在确认该 MOD 已加载后动态解析目标并安装 4 个 Postfix；
     /// 未加载时返回 Inactive，目标结构变化时返回 TargetChanged 并安全跳过。
     /// 本模块不建立任何 ProgressionEducation 程序集静态依赖。

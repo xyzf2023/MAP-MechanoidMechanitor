@@ -6,23 +6,25 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
 {
     /// <summary>
     /// Progression: Education 兼容专用候选枚举。
-    /// 权威来源：GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors。
-    /// 不做全地图扫描寻找 RaceProps.IsMechanoid，也不在 UI 层初始化任何生命周期状态。
-    /// 课程类型（Skill / Daycare / Proficiency）与教学资格由 Education 自己的
-    /// Role / SubjectLogic 实时判断，本枚举阶段不检查任何技能数值。
+    /// 不再仅依赖 GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors，
+    /// 因为 ClassroomTeaching 能力可能来自 Mechanitor identity 或真实 ThingComp。
+    /// 改为按能力层扫描当前 Map 已生成 Pawn，允许低频 UI 操作（创建课程）进行全地图扫描。
+    /// 仅回答“这个机械族 Pawn 是否允许进入 Education 的机械教学候选体系”；
+    /// 真正课程资格（技能数值等）完全交给 Education 自己的 Role / SubjectLogic 判断。
+    /// 不在 UI 层初始化任何生命周期状态；基础设施缺失时安全跳过。
     /// </summary>
     internal static class ProgressionEducationCandidateUtility
     {
         private const string LogPrefix =
             "[MAP-机械族机械师] Progression: Education 兼容：";
 
-        private const int WarningKeyTimetableNull = unchecked((int)0x5046_0001);
+        private const int WarningKeyInfrastructureNull = unchecked((int)0x5046_0001);
 
         /// <summary>
-        /// 枚举当前 Map 上合法的机械族机械师。
-        /// timetable 为 null 的注册机械族机械师安全跳过（生命周期异常，不在 UI 层初始化）。
+        /// 枚举当前 Map 上具备 ClassroomTeaching 与 ColonistLikeTimetable 能力、
+        /// 且教学基础设施完整的机械族 Pawn。
         /// </summary>
-        public static List<Pawn> GetEligibleMechanoidMechanitors(Map map)
+        public static List<Pawn> GetEligibleClassroomTeachers(Map map)
         {
             List<Pawn> result = new List<Pawn>();
             if (map == null || Current.Game == null)
@@ -30,11 +32,10 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                 return result;
             }
 
-            IReadOnlyList<Pawn> registered =
-                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
-            for (int i = 0; i < registered.Count; i++)
+            IReadOnlyList<Pawn> spawned = map.mapPawns.AllPawnsSpawned;
+            for (int i = 0; i < spawned.Count; i++)
             {
-                Pawn pawn = registered[i];
+                Pawn pawn = spawned[i];
                 if (IsEligible(pawn, map))
                 {
                     result.Add(pawn);
@@ -61,21 +62,37 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (pawn.RaceProps?.IsMechanoid != true)
             {
                 return false;
             }
 
-            if (pawn.timetable == null)
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn,
+                    MechanoidMechanitorCapability.ClassroomTeaching))
+            {
+                return false;
+            }
+
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn,
+                    MechanoidMechanitorCapability.ColonistLikeTimetable))
+            {
+                return false;
+            }
+
+            if (pawn.timetable == null
+                || pawn.skills == null
+                || pawn.interactions == null
+                || pawn.relations == null)
             {
                 if (Prefs.DevMode)
                 {
                     Log.WarningOnce(
                         LogPrefix
-                        + "候选枚举跳过 timetable 为 null 的注册机械族机械师"
-                        + "（生命周期异常，不在 UI 层初始化）："
-                        + $"{pawn.LabelShort}（{pawn.ThingID}）。",
-                        WarningKeyTimetableNull);
+                        + "候选枚举跳过教学基础设施不完整（生命周期异常，不在 UI 层初始化）的"
+                        + $"ColonistLikeTimetable 机械族：{pawn.LabelShort}（{pawn.ThingID}）。",
+                        WarningKeyInfrastructureNull);
                 }
 
                 return false;

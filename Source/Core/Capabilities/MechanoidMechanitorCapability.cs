@@ -28,6 +28,13 @@ namespace MAP_MechanoidMechanitor
         IdeologyMembership = 1 << 15,
         IdeologyFullParticipation = 1 << 16,
         Psycasting = 1 << 17,
-        Royalty = 1 << 18
+        Royalty = 1 << 18,
+
+        // 以下两项为本次“恋人/非机械师机械族”能力层化重构新增，
+        // 必须保持在 Royalty 之后且不改变任何已有 bit。
+        // ColonistLikeTimetable：允许拥有并使用原版 Pawn_TimetableTracker 数据层与真实 CurrentAssignment。
+        // ClassroomTeaching：允许作为第三方课堂教育系统的教师候选（Skill / Daycare）。
+        ColonistLikeTimetable = 1 << 19,
+        ClassroomTeaching = 1 << 20
     }
 }

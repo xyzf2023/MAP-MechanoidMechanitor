@@ -95,7 +95,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
             try
             {
                 candidates = ProgressionEducationCandidateUtility
-                    .GetEligibleMechanoidMechanitors(__0);
+                    .GetEligibleClassroomTeachers(__0);
             }
             catch (Exception ex)
             {
@@ -178,7 +178,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
             try
             {
                 candidates = ProgressionEducationCandidateUtility
-                    .GetEligibleMechanoidMechanitors(__2);
+                    .GetEligibleClassroomTeachers(__2);
             }
             catch (Exception ex)
             {
@@ -203,10 +203,12 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
         // ============ Patch 3：TeacherRole.CanAcceptPawn(Pawn) ============
 
         /// <summary>
-        /// Postfix：机械族机械师仅在 Education 原结果已 Accept 时保留，
+        /// Postfix：具备 ClassroomTeaching 能力的机械族 Pawn 仅在 Education 原结果已 Accept 时保留，
+        /// 且必须具备 timetable 数据层（ColonistLikeTimetable），
         /// 且当前实时 subjectLogic 属于 SkillClassLogic / DaycareClassLogic（含派生）时才放行。
         /// 严禁把 Education 原本的拒绝改成接受；Proficiency 与未知课程一律拒绝。
-        /// 每次调用实时读取 ClassRole.studyGroup → StudyGroup.subjectLogic，不缓存课程类型。
+        /// 读取 studyGroup / subjectLogic 反射异常时按白名单安全原则 fail-closed 拒绝，
+        /// 不再保留 Education 原先的 Accepted=true（无法证明课程类型即默认拒绝）。
         /// </summary>
         public static void Postfix_TeacherRoleCanAcceptPawn(
             object __instance,
@@ -223,8 +225,20 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                 return;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(__0))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    __0,
+                    MechanoidMechanitorCapability.ClassroomTeaching))
             {
+                return;
+            }
+
+            // 拥有 ClassroomTeaching 但缺少 timetable 数据层属于配置/生命周期错误，fail-closed 拒绝。
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    __0,
+                    MechanoidMechanitorCapability.ColonistLikeTimetable)
+                || __0.timetable == null)
+            {
+                __result = AcceptanceReport.WasRejected;
                 return;
             }
 
@@ -246,6 +260,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                     + "TeacherRole.CanAcceptPawn Postfix 读取 studyGroup 失败，"
                     + $"Pawn={__0.LabelShort}（{__0.ThingID}），异常：{ex}",
                     ErrorKeyTeacherRead);
+                __result = AcceptanceReport.WasRejected;
                 return;
             }
 
@@ -267,6 +282,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                     + "TeacherRole.CanAcceptPawn Postfix 读取 subjectLogic 失败，"
                     + $"Pawn={__0.LabelShort}（{__0.ThingID}），异常：{ex}",
                     ErrorKeyTeacherRead);
+                __result = AcceptanceReport.WasRejected;
                 return;
             }
 
@@ -281,7 +297,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
         // ============ Patch 4：StudentRole.CanAcceptPawn(Pawn) ============
 
         /// <summary>
-        /// Postfix：机械族机械师无论课程类型，StudentRole 一律拒绝。
+        /// Postfix：具备 ClassroomTeaching 能力的机械族 Pawn（正式机械族机械师 / 挂载
+        /// CompClassroomTeachingUser 的非机械师机械族）无论课程类型，StudentRole 一律拒绝。
         /// 普通 Pawn 完全保持 Education 原结果。
         /// </summary>
         public static void Postfix_StudentRoleCanAcceptPawn(
@@ -298,7 +315,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                 return;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(__0))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    __0,
+                    MechanoidMechanitorCapability.ClassroomTeaching))
             {
                 return;
             }

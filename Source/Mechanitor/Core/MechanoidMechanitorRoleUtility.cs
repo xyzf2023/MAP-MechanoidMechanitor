@@ -240,16 +240,11 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 为机械族机械师补齐原版 Pawn_TimetableTracker。
-        /// 规则：timetable 已存在则绝不重新初始化（避免覆盖玩家设置或旧档数据）；
-        /// 仅当为 null 时新建，并把 0~23 共 24 小时全部置为 Anything。
-        /// 原因：原版构造器默认夜间为 Sleep，而机械族机械师历史上不存在 timetable，
-        /// 旧档升级时不能突然获得夜间 Sleep 行为。
-        /// </summary>
-        /// <summary>
-        /// 保证机械族机械师拥有合法 24 格 timetable。完全幂等：
-        /// 已有合法 24 格时不做任何修改，绝不覆盖玩家已设置的作息。
-        /// 普通机械族（无 mechanitor record）直接 return，不会获得 timetable。
+        /// 机械族机械师生命周期入口：补齐原版 Pawn_TimetableTracker。
+        /// 仅对正式机械族机械师生效（确保历史行为不变），
+        /// 真实数据修复逻辑已抽离到 ColonistLikeMechTimetableUtility.EnsureTimetableState，
+        /// 非机械师机械族由 CompColonistLikeTimetableUser 直接调用该共享 Utility。
+        /// 完全幂等：已有合法 24 格时不做任何修改，绝不覆盖玩家已设置的作息。
         /// </summary>
         public static void EnsureTimetableState(Pawn? pawn)
         {
@@ -258,73 +253,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 4.2 tracker 缺失：创建并设为 24 格 Anything。
-            // 不使用原版构造器默认夜间 Sleep：机械族机械师历史上没有 timetable，
-            // 旧档升级时不能突然获得夜间 Sleep 行为。
-            if (pawn.timetable == null)
-            {
-                pawn.timetable = new Pawn_TimetableTracker(pawn);
-                for (int hour = 0; hour < 24; hour++)
-                {
-                    pawn.timetable.SetAssignment(hour, TimeAssignmentDefOf.Anything);
-                }
-
-                return;
-            }
-
-            // 4.3 已存在且完全合法：times 非 null、Count==24、无 null 元素 -> 完全不修改。
-            List<TimeAssignmentDef>? times = pawn.timetable.times;
-            if (times != null && times.Count == 24)
-            {
-                bool allValid = true;
-                for (int hour = 0; hour < 24; hour++)
-                {
-                    if (times[hour] == null)
-                    {
-                        allValid = false;
-                        break;
-                    }
-                }
-
-                if (allValid)
-                {
-                    return;
-                }
-            }
-
-            // 到达此处说明需要修复：仅修补异常结构，保留玩家已设置的合法作息。
-
-            // 4.4 times == null：重建为 24 格 Anything。
-            if (times == null)
-            {
-                times = new List<TimeAssignmentDef>(24);
-                for (int hour = 0; hour < 24; hour++)
-                {
-                    times.Add(TimeAssignmentDefOf.Anything);
-                }
-
-                pawn.timetable.times = times;
-                return;
-            }
-
-            // 4.6 times.Count > 24：截断尾部，仅保留前 24 格（不重置全部作息）。
-            if (times.Count > 24)
-            {
-                times.RemoveRange(24, times.Count - 24);
-            }
-
-            // 4.5 / 4.6 补齐不足 24 格，并修复前 24 格中的 null 元素（仅替换 null 为 Anything）。
-            for (int hour = 0; hour < 24; hour++)
-            {
-                if (hour >= times.Count)
-                {
-                    times.Add(TimeAssignmentDefOf.Anything);
-                }
-                else if (times[hour] == null)
-                {
-                    times[hour] = TimeAssignmentDefOf.Anything;
-                }
-            }
+            ColonistLikeMechTimetableUtility.EnsureTimetableState(pawn);
         }
 
         public static bool UsesVanillaControlPath(Pawn? pawn)

@@ -111,6 +111,20 @@ namespace MAP_MechanoidMechanitor
             {
                 capabilities |= MechanoidMechanitorCapability.ColonistLikeSocialTab;
             }
+
+            // 非机械师机械族（如恋人）通过真实 ThingComp 声明 timetable 数据层能力。
+            // 业务代码完全不需要知道其 PawnDef；能力提升只查询，不产生副作用。
+            if (pawn.GetComp<CompColonistLikeTimetableUser>() != null)
+            {
+                capabilities |= MechanoidMechanitorCapability.ColonistLikeTimetable;
+            }
+
+            // 非机械师机械族通过真实 ThingComp 声明课堂教师候选能力。
+            // 具体是否允许 Skill / Daycare 仍由 ProgressionEducation 课程白名单负责。
+            if (pawn.GetComp<CompClassroomTeachingUser>() != null)
+            {
+                capabilities |= MechanoidMechanitorCapability.ClassroomTeaching;
+            }
         }
 
         private static void AddCapabilitiesFromMechanitorIdentity(
@@ -124,10 +138,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 所有正式机械族机械师（Native + Acquired）天然获得 timetable 数据层与课堂教师候选能力。
+            // 这一分支在“是否为后天机械师”的二次判断之前执行，确保非后天机械师同样获得两项能力。
             capabilities |= MechanoidMechanitorCapability.ImplantInstallation
                 | MechanoidMechanitorCapability.ShuttlePilot
                 | MechanoidMechanitorCapability.ColonistLikeSocialTab
-                | MechanoidMechanitorCapability.Royalty;
+                | MechanoidMechanitorCapability.Royalty
+                | MechanoidMechanitorCapability.ColonistLikeTimetable
+                | MechanoidMechanitorCapability.ClassroomTeaching;
 
             MechanoidMechanitorIdeologyAdaptationLevel ideologyLevel =
                 MechanoidMechanitorIdeologyAdaptationUtility.GetEffectiveLevel();

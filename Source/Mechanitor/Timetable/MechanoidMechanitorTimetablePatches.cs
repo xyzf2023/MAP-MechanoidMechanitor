@@ -22,9 +22,10 @@ namespace MAP_MechanoidMechanitor
 
     /// <summary>
     /// 原版 Pawn_TimetableTracker.CurrentAssignment 对 !pawn.IsColonist 直接返回 Anything。
-    /// 机械族机械师不是 Humanlike Colonist，因此仅创建 tracker 不够。
-    /// 本补丁仅当其 owner 为机械族机械师时覆盖原版结果，普通人类 / 普通机械族 / 囚犯完全走原版。
-    /// 不修改 Pawn.IsColonist。
+    /// 机械族机械师与挂载 ColonistLikeTimetable 组件的非机械师机械族不是 Humanlike Colonist，
+    /// 因此仅创建 tracker 不够。本补丁改为查询能力层：仅当 Pawn 具备 ColonistLikeTimetable 能力时
+    /// 覆盖原版结果返回其真实小时 Assignment（含第三方自定义 PE_DynamicClass_*，绝不做任何改写）。
+    /// 普通人类 / 普通机械族 / 囚犯完全走原版。不修改 Pawn.IsColonist。
     /// </summary>
     [HarmonyPatch(typeof(Pawn_TimetableTracker), "get_CurrentAssignment")]
     public static class Patch_Pawn_TimetableTracker_CurrentAssignment
@@ -34,7 +35,9 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn? pawn = MechanoidMechanitorTimetablePatches.PawnFieldRef(__instance);
             if (pawn != null
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+                && MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn,
+                    MechanoidMechanitorCapability.ColonistLikeTimetable))
             {
                 // 放行其真实小时 Assignment；其余 Pawn 保持原版 Anything / 原版殖民者逻辑。
                 __result = __instance.GetAssignment(GenLocalDate.HourOfDay(pawn));
@@ -43,15 +46,19 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 原版 MainTabWindow_Schedule 中显示机械族机械师。
+    /// 原版 MainTabWindow_Schedule 中显示具备 ColonistLikeTimetable 能力的机械族 Pawn
+    /// （含正式机械族机械师，以及挂载 CompColonistLikeTimetableUser 的非机械师机械族）。
     /// 只 Patch Pawns getter，不改动 MapPawns.FreeColonists 等全局集合，
     /// 也不改动 MainTabWindow_PawnTable 的全局行为。
-    /// 候选从 Registry.CurrentRegisteredMechanitors 读取，不每次打开 UI 全地图扫描。
-    /// UI getter 不承担初始化副作用，不在此调用 EnsureRoleState（必须由生命周期提前保证）。
+    /// 候选从当前 Map 已生成 Pawn 中按能力层筛选，不再仅依赖 Registry。
+    /// UI getter 不承担初始化副作用：timetable 非空应由对应生命周期保证，
+    /// 极端异常下若 timetable 仍为 null，这里安全跳过，绝不在此 new Pawn_TimetableTracker。
     /// </summary>
     [HarmonyPatch(typeof(MainTabWindow_Schedule), "get_Pawns")]
     public static class Patch_MainTabWindow_Schedule_Pawns
     {
+        private const int WarningKeyScheduleTimetableNull = unchecked((int)0x5449_0001);
+
         [HarmonyPostfix]
         public static void Postfix(ref IEnumerable<Pawn> __result)
         {
@@ -61,17 +68,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            IReadOnlyList<Pawn> registered =
-                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
-
             List<Pawn>? additions = null;
-            for (int i = 0; i < registered.Count; i++)
+            IReadOnlyList<Pawn> spawnedPawns = currentMap.mapPawns.AllPawnsSpawned;
+            for (int i = 0; i < spawnedPawns.Count; i++)
             {
-                Pawn pawn = registered[i];
+                Pawn pawn = spawnedPawns[i];
                 if (pawn == null
                     || pawn.Destroyed
                     || pawn.Dead
-                    || !pawn.Spawned
                     || pawn.Map != currentMap)
                 {
                     continue;
@@ -82,13 +86,33 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (pawn.RaceProps?.IsMechanoid != true)
+                {
+                    continue;
+                }
+
+                if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                        pawn,
+                        MechanoidMechanitorCapability.ColonistLikeTimetable))
+                {
+                    continue;
+                }
+
                 // 防御性判断：仅控制“本 Patch 是否把该 Pawn 追加进 Schedule 列表”，
                 // 不保证 Pawn 不会由 base.MainTabWindow_Schedule.Pawns / FreeColonists 等
-                // 其它集合进入 Schedule。timetable 非空应由 Registry 生命周期
-                // （AddRecord / PostLoadInit / EnsureRoleState）保证，而非 UI 层创建。
+                // 其它集合进入 Schedule。timetable 非空应由生命周期保证，而非 UI 层创建。
                 // 极端异常下若 timetable 仍为 null，这里安全跳过，不让本 Patch 崩溃。
                 if (pawn.timetable == null)
                 {
+                    if (Prefs.DevMode)
+                    {
+                        Log.WarningOnce(
+                            "[MAP-机械族机械师] Schedule UI 跳过 timetable 为 null 的 "
+                            + "ColonistLikeTimetable 机械族（生命周期异常，不在 UI 层初始化）："
+                            + $"{pawn.LabelShort}（{pawn.ThingID}）。",
+                            WarningKeyScheduleTimetableNull);
+                    }
+
                     continue;
                 }
 
