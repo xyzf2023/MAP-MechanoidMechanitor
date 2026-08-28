@@ -8,20 +8,4 @@
     </value>
   </Operation>
 
-  <!--
-    统一储物分类：原版抽象父级 MechanitorImplantCraftableBase 本身没有本地 thingCategories 节点，
-    而是从 MechanitorImplantBase 继承 BodyPartsMechtech。
-    这里直接新增 thingCategories 并使用 Inherit="False"，使所有继承该父级的物品
-    （本 MOD 植入体、原版及其他 MOD 的对应植入体）只进入“身体部件 → 机械族机械师”，
-    不再同时出现在“身体部件 → 机械科技”下；其 parent 为 BodyParts，
-    因此 IsWithinCategory(BodyParts) 仍为真。
-  -->
-  <Operation Class="PatchOperationAdd">
-    <xpath>Defs/ThingDef[@Name="MechanitorImplantCraftableBase"]</xpath>
-    <value>
-      <thingCategories Inherit="False">
-        <li>MAP_MechanoidMechanitorBodyParts</li>
-      </thingCategories>
-    </value>
-  </Operation>
 </Patch>

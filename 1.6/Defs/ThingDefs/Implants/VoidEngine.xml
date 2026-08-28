@@ -15,6 +15,9 @@
       <MarketValue>1500</MarketValue>
       <WorkToMake>18000</WorkToMake>
     </statBases>
+    <thingCategories Inherit="False">
+      <li>MAP_MechanoidMechanitorBodyParts</li>
+    </thingCategories>
     <recipeMaker>
       <researchPrerequisite>MAP_QuantumVacuumExtraction</researchPrerequisite>
       <skillRequirements Inherit="False">

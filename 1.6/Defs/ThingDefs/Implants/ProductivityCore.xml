@@ -18,6 +18,9 @@
       <MarketValue>2000</MarketValue>
       <WorkToMake>12000</WorkToMake>
     </statBases>
+    <thingCategories Inherit="False">
+      <li>MAP_MechanoidMechanitorBodyParts</li>
+    </thingCategories>
     <recipeMaker>
       <researchPrerequisite>MAP_QuantumTaskComputation</researchPrerequisite>
       <skillRequirements Inherit="False">
@@ -58,6 +61,9 @@
       <MarketValue>2000</MarketValue>
       <WorkToMake>12000</WorkToMake>
     </statBases>
+    <thingCategories Inherit="False">
+      <li>MAP_MechanoidMechanitorBodyParts</li>
+    </thingCategories>
     <recipeMaker>
       <researchPrerequisite>MAP_QuantumTaskComputation</researchPrerequisite>
       <skillRequirements Inherit="False">

@@ -14,6 +14,9 @@
       <Mass>0.01</Mass>
       <WorkToMake>15000</WorkToMake>
     </statBases>
+    <thingCategories Inherit="False">
+      <li>MAP_MechanoidMechanitorBodyParts</li>
+    </thingCategories>
     <recipeMaker>
       <researchPrerequisite>MAP_QuantumMechtech</researchPrerequisite>
       <skillRequirements Inherit="False">

@@ -18,6 +18,9 @@
       <Mass>0.01</Mass>
       <WorkToMake>12000</WorkToMake>
     </statBases>
+    <thingCategories Inherit="False">
+      <li>MAP_MechanoidMechanitorBodyParts</li>
+    </thingCategories>
     <recipeMaker>
       <researchPrerequisite>UltraMechtech</researchPrerequisite>
       <skillRequirements Inherit="False">

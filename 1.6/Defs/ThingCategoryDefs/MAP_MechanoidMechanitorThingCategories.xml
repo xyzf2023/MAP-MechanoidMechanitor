@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-  <!-- 身体部件 → 机械族机械师（所有继承抽象父类 MechanitorImplantCraftableBase 的可制造机械师植入体，包括 RimWorld 原版、本 MOD 及其他 MOD 中继承该父类的定义，通过抽象父类统一归类） -->
+  <!-- 身体部件 → 机械族机械师（仅收纳本 MOD 自己定义的机械师植入体） -->
   <ThingCategoryDef>
     <defName>MAP_MechanoidMechanitorBodyParts</defName>
     <label>机械族机械师</label>

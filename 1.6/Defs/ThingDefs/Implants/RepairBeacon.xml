@@ -16,6 +16,9 @@
       <MarketValue>3000</MarketValue>
       <WorkToMake>24000</WorkToMake>
     </statBases>
+    <thingCategories Inherit="False">
+      <li>MAP_MechanoidMechanitorBodyParts</li>
+    </thingCategories>
     <recipeMaker>
       <researchPrerequisite>MAP_QuantumStructuralRestoration</researchPrerequisite>
       <skillRequirements Inherit="False">

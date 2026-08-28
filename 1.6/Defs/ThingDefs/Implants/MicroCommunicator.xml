@@ -19,6 +19,9 @@
     <statBases>
       <MaxInstallCount>1</MaxInstallCount>
     </statBases>
+    <thingCategories Inherit="False">
+      <li>MAP_MechanoidMechanitorBodyParts</li>
+    </thingCategories>
 
     <recipeMaker>
       <researchPrerequisites>
