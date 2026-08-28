@@ -219,7 +219,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            ExecuteHuntPendingOn(map, refreshCooldown: true);
+            // 通过正式 IncidentDef / IncidentWorker 进入现有 Hunt 业务入口。
+            // forced=true：Manager 已经自行处理保护期/概率/隐藏预约/共享冷却/全局互斥，
+            // 不让原版 CanFireNow 重新引入 Storyteller 调度规则（earliestDay/difficulty/
+            // ThreatBig allowBigThreats/minRefireDays/Scenario 禁用等）。
+            // 真正业务合法性由 Worker.TryExecuteWorker -> Manager.TryStartHuntOn 重新校验。
+            IncidentParms parms = new IncidentParms
+            {
+                target = map,
+                forced = true,
+                sendLetter = false
+            };
+
+            MechanoidMechanitorInsectPursuitDefOf
+                .MAP_InsectPursuit
+                .Worker
+                .TryExecute(parms);
         }
 
         private void ExecuteExtraInfestationOn(Map map, bool refreshCooldown)
@@ -253,17 +268,59 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private void ExecuteHuntPendingOn(Map map, bool refreshCooldown)
+        /// <summary>
+        /// 统一资格入口：如果现在有人要求正式启动一个 MAP_InsectPursuit，
+        /// 该地图是否允许开始一次追猎。
+        /// 只检查“事件自身资格”，不检查每日概率/保护期/lastDailyCheckDay/
+        /// 今天是否已抽/shared cooldown，那些属于 Scheduler 职责。
+        /// </summary>
+        internal bool CanStartHuntOn(Map map)
         {
             if (map == null)
             {
-                return;
+                return false;
+            }
+
+            if (!MechanoidMechanitorInsectPursuitUtility.IsPursuitActive())
+            {
+                return false;
+            }
+
+            if (!MechanoidMechanitorInsectPursuitUtility.IsEligibleTargetMap(map))
+            {
+                return false;
+            }
+
+            if (activeHuntMap != null)
+            {
+                return false;
+            }
+
+            if (pendingEvent != MechanoidMechanitorInsectPursuitPendingEvent.None)
+            {
+                return false;
             }
 
             if (!MechanoidMechanitorInsectPursuitUtility
                     .CanCurrentlyHostManagedInfestation(map))
             {
-                return;
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 正式开始一次虫族追猎（Hunt）。
+        /// 必须先通过 CanStartHuntOn 重新校验，避免外部 forced Do incident
+        /// 绕过 Pursuit 模式/全局互斥/地图资格等约束。
+        /// 成功后发送第一封“虫族追猎”红信并设置 8~12 小时倒计时。
+        /// </summary>
+        internal bool TryStartHuntOn(Map map, bool refreshCooldown)
+        {
+            if (!CanStartHuntOn(map))
+            {
+                return false;
             }
 
             Find.LetterStack.ReceiveLetter(
@@ -286,6 +343,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             activeHuntStartedWithGravEngine = ModsConfig.OdysseyActive
                 && MechanoidMechanitorInsectPursuitUtility
                     .TryGetPlayerGravEngine(map) != null;
+
+            return true;
         }
 
         private void LaunchAttackOn(Map map)
@@ -511,7 +570,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            ExecuteHuntPendingOn(map, refreshCooldown: false);
+            // 复用正式 Hunt 业务入口；DEV 按钮绕过共享冷却，但不绕过业务资格。
+            TryStartHuntOn(map, refreshCooldown: false);
         }
 
         public void DevLaunchCurrentHunt()

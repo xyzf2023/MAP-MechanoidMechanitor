@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <IncidentDef>
+    <defName>MAP_InsectPursuit</defName>
+    <label>insect pursuit</label>
+    <targetTags>
+      <li>Map_PlayerHome</li>
+    </targetTags>
+    <workerClass>MAP_MechanoidMechanitor.Scenarios.IncidentWorker_InsectPursuit</workerClass>
+    <category>ThreatBig</category>
+    <baseChance>0</baseChance>
+    <canOccurOnAllPlanetLayers>true</canOccurOnAllPlanetLayers>
+  </IncidentDef>
+</Defs>
