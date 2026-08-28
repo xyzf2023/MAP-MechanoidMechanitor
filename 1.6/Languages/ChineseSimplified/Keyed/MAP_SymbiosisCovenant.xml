@@ -61,6 +61,7 @@
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.DestroyedSettlement>摧毁该派系据点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.DestroyedSettlement>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>摧毁机械巢节点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>清除共同敌人据点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.CerebrexVictory>击败机械主脑</MAP_MechanoidMechanitor.Symbiosis.TrustReason.CerebrexVictory>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev>DEV 信任测试</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock>声明前锁定收紧</MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.JoinCovenant>加入共生盟约</MAP_MechanoidMechanitor.Symbiosis.TrustReason.JoinCovenant>

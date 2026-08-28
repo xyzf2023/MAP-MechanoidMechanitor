@@ -144,6 +144,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 adjustedAmount *= 2;
             }
 
+            // 成长倍率必须作用在「已经应用完既有规则（如低信任背叛 ×2）的最终基础 delta」上。
+            // 若外部先按倍率缩放再让这里 ×2，同样的输入会得到不同的惩罚强度。
+            adjustedAmount = SymbiosisCovenantGrowthUtility.ScaleDelta(adjustedAmount);
+
             int amount = ApplySourceLimit(adjustedAmount, source, now);
             if (amount == 0)
             {
@@ -285,7 +289,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     now);
                 int remaining = Math.Max(
                     0,
-                    GameComponent_SymbiosisCovenantState.GoodwillTrustPerWindow
+                    SymbiosisCovenantGrowthUtility.ScaleWindowCap(
+                        GameComponent_SymbiosisCovenantState.GoodwillTrustPerWindow)
                         - goodwillTrustGainedInWindow);
                 int accepted = Math.Min(amount, remaining);
                 goodwillTrustGainedInWindow += accepted;
@@ -300,7 +305,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     now);
                 int remaining = Math.Max(
                     0,
-                    GameComponent_SymbiosisCovenantState.TradeTrustPerWindow
+                    SymbiosisCovenantGrowthUtility.ScaleWindowCap(
+                        GameComponent_SymbiosisCovenantState.TradeTrustPerWindow)
                         - tradeTrustGainedInWindow);
                 int accepted = Math.Min(amount, remaining);
                 tradeTrustGainedInWindow += accepted;
@@ -399,9 +405,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public const int InvitationTrustThreshold = 25;
         public const int InitialHostileTrust = -50;
         public const int SourceWindowTicks = 900000;
-        public const int GoodwillTrustPerWindow = 15;
-        public const int TradeTrustPerWindow = 5;
+        // 来源窗口上限是「×1.0 基础值」。实际生效上限由
+        // SymbiosisCovenantGrowthUtility.ScaleWindowCap 按当前成长倍率换算，调用方不得二次乘倍率。
+        public const int GoodwillTrustPerWindow = 50;
+        public const int TradeTrustPerWindow = 30;
         public const int BetrayalCooldownTicks = 600;
+
+        // 盟约等级的唯一权威阈值。等级重算、UI、DEV 必须共用这里，
+        // 不允许再复制一套等级表，否则数值调整后会出现多个权威来源。
+        public const int CovenantLevel2UnityThreshold = 50;
+        public const int CovenantLevel3UnityThreshold = 125;
+        public const int CovenantLevel4UnityThreshold = 225;
+        public const int CovenantLevel5UnityThreshold = 350;
 
         private const int SynchronizeIntervalTicks = 2500;
         private const int ProposalMinTicks = 60000;
@@ -411,7 +426,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const int UnityMax = 1000;
         private const int CovenantLevelMax = 5;
         private const int CovenantExitUnityPenalty = 100;
-        private const float UnityContributionMultiplier = 2f;
+
+        // 单个盟约成员的每日团结度贡献：Trust 50 → 0，Trust 200 → +8 / 天。
+        private const float UnityContributionTrustDivisor = 150f;
+        private const float UnityContributionMaxPerMember = 8f;
+        // 负信任成员：rawContribution = Trust / 25f，即 Trust -25 → -1 / 天。
+        private const float UnityNegativeContributionDivisor = 25f;
+        // 只有超过该信任值才产生正向团结度贡献。
+        private const int UnityContributionTrustFloor = 50;
 
         private bool initialized;
         private bool contactUnlockedLetterSent;
@@ -601,11 +623,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 调整团结度（受盟约激活限制，并在 [0, UnityMax] 内钳制）。
-        /// 供联合军事行动在成功/失败时结算团结度增减，与 TryAdjustTrust 对等。
+        /// 正常游戏内团结度变化的唯一入口：统一应用成长倍率、按变化幅度向上取整、
+        /// 钳制到 [0, UnityMax]，并立即重算盟约等级（不等下一次周期同步）。
+        /// 每日 Trust→Unity、联合军事行动成功/失败、主脑任务胜利、成员退出惩罚都必须走这里。
+        /// DEV 直接设置（DevChangeUnity / DevSetUnity）与盟约解散归零不受成长倍率影响，禁止走这里。
         /// reason 仅用于记录与调试追溯。
         /// </summary>
-        public static bool TryAdjustUnity(float delta, string reason)
+        public static bool TryAdjustUnity(int baseDelta, string reason)
         {
             GameComponent_SymbiosisCovenantState? state = CurrentComponent;
             if (!IsActive || state == null)
@@ -614,8 +638,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             state.TryInitializeOrSynchronize();
-            state.unity = Mathf.Clamp(state.unity + delta, 0f, UnityMax);
-            return true;
+            return state.ApplyScaledUnityDelta(baseDelta);
         }
 
         public static int TryAdjustTrustForAll(
@@ -649,6 +672,68 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return changed;
+        }
+
+        /// <summary>
+        /// 只奖励「当前盟约成员」的权威入口。
+        /// 机械主脑任务胜利必须走这里，不能用 TryAdjustTrustForAll（那会给所有普通派系记录）。
+        /// 返回实际发生信任变化的派系数量。
+        /// </summary>
+        public static int TryAdjustTrustForCovenantMembers(
+            int amount,
+            string reason,
+            SymbiosisCovenantTrustSource source)
+        {
+            GameComponent_SymbiosisCovenantState? state = CurrentComponent;
+            if (!IsActive || state == null)
+            {
+                return 0;
+            }
+
+            state.TryInitializeOrSynchronize();
+            int changed = 0;
+            List<Faction> members = state.factionRecords
+                .Where(record => record.CovenantMember && record.Faction != null)
+                .Select(record => record.Faction)
+                .Cast<Faction>()
+                .ToList();
+            for (int i = 0; i < members.Count; i++)
+            {
+                if (state.AdjustTrustInternal(
+                        members[i],
+                        amount,
+                        reason,
+                        source))
+                {
+                    changed++;
+                }
+            }
+
+            return changed;
+        }
+
+        /// <summary>
+        /// 返回升到指定盟约等级所需的团结度。L0/L1 返回 0，超过最高等级返回 -1。
+        /// UI（下一等级预览 / DEV 按钮）必须复用这里，不得自带一份阈值表。
+        /// </summary>
+        public static int GetCovenantLevelThreshold(int level)
+        {
+            switch (level)
+            {
+                case 0:
+                case 1:
+                    return 0;
+                case 2:
+                    return CovenantLevel2UnityThreshold;
+                case 3:
+                    return CovenantLevel3UnityThreshold;
+                case 4:
+                    return CovenantLevel4UnityThreshold;
+                case 5:
+                    return CovenantLevel5UnityThreshold;
+                default:
+                    return -1;
+            }
         }
 
         public bool TryBroadcastPublicDeclaration()
@@ -1272,7 +1357,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             record.IncrementCovenantExitCount();
             record.SetNextInvitationTick(CurrentTick + InvitationCooldownTicks);
 
-            unity = Mathf.Max(0f, unity - CovenantExitUnityPenalty);
+            // 成员退出属于正常游戏变化，惩罚基础值 -100 需要受成长倍率影响；
+            // 最后一名成员退出导致的盟约解散则是绝对归零，不经过倍率。
+            ApplyScaledUnityDelta(-CovenantExitUnityPenalty);
             RecalculateGoodwillSituations();
 
             int memberCount = CovenantMemberCount;
@@ -1401,8 +1488,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void ApplyDailyUnityDelta()
         {
-            float totalContribution = 0f;
-            int memberCount = 0;
+            // 每个盟约成员独立贡献并直接求和，不再按成员数量求平均：
+            // 盟约越壮大应越快成长，而不是被平均摊薄。
+            float dailyRawDelta = 0f;
             for (int i = 0; i < factionRecords.Count; i++)
             {
                 SymbiosisCovenantFactionRecord record = factionRecords[i];
@@ -1411,23 +1499,52 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                memberCount++;
-                int trust = record.Trust;
-                if (trust > 50)
-                {
-                    totalContribution += (trust - 50) / 10f;
-                }
-                else if (trust < 0)
-                {
-                    totalContribution -= (-trust) / 5f;
-                }
+                dailyRawDelta += GetMemberDailyUnityContribution(record.Trust);
             }
 
-            float delta = memberCount > 0
-                ? totalContribution / memberCount * UnityContributionMultiplier
-                : 0f;
-            unity = Mathf.Clamp(unity + delta, 0f, UnityMax);
+            ApplyScaledUnityDelta(dailyRawDelta);
+        }
+
+        /// <summary>
+        /// 单个盟约成员的每日团结度原始贡献。
+        /// Trust &gt; 50：(Trust - 50) / 150 × 8，即 Trust 50 → 0，Trust 200 → +8 / 天。
+        /// Trust 0～50：贡献 0。
+        /// Trust &lt; 0：Trust / 25，即 -25 → -1 / 天（低于 -50 的成员仍按既有机制退出盟约）。
+        /// </summary>
+        private static float GetMemberDailyUnityContribution(int trust)
+        {
+            if (trust > UnityContributionTrustFloor)
+            {
+                return (trust - UnityContributionTrustFloor)
+                    / UnityContributionTrustDivisor
+                    * UnityContributionMaxPerMember;
+            }
+
+            if (trust < 0)
+            {
+                return trust / UnityNegativeContributionDivisor;
+            }
+
+            return 0f;
+        }
+
+        /// <summary>
+        /// 对 Unity 原始变化统一应用成长倍率并立即重算等级。
+        /// 向上取整只发生在「本次最终 Unity 变化」这一层级，
+        /// 避免对每个成员分别取整后再求和时产生额外重复舍入奖励。
+        /// </summary>
+        private bool ApplyScaledUnityDelta(float rawDelta)
+        {
+            int scaled = SymbiosisCovenantGrowthUtility.ScaleDelta(rawDelta);
+            if (scaled == 0)
+            {
+                return false;
+            }
+
+            float previous = unity;
+            unity = Mathf.Clamp(unity + scaled, 0f, UnityMax);
             RecalculateCovenantLevel();
+            return !Mathf.Approximately(previous, unity);
         }
 
         private void RecalculateCovenantLevel()
@@ -1439,10 +1556,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (memberCount > 0)
             {
                 level = 1;
-                if (unity >= 700) level = 5;
-                else if (unity >= 450) level = 4;
-                else if (unity >= 250) level = 3;
-                else if (unity >= 100) level = 2;
+                if (unity >= CovenantLevel5UnityThreshold) level = 5;
+                else if (unity >= CovenantLevel4UnityThreshold) level = 4;
+                else if (unity >= CovenantLevel3UnityThreshold) level = 3;
+                else if (unity >= CovenantLevel2UnityThreshold) level = 2;
             }
 
             covenantLevel = level;

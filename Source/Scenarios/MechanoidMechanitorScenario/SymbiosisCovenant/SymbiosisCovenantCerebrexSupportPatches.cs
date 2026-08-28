@@ -42,7 +42,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (quest.root == null || quest.root.defName != "Gravcore_Mechhive")
+            if (!SymbiosisCovenantCerebrexSupportUtility.IsGravcoreMechhiveQuest(quest))
             {
                 return;
             }

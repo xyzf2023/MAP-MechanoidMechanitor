@@ -12,7 +12,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
-    /// 共生盟约「联合军事行动」的调度器（L4 专属，独立机制）。
+    /// 共生盟约「联合军事行动」的调度器（L2 解锁，独立机制）。
     /// 复用共生盟约既有「以 GameComponent 为 key 的 ConditionalWeakTable + 三处 Harmony 钩子」模式：
     /// 不新增 GameComponent，也不修改共同防卫/联合贸易代表团的正式逻辑，
     /// 仅在盟约状态组件的 Tick / ExposeData / 等级重算 三个钩子上追加本机制行为。
@@ -100,13 +100,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 盟约等级重算后调用：等级达到 L4 时安排首次每日检查；低于 L4 时暂停调度。
+        /// 盟约等级重算后调用：等级达到解锁等级（L2）时安排首次每日检查；低于该等级时暂停调度。
         /// 不清除冷却（冷却由行动结束逻辑设置，等级恢复后仍应遵守）。
         /// </summary>
         public static void HandleLevelRecalculated(GameComponent_SymbiosisCovenantState component)
         {
             ScheduleState state = GetState(component);
-            if (!GameComponent_SymbiosisCovenantState.IsActive || component.CovenantLevel < 4)
+            if (!GameComponent_SymbiosisCovenantState.IsActive
+                || component.CovenantLevel
+                    < SymbiosisCovenantJointOperationDef.MinimumCovenantLevel)
             {
                 state.nextCheckTick = -1;
                 return;
@@ -133,7 +135,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ScheduleState state = GetState(component);
 
             // 盟约未激活或等级不足：暂停，待等级重算钩子重新安排。
-            if (!GameComponent_SymbiosisCovenantState.IsActive || component.CovenantLevel < 4)
+            if (!GameComponent_SymbiosisCovenantState.IsActive
+                || component.CovenantLevel
+                    < SymbiosisCovenantJointOperationDef.MinimumCovenantLevel)
             {
                 state.nextCheckTick = -1;
                 return;
@@ -198,8 +202,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 生成一次联合军事行动邀请。所有资格判定（L4、无进行中行动、暴力任务许可、
-        /// 真实存在的敌方世界目标、发起者与参与派系）均在此处与 Utility 中完成。
+        /// 生成一次联合军事行动邀请。所有资格判定（盟约等级达到解锁等级 L2、无进行中行动、
+        /// 暴力任务许可、真实存在的敌方世界目标、发起者与参与派系）均在此处与 Utility 中完成。
         /// 绝不凭空生成敌方据点。
         ///
         /// 正式调度传 null/false；DEV 可传精确目标与参与派系以跳过自然随机与概率。
@@ -230,9 +234,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (component.CovenantLevel < 4)
+            if (component.CovenantLevel < SymbiosisCovenantJointOperationDef.MinimumCovenantLevel)
             {
-                reason = "covenantLevelBelowL4";
+                reason = "covenantLevelBelowUnlockLevel";
                 return false;
             }
 
@@ -387,7 +391,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return 1000f;
         }
 
-        // ===== DEV 工具（便于 QA 直接验证 L4 机制） =====
+        // ===== DEV 工具（便于 QA 直接验证联合军事行动机制） =====
 
         public static bool DevSpawnNow()
         {
@@ -396,7 +400,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            // 无视冷却，但尊重「已有进行中行动」与 L4 条件。
+            // 无视冷却，但尊重「已有进行中行动」与盟约等级解锁条件（L2）。
             return TryGenerateOffer();
         }
 
@@ -435,7 +439,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             GameComponent_SymbiosisCovenantState? component =
                 GameComponent_SymbiosisCovenantState.CurrentComponent;
-            if (component == null || component.CovenantLevel < 4)
+            if (component == null
+                || component.CovenantLevel
+                    < SymbiosisCovenantJointOperationDef.MinimumCovenantLevel)
             {
                 return false;
             }
@@ -479,12 +485,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             public float TotalSupportPointsAtDeployment;
             public int TrackedLordCount;
             public List<string>? PerFactionSupport;
+            // 当前等级若现在接取会使用的援军倍率（便于与进行中行动的快照对照）。
+            public float CurrentSupportPointsFactor;
+            // 进行中行动接受时锁定的等级 / 倍率快照；0 / 0 表示还没有进行中的行动。
+            public int CovenantLevelSnapshot;
+            public float SupportPointsFactorSnapshot;
         }
 
         public static SymbiosisCovenantJointOperationDevSnapshot? GetDevSnapshot(
             GameComponent_SymbiosisCovenantState component)
         {
-            if (!GameComponent_SymbiosisCovenantState.IsActive || component.CovenantLevel < 4)
+            if (!GameComponent_SymbiosisCovenantState.IsActive
+                || component.CovenantLevel
+                    < SymbiosisCovenantJointOperationDef.MinimumCovenantLevel)
             {
                 return null;
             }
@@ -524,10 +537,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
+            SymbiosisCovenantJointOperationDef? devDef =
+                SymbiosisCovenantJointOperationDefOf.MAP_SymbiosisCovenant_JointOperationConfig;
+
             return new SymbiosisCovenantJointOperationDevSnapshot
             {
                 CovenantLevel = component.CovenantLevel,
                 Available = true,
+                CurrentSupportPointsFactor = devDef != null
+                    ? devDef.GetSupportPointsFactorForLevel(component.CovenantLevel)
+                    : SymbiosisCovenantJointOperationDef.LegacySupportPointsFactor,
+                CovenantLevelSnapshot = part?.covenantLevelSnapshot ?? 0,
+                SupportPointsFactorSnapshot =
+                    part?.supportPointsFactorSnapshot ?? 0f,
                 NextTick = state.nextCheckTick,
                 DaysUntilNext = GetDaysUntilNext(),
                 CooldownRemainingTicks = GetCooldownRemainingTicks(),

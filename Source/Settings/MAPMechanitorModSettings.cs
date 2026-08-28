@@ -276,6 +276,37 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool restrictMechHackBossTargets = true;
 
+        // ===== 共生盟约全局设置（所有存档共享） =====
+
+        /// <summary>
+        /// 共生盟约中信任度与团结度正负变化的成长倍率档位（tenths）。
+        /// 5 = ×0.5，10 = ×1.0，20 = ×2.0。
+        /// 保存整数档位而不是 float，避免浮点滑块留下 1.0999999 一类无法稳定复现的值。
+        /// 只影响之后发生的变化，不追溯修改已有的信任度与团结度。
+        /// </summary>
+        public int symbiosisCovenantGrowthMultiplierTenths =
+            DefaultSymbiosisCovenantGrowthMultiplierTenths;
+
+        public const int MinSymbiosisCovenantGrowthMultiplierTenths = 5;
+        public const int MaxSymbiosisCovenantGrowthMultiplierTenths = 20;
+        public const int DefaultSymbiosisCovenantGrowthMultiplierTenths = 10;
+
+        /// <summary>
+        /// 统一钳制共生盟约设置：供 ExposeData 的 PostLoadInit 与
+        /// MAPMechanitorMod.WriteSettings 共同调用，确保读取、界面、运行期三层一致。
+        /// 这里刻意不重置 goodwill / trade 来源窗口：
+        /// 否则玩家可以通过反复切换倍率刷新窗口上限来刷信任。
+        /// 从高倍率切到低倍率时，当前窗口已累计的实际值可能暂时超过新上限，
+        /// 属于预期行为，等待窗口自然刷新即可。
+        /// </summary>
+        public void NormalizeSymbiosisCovenantSettings()
+        {
+            symbiosisCovenantGrowthMultiplierTenths = Mathf.Clamp(
+                symbiosisCovenantGrowthMultiplierTenths,
+                MinSymbiosisCovenantGrowthMultiplierTenths,
+                MaxSymbiosisCovenantGrowthMultiplierTenths);
+        }
+
         /// <summary>
         /// 统一钳制正义 BOSS 难度设置：供 ExposeData 的 PostLoadInit 与
         /// MAPMechanitorMod.WriteSettings 共同调用，确保读取、界面、战斗快照三层一致。
@@ -581,8 +612,15 @@ namespace MAP_MechanoidMechanitor
                 "restrictMechHackBossTargets",
                 true);
 
+            Scribe_Values.Look(
+                ref symbiosisCovenantGrowthMultiplierTenths,
+                "symbiosisCovenantGrowthMultiplierTenths",
+                DefaultSymbiosisCovenantGrowthMultiplierTenths);
+
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
+                NormalizeSymbiosisCovenantSettings();
+
                 productivityCoreWorkSpeedOffsetPercentPerLevel = Mathf.Clamp(
                     productivityCoreWorkSpeedOffsetPercentPerLevel,
                     ProductivityCoreUtility.MinWorkSpeedOffsetPercentPerLevel,

@@ -41,6 +41,14 @@
   <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.OfferTimeout>援助邀请有效期：{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.OfferTimeout>
   <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.AcceptCooldown>成功接受援助后：{0}共同防卫冷却</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.AcceptCooldown>
 
+  <!-- 盟约效果页：联合军事行动 -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Title>联合军事行动</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Description>盟约可以发起联合军事行动，邀请盟友共同进攻真实存在的敌方据点。</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Description>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Tooltip>盟友提供的援军总点数约为目标威胁点数的 {0}。
+
+援军规模按玩家接受行动时的盟约等级锁定：之后即使盟约等级变化，本次行动也不会改变。</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Tooltip>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Locked>尚未解锁联合军事行动（需要 L{0}）。</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Locked>
+
   <!-- 盟约效果页：下一阶段预览 -->
   <MAP_MechanoidMechanitor.Symbiosis.Effects.NextLevel>下一阶段：{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.NextLevel>
   <MAP_MechanoidMechanitor.Symbiosis.Effects.RequiredUnity>需要团结度：{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.RequiredUnity>
@@ -61,5 +69,7 @@
   <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitaryBaseChance>基础响应概率：{0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitaryBaseChance>
   <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitarySupportScale>援军基础规模：{0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitarySupportScale>
   <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock>解锁：盟约成员间持续维持盟友关系</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockJointOperation>解锁：联合军事行动</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockJointOperation>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.JointOperationSupportScale>联合军事行动援军规模：{0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.JointOperationSupportScale>
 
 </LanguageData>

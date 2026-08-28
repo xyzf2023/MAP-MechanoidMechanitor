@@ -23,6 +23,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const string EvacPodDefName = "MAP_SymbiosisCovenant_CerebrexEvacDropPod";
 
+        /// <summary>
+        /// 奥德赛原版机械主脑任务的 root defName。
+        /// 识别主脑任务时严格比对 defName，绝不使用任务标题 / 名称文本。
+        /// </summary>
+        public const string GravcoreMechhiveQuestDefName = "Gravcore_Mechhive";
+
         private static readonly AccessTools.FieldRef<QuestPart_CerebrexCore, Site> GetCerebrexCoreSite =
             AccessTools.FieldRefAccess<QuestPart_CerebrexCore, Site>("site");
 
@@ -788,6 +794,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        // ───────────────────────── 主脑任务胜利奖励 ─────────────────────────
+
+        /// <summary>
+        /// 严格识别奥德赛原版机械主脑任务：必须按 root defName 判断，
+        /// 不能把其它机械族任务误判为主脑任务。
+        /// </summary>
+        public static bool IsGravcoreMechhiveQuest(Quest? quest)
+            => quest?.root != null && quest.root.defName == GravcoreMechhiveQuestDefName;
+
+        /// <summary>
+        /// 原版 Gravcore_Mechhive Quest 真正以 QuestEndOutcome.Success 结束时，
+        /// 发放共生盟约的机械主脑胜利奖励。
+        /// 除严格比对 defName 外，还要求本支援 QuestPart 存在：
+        /// Exactly Once 依赖该 Part 上随存档的 completionRewardApplied，
+        /// 因此没有 Part 时不发放，也不会追溯补发给已经 Historical 的旧任务。
+        /// 奖励与玩家是否接受过盟约援军无关。
+        /// </summary>
+        public static bool TryApplyGravcoreMechhiveCompletionReward(Quest? quest)
+        {
+            if (quest == null || !IsGravcoreMechhiveQuest(quest))
+            {
+                return false;
+            }
+
+            QuestPart_SymbiosisCovenantCerebrexSupport? part = quest.PartsListForReading
+                .OfType<QuestPart_SymbiosisCovenantCerebrexSupport>()
+                .FirstOrDefault();
+            if (part == null)
+            {
+                Log.Warning(
+                    $"{LogPrefix} Gravcore_Mechhive 任务成功，但缺少共生盟约支援 QuestPart，"
+                    + $"未发放盟约胜利奖励（quest={quest.id}）。");
+                return false;
+            }
+
+            return part.TryApplyCompletionReward();
+        }
+
         // ───────────────────────── 旧存档补装 ─────────────────────────
 
         public static void BackfillMissingSupportQuestParts()
@@ -799,7 +843,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             foreach (Quest quest in Find.QuestManager.QuestsListForReading)
             {
-                if (quest.root == null || quest.root.defName != "Gravcore_Mechhive")
+                if (!IsGravcoreMechhiveQuest(quest))
                 {
                     continue;
                 }

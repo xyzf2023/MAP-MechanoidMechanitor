@@ -25,6 +25,12 @@
   <level4ThreatOffsetFactor>0.35</level4ThreatOffsetFactor>
   <level5ThreatOffsetFactor>0.5</level5ThreatOffsetFactor>
 
+  <!-- 主脑任务真正以 Success 结束时的共生盟约奖励（×1.0 基础值，随共生盟约成长倍率缩放）。
+       completionTrustReward 只发给当前 CovenantMember；completionUnityReward 发给整个盟约。
+       与玩家是否接受盟约援军无关。 -->
+  <completionTrustReward>75</completionTrustReward>
+  <completionUnityReward>100</completionUnityReward>
+
   <!-- 每波最多参与派系数与空投仓开盖延迟 -->
   <maxParticipantsPerWave>3</maxParticipantsPerWave>
   <dropPodOpenDelayTicks>140</dropPodOpenDelayTicks>

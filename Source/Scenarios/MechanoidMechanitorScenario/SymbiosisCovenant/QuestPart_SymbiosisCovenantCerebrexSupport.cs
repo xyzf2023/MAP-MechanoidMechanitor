@@ -68,6 +68,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool stopSchedulingWaves;
         public string? invalidReason;
 
+        /// <summary>
+        /// 主脑任务胜利奖励是否已发放。随存档保存，保证同一个 Quest 最多发放一次。
+        /// 严禁用 static 集合或纯运行期 bool 防重复：那样读档后会再次发放。
+        /// </summary>
+        public bool completionRewardApplied;
+
         private SymbiosisCovenantCerebrexSupportDef Config
             => SymbiosisCovenantCerebrexSupportDefOf.MAP_SymbiosisCovenant_CerebrexSupportConfig;
 
@@ -487,7 +493,51 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
+        /// 发放「成功完成机械主脑任务」的共生盟约奖励。
+        /// 只能由原版 Gravcore_Mechhive Quest 真正 Quest.End(QuestEndOutcome.Success) 触发，
+        /// 严禁在 NotifyCoreDefencesLowered / 威胁稳定期 / 援军撤离 / 载具发射 等时机调用。
+        /// 是否接受过盟约援军、是否有盟军实际到场，都不影响本奖励。
+        /// 奖励只发给当前 CovenantMember，团结度奖励发给整个盟约。
+        /// </summary>
+        public bool TryApplyCompletionReward()
+        {
+            if (completionRewardApplied)
+            {
+                return false;
+            }
+
+            GameComponent_SymbiosisCovenantState? comp =
+                GameComponent_SymbiosisCovenantState.CurrentComponent;
+            if (comp == null
+                || !GameComponent_SymbiosisCovenantState.IsActive
+                || comp.CovenantMemberCount <= 0)
+            {
+                return false;
+            }
+
+            // 先进入一次性保护状态，再发放，避免发放过程中重入造成重复结算。
+            completionRewardApplied = true;
+
+            SymbiosisCovenantCerebrexSupportDef cfg = Config;
+            string reason =
+                "MAP_MechanoidMechanitor.Symbiosis.TrustReason.CerebrexVictory".Translate();
+
+            int memberCount = GameComponent_SymbiosisCovenantState.TryAdjustTrustForCovenantMembers(
+                cfg.completionTrustReward,
+                reason,
+                SymbiosisCovenantTrustSource.Quest);
+            GameComponent_SymbiosisCovenantState.TryAdjustUnity(
+                cfg.completionUnityReward,
+                reason);
+
+            Log.Message($"{LogPrefix} 机械主脑任务成功，已发放盟约胜利奖励"
+                + $"（成员 Trust +{cfg.completionTrustReward} ×{memberCount}，Unity +{cfg.completionUnityReward}，questId={quest?.id.ToString() ?? "-"}）。");
+            return true;
+        }
+
+        /// <summary>
         /// 由支援系统通知：主脑防御已解除。
+        /// 注意：这仅表示主脑已可互动，绝不等于主脑任务成功完成，此处不得发放任何盟约奖励。
         /// </summary>
         public void NotifyCoreDefencesLowered(int now)
         {
@@ -592,6 +642,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             Scribe_Values.Look(ref stopSchedulingWaves, "stopSchedulingWaves", false);
             Scribe_Values.Look(ref invalidReason, "invalidReason");
+            Scribe_Values.Look(
+                ref completionRewardApplied,
+                "completionRewardApplied",
+                false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {

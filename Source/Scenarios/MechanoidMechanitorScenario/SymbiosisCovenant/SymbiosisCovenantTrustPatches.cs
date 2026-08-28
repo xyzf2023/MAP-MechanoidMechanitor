@@ -4,6 +4,7 @@ using System.Linq;
 using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
@@ -102,7 +103,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 - __state.previousGoodwill;
             if (goodwillDelta > 0)
             {
-                int trust = Math.Max(1, Math.Min(10, (goodwillDelta + 4) / 5));
+                // 大约每 +4 派系好感提供 +1 信任：+1→+1，+4→+1，+5→+2，+8→+2，+9→+3。
+                // 这里只给「基础值」，成长倍率统一由 AdjustTrust 内部应用。
+                int trust = Mathf.CeilToInt(goodwillDelta / 4f);
                 GameComponent_SymbiosisCovenantState.TryAdjustTrust(
                     __state.ordinaryFaction,
                     trust,
@@ -191,22 +194,49 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             GameComponent_SymbiosisCovenantState.TryAdjustTrust(
                 __state,
-                1,
+                2,
                 "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Trade".Translate(),
                 SymbiosisCovenantTrustSource.Trade);
         }
     }
 
+    /// <summary>
+    /// 普通派系委托成功奖励。
+    /// 联合军事行动与 Gravcore_Mechhive 主脑任务各有专用 Trust / Unity 奖励，
+    /// 必须在这里明确分流，绝不能让它们再叠加一次普通任务奖励。
+    /// 其它独立世界事件（例如摧毁共同敌人据点）仍按各自入口结算，不受本分流影响。
+    /// </summary>
     [HarmonyPatch(typeof(Quest), nameof(Quest.End))]
     public static class SymbiosisCovenant_QuestEnded_Patch
     {
+        /// <summary>普通派系委托成功的基础信任奖励（×1.0 基础值）。</summary>
+        private const int NormalQuestTrustBase = 20;
+
+        // 必须是 public：作为 public Patch 方法的 __state 参数类型，
+        // 私有嵌套类型会导致可访问性不一致的编译错误。
+        public enum QuestRewardKind : byte
+        {
+            None = 0,
+            Normal = 1,
+            JointOperation = 2,
+            GravcoreMechhive = 3
+        }
+
+        public struct QuestRewardState
+        {
+            public QuestRewardKind Kind;
+
+            /// <summary>仅 Normal 分支使用：本次应获得普通任务奖励的普通派系。</summary>
+            public List<Faction>? OrdinaryFactions;
+        }
+
         [HarmonyPrefix]
         public static void Prefix(
             Quest __instance,
             QuestEndOutcome outcome,
-            out List<Faction>? __state)
+            out QuestRewardState __state)
         {
-            __state = null;
+            __state = default;
             if (!GameComponent_SymbiosisCovenantState.IsActive
                 || outcome != QuestEndOutcome.Success
                 || !__instance.EverAccepted)
@@ -214,27 +244,50 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            __state = __instance.InvolvedFactions
+            // 联合军事行动：由 QuestPart_SymbiosisCovenantJointOperation 自己结算
+            // Unity +35 与有效参与派系 Trust +35，这里必须跳过普通奖励。
+            if (SymbiosisCovenantJointOperationUtility.HasJointOperationPart(__instance))
+            {
+                __state.Kind = QuestRewardKind.JointOperation;
+                return;
+            }
+
+            // 主脑任务：由共生盟约专用入口结算盟约成员 Trust +75 与 Unity +100。
+            // 严格按 root defName 识别，不依赖任务标题或名称文本。
+            if (SymbiosisCovenantCerebrexSupportUtility.IsGravcoreMechhiveQuest(__instance))
+            {
+                __state.Kind = QuestRewardKind.GravcoreMechhive;
+                return;
+            }
+
+            __state.Kind = QuestRewardKind.Normal;
+            __state.OrdinaryFactions = __instance.InvolvedFactions
                 .Where(MechanoidMechanitorOrdinaryFactionUtility.IsOrdinaryFaction)
                 .Distinct()
                 .ToList();
         }
 
         [HarmonyPostfix]
-        public static void Postfix(List<Faction>? __state)
+        public static void Postfix(Quest __instance, QuestRewardState __state)
         {
-            if (__state == null)
+            switch (__state.Kind)
             {
-                return;
-            }
+                case QuestRewardKind.Normal:
+                    for (int i = 0; i < __state.OrdinaryFactions!.Count; i++)
+                    {
+                        GameComponent_SymbiosisCovenantState.TryAdjustTrust(
+                            __state.OrdinaryFactions[i],
+                            NormalQuestTrustBase,
+                            "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Quest".Translate(),
+                            SymbiosisCovenantTrustSource.Quest);
+                    }
 
-            for (int i = 0; i < __state.Count; i++)
-            {
-                GameComponent_SymbiosisCovenantState.TryAdjustTrust(
-                    __state[i],
-                    10,
-                    "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Quest".Translate(),
-                    SymbiosisCovenantTrustSource.Quest);
+                    break;
+
+                case QuestRewardKind.GravcoreMechhive:
+                    SymbiosisCovenantCerebrexSupportUtility
+                        .TryApplyGravcoreMechhiveCompletionReward(__instance);
+                    break;
             }
         }
     }
@@ -280,13 +333,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (__state == mechHive)
             {
                 GameComponent_SymbiosisCovenantState.TryAdjustTrustForAll(
-                    10,
+                    30,
                     "MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode"
                         .Translate(),
                     SymbiosisCovenantTrustSource.MechHiveNode);
                 return;
             }
 
+            // 只奖励与该被摧毁派系敌对的记录。这里沿用既有语义：
+            // 不要求对方已经是 CovenantMember，本次不得偷偷加上该限制。
             IReadOnlyList<SymbiosisCovenantFactionRecord> records =
                 state.GetRecordsSorted();
             for (int i = 0; i < records.Count; i++)
@@ -296,7 +351,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     GameComponent_SymbiosisCovenantState.TryAdjustTrust(
                         covenantFaction,
-                        10,
+                        25,
                         "MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy"
                             .Translate(),
                         SymbiosisCovenantTrustSource.Other);
@@ -322,8 +377,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 与「摧毁机械巢 Settlement」是两条不同的 Harmony 入口，
+            // 基础值同为 +30，但触发条件不同，不得合并。
             GameComponent_SymbiosisCovenantState.TryAdjustTrustForAll(
-                10,
+                30,
                 "MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode".Translate(),
                 SymbiosisCovenantTrustSource.MechHiveNode);
         }

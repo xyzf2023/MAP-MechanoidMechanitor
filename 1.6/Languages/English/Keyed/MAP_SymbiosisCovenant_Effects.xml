@@ -41,6 +41,14 @@ A larger member count slightly speeds up visits from the joint trade network.</M
   <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.OfferTimeout>Aid offer valid for: {0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.OfferTimeout>
   <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.AcceptCooldown>After accepting aid: {0} common-defense cooldown</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.AcceptCooldown>
 
+  <!-- Covenant Effects page: joint military operation -->
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Title>Joint military operation</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Description>The covenant can launch joint military operations, inviting allies to strike a real enemy site together.</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Description>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Tooltip>Total allied reinforcement points are about {0} of the target's threat points.
+
+Aid size is locked to the covenant level at the moment the operation is accepted; later level changes no longer affect that operation.</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Tooltip>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Locked>Joint military operations not unlocked yet (requires L{0}).</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Locked>
+
   <!-- Covenant Effects page: next level preview -->
   <MAP_MechanoidMechanitor.Symbiosis.Effects.NextLevel>Next stage: {0}</MAP_MechanoidMechanitor.Symbiosis.Effects.NextLevel>
   <MAP_MechanoidMechanitor.Symbiosis.Effects.RequiredUnity>Required unity: {0}</MAP_MechanoidMechanitor.Symbiosis.Effects.RequiredUnity>
@@ -61,5 +69,7 @@ A larger member count slightly speeds up visits from the joint trade network.</M
   <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitaryBaseChance>Base response chance: {0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitaryBaseChance>
   <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitarySupportScale>Base aid scale: {0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitarySupportScale>
   <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock>Unlocked: covenant members kept allied</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockJointOperation>Unlocked: joint military operation</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockJointOperation>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.JointOperationSupportScale>Joint operation aid size: {0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.JointOperationSupportScale>
 
 </LanguageData>

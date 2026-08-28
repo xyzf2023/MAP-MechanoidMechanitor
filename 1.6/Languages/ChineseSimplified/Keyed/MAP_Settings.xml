@@ -27,6 +27,11 @@
   <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>启用肃清指令UI加载界面</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>
   <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>开启后，每次打开肃清指令UI时都会先显示通讯连接与进度条界面。关闭后，将跳过加载界面并直接进入主界面。</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>
 
+  <!-- 模块：共生盟约 -->
+  <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>共生盟约</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>
+  <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>共生盟约成长倍率：×{0}</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>
+  <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>调整共生盟约中信任度与团结度的正负变化速度。不会修改已有数值，仅影响之后发生的变化。默认 ×1.0。</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>
+
   <!-- 模块：战略节点概率 -->
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>战略节点概率</MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>以下概率为全局MOD设置，所有存档共享，并会在后续对应事件检查时直接读取。设置的是每座符合条件的完整节点的独立基础概率；多个节点的最终概率按 1-(1-p)^n 合并，而不是直接相加。</MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>

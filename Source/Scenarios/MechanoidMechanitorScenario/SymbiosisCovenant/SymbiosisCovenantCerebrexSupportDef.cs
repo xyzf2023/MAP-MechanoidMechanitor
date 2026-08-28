@@ -31,6 +31,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public float level4ThreatOffsetFactor = 0.35f;
         public float level5ThreatOffsetFactor = 0.50f;
 
+        // 主脑任务真正以 Success 结束时的共生盟约奖励（×1.0 基础值）。
+        // 表示“玩家完成了共生盟约的核心战略目标”，与是否接受/实际获得盟约援军无关。
+        // 只奖励当前 CovenantMember 的信任，以及整个盟约的团结度。
+        public int completionTrustReward = 75;
+        public int completionUnityReward = 100;
+
         // 每波最多参与派系数与空投仓开盖延迟
         public int maxParticipantsPerWave = 3;
         public int dropPodOpenDelayTicks = 140;
@@ -126,6 +132,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || level5ThreatOffsetFactor < 0f)
             {
                 yield return $"{defName}: threat offset factors (L2..L5) cannot be negative.";
+            }
+
+            if (completionTrustReward < 0)
+            {
+                yield return $"{defName}: completionTrustReward must be non-negative.";
+            }
+
+            if (completionUnityReward < 0)
+            {
+                yield return $"{defName}: completionUnityReward must be non-negative.";
             }
 
             if (maxParticipantsPerWave < 1)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
 
-  <!-- 联合军事行动（L4 独立机制）的可读取配置入口。所有天数/数值集中在此，不硬编码。 -->
+  <!-- 联合军事行动（L2 解锁的独立机制）的可读取配置入口。所有天数/数值集中在此，不硬编码。 -->
   <MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantJointOperationDef>
     <defName>MAP_SymbiosisCovenant_JointOperationConfig</defName>
     <label>symbiosis covenant joint operation configuration</label>
@@ -20,12 +20,17 @@
     <!-- 团结度与参与派系信任变化。 -->
     <successUnityDelta>35</successUnityDelta>
     <failUnityDelta>-30</failUnityDelta>
-    <successTrustDeltaPerValidParticipant>12</successTrustDeltaPerValidParticipant>
+    <successTrustDeltaPerValidParticipant>35</successTrustDeltaPerValidParticipant>
     <failTrustDeltaPerValidParticipant>-8</failTrustDeltaPerValidParticipant>
 
-    <!-- 援军规模：所有参与派系“合计”的援军点数 = 目标威胁点 × supportPointsFactor
-         （不是每个派系各算一次；点数再平均分配给仍有效且能生成战斗编组的参与派系）。 -->
-    <supportPointsFactor>0.50</supportPointsFactor>
+    <!-- 援军规模：所有参与派系“合计”的援军点数 = 目标威胁点 × 接取时锁定的等级倍率
+         （不是每个派系各算一次；点数再平均分配给仍有效且能生成战斗编组的参与派系）。
+         L2 观察性小规模支援 → L3 正式作战力量 → L4 既有强度 → L5 接近主力规模。
+         必须保持非递减，否则 Def 载入会报 ConfigError。 -->
+    <level2SupportPointsFactor>0.15</level2SupportPointsFactor>
+    <level3SupportPointsFactor>0.30</level3SupportPointsFactor>
+    <level4SupportPointsFactor>0.50</level4SupportPointsFactor>
+    <level5SupportPointsFactor>0.75</level5SupportPointsFactor>
     <maxParticipants>3</maxParticipants>
     <!-- 达到该科技等级使用快速空投抵达，否则从地图边缘步行进入（由实际参与援军生成的派系最高科技统一决定）。 -->
     <industrialArrivalThreshold>Industrial</industrialArrivalThreshold>

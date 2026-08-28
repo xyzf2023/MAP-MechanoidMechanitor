@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <LanguageData>
-  <!-- 联合军事行动（L4 独立机制）文本。C# 只传入动态占位符，完整句子模板在此处。 -->
+  <!-- 联合军事行动（L2 解锁的独立机制）文本。C# 只传入动态占位符，完整句子模板在此处。 -->
 
   <!-- 发起者没有首领时的首领描述兜底。外层模板已包含“{派系}的”。 -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>代表</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
@@ -36,9 +36,9 @@
   <!-- 信任变化原因（与共同防卫/贸易委托共用 TrustReason 体系）。 -->
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.JointOperation>联合军事行动</MAP_MechanoidMechanitor.Symbiosis.TrustReason.JointOperation>
 
-  <!-- DEV 面板（便于 QA 直接验证 L4 机制）。 -->
+  <!-- DEV 面板（便于 QA 直接验证联合军事行动机制）。 -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Section>联合军事行动</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Section>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled>未安排（盟约等级不足 L4）。</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled>未安排（盟约等级尚未解锁联合军事行动）。</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled>
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Level>当前等级：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Level>
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Available>可用：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Available>
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.NextTick>下次检查 Tick：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.NextTick>
@@ -49,6 +49,9 @@
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Stage>阶段：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Stage>
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Participants>参与派系数：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Participants>
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.RewardValue>奖励价值：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.RewardValue>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CurrentSupportFactor>当前等级援军倍率：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CurrentSupportFactor>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotLevel>行动锁定等级：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotSupportFactor>行动锁定援军倍率：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotSupportFactor>
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.SpawnNow>立即生成邀请</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.SpawnNow>
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.MakeDue>立即到期</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.MakeDue>
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearCooldown>清除冷却</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearCooldown>

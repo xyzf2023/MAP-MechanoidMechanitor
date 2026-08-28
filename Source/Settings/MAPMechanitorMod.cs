@@ -131,6 +131,8 @@ namespace MAP_MechanoidMechanitor
 
             DrawRecreationSettings(listing);
 
+            DrawSymbiosisCovenantSettings(listing);
+
             DrawStrategicNodeSettings(listing);
 
             DrawInsectStorySettings(listing);
@@ -252,6 +254,44 @@ namespace MAP_MechanoidMechanitor
                 ref Settings.restrictMechHackBossTargets,
                 "MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description"
                     .Translate());
+        }
+
+        private static void DrawSymbiosisCovenantSettings(Listing_Standard listing)
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            listing.GapLine();
+
+            listing.Label(
+                "MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section".Translate());
+
+            int tenths = Mathf.Clamp(
+                Settings.symbiosisCovenantGrowthMultiplierTenths,
+                MAPMechanitorModSettings.MinSymbiosisCovenantGrowthMultiplierTenths,
+                MAPMechanitorModSettings.MaxSymbiosisCovenantGrowthMultiplierTenths);
+
+            // 滑块直接走整数档位 5..20，显示时才 /10，
+            // 绝不保存 Slider 返回的 float，避免留下无法稳定复现的小数档位。
+            float sliderValue = listing.SliderLabeled(
+                "MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label"
+                    .Translate(
+                        (tenths / 10f).ToString("0.0", CultureInfo.CurrentCulture))
+                    .ToString(),
+                tenths,
+                MAPMechanitorModSettings.MinSymbiosisCovenantGrowthMultiplierTenths,
+                MAPMechanitorModSettings.MaxSymbiosisCovenantGrowthMultiplierTenths,
+                0.62f,
+                "MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description"
+                    .Translate()
+                    .ToString());
+
+            Settings.symbiosisCovenantGrowthMultiplierTenths = Mathf.Clamp(
+                Mathf.RoundToInt(sliderValue),
+                MAPMechanitorModSettings.MinSymbiosisCovenantGrowthMultiplierTenths,
+                MAPMechanitorModSettings.MaxSymbiosisCovenantGrowthMultiplierTenths);
         }
 
         private static void DrawJusticeBossDifficultySettings(
@@ -846,6 +886,7 @@ namespace MAP_MechanoidMechanitor
             JusticeBossDiagnosticsRuntime.Refresh();
             Settings?.NormalizeJusticeBossSettings();
             Settings?.NormalizeCerebrexBossSettings();
+            Settings?.NormalizeSymbiosisCovenantSettings();
             base.WriteSettings();
         }
 

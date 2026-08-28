@@ -49,6 +49,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public List<SymbiosisCovenantJointOperationFactionSupportRecord>? supportRecords;
         public List<string>? spawnedAidTags;
 
+        // 等级 / 援军倍率快照：玩家正式接受任务时锁定，本次行动之后一律使用快照。
+        // 这样玩家在 L2 接任务后升到 L5，本次仍然按 L2 的 15% 部署，
+        // 下一次新行动才使用新的等级。设计与主脑援军 covenantLevelSnapshot 一致。
+        public int covenantLevelSnapshot;
+        // 负值表示尚未建立快照（旧存档或尚未接受）：结算时按 LegacySupportPointsFactor 兼容。
+        public float supportPointsFactorSnapshot = -1f;
+
         // 额外运行期字段（随存档）
         public SymbiosisCovenantJointOperationDef? jointOperationDef;
         public int rewardValue;
@@ -199,6 +206,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 SymbiosisCovenantJointOperationDef? def = ResolveDef();
                 operationExpireTick = (tickManager?.TicksGame ?? 0)
                     + (def?.operationTimeoutTicks ?? 900000);
+
+                // 接受瞬间锁定等级与援军倍率：此后本次行动始终使用快照，
+                // 既不因中途升级变强，也不因中途降级变弱。
+                GameComponent_SymbiosisCovenantState? snapshotState =
+                    GameComponent_SymbiosisCovenantState.CurrentComponent;
+                covenantLevelSnapshot = snapshotState?.CovenantLevel ?? 0;
+                supportPointsFactorSnapshot = def != null
+                    ? def.GetSupportPointsFactorForLevel(covenantLevelSnapshot)
+                    : SymbiosisCovenantJointOperationDef.LegacySupportPointsFactor;
 
                 int preTick = tickManager?.TicksGame ?? 0;
                 LogDeploymentDiagnostic(
@@ -783,8 +799,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return;
                 }
 
+                // 只有跌到解锁等级以下才因等级不足终止；L2~L5 之间升降不取消已接取的行动。
                 if (!GameComponent_SymbiosisCovenantState.IsActive
-                    || GameComponent_SymbiosisCovenantState.CurrentComponent?.CovenantLevel < 4)
+                    || GameComponent_SymbiosisCovenantState.CurrentComponent?.CovenantLevel
+                        < SymbiosisCovenantJointOperationDef.MinimumCovenantLevel)
                 {
                     BeginInvalidEnd("covenantLevelTooLow");
                     return;
@@ -1307,6 +1325,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         // ===== 援军生成（B / C / D / H） =====
 
+        /// <summary>
+        /// 本次行动实际使用的援军点数倍率。始终使用接受任务时锁定的快照；
+        /// 只有在快照缺失（更新前的旧存档已接受行动）时才回退到旧版固定 50%，
+        /// 绝不用部署时的当前盟约等级重新计算。
+        /// </summary>
+        private float ResolveSupportPointsFactor()
+        {
+            return supportPointsFactorSnapshot < 0f
+                ? SymbiosisCovenantJointOperationDef.LegacySupportPointsFactor
+                : supportPointsFactorSnapshot;
+        }
+
         private bool TryDeployReinforcements(Map targetMap)
         {
             SymbiosisCovenantJointOperationDef? def = ResolveDef();
@@ -1326,14 +1356,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 targetWorldObject, targetMap);
             targetThreatPointsAtDeployment = threat;
 
-            // B：所有参与派系“合计”的援军点数 = 目标威胁点 × supportPointsFactor。
-            float total = threat * def.supportPointsFactor;
+            // B：所有参与派系“合计”的援军点数 = 目标威胁点 × 接取时锁定的等级倍率。
+            float factor = ResolveSupportPointsFactor();
+            float total = threat * factor;
             totalSupportPointsAtDeployment = total;
 
             LogDeploymentDiagnostic(
                 "SupportPointsCalculated",
                 "targetThreatPoints=" + threat
-                + " | supportPointsFactor=" + def.supportPointsFactor.ToString("F3")
+                + " | supportPointsFactor=" + factor.ToString("F3")
+                + " | covenantLevelSnapshot=" + covenantLevelSnapshot
                 + " | totalSupportPoints=" + total.ToString("F1")
                 + " | targetThreatSource=" + SymbiosisCovenantJointOperationUtility.GetTargetThreatSourceName(targetWorldObject)
                 + (targetWorldObject is MAPMechHiveNode node
@@ -2681,6 +2713,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Defs.Look(ref jointOperationDef, "jointOperationDef");
             Scribe_Values.Look(ref rewardValue, "rewardValue", 0);
             Scribe_Values.Look(ref playerEngaged, "playerEngaged", false);
+            Scribe_Values.Look(ref covenantLevelSnapshot, "covenantLevelSnapshot", 0);
+            Scribe_Values.Look(
+                ref supportPointsFactorSnapshot,
+                "supportPointsFactorSnapshot",
+                -1f);
 
             // OfferPending 普通 Site 延迟验证状态（参与存档，保证旧存档读档后能继续验证）。
             Scribe_Values.Look(ref offerPendingTargetMapFirstObservedTick, "offerPendingTargetMapFirstObservedTick", -1);
@@ -2696,14 +2733,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 spawnedAidTags ??= new List<string>();
                 // 兼容旧存档：确保本 Part 在 OfferPending 阶段也能监听目标完成信号。
                 signalListenMode = QuestPart.SignalListenMode.OngoingOrNotYetAccepted;
+
+                // 旧存档兼容：更新前接取的行动没有快照。更新前只有 L4 及以上才可能接到
+                // 联合行动，其历史承诺就是旧版固定 50%，必须显式补成 0.50，
+                // 绝不能按读档时的当前等级重新计算（否则可能从 50% 变成 75%）。
+                // 尚未接受的 OfferPending 保持 -1，留给 PreQuestAccept 按新规则建立快照。
+                if (supportPointsFactorSnapshot < 0f && IsOperationAccepted)
+                {
+                    supportPointsFactorSnapshot =
+                        SymbiosisCovenantJointOperationDef.LegacySupportPointsFactor;
+                }
             }
         }
 
-        // ===== 静态入口：供调度器在盟约降级时取消进行中的行动（G6） =====
+        // ===== 静态入口：供调度器在盟约跌破解锁等级时取消进行中的行动（G6） =====
 
         public static void NotifyCovenantLevelChanged(int level)
         {
-            if (level >= 4)
+            // L2~L5 之间任意变化都不取消已接取的行动，只有跌到 L1 及以下才算等级不足。
+            if (level >= SymbiosisCovenantJointOperationDef.MinimumCovenantLevel)
             {
                 return;
             }

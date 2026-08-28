@@ -385,13 +385,16 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            // 确保盟约等级至少 L4：团结度设为 450 并重新计算。
-            state.DevSetUnity(450f);
+            // 确保盟约等级至少达到联合军事行动解锁等级：团结度设为 L2 阈值并重新计算。
+            state.DevSetUnity(
+                GameComponent_SymbiosisCovenantState.CovenantLevel2UnityThreshold);
             state.DevRecalculateCovenantLevel();
 
-            if (state.CovenantLevel < 4)
+            int unlockLevel = SymbiosisCovenantJointOperationDef.MinimumCovenantLevel;
+            if (state.CovenantLevel < unlockLevel)
             {
-                message = "盟约等级不足 L4（当前 L" + state.CovenantLevel + "）。";
+                message = "盟约等级不足 L" + unlockLevel
+                    + "（当前 L" + state.CovenantLevel + "）。";
                 return false;
             }
 
@@ -1404,7 +1407,7 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        // ===== 联合军事行动（L4） =====
+        // ===== 联合军事行动（L2 解锁的独立机制） =====
 
         public static bool TrySpawnJointOperationNow(out string message)
         {
@@ -1422,13 +1425,15 @@ namespace MAP_MechanoidMechanitor
             {
                 message =
                     "已立即尝试生成联合军事行动邀请"
-                    + "（需 L4 / 无进行中行动 / 暴力任务许可 / 存在可用目标）。";
+                    + "（需盟约等级达到 L" + SymbiosisCovenantJointOperationDef.MinimumCovenantLevel
+                    + " / 无进行中行动 / 暴力任务许可 / 存在可用目标）。";
                 return true;
             }
 
             message =
-                "未能生成联合军事行动邀请（盟约等级不足 L4、已有进行中行动、"
-                + "无可用真实敌方目标或暴力任务被禁用）。";
+                "未能生成联合军事行动邀请（盟约等级不足 L"
+                + SymbiosisCovenantJointOperationDef.MinimumCovenantLevel
+                + "、已有进行中行动、无可用真实敌方目标或暴力任务被禁用）。";
             return false;
         }
 
@@ -1450,7 +1455,8 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            message = "无法使联合军事行动调度到期（盟约等级不足 L4）。";
+            message = "无法使联合军事行动调度到期（盟约等级不足 L"
+                + SymbiosisCovenantJointOperationDef.MinimumCovenantLevel + "）。";
             return false;
         }
 
@@ -1523,12 +1529,20 @@ namespace MAP_MechanoidMechanitor
 
             if (snap == null)
             {
-                sb.AppendLine("Available = False (level < L4)");
+                sb.AppendLine("Available = False (level < L"
+                    + SymbiosisCovenantJointOperationDef.MinimumCovenantLevel + ")");
                 sb.AppendLine();
                 return sb.ToString();
             }
 
             sb.AppendLine("Level = " + snap.CovenantLevel);
+            sb.AppendLine(
+                "CurrentSupportPointsFactor = "
+                + snap.CurrentSupportPointsFactor.ToString("F2"));
+            sb.AppendLine("CovenantLevelSnapshot = " + snap.CovenantLevelSnapshot);
+            sb.AppendLine(
+                "SupportPointsFactorSnapshot = "
+                + snap.SupportPointsFactorSnapshot.ToString("F2"));
             sb.AppendLine("NextTick = " + snap.NextTick);
             sb.AppendLine("DaysUntilNext = " + snap.DaysUntilNext.ToString("F1"));
             sb.AppendLine("CooldownRemainingTicks = " + snap.CooldownRemainingTicks);

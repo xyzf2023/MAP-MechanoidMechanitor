@@ -580,6 +580,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
+        /// 判断某个 Quest 是否是共生盟约联合军事行动。
+        /// 严格按 QuestPart 类型识别，绝不依赖任务标题 / 名称文本，避免翻译或重命名导致误判。
+        /// 普通 Quest 成功奖励必须用它把自己排除，防止与联合行动专用奖励重复叠加。
+        /// </summary>
+        public static bool HasJointOperationPart(Quest? quest)
+        {
+            if (quest == null)
+            {
+                return false;
+            }
+
+            foreach (QuestPart part in quest.PartsListForReading)
+            {
+                if (part is QuestPart_SymbiosisCovenantJointOperation)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// 通知当前活动的联合行动：其锁定目标已被清除。
         /// 会自动定位活动 QuestPart 并转发到目标清除逻辑；若 worldObject 不是当前活动目标则忽略。
         /// reason 用于日志与结算标记，便于排查来源。

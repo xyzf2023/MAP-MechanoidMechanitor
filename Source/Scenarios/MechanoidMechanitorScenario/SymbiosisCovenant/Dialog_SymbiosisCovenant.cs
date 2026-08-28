@@ -101,22 +101,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             DrawFooter(footerRect);
         }
 
+        /// <summary>
+        /// 下一等级所需团结度。阈值只从 GameComponent_SymbiosisCovenantState 读取，
+        /// 这里不得再维护一份等级表。
+        /// </summary>
         private static int GetNextLevelThreshold(int level)
         {
-            switch (level)
-            {
-                case 0:
-                case 1:
-                    return 100;
-                case 2:
-                    return 250;
-                case 3:
-                    return 450;
-                case 4:
-                    return 700;
-                default:
-                    return -1;
-            }
+            // L0/L1 的下一等级都是 L2。
+            int nextLevel = level <= 1 ? 2 : level + 1;
+            return GameComponent_SymbiosisCovenantState.GetCovenantLevelThreshold(nextLevel);
         }
 
         private static string GetCovenantLevelLabel(int level)
@@ -507,6 +500,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 });
             }
 
+            // 联合军事行动（L2+）。L1 明确提示尚未解锁，避免玩家误以为功能缺失。
+            if (snap.JointOperationUnlocked)
+            {
+                cards.Add(new EffectCardInfo
+                {
+                    Title = "MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Title"
+                        .Translate(),
+                    Summary = "MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Description"
+                        .Translate(),
+                    Tooltip = "MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Tooltip"
+                        .Translate(Percent(snap.JointOperationSupportPointsFactor))
+                });
+            }
+            else
+            {
+                cards.Add(new EffectCardInfo
+                {
+                    Title = "MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Title"
+                        .Translate(),
+                    Summary = "MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Locked"
+                        .Translate(
+                            SymbiosisCovenantJointOperationDef.MinimumCovenantLevel)
+                });
+            }
+
             return cards;
         }
 
@@ -720,6 +738,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!cur.MemberAllianceLock && nxt.MemberAllianceLock)
             {
                 sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock".Translate());
+            }
+
+            if (!cur.JointOperationUnlocked && nxt.JointOperationUnlocked)
+            {
+                sb.AppendLine(
+                    "MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockJointOperation"
+                        .Translate());
+            }
+            else if (cur.JointOperationUnlocked
+                     && nxt.JointOperationUnlocked
+                     && !Mathf.Approximately(
+                         cur.JointOperationSupportPointsFactor,
+                         nxt.JointOperationSupportPointsFactor))
+            {
+                sb.AppendLine(
+                    "MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.JointOperationSupportScale"
+                        .Translate(
+                            Percent(cur.JointOperationSupportPointsFactor),
+                            Percent(nxt.JointOperationSupportPointsFactor)));
             }
         }
 
@@ -1148,7 +1185,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 SymbiosisCovenantFactionRecord? record = state.GetRecord(selectedFaction);
                 bool hasRecord = record != null && selectedFaction != null;
-                // M3：新增两个系统区，L4 联合军事行动再增一区，提高内容高度。
+                // 新增两个系统区，联合军事行动再增一区，提高内容高度。
                 float contentHeight = hasRecord ? 2350f : 1450f;
                 Rect viewRect = new Rect(
                     0f,
@@ -1191,7 +1228,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     // M3：联合贸易代表团与共同防卫 DEV 状态区（即使未选择派系也显示）。
                     y = DrawTradeDelegationDevSection(state, viewRect, y);
                     y = DrawMilitaryAidDevSection(state, viewRect, y);
-                    // L4 独立机制：联合军事行动 DEV 状态区（即使未选择派系也显示）。
+                    // 联合军事行动 DEV 状态区（独立机制，即使未选择派系也显示）。
                     y = DrawJointOperationDevSection(state, viewRect, y);
 
                     DrawGlobalState(state, viewRect, y, record);
@@ -1432,22 +1469,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     () => state.DevChangeUnity(100f)
                 });
             y += 38f;
+            // 直接设置团结度的按钮使用当前权威阈值，方便一次性跳到各等级的临界值。
+            int l2 = GameComponent_SymbiosisCovenantState.CovenantLevel2UnityThreshold;
+            int l3 = GameComponent_SymbiosisCovenantState.CovenantLevel3UnityThreshold;
+            int l4 = GameComponent_SymbiosisCovenantState.CovenantLevel4UnityThreshold;
+            int l5 = GameComponent_SymbiosisCovenantState.CovenantLevel5UnityThreshold;
+
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
-                new[] { "0", "100", "250", "450" },
+                new[] { "0", l2.ToString(), l3.ToString(), l4.ToString() },
                 new Action[]
                 {
                     () => state.DevSetUnity(0f),
-                    () => state.DevSetUnity(100f),
-                    () => state.DevSetUnity(250f),
-                    () => state.DevSetUnity(450f)
+                    () => state.DevSetUnity(l2),
+                    () => state.DevSetUnity(l3),
+                    () => state.DevSetUnity(l4)
                 });
             y += 38f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "700",
+                    l5.ToString(),
                     "MAP_MechanoidMechanitor.Symbiosis.Dev.UpdateUnityDaily"
                         .Translate().ToString(),
                     "MAP_MechanoidMechanitor.Symbiosis.Dev.RecalcLevel"
@@ -1455,7 +1498,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 },
                 new Action[]
                 {
-                    () => state.DevSetUnity(700f),
+                    () => state.DevSetUnity(l5),
                     () => state.DevUpdateUnityDaily(),
                     () => state.DevRecalculateCovenantLevel()
                 });
@@ -1680,7 +1723,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return y;
         }
 
-        // L4：联合军事行动 DEV 状态区（全局系统，不依赖所选派系）。
+        // 联合军事行动 DEV 状态区（全局系统，不依赖所选派系）。
         private float DrawJointOperationDevSection(
             GameComponent_SymbiosisCovenantState state,
             Rect inRect,
@@ -1739,10 +1782,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         .Translate((NamedArgument)snap.ParticipantsCount));
                     sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.RewardValue"
                         .Translate(snap.RewardValue));
+                    sb.AppendLine(
+                        "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CurrentSupportFactor"
+                            .Translate(Percent(snap.CurrentSupportPointsFactor)));
+                    sb.AppendLine(
+                        "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotLevel"
+                            .Translate((NamedArgument)snap.CovenantLevelSnapshot));
+                    sb.AppendLine(
+                        "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotSupportFactor"
+                            .Translate(Percent(snap.SupportPointsFactorSnapshot)));
                     Widgets.Label(
-                        new Rect(inRect.x, y, inRect.width, 250f),
+                        new Rect(inRect.x, y, inRect.width, 290f),
                         sb.ToString());
-                    y += 256f;
+                    y += 296f;
                 }
             }
             finally
