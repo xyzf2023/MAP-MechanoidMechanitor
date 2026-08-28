@@ -245,9 +245,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             deferredEffectsApplied = true;
+            MechanoidMechanitorLoadDeathGuard.EndLoad();
             loadInProgress = false;
             ClearQueues();
-            MechanoidMechanitorLoadDeathGuard.EndLoad();
         }
 
         private static bool TryRestorePositiveSources()

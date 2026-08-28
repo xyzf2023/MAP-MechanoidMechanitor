@@ -39,7 +39,6 @@ namespace MAP_MechanoidMechanitor
 
         private static Game? activeGame;
         private static bool active;
-        private static readonly HashSet<string> loggedBlocked = new HashSet<string>();
 
         internal static bool Active => active;
 
@@ -50,7 +49,6 @@ namespace MAP_MechanoidMechanitor
         {
             activeGame = game;
             protectedPawns.Clear();
-            loggedBlocked.Clear();
             active = SettingEnabled;
         }
 
@@ -58,7 +56,6 @@ namespace MAP_MechanoidMechanitor
         {
             active = false;
             protectedPawns.Clear();
-            loggedBlocked.Clear();
             activeGame = null;
         }
 
@@ -71,7 +68,6 @@ namespace MAP_MechanoidMechanitor
         {
             active = false;
             protectedPawns.Clear();
-            loggedBlocked.Clear();
             activeGame = game;
         }
 
@@ -94,7 +90,9 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                if (pawn.health == null || pawn.Dead)
+                if (pawn.health == null
+                    || pawn.Dead
+                    || pawn.health.State == PawnHealthState.Dead)
                 {
                     return;
                 }
@@ -126,17 +124,31 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         internal static bool ShouldBlockKill(Pawn? pawn, DamageInfo? dinfo)
         {
-            if (!active || !SettingEnabled)
+            // 双门控：Guard 自身 active 与 SafetyCoordinator 的 LoadInProgress
+            // 必须同时为 true，才允许进入阻止死亡逻辑；任一为 false 都交回原版死亡。
+            if (!active
+                || !SettingEnabled
+                || !MechanoidMechanitorPostLoadSafetyCoordinator.LoadInProgress)
             {
                 return false;
             }
 
+            // 真实伤害来源（dinfo 有值）一律放行，绝不保护。
             if (dinfo != null)
             {
                 return false;
             }
 
             if (pawn == null)
+            {
+                return false;
+            }
+
+            // 执行 Kill Prefix 时再次确认 Pawn 当前并未进入死亡状态；
+            // 若已通过其他合法流程死亡，不应干扰其死亡收尾。
+            if (pawn.health == null
+                || pawn.Dead
+                || pawn.health.State == PawnHealthState.Dead)
             {
                 return false;
             }
@@ -200,21 +212,19 @@ namespace MAP_MechanoidMechanitor
 
         private static void LogBlockedKill(Pawn pawn, DamageInfo? dinfo, Hediff? exactCulprit)
         {
-            string id = pawn.ThingID ?? "unknown";
-            if (!loggedBlocked.Add(id))
-            {
-                return;
-            }
-
+            // 每次真正阻止一次加载期误杀都独立输出一条 Warning（不再按 Pawn 去重），
+            // 以保留完整的触发链诊断信息。
             string culprit = exactCulprit?.def?.defName ?? "null";
             Log.Warning(
                 LogPrefix + " 已阻止加载期间机械族机械师意外死亡：" +
-                $"Pawn={pawn.LabelShort}（{id}）" +
+                $"Pawn={pawn.LabelShort}（{pawn.ThingID ?? "unknown"}）" +
                 $"，Def={pawn.def?.defName ?? "unknown"}" +
                 $"，DamageInfo={(dinfo.HasValue ? dinfo.Value.ToString() : "null")}" +
                 $"，ExactCulprit={culprit}" +
                 $"，SCRIBE={Scribe.mode}" +
-                $"，LOAD_IN_PROGRESS={active}");
+                $"，GUARD_ACTIVE={active}" +
+                $"，LOAD_IN_PROGRESS={MechanoidMechanitorPostLoadSafetyCoordinator.LoadInProgress}" +
+                $"，PROGRAM={Current.ProgramState}");
 
             try
             {
@@ -241,9 +251,10 @@ namespace MAP_MechanoidMechanitor
         {
             private static void Postfix(Pawn_HealthTracker __instance)
             {
-                if (Scribe.mode != LoadSaveMode.LoadingVars
-                    && Scribe.mode != LoadSaveMode.ResolvingCrossRefs
-                    && Scribe.mode != LoadSaveMode.PostLoadInit)
+                // 仅在 LoadingVars 阶段登记：这是获取“存档数据中原本存活”事实的
+                // 主要入口。ResolvingCrossRefs / PostLoadInit 已属后续加载阶段，
+                // 若 Pawn 在那时才变为 Alive，不代表其存档中原本存活，禁止重新登记。
+                if (Scribe.mode != LoadSaveMode.LoadingVars)
                 {
                     return;
                 }
@@ -267,35 +278,6 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 RegisterLoadedMechanitor(__instance);
-            }
-        }
-
-        [HarmonyPatch(typeof(GameComponentUtility), nameof(GameComponentUtility.LoadedGame))]
-        private static class LoadedGamePatch
-        {
-            private static void Prefix()
-            {
-                try
-                {
-                    if (!active || !SettingEnabled)
-                    {
-                        return;
-                    }
-
-                    IReadOnlyList<MechanoidMechanitorRegistrySnapshotEntry> entries =
-                        GameComponent_MechanoidMechanitorRegistry
-                            .GetPersistentRecordSnapshot();
-                    for (int i = 0; i < entries.Count; i++)
-                    {
-                        RegisterLoadedMechanitor(entries[i].Pawn);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.ErrorOnce(
-                        LogPrefix + " 读档完成阶段登记受保护机械族机械师异常：" + ex,
-                        LogKeyBase + 2);
-                }
             }
         }
 
