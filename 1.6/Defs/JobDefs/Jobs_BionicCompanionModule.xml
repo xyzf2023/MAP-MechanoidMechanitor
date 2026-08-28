@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
+  <!-- 旧 JobDef 保留用于旧存档兼容；新右键操作不再创建。driverClass 重定向到通用安装 Driver。 -->
   <JobDef>
     <defName>MAP_UseBionicCompanionModule</defName>
     <label>安装仿生伴侣模块</label>
-    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseBionicCompanionModule</driverClass>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_InstallMechanoidModule</driverClass>
     <reportString>正在安装仿生伴侣模块。</reportString>
   </JobDef>
 </Defs>

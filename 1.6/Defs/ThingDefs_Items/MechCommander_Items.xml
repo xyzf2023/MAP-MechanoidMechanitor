@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-  <ThingDef ParentName="MechanitorImplantBase">
+  <!--
+    自律指令核心与仿生伴侣模块的通用主动安装框架父级。
+    继续继承原版 MechanitorImplantBase（不直接获得 recipeMaker，不会自动生成制作配方），
+    但不继承 MechanitorImplantCraftableBase。
+    通过 <comps Inherit="False"> 丢弃原版继承来的 CompProperties_UseEffectDestroySelf，
+    改由通用安装流程在效果成功后才统一销毁物品。
+  -->
+  <ThingDef Abstract="True" Name="MAP_MechanoidMechanitorInstallableModuleBase" ParentName="MechanitorImplantBase">
+    <stackLimit>1</stackLimit>
+    <techLevel>Archotech</techLevel>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+      <Beauty>-4</Beauty>
+      <DeteriorationRate>0</DeteriorationRate>
+      <Mass>1</Mass>
+      <MarketValue>3000</MarketValue>
+    </statBases>
+    <comps Inherit="False">
+      <li Class="CompProperties_Forbiddable"/>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_InstallableMechanoidModule"/>
+    </comps>
+    <thingCategories Inherit="False">
+      <li>MAP_MechanoidMechanitorItems</li>
+    </thingCategories>
+  </ThingDef>
+
+  <ThingDef ParentName="MAP_MechanoidMechanitorInstallableModuleBase">
     <defName>MAP_AutonomousDirectiveCore</defName>
     <label>自律指令核心</label>
     <description>为机械体提供自主意识的超凡核心，能让机械体成为机械族机械师。选中机械体并右键以下达使用命令。</description>
@@ -9,24 +35,15 @@
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>1.0</drawSize>
     </graphicData>
-    <stackLimit>1</stackLimit>
-    <statBases>
-      <MaxHitPoints>100</MaxHitPoints>
-      <Beauty>-4</Beauty>
-      <DeteriorationRate>0</DeteriorationRate>
-      <Mass>1</Mass>
-      <MarketValue>3000</MarketValue>
-    </statBases>
-    <comps>
-      <li Class="CompProperties_Forbiddable"/>
-    </comps>
     <tradeTags>
       <li>ExoticMisc</li>
     </tradeTags>
-    <techLevel>Archotech</techLevel>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AutonomousDirectiveCoreInstallEffect"/>
+    </comps>
   </ThingDef>
 
-  <ThingDef ParentName="MechanitorImplantBase">
+  <ThingDef ParentName="MAP_MechanoidMechanitorInstallableModuleBase">
     <defName>MAP_BionicCompanionModule</defName>
     <label>仿生伴侣模块</label>
     <description>一种由超凡科技打造的机械族模块。机械族安装后将拥有情感模拟器，并能通过人造子宫孕育生命。</description>
@@ -35,17 +52,8 @@
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>1.0</drawSize>
     </graphicData>
-    <stackLimit>1</stackLimit>
-    <statBases>
-      <MaxHitPoints>100</MaxHitPoints>
-      <Beauty>-4</Beauty>
-      <DeteriorationRate>0</DeteriorationRate>
-      <Mass>1</Mass>
-      <MarketValue>3000</MarketValue>
-    </statBases>
     <comps>
-      <li Class="CompProperties_Forbiddable"/>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_BionicCompanionModuleInstallEffect"/>
     </comps>
-    <techLevel>Archotech</techLevel>
   </ThingDef>
 </Defs>

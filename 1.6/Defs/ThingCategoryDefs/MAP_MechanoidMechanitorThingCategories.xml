@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <!-- 身体部件 → 机械族机械师（仅本 MOD 植入体，通过 MechanitorImplantCraftableBase 统一继承） -->
+  <ThingCategoryDef>
+    <defName>MAP_MechanoidMechanitorBodyParts</defName>
+    <label>机械族机械师</label>
+    <parent>BodyParts</parent>
+  </ThingCategoryDef>
+
+  <!-- 物品 → 机械族机械师（自律指令核心 / 仿生伴侣模块等主动安装模块） -->
+  <ThingCategoryDef>
+    <defName>MAP_MechanoidMechanitorItems</defName>
+    <label>机械族机械师</label>
+    <parent>Items</parent>
+  </ThingCategoryDef>
+</Defs>

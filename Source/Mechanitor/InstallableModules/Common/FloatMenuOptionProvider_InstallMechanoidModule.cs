@@ -6,12 +6,12 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
-    public class FloatMenuOptionProvider_UseAutonomousDirectiveCore : FloatMenuOptionProvider
+    /// <summary>
+    /// 机械族模块通用右键安装入口。
+    /// 只处理拥有 CompInstallableMechanoidModule 的物品，不硬编码任何模块的 defName。
+    /// </summary>
+    public class FloatMenuOptionProvider_InstallMechanoidModule : FloatMenuOptionProvider
     {
-        private const string AutonomousDirectiveCoreDefName = "MAP_AutonomousDirectiveCore";
-        private const string InstallLabel = "安装自律指令核心";
-        private const string AlreadyMechanitorSuffix = "：已经是机械族机械师";
-
         protected override bool Drafted => true;
         protected override bool Undrafted => true;
         protected override bool Multiselect => false;
@@ -26,34 +26,47 @@ namespace MAP_MechanoidMechanitor
             Thing clickedThing,
             FloatMenuContext context)
         {
-            if (clickedThing?.def?.defName != AutonomousDirectiveCoreDefName)
+            if (clickedThing == null)
+            {
+                yield break;
+            }
+
+            CompInstallableMechanoidModule? comp =
+                clickedThing.TryGetComp<CompInstallableMechanoidModule>();
+            if (comp == null)
             {
                 yield break;
             }
 
             Pawn pawn = context.FirstSelectedPawn;
-            if (!IsEligibleInstaller(pawn))
+            if (!comp.IsValidInstaller(pawn))
             {
                 yield break;
             }
 
-            if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            CompMechanoidModuleInstallEffect? effect = comp.TryGetInstallEffect();
+            if (effect == null)
             {
-                yield return new FloatMenuOption(
-                    InstallLabel + AlreadyMechanitorSuffix,
-                    null);
                 yield break;
             }
 
-            if (!MechanoidMechanitorRoleUtility.CanBecomeAcquiredMechanoidMechanitor(pawn))
+            string baseLabel = comp.InstallOptionLabel;
+
+            if (!effect.ShouldShowOption(pawn, out string? disabledReason))
             {
+                yield break;
+            }
+
+            if (!disabledReason.NullOrEmpty())
+            {
+                yield return new FloatMenuOption(baseLabel + disabledReason, null);
                 yield break;
             }
 
             if (!pawn.CanReach(clickedThing, PathEndMode.Touch, Danger.Deadly))
             {
                 yield return new FloatMenuOption(
-                    InstallLabel + ": " + "NoPath".Translate().CapitalizeFirst(),
+                    baseLabel + ": " + "NoPath".Translate().CapitalizeFirst(),
                     null);
                 yield break;
             }
@@ -61,36 +74,24 @@ namespace MAP_MechanoidMechanitor
             if (!pawn.CanReserve(clickedThing))
             {
                 yield return new FloatMenuOption(
-                    InstallLabel + ": " + "Reserved".Translate().CapitalizeFirst(),
+                    baseLabel + ": " + "Reserved".Translate().CapitalizeFirst(),
                     null);
                 yield break;
             }
 
             Action startJob = () => StartJob(pawn, clickedThing);
             yield return FloatMenuUtility.DecoratePrioritizedTask(
-                new FloatMenuOption(InstallLabel, startJob),
+                new FloatMenuOption(baseLabel, startJob),
                 pawn,
                 clickedThing,
                 reservedText: "Reserved");
-        }
-
-        private static bool IsEligibleInstaller(Pawn? pawn)
-        {
-            return ModsConfig.BiotechActive
-                && pawn != null
-                && !pawn.Dead
-                && !pawn.Destroyed
-                && pawn.RaceProps.IsMechanoid
-                && pawn.Faction != null
-                && pawn.Faction.IsPlayerSafe()
-                && pawn.health?.hediffSet != null;
         }
 
         private static void StartJob(Pawn pawn, Thing module)
         {
             module.SetForbidden(false, false);
             Job job = JobMaker.MakeJob(
-                MAPMechanitor_JobDefOf.MAP_UseAutonomousDirectiveCore,
+                MAPMechanitor_JobDefOf.MAP_InstallMechanoidModule,
                 module);
             pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
         }

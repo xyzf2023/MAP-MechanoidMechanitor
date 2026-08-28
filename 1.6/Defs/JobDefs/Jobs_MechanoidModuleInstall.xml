@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <!-- 自律指令核心 / 仿生伴侣模块共用的主动安装 Job；reportString 用 {TargetA} 动态显示目标。 -->
+  <JobDef>
+    <defName>MAP_InstallMechanoidModule</defName>
+    <label>安装机械族机械师模块</label>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_InstallMechanoidModule</driverClass>
+    <reportString>正在安装{TargetA}。</reportString>
+  </JobDef>
+</Defs>

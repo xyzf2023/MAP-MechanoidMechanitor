@@ -9,6 +9,9 @@ namespace MAP_MechanoidMechanitor
         public static JobDef MAP_MechanoidMechanitorUseBossChipForBandwidth = null!;
         public static JobDef MAP_UseAutonomousDirectiveCore = null!;
         public static JobDef MAP_UseBionicCompanionModule = null!;
+
+        // 自律指令核心 / 仿生伴侣模块共用的主动安装 JobDef。
+        public static JobDef MAP_InstallMechanoidModule = null!;
         public static JobDef MAP_TransferMechanicalConsciousness = null!;
         public static JobDef MAP_SyntheticGiveBirth = null!;
         public static JobDef MAP_ContactMechanoidOvermind = null!;
