@@ -220,9 +220,10 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
         // ============ Patch 3：TeacherRole.CanAcceptPawn(Pawn) ============
 
         /// <summary>
-        /// Postfix：具备 ClassroomTeaching 能力的机械族 Pawn 仅在 Education 原结果已 Accept 时保留，
-        /// 且必须具备 timetable 数据层（ColonistLikeTimetable），
-        /// 且当前实时 subjectLogic 属于 SkillClassLogic / DaycareClassLogic（含派生）时才放行。
+        /// Postfix：MAP 仅在 Education 原始结果已 Accepted 时施加额外兼容限制；
+        /// Education 原始拒绝结果及 Reason 永远优先保留，绝不被 MAP 覆盖。
+        /// 仅当 Education 原本接受 Pawn 后，才继续检查 timetable 数据层（ColonistLikeTimetable）
+        /// 以及当前实时 subjectLogic 是否属于 SkillClassLogic / DaycareClassLogic（含派生）。
         /// 严禁把 Education 原本的拒绝改成接受；Proficiency 与未知课程一律拒绝。
         /// 读取 studyGroup / subjectLogic 反射异常时按白名单安全原则 fail-closed 拒绝，
         /// 不再保留 Education 原先的 Accepted=true（无法证明课程类型即默认拒绝）。
@@ -249,19 +250,21 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                 return;
             }
 
+            // MAP 仅在 Education 原始结果已 Accepted 时施加额外兼容限制；
+            // Education 原始拒绝结果及 Reason 永远优先保留，绝不被 MAP 覆盖。
+            if (!__result.Accepted)
+            {
+                return;
+            }
+
             // 拥有 ClassroomTeaching 但缺少 timetable 数据层属于配置/生命周期错误，fail-closed 拒绝。
+            // 此分支只在 Education 原本接受 Pawn 后才可能生效。
             if (!MechanoidMechanitorCapabilityUtility.HasCapability(
                     __0,
                     MechanoidMechanitorCapability.ColonistLikeTimetable)
                 || __0.timetable == null)
             {
                 __result = RejectWithReason(ReasonMissingTeachingInfrastructure);
-                return;
-            }
-
-            // 严禁把 Education 原本的拒绝改成接受。
-            if (!__result.Accepted)
-            {
                 return;
             }
 
