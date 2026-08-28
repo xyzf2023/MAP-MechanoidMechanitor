@@ -7,7 +7,7 @@
       <li>Map_PlayerHome</li>
     </targetTags>
     <workerClass>MAP_MechanoidMechanitor.Scenarios.IncidentWorker_InsectPursuit</workerClass>
-    <category>ThreatBig</category>
+    <category>Special</category>
     <baseChance>0</baseChance>
     <canOccurOnAllPlanetLayers>true</canOccurOnAllPlanetLayers>
   </IncidentDef>

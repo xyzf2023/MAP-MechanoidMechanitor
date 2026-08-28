@@ -39,10 +39,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 return false;
             }
-
+            
             // 不依赖 CanFireNowSub 是否被提前调用：自身再次通过 Manager 统一业务入口校验。
-            // 原版 IncidentWorker.TryExecute 成功后才会 RecordIncidentFired，
-            // 让“虫族追猎”成为正式 RimWorld Incident。
+            // 通过正式 IncidentDef / IncidentWorker 入口执行，使“虫族追猎”可以被
+            // RimWorld Incident 系统及其他 MOD 以 MAP_InsectPursuit 精确引用。
             return manager.TryStartHuntOn(map, refreshCooldown: true);
         }
     }
