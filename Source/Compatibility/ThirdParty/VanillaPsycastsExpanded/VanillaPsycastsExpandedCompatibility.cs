@@ -14,8 +14,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
     /// 仅当 VPE 与前置 VEF（OskarPotocki.VanillaFactionsExpanded.Core）均已加载，
     /// 且全部第三方反射目标按完整类型名精确解析成功后：
     /// 1) 为所有机械族 ThingDef 动态注入 VEF.Abilities.CompAbilities 能力容器，并补充 VPE 灵能树页签；
-    /// 2) 安装四个显式 Harmony 补丁（机械师身份初始化 Postfix、旧档恢复 Postfix、
-    ///    灵能中枢升级前 Prefix、灵能中枢完成后 Postfix），驱动幂等的 Pawn VPE 状态补齐。
+    /// 2) 安装五个显式 Harmony 补丁（机械师身份初始化 Postfix、旧档恢复 Postfix、
+    ///    灵能中枢升级前 Prefix、灵能中枢完成后 Postfix、VEF Ability Gizmo 可见性 Transpiler），
+    ///    驱动幂等的 Pawn VPE 状态补齐。
     /// 未加载 VPE 时返回 Inactive（静默，不输出警告）；任一第三方目标签名不符返回 TargetChanged；
     /// Def 注入或补丁安装发生本模块自身异常返回 Failed。
     /// 全程不使用 VEF.dll / VPE.dll 静态引用，不添加 [HarmonyPatch]、不使用 PatchAll，
@@ -35,6 +36,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             "VanillaPsycastsExpanded.Hediff_PsycastAbilities";
         private const string ITabPsycastsTypeName =
             "VanillaPsycastsExpanded.UI.ITab_Pawn_Psycasts";
+
+        private const string VefAbilityTypeName = "VEF.Abilities.Ability";
 
         private const string VpeHediffDefName = "VPE_PsycastAbilityImplant";
 
@@ -107,7 +110,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     ModuleId, DisplayName, PackageId, ownTargetFailure);
             }
 
-            // 第五步：精确解析本项目四个补丁方法并校验签名。
+            // 第五步：精确解析本项目四个补丁方法以及第五个入口 Transpiler，并校验签名。
             MethodInfo? postfixEnsureRoleState = GetPatchMethod(
                 nameof(VanillaPsycastsExpandedCompatibilityPatches
                     .Postfix_EnsureRoleState));
@@ -147,6 +150,25 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                         + " / "
                         + nameof(VanillaPsycastsExpandedCompatibilityPatches
                             .Postfix_TryGainPsylinkLevel)));
+            }
+
+            // 第五个入口 Transpiler 精确解析与签名校验（static、
+            // 返回 IEnumerable<CodeInstruction>、恰好一个 IEnumerable<CodeInstruction> 参数）。
+            MethodInfo? transpilerAbilityShowGizmoOnPawn = GetPatchMethod(
+                nameof(VanillaPsycastsExpandedCompatibilityPatches
+                    .Transpiler_AbilityShowGizmoOnPawn));
+            if (transpilerAbilityShowGizmoOnPawn == null
+                || !IsValidTranspiler(transpilerAbilityShowGizmoOnPawn))
+            {
+                return ThirdPartyCompatibilityResult.CreateFailed(
+                    ModuleId,
+                    DisplayName,
+                    PackageId,
+                    "无法解析本项目的原版灵能拓展兼容 Transpiler 方法或其签名不符。",
+                    new MissingMethodException(
+                        typeof(VanillaPsycastsExpandedCompatibilityPatches).FullName,
+                        nameof(VanillaPsycastsExpandedCompatibilityPatches
+                            .Transpiler_AbilityShowGizmoOnPawn)));
             }
 
             // 第六步：先显式完成 VPE 灵能树页签（ITab_Pawn_Psycasts）类型的静态构造，
@@ -239,10 +261,12 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     ensureRoleStateMethod!,
                     tryRestorePositiveSourcesMethod!,
                     tryGainPsylinkLevelMethod!,
+                    targets.AbilityShowGizmoOnPawnMethod,
                     postfixEnsureRoleState!,
                     postfixTryRestore!,
                     prefixTryGainPsylinkLevel!,
-                    postfixTryGainPsylinkLevel!);
+                    postfixTryGainPsylinkLevel!,
+                    transpilerAbilityShowGizmoOnPawn!);
             }
             catch (Exception ex)
             {
@@ -266,12 +290,14 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 + $"{injectionTracker.ExistingCompCount} 个原本已有 CompAbilities；"
                 + $"{injectionTracker.SkippedShieldConflictCount} 个因其他护盾 Comp 冲突跳过；"
                 + $"成功补充 VPE 灵能页签 {injectionTracker.AddedTabCount} 个定义；"
-                + "已安装四个兼容入口：机械师身份初始化修复"
+                + "已安装五个兼容入口：机械师身份初始化修复"
                 + "（MechanoidMechanitorRoleUtility.EnsureRoleState Postfix）、"
                 + "旧档恢复修复（MechanoidMechanitorPostLoadSafetyCoordinator."
                 + "TryRestorePositiveSources Postfix）、"
                 + "灵能中枢升级前修复（PsychicCoreUtility.TryGainPsylinkLevel Prefix）、"
-                + "灵能中枢完成后的即时修复（PsychicCoreUtility.TryGainPsylinkLevel Postfix）。");
+                + "灵能中枢完成后的即时修复（PsychicCoreUtility.TryGainPsylinkLevel Postfix）、"
+                + "VEF Ability Gizmo 可见性修复"
+                + "（VEF.Abilities.Ability.ShowGizmoOnPawn Transpiler）。");
         }
 
         // ==================== 反射目标解析 ====================
@@ -333,6 +359,38 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     out typeFailure))
             {
                 failureReason = typeFailure;
+                return false;
+            }
+
+            // —— 5b. VEF.Abilities.Ability 类型解析（从 VEF 程序集按完整类型名唯一解析）。 ——
+            if (!ThirdPartyCompatibilityTargetResolver.TryResolveUniqueType(
+                    vefMod,
+                    VefAbilityTypeName,
+                    out Type? vefAbilityType,
+                    out typeFailure))
+            {
+                failureReason = typeFailure;
+                return false;
+            }
+
+            if (!vefAbilityType!.IsClass)
+            {
+                failureReason =
+                    $"{VefAbilityTypeName} 不是 class，签名不符。";
+                return false;
+            }
+
+            // —— 5c. VEF.Abilities.Ability.ShowGizmoOnPawn() 实例方法精确解析。 ——
+            if (!ThirdPartyCompatibilityTargetResolver.TryResolveUniqueInstanceMethod(
+                    vefMod,
+                    VefAbilityTypeName,
+                    "ShowGizmoOnPawn",
+                    typeof(bool),
+                    Type.EmptyTypes,
+                    out MethodInfo? abilityShowGizmoOnPawnMethod,
+                    out string showGizmoMethodFailure))
+            {
+                failureReason = showGizmoMethodFailure;
                 return false;
             }
 
@@ -558,7 +616,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 minShieldSizeField!,
                 maxShieldSizeField!,
                 shieldColorField!,
-                energyLossPerDamageField!);
+                energyLossPerDamageField!,
+                vefAbilityType!,
+                abilityShowGizmoOnPawnMethod!);
             return true;
         }
 
@@ -673,6 +733,23 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             ParameterInfo[] parameters = method.GetParameters();
             return parameters.Length == 1
                 && parameters[0].ParameterType == parameterType;
+        }
+
+        /// <summary>
+        /// 校验第五个入口 Transpiler 的签名：static、返回 IEnumerable&lt;CodeInstruction&gt;、
+        /// 恰好一个 IEnumerable&lt;CodeInstruction&gt; 参数。不得因校验而静态引用 VEF 类型。
+        /// </summary>
+        private static bool IsValidTranspiler(MethodInfo method)
+        {
+            if (!method.IsStatic
+                || method.ReturnType != typeof(IEnumerable<CodeInstruction>))
+            {
+                return false;
+            }
+
+            ParameterInfo[] parameters = method.GetParameters();
+            return parameters.Length == 1
+                && parameters[0].ParameterType == typeof(IEnumerable<CodeInstruction>);
         }
 
         // ==================== Def 注入 ====================
@@ -888,46 +965,42 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             MethodInfo ensureRoleStateMethod,
             MethodInfo tryRestorePositiveSourcesMethod,
             MethodInfo tryGainPsylinkLevelMethod,
+            MethodInfo abilityShowGizmoOnPawnMethod,
             MethodInfo postfixEnsureRoleState,
             MethodInfo postfixTryRestore,
             MethodInfo prefixTryGainPsylinkLevel,
-            MethodInfo postfixTryGainPsylinkLevel)
+            MethodInfo postfixTryGainPsylinkLevel,
+            MethodInfo transpilerAbilityShowGizmoOnPawn)
         {
-            harmony.Patch(
-                ensureRoleStateMethod,
-                postfix: new HarmonyMethod(postfixEnsureRoleState));
             try
             {
+                // 五个补丁入口在统一 try 中依次显式安装；任一安装异常时，
+                // 由下方 catch 通过具体 original / patch MethodInfo 定向撤销全部本模块补丁，
+                // 不调用 UnpatchAll，不移除其他 MOD 或模块的补丁。
+                harmony.Patch(
+                    ensureRoleStateMethod,
+                    postfix: new HarmonyMethod(postfixEnsureRoleState));
                 harmony.Patch(
                     tryRestorePositiveSourcesMethod,
                     postfix: new HarmonyMethod(postfixTryRestore));
-            }
-            catch
-            {
-                // 第二个补丁安装失败时，按原方法与本模块补丁方法定向撤销第一个补丁。
-                // 不得调用 UnpatchAll。
-                harmony.Unpatch(ensureRoleStateMethod, postfixEnsureRoleState);
-                throw;
-            }
-
-            try
-            {
                 harmony.Patch(
                     tryGainPsylinkLevelMethod,
                     prefix: new HarmonyMethod(prefixTryGainPsylinkLevel),
                     postfix: new HarmonyMethod(postfixTryGainPsylinkLevel));
+                harmony.Patch(
+                    abilityShowGizmoOnPawnMethod,
+                    transpiler: new HarmonyMethod(transpilerAbilityShowGizmoOnPawn));
             }
-            catch
+            catch (Exception)
             {
-                // 第三个补丁安装失败时（可能发生在 Prefix 或 Postfix 任一阶段）：
-                // 先定向撤销本方法上可能已安装的 Prefix / Postfix，再撤销前两个入口，
-                // 随后重新抛出原始异常，由 Apply 统一执行 DefInjectionTracker.Rollback()
-                // 与 Runtime.Clear()。全程使用具体 MethodInfo 定向 Unpatch，
-                // 不调用 UnpatchAll，不移除其他模块或其他 MOD 的 Harmony 补丁。
+                // 定向撤销五个本模块补丁入口：使用具体 original 与具体 patch MethodInfo，
+                // 不调用 UnpatchAll，不删除其他 MOD 的补丁。
+                // UnpatchQuietly 自身异常被吞掉，避免掩盖最初的安装异常。
+                UnpatchQuietly(harmony, ensureRoleStateMethod, postfixEnsureRoleState);
+                UnpatchQuietly(harmony, tryRestorePositiveSourcesMethod, postfixTryRestore);
                 UnpatchQuietly(harmony, tryGainPsylinkLevelMethod, prefixTryGainPsylinkLevel);
                 UnpatchQuietly(harmony, tryGainPsylinkLevelMethod, postfixTryGainPsylinkLevel);
-                UnpatchQuietly(harmony, tryRestorePositiveSourcesMethod, postfixTryRestore);
-                UnpatchQuietly(harmony, ensureRoleStateMethod, postfixEnsureRoleState);
+                UnpatchQuietly(harmony, abilityShowGizmoOnPawnMethod, transpilerAbilityShowGizmoOnPawn);
                 throw;
             }
         }
@@ -1099,7 +1172,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 FieldInfo minShieldSizeField,
                 FieldInfo maxShieldSizeField,
                 FieldInfo shieldColorField,
-                FieldInfo energyLossPerDamageField)
+                FieldInfo energyLossPerDamageField,
+                Type vefAbilityType,
+                MethodInfo abilityShowGizmoOnPawnMethod)
             {
                 CompAbilitiesType = compAbilitiesType;
                 ShieldCompType = shieldCompType;
@@ -1119,6 +1194,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 MaxShieldSizeField = maxShieldSizeField;
                 ShieldColorField = shieldColorField;
                 EnergyLossPerDamageField = energyLossPerDamageField;
+                VefAbilityType = vefAbilityType;
+                AbilityShowGizmoOnPawnMethod = abilityShowGizmoOnPawnMethod;
             }
 
             public Type CompAbilitiesType { get; }
@@ -1156,6 +1233,10 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             public FieldInfo ShieldColorField { get; }
 
             public FieldInfo EnergyLossPerDamageField { get; }
+
+            public Type VefAbilityType { get; }
+
+            public MethodInfo AbilityShowGizmoOnPawnMethod { get; }
         }
     }
 }
