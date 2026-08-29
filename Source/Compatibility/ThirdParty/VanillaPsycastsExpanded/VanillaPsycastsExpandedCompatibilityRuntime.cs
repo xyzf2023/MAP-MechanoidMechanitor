@@ -26,6 +26,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
         private const int ErrorKeyInitialize = unchecked((int)0x5650_0004);
         private const int ErrorKeyRollback = unchecked((int)0x5650_0005);
         private const int ErrorKeyBatch = unchecked((int)0x5650_0006);
+        private const int ErrorKeyPawnStateUnexpected = unchecked((int)0x5650_0007);
+        private const int ErrorKeyBatchPawn = unchecked((int)0x5650_0008);
 
         private static Type? compAbilitiesType;
         private static Type? hediffPsycastAbilitiesType;
@@ -94,6 +96,31 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 return;
             }
 
+            try
+            {
+                EnsurePawnStateCore(pawn);
+            }
+            catch (Exception ex)
+            {
+                // 完整异常边界：单 Pawn 修复流程中任何未预期异常都只记录一次，
+                // 绝不向调用方（EnsureRoleState Postfix / 批量修复）传播，
+                // 不影响机械师初始化或其他 Pawn 的修复。
+                Log.ErrorOnce(
+                    LogPrefix + "单 Pawn 的 VPE 状态修复发生未预期异常，"
+                    + $"已跳过该 Pawn（{SafePawnId(pawn)}），"
+                    + "不影响机械师初始化或其他 Pawn：" + ex,
+                    ErrorKeyPawnStateUnexpected);
+            }
+        }
+
+        /// <summary>
+        /// 单 Pawn VPE 状态补齐的实际逻辑。仅由 EnsurePawnState 调用，
+        /// 任何未预期异常都会由公开入口统一拦截。
+        /// 保留原有全部判断与精细回滚：已有 VPE Hediff 时完全不修改，
+        /// 类型不符或初始化失败时只回滚本次新增的 Hediff。
+        /// </summary>
+        private static void EnsurePawnStateCore(Pawn? pawn)
+        {
             if (!ModsConfig.RoyaltyActive)
             {
                 return;
@@ -227,20 +254,38 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 return;
             }
 
+            IReadOnlyList<MechanoidMechanitorRegistrySnapshotEntry> snapshot;
             try
             {
-                IReadOnlyList<MechanoidMechanitorRegistrySnapshotEntry> snapshot =
-                    GameComponent_MechanoidMechanitorRegistry.GetPersistentRecordSnapshot();
-                for (int i = 0; i < snapshot.Count; i++)
-                {
-                    EnsurePawnState(snapshot[i].Pawn);
-                }
+                snapshot =
+                    GameComponent_MechanoidMechanitorRegistry
+                        .GetPersistentRecordSnapshot();
             }
             catch (Exception ex)
             {
                 Log.ErrorOnce(
-                    LogPrefix + "旧档机械族机械师 VPE 状态批量修复失败：" + ex,
+                    LogPrefix + "旧档机械族机械师 VPE 状态批量修复："
+                    + "获取持久化记录快照失败，已停止本次批量修复：" + ex,
                     ErrorKeyBatch);
+                return;
+            }
+
+            // 逐条调用公开安全入口（EnsurePawnState 自带完整异常边界）；
+            // 此处每个 Pawn 再保留独立的兜底 try/catch，即使未来入口被改动，
+            // 单个异常记录也绝不中断后续记录的检查。
+            for (int i = 0; i < snapshot.Count; i++)
+            {
+                try
+                {
+                    EnsurePawnState(snapshot[i].Pawn);
+                }
+                catch (Exception ex)
+                {
+                    Log.ErrorOnce(
+                        LogPrefix + "旧档机械族机械师 VPE 状态批量修复："
+                        + "单个记录处理失败，已跳过该记录，继续处理后续记录：" + ex,
+                        ErrorKeyBatchPawn);
+                }
             }
         }
 
@@ -265,6 +310,28 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
         private static string FormatPawn(Pawn pawn)
         {
             return $"{pawn.LabelShort}（{pawn.ThingID}）";
+        }
+
+        /// <summary>
+        /// 异常屏障日志专用的安全 Pawn 标识：
+        /// null 返回 "&lt;null&gt;"；ThingID 访问异常时返回占位文本，绝不把日志格式化
+        /// 的异常再次抛出。不调用 FormatPawn（可能涉及更复杂的显示逻辑）。
+        /// </summary>
+        private static string SafePawnId(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return "<null>";
+            }
+
+            try
+            {
+                return pawn.ThingID;
+            }
+            catch (Exception ex)
+            {
+                return "<ThingID 访问失败：" + ex.GetType().Name + ">";
+            }
         }
     }
 }

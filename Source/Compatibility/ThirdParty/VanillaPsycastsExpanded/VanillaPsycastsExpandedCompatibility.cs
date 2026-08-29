@@ -189,11 +189,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                         "Runtime.Configure did not configure the runtime."));
             }
 
-            DefInjectionTracker? injectionTracker = null;
+            DefInjectionTracker injectionTracker = new DefInjectionTracker();
             try
             {
-                injectionTracker = InjectAbilitiesIntoMechanoidDefs(
-                    targets, sharedPsycastsTab);
+                InjectAbilitiesIntoMechanoidDefs(
+                    targets, sharedPsycastsTab, injectionTracker);
                 InstallPatches(
                     harmony,
                     ensureRoleStateMethod!,
@@ -203,9 +203,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             }
             catch (Exception ex)
             {
-                // 尽量回滚本轮新增的组件 / 页签，随后清除 Runtime 配置。
+                // 无条件回滚本轮新增的组件 / 页签，随后清除 Runtime 配置。
                 // 绝不删除原本已经存在的内容。
-                injectionTracker?.Rollback();
+                injectionTracker.Rollback();
                 VanillaPsycastsExpandedCompatibilityRuntime.Clear();
                 return ThirdPartyCompatibilityResult.CreateFailed(
                     ModuleId,
@@ -219,7 +219,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 ModuleId,
                 DisplayName,
                 PackageId,
-                $"已为 {injectionTracker!.AddedCompCount} 个机械族定义新增 CompAbilities；"
+                $"已为 {injectionTracker.AddedCompCount} 个机械族定义新增 CompAbilities；"
                 + $"{injectionTracker.ExistingCompCount} 个原本已有 CompAbilities；"
                 + $"{injectionTracker.SkippedShieldConflictCount} 个因其他护盾 Comp 冲突跳过；"
                 + $"成功补充 VPE 灵能页签 {injectionTracker.AddedTabCount} 个定义；"
@@ -599,12 +599,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
 
         // ==================== Def 注入 ====================
 
-        private static DefInjectionTracker InjectAbilitiesIntoMechanoidDefs(
+        private static void InjectAbilitiesIntoMechanoidDefs(
             ResolvedTargets targets,
-            InspectTabBase sharedPsycastsTab)
+            InspectTabBase sharedPsycastsTab,
+            DefInjectionTracker tracker)
         {
-            DefInjectionTracker tracker = new DefInjectionTracker();
-
             List<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading;
             for (int i = 0; i < defs.Count; i++)
             {
@@ -647,7 +646,6 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     + " Comp 而跳过，未添加 CompAbilities 与灵能页签。");
             }
 
-            return tracker;
         }
 
         private static bool ContainsAbilitiesComp(ThingDef def, ResolvedTargets targets)
