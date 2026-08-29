@@ -1,5 +1,6 @@
 using System;
 using HarmonyLib;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
@@ -19,7 +20,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new GlitterworldDestroyer5DryseaCompatibility(),
             new GlitterworldDestroyer5ExpansionCompatibility(),
             new GlitterworldDestroyer5ExpansionMechFusionCompatibility(),
-            new ProgressionEducationCompatibility()
+            new ProgressionEducationCompatibility(),
+            new DeadManSwitchCompatibility()
         };
 
         public static void ApplyAll(Harmony harmony)
