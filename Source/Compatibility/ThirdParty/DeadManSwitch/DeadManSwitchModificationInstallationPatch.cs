@@ -101,7 +101,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
 
             // 在 getter 调用之前插入 ldarg.0（当前 CompTargetable_AddHediffOnTarget 实例，作为 ThingComp）。
             // 原 getter 调用上的分支标签必须转移到新增的 ldarg.0 指令，避免分支跳过参数加载导致栈失衡。
-            // 随后把原 getter 调用替换为对辅助方法的 Call；栈顺序为 Pawn（原 usedBy 加载）在上、ThingComp（this）在下。
+            // 随后把原 getter 调用替换为对辅助方法的 Call；调用前的求值栈从底到顶依次为 Pawn（原 usedBy 加载）、ThingComp（this）。
             CodeInstruction getterCall = codes[getterIndex];
             CodeInstruction loadThis = new CodeInstruction(OpCodes.Ldarg_0);
             loadThis.labels.AddRange(getterCall.labels);
