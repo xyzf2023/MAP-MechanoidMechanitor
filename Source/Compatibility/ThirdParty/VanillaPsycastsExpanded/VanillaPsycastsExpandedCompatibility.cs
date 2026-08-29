@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -148,7 +149,28 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                             .Postfix_TryGainPsylinkLevel)));
             }
 
-            // 第六步：提前取得共享页签实例，并验证返回值非空且类型兼容。
+            // 第六步：先显式完成 VPE 灵能树页签（ITab_Pawn_Psycasts）类型的静态构造，
+            // 避免随后 GetSharedInstance 在创建实例过程中触发该类型的静态构造，
+            // 进而发生同类型共享实例的重复登记（重复键异常）。
+            // 静态构造完成后，再取得已由灵拓自身登记的共享页签实例。
+            // 这一切发生在 Runtime.Configure、Def 注入与 Harmony 补丁安装之前。
+            try
+            {
+                RuntimeHelpers.RunClassConstructor(
+                    targets.ITabPsycastsType.TypeHandle);
+            }
+            catch (Exception ex)
+            {
+                // 静态初始化失败：尚未执行 Runtime.Configure / Def 注入 / 补丁安装，无需回滚。
+                return ThirdPartyCompatibilityResult.CreateTargetChanged(
+                    ModuleId,
+                    DisplayName,
+                    PackageId,
+                    "显式执行 VPE 灵能树页签类型的静态初始化失败，兼容已安全跳过：" + ex);
+            }
+
+            // 静态构造已成功执行（或此前已完成），灵拓已在内部完成共享实例的首次登记。
+            // 再次取得共享实例，此时 InspectTabManager 应直接返回既有的共享实例，不再重复登记。
             InspectTabBase? sharedPsycastsTab;
             try
             {
@@ -161,7 +183,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     ModuleId,
                     DisplayName,
                     PackageId,
-                    "获取 VPE 灵能树页签共享实例失败，兼容已安全跳过：" + ex);
+                    "VPE 灵能树页签类型已完成静态初始化，但取得其共享实例失败，兼容已安全跳过：" + ex);
             }
 
             if (sharedPsycastsTab == null
@@ -171,7 +193,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     ModuleId,
                     DisplayName,
                     PackageId,
-                    "VPE 灵能树页签共享实例为空或类型不符，兼容已安全跳过。");
+                    "VPE 灵能树页签共享实例（静态初始化后取得）为空或类型不符，兼容已安全跳过。");
             }
 
             // 第七步：解析 VPE_PsycastAbilityImplant HediffDef，并校验 hediffClass 兼容性。
