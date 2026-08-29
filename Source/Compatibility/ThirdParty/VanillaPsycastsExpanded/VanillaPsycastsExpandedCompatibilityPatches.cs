@@ -13,14 +13,17 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
     /// 本文件不添加任何 [HarmonyPatch] 特性，不使用 PatchAll；
     /// 全部补丁均由 VanillaPsycastsExpandedCompatibility.Apply
     /// 通过传入的 Harmony 实例显式 harmony.Patch() 安装。
-    /// 当前共五个入口：
+    /// 当前共六个入口：
     /// - Postfix_EnsureRoleState：机械师身份初始化（EnsureRoleState Postfix）；
     /// - Postfix_TryRestorePositiveSources：旧档恢复（TryRestorePositiveSources Postfix）；
     /// - Prefix_TryGainPsylinkLevel：已有启灵神经的升级前修复（TryGainPsylinkLevel Prefix）；
     /// - Postfix_TryGainPsylinkLevel：首次新增启灵神经后的即时修复（TryGainPsylinkLevel Postfix）；
     /// - Transpiler_AbilityShowGizmoOnPawn：把 VEF 原有的“玩家控制殖民者”判定扩充为
     ///   “玩家阵营正式机械族机械师”，其余可见性条件（showUndrafted / Drafted、
-    ///   AbilityModExtensions）仍由原方法负责。
+    ///   AbilityModExtensions）仍由原方法负责；
+    /// - Transpiler_AbilityAutoCast：把 VEF.Abilities.Ability.get_AutoCast 中唯一的
+    ///   “玩家控制殖民者”判定同样扩充为“玩家阵营正式机械族机械师”，
+    ///   使玩家可右键切换机械族机械师技能的自动释放开关，其余 AI 自动释放逻辑不变。
     /// </summary>
     internal static class VanillaPsycastsExpandedCompatibilityPatches
     {
@@ -157,6 +160,72 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             {
                 throw new InvalidOperationException(
                     "目标方法 VEF.Abilities.Ability.ShowGizmoOnPawn 中预期唯一匹配" +
+                    " Pawn.get_IsColonistPlayerControlled 调用 1 次，实际匹配 "
+                    + matchCount + " 次，兼容不能安全应用。");
+            }
+
+            return codes;
+        }
+
+        /// <summary>
+        /// 第六个兼容入口：VEF.Abilities.Ability.get_AutoCast 的 Transpiler。
+        /// 仅把 getter 体内唯一一次 Pawn.get_IsColonistPlayerControlled 调用
+        /// 原地替换为对 IsColonistPlayerControlledOrPlayerMechanoidMechanitor(Pawn) 的 call，
+        /// 等价把语义从“玩家控制殖民者”扩展为“玩家控制殖民者 或 玩家阵营正式机械族机械师”。
+        /// 替换后玩家阵营正式机械族机械师读取 autoCast 字段（由 VEF 自身 DoAction 右键切换、
+        /// 并由 VEF 自身 ExposeData 存读档），从而获得玩家可切换的自动释放开关；
+        /// 其余 Pawn 仍走 pawn.Spawned &amp;&amp; CanAutoCast 的 AI 分支。
+        /// 不插入 / 删除 / 复制任何 Pawn 栈值，两者均从栈取走一个 Pawn 再压入一个 bool，
+        /// 栈平衡保持不变；不改动右键输入处理、不补丁 DoAction、不补丁 Command_Ability。
+        /// 找不到唯一 getter 调用时不静默返回原始 IL，而是抛出明确异常，
+        /// 由 InstallPatches 统一定向回滚，避免留下半兼容状态。
+        /// </summary>
+        public static IEnumerable<CodeInstruction> Transpiler_AbilityAutoCast(
+            IEnumerable<CodeInstruction> instructions)
+        {
+            MethodInfo? colonistGetter = AccessTools.PropertyGetter(
+                typeof(Pawn),
+                nameof(Pawn.IsColonistPlayerControlled));
+            if (colonistGetter == null)
+            {
+                throw new InvalidOperationException(
+                    "原版灵能拓展兼容：无法解析 Pawn.get_IsColonistPlayerControlled，" +
+                    "无法安全安装 VEF Ability.get_AutoCast Transpiler。");
+            }
+
+            // 复用现有身份辅助判断，不再创建第二套机械族机械师身份判断。
+            // C# 的 Pawn? 仅是可空标记，运行时参数类型仍为 Pawn，故按 typeof(Pawn) 解析。
+            MethodInfo? helper = AccessTools.Method(
+                typeof(VanillaPsycastsExpandedCompatibilityPatches),
+                nameof(IsColonistPlayerControlledOrPlayerMechanoidMechanitor),
+                new[] { typeof(Pawn) });
+            if (helper == null)
+            {
+                throw new InvalidOperationException(
+                    "原版灵能拓展兼容：无法解析辅助方法" +
+                    " IsColonistPlayerControlledOrPlayerMechanoidMechanitor(Pawn)，" +
+                    "无法安全安装 VEF Ability.get_AutoCast Transpiler。");
+            }
+
+            List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
+            int matchCount = 0;
+            for (int i = 0; i < codes.Count; i++)
+            {
+                CodeInstruction instruction = codes[i];
+                if (instruction.operand is MethodInfo candidate
+                    && candidate == colonistGetter)
+                {
+                    // 原地修改以保留该 CodeInstruction 上已有的 labels 与 exception blocks。
+                    instruction.opcode = OpCodes.Call;
+                    instruction.operand = helper;
+                    matchCount++;
+                }
+            }
+
+            if (matchCount != 1)
+            {
+                throw new InvalidOperationException(
+                    "目标方法 VEF.Abilities.Ability.get_AutoCast 中预期唯一匹配" +
                     " Pawn.get_IsColonistPlayerControlled 调用 1 次，实际匹配 "
                     + matchCount + " 次，兼容不能安全应用。");
             }

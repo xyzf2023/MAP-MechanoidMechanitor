@@ -14,8 +14,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
     /// 仅当 VPE 与前置 VEF（OskarPotocki.VanillaFactionsExpanded.Core）均已加载，
     /// 且全部第三方反射目标按完整类型名精确解析成功后：
     /// 1) 为所有机械族 ThingDef 动态注入 VEF.Abilities.CompAbilities 能力容器，并补充 VPE 灵能树页签；
-    /// 2) 安装五个显式 Harmony 补丁（机械师身份初始化 Postfix、旧档恢复 Postfix、
-    ///    灵能中枢升级前 Prefix、灵能中枢完成后 Postfix、VEF Ability Gizmo 可见性 Transpiler），
+    /// 2) 安装六个显式 Harmony 补丁（机械师身份初始化 Postfix、旧档恢复 Postfix、
+    ///    灵能中枢升级前 Prefix、灵能中枢完成后 Postfix、
+    ///    VEF Ability Gizmo 可见性 Transpiler、VEF Ability 自动释放开关 Transpiler），
     ///    驱动幂等的 Pawn VPE 状态补齐。
     /// 未加载 VPE 时返回 Inactive（静默，不输出警告）；任一第三方目标签名不符返回 TargetChanged；
     /// Def 注入或补丁安装发生本模块自身异常返回 Failed。
@@ -171,6 +172,25 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                             .Transpiler_AbilityShowGizmoOnPawn)));
             }
 
+            // 第六个入口 Transpiler（VEF.Abilities.Ability.get_AutoCast）精确解析与签名校验。
+            // 必须与第五个入口使用同一套 IsValidTranspiler 签名校验，不得模糊寻找替代方法。
+            MethodInfo? transpilerAbilityAutoCast = GetPatchMethod(
+                nameof(VanillaPsycastsExpandedCompatibilityPatches
+                    .Transpiler_AbilityAutoCast));
+            if (transpilerAbilityAutoCast == null
+                || !IsValidTranspiler(transpilerAbilityAutoCast))
+            {
+                return ThirdPartyCompatibilityResult.CreateFailed(
+                    ModuleId,
+                    DisplayName,
+                    PackageId,
+                    "无法解析本项目的原版灵能拓展兼容自动释放 Transpiler 方法或其签名不符。",
+                    new MissingMethodException(
+                        typeof(VanillaPsycastsExpandedCompatibilityPatches).FullName,
+                        nameof(VanillaPsycastsExpandedCompatibilityPatches
+                            .Transpiler_AbilityAutoCast)));
+            }
+
             // 第六步：先显式完成 VPE 灵能树页签（ITab_Pawn_Psycasts）类型的静态构造，
             // 避免随后 GetSharedInstance 在创建实例过程中触发该类型的静态构造，
             // 进而发生同类型共享实例的重复登记（重复键异常）。
@@ -262,11 +282,13 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     tryRestorePositiveSourcesMethod!,
                     tryGainPsylinkLevelMethod!,
                     targets.AbilityShowGizmoOnPawnMethod,
+                    targets.AbilityAutoCastGetter,
                     postfixEnsureRoleState!,
                     postfixTryRestore!,
                     prefixTryGainPsylinkLevel!,
                     postfixTryGainPsylinkLevel!,
-                    transpilerAbilityShowGizmoOnPawn!);
+                    transpilerAbilityShowGizmoOnPawn!,
+                    transpilerAbilityAutoCast!);
             }
             catch (Exception ex)
             {
@@ -290,14 +312,16 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 + $"{injectionTracker.ExistingCompCount} 个原本已有 CompAbilities；"
                 + $"{injectionTracker.SkippedShieldConflictCount} 个因其他护盾 Comp 冲突跳过；"
                 + $"成功补充 VPE 灵能页签 {injectionTracker.AddedTabCount} 个定义；"
-                + "已安装五个兼容入口：机械师身份初始化修复"
+                + "已安装六个兼容入口：机械师身份初始化修复"
                 + "（MechanoidMechanitorRoleUtility.EnsureRoleState Postfix）、"
                 + "旧档恢复修复（MechanoidMechanitorPostLoadSafetyCoordinator."
                 + "TryRestorePositiveSources Postfix）、"
                 + "灵能中枢升级前修复（PsychicCoreUtility.TryGainPsylinkLevel Prefix）、"
                 + "灵能中枢完成后的即时修复（PsychicCoreUtility.TryGainPsylinkLevel Postfix）、"
                 + "VEF Ability Gizmo 可见性修复"
-                + "（VEF.Abilities.Ability.ShowGizmoOnPawn Transpiler）。");
+                + "（VEF.Abilities.Ability.ShowGizmoOnPawn Transpiler）、"
+                + "VEF Ability 自动释放开关修复"
+                + "（VEF.Abilities.Ability.get_AutoCast Transpiler）。");
         }
 
         // ==================== 反射目标解析 ====================
@@ -391,6 +415,44 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     out string showGizmoMethodFailure))
             {
                 failureReason = showGizmoMethodFailure;
+                return false;
+            }
+
+            // —— 5d. VEF.Abilities.Ability.get_AutoCast() 实例属性 getter 精确解析。 ——
+            // 该 getter 的语义为：玩家控制殖民者时返回 autoCast 字段，
+            // 否则返回 pawn.Spawned && CanAutoCast。机械族机械师被原版视作非殖民者，
+            // 因此永远走 AI 分支，导致玩家无法关闭自动释放。需以 Transpiler 把唯一的
+            // Pawn.get_IsColonistPlayerControlled 调用替换为玩家阵营正式机械族机械师判定。
+            // 必须使用精确唯一解析，不得模糊匹配、不得枚举后取 First()。
+            if (!ThirdPartyCompatibilityTargetResolver.TryResolveUniqueInstanceMethod(
+                    vefMod,
+                    VefAbilityTypeName,
+                    "get_AutoCast",
+                    typeof(bool),
+                    Type.EmptyTypes,
+                    out MethodInfo? abilityAutoCastGetter,
+                    out string autoCastMethodFailure))
+            {
+                failureReason = autoCastMethodFailure;
+                return false;
+            }
+
+            // 防御性校验：声明类型必须正是已解析的 VEF.Abilities.Ability，
+            // 且为属性 getter（IsSpecialName）。任何不符视为第三方目标结构变化。
+            if (abilityAutoCastGetter!.DeclaringType != vefAbilityType)
+            {
+                failureReason =
+                    $"{VefAbilityTypeName}.get_AutoCast 的声明类型" +
+                    $" {abilityAutoCastGetter.DeclaringType?.FullName} 与预期" +
+                    $" {VefAbilityTypeName} 不符，兼容已安全跳过。";
+                return false;
+            }
+
+            if (!abilityAutoCastGetter.IsSpecialName)
+            {
+                failureReason =
+                    $"{VefAbilityTypeName}.get_AutoCast 不是属性 getter" +
+                    $"（IsSpecialName 为 false），签名不符，兼容已安全跳过。";
                 return false;
             }
 
@@ -618,7 +680,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 shieldColorField!,
                 energyLossPerDamageField!,
                 vefAbilityType!,
-                abilityShowGizmoOnPawnMethod!);
+                abilityShowGizmoOnPawnMethod!,
+                abilityAutoCastGetter!);
             return true;
         }
 
@@ -966,15 +1029,17 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             MethodInfo tryRestorePositiveSourcesMethod,
             MethodInfo tryGainPsylinkLevelMethod,
             MethodInfo abilityShowGizmoOnPawnMethod,
+            MethodInfo abilityAutoCastGetter,
             MethodInfo postfixEnsureRoleState,
             MethodInfo postfixTryRestore,
             MethodInfo prefixTryGainPsylinkLevel,
             MethodInfo postfixTryGainPsylinkLevel,
-            MethodInfo transpilerAbilityShowGizmoOnPawn)
+            MethodInfo transpilerAbilityShowGizmoOnPawn,
+            MethodInfo transpilerAbilityAutoCast)
         {
             try
             {
-                // 五个补丁入口在统一 try 中依次显式安装；任一安装异常时，
+                // 六个补丁入口在统一 try 中依次显式安装；任一安装异常时，
                 // 由下方 catch 通过具体 original / patch MethodInfo 定向撤销全部本模块补丁，
                 // 不调用 UnpatchAll，不移除其他 MOD 或模块的补丁。
                 harmony.Patch(
@@ -990,17 +1055,23 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 harmony.Patch(
                     abilityShowGizmoOnPawnMethod,
                     transpiler: new HarmonyMethod(transpilerAbilityShowGizmoOnPawn));
+                harmony.Patch(
+                    abilityAutoCastGetter,
+                    transpiler: new HarmonyMethod(transpilerAbilityAutoCast));
             }
             catch (Exception)
             {
-                // 定向撤销五个本模块补丁入口：使用具体 original 与具体 patch MethodInfo，
+                // 定向撤销六个本模块补丁入口：使用具体 original 与具体 patch MethodInfo，
                 // 不调用 UnpatchAll，不删除其他 MOD 的补丁。
                 // UnpatchQuietly 自身异常被吞掉，避免掩盖最初的安装异常。
+                // 即使第六个入口自身安装失败，也必须先撤销此前已安装的五个入口，
+                // 避免留下半兼容状态。
                 UnpatchQuietly(harmony, ensureRoleStateMethod, postfixEnsureRoleState);
                 UnpatchQuietly(harmony, tryRestorePositiveSourcesMethod, postfixTryRestore);
                 UnpatchQuietly(harmony, tryGainPsylinkLevelMethod, prefixTryGainPsylinkLevel);
                 UnpatchQuietly(harmony, tryGainPsylinkLevelMethod, postfixTryGainPsylinkLevel);
                 UnpatchQuietly(harmony, abilityShowGizmoOnPawnMethod, transpilerAbilityShowGizmoOnPawn);
+                UnpatchQuietly(harmony, abilityAutoCastGetter, transpilerAbilityAutoCast);
                 throw;
             }
         }
@@ -1174,7 +1245,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 FieldInfo shieldColorField,
                 FieldInfo energyLossPerDamageField,
                 Type vefAbilityType,
-                MethodInfo abilityShowGizmoOnPawnMethod)
+                MethodInfo abilityShowGizmoOnPawnMethod,
+                MethodInfo abilityAutoCastGetter)
             {
                 CompAbilitiesType = compAbilitiesType;
                 ShieldCompType = shieldCompType;
@@ -1196,6 +1268,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 EnergyLossPerDamageField = energyLossPerDamageField;
                 VefAbilityType = vefAbilityType;
                 AbilityShowGizmoOnPawnMethod = abilityShowGizmoOnPawnMethod;
+                AbilityAutoCastGetter = abilityAutoCastGetter;
             }
 
             public Type CompAbilitiesType { get; }
@@ -1237,6 +1310,14 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             public Type VefAbilityType { get; }
 
             public MethodInfo AbilityShowGizmoOnPawnMethod { get; }
+
+            /// <summary>
+            /// VEF.Abilities.Ability.get_AutoCast 实例属性 getter 的精确解析结果。
+            /// 由第六个兼容入口 Transpiler 原地替换其中唯一一次
+            /// Pawn.get_IsColonistPlayerControlled 调用，使玩家阵营正式机械族机械师
+            /// 也读取 autoCast 字段，从而获得玩家可切换的自动释放开关。
+            /// </summary>
+            public MethodInfo AbilityAutoCastGetter { get; }
         }
     }
 }
