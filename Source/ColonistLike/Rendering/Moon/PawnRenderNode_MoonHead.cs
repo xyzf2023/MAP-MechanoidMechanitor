@@ -41,8 +41,9 @@ namespace MAP_MechanoidMechanitor
             }
             if (pawn.Drawer.renderer.CurRotDrawMode == RotDrawMode.Dessicated)
             {
-                // 保留与修改前完全一致的尸化表现：机械体死亡后显示骷髅。
-                // 此处使用 Color.white，不会进入皮肤颜色 / 暗红路径。
+                // 保留修改前 PawnRenderNode_Head 的 Dessicated 行为：尸化状态使用原版 Skull Graphic。
+                // 该分支有意继续沿用 HeadTypeDefOf.Skull.GetGraphic，仍属于 HeadTypeDef 调用路径，
+                // 不属于正常 Moon 头部的自定义材质路径（正常 Moon Head 不在此分支）。
                 return HeadTypeDefOf.Skull.GetGraphic(pawn, Color.white);
             }
             string texPath = TexPathFor(pawn);
@@ -55,7 +56,7 @@ namespace MAP_MechanoidMechanitor
             {
                 return null;
             }
-            return GraphicDatabase.Get<Graphic_Multi>(texPath, shader, props.drawSize, Color.white);
+            return GraphicDatabase.Get<Graphic_Multi>(texPath, shader, Vector2.one, Color.white);
         }
     }
 }
