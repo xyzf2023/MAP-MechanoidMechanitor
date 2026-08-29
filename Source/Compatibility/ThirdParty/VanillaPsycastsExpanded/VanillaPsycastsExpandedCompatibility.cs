@@ -13,7 +13,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
     /// 仅当 VPE 与前置 VEF（OskarPotocki.VanillaFactionsExpanded.Core）均已加载，
     /// 且全部第三方反射目标按完整类型名精确解析成功后：
     /// 1) 为所有机械族 ThingDef 动态注入 VEF.Abilities.CompAbilities 能力容器，并补充 VPE 灵能树页签；
-    /// 2) 安装两个显式 Postfix（即时角色初始化入口 + 旧档安全入口），驱动幂等的 Pawn VPE 状态补齐。
+    /// 2) 安装四个显式 Harmony 补丁（机械师身份初始化 Postfix、旧档恢复 Postfix、
+    ///    灵能中枢升级前 Prefix、灵能中枢完成后 Postfix），驱动幂等的 Pawn VPE 状态补齐。
     /// 未加载 VPE 时返回 Inactive（静默，不输出警告）；任一第三方目标签名不符返回 TargetChanged；
     /// Def 注入或补丁安装发生本模块自身异常返回 Failed。
     /// 全程不使用 VEF.dll / VPE.dll 静态引用，不添加 [HarmonyPatch]、不使用 PatchAll，
@@ -94,40 +95,57 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     new InvalidOperationException("ResolvedTargets is null."));
             }
 
-            // 第四步：精确解析本项目自身的两个 Harmony 目标并校验签名。
+            // 第四步：精确解析本项目自身的三个 Harmony 目标并校验签名。
             if (!TryResolveOwnHarmonyTargets(
                     out MethodInfo? ensureRoleStateMethod,
                     out MethodInfo? tryRestorePositiveSourcesMethod,
+                    out MethodInfo? tryGainPsylinkLevelMethod,
                     out string ownTargetFailure))
             {
                 return ThirdPartyCompatibilityResult.CreateTargetChanged(
                     ModuleId, DisplayName, PackageId, ownTargetFailure);
             }
 
-            // 第五步：精确解析本项目两个 Postfix 方法并校验签名。
-            MethodInfo? postfixEnsureRoleState = GetPostfix(
+            // 第五步：精确解析本项目四个补丁方法并校验签名。
+            MethodInfo? postfixEnsureRoleState = GetPatchMethod(
                 nameof(VanillaPsycastsExpandedCompatibilityPatches
                     .Postfix_EnsureRoleState));
-            MethodInfo? postfixTryRestore = GetPostfix(
+            MethodInfo? postfixTryRestore = GetPatchMethod(
                 nameof(VanillaPsycastsExpandedCompatibilityPatches
                     .Postfix_TryRestorePositiveSources));
+            MethodInfo? prefixTryGainPsylinkLevel = GetPatchMethod(
+                nameof(VanillaPsycastsExpandedCompatibilityPatches
+                    .Prefix_TryGainPsylinkLevel));
+            MethodInfo? postfixTryGainPsylinkLevel = GetPatchMethod(
+                nameof(VanillaPsycastsExpandedCompatibilityPatches
+                    .Postfix_TryGainPsylinkLevel));
             if (postfixEnsureRoleState == null
                 || postfixTryRestore == null
+                || prefixTryGainPsylinkLevel == null
+                || postfixTryGainPsylinkLevel == null
                 || !IsStaticVoidWithSingleParameter(postfixEnsureRoleState, typeof(Pawn))
-                || !IsStaticVoidWithSingleParameter(postfixTryRestore, typeof(bool)))
+                || !IsStaticVoidWithSingleParameter(postfixTryRestore, typeof(bool))
+                || !IsStaticVoidWithSingleParameter(prefixTryGainPsylinkLevel, typeof(Pawn))
+                || !IsStaticVoidWithSingleParameter(postfixTryGainPsylinkLevel, typeof(Pawn)))
             {
                 return ThirdPartyCompatibilityResult.CreateFailed(
                     ModuleId,
                     DisplayName,
                     PackageId,
-                    "无法解析本项目的原版灵能拓展兼容 Postfix 方法或其签名不符。",
+                    "无法解析本项目的原版灵能拓展兼容补丁方法或其签名不符。",
                     new MissingMethodException(
                         typeof(VanillaPsycastsExpandedCompatibilityPatches).FullName,
                         nameof(VanillaPsycastsExpandedCompatibilityPatches
                             .Postfix_EnsureRoleState)
                         + " / "
                         + nameof(VanillaPsycastsExpandedCompatibilityPatches
-                            .Postfix_TryRestorePositiveSources)));
+                            .Postfix_TryRestorePositiveSources)
+                        + " / "
+                        + nameof(VanillaPsycastsExpandedCompatibilityPatches
+                            .Prefix_TryGainPsylinkLevel)
+                        + " / "
+                        + nameof(VanillaPsycastsExpandedCompatibilityPatches
+                            .Postfix_TryGainPsylinkLevel)));
             }
 
             // 第六步：提前取得共享页签实例，并验证返回值非空且类型兼容。
@@ -198,8 +216,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     harmony,
                     ensureRoleStateMethod!,
                     tryRestorePositiveSourcesMethod!,
+                    tryGainPsylinkLevelMethod!,
                     postfixEnsureRoleState!,
-                    postfixTryRestore!);
+                    postfixTryRestore!,
+                    prefixTryGainPsylinkLevel!,
+                    postfixTryGainPsylinkLevel!);
             }
             catch (Exception ex)
             {
@@ -223,9 +244,12 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 + $"{injectionTracker.ExistingCompCount} 个原本已有 CompAbilities；"
                 + $"{injectionTracker.SkippedShieldConflictCount} 个因其他护盾 Comp 冲突跳过；"
                 + $"成功补充 VPE 灵能页签 {injectionTracker.AddedTabCount} 个定义；"
-                + "已安装即时修复（MechanoidMechanitorRoleUtility.EnsureRoleState Postfix）"
-                + "与旧档修复（MechanoidMechanitorPostLoadSafetyCoordinator."
-                + "TryRestorePositiveSources Postfix）两个入口。");
+                + "已安装四个兼容入口：机械师身份初始化修复"
+                + "（MechanoidMechanitorRoleUtility.EnsureRoleState Postfix）、"
+                + "旧档恢复修复（MechanoidMechanitorPostLoadSafetyCoordinator."
+                + "TryRestorePositiveSources Postfix）、"
+                + "灵能中枢升级前修复（PsychicCoreUtility.TryGainPsylinkLevel Prefix）、"
+                + "灵能中枢完成后的即时修复（PsychicCoreUtility.TryGainPsylinkLevel Postfix）。");
         }
 
         // ==================== 反射目标解析 ====================
@@ -519,10 +543,12 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
         private static bool TryResolveOwnHarmonyTargets(
             out MethodInfo? ensureRoleStateMethod,
             out MethodInfo? tryRestorePositiveSourcesMethod,
+            out MethodInfo? tryGainPsylinkLevelMethod,
             out string failureReason)
         {
             ensureRoleStateMethod = null;
             tryRestorePositiveSourcesMethod = null;
+            tryGainPsylinkLevelMethod = null;
             failureReason = string.Empty;
 
             ensureRoleStateMethod =
@@ -570,10 +596,40 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 return false;
             }
 
+            // 灵能中枢即时补齐目标：PsychicCoreUtility.TryGainPsylinkLevel(Pawn)。
+            // 灵能中枢的 PostAdd / ChangeLevel 通过它获得或升级启灵神经；
+            // 本模块在该方法两侧安装 Prefix / Postfix，为机械族机械师即时补齐 VPE 灵能状态。
+            tryGainPsylinkLevelMethod =
+                typeof(PsychicCoreUtility).GetMethod(
+                    nameof(PsychicCoreUtility.TryGainPsylinkLevel),
+                    BindingFlags.Static
+                    | BindingFlags.Public
+                    | BindingFlags.NonPublic
+                    | BindingFlags.DeclaredOnly);
+            if (tryGainPsylinkLevelMethod == null
+                || !tryGainPsylinkLevelMethod.IsStatic
+                || tryGainPsylinkLevelMethod.ReturnType != typeof(void))
+            {
+                failureReason =
+                    "本项目的 PsychicCoreUtility.TryGainPsylinkLevel(Pawn) 无法解析" +
+                    "或签名不符（应为 static void），兼容已安全跳过。";
+                return false;
+            }
+
+            ParameterInfo[] psylinkParams = tryGainPsylinkLevelMethod.GetParameters();
+            if (psylinkParams.Length != 1
+                || psylinkParams[0].ParameterType != typeof(Pawn))
+            {
+                failureReason =
+                    "本项目的 PsychicCoreUtility.TryGainPsylinkLevel(Pawn) 参数签名不符" +
+                    "（应为单个 Verse.Pawn），兼容已安全跳过。";
+                return false;
+            }
+
             return true;
         }
 
-        private static MethodInfo? GetPostfix(string methodName)
+        private static MethodInfo? GetPatchMethod(string methodName)
         {
             return typeof(VanillaPsycastsExpandedCompatibilityPatches).GetMethod(
                 methodName,
@@ -809,8 +865,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             Harmony harmony,
             MethodInfo ensureRoleStateMethod,
             MethodInfo tryRestorePositiveSourcesMethod,
+            MethodInfo tryGainPsylinkLevelMethod,
             MethodInfo postfixEnsureRoleState,
-            MethodInfo postfixTryRestore)
+            MethodInfo postfixTryRestore,
+            MethodInfo prefixTryGainPsylinkLevel,
+            MethodInfo postfixTryGainPsylinkLevel)
         {
             harmony.Patch(
                 ensureRoleStateMethod,
@@ -827,6 +886,47 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 // 不得调用 UnpatchAll。
                 harmony.Unpatch(ensureRoleStateMethod, postfixEnsureRoleState);
                 throw;
+            }
+
+            try
+            {
+                harmony.Patch(
+                    tryGainPsylinkLevelMethod,
+                    prefix: new HarmonyMethod(prefixTryGainPsylinkLevel),
+                    postfix: new HarmonyMethod(postfixTryGainPsylinkLevel));
+            }
+            catch
+            {
+                // 第三个补丁安装失败时（可能发生在 Prefix 或 Postfix 任一阶段）：
+                // 先定向撤销本方法上可能已安装的 Prefix / Postfix，再撤销前两个入口，
+                // 随后重新抛出原始异常，由 Apply 统一执行 DefInjectionTracker.Rollback()
+                // 与 Runtime.Clear()。全程使用具体 MethodInfo 定向 Unpatch，
+                // 不调用 UnpatchAll，不移除其他模块或其他 MOD 的 Harmony 补丁。
+                UnpatchQuietly(harmony, tryGainPsylinkLevelMethod, prefixTryGainPsylinkLevel);
+                UnpatchQuietly(harmony, tryGainPsylinkLevelMethod, postfixTryGainPsylinkLevel);
+                UnpatchQuietly(harmony, tryRestorePositiveSourcesMethod, postfixTryRestore);
+                UnpatchQuietly(harmony, ensureRoleStateMethod, postfixEnsureRoleState);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 定向撤销单个补丁的极小辅助方法。
+        /// 只在 InstallPatches 的失败回滚路径中使用：具体 original 与具体 patch 一一对应，
+        /// 绝不调用 UnpatchAll；回滚自身异常被吞掉，避免掩盖最初的安装异常。
+        /// </summary>
+        private static void UnpatchQuietly(
+            Harmony harmony,
+            MethodInfo original,
+            MethodInfo patch)
+        {
+            try
+            {
+                harmony.Unpatch(original, patch);
+            }
+            catch
+            {
+                // 定向回滚失败不掩盖最初的安装异常。
             }
         }
 
