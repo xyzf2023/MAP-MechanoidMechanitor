@@ -25,5 +25,7 @@
 	</modDependencies>
 	<loadAfter>
 		<li>brrainz.harmony</li>
+		<li>OskarPotocki.VanillaFactionsExpanded.Core</li>
+		<li>VanillaExpanded.VPsycastsE</li>
 	</loadAfter>
 </ModMetaData>
