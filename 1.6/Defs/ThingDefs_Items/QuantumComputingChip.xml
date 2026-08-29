@@ -8,6 +8,7 @@
     <graphicData>
       <texPath>Things/QuantumComputingChip</texPath>
       <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>0.5</drawSize>
     </graphicData>
     <statBases>
       <MarketValue>2000</MarketValue>
