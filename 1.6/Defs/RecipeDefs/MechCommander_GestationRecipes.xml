@@ -25,18 +25,10 @@
       <li>
         <filter>
           <thingDefs>
-            <li>AIPersonaCore</li>
-          </thingDefs>
-        </filter>
-        <count>1</count>
-      </li>
-      <li>
-        <filter>
-          <thingDefs>
             <li>Plasteel</li>
           </thingDefs>
         </filter>
-        <count>225</count>
+        <count>250</count>
       </li>
       <li>
         <filter>
@@ -45,6 +37,14 @@
           </thingDefs>
         </filter>
         <count>5</count>
+      </li>
+      <li>
+        <filter>
+          <thingDefs>
+            <li>Steel</li>
+          </thingDefs>
+        </filter>
+        <count>250</count>
       </li>
       <li>
         <filter>
@@ -58,9 +58,9 @@
     <fixedIngredientFilter>
       <thingDefs>
         <li>SubcoreHigh</li>
-        <li>AIPersonaCore</li>
         <li>Plasteel</li>
         <li>ComponentSpacer</li>
+        <li>Steel</li>
         <li>MAP_AutonomousDirectiveCore</li>
       </thingDefs>
     </fixedIngredientFilter>

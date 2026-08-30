@@ -20,9 +20,9 @@
     </statBases>
     <costList>
       <SubcoreHigh>1</SubcoreHigh>
-      <AIPersonaCore>1</AIPersonaCore>
-      <Plasteel>225</Plasteel>
+      <Plasteel>250</Plasteel>
       <ComponentSpacer>5</ComponentSpacer>
+      <Steel>250</Steel>
       <MAP_AutonomousDirectiveCore>1</MAP_AutonomousDirectiveCore>
     </costList>
     <researchPrerequisites>

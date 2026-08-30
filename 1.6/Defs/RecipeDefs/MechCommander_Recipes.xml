@@ -66,7 +66,7 @@
     <description>制作一个自律指令核心。</description>
     <jobString>正在制作自律指令核心。</jobString>
     <researchPrerequisite>MAP_AutonomousDirectiveCore</researchPrerequisite>
-    <workAmount>2000</workAmount>
+    <workAmount>8000</workAmount>
     <workSpeedStat>GeneralLaborSpeed</workSpeedStat>
     <effectWorking>Cook</effectWorking>
     <soundWorking>Recipe_Machining</soundWorking>
@@ -80,7 +80,7 @@
             <li>ComponentSpacer</li>
           </thingDefs>
         </filter>
-        <count>3</count>
+        <count>12</count>
       </li>
       <li>
         <filter>
@@ -106,6 +106,22 @@
         </filter>
         <count>20</count>
       </li>
+      <li>
+        <filter>
+          <thingDefs>
+            <li>MAP_QuantumComputingChip</li>
+          </thingDefs>
+        </filter>
+        <count>1</count>
+      </li>
+      <li>
+        <filter>
+          <thingDefs>
+            <li>AIPersonaCore</li>
+          </thingDefs>
+        </filter>
+        <count>1</count>
+      </li>
     </ingredients>
     <fixedIngredientFilter>
       <thingDefs>
@@ -113,6 +129,8 @@
         <li>Mechlink</li>
         <li>Plasteel</li>
         <li>Gold</li>
+        <li>MAP_QuantumComputingChip</li>
+        <li>AIPersonaCore</li>
       </thingDefs>
     </fixedIngredientFilter>
     <products>

@@ -5,10 +5,10 @@
     <techLevel>Archotech</techLevel>
     <statBases>
       <MaxHitPoints>100</MaxHitPoints>
-      <Beauty>-4</Beauty>
+      <Beauty>2</Beauty>
       <DeteriorationRate>0</DeteriorationRate>
       <Mass>1</Mass>
-      <MarketValue>3000</MarketValue>
+      <MarketValue>5000</MarketValue>
     </statBases>
     <comps Inherit="False">
       <li Class="CompProperties_Forbiddable"/>
