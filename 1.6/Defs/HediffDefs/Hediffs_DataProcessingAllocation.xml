@@ -31,7 +31,7 @@
   <HediffDef>
     <defName>MAP_CommandFocus_GeneralTuning</defName>
     <label>指令聚焦：通用调谐</label>
-    <description>监管者分配的数据处理能力被用于目标机械体的通用性能调谐，同时改善作业、机动、攻击时序、防御与受抑止时间。</description>
+    <description>监管者分配的数据处理能力被用于目标机械体的通用性能调谐，同时改善作业、机动、攻击时序、防御，并减少受抑止时间。</description>
     <descriptionShort>监管者正在向该机械族分配额外算力以进行通用性能调谐。</descriptionShort>
     <defaultLabelColor>(0.55, 0.85, 1.00)</defaultLabelColor>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_CommandFocus</hediffClass>

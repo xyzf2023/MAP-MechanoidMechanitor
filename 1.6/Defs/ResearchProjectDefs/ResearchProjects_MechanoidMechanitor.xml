@@ -195,7 +195,7 @@
     <ResearchProjectDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
     <defName>MAP_ArtificialPsychicPathway</defName>
     <label>人工灵能通路</label>
-    <description>研究如何利用启灵装置构建人工灵能通路，从而更好的感知、传导并驾驭灵能。机械族机械师可以通过这项技术获得使用灵能的能力，普通灵能者亦能从中获益。\n\n研究完成后可制造「心灵中枢」。</description>
+    <description>研究如何利用启灵装置构建人工灵能通路，从而更好地感知、传导并驾驭灵能。机械族机械师可以通过这项技术获得使用灵能的能力，普通灵能者亦能从中获益。\n\n研究完成后可制造「心灵中枢」。</description>
     <baseCost>5000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
