@@ -82,7 +82,7 @@
 
   <HediffDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
     <defName>MAP_PsychicActivationActive</defName>
-    <hediffClass>HediffWithComps</hediffClass>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_PsychicActivationActive</hediffClass>
     <label>心灵活化</label>
     <description>该单位的心灵能力被激活，灵能通路在短时间内进入高度活跃状态。\n\n持续期间使用者的灵能将得到进一步强化，并获得额外的精神力恢复能力。\n效果持续六个小时。</description>
     <descriptionShort>该单位的心灵能力处于活化状态。</descriptionShort>

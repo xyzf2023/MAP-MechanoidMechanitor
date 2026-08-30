@@ -1,4 +1,5 @@
 using RimWorld;
+using System.Text;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -54,7 +55,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             float multiplier =
-                PsychicCoreUtility.GetEffectivePsyfocusRecoveryMultiplier(
+                PsychicCoreUtility.GetTotalPsyfocusRecoveryMultiplier(
                     pawn,
                     level);
             if (multiplier <= 0f)
@@ -68,6 +69,38 @@ namespace MAP_MechanoidMechanitor
                 * delta
                 / 60000f;
             pawn.psychicEntropy.OffsetPsyfocusDirectly(offset);
+        }
+
+        public override string TipStringExtra
+        {
+            get
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                string baseTip = base.TipStringExtra;
+                if (!baseTip.NullOrEmpty())
+                {
+                    stringBuilder.Append(baseTip);
+                    stringBuilder.AppendLine();
+                }
+
+                float baseMultiplier =
+                    PsychicCoreUtility.GetPassivePsyfocusRecoveryMultiplier(level);
+                if (baseMultiplier > 0f)
+                {
+                    stringBuilder.AppendLine(
+                        " - 精神力自动恢复："
+                        + PsychicCoreUtility.FormatPsyfocusPercent(
+                            PsychicCoreUtility.GetPsyfocusRecoveryPerHour(baseMultiplier))
+                        + "/小时");
+                }
+
+                if (CurStage is { blocksMentalBreaks: true })
+                {
+                    stringBuilder.AppendLine(" - 不再陷入精神崩溃");
+                }
+
+                return stringBuilder.ToString().TrimEnd('\n', '\r');
+            }
         }
 
         public override void PostRemoved()

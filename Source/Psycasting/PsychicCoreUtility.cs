@@ -1,3 +1,4 @@
+using System.Globalization;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -91,17 +92,35 @@ namespace MAP_MechanoidMechanitor
                 && pawn.health.hediffSet.HasHediff(activationDef);
         }
 
-        public static float GetEffectivePsyfocusRecoveryMultiplier(
+        public static float GetPsychicActivationBonusMultiplier(
             Pawn? pawn,
             int coreLevel)
         {
-            float passive = GetPassivePsyfocusRecoveryMultiplier(coreLevel);
             if (!IsPsychicActivationActive(pawn))
             {
-                return passive;
+                return 0f;
             }
 
-            return Mathf.Max(1f, passive * 2f);
+            float baseMultiplier = GetPassivePsyfocusRecoveryMultiplier(coreLevel);
+            return Mathf.Max(0f, Mathf.Max(1f, baseMultiplier * 2f) - baseMultiplier);
+        }
+
+        public static float GetTotalPsyfocusRecoveryMultiplier(
+            Pawn? pawn,
+            int coreLevel)
+        {
+            return GetPassivePsyfocusRecoveryMultiplier(coreLevel)
+                + GetPsychicActivationBonusMultiplier(pawn, coreLevel);
+        }
+
+        public static float GetPsyfocusRecoveryPerHour(float multiplier)
+        {
+            return StandardNaturalMeditationPsyfocusPerDay * multiplier / 24f;
+        }
+
+        public static string FormatPsyfocusPercent(float fraction)
+        {
+            return (fraction * 100f).ToString("0.####", CultureInfo.CurrentCulture) + "%";
         }
 
         public static void TryGainPsylinkLevel(Pawn? pawn)
