@@ -126,6 +126,11 @@ namespace MAP_MechanoidMechanitor
             DrawProductivityCoreWorkSpeedSetting(listing);
 
             listing.CheckboxLabeled(
+                "允许满级心灵中枢自动清除精神状态",
+                ref Settings.enableMaxLevelPsychicCoreMentalStateRecovery,
+                "开启后，每10秒将尝试清除安装了满级心灵中枢的角色的精神状态。");
+
+            listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label".Translate(),
                 ref Settings.syntheticOffspringInheritXenogenes,
                 "MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description".Translate());

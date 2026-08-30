@@ -1,6 +1,7 @@
 using RimWorld;
 using System.Text;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -47,28 +48,71 @@ namespace MAP_MechanoidMechanitor
 
             if (pawn == null
                 || pawn.Destroyed
+                || pawn.Dead)
+            {
+                return;
+            }
+
+            TryRecoverMentalStateAtMaxLevel(delta);
+
+            // 第三方状态结束回调可能改变角色状态，恢复前再次校验存活与植入体仍在位。
+            if (pawn == null
+                || pawn.Destroyed
                 || pawn.Dead
+                || pawn.health?.hediffSet == null
+                || !pawn.health.hediffSet.hediffs.Contains(this)
                 || pawn.psychicEntropy == null
                 || !pawn.HasPsylink)
             {
                 return;
             }
 
-            float multiplier =
-                PsychicCoreUtility.GetTotalPsyfocusRecoveryMultiplier(
-                    pawn,
-                    level);
-            if (multiplier <= 0f)
+            float totalPerHour =
+                PsychicCoreUtility.GetTotalPsyfocusRecoveryPerHour(pawn, level);
+            if (totalPerHour <= 0f)
             {
                 return;
             }
 
             float offset =
-                PsychicCoreUtility.StandardNaturalMeditationPsyfocusPerDay
-                * multiplier
-                * delta
-                / 60000f;
+                totalPerHour * delta / GenDate.TicksPerHour;
             pawn.psychicEntropy.OffsetPsyfocusDirectly(offset);
+        }
+
+        private void TryRecoverMentalStateAtMaxLevel(int delta)
+        {
+            if (pawn == null
+                || pawn.Destroyed
+                || pawn.Dead)
+            {
+                return;
+            }
+
+            if (MAPMechanitorMod.Settings == null
+                || !MAPMechanitorMod.Settings
+                    .enableMaxLevelPsychicCoreMentalStateRecovery)
+            {
+                return;
+            }
+
+            if (level < def.maxSeverity)
+            {
+                return;
+            }
+
+            if (!pawn.IsHashIntervalTick(600, delta))
+            {
+                return;
+            }
+
+            MentalState? mentalState =
+                pawn.mindState?.mentalStateHandler?.CurState;
+            if (mentalState == null)
+            {
+                return;
+            }
+
+            mentalState.RecoverFromState();
         }
 
         public override string TipStringExtra
@@ -83,14 +127,13 @@ namespace MAP_MechanoidMechanitor
                     stringBuilder.AppendLine();
                 }
 
-                float baseMultiplier =
-                    PsychicCoreUtility.GetPassivePsyfocusRecoveryMultiplier(level);
-                if (baseMultiplier > 0f)
+                float basePerHour =
+                    PsychicCoreUtility.GetPassivePsyfocusRecoveryPerHour(level);
+                if (basePerHour > 0f)
                 {
                     stringBuilder.AppendLine(
                         " - 精神力自动恢复："
-                        + PsychicCoreUtility.FormatPsyfocusPercent(
-                            PsychicCoreUtility.GetPsyfocusRecoveryPerHour(baseMultiplier))
+                        + PsychicCoreUtility.FormatPsyfocusPercent(basePerHour)
                         + "/小时");
                 }
 

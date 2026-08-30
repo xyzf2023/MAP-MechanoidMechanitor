@@ -18,15 +18,14 @@ namespace MAP_MechanoidMechanitor
                     stringBuilder.AppendLine();
                 }
 
-                float bonus = PsychicCoreUtility.GetPsychicActivationBonusMultiplier(
+                float bonus = PsychicCoreUtility.GetPsychicActivationBonusPerHour(
                     pawn,
                     PsychicCoreUtility.GetPsychicCoreLevel(pawn));
                 if (bonus > 0f)
                 {
                     stringBuilder.AppendLine(
                         " - 精神力自动恢复："
-                        + PsychicCoreUtility.FormatPsyfocusPercent(
-                            PsychicCoreUtility.GetPsyfocusRecoveryPerHour(bonus))
+                        + PsychicCoreUtility.FormatPsyfocusPercent(bonus)
                         + "/小时");
                 }
 

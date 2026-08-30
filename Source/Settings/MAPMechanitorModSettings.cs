@@ -285,6 +285,14 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool restrictMechHackBossTargets = true;
 
+        /// <summary>
+        /// 默认开启。开启后，安装了满级心灵中枢的角色每 600 游戏刻（10 秒）将尝试结束
+        /// 当前精神状态。该设置只控制「定期结束已存在的精神状态」，不影响心灵中枢基础/
+        /// 活化精神力恢复，也不影响满级阶段原有的防止常规精神崩溃（blocksMentalBreaks）。
+        /// 在游戏中实时生效，无需重启或重新安装植入体。
+        /// </summary>
+        public bool enableMaxLevelPsychicCoreMentalStateRecovery = true;
+
         // ===== 共生盟约全局设置（所有存档共享） =====
 
         /// <summary>
@@ -623,6 +631,11 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref restrictMechHackBossTargets,
                 "restrictMechHackBossTargets",
+                true);
+
+            Scribe_Values.Look(
+                ref enableMaxLevelPsychicCoreMentalStateRecovery,
+                "enableMaxLevelPsychicCoreMentalStateRecovery",
                 true);
 
             Scribe_Values.Look(

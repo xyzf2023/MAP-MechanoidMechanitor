@@ -10,23 +10,22 @@ namespace MAP_MechanoidMechanitor
         public const string PsychicCoreHediffDefName = "MAP_PsychicCore";
         public const string PsychicActivationHediffDefName = "MAP_PsychicActivationActive";
 
-        // Standard reference agreed for the implant:
-        // a base 0.50/day meditation gain plus a 0.28 natural-focus reference.
-        public const float StandardNaturalMeditationPsyfocusPerDay = 0.78f;
-
-        private static readonly float[] PassivePsyfocusRecoveryMultipliers =
+        // 心灵中枢基础精神力恢复量表（按等级索引）：数值为「每小时」恢复的精神力条
+        // 占比（0~1 口径）。索引 0 不受调用（等级从 1 起）；索引 1 即 1 级固定为 0；
+        // 最高等级 10 对应 10%/小时。
+        private static readonly float[] PassivePsyfocusRecoveryPerHour =
         {
             0f,
             0f,
-            0.25f,
-            0.50f,
-            0.75f,
-            1.00f,
-            1.25f,
-            1.50f,
-            2.00f,
-            2.50f,
-            3.00f
+            0.01f,
+            0.02f,
+            0.03f,
+            0.04f,
+            0.05f,
+            0.06f,
+            0.07f,
+            0.08f,
+            0.10f
         };
 
         private static HediffDef? psychicCoreHediffDef;
@@ -75,13 +74,13 @@ namespace MAP_MechanoidMechanitor
             return GetPsychicCore(pawn)?.level ?? 0;
         }
 
-        public static float GetPassivePsyfocusRecoveryMultiplier(int level)
+        public static float GetPassivePsyfocusRecoveryPerHour(int level)
         {
             int clampedLevel = Mathf.Clamp(
                 level,
                 0,
-                PassivePsyfocusRecoveryMultipliers.Length - 1);
-            return PassivePsyfocusRecoveryMultipliers[clampedLevel];
+                PassivePsyfocusRecoveryPerHour.Length - 1);
+            return PassivePsyfocusRecoveryPerHour[clampedLevel];
         }
 
         public static bool IsPsychicActivationActive(Pawn? pawn)
@@ -92,7 +91,7 @@ namespace MAP_MechanoidMechanitor
                 && pawn.health.hediffSet.HasHediff(activationDef);
         }
 
-        public static float GetPsychicActivationBonusMultiplier(
+        public static float GetPsychicActivationBonusPerHour(
             Pawn? pawn,
             int coreLevel)
         {
@@ -101,21 +100,16 @@ namespace MAP_MechanoidMechanitor
                 return 0f;
             }
 
-            float baseMultiplier = GetPassivePsyfocusRecoveryMultiplier(coreLevel);
-            return Mathf.Max(0f, Mathf.Max(1f, baseMultiplier * 2f) - baseMultiplier);
+            float basePerHour = GetPassivePsyfocusRecoveryPerHour(coreLevel);
+            return Mathf.Max(0f, Mathf.Max(0.03f, basePerHour * 2f) - basePerHour);
         }
 
-        public static float GetTotalPsyfocusRecoveryMultiplier(
+        public static float GetTotalPsyfocusRecoveryPerHour(
             Pawn? pawn,
             int coreLevel)
         {
-            return GetPassivePsyfocusRecoveryMultiplier(coreLevel)
-                + GetPsychicActivationBonusMultiplier(pawn, coreLevel);
-        }
-
-        public static float GetPsyfocusRecoveryPerHour(float multiplier)
-        {
-            return StandardNaturalMeditationPsyfocusPerDay * multiplier / 24f;
+            return GetPassivePsyfocusRecoveryPerHour(coreLevel)
+                + GetPsychicActivationBonusPerHour(pawn, coreLevel);
         }
 
         public static string FormatPsyfocusPercent(float fraction)
