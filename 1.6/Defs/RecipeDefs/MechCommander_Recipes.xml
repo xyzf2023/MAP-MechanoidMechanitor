@@ -125,7 +125,7 @@
     <label>制作仿生伴侣模块</label>
     <description>制作一个仿生伴侣模块。</description>
     <jobString>正在制作仿生伴侣模块。</jobString>
-    <researchPrerequisite>MAP_BionicMechanicalStructure</researchPrerequisite>
+    <researchPrerequisite>MAP_BionicCompanionEngineering</researchPrerequisite>
     <workAmount>2000</workAmount>
     <workSpeedStat>GeneralLaborSpeed</workSpeedStat>
     <effectWorking>Cook</effectWorking>

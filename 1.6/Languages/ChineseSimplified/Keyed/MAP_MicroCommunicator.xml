@@ -3,7 +3,7 @@
 
   <MAP_MicroCommunicator_CommandLabel>通讯</MAP_MicroCommunicator_CommandLabel>
 
-  <MAP_MicroCommunicator_CommandDesc>TODO</MAP_MicroCommunicator_CommandDesc>
+  <MAP_MicroCommunicator_CommandDesc>使用微型通讯器进行通讯。</MAP_MicroCommunicator_CommandDesc>
 
   <MAP_MicroCommunicator_SolarFlareDisabled>太阳耀斑阻碍了通讯。</MAP_MicroCommunicator_SolarFlareDisabled>
 

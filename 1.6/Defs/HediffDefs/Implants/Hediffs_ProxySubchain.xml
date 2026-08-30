@@ -8,9 +8,9 @@
     </descriptionHyperlinks>
     <label>代理子链</label>
     <labelNoun>代理子链</labelNoun>
-    <description>TODO</description>
-    <descriptionShort>TODO</descriptionShort>
-    <defaultLabelColor>(0.4, 0.75, 1.0)</defaultLabelColor>
+    <description>一种内置代理人工智能的机械师植入体。当机械师暂时失去指挥能力时，它会接管既有控制网络，使受控机械族继续维持正常行动。</description>
+    <descriptionShort>该机械师监管的机械族可以在机械师失能时继续被指挥。</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <priceImpact>true</priceImpact>
     <initialSeverity>1</initialSeverity>

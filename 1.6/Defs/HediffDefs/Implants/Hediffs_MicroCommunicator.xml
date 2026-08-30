@@ -6,8 +6,9 @@
     <hediffClass>HediffWithComps</hediffClass>
 
     <label>微型通讯器</label>
-    <description>TODO</description>
-    <descriptionShort>TODO</descriptionShort>
+    <description>一个迷你通讯装置，可以使安装者在不借助通讯台的情况下进行联络。</description>
+    <descriptionShort>该单位可以使用自带的通讯功能进行联络。</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
 
     <descriptionHyperlinks>
       <ThingDef>MAP_MicroCommunicator</ThingDef>

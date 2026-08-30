@@ -7,7 +7,8 @@
       <ThingDef>MAP_PsychicCore</ThingDef>
     </descriptionHyperlinks>
     <label>心灵中枢</label>
-    <description>TODO</description>
+    <description>一种以启灵装置为核心构筑的精密植入体。在保留启灵装置原有功能的基础上，它能够进一步稳定并强化灵能通路，从多个方面提升使用者的灵能能力。\n\n此装置同样能够为机械族机械师提供启灵等级。</description>
+    <descriptionShort>该单位的心灵能力获得了强化。强化效果随植入数量提升。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <priceImpact>true</priceImpact>
@@ -83,7 +84,8 @@
     <defName>MAP_PsychicActivationActive</defName>
     <hediffClass>HediffWithComps</hediffClass>
     <label>心灵活化</label>
-    <description>TODO</description>
+    <description>该单位的心灵能力被激活，灵能通路在短时间内进入高度活跃状态。\n\n持续期间使用者的灵能将得到进一步强化，并获得额外的精神力恢复能力。\n效果持续六个小时。</description>
+    <descriptionShort>该单位的心灵能力处于活化状态。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <priceImpact>false</priceImpact>

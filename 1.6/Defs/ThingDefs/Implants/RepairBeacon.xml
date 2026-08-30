@@ -3,7 +3,7 @@
   <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_RepairBeacon</defName>
     <label>修复信标</label>
-    <description>一种内置量子结构演算阵列的机械师植入体。它能持续解析受监管机械族的结构损伤，并通过监管链路下发精确的自我修复序列；必要时还可超负荷运行，启动战地修复协议。</description>
+    <description>一种内置量子结构演算阵列的机械师植入体。它能持续解析受监管机械族的结构损伤，并通过监管链路下发精确的自我修复序列；必要时还可超负荷运行，启动战地修复协议来引导机械族快速自我修复。</description>
     <costList>
       <MAP_QuantumComputingChip>1</MAP_QuantumComputingChip>
       <Plasteel>20</Plasteel>

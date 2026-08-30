@@ -3,14 +3,15 @@
   <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_ProxySubchain</defName>
     <label>代理子链</label>
-    <description>TODO</description>
+    <description>一种内置代理人工智能的机械师植入体。当机械师暂时失去指挥能力时，它会接管既有控制网络，使受控机械族继续维持正常行动。</description>
     <descriptionHyperlinks>
       <HediffDef>MAP_ProxySubchain</HediffDef>
     </descriptionHyperlinks>
     <costList>
       <Plasteel>30</Plasteel>
-      <Gold>15</Gold>
-      <ComponentSpacer>2</ComponentSpacer>
+      <Gold>2</Gold>
+      <ComponentSpacer>5</ComponentSpacer>
+      <MAP_QuantumComputingChip>1</MAP_QuantumComputingChip>
     </costList>
     <statBases>
       <MaxInstallCount>1</MaxInstallCount>
@@ -22,7 +23,7 @@
       <li>MAP_MechanoidMechanitorBodyParts</li>
     </thingCategories>
     <recipeMaker>
-      <researchPrerequisite>UltraMechtech</researchPrerequisite>
+      <researchPrerequisite>MAP_QuantumProxyProtocol</researchPrerequisite>
       <skillRequirements Inherit="False">
         <Crafting>10</Crafting>
       </skillRequirements>

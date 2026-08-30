@@ -4,7 +4,7 @@
             MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
     <defName>MAP_PsychicCore</defName>
     <label>心灵中枢</label>
-    <description>TODO</description>
+    <description>一种以启灵装置为核心构筑的精密植入体。在保留启灵装置原有功能的基础上，它能够进一步稳定并强化灵能通路，从多个方面提升使用者的灵能能力。\n\n此装置同样能够为机械族机械师提供启灵等级。</description>
     <descriptionHyperlinks>
       <HediffDef>MAP_PsychicCore</HediffDef>
     </descriptionHyperlinks>
@@ -23,7 +23,7 @@
       <li>MAP_MechanoidMechanitorBodyParts</li>
     </thingCategories>
     <recipeMaker>
-      <researchPrerequisite>MAP_PsychicCoreIntegration</researchPrerequisite>
+      <researchPrerequisite>MAP_ArtificialPsychicPathway</researchPrerequisite>
       <skillRequirements Inherit="False">
         <Crafting>12</Crafting>
       </skillRequirements>

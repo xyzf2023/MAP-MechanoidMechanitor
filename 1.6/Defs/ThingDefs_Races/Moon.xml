@@ -4,7 +4,7 @@
   <ThingDef ParentName="BaseMechanoid">
     <defName>MAP_Mech_Moon</defName>
     <label>「月亮」</label>
-    <description>一台采用类人结构并保留完整人类式着装与自维护能力的特殊机械体。</description>
+    <description>为适应人类装备体系而设计的仿生战斗机械体。「月亮」采用高度类人的身体结构，能够自由穿戴人类护甲、使用人类武器，并适配大多数人类植入体。这种开放式设计使其可以充分利用殖民地的装备与改造技术，灵活应对不同的战场需求。\n\n「月亮」搭载了高性能作战系统，无论近身搏斗还是远程交火都能展现出强大的战斗力；先进的机体装甲则为其提供了可靠的防护，使它足以胜任最为激烈的正面交锋。</description>
 
     <statBases>
       <MarketValue>2500</MarketValue>

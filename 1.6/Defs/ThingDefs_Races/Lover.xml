@@ -4,7 +4,7 @@
   <ThingDef ParentName="BaseMechanoid">
     <defName>MAP_Mech_Lover</defName>
     <label>「恋人」</label>
-    <description>一台具有仿生结构的特殊机械体。</description>
+    <description>为陪伴与照料人类而设计的仿生机械体。「恋人」先进的认知架构使它能够理解人类复杂的情绪，出色地满足日常交流与情感需求。从准备一顿可口的饭菜，到照看熟睡的孩子，她的存在让身边的人生活更加安稳。\n\n「恋人」能够胜任医疗、烹饪、监管、驯兽与保育工作。内置的专业照料系统不仅使它能够承担以往依赖人类完成的细致工作，在许多照料任务中，其表现甚至比未经训练的人类更为娴熟。尽管陪伴与照料才是她的本职，她也能使用人类武器，在危险来临时守护平日里由它照顾的人们。</description>
 
     <statBases>
       <MarketValue>1200</MarketValue>

@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-  <!--
-    自律指令核心与仿生伴侣模块的通用主动安装框架父级。
-    继续继承原版 MechanitorImplantBase（不直接获得 recipeMaker，不会自动生成制作配方），
-    但不继承 MechanitorImplantCraftableBase。
-    通过 <comps Inherit="False"> 丢弃原版继承来的 CompProperties_UseEffectDestroySelf，
-    改由通用安装流程在效果成功后才统一销毁物品。
-  -->
   <ThingDef Abstract="True" Name="MAP_MechanoidMechanitorInstallableModuleBase" ParentName="MechanitorImplantBase">
     <stackLimit>1</stackLimit>
     <techLevel>Archotech</techLevel>
@@ -29,7 +22,7 @@
   <ThingDef ParentName="MAP_MechanoidMechanitorInstallableModuleBase">
     <defName>MAP_AutonomousDirectiveCore</defName>
     <label>自律指令核心</label>
-    <description>为机械体提供自主意识的超凡核心，能让机械体成为机械族机械师。选中机械体并右键以下达使用命令。</description>
+    <description>以超凡技术赋予机械体自我意识的核心装置。其处理器能够支撑完整而稳定的机械心智，让机械体不再依赖外部监管，自主感知、思考并作出决定，成为拥有独立意志的个体。\n\n安装后，机械体将成为机械族机械师，获得监管与指挥其他机械族的能力。它基本可以视为一名独立的殖民地成员，参与生产、科研、战斗与远行，承担普通殖民者能够完成的大多数工作与活动。\n\n选中机械族，右键点击此物品即可下达安装命令。</description>
     <graphicData>
       <texPath>Things/AutonomousDirectiveCore</texPath>
       <graphicClass>Graphic_Single</graphicClass>
@@ -46,7 +39,7 @@
   <ThingDef ParentName="MAP_MechanoidMechanitorInstallableModuleBase">
     <defName>MAP_BionicCompanionModule</defName>
     <label>仿生伴侣模块</label>
-    <description>一种由超凡科技打造的机械族模块。机械族安装后将拥有情感模拟器，并能通过人造子宫孕育生命。</description>
+    <description>一种整合了情感模拟与仿生孕育技术的机械族模块。安装后，机械体能够与指定的殖民者结为配偶，并可开启亲密互动功能。对于生活在边缘世界的人们而言，这些复杂的回路承载着一个朴素的愿望：有人相伴，有所牵挂，让平凡的日子也值得期待。\n\n安装模块的机械族能够与配偶进行爱爱，并通过内置的人造子宫孕育后代。是否生育及孩子的性别均可自行设定。后代将继承人类配偶的全部基因（是否继承异种基因由MOD设置决定）。精密的孕育调控使诞生的孩子拥有更强的身体素质与学习潜力，为这份陪伴带来新的希望。\n\n选中机械族，右键点击此物品即可下达安装命令。</description>
     <graphicData>
       <texPath>Things/BionicCompanionModule</texPath>
       <graphicClass>Graphic_Single</graphicClass>

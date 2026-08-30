@@ -5,10 +5,11 @@
     <label>量子通讯器</label>
     <labelNoun>量子通讯器</labelNoun>
     <description>利用量子效应实现超距通信的超凡通讯装置，植入后控制机械族不再受距离限制。</description>
+    <descriptionShort>该机械师控制其监管的机械族不再受距离限制。</descriptionShort>
     <descriptionHyperlinks>
       <ThingDef>MAP_QuantumCommunicator</ThingDef>
     </descriptionHyperlinks>
-    <defaultLabelColor>(0.2, 0.6, 1.0)</defaultLabelColor>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
     <stages>
       <li>

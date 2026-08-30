@@ -5,7 +5,7 @@
 
     <defName>MAP_MicroCommunicator</defName>
     <label>微型通讯器</label>
-    <description>TODO</description>
+    <description>一个迷你通讯装置，可以使安装者在不借助通讯台的情况下进行联络。</description>
 
     <descriptionHyperlinks>
       <HediffDef>MAP_MicroCommunicator</HediffDef>

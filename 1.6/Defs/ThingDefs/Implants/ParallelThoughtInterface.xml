@@ -3,9 +3,7 @@
   <ThingDef ParentName="MechanitorImplantCraftableBase" MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_ParallelThoughtInterface</defName>
     <label>并行思维接口</label>
-    <description>一种安装于人类机械师脑部的高带宽神经机械接口。它能够接收并行思维阵列传输的运算结果，将机械数据流转换为人类意识能够处理的神经信号。
-
-安装后，该机械师可以成为并行思维阵列的增幅目标，并能够使用数据处理分配功能。接口本身不提供意识增幅。</description>
+    <description>一种安装于人类机械师脑部的高带宽神经机械接口。它能够接收并行思维阵列传输的运算结果，将机械数据流转换为人类意识能够处理的神经信号。\n\n安装后，该机械师可以成为并行思维阵列的增幅目标，并能够使用数据处理分配功能。接口本身不提供意识增幅。</description>
     <descriptionHyperlinks>
       <HediffDef>MAP_ParallelThoughtInterface</HediffDef>
     </descriptionHyperlinks>

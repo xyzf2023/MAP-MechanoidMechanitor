@@ -3,7 +3,8 @@
   <HediffDef MayRequire="Ludeon.RimWorld.Royalty">
     <defName>MAP_MechanoidMechanitor_PsychicReceiver</defName>
     <label>机械灵能接收器</label>
-    <description>机械族机械师用于接收灵能场信号的隐藏接口。</description>
+    <description>机械族机械师用于接收灵能场信号的隐藏接口。\n\n这是个隐藏健康状态，用于为心灵敏感度不足的机械族补齐心灵敏感度。</description>
+    <descriptionShort>机械族机械师用于接收灵能场信号的隐藏接口。</descriptionShort>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_MechanoidMechanitorPsychicReceiver</hediffClass>
     <isBad>false</isBad>
     <initialSeverity>1</initialSeverity>

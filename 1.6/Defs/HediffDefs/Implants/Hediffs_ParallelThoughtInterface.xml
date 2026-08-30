@@ -5,12 +5,10 @@
   <HediffDef>
     <defName>MAP_ParallelThoughtInterface</defName>
     <label>并行思维接口</label>
-    <description>一种安装于人类机械师脑部的高带宽神经机械接口。它能够接收并行思维阵列传输的运算结果，将机械数据流转换为人类意识能够处理的神经信号。
-
-安装后，该机械师可以成为并行思维阵列的增幅目标，并能够使用数据处理分配功能。接口本身不提供意识增幅。</description>
-    <descriptionShort>用于接入并行思维阵列的高带宽神经接口。</descriptionShort>
+    <description>一种安装于人类机械师脑部的高带宽神经机械接口。它能够接收并行思维阵列传输的运算结果，将机械数据流转换为人类意识能够处理的神经信号。\n\n安装后，该机械师可以成为并行思维阵列的增幅目标，并能够使用数据处理分配功能。接口本身不提供意识增幅。\n\n机械族机械师植入后无效果。</description>
+    <descriptionShort>该单位可接入并行思维阵列获取意识加成，并获得数据处理分配能力。</descriptionShort>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_ParallelThoughtInterface</hediffClass>
-    <defaultLabelColor>(0.49,0.78,0.49,1)</defaultLabelColor>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <priceImpact>true</priceImpact>
     <initialSeverity>1</initialSeverity>

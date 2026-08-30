@@ -9,7 +9,7 @@
     </descriptionHyperlinks>
     <label>效能核心</label>
     <description>一套可植入机械师的微型量子运算阵列，能为受监管机械族实时计算最优作业方案。\n\n大幅提高该机械师监管机械族的工作速度与制作品质，移除机械族进行工作时的技能限制，阻止因烹饪等级造成的食物中毒，并使手术一定成功。可通过内存拓展模块提升至最高5级。</description>
-    <descriptionShort>每级提供+1制作物品品质偏移和可配置的工作速度偏移。</descriptionShort>
+    <descriptionShort>该机械师监管的机械族工作效率与质量大幅提升。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <priceImpact>true</priceImpact>

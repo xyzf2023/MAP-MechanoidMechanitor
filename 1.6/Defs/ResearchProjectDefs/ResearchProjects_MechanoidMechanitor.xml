@@ -6,7 +6,7 @@
     <label>量子机械科技</label>
     <description>通过对量子运算芯片的逆向分析，我们掌握了以量子运算系统处理机械意识、控制信号与多重任务的方法，为构建更先进的机械体及机械族控制技术奠定了基础。</description>
     <baseCost>10000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <requiredAnalyzed>
       <li>MAP_QuantumComputingChip</li>
@@ -21,9 +21,23 @@
   <ResearchProjectDef>
     <defName>MAP_QuantumStructuralRestoration</defName>
     <label>量子结构复原</label>
-    <description>利用量子运算建立机械体完整结构的高精度状态模型，并将受损部位与基准结构持续比对，以生成可由机械族自身执行的精密修复序列。研究完成后可制造修复信标。</description>
+    <description>利用量子运算建立机械体完整结构的高精度状态模型，并将受损部位与基准结构持续比对，以生成可由机械族自身执行的精密修复序列。\n\n研究完成后可制造「修复信标」。</description>
     <baseCost>2000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_QuantumMechtech</li>
+    </prerequisites>
+    <researchViewX>1.00</researchViewX>
+    <researchViewY>0.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_QuantumVacuumExtraction</defName>
+    <label>量子真空汲取</label>
+    <description>利用量子运算预测并稳定转瞬即逝的虚空泡，从量子真空的涨落中持续提取可用能量，再经由机械师的监管链路将其输送至受监管机械族。\n\n研究完成后可制造「虚空引擎」。</description>
+    <baseCost>2000</baseCost>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_QuantumMechtech</li>
@@ -33,31 +47,17 @@
   </ResearchProjectDef>
 
   <ResearchProjectDef>
-    <defName>MAP_QuantumVacuumExtraction</defName>
-    <label>量子真空汲取</label>
-    <description>利用量子运算预测并稳定转瞬即逝的虚空泡，从量子真空的涨落中持续提取可用能量，再经由机械师的监管链路将其输送至受监管机械族。研究完成后可制造虚空引擎。</description>
-    <baseCost>2000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <defName>MAP_AutonomousDirectiveCore</defName>
+    <label>自律指令核心</label>
+    <description>机械族能否真正拥有意识，一直是学术界争论不休的问题——直到自律指令核心的出现。它能够赋予机械族完整而稳定的心智，使其摆脱对监管者的依赖，并获得机械师所需的机控能力，成为独立的指挥节点。\n\n研究此科技以解锁自律指令核心的制作方式，以及搭载该核心的重装指挥官「正义」的培育方式。</description>
+    <baseCost>8000</baseCost>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_QuantumMechtech</li>
     </prerequisites>
     <researchViewX>1.00</researchViewX>
     <researchViewY>2.00</researchViewY>
-  </ResearchProjectDef>
-
-  <ResearchProjectDef>
-    <defName>MAP_AutonomousDirectiveCore</defName>
-    <label>自律指令核心</label>
-    <description>机械族能否真正拥有意识，一直是学术界争论不休的问题——直到自律指令核心的出现。它能够赋予机械族完整而稳定的心智，使其摆脱对监管者的依赖，并获得机械师所需的机控能力，成为独立的指挥节点。\n\n研究此科技以解锁自律指令核心的制作方式，以及搭载该核心的重装指挥官「正义」的培育方式。</description>
-    <baseCost>8000</baseCost>
-    <techLevel>Industrial</techLevel>
-    <tab>MAP_MechanoidMechanitorResearch</tab>
-    <prerequisites>
-      <li>MAP_QuantumMechtech</li>
-    </prerequisites>
-    <researchViewX>1.00</researchViewX>
-    <researchViewY>3.00</researchViewY>
         <tags>
       <li>MAP_MechHive</li>
     </tags>
@@ -68,13 +68,13 @@
     <label>量子作业演算</label>
     <description>利用量子运算同时处理大量作业变量，为机械族计算更高效、更精确的执行方案。研究完成后可制造效能核心。</description>
     <baseCost>5000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_QuantumMechtech</li>
     </prerequisites>
     <researchViewX>1.00</researchViewX>
-    <researchViewY>4.00</researchViewY>
+    <researchViewY>3.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -82,7 +82,7 @@
     <label>自律指令优化</label>
     <description>重构自律指令协议的决策逻辑与故障处理机制，使机械族机械师在极端环境中仍能维持稳定、高效的自主运作。\n\n研究完成后，机械族机械师在“自律指令”工作模式与“休眠（自机充电）”状态下，将分别获得对应的健康状态。</description>
     <baseCost>3000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_AutonomousDirectiveCore</li>
@@ -90,7 +90,7 @@
       <li>MAP_QuantumVacuumExtraction</li>
     </prerequisites>
     <researchViewX>2.00</researchViewX>
-    <researchViewY>2.00</researchViewY>
+    <researchViewY>1.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -98,13 +98,13 @@
     <label>机械意识传输</label>
     <description>将机械意识从固定机体中剥离，转化为能够传输、保存与重新写入的数据结构，使意识得以跨越不同的机械载体延续，并解决未启动机体的意识初始化问题。\n\n研究此科技以解锁特殊建筑「正义」（未启动）。启动该建筑后，可生成一台新的「正义」。\n在“机械族机械师”剧本中，还将解锁意识转移功能。</description>
     <baseCost>3000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_AutonomousDirectiveCore</li>
     </prerequisites>
     <researchViewX>2.00</researchViewX>
-    <researchViewY>3.00</researchViewY>
+    <researchViewY>2.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -112,13 +112,13 @@
     <label>数据处理分配</label>
     <description>开发定向数据分配协议，使机械族机械师能够将部分数据处理能力用于关注下属机械体。尽管这会削弱自身的处理效率，却能提升对目标机械体的指令精度，进而强化其各项性能。\n\n研究此科技以解锁机械族机械师功能“数据处理分配”。</description>
     <baseCost>3000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_AutonomousDirectiveCore</li>
     </prerequisites>
     <researchViewX>2.00</researchViewX>
-    <researchViewY>4.00</researchViewY>
+    <researchViewY>3.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -126,14 +126,14 @@
     <label>机控原理研究</label>
     <description>系统解析机控中枢、机械意识与机械体控制网络之间的运行关系，从而掌握人工制造机控中枢的方法。</description>
     <baseCost>5000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>UltraMechtech</li>
       <li>MAP_MechanicalConsciousnessTransfer</li>
     </prerequisites>
     <researchViewX>3.00</researchViewX>
-    <researchViewY>3.00</researchViewY>
+    <researchViewY>2.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -141,13 +141,13 @@
     <label>数据流重整</label>
     <description>重新规划机械族机械师内部的数据流向与处理次序，减少冗余运算和指令冲突，释放更多数据处理能力。\n\n研究此科技以提高“机械族机械师”健康状态所提供的数据处理能力。\n在“机械族机械师”剧本中，还将提高“机械意识”健康状态所提供的数据处理能力。</description>
     <baseCost>5000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_AutonomousDirectiveOptimization</li>
     </prerequisites>
     <researchViewX>3.00</researchViewX>
-    <researchViewY>2.00</researchViewY>
+    <researchViewY>1.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -155,13 +155,13 @@
     <label>自我指令聚焦</label>
     <description>改进数据处理分配协议，使机械族机械师能够将分配出的处理能力重新聚焦于自身，通过更加精细的自我指令强化机体性能。\n\n研究完成后，机械族机械师可以将自身设为数据处理分配的目标。该分配仍会降低自身的数据处理能力，但损失仅为向下属机械体分配时的一半。</description>
     <baseCost>3000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_DataProcessingAllocation</li>
     </prerequisites>
     <researchViewX>3.00</researchViewX>
-    <researchViewY>4.00</researchViewY>
+    <researchViewY>3.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -169,7 +169,21 @@
     <label>意识结构拷贝</label>
     <description>通过对机械族意识载体的深入研究，我们掌握了将成品次生核心中的完整数据复制至空白次生核心的技术。</description>
     <baseCost>3000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_DataStreamReorganization</li>
+    </prerequisites>
+    <researchViewX>4.00</researchViewX>
+    <researchViewY>0.00</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_ParallelThoughtMatrix</defName>
+    <label>并行思维矩阵</label>
+    <description>将机械意识划分为多个可同时运行的思维进程，并以统一矩阵协调其运作，使机械族机械师能够同时处理更加复杂的意识活动与指令任务。\n\n研究此科技以进一步提高“机械族机械师”健康状态所提供的数据处理能力。若存在多个机械族机械师，该加成还会随其数量进一步提升。\n在“机械族机械师”剧本中，还将进一步提高“机械意识”健康状态所提供的数据处理能力。\n\n研究完成后，还可建造「并行思维阵列」并制造「并行思维接口」。</description>
+    <baseCost>8000</baseCost>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_DataStreamReorganization</li>
@@ -178,46 +192,92 @@
     <researchViewY>1.00</researchViewY>
   </ResearchProjectDef>
 
-  <ResearchProjectDef>
-    <defName>MAP_ParallelThoughtMatrix</defName>
-    <label>并行思维矩阵</label>
-    <description>将机械意识划分为多个可同时运行的思维进程，并以统一矩阵协调其运作，使机械族机械师能够同时处理更加复杂的意识活动与指令任务。\n\n研究此科技以进一步提高“机械族机械师”健康状态所提供的数据处理能力。若存在多个机械族机械师，该加成还会随其数量进一步提升。\n在“机械族机械师”剧本中，还将进一步提高“机械意识”健康状态所提供的数据处理能力。\n\n研究完成后，还可建造「并行思维阵列」并制造「并行思维接口」。</description>
-    <baseCost>8000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <ResearchProjectDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
+    <defName>MAP_ArtificialPsychicPathway</defName>
+    <label>人工灵能通路</label>
+    <description>研究如何利用启灵装置构建人工灵能通路，从而更好的感知、传导并驾驭灵能。机械族机械师可以通过这项技术获得使用灵能的能力，普通灵能者亦能从中获益。\n\n研究完成后可制造「心灵中枢」。</description>
+    <baseCost>5000</baseCost>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
-      <li>MAP_DataStreamReorganization</li>
+      <li>MAP_QuantumMechtech</li>
     </prerequisites>
-    <researchViewX>4.00</researchViewX>
-    <researchViewY>2.00</researchViewY>
+    <researchViewX>1.00</researchViewX>
+    <researchViewY>4.00</researchViewY>
   </ResearchProjectDef>
+
 
   <ResearchProjectDef>
     <defName>MAP_MechanicalCommandProxy</defName>
     <label>机械指挥代理</label>
     <description>开发能够独立维持机控连接、处理基础决策并转发指令的机械指挥代理，使部分机械师职能能够由专用机械体承担。\n\n研究此科技以解锁机械族「隐者」的培育方式。「隐者」能够独立带领远行队，并胜任科研工作。</description>
     <baseCost>1500</baseCost>
-    <techLevel>Industrial</techLevel>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
+    <researchViewX>0.00</researchViewX>
+    <researchViewY>5.00</researchViewY>
+    <tags>
+      <li>MAP_MechHive</li>
+    </tags>
+  </ResearchProjectDef>
+
+    <ResearchProjectDef>
+    <defName>MAP_QuantumProxyProtocol</defName>
+    <label>量子代理协议</label>
+    <description>将机械指挥代理的基础决策能力与量子运算技术结合，使微型代理人工智能能够接入机械师的控制网络，并在机械师失去指挥能力时临时维持既有的机控连接。\n\n研究完成后可制造「代理子链」。</description>
+    <baseCost>3000</baseCost>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_MechanicalCommandProxy</li>
+      <li>MAP_QuantumMechtech</li>
+    </prerequisites>
     <researchViewX>1.00</researchViewX>
-    <researchViewY>5.50</researchViewY>
+    <researchViewY>5.00</researchViewY>
+  </ResearchProjectDef>
+
+
+  <ResearchProjectDef>
+    <defName>MAP_BionicMechanicalStructure</defName>
+    <label>仿生机械结构</label>
+    <description>将生物的身体结构与运动方式应用于机械体设计，构建兼具机械强度、精细动作能力与人类装备适配性的仿生机体。\n\n研究此科技以解锁机械族「月亮」的培育方式。「月亮」能够穿戴人类服饰、使用人类武器，并安装适配的人类植入体。</description>
+    <baseCost>2000</baseCost>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <researchViewX>0.00</researchViewX>
+    <researchViewY>6.00</researchViewY>
     <tags>
       <li>MAP_MechHive</li>
     </tags>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
-    <defName>MAP_BionicMechanicalStructure</defName>
-    <label>仿生机械结构</label>
-    <description>将生物组织的结构特征与运动方式应用于机械体设计，创造兼具机械强度、精细动作能力与生物形态适应性的仿生机体。\n\n研究此科技以解锁机械族「恋人」的培育方式。「恋人」可以穿戴人类服饰、使用人类装备，并胜任监管、驯兽与保育工作。</description>
-    <baseCost>5000</baseCost>
-    <techLevel>Industrial</techLevel>
+    <defName>MAP_BionicCognitiveArchitecture</defName>
+    <label>仿生认知架构</label>
+    <description>利用量子运算构建能够识别生物需求、理解交互情境并协调精细动作的认知架构，使仿生机械体能够胜任复杂的照料与交流任务。\n\n研究此科技以解锁机械族「恋人」的培育方式。「恋人」能够承担医疗、烹饪、监管、驯兽与保育工作。</description>
+    <baseCost>3000</baseCost>
+    <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_BionicMechanicalStructure</li>
+      <li>MAP_QuantumMechtech</li>
+    </prerequisites>
+    <researchViewX>1.00</researchViewX>
+    <researchViewY>6.00</researchViewY>
+  </ResearchProjectDef>
+
+    <ResearchProjectDef>
+    <defName>MAP_BionicCompanionEngineering</defName>
+    <label>仿生伴侣工程</label>
+    <description>在仿生结构与认知架构的基础上，整合情感模拟系统与人工孕育装置，使机械体能够参与更亲密的关系，并成为新生命的孕育载体。\n\n研究此科技以解锁仿生伴侣模块的制作方式。安装该模块后，机械族将获得情感模拟与人工孕育能力。</description>
+    <baseCost>5000</baseCost>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_BionicMechanicalStructure</li>
+    </prerequisites>
     <researchViewX>2.00</researchViewX>
-    <researchViewY>5.50</researchViewY>
-    <tags>
-      <li>MAP_MechHive</li>
-    </tags>
+    <researchViewY>6.00</researchViewY>
   </ResearchProjectDef>
 
 </Defs>

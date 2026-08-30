@@ -2,7 +2,7 @@
 <Defs>
   <HediffDef>
     <defName>MAP_Hediff_MechHackImmobilized</defName>
-    <label>机体骇入</label>
+    <label>被骇入</label>
     <description>该机械体正在被骇入，无法移动。</description>
     <hediffClass>HediffWithComps</hediffClass>
     <isBad>false</isBad>
