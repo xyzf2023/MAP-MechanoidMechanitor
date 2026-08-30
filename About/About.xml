@@ -9,7 +9,7 @@
 		<li>星羽枝繁</li>
 		<li>数据删除</li>
 	</authors>
-	<modVersion IgnoreIfNoMatchingField="true">0.3.0</modVersion>
+	<modVersion IgnoreIfNoMatchingField="true">0.3.1</modVersion>
 	<description>扮演觉醒了自我意识的机械族机械师，体验纯粹由机械族组成的殖民地。</description>
 	<modDependencies>
 		<li>
