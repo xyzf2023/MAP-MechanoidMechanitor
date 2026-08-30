@@ -274,7 +274,7 @@
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
-      <li>MAP_BionicMechanicalStructure</li>
+      <li>MAP_BionicCognitiveArchitecture</li>
     </prerequisites>
     <researchViewX>2.00</researchViewX>
     <researchViewY>6.00</researchViewY>

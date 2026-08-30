@@ -5,9 +5,7 @@
   <ThingDef ParentName="BuildingBase" MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_ParallelThoughtArray</defName>
     <label>并行思维阵列</label>
-    <description>一座由大量量子运算模块组成的外置思维设施。阵列能够与指定机械师建立持续同步连接，在外部并行处理其意识活动与控制数据，并将运算结果实时反馈给目标。
-
-对机械族机械师而言，这会增加其可用于分配的数据处理能力；对安装了并行思维接口的人类机械师而言，则会直接扩展其意识处理能力。提高阵列的运算强度会同时提高增幅效果与电力消耗。</description>
+    <description>一座由大量量子运算模块组成的外置思维设施。阵列能够与指定机械师建立持续同步连接，在外部并行处理其意识活动与控制数据，并将运算结果实时反馈给目标。\n\n对机械族机械师而言，这会增加其可用于分配的数据处理能力；对安装了并行思维接口的人类机械师而言，则会直接提升其意识。提高阵列的运算强度会同时提高增幅效果与电力消耗。</description>
     <graphicData>
       <texPath>Things/Building/Misc/BandNode</texPath>
       <graphicClass>Graphic_Single</graphicClass>

@@ -17,8 +17,8 @@
   <MAP_MechanoidMechanitor.Settings.BrainImplants.Label>启用机械族机械师使用并安装脑部植入体</MAP_MechanoidMechanitor.Settings.BrainImplants.Label>
   <MAP_MechanoidMechanitor.Settings.BrainImplants.Description>开启后，机械族机械师可以右键选择人类脑部植入体并为自己安装。此功能会略微影响游戏启动时的加载速度。</MAP_MechanoidMechanitor.Settings.BrainImplants.Description>
   <MAP_MechanoidMechanitor.Settings.BrainImplants.RestartRequired>此设置将在重新启动游戏后生效。</MAP_MechanoidMechanitor.Settings.BrainImplants.RestartRequired>
-  <MAP_MechanoidMechanitor.Settings.MoonImplants.Label>允许「月亮」自由安装仿生体</MAP_MechanoidMechanitor.Settings.MoonImplants.Label>
-  <MAP_MechanoidMechanitor.Settings.MoonImplants.Description>启用后，「月亮」可以通过右键地图中的标准人类植入体和替换型义体，自行选择合法身体部位并完成安装。修改此设置后需要重新启动游戏才会生效。</MAP_MechanoidMechanitor.Settings.MoonImplants.Description>
+  <MAP_MechanoidMechanitor.Settings.MoonImplants.Label>允许「月亮」安装仿生体</MAP_MechanoidMechanitor.Settings.MoonImplants.Label>
+  <MAP_MechanoidMechanitor.Settings.MoonImplants.Description>启用后，「月亮」可以通过右键植入体安装。此功能会略微影响游戏启动时的加载速度。修改此设置后需要重新启动游戏。</MAP_MechanoidMechanitor.Settings.MoonImplants.Description>
   <MAP_MechanoidMechanitor.Settings.MoonImplants.RestartRequired>该设置已更改，需要重新启动游戏后才能生效。</MAP_MechanoidMechanitor.Settings.MoonImplants.RestartRequired>
 
   <!-- 模块：仿生子嗣 -->

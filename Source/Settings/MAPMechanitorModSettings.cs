@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor
         public bool enableMechanoidMechanitorBrainImplants = false;
 
         // 字段名已改为 enableMoonImplants；序列化 key 仍沿用旧 "enableLoverImplants" 以保证旧设置兼容。
-        public bool enableMoonImplants = false;
+        public bool enableMoonImplants = true;
 
         /// <summary>
         /// 默认关闭。开启后，不含机械族机械师剧本词条的普通剧本也会在新游戏流程中
@@ -401,7 +401,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref enableMoonImplants,
                 "enableLoverImplants",
-                false);
+                true);
             Scribe_Values.Look(
                 ref enableStoryStylesForGeneralScenarios,
                 "enableStoryStylesForGeneralScenarios",
