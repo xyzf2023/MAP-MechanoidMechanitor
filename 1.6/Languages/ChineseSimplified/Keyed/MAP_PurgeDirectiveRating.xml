@@ -59,6 +59,7 @@
   <MAP_PurgeDirectiveRating.Goods.Tier3>全部合法物资</MAP_PurgeDirectiveRating.Goods.Tier3>
 
   <!-- ===== 肃清节点评级：机械族/物资行 ===== -->
+  <MAP_PurgeDirectiveRating.Mechs.RatingNotMet>节点评级未满足</MAP_PurgeDirectiveRating.Mechs.RatingNotMet>
   <MAP_PurgeDirectiveRating.MechRow.PriceDiscounted>单价 {0}（原价 {1}）</MAP_PurgeDirectiveRating.MechRow.PriceDiscounted>
   <MAP_PurgeDirectiveRating.MechRow.Price>单价 {0}</MAP_PurgeDirectiveRating.MechRow.Price>
   <MAP_PurgeDirectiveRating.LockedForLevel>需 {0} 级评级</MAP_PurgeDirectiveRating.LockedForLevel>

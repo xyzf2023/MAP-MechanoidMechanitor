@@ -39,6 +39,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool filterBuilt;
 
+        private int cachedRatingLevel = -1;
+
         private readonly List<MechanoidOvermindThingCatalogEntry> filtered =
             new List<MechanoidOvermindThingCatalogEntry>();
 
@@ -218,10 +220,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void RebuildFilteredIfNeeded()
         {
+            int ratingLevel = PurgeDirectiveRatingUtility.CurrentRatingLevel;
             if (filterBuilt
                 && cachedSearch == search
                 && cachedCategory == categoryFilter
-                && cachedSort == sortMode)
+                && cachedSort == sortMode
+                && cachedRatingLevel == ratingLevel)
             {
                 return;
             }
@@ -229,6 +233,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             cachedSearch = search;
             cachedCategory = categoryFilter;
             cachedSort = sortMode;
+            cachedRatingLevel = ratingLevel;
             filterBuilt = true;
             filtered.Clear();
 
@@ -238,6 +243,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             for (int i = 0; i < catalog.Count; i++)
             {
                 MechanoidOvermindThingCatalogEntry entry = catalog[i];
+                if (!PurgeDirectiveRatingUtility.IsThingUnlocked(entry.Def))
+                {
+                    continue;
+                }
+
                 if (categoryFilter.HasValue && entry.Category != categoryFilter.Value)
                 {
                     continue;
@@ -254,6 +264,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             filtered.Sort(CompareEntries);
+
+            if (selected != null
+                && !PurgeDirectiveRatingUtility.IsThingUnlocked(selected.Def))
+            {
+                selected = null;
+                selectedStuff = null;
+                selectedCount = 0;
+                countEditBuffer = "0";
+                pricedSpec = null;
+                priceDirty = true;
+            }
         }
 
         private int CompareEntries(
@@ -349,16 +370,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(textX, rowRect.y + 20f, textWidth, 16f),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.GoodsRowCategory".Translate(
                     GetCategoryLabel(entry.Category)));
-
-            if (!PurgeDirectiveRatingUtility.IsThingUnlocked(entry.Def))
-            {
-                MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(textRight - 160f, rowRect.y + 20f, 160f, 16f),
-                    PurgeDirectiveRatingUtility.GetThingLockReason(entry.Def),
-                    GameFont.Tiny,
-                    TextAnchor.MiddleRight,
-                    MechanoidOvermindUiStyle.Error);
-            }
 
             if (Widgets.ButtonInvisible(rowRect))
             {

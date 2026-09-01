@@ -17,7 +17,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float MinVirtualHeight = 640f;
 
-        private const float TopBarHeight = 104f;
+        private const float BaseTopBarHeight = 72f;
+
+        private const float RatingTopBarHeight = 90f;
 
         private const float BottomBarHeight = 36f;
 
@@ -750,7 +752,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void DrawLayout(Rect inRect)
         {
-            Rect topRect = new Rect(inRect.x, inRect.y, inRect.width, TopBarHeight);
+            float topBarHeight = PurgeDirectiveRatingUtility.IsRatingSystemActive()
+                ? RatingTopBarHeight
+                : BaseTopBarHeight;
+            Rect topRect = new Rect(inRect.x, inRect.y, inRect.width, topBarHeight);
             DrawTopBar(topRect);
 
             Rect bottomRect = new Rect(
@@ -1086,15 +1091,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindUiStyle.AccentBright);
 
             bool ratingActive = PurgeDirectiveRatingUtility.IsRatingSystemActive();
-            bool takeoverActive = GameComponent_CerebrexTakeoverState.IsActive;
-            float ratingY = 20f;
             float connectionY = ratingActive ? 38f : 20f;
             float permissionY = ratingActive ? 56f : 38f;
 
             if (ratingActive)
             {
-                int ratingLevel = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingLevel();
-                int ratingValue = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingValue();
+                int ratingLevel = PurgeDirectiveRatingUtility.CurrentRatingLevel;
+                int ratingValue = PurgeDirectiveRatingUtility.CurrentRatingValue();
                 int nextThreshold = PurgeDirectiveRatingUtility.Config.GetNextLevelStart(ratingLevel);
                 string ratingText = PurgeDirectiveRatingUtility.IsMaxRatingLevel()
                     ? "MAP_PurgeDirectiveRating.TopBar.Maxed".Translate(
@@ -1106,18 +1109,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         ratingValue,
                         nextThreshold);
                 MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(rightX, inner.y + ratingY, rightWidth, 18f),
+                    new Rect(rightX, inner.y + 20f, rightWidth, 18f),
                     ratingText,
-                    GameFont.Tiny,
-                    TextAnchor.MiddleRight,
-                    MechanoidOvermindUiStyle.AccentBright);
-            }
-            else if (takeoverActive)
-            {
-                // 接管主脑：不显示评级进度，仅显示控制权限状态。
-                MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(rightX, inner.y + ratingY, rightWidth, 18f),
-                    "MAP_PurgeDirectiveRating.Takeover.Name".Translate(),
                     GameFont.Tiny,
                     TextAnchor.MiddleRight,
                     MechanoidOvermindUiStyle.AccentBright);
@@ -1136,21 +1129,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 GameFont.Tiny,
                 TextAnchor.MiddleRight,
                 MechanoidOvermindUiStyle.TextSecondary);
-
-            // 接管主脑后不显示评级进度条；否则固定显示评级进度条（按当前等级内计算）。
-            if (ratingActive)
-            {
-                int ratingValue = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingValue();
-                int ratingLevel = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingLevel();
-                int levelStart = PurgeDirectiveRatingUtility.Config.GetLevelStart(ratingLevel);
-                int nextThreshold = PurgeDirectiveRatingUtility.Config.GetNextLevelStart(ratingLevel);
-                float span = nextThreshold - levelStart;
-                float ratio = span <= 0f
-                    ? 1f
-                    : Mathf.Clamp01((float)(ratingValue - levelStart) / span);
-                Rect barRect = new Rect(rightX, inner.y + 74f, rightWidth, 8f);
-                Widgets.FillableBar(barRect, ratio);
-            }
         }
 
         private void DrawBottomBar(Rect rect, bool bootPage)

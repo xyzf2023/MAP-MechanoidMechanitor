@@ -34,6 +34,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private WeightFilter? cachedFilter;
 
+        private int cachedRatingLevel = -1;
+
+        private bool selectedWeightLocked;
+
         private readonly List<MechanoidOvermindMechCatalogEntry> filtered =
             new List<MechanoidOvermindMechCatalogEntry>();
 
@@ -121,13 +125,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void RebuildFilteredIfNeeded()
         {
-            if (cachedSearch == search && cachedFilter == weightFilter)
+            int ratingLevel = PurgeDirectiveRatingUtility.CurrentRatingLevel;
+            if (cachedSearch == search
+                && cachedFilter == weightFilter
+                && cachedRatingLevel == ratingLevel)
             {
                 return;
             }
 
             cachedSearch = search;
             cachedFilter = weightFilter;
+            cachedRatingLevel = ratingLevel;
+            selectedWeightLocked = IsSelectedWeightLocked();
             filtered.Clear();
 
             string needle = search.Trim();
@@ -137,6 +146,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             for (int i = 0; i < catalog.Count; i++)
             {
                 MechanoidOvermindMechCatalogEntry entry = catalog[i];
+                if (!PurgeDirectiveRatingUtility.IsMechUnlocked(entry.WeightClass))
+                {
+                    continue;
+                }
+
                 if (!MatchesWeight(entry))
                 {
                     continue;
@@ -151,6 +165,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 filtered.Add(entry);
             }
+        }
+
+        private bool IsSelectedWeightLocked()
+        {
+            MechWeightClassDef? selectedWeight;
+            switch (weightFilter)
+            {
+                case WeightFilter.Medium:
+                    selectedWeight = MechWeightClassDefOf.Medium;
+                    break;
+                case WeightFilter.Heavy:
+                    selectedWeight = MechWeightClassDefOf.Heavy;
+                    break;
+                case WeightFilter.UltraHeavy:
+                    selectedWeight = MechWeightClassDefOf.UltraHeavy;
+                    break;
+                default:
+                    return false;
+            }
+
+            return !PurgeDirectiveRatingUtility.IsMechUnlocked(selectedWeight);
         }
 
         private bool MatchesWeight(MechanoidOvermindMechCatalogEntry entry)
@@ -176,6 +211,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void DrawList(Rect listRect, MechanoidOvermindOrder order)
         {
             MechanoidOvermindUiStyle.DrawPanel(listRect, alt: true, cornerMarks: false);
+            if (selectedWeightLocked)
+            {
+                MechanoidOvermindUiStyle.DrawLabel(
+                    listRect.ContractedBy(8f),
+                    "MAP_PurgeDirectiveRating.Mechs.RatingNotMet".Translate(),
+                    GameFont.Small,
+                    TextAnchor.MiddleCenter,
+                    MechanoidOvermindUiStyle.Error);
+                return;
+            }
+
             float rowStride = RowHeight + 2f;
             Rect viewRect = new Rect(
                 0f,
@@ -220,33 +266,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(textX, rowRect.y + 4f, textWidth, 20f),
                 entry.Kind.LabelCap);
 
-            bool mechUnlocked = PurgeDirectiveRatingUtility.IsMechUnlocked(entry.WeightClass);
-            int requiredLevel = PurgeDirectiveRatingUtility.RequiredLevelForMechWeight(entry.WeightClass);
-
             string weightLabel = entry.WeightClass != null
                 ? entry.WeightClass.LabelCap
                 : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Light".Translate();
-
-            string priceMeta;
-            if (mechUnlocked)
-            {
-                int shownPrice = MechanoidOvermindRatingPricingService.GetDiscountedUnitPrice(
-                    entry.PurgePrice);
-                if (shownPrice != entry.PurgePrice)
-                {
-                    priceMeta = "MAP_PurgeDirectiveRating.MechRow.PriceDiscounted".Translate(
-                        shownPrice,
-                        entry.PurgePrice);
-                }
-                else
-                {
-                    priceMeta = "MAP_PurgeDirectiveRating.MechRow.Price".Translate(shownPrice);
-                }
-            }
-            else
-            {
-                priceMeta = "MAP_PurgeDirectiveRating.LockedForLevel".Translate(requiredLevel);
-            }
+            int shownPrice = MechanoidOvermindRatingPricingService.GetDiscountedUnitPrice(
+                entry.PurgePrice);
+            string priceMeta = shownPrice != entry.PurgePrice
+                ? "MAP_PurgeDirectiveRating.MechRow.PriceDiscounted".Translate(
+                    shownPrice,
+                    entry.PurgePrice)
+                : "MAP_PurgeDirectiveRating.MechRow.Price".Translate(shownPrice);
 
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(textX, rowRect.y + 24f, textWidth, 20f),
@@ -256,41 +285,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     priceMeta));
 
             int orderCount = order.GetMechCount(entry.Kind);
-            if (mechUnlocked)
+            Rect countRect = new Rect(rowRect.xMax - 168f, rowRect.y + 12f, 48f, 28f);
+            DrawCountField(countRect, entry.Kind, order, orderCount);
+
+            if (MechanoidOvermindUiStyle.DrawActionButton(
+                    new Rect(rowRect.xMax - 112f, rowRect.y + 12f, 24f, 28f),
+                    "-"))
             {
-                Rect countRect = new Rect(rowRect.xMax - 168f, rowRect.y + 12f, 48f, 28f);
-                DrawCountField(countRect, entry.Kind, order, orderCount);
-
-                if (MechanoidOvermindUiStyle.DrawActionButton(
-                        new Rect(rowRect.xMax - 112f, rowRect.y + 12f, 24f, 28f),
-                        "-"))
-                {
-                    ApplyMechCount(order, entry.Kind, orderCount - 1);
-                }
-
-                if (MechanoidOvermindUiStyle.DrawActionButton(
-                        new Rect(rowRect.xMax - 84f, rowRect.y + 12f, 24f, 28f),
-                        "+"))
-                {
-                    ApplyMechCount(order, entry.Kind, orderCount + 1);
-                }
-
-                if (MechanoidOvermindUiStyle.DrawActionButton(
-                        new Rect(rowRect.xMax - 56f, rowRect.y + 12f, 52f, 28f),
-                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem".Translate()))
-                {
-                    ApplyMechCount(order, entry.Kind, 0);
-                }
+                ApplyMechCount(order, entry.Kind, orderCount - 1);
             }
-            else
+
+            if (MechanoidOvermindUiStyle.DrawActionButton(
+                    new Rect(rowRect.xMax - 84f, rowRect.y + 12f, 24f, 28f),
+                    "+"))
             {
-                // 未解锁：禁用操作，仅提示所需评级。
-                MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(rowRect.xMax - 168f, rowRect.y + 12f, 164f, 28f),
-                    "MAP_PurgeDirectiveRating.RequiresLevel".Translate(requiredLevel),
-                    GameFont.Tiny,
-                    TextAnchor.MiddleRight,
-                    MechanoidOvermindUiStyle.Error);
+                ApplyMechCount(order, entry.Kind, orderCount + 1);
+            }
+
+            if (MechanoidOvermindUiStyle.DrawActionButton(
+                    new Rect(rowRect.xMax - 56f, rowRect.y + 12f, 52f, 28f),
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem".Translate()))
+            {
+                ApplyMechCount(order, entry.Kind, 0);
             }
         }
 
