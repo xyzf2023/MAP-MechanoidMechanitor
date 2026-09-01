@@ -92,17 +92,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 接管主脑优先于一切完成重试：现存评级任务必须立即无处罚结束。
+            if (GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                EndWithoutPenalty();
+                return;
+            }
+
             // 明确完成信号已到达但奖励提交暂时失败时，持续重试，不把目标后续销毁误判为无效。
             if (completionConfirmed)
             {
                 Success();
-                return;
-            }
-
-            // 接管主脑：现存评级任务无处罚结束。
-            if (GameComponent_CerebrexTakeoverState.IsActive)
-            {
-                EndWithoutPenalty();
                 return;
             }
 
