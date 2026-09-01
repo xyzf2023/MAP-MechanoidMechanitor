@@ -89,8 +89,6 @@
     <outpostFailurePenalty>300</outpostFailurePenalty>
     <baseFailurePenalty>600</baseFailurePenalty>
 
-    <ratingUpgradeLetter>MAP_PurgeDirectiveRatingUpgrade</ratingUpgradeLetter>
-    <ratingDowngradeLetter>MAP_PurgeDirectiveRatingDowngrade</ratingDowngradeLetter>
   </MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveRatingConfigDef>
 
   <!-- 物资评级覆盖：按 DefName 显式锁定所需评级等级（仅允许 1~3），替代自动分类（不是 max）。
@@ -111,7 +109,7 @@
   <MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveQuestConfigDef>
     <defName>MAP_PurgeDirectiveQuestConfig</defName>
     <label>purge directive rating quest configuration</label>
-    <questScriptDefName>MAP_PurgeDirectiveQuest</questScriptDefName>
+    <questScriptDef>MAP_PurgeDirectiveQuest</questScriptDef>
   </MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveQuestConfigDef>
 
   <!-- 肃清评级任务的 QuestScriptDef。根节点仅构造 Quest 与唯一的 QuestPart 状态机，

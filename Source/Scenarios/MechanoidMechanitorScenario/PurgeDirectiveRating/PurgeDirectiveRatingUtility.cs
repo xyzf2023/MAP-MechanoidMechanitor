@@ -86,7 +86,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool IsMechUnlocked(MechWeightClassDef? weight)
         {
-            if (weight == null) return false;
+            // 配置约定 null 重量级按 Light 处理，第三方机械族不因缺省重量级被永久锁死。
             return CurrentRatingLevel >= RequiredLevelForMechWeight(weight);
         }
 
@@ -120,6 +120,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool IsThingUnlocked(ThingDef? def)
         {
             if (def == null) return false;
+
+            // 黑名单是最终否决，不得因为三级已满足 RequiredLevelForThing 的从严回退值而绕过。
+            if (MechanoidOvermindCatalogService.GetMergedBlacklist().Contains(def)) return false;
             return CurrentRatingLevel >= RequiredLevelForThing(def);
         }
 

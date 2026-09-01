@@ -308,25 +308,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool TryAddPurgeDirectiveRewardPoints(int amount)
         {
-            if (amount <= 0 || !IsPurgeDirectiveActive)
-            {
-                return false;
-            }
-
-            GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
-            if (component == null
-                || !component.PurgeDirectiveEnabled
-                || component.purgeDirectiveRuntimeState == null)
-            {
-                return false;
-            }
-
-            component.purgeDirectiveRuntimeState.AddRewardPoints(amount);
-
-            // 所有合法肃清额度正向奖励同步增加等量评级（退款 / 订单取消返款 / DEV 调额度
-            // 不经由本入口，因此不会增加评级）。接管主脑后本调用内部自动停止评级增减。
-            PurgeDirectiveRatingUtility.TryAddRating(amount);
-            return true;
+            // 兼容旧调用点，所有正式奖励统一由同一个原子入口处理。
+            return PurgeDirectiveRatingUtility.TryAddPurgeDirectiveRewardPoints(amount);
         }
 
         /// <summary>

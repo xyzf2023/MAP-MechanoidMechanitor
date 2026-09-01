@@ -192,7 +192,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             foreach (Quest quest in Find.QuestManager.QuestsListForReading)
             {
-                if (quest.root != questScriptDef || quest.State != QuestState.Ongoing)
+                if (quest.root != questScriptDef
+                    || (quest.State != QuestState.Ongoing
+                        && quest.State != QuestState.NotYetAccepted))
                 {
                     continue;
                 }
@@ -220,7 +222,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             foreach (Quest quest in Find.QuestManager.QuestsListForReading)
             {
-                if (quest.root != questScriptDef || quest.State != QuestState.Ongoing)
+                if (quest.root != questScriptDef
+                    || (quest.State != QuestState.Ongoing
+                        && quest.State != QuestState.NotYetAccepted))
                 {
                     continue;
                 }
@@ -243,14 +247,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            // 生成前即把目标标记为已使用，保证待接受邀请期内不会重复选择同一目标。
-            string? stableId = PurgeDirectiveQuestTargetUtility.TryGetStableId(target);
-            if (stableId != null)
+            Faction? targetFaction = target.Faction;
+            if (!MechanoidMechanitorMechHiveCommunicationUtility.TryGetContactableMechHive(
+                    out Faction proposerFaction))
             {
-                PurgeDirectiveRatingUtility.Runtime?.MarkQuestTargetUsed(stableId);
+                return;
             }
 
-            Faction? targetFaction = target.Faction;
+            string? stableId = PurgeDirectiveQuestTargetUtility.TryGetStableId(target);
             PurgeDirectiveTargetType type = PurgeDirectiveQuestTargetUtility.ClassifyTargetType(target);
             int extraReward = PurgeDirectiveRatingUtility.GetQuestExtraReward(type);
             int offerTimeout = cfg.questOfferTimeoutDays * 60000;
@@ -259,7 +263,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Slate slate = new Slate();
             slate.Set("targetWorldObject", target);
             slate.Set("targetFaction", targetFaction);
-            slate.Set("proposerFaction", Faction.OfPlayer);
+            slate.Set("proposerFaction", proposerFaction);
             slate.Set("purgeQuestConfigDefName", cfg.defName);
             slate.Set("rewardValue", extraReward);
             slate.Set("offerTimeoutTicks", offerTimeout);
@@ -268,6 +272,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Quest quest = QuestUtility.GenerateQuestAndMakeAvailable(questScriptDef, slate);
             if (quest != null)
             {
+                if (stableId != null)
+                {
+                    // 仅在任务实际生成成功后登记历史目标，避免生成异常永久浪费目标。
+                    PurgeDirectiveRatingUtility.Runtime?.MarkQuestTargetUsed(stableId);
+                }
+
                 quest.name = "MAP_PurgeDirectiveRating.Quest.Title".Translate(target.LabelCap);
             }
         }

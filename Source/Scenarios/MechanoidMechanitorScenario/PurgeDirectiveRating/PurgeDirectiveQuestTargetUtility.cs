@@ -117,9 +117,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (faction == null) return true;
             if (faction.IsPlayer) return true;
             if (faction.def == null) return true;
-            if (faction.def.hidden) return true;
-            if (faction.defeated) return true;
-            if (faction.def == FactionDefOf.Mechanoid) return true; // 机械族/机械巢派系
+            if (faction.Hidden || faction.def.hidden) return true;
+            if (faction.temporary || faction.deactivated || faction.defeated) return true;
+            if (faction.def == FactionDefOf.Mechanoid) return true;
+
+            // 兼容第三方机械巢派系 Def：以当前实际机械巢实例为准，不只比较原版 FactionDef。
+            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive();
+            if (mechHive != null && faction == mechHive) return true;
             return false;
         }
 
@@ -130,6 +134,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!HasStableId(obj)) return false;
             if (obj.Destroyed) return false;
             if (!obj.Spawned) return false; // 未登记在当前世界对象列表中
+            if (obj is MapParent mapParent && mapParent.HasMap) return false;
 
             PurgeDirectiveTargetType type = ClassifyTargetType(obj);
             if (type == PurgeDirectiveTargetType.Invalid) return false;
@@ -150,6 +155,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool IsTargetOccupiedByOtherQuest(WorldObject? obj)
         {
             if (obj == null) return false;
+
+            // 原版及第三方任务通常会把占用标记写入世界对象 questTags。
+            // 保守排除任何已有标记的目标，避免把同一地点分配给两条任务线。
+            if (obj.questTags != null && obj.questTags.Count > 0) return true;
+
             string? stableId = TryGetStableId(obj);
             if (stableId == null) return false;
 
@@ -242,24 +252,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         private static WorldObject? PickHighestThreatOutpostIfReliable(List<WorldObject> outposts)
         {
-            WorldObject? best = null;
-            float bestThreat = -1f;
-            bool anyReliable = false;
-            for (int i = 0; i < outposts.Count; i++)
-            {
-                if (outposts[i] is Site site && site.HasMap)
-                {
-                    anyReliable = true;
-                    float threat = site.ActualThreatPoints;
-                    if (threat > bestThreat)
-                    {
-                        bestThreat = threat;
-                        best = site;
-                    }
-                }
-            }
-
-            return anyReliable ? best : null;
+            // 合法候选明确排除已生成地图的地点；未生成地图时没有可靠、统一的实际守军
+            // 威胁快照，因此不猜测第三方 Site 的强度，交由调用方在同类中随机选择。
+            return null;
         }
     }
 }

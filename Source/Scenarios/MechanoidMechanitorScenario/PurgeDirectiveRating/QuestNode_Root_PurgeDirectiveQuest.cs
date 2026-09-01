@@ -8,8 +8,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 肃清评级任务根节点。只负责按 Slate 构造 Quest 与唯一的 QuestPart 状态机，
-    /// 不引用共生盟约的任何类型与逻辑。目标信号由 WorldObject 销毁钩子驱动，
-    /// 因此无需在此铺设 MapGenerated / NoActiveThreats 等信号链。
+    /// 不引用共生盟约的任何类型与逻辑。完成只接受据点/站点的明确守军击败信号，
+    /// 不把任意 WorldObject.Destroy 当作玩家完成。
     /// </summary>
     public class QuestNode_Root_PurgeDirectiveQuest : QuestNode
     {
@@ -21,6 +21,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Faction proposerFaction = slate.Get<Faction>("proposerFaction");
             string configName = slate.Get<string>("purgeQuestConfigDefName");
             int rewardValue = slate.Get<int>("rewardValue", 0);
+            int offerTimeout = slate.Get<int>("offerTimeoutTicks", 0);
             int operationTimeout = slate.Get<int>("operationTimeoutTicks", 0);
 
             PurgeDirectiveTargetType targetType =
@@ -39,6 +40,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 questTag = "Quest" + QuestGen.quest.id + "."
             };
 
+            part.InitializeOfferExpiry(Find.TickManager.TicksGame + offerTimeout);
             QuestGen.quest.AddPart(part);
 
             // 玩家抉择期：由 QuestScriptDef.expireDaysRange 控制，到期未接取则按拒绝（无处罚）结束。

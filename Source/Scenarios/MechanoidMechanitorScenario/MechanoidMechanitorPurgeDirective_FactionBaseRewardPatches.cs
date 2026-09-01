@@ -52,7 +52,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (!__state
                 || __instance == null
-                || !AllEnemiesDefeatedSignalSent(__instance))
+                || !AllEnemiesDefeatedSignalSent(__instance)
+                || __instance.Faction == null
+                || __instance.Faction.IsPlayer)
             {
                 return;
             }

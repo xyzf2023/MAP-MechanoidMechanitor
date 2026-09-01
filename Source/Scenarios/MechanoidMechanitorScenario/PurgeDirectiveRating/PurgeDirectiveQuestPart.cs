@@ -12,13 +12,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// 援军 / Lord 等任何代码。
     ///
     /// 状态转换（QuestPart 是活动任务状态的唯一权威来源，GameComponent 不保存第二份阶段）：
-    ///  OfferPending →（玩家接取）→ OperationActive →（真实完成信号/目标被摧毁）→ 成功
+    ///  OfferPending →（玩家接取）→ OperationActive →（明确守军击败信号）→ 成功
     ///                                          →（超时）→ 失败（按目标类型扣评级，不扣肃清额度）
     ///                                          →（目标失去敌对 / 接管主脑 / 失效）→ 无处罚结束
     ///  OfferPending →（玩家拒绝 / 抉择期过期）→ 无处罚结束
     ///
     /// 成功结算顺序：确保基础200点(按稳定ID去重) → 发放任务额外奖励(按目标类型) → 标记状态 → 信 → 结束。
-    /// 完成信号幂等：无论 NotifyTargetDestroyed / 守军清除通知 / Tick 触发多少次，Success 只结算一次。
+    /// 完成信号幂等：无论守军清除通知 / Tick 重试多少次，奖励与 Success 都只结算一次。
     /// </summary>
     public class PurgeDirectiveQuestPart : QuestPartActivable
     {
@@ -50,6 +50,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool extraRewardHandled;
         private bool penaltyHandled;
         private bool cooldownHandled;
+        private bool completionConfirmed;
 
         public bool IsOperationActive => stage == Stage.OperationActive;
 
@@ -69,13 +70,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return Mathf.Max(0, operationExpireTick - Find.TickManager.TicksGame);
         }
 
+        public void InitializeOfferExpiry(int absoluteTick)
+        {
+            offerExpireTick = absoluteTick;
+        }
+
         public override void PreQuestAccept()
         {
             if (stage == Stage.OfferPending)
             {
                 stage = Stage.OperationActive;
-                offerExpireTick = Find.TickManager.TicksGame
-                    + (PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig?.questOfferTimeoutDays ?? 3) * 60000;
                 operationExpireTick = Find.TickManager.TicksGame + operationTimeoutTicks;
             }
         }
@@ -85,6 +89,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             base.QuestPartTick();
             if (stage != Stage.OperationActive)
             {
+                return;
+            }
+
+            // 明确完成信号已到达但奖励提交暂时失败时，持续重试，不把目标后续销毁误判为无效。
+            if (completionConfirmed)
+            {
+                Success();
                 return;
             }
 
@@ -102,18 +113,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            // 目标引用失效（已销毁但未走成功路径、未登记等）：无处罚失效。
+            // 只有守军击败补丁发送的明确完成信号才算成功；任意 Destroy/失去登记均无处罚失效。
             if (targetWorldObject == null || targetWorldObject.Destroyed || !targetWorldObject.Spawned)
             {
-                // 工作站守军清除由 WorkSiteDefeatedPatch 显式通知成功；
-                // 据点/前哨的真实摧毁信号亦走显式通知或 Destroy 兜底。
-                if (targetWorldObject != null && targetWorldObject.Destroyed
-                    && PurgeDirectiveRatingUtility.IsRatingSystemActive())
-                {
-                    Success();
-                    return;
-                }
-
                 EndWithoutPenalty();
                 return;
             }
@@ -125,15 +127,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        /// <summary>由 WorldObject 销毁钩子调用：玩家摧毁目标 → 成功（兜底/分发，需正处于操作阶段）。</summary>
-        public void NotifyTargetDestroyed()
-        {
-            if (stage == Stage.OperationActive && PurgeDirectiveRatingUtility.IsRatingSystemActive())
-            {
-                Success();
-            }
-        }
-
         /// <summary>由守军清除/完成信号调用（如工作站 AllEnemiesDefeated）：若正在针对该目标操作则记为成功。</summary>
         public void NotifyTargetDefeated(WorldObject? obj)
         {
@@ -142,48 +135,59 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && obj == targetWorldObject
                 && PurgeDirectiveRatingUtility.IsRatingSystemActive())
             {
+                completionConfirmed = true;
                 Success();
             }
         }
 
         private void Success()
         {
-            if (stage == Stage.Ended)
+            if (stage == Stage.Ended || !completionConfirmed)
+            {
+                return;
+            }
+
+            int baseReward =
+                PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig?.questBaseRewardPoints ?? 200;
+
+            // 先确认历史去重状态；只有奖励已存在或本次实际提交成功，才标记为已处理。
+            if (!baseRewardHandled)
+            {
+                MechanoidMechanitorPurgeDirectiveRuntimeState? runtime =
+                    PurgeDirectiveRatingUtility.Runtime;
+                if (!string.IsNullOrEmpty(targetStableId)
+                    && runtime != null
+                    && runtime.HasAwardedBaseReward(targetStableId!))
+                {
+                    baseRewardHandled = true;
+                }
+                else if (targetWorldObject != null
+                    && PurgeDirectiveRatingUtility.TryGrantWorldTargetBaseReward(
+                        targetWorldObject,
+                        baseReward))
+                {
+                    baseRewardHandled = true;
+                }
+            }
+
+            if (!extraRewardHandled)
+            {
+                int extra = PurgeDirectiveRatingUtility.GetQuestExtraReward(targetType);
+                extraRewardHandled = extra <= 0
+                    || PurgeDirectiveRatingUtility.TryAddPurgeDirectiveRewardPoints(extra);
+            }
+
+            // 奖励没有真正写入时保持操作阶段并由 Tick 重试，禁止虚假标记成功。
+            if (!baseRewardHandled || !extraRewardHandled)
             {
                 return;
             }
 
             stage = Stage.Ended;
-
-            // 1) 确保基础攻克奖励（按世界目标稳定ID去重，同时增加肃清额度与等量评级）。
-            if (targetWorldObject != null && !baseRewardHandled)
-            {
-                PurgeDirectiveRatingUtility.TryGrantWorldTargetBaseReward(
-                    targetWorldObject,
-                    PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig?.questBaseRewardPoints ?? 200);
-                baseRewardHandled = true;
-            }
-
-            // 2) 任务额外奖励（按目标类型，同时增加肃清额度与等量评级）。
-            if (!extraRewardHandled)
-            {
-                int extra = PurgeDirectiveRatingUtility.GetQuestExtraReward(targetType);
-                if (extra > 0)
-                {
-                    PurgeDirectiveRatingUtility.TryAddPurgeDirectiveRewardPoints(extra);
-                }
-
-                extraRewardHandled = true;
-            }
-
-            // 3) 发送完成提示。
             PurgeDirectiveRatingLetterUtility.SendQuestCompleteLetter(
                 targetWorldObject,
                 targetType,
-                (PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig?.questBaseRewardPoints ?? 200)
-                + PurgeDirectiveRatingUtility.GetQuestExtraReward(targetType));
-
-            // 4) 结束并安排 7~10 天后再尝试。
+                baseReward + PurgeDirectiveRatingUtility.GetQuestExtraReward(targetType));
             EndQuest(QuestEndOutcome.Success);
         }
 
@@ -229,8 +233,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override void Notify_PreCleanup()
         {
-            // 任务以任意方式结束（拒绝 / 抉择期过期 / 接管 / 失效）而此时仍处于 OfferPending/OperationActive：
-            // 视为无处罚结束，仅安排冷却。失败/成功已在对应路径处理，不会重复处罚或奖励。
+            if (stage == Stage.OperationActive
+                && !completionConfirmed
+                && !GameComponent_CerebrexTakeoverState.IsActive
+                && !penaltyHandled)
+            {
+                // 玩家接取后从任务界面放弃/外部结束，也属于失败；待接受邀请被拒绝或过期不处罚。
+                PurgeDirectiveRatingUtility.ApplyQuestFailurePenalty(targetType);
+                penaltyHandled = true;
+            }
+
             if (stage != Stage.Ended)
             {
                 stage = Stage.Ended;
@@ -242,39 +254,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             base.Notify_PreCleanup();
-        }
-
-        /// <summary>供 WorldObject 销毁钩子调用：若本任务正在针对该目标进行，则记为成功。</summary>
-        public static void NotifyWorldObjectDestroyed(WorldObject destroyed)
-        {
-            if (destroyed == null)
-            {
-                return;
-            }
-
-            QuestScriptDef? questScriptDef = PurgeDirectiveQuestTargetUtility.ResolveQuestScriptDef();
-            if (questScriptDef == null)
-            {
-                return;
-            }
-
-            foreach (Quest quest in Find.QuestManager.QuestsListForReading)
-            {
-                if (quest.root != questScriptDef || quest.State != QuestState.Ongoing)
-                {
-                    continue;
-                }
-
-                foreach (QuestPart part in quest.PartsListForReading)
-                {
-                    if (part is PurgeDirectiveQuestPart purgePart
-                        && purgePart.IsOperationActive
-                        && purgePart.targetWorldObject == destroyed)
-                    {
-                        purgePart.NotifyTargetDestroyed();
-                    }
-                }
-            }
         }
 
         /// <summary>由守军清除/完成信号调用（如工作站 AllEnemiesDefeated）：若本任务正在针对该目标则记为成功。</summary>
@@ -335,6 +314,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref extraRewardHandled, "pdqExtraRewardHandled");
             Scribe_Values.Look(ref penaltyHandled, "pdqPenaltyHandled");
             Scribe_Values.Look(ref cooldownHandled, "pdqCooldownHandled");
+            Scribe_Values.Look(ref completionConfirmed, "pdqCompletionConfirmed");
         }
     }
 }
