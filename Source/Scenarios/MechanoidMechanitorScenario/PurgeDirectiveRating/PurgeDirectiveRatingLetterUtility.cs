@@ -18,11 +18,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             PurgeDirectiveRatingConfigDef def = PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig;
             LetterDef letterDef = def.ratingUpgradeLetter ?? LetterDefOf.PositiveEvent;
-            TaggedString title = "MAP_PurgeDirectiveRating.Letter.Upgrade.Title".Translate(newLevel);
+            TaggedString title = "MAP_PurgeDirectiveRating.Letter.Upgrade.Title".Translate();
             TaggedString text = "MAP_PurgeDirectiveRating.Letter.Upgrade.Text".Translate(
-                prevLevel,
-                newLevel,
-                ratingValue);
+                PurgeDirectiveRatingDisplay.RatingName(prevLevel),
+                PurgeDirectiveRatingDisplay.RatingName(newLevel),
+                ratingValue,
+                PurgeDirectiveRatingDisplay.PermissionsBetween(prevLevel, newLevel));
             Find.LetterStack.ReceiveLetter(title, text, letterDef);
         }
 
@@ -35,11 +36,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             PurgeDirectiveRatingConfigDef def = PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig;
             LetterDef letterDef = def.ratingDowngradeLetter ?? LetterDefOf.NegativeEvent;
-            TaggedString title = "MAP_PurgeDirectiveRating.Letter.Downgrade.Title".Translate(newLevel);
+            TaggedString title = "MAP_PurgeDirectiveRating.Letter.Downgrade.Title".Translate();
             TaggedString text = "MAP_PurgeDirectiveRating.Letter.Downgrade.Text".Translate(
-                prevLevel,
-                newLevel,
-                ratingValue);
+                PurgeDirectiveRatingDisplay.RatingName(prevLevel),
+                PurgeDirectiveRatingDisplay.RatingName(newLevel),
+                ratingValue,
+                PurgeDirectiveRatingDisplay.PermissionsBetween(newLevel, prevLevel));
             Find.LetterStack.ReceiveLetter(title, text, letterDef);
         }
 

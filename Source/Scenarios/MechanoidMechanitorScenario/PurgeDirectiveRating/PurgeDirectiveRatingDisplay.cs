@@ -81,7 +81,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     : NewPermissionsAtLevel(level + 1);
             }
 
-            FillQuestInfo(s);
+            if (!takeover)
+            {
+                FillQuestInfo(s);
+            }
+
             return s;
         }
 
@@ -117,7 +121,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (def == null) return null;
             foreach (Quest quest in Find.QuestManager.QuestsListForReading)
             {
-                if (quest.root != def || quest.State != QuestState.Ongoing) continue;
+                if (quest.root != def
+                    || (quest.State != QuestState.Ongoing
+                        && quest.State != QuestState.NotYetAccepted)) continue;
                 foreach (QuestPart p in quest.PartsListForReading)
                 {
                     if (p is PurgeDirectiveQuestPart purge && (purge.IsOfferPending || purge.IsOperationActive))
@@ -161,44 +167,43 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<string> items = new List<string>();
             PurgeDirectiveRatingConfigDef cfg = PurgeDirectiveRatingUtility.Config;
 
-            if (level >= cfg.mechMediumRequiredLevel && level < cfg.mechHeavyRequiredLevel)
+            switch (level)
             {
-                items.Add("MAP_PurgeDirectiveRating.Perm.MechMedium".Translate());
-            }
-            else if (level >= cfg.mechHeavyRequiredLevel && level < cfg.mechUltraHeavyRequiredLevel)
-            {
-                items.Add("MAP_PurgeDirectiveRating.Perm.MechHeavy".Translate());
-            }
-            else if (level >= cfg.mechUltraHeavyRequiredLevel)
-            {
-                items.Add("MAP_PurgeDirectiveRating.Perm.MechUltraHeavy".Translate());
-            }
-
-            if (level == 2) items.Add("MAP_PurgeDirectiveRating.Perm.GoodsStandard".Translate());
-            if (level == 3) items.Add("MAP_PurgeDirectiveRating.Perm.GoodsFull".Translate());
-            if (level == 2) items.Add("MAP_PurgeDirectiveRating.Perm.ForceSupport".Translate()
-                + " ≤" + cfg.GetForceSupportMaxThreat(2));
-            if (level == 3) items.Add("MAP_PurgeDirectiveRating.Perm.ForceSupport".Translate()
-                + " ≤" + cfg.GetForceSupportMaxThreat(3));
-            if (level == 4)
-            {
-                items.Add("MAP_PurgeDirectiveRating.Perm.ForceSupport".Translate()
-                    + " ≤" + cfg.GetForceSupportMaxThreat(4));
-                items.Add("MAP_PurgeDirectiveRating.Perm.Cluster".Translate()
-                    + " ≤" + cfg.GetClusterMaxThreat(4));
-                items.Add(string.Format(
-                    "MAP_PurgeDirectiveRating.Perm.Discount".Translate(),
-                    Mathf.RoundToInt(cfg.discountLevel4 * 100f)));
-            }
-
-            if (level >= 5)
-            {
-                items.Add("MAP_PurgeDirectiveRating.Perm.Cluster".Translate()
-                    + " ≤" + cfg.GetClusterMaxThreat(5));
-                items.Add("MAP_PurgeDirectiveRating.Perm.Environment".Translate());
-                items.Add(string.Format(
-                    "MAP_PurgeDirectiveRating.Perm.Discount".Translate(),
-                    Mathf.RoundToInt(cfg.discountLevel5 * 100f)));
+                case 1:
+                    items.Add("MAP_PurgeDirectiveRating.Perm.MechLight".Translate());
+                    items.Add("MAP_PurgeDirectiveRating.Perm.GoodsBasic".Translate());
+                    break;
+                case 2:
+                    items.Add("MAP_PurgeDirectiveRating.Perm.MechMedium".Translate());
+                    items.Add("MAP_PurgeDirectiveRating.Perm.GoodsStandard".Translate());
+                    items.Add("MAP_PurgeDirectiveRating.Perm.ForceSupport".Translate()
+                        + " ≤" + cfg.GetForceSupportMaxThreat(2));
+                    break;
+                case 3:
+                    items.Add("MAP_PurgeDirectiveRating.Perm.MechHeavy".Translate());
+                    items.Add("MAP_PurgeDirectiveRating.Perm.GoodsFull".Translate());
+                    items.Add("MAP_PurgeDirectiveRating.Perm.ForceSupport".Translate()
+                        + " ≤" + cfg.GetForceSupportMaxThreat(3));
+                    break;
+                case 4:
+                    items.Add("MAP_PurgeDirectiveRating.Perm.MechUltraHeavy".Translate());
+                    items.Add("MAP_PurgeDirectiveRating.Perm.ForceSupport".Translate()
+                        + " ≤" + cfg.GetForceSupportMaxThreat(4));
+                    items.Add("MAP_PurgeDirectiveRating.Perm.Cluster".Translate()
+                        + " ≤" + cfg.GetClusterMaxThreat(4));
+                    items.Add(string.Format(
+                        "MAP_PurgeDirectiveRating.Perm.Discount".Translate(),
+                        Mathf.RoundToInt(cfg.discountLevel4 * 100f)));
+                    break;
+                case 5:
+                    items.Add("MAP_PurgeDirectiveRating.Perm.ForceUnlimited".Translate());
+                    items.Add("MAP_PurgeDirectiveRating.Perm.Cluster".Translate()
+                        + " ≤" + cfg.GetClusterMaxThreat(5));
+                    items.Add("MAP_PurgeDirectiveRating.Perm.Environment".Translate());
+                    items.Add(string.Format(
+                        "MAP_PurgeDirectiveRating.Perm.Discount".Translate(),
+                        Mathf.RoundToInt(cfg.discountLevel5 * 100f)));
+                    break;
             }
 
             if (items.Count == 0)
@@ -206,14 +211,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return "MAP_PurgeDirectiveRating.Perm.None".Translate();
             }
 
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < items.Count; i++)
+            return string.Join("、", items);
+        }
+
+        /// <summary>汇总跨级变化中新增或失去的权限；lowerExclusive 不包含，upperInclusive 包含。</summary>
+        public static string PermissionsBetween(int lowerExclusive, int upperInclusive)
+        {
+            List<string> segs = new List<string>();
+            for (int level = Mathf.Max(1, lowerExclusive + 1);
+                 level <= Mathf.Min(5, upperInclusive);
+                 level++)
             {
-                if (i > 0) sb.Append("、");
-                sb.Append(items[i]);
+                string permissions = NewPermissionsAtLevel(level);
+                if (!string.IsNullOrEmpty(permissions))
+                {
+                    segs.Add(permissions);
+                }
             }
 
-            return sb.ToString();
+            return segs.Count == 0
+                ? "MAP_PurgeDirectiveRating.Perm.None".Translate()
+                : string.Join("；", segs);
         }
 
         /// <summary>汇总某等级当前已开放的权限（1..level 各档新增权限的合并）。</summary>

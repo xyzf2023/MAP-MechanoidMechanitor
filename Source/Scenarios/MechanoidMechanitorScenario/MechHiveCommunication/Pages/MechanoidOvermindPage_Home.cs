@@ -11,7 +11,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const int MenuCount = 4;
 
-        private const float OverviewHeight = 64f;
+        private const float OverviewHeight = 80f;
 
         public MechanoidOvermindPageKind? Draw(Rect inRect, bool inputEnabled)
         {
@@ -127,11 +127,26 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect barRect = new Rect(inner.x, barY, inner.width, barH);
             Widgets.FillableBar(barRect, ratio);
 
+            int discountPercent = Mathf.RoundToInt(
+                PurgeDirectiveRatingUtility.GetDiscountRate() * 100f);
             string hint = "MAP_PurgeDirectiveRating.Home.Overview.Hint".Translate(
-                PurgeDirectiveRatingUtility.GetDiscountRate());
+                discountPercent);
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(inner.x, barY + barH + 2f, inner.width, 16f),
                 hint,
+                TextAnchor.MiddleLeft);
+
+            PurgeDirectiveRatingDisplay display = PurgeDirectiveRatingDisplay.Build();
+            string questSummary = display.CurrentQuestTargetLabel.NullOrEmpty()
+                ? "MAP_PurgeDirectiveRating.Home.Overview.QuestIdle".Translate(
+                    display.CurrentQuestStage)
+                : "MAP_PurgeDirectiveRating.Home.Overview.QuestActive".Translate(
+                    display.CurrentQuestStage,
+                    display.CurrentQuestTargetLabel,
+                    display.OfferOrActionRemainingTicks.ToStringTicksToPeriod());
+            MechanoidOvermindUiStyle.DrawSecondaryLabel(
+                new Rect(inner.x, barY + barH + 18f, inner.width, 16f),
+                questSummary,
                 TextAnchor.MiddleLeft);
         }
 

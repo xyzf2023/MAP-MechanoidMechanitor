@@ -2705,7 +2705,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void PlayNodeRatingQueryResponse()
         {
             TaggedString translated;
-            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            if (GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                translated =
+                    "MAP_PurgeDirectiveRating.Communication.Response.ControlPermission".Translate();
+            }
+            else if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
             {
                 translated =
                     "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled".Translate();
@@ -2715,13 +2720,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
                 int value = PurgeDirectiveRatingUtility.CurrentRatingValue();
                 int next = PurgeDirectiveRatingUtility.Config.GetNextLevelStart(level);
-                float discount = PurgeDirectiveRatingUtility.GetDiscountRate();
+                int discountPercent = Mathf.RoundToInt(
+                    PurgeDirectiveRatingUtility.GetDiscountRate() * 100f);
                 if (PurgeDirectiveRatingUtility.IsMaxRatingLevel())
                 {
                     translated = "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed".Translate(
                         PurgeDirectiveRatingDisplay.RatingName(level),
                         value,
-                        discount);
+                        discountPercent);
                 }
                 else
                 {
@@ -2729,7 +2735,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         PurgeDirectiveRatingDisplay.RatingName(level),
                         value,
                         next,
-                        discount);
+                        discountPercent);
                 }
 
                 translated += "\n" + "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Opened".Translate(

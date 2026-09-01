@@ -29,7 +29,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (DrawQueryCard(
                         ratingRect,
                         "02",
-                        "MAP_PurgeDirectiveRating.Communication.Query.NodeRating".Translate()))
+                        (GameComponent_CerebrexTakeoverState.IsActive
+                            ? "MAP_PurgeDirectiveRating.Communication.Query.ControlPermission"
+                            : "MAP_PurgeDirectiveRating.Communication.Query.NodeRating").Translate()))
                 {
                     selected = MechanoidOvermindCommunicationQueryKind.NodeRating;
                 }
