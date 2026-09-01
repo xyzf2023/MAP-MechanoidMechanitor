@@ -111,4 +111,7 @@
   <MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>肃清指令节点：目标肃清</MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>
   <MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>你已肃清 {0}（当前{1}）。本次肃清额度 +{2}。</MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>
 
+  <!-- ===== 肃清指令 DEV 面板入口 ===== -->
+  <MAP_PurgeDirectiveRating.Dev.Entry>DEV测试</MAP_PurgeDirectiveRating.Dev.Entry>
+
 </LanguageData>

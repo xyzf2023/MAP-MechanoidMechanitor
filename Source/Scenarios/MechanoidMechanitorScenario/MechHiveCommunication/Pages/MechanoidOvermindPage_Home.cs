@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Verse;
 
@@ -9,18 +10,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float RowGap = 8f;
 
-        private const int MenuCount = 4;
+        private const int BaseMenuCount = 4;
 
-        public MechanoidOvermindPageKind? Draw(Rect inRect, bool inputEnabled)
+        public MechanoidOvermindPageKind? Draw(
+            Rect inRect,
+            bool inputEnabled,
+            bool showDevEntry = false,
+            Action? openDevPanel = null)
         {
             using (MechanoidOvermindUiStyle.Push())
             {
-                float needed = MenuCount * TargetRowHeight + (MenuCount - 1) * RowGap;
+                int menuCount = showDevEntry ? BaseMenuCount + 1 : BaseMenuCount;
+                float needed = menuCount * TargetRowHeight + (menuCount - 1) * RowGap;
                 float rowH = TargetRowHeight;
                 if (inRect.height < needed && needed > 0f)
                 {
-                    float gaps = (MenuCount - 1) * RowGap;
-                    rowH = Mathf.Max(1f, (inRect.height - gaps) / MenuCount);
+                    float gaps = (menuCount - 1) * RowGap;
+                    rowH = Mathf.Max(1f, (inRect.height - gaps) / menuCount);
                     rowH = Mathf.Min(rowH, TargetRowHeight);
                 }
 
@@ -64,6 +70,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         inputEnabled))
                 {
                     selected = MechanoidOvermindPageKind.SpecialProtocols;
+                }
+
+                if (showDevEntry)
+                {
+                    y += rowH + RowGap;
+                    if (DrawCard(
+                            new Rect(inRect.x, y, inRect.width, rowH),
+                            "05",
+                            "MAP_PurgeDirectiveRating.Dev.Entry".Translate(),
+                            inputEnabled))
+                    {
+                        openDevPanel?.Invoke();
+                    }
                 }
 
                 return selected;

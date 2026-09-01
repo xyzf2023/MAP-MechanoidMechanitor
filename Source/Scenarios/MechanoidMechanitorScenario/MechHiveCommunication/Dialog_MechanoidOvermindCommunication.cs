@@ -836,7 +836,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 dialogueRect.yMax + Gap,
                 rightRect.width,
                 Mathf.Max(0f, rightRect.yMax - (dialogueRect.yMax + Gap)));
-            MechanoidOvermindPageKind? selected = homePage.Draw(cardsRect, inputEnabled: true);
+            MechanoidOvermindPageKind? selected = homePage.Draw(
+                cardsRect,
+                inputEnabled: true,
+                showDevEntry: Prefs.DevMode && devControlsEnabled,
+                openDevPanel: OpenPurgeDirectiveDevPanel);
             if (selected.HasValue)
             {
                 BeginTransitionTo(selected.Value);
@@ -1142,11 +1146,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 forceMojibakeDialogue = false;
             }
 
-            if (!bootPage)
-            {
-                bootLoopTestEnabled = false;
-            }
-
             if (!devControlsEnabled)
             {
                 bootLoopTestEnabled = false;
@@ -1157,44 +1156,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             const float itemGap = 4f;
             const float disconnectW = 110f;
             const float devToggleW = 54f;
-            const float loopTestW = 86f;
-            const float forceMojibakeW = 118f;
-            const float creditWideW = 102f;
-            const float creditNarrowW = 92f;
 
             bool showDevToggle = Prefs.DevMode;
-            bool showCreditButtons = showDevToggle && devControlsEnabled;
-            bool showLoopTest = bootPage && showDevToggle && devControlsEnabled;
-            bool showForceMojibake = showDevToggle && devControlsEnabled;
-            // 启动页不属于 transitioning，DEV / 额度 / 循环测试均可操作。
             bool freezeDev = !bootPage && transitioning;
-            bool creditEnabled = bootPage || !transitioning;
-
-            float creditClusterW = showCreditButtons
-                ? creditWideW + itemGap + creditWideW + itemGap + creditNarrowW + itemGap
-                    + creditNarrowW
-                : 0f;
-
-            float rightClusterW = disconnectW;
-            if (showDevToggle)
-            {
-                rightClusterW += itemGap + devToggleW;
-            }
-
-            if (showForceMojibake)
-            {
-                rightClusterW += itemGap + forceMojibakeW;
-            }
-
-            if (showLoopTest)
-            {
-                rightClusterW += itemGap + loopTestW;
-            }
-
-            if (showCreditButtons)
-            {
-                rightClusterW += itemGap + creditClusterW;
-            }
+            float rightClusterW = disconnectW
+                + (showDevToggle ? itemGap + devToggleW : 0f);
 
             string statusText;
             Color color = MechanoidOvermindUiStyle.TextSecondary;
@@ -1273,102 +1239,54 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                 }
             }
-
-            if (showForceMojibake && devControlsEnabled)
-            {
-                cursorX -= itemGap + forceMojibakeW;
-                Rect forceRect = new Rect(cursorX, rect.y + 6f, forceMojibakeW, rect.height - 12f);
-                if (freezeDev)
-                {
-                    bool frozen = forceMojibakeDialogue;
-                    Widgets.CheckboxLabeled(
-                        forceRect,
-                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.ForceMojibake"
-                            .Translate(),
-                        ref frozen);
-                }
-                else
-                {
-                    bool forceEnabled = forceMojibakeDialogue;
-                    Widgets.CheckboxLabeled(
-                        forceRect,
-                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.ForceMojibake"
-                            .Translate(),
-                        ref forceEnabled);
-                    forceMojibakeDialogue = forceEnabled;
-                }
-            }
-
-            if (showLoopTest && devControlsEnabled)
-            {
-                cursorX -= itemGap + loopTestW;
-                Rect loopRect = new Rect(cursorX, rect.y + 6f, loopTestW, rect.height - 12f);
-                bool loopEnabled = bootLoopTestEnabled;
-                Widgets.CheckboxLabeled(
-                    loopRect,
-                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.LoopTest".Translate(),
-                    ref loopEnabled);
-                bootLoopTestEnabled = loopEnabled;
-            }
-
-            if (showCreditButtons && devControlsEnabled)
-            {
-                // 从右向左放置，保证左→右顺序为：+1000、-1000、+100、-100。
-                cursorX -= itemGap + creditNarrowW;
-                if (DrawDevCreditButton(
-                        new Rect(cursorX, buttonY, creditNarrowW, buttonH),
-                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Sub100",
-                        creditEnabled))
-                {
-                    AdjustPurgeCreditsForDev(-100);
-                }
-
-                cursorX -= itemGap + creditNarrowW;
-                if (DrawDevCreditButton(
-                        new Rect(cursorX, buttonY, creditNarrowW, buttonH),
-                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Add100",
-                        creditEnabled))
-                {
-                    AdjustPurgeCreditsForDev(100);
-                }
-
-                cursorX -= itemGap + creditWideW;
-                if (DrawDevCreditButton(
-                        new Rect(cursorX, buttonY, creditWideW, buttonH),
-                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Sub1000",
-                        creditEnabled))
-                {
-                    AdjustPurgeCreditsForDev(-1000);
-                }
-
-                cursorX -= itemGap + creditWideW;
-                if (DrawDevCreditButton(
-                        new Rect(cursorX, buttonY, creditWideW, buttonH),
-                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Add1000",
-                        creditEnabled))
-                {
-                    AdjustPurgeCreditsForDev(1000);
-                }
-            }
         }
 
-        private static bool DrawDevCreditButton(Rect rect, string labelKey, bool enabled)
+        internal bool DevForceMojibake
         {
-            return MechanoidOvermindUiStyle.DrawActionButton(
-                rect,
-                labelKey.Translate(),
-                enabled);
+            get => forceMojibakeDialogue;
+            set => forceMojibakeDialogue = Prefs.DevMode && devControlsEnabled && value;
         }
 
-        private static void AdjustPurgeCreditsForDev(int delta)
+        internal bool DevBootLoopTest
         {
-            try
+            get => bootLoopTestEnabled;
+            set
             {
-                if (delta == 0)
+                if (!Prefs.DevMode || !devControlsEnabled)
                 {
+                    bootLoopTestEnabled = false;
                     return;
                 }
 
+                bool wasEnabled = bootLoopTestEnabled;
+                bootLoopTestEnabled = value;
+                if (value && !wasEnabled && bootComplete)
+                {
+                    StartBootSequence();
+                }
+            }
+        }
+
+        internal void DevRestartBootOnce()
+        {
+            if (!Prefs.DevMode || !devControlsEnabled)
+            {
+                return;
+            }
+
+            bootLoopTestEnabled = false;
+            StartBootSequence();
+        }
+
+        internal void DevAdjustPurgeCredits(int delta)
+        {
+            if (!Prefs.DevMode || !devControlsEnabled || delta == 0)
+            {
+                return;
+            }
+
+            try
+            {
                 if (delta > 0)
                 {
                     GameComponent_MechanoidMechanitorStoryState.RefundPurgeDirectiveCredits(delta);
@@ -1378,16 +1296,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 int current =
                     GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRewardPoints();
                 int spend = Mathf.Min(current, -delta);
-                if (spend <= 0)
+                if (spend > 0)
                 {
-                    return;
+                    GameComponent_MechanoidMechanitorStoryState.TrySpendPurgeDirectiveCredits(spend);
                 }
-
-                GameComponent_MechanoidMechanitorStoryState.TrySpendPurgeDirectiveCredits(spend);
             }
             catch (Exception)
             {
-                // DEV 调试失败时静默。
+                // DEV 调试失败时静默，避免中断通讯窗口。
+            }
+        }
+
+        private void OpenPurgeDirectiveDevPanel()
+        {
+            if (Prefs.DevMode && devControlsEnabled)
+            {
+                Find.WindowStack.Add(new Dialog_PurgeDirectiveDev(this));
             }
         }
 

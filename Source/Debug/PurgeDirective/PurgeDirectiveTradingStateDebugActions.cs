@@ -1,70 +1,10 @@
-using System.Collections.Generic;
 using HarmonyLib;
-using LudeonTK;
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    /// <summary>
-    /// 开发者控制台入口：在常态肃清交易与主脑受控交易之间切换。
-    /// 该入口只改变当前存档的运行状态，不重新播放奥德赛结局流程。
-    /// </summary>
-    public static class PurgeDirectiveTradingStateDebugActions
-    {
-        [DebugAction(
-            "MAP-机械族机械师",
-            "更改肃清指令交易状态",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
-        private static List<DebugActionNode> ChangePurgeDirectiveTradingState()
-        {
-            return new List<DebugActionNode>
-            {
-                new DebugActionNode(
-                    "切换为常态",
-                    DebugActionType.Action,
-                    ExecuteSwitchToNormal),
-                new DebugActionNode(
-                    "切换为主脑受控状态",
-                    DebugActionType.Action,
-                    ExecuteSwitchToControlled)
-            };
-        }
-
-        private static void ExecuteSwitchToNormal()
-        {
-            bool changed = PurgeDirectiveTradingStateDebugUtility.TrySwitchToNormal(
-                out string message);
-            Messages.Message(
-                message,
-                changed
-                    ? MessageTypeDefOf.TaskCompletion
-                    : MessageTypeDefOf.RejectInput,
-                historical: false);
-        }
-
-        private static void ExecuteSwitchToControlled()
-        {
-            bool changed = PurgeDirectiveTradingStateDebugUtility.TrySwitchToControlled(
-                out string message);
-            Messages.Message(
-                message,
-                changed
-                    ? MessageTypeDefOf.TaskCompletion
-                    : MessageTypeDefOf.RejectInput,
-                historical: false);
-        }
-    }
-
     internal static class PurgeDirectiveTradingStateDebugUtility
     {
         private const int TicksPerDay = 60000;
@@ -264,3 +204,4 @@ namespace MAP_MechanoidMechanitor
         }
     }
 }
+
