@@ -16,6 +16,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public const int ConditionCauserSurcharge = 375;
 
+        /// <summary>
+        /// 评级感知的有效威胁点上限：接管主脑后回到原版常量（完全开放），
+        /// 否则按当前评级等级限制。UI 与成本计算都必须引用此方法，避免上限漂移。
+        /// </summary>
+        public static int EffectiveMaxThreatPoints() =>
+            PurgeDirectiveRatingUtility.EffectiveClusterMaxThreat();
+
         private ThingDef? conditionCauser;
 
         private int threatPoints = DefaultThreatPoints;
@@ -44,9 +51,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return MinThreatPoints;
             }
 
-            if (points > MaxThreatPoints)
+            int effectiveMax = EffectiveMaxThreatPoints();
+            if (effectiveMax < MinThreatPoints)
             {
-                return MaxThreatPoints;
+                effectiveMax = MinThreatPoints;
+            }
+
+            if (points > effectiveMax)
+            {
+                return effectiveMax;
             }
 
             int steps = (points + ThreatPointsStep / 2) / ThreatPointsStep;

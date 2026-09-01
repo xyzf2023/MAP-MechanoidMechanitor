@@ -220,39 +220,77 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(textX, rowRect.y + 4f, textWidth, 20f),
                 entry.Kind.LabelCap);
 
+            bool mechUnlocked = PurgeDirectiveRatingUtility.IsMechUnlocked(entry.WeightClass);
+            int requiredLevel = PurgeDirectiveRatingUtility.RequiredLevelForMechWeight(entry.WeightClass);
+
             string weightLabel = entry.WeightClass != null
                 ? entry.WeightClass.LabelCap
                 : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Light".Translate();
+
+            string priceMeta;
+            if (mechUnlocked)
+            {
+                int shownPrice = MechanoidOvermindRatingPricingService.GetDiscountedUnitPrice(
+                    entry.PurgePrice);
+                if (shownPrice != entry.PurgePrice)
+                {
+                    priceMeta = "MAP_PurgeDirectiveRating.MechRow.PriceDiscounted".Translate(
+                        shownPrice,
+                        entry.PurgePrice);
+                }
+                else
+                {
+                    priceMeta = "MAP_PurgeDirectiveRating.MechRow.Price".Translate(shownPrice);
+                }
+            }
+            else
+            {
+                priceMeta = "MAP_PurgeDirectiveRating.LockedForLevel".Translate(requiredLevel);
+            }
+
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(textX, rowRect.y + 24f, textWidth, 20f),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta".Translate(
                     weightLabel,
                     entry.BandwidthCost.ToString("0.##"),
-                    entry.PurgePrice));
+                    priceMeta));
 
             int orderCount = order.GetMechCount(entry.Kind);
-            Rect countRect = new Rect(rowRect.xMax - 168f, rowRect.y + 12f, 48f, 28f);
-            DrawCountField(countRect, entry.Kind, order, orderCount);
-
-            if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(rowRect.xMax - 112f, rowRect.y + 12f, 24f, 28f),
-                    "-"))
+            if (mechUnlocked)
             {
-                ApplyMechCount(order, entry.Kind, orderCount - 1);
+                Rect countRect = new Rect(rowRect.xMax - 168f, rowRect.y + 12f, 48f, 28f);
+                DrawCountField(countRect, entry.Kind, order, orderCount);
+
+                if (MechanoidOvermindUiStyle.DrawActionButton(
+                        new Rect(rowRect.xMax - 112f, rowRect.y + 12f, 24f, 28f),
+                        "-"))
+                {
+                    ApplyMechCount(order, entry.Kind, orderCount - 1);
+                }
+
+                if (MechanoidOvermindUiStyle.DrawActionButton(
+                        new Rect(rowRect.xMax - 84f, rowRect.y + 12f, 24f, 28f),
+                        "+"))
+                {
+                    ApplyMechCount(order, entry.Kind, orderCount + 1);
+                }
+
+                if (MechanoidOvermindUiStyle.DrawActionButton(
+                        new Rect(rowRect.xMax - 56f, rowRect.y + 12f, 52f, 28f),
+                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem".Translate()))
+                {
+                    ApplyMechCount(order, entry.Kind, 0);
+                }
             }
-
-            if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(rowRect.xMax - 84f, rowRect.y + 12f, 24f, 28f),
-                    "+"))
+            else
             {
-                ApplyMechCount(order, entry.Kind, orderCount + 1);
-            }
-
-            if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(rowRect.xMax - 56f, rowRect.y + 12f, 52f, 28f),
-                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem".Translate()))
-            {
-                ApplyMechCount(order, entry.Kind, 0);
+                // 未解锁：禁用操作，仅提示所需评级。
+                MechanoidOvermindUiStyle.DrawLabel(
+                    new Rect(rowRect.xMax - 168f, rowRect.y + 12f, 164f, 28f),
+                    "MAP_PurgeDirectiveRating.RequiresLevel".Translate(requiredLevel),
+                    GameFont.Tiny,
+                    TextAnchor.MiddleRight,
+                    MechanoidOvermindUiStyle.Error);
             }
         }
 

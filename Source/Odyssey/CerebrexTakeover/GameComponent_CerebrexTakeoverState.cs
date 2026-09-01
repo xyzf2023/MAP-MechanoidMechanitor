@@ -4,6 +4,7 @@ using HarmonyLib;
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -29,6 +30,11 @@ namespace MAP_MechanoidMechanitor
         // 不存档的、当前游戏实例级别的待同步派系列表（接管主脑后的关系同步）。
         private readonly HashSet<Faction> pendingRelationSyncFactions = new HashSet<Faction>();
         private bool playerMechHiveRecalibrationRequested;
+
+        // 主脑关系同步专用运行期工作刷新批次（不持久化、不跨游戏/存档残留）。
+        private int relationJobRefreshBatchDepth;
+        private readonly HashSet<Pawn_JobTracker> pendingJobRefreshTrackers = new HashSet<Pawn_JobTracker>();
+        private bool relationJobRefreshFlushing;
 
         public bool TakeoverActive => takeoverActive;
         public int ResourceCredits => resourceCredits;
@@ -137,6 +143,83 @@ namespace MAP_MechanoidMechanitor
             playerMechHiveRecalibrationRequested = true;
         }
 
+        public bool IsRelationJobRefreshBatchActive => relationJobRefreshBatchDepth > 0;
+
+        internal void EnterRelationJobRefreshBatch()
+        {
+            relationJobRefreshBatchDepth++;
+        }
+
+        internal void ExitRelationJobRefreshBatch()
+        {
+            if (relationJobRefreshBatchDepth <= 0)
+            {
+                return;
+            }
+
+            relationJobRefreshBatchDepth--;
+            if (relationJobRefreshBatchDepth == 0)
+            {
+                FlushPendingJobRefreshes();
+            }
+        }
+
+        internal void QueueJobRefreshFor(Pawn_JobTracker tracker)
+        {
+            if (tracker == null)
+            {
+                return;
+            }
+
+            pendingJobRefreshTrackers.Add(tracker);
+        }
+
+        private void FlushPendingJobRefreshes()
+        {
+            if (relationJobRefreshFlushing)
+            {
+                return;
+            }
+
+            // 非游玩阶段（如加载阶段）不宜启动工作：保留待刷新集合，
+            // 待回到 Playing 状态后由 GameComponentTick 的安全处理点统一刷新。
+            if (Verse.Current.ProgramState != ProgramState.Playing)
+            {
+                return;
+            }
+
+            // 复制并清空当前集合，避免枚举期间集合被修改。
+            List<Pawn_JobTracker> snapshot = new List<Pawn_JobTracker>(pendingJobRefreshTrackers);
+            pendingJobRefreshTrackers.Clear();
+
+            relationJobRefreshFlushing = true;
+            try
+            {
+                for (int i = 0; i < snapshot.Count; i++)
+                {
+                    Pawn_JobTracker tracker = snapshot[i];
+                    try
+                    {
+                        if (!CerebrexRelationJobRefreshBatch.IsTrackerValidForRefresh(tracker))
+                        {
+                            continue;
+                        }
+
+                        tracker.EndCurrentJob(JobCondition.InterruptForced, true, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(
+                            "[MAP-机械族机械师] 主脑关系同步后刷新单位工作失败。\n" + ex);
+                    }
+                }
+            }
+            finally
+            {
+                relationJobRefreshFlushing = false;
+            }
+        }
+
         internal void ProcessPendingRelationSyncQueue()
         {
             if (!IsActive)
@@ -151,28 +234,31 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 复制并清空当前队列，防止处理期间新通知破坏枚举。
-            HashSet<Faction> batch = new HashSet<Faction>(pendingRelationSyncFactions);
-            bool recalibrate = playerMechHiveRecalibrationRequested;
-            pendingRelationSyncFactions.Clear();
-            playerMechHiveRecalibrationRequested = false;
-
-            if (recalibrate)
+            using (CerebrexRelationJobRefreshBatch.Enter())
             {
-                CerebrexTakeoverRelationUtility.EnsureMutualAllies();
-            }
+                // 复制并清空当前队列，防止处理期间新通知破坏枚举。
+                HashSet<Faction> batch = new HashSet<Faction>(pendingRelationSyncFactions);
+                bool recalibrate = playerMechHiveRecalibrationRequested;
+                pendingRelationSyncFactions.Clear();
+                playerMechHiveRecalibrationRequested = false;
 
-            foreach (Faction other in batch)
-            {
-                try
+                if (recalibrate)
                 {
-                    CerebrexTakeoverRelationUtility.AlignMechHiveRelationToPlayerRelation(other);
+                    CerebrexTakeoverRelationUtility.EnsureMutualAllies();
                 }
-                catch (Exception ex)
+
+                foreach (Faction other in batch)
                 {
-                    Log.Error(
-                        "[MAP-机械族机械师] 处理待同步机械巢关系失败："
-                        + (other?.GetUniqueLoadID() ?? "null") + "\n" + ex);
+                    try
+                    {
+                        CerebrexTakeoverRelationUtility.AlignMechHiveRelationToPlayerRelation(other);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(
+                            "[MAP-机械族机械师] 处理待同步机械巢关系失败："
+                            + (other?.GetUniqueLoadID() ?? "null") + "\n" + ex);
+                    }
                 }
             }
         }
@@ -233,10 +319,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             ProcessElapsedDays();
-            ProcessPendingRelationSyncQueue();
-            if (Find.TickManager.TicksGame % RelationCalibrationIntervalTicks == 0)
+            using (CerebrexRelationJobRefreshBatch.Enter())
             {
-                CerebrexTakeoverRelationUtility.EnsureTakeoverRelations();
+                ProcessPendingRelationSyncQueue();
+                if (Find.TickManager.TicksGame % RelationCalibrationIntervalTicks == 0)
+                {
+                    CerebrexTakeoverRelationUtility.EnsureTakeoverRelations();
+                }
             }
         }
 
@@ -352,14 +441,16 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            Faction? player = Faction.OfPlayerSilentFail;
-            Faction? mechHive = MechHive;
-            if (player == null || mechHive == null)
+            using (CerebrexRelationJobRefreshBatch.Enter())
             {
-                return false;
-            }
+                Faction? player = Faction.OfPlayerSilentFail;
+                Faction? mechHive = MechHive;
+                if (player == null || mechHive == null)
+                {
+                    return false;
+                }
 
-            applying = true;
+                applying = true;
             try
             {
                 FactionRelation? playerRelation = player.RelationWith(mechHive, allowNull: true);
@@ -437,6 +528,7 @@ namespace MAP_MechanoidMechanitor
             {
                 applying = false;
             }
+            }
         }
 
         /// <summary>
@@ -445,8 +537,11 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static void EnsureTakeoverRelations()
         {
-            EnsureMutualAllies();
-            AlignAllMechHiveRelationsToPlayer();
+            using (CerebrexRelationJobRefreshBatch.Enter())
+            {
+                EnsureMutualAllies();
+                AlignAllMechHiveRelationsToPlayer();
+            }
         }
 
         /// <summary>
@@ -473,22 +568,25 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            foreach (Faction other in Find.FactionManager.AllFactionsListForReading)
+            using (CerebrexRelationJobRefreshBatch.Enter())
             {
-                if (other == null || other == player || other == mechHive)
+                foreach (Faction other in Find.FactionManager.AllFactionsListForReading)
                 {
-                    continue;
-                }
+                    if (other == null || other == player || other == mechHive)
+                    {
+                        continue;
+                    }
 
-                try
-                {
-                    AlignMechHiveRelationToPlayerRelation(other);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(
-                        "[MAP-机械族机械师] 校准机械巢与派系关系失败："
-                        + (other?.GetUniqueLoadID() ?? "null") + "\n" + ex);
+                    try
+                    {
+                        AlignMechHiveRelationToPlayerRelation(other);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(
+                            "[MAP-机械族机械师] 校准机械巢与派系关系失败："
+                            + (other?.GetUniqueLoadID() ?? "null") + "\n" + ex);
+                    }
                 }
             }
         }
@@ -526,7 +624,9 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            applying = true;
+            using (CerebrexRelationJobRefreshBatch.Enter())
+            {
+                applying = true;
             try
             {
                 EnsureBidirectionalMechHiveRelation(mechHive, other);
@@ -565,6 +665,7 @@ namespace MAP_MechanoidMechanitor
             finally
             {
                 applying = false;
+            }
             }
         }
 

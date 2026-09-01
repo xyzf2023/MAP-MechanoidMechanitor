@@ -17,7 +17,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float MinVirtualHeight = 640f;
 
-        private const float TopBarHeight = 72f;
+        private const float TopBarHeight = 104f;
 
         private const float BottomBarHeight = 36f;
 
@@ -1084,19 +1084,54 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 GameFont.Small,
                 TextAnchor.MiddleRight,
                 MechanoidOvermindUiStyle.AccentBright);
+
+            bool ratingActive = PurgeDirectiveRatingUtility.IsRatingSystemActive();
+            float ratingY = 20f;
+            float connectionY = ratingActive ? 38f : 20f;
+            float permissionY = ratingActive ? 56f : 38f;
+
+            if (ratingActive)
+            {
+                int ratingLevel = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingLevel();
+                int ratingValue = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingValue();
+                int nextThreshold = PurgeDirectiveRatingUtility.NextThresholdValue();
+                string ratingText = PurgeDirectiveRatingUtility.IsMaxRatingLevel()
+                    ? "MAP_PurgeDirectiveRating.TopBar.Maxed".Translate(ratingLevel, ratingValue)
+                    : "MAP_PurgeDirectiveRating.TopBar.Level".Translate(
+                        ratingLevel,
+                        ratingValue,
+                        nextThreshold);
+                MechanoidOvermindUiStyle.DrawLabel(
+                    new Rect(rightX, inner.y + ratingY, rightWidth, 18f),
+                    ratingText,
+                    GameFont.Tiny,
+                    TextAnchor.MiddleRight,
+                    MechanoidOvermindUiStyle.AccentBright);
+            }
+
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rightX, inner.y + 20f, rightWidth, 18f),
+                new Rect(rightX, inner.y + connectionY, rightWidth, 18f),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.ConnectionStable".Translate(),
                 GameFont.Tiny,
                 TextAnchor.MiddleRight,
                 MechanoidOvermindUiStyle.TextSecondary);
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rightX, inner.y + 38f, rightWidth, 18f),
+                new Rect(rightX, inner.y + permissionY, rightWidth, 18f),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.NodePermission".Translate(
                     GetNodePermissionLabel()),
                 GameFont.Tiny,
                 TextAnchor.MiddleRight,
                 MechanoidOvermindUiStyle.TextSecondary);
+
+            // 接管主脑后不显示评级进度条；否则固定显示评级进度条。
+            if (ratingActive)
+            {
+                int ratingValue = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingValue();
+                int nextThreshold = PurgeDirectiveRatingUtility.NextThresholdValue();
+                float ratio = Mathf.Clamp01((float)ratingValue / nextThreshold);
+                Rect barRect = new Rect(rightX, inner.y + 74f, rightWidth, 8f);
+                Widgets.FillableBar(barRect, ratio);
+            }
         }
 
         private void DrawBottomBar(Rect rect, bool bootPage)
@@ -1633,6 +1668,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             GetOrderFooterLineHeights(out float smallLineHeight, out float tinyLineHeight);
 
+            // 统一折扣计价：显示与扣款共用同一最终费用，避免折扣显示 / 余额检查 / 实际扣款漂移。
+            bool hasDiscount = MechanoidOvermindRatingPricingService.TryCalculateFinalOrderCosts(
+                order,
+                out _,
+                out _,
+                out float discountRate,
+                out int discountAmount,
+                out int finalCost);
+            if (!hasDiscount)
+            {
+                finalCost = totalCost;
+                discountAmount = 0;
+                discountRate = 0f;
+            }
+
             const float summaryRowGap = 2f;
             float summaryHeight = smallLineHeight + tinyLineHeight + tinyLineHeight
                 + summaryRowGap * 2f;
@@ -1648,16 +1698,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && !order.IsEmpty
                 && connected
                 && cachedDropValid
-                && credits >= totalCost
+                && credits >= finalCost
                 && currentPage != MechanoidOvermindPageKind.SpecialProtocols;
 
             GUI.BeginGroup(rect);
 
             float summaryY = 0f;
+            int shownTotal = costsOk ? finalCost : 0;
+            string totalLabel = discountAmount > 0
+                ? "MAP_PurgeDirectiveRating.Order.TotalWithDiscount".Translate(shownTotal, discountAmount)
+                : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Total".Translate(shownTotal);
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(0f, summaryY, rect.width, smallLineHeight),
-                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Total".Translate(
-                    costsOk ? totalCost : 0),
+                totalLabel,
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.AccentBright);
@@ -1667,7 +1720,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.CurrentCredits".Translate(
                     credits));
             summaryY += tinyLineHeight + summaryRowGap;
-            int balance = costsOk ? credits - totalCost : credits;
+            int balance = costsOk ? credits - finalCost : credits;
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(0f, summaryY, rect.width, tinyLineHeight),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.BalanceAfter".Translate(
@@ -2611,6 +2664,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case MechanoidOvermindCommunicationQueryKind.PurgeCredits:
                     PlayPurgeCreditsQueryResponse();
                     break;
+                case MechanoidOvermindCommunicationQueryKind.NodeRating:
+                    PlayNodeRatingQueryResponse();
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(query), query, null);
             }
@@ -2625,6 +2681,36 @@ namespace MAP_MechanoidMechanitor.Scenarios
             PlayDialogueText(translated.RawText);
             activeCommunicationQuery =
                 MechanoidOvermindCommunicationQueryKind.PurgeCredits;
+        }
+
+        private void PlayNodeRatingQueryResponse()
+        {
+            TaggedString translated;
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            {
+                translated =
+                    "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled".Translate();
+            }
+            else
+            {
+                int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
+                int value = PurgeDirectiveRatingUtility.RatingValue;
+                int next = PurgeDirectiveRatingUtility.NextThresholdValue();
+                float discount = PurgeDirectiveRatingUtility.GetDiscountRate();
+                translated = PurgeDirectiveRatingUtility.IsMaxRatingLevel()
+                    ? "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed".Translate(
+                        level,
+                        value,
+                        discount)
+                    : "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level".Translate(
+                        level,
+                        value,
+                        next,
+                        discount);
+            }
+
+            PlayDialogueText(translated.RawText);
+            activeCommunicationQuery = MechanoidOvermindCommunicationQueryKind.NodeRating;
         }
 
         private void PlayDialogueText(string text)

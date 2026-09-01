@@ -13,6 +13,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public const int LargeRequestWarningThreshold = 20000;
 
+        /// <summary>
+        /// 评级感知的有效威胁点上限：接管主脑后完全开放（int.MaxValue），
+        /// 否则按当前评级等级限制。UI 与校验必须引用此方法。
+        /// </summary>
+        public static int EffectiveMaxThreatPoints() =>
+            PurgeDirectiveRatingUtility.EffectiveForceSupportMaxThreat();
+
         private int threatPoints = DefaultThreatPoints;
 
         private string threatPointsBuffer = DefaultThreatPoints.ToString();
@@ -89,7 +96,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref threatPoints,
                 ref threatPointsBuffer,
                 MinThreatPoints,
-                int.MaxValue);
+                EffectiveMaxThreatPoints());
             if (previousPoints != threatPoints || previousBuffer != threatPointsBuffer)
             {
                 revision++;

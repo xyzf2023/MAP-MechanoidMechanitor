@@ -25,7 +25,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            GameComponent_MechanoidMechanitorStoryState.TryAddPurgeDirectiveRewardPoints(
+            GameComponent_MechanoidMechanitorStoryState.TryAddPurgeDirectiveWorldTargetBaseReward(
+                factionBase,
                 MechanoidMechanitorPurgeDirectiveRuntimeState
                     .OtherFactionBaseDestroyedRewardPoints);
         }
@@ -71,7 +72,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            GameComponent_MechanoidMechanitorStoryState.TryAddPurgeDirectiveRewardPoints(
+            GameComponent_MechanoidMechanitorStoryState.TryAddPurgeDirectiveWorldTargetBaseReward(
+                __instance,
                 MechanoidMechanitorPurgeDirectiveRuntimeState
                     .OtherFactionBaseDestroyedRewardPoints);
         }

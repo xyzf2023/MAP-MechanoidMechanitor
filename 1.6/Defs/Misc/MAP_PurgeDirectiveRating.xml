@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- 肃清指令「节点评级」系统的统一配置入口。所有等级阈值、折扣、重量级权限、物资分级、
+       特殊协议上限、任务调度与处罚数值集中在此，禁止在 UI / 订单 / 扣款 / 交付 / 支援 /
+       集群 / 任务中分别维护互相漂移的等级表。 -->
+  <MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveRatingConfigDef>
+    <defName>MAP_PurgeDirectiveRatingConfig</defName>
+    <label>purge directive node rating configuration</label>
+
+    <!-- 评级阈值：0~4000 钳制；L1=750, L2=1500, L3=2250, L4=3000, L5=4000(满级)。 -->
+    <ratingLevel1Threshold>750</ratingLevel1Threshold>
+    <ratingLevel2Threshold>1500</ratingLevel2Threshold>
+    <ratingLevel3Threshold>2250</ratingLevel3Threshold>
+    <ratingLevel4Threshold>3000</ratingLevel4Threshold>
+    <maxRatingValue>4000</maxRatingValue>
+
+    <!-- 折扣（按等级 L1..L5）；四、五级均为 20%。接管主脑后机械族/物资享 20%。 -->
+    <discountLevel1>0.05</discountLevel1>
+    <discountLevel2>0.10</discountLevel2>
+    <discountLevel3>0.15</discountLevel3>
+    <discountLevel4>0.20</discountLevel4>
+    <discountLevel5>0.20</discountLevel5>
+    <takeoverDiscount>0.20</takeoverDiscount>
+
+    <!-- 机械族重量级所需最低评级等级。 -->
+    <mechLightRequiredLevel>1</mechLightRequiredLevel>
+    <mechMediumRequiredLevel>2</mechMediumRequiredLevel>
+    <mechHeavyRequiredLevel>3</mechHeavyRequiredLevel>
+    <mechUltraHeavyRequiredLevel>4</mechUltraHeavyRequiredLevel>
+
+    <!-- 物资按基础市场价值自动分级边界（0~99→1, 100~499→2, 500~1999→3, 2000~4999→4, ≥5000→5）。 -->
+    <goodsTier1MaxMarketValue>99</goodsTier1MaxMarketValue>
+    <goodsTier2MaxMarketValue>499</goodsTier2MaxMarketValue>
+    <goodsTier3MaxMarketValue>1999</goodsTier3MaxMarketValue>
+    <goodsTier4MaxMarketValue>4999</goodsTier4MaxMarketValue>
+
+    <!-- 特殊协议威胁点上限（按等级 L1..L5）。部队支援：5000/10000/20000/10000/10000。
+         机械集群：10000/20000/30000/40000/40000。环境影响器仅在 L5 解锁。 -->
+    <mechForceSupportMaxThreatPointsByLevel>
+      <li>5000</li>
+      <li>10000</li>
+      <li>20000</li>
+      <li>10000</li>
+      <li>10000</li>
+    </mechForceSupportMaxThreatPointsByLevel>
+    <mechClusterMaxThreatPointsByLevel>
+      <li>10000</li>
+      <li>20000</li>
+      <li>30000</li>
+      <li>40000</li>
+      <li>40000</li>
+    </mechClusterMaxThreatPointsByLevel>
+    <mechClusterEnvironmentMinLevel>5</mechClusterEnvironmentMinLevel>
+
+    <!-- 肃清评级任务调度。 -->
+    <questMinRatingLevel>1</questMinRatingLevel>
+    <questMaxActive>1</questMaxActive>
+    <questOfferTimeoutDays>3</questOfferTimeoutDays>
+    <questOperationTimeoutDays>15</questOperationTimeoutDays>
+    <questIdleCooldownDays>4</questIdleCooldownDays>
+    <questBaseSuccessRewardPoints>200</questBaseSuccessRewardPoints>
+
+    <!-- 评级处罚：不扣肃清额度，仅减少评级值，且每阶段只处罚一次。 -->
+    <yellowWarningPenalty>100</yellowWarningPenalty>
+    <orange1WarningPenalty>250</orange1WarningPenalty>
+    <orange2WarningPenalty>500</orange2WarningPenalty>
+    <workSiteFailurePenalty>150</workSiteFailurePenalty>
+    <outpostFailurePenalty>300</outpostFailurePenalty>
+    <baseFailurePenalty>600</baseFailurePenalty>
+  </MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveRatingConfigDef>
+
+  <!-- 物资评级覆盖：按 DefName 显式锁定所需评级等级，覆盖按市场价值的自动分级。
+       例：把可搬运建筑固定为 3 级，就在 overrides 中追加对应 ThingDef 与 <requiredLevel>3</requiredLevel>。 -->
+  <MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveGoodsRatingOverrideDef>
+    <defName>MAP_PurgeDirectiveGoodsRatingOverrides</defName>
+    <label>purge directive goods rating overrides</label>
+    <overrides>
+      <!-- <li>
+        <thing>SomeTransportableBuilding</thing>
+        <requiredLevel>3</requiredLevel>
+      </li> -->
+    </overrides>
+  </MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveGoodsRatingOverrideDef>
+
+  <!-- 肃清评级任务配置（独立 Quest）。 -->
+  <MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveQuestConfigDef>
+    <defName>MAP_PurgeDirectiveQuestConfig</defName>
+    <label>purge directive rating quest configuration</label>
+    <questScriptDefName>MAP_PurgeDirectiveQuest</questScriptDefName>
+    <minRatingLevel>1</minRatingLevel>
+    <maxActive>1</maxActive>
+    <offerTimeoutDays>3</offerTimeoutDays>
+    <operationTimeoutDays>15</operationTimeoutDays>
+    <idleCooldownDays>4</idleCooldownDays>
+    <baseSuccessRewardPoints>200</baseSuccessRewardPoints>
+    <failurePenalty>1000</failurePenalty>
+    <minRewardValue>600</minRewardValue>
+    <maxRewardValue>1200</maxRewardValue>
+  </MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveQuestConfigDef>
+
+  <!-- 肃清评级任务的 QuestScriptDef。根节点仅构造 Quest 与唯一的 QuestPart 状态机，
+       不引用共生盟约任何类型与逻辑。 -->
+  <QuestScriptDef>
+    <defName>MAP_PurgeDirectiveQuest</defName>
+    <label>purge directive node rating quest</label>
+    <autoAccept>false</autoAccept>
+    <defaultHidden>false</defaultHidden>
+    <everAcceptableInSpace>true</everAcceptableInSpace>
+    <expireDaysRange>3</expireDaysRange>
+    <root Class="MAP_MechanoidMechanitor.Scenarios.QuestNode_Root_PurgeDirectiveQuest" />
+  </QuestScriptDef>
+
+</Defs>

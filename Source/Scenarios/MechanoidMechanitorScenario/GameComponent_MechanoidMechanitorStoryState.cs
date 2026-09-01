@@ -322,7 +322,37 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             component.purgeDirectiveRuntimeState.AddRewardPoints(amount);
+
+            // 所有合法肃清额度正向奖励同步增加等量评级（退款 / 订单取消返款 / DEV 调额度
+            // 不经由本入口，因此不会增加评级）。接管主脑后本调用内部自动停止评级增减。
+            PurgeDirectiveRatingUtility.TryAddRating(amount);
             return true;
+        }
+
+        /// <summary>
+        /// 世界目标基础奖励（如摧毁据点 200 点）。按世界目标稳定ID持久化去重，防止重复结算。
+        /// 奖励同时增加肃清额度与等量评级（经由统一奖励入口）。
+        /// </summary>
+        public static bool TryAddPurgeDirectiveWorldTargetBaseReward(
+            RimWorld.Planet.WorldObject target,
+            int points)
+        {
+            return PurgeDirectiveRatingUtility.TryGrantWorldTargetBaseReward(target, points);
+        }
+
+        public static int GetPurgeDirectiveRatingValue()
+        {
+            return PurgeDirectiveRatingUtility.RatingValue;
+        }
+
+        public static int GetPurgeDirectiveRatingLevel()
+        {
+            return PurgeDirectiveRatingUtility.CurrentRatingLevel;
+        }
+
+        public static bool IsPurgeDirectiveRatingActive()
+        {
+            return PurgeDirectiveRatingUtility.IsRatingSystemActive();
         }
 
         public bool TrySpendPurgeDirectiveCredits(int amount)

@@ -350,6 +350,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.GoodsRowCategory".Translate(
                     GetCategoryLabel(entry.Category)));
 
+            if (!PurgeDirectiveRatingUtility.IsThingUnlocked(entry.Def))
+            {
+                int reqLevel = PurgeDirectiveRatingUtility.RequiredLevelForThing(entry.Def);
+                MechanoidOvermindUiStyle.DrawLabel(
+                    new Rect(textRight - 120f, rowRect.y + 20f, 120f, 16f),
+                    "MAP_PurgeDirectiveRating.RequiresLevel".Translate(reqLevel),
+                    GameFont.Tiny,
+                    TextAnchor.MiddleRight,
+                    MechanoidOvermindUiStyle.Error);
+            }
+
             if (Widgets.ButtonInvisible(rowRect))
             {
                 SelectEntry(entry, order);
@@ -385,6 +396,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidOvermindThingCatalogEntry entry = selected;
             float x = inner.x;
             float y = inner.y;
+
+            bool thingUnlocked = PurgeDirectiveRatingUtility.IsThingUnlocked(entry.Def);
+            int thingRequiredLevel = PurgeDirectiveRatingUtility.RequiredLevelForThing(entry.Def);
 
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(x, y, inner.width, 22f),
@@ -423,21 +437,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 x += 190f;
             }
 
-            Rect countRect = new Rect(x, y, 56f, 28f);
-            DrawCountField(countRect, order, entry);
-
-            if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(countRect.xMax + 4f, y, 24f, 28f),
-                    "-"))
+            if (thingUnlocked)
             {
-                ApplyThingCount(order, entry, selectedCount - 1);
+                Rect countRect = new Rect(x, y, 56f, 28f);
+                DrawCountField(countRect, order, entry);
+
+                if (MechanoidOvermindUiStyle.DrawActionButton(
+                        new Rect(countRect.xMax + 4f, y, 24f, 28f),
+                        "-"))
+                {
+                    ApplyThingCount(order, entry, selectedCount - 1);
+                }
+
+                if (MechanoidOvermindUiStyle.DrawActionButton(
+                        new Rect(countRect.xMax + 32f, y, 24f, 28f),
+                        "+"))
+                {
+                    ApplyThingCount(order, entry, selectedCount + 1);
+                }
             }
-
-            if (MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(countRect.xMax + 32f, y, 24f, 28f),
-                    "+"))
+            else
             {
-                ApplyThingCount(order, entry, selectedCount + 1);
+                MechanoidOvermindUiStyle.DrawLabel(
+                    new Rect(x, y, 300f, 28f),
+                    "MAP_PurgeDirectiveRating.RequiresLevel".Translate(thingRequiredLevel),
+                    GameFont.Small,
+                    TextAnchor.MiddleLeft,
+                    MechanoidOvermindUiStyle.Error);
             }
 
             RefreshPriceIfNeeded(entry);
@@ -451,7 +477,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.AccentBright);
 
-            if (MechanoidOvermindUiStyle.DrawActionButton(
+            if (selectedCount > 0
+                && MechanoidOvermindUiStyle.DrawActionButton(
                     new Rect(inner.xMax - 140f, inner.yMax - 34f, 140f, 30f),
                     "MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem".Translate()))
             {
@@ -557,6 +584,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             double sum = (double)cachedUnitMarketValue * selectedCount;
             int credits = (int)Math.Ceiling(sum / 5d);
             cachedEstimatedCredits = credits < 1 ? 1 : credits;
+
+            // 物资订单按当前评级享受统一折扣（与订单最终费用、扣款共用同一折扣率）。
+            float discountRate = PurgeDirectiveRatingUtility.GetDiscountRate();
+            if (discountRate > 0f && cachedEstimatedCredits > 0)
+            {
+                int discount = Mathf.RoundToInt(cachedEstimatedCredits * discountRate);
+                cachedEstimatedCredits = Mathf.Max(1, cachedEstimatedCredits - discount);
+            }
         }
 
         private MechanoidOvermindThingSpec? BuildCurrentSpec(

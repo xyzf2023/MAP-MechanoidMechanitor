@@ -61,10 +61,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Description"
                         .Translate());
 
-                bool clusterAvailable =
+                bool clusterMapAvailable =
                     MechClusterDeploymentService.TryResolveAvailableMap(out Map? clusterMap)
                     && clusterMap != null;
-                bool forceSupportAvailable = MechForceSupportService.HasAvailableMap();
+                bool forceSupportMapAvailable = MechForceSupportService.HasAvailableMap();
+
+                // 评级未达 1 级（且未接管主脑）时协议关闭，但仍显示并标注所需评级。
+                bool clusterRatingAvailable = PurgeDirectiveRatingUtility.IsClusterAvailable();
+                bool forceSupportRatingAvailable = PurgeDirectiveRatingUtility.IsForceSupportAvailable();
+
+                bool clusterAvailable = clusterMapAvailable && clusterRatingAvailable;
+                bool forceSupportAvailable = forceSupportMapAvailable && forceSupportRatingAvailable;
 
                 if (expandedProtocol == SpecialProtocolKind.MechClusterDeployment
                     && !clusterAvailable)
@@ -111,6 +118,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         .Translate(clusterMap.Parent.LabelCap)
                     : "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ProtocolUnavailable"
                         .Translate();
+                if (!clusterRatingAvailable)
+                {
+                    clusterMeta += "  " + "MAP_PurgeDirectiveRating.RequiredLevel".Translate(1);
+                }
+
                 DrawProtocolCard(
                     clusterCardRect,
                     SpecialProtocolKind.MechClusterDeployment,
@@ -121,13 +133,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     clusterOrder,
                     forceSupportOrder);
 
+                string forceSupportMeta =
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.CardMeta"
+                        .Translate();
+                if (!forceSupportRatingAvailable)
+                {
+                    forceSupportMeta += "  " + "MAP_PurgeDirectiveRating.RequiredLevel".Translate(1);
+                }
+
                 DrawProtocolCard(
                     forceSupportCardRect,
                     SpecialProtocolKind.MechForceSupport,
                     "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Title",
                     "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Description",
-                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.CardMeta"
-                        .Translate(),
+                    forceSupportMeta,
                     forceSupportAvailable,
                     clusterOrder,
                     forceSupportOrder);
@@ -442,8 +461,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static void OpenThreatPointsMenu(MechClusterDeploymentOrder order)
         {
             List<FloatMenuOption> options = new List<FloatMenuOption>();
+            int threatMenuMax = Mathf.Min(
+                MechClusterDeploymentOrder.MaxThreatPoints,
+                MechClusterDeploymentOrder.EffectiveMaxThreatPoints());
             for (int points = MechClusterDeploymentOrder.MinThreatPoints;
-                points <= MechClusterDeploymentOrder.MaxThreatPoints;
+                points <= threatMenuMax;
                 points += MechClusterDeploymentOrder.ThreatPointsStep)
             {
                 int captured = points;
@@ -470,6 +492,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                             .Translate(),
                     () => order.SetConditionCauser(null))
             };
+
+            // 环境影响器仅在达到对应评级等级（或接管主脑）后开放。
+            if (!PurgeDirectiveRatingUtility.ClusterEnvironmentAllowed())
+            {
+                options.Add(
+                    new FloatMenuOption(
+                        "MAP_PurgeDirectiveRating.ClusterEnvironmentLocked".Translate(
+                            PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig
+                                .mechClusterEnvironmentMinLevel),
+                        () => { }));
+                Find.WindowStack.Add(new FloatMenu(options));
+                return;
+            }
 
             List<ThingDef> defs = MechClusterDeploymentService.GetConditionCausers(
                 order.ThreatPoints);

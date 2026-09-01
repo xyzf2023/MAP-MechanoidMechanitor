@@ -11,26 +11,44 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const int MenuCount = 4;
 
+        private const float OverviewHeight = 64f;
+
         public MechanoidOvermindPageKind? Draw(Rect inRect, bool inputEnabled)
         {
             using (MechanoidOvermindUiStyle.Push())
             {
+                bool ratingActive = PurgeDirectiveRatingUtility.IsRatingSystemActive();
+                float overviewH = ratingActive ? OverviewHeight : 0f;
+                float overviewGap = ratingActive ? 10f : 0f;
+
+                if (ratingActive)
+                {
+                    DrawRatingOverview(new Rect(inRect.x, inRect.y, inRect.width, overviewH));
+                }
+
+                Rect cardsRect = new Rect(
+                    inRect.x,
+                    inRect.y + overviewH + overviewGap,
+                    inRect.width,
+                    Mathf.Max(0f, inRect.height - overviewH - overviewGap));
+
                 float needed = MenuCount * TargetRowHeight + (MenuCount - 1) * RowGap;
                 float rowH = TargetRowHeight;
-                if (inRect.height < needed && needed > 0f)
+                if (cardsRect.height < needed && needed > 0f)
                 {
                     float gaps = (MenuCount - 1) * RowGap;
-                    rowH = Mathf.Max(1f, (inRect.height - gaps) / MenuCount);
+                    rowH = Mathf.Max(1f, (cardsRect.height - gaps) / MenuCount);
                     rowH = Mathf.Min(rowH, TargetRowHeight);
                 }
 
                 MechanoidOvermindPageKind? selected = null;
-                float y = inRect.y;
+                float y = cardsRect.y;
 
                 if (DrawCard(
-                        new Rect(inRect.x, y, inRect.width, rowH),
+                        new Rect(cardsRect.x, y, cardsRect.width, rowH),
                         "01",
                         "MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Communication".Translate(),
+                        RatingSummaryCommunication(),
                         inputEnabled))
                 {
                     selected = MechanoidOvermindPageKind.Communication;
@@ -38,9 +56,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 y += rowH + RowGap;
                 if (DrawCard(
-                        new Rect(inRect.x, y, inRect.width, rowH),
+                        new Rect(cardsRect.x, y, cardsRect.width, rowH),
                         "02",
                         "MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Mechs".Translate(),
+                        RatingSummaryMechs(),
                         inputEnabled))
                 {
                     selected = MechanoidOvermindPageKind.Mechs;
@@ -48,9 +67,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 y += rowH + RowGap;
                 if (DrawCard(
-                        new Rect(inRect.x, y, inRect.width, rowH),
+                        new Rect(cardsRect.x, y, cardsRect.width, rowH),
                         "03",
                         "MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.Goods".Translate(),
+                        RatingSummaryGoods(),
                         inputEnabled))
                 {
                     selected = MechanoidOvermindPageKind.Goods;
@@ -58,9 +78,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 y += rowH + RowGap;
                 if (DrawCard(
-                        new Rect(inRect.x, y, inRect.width, rowH),
+                        new Rect(cardsRect.x, y, cardsRect.width, rowH),
                         "04",
                         "MAP_MechanoidMechanitor.PurgeDirective.Communication.Nav.SpecialProtocols".Translate(),
+                        RatingSummarySpecialProtocols(),
                         inputEnabled))
                 {
                     selected = MechanoidOvermindPageKind.SpecialProtocols;
@@ -70,20 +91,133 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        private static void DrawRatingOverview(Rect rect)
+        {
+            MechanoidOvermindUiStyle.DrawPanel(rect);
+            Rect inner = rect.ContractedBy(8f);
+
+            int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
+            int value = PurgeDirectiveRatingUtility.RatingValue;
+            int next = PurgeDirectiveRatingUtility.NextThresholdValue();
+
+            string title = PurgeDirectiveRatingUtility.IsMaxRatingLevel()
+                ? "MAP_PurgeDirectiveRating.Home.Overview.Maxed".Translate(level, value)
+                : "MAP_PurgeDirectiveRating.Home.Overview.Level".Translate(level, value, next);
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, inner.y, inner.width, 22f),
+                title,
+                GameFont.Small,
+                TextAnchor.MiddleLeft,
+                MechanoidOvermindUiStyle.AccentBright);
+
+            float barY = inner.y + 26f;
+            float barH = 12f;
+            float ratio = Mathf.Clamp01((float)value / next);
+            Rect barRect = new Rect(inner.x, barY, inner.width, barH);
+            Widgets.FillableBar(barRect, ratio);
+
+            string hint = "MAP_PurgeDirectiveRating.Home.Overview.Hint".Translate(
+                PurgeDirectiveRatingUtility.GetDiscountRate());
+            MechanoidOvermindUiStyle.DrawSecondaryLabel(
+                new Rect(inner.x, barY + barH + 2f, inner.width, 16f),
+                hint,
+                TextAnchor.MiddleLeft);
+        }
+
+        private static string RatingSummaryCommunication()
+        {
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            {
+                return string.Empty;
+            }
+
+            int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
+            int value = PurgeDirectiveRatingUtility.RatingValue;
+            int next = PurgeDirectiveRatingUtility.NextThresholdValue();
+            return PurgeDirectiveRatingUtility.IsMaxRatingLevel()
+                ? "MAP_PurgeDirectiveRating.Home.Card.Communication.Maxed".Translate(level, value)
+                : "MAP_PurgeDirectiveRating.Home.Card.Communication.Level".Translate(level, value, next);
+        }
+
+        private static string RatingSummaryMechs()
+        {
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            {
+                return string.Empty;
+            }
+
+            return "MAP_PurgeDirectiveRating.Home.Card.Mechs".Translate(
+                WeightsUnlockedLabel(PurgeDirectiveRatingUtility.CurrentRatingLevel));
+        }
+
+        private static string RatingSummaryGoods()
+        {
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            {
+                return string.Empty;
+            }
+
+            int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
+            return "MAP_PurgeDirectiveRating.Home.Card.Goods".Translate(level);
+        }
+
+        private static string RatingSummarySpecialProtocols()
+        {
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            {
+                return string.Empty;
+            }
+
+            int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
+            bool cluster = PurgeDirectiveRatingUtility.IsClusterAvailable();
+            bool force = PurgeDirectiveRatingUtility.IsForceSupportAvailable();
+            return "MAP_PurgeDirectiveRating.Home.Card.SpecialProtocols".Translate(
+                level,
+                cluster ? "MAP_PurgeDirectiveRating.Word.Available".Translate()
+                    : "MAP_PurgeDirectiveRating.Word.Locked".Translate(),
+                force ? "MAP_PurgeDirectiveRating.Word.Available".Translate()
+                    : "MAP_PurgeDirectiveRating.Word.Locked".Translate());
+        }
+
+        private static string WeightsUnlockedLabel(int level)
+        {
+            switch (level)
+            {
+                case 0: return "MAP_PurgeDirectiveRating.Word.None".Translate();
+                case 1: return "MAP_PurgeDirectiveRating.Weight.Light".Translate();
+                case 2: return "MAP_PurgeDirectiveRating.Weight.LightMedium".Translate();
+                case 3: return "MAP_PurgeDirectiveRating.Weight.LightMediumHeavy".Translate();
+                case 4: return "MAP_PurgeDirectiveRating.Weight.LightMediumHeavyUltra".Translate();
+                default: return "MAP_PurgeDirectiveRating.Word.All".Translate();
+            }
+        }
+
         private static bool DrawCard(
             Rect rect,
             string node,
             string title,
+            string summary,
             bool inputEnabled)
         {
             string nodeLabel =
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Home.Node".Translate(node);
-            return MechanoidOvermindUiStyle.DrawMenuCard(
+            bool clicked = MechanoidOvermindUiStyle.DrawMenuCard(
                 rect,
                 nodeLabel,
                 title,
                 inputEnabled,
                 compactLayout: true);
+
+            if (!summary.NullOrEmpty())
+            {
+                float lineH = 16f;
+                MechanoidOvermindUiStyle.DrawSecondaryLabel(
+                    new Rect(rect.x + 14f, rect.yMax - lineH - 6f, rect.width - 28f, lineH),
+                    summary,
+                    TextAnchor.MiddleLeft);
+            }
+
+            return clicked;
         }
     }
 }

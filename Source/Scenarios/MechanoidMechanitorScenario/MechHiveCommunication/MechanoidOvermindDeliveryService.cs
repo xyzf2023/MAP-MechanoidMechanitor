@@ -54,6 +54,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public const string ErrorChargeFailed =
             "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.ChargeFailed";
 
+        public const string ErrorRatingLocked =
+            "MAP_PurgeDirectiveRating.Delivery.ErrorRatingLocked";
+
         public const string ErrorDropFailed =
             "MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.DropFailed";
 
@@ -129,12 +132,42 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             MechanoidOvermindPricingService.ClearThingMarketValueCache();
-            if (!order.TryGetCosts(out _, out _, out int totalCost) || totalCost < 0)
+            // 先校验订单本身有效（pre-discount），再计算含评级折扣的最终费用。
+            if (!order.TryGetCosts(out _, out _, out int preTotalCost) || preTotalCost < 0)
             {
                 return MechanoidOvermindDeliveryResult.Failed(ErrorInvalidOrder);
             }
 
-            if (totalCost
+            if (!MechanoidOvermindRatingPricingService.TryCalculateFinalOrderCosts(
+                    order,
+                    out _,
+                    out _,
+                    out _,
+                    out _,
+                    out int finalCost))
+            {
+                return MechanoidOvermindDeliveryResult.Failed(ErrorInvalidOrder);
+            }
+
+            // 最终执行入口：按当前有效评级权限重新校验每一行，防止降级后已下单内容被违规交付。
+            foreach (MechanoidOvermindOrderLine_Mech mechLine in order.MechLines)
+            {
+                if (!PurgeDirectiveRatingUtility.IsMechUnlocked(
+                        mechLine.Kind?.race?.race?.mechWeightClass))
+                {
+                    return MechanoidOvermindDeliveryResult.Failed(ErrorRatingLocked);
+                }
+            }
+
+            foreach (MechanoidOvermindOrderLine_Thing thingLine in order.ThingLines)
+            {
+                if (!PurgeDirectiveRatingUtility.IsThingUnlocked(thingLine.Spec?.Def))
+                {
+                    return MechanoidOvermindDeliveryResult.Failed(ErrorRatingLocked);
+                }
+            }
+
+            if (finalCost
                 > GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRewardPoints())
             {
                 return MechanoidOvermindDeliveryResult.Failed(ErrorInsufficientCredits);
@@ -162,7 +195,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 if (!GameComponent_MechanoidMechanitorStoryState.TrySpendPurgeDirectiveCredits(
-                        totalCost))
+                        finalCost))
                 {
                     CleanupUndelivered(info);
                     return MechanoidOvermindDeliveryResult.Failed(ErrorChargeFailed);
@@ -173,7 +206,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (!MechanoidMechanitorMechHiveCommunicationUtility.TryGetContactableMechHive(
                         out Faction mechHive))
                 {
-                    SafeRefund(totalCost);
+                    SafeRefund(finalCost);
                     spent = false;
                     CleanupUndelivered(info);
                     return MechanoidOvermindDeliveryResult.Failed(ErrorConnection);
@@ -182,7 +215,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 // MakeDropPodAt 正常返回即视为投送已提交（Contents 已挂到 ActiveTransporter）。
                 // 传入实际联络的机械巢派系，由原版按 FactionDef.dropPodActive / dropPodIncoming 选用机械族空投仓。
                 DropPodUtility.MakeDropPodAt(dropCell, map, info, mechHive);
-                return MechanoidOvermindDeliveryResult.Succeeded(totalCost);
+                return MechanoidOvermindDeliveryResult.Succeeded(finalCost);
             }
             catch (Exception ex)
             {
@@ -192,13 +225,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (IsDropCommitted(info))
                 {
                     // 投送对象已进入地图持有链：不退款、不清理内容。
-                    return MechanoidOvermindDeliveryResult.Succeeded(totalCost);
+                    return MechanoidOvermindDeliveryResult.Succeeded(finalCost);
                 }
 
                 AbortUncommittedDrop(info);
                 if (spent)
                 {
-                    SafeRefund(totalCost);
+                    SafeRefund(finalCost);
                 }
 
                 return MechanoidOvermindDeliveryResult.Failed(

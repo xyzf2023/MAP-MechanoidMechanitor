@@ -25,6 +25,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     selected = MechanoidOvermindCommunicationQueryKind.PurgeCredits;
                 }
 
+                Rect ratingRect = new Rect(inner.x, inner.y + QueryRowHeight + 8f, inner.width, QueryRowHeight);
+                if (DrawQueryCard(
+                        ratingRect,
+                        "02",
+                        "MAP_PurgeDirectiveRating.Communication.Query.NodeRating".Translate()))
+                {
+                    selected = MechanoidOvermindCommunicationQueryKind.NodeRating;
+                }
+
                 return selected;
             }
         }

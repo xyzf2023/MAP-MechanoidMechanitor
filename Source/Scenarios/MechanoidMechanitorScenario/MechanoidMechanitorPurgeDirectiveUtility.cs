@@ -193,6 +193,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.PurgeDirective.Letter.Yellow.Text",
                 LetterDefOf.NegativeEvent,
                 fleshColonists);
+            // 进入黄色肃清警告阶段：评级 -100（不低于0，仅首次）。
+            PurgeDirectiveRatingUtility.ApplyYellowWarningPenalty();
             runtime.SetTrackedPawns(fleshColonists);
         }
 
@@ -209,6 +211,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange1.Text",
                     LetterDefOf.ThreatSmall,
                     aliveTracked);
+                // 进入第一次橙色警告阶段：评级 -250（不低于0，仅首次）。
+                PurgeDirectiveRatingUtility.ApplyOrange1WarningPenalty();
                 runtime.SetOrangeWarningsSent(1);
                 runtime.RetainAliveTrackedPawns(aliveTracked);
                 return;
@@ -221,6 +225,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "MAP_MechanoidMechanitor.PurgeDirective.Letter.Orange2.Text",
                     LetterDefOf.ThreatSmall,
                     aliveTracked);
+                // 进入第二次橙色警告阶段：评级 -500（不低于0，仅首次）。
+                PurgeDirectiveRatingUtility.ApplyOrange2WarningPenalty();
                 runtime.SetOrangeWarningsSent(2);
                 runtime.RetainAliveTrackedPawns(aliveTracked);
                 return;
@@ -248,6 +254,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.PurgeDirective.Letter.Red.Text",
                 LetterDefOf.ThreatBig,
                 aliveTracked);
+
+            // 红色（终末）警告触发时同步将评级清零（评级=0）。
+            PurgeDirectiveRatingUtility.SetRatingDirect(0);
 
             if (!TryCompleteFinalRaidQueue(storyState, runtime))
             {

@@ -183,11 +183,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static List<ThingDef> GetConditionCausers(int threatPoints)
         {
+            // 环境影响器仅在达到对应评级等级（或接管主脑）后开放。
+            if (!PurgeDirectiveRatingUtility.ClusterEnvironmentAllowed())
+            {
+                return new List<ThingDef>();
+            }
+
             return MechClusterBuildingUtility.GetConditionCausers(threatPoints);
         }
 
         public static bool IsConditionCauser(ThingDef? def, int threatPoints)
         {
+            if (def == null)
+            {
+                return false;
+            }
+
+            // 环境影响器仅在达到对应评级等级（或接管主脑）后开放。
+            if (!PurgeDirectiveRatingUtility.ClusterEnvironmentAllowed())
+            {
+                return false;
+            }
+
             return MechClusterBuildingUtility.IsConditionCauser(def, threatPoints);
         }
 
@@ -209,7 +226,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            if (!PurgeDirectiveRatingUtility.IsClusterAvailable())
+            {
+                errorKey = ErrorInvalidRequest;
+                return false;
+            }
+
             int threatPoints = MechClusterDeploymentOrder.ClampThreatPoints(order.ThreatPoints);
+            if (threatPoints > PurgeDirectiveRatingUtility.EffectiveClusterMaxThreat())
+            {
+                errorKey = ErrorInvalidRequest;
+                return false;
+            }
+
             ThingDef? selectedConditionCauser = order.ConditionCauser;
             if (selectedConditionCauser != null
                 && !IsConditionCauser(selectedConditionCauser, threatPoints))

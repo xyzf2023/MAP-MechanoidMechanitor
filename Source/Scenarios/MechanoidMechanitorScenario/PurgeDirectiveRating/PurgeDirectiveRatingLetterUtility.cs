@@ -1,0 +1,46 @@
+using RimWorld;
+using Verse;
+
+namespace MAP_MechanoidMechanitor.Scenarios
+{
+    /// <summary>
+    /// 评级升级 / 降级信件。仅在评级机制活动（未接管主脑）时发送。
+    /// 接管主脑分支中调用方不应进入本路径。
+    /// </summary>
+    public static class PurgeDirectiveRatingLetterUtility
+    {
+        public static void SendUpgradeLetter(int prevLevel, int newLevel, int ratingValue)
+        {
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            {
+                return;
+            }
+
+            PurgeDirectiveRatingConfigDef def = PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig;
+            LetterDef letterDef = def.ratingUpgradeLetter ?? LetterDefOf.PositiveEvent;
+            TaggedString title = "MAP_PurgeDirectiveRating.Letter.Upgrade.Title".Translate(newLevel);
+            TaggedString text = "MAP_PurgeDirectiveRating.Letter.Upgrade.Text".Translate(
+                prevLevel,
+                newLevel,
+                ratingValue);
+            Find.LetterStack.ReceiveLetter(title, text, letterDef);
+        }
+
+        public static void SendDowngradeLetter(int newLevel, int prevLevel, int ratingValue)
+        {
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            {
+                return;
+            }
+
+            PurgeDirectiveRatingConfigDef def = PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig;
+            LetterDef letterDef = def.ratingDowngradeLetter ?? LetterDefOf.NegativeEvent;
+            TaggedString title = "MAP_PurgeDirectiveRating.Letter.Downgrade.Title".Translate(newLevel);
+            TaggedString text = "MAP_PurgeDirectiveRating.Letter.Downgrade.Text".Translate(
+                prevLevel,
+                newLevel,
+                ratingValue);
+            Find.LetterStack.ReceiveLetter(title, text, letterDef);
+        }
+    }
+}

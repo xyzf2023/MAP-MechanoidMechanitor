@@ -315,6 +315,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return MechForceSupportDeploymentResult.Failed(errorKey);
             }
 
+            if (!PurgeDirectiveRatingUtility.IsForceSupportAvailable()
+                || order.ThreatPoints > PurgeDirectiveRatingUtility.EffectiveForceSupportMaxThreat())
+            {
+                return MechForceSupportDeploymentResult.Failed(ErrorInvalidRequest);
+            }
+
             AcceptanceReport targetReport = ValidateTargetCell(map, center);
             if (!targetReport.Accepted || map == null)
             {
