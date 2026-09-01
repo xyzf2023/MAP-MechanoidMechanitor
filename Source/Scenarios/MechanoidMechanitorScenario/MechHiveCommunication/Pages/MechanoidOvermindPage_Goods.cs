@@ -352,10 +352,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (!PurgeDirectiveRatingUtility.IsThingUnlocked(entry.Def))
             {
-                int reqLevel = PurgeDirectiveRatingUtility.RequiredLevelForThing(entry.Def);
                 MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(textRight - 120f, rowRect.y + 20f, 120f, 16f),
-                    "MAP_PurgeDirectiveRating.RequiresLevel".Translate(reqLevel),
+                    new Rect(textRight - 160f, rowRect.y + 20f, 160f, 16f),
+                    PurgeDirectiveRatingUtility.GetThingLockReason(entry.Def),
                     GameFont.Tiny,
                     TextAnchor.MiddleRight,
                     MechanoidOvermindUiStyle.Error);
@@ -406,7 +405,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 GameFont.Small);
             y += 26f;
 
-            if (entry.MadeFromStuff)
+            if (thingUnlocked && entry.MadeFromStuff)
             {
                 Rect stuffRect = new Rect(x, y, 220f, 28f);
                 string stuffLabel = selectedStuff != null
@@ -423,7 +422,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 x += 230f;
             }
 
-            if (entry.HasQuality)
+            if (thingUnlocked && entry.HasQuality)
             {
                 Rect qualityRect = new Rect(x, y, 180f, 28f);
                 if (MechanoidOvermindUiStyle.DrawActionButton(
@@ -460,7 +459,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 MechanoidOvermindUiStyle.DrawLabel(
                     new Rect(x, y, 300f, 28f),
-                    "MAP_PurgeDirectiveRating.RequiresLevel".Translate(thingRequiredLevel),
+                    PurgeDirectiveRatingUtility.GetThingLockReason(entry.Def),
                     GameFont.Small,
                     TextAnchor.MiddleLeft,
                     MechanoidOvermindUiStyle.Error);
@@ -589,8 +588,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             float discountRate = PurgeDirectiveRatingUtility.GetDiscountRate();
             if (discountRate > 0f && cachedEstimatedCredits > 0)
             {
-                int discount = Mathf.RoundToInt(cachedEstimatedCredits * discountRate);
-                cachedEstimatedCredits = Mathf.Max(1, cachedEstimatedCredits - discount);
+                MechanoidOvermindRatingPricingService.ApplyDiscount(
+                    cachedEstimatedCredits,
+                    discountRate,
+                    out long finalCost,
+                    out _);
+                cachedEstimatedCredits = (int)finalCost;
             }
         }
 

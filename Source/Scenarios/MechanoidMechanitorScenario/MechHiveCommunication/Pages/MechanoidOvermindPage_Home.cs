@@ -18,12 +18,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             using (MechanoidOvermindUiStyle.Push())
             {
                 bool ratingActive = PurgeDirectiveRatingUtility.IsRatingSystemActive();
-                float overviewH = ratingActive ? OverviewHeight : 0f;
-                float overviewGap = ratingActive ? 10f : 0f;
+                bool takeoverActive = GameComponent_CerebrexTakeoverState.IsActive;
+                float overviewH = (ratingActive || takeoverActive) ? OverviewHeight : 0f;
+                float overviewGap = overviewH > 0f ? 10f : 0f;
 
                 if (ratingActive)
                 {
                     DrawRatingOverview(new Rect(inRect.x, inRect.y, inRect.width, overviewH));
+                }
+                else if (takeoverActive)
+                {
+                    DrawTakeoverOverview(new Rect(inRect.x, inRect.y, inRect.width, overviewH));
                 }
 
                 Rect cardsRect = new Rect(
@@ -97,12 +102,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Rect inner = rect.ContractedBy(8f);
 
             int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
-            int value = PurgeDirectiveRatingUtility.RatingValue;
-            int next = PurgeDirectiveRatingUtility.NextThresholdValue();
+            int value = PurgeDirectiveRatingUtility.CurrentRatingValue();
+            int levelStart = PurgeDirectiveRatingUtility.Config.GetLevelStart(level);
+            int next = PurgeDirectiveRatingUtility.Config.GetNextLevelStart(level);
 
             string title = PurgeDirectiveRatingUtility.IsMaxRatingLevel()
-                ? "MAP_PurgeDirectiveRating.Home.Overview.Maxed".Translate(level, value)
-                : "MAP_PurgeDirectiveRating.Home.Overview.Level".Translate(level, value, next);
+                ? "MAP_PurgeDirectiveRating.Home.Overview.Maxed".Translate(
+                    PurgeDirectiveRatingDisplay.RatingName(level), value)
+                : "MAP_PurgeDirectiveRating.Home.Overview.Level".Translate(
+                    PurgeDirectiveRatingDisplay.RatingName(level), value, next);
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(inner.x, inner.y, inner.width, 22f),
                 title,
@@ -112,7 +120,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             float barY = inner.y + 26f;
             float barH = 12f;
-            float ratio = Mathf.Clamp01((float)value / next);
+            float span = next - levelStart;
+            float ratio = span <= 0f
+                ? 1f
+                : Mathf.Clamp01((float)(value - levelStart) / span);
             Rect barRect = new Rect(inner.x, barY, inner.width, barH);
             Widgets.FillableBar(barRect, ratio);
 
@@ -124,6 +135,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 TextAnchor.MiddleLeft);
         }
 
+        private static void DrawTakeoverOverview(Rect rect)
+        {
+            MechanoidOvermindUiStyle.DrawPanel(rect);
+            Rect inner = rect.ContractedBy(8f);
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, inner.y, inner.width, 22f),
+                "MAP_PurgeDirectiveRating.Takeover.Name".Translate(),
+                GameFont.Small,
+                TextAnchor.MiddleLeft,
+                MechanoidOvermindUiStyle.AccentBright);
+            MechanoidOvermindUiStyle.DrawSecondaryLabel(
+                new Rect(inner.x, inner.y + 26f, inner.width, 16f),
+                "MAP_PurgeDirectiveRating.Takeover.HomeHint".Translate(),
+                TextAnchor.MiddleLeft);
+        }
+
         private static string RatingSummaryCommunication()
         {
             if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
@@ -132,11 +159,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
-            int value = PurgeDirectiveRatingUtility.RatingValue;
-            int next = PurgeDirectiveRatingUtility.NextThresholdValue();
+            int value = PurgeDirectiveRatingUtility.CurrentRatingValue();
+            int next = PurgeDirectiveRatingUtility.Config.GetNextLevelStart(level);
             return PurgeDirectiveRatingUtility.IsMaxRatingLevel()
-                ? "MAP_PurgeDirectiveRating.Home.Card.Communication.Maxed".Translate(level, value)
-                : "MAP_PurgeDirectiveRating.Home.Card.Communication.Level".Translate(level, value, next);
+                ? "MAP_PurgeDirectiveRating.Home.Card.Communication.Maxed".Translate(
+                    PurgeDirectiveRatingDisplay.RatingName(level), value)
+                : "MAP_PurgeDirectiveRating.Home.Card.Communication.Level".Translate(
+                    PurgeDirectiveRatingDisplay.RatingName(level), value, next);
         }
 
         private static string RatingSummaryMechs()
@@ -158,7 +187,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
-            return "MAP_PurgeDirectiveRating.Home.Card.Goods".Translate(level);
+            int goodsLevel = Mathf.Min(level, 3);
+            string tier = goodsLevel >= 3
+                ? "MAP_PurgeDirectiveRating.Goods.Tier3".Translate()
+                : goodsLevel >= 2
+                    ? "MAP_PurgeDirectiveRating.Goods.Tier2".Translate()
+                    : "MAP_PurgeDirectiveRating.Goods.Tier1".Translate();
+            float discount = PurgeDirectiveRatingUtility.GetDiscountRate();
+            return "MAP_PurgeDirectiveRating.Home.Card.Goods".Translate(
+                tier,
+                Mathf.RoundToInt(discount * 100f));
         }
 
         private static string RatingSummarySpecialProtocols()
@@ -172,7 +210,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool cluster = PurgeDirectiveRatingUtility.IsClusterAvailable();
             bool force = PurgeDirectiveRatingUtility.IsForceSupportAvailable();
             return "MAP_PurgeDirectiveRating.Home.Card.SpecialProtocols".Translate(
-                level,
+                PurgeDirectiveRatingDisplay.RatingName(level),
                 cluster ? "MAP_PurgeDirectiveRating.Word.Available".Translate()
                     : "MAP_PurgeDirectiveRating.Word.Locked".Translate(),
                 force ? "MAP_PurgeDirectiveRating.Word.Available".Translate()

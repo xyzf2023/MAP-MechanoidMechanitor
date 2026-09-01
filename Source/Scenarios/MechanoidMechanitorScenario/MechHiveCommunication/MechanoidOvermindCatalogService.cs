@@ -84,6 +84,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static List<MechanoidOvermindMechCatalogEntry>? mechCatalog;
 
         private static List<MechanoidOvermindThingCatalogEntry>? thingCatalog;
+        private static Dictionary<ThingDef, MechanoidOvermindThingCatalogEntry>? thingLookup;
 
         private static HashSet<ThingDef>? thingBlacklistCache;
 
@@ -102,6 +103,43 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             EnsureThingCatalog();
             return thingCatalog!;
+        }
+
+        /// <summary>
+        /// 根据 ThingDef 查找其物资目录条目（类别 + 默认参考单位市场价值）。
+        /// 用于肃清评级物资分级，避免退回 ThingDef.BaseMarketValue 的粗略五档分类。
+        /// 查询失败或目录未收录时返回 false。
+        /// </summary>
+        public static bool TryFindThingCatalogEntry(
+            ThingDef def,
+            out MechanoidOvermindThingCatalogEntry entry)
+        {
+            entry = null!;
+            if (def == null)
+            {
+                return false;
+            }
+
+            EnsureThingCatalog();
+            if (thingCatalog == null)
+            {
+                return false;
+            }
+
+            if (thingLookup == null)
+            {
+                thingLookup = new Dictionary<ThingDef, MechanoidOvermindThingCatalogEntry>();
+                for (int i = 0; i < thingCatalog.Count; i++)
+                {
+                    MechanoidOvermindThingCatalogEntry e = thingCatalog[i];
+                    if (e.Def != null && !thingLookup.ContainsKey(e.Def))
+                    {
+                        thingLookup[e.Def] = e;
+                    }
+                }
+            }
+
+            return thingLookup.TryGetValue(def, out entry);
         }
 
         public static IReadOnlyList<ThingDef> GetStuffCandidates(ThingDef def)
@@ -226,6 +264,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             mechCatalog = null;
             thingCatalog = null;
+            thingLookup = null;
             thingBlacklistCache = null;
             mechPawnKindBlacklistCache = null;
             stuffCandidatesCache.Clear();

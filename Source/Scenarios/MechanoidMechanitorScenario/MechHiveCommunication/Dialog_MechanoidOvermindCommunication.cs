@@ -1086,6 +1086,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindUiStyle.AccentBright);
 
             bool ratingActive = PurgeDirectiveRatingUtility.IsRatingSystemActive();
+            bool takeoverActive = GameComponent_CerebrexTakeoverState.IsActive;
             float ratingY = 20f;
             float connectionY = ratingActive ? 38f : 20f;
             float permissionY = ratingActive ? 56f : 38f;
@@ -1094,16 +1095,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 int ratingLevel = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingLevel();
                 int ratingValue = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingValue();
-                int nextThreshold = PurgeDirectiveRatingUtility.NextThresholdValue();
+                int nextThreshold = PurgeDirectiveRatingUtility.Config.GetNextLevelStart(ratingLevel);
                 string ratingText = PurgeDirectiveRatingUtility.IsMaxRatingLevel()
-                    ? "MAP_PurgeDirectiveRating.TopBar.Maxed".Translate(ratingLevel, ratingValue)
+                    ? "MAP_PurgeDirectiveRating.TopBar.Maxed".Translate(
+                        PurgeDirectiveRatingDisplay.RatingName(ratingLevel),
+                        ratingValue,
+                        PurgeDirectiveRatingUtility.Config.maxRatingValue)
                     : "MAP_PurgeDirectiveRating.TopBar.Level".Translate(
-                        ratingLevel,
+                        PurgeDirectiveRatingDisplay.RatingName(ratingLevel),
                         ratingValue,
                         nextThreshold);
                 MechanoidOvermindUiStyle.DrawLabel(
                     new Rect(rightX, inner.y + ratingY, rightWidth, 18f),
                     ratingText,
+                    GameFont.Tiny,
+                    TextAnchor.MiddleRight,
+                    MechanoidOvermindUiStyle.AccentBright);
+            }
+            else if (takeoverActive)
+            {
+                // 接管主脑：不显示评级进度，仅显示控制权限状态。
+                MechanoidOvermindUiStyle.DrawLabel(
+                    new Rect(rightX, inner.y + ratingY, rightWidth, 18f),
+                    "MAP_PurgeDirectiveRating.Takeover.Name".Translate(),
                     GameFont.Tiny,
                     TextAnchor.MiddleRight,
                     MechanoidOvermindUiStyle.AccentBright);
@@ -1123,12 +1137,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 TextAnchor.MiddleRight,
                 MechanoidOvermindUiStyle.TextSecondary);
 
-            // 接管主脑后不显示评级进度条；否则固定显示评级进度条。
+            // 接管主脑后不显示评级进度条；否则固定显示评级进度条（按当前等级内计算）。
             if (ratingActive)
             {
                 int ratingValue = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingValue();
-                int nextThreshold = PurgeDirectiveRatingUtility.NextThresholdValue();
-                float ratio = Mathf.Clamp01((float)ratingValue / nextThreshold);
+                int ratingLevel = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRatingLevel();
+                int levelStart = PurgeDirectiveRatingUtility.Config.GetLevelStart(ratingLevel);
+                int nextThreshold = PurgeDirectiveRatingUtility.Config.GetNextLevelStart(ratingLevel);
+                float span = nextThreshold - levelStart;
+                float ratio = span <= 0f
+                    ? 1f
+                    : Mathf.Clamp01((float)(ratingValue - levelStart) / span);
                 Rect barRect = new Rect(rightX, inner.y + 74f, rightWidth, 8f);
                 Widgets.FillableBar(barRect, ratio);
             }
@@ -2694,19 +2713,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
             else
             {
                 int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
-                int value = PurgeDirectiveRatingUtility.RatingValue;
-                int next = PurgeDirectiveRatingUtility.NextThresholdValue();
+                int value = PurgeDirectiveRatingUtility.CurrentRatingValue();
+                int next = PurgeDirectiveRatingUtility.Config.GetNextLevelStart(level);
                 float discount = PurgeDirectiveRatingUtility.GetDiscountRate();
-                translated = PurgeDirectiveRatingUtility.IsMaxRatingLevel()
-                    ? "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed".Translate(
-                        level,
+                if (PurgeDirectiveRatingUtility.IsMaxRatingLevel())
+                {
+                    translated = "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed".Translate(
+                        PurgeDirectiveRatingDisplay.RatingName(level),
                         value,
-                        discount)
-                    : "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level".Translate(
-                        level,
+                        discount);
+                }
+                else
+                {
+                    translated = "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level".Translate(
+                        PurgeDirectiveRatingDisplay.RatingName(level),
                         value,
                         next,
                         discount);
+                }
+
+                translated += "\n" + "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Opened".Translate(
+                    PurgeDirectiveRatingDisplay.PermissionSummaryForLevel(level));
+                if (!PurgeDirectiveRatingUtility.IsMaxRatingLevel())
+                {
+                    translated += "\n" + "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.NextNew".Translate(
+                        PurgeDirectiveRatingDisplay.NewPermissionsAtLevel(level + 1));
+                }
             }
 
             PlayDialogueText(translated.RawText);

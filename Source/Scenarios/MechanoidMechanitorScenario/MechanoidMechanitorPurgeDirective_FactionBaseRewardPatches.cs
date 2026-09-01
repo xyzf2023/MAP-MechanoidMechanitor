@@ -29,6 +29,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 factionBase,
                 MechanoidMechanitorPurgeDirectiveRuntimeState
                     .OtherFactionBaseDestroyedRewardPoints);
+
+            // 据点被摧毁后立即结算肃清任务（不依赖世界对象稍后被其他任务销毁）。
+            PurgeDirectiveQuestPart.NotifyActiveQuestTargetDefeated(factionBase);
         }
     }
 
@@ -54,20 +57,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (__instance.Faction == null || __instance.Faction.IsPlayer)
-            {
-                return;
-            }
-
-            if (__instance.parts == null || __instance.parts.Count == 0)
-            {
-                return;
-            }
-
-            SitePartDef mainSitePartDef = __instance.MainSitePartDef;
-            if (mainSitePartDef == null
-                || mainSitePartDef.tags == null
-                || !mainSitePartDef.tags.Contains("WorkSite"))
+            // 只处理合法肃清目标（工作站 / 前哨）；玩家、机械巢或非法据点不结算。
+            if (PurgeDirectiveQuestTargetUtility.ClassifyTargetType(__instance)
+                == PurgeDirectiveTargetType.Invalid)
             {
                 return;
             }
@@ -76,6 +68,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 __instance,
                 MechanoidMechanitorPurgeDirectiveRuntimeState
                     .OtherFactionBaseDestroyedRewardPoints);
+
+            // 玩家击败守军后立即结算工作站 / 前哨肃清任务（不依赖世界对象稍后被其他任务销毁）。
+            PurgeDirectiveQuestPart.NotifyActiveQuestTargetDefeated(__instance);
         }
     }
 }

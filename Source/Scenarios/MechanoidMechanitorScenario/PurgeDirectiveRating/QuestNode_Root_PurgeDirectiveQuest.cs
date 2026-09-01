@@ -1,6 +1,7 @@
 using RimWorld;
 using RimWorld.Planet;
 using RimWorld.QuestGen;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Scenarios
@@ -20,8 +21,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Faction proposerFaction = slate.Get<Faction>("proposerFaction");
             string configName = slate.Get<string>("purgeQuestConfigDefName");
             int rewardValue = slate.Get<int>("rewardValue", 0);
-            int offerTimeout = slate.Get<int>("offerTimeoutTicks", 0);
             int operationTimeout = slate.Get<int>("operationTimeoutTicks", 0);
+
+            PurgeDirectiveTargetType targetType =
+                PurgeDirectiveQuestTargetUtility.ClassifyTargetType(target);
 
             PurgeDirectiveQuestPart part = new PurgeDirectiveQuestPart
             {
@@ -30,7 +33,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 proposerFaction = proposerFaction,
                 purgeQuestConfigDefName = configName,
                 rewardValue = rewardValue,
-                operationTimeoutTicks = operationTimeout
+                operationTimeoutTicks = operationTimeout,
+                targetType = targetType,
+                targetStableId = PurgeDirectiveQuestTargetUtility.TryGetStableId(target),
+                questTag = "Quest" + QuestGen.quest.id + "."
             };
 
             QuestGen.quest.AddPart(part);

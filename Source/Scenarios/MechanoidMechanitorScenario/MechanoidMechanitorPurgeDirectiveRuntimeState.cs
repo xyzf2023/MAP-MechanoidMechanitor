@@ -39,7 +39,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool purgeDirectiveRatingInitialized;   // 旧存档迁移标记
         // 世界目标基础奖励（如摧毁据点 200 点）按稳定ID持久化去重，防止重复结算。
         private List<string> purgeDirectiveAwardedBaseRewardIds = new List<string>();
-        // 肃清评级任务调度状态：下一次每日检查时间 / 冷却到期时间，随主脑存档。
+        // 历史已用于肃清评级任务的世界目标稳定ID（排重：同一目标不重复生成任务）。
+        private List<string> purgeDirectiveUsedQuestTargetIds = new List<string>();
+        // 肃清评级任务调度状态：
+        // - nextPurgeQuestCheckTick：约 2500 tick 的检查节流（读档可重置，不影响绝对调度）。
+        // - purgeQuestCooldownEndTick：下一次尝试生成任务的「绝对」tick（随存档保持，不得漂移）。
         private int nextPurgeQuestCheckTick = -1;
         private int purgeQuestCooldownEndTick;
 
@@ -52,6 +56,68 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int NextPurgeQuestCheckTick => nextPurgeQuestCheckTick;
 
         public int PurgeQuestCooldownEndTick => purgeQuestCooldownEndTick;
+
+        public bool HasUsedQuestTarget(string stableId)
+        {
+            return stableId != null && purgeDirectiveUsedQuestTargetIds.Contains(stableId);
+        }
+
+        public int UsedQuestTargetCount => purgeDirectiveUsedQuestTargetIds?.Count ?? 0;
+
+        public int AwardedBaseRewardCount => purgeDirectiveAwardedBaseRewardIds?.Count ?? 0;
+
+        public void MarkQuestTargetUsed(string stableId)
+        {
+            if (stableId != null && !purgeDirectiveUsedQuestTargetIds.Contains(stableId))
+            {
+                purgeDirectiveUsedQuestTargetIds.Add(stableId);
+            }
+        }
+
+        public void CleanupUsedQuestTargetIds()
+        {
+            if (purgeDirectiveUsedQuestTargetIds == null)
+            {
+                purgeDirectiveUsedQuestTargetIds = new List<string>();
+                return;
+            }
+
+            List<string> cleaned = new List<string>();
+            for (int i = 0; i < purgeDirectiveUsedQuestTargetIds.Count; i++)
+            {
+                string? id = purgeDirectiveUsedQuestTargetIds[i];
+                if (string.IsNullOrEmpty(id))
+                {
+                    continue;
+                }
+
+                if (!cleaned.Contains(id))
+                {
+                    cleaned.Add(id);
+                }
+            }
+
+            purgeDirectiveUsedQuestTargetIds = cleaned;
+        }
+
+        /// <summary>
+        /// 将下一次尝试生成肃清任务的绝对 tick 设为「当前 tick + 随机 [min,max] 天」。
+        /// 用于新游戏首次、任意结束后再尝试；绝对 tick 随存档保持，不会每 2500 tick 重新随机。
+        /// </summary>
+        public void SchedulePurgeQuestAttemptRange(int minDays, int maxDays)
+        {
+            if (minDays < 0) minDays = 0;
+            if (maxDays < minDays) maxDays = minDays;
+            int days = Rand.RangeInclusive(minDays, maxDays);
+            purgeQuestCooldownEndTick = Find.TickManager.TicksGame + days * 60000;
+        }
+
+        /// <summary>将下一次尝试设为「当前 tick + days 天」（用于无合法目标时 1 天后重试）。</summary>
+        public void SchedulePurgeQuestAttemptAfter(int days)
+        {
+            if (days < 0) days = 0;
+            purgeQuestCooldownEndTick = Find.TickManager.TicksGame + days * 60000;
+        }
 
         public int NextCheckTick => nextPurgeDirectiveCheckTick;
 
@@ -121,8 +187,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             purgeDirectiveRatingValue = 0;
             purgeDirectiveRatingInitialized = true;
             purgeDirectiveAwardedBaseRewardIds = new List<string>();
+            purgeDirectiveUsedQuestTargetIds = new List<string>();
             nextPurgeQuestCheckTick = -1;
-            purgeQuestCooldownEndTick = 0;
+            // 新游戏首个任务：当前 tick 起随机 4~6 天后再尝试。
+            PurgeDirectiveRatingConfigDef cfg = PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig;
+            int firstDays = cfg != null
+                ? Rand.RangeInclusive(cfg.questFirstDelayDaysMin, cfg.questFirstDelayDaysMax)
+                : 6;
+            purgeQuestCooldownEndTick = Find.TickManager.TicksGame + firstDays * 60000;
         }
 
         public void MarkContactOvermindUnlockedLetterSent()
@@ -323,6 +395,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref purgeDirectiveAwardedBaseRewardIds,
                 "purgeDirectiveAwardedBaseRewardIds",
                 LookMode.Value);
+            Scribe_Collections.Look(
+                ref purgeDirectiveUsedQuestTargetIds,
+                "purgeDirectiveUsedQuestTargetIds",
+                LookMode.Value);
             Scribe_Values.Look(
                 ref nextPurgeQuestCheckTick,
                 "nextPurgeQuestCheckTick",
@@ -354,6 +430,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     purgeDirectiveAwardedBaseRewardIds = new List<string>();
                 }
 
+                if (purgeDirectiveUsedQuestTargetIds == null)
+                {
+                    purgeDirectiveUsedQuestTargetIds = new List<string>();
+                }
+
                 if (nextPurgeQuestCheckTick < -1)
                 {
                     nextPurgeQuestCheckTick = -1;
@@ -383,6 +464,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     purgeDirectiveRatingInitialized = true;
                 }
 
+                // 旧存档缺调度字段（或仍为立即触发的 0）：载入后随机 4~6 天再尝试；
+                // 已保存的绝对值必须保留，不得每次读档重新随机。
+                if (purgeQuestCooldownEndTick <= 0)
+                {
+                    PurgeDirectiveRatingConfigDef? cfg =
+                        PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig;
+                    int firstDays = cfg != null
+                        ? Rand.RangeInclusive(cfg.questFirstDelayDaysMin, cfg.questFirstDelayDaysMax)
+                        : 6;
+                    purgeQuestCooldownEndTick = Find.TickManager.TicksGame + firstDays * 60000;
+                }
+
+                // 清理历史目标ID中的空字符串与重复项。
+                CleanupUsedQuestTargetIds();
                 CleanupTrackedPawns();
             }
         }

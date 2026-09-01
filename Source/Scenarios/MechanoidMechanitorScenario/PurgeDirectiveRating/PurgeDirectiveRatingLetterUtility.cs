@@ -42,5 +42,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ratingValue);
             Find.LetterStack.ReceiveLetter(title, text, letterDef);
         }
+
+        public static void SendQuestCompleteLetter(
+            RimWorld.Planet.WorldObject? target,
+            PurgeDirectiveTargetType targetType,
+            int totalReward)
+        {
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            {
+                return;
+            }
+
+            TaggedString title = "MAP_PurgeDirectiveRating.Letter.QuestComplete.Title".Translate();
+            TaggedString text = "MAP_PurgeDirectiveRating.Letter.QuestComplete.Text".Translate(
+                target != null ? target.LabelCap : "?",
+                PurgeDirectiveRatingDisplay.RatingName(
+                    PurgeDirectiveRatingUtility.CurrentRatingLevel),
+                totalReward);
+            Find.LetterStack.ReceiveLetter(title, text, LetterDefOf.PositiveEvent);
+        }
     }
 }

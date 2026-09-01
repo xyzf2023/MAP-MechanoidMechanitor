@@ -11,8 +11,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// 肃清评级任务调度器。独立状态机：只负责「是否生成任务」，不参与共生盟约逻辑，
     /// 也不读取盟约成员 / 信任度 / 团结度 / 参与派系 / 援军 / Lord 等任何代码。
     ///
-    /// 调度状态（下一次检查时间、冷却到期时间）保存在主脑运行时状态中，随存档持久化。
-    /// 通过 Harmony 挂接到主脑 GameComponent 的 Tick / ExposeData 触发，避免改动既有调用链。
+    /// 调度状态（下一次检查节流、下一次尝试的绝对 tick）保存在主脑运行时状态中，随存档持久化；
+    /// 绝对 tick 不得每 2500 tick 重新随机。通过 Harmony 挂接到主脑 GameComponent 的
+    /// Tick / ExposeData 触发，避免改动既有调用链。
     /// </summary>
     [StaticConstructorOnStartup]
     public static class PurgeDirectiveQuestScheduler
@@ -22,7 +23,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static readonly QuestScriptDef? questScriptDef =
             PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig != null
                 ? DefDatabase<QuestScriptDef>.GetNamedSilentFail(
-                    PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig.questScriptDefName)
+                    PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig.questScriptDef)
                 : null;
 
         static PurgeDirectiveQuestScheduler()
@@ -36,8 +37,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 postfix: new HarmonyMethod(typeof(PurgeDirectiveQuestScheduler), nameof(PostExpose)));
         }
 
-        private static PurgeDirectiveQuestConfigDef Config =>
-            PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig;
+        private static PurgeDirectiveRatingConfigDef RatingConfig =>
+            PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig;
 
         public static void PostTick(GameComponent_MechanoidMechanitorStoryState __instance)
         {
@@ -46,6 +47,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static void PostExpose()
         {
+            // 仅重置「约 2500 tick 的检查节流」；绝对下一次尝试 tick 由运行时状态持久化，不得漂移。
             if (Scribe.mode != LoadSaveMode.PostLoadInit)
             {
                 return;
@@ -69,8 +71,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            // 接管主脑或肃清额度未启用：停止评级任务调度。
-            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
+            // 接管主脑：安全结束所有活动评级任务（无处罚），不再生成新任务。
+            if (GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                EndAllActivePurgeQuestsWithoutPenalty();
+                return;
+            }
+
+            // 不生成任务的条件：未激活评级系统（含接管主脑、肃清额度未启用）、触发最终红色惩罚。
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive()
+                || PurgeDirectiveRatingUtility.IsFinalPenaltyTriggered())
             {
                 return;
             }
@@ -89,61 +99,64 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             rs.SetNextPurgeQuestCheckTick(now + CheckIntervalTicks);
 
-            if (Config == null)
+            PurgeDirectiveRatingConfigDef cfg = RatingConfig;
+            if (cfg == null || questScriptDef == null)
             {
                 return;
             }
 
-            // 冷却期内不生成。
+            // 绝对下一次尝试时间未到：不生成（不重新随机）。
             if (now < rs.PurgeQuestCooldownEndTick)
             {
                 return;
             }
 
-            // 评级不足不生成。
-            if (PurgeDirectiveRatingUtility.CurrentRatingLevel < Config.minRatingLevel)
+            // 已有活动任务（含待接受邀请）则跳过，保证 maxActive 限制。
+            if (!CanGenerateQuest(story))
             {
                 return;
             }
 
-            // 已有进行中/待抉择任务则跳过（保证 maxActive 限制）。
-            if (AnyActivePurgeQuest())
-            {
-                return;
-            }
-
-            WorldObject? target = PurgeDirectiveQuestTargetUtility.TryGetValidTarget();
+            WorldObject? target = PurgeDirectiveQuestTargetUtility.SelectTarget(
+                PurgeDirectiveRatingUtility.CurrentRatingLevel);
             if (target == null)
             {
+                // 到期但无合法目标：1 天后重试（不生成）。
+                rs.SchedulePurgeQuestAttemptAfter(cfg.questNoTargetRetryDays);
                 return;
             }
 
-            GenerateQuest(target, story);
+            GenerateQuest(target, cfg);
+        }
+
+        /// <summary>是否满足「可生成任务」的全部前置：游戏存在、叙事者允许暴力任务、机械巢可联络、无活动任务。</summary>
+        private static bool CanGenerateQuest(GameComponent_MechanoidMechanitorStoryState story)
+        {
+            if (Current.Game == null) return false;
+            if (!Find.Storyteller.difficulty.allowViolentQuests) return false;
+            if (!MechanoidMechanitorMechHiveCommunicationUtility.TryGetContactableMechHive(out _)) return false;
+            if (AnyActivePurgeQuest()) return false;
+            return true;
         }
 
         /// <summary>
-        /// 任务结束（成功/失败/拒绝/超时/目标失效/接管）后调用，进入冷却期。
+        /// 任意任务结束（成功/失败/拒绝/超时/无效）后调用：安排 7~10 天后再尝试。
+        /// 无处罚结束同样进入此冷却。
         /// </summary>
         public static void NotifyQuestEnded()
         {
-            if (Config == null)
-            {
-                return;
-            }
-
             GameComponent_MechanoidMechanitorStoryState? story =
                 Current.Game?.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = story?.PurgeDirectiveRuntimeState;
-            if (rs == null)
-            {
-                return;
-            }
+            if (rs == null) return;
 
-            int cooldownTicks = Config.idleCooldownDays * 60000;
-            rs.SetPurgeQuestCooldownEndTick(Find.TickManager.TicksGame + cooldownTicks);
+            PurgeDirectiveRatingConfigDef cfg = RatingConfig;
+            if (cfg == null) return;
+
+            rs.SchedulePurgeQuestAttemptRange(cfg.questRetryDelayDaysMin, cfg.questRetryDelayDaysMax);
         }
 
-        /// <summary>DEV：立即将下一次检查时间设为当前，绕过间隔。</summary>
+        /// <summary>DEV：立即将下一次检查时间设为当前，并绕过冷却强制尝试调度。</summary>
         public static void ForceDueNow()
         {
             GameComponent_MechanoidMechanitorStoryState? story =
@@ -151,6 +164,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = story?.PurgeDirectiveRuntimeState;
             if (rs != null)
             {
+                rs.SchedulePurgeQuestAttemptAfter(0);
                 rs.SetNextPurgeQuestCheckTick(Find.TickManager.TicksGame);
                 Tick();
             }
@@ -164,10 +178,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = story?.PurgeDirectiveRuntimeState;
             if (rs != null)
             {
-                rs.SetPurgeQuestCooldownEndTick(0);
+                rs.SchedulePurgeQuestAttemptAfter(0);
             }
         }
 
+        /// <summary>活动任务计数：本MOD肃清任务中尚未真正结束的（含待接受邀请与进行中）都计入。</summary>
         private static bool AnyActivePurgeQuest()
         {
             if (questScriptDef == null)
@@ -177,34 +192,76 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             foreach (Quest quest in Find.QuestManager.QuestsListForReading)
             {
-                if (quest.root == questScriptDef && quest.State == QuestState.Ongoing)
+                if (quest.root != questScriptDef || quest.State != QuestState.Ongoing)
                 {
-                    return true;
+                    continue;
+                }
+
+                foreach (QuestPart part in quest.PartsListForReading)
+                {
+                    if (part is PurgeDirectiveQuestPart purgePart
+                        && (purgePart.IsOfferPending || purgePart.IsOperationActive))
+                    {
+                        return true;
+                    }
                 }
             }
 
             return false;
         }
 
-        private static void GenerateQuest(WorldObject target, GameComponent_MechanoidMechanitorStoryState story)
+        /// <summary>接管主脑发生时：无处罚结束所有尚未真正结束的活动评级任务（含待接受邀请）。</summary>
+        private static void EndAllActivePurgeQuestsWithoutPenalty()
         {
-            if (Config == null || questScriptDef == null)
+            if (questScriptDef == null)
             {
                 return;
             }
 
-            Faction? targetFaction = target.Faction;
+            foreach (Quest quest in Find.QuestManager.QuestsListForReading)
+            {
+                if (quest.root != questScriptDef || quest.State != QuestState.Ongoing)
+                {
+                    continue;
+                }
 
-            int rewardValue = Rand.RangeInclusive(Config.minRewardValue, Config.maxRewardValue);
-            int offerTimeout = Config.offerTimeoutDays * 60000;
-            int operationTimeout = Config.operationTimeoutDays * 60000;
+                foreach (QuestPart part in quest.PartsListForReading)
+                {
+                    if (part is PurgeDirectiveQuestPart purgePart
+                        && (purgePart.IsOfferPending || purgePart.IsOperationActive))
+                    {
+                        purgePart.EndWithoutPenalty();
+                    }
+                }
+            }
+        }
+
+        private static void GenerateQuest(WorldObject target, PurgeDirectiveRatingConfigDef cfg)
+        {
+            if (cfg == null || questScriptDef == null)
+            {
+                return;
+            }
+
+            // 生成前即把目标标记为已使用，保证待接受邀请期内不会重复选择同一目标。
+            string? stableId = PurgeDirectiveQuestTargetUtility.TryGetStableId(target);
+            if (stableId != null)
+            {
+                PurgeDirectiveRatingUtility.Runtime?.MarkQuestTargetUsed(stableId);
+            }
+
+            Faction? targetFaction = target.Faction;
+            PurgeDirectiveTargetType type = PurgeDirectiveQuestTargetUtility.ClassifyTargetType(target);
+            int extraReward = PurgeDirectiveRatingUtility.GetQuestExtraReward(type);
+            int offerTimeout = cfg.questOfferTimeoutDays * 60000;
+            int operationTimeout = cfg.questOperationTimeoutDays * 60000;
 
             Slate slate = new Slate();
             slate.Set("targetWorldObject", target);
             slate.Set("targetFaction", targetFaction);
             slate.Set("proposerFaction", Faction.OfPlayer);
-            slate.Set("purgeQuestConfigDefName", Config.defName);
-            slate.Set("rewardValue", rewardValue);
+            slate.Set("purgeQuestConfigDefName", cfg.defName);
+            slate.Set("rewardValue", extraReward);
             slate.Set("offerTimeoutTicks", offerTimeout);
             slate.Set("operationTimeoutTicks", operationTimeout);
 

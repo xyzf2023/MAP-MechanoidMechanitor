@@ -342,7 +342,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static int GetPurgeDirectiveRatingValue()
         {
-            return PurgeDirectiveRatingUtility.RatingValue;
+            return PurgeDirectiveRatingUtility.CurrentRatingValue();
+        }
+
+        /// <summary>
+        /// DEV / 内部调额入口：仅增加肃清额度，不增加评级值。
+        /// 退款、订单取消返款、DEV 调额度都走这里，避免误触发评级增减。
+        /// </summary>
+        public static bool AddPurgeDirectiveCreditsDev(int amount)
+        {
+            if (amount == 0 || !IsPurgeDirectiveActive)
+            {
+                return false;
+            }
+
+            GameComponent_MechanoidMechanitorStoryState? component = CurrentComponent;
+            if (component == null
+                || !component.PurgeDirectiveEnabled
+                || component.purgeDirectiveRuntimeState == null)
+            {
+                return false;
+            }
+
+            long next = (long)component.purgeDirectiveRuntimeState.RewardPoints + amount;
+            if (next < 0L) next = 0L;
+            if (next > int.MaxValue) next = int.MaxValue;
+            component.purgeDirectiveRuntimeState.AddRewardPoints((int)(next - component.purgeDirectiveRuntimeState.RewardPoints));
+            return true;
         }
 
         public static int GetPurgeDirectiveRatingLevel()

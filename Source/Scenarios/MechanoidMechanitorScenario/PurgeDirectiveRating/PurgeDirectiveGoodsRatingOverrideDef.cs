@@ -46,9 +46,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                if (o.requiredLevel < 1 || o.requiredLevel > 5)
+                if (o.requiredLevel < 1 || o.requiredLevel > 3)
                 {
-                    yield return $"{defName}: override {o.thing.defName} requiredLevel must be 1..5.";
+                    yield return $"{defName}: override {o.thing.defName} requiredLevel must be 1..3 (goods only have three open tiers).";
                 }
 
                 if (!seen.Add(o.thing))

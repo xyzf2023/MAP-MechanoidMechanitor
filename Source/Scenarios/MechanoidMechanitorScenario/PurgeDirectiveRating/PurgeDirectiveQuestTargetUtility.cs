@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -6,48 +8,103 @@ using Verse;
 namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
-    /// 肃清评级任务目标选择：只选择已经敌对玩家的「普通派系」工作站、前哨和据点
-    /// （Settlement / Site），排除机械族与机械巢，且排除已被当前进行中肃清任务锁定的目标。
+    /// 肃清评级任务目标识别与排重。
+    /// 只允许选择：原版/文化DLC工作站、本MOD或原版意义上的普通派系前哨、普通派系据点。
+    /// 严格排除：中立/友好/盟友、玩家、机械族/机械巢派系、机械巢节点、隐藏/临时/已战败派系、
+    /// 已销毁或未登记对象、已生成地图、被其他任务占用、本MOD历史/当前已用目标、无稳定ID、
+    /// 以及仅仅是 Site 但既非工作站也非前哨的特殊任务地点。
     /// </summary>
+    public enum PurgeDirectiveTargetType : byte
+    {
+        Invalid = 0,
+        WorkSite,
+        Outpost,
+        Settlement
+    }
+
     public static class PurgeDirectiveQuestTargetUtility
     {
-        public static bool IsValidTarget(WorldObject worldObject)
+        /// <summary>取得世界目标稳定ID（用于去重与结算）。失败返回 null。</summary>
+        public static string? TryGetStableId(WorldObject? obj)
         {
-            if (worldObject == null || worldObject.Destroyed)
+            if (obj == null) return null;
+            string? id = obj.GetUniqueLoadID();
+            return string.IsNullOrEmpty(id) ? null : id;
+        }
+
+        /// <summary>解析肃清评级任务对应的 QuestScriptDef。</summary>
+        public static QuestScriptDef? ResolveQuestScriptDef()
+        {
+            PurgeDirectiveQuestConfigDef? cfg = PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig;
+            return cfg?.QuestScript;
+        }
+
+        public static bool HasStableId(WorldObject? obj)
+        {
+            return TryGetStableId(obj) != null;
+        }
+
+        /// <summary>
+        /// 真实目标类型分类。仅工作站/前哨/据点返回有效类型，其余（含各类特殊 Site、节点）返回 Invalid。
+        /// 不读取盟约成员/信任度/团结度等无关状态。
+        /// </summary>
+        public static PurgeDirectiveTargetType ClassifyTargetType(WorldObject? obj)
+        {
+            if (obj == null) return PurgeDirectiveTargetType.Invalid;
+
+            if (obj is Settlement)
             {
-                return false;
+                return PurgeDirectiveTargetType.Settlement;
             }
 
-            if (worldObject.Faction == null)
+            if (obj is Site site)
             {
-                return false;
+                SitePartDef? main = site.MainSitePartDef;
+                if (main == null) return PurgeDirectiveTargetType.Invalid;
+
+                // 机械巢节点及其建设中等特殊地点直接排除。
+                if (IsMechHiveNodeSitePart(main))
+                {
+                    return PurgeDirectiveTargetType.Invalid;
+                }
+
+                if (main.tags != null && main.tags.Contains("WorkSite"))
+                {
+                    return PurgeDirectiveTargetType.WorkSite;
+                }
+
+                if (main.tags != null && main.tags.Contains("Outpost"))
+                {
+                    return PurgeDirectiveTargetType.Outpost;
+                }
+
+                // 兜底：以 defName 中是否含 Outpost 识别普通派系前哨（不读取盟约/援军状态）。
+                if (main.defName.IndexOf("Outpost", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return PurgeDirectiveTargetType.Outpost;
+                }
+
+                return PurgeDirectiveTargetType.Invalid;
             }
 
-            Faction faction = worldObject.Faction;
-            if (faction == Faction.OfPlayer || faction == Faction.OfMechanoids)
-            {
-                return false;
-            }
+            return PurgeDirectiveTargetType.Invalid;
+        }
 
-            // 排除机械巢（玩家联络的机械族主脑派系）。
-            Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive();
-            if (mechHive != null && faction == mechHive)
-            {
-                return false;
-            }
-
-            // 仅普通派系，且当前必须敌对玩家。
-            if (faction.def == null || faction.def.isPlayer || !faction.HostileTo(Faction.OfPlayer))
-            {
-                return false;
-            }
-
-            if (worldObject is Settlement)
+        private static bool IsMechHiveNodeSitePart(SitePartDef def)
+        {
+            if (def == null) return false;
+            if (def.defName.IndexOf("MechHive", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return true;
             }
 
-            if (worldObject is Site)
+            if (def.defName.IndexOf("MechCluster", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            if (def.tags != null
+                && (def.tags.Contains("MechHive") || def.tags.Contains("MechCluster")))
             {
                 return true;
             }
@@ -55,74 +112,154 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return false;
         }
 
-        public static WorldObject? TryGetValidTarget()
+        private static bool IsExcludedFaction(Faction? faction)
         {
-            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
-            {
-                return null;
-            }
+            if (faction == null) return true;
+            if (faction.IsPlayer) return true;
+            if (faction.def == null) return true;
+            if (faction.def.hidden) return true;
+            if (faction.defeated) return true;
+            if (faction.def == FactionDefOf.Mechanoid) return true; // 机械族/机械巢派系
+            return false;
+        }
 
-            HashSet<WorldObject> alreadyTargeted = GetCurrentlyTargetedWorldObjects();
+        /// <summary>目标是否仍可作为合法肃清目标（含派系敌对、登记、未生成地图、未被占用/已用等）。</summary>
+        public static bool IsValidTarget(WorldObject? obj)
+        {
+            if (obj == null) return false;
+            if (!HasStableId(obj)) return false;
+            if (obj.Destroyed) return false;
+            if (!obj.Spawned) return false; // 未登记在当前世界对象列表中
 
-            // 优先据点（Settlement），其次站点（Site / 前哨）。
-            foreach (Settlement settlement in Find.WorldObjects.Settlements)
+            PurgeDirectiveTargetType type = ClassifyTargetType(obj);
+            if (type == PurgeDirectiveTargetType.Invalid) return false;
+
+            Faction? faction = obj.Faction;
+            if (IsExcludedFaction(faction)) return false;
+            if (!faction!.HostileTo(Faction.OfPlayer)) return false; // 中立/友好/盟友排除
+
+            string stableId = TryGetStableId(obj)!;
+            MechanoidMechanitorPurgeDirectiveRuntimeState? rs = PurgeDirectiveRatingUtility.Runtime;
+            if (rs != null && rs.HasUsedQuestTarget(stableId)) return false;
+            if (IsTargetOccupiedByOtherQuest(obj)) return false;
+
+            return true;
+        }
+
+        /// <summary>该世界对象是否正被其他（非肃清评级）任务占用。</summary>
+        public static bool IsTargetOccupiedByOtherQuest(WorldObject? obj)
+        {
+            if (obj == null) return false;
+            string? stableId = TryGetStableId(obj);
+            if (stableId == null) return false;
+
+            List<Quest> quests = Find.QuestManager.QuestsListForReading;
+            for (int i = 0; i < quests.Count; i++)
             {
-                if (IsValidTarget(settlement) && !alreadyTargeted.Contains(settlement))
+                Quest q = quests[i];
+                if (q == null) continue;
+                if (q.State != QuestState.Ongoing && q.State != QuestState.NotYetAccepted) continue;
+                foreach (QuestPart part in q.PartsListForReading)
                 {
-                    return settlement;
+                    if (part is PurgeDirectiveQuestPart p && p.targetStableId == stableId) return true;
                 }
             }
 
-            foreach (Site site in Find.WorldObjects.Sites)
+            return false;
+        }
+
+        /// <summary>
+        /// 按当前评级选择目标：评级只影响优先顺序，最高类别无目标时允许回退。
+        /// 同优先级内随机选择（不永远返回列表第一个）。
+        /// 五级高威胁前哨：仅在目标已生成地图、存在可靠守军威胁快照时按威胁排序，否则退化为同类随机。
+        /// </summary>
+        public static WorldObject? SelectTarget(int ratingLevel)
+        {
+            List<WorldObject> worksites = new List<WorldObject>();
+            List<WorldObject> outposts = new List<WorldObject>();
+            List<WorldObject> settlements = new List<WorldObject>();
+
+            List<WorldObject> all = Find.WorldObjects.AllWorldObjects;
+            for (int i = 0; i < all.Count; i++)
             {
-                if (IsValidTarget(site) && !alreadyTargeted.Contains(site))
+                WorldObject obj = all[i];
+                if (!IsValidTarget(obj)) continue;
+                switch (ClassifyTargetType(obj))
                 {
-                    return site;
+                    case PurgeDirectiveTargetType.WorkSite:
+                        worksites.Add(obj);
+                        break;
+                    case PurgeDirectiveTargetType.Outpost:
+                        outposts.Add(obj);
+                        break;
+                    case PurgeDirectiveTargetType.Settlement:
+                        settlements.Add(obj);
+                        break;
                 }
+            }
+
+            List<List<WorldObject>> ordered = GetOrderedCategories(ratingLevel, worksites, outposts, settlements);
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                List<WorldObject> bucket = ordered[i];
+                if (bucket.Count == 0) continue;
+                if (ratingLevel >= 5 && bucket == outposts)
+                {
+                    WorldObject? best = PickHighestThreatOutpostIfReliable(bucket);
+                    if (best != null) return best;
+                }
+
+                return bucket.RandomElement();
             }
 
             return null;
         }
 
-        private static HashSet<WorldObject> GetCurrentlyTargetedWorldObjects()
+        private static List<List<WorldObject>> GetOrderedCategories(
+            int ratingLevel,
+            List<WorldObject> worksites,
+            List<WorldObject> outposts,
+            List<WorldObject> settlements)
         {
-            HashSet<WorldObject> result = new HashSet<WorldObject>();
-            QuestScriptDef? questScriptDef = ResolveQuestScriptDef();
-            if (questScriptDef == null)
+            switch (ratingLevel)
             {
-                return result;
+                case 1:
+                    return new List<List<WorldObject>> { worksites, outposts, settlements };
+                case 2:
+                    return new List<List<WorldObject>> { outposts, worksites, settlements };
+                case 3:
+                    return new List<List<WorldObject>> { outposts, settlements, worksites };
+                case 4:
+                    return new List<List<WorldObject>> { settlements, outposts, worksites };
+                default: // 5
+                    return new List<List<WorldObject>> { settlements, outposts, worksites };
             }
+        }
 
-            foreach (Quest quest in Find.QuestManager.QuestsListForReading)
+        /// <summary>
+        /// 仅在目标已生成地图、存在可靠守军威胁快照时按威胁排序；否则返回 null 退化为同类随机。
+        /// 不为了读取威胁值而生成目标地图。
+        /// </summary>
+        private static WorldObject? PickHighestThreatOutpostIfReliable(List<WorldObject> outposts)
+        {
+            WorldObject? best = null;
+            float bestThreat = -1f;
+            bool anyReliable = false;
+            for (int i = 0; i < outposts.Count; i++)
             {
-                if (quest.root != questScriptDef || quest.State != QuestState.Ongoing)
+                if (outposts[i] is Site site && site.HasMap)
                 {
-                    continue;
-                }
-
-                foreach (QuestPart part in quest.PartsListForReading)
-                {
-                    if (part is PurgeDirectiveQuestPart purgePart
-                        && purgePart.targetWorldObject != null)
+                    anyReliable = true;
+                    float threat = site.ActualThreatPoints;
+                    if (threat > bestThreat)
                     {
-                        result.Add(purgePart.targetWorldObject);
+                        bestThreat = threat;
+                        best = site;
                     }
                 }
             }
 
-            return result;
-        }
-
-        public static QuestScriptDef? ResolveQuestScriptDef()
-        {
-            string? name =
-                PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig?.questScriptDefName;
-            if (name == null)
-            {
-                return null;
-            }
-
-            return DefDatabase<QuestScriptDef>.GetNamedSilentFail(name);
+            return anyReliable ? best : null;
         }
     }
 }
