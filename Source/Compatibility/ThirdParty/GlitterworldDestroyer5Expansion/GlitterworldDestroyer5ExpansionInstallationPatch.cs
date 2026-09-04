@@ -56,11 +56,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
 
             if (getter == null || helper == null)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}无法解析 Pawn.IsColonistPlayerControlled getter 或本 MOD 辅助方法，" +
-                    $"补丁未应用。",
-                    ErrorKeyDoEffectResolve);
-                return codes;
+                    $"补丁未应用。");
             }
 
             int matchCount = 0;
@@ -76,21 +74,17 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
 
             if (matchCount != 1)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}CompTargetEffect_GiveHediffToPlayMech.DoEffectOn 中 " +
                     $"Pawn.IsColonistPlayerControlled 调用预期仅 1 处，实际找到 {matchCount} 处，" +
-                    $"结构已变化，兼容安全跳过。",
-                    ErrorKeyDoEffectMatch);
-                return codes;
+                    $"结构已变化，兼容安全跳过。");
             }
 
             if (codes[getterIndex].blocks.Count > 0)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}DoEffectOn 中 IsColonistPlayerControlled 调用位于 exception block，" +
-                    $"无法安全扩展，兼容安全跳过。",
-                    ErrorKeyDoEffectBlock);
-                return codes;
+                    $"无法安全扩展，兼容安全跳过。");
             }
 
             // 同栈输入（Pawn）、同栈输出（bool），仅替换调用目标，原指令的 labels 自然保留。
@@ -111,11 +105,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
 
             if (s_captureField == null || s_waitWithMethod == null)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}Wait With 兼容所需的精确目标未配置（状态机捕获字段或 WaitWith 方法缺失），" +
-                    $"补丁未应用。",
-                    ErrorKeyWaitResolve);
-                return codes;
+                    $"补丁未应用。");
             }
 
             MethodInfo? helper = AccessTools.Method(
@@ -123,10 +115,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                 nameof(CreateExpansionInstallationWait));
             if (helper == null)
             {
-                Log.ErrorOnce(
-                    $"{LogPrefix}无法解析本 MOD 的 CreateExpansionInstallationWait 辅助方法，补丁未应用。",
-                    ErrorKeyWaitResolve);
-                return codes;
+                throw new InvalidOperationException(
+                    $"{LogPrefix}无法解析本 MOD 的 CreateExpansionInstallationWait 辅助方法，补丁未应用。");
             }
 
             int matchCount = 0;
@@ -142,21 +132,17 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
 
             if (matchCount != 1)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}JobDriver_GiveHediffToMech.MakeNewToils 状态机 MoveNext 中 " +
                     $"Toils_General.WaitWith 调用预期仅 1 处，实际找到 {matchCount} 处，" +
-                    $"结构已变化，兼容安全跳过。",
-                    ErrorKeyWaitMatch);
-                return codes;
+                    $"结构已变化，兼容安全跳过。");
             }
 
             if (codes[callIndex].blocks.Count > 0)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}MakeNewToils 状态机中 WaitWith 调用位于 exception block，" +
-                    $"无法安全改写，兼容安全跳过。",
-                    ErrorKeyWaitBlock);
-                return codes;
+                    $"无法安全改写，兼容安全跳过。");
             }
 
             CodeInstruction callInstruction = codes[callIndex];

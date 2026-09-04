@@ -122,12 +122,16 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
             }
             catch (Exception ex)
             {
+                UnpatchQuietly(harmony, doEffectMethod!, doEffectTranspiler);
+                UnpatchQuietly(harmony, moveNextMethod!, waitTranspiler);
                 return ThirdPartyCompatibilityResult.CreateFailed(
                     ModuleId,
                     DisplayName,
                     PackageId,
                     "安装 DeadManSwitch 兼容补丁时发生异常。",
-                    ex);
+                    ex,
+                    doEffectMethod!,
+                    moveNextMethod!);
             }
 
             return ThirdPartyCompatibilityResult.CreateApplied(
@@ -136,6 +140,21 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
                 PackageId,
                 "CompTargetable_AddHediffOnTarget.DoEffect 身份门槛扩展（仅放行失能机关本体插件）；" +
                 "JobDriver_ApplyModification.MakeNewToils 枚举器中的自我安装 Wait 分支。");
+        }
+
+        private static void UnpatchQuietly(
+            Harmony harmony,
+            MethodInfo original,
+            MethodInfo patch)
+        {
+            try
+            {
+                harmony.Unpatch(original, patch);
+            }
+            catch
+            {
+                // 回滚失败不得掩盖最初的补丁安装异常。
+            }
         }
 
         private static bool TryResolveAllTargets(

@@ -69,9 +69,22 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                         nameof(ModifySavingMechCompatibilityPatch.Postfix)));
             }
 
-            harmony.Patch(
-                targetMethod,
-                postfix: new HarmonyMethod(postfix));
+            try
+            {
+                harmony.Patch(
+                    targetMethod,
+                    postfix: new HarmonyMethod(postfix));
+            }
+            catch (Exception ex)
+            {
+                return ThirdPartyCompatibilityResult.CreateFailed(
+                    ModuleId,
+                    DisplayName,
+                    PackageId,
+                    "安装闪耀世界毁灭者5兼容补丁时发生异常。",
+                    ex,
+                    targetMethod);
+            }
 
             return ThirdPartyCompatibilityResult.CreateApplied(
                 ModuleId,

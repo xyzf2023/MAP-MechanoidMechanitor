@@ -113,12 +113,24 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
             }
             catch (Exception ex)
             {
+                UnpatchQuietly(
+                    harmony, targets.ClassCandidatePoolCtor, candidatePoolPostfix);
+                UnpatchQuietly(
+                    harmony, targets.ClassAssignmentsManagerCtor, assignmentsPostfix);
+                UnpatchQuietly(
+                    harmony, targets.TeacherCanAcceptPawn, teacherPostfix);
+                UnpatchQuietly(
+                    harmony, targets.StudentCanAcceptPawn, studentPostfix);
                 return ThirdPartyCompatibilityResult.CreateFailed(
                     ModuleId,
                     DisplayName,
                     PackageId,
                     "安装 Progression: Education 兼容补丁时发生异常。",
-                    ex);
+                    ex,
+                    targets.ClassCandidatePoolCtor,
+                    targets.ClassAssignmentsManagerCtor,
+                    targets.TeacherCanAcceptPawn,
+                    targets.StudentCanAcceptPawn);
             }
 
             return ThirdPartyCompatibilityResult.CreateApplied(
@@ -129,6 +141,21 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                 + "ClassCandidatePool(Map) 构造器、"
                 + "ClassAssignmentsManager(TeacherRole, StudentRole, Map, Dictionary<string, Pawn>) 构造器、"
                 + "TeacherRole.CanAcceptPawn、StudentRole.CanAcceptPawn。");
+        }
+
+        private static void UnpatchQuietly(
+            Harmony harmony,
+            MethodBase original,
+            MethodInfo patch)
+        {
+            try
+            {
+                harmony.Unpatch(original, patch);
+            }
+            catch
+            {
+                // 回滚失败不得掩盖最初的补丁安装异常。
+            }
         }
 
         private static MethodInfo? GetPostfix(string methodName)

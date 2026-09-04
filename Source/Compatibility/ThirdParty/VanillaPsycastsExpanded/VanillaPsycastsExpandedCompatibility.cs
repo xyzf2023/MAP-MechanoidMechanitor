@@ -301,7 +301,12 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     DisplayName,
                     PackageId,
                     "应用原版灵能拓展兼容（Def 注入或 Harmony 补丁安装）时发生异常。",
-                    ex);
+                    ex,
+                    ensureRoleStateMethod!,
+                    tryRestorePositiveSourcesMethod!,
+                    tryGainPsylinkLevelMethod!,
+                    targets.AbilityShowGizmoOnPawnMethod,
+                    targets.AbilityAutoCastGetter);
             }
 
             return ThirdPartyCompatibilityResult.CreateApplied(
