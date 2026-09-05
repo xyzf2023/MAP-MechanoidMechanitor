@@ -19,10 +19,20 @@
 
   <!-- 模块：能力与特性解锁 -->
   <MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.Title>能力：{0}</MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.Title>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.SpecialScenario.Text>「正义」及机械意识载体获得技能：{0}。</MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.SpecialScenario.Text>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.JusticeOnly.Text>「正义」获得技能：{0}。</MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.JusticeOnly.Text>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.SpecialScenario.Text>「正义」及机械意识载体获得技能：{0}。\n\n{1}</MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.SpecialScenario.Text>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.JusticeOnly.Text>「正义」获得技能：{0}。\n\n{1}</MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.JusticeOnly.Text>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechRecode.Description>机体再编码 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechRecode.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechReconstruction.Description>机体重构 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechReconstruction.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechHack.Description>机体骇入 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechHack.Description>
+
   <MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Title>特性：{0}</MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Title>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Text>已解锁机械族机械师特性：{0}。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Text>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Text>已解锁机械族机械师特性：{0}。\n\n{1}</MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Text>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description>自律指令优化 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description>机械意识传输 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataProcessingAllocation.Description>数据处理分配 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataProcessingAllocation.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.SelfDirectiveFocus.Description>自我指令聚焦 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.SelfDirectiveFocus.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataStreamReorganization.Description>数据流重整 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataStreamReorganization.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.ParallelThoughtMatrix.Description>并行思维矩阵 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.ParallelThoughtMatrix.Description>
 
   <!-- 模块：意识转移 -->
   <MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.Label>意识转移</MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.Label>
