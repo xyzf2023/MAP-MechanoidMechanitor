@@ -13,23 +13,33 @@ namespace MAP_MechanoidMechanitor
         public const string MechReconstructionAbilityDefName = "MAP_Ability_MechReconstruction";
         public const string MechHackAbilityDefName = "MAP_Ability_MechHack";
 
+        public const string MechRecodeDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechRecode.Description";
+        public const string MechReconstructionDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechReconstruction.Description";
+        public const string MechHackDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechHack.Description";
+
         public static readonly ManagedResearchAbilityDescriptor MechRecode =
             new ManagedResearchAbilityDescriptor(
                 id: "MechRecode",
                 abilityDefName: MechRecodeAbilityDefName,
-                researchProjectDefName: StandardMechtechDefName);
+                researchProjectDefName: StandardMechtechDefName,
+                unlockLetterDescriptionKey: MechRecodeDescriptionKey);
 
         public static readonly ManagedResearchAbilityDescriptor MechReconstruction =
             new ManagedResearchAbilityDescriptor(
                 id: "MechReconstruction",
                 abilityDefName: MechReconstructionAbilityDefName,
-                researchProjectDefName: HighMechtechDefName);
+                researchProjectDefName: HighMechtechDefName,
+                unlockLetterDescriptionKey: MechReconstructionDescriptionKey);
 
         public static readonly ManagedResearchAbilityDescriptor MechHack =
             new ManagedResearchAbilityDescriptor(
                 id: "MechHack",
                 abilityDefName: MechHackAbilityDefName,
-                researchProjectDefName: UltraMechtechDefName);
+                researchProjectDefName: UltraMechtechDefName,
+                unlockLetterDescriptionKey: MechHackDescriptionKey);
 
         // 三个科研能力均已接入统一解锁同步与意识迁移冷却逻辑。
         private static readonly ManagedResearchAbilityDescriptor[] allInternal =
