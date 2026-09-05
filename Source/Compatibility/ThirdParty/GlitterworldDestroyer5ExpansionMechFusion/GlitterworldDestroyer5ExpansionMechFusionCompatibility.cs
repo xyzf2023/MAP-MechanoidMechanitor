@@ -86,12 +86,16 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
             }
             catch (Exception ex)
             {
+                UnpatchQuietly(harmony, finishProject!, researchPostfix);
+                UnpatchQuietly(harmony, loadedGame!, loadedPostfix);
                 return ThirdPartyCompatibilityResult.CreateFailed(
                     ModuleId,
                     DisplayName,
                     PackageId,
                     "安装 MechFusion 兼容补丁时发生异常。",
-                    ex);
+                    ex,
+                    finishProject!,
+                    loadedGame!);
             }
 
             return ThirdPartyCompatibilityResult.CreateApplied(
@@ -100,6 +104,21 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                 PackageId,
                 "ResearchManager.FinishProject(MF_Theory) 与 GameComponentUtility.LoadedGame()"
                 + " 两个入口已动态安装，仅在缺失状态时补发 MechBond。");
+        }
+
+        private static void UnpatchQuietly(
+            Harmony harmony,
+            MethodInfo original,
+            MethodInfo patch)
+        {
+            try
+            {
+                harmony.Unpatch(original, patch);
+            }
+            catch
+            {
+                // 回滚失败不得掩盖最初的补丁安装异常。
+            }
         }
 
         private static bool TryResolveVanillaTargets(

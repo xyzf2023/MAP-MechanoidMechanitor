@@ -62,11 +62,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
 
             if (getter == null || helper == null)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}无法解析 Pawn.IsColonistPlayerControlled getter 或本 MOD 辅助方法，" +
-                    $"补丁未应用。",
-                    ErrorKeyDoEffectResolve);
-                return codes;
+                    $"补丁未应用。");
             }
 
             int matchCount = 0;
@@ -82,21 +80,17 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
 
             if (matchCount != 1)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}CompTargetable_AddHediffOnTarget.DoEffect 中 " +
                     $"Pawn.IsColonistPlayerControlled 调用预期仅 1 处，实际找到 {matchCount} 处，" +
-                    $"结构已变化，兼容安全跳过。",
-                    ErrorKeyDoEffectMatch);
-                return codes;
+                    $"结构已变化，兼容安全跳过。");
             }
 
             if (codes[getterIndex].blocks.Count > 0)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}DoEffect 中 IsColonistPlayerControlled 调用位于 exception block，" +
-                    $"无法安全扩展，兼容安全跳过。",
-                    ErrorKeyDoEffectBlock);
-                return codes;
+                    $"无法安全扩展，兼容安全跳过。");
             }
 
             // 在 getter 调用之前插入 ldarg.0（当前 CompTargetable_AddHediffOnTarget 实例，作为 ThingComp）。
@@ -126,11 +120,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
 
             if (s_captureField == null || s_waitWithMethod == null)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}Wait 兼容所需的精确目标未配置（状态机捕获字段或 WaitWith 方法缺失），" +
-                    $"补丁未应用。",
-                    ErrorKeyWaitResolve);
-                return codes;
+                    $"补丁未应用。");
             }
 
             MethodInfo? helper = AccessTools.Method(
@@ -138,10 +130,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
                 nameof(CreateDeadManSwitchInstallationWait));
             if (helper == null)
             {
-                Log.ErrorOnce(
-                    $"{LogPrefix}无法解析本 MOD 的 CreateDeadManSwitchInstallationWait 辅助方法，补丁未应用。",
-                    ErrorKeyWaitResolve);
-                return codes;
+                throw new InvalidOperationException(
+                    $"{LogPrefix}无法解析本 MOD 的 CreateDeadManSwitchInstallationWait 辅助方法，补丁未应用。");
             }
 
             int matchCount = 0;
@@ -157,21 +147,17 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
 
             if (matchCount != 1)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}JobDriver_ApplyModification.MakeNewToils 状态机 MoveNext 中 " +
                     $"Toils_General.WaitWith 调用预期仅 1 处，实际找到 {matchCount} 处，" +
-                    $"结构已变化，兼容安全跳过。",
-                    ErrorKeyWaitMatch);
-                return codes;
+                    $"结构已变化，兼容安全跳过。");
             }
 
             if (codes[callIndex].blocks.Count > 0)
             {
-                Log.ErrorOnce(
+                throw new InvalidOperationException(
                     $"{LogPrefix}MakeNewToils 状态机中 WaitWith 调用位于 exception block，" +
-                    $"无法安全改写，兼容安全跳过。",
-                    ErrorKeyWaitBlock);
-                return codes;
+                    $"无法安全改写，兼容安全跳过。");
             }
 
             CodeInstruction callInstruction = codes[callIndex];

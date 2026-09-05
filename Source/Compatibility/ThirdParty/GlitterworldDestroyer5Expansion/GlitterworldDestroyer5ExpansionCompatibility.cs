@@ -99,12 +99,16 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
             }
             catch (Exception ex)
             {
+                UnpatchQuietly(harmony, doEffectMethod!, doEffectTranspiler);
+                UnpatchQuietly(harmony, moveNextMethod!, waitTranspiler);
                 return ThirdPartyCompatibilityResult.CreateFailed(
                     ModuleId,
                     DisplayName,
                     PackageId,
                     "安装 GlitterworldDestroyer5Expansion 兼容补丁时发生异常。",
-                    ex);
+                    ex,
+                    doEffectMethod!,
+                    moveNextMethod!);
             }
 
             return ThirdPartyCompatibilityResult.CreateApplied(
@@ -113,6 +117,21 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                 PackageId,
                 "CompTargetEffect_GiveHediffToPlayMech.DoEffectOn 身份门控扩展；"
                 + "JobDriver_GiveHediffToMech.MakeNewToils 枚举器中的自我安装 Wait 分支。");
+        }
+
+        private static void UnpatchQuietly(
+            Harmony harmony,
+            MethodInfo original,
+            MethodInfo patch)
+        {
+            try
+            {
+                harmony.Unpatch(original, patch);
+            }
+            catch
+            {
+                // 回滚失败不得掩盖最初的补丁安装异常。
+            }
         }
 
         private static bool TryResolveAllTargets(

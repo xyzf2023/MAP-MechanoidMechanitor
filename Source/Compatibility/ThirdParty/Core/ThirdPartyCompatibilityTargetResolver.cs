@@ -74,9 +74,18 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             }
 
             List<MethodInfo> matchingMethods = new List<MethodInfo>();
+            List<string> sameNameMethods = new List<string>();
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo candidate = methods[i];
+                if (string.Equals(
+                        candidate.Name,
+                        methodName,
+                        StringComparison.Ordinal))
+                {
+                    sameNameMethods.Add(FormatMethod(candidate));
+                }
+
                 if (!string.Equals(
                         candidate.Name,
                         methodName,
@@ -114,7 +123,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
                 failureReason =
                     $"预期在{typeFullName}中唯一找到实例方法" +
                     $"{FormatSignature(methodName, returnType, parameterTypes)}，" +
-                    $"实际找到{matchingMethods.Count}个。";
+                    $"实际找到{matchingMethods.Count}个。" +
+                    FormatCandidates("同名方法", sameNameMethods);
                 return false;
             }
 
@@ -171,9 +181,16 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
 
             if (matchingTypes.Count != 1)
             {
+                List<string> assemblyNames = new List<string>();
+                for (int i = 0; i < assemblies.Count; i++)
+                {
+                    assemblyNames.Add(assemblies[i].FullName);
+                }
+
                 failureReason =
                     $"预期在目标MOD程序集中唯一找到类型{typeFullName}，" +
-                    $"实际找到{matchingTypes.Count}个。";
+                    $"实际找到{matchingTypes.Count}个。" +
+                    FormatCandidates("目标MOD已加载程序集", assemblyNames);
                 return false;
             }
 
@@ -220,9 +237,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             }
 
             List<ConstructorInfo> matchingConstructors = new List<ConstructorInfo>();
+            List<string> availableConstructors = new List<string>();
             for (int i = 0; i < constructors.Length; i++)
             {
                 ConstructorInfo candidate = constructors[i];
+                availableConstructors.Add(FormatConstructor(candidate));
                 ParameterInfo[] parameters = candidate.GetParameters();
                 if (parameters.Length != parameterTypes.Length)
                 {
@@ -250,7 +269,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
                 failureReason =
                     $"预期在{type.FullName}中唯一找到构造函数" +
                     $"{FormatSignature(".ctor", typeof(void), parameterTypes)}，" +
-                    $"实际找到{matchingConstructors.Count}个。";
+                    $"实际找到{matchingConstructors.Count}个。" +
+                    FormatCandidates("实际构造函数", availableConstructors);
                 return false;
             }
 
@@ -306,9 +326,20 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             }
 
             List<FieldInfo> matchingFields = new List<FieldInfo>();
+            List<string> sameNameFields = new List<string>();
             for (int i = 0; i < fields.Length; i++)
             {
                 FieldInfo candidate = fields[i];
+                if (string.Equals(candidate.Name, fieldName, StringComparison.Ordinal))
+                {
+                    sameNameFields.Add(
+                        FormatType(candidate.FieldType)
+                        + " "
+                        + (candidate.DeclaringType?.FullName ?? "<无声明类型>")
+                        + "."
+                        + candidate.Name);
+                }
+
                 if (string.Equals(candidate.Name, fieldName, StringComparison.Ordinal)
                     && candidate.FieldType == expectedFieldType)
                 {
@@ -321,12 +352,66 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
                 failureReason =
                     $"预期在{type.FullName}中唯一找到字段" +
                     $"{fieldName}（{FormatType(expectedFieldType)}），" +
-                    $"实际找到{matchingFields.Count}个。";
+                    $"实际找到{matchingFields.Count}个。" +
+                    FormatCandidates("同名字段", sameNameFields);
                 return false;
             }
 
             field = matchingFields[0];
             return true;
+        }
+
+        private static string FormatCandidates(
+            string label,
+            List<string> candidates)
+        {
+            if (candidates.Count == 0)
+            {
+                return $" {label}：无。";
+            }
+
+            const int maxEntries = 16;
+            int count = Math.Min(candidates.Count, maxEntries);
+            string[] displayed = new string[count];
+            for (int i = 0; i < count; i++)
+            {
+                displayed[i] = candidates[i];
+            }
+
+            string suffix =
+                candidates.Count > maxEntries
+                    ? $"；另有{candidates.Count - maxEntries}项已省略"
+                    : string.Empty;
+            return $" {label}：{string.Join("；", displayed)}{suffix}。";
+        }
+
+        private static string FormatConstructor(ConstructorInfo constructor)
+        {
+            ParameterInfo[] parameters = constructor.GetParameters();
+            Type[] parameterTypes = new Type[parameters.Length];
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                parameterTypes[i] = parameters[i].ParameterType;
+            }
+
+            return FormatSignature(".ctor", typeof(void), parameterTypes);
+        }
+
+        private static string FormatMethod(MethodInfo method)
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+            Type[] parameterTypes = new Type[parameters.Length];
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                parameterTypes[i] = parameters[i].ParameterType;
+            }
+
+            return
+                (method.IsStatic ? "static " : "instance ")
+                + FormatSignature(
+                    method.Name,
+                    method.ReturnType,
+                    parameterTypes);
         }
 
         private static string FormatType(Type type)

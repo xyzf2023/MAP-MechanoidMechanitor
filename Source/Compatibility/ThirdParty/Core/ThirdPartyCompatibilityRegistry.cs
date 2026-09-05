@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
 using HarmonyLib;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5;
@@ -12,8 +14,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
 {
     internal static class ThirdPartyCompatibilityRegistry
     {
-        private const string LogPrefix =
-            "[MAP-机械族机械师] 第三方兼容：";
+        private const string LogPrefix = "[MAP-机械族机械师]";
 
         private static readonly IThirdPartyCompatibilityModule[] Modules =
         {
@@ -28,6 +29,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
 
         public static void ApplyAll(Harmony harmony)
         {
+            List<ThirdPartyCompatibilityResult> applied =
+                new List<ThirdPartyCompatibilityResult>();
+            List<ThirdPartyCompatibilityResult> failed =
+                new List<ThirdPartyCompatibilityResult>();
+
             for (int i = 0; i < Modules.Length; i++)
             {
                 IThirdPartyCompatibilityModule module = Modules[i];
@@ -47,43 +53,66 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
                         ex);
                 }
 
-                LogResult(result);
+                switch (result.Status)
+                {
+                    case ThirdPartyCompatibilityStatus.Applied:
+                        applied.Add(result);
+                        break;
+
+                    case ThirdPartyCompatibilityStatus.TargetChanged:
+                    case ThirdPartyCompatibilityStatus.Failed:
+                        failed.Add(result);
+                        break;
+                }
+            }
+
+            LogAppliedSummary(applied);
+
+            for (int i = 0; i < failed.Count; i++)
+            {
+                LogFailure(failed[i]);
             }
         }
 
-        private static void LogResult(ThirdPartyCompatibilityResult result)
+        private static void LogAppliedSummary(
+            List<ThirdPartyCompatibilityResult> applied)
         {
-            switch (result.Status)
+            if (applied.Count == 0)
             {
-                case ThirdPartyCompatibilityStatus.Inactive:
-                    return;
-
-                case ThirdPartyCompatibilityStatus.Applied:
-                    if (Prefs.DevMode)
-                    {
-                        Log.Message(
-                            $"{LogPrefix}{result.DisplayName}（{result.PackageId}）" +
-                            $"兼容已应用：{result.Detail}");
-                    }
-                    return;
-
-                case ThirdPartyCompatibilityStatus.TargetChanged:
-                    Log.Warning(
-                        $"{LogPrefix}{result.DisplayName}（{result.PackageId}）" +
-                        $"目标代码结构无法确认，兼容已安全跳过，不影响其他功能。" +
-                        $"详情：{result.Detail}");
-                    return;
-
-                case ThirdPartyCompatibilityStatus.Failed:
-                    Log.Error(
-                        $"{LogPrefix}{result.DisplayName}（{result.PackageId}）" +
-                        $"兼容应用失败，已停止该模块，不影响其他兼容模块。" +
-                        $"详情：{result.Detail}" +
-                        (result.Exception == null
-                            ? string.Empty
-                            : $"\n{result.Exception}"));
-                    return;
+                return;
             }
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append(
+                LogPrefix
+                + "MOD兼容层已启用。成功加载的兼容补丁：");
+
+            for (int i = 0; i < applied.Count; i++)
+            {
+                builder.Append("\n-");
+                builder.Append(applied[i].DisplayName);
+            }
+
+            Log.Message(builder.ToString());
+        }
+
+        private static void LogFailure(ThirdPartyCompatibilityResult result)
+        {
+            string brief = LogPrefix + result.DisplayName + "加载失败。";
+            bool detailed =
+                MAPMechanitorMod.Settings?.enableCompatibilityDetailedLogging
+                ?? false;
+
+            if (!detailed)
+            {
+                Log.Error(brief);
+                return;
+            }
+
+            Log.Error(
+                brief
+                + "\n"
+                + ThirdPartyCompatibilityDiagnostics.BuildFailureReport(result));
         }
     }
 }

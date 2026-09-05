@@ -90,6 +90,13 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description"
                     .Translate());
 
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Label"
+                    .Translate(),
+                ref Settings.enableCompatibilityDetailedLogging,
+                "MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Description"
+                    .Translate());
+
             bool previousEnablePortraitDisplayForAllSaves =
                 Settings.enablePortraitDisplayForAllSaves;
             listing.CheckboxLabeled(

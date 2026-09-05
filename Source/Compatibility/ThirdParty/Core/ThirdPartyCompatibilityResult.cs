@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
 {
@@ -18,7 +20,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             string packageId,
             ThirdPartyCompatibilityStatus status,
             string detail,
-            Exception? exception)
+            Exception? exception,
+            MethodBase[] diagnosticTargets)
         {
             ModuleId = moduleId;
             DisplayName = displayName;
@@ -26,6 +29,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             Status = status;
             Detail = detail;
             Exception = exception;
+            DiagnosticTargets = diagnosticTargets;
         }
 
         public string ModuleId { get; }
@@ -40,6 +44,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
 
         public Exception? Exception { get; }
 
+        public IReadOnlyList<MethodBase> DiagnosticTargets { get; }
+
         public static ThirdPartyCompatibilityResult CreateInactive(
             string moduleId,
             string displayName,
@@ -51,7 +57,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
                 packageId,
                 ThirdPartyCompatibilityStatus.Inactive,
                 string.Empty,
-                null);
+                null,
+                Array.Empty<MethodBase>());
         }
 
         public static ThirdPartyCompatibilityResult CreateApplied(
@@ -66,14 +73,16 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
                 packageId,
                 ThirdPartyCompatibilityStatus.Applied,
                 detail,
-                null);
+                null,
+                Array.Empty<MethodBase>());
         }
 
         public static ThirdPartyCompatibilityResult CreateTargetChanged(
             string moduleId,
             string displayName,
             string packageId,
-            string detail)
+            string detail,
+            params MethodBase[] diagnosticTargets)
         {
             return new ThirdPartyCompatibilityResult(
                 moduleId,
@@ -81,7 +90,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
                 packageId,
                 ThirdPartyCompatibilityStatus.TargetChanged,
                 detail,
-                null);
+                null,
+                diagnosticTargets ?? Array.Empty<MethodBase>());
         }
 
         public static ThirdPartyCompatibilityResult CreateFailed(
@@ -89,7 +99,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             string displayName,
             string packageId,
             string detail,
-            Exception? exception)
+            Exception? exception,
+            params MethodBase[] diagnosticTargets)
         {
             return new ThirdPartyCompatibilityResult(
                 moduleId,
@@ -97,7 +108,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
                 packageId,
                 ThirdPartyCompatibilityStatus.Failed,
                 detail,
-                exception);
+                exception,
+                diagnosticTargets ?? Array.Empty<MethodBase>());
         }
     }
 }
