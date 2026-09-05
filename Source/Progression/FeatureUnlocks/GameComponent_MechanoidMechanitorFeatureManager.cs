@@ -808,7 +808,7 @@ namespace MAP_MechanoidMechanitor
                 attemptedAbilityUnlockLetterIdsThisSession.Add(id);
                 try
                 {
-                    SendAbilityUnlockLetter(abilityDef);
+                    SendAbilityUnlockLetter(descriptor, abilityDef);
                     pendingUnlockLetterIds.Remove(id);
                 }
                 catch (Exception ex)
@@ -865,7 +865,7 @@ namespace MAP_MechanoidMechanitor
                 attemptedFeatureUnlockLetterIdsThisSession.Add(id);
                 try
                 {
-                    SendFeatureUnlockLetter(research);
+                    SendFeatureUnlockLetter(descriptor, research);
                     pendingFeatureUnlockLetterIds.Remove(id);
                 }
                 catch (Exception ex)
@@ -879,22 +879,28 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void SendAbilityUnlockLetter(AbilityDef abilityDef)
+        private void SendAbilityUnlockLetter(
+            ManagedResearchAbilityDescriptor descriptor,
+            AbilityDef abilityDef)
         {
             TaggedString abilityLabel = abilityDef.LabelCap;
+            TaggedString description = descriptor.UnlockLetterDescriptionKey.Translate();
             TaggedString title = AbilityUnlockLetterTitleKey.Translate(abilityLabel);
             TaggedString text = GameComponent_MechanoidMechanitorScenarioState.IsEnabled
-                ? AbilityUnlockLetterSpecialScenarioTextKey.Translate(abilityLabel)
-                : AbilityUnlockLetterJusticeOnlyTextKey.Translate(abilityLabel);
+                ? AbilityUnlockLetterSpecialScenarioTextKey.Translate(abilityLabel, description)
+                : AbilityUnlockLetterJusticeOnlyTextKey.Translate(abilityLabel, description);
 
             Find.LetterStack.ReceiveLetter(title, text, LetterDefOf.PositiveEvent);
         }
 
-        private void SendFeatureUnlockLetter(ResearchProjectDef research)
+        private void SendFeatureUnlockLetter(
+            ManagedResearchFeatureDescriptor descriptor,
+            ResearchProjectDef research)
         {
             TaggedString researchLabel = research.LabelCap;
+            TaggedString description = descriptor.UnlockLetterDescriptionKey.Translate();
             TaggedString title = FeatureUnlockLetterTitleKey.Translate(researchLabel);
-            TaggedString text = FeatureUnlockLetterTextKey.Translate(researchLabel);
+            TaggedString text = FeatureUnlockLetterTextKey.Translate(researchLabel, description);
             Find.LetterStack.ReceiveLetter(title, text, LetterDefOf.PositiveEvent);
         }
 
