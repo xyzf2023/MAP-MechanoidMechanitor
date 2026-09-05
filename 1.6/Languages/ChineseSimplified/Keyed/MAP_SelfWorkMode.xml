@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：机械族机械师本体工作模式 -->
+  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerHour>  - 自我修复：{0}点/小时</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerHour>
+  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour>  - 能量恢复：{0}%/小时</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour>
+
+</LanguageData>
