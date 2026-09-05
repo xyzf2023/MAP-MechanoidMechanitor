@@ -9,7 +9,7 @@
   <MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Label>结婚</MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Label>
   <MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Text>{COMPANION_labelShort}与{TARGET_labelShort}已经结婚。{COMPANION_labelShort}已成为{TARGET_labelShort}的配偶。</MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Text>
   <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>与配偶爱爱</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>
-  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>开启后，授权机械体将尝试在配偶允许时与配偶爱爱。\n注意：生育功能需在“社交”中手动是个水水水水开启。</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>
+  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>开启后，授权机械体将尝试在配偶允许时与配偶爱爱。\n注意：生育功能需在“社交”中手动开启。</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>
 
   <!-- 模块：仿生怀孕与分娩 -->
   <MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>仿生生育方式</MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>

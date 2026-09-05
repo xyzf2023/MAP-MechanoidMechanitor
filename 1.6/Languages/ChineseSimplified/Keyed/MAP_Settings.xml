@@ -131,7 +131,7 @@
   <!-- 模块：虫巢剧情 -->
   <MAP_MechanoidMechanitor.Settings.Insects.Section>虫巢剧情</MAP_MechanoidMechanitor.Settings.Insects.Section>
   <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>阻止与虫巢为盟友时发生虫巢袭击事件</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>
-  <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>开启后，当与虫巢为盟友时，阻止原版虫灾时间和原版任务系统生成的虫灾。注意：每次阻止虫灾时会在日志中输出警告。</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>开启后，当与虫巢为盟友时，阻止原版虫灾事件和原版任务系统生成的虫灾。注意：每次阻止虫灾时会在日志中输出警告。</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>
 
   <!-- 模块：虫巢追杀 -->
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Label>允许追杀模式虫灾无视厚岩顶</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Label>

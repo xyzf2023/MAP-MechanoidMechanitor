@@ -27,13 +27,33 @@
     <value><tags><li>MAP_MechHive</li></tags></value>
   </Operation>
   <!-- 太阳能板 -->
-  <Operation Class="PatchOperationAdd">
-    <xpath>Defs/ResearchProjectDef[defName="SolarPanels"]</xpath>
-    <value><tags><li>MAP_MechHive</li></tags></value>
+  <Operation Class="PatchOperationConditional">
+    <xpath>Defs/ResearchProjectDef[defName="SolarPanels"]/tags/li[text()="MAP_MechHive"]</xpath>
+    <nomatch Class="PatchOperationConditional">
+      <xpath>Defs/ResearchProjectDef[defName="SolarPanels"]/tags</xpath>
+      <match Class="PatchOperationAdd">
+        <xpath>Defs/ResearchProjectDef[defName="SolarPanels"]/tags</xpath>
+        <value><li>MAP_MechHive</li></value>
+      </match>
+      <nomatch Class="PatchOperationAdd">
+        <xpath>Defs/ResearchProjectDef[defName="SolarPanels"]</xpath>
+        <value><tags><li>MAP_MechHive</li></tags></value>
+      </nomatch>
+    </nomatch>
   </Operation>
   <!-- 蓄电池 -->
-  <Operation Class="PatchOperationAdd">
-    <xpath>Defs/ResearchProjectDef[defName="Batteries"]</xpath>
-    <value><tags><li>MAP_MechHive</li></tags></value>
+  <Operation Class="PatchOperationConditional">
+    <xpath>Defs/ResearchProjectDef[defName="Batteries"]/tags/li[text()="MAP_MechHive"]</xpath>
+    <nomatch Class="PatchOperationConditional">
+      <xpath>Defs/ResearchProjectDef[defName="Batteries"]/tags</xpath>
+      <match Class="PatchOperationAdd">
+        <xpath>Defs/ResearchProjectDef[defName="Batteries"]/tags</xpath>
+        <value><li>MAP_MechHive</li></value>
+      </match>
+      <nomatch Class="PatchOperationAdd">
+        <xpath>Defs/ResearchProjectDef[defName="Batteries"]</xpath>
+        <value><tags><li>MAP_MechHive</li></tags></value>
+      </nomatch>
+    </nomatch>
   </Operation>
 </Patch>
