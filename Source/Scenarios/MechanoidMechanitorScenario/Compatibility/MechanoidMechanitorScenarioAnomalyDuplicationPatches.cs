@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty;
 using MAP_MechanoidMechanitor.Scenarios;
 using HarmonyLib;
 using RimWorld;
@@ -18,8 +20,12 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(CompObelisk_Duplicator), "CompTick")]
     public static class MechanoidMechanitorScenario_CompObelisk_Duplicator_CompTick_Patch
     {
-        private const string LogPrefix =
-            "[MAP-机械族机械师] Anomaly 腐化复制方尖碑候选过滤：";
+        private const string PatchDisplayName =
+            "[MAP-机械族机械师] Anomaly 腐化复制方尖碑候选过滤";
+        private const string DiagnosticModuleId =
+            "anomaly.corrupted-obelisk-candidate-filter";
+        private const string AnomalyPackageId = "ludeon.rimworld.anomaly";
+        private const int DiagnosticWindowRadius = 18;
         private const int ReflectionFailKey = 879360101;
         private const int RandomElementFailKey = 879360102;
         private const int FinalCountFailKey = 879360103;
@@ -49,9 +55,19 @@ namespace MAP_MechanoidMechanitor
 
             if (candidateField == null || countGetter == null || filterMethod == null)
             {
-                Log.ErrorOnce(
-                    $"{LogPrefix}无法解析反射目标（tmpDuplicateCandidates / List.Count / Filter），补丁未应用。",
-                    ReflectionFailKey);
+                LogPatchFailure(
+                    "无法解析反射目标，补丁未应用。"
+                    + "解析状态：tmpDuplicateCandidates="
+                    + (candidateField == null ? "失败" : "成功")
+                    + "，List<Pawn>.Count="
+                    + (countGetter == null ? "失败" : "成功")
+                    + "，FilterCorruptedObeliskCandidates="
+                    + (filterMethod == null ? "失败" : "成功")
+                    + "。",
+                    ReflectionFailKey,
+                    codes,
+                    candidateField,
+                    countGetter);
                 return codes;
             }
 
@@ -61,9 +77,14 @@ namespace MAP_MechanoidMechanitor
             int randomElementIndex = FindDuplicateTargetRandomElement(codes, candidateField);
             if (randomElementIndex < 0)
             {
-                Log.ErrorOnce(
-                    $"{LogPrefix}无法唯一确认腐化复制方尖碑 RandomElement 目标选择位置（结果 {randomElementIndex}），候选过滤补丁未应用，原版指令原样返回。",
-                    RandomElementFailKey);
+                LogPatchFailure(
+                    "无法唯一确认腐化复制方尖碑 RandomElement 目标选择位置"
+                    + $"（结果 {randomElementIndex}），候选过滤补丁未应用，原版指令原样返回。",
+                    RandomElementFailKey,
+                    codes,
+                    candidateField,
+                    countGetter,
+                    randomElementIndex);
                 return codes;
             }
 
@@ -105,9 +126,14 @@ namespace MAP_MechanoidMechanitor
 
             if (finalCountAnchors.Count != 1)
             {
-                Log.ErrorOnce(
-                    $"{LogPrefix}通过 RandomElement 控制流无法唯一确认最终 Count 判断锚点（匹配 {finalCountAnchors.Count} 处），补丁未应用，原版指令原样返回。",
-                    FinalCountFailKey);
+                LogPatchFailure(
+                    "通过 RandomElement 控制流无法唯一确认最终 Count 判断锚点"
+                    + $"（匹配 {finalCountAnchors.Count} 处），补丁未应用，原版指令原样返回。",
+                    FinalCountFailKey,
+                    codes,
+                    candidateField,
+                    countGetter,
+                    randomElementIndex);
                 return codes;
             }
 
@@ -117,9 +143,14 @@ namespace MAP_MechanoidMechanitor
             // 第七步：异常块安全检查。若该指令是异常处理边界入口，禁止猜测移动。
             if (anchor.blocks.Count > 0)
             {
-                Log.ErrorOnce(
-                    $"{LogPrefix}最终 Count 锚点携带无法安全处理的 ExceptionBlock，补丁未应用，原版指令原样返回。",
-                    ExceptionBlockFailKey);
+                LogPatchFailure(
+                    "最终 Count 锚点携带无法安全处理的 ExceptionBlock，"
+                    + "补丁未应用，原版指令原样返回。",
+                    ExceptionBlockFailKey,
+                    codes,
+                    candidateField,
+                    countGetter,
+                    randomElementIndex);
                 return codes;
             }
 
@@ -145,6 +176,233 @@ namespace MAP_MechanoidMechanitor
             codes.Insert(anchorIndex + 1, filterCall);
 
             return codes;
+        }
+
+        /// <summary>
+        /// 关闭详细日志时只输出统一的简短失败提示；开启时复用第三方兼容层诊断器，
+        /// 同时附带当前 Transpiler 实际收到的局部 IL 现场。
+        /// </summary>
+        private static void LogPatchFailure(
+            string reason,
+            int logKey,
+            List<CodeInstruction> codes,
+            FieldInfo? candidateField,
+            MethodInfo? countGetter,
+            int randomElementIndex = -1)
+        {
+            if (MAPMechanitorMod.Settings?.enableCompatibilityDetailedLogging != true)
+            {
+                Log.ErrorOnce(PatchDisplayName + "加载失败。", logKey);
+                return;
+            }
+
+            try
+            {
+                string detail = BuildTranspilerDiagnosticDetail(
+                    reason,
+                    codes,
+                    candidateField,
+                    countGetter,
+                    randomElementIndex);
+                MethodInfo? targetMethod = AccessTools.Method(
+                    typeof(CompObelisk_Duplicator),
+                    nameof(CompObelisk_Duplicator.CompTick));
+
+                ThirdPartyCompatibilityResult result = targetMethod == null
+                    ? ThirdPartyCompatibilityResult.CreateTargetChanged(
+                        DiagnosticModuleId,
+                        PatchDisplayName,
+                        AnomalyPackageId,
+                        detail)
+                    : ThirdPartyCompatibilityResult.CreateTargetChanged(
+                        DiagnosticModuleId,
+                        PatchDisplayName,
+                        AnomalyPackageId,
+                        detail,
+                        targetMethod);
+
+                Log.ErrorOnce(
+                    PatchDisplayName
+                    + "加载失败。\n"
+                    + ThirdPartyCompatibilityDiagnostics.BuildFailureReport(result),
+                    logKey);
+            }
+            catch (Exception ex)
+            {
+                // 诊断本身不得妨碍安全回退到原版指令。
+                Log.ErrorOnce(
+                    PatchDisplayName
+                    + "加载失败。\n兼容层详细诊断生成失败："
+                    + ex.GetType().FullName
+                    + "："
+                    + ex.Message,
+                    logKey);
+            }
+        }
+
+        private static string BuildTranspilerDiagnosticDetail(
+            string reason,
+            List<CodeInstruction> codes,
+            FieldInfo? candidateField,
+            MethodInfo? countGetter,
+            int randomElementIndex)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine(reason);
+            builder.AppendLine("  Transpiler 收到的指令总数：" + codes.Count);
+            builder.AppendLine(
+                "  唯一 RandomElement 识别结果：" + randomElementIndex);
+
+            AppendRandomElementCandidates(builder, codes, candidateField);
+            AppendCountCandidates(
+                builder,
+                codes,
+                candidateField,
+                countGetter,
+                randomElementIndex);
+            AppendInstructionWindow(builder, codes, randomElementIndex);
+            return builder.ToString().TrimEnd();
+        }
+
+        private static void AppendRandomElementCandidates(
+            StringBuilder builder,
+            List<CodeInstruction> codes,
+            FieldInfo? candidateField)
+        {
+            int candidateCount = 0;
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].operand is not MethodInfo method
+                    || method.Name != "RandomElement")
+                {
+                    continue;
+                }
+
+                candidateCount++;
+                bool directlyLoadsCandidateField = candidateField != null
+                    && i > 0
+                    && codes[i - 1].LoadsField(candidateField);
+                builder.AppendLine(
+                    "  RandomElement 候选：索引="
+                    + i
+                    + "，返回类型="
+                    + (method.ReturnType.FullName ?? method.ReturnType.Name)
+                    + "，前一条是否直接读取候选列表="
+                    + directlyLoadsCandidateField);
+            }
+
+            if (candidateCount == 0)
+            {
+                builder.AppendLine("  RandomElement 候选：未发现。");
+            }
+        }
+
+        private static void AppendCountCandidates(
+            StringBuilder builder,
+            List<CodeInstruction> codes,
+            FieldInfo? candidateField,
+            MethodInfo? countGetter,
+            int randomElementIndex)
+        {
+            if (candidateField == null || countGetter == null)
+            {
+                builder.AppendLine("  Count 候选：反射目标不完整，无法检查。");
+                return;
+            }
+
+            int fieldLoadCount = 0;
+            int directCountCandidateCount = 0;
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (!codes[i].LoadsField(candidateField))
+                {
+                    continue;
+                }
+
+                fieldLoadCount++;
+                bool followedByCount = i + 1 < codes.Count
+                    && codes[i + 1].Calls(countGetter);
+                if (!followedByCount)
+                {
+                    continue;
+                }
+
+                directCountCandidateCount++;
+                int branchIndex = FindConditionalBranchAfter(codes, i + 2);
+                int targetIndex = -1;
+                string branchOpcode = "未找到";
+                if (branchIndex >= 0)
+                {
+                    branchOpcode = codes[branchIndex].opcode.ToString();
+                    if (codes[branchIndex].operand is Label branchLabel)
+                    {
+                        targetIndex = IndexOfLabel(codes, branchLabel);
+                    }
+                }
+
+                builder.AppendLine(
+                    "  Count 候选：读取索引="
+                    + i
+                    + "，条件分支索引="
+                    + branchIndex
+                    + "，分支指令="
+                    + branchOpcode
+                    + "，目标索引="
+                    + targetIndex
+                    + "，目标是否位于 RandomElement 之后="
+                    + (randomElementIndex >= 0 && targetIndex > randomElementIndex));
+            }
+
+            builder.AppendLine(
+                "  候选列表字段读取总数="
+                + fieldLoadCount
+                + "，紧邻 Count 的候选数="
+                + directCountCandidateCount
+                + "。");
+        }
+
+        private static void AppendInstructionWindow(
+            StringBuilder builder,
+            List<CodeInstruction> codes,
+            int randomElementIndex)
+        {
+            int centerIndex = randomElementIndex;
+            if (centerIndex < 0)
+            {
+                centerIndex = FindFirstRandomElementCall(codes);
+            }
+
+            if (centerIndex < 0)
+            {
+                builder.AppendLine("  局部 IL：没有可用的 RandomElement 中心点。");
+                return;
+            }
+
+            int start = Math.Max(0, centerIndex - DiagnosticWindowRadius);
+            int end = Math.Min(codes.Count - 1, centerIndex + DiagnosticWindowRadius);
+            builder.AppendLine(
+                "  RandomElement 附近 IL（索引 " + start + "-" + end + "）：");
+            for (int i = start; i <= end; i++)
+            {
+                builder.Append("    [");
+                builder.Append(i);
+                builder.Append("] ");
+                builder.AppendLine(codes[i].ToString());
+            }
+        }
+
+        private static int FindFirstRandomElementCall(List<CodeInstruction> codes)
+        {
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].operand is MethodInfo method
+                    && method.Name == "RandomElement")
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         /// <summary>
