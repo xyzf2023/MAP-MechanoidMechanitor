@@ -116,6 +116,7 @@
         <repairIntervalTicks>6</repairIntervalTicks>
         <repairAmount>10</repairAmount>
         <requiresAutoRepair>false</requiresAutoRepair>
+        <displayRateUnit>PerSecond</displayRateUnit>
       </li>
     </comps>
     <stages>
