@@ -89,9 +89,11 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 第二步：从唯一 RandomElement 向前定位控制它的最终 Count 判断。
-            // 两个回退分支（Count == 0 时改取 WorldPawns）的分支目标位于 RandomElement 之前，
-            // 只有最终 "Count != 0" 判断的分支目标位于 RandomElement 之后（跳过整个复制块）。
-            // 因此用"分支目标是否位于 RandomElement 之后"区分最终 Count 与回退 Count。
+            // 兼容两种等价的编译结果：
+            // 1. 空列表分支跳到 RandomElement 之后，直接跳过整个复制块；
+            // 2. 非空列表分支跳到 RandomElement 前的候选列表读取，空列表路径立即 ret。
+            // 第二种正是 RimWorld 1.6.9676.17735 的实际结构。两个回退 Count 判断不会同时
+            // 满足这些控制流约束，因此仍然要求最终只能得到一个锚点。
             List<int> finalCountAnchors = new List<int>();
             for (int i = 0; i < codes.Count - 1; i++)
             {
@@ -118,7 +120,13 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (targetIndex > randomElementIndex)
+                if (targetIndex > randomElementIndex
+                    || IsNonEmptyBranchIntoRandomElement(
+                        codes,
+                        branchIndex,
+                        targetIndex,
+                        randomElementIndex,
+                        candidateField))
                 {
                     finalCountAnchors.Add(i);
                 }
@@ -350,7 +358,14 @@ namespace MAP_MechanoidMechanitor
                     + "，目标索引="
                     + targetIndex
                     + "，目标是否位于 RandomElement 之后="
-                    + (randomElementIndex >= 0 && targetIndex > randomElementIndex));
+                    + (randomElementIndex >= 0 && targetIndex > randomElementIndex)
+                    + "，是否为非空分支进入 RandomElement="
+                    + IsNonEmptyBranchIntoRandomElement(
+                        codes,
+                        branchIndex,
+                        targetIndex,
+                        randomElementIndex,
+                        candidateField));
             }
 
             builder.AppendLine(
@@ -469,6 +484,56 @@ namespace MAP_MechanoidMechanitor
             }
 
             return -1;
+        }
+
+        /// <summary>
+        /// 识别当前原版采用的最终 Count 守门结构：Count 非零时通过 brtrue 跳到
+        /// RandomElement 前的候选列表读取；Count 为零时沿顺序路径立即 ret。
+        /// 限定目标必须恰好是 RandomElement 的直接入栈指令，并且中间只能有 nop 与一次 ret，
+        /// 避免把前方用于切换候选来源的回退 Count 判断误认为最终锚点。
+        /// </summary>
+        private static bool IsNonEmptyBranchIntoRandomElement(
+            List<CodeInstruction> codes,
+            int branchIndex,
+            int targetIndex,
+            int randomElementIndex,
+            FieldInfo candidateField)
+        {
+            if (branchIndex < 0
+                || targetIndex < 0
+                || randomElementIndex <= 0
+                || targetIndex != randomElementIndex - 1
+                || !codes[targetIndex].LoadsField(candidateField))
+            {
+                return false;
+            }
+
+            OpCode branchOpcode = codes[branchIndex].opcode;
+            if (branchOpcode != OpCodes.Brtrue
+                && branchOpcode != OpCodes.Brtrue_S)
+            {
+                return false;
+            }
+
+            bool foundReturn = false;
+            for (int i = branchIndex + 1; i < targetIndex; i++)
+            {
+                OpCode opcode = codes[i].opcode;
+                if (opcode == OpCodes.Nop)
+                {
+                    continue;
+                }
+
+                if (!foundReturn && opcode == OpCodes.Ret)
+                {
+                    foundReturn = true;
+                    continue;
+                }
+
+                return false;
+            }
+
+            return foundReturn;
         }
 
         /// <summary>
