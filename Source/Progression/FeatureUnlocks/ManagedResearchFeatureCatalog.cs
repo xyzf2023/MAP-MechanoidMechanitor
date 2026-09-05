@@ -23,35 +23,59 @@ namespace MAP_MechanoidMechanitor
         public const string ParallelThoughtMatrixResearchDefName =
             "MAP_ParallelThoughtMatrix";
 
+        public const string AutonomousDirectiveOptimizationDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description";
+
+        public const string MechanicalConsciousnessTransferDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description";
+
+        public const string DataProcessingAllocationDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataProcessingAllocation.Description";
+
+        public const string SelfDirectiveFocusDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.SelfDirectiveFocus.Description";
+
+        public const string DataStreamReorganizationDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataStreamReorganization.Description";
+
+        public const string ParallelThoughtMatrixDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.ParallelThoughtMatrix.Description";
+
         public static readonly ManagedResearchFeatureDescriptor AutonomousDirectiveOptimization =
             new ManagedResearchFeatureDescriptor(
                 id: "AutonomousDirectiveOptimization",
-                researchProjectDefName: AutonomousDirectiveOptimizationResearchDefName);
+                researchProjectDefName: AutonomousDirectiveOptimizationResearchDefName,
+                unlockLetterDescriptionKey: AutonomousDirectiveOptimizationDescriptionKey);
 
         public static readonly ManagedResearchFeatureDescriptor MechanicalConsciousnessTransfer =
             new ManagedResearchFeatureDescriptor(
                 id: "MechanicalConsciousnessTransfer",
-                researchProjectDefName: MechanicalConsciousnessTransferResearchDefName);
+                researchProjectDefName: MechanicalConsciousnessTransferResearchDefName,
+                unlockLetterDescriptionKey: MechanicalConsciousnessTransferDescriptionKey);
 
         public static readonly ManagedResearchFeatureDescriptor DataProcessingAllocation =
             new ManagedResearchFeatureDescriptor(
                 id: "DataProcessingAllocation",
-                researchProjectDefName: DataProcessingAllocationResearchDefName);
+                researchProjectDefName: DataProcessingAllocationResearchDefName,
+                unlockLetterDescriptionKey: DataProcessingAllocationDescriptionKey);
 
         public static readonly ManagedResearchFeatureDescriptor SelfDirectiveFocus =
             new ManagedResearchFeatureDescriptor(
                 id: "SelfDirectiveFocus",
-                researchProjectDefName: SelfDirectiveFocusResearchDefName);
+                researchProjectDefName: SelfDirectiveFocusResearchDefName,
+                unlockLetterDescriptionKey: SelfDirectiveFocusDescriptionKey);
 
         public static readonly ManagedResearchFeatureDescriptor DataStreamReorganization =
             new ManagedResearchFeatureDescriptor(
                 id: "DataStreamReorganization",
-                researchProjectDefName: DataStreamReorganizationResearchDefName);
+                researchProjectDefName: DataStreamReorganizationResearchDefName,
+                unlockLetterDescriptionKey: DataStreamReorganizationDescriptionKey);
 
         public static readonly ManagedResearchFeatureDescriptor ParallelThoughtMatrix =
             new ManagedResearchFeatureDescriptor(
                 id: "ParallelThoughtMatrix",
-                researchProjectDefName: ParallelThoughtMatrixResearchDefName);
+                researchProjectDefName: ParallelThoughtMatrixResearchDefName,
+                unlockLetterDescriptionKey: ParallelThoughtMatrixDescriptionKey);
 
         private static readonly ManagedResearchFeatureDescriptor[] allInternal =
         {
