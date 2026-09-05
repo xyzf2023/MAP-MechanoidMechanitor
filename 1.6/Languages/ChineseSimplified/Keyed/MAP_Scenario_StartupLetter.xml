@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：机械族机械师剧本开局提示 -->
+  <MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Label>机体能源管理</MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Label>
+  <MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Text>身为机械族，你不需要像有机体那样每日进食与休息，但仍需要定期充电以维持机体运转。请尽早建设发电设施与充电站，确保拥有稳定的能源供应，避免因电量耗尽而被迫进入休眠。如果你希望机械族机械师像有机体一样按照固定作息定时充电，可以在“管制”菜单中安排休息时间。进入休息时段后，机械族机械师会优先尝试进行充电。</MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Text>
+
+</LanguageData>
