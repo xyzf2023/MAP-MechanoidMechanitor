@@ -11,11 +11,13 @@ namespace MAP_MechanoidMechanitor
         public ManagedResearchAbilityDescriptor(
             string id,
             string abilityDefName,
-            string researchProjectDefName)
+            string researchProjectDefName,
+            string unlockLetterDescriptionKey)
         {
             Id = id;
             AbilityDefName = abilityDefName;
             ResearchProjectDefName = researchProjectDefName;
+            UnlockLetterDescriptionKey = unlockLetterDescriptionKey;
         }
 
         public string Id { get; }
@@ -23,6 +25,8 @@ namespace MAP_MechanoidMechanitor
         public string AbilityDefName { get; }
 
         public string ResearchProjectDefName { get; }
+
+        public string UnlockLetterDescriptionKey { get; }
 
         private AbilityDef? cachedAbilityDef;
         private ResearchProjectDef? cachedResearchDef;
