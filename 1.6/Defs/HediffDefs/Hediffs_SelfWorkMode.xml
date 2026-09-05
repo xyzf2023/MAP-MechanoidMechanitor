@@ -13,6 +13,7 @@
         <repairAmount>10</repairAmount>
         <energyRestoreInterval>300</energyRestoreInterval>
         <energyRestoreFraction>0.01</energyRestoreFraction>
+        <showRecoveryRates>true</showRecoveryRates>
       </li>
     </comps>
     <stages>
