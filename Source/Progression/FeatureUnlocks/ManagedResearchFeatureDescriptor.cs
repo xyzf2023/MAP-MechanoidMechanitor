@@ -8,15 +8,21 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public sealed class ManagedResearchFeatureDescriptor
     {
-        public ManagedResearchFeatureDescriptor(string id, string researchProjectDefName)
+        public ManagedResearchFeatureDescriptor(
+            string id,
+            string researchProjectDefName,
+            string unlockLetterDescriptionKey)
         {
             Id = id;
             ResearchProjectDefName = researchProjectDefName;
+            UnlockLetterDescriptionKey = unlockLetterDescriptionKey;
         }
 
         public string Id { get; }
 
         public string ResearchProjectDefName { get; }
+
+        public string UnlockLetterDescriptionKey { get; }
 
         private ResearchProjectDef? cachedResearchDef;
         private bool researchDefMissingLogged;
