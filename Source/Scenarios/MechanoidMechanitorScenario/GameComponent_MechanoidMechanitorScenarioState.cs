@@ -9,10 +9,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     public sealed class GameComponent_MechanoidMechanitorScenarioState : GameComponent
     {
+        private const int EnergyManagementLetterDelayTicks = 2500;
+
         private bool mechanoidMechanitorScenarioEnabled;
 
         private List<Pawn> portraitDisplayEnabledPawnsList = new List<Pawn>();
         private HashSet<Pawn> portraitDisplayEnabledPawns = new HashSet<Pawn>();
+
+        // 默认视为已处理，确保本功能加入前创建的旧存档不会在读档后补发开局提示。
+        private bool energyManagementLetterResolved = true;
+        private int energyManagementLetterTriggerTick = -1;
 
         private bool factionNamingScenarioChecked;
         private bool factionNamingRoutineEnabled;
@@ -152,6 +158,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "mechanoidMechanitorScenarioEnabled",
                 false);
             Scribe_Values.Look(
+                ref energyManagementLetterResolved,
+                "energyManagementLetterResolved",
+                true);
+            Scribe_Values.Look(
+                ref energyManagementLetterTriggerTick,
+                "energyManagementLetterTriggerTick",
+                -1);
+            Scribe_Values.Look(
                 ref factionNamingScenarioChecked,
                 "factionNamingScenarioChecked",
                 false);
@@ -203,6 +217,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.StartedNewGame();
             SyncFromScenarioMarker();
+
+            if (mechanoidMechanitorScenarioEnabled && Find.TickManager != null)
+            {
+                energyManagementLetterResolved = false;
+                energyManagementLetterTriggerTick =
+                    Find.TickManager.TicksGame + EnergyManagementLetterDelayTicks;
+            }
+            else
+            {
+                energyManagementLetterResolved = true;
+                energyManagementLetterTriggerTick = -1;
+            }
+
             factionNamingScenarioChecked = false;
             factionNamingRoutineEnabled = false;
             factionNamingRoutineFinished = false;
@@ -219,6 +246,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public override void GameComponentTick()
         {
             base.GameComponentTick();
+
+            TryResolveEnergyManagementLetter();
 
             if (factionNamingRoutineFinished
                 || Current.Game == null
@@ -364,6 +393,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             waitingForFactionNameCompletion = true;
+        }
+
+        private void TryResolveEnergyManagementLetter()
+        {
+            if (energyManagementLetterResolved
+                || energyManagementLetterTriggerTick < 0
+                || Find.TickManager == null
+                || Find.TickManager.TicksGame < energyManagementLetterTriggerTick)
+            {
+                return;
+            }
+
+            // 到达预约时间后只检查一次。无论是否存在机械族机械师，本局都不再重复检查。
+            energyManagementLetterResolved = true;
+            energyManagementLetterTriggerTick = -1;
+
+            if (!mechanoidMechanitorScenarioEnabled
+                || Find.LetterStack == null
+                || GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors.Count == 0)
+            {
+                return;
+            }
+
+            Find.LetterStack.ReceiveLetter(
+                "MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Label".Translate(),
+                "MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Text".Translate(),
+                LetterDefOf.NeutralEvent);
         }
 
         private void FinishFactionNamingRoutine()
