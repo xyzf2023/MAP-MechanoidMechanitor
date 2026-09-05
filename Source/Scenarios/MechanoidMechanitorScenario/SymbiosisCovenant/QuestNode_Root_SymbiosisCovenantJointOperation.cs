@@ -25,8 +25,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && slate.Exists("proposerFaction")
                 && slate.Exists("participants")
                 && slate.Exists("jointOperationDef")
-                && slate.Exists("actionId")
-                && slate.Exists("rewardValue");
+                && slate.Exists("actionId");
         }
 
         protected override void RunInt()
@@ -41,7 +40,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             SymbiosisCovenantJointOperationDef? def =
                 slate.Get<SymbiosisCovenantJointOperationDef>("jointOperationDef");
             string actionId = slate.Get<string>("actionId");
-            int rewardValue = slate.Get<int>("rewardValue");
 
             if (target == null
                 || targetFaction == null
@@ -123,7 +121,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     proposerFaction = proposer,
                     participantFactions = participants,
                     jointOperationDef = def,
-                    rewardValue = rewardValue,
                     offerExpireTick = quest.acceptanceExpireTick,
                     // 新任务创建时直接赋予：让尚未接受（NotYetAccepted / OfferPending）的
                     // Part 也能监听目标完成信号，从而支持“未接取但已彻底摧毁目标”的成功结算。

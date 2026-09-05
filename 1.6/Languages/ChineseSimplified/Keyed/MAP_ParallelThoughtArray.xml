@@ -7,9 +7,9 @@
 
   <!-- 分配标签 -->
   <MAP_MechanoidMechanitor.DataProcessingAllocation>数据处理分配</MAP_MechanoidMechanitor.DataProcessingAllocation>
-  <MAP_MechanoidMechanitor.ConsciousnessAllocation>意识分配</MAP_MechanoidMechanitor.ConsciousnessAllocation>
+  <MAP_MechanoidMechanitor.ConsciousnessAllocation>意识聚焦</MAP_MechanoidMechanitor.ConsciousnessAllocation>
   <MAP_MechanoidMechanitor.DataProcessingAllocation.Desc>将数据处理能力分配给受控机械族。分配会按档位降低自身数据处理能力，但可为下属机械体提供对应增幅。</MAP_MechanoidMechanitor.DataProcessingAllocation.Desc>
-  <MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>将意识处理能力分配给受控机械族。分配会按档位降低自身意识处理能力，但可为下属机械体提供对应增幅。</MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>
+  <MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>将一部分意识聚焦到受控机械族上。分配会按档位降低自身意识，但可为下属机械体提供对应增幅。</MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>
 
   <!-- 并行思维接口：使用限制 -->
   <MAP_MechanoidMechanitor.ParallelThoughtInterface.RequiresHumanMechanitor>并行思维接口只能由人类机械师安装。</MAP_MechanoidMechanitor.ParallelThoughtInterface.RequiresHumanMechanitor>

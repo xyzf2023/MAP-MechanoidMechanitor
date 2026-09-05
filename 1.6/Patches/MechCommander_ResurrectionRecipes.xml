@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Patch>
 
-  <!-- 将「恋人」与「隐者」加入原版中型机械族复活配方 -->
+  <!-- 将「恋人」、「隐者」与「月亮」加入原版中型机械族复活配方 -->
   <Operation Class="PatchOperationAdd">
     <xpath>Defs/RecipeDef[defName="ResurrectMediumMech"]/fixedIngredientFilter/thingDefs</xpath>
     <value>
       <li>Corpse_MAP_Mech_Lover</li>
       <li>Corpse_MAP_Mech_Hermit</li>
+      <li>Corpse_MAP_Mech_Moon</li>
     </value>
   </Operation>
 

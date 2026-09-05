@@ -28,7 +28,7 @@
   <MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>该机械体可以脱离当前机械族机械师的命令距离范围行动。</MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>
   <MAP_MechanoidMechanitor.DataProcessing.EffectAttackTiming>瞄准时间、射击冷却与近战冷却 ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectAttackTiming>
   <MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead>可带领远行队</MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead>
-  <MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>该机械体获得完整的虚拟旅行节点能力，可以带领远行队、收集远行队物资，并在运输抵达后刷新相关状态。</MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>该机械体获得完整的远行队带队能力。</MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>
   <MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot>可驾驶穿梭机</MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot>
   <MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot.Tooltip>该机械体获得穿梭机驾驶资格，可作为奥德赛玩家穿梭机的有效驾驶员。</MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot.Tooltip>
   <MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed>移动速度 +{0}</MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed>

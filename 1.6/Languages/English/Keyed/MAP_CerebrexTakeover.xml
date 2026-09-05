@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LanguageData>
-  <MAP_CerebrexTakeover.Option>Take control of the core</MAP_CerebrexTakeover.Option>
-  <MAP_CerebrexTakeover.BeginFailed>The Cerebrex takeover sequence could not be started.</MAP_CerebrexTakeover.BeginFailed>
-  <MAP_CerebrexTakeover.Letter.Label>Cerebrex core taken over</MAP_CerebrexTakeover.Letter.Label>
-  <MAP_CerebrexTakeover.Letter.Text>{PAWN} has taken control of the Cerebrex core. The mechhive has accepted the new control link and entered an alliance with the colony. Its resources can now be requested through a comms console.</MAP_CerebrexTakeover.Letter.Text>
-  <MAP_CerebrexTakeover.Credits>{PAWN} took control of the Cerebrex core and integrated the mechhive resource network into the colony's allocation system.</MAP_CerebrexTakeover.Credits>
-  <MAP_CerebrexTakeover.PurgeCreditsResponse>Each day, the mechhive produces allocatable resources equivalent to 2,000 credits and adds 2,000 credits. Assisting with the construction of mech nodes also frees additional supplies and grants credits.</MAP_CerebrexTakeover.PurgeCreditsResponse>
-</LanguageData>

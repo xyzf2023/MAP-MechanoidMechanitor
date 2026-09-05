@@ -58,7 +58,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         // 额外运行期字段（随存档）
         public SymbiosisCovenantJointOperationDef? jointOperationDef;
-        public int rewardValue;
         public bool playerEngaged;
 
         // 延迟部署与威胁确认状态（随存档）。用于在 MapGenerated 信号内避免过早判定，
@@ -2351,7 +2350,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 + " | hasReachedCombatReady=" + hasReachedCombatReadySnapshot
                 + " | tick=" + (Find.TickManager?.TicksGame ?? 0));
 
-            // J：实物奖励本次暂不发放，仅保留 Unity / Trust 成功奖励（见 GrantReward 注释）。
             quest?.End(QuestEndOutcome.Success);
         }
 
@@ -2671,17 +2669,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .SetCooldownEndTick(now + def.invalidEndCooldownTicks);
         }
 
-        /// <summary>
-        /// J：实物奖励本次暂不发放。
-        /// 原实现用 ThingSetMakerDefOf.Reward_ItemsStandard + GenPlace 直接放置物品，
-        /// 不是完整的原版 Quest 奖励流程，可能在纯机械殖民地/目标地图移除等情况下错发。
-        /// 本次修复优先保证行动/目标/援军/结算正确，实物奖励保留 Def 字段供未来以原版
-        /// Quest reward 路径单独实现，此处故意留空。
-        /// </summary>
-        private void GrantReward()
-        {
-        }
-
         public override void ExposeData()
         {
             base.ExposeData();
@@ -2711,7 +2698,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 LookMode.Deep);
             Scribe_Collections.Look(ref spawnedAidTags, "spawnedAidTags", LookMode.Value);
             Scribe_Defs.Look(ref jointOperationDef, "jointOperationDef");
-            Scribe_Values.Look(ref rewardValue, "rewardValue", 0);
             Scribe_Values.Look(ref playerEngaged, "playerEngaged", false);
             Scribe_Values.Look(ref covenantLevelSnapshot, "covenantLevelSnapshot", 0);
             Scribe_Values.Look(

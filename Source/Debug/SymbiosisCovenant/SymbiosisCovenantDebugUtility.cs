@@ -1551,7 +1551,6 @@ namespace MAP_MechanoidMechanitor
             sb.AppendLine("TargetQuestTag = " + (snap.TargetQuestTag ?? "-"));
             sb.AppendLine("Stage = " + snap.Stage);
             sb.AppendLine("Participants = " + snap.ParticipantsCount);
-            sb.AppendLine("RewardValue = " + snap.RewardValue);
             sb.AppendLine("TargetThreatPointsAtDeployment = " + snap.TargetThreatPointsAtDeployment);
             sb.AppendLine("TotalSupportPointsAtDeployment = " + snap.TotalSupportPointsAtDeployment.ToString("F1"));
             sb.AppendLine("TrackedLordCount = " + snap.TrackedLordCount);

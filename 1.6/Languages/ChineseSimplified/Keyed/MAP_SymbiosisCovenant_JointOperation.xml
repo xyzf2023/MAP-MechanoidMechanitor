@@ -6,11 +6,7 @@
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>代表</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
 
   <!-- 邀请说明：{0}=发起派系名，{1}=首领描述（称谓+名 或“{派系}的代表”），{2}=目标派系名，{3}=目标地点，{4}=参与派系列表。 -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}的{1}向联盟发出军事行动邀请，共同进攻{2}的{3}。
-
-目前加入本次军事行动的派系有：{4}。
-
-加入本次军事行动并成功摧毁目标能提升盟约团结度和参与派系对我们的信任度。我们要参与本次军事行动吗？</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}的{1}向联盟成员发出军事行动邀请，共同进攻{2}的{3}。\n\n目前加入本次军事行动的派系有：{4}。\n\n加入本次军事行动并成功摧毁目标能提升盟约团结度和参与派系对我们的信任度。我们要参与本次军事行动吗？</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>
 
   <!-- 援军撤离通知：{0}=派系名。 -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>{0} 的援军正在撤离战场。</MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>
@@ -21,40 +17,13 @@
   <!-- 世界界面目标标识。 -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.TargetInspectLabel>联合军事行动目标</MAP_MechanoidMechanitor.Symbiosis.JointOp.TargetInspectLabel>
 
-  <!-- DEV 按钮：一键准备并生成测试邀请 / 清除行动。 -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.PrepareTest>一键准备测试</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.PrepareTest>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearOperation>清除行动</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearOperation>
-
   <!-- 援军抵达信件。 -->
   <MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Label>联合军事行动：援军抵达</MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Label>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Text>{0} 的盟约援军已抵达战场，将协助你清除目标据点。</MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Text>{0} 的盟约援军已抵达战场。他们将与你共同进攻目标据点。</MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Text>
 
-  <!-- 奖励信件：{0}=空投地图名。 -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Reward.Letter.Label>联合军事行动：战利品</MAP_MechanoidMechanitor.Symbiosis.JointOp.Reward.Letter.Label>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Reward.Letter.Text>作为本次联合军事行动的战利品，一批物资已空投至 {0}。</MAP_MechanoidMechanitor.Symbiosis.JointOp.Reward.Letter.Text>
 
-  <!-- 信任变化原因（与共同防卫/贸易委托共用 TrustReason 体系）。 -->
+  <!-- 信任变化原因 -->
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.JointOperation>联合军事行动</MAP_MechanoidMechanitor.Symbiosis.TrustReason.JointOperation>
 
-  <!-- DEV 面板（便于 QA 直接验证联合军事行动机制）。 -->
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Section>联合军事行动</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Section>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled>未安排（盟约等级尚未解锁联合军事行动）。</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Level>当前等级：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Level>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Available>可用：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Available>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.NextTick>下次检查 Tick：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.NextTick>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.DaysUntilNext>距下次检查（天）：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.DaysUntilNext>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CooldownRemaining>冷却剩余（ticks）：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CooldownRemaining>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Ongoing>进行中：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Ongoing>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Target>目标：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Target>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Stage>阶段：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Stage>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Participants>参与派系数：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Participants>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.RewardValue>奖励价值：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.RewardValue>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CurrentSupportFactor>当前等级援军倍率：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CurrentSupportFactor>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotLevel>行动锁定等级：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotLevel>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotSupportFactor>行动锁定援军倍率：{0}</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotSupportFactor>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.SpawnNow>立即生成邀请</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.SpawnNow>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.MakeDue>立即到期</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.MakeDue>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearCooldown>清除冷却</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearCooldown>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Success>联合军事行动 DEV 操作已执行。</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Success>
-  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Failed>当前条件不足，联合军事行动 DEV 操作未执行。</MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Failed>
+
 </LanguageData>

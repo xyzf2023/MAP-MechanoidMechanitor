@@ -47,12 +47,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int maxParticipants = 3;                   // 含发起者，玩家不计入
         public TechLevel industrialArrivalThreshold = TechLevel.Industrial;
 
-        // 奖励：实物奖励本次暂不发放（见 QuestPart.GrantReward 注释）。
-        // rewardValueFactor / minRewardValue / maxRewardValue 仅保留供未来以原版 Quest reward 路径扩展。
-        public float rewardValueFactor = 0.5f;
-        public int minRewardValue = 300;
-        public int maxRewardValue = 3000;
-
         public override IEnumerable<string> ConfigErrors()
         {
             foreach (string error in base.ConfigErrors())
@@ -116,16 +110,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (maxParticipants < 1 || maxParticipants > 3)
             {
                 yield return $"{defName}: maxParticipants must be in 1..3.";
-            }
-
-            if (rewardValueFactor <= 0f)
-            {
-                yield return $"{defName}: rewardValueFactor must be positive.";
-            }
-
-            if (minRewardValue < 0 || maxRewardValue < minRewardValue)
-            {
-                yield return $"{defName}: reward value range is invalid.";
             }
         }
 

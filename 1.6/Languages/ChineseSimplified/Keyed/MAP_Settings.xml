@@ -3,19 +3,19 @@
 
   <!-- 模块：头像显示 -->
   <MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Label>在所有存档中启用机械族"头像显示"</MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Label>
-  <MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>启用后，所有存档中的玩家机械体均可通过"机械族"管理表的"头像显示"选项，将头像追加到殖民者栏。关闭时此功能仅在机械族机械师剧本中启用。</MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>
+  <MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>启用后，在所有存档中显示机械族中的"头像显示"开关。关闭时此功能仅在机械族机械师剧本中启用。</MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>
 
   <!-- 模块：数据处理 -->
-  <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>征召状态切换时立即刷新动态分配</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>
-  <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>开启后，受动态分配管理的机械族在征召或取消征召时，会在下一游戏刻立即重新评估当前状态、特化模式和请求额度。批量征召会按监管者合并预算重算。关闭后，征召状态变化将在目标原有的状态检查间隔到期时处理。</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>
-  <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>启用加载期死亡诊断日志（临时）</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>
-  <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>默认关闭。仅用于诊断旧存档加载时机械族机械师突然死亡。开启后会在加载期间记录健康状态、意识、Hediff、数据处理记录与关键调用栈，可能产生较多日志。诊断完成后应关闭。此选项不会阻止死亡或修改存档。</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>
+  <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>切换征召状态时立即刷新动态分配</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>
+  <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>开启后，受动态分配管理的机械族在切换征召状态时立刻执行一次动态分配的状态检测。</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>
+  <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>启用加载期死亡诊断日志</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>
+  <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>这是一项开发者功能。如果你的机械族机械师在存档加载期间意外死亡，可以使用该功能生成日志并发送给作者检查。</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>
   <MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Label>阻止机械族机械师在存档加载时死亡</MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Label>
-  <MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>开启后，阻止加载存档期间原本存活的机械族机械师意外死亡。仅会影响存档加载时的判定，不影响正常游戏。</MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>
+  <MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>开启后，阻止加载存档期间原本存活的机械族机械师因奇妙の逻辑冲突意外死亡。</MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>
 
   <!-- 模块：植入体功能 -->
-  <MAP_MechanoidMechanitor.Settings.BrainImplants.Label>启用机械族机械师使用并安装脑部植入体</MAP_MechanoidMechanitor.Settings.BrainImplants.Label>
-  <MAP_MechanoidMechanitor.Settings.BrainImplants.Description>开启后，机械族机械师可以右键选择人类脑部植入体并为自己安装。此功能会略微影响游戏启动时的加载速度。</MAP_MechanoidMechanitor.Settings.BrainImplants.Description>
+  <MAP_MechanoidMechanitor.Settings.BrainImplants.Label>允许机械族机械师安装脑部植入体</MAP_MechanoidMechanitor.Settings.BrainImplants.Label>
+  <MAP_MechanoidMechanitor.Settings.BrainImplants.Description>开启后，机械族机械师可以被右键下达安装脑部植入体的命令。此功能会略微影响游戏启动时的加载速度。</MAP_MechanoidMechanitor.Settings.BrainImplants.Description>
   <MAP_MechanoidMechanitor.Settings.BrainImplants.RestartRequired>此设置将在重新启动游戏后生效。</MAP_MechanoidMechanitor.Settings.BrainImplants.RestartRequired>
   <MAP_MechanoidMechanitor.Settings.MoonImplants.Label>允许「月亮」安装仿生体</MAP_MechanoidMechanitor.Settings.MoonImplants.Label>
   <MAP_MechanoidMechanitor.Settings.MoonImplants.Description>启用后，「月亮」可以通过右键植入体安装。此功能会略微影响游戏启动时的加载速度。修改此设置后需要重新启动游戏。</MAP_MechanoidMechanitor.Settings.MoonImplants.Description>
@@ -23,20 +23,20 @@
 
   <!-- 模块：仿生子嗣 -->
   <MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label>通过仿生孕育的子嗣继承异种基因</MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label>
-  <MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description>开启后，具备仿生孕育能力的机械体孕育的子嗣将继承配偶的所有基因，包括系谱基因和异种基因。</MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description>
+  <MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description>开启后，具备仿生孕育能力的机械体孕育的子嗣将额外继承配偶的异种基因。</MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description>
 
   <!-- 模块：肃清指令界面 -->
   <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>启用肃清指令UI加载界面</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>
-  <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>开启后，每次打开肃清指令UI时都会先显示通讯连接与进度条界面。关闭后，将跳过加载界面并直接进入主界面。</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>
+  <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>开启时，显示联络主脑时的进度条界面。</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>
 
   <!-- 模块：共生盟约 -->
   <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>共生盟约</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>
   <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>共生盟约成长倍率：×{0}</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>
-  <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>调整共生盟约中信任度与团结度的正负变化速度。不会修改已有数值，仅影响之后发生的变化。默认 ×1.0。</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>
+  <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>调整共生盟约中信任度与团结度的正负变化倍率。</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>
 
   <!-- 模块：战略节点概率 -->
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>战略节点概率</MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>
-  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>以下概率为全局MOD设置，所有存档共享，并会在后续对应事件检查时直接读取。设置的是每座符合条件的完整节点的独立基础概率；多个节点的最终概率按 1-(1-p)^n 合并，而不是直接相加。</MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>注意：设置的是每座符合条件的完整节点的独立基础概率；多个节点的最终概率使用公式 1-(1-p)^n 计算。</MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost>普通派系前哨</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Label>单个敌对前哨每日袭击概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Label>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>每座符合条件的完整敌对派系前哨，每日进行额外袭击检查时使用的独立基础概率。0%表示禁用由普通派系前哨额外产生的袭击；100%表示只要至少存在一座符合条件的完整敌对前哨，该次检查就必定通过概率判定。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>
@@ -46,9 +46,9 @@
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Description>仅影响之后新生成的普通派系前哨。前哨会在创建时根据附近玩家殖民地的当前原版威胁点数，乘以此倍率保存守军预算。已存在的前哨不会因调整本设置而改变。联合军事行动以此类前哨为目标时，也会使用该前哨保存的防卫预算计算援军规模。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode>机械巢节点</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Label>单个敌对节点每日袭击概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Label>
-  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>每座符合条件的完整敌对机械巢节点，每日进行额外袭击检查时使用的独立基础概率。0%表示禁用由机械巢节点额外产生的袭击；100%表示只要至少存在一座符合条件的完整敌对节点，该次检查就必定通过概率判定。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>与机械巢敌对时每个机械巢节点每日进行额外袭击的概率。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>单个盟友节点支援概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>
-  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>每座符合条件的完整盟友机械巢节点，在殖民地遭遇敌对袭击后提供机械巢援军的独立基础概率。0%表示不提供这种自动援军。此设置不改变援军点数、派系归属、带宽或其他部署规则。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>与机械巢为盟友时每个机械巢节点提供援军的概率。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>
 
   <!-- 模块：正义能力 -->
   <MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>正义能力</MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>
@@ -57,96 +57,96 @@
 
   <!-- 模块：正义 BOSS 难度 -->
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>正义 BOSS 战难度</MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」作为敌对 BOSS 到达地图后使用的战斗参数。战斗参数会在每场 BOSS 战开始时锁定；战斗过程中修改只会影响下一场 BOSS 战。详细诊断日志开关不属于战斗参数，会实时生效。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」-重装指挥单元的BOSS战难度。注意：战斗过程中修改只会影响下一场 BOSS 战。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>启用正义 BOSS 详细诊断日志</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>默认关闭。开启后，将记录正义 BOSS 的波次生成、机械族生成、空投落点搜索、空投仓创建及落地分配等阶段，用于定位卡死或异常耗时。该功能不要求开启开发者模式，但可能产生较多日志并带来少量额外性能开销。关闭后不会执行相关计时、阶段跟踪或日志内容构造。</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>开发者功能，开启后「正义」BOSS战将生成详细的日志。</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>召唤高角护盾</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>启用后，「正义」部署设施时会召唤一座用于拦截高角度攻击的护盾发生器。此设置仅在启用皇权 DLC 时显示。</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>启用后，「正义」部署设施时会召唤一个高角护盾。</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Label>召唤低角护盾</MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Description>启用后，「正义」部署设施时会召唤一座用于拦截低角度攻击的护盾发生器。此设置仅在启用皇权 DLC 时显示。</MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Description>启用后，「正义」部署设施时会召唤一个低角护盾。</MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Label>自动迫击炮数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Description>「正义」到达后尝试部署的自动迫击炮数量。设为 0 时不部署。地图空间不足时，实际部署数量可能少于设置值。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Description>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Label>自动电荷炮塔数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Description>「正义」到达后尝试部署的自动电荷炮塔数量。设为 0 时不部署。地图空间不足时，实际部署数量可能少于设置值。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Description>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Label>自动炼狱炮塔数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Description>「正义」到达后尝试部署的自动炼狱炮塔数量。设为 0 时不部署。地图空间不足时，实际部署数量可能少于设置值。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Description>「正义」到达后部署的自动迫击炮数量。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Label>自动电荷冲击炮塔数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Description>「正义」到达后部署的自动电荷冲击炮塔数量。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Label>自动地狱火加农数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Description>「正义」到达后部署的自动地狱火加农炮塔数量。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Label>召唤波数：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Description>「正义」完成该数量的机械族召唤波次后，将停止继续召唤，并在原有等待时间结束后撤离。</MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Description>「正义」完成该数量的机械族召唤波次后，将停止继续召唤，并在一段时间撤离。</MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Label>波次间隔：{0} 秒</MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Description>两次正常机械族召唤波次之间的等待时间。该设置不影响第一波的初始等待时间、空投失败重试时间或最后一波后的撤退等待时间。</MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Description>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Label>每波基础机械族数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>第二波及以后每波召唤的机械族数量。第一波会召唤该数值两倍的机械族。每波约 40% 的位置会从重型机械族池中抽取。</MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Description>正义召唤两个机械族波次之间的等待时间。</MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Label>每波机械族数量：{0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>「正义」每波召唤的机械族数量。注意：第一波会召唤该数值两倍的机械族。</MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label>允许生成 BOSS 机械族</MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>启用后，每个正常波次会进行一次 2% 概率判定。判定成功时，随机将本波的一个机械族替换为现有候选池中的 BOSS 机械族。开发者模式的强制替换指令不受此开关限制。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>启用后，每个正常波次有2%概率生成一个BOSS机械族。</MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Label>为召唤单位添加机动作战</MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Description>默认开启。开启后，「正义」会为其召唤的守卫和波次机械族添加机动作战。关闭后，正义 BOSS 不会主动添加该状态，但不会移除单位通过其他机制已经获得的机动作战。该参数会在每场正义 BOSS 战开始时锁定。</MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Description>开启后，「正义」会为其召唤的机械族添加机动作战健康状态。</MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Description>
 
   <!-- 模块：机械主脑 BOSS 战难度 -->
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section>机械主脑 BOSS 战难度</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>调整机械主脑（CerebrexCore）作为敌对 BOSS 时使用的额外战斗技能参数。战斗参数会在每场 BOSS 战开始时锁定为当前设置快照；战斗过程中修改设置只会影响下一场 BOSS 战，不会改动正在进行中的战斗。总开关与各项技能开关也遵循同样的每场锁定规则。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>调整机械主脑战斗时的额外战斗技能参数。注意：无法在战斗过程中修改。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Label>启用机械主脑额外 BOSS 技能（总开关）</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>默认开启。机械主脑额外 BOSS 技能的总开关。关闭后，主脑不会自动发动召唤机械族、EMP 冲击波和带宽干扰等额外技能（已经在进行中的整轮技能仍会自然结束）。战斗中修改只影响下一场战斗。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>开启后，允许主脑使用额外技能。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection>召唤机械族</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Label>启用召唤机械族</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>默认开启。开启后，主脑优先在自身附近集中空投机械族增援；附近没有合法落点时才会扩大搜索范围，地图边缘仅作为最终保障。关闭后，主脑不会自动发起新的召唤或自动推进失败空投重试；DEV 强制测试不受此开关限制。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>开启后，主脑召唤额外的机械族援军。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Label>召唤间隔：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description>两次正常机械族召唤波次之间的等待时间。该设置不影响第一波的初始等待时间，也不影响空投失败后的重试间隔。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description>主脑两次正常召唤波次之间的等待时间。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Label>每波机械族数量：{0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>每次正常召唤波次尝试召唤的机械族数量。实际生成数量受最大同时存活数量限制，且空投途中的单位也计入上限；若已达上限，本波会跳过或进入空投重试而不超过上限。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>每次正常召唤波次尝试召唤的机械族数量。实际生成数量受最大同时存活数量限制（空投途中单位也计入上限）。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Label>最大同时存活数量：{0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Description>主脑通过召唤维持的玩家敌对机械族同时存活上限（含正在空投途中的单位）。达到上限时不再发起新的正常召唤，但已在进行中的空投重试仍会完成。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Description>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label>召唤机械族施加机动作战</MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>默认开启。开启后，主脑召唤的机械族会获得机动作战 Hediff。关闭时只是不由 BOSS 主动添加，不会移除单位通过其他来源已有的机动作战；该设置会纳入每场战斗开始时的难度快照。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Description>主脑通过召唤维持的玩家敌对机械族同时存活上限（含空投途中单位）。达上限后不再发起新召唤，已在进行中的空投重试仍会完成。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label>为召唤单位施加机动作战</MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>开启后，主脑会为其召唤的机械族添加机动作战健康状态。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Bandwidth.Subsection>带宽干扰</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Bandwidth.Subsection>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Label>启用带宽干扰</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description>默认开启。开启后，主脑会周期性对玩家监管者麾下、非持久化记录的机械族发动带宽干扰：使部分受控机械族脱离监管者并狂暴，持续一段时间后恢复。关闭后主脑不会主动发动带宽干扰。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description>开启后，主脑会周期性对玩家派系的机械族发动带宽干扰。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Label>带宽干扰冷却下限：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>每次带宽干扰结束后到下一次自动发动之间的冷却时间下限。实际冷却时间在上下限之间随机取值；若下限大于上限会自动交换二者。若一次发动未找到合法目标，仅延迟 60 游戏刻后重试，不会进入完整随机冷却。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>每次带宽干扰结束后到下一次自动发动之间的冷却时间下限。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Label>带宽干扰冷却上限：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>每次带宽干扰结束后到下一次自动发动之间的冷却时间上限。实际冷却时间在上下限之间随机取值；若上限小于下限会自动交换二者。若一次发动未找到合法目标，仅延迟 60 游戏刻后重试，不会进入完整随机冷却。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>每次带宽干扰结束后到下一次自动发动之间的冷却时间上限。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Label>带宽干扰持续时间：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description>一次带宽干扰整轮的持续时间。达到该时间后，无论是否仍有有效目标或狂暴中的机械族，本次干扰都会结束并恢复所有受影响的机械族。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description>单次带宽干扰允许的最长持续时间。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Label>带宽干扰最大目标数：{0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Description>单次带宽干扰同时选择的最多目标数量。目标按带宽消耗从高到低优先选取，同消耗目标之间随机；本场战斗中已选择过的目标不会再次被选（即使其死亡后复活）。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Description>单次带宽干扰允许选择的最多目标数量。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Emp.Subsection>EMP 冲击波</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Emp.Subsection>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Label>启用 EMP 冲击波</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Description>默认开启。开启后，主脑会周期性释放 EMP 冲击波，使范围内的玩家非机械族pawn与耗电建筑短暂瘫痪。关闭后主脑不会主动释放 EMP。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Description>开启后，主脑会周期性释放 EMP 冲击波。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Label>EMP 冷却下限：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Description>每次 EMP 释放后到下一次自动释放之间的冷却时间下限。实际冷却时间在上下限之间随机取值；若下限大于上限会自动交换二者。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Description>每次 EMP 释放后到下一次自动释放之间的冷却时间下限。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Label>EMP 冷却上限：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Description>每次 EMP 释放后到下一次自动释放之间的冷却时间上限。实际冷却时间在上下限之间随机取值；若上限小于下限会自动交换二者。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Description>每次 EMP 释放后到下一次自动释放之间的冷却时间上限。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Label>EMP 眩晕基础时长：{0} 秒</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description>EMP 冲击波对目标造成的眩晕基础时长。实际眩晕时长会按目标的 EMP 抗性（EMPResistance）向下调整，抗性越高眩晕越短。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description>EMP 冲击波对目标造成的眩晕基础时长。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Label>EMP 冲击波半径：{0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Label>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>EMP 冲击波影响的最大半径。半径内不属于机械巢派系的机械族，以及符合条件的耗电建筑会被选中并短暂瘫痪；机械巢派系单位不受影响。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>EMP 冲击波影响的最大半径。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>
 
   <!-- 模块：效能核心 -->
   <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>每级效能核心工作速度偏移</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>
-  <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>设置每级效能核心给予的机械族工作速度偏移。允许输入0至10000；超出范围的数值会在输入框失去焦点或离开设置页面时调整。</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>
+  <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>设置每级效能核心给予的机械族工作速度偏移；范围0至10000。</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>
 
   <!-- 模块：虫巢剧情 -->
   <MAP_MechanoidMechanitor.Settings.Insects.Section>虫巢剧情</MAP_MechanoidMechanitor.Settings.Insects.Section>
   <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>阻止与虫巢为盟友时发生虫巢袭击事件</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>
-  <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>开启后，当当前存档的机械族机械师剧情配置将虫巢设为盟友时，阻止普通虫灾、深钻虫袭、废料虫袭，以及原版任务系统生成的标准任务型虫灾。关闭后，即使虫巢为盟友，这些虫灾仍可正常发生。此设置不影响永久中立模式，也不会删除自然生成、其他特殊机制生成或已经存在的虫巢。每次实际阻止虫灾时会在日志中输出黄色警告，并尽可能标注调用来源。</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>开启后，当与虫巢为盟友时，阻止原版虫灾时间和原版任务系统生成的虫灾。注意：每次阻止虫灾时会在日志中输出警告。</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>
 
   <!-- 模块：虫巢追杀 -->
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Label>允许追杀模式虫灾无视厚岩顶</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Label>
-  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Description>开启后，追杀模式中的标准普通虫灾会优先使用原版虫灾落点；只有原版找不到合法位置时，才允许在殖民地附近使用不要求厚岩顶的备用位置。此设置不会修改默认、永久中立或盟友模式，也不会改变深钻虫袭、废料虫袭、虫胶事件或其他特殊虫灾。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Description>开启后，允许追杀模式中的虫灾生成在没有厚岩顶的地方。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Description>
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Label>追杀模式开局保护期：{0}天</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Label>
-  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Description>开局前 N 个完整游戏日内，不进行 Pursuit 专属额外事件判定。0 表示不提供开局保护。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Description>设置开局不会触发追杀事件的游戏日。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Description>
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Label>虫族追猎每日触发概率：{0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Label>
-  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Description>每天符合资格时优先进行该概率判定。命中后不会继续判定当天的额外虫灾。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Description>每日触发虫族追猎的概率。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Description>
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Label>额外虫灾每日触发概率：{0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Label>
-  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Description>只有当天虫族追猎判定失败后才进行。所以两个默认都是 10% 时：追猎实际概率 10%，额外虫灾实际概率 9%。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Description>每日触发额外虫灾事件的概率。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Description>
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Label>追杀事件重复触发间隔：{0}天</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Label>
-  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Description>任意一种 Pursuit 专属事件真正开始后，N 天内两种事件都不再进行新的概率判定。0 表示没有额外冷却，但 pending / active 互斥规则仍存在。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Description>每次触发额外虫族事件的冷却时间。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Description>
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Label>虫族追猎地面虫群点数倍率：{0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Label>
-  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Description>以攻击真正发生时 StorytellerUtility.DefaultThreatPointsNow(map) 为基础，乘对应百分比。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Description>发生虫族追猎时，从地图边缘步行到达的虫族的威胁点数倍率。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Description>
   <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Label>虫族追猎地下虫灾点数倍率：{0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Label>
-  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>以攻击真正发生时 StorytellerUtility.DefaultThreatPointsNow(map) 为基础，乘对应百分比。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>发生虫族追猎时，从地下掘洞的虫灾的威胁点数倍率。</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>
 
   <!-- 模块：机械族优先工作指令 -->
   <MAP_MechanoidPrioritizedWorkOrders_Label>允许机械族被下达优先工作指令</MAP_MechanoidPrioritizedWorkOrders_Label>
-  <MAP_MechanoidPrioritizedWorkOrders_Description>开启后，玩家所属的机械族可以通过右键直接被命令优先执行其本身能够进行的工作。不会赋予机械族新的工作类型或工作能力。</MAP_MechanoidPrioritizedWorkOrders_Description>
+  <MAP_MechanoidPrioritizedWorkOrders_Description>开启后，可以给机械族下达右键优先工作指令。</MAP_MechanoidPrioritizedWorkOrders_Description>
 
 </LanguageData>

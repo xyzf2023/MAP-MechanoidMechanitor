@@ -1161,7 +1161,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 Widgets.Label(
                     new Rect(inRect.x, inRect.y, inRect.width, 60f),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord".Translate());
+                    "当前没有可测试的派系信任记录。");
                 return;
             }
 
@@ -1174,7 +1174,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Text.Anchor = TextAnchor.UpperLeft;
                 Widgets.Label(
                     new Rect(inRect.x, inRect.y, inRect.width, 32f),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.Title".Translate());
+                    "DEV // 共生盟约测试");
 
                 // 标题下方建立滚动区域；派系选择按钮及其状态一并放入滚动视图。
                 Rect outRect = new Rect(
@@ -1202,8 +1202,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     Text.Font = GameFont.Small;
                     Text.Anchor = TextAnchor.UpperLeft;
                     string factionLabel = selectedFaction?.Name
-                        ?? "MAP_MechanoidMechanitor.Symbiosis.Dev.SelectFaction"
-                            .Translate();
+                        ?? "选择测试派系";
                     Rect selectRect = new Rect(0f, y, 320f, 28f);
                     if (Widgets.ButtonText(selectRect, factionLabel))
                     {
@@ -1220,8 +1219,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     {
                         Widgets.Label(
                             new Rect(0f, y, viewRect.width, 40f),
-                            "MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord"
-                                .Translate());
+                            "当前没有可测试的派系信任记录。");
                         y += 46f;
                     }
 
@@ -1274,7 +1272,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 options.Add(
                     new FloatMenuOption(
-                        "MAP_MechanoidMechanitor.Symbiosis.Dev.NoRecord".Translate(),
+                        "当前没有可测试的派系信任记录。",
                         null));
             }
 
@@ -1290,7 +1288,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             float y = startY;
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Dev.Adjust".Translate());
+                "增减当前信任");
             y += 26f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
@@ -1306,7 +1304,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Dev.Set".Translate());
+                "直接设置关键阶段");
             y += 26f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
@@ -1334,16 +1332,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Dev.Utilities".Translate());
+                "测试工具");
             y += 26f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.RecreateRecord"
-                        .Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.ResetLimits"
-                        .Translate().ToString()
+                    "重建当前记录",
+                    "重置周期限制"
                 },
                 new Action[]
                 {
@@ -1354,30 +1350,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Dev.Declaration".Translate());
+                "公开脱离声明");
             y += 26f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.BroadcastDeclaration"
-                        .Translate().ToString()
+                    "立即完成公开脱离声明"
                 },
                 new Action[] { () => state.DevBroadcastDeclaration() });
             y += 42f;
 
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Dev.Proposal".Translate());
+                "盟约邀请提议");
             y += 26f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.BeginProposal"
-                        .Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.ResolveProposal"
-                        .Translate().ToString()
+                    "开始一次提议",
+                    "按正常公式结算"
                 },
                 new Action[]
                 {
@@ -1389,12 +1382,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.ForceProposalSuccess"
-                        .Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.ForceProposalFailure"
-                        .Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.ClearCooldown"
-                        .Translate().ToString()
+                    "强制成功",
+                    "强制失败",
+                    "清除邀请冷却"
                 },
                 new Action[]
                 {
@@ -1406,7 +1396,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Dev.Counters".Translate());
+                "计数设置");
             y += 26f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
@@ -1432,16 +1422,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Dev.Covenant".Translate());
+                "盟约成员");
             y += 26f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.ForceJoin"
-                        .Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.ForceLeave"
-                        .Translate().ToString()
+                    "强制加入盟约",
+                    "强制退出盟约（正常逻辑）"
                 },
                 new Action[]
                 {
@@ -1452,16 +1440,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Dev.Unity".Translate());
+                "团结度");
             y += 26f;
             DrawButtonRow(
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.UnityMinus100"
-                        .Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.UnityPlus100"
-                        .Translate().ToString()
+                    "团结度-100",
+                    "团结度+100"
                 },
                 new Action[]
                 {
@@ -1491,10 +1477,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new[]
                 {
                     l5.ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.UpdateUnityDaily"
-                        .Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Dev.RecalcLevel"
-                        .Translate().ToString()
+                    "执行每日结算",
+                    "重新计算等级"
                 },
                 new Action[]
                 {
@@ -1536,7 +1520,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Section".Translate());
+                "联合贸易代表团");
             y += 26f;
 
             SymbiosisCovenantTradeDelegationDevSnapshot? snap =
@@ -1552,36 +1536,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     Widgets.Label(
                         new Rect(inRect.x, y, inRect.width, 40f),
-                        "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Unscheduled".Translate());
+                        "当前未安排联合商队");
                     y += 46f;
                 }
                 else
                 {
                     System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.Level"
-                        .Translate(snap.CurrentLevel));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberCount"
-                        .Translate(snap.MemberCount));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.BaseInterval"
-                        .Translate(FormatFloatRange(snap.BaseIntervalDays)));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.MemberSpeed"
-                        .Translate(snap.MemberSpeedMultiplier.ToString("F2")));
+                    sb.AppendLine(string.Format("当前盟约等级：{0}", snap.CurrentLevel));
+                    sb.AppendLine(string.Format("成员数量：{0}", snap.MemberCount));
+                    sb.AppendLine(string.Format("基础到访周期：{0} 天", FormatFloatRange(snap.BaseIntervalDays)));
+                    sb.AppendLine(string.Format("成员规模速度倍率：×{0}", snap.MemberSpeedMultiplier.ToString("F2")));
                     if (snap.NextTick < 0)
                     {
-                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextVisit"
-                            .Translate("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Unscheduled".Translate()));
+                        sb.AppendLine(string.Format("下一次到访：{0}", "当前未安排联合商队"));
                     }
                     else
                     {
-                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.NextTick"
-                            .Translate(snap.NextTick));
-                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.DaysUntilNext"
-                            .Translate(snap.DaysUntilNext.ToString("F1")));
+                        sb.AppendLine(string.Format("下一次Tick：{0}", snap.NextTick));
+                        sb.AppendLine(string.Format("剩余时间：{0} 天", snap.DaysUntilNext.ToString("F1")));
                     }
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.RetryCount"
-                        .Translate(snap.RetryCount));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Field.LastLead"
-                        .Translate(snap.LastLeadFaction?.Name ?? "—"));
+                    sb.AppendLine(string.Format("短期重试次数：{0}", snap.RetryCount));
+                    sb.AppendLine(string.Format("上次主导派系：{0}", snap.LastLeadFaction?.Name ?? "—"));
                     Widgets.Label(
                         new Rect(inRect.x, y, inRect.width, 150f),
                         sb.ToString());
@@ -1598,9 +1573,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.SpawnNow".Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Reschedule".Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.MakeDue".Translate().ToString()
+                    "立即生成联合贸易代表团",
+                    "重新安排下一次联合商队",
+                    "将下一次联合商队设为立即到期"
                 },
                 new Action[]
                 {
@@ -1621,7 +1596,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Section".Translate());
+                "共同防卫");
             y += 26f;
 
             Map? map = Find.CurrentMap;
@@ -1635,63 +1610,39 @@ namespace MAP_MechanoidMechanitor.Scenarios
             try
             {
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.Level"
-                    .Translate(snap.CovenantLevel));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.BaseChance"
-                    .Translate(Percent(snap.BaseOfferChance)));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.MaxChance"
-                    .Translate(Percent(snap.MaxOfferChance)));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportFactor"
-                    .Translate(Percent(snap.SupportPointsFactor)));
+                sb.AppendLine(string.Format("当前等级：{0}", snap.CovenantLevel));
+                sb.AppendLine(string.Format("基础响应概率：{0}", Percent(snap.BaseOfferChance)));
+                sb.AppendLine(string.Format("最大响应概率：{0}", Percent(snap.MaxOfferChance)));
+                sb.AppendLine(string.Format("援军点数比例：{0}", Percent(snap.SupportPointsFactor)));
 
                 if (snap.CurrentThreatFaction != null)
                 {
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction"
-                        .Translate(snap.CurrentThreatFaction.Name));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatPower"
-                        .Translate(snap.CurrentThreatCombatPower.ToString("F0")));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EligibleResponders"
-                        .Translate(snap.EligibleResponderCount));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance"
-                        .Translate(Percent(snap.EffectiveOfferChance)));
+                    sb.AppendLine(string.Format("当前威胁派系：{0}", snap.CurrentThreatFaction.Name));
+                    sb.AppendLine(string.Format("当前ActiveThreat CombatPower：{0}", snap.CurrentThreatCombatPower.ToString("F0")));
+                    sb.AppendLine(string.Format("合法响应成员：{0}", snap.EligibleResponderCount));
+                    sb.AppendLine(string.Format("当前有效响应概率：{0}", Percent(snap.EffectiveOfferChance)));
                 }
                 else
                 {
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ThreatFaction"
-                        .Translate("—"));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.EffectiveChance"
-                        .Translate("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.NA".Translate()));
+                    sb.AppendLine(string.Format("当前威胁派系：{0}", "—"));
+                    sb.AppendLine(string.Format("当前有效响应概率：{0}", "N/A"));
                 }
 
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaid"
-                    .Translate(snap.PendingEvaluation.ToString()));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidAttacker"
-                    .Translate(snap.PendingRaidAttackerFaction?.Name ?? "-"));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidPoints"
-                    .Translate(snap.PendingRaidPoints.ToString("F0")));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidEvaluateTick"
-                    .Translate(snap.PendingRaidEvaluateAtTick));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingRaidTicksRemaining"
-                    .Translate(snap.PendingRaidTicksRemaining));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.PendingOffer"
-                    .Translate(snap.PendingOffer.ToString()));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.LastResponder"
-                    .Translate(snap.LastResponderFaction?.Name ?? "—"));
+                sb.AppendLine(string.Format("待判定Raid：{0}", snap.PendingEvaluation.ToString()));
+                sb.AppendLine(string.Format("待判定Raid攻击派系：{0}", snap.PendingRaidAttackerFaction?.Name ?? "-"));
+                sb.AppendLine(string.Format("待判定Raid点数：{0}", snap.PendingRaidPoints.ToString("F0")));
+                sb.AppendLine(string.Format("待判定Raid判定Tick：{0}", snap.PendingRaidEvaluateAtTick));
+                sb.AppendLine(string.Format("待判定Raid剩余Tick：{0}", snap.PendingRaidTicksRemaining));
+                sb.AppendLine(string.Format("待处理援助信：{0}", snap.PendingOffer.ToString()));
+                sb.AppendLine(string.Format("上次响应派系：{0}", snap.LastResponderFaction?.Name ?? "—"));
 
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.ActiveAidFaction"
-                    .Translate(snap.ActiveAidFaction?.Name ?? "—"));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidTag"
-                    .Translate(snap.ActiveAidTag ?? "—"));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TriggerRaidPoints"
-                    .Translate(snap.ActiveAidTriggerRaidPoints.ToString("F0")));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.SupportPoints"
-                    .Translate(snap.ActiveAidSupportPoints.ToString("F0")));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.TaggedLords"
-                    .Translate(snap.TaggedAssistLordCount));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.AidStartTick"
-                    .Translate(snap.ActiveAidStartTick));
-                sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Field.CooldownRemaining"
-                    .Translate(snap.CooldownRemainingTicks));
+                sb.AppendLine(string.Format("当前盟约援军派系：{0}", snap.ActiveAidFaction?.Name ?? "—"));
+                sb.AppendLine(string.Format("Aid Tag：{0}", snap.ActiveAidTag ?? "—"));
+                sb.AppendLine(string.Format("触发Raid Points：{0}", snap.ActiveAidTriggerRaidPoints.ToString("F0")));
+                sb.AppendLine(string.Format("援军Points：{0}", snap.ActiveAidSupportPoints.ToString("F0")));
+                sb.AppendLine(string.Format("Tagged Lords：{0}", snap.TaggedAssistLordCount));
+                sb.AppendLine(string.Format("援军开始Tick：{0}", snap.ActiveAidStartTick));
+                sb.AppendLine(string.Format("冷却剩余（ticks）：{0}", snap.CooldownRemainingTicks));
 
                 Widgets.Label(
                     new Rect(inRect.x, y, inRect.width, 440f),
@@ -1708,9 +1659,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ForceOffer".Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearState".Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.ClearCooldown".Translate().ToString()
+                    "为当前威胁强制发送援助询问",
+                    "清除当前地图共同防卫状态",
+                    "仅清除共同防卫冷却"
                 },
                 new Action[]
                 {
@@ -1731,7 +1682,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             DrawSectionLabel(
                 new Rect(inRect.x, y, inRect.width, 22f),
-                "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Section".Translate());
+                "联合军事行动");
             y += 26f;
 
             SymbiosisCovenantJointOperationScheduler
@@ -1748,49 +1699,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     Widgets.Label(
                         new Rect(inRect.x, y, inRect.width, 40f),
-                        "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled".Translate());
+                        "未安排（盟约等级尚未解锁联合军事行动）。");
                     y += 46f;
                 }
                 else
                 {
                     System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Level"
-                        .Translate((NamedArgument)snap.CovenantLevel));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Available"
-                        .Translate((NamedArgument)(snap.Available ? "True" : "False")));
+                    sb.AppendLine(string.Format("当前等级：{0}", snap.CovenantLevel));
+                    sb.AppendLine(string.Format("可用：{0}", snap.Available ? "True" : "False"));
                     if (snap.NextTick < 0)
                     {
-                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.NextTick"
-                            .Translate("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Unscheduled".Translate()));
+                        sb.AppendLine(string.Format("下次检查 Tick：{0}", "未安排（盟约等级尚未解锁联合军事行动）。"));
                     }
                     else
                     {
-                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.NextTick"
-                            .Translate((NamedArgument)snap.NextTick));
-                        sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.DaysUntilNext"
-                            .Translate((NamedArgument)snap.DaysUntilNext.ToString("F1")));
+                        sb.AppendLine(string.Format("下次检查 Tick：{0}", snap.NextTick));
+                        sb.AppendLine(string.Format("距下次检查（天）：{0}", snap.DaysUntilNext.ToString("F1")));
                     }
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CooldownRemaining"
-                        .Translate((NamedArgument)snap.CooldownRemainingTicks));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Ongoing"
-                        .Translate((NamedArgument)(snap.Ongoing ? "True" : "False")));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Target"
-                        .Translate((NamedArgument)(snap.TargetLabel ?? "—")));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Stage"
-                        .Translate((NamedArgument)snap.Stage));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.Participants"
-                        .Translate((NamedArgument)snap.ParticipantsCount));
-                    sb.AppendLine("MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.RewardValue"
-                        .Translate(snap.RewardValue));
-                    sb.AppendLine(
-                        "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.CurrentSupportFactor"
-                            .Translate(Percent(snap.CurrentSupportPointsFactor)));
-                    sb.AppendLine(
-                        "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotLevel"
-                            .Translate((NamedArgument)snap.CovenantLevelSnapshot));
-                    sb.AppendLine(
-                        "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Field.SnapshotSupportFactor"
-                            .Translate(Percent(snap.SupportPointsFactorSnapshot)));
+                    sb.AppendLine(string.Format("冷却剩余（ticks）：{0}", snap.CooldownRemainingTicks));
+                    sb.AppendLine(string.Format("进行中：{0}", snap.Ongoing ? "True" : "False"));
+                    sb.AppendLine(string.Format("目标：{0}", snap.TargetLabel ?? "—"));
+                    sb.AppendLine(string.Format("阶段：{0}", snap.Stage));
+                    sb.AppendLine(string.Format("参与派系数：{0}", snap.ParticipantsCount));
+                    sb.AppendLine(string.Format("当前等级援军倍率：{0}", Percent(snap.CurrentSupportPointsFactor)));
+                    sb.AppendLine(string.Format("行动锁定等级：{0}", snap.CovenantLevelSnapshot));
+                    sb.AppendLine(string.Format("行动锁定援军倍率：{0}", Percent(snap.SupportPointsFactorSnapshot)));
                     Widgets.Label(
                         new Rect(inRect.x, y, inRect.width, 290f),
                         sb.ToString());
@@ -1807,11 +1740,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 new Rect(inRect.x, y, inRect.width, 32f),
                 new[]
                 {
-                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.PrepareTest".Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.SpawnNow".Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.MakeDue".Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearCooldown".Translate().ToString(),
-                    "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.ClearOperation".Translate().ToString()
+                    "一键准备测试",
+                    "立即生成邀请",
+                    "立即到期",
+                    "清除冷却",
+                    "清除行动"
                 },
                 new Action[]
                 {
@@ -1838,8 +1771,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static void ShowJointOpMessage(bool success, string message = "")
         {
             string text = success
-                ? "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Success".Translate()
-                : "MAP_MechanoidMechanitor.Symbiosis.JointOp.Dev.Failed".Translate();
+                ? "联合军事行动 DEV 操作已执行。"
+                : "当前条件不足，联合军事行动 DEV 操作未执行。";
 
             if (!string.IsNullOrEmpty(message))
             {
@@ -1859,8 +1792,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             Messages.Message(
                 success
-                    ? "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Success".Translate()
-                    : "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Dev.Failed".Translate(),
+                    ? "共生盟约共同防卫DEV操作已执行。"
+                    : "当前条件不足，共同防卫DEV操作未执行。",
                 success ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.RejectInput,
                 historical: false);
         }
@@ -1869,8 +1802,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             Messages.Message(
                 success
-                    ? "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Success".Translate()
-                    : "MAP_MechanoidMechanitor.Symbiosis.Delegation.Dev.Failed".Translate(),
+                    ? "共生盟约联合商队DEV操作已执行。"
+                    : "当前条件不足，联合商队DEV操作未执行。",
                 success ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.RejectInput,
                 historical: false);
         }
@@ -1906,8 +1839,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 builder.AppendLine(
                     "MechHiveRelation = "
-                    + "MAP_MechanoidMechanitor.Symbiosis.Dev.MechHiveNone"
-                        .Translate());
+                    + "(无机械巢)");
             }
 
             if (record == null)

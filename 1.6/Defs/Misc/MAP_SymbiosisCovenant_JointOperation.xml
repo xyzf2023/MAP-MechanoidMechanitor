@@ -34,12 +34,6 @@
     <maxParticipants>3</maxParticipants>
     <!-- 达到该科技等级使用快速空投抵达，否则从地图边缘步行进入（由实际参与援军生成的派系最高科技统一决定）。 -->
     <industrialArrivalThreshold>Industrial</industrialArrivalThreshold>
-
-    <!-- 奖励：实物奖励本次暂不发放（见 QuestPart.GrantReward 注释）；
-         rewardValueFactor / minRewardValue / maxRewardValue 仅保留供未来以原版 Quest reward 路径扩展。 -->
-    <rewardValueFactor>0.5</rewardValueFactor>
-    <minRewardValue>300</minRewardValue>
-    <maxRewardValue>3000</maxRewardValue>
   </MAP_MechanoidMechanitor.Scenarios.SymbiosisCovenantJointOperationDef>
 
   <!-- 联合军事行动的 QuestScriptDef。根节点负责构造 Quest 与唯一的 QuestPart 状态机。 -->

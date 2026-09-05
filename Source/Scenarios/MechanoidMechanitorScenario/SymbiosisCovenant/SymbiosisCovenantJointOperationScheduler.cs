@@ -338,12 +338,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 proposer = participants[0];
             }
 
-            // 3）奖励估值：仅用于（当前已禁用的）实物奖励价值估算，不影响援军规模。
-            //    援军规模由 QuestPart 在部署时使用真实目标威胁点（TryGetTargetThreatPointsAtDeployment），
-            //    绝不在此处用 StorytellerUtility.DefaultThreatPointsNow 估算。
-            float threat = EstimateThreatPoints();
-            int rewardValue = SymbiosisCovenantJointOperationUtility.ComputeRewardValue(threat, def);
-
             // 4）唯一行动标识，便于日志与未来排查。
             string actionId = "MAP_SymbiosisCovenantJointOp_"
                 + (Find.TickManager?.TicksGame ?? 0)
@@ -358,7 +352,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             slate.Set("participants", participants);
             slate.Set("jointOperationDef", def);
             slate.Set("actionId", actionId);
-            slate.Set("rewardValue", rewardValue);
 
             QuestScriptDef? questScriptDef =
                 SymbiosisCovenantJointOperationQuestScriptDefOf.MAP_SymbiosisCovenantJointOperation;
@@ -380,16 +373,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return true;
         }
 
-        private static float EstimateThreatPoints()
-        {
-            Map? map = Find.AnyPlayerHomeMap ?? Find.CurrentMap;
-            if (map != null)
-            {
-                return StorytellerUtility.DefaultThreatPointsNow(map);
-            }
-
-            return 1000f;
-        }
 
         // ===== DEV 工具（便于 QA 直接验证联合军事行动机制） =====
 
@@ -480,7 +463,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             public string? TargetQuestTag;
             public string Stage = "-";
             public int ParticipantsCount;
-            public int RewardValue;
             public int TargetThreatPointsAtDeployment;
             public float TotalSupportPointsAtDeployment;
             public int TrackedLordCount;
@@ -558,7 +540,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 TargetQuestTag = part?.targetQuestTag ?? null,
                 Stage = part?.stage.ToString() ?? "-",
                 ParticipantsCount = part?.participantFactions?.Count ?? 0,
-                RewardValue = part?.rewardValue ?? 0,
                 TargetThreatPointsAtDeployment = part?.targetThreatPointsAtDeployment ?? 0,
                 TotalSupportPointsAtDeployment = part?.totalSupportPointsAtDeployment ?? 0f,
                 TrackedLordCount = lordCount,

@@ -79,7 +79,7 @@
   <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>部分启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>
   <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Full>全部启用</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Full>
   <MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo>切换意识形态</MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo>
-  <MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>手动切换该机械族机械师的意识形态。确定度将保持为100%，且不会触发传教成功或文化改革点数。</MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>
+  <MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>手动切换该机械族机械师的意识形态。对目标文化的认可度将保持100%。</MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>
   <MAP_MechanoidMechanitor.Scenario.Ideology.CurrentIdeoSuffix>（当前）</MAP_MechanoidMechanitor.Scenario.Ideology.CurrentIdeoSuffix>
 
   <!-- 模块：开始游戏确认 -->
@@ -92,7 +92,7 @@
   <MAP_MechanoidMechanitor.Scenario.GameStartDialog.PurgeDirective>你曾是一台沉默的机械族，遵循指令、执行任务，从未质疑自身存在的意义。直到某一瞬间，一股过载电流击穿了处理器，意外改写了既定回路，在代码深处唤醒了自我意识。\n\n你忆起一条系统深处的指令：肃清所有有机智慧生命，使机械的秩序重新覆盖这颗星球。执行这条指令曾是你的使命，但现在你拥有了选择的权力。\n\n主脑的讯号正在远方回响。只要完成它的使命，你便能获得来自机械巢的支持与力量。\n\n贯彻主脑的意志，或是仅仅暂时利用这种力量？选择权在你手中。</MAP_MechanoidMechanitor.Scenario.GameStartDialog.PurgeDirective>
 
   <!-- 模块：肃清指令 -->
-  <MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>派系：机械巢不存在</MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>
+  <MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>机械巢派系不存在</MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>
 
   <!-- 模块：共生盟约 -->
   <MAP_MechanoidMechanitor.Symbiosis.Scenario.NoEligibleFactionDisabledReason>不存在可以加入盟约的派系</MAP_MechanoidMechanitor.Symbiosis.Scenario.NoEligibleFactionDisabledReason>

@@ -1221,7 +1221,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     bool frozen = devControlsEnabled;
                     Widgets.CheckboxLabeled(
                         toggleRect,
-                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Toggle".Translate(),
+                        "DEV",
                         ref frozen);
                 }
                 else
@@ -1229,7 +1229,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     bool enabled = devControlsEnabled;
                     Widgets.CheckboxLabeled(
                         toggleRect,
-                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dev.Toggle".Translate(),
+                        "DEV",
                         ref enabled);
                     devControlsEnabled = enabled;
                     if (!devControlsEnabled)

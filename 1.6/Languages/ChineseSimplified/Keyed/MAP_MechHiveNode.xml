@@ -5,11 +5,11 @@
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Created.Label>正在建设中的机械巢节点</MAP_MechanoidMechanitor.MechHiveNode.Letter.Created.Label>
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Created.Text>殖民地附近出现了一个正在建设中的机械巢节点。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Created.Text>
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Label>机械巢节点建设完毕</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Label>
-  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Ally>附近一个机械巢节点的建设已经完毕。当我们遇到袭击时，有概率获取该机械巢节点的支持。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Ally>
-  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>附近一个机械巢节点的建设已经完毕。我们有可能遭遇来自该机械巢的额外袭击。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>
-  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>附近一个机械巢节点的建设已经完毕。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Ally>附近一个机械巢节点已经建设完毕。当殖民地遇到袭击时，该节点可能会派出支援。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Ally>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>附近一个机械巢节点已经建设完毕。该节点可能会派出机械族袭击殖民地。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>附近一个机械巢节点已经建设完毕。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>机械巢节点已肃清</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>
-  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>该机械巢节点的威胁已被消灭。待人员撤离后，节点将从世界地图上移除。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>该机械巢节点的威胁已被消灭。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>
 
   <!-- 模块：建设材料需求 -->
   <MAP_MechanoidMechanitor.MechHiveNode.MaterialDemand>材料需求：{0} ×{1}</MAP_MechanoidMechanitor.MechHiveNode.MaterialDemand>
@@ -24,7 +24,7 @@
   <!-- 模块：运输舱交付 -->
   <MAP_MechanoidMechanitor.MechHiveNode.Transport.Deliver>空投交付材料</MAP_MechanoidMechanitor.MechHiveNode.Transport.Deliver>
   <MAP_MechanoidMechanitor.MechHiveNode.Transport.ConvertQuota>空投并折算为肃清额度</MAP_MechanoidMechanitor.MechHiveNode.Transport.ConvertQuota>
-  <MAP_MechanoidMechanitor.MechHiveNode.Transport.DumpLost>空投（物资将失踪）</MAP_MechanoidMechanitor.MechHiveNode.Transport.DumpLost>
+  <MAP_MechanoidMechanitor.MechHiveNode.Transport.DumpLost>空投（内容将失踪）</MAP_MechanoidMechanitor.MechHiveNode.Transport.DumpLost>
   <MAP_MechanoidMechanitor.MechHiveNode.Transport.InsufficientConfirm>当前所交付的材料无法满足节点建设需求，因此只会按其价值的0.2折算为肃清额度，不会为节点建设提供进度。\n\n仍要发射？</MAP_MechanoidMechanitor.MechHiveNode.Transport.InsufficientConfirm>
   <MAP_MechanoidMechanitor.MechHiveNode.Transport.DeliveredMessage>运输舱已向机械巢节点交付材料，其建设将会加快。</MAP_MechanoidMechanitor.MechHiveNode.Transport.DeliveredMessage>
   <MAP_MechanoidMechanitor.MechHiveNode.Transport.QuotaMessage>运输舱内容已按价值折算为肃清额度。</MAP_MechanoidMechanitor.MechHiveNode.Transport.QuotaMessage>
@@ -32,7 +32,7 @@
   <!-- 模块：进攻限制 -->
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.NodeUnavailable>目标机械巢节点已不可进攻。</MAP_MechanoidMechanitor.MechHiveNode.Attack.NodeUnavailable>
 
-  <MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>当前与机械巢的关系不允许进攻该节点。</MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>
+  <MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>我们与机械巢的关系不适合进攻该节点。</MAP_MechanoidMechanitor.MechHiveNode.Attack.RelationBlocked>
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>无法将机械巢转为敌对，进攻已取消。</MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed>机械巢节点防御设施初始化失败，本次进入已取消。</MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed>
 

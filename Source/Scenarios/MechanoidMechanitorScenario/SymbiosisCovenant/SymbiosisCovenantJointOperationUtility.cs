@@ -395,14 +395,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return "MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name".Translate();
         }
 
-        public static int ComputeRewardValue(
-            float threatEstimate,
-            SymbiosisCovenantJointOperationDef def)
-        {
-            float raw = threatEstimate * def.rewardValueFactor;
-            return (int)Mathf.Clamp(raw, def.minRewardValue, def.maxRewardValue);
-        }
-
         /// <summary>
         /// 计算“联合行动援军规模”所使用的真实目标威胁点（H）。
         /// 不再使用 StorytellerUtility.DefaultThreatPointsNow（那是按玩家殖民地规模估算的）。

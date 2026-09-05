@@ -78,7 +78,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (DrawCard(
                             new Rect(inRect.x, y, inRect.width, rowH),
                             "05",
-                            "MAP_PurgeDirectiveRating.Dev.Entry".Translate(),
+                            "DEV",
                             inputEnabled))
                     {
                         openDevPanel?.Invoke();

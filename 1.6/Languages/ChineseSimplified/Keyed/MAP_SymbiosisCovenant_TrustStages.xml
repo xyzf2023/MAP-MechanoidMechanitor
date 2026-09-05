@@ -15,5 +15,5 @@
   <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.StrategicAlliance>战略同盟</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.StrategicAlliance>
   <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.SymbiosisAlliance>共生联盟</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.SymbiosisAlliance>
 
-  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.TrustTooLow>当前信任不足。信任至少达到 {0}（合作意愿）后，才能提出正式的共生盟约邀请。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.TrustTooLow>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.TrustTooLow>当前信任不足。信任至少达到 {0}（合作意愿）后，才能提出共生盟约邀请。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.TrustTooLow>
 </LanguageData>
