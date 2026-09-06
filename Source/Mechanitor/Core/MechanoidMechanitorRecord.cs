@@ -11,6 +11,7 @@ namespace MAP_MechanoidMechanitor
         public int ChipBandwidthBonus;
         public MechWorkModeDef? SelfWorkMode;
         public bool RoleWorkSettingsInitialized;
+        public bool HasMappedPersonality;
 
         // 每个机械族机械师自己的充电阈值（0~1 比例）。
         // 默认值必须直接来自原版 MechanitorControlGroup.DefaultMechRechargeThresholds，
@@ -38,6 +39,7 @@ namespace MAP_MechanoidMechanitor
                 ref RoleWorkSettingsInitialized,
                 "roleWorkSettingsInitialized",
                 false);
+            Scribe_Values.Look(ref HasMappedPersonality, "hasMappedPersonality", false);
 
             // 个人充电阈值：使用与原版 MechanitorControlGroup 保存
             // mechRechargeThresholds 相同的 Scribe_Values 方式，旧档缺字段时自动取默认值。
@@ -66,9 +68,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             SelfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(SelfWorkMode);
-
-            // 阈值合法化规则唯一实现在 MechanoidMechanitorRechargeUtility，
-            // 与 UI 写入入口 TrySetRechargeThresholds 共用同一套规则，禁止在此复制第二份。
             RechargeThresholds =
                 MechanoidMechanitorRechargeUtility.SanitizeRechargeThresholds(RechargeThresholds);
         }

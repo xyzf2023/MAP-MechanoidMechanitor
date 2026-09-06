@@ -17,6 +17,11 @@ namespace MAP_MechanoidMechanitor
         public static JobDef MAP_ContactMechanoidOvermind = null!;
         public static JobDef MAP_MechanoidMechanitorSelfRepair = null!;
 
+        public static JobDef MAP_AscendWithMindData = null!;
+        public static JobDef MAP_ImportMindData = null!;
+        public static JobDef MAP_ExportMindData = null!;
+        public static JobDef MAP_CopyMindData = null!;
+
         // 新任务使用此 JobDef。
         public static JobDef MAP_HumanImplantInstall = null!;
 

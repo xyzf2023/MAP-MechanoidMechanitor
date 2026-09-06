@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <HediffDef MayRequire="Ludeon.RimWorld.Biotech">
+    <defName>MAP_MindMappingLoad</defName>
+    <label>心智映射负载</label>
+    <description>复制心智数据是一项复杂的工作，由此产生的一系列数据残余会阻止短时间内进行第二次复制。</description>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <isBad>false</isBad>
+    <comps>
+      <li Class="HediffCompProperties_Disappears">
+        <disappearsAfterTicks>420000</disappearsAfterTicks>
+        <showRemainingTime>true</showRemainingTime>
+      </li>
+    </comps>
+  </HediffDef>
+</Defs>

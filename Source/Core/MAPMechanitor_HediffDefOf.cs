@@ -21,8 +21,8 @@ namespace MAP_MechanoidMechanitor
         public static HediffDef MAP_ProxySubchain = null!;
 
         public static HediffDef MAP_MicroCommunicator = null!;
-
         public static HediffDef MAP_ParallelThoughtInterface = null!;
+        public static HediffDef MAP_MindMappingLoad = null!;
 
         static MAPMechanitor_HediffDefOf()
         {

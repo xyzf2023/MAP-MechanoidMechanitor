@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MindMapping.Core.BlankLabel>自律指令核心（空白）</MAP_MindMapping.Core.BlankLabel>
+  <MAP_MindMapping.Core.LoadedLabel>自律指令核心（{0}）</MAP_MindMapping.Core.LoadedLabel>
+
+  <MAP_MindMapping.Scanner.Toggle>心智映射扫描</MAP_MindMapping.Scanner.Toggle>
+  <MAP_MindMapping.Scanner.ToggleDesc>TODO</MAP_MindMapping.Scanner.ToggleDesc>
+  <MAP_MindMapping.Scanner.ToggleDisabled>裂解扫描仪已经开始准备、填充或扫描，当前不能切换模式。</MAP_MindMapping.Scanner.ToggleDisabled>
+  <MAP_MindMapping.Scanner.RequiresCore>需要一个空白的{0}。</MAP_MindMapping.Scanner.RequiresCore>
+
+  <MAP_MindMapping.Command.Ascend>导入心智数据并升格</MAP_MindMapping.Command.Ascend>
+  <MAP_MindMapping.Command.Import>导入心智数据</MAP_MindMapping.Command.Import>
+  <MAP_MindMapping.Command.Export>导出心智数据</MAP_MindMapping.Command.Export>
+  <MAP_MindMapping.Command.Copy>复制心智数据</MAP_MindMapping.Command.Copy>
+  <MAP_MindMapping.Reason.CopyCooldown>受到心智映射负载影响</MAP_MindMapping.Reason.CopyCooldown>
+  <MAP_MindMapping.Export.Confirm>导出心智数据会使当前机械族机械师数据初始化。\n\n继续导出？</MAP_MindMapping.Export.Confirm>
+  <MAP_MindMapping.Message.Success>心智数据操作完成。</MAP_MindMapping.Message.Success>
+  <MAP_MindMapping.Message.Invalidated>心智数据操作条件已经失效。</MAP_MindMapping.Message.Invalidated>
+
+  <MAP_MindMapping.Inspect.Blank>未存放心智数据。</MAP_MindMapping.Inspect.Blank>
+  <MAP_MindMapping.Inspect.Name>姓名：{0}</MAP_MindMapping.Inspect.Name>
+  <MAP_MindMapping.Inspect.Age>历法年龄：{0}</MAP_MindMapping.Inspect.Age>
+  <MAP_MindMapping.Inspect.Childhood>童年背景：{0}</MAP_MindMapping.Inspect.Childhood>
+  <MAP_MindMapping.Inspect.Adulthood>成年背景：{0}</MAP_MindMapping.Inspect.Adulthood>
+  <MAP_MindMapping.Inspect.Traits>特性：</MAP_MindMapping.Inspect.Traits>
+  <MAP_MindMapping.Inspect.Skills>技能：</MAP_MindMapping.Inspect.Skills>
+</LanguageData>
