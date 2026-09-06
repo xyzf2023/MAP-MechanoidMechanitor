@@ -11,6 +11,9 @@ namespace MAP_MechanoidMechanitor
         public const string MechanicalConsciousnessTransferResearchDefName =
             "MAP_MechanicalConsciousnessTransfer";
 
+        public const string OrbitalDataNetworkResearchDefName =
+            "MAP_OrbitalDataNetwork";
+
         public const string DataProcessingAllocationResearchDefName =
             "MAP_DataProcessingAllocation";
 
@@ -28,6 +31,9 @@ namespace MAP_MechanoidMechanitor
 
         public const string MechanicalConsciousnessTransferDescriptionKey =
             "MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description";
+
+        public const string OrbitalDataNetworkDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.OrbitalDataNetwork.Description";
 
         public const string DataProcessingAllocationDescriptionKey =
             "MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataProcessingAllocation.Description";
@@ -52,6 +58,12 @@ namespace MAP_MechanoidMechanitor
                 id: "MechanicalConsciousnessTransfer",
                 researchProjectDefName: MechanicalConsciousnessTransferResearchDefName,
                 unlockLetterDescriptionKey: MechanicalConsciousnessTransferDescriptionKey);
+
+        public static readonly ManagedResearchFeatureDescriptor OrbitalDataNetwork =
+            new ManagedResearchFeatureDescriptor(
+                id: "OrbitalDataNetwork",
+                researchProjectDefName: OrbitalDataNetworkResearchDefName,
+                unlockLetterDescriptionKey: OrbitalDataNetworkDescriptionKey);
 
         public static readonly ManagedResearchFeatureDescriptor DataProcessingAllocation =
             new ManagedResearchFeatureDescriptor(
@@ -81,6 +93,7 @@ namespace MAP_MechanoidMechanitor
         {
             AutonomousDirectiveOptimization,
             MechanicalConsciousnessTransfer,
+            OrbitalDataNetwork,
             DataProcessingAllocation,
             SelfDirectiveFocus,
             DataStreamReorganization,

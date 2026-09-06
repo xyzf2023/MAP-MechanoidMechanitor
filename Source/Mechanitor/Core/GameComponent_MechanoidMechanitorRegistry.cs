@@ -76,6 +76,16 @@ namespace MAP_MechanoidMechanitor
             return pawn != null && ReferenceEquals(CurrentMechanicalConsciousnessHost, pawn);
         }
 
+        /// <summary>
+        /// 机械意识健康状态同步的外部入口。
+        /// 实际逻辑仍在私有的 SynchronizeMechanicalConsciousnessHediff 内，
+        /// 因此读档安全协调阶段对该方法的 Harmony 延迟保护依旧生效，不会被绕过。
+        /// </summary>
+        public static void RequestMechanicalConsciousnessHediffSync()
+        {
+            CurrentRegistry?.SynchronizeMechanicalConsciousnessHediff();
+        }
+
         public static bool CanHostMechanicalConsciousness(Pawn? pawn)
         {
             return MechanoidMechanitorScenarioUtility.IsScenarioActive
@@ -1350,6 +1360,14 @@ namespace MAP_MechanoidMechanitor
                     EnsureSingleHediffOnPawn(host, def, "机械意识");
                 }
 
+                // 轨道数据网络完成后，机械意识不再由唯一载体独占，
+                // 而是分发给所有存活且完成初始化的注册机械族机械师。
+                // mechanicalConsciousnessHost 字段本身的含义不变：
+                // 它仍然只表示旧意识转移流程中的主要载体身份。
+                bool distributeToAll =
+                    ResearchFeatureUnlockUtility.IsOrbitalDataNetworkUnlocked();
+
+                List<Pawn> changedPawns = new List<Pawn>();
                 for (int i = 0; i < mechanitorRecords.Count; i++)
                 {
                     MechanoidMechanitorRecord? record = mechanitorRecords[i];
@@ -1359,14 +1377,41 @@ namespace MAP_MechanoidMechanitor
                         continue;
                     }
 
+                    if (distributeToAll)
+                    {
+                        // 死亡、销毁或半初始化的 Pawn 不参与分发，也不强行刷新其健康状态。
+                        if (!IsPawnAliveAndInitialized(pawn))
+                        {
+                            continue;
+                        }
+
+                        if (EnsureSingleHediffOnPawn(pawn, def, "机械意识"))
+                        {
+                            changedPawns.Add(pawn);
+                        }
+
+                        continue;
+                    }
+
                     if (ReferenceEquals(pawn, host))
                     {
                         EnsureSingleHediffOnPawn(pawn, def, "机械意识");
                     }
-                    else
+                    else if (RemoveAllHediffsFromPawn(pawn, def, "机械意识"))
                     {
-                        RemoveAllHediffsFromPawn(pawn, def, "机械意识");
+                        changedPawns.Add(pawn);
                     }
+                }
+
+                for (int i = 0; i < changedPawns.Count; i++)
+                {
+                    Pawn pawn = changedPawns[i];
+                    if (!IsPawnAliveAndInitialized(pawn))
+                    {
+                        continue;
+                    }
+
+                    DynamicConsciousnessBonusUtility.RefreshForPawn(pawn);
                 }
             }
             catch (Exception ex)
@@ -1378,14 +1423,15 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void EnsureSingleHediffOnPawn(
+        /// <returns>本次是否新添加了该健康状态。</returns>
+        private static bool EnsureSingleHediffOnPawn(
             Pawn pawn,
             HediffDef def,
             string contextLabel)
         {
             if (pawn.health?.hediffSet == null)
             {
-                return;
+                return false;
             }
 
             Hediff? keeper = null;
@@ -1419,12 +1465,13 @@ namespace MAP_MechanoidMechanitor
 
             if (keeper != null)
             {
-                return;
+                return false;
             }
 
             try
             {
                 pawn.health.AddHediff(def);
+                return true;
             }
             catch (Exception ex)
             {
@@ -1432,19 +1479,22 @@ namespace MAP_MechanoidMechanitor
                     $"[MAP-机械族机械师] 添加{contextLabel}健康状态失败：" +
                     $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
                     $"hediffDef={def.defName}：{ex}");
+                return false;
             }
         }
 
-        private static void RemoveAllHediffsFromPawn(
+        /// <returns>本次是否至少移除了一个该健康状态。</returns>
+        private static bool RemoveAllHediffsFromPawn(
             Pawn pawn,
             HediffDef def,
             string contextLabel)
         {
             if (pawn.health?.hediffSet == null)
             {
-                return;
+                return false;
             }
 
+            bool removedAny = false;
             List<Hediff> hediffs = pawn.health.hediffSet.hediffs;
             for (int i = hediffs.Count - 1; i >= 0; i--)
             {
@@ -1457,6 +1507,7 @@ namespace MAP_MechanoidMechanitor
                 try
                 {
                     pawn.health.RemoveHediff(hediff);
+                    removedAny = true;
                 }
                 catch (Exception ex)
                 {
@@ -1466,6 +1517,8 @@ namespace MAP_MechanoidMechanitor
                         $"hediffDef={def.defName}：{ex}");
                 }
             }
+
+            return removedAny;
         }
     }
 }

@@ -22,6 +22,11 @@ namespace MAP_MechanoidMechanitor
             allSucceeded = result && allSucceeded;
 
             result = SyncFeatureSafe(
+                ManagedResearchFeatureCatalog.OrbitalDataNetwork,
+                SyncOrbitalDataNetwork);
+            allSucceeded = result && allSucceeded;
+
+            result = SyncFeatureSafe(
                 ManagedResearchFeatureCatalog.DataProcessingAllocation,
                 SyncDataProcessingAllocation);
             allSucceeded = result && allSucceeded;
@@ -177,6 +182,34 @@ namespace MAP_MechanoidMechanitor
                         "[MAP-机械族机械师] 取消机械意识转移工作失败：" +
                         $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
                 }
+            }
+
+            return allSucceeded;
+        }
+
+        /// <summary>
+        /// 轨道数据网络：技能备份与兴趣同步。
+        /// 机械意识健康状态分发始终交由注册表统一入口执行；
+        /// 科研被取消时该入口会恢复“仅唯一载体拥有机械意识”的旧逻辑，
+        /// 但不会回滚已经提升的技能等级与兴趣。
+        /// </summary>
+        private static bool SyncOrbitalDataNetwork()
+        {
+            bool allSucceeded = true;
+
+            if (ResearchFeatureUnlockUtility.IsOrbitalDataNetworkUnlocked()
+                && !OrbitalDataNetworkSkillSyncUtility.SyncAll())
+            {
+                allSucceeded = false;
+            }
+
+            GameComponent_MechanoidMechanitorRegistry
+                .RequestMechanicalConsciousnessHediffSync();
+
+            // 科研完成或读档后，机械族机械师可能已全部损毁：此时需要恢复备用机体信件。
+            if (!OrbitalBackupGameEndUtility.Refresh())
+            {
+                allSucceeded = false;
             }
 
             return allSucceeded;

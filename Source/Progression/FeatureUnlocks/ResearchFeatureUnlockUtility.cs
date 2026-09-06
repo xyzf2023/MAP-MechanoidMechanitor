@@ -77,6 +77,9 @@ namespace MAP_MechanoidMechanitor
         public static bool IsMechanicalConsciousnessTransferUnlocked() =>
             IsFeatureUnlocked(ManagedResearchFeatureCatalog.MechanicalConsciousnessTransfer);
 
+        public static bool IsOrbitalDataNetworkUnlocked() =>
+            IsFeatureUnlocked(ManagedResearchFeatureCatalog.OrbitalDataNetwork);
+
         public static bool IsDataProcessingAllocationUnlocked() =>
             IsFeatureUnlocked(ManagedResearchFeatureCatalog.DataProcessingAllocation);
 

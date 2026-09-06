@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- 备用机体已就绪：使用自定义 letterClass，外观沿用原版正面信件。 -->
+  <LetterDef ParentName="PositiveEvent">
+    <defName>MAP_OrbitalBackupReady</defName>
+    <letterClass>MAP_MechanoidMechanitor.ChoiceLetter_OrbitalBackupReady</letterClass>
+    <color>(120, 176, 216)</color>
+    <flashColor>(106, 179, 231)</flashColor>
+    <flashInterval>90</flashInterval>
+    <arriveSound>LetterArrive_Good</arriveSound>
+  </LetterDef>
+
+</Defs>

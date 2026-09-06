@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+
+  <!-- 模块：轨道数据网络 - 备用机体信件 -->
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.Title>备用机体已就绪</MAP_MechanoidMechanitor.OrbitalBackup.Letter.Title>
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.Text>所有正在运行的机械族机械师均已损毁，不过我们的轨道设施仍在运转。备用机体随时准备投放。\n\n现在投放备用机体？</MAP_MechanoidMechanitor.OrbitalBackup.Letter.Text>
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.KeepWatching>保持观察</MAP_MechanoidMechanitor.OrbitalBackup.Letter.KeepWatching>
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.Deploy>投放备用机体</MAP_MechanoidMechanitor.OrbitalBackup.Letter.Deploy>
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.MainMenu>返回主菜单</MAP_MechanoidMechanitor.OrbitalBackup.Letter.MainMenu>
+
+  <!-- 模块：轨道数据网络 - 投放限制 -->
+  <MAP_MechanoidMechanitor.OrbitalBackup.WaitHours>必须等待{0}小时</MAP_MechanoidMechanitor.OrbitalBackup.WaitHours>
+  <MAP_MechanoidMechanitor.OrbitalBackup.NotAvailable>当前无法投放备用机体。</MAP_MechanoidMechanitor.OrbitalBackup.NotAvailable>
+  <MAP_MechanoidMechanitor.OrbitalBackup.NoDropSpot>找不到合适的空投地点。</MAP_MechanoidMechanitor.OrbitalBackup.NoDropSpot>
+
+</LanguageData>

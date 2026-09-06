@@ -119,7 +119,7 @@ namespace MAP_MechanoidMechanitor
             {
                 try
                 {
-                    ManagedResearchAbilitySyncUtility.SyncPawn(pawn);
+                    SyncPawnResearchState(pawn!);
                 }
                 catch (Exception ex)
                 {
@@ -138,6 +138,24 @@ namespace MAP_MechanoidMechanitor
 
             // 环境暂不安全：入队但不计为同步失败。
             manager.EnqueuePendingPawnSync(pawn!);
+        }
+
+        /// <summary>
+        /// 单个 Pawn 的科研状态同步共同入口。
+        /// 立即同步路径与 pendingPawnSyncs 重试路径必须都走这里，
+        /// 避免出现“重试时只同步能力而遗漏轨道数据网络”的分歧。
+        /// </summary>
+        private static void SyncPawnResearchState(Pawn pawn)
+        {
+            ManagedResearchAbilitySyncUtility.SyncPawn(pawn);
+
+            // 轨道数据网络：合并新机械师技能、下发历史备份、统一兴趣并同步机械意识。
+            OrbitalDataNetworkSkillSyncUtility.SyncForNewMechanitor(pawn);
+
+            if (GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn))
+            {
+                DynamicConsciousnessBonusUtility.RefreshForPawn(pawn);
+            }
         }
 
         public override void StartedNewGame()
@@ -418,7 +436,7 @@ namespace MAP_MechanoidMechanitor
 
                 try
                 {
-                    ManagedResearchAbilitySyncUtility.SyncPawn(pawn);
+                    SyncPawnResearchState(pawn);
                 }
                 catch (Exception ex)
                 {

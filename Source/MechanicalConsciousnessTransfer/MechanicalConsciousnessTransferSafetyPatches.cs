@@ -416,7 +416,11 @@ namespace MAP_MechanoidMechanitor
                     && !newHost.Discarded
                     && newHost.health?.isBeingKilled != true
                     && HasHediff(newHost, consciousnessDef)
-                    && !HasHediff(expectedCurrentHost, consciousnessDef);
+                    // 轨道数据网络完成后，所有机械族机械师都会保留“机械意识”，
+                    // 因此不能再把“旧载体已无机械意识”作为替换成功的必要条件，
+                    // 否则最终同步会立即把旧载体的健康状态补回并导致事务回滚。
+                    && (ResearchFeatureUnlockUtility.IsOrbitalDataNetworkUnlocked()
+                        || !HasHediff(expectedCurrentHost, consciousnessDef));
 
                 if (!valid)
                 {
