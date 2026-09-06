@@ -150,7 +150,13 @@ namespace MAP_MechanoidMechanitor
             ManagedResearchAbilitySyncUtility.SyncPawn(pawn);
 
             // 轨道数据网络：合并新机械师技能、下发历史备份、统一兴趣并同步机械意识。
-            OrbitalDataNetworkSkillSyncUtility.SyncForNewMechanitor(pawn);
+            if (!OrbitalDataNetworkSkillSyncUtility.SyncForNewMechanitor(pawn))
+            {
+                // 该同步入口会自行记录具体失败项并返回 false。
+                // 向外抛出统一异常，使立即同步与 pending 重试路径沿用管理器既有的失败处理。
+                throw new InvalidOperationException(
+                    "[MAP-机械族机械师] 单个机械族机械师的轨道数据网络状态同步未完全成功。");
+            }
 
             if (GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn))
             {

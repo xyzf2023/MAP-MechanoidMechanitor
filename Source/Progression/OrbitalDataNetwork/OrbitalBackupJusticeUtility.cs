@@ -43,6 +43,19 @@ namespace MAP_MechanoidMechanitor
                 return NotAvailableKey.Translate().Resolve();
             }
 
+            // 信件对话可能在机械师复活或新机械师完成注册后仍保持打开，
+            // 因此每次重建选项时都必须重新确认备用机体仍有投放必要。
+            if (OrbitalBackupGameEndUtility.AnyLivingRegisteredMechanitor())
+            {
+                return NotAvailableKey.Translate().Resolve();
+            }
+
+            if (GameComponent_OrbitalDataNetworkState.CurrentState == null
+                || Find.TickManager == null)
+            {
+                return NotAvailableKey.Translate().Resolve();
+            }
+
             int remainingHours =
                 GameComponent_OrbitalDataNetworkState.RemainingCooldownHours;
             if (remainingHours > 0)
@@ -72,6 +85,9 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn? created = null;
             Map? targetMap = null;
+            ActiveTransporterInfo? transporterInfo = null;
+            GameComponent_OrbitalDataNetworkState? orbitalState = null;
+            TickManager? tickManager = null;
             bool succeeded = false;
 
             try
@@ -88,6 +104,17 @@ namespace MAP_MechanoidMechanitor
                 {
                     Log.Warning(
                         "[MAP-机械族机械师] 备用机体投放被拒绝：" + disabledReason);
+                    return false;
+                }
+
+                // 在创建 Pawn 前固定本次事务所需的持久化状态与计时器。
+                // 后续空投成功后直接写入该组件，避免“空投已生成但重新查找组件失败”。
+                orbitalState = GameComponent_OrbitalDataNetworkState.CurrentState;
+                tickManager = Find.TickManager;
+                if (orbitalState == null || tickManager == null)
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 备用机体投放失败：轨道状态组件或游戏计时器不可用。");
                     return false;
                 }
 
@@ -147,15 +174,15 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_MechanoidMechanitorRegistry
                     .RequestMechanicalConsciousnessHediffSync();
 
-                ActiveTransporterInfo info = new ActiveTransporterInfo();
-                info.openDelay = ActiveTransporterInfo.DefaultOpenDelay;
+                transporterInfo = new ActiveTransporterInfo();
+                transporterInfo.openDelay = ActiveTransporterInfo.DefaultOpenDelay;
 
                 if (created.Spawned)
                 {
                     created.DeSpawn();
                 }
 
-                if (!info.innerContainer.TryAdd(created))
+                if (!transporterInfo.innerContainer.TryAdd(created))
                 {
                     Log.Error(
                         "[MAP-机械族机械师] 备用机体投放失败：阶段=FillTransporter，" +
@@ -163,9 +190,9 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
-                DropPodUtility.MakeDropPodAt(dropCell, targetMap, info);
+                DropPodUtility.MakeDropPodAt(dropCell, targetMap, transporterInfo);
 
-                if (!IsPawnInWorld(created))
+                if (!IsPawnCommittedToMap(created, targetMap))
                 {
                     Log.Error(
                         "[MAP-机械族机械师] 备用机体投放失败：阶段=VerifyDropPod，" +
@@ -174,16 +201,8 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
-                TickManager? tickManager = Find.TickManager;
-                if (tickManager == null
-                    || !GameComponent_OrbitalDataNetworkState.TryRecordDeployment(
-                        tickManager.TicksGame))
-                {
-                    Log.Error(
-                        "[MAP-机械族机械师] 备用机体投放失败：阶段=CommitCooldown，" +
-                        $"pawn={created.LabelShort}（{created.ThingID}）。");
-                    return false;
-                }
+                // 组件与计时器已在创建 Pawn 前确认并固定；空投成功后提交冷却不会再次查找组件。
+                orbitalState.MarkDeployment(tickManager.TicksGame);
 
                 OrbitalBackupGameEndUtility.RemoveBackupLetter();
                 GameEnder? gameEnder = Find.GameEnder;
@@ -206,7 +225,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (!succeeded)
                 {
-                    RollbackCreatedPawn(created);
+                    RollbackCreatedPawn(created, transporterInfo, targetMap);
                 }
             }
         }
@@ -421,18 +440,27 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static bool IsPawnInWorld(Pawn? pawn)
+        /// <summary>
+        /// 只有 Pawn 本身或其持有链已经连接到预期地图时，才算真正完成空投提交。
+        /// 临时 ActiveTransporterInfo 虽然会让 Pawn 拥有 ParentHolder，但并不代表它已进入世界。
+        /// </summary>
+        private static bool IsPawnCommittedToMap(Pawn? pawn, Map? expectedMap)
         {
             return pawn != null
+                && expectedMap != null
                 && !pawn.Destroyed
                 && !pawn.Discarded
-                && (pawn.Spawned || pawn.ParentHolder != null);
+                && pawn.SpawnedOrAnyParentSpawned
+                && ReferenceEquals(pawn.MapHeld, expectedMap);
         }
 
         /// <summary>
-        /// 回滚本次刚创建的临时 Pawn。已经进入世界的 Pawn 不会回滚，也不会删除任何已有 Pawn。
+        /// 回滚本次刚创建的临时 Pawn。已经随空投仓连接到目标地图的 Pawn 不会被删除。
         /// </summary>
-        private static void RollbackCreatedPawn(Pawn? pawn)
+        private static void RollbackCreatedPawn(
+            Pawn? pawn,
+            ActiveTransporterInfo? transporterInfo,
+            Map? targetMap)
         {
             if (pawn == null)
             {
@@ -441,8 +469,25 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
-                if (IsPawnInWorld(pawn))
+                if (IsPawnCommittedToMap(pawn, targetMap))
                 {
+                    return;
+                }
+
+                // Pawn 加入未生成的 ActiveTransporterInfo 后也会拥有 ParentHolder。
+                // 必须先从本次事务的临时容器取出，否则会被误判为已经安全进入世界。
+                if (transporterInfo?.innerContainer.Contains(pawn) == true)
+                {
+                    transporterInfo.innerContainer.Remove(pawn);
+                }
+
+                if (pawn.ParentHolder != null)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 备用机体投放失败后无法安全回滚：" +
+                        "临时 Pawn 仍被未知容器持有，已停止清理以避免破坏其他世界对象。" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}），" +
+                        $"holder={pawn.ParentHolder.GetType().FullName ?? "null"}。");
                     return;
                 }
 
@@ -451,7 +496,15 @@ namespace MAP_MechanoidMechanitor
                     Find.WorldPawns?.RemovePawn(pawn);
                 }
 
-                GameComponent_MechanoidMechanitorRegistry.RemoveFailedGeneratedMechanitor(pawn);
+                if (!GameComponent_MechanoidMechanitorRegistry
+                        .RemoveFailedGeneratedMechanitor(pawn))
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 备用机体投放失败后无法安全回滚：" +
+                        "注册表记录未能清除，已停止销毁临时 Pawn。" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）。");
+                    return;
+                }
 
                 if (pawn.Spawned)
                 {
