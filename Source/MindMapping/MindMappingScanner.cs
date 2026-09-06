@@ -281,7 +281,7 @@ namespace MAP_MechanoidMechanitor
         internal sealed class CompletionState
         {
             public MindMappingData? Data;
-            public HashSet<string> ExistingOutputIds = new HashSet<string>();
+            public Dictionary<string, int> ExistingOutputCounts = new Dictionary<string, int>();
         }
 
         [HarmonyPrefix]
@@ -307,7 +307,7 @@ namespace MAP_MechanoidMechanitor
                 __instance.def.building.subcoreScannerOutputDef);
             for (int i = 0; i < existing.Count; i++)
             {
-                state.ExistingOutputIds.Add(existing[i].ThingID);
+                state.ExistingOutputCounts[existing[i].ThingID] = existing[i].stackCount;
             }
 
             __state = state;
@@ -326,12 +326,22 @@ namespace MAP_MechanoidMechanitor
             IntVec3 outputCell = __instance.InteractionCell;
             List<Thing> outputs = __instance.Map.listerThings.ThingsOfDef(
                 __instance.def.building.subcoreScannerOutputDef);
-            Thing? vanillaOutput = outputs.FirstOrDefault(
-                thing => !__state.ExistingOutputIds.Contains(thing.ThingID));
+            Thing? vanillaOutput = outputs.FirstOrDefault(thing =>
+            {
+                __state.ExistingOutputCounts.TryGetValue(thing.ThingID, out int previousCount);
+                return thing.stackCount > previousCount;
+            });
             if (vanillaOutput != null)
             {
                 outputCell = vanillaOutput.Position;
-                vanillaOutput.Destroy(DestroyMode.Vanish);
+                if (vanillaOutput.stackCount > 1)
+                {
+                    vanillaOutput.SplitOff(1).Destroy(DestroyMode.Vanish);
+                }
+                else
+                {
+                    vanillaOutput.Destroy(DestroyMode.Vanish);
+                }
             }
             else
             {

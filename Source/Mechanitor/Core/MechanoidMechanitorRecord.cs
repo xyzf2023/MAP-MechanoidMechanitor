@@ -68,6 +68,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             SelfWorkMode = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(SelfWorkMode);
+
+            // 阈值合法化规则唯一实现在 MechanoidMechanitorRechargeUtility，
+            // 与 UI 写入入口 TrySetRechargeThresholds 共用同一套规则，禁止在此复制第二份。
             RechargeThresholds =
                 MechanoidMechanitorRechargeUtility.SanitizeRechargeThresholds(RechargeThresholds);
         }
