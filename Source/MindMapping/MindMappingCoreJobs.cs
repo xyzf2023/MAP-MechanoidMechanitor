@@ -20,7 +20,12 @@ namespace MAP_MechanoidMechanitor
             Thing clickedThing,
             FloatMenuContext context)
         {
-            CompMindMappingCore? core = clickedThing?.TryGetComp<CompMindMappingCore>();
+            if (clickedThing == null)
+            {
+                yield break;
+            }
+
+            CompMindMappingCore? core = clickedThing.TryGetComp<CompMindMappingCore>();
             Pawn pawn = context.FirstSelectedPawn;
             if (core == null || pawn == null || !pawn.RaceProps.IsMechanoid)
             {

@@ -171,7 +171,8 @@ namespace MAP_MechanoidMechanitor
         {
             StringBuilder builder = new StringBuilder();
             builder.AppendLine("MAP_MindMapping.Inspect.Name".Translate(ShortName));
-            builder.AppendLine("MAP_MindMapping.Inspect.Age".Translate(chronologicalAgeTicks.ToStringTicksToPeriod()));
+            builder.AppendLine("MAP_MindMapping.Inspect.Age".Translate(
+                chronologicalAgeTicks / GenDate.TicksPerYear));
             builder.AppendLine("MAP_MindMapping.Inspect.Childhood".Translate(BackstoryLabel(childhood)));
             builder.AppendLine("MAP_MindMapping.Inspect.Adulthood".Translate(BackstoryLabel(adulthood)));
             builder.AppendLine("MAP_MindMapping.Inspect.Traits".Translate());

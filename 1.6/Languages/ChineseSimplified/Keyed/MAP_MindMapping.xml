@@ -19,7 +19,7 @@
 
   <MAP_MindMapping.Inspect.Blank>未存放心智数据。</MAP_MindMapping.Inspect.Blank>
   <MAP_MindMapping.Inspect.Name>姓名：{0}</MAP_MindMapping.Inspect.Name>
-  <MAP_MindMapping.Inspect.Age>历法年龄：{0}</MAP_MindMapping.Inspect.Age>
+  <MAP_MindMapping.Inspect.Age>历法年龄：{0}岁</MAP_MindMapping.Inspect.Age>
   <MAP_MindMapping.Inspect.Childhood>童年背景：{0}</MAP_MindMapping.Inspect.Childhood>
   <MAP_MindMapping.Inspect.Adulthood>成年背景：{0}</MAP_MindMapping.Inspect.Adulthood>
   <MAP_MindMapping.Inspect.Traits>特性：</MAP_MindMapping.Inspect.Traits>
