@@ -6,4 +6,11 @@
     <driverClass>MAP_MechanoidMechanitor.JobDriver_TransferMechanicalConsciousness</driverClass>
     <reportString>正在进行意识转移。</reportString>
   </JobDef>
+  <!-- 轨道数据网络研究完成后的“控制权交接”：只交接芯片带宽加成与监管机械族控制权。 -->
+  <JobDef>
+    <defName>MAP_TransferMechanitorControl</defName>
+    <label>控制权交接</label>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_TransferMechanitorControl</driverClass>
+    <reportString>正在进行控制权交接。</reportString>
+  </JobDef>
 </Defs>

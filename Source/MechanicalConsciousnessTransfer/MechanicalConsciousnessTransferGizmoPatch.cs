@@ -21,12 +21,29 @@ namespace MAP_MechanoidMechanitor
             "MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.RecoveringEmergencyData";
         private const string FailedKey = "MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.Failed";
 
+        private const string HandoffLabelKey =
+            "MAP_MechanoidMechanitor.Justice.ControlHandoff.Label";
+        private const string HandoffDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.ControlHandoff.Description";
+        private const string HandoffNoCandidateKey =
+            "MAP_MechanoidMechanitor.Justice.ControlHandoff.NoCandidate";
+        private const string HandoffFailedKey =
+            "MAP_MechanoidMechanitor.Justice.ControlHandoff.Failed";
+
         [HarmonyPostfix]
         public static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Pawn mech)
         {
             foreach (Gizmo gizmo in __result)
             {
                 yield return gizmo;
+            }
+
+            // 轨道数据网络研究完成后，所有合法机械族机械师（无需是宿主）显示“控制权交接”，
+            // 取代原先的“意识转移”；研究前仍走下方原有意识转移分支。
+            if (ShouldShowControlHandoffGizmo(mech))
+            {
+                yield return MakeControlHandoffCommand(mech);
+                yield break;
             }
 
             if (!ShouldShowConsciousnessTransferGizmo(mech))
@@ -171,6 +188,127 @@ namespace MAP_MechanoidMechanitor
 
             Job job = JobMaker.MakeJob(
                 MAPMechanitor_JobDefOf.MAP_TransferMechanicalConsciousness,
+                source,
+                target);
+            source.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+        }
+
+        private static bool ShouldShowControlHandoffGizmo(Pawn? mech)
+        {
+            return mech != null
+                && !mech.Dead
+                && !mech.Destroyed
+                && mech.jobs != null
+                && mech.Spawned
+                && mech.Map != null
+                && MechanicalControlHandoffUtility.IsValidControlHandoffParticipant(mech);
+        }
+
+        private static Command_Action MakeControlHandoffCommand(Pawn source)
+        {
+            List<Pawn> candidates = BuildControlHandoffTargets(source);
+            Command_Action command = new Command_Action
+            {
+                defaultLabel = HandoffLabelKey.Translate(),
+                defaultDesc = HandoffDescriptionKey.Translate(),
+                icon = ContentFinder<Texture2D>.Get("UI/MM_TransferMechanicalConsciousness"),
+                action = delegate
+                {
+                    OpenControlHandoffTargetMenu(source);
+                }
+            };
+
+            if (candidates.Count == 0)
+            {
+                command.Disable(HandoffNoCandidateKey.Translate());
+            }
+
+            return command;
+        }
+
+        private static void OpenControlHandoffTargetMenu(Pawn source)
+        {
+            List<FloatMenuOption> options = BuildControlHandoffFloatMenuOptions(source);
+            if (options.Count == 0)
+            {
+                Messages.Message(
+                    HandoffFailedKey.Translate(),
+                    source,
+                    MessageTypeDefOf.RejectInput);
+                return;
+            }
+
+            Find.WindowStack.Add(new FloatMenu(options));
+        }
+
+        private static List<FloatMenuOption> BuildControlHandoffFloatMenuOptions(Pawn source)
+        {
+            List<Pawn> candidates = BuildControlHandoffTargets(source);
+            List<FloatMenuOption> options = new List<FloatMenuOption>(candidates.Count);
+
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                Pawn target = candidates[i];
+                Pawn localTarget = target;
+                options.Add(new FloatMenuOption(
+                    localTarget.LabelShortCap,
+                    delegate
+                    {
+                        TryStartControlHandoffJob(source, localTarget);
+                    }));
+            }
+
+            return options;
+        }
+
+        private static List<Pawn> BuildControlHandoffTargets(Pawn source)
+        {
+            HashSet<Pawn> seen = new HashSet<Pawn>();
+            List<Pawn> targets = new List<Pawn>();
+
+            foreach (Pawn candidate in GameComponent_MechanoidMechanitorRegistry
+                         .GetMechanicalConsciousnessCandidates())
+            {
+                if (candidate == null
+                    || candidate.Destroyed
+                    || !seen.Add(candidate))
+                {
+                    continue;
+                }
+
+                if (!MechanicalControlHandoffUtility.CanTransferControl(source, candidate))
+                {
+                    continue;
+                }
+
+                targets.Add(candidate);
+            }
+
+            targets.Sort((left, right) => string.Compare(
+                left.LabelShortCap,
+                right.LabelShortCap,
+                StringComparison.Ordinal));
+            return targets;
+        }
+
+        private static void TryStartControlHandoffJob(Pawn source, Pawn target)
+        {
+            if (source == null
+                || target == null
+                || source.jobs == null
+                || !source.Spawned
+                || source.Map == null
+                || !MechanicalControlHandoffUtility.CanTransferControl(source, target))
+            {
+                Messages.Message(
+                    HandoffFailedKey.Translate(),
+                    source,
+                    MessageTypeDefOf.RejectInput);
+                return;
+            }
+
+            Job job = JobMaker.MakeJob(
+                MAPMechanitor_JobDefOf.MAP_TransferMechanitorControl,
                 source,
                 target);
             source.jobs.TryTakeOrderedJob(job, JobTag.Misc);

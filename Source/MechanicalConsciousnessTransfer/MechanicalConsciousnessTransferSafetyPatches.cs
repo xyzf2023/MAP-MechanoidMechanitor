@@ -244,6 +244,79 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    /// <summary>
+    /// 轨道数据网络完成后的“紧急控制权交接”目标选择必须套用同一全局事务 guard：
+    /// 跳过正在死亡、已被 guard 注册参与的目标，并把选定目标注册为参与方，
+    /// 防止交接事务期间出现嵌套紧急转移或吞掉原版 Kill。
+    /// 该方法业务原体与紧急控制权交接共用 MechanicalControlHandoffUtility.CanTransferControl。
+    /// </summary>
+    [HarmonyPatch(
+        typeof(EmergencyMechanicalConsciousnessTransferUtility),
+        nameof(EmergencyMechanicalConsciousnessTransferUtility.SelectEmergencyControlHandoffTarget))]
+    internal static class EmergencyControlHandoffSafeTargetSelectionPatch
+    {
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
+        private static bool Prefix(
+            Pawn source,
+            Pawn? excludePawn,
+            ref Pawn? __result)
+        {
+            Pawn? firstOtherMechanitor = null;
+            HashSet<Pawn> seen = new HashSet<Pawn>();
+
+            foreach (Pawn candidate in GameComponent_MechanoidMechanitorRegistry
+                         .GetMechanicalConsciousnessCandidates())
+            {
+                if (candidate == null
+                    || candidate.Dead
+                    || candidate.Destroyed
+                    || candidate.Discarded
+                    || candidate.health?.isBeingKilled == true
+                    || !seen.Add(candidate)
+                    || ReferenceEquals(candidate, source)
+                    || ReferenceEquals(candidate, excludePawn)
+                    || EmergencyMechanicalConsciousnessTransferGlobalGuard
+                        .IsParticipant(candidate))
+                {
+                    continue;
+                }
+
+                if (!MechanicalControlHandoffUtility.CanTransferControl(
+                        source,
+                        candidate))
+                {
+                    continue;
+                }
+
+                if (JusticePawnUtility.IsJustice(candidate))
+                {
+                    __result =
+                        EmergencyMechanicalConsciousnessTransferGlobalGuard
+                            .TryRegisterTarget(candidate)
+                            ? candidate
+                            : null;
+                    return false;
+                }
+
+                firstOtherMechanitor ??= candidate;
+            }
+
+            if (firstOtherMechanitor != null
+                && EmergencyMechanicalConsciousnessTransferGlobalGuard
+                    .TryRegisterTarget(firstOtherMechanitor))
+            {
+                __result = firstOtherMechanitor;
+            }
+            else
+            {
+                __result = null;
+            }
+
+            return false;
+        }
+    }
+
     [HarmonyPatch(
         typeof(MechanicalConsciousnessTransferUtility),
         "TryTransferMechanicalConsciousness",

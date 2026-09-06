@@ -15,7 +15,9 @@ namespace MAP_MechanoidMechanitor
 
     public static class MechanicalConsciousnessTransferUtility
     {
-        private readonly struct OverseerRelationSnapshot
+        // “芯片带宽加成 + 监管关系”迁移/回滚共用同一实现：既被研究前的完整意识转移使用，
+        // 也被研究后的“控制权交接”（MechanicalControlHandoffUtility）复用，避免数值与语义分叉。
+        internal readonly struct OverseerRelationSnapshot
         {
             public readonly Pawn Mech;
             public readonly bool HadSourceRelation;
@@ -39,7 +41,10 @@ namespace MAP_MechanoidMechanitor
 
         public static bool CanVoluntarilyTransferMechanicalConsciousness(Pawn? source, Pawn? target)
         {
+            // 轨道数据网络研究完成后不再执行任何“意识转移”，主动路径只能走控制权交接。
+            // 若研究状态在意识转移 Job 执行期间变化，此处会使旧 Job 立即失效并安全终止。
             return ResearchFeatureUnlockUtility.IsMechanicalConsciousnessTransferUnlocked()
+                && !MechanicalControlHandoffUtility.IsActive()
                 && !EmergencyMechanicalConsciousnessTransferUtility
                     .HasEmergencyConsciousnessTransferHediff(source)
                 && CanTransferMechanicalConsciousness(source, target);
@@ -315,7 +320,7 @@ namespace MAP_MechanoidMechanitor
             return snapshot;
         }
 
-        private static List<Pawn> CaptureOverseenPawns(Pawn source)
+        internal static List<Pawn> CaptureOverseenPawns(Pawn source)
         {
             if (source.mechanitor == null)
             {
@@ -370,7 +375,7 @@ namespace MAP_MechanoidMechanitor
             return null;
         }
 
-        private static void ApplyChipBandwidthTransfer(
+        internal static void ApplyChipBandwidthTransfer(
             MechanoidMechanitorRecord sourceRecord,
             MechanoidMechanitorRecord targetRecord,
             Pawn target,
@@ -386,7 +391,7 @@ namespace MAP_MechanoidMechanitor
             sourceRecord.ChipBandwidthBonus = 0;
         }
 
-        private static void TransferOverseerRelations(
+        internal static void TransferOverseerRelations(
             Pawn source,
             Pawn target,
             List<Pawn> overseenSnapshot,
@@ -467,7 +472,7 @@ namespace MAP_MechanoidMechanitor
             if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(overseer, subject))
             {
                 throw new InvalidOperationException(
-                    "[MAP-机械族机械师] 机械意识转移监管关系迁移失败：" +
+                    "[MAP-机械族机械师] 监管关系迁移失败：" +
                     $"targetOverseer={overseer.LabelShort}（{overseer.ThingID}），" +
                     $"subject={subject.LabelShort}（{subject.ThingID}），" +
                     "TryAssignActualOverseer 返回 false。");
@@ -551,7 +556,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void RollbackOverseerRelations(
+        internal static void RollbackOverseerRelations(
             Pawn source,
             Pawn target,
             List<OverseerRelationSnapshot> overseerSnapshots,
@@ -639,7 +644,7 @@ namespace MAP_MechanoidMechanitor
                     }
 
                     throw new InvalidOperationException(
-                        $"[MAP-机械族机械师] 意识转移回滚失败：shouldHaveRelation=true，" +
+                        $"[MAP-机械族机械师] 监管关系回滚失败：shouldHaveRelation=true，" +
                         $"overseer={overseer.LabelShort}（{overseer.ThingID}）缺少 mechanitor Tracker，" +
                         $"subject={subject.LabelShort}（{subject.ThingID}），" +
                         "relationExists=false，controlGroupExists=false，directionValid=false。");
@@ -662,7 +667,7 @@ namespace MAP_MechanoidMechanitor
                     tracker.UnassignPawnFromAnyControlGroup(subject);
                     tracker.Notify_BandwidthChanged();
                     throw new InvalidOperationException(
-                        $"[MAP-机械族机械师] 意识转移回滚失败：shouldHaveRelation=true，控制组分配失败，" +
+                        $"[MAP-机械族机械师] 监管关系回滚失败：shouldHaveRelation=true，控制组分配失败，" +
                         $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
                         $"subject={subject.LabelShort}（{subject.ThingID}），" +
                         $"relationExists={relations.DirectRelationExists(PawnRelationDefOf.Overseer, subject)}，" +
@@ -689,7 +694,7 @@ namespace MAP_MechanoidMechanitor
 
                     tracker.Notify_BandwidthChanged();
                     throw new InvalidOperationException(
-                        $"[MAP-机械族机械师] 意识转移回滚失败：shouldHaveRelation=true，最终验证失败，" +
+                        $"[MAP-机械族机械师] 监管关系回滚失败：shouldHaveRelation=true，最终验证失败，" +
                         $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
                         $"subject={subject.LabelShort}（{subject.ThingID}），" +
                         $"relationExists={relationExists}，controlGroupExists={controlGroupExists}，" +
@@ -717,7 +722,7 @@ namespace MAP_MechanoidMechanitor
                 if (relationExists || controlGroupExists || directionValid)
                 {
                     throw new InvalidOperationException(
-                        "[MAP-机械族机械师] 意识转移回滚失败：" +
+                        "[MAP-机械族机械师] 监管关系回滚失败：" +
                         "shouldHaveRelation=false，但监管状态未完全清除，" +
                         $"overseer={overseer.LabelShort}（{overseer.ThingID}），" +
                         $"subject={subject.LabelShort}（{subject.ThingID}），" +
