@@ -96,7 +96,7 @@
   <ResearchProjectDef>
     <defName>MAP_MechanicalConsciousnessTransfer</defName>
     <label>机械意识传输</label>
-    <description>将机械意识从固定机体中剥离，转化为能够传输、保存与重新写入的数据结构，使意识得以跨越不同的机械载体延续，并解决未启动机体的意识初始化问题。\n\n研究此科技以解锁特殊建筑「正义」（未启动）。启动该建筑后，可生成一台新的「正义」。\n在“机械族机械师”剧本中，还将解锁意识转移功能。</description>
+    <description>将机械意识从固定机体中剥离，转化为能够传输、保存与重新写入的数据结构，使意识得以跨越不同的机械载体延续，并解决未启动机体的意识初始化问题。\n\n研究此科技以解锁特殊建筑「正义」（未启动）。启动该建筑后，可生成一台新的「正义」。\n\n在“机械族机械师”剧本中，还将解锁意识转移功能和紧急意识转移机制。</description>
     <baseCost>3000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
@@ -104,7 +104,21 @@
       <li>MAP_AutonomousDirectiveCore</li>
     </prerequisites>
     <researchViewX>2.00</researchViewX>
-    <researchViewY>2.00</researchViewY>
+    <researchViewY>3.50</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_OrbitalDataNetwork</defName>
+    <label>轨道数据网络</label>
+    <description>骇入一座无人监管的近地轨道数据库，并借助其庞大的存储与运算设施处理大规模数据流。以此为基础，我们可以实现所有机械族机械师之间的数据同步，并将其机械意识持续上传至轨道设施进行保存。\n\n研究完成后，所有机械族机械师都会获得“机械意识”健康状态；同时，其所有技能的兴趣将提升至“狂热”，技能等级则统一取当前所有机械族机械师中的最高值。\n\n在“机械族机械师”剧本中，游戏将不会再因为承载“机体意识”的机械族被摧毁而结束。</description>
+    <baseCost>8000</baseCost>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_MechanicalConsciousnessTransfer</li>
+    </prerequisites>
+    <researchViewX>3.00</researchViewX>
+    <researchViewY>4.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -118,7 +132,7 @@
       <li>MAP_AutonomousDirectiveCore</li>
     </prerequisites>
     <researchViewX>2.00</researchViewX>
-    <researchViewY>3.00</researchViewY>
+    <researchViewY>2.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -129,17 +143,16 @@
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
-      <li>UltraMechtech</li>
       <li>MAP_MechanicalConsciousnessTransfer</li>
     </prerequisites>
     <researchViewX>3.00</researchViewX>
-    <researchViewY>2.00</researchViewY>
+    <researchViewY>3.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
     <defName>MAP_DataStreamReorganization</defName>
     <label>数据流重整</label>
-    <description>重新规划机械族机械师内部的数据流向与处理次序，减少冗余运算和指令冲突，释放更多数据处理能力。\n\n研究此科技以提高“机械族机械师”健康状态所提供的数据处理能力。\n在“机械族机械师”剧本中，还将提高“机械意识”健康状态所提供的数据处理能力。</description>
+    <description>重新规划机械族机械师内部的数据流向与处理次序，减少冗余运算和指令冲突，释放更多数据处理能力。\n\n研究此科技以提高“机械族机械师”健康状态所提供的数据处理能力。\n\n在“机械族机械师”剧本中，还将提高“机械意识”健康状态所提供的数据处理能力。</description>
     <baseCost>5000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
@@ -161,7 +174,7 @@
       <li>MAP_DataProcessingAllocation</li>
     </prerequisites>
     <researchViewX>3.00</researchViewX>
-    <researchViewY>3.00</researchViewY>
+    <researchViewY>2.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
@@ -172,27 +185,43 @@
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
-      <li>MAP_DataStreamReorganization</li>
+      <li>MAP_MechanitorPrinciples</li>
     </prerequisites>
     <researchViewX>4.00</researchViewX>
-    <researchViewY>0.00</researchViewY>
+    <researchViewY>3.00</researchViewY>
   </ResearchProjectDef>
 
   <ResearchProjectDef>
     <defName>MAP_ParallelThoughtMatrix</defName>
     <label>并行思维矩阵</label>
-    <description>将机械意识划分为多个可同时运行的思维进程，并以统一矩阵协调其运作，使机械族机械师能够同时处理更加复杂的意识活动与指令任务。\n\n研究此科技以进一步提高“机械族机械师”健康状态所提供的数据处理能力。若存在多个机械族机械师，该加成还会随其数量进一步提升。\n在“机械族机械师”剧本中，还将进一步提高“机械意识”健康状态所提供的数据处理能力。\n\n研究完成后，还可建造「并行思维阵列」并制造「并行思维接口」。</description>
+    <description>将机械意识划分为多个可同时运行的思维进程，并以统一矩阵协调其运作，使机械族机械师能够同时处理更加复杂的意识活动与指令任务。\n\n研究此科技以进一步提高“机械族机械师”健康状态所提供的数据处理能力。若存在多个机械族机械师，该加成还会随其数量进一步提升。\n\n在“机械族机械师”剧本中，还将进一步提高“机械意识”健康状态所提供的数据处理能力。\n\n研究完成后，还可建造「并行思维阵列」并制造「并行思维接口」。</description>
     <baseCost>8000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
     <prerequisites>
       <li>MAP_DataStreamReorganization</li>
+      <li>MAP_SelfDirectiveFocus</li>
     </prerequisites>
     <researchViewX>4.00</researchViewX>
-    <researchViewY>1.00</researchViewY>
+    <researchViewY>1.50</researchViewY>
   </ResearchProjectDef>
 
-    <ResearchProjectDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
+  <ResearchProjectDef>
+    <defName>MAP_MindMapping</defName>
+    <label>心智映射</label>
+    <description>通过深入研究意识结构和数据模拟，我们掌握了将人类完整心智映射到自律指令核心的能力，使其记忆、经验与人格得以脱离原有的有机载体，在机械心智中延续。\n\n研究完成后，可以切换裂解扫描仪的工作模式，填充自律指令核心作为扫描核心。以此方法进行的裂解扫描可以得到承载意识的特殊核心。使用该自律指令核心升格的机械族机械师将继承原个体的技能、背景故事与特性。</description>
+    <baseCost>12000</baseCost>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_ParallelThoughtMatrix</li>
+      <li>MAP_ConsciousnessStructureCopy</li>
+    </prerequisites>
+    <researchViewX>5.00</researchViewX>
+    <researchViewY>2.25</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
     <defName>MAP_ArtificialPsychicPathway</defName>
     <label>人工灵能通路</label>
     <description>研究如何利用启灵装置构建人工灵能通路，从而更好地感知、传导并驾驭灵能。机械族机械师可以通过这项技术获得使用灵能的能力，普通灵能者亦能从中获益。\n\n研究完成后可制造「心灵中枢」。</description>
@@ -205,7 +234,6 @@
     <researchViewX>1.00</researchViewX>
     <researchViewY>4.00</researchViewY>
   </ResearchProjectDef>
-
 
   <ResearchProjectDef>
     <defName>MAP_MechanicalCommandProxy</defName>
@@ -221,7 +249,7 @@
     </tags>
   </ResearchProjectDef>
 
-    <ResearchProjectDef>
+  <ResearchProjectDef>
     <defName>MAP_QuantumProxyProtocol</defName>
     <label>量子代理协议</label>
     <description>将机械指挥代理的基础决策能力与量子运算技术结合，使微型代理人工智能能够接入机械师的控制网络，并在机械师失去指挥能力时临时维持既有的机控连接。\n\n研究完成后可制造「代理子链」。</description>
@@ -266,7 +294,7 @@
     <researchViewY>6.00</researchViewY>
   </ResearchProjectDef>
 
-    <ResearchProjectDef>
+  <ResearchProjectDef>
     <defName>MAP_BionicCompanionEngineering</defName>
     <label>仿生伴侣工程</label>
     <description>在仿生结构与认知架构的基础上，整合情感模拟系统与人工孕育装置，使机械体能够参与更亲密的关系，并成为新生命的孕育载体。\n\n研究此科技以解锁仿生伴侣模块的制作方式。安装该模块后，机械族将获得情感模拟与人工孕育能力。</description>
