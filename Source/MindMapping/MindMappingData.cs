@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
+using HarmonyLib;
 using RimWorld;
 using Verse;
 
@@ -54,6 +56,14 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public sealed class MindMappingData : IExposable
     {
+        private static readonly FieldInfo ChildhoodField = AccessTools.Field(
+            typeof(Pawn_StoryTracker),
+            "childhood");
+
+        private static readonly FieldInfo BackstoriesCacheField = AccessTools.Field(
+            typeof(Pawn_StoryTracker),
+            "backstoriesCache");
+
         private bool tripleName;
         private bool numericalSingleName;
         private string firstName = string.Empty;
@@ -145,8 +155,7 @@ namespace MAP_MechanoidMechanitor
                 pawn.ageTracker.AgeChronologicalTicks = chronologicalAgeTicks;
             }
 
-            pawn.story!.Childhood = childhood;
-            pawn.story.Adulthood = adulthood;
+            SetBackstories(pawn, childhood, adulthood);
             ReplaceNonGeneTraits(pawn, traits);
 
             for (int i = 0; i < skills.Count; i++)
@@ -283,8 +292,7 @@ namespace MAP_MechanoidMechanitor
         internal static void ResetToAcquiredBaseline(Pawn pawn)
         {
             EnsurePersonalityTrackers(pawn);
-            pawn.story!.Childhood = null;
-            pawn.story.Adulthood = null;
+            SetBackstories(pawn, null, null);
             ReplaceNonGeneTraits(pawn, new List<MindMappingTraitData>());
 
             List<SkillRecord> records = pawn.skills!.skills;
@@ -324,6 +332,27 @@ namespace MAP_MechanoidMechanitor
             skill.Level = level;
             skill.xpSinceLastLevel = 0f;
             skill.xpSinceMidnight = 0f;
+        }
+
+        private static void SetBackstories(
+            Pawn pawn,
+            BackstoryDef? newChildhood,
+            BackstoryDef? newAdulthood)
+        {
+            Pawn_StoryTracker story = pawn.story!;
+            if (newChildhood != null)
+            {
+                story.Childhood = newChildhood;
+            }
+            else
+            {
+                // 原版 Childhood setter 会无条件读取 value.spawnCategories，不能传入 null。
+                ChildhoodField.SetValue(story, null);
+                BackstoriesCacheField.SetValue(story, null);
+            }
+
+            // Adulthood setter 支持 null，并会同步清空背景故事缓存。
+            story.Adulthood = newAdulthood;
         }
 
         private static void NotifyPersonalityChanged(Pawn pawn)
