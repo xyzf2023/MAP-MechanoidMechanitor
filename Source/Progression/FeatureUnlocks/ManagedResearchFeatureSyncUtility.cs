@@ -158,33 +158,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            JobDef? transferJobDef = MAPMechanitor_JobDefOf.MAP_TransferMechanicalConsciousness;
-            if (transferJobDef == null)
-            {
-                Log.Error(
-                    "[MAP-机械族机械师] 取消机械意识转移工作失败：缺少 JobDef " +
-                    "MAP_TransferMechanicalConsciousness。");
-                return false;
-            }
-
-            bool allSucceeded = true;
-            HashSet<Pawn> targets = CollectPlayerMechanitorPawns();
-            foreach (Pawn pawn in targets)
-            {
-                try
-                {
-                    CancelTransferJobs(pawn, transferJobDef);
-                }
-                catch (Exception ex)
-                {
-                    allSucceeded = false;
-                    Log.Error(
-                        "[MAP-机械族机械师] 取消机械意识转移工作失败：" +
-                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
-                }
-            }
-
-            return allSucceeded;
+            return CancelMechanicalConsciousnessTransferJobs();
         }
 
         /// <summary>
@@ -196,11 +170,22 @@ namespace MAP_MechanoidMechanitor
         private static bool SyncOrbitalDataNetwork()
         {
             bool allSucceeded = true;
+            bool orbitalDataNetworkUnlocked =
+                ResearchFeatureUnlockUtility.IsOrbitalDataNetworkUnlocked();
 
-            if (ResearchFeatureUnlockUtility.IsOrbitalDataNetworkUnlocked()
-                && !OrbitalDataNetworkSkillSyncUtility.SyncAll())
+            if (orbitalDataNetworkUnlocked)
             {
-                allSucceeded = false;
+                if (!OrbitalDataNetworkSkillSyncUtility.SyncAll())
+                {
+                    allSucceeded = false;
+                }
+
+                // 轨道数据网络完成后，主动交互已经由“意识转移”切换为“控制权交接”。
+                // 立即清除仍在执行或排队的旧意识转移工作，避免科研切换后残留过期 Job。
+                if (!CancelMechanicalConsciousnessTransferJobs())
+                {
+                    allSucceeded = false;
+                }
             }
 
             GameComponent_MechanoidMechanitorRegistry
@@ -268,6 +253,37 @@ namespace MAP_MechanoidMechanitor
             }
 
             return registry.ClearSelfAllocationsAndEffects();
+        }
+
+        private static bool CancelMechanicalConsciousnessTransferJobs()
+        {
+            JobDef? transferJobDef = MAPMechanitor_JobDefOf.MAP_TransferMechanicalConsciousness;
+            if (transferJobDef == null)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 取消机械意识转移工作失败：缺少 JobDef " +
+                    "MAP_TransferMechanicalConsciousness。");
+                return false;
+            }
+
+            bool allSucceeded = true;
+            HashSet<Pawn> targets = CollectPlayerMechanitorPawns();
+            foreach (Pawn pawn in targets)
+            {
+                try
+                {
+                    CancelTransferJobs(pawn, transferJobDef);
+                }
+                catch (Exception ex)
+                {
+                    allSucceeded = false;
+                    Log.Error(
+                        "[MAP-机械族机械师] 取消机械意识转移工作失败：" +
+                        $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+                }
+            }
+
+            return allSucceeded;
         }
 
         private static void CancelTransferJobs(Pawn pawn, JobDef transferJobDef)
