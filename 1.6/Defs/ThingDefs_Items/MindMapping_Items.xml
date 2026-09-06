@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
   <ThingDef ParentName="MAP_MechanoidMechanitorInstallableModuleBase" MayRequire="Ludeon.RimWorld.Biotech">
-    <defName>MAP_MindMappingCore</defName>
+    <defName>MAP_MindMappingAutonomousDirectiveCore</defName>
     <label>自律指令核心（空白）</label>
     <description>TODO</description>
     <graphicData>

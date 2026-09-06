@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
   <RecipeDef MayRequire="Ludeon.RimWorld.Biotech">
-    <defName>MAP_Make_MindMappingCore</defName>
+    <defName>MAP_Make_MindMappingAutonomousDirectiveCore</defName>
     <label>制作自律指令核心（空白）</label>
     <description>TODO</description>
     <jobString>正在制作自律指令核心（空白）。</jobString>
@@ -32,7 +32,7 @@
       </thingDefs>
     </fixedIngredientFilter>
     <products>
-      <MAP_MindMappingCore>1</MAP_MindMappingCore>
+      <MAP_MindMappingAutonomousDirectiveCore>1</MAP_MindMappingAutonomousDirectiveCore>
     </products>
   </RecipeDef>
 </Defs>

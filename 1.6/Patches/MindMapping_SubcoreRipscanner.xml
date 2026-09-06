@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Patch>
   <Operation Class="PatchOperationAdd">
-    <xpath>/Defs/ThingDef[defName="SubcoreRipscanner"]/comps</xpath>
+    <xpath>/Defs/ThingDef[defName="SubcoreRipscanner"]</xpath>
     <value>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_MindMappingScanner"/>
+      <comps>
+        <li Class="MAP_MechanoidMechanitor.CompProperties_MindMappingScanner"/>
+      </comps>
     </value>
   </Operation>
 </Patch>

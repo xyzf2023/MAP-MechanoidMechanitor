@@ -8,7 +8,7 @@ namespace MAP_MechanoidMechanitor
     {
         public static ThingDef MAP_ParallelThoughtArray = null!;
         public static ThingDef MAP_ParallelThoughtInterface = null!;
-        public static ThingDef MAP_MindMappingCore = null!;
+        public static ThingDef MAP_MindMappingAutonomousDirectiveCore = null!;
 
         static MAPMechanitor_ThingDefOf()
         {

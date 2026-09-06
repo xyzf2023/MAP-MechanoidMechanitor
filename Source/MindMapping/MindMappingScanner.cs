@@ -115,7 +115,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < owner.Count; i++)
             {
                 Thing thing = owner[i];
-                if (thing.def == MAPMechanitor_ThingDefOf.MAP_MindMappingCore
+                if (thing.def == MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore
                     && thing.TryGetComp<CompMindMappingCore>()?.IsBlank == true)
                 {
                     count += thing.stackCount;
@@ -156,7 +156,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            __result = thingDef == MAPMechanitor_ThingDefOf.MAP_MindMappingCore
+            __result = thingDef == MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore
                 ? 1 - MindMappingScannerUtility.BlankCoreCount(__instance)
                 : 0;
             return false;
@@ -177,7 +177,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            __result = thing?.def == MAPMechanitor_ThingDefOf.MAP_MindMappingCore
+            __result = thing?.def == MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore
                 && thing.TryGetComp<CompMindMappingCore>()?.IsBlank == true
                 && MindMappingScannerUtility.BlankCoreCount(__instance) < 1;
             return false;
@@ -214,7 +214,7 @@ namespace MAP_MechanoidMechanitor
             else
             {
                 __result = "MAP_MindMapping.Scanner.RequiresCore".Translate(
-                    MAPMechanitor_ThingDefOf.MAP_MindMappingCore.LabelCap);
+                    MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore.LabelCap);
             }
 
             return false;
@@ -233,7 +233,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             sb.AppendInNewLine(
-                $" - {MAPMechanitor_ThingDefOf.MAP_MindMappingCore.LabelCap} " +
+                $" - {MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore.LabelCap} " +
                 $"{MindMappingScannerUtility.BlankCoreCount(__instance)} / 1");
             return false;
         }
@@ -255,14 +255,14 @@ namespace MAP_MechanoidMechanitor
                 {
                     StringBuilder description = new StringBuilder();
                     description.Append("SubcoreScannerProduces".Translate() + " " +
-                        MAPMechanitor_ThingDefOf.MAP_MindMappingCore.label + ".");
+                        MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore.label + ".");
                     description.Append("\n\n");
                     description.Append("DurationHours".Translate() + ": " +
                         __instance.def.building.subcoreScannerTicks.ToStringTicksToPeriod());
                     description.Append("\n\n");
                     description.Append("SubcoreScannerStartDesc".Translate(
                         __instance.def.label,
-                        MAPMechanitor_ThingDefOf.MAP_MindMappingCore.LabelCap + " x1"));
+                        MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore.LabelCap + " x1"));
                     command.defaultDesc = description.ToString();
                 }
 
@@ -348,7 +348,8 @@ namespace MAP_MechanoidMechanitor
                 Log.Error("[MAP-机械族机械师] 心智映射扫描完成后未找到原版产物，改为直接生成映射核心。");
             }
 
-            Thing mappedCore = ThingMaker.MakeThing(MAPMechanitor_ThingDefOf.MAP_MindMappingCore);
+            Thing mappedCore = ThingMaker.MakeThing(
+                MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore);
             mappedCore.TryGetComp<CompMindMappingCore>()?.Store(__state.Data);
             GenPlace.TryPlaceThing(mappedCore, outputCell, __instance.Map, ThingPlaceMode.Near);
         }

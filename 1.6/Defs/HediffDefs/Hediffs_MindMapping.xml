@@ -4,6 +4,7 @@
     <defName>MAP_MindMappingLoad</defName>
     <label>心智映射负载</label>
     <description>复制心智数据是一项复杂的工作，由此产生的一系列数据残余会阻止短时间内进行第二次复制。</description>
+    <hediffClass>HediffWithComps</hediffClass>
     <scenarioCanAdd>false</scenarioCanAdd>
     <isBad>false</isBad>
     <comps>
