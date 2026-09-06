@@ -116,7 +116,7 @@ namespace MAP_MechanoidMechanitor
             {
                 Thing thing = owner[i];
                 if (thing.def == MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore
-                    && thing.TryGetComp<CompMindMappingCore>()?.IsBlank == true)
+                    && thing.TryGetComp<CompMindMappingAutonomousDirectiveCore>()?.IsBlank == true)
                 {
                     count += thing.stackCount;
                 }
@@ -178,7 +178,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             __result = thing?.def == MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore
-                && thing.TryGetComp<CompMindMappingCore>()?.IsBlank == true
+                && thing.TryGetComp<CompMindMappingAutonomousDirectiveCore>()?.IsBlank == true
                 && MindMappingScannerUtility.BlankCoreCount(__instance) < 1;
             return false;
         }
@@ -350,7 +350,7 @@ namespace MAP_MechanoidMechanitor
 
             Thing mappedCore = ThingMaker.MakeThing(
                 MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore);
-            mappedCore.TryGetComp<CompMindMappingCore>()?.Store(__state.Data);
+            mappedCore.TryGetComp<CompMindMappingAutonomousDirectiveCore>()?.Store(__state.Data);
             GenPlace.TryPlaceThing(mappedCore, outputCell, __instance.Map, ThingPlaceMode.Near);
         }
     }

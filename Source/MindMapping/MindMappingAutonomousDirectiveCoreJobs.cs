@@ -6,7 +6,7 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
-    public sealed class FloatMenuOptionProvider_MindMappingCore : FloatMenuOptionProvider
+    public sealed class FloatMenuOptionProvider_MindMappingAutonomousDirectiveCore : FloatMenuOptionProvider
     {
         protected override bool Drafted => true;
         protected override bool Undrafted => true;
@@ -25,7 +25,8 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            CompMindMappingCore? core = clickedThing.TryGetComp<CompMindMappingCore>();
+            CompMindMappingAutonomousDirectiveCore? core =
+                clickedThing.TryGetComp<CompMindMappingAutonomousDirectiveCore>();
             Pawn pawn = context.FirstSelectedPawn;
             if (core == null || pawn == null || !pawn.RaceProps.IsMechanoid)
             {
@@ -123,7 +124,7 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    public sealed class JobDriver_UseMindMappingCore : JobDriver
+    public sealed class JobDriver_UseMindMappingAutonomousDirectiveCore : JobDriver
     {
         private const int WorkTicks = 600;
 
@@ -215,7 +216,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            CompMindMappingCore core = Core.TryGetComp<CompMindMappingCore>();
+            CompMindMappingAutonomousDirectiveCore core =
+                Core.TryGetComp<CompMindMappingAutonomousDirectiveCore>();
             bool success;
             if (job.def == MAPMechanitor_JobDefOf.MAP_AscendWithMindData)
             {
@@ -274,7 +276,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            CompMindMappingCore? core = coreThing.TryGetComp<CompMindMappingCore>();
+            CompMindMappingAutonomousDirectiveCore? core =
+                coreThing.TryGetComp<CompMindMappingAutonomousDirectiveCore>();
             if (core == null)
             {
                 return false;
@@ -306,7 +309,9 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        public static bool TryAscend(Pawn pawn, CompMindMappingCore core)
+        public static bool TryAscend(
+            Pawn pawn,
+            CompMindMappingAutonomousDirectiveCore core)
         {
             MindMappingData? data = core.Data;
             if (data == null
@@ -319,7 +324,9 @@ namespace MAP_MechanoidMechanitor
             return TrySetMappedPersonality(pawn, true);
         }
 
-        public static bool TryImport(Pawn pawn, CompMindMappingCore core)
+        public static bool TryImport(
+            Pawn pawn,
+            CompMindMappingAutonomousDirectiveCore core)
         {
             MindMappingData? data = core.Data;
             if (data == null
@@ -338,7 +345,9 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        public static bool TryExport(Pawn pawn, CompMindMappingCore core)
+        public static bool TryExport(
+            Pawn pawn,
+            CompMindMappingAutonomousDirectiveCore core)
         {
             if (!core.IsBlank
                 || !GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _))
@@ -352,7 +361,9 @@ namespace MAP_MechanoidMechanitor
             return TrySetMappedPersonality(pawn, false);
         }
 
-        public static bool TryCopy(Pawn pawn, CompMindMappingCore core)
+        public static bool TryCopy(
+            Pawn pawn,
+            CompMindMappingAutonomousDirectiveCore core)
         {
             if (!core.IsBlank || HasCopyCooldown(pawn))
             {

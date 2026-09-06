@@ -2,22 +2,22 @@
 <Defs>
   <JobDef MayRequire="Ludeon.RimWorld.Biotech">
     <defName>MAP_AscendWithMindData</defName>
-    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMindMappingCore</driverClass>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMindMappingAutonomousDirectiveCore</driverClass>
     <reportString>正在导入心智数据。</reportString>
   </JobDef>
   <JobDef MayRequire="Ludeon.RimWorld.Biotech">
     <defName>MAP_ImportMindData</defName>
-    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMindMappingCore</driverClass>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMindMappingAutonomousDirectiveCore</driverClass>
     <reportString>正在导入心智数据。</reportString>
   </JobDef>
   <JobDef MayRequire="Ludeon.RimWorld.Biotech">
     <defName>MAP_ExportMindData</defName>
-    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMindMappingCore</driverClass>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMindMappingAutonomousDirectiveCore</driverClass>
     <reportString>正在导出心智数据。</reportString>
   </JobDef>
   <JobDef MayRequire="Ludeon.RimWorld.Biotech">
     <defName>MAP_CopyMindData</defName>
-    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMindMappingCore</driverClass>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMindMappingAutonomousDirectiveCore</driverClass>
     <reportString>正在复制心智数据。</reportString>
   </JobDef>
 </Defs>

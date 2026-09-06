@@ -11,7 +11,7 @@
     </graphicData>
     <comps Inherit="False">
       <li Class="CompProperties_Forbiddable"/>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_MindMappingCore"/>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MindMappingAutonomousDirectiveCore"/>
     </comps>
   </ThingDef>
 </Defs>

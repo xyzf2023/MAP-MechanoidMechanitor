@@ -2,15 +2,15 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    public sealed class CompProperties_MindMappingCore : CompProperties
+    public sealed class CompProperties_MindMappingAutonomousDirectiveCore : CompProperties
     {
-        public CompProperties_MindMappingCore()
-            : base(typeof(CompMindMappingCore))
+        public CompProperties_MindMappingAutonomousDirectiveCore()
+            : base(typeof(CompMindMappingAutonomousDirectiveCore))
         {
         }
     }
 
-    public sealed class CompMindMappingCore : ThingComp
+    public sealed class CompMindMappingAutonomousDirectiveCore : ThingComp
     {
         private MindMappingData? data;
 
