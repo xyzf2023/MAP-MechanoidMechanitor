@@ -14,35 +14,78 @@ namespace MAP_MechanoidMechanitor
 
         public static void EnsureGenericBackstories(Pawn? pawn)
         {
-            if (pawn == null || pawn.Destroyed || !pawn.RaceProps.IsMechanoid)
+            if (!CanInitializeBackstories(pawn))
             {
                 return;
             }
 
-            if (pawn.kindDef == null)
+            if (ShouldSkipDedicatedBackstoryPawn(pawn!))
             {
                 return;
             }
 
-            if (ShouldSkipDedicatedBackstoryPawn(pawn))
+            EnsureStoryTracker(pawn!);
+            ApplyMissingBackstories(
+                pawn!,
+                GetGenericChildhood(),
+                GetGenericAdulthood());
+        }
+
+        /// <summary>
+        /// 心智数据导出后恢复机体原本应有的背景故事。
+        /// 正义、恋人及其他声明了专属背景的机体读取自身组件配置；
+        /// 普通机械族则使用通用“机械体”背景。
+        /// </summary>
+        public static void RestoreBaselineBackstories(Pawn? pawn)
+        {
+            if (!CanInitializeBackstories(pawn))
             {
                 return;
             }
 
+            EnsureStoryTracker(pawn!);
+            if (TryGetDedicatedBackstories(
+                    pawn!.def,
+                    out BackstoryDef? childhood,
+                    out BackstoryDef? adulthood))
+            {
+                ApplyMissingBackstories(pawn, childhood, adulthood);
+                return;
+            }
+
+            ApplyMissingBackstories(
+                pawn,
+                GetGenericChildhood(),
+                GetGenericAdulthood());
+        }
+
+        private static bool CanInitializeBackstories(Pawn? pawn)
+        {
+            return pawn != null
+                && !pawn.Destroyed
+                && pawn.RaceProps.IsMechanoid
+                && pawn.kindDef != null;
+        }
+
+        private static void EnsureStoryTracker(Pawn pawn)
+        {
             pawn.story ??= new Pawn_StoryTracker(pawn);
             pawn.story.traits ??= new TraitSet(pawn);
+        }
 
-            BackstoryDef? genericChildhood = GetGenericChildhood();
-            BackstoryDef? genericAdulthood = GetGenericAdulthood();
-
-            if (pawn.story.Childhood == null && genericChildhood != null)
+        private static void ApplyMissingBackstories(
+            Pawn pawn,
+            BackstoryDef? childhood,
+            BackstoryDef? adulthood)
+        {
+            if (pawn.story!.Childhood == null && childhood != null)
             {
-                pawn.story.Childhood = genericChildhood;
+                pawn.story.Childhood = childhood;
             }
 
-            if (pawn.story.Adulthood == null && genericAdulthood != null)
+            if (pawn.story.Adulthood == null && adulthood != null)
             {
-                pawn.story.Adulthood = genericAdulthood;
+                pawn.story.Adulthood = adulthood;
             }
         }
 
@@ -58,6 +101,19 @@ namespace MAP_MechanoidMechanitor
 
         private static bool HasDedicatedBackstoryComp(ThingDef? def)
         {
+            return TryGetDedicatedBackstories(
+                def,
+                out _,
+                out _);
+        }
+
+        private static bool TryGetDedicatedBackstories(
+            ThingDef? def,
+            out BackstoryDef? childhood,
+            out BackstoryDef? adulthood)
+        {
+            childhood = null;
+            adulthood = null;
             if (def?.comps == null)
             {
                 return false;
@@ -70,6 +126,8 @@ namespace MAP_MechanoidMechanitor
                     && (colonistProps.childhoodBackstory != null
                         || colonistProps.adulthoodBackstory != null))
                 {
+                    childhood = colonistProps.childhoodBackstory;
+                    adulthood = colonistProps.adulthoodBackstory;
                     return true;
                 }
 
@@ -77,6 +135,8 @@ namespace MAP_MechanoidMechanitor
                     && (commanderProps.childhoodBackstory != null
                         || commanderProps.adulthoodBackstory != null))
                 {
+                    childhood = commanderProps.childhoodBackstory;
+                    adulthood = commanderProps.adulthoodBackstory;
                     return true;
                 }
             }

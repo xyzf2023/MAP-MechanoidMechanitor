@@ -293,6 +293,7 @@ namespace MAP_MechanoidMechanitor
         {
             EnsurePersonalityTrackers(pawn);
             SetBackstories(pawn, null, null);
+            MechanoidBackstoryUtility.RestoreBaselineBackstories(pawn);
             ReplaceNonGeneTraits(pawn, new List<MindMappingTraitData>());
 
             List<SkillRecord> records = pawn.skills!.skills;
