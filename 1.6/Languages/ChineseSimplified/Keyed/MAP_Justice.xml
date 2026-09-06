@@ -21,18 +21,18 @@
   <MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.Title>能力：{0}</MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.Title>
   <MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.SpecialScenario.Text>「正义」及机械意识载体获得技能：{0}。\n\n{1}</MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.SpecialScenario.Text>
   <MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.JusticeOnly.Text>「正义」获得技能：{0}。\n\n{1}</MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.JusticeOnly.Text>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechRecode.Description>机体再编码 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechRecode.Description>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechReconstruction.Description>机体重构 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechReconstruction.Description>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechHack.Description>机体骇入 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechHack.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechRecode.Description>该能力可以将已关机的机械族改为我方阵营。</MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechRecode.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechReconstruction.Description>该能力可以重启一台已关机的我方机械族。</MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechReconstruction.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechHack.Description>该能力可以将一台非我方机械族的阵营改为我方。</MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechHack.Description>
 
   <MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Title>特性：{0}</MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Title>
   <MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Text>已解锁机械族机械师特性：{0}。\n\n{1}</MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Text>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description>自律指令优化 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description>机械意识传输 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataProcessingAllocation.Description>数据处理分配 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataProcessingAllocation.Description>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.SelfDirectiveFocus.Description>自我指令聚焦 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.SelfDirectiveFocus.Description>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataStreamReorganization.Description>数据流重整 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataStreamReorganization.Description>
-  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.ParallelThoughtMatrix.Description>并行思维矩阵 TODO</MAP_MechanoidMechanitor.Justice.Unlock.Feature.ParallelThoughtMatrix.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description>通过优化自律指令的运算逻辑，机械族机械师能更高效地根据环境调整自身运行状态。现在，机械族机械师处于“自律指令”和“休眠（自机充电）”行为模式时，将获得对应的机体加成。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description>通过对量子信息传输技术的深入研究，我们掌握了在极短时间内传输大量数据的方法，使机械意识能够迅速转移至另一具兼容机体中。当机械意识载体即将损毁时，也可以借助这项技术紧急转移意识数据，避免机械意识随宿主一同彻底丢失。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataProcessingAllocation.Description>通过对机械意识数据处理机制的进一步研究，我们掌握了将部分运算能力定向分配给其他机械体的方法。机械族机械师现在可以将自身的数据处理分配给下属机械族，为目标机械族提供额外机体性能。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataProcessingAllocation.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.SelfDirectiveFocus.Description>通过对数据处理分配协议的进一步优化，我们掌握了将运算能力重新聚焦于机械族机械师自身的方法。现在，机械族机械师可以将自身设为数据处理分配的目标，在强化自身机体性能的同时，仅承担较低的数据处理效率损失。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.SelfDirectiveFocus.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataStreamReorganization.Description>通过重新规划机械意识内部的数据运算逻辑，我们提高了运算资源的利用效率。现机械族机械师将获得额外的数据处理能力加成。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.DataStreamReorganization.Description>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.ParallelThoughtMatrix.Description>通过构建并行运算进程，我们进一步提升了机械意识的整体运算效率。机械族机械师将获得更高的数据处理能力加成，且多个机械族机械师之间还可彼此提供额外的意识运算支持。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.ParallelThoughtMatrix.Description>
 
   <!-- 模块：意识转移 -->
   <MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.Label>意识转移</MAP_MechanoidMechanitor.Justice.ConsciousnessTransfer.Label>
