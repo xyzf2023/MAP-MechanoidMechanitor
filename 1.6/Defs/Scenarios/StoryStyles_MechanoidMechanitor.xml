@@ -8,8 +8,10 @@
     <iconPath>UI/Classic</iconPath>
     <presetConfiguration>
       <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
+      <factionOutpostFrequency>Low</factionOutpostFrequency>
       <mechHiveRelationMode>Default</mechHiveRelationMode>
       <insectRelationMode>Default</insectRelationMode>
+      <mechHiveNodeFrequency>Low</mechHiveNodeFrequency>
       <purgeDirectiveEnabled>false</purgeDirectiveEnabled>
       <symbiosisCovenantEnabled>false</symbiosisCovenantEnabled>
     </presetConfiguration>
@@ -23,6 +25,7 @@
     <iconPath>UI/SymbiosisCovenant</iconPath>
     <presetConfiguration>
       <ordinaryFactionRelationsMode>AllHostile</ordinaryFactionRelationsMode>
+      <factionOutpostFrequency>Medium</factionOutpostFrequency>
       <mechHiveRelationMode>Neutral</mechHiveRelationMode>
       <insectRelationMode>Default</insectRelationMode>
       <mechHiveNodeFrequency>Medium</mechHiveNodeFrequency>
@@ -39,6 +42,7 @@
     <iconPath>UI/PurgeDirective</iconPath>
     <presetConfiguration>
       <ordinaryFactionRelationsMode>AllPermanentHostile</ordinaryFactionRelationsMode>
+      <factionOutpostFrequency>Medium</factionOutpostFrequency>
       <mechHiveRelationMode>Ally</mechHiveRelationMode>
       <insectRelationMode>Default</insectRelationMode>
       <mechHiveNodeFrequency>Medium</mechHiveNodeFrequency>
