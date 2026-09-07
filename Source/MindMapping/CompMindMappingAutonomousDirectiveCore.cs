@@ -34,11 +34,6 @@ namespace MAP_MechanoidMechanitor
                 : "MAP_MindMapping.Core.LoadedLabel".Translate(data.ShortName);
         }
 
-        public override string CompInspectStringExtra()
-        {
-            return data?.GetInspectString() ?? "MAP_MindMapping.Inspect.Blank".Translate();
-        }
-
         public override void PostExposeData()
         {
             base.PostExposeData();

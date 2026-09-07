@@ -13,5 +13,8 @@
       <li Class="CompProperties_Forbiddable"/>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MindMappingAutonomousDirectiveCore"/>
     </comps>
+    <inspectorTabs>
+      <li>MAP_MechanoidMechanitor.ITab_MindMappingDetails</li>
+    </inspectorTabs>
   </ThingDef>
 </Defs>

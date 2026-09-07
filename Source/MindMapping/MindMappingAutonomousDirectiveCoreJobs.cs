@@ -84,7 +84,7 @@ namespace MAP_MechanoidMechanitor
                 yield return MakeOption(
                     pawn,
                     clickedThing,
-                    "MAP_MindMapping.Command.Ascend".Translate(),
+                    clickedThing.LabelCap,
                     MAPMechanitor_JobDefOf.MAP_AscendWithMindData);
             }
         }

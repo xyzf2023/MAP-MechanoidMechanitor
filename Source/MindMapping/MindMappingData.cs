@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -33,6 +32,8 @@ namespace MAP_MechanoidMechanitor
     {
         public SkillDef? Def;
         public int Level;
+        public Passion PassionValue;
+        public bool PassionRecorded;
 
         public MindMappingSkillData()
         {
@@ -42,12 +43,16 @@ namespace MAP_MechanoidMechanitor
         {
             Def = skill.def;
             Level = skill.Level;
+            PassionValue = skill.passion;
+            PassionRecorded = true;
         }
 
         public void ExposeData()
         {
             Scribe_Defs.Look(ref Def, "def");
             Scribe_Values.Look(ref Level, "level", 0);
+            Scribe_Values.Look(ref PassionValue, "passion", RimWorld.Passion.None);
+            Scribe_Values.Look(ref PassionRecorded, "passionRecorded", false);
         }
     }
 
@@ -71,10 +76,65 @@ namespace MAP_MechanoidMechanitor
         private string lastName = string.Empty;
         private string singleName = string.Empty;
         private long chronologicalAgeTicks;
+        private long biologicalAgeTicks;
+        private bool biologicalAgeRecorded;
+        private Gender gender;
+        private bool genderRecorded;
+        private bool ideologyRecorded;
+        private bool hadIdeology;
+        private Ideo? ideology;
+        private string ideologyName = string.Empty;
+        private WorkTags disabledWorkTags;
+        private bool disabledWorkTagsRecorded;
         private BackstoryDef? childhood;
         private BackstoryDef? adulthood;
         private List<MindMappingTraitData> traits = new List<MindMappingTraitData>();
         private List<MindMappingSkillData> skills = new List<MindMappingSkillData>();
+
+        public IReadOnlyList<MindMappingTraitData> Traits => traits;
+
+        public IReadOnlyList<MindMappingSkillData> Skills => skills;
+
+        public BackstoryDef? Childhood => childhood;
+
+        public BackstoryDef? Adulthood => adulthood;
+
+        public string FullName => BuildName().ToStringFull;
+
+        public int ChronologicalAgeYears
+            => (int)(chronologicalAgeTicks / GenDate.TicksPerYear);
+
+        public bool BiologicalAgeRecorded => biologicalAgeRecorded;
+
+        public int BiologicalAgeYears
+            => (int)(biologicalAgeTicks / GenDate.TicksPerYear);
+
+        public bool GenderRecorded => genderRecorded;
+
+        public Gender Gender => gender;
+
+        public bool IdeologyRecorded => ideologyRecorded;
+
+        public bool HadIdeology => hadIdeology;
+
+        public Ideo? Ideology => ideology;
+
+        public string IdeologyName
+        {
+            get
+            {
+                if (ideology != null && !ideology.name.NullOrEmpty())
+                {
+                    return ideology.name;
+                }
+
+                return ideologyName;
+            }
+        }
+
+        public bool DisabledWorkTagsRecorded => disabledWorkTagsRecorded;
+
+        public WorkTags DisabledWorkTags => disabledWorkTags;
 
         public string ShortName
         {
@@ -91,9 +151,24 @@ namespace MAP_MechanoidMechanitor
 
         public static MindMappingData Capture(Pawn pawn)
         {
+            Ideo? pawnIdeology = pawn.Ideo;
             MindMappingData data = new MindMappingData
             {
                 chronologicalAgeTicks = pawn.ageTracker?.AgeChronologicalTicks ?? 0L,
+                biologicalAgeTicks = pawn.ageTracker?.AgeBiologicalTicks ?? 0L,
+                biologicalAgeRecorded = pawn.ageTracker != null,
+                gender = pawn.gender,
+                genderRecorded = true,
+                ideologyRecorded = true,
+                hadIdeology = pawnIdeology != null,
+                ideology = pawnIdeology,
+                ideologyName = pawnIdeology == null
+                    ? string.Empty
+                    : (pawnIdeology.name.NullOrEmpty()
+                        ? pawnIdeology.ToString()
+                        : pawnIdeology.name),
+                disabledWorkTags = pawn.CombinedDisabledWorkTags,
+                disabledWorkTagsRecorded = true,
                 childhood = pawn.story?.Childhood,
                 adulthood = pawn.story?.Adulthood
             };
@@ -176,44 +251,6 @@ namespace MAP_MechanoidMechanitor
             NotifyPersonalityChanged(pawn);
         }
 
-        public string GetInspectString()
-        {
-            StringBuilder builder = new StringBuilder();
-            builder.AppendLine("MAP_MindMapping.Inspect.Name".Translate(ShortName));
-            builder.AppendLine("MAP_MindMapping.Inspect.Age".Translate(
-                chronologicalAgeTicks / GenDate.TicksPerYear));
-            builder.AppendLine("MAP_MindMapping.Inspect.Childhood".Translate(BackstoryLabel(childhood)));
-            builder.AppendLine("MAP_MindMapping.Inspect.Adulthood".Translate(BackstoryLabel(adulthood)));
-            builder.AppendLine("MAP_MindMapping.Inspect.Traits".Translate());
-            if (traits.Count == 0)
-            {
-                builder.AppendLine(" - " + "None".Translate());
-            }
-            else
-            {
-                for (int i = 0; i < traits.Count; i++)
-                {
-                    MindMappingTraitData trait = traits[i];
-                    if (trait.Def != null)
-                    {
-                        builder.AppendLine(" - " + trait.Def.DataAtDegree(trait.Degree).label.CapitalizeFirst());
-                    }
-                }
-            }
-
-            builder.AppendLine("MAP_MindMapping.Inspect.Skills".Translate());
-            for (int i = 0; i < skills.Count; i++)
-            {
-                MindMappingSkillData skill = skills[i];
-                if (skill.Def != null)
-                {
-                    builder.AppendLine($" - {skill.Def.skillLabel.CapitalizeFirst()}: {skill.Level}");
-                }
-            }
-
-            return builder.ToString().TrimEndNewlines();
-        }
-
         public void ExposeData()
         {
             Scribe_Values.Look(ref tripleName, "tripleName", false);
@@ -223,10 +260,24 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref lastName, "lastName", string.Empty);
             Scribe_Values.Look(ref singleName, "singleName", string.Empty);
             Scribe_Values.Look(ref chronologicalAgeTicks, "chronologicalAgeTicks", 0L);
+            Scribe_Values.Look(ref biologicalAgeTicks, "biologicalAgeTicks", 0L);
+            Scribe_Values.Look(ref biologicalAgeRecorded, "biologicalAgeRecorded", false);
+            Scribe_Values.Look(ref gender, "gender", Gender.None);
+            Scribe_Values.Look(ref genderRecorded, "genderRecorded", false);
+            Scribe_Values.Look(ref ideologyRecorded, "ideologyRecorded", false);
+            Scribe_Values.Look(ref hadIdeology, "hadIdeology", false);
+            Scribe_References.Look(ref ideology, "ideology");
+            Scribe_Values.Look(ref ideologyName, "ideologyName", string.Empty);
+            Scribe_Values.Look(ref disabledWorkTags, "disabledWorkTags", WorkTags.None);
+            Scribe_Values.Look(
+                ref disabledWorkTagsRecorded,
+                "disabledWorkTagsRecorded",
+                false);
             Scribe_Defs.Look(ref childhood, "childhood");
             Scribe_Defs.Look(ref adulthood, "adulthood");
             Scribe_Collections.Look(ref traits, "traits", LookMode.Deep);
             Scribe_Collections.Look(ref skills, "skills", LookMode.Deep);
+            ideologyName ??= string.Empty;
             traits ??= new List<MindMappingTraitData>();
             skills ??= new List<MindMappingSkillData>();
         }
@@ -237,9 +288,6 @@ namespace MAP_MechanoidMechanitor
                 ? (Name)new NameTriple(firstName, nickName, lastName)
                 : new NameSingle(singleName, numericalSingleName);
         }
-
-        private static string BackstoryLabel(BackstoryDef? backstory)
-            => backstory?.title?.CapitalizeFirst() ?? "None".Translate();
 
         private static void EnsurePersonalityTrackers(Pawn pawn)
         {

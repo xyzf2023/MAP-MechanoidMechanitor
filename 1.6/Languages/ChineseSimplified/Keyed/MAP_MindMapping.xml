@@ -3,12 +3,28 @@
   <MAP_MindMapping.Core.BlankLabel>自律指令核心（空白）</MAP_MindMapping.Core.BlankLabel>
   <MAP_MindMapping.Core.LoadedLabel>自律指令核心（{0}）</MAP_MindMapping.Core.LoadedLabel>
 
+  <MAP_MindMapping.Tab.Details>详情</MAP_MindMapping.Tab.Details>
+  <MAP_MindMapping.Details.Name>姓名</MAP_MindMapping.Details.Name>
+  <MAP_MindMapping.Details.ChronologicalAge>历法年龄</MAP_MindMapping.Details.ChronologicalAge>
+  <MAP_MindMapping.Details.BiologicalAge>生理年龄</MAP_MindMapping.Details.BiologicalAge>
+  <MAP_MindMapping.Details.Gender>性别</MAP_MindMapping.Details.Gender>
+  <MAP_MindMapping.Details.Ideology>所属文化</MAP_MindMapping.Details.Ideology>
+  <MAP_MindMapping.Details.Childhood>童年背景</MAP_MindMapping.Details.Childhood>
+  <MAP_MindMapping.Details.Adulthood>成年背景</MAP_MindMapping.Details.Adulthood>
+  <MAP_MindMapping.Details.Traits>特性</MAP_MindMapping.Details.Traits>
+  <MAP_MindMapping.Details.IncapableOf>无法从事</MAP_MindMapping.Details.IncapableOf>
+  <MAP_MindMapping.Details.Skills>技能</MAP_MindMapping.Details.Skills>
+  <MAP_MindMapping.Details.Passion>技能兴趣</MAP_MindMapping.Details.Passion>
+  <MAP_MindMapping.Details.SkillLevel>等级</MAP_MindMapping.Details.SkillLevel>
+  <MAP_MindMapping.Details.AgeYears>{0}岁</MAP_MindMapping.Details.AgeYears>
+  <MAP_MindMapping.Details.None>无</MAP_MindMapping.Details.None>
+  <MAP_MindMapping.Details.NotRecorded>未记录</MAP_MindMapping.Details.NotRecorded>
+
   <MAP_MindMapping.Scanner.Toggle>心智映射扫描</MAP_MindMapping.Scanner.Toggle>
   <MAP_MindMapping.Scanner.ToggleDesc>TODO</MAP_MindMapping.Scanner.ToggleDesc>
   <MAP_MindMapping.Scanner.ToggleDisabled>裂解扫描仪已经开始准备、填充或扫描，当前不能切换模式。</MAP_MindMapping.Scanner.ToggleDisabled>
   <MAP_MindMapping.Scanner.RequiresCore>需要一个空白的{0}。</MAP_MindMapping.Scanner.RequiresCore>
 
-  <MAP_MindMapping.Command.Ascend>导入心智数据并升格</MAP_MindMapping.Command.Ascend>
   <MAP_MindMapping.Command.Import>导入心智数据</MAP_MindMapping.Command.Import>
   <MAP_MindMapping.Command.Export>导出心智数据</MAP_MindMapping.Command.Export>
   <MAP_MindMapping.Command.Copy>复制心智数据</MAP_MindMapping.Command.Copy>
@@ -17,11 +33,4 @@
   <MAP_MindMapping.Message.Success>心智数据操作完成。</MAP_MindMapping.Message.Success>
   <MAP_MindMapping.Message.Invalidated>心智数据操作条件已经失效。</MAP_MindMapping.Message.Invalidated>
 
-  <MAP_MindMapping.Inspect.Blank>未存放心智数据。</MAP_MindMapping.Inspect.Blank>
-  <MAP_MindMapping.Inspect.Name>姓名：{0}</MAP_MindMapping.Inspect.Name>
-  <MAP_MindMapping.Inspect.Age>历法年龄：{0}岁</MAP_MindMapping.Inspect.Age>
-  <MAP_MindMapping.Inspect.Childhood>童年背景：{0}</MAP_MindMapping.Inspect.Childhood>
-  <MAP_MindMapping.Inspect.Adulthood>成年背景：{0}</MAP_MindMapping.Inspect.Adulthood>
-  <MAP_MindMapping.Inspect.Traits>特性：</MAP_MindMapping.Inspect.Traits>
-  <MAP_MindMapping.Inspect.Skills>技能：</MAP_MindMapping.Inspect.Skills>
 </LanguageData>
