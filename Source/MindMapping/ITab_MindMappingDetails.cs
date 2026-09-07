@@ -369,7 +369,6 @@ namespace MAP_MechanoidMechanitor
             BackstoryDef? backstory,
             MindMappingData data)
         {
-            Rect row = NewRowRect(rect, y, ValueRowHeight);
             string value = NoneText();
             if (backstory != null)
             {
@@ -382,12 +381,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             DrawPlainRow(rect, ref y, value);
-            if (backstory != null && !backstory.description.NullOrEmpty())
-            {
-                TooltipHandler.TipRegion(
-                    row,
-                    new TipSignal(backstory.description, backstory.GetHashCode()));
-            }
         }
 
         private static void DrawTraitRows(
@@ -415,16 +408,7 @@ namespace MAP_MechanoidMechanitor
                     ? fallback.CapitalizeFirst()
                     : degreeData.GetLabelCapFor(DisplayGender(data));
 
-                Rect row = NewRowRect(rect, y, ValueRowHeight);
                 DrawPlainRow(rect, ref y, label);
-                if (degreeData != null && !degreeData.description.NullOrEmpty())
-                {
-                    TooltipHandler.TipRegion(
-                        row,
-                        new TipSignal(
-                            degreeData.description,
-                            trait.Def.GetHashCode() ^ trait.Degree));
-                }
 
                 drawn++;
             }
