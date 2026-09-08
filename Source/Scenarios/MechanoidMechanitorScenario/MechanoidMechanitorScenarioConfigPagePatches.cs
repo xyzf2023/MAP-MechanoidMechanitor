@@ -19,10 +19,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             bool containsScenarioMarker = MechanoidMechanitorScenarioUtility
                 .ScenarioContainsMarker(__instance);
-            bool allowGeneralScenarioStoryStyles =
-                MAPMechanitorMod.Settings?.enableStoryStylesForGeneralScenarios == true;
 
-            if (!containsScenarioMarker && !allowGeneralScenarioStoryStyles)
+            // 剧情风格页面只属于机械族机械师专用剧本。
+            // 普通剧本统一由普通剧本默认剧情模板静默建立 GeneralScenario 配置。
+            if (!containsScenarioMarker)
             {
                 return;
             }
