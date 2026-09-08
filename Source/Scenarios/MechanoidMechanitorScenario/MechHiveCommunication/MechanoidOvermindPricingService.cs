@@ -23,10 +23,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static readonly HashSet<MechanoidOvermindThingSpec> thingMarketValueFailureCache =
             new HashSet<MechanoidOvermindThingSpec>();
 
+        private static Dictionary<PawnKindDef, int>? mechPriceOverrideCache;
+
         public static void ClearThingMarketValueCache()
         {
             thingMarketValueCache.Clear();
             thingMarketValueFailureCache.Clear();
+        }
+
+        public static void ClearMechPriceOverrideCache()
+        {
+            mechPriceOverrideCache = null;
         }
 
         public static int GetMechWeightBaseCost(MechWeightClassDef? weightClass)
@@ -111,6 +118,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (MechanoidOvermindCatalogService.IsMechPawnKindBlacklisted(kind))
             {
                 return false;
+            }
+
+            if (TryGetMechPriceOverride(kind, out price))
+            {
+                return true;
             }
 
             if (!TryGetMechBandwidthCost(kind, out float bandwidth))
@@ -302,6 +314,89 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return true;
+        }
+
+        private static bool TryGetMechPriceOverride(PawnKindDef kind, out int price)
+        {
+            price = 0;
+            EnsureMechPriceOverrideCache();
+            return mechPriceOverrideCache!.TryGetValue(kind, out price);
+        }
+
+        private static void EnsureMechPriceOverrideCache()
+        {
+            if (mechPriceOverrideCache != null)
+            {
+                return;
+            }
+
+            Dictionary<PawnKindDef, int> cache = new Dictionary<PawnKindDef, int>();
+            List<MechanoidMechanitorPurgeTradePriceOverrideDef> defs =
+                DefDatabase<MechanoidMechanitorPurgeTradePriceOverrideDef>.AllDefsListForReading;
+            for (int i = 0; i < defs.Count; i++)
+            {
+                MechanoidMechanitorPurgeTradePriceOverrideDef? overrideDef = defs[i];
+                if (overrideDef == null)
+                {
+                    continue;
+                }
+
+                List<MechanoidMechanitorPurgeTradePriceOverrideEntry>? entries =
+                    overrideDef.mechPriceOverrides;
+                if (entries == null)
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < entries.Count; j++)
+                {
+                    MechanoidMechanitorPurgeTradePriceOverrideEntry? entry = entries[j];
+                    PawnKindDef? kind = entry?.mechPawnKind;
+                    if (kind == null)
+                    {
+                        Log.Warning(
+                            "[MAP] 肃清指令机械族固定价格配置包含空 PawnKindDef，已忽略。"
+                            + " Def="
+                            + overrideDef.defName
+                            + "。条目索引="
+                            + j
+                            + "。");
+                        continue;
+                    }
+
+                    if (entry!.price <= 0)
+                    {
+                        Log.Warning(
+                            "[MAP] 肃清指令机械族固定价格必须大于 0，已忽略。"
+                            + " Def="
+                            + overrideDef.defName
+                            + ", PawnKindDef="
+                            + kind.defName
+                            + ", Price="
+                            + entry.price
+                            + "。");
+                        continue;
+                    }
+
+                    if (cache.ContainsKey(kind))
+                    {
+                        Log.Warning(
+                            "[MAP] 肃清指令机械族固定价格存在重复配置，后续条目已忽略。"
+                            + " Def="
+                            + overrideDef.defName
+                            + ", PawnKindDef="
+                            + kind.defName
+                            + ", Price="
+                            + entry.price
+                            + "。");
+                        continue;
+                    }
+
+                    cache.Add(kind, entry.price);
+                }
+            }
+
+            mechPriceOverrideCache = cache;
         }
 
         private static bool TryEvaluateThingMarketValue(

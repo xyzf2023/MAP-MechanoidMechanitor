@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorPurgeTradePriceOverrideDef>
+    <defName>MAP_PurgeTradePriceOverrides_Core</defName>
+    <mechPriceOverrides>
+      <li>
+        <mechPawnKind>MAP_Mech_Justice</mechPawnKind>
+        <price>1500</price>
+      </li>
+    </mechPriceOverrides>
+  </MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorPurgeTradePriceOverrideDef>
+
+</Defs>
