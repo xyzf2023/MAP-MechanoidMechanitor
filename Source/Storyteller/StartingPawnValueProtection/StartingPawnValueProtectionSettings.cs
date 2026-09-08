@@ -5,12 +5,77 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 开局 Pawn 价值保护的全局设置。
-    /// 这些字段通过 MAPMechanitorModSettings.ExposeData 的 Harmony 补丁写入同一份 MOD 设置文件；
-    /// 运行中的存档不会直接读取这些字段，而是由 GameComponent 在新开局/读档时建立快照。
+    /// 开局 Pawn 价值保护的独立设置数据。
+    /// 使用 LoadedModManager 的原版设置读写 API 单独持久化，避免依赖 Harmony 安装时序去劫持
+    /// MAPMechanitorModSettings 的首次加载。
+    /// </summary>
+    public sealed class StartingPawnValueProtectionModSettings : ModSettings
+    {
+        public bool enableMechanitorStartingValueProtection =
+            StartingPawnValueProtectionSettings.DefaultEnableMechanitorStartingValueProtection;
+
+        public bool protectOtherStartingMechs =
+            StartingPawnValueProtectionSettings.DefaultProtectOtherStartingMechs;
+
+        public int durationDays = StartingPawnValueProtectionSettings.DefaultDurationDays;
+        public int minimumFactorPercent =
+            StartingPawnValueProtectionSettings.DefaultMinimumFactorPercent;
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+
+            Scribe_Values.Look(
+                ref enableMechanitorStartingValueProtection,
+                "enableMechanitorStartingValueProtection",
+                StartingPawnValueProtectionSettings.DefaultEnableMechanitorStartingValueProtection);
+
+            Scribe_Values.Look(
+                ref protectOtherStartingMechs,
+                "protectOtherStartingMechs",
+                StartingPawnValueProtectionSettings.DefaultProtectOtherStartingMechs);
+
+            Scribe_Values.Look(
+                ref durationDays,
+                "startingPawnValueProtectionDurationDays",
+                StartingPawnValueProtectionSettings.DefaultDurationDays);
+
+            Scribe_Values.Look(
+                ref minimumFactorPercent,
+                "startingPawnValueProtectionMinimumFactorPercent",
+                StartingPawnValueProtectionSettings.DefaultMinimumFactorPercent);
+
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                Normalize();
+            }
+        }
+
+        public void Normalize()
+        {
+            durationDays = StartingPawnValueProtectionSettings.NormalizeSteppedInt(
+                durationDays,
+                StartingPawnValueProtectionSettings.MinDurationDays,
+                StartingPawnValueProtectionSettings.MaxDurationDays,
+                StartingPawnValueProtectionSettings.DurationStepDays);
+
+            minimumFactorPercent = StartingPawnValueProtectionSettings.NormalizeSteppedInt(
+                minimumFactorPercent,
+                StartingPawnValueProtectionSettings.MinMinimumFactorPercent,
+                StartingPawnValueProtectionSettings.MaxMinimumFactorPercent,
+                StartingPawnValueProtectionSettings.MinimumFactorStepPercent);
+        }
+    }
+
+    /// <summary>
+    /// 价值保护设置访问入口。
+    /// 运行中的存档不会直接读取实时设置，而是由 GameComponent 在新开局/读档时建立快照。
     /// </summary>
     public static class StartingPawnValueProtectionSettings
     {
+        private const string SettingsHandleName =
+            "MAPMechanitorMod_StartingPawnValueProtection";
+
         public const bool DefaultEnableMechanitorStartingValueProtection = true;
         public const bool DefaultProtectOtherStartingMechs = false;
 
@@ -24,37 +89,57 @@ namespace MAP_MechanoidMechanitor
         public const int MinimumFactorStepPercent = 5;
         public const int DefaultMinimumFactorPercent = 0;
 
-        public static bool enableMechanitorStartingValueProtection =
-            DefaultEnableMechanitorStartingValueProtection;
+        private static StartingPawnValueProtectionModSettings? settings;
+        private static readonly StartingPawnValueProtectionModSettings FallbackSettings =
+            new StartingPawnValueProtectionModSettings();
 
-        public static bool protectOtherStartingMechs =
-            DefaultProtectOtherStartingMechs;
+        public static StartingPawnValueProtectionModSettings Data
+        {
+            get
+            {
+                EnsureLoaded();
+                return settings ?? FallbackSettings;
+            }
+        }
 
-        public static int durationDays = DefaultDurationDays;
-        public static int minimumFactorPercent = DefaultMinimumFactorPercent;
+        public static int durationDays => Data.durationDays;
+        public static int minimumFactorPercent => Data.minimumFactorPercent;
 
         public static bool ShouldProtectStartingMechanitor =>
-            enableMechanitorStartingValueProtection && durationDays > 0;
+            Data.enableMechanitorStartingValueProtection && Data.durationDays > 0;
 
         public static bool ShouldProtectOtherStartingMechs =>
-            ShouldProtectStartingMechanitor && protectOtherStartingMechs;
+            ShouldProtectStartingMechanitor && Data.protectOtherStartingMechs;
 
         public static void Normalize()
         {
-            durationDays = NormalizeSteppedInt(
-                durationDays,
-                MinDurationDays,
-                MaxDurationDays,
-                DurationStepDays);
-
-            minimumFactorPercent = NormalizeSteppedInt(
-                minimumFactorPercent,
-                MinMinimumFactorPercent,
-                MaxMinimumFactorPercent,
-                MinimumFactorStepPercent);
+            Data.Normalize();
         }
 
-        private static int NormalizeSteppedInt(
+        public static void Write()
+        {
+            EnsureLoaded();
+            if (settings == null)
+            {
+                return;
+            }
+
+            settings.Normalize();
+            string? modIdentifier = ResolveModIdentifier();
+            if (modIdentifier.NullOrEmpty())
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 开局价值保护设置：无法确认 MOD 标识，设置未写入磁盘。");
+                return;
+            }
+
+            LoadedModManager.WriteModSettings(
+                modIdentifier,
+                SettingsHandleName,
+                settings);
+        }
+
+        internal static int NormalizeSteppedInt(
             int value,
             int min,
             int max,
@@ -65,48 +150,49 @@ namespace MAP_MechanoidMechanitor
             int stepped = Mathf.RoundToInt(clamped / (float)safeStep) * safeStep;
             return Mathf.Clamp(stepped, min, max);
         }
+
+        internal static void EnsureLoaded()
+        {
+            if (settings != null)
+            {
+                return;
+            }
+
+            string? modIdentifier = ResolveModIdentifier();
+            if (modIdentifier.NullOrEmpty())
+            {
+                return;
+            }
+
+            settings = LoadedModManager.ReadModSettings<StartingPawnValueProtectionModSettings>(
+                    modIdentifier,
+                    SettingsHandleName)
+                ?? new StartingPawnValueProtectionModSettings();
+            settings.Normalize();
+        }
+
+        private static string? ResolveModIdentifier()
+        {
+            return MAPMechanitorMod.Settings?.Mod?.Content?.FolderName;
+        }
     }
 
-    [HarmonyPatch(typeof(MAPMechanitorModSettings), nameof(MAPMechanitorModSettings.ExposeData))]
-    internal static class StartingPawnValueProtectionSettings_ExposeData_Patch
+    [StaticConstructorOnStartup]
+    internal static class StartingPawnValueProtectionSettingsBootstrap
     {
-        [HarmonyPostfix]
-        private static void Postfix()
+        static StartingPawnValueProtectionSettingsBootstrap()
         {
-            Scribe_Values.Look(
-                ref StartingPawnValueProtectionSettings.enableMechanitorStartingValueProtection,
-                "enableMechanitorStartingValueProtection",
-                StartingPawnValueProtectionSettings.DefaultEnableMechanitorStartingValueProtection);
-
-            Scribe_Values.Look(
-                ref StartingPawnValueProtectionSettings.protectOtherStartingMechs,
-                "protectOtherStartingMechs",
-                StartingPawnValueProtectionSettings.DefaultProtectOtherStartingMechs);
-
-            Scribe_Values.Look(
-                ref StartingPawnValueProtectionSettings.durationDays,
-                "startingPawnValueProtectionDurationDays",
-                StartingPawnValueProtectionSettings.DefaultDurationDays);
-
-            Scribe_Values.Look(
-                ref StartingPawnValueProtectionSettings.minimumFactorPercent,
-                "startingPawnValueProtectionMinimumFactorPercent",
-                StartingPawnValueProtectionSettings.DefaultMinimumFactorPercent);
-
-            if (Scribe.mode == LoadSaveMode.PostLoadInit)
-            {
-                StartingPawnValueProtectionSettings.Normalize();
-            }
+            StartingPawnValueProtectionSettings.EnsureLoaded();
         }
     }
 
     [HarmonyPatch(typeof(MAPMechanitorMod), nameof(MAPMechanitorMod.WriteSettings))]
     internal static class StartingPawnValueProtectionSettings_WriteSettings_Patch
     {
-        [HarmonyPrefix]
-        private static void Prefix()
+        [HarmonyPostfix]
+        private static void Postfix()
         {
-            StartingPawnValueProtectionSettings.Normalize();
+            StartingPawnValueProtectionSettings.Write();
         }
     }
 
@@ -125,7 +211,9 @@ namespace MAP_MechanoidMechanitor
 
         private static void DrawSettings(Listing_Standard listing)
         {
-            StartingPawnValueProtectionSettings.Normalize();
+            StartingPawnValueProtectionModSettings settings =
+                StartingPawnValueProtectionSettings.Data;
+            settings.Normalize();
 
             listing.GapLine();
             listing.Label(
@@ -135,7 +223,7 @@ namespace MAP_MechanoidMechanitor
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Label"
                     .Translate(),
-                ref StartingPawnValueProtectionSettings.enableMechanitorStartingValueProtection,
+                ref settings.enableMechanitorStartingValueProtection,
                 "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Description"
                     .Translate());
 
@@ -144,25 +232,25 @@ namespace MAP_MechanoidMechanitor
                 otherMechsRow,
                 "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Label"
                     .Translate(),
-                ref StartingPawnValueProtectionSettings.protectOtherStartingMechs,
-                disabled: !StartingPawnValueProtectionSettings.enableMechanitorStartingValueProtection);
+                ref settings.protectOtherStartingMechs,
+                disabled: !settings.enableMechanitorStartingValueProtection);
             TooltipHandler.TipRegion(
                 otherMechsRow,
                 "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Description"
                     .Translate());
 
-            StartingPawnValueProtectionSettings.durationDays = DrawSteppedSlider(
+            settings.durationDays = DrawSteppedSlider(
                 listing,
                 "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Duration.Label",
-                StartingPawnValueProtectionSettings.durationDays,
+                settings.durationDays,
                 StartingPawnValueProtectionSettings.MinDurationDays,
                 StartingPawnValueProtectionSettings.MaxDurationDays,
                 StartingPawnValueProtectionSettings.DurationStepDays);
 
-            StartingPawnValueProtectionSettings.minimumFactorPercent = DrawSteppedSlider(
+            settings.minimumFactorPercent = DrawSteppedSlider(
                 listing,
                 "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.MinimumFactor.Label",
-                StartingPawnValueProtectionSettings.minimumFactorPercent,
+                settings.minimumFactorPercent,
                 StartingPawnValueProtectionSettings.MinMinimumFactorPercent,
                 StartingPawnValueProtectionSettings.MaxMinimumFactorPercent,
                 StartingPawnValueProtectionSettings.MinimumFactorStepPercent);
