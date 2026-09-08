@@ -28,6 +28,28 @@ namespace MAP_MechanoidMechanitor
         public bool enableStoryStylesForGeneralScenarios = false;
 
         /// <summary>
+        /// 普通剧本未启用剧情风格选择页时，新游戏静默配置使用的普通派系前哨生成频率。
+        /// 初始值按当前 Classic 预设设为 Low；保存后与 Classic 完全解耦。
+        /// </summary>
+        public MechanoidMechanitorFactionOutpostFrequency generalScenarioFactionOutpostFrequency =
+            DefaultGeneralScenarioFactionOutpostFrequency;
+
+        /// <summary>
+        /// 普通剧本未启用剧情风格选择页时，新游戏静默配置使用的机械巢节点生成频率。
+        /// 初始值按当前 Classic 预设设为 Low；保存后与 Classic 完全解耦。
+        /// </summary>
+        public MechanoidMechanitorMechHiveNodeFrequency generalScenarioMechHiveNodeFrequency =
+            DefaultGeneralScenarioMechHiveNodeFrequency;
+
+        public const MechanoidMechanitorFactionOutpostFrequency
+            DefaultGeneralScenarioFactionOutpostFrequency =
+                MechanoidMechanitorFactionOutpostFrequency.Low;
+
+        public const MechanoidMechanitorMechHiveNodeFrequency
+            DefaultGeneralScenarioMechHiveNodeFrequency =
+                MechanoidMechanitorMechHiveNodeFrequency.Low;
+
+        /// <summary>
         /// 是否监听动态分配目标的征召状态切换，并在下一游戏刻立即刷新目标状态。
         /// 默认开启；关闭后继续依赖各目标原有的周期检查间隔。
         /// </summary>
@@ -249,7 +271,7 @@ namespace MAP_MechanoidMechanitor
         /// 普通派系前哨防卫强度倍率百分比（10～500，步进 10，默认 100）。
         /// 仅影响之后新创建的前哨：前哨创建时按来源殖民地当前原版威胁点数乘以此倍率
         /// 保存守军预算快照；已存在的前哨不会因调整本设置而改变。
-        /// 联合军事行动以此类前哨为目标时，也会读取该前哨保存的守军预算。
+        /// 联合军事行动以此类前哨为目标时，也会读取该前哨保存的防卫预算。
         /// </summary>
         public int factionOutpostGarrisonThreatScalePercent =
             FactionOutpostThreatPointsUtility.DefaultScalePercent;
@@ -314,6 +336,27 @@ namespace MAP_MechanoidMechanitor
         public const int MinSymbiosisCovenantGrowthMultiplierTenths = 5;
         public const int MaxSymbiosisCovenantGrowthMultiplierTenths = 20;
         public const int DefaultSymbiosisCovenantGrowthMultiplierTenths = 10;
+
+        /// <summary>
+        /// 统一校正普通剧本默认世界内容设置。Classic 只决定这些字段最初采用 Low，
+        /// 后续不从 Classic Def 重新读取或同步。
+        /// </summary>
+        public void NormalizeGeneralScenarioDefaultSettings()
+        {
+            if ((byte)generalScenarioFactionOutpostFrequency
+                > (byte)MechanoidMechanitorFactionOutpostFrequency.High)
+            {
+                generalScenarioFactionOutpostFrequency =
+                    DefaultGeneralScenarioFactionOutpostFrequency;
+            }
+
+            if ((byte)generalScenarioMechHiveNodeFrequency
+                > (byte)MechanoidMechanitorMechHiveNodeFrequency.High)
+            {
+                generalScenarioMechHiveNodeFrequency =
+                    DefaultGeneralScenarioMechHiveNodeFrequency;
+            }
+        }
 
         /// <summary>
         /// 统一钳制共生盟约设置：供 ExposeData 的 PostLoadInit 与
@@ -421,6 +464,14 @@ namespace MAP_MechanoidMechanitor
                 ref enableStoryStylesForGeneralScenarios,
                 "enableStoryStylesForGeneralScenarios",
                 false);
+            Scribe_Values.Look(
+                ref generalScenarioFactionOutpostFrequency,
+                "generalScenarioFactionOutpostFrequency",
+                DefaultGeneralScenarioFactionOutpostFrequency);
+            Scribe_Values.Look(
+                ref generalScenarioMechHiveNodeFrequency,
+                "generalScenarioMechHiveNodeFrequency",
+                DefaultGeneralScenarioMechHiveNodeFrequency);
             Scribe_Values.Look(
                 ref enableImmediateDraftStateRefresh,
                 "enableImmediateDraftStateRefresh",
@@ -656,6 +707,7 @@ namespace MAP_MechanoidMechanitor
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
+                NormalizeGeneralScenarioDefaultSettings();
                 NormalizeSymbiosisCovenantSettings();
 
                 productivityCoreWorkSpeedOffsetPercentPerLevel = Mathf.Clamp(

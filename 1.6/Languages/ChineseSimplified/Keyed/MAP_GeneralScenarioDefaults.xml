@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section>普通剧本默认世界内容</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Description>当未启用“允许普通剧本使用机械族机械师剧情风格”时，新建普通游戏会静默使用以下生成频率。修改仅影响之后创建的新游戏，不影响已有存档。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.DisabledNotice>当前已启用普通剧本剧情风格选择，以下默认值暂不参与新游戏初始化。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.DisabledNotice>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Label>普通派系前哨生成频率</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Description>决定未手动选择剧情风格的普通新存档中普通派系前哨的自然生成频率。默认值为“频率：低”；创建存档后该值会保存进存档，不再跟随此设置变化。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Label>机械巢节点生成频率</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Description>决定未手动选择剧情风格的普通新存档中机械巢节点的自然生成频率。默认值为“频率：低”；创建存档后该值会保存进存档，不再跟随此设置变化。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Description>
+</LanguageData>
