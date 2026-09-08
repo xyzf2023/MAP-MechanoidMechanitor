@@ -313,6 +313,14 @@ namespace MAP_MechanoidMechanitor
             ImportSavedIdeology(pawn);
 
             NotifyPersonalityChanged(pawn);
+
+            // 姓名、年龄、背景、特性、技能等级/兴趣、文化均已写入后，复用现有“单 Pawn
+            // 科研状态统一同步入口”重新同步该机械族机械师。升格路线与已有机械师导入路线
+            // 共同经过本方法，因此只需在此接入一次，避免在两个 Job 路径复制轨道数据处理逻辑。
+            // 环境安全时立即执行 SyncPawnResearchState；不安全时进入现有待处理队列；同步异常
+            // 由管理器记录并入队重试，不会把失败传播给本次导入事务，也不会导致升格被回滚。
+            // 轨道数据网络未研究时该同步不会修改任何技能等级与兴趣。
+            GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorInitialized(pawn);
         }
 
         /// <summary>
