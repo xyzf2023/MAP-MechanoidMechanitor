@@ -104,10 +104,46 @@ namespace MAP_MechanoidMechanitor
         public int ChronologicalAgeYears
             => (int)(chronologicalAgeTicks / GenDate.TicksPerYear);
 
+        public long ChronologicalAgeTicks => chronologicalAgeTicks;
+
         public bool BiologicalAgeRecorded => biologicalAgeRecorded;
 
         public int BiologicalAgeYears
             => (int)(biologicalAgeTicks / GenDate.TicksPerYear);
+
+        public long BiologicalAgeTicks => biologicalAgeTicks;
+
+        /// <summary>
+        /// 只读格式化：参照原版 Pawn_AgeTracker.AgeNumberString。
+        /// 生物年龄与历法年龄不同年时以"生理 (历法)"形式返回；生物年龄未记录时退化为历法年龄；
+        /// 完全没有年龄数据时返回空字符串，由显示层安全回退。
+        /// </summary>
+        public string AgeNumberString
+        {
+            get
+            {
+                if (biologicalAgeRecorded)
+                {
+                    string text = ((float)biologicalAgeTicks / GenDate.TicksPerYear)
+                        .ToStringApproxAge();
+                    if (chronologicalAgeTicks / GenDate.TicksPerYear
+                        != biologicalAgeTicks / GenDate.TicksPerYear)
+                    {
+                        text += " (" + chronologicalAgeTicks / GenDate.TicksPerYear + ")";
+                    }
+
+                    return text;
+                }
+
+                if (chronologicalAgeTicks > 0L)
+                {
+                    return ((float)chronologicalAgeTicks / GenDate.TicksPerYear)
+                        .ToStringApproxAge();
+                }
+
+                return string.Empty;
+            }
+        }
 
         public bool GenderRecorded => genderRecorded;
 
