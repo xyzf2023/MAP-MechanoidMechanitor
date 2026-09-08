@@ -45,6 +45,8 @@ namespace MAP_MechanoidMechanitor
 
         private bool retreatOrdered;
 
+        private bool retreatCommitted;
+
         private Lord? attackerLord;
 
         private Lord? guardLord;
@@ -81,6 +83,8 @@ namespace MAP_MechanoidMechanitor
 
         private bool stopped;
 
+        // 旧存档兼容标记。difficulty 字段不再代表整场战斗快照，
+        // 仅作为最近一次从 ModSettings 刷新的合法值缓存。
         private bool bossDifficultyCaptured;
 
         private bool difficultyEnableMortarShield =
@@ -112,6 +116,16 @@ namespace MAP_MechanoidMechanitor
 
         private bool difficultyApplyMobileCombatToSummons =
             JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons;
+
+        // 已经开始的部署/波次必须保持内部一致，不能因设置中途变化让同一批单位前后规则不同。
+        private bool infrastructureApplyMobileCombatToSummons =
+            JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons;
+
+        private bool currentWaveApplyMobileCombatToSummons =
+            JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons;
+
+        // 用于识别旧存档是否缺少上述“当前动作”字段。
+        private bool actionSettingsCaptured;
 
         private Pawn Pawn => (Pawn)parent;
 
@@ -172,7 +186,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            CaptureDifficultySnapshot();
+            RefreshDifficultySettings();
 
             initialized = true;
             stopped = false;
@@ -184,6 +198,7 @@ namespace MAP_MechanoidMechanitor
             nextWaveTick = arrivalTick + FirstWaveDelayTicks;
             retreatTick = -1;
             retreatOrdered = false;
+            retreatCommitted = false;
             attackerLord = null;
             guardLord = null;
             deployedInfrastructure = new List<Thing>();
@@ -199,19 +214,28 @@ namespace MAP_MechanoidMechanitor
             nextGuardRetryTick = -1;
             guardDropRetryCount = 0;
             loggedGuardDropFailure = false;
+            infrastructureApplyMobileCombatToSummons =
+                difficultyApplyMobileCombatToSummons;
+            currentWaveApplyMobileCombatToSummons =
+                difficultyApplyMobileCombatToSummons;
+            actionSettingsCaptured = true;
 
             GameComponent_JusticeBossCallTracker.Current?.MarkActive();
             GameComponent_JusticeBossCallTracker.Current?.SetJusticePawn(Pawn);
         }
 
-        private void CaptureDifficultySnapshot()
+        // ----------------------------------------------------------------
+        // 实时难度设置
+        // ----------------------------------------------------------------
+
+        private void RefreshDifficultySettings()
         {
             MAPMechanitorModSettings? settings =
                 MAPMechanitorMod.Settings;
 
             if (settings == null)
             {
-                ApplyDefaultDifficultySnapshot();
+                ApplyDefaultDifficultySettings();
                 return;
             }
 
@@ -254,7 +278,7 @@ namespace MAP_MechanoidMechanitor
             bossDifficultyCaptured = true;
         }
 
-        private void ApplyDefaultDifficultySnapshot()
+        private void ApplyDefaultDifficultySettings()
         {
             difficultyEnableMortarShield =
                 JusticeBossDifficultyValues.DefaultEnableMortarShield;
@@ -289,7 +313,7 @@ namespace MAP_MechanoidMechanitor
             bossDifficultyCaptured = true;
         }
 
-        private void ClampDifficultySnapshot()
+        private void ClampDifficultyCache()
         {
             difficultyAutoMortarCount =
                 JusticeBossDifficultyValues.ClampTurretCount(
@@ -314,6 +338,14 @@ namespace MAP_MechanoidMechanitor
             difficultyMechsPerWave =
                 JusticeBossDifficultyValues.ClampMechsPerWave(
                     difficultyMechsPerWave);
+        }
+
+        private int GetCurrentTotalWaves()
+        {
+            MAPMechanitorModSettings? settings = MAPMechanitorMod.Settings;
+            return JusticeBossDifficultyValues.ClampTotalWaves(
+                settings?.justiceBossTotalWaves
+                ?? JusticeBossDifficultyValues.DefaultTotalWaves);
         }
 
         public override void CompTick()
@@ -354,14 +386,23 @@ namespace MAP_MechanoidMechanitor
                 TryRetryGuardDrops(now);
             }
 
-            if (waveCount < difficultyTotalWaves
+            // 只在当前没有未完成波次时根据实时总波数决定是否进入撤退。
+            // 一旦 committed，之后提高总波数也不得重新开启战斗。
+            if (!retreatCommitted
+                && pendingWaveKinds.Count == 0
+                && waveCount >= GetCurrentTotalWaves())
+            {
+                CommitToRetreat();
+            }
+
+            if (!retreatCommitted
                 && nextWaveTick > 0
                 && now >= nextWaveTick)
             {
                 TrySpawnWave(forceBossReplace: false);
             }
 
-            if (waveCount >= difficultyTotalWaves
+            if (retreatCommitted
                 && retreatTick > 0
                 && !retreatOrdered
                 && now >= retreatTick)
@@ -394,7 +435,13 @@ namespace MAP_MechanoidMechanitor
                 InitializeOnArrival();
             }
 
-            if (waveCount >= difficultyTotalWaves)
+            if (retreatCommitted)
+            {
+                return;
+            }
+
+            if (pendingWaveKinds.Count == 0
+                && waveCount >= GetCurrentTotalWaves())
             {
                 return;
             }
@@ -409,9 +456,8 @@ namespace MAP_MechanoidMechanitor
                 InitializeOnArrival();
             }
 
-            waveCount = difficultyTotalWaves;
-            nextWaveTick = -1;
-            retreatTick = Find.TickManager.TicksGame + RetreatDelayAfterFinalWaveTicks;
+            waveCount = GetCurrentTotalWaves();
+            CommitToRetreat();
         }
 
         public void DebugForceRetreatNow()
@@ -421,7 +467,8 @@ namespace MAP_MechanoidMechanitor
                 InitializeOnArrival();
             }
 
-            waveCount = difficultyTotalWaves;
+            waveCount = GetCurrentTotalWaves();
+            CommitToRetreat();
             retreatTick = Find.TickManager.TicksGame;
             retreatOrdered = false;
             TryOrderRetreat();
@@ -434,6 +481,11 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            RefreshDifficultySettings();
+            infrastructureApplyMobileCombatToSummons =
+                difficultyApplyMobileCombatToSummons;
+            actionSettingsCaptured = true;
+
             JusticeBossDeploymentUtility.DeployInfrastructure(
                 Pawn,
                 anchorCell,
@@ -443,7 +495,7 @@ namespace MAP_MechanoidMechanitor
                 difficultyAutoInfernoCount,
                 difficultyEnableMortarShield,
                 difficultyEnableBulletShield,
-                difficultyApplyMobileCombatToSummons,
+                infrastructureApplyMobileCombatToSummons,
                 out deployedInfrastructure,
                 out pendingGuardKinds,
                 out guardLord);
@@ -528,7 +580,7 @@ namespace MAP_MechanoidMechanitor
                     anchorCell,
                     justiceEventId,
                     pendingGuardKinds,
-                    difficultyApplyMobileCombatToSummons,
+                    infrastructureApplyMobileCombatToSummons,
                     out Lord? retryGuardLord);
             if (retryGuardLord != null)
             {
@@ -576,18 +628,29 @@ namespace MAP_MechanoidMechanitor
 
         private void TrySpawnWave(bool forceBossReplace)
         {
-            if (Pawn.Map == null || waveCount >= difficultyTotalWaves)
+            if (Pawn.Map == null || retreatCommitted)
             {
                 return;
             }
 
             if (pendingWaveKinds.Count == 0)
             {
+                RefreshDifficultySettings();
+                if (waveCount >= difficultyTotalWaves)
+                {
+                    CommitToRetreat();
+                    return;
+                }
+
                 int waveIndex = waveCount + 1;
 
                 bool applyBossReplace =
                     !forceBossReplace
                     && difficultyAllowBossReplacement;
+
+                currentWaveApplyMobileCombatToSummons =
+                    difficultyApplyMobileCombatToSummons;
+                actionSettingsCaptured = true;
 
                 List<PawnKindDef> composition =
                     JusticeBossSpawnUtility.BuildWaveComposition(
@@ -623,7 +686,7 @@ namespace MAP_MechanoidMechanitor
                     anchorCell,
                     justiceEventId,
                     pendingWaveKinds,
-                    difficultyApplyMobileCombatToSummons,
+                    currentWaveApplyMobileCombatToSummons,
                     out Lord? assaultLord);
             if (assaultLord != null)
             {
@@ -676,16 +739,29 @@ namespace MAP_MechanoidMechanitor
 
         private void ScheduleAfterWave()
         {
+            RefreshDifficultySettings();
             if (waveCount >= difficultyTotalWaves)
             {
-                nextWaveTick = -1;
-                retreatTick = Find.TickManager.TicksGame + RetreatDelayAfterFinalWaveTicks;
+                CommitToRetreat();
             }
             else
             {
+                retreatTick = -1;
                 nextWaveTick =
                     Find.TickManager.TicksGame
                     + difficultyWaveIntervalTicks;
+            }
+        }
+
+        private void CommitToRetreat()
+        {
+            retreatCommitted = true;
+            nextWaveTick = -1;
+            if (retreatTick <= 0)
+            {
+                retreatTick =
+                    Find.TickManager.TicksGame
+                    + RetreatDelayAfterFinalWaveTicks;
             }
         }
 
@@ -731,24 +807,16 @@ namespace MAP_MechanoidMechanitor
                 landed = dropTracker.LandedAndAssignedCount;
             }
 
-            return $"eventId={justiceEventId} init={initialized} waves={waveCount}/{difficultyTotalWaves} "
+            int liveTotalWaves = GetCurrentTotalWaves();
+            return $"eventId={justiceEventId} init={initialized} waves={waveCount}/{liveTotalWaves} "
                 + $"infra={infrastructureDeployed} pendingInfra={PendingActivationCount} "
                 + $"pendingWave={pendingWaveKinds.Count} waveRetries={waveDropRetryCount} "
                 + $"pendingGuards={pendingGuardKinds.Count} guardRetries={guardDropRetryCount} "
                 + $"pendingDrops={pendingDrops} landedAssigned={landed} "
-                + $"nextWave={nextWaveTick} retreat={retreatTick} ordered={retreatOrdered} "
-                + $"bossRepl={bossReplacementCount} stopped={stopped} anchor={anchorCell}"
-                + $" difficultyCaptured={bossDifficultyCaptured}"
-                + $" difficulty=["
-                + $"mortar={difficultyAutoMortarCount} "
-                + $"charge={difficultyAutoChargeBlasterCount} "
-                + $"inferno={difficultyAutoInfernoCount} "
-                + $"mortarShield={difficultyEnableMortarShield} "
-                + $"bulletShield={difficultyEnableBulletShield} "
-                + $"interval={difficultyWaveIntervalTicks} "
-                + $"mechsPerWave={difficultyMechsPerWave} "
-                + $"allowBoss={difficultyAllowBossReplacement} "
-                + $"mobileCombat={difficultyApplyMobileCombatToSummons}]";
+                + $"nextWave={nextWaveTick} retreat={retreatTick} committed={retreatCommitted} ordered={retreatOrdered} "
+                + $"bossRepl={bossReplacementCount} stopped={stopped} anchor={anchorCell} "
+                + $"waveMobile={currentWaveApplyMobileCombatToSummons} "
+                + $"infraMobile={infrastructureApplyMobileCombatToSummons}";
         }
 
         public override void PostExposeData()
@@ -762,6 +830,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref nextWaveTick, "justiceBossNextWaveTick", -1);
             Scribe_Values.Look(ref retreatTick, "justiceBossRetreatTick", -1);
             Scribe_Values.Look(ref retreatOrdered, "justiceBossRetreatOrdered", false);
+            Scribe_Values.Look(ref retreatCommitted, "justiceBossRetreatCommitted", false);
             Scribe_References.Look(ref attackerLord, "justiceBossAttackerLord");
             Scribe_References.Look(ref guardLord, "justiceBossGuardLord");
             Scribe_Values.Look(ref bossReplacementCount, "justiceBossReplacementCount", 0);
@@ -792,7 +861,20 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref guardDropRetryCount, "justiceBossGuardDropRetryCount", 0);
             Scribe_Values.Look(ref loggedGuardDropFailure, "justiceBossLoggedGuardDropFailure", false);
             Scribe_Values.Look(ref stopped, "justiceBossStopped", false);
+            Scribe_Values.Look(
+                ref infrastructureApplyMobileCombatToSummons,
+                "justiceBossInfrastructureApplyMobileCombat",
+                JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons);
+            Scribe_Values.Look(
+                ref currentWaveApplyMobileCombatToSummons,
+                "justiceBossCurrentWaveApplyMobileCombat",
+                JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons);
+            Scribe_Values.Look(
+                ref actionSettingsCaptured,
+                "justiceBossActionSettingsCaptured",
+                false);
 
+            // 保留旧 difficulty 键用于旧存档读取与回滚兼容；正常战斗会在阶段边界重新读取实时设置。
             Scribe_Values.Look(
                 ref bossDifficultyCaptured,
                 "justiceBossDifficultyCaptured",
@@ -861,14 +943,32 @@ namespace MAP_MechanoidMechanitor
                     justiceEventId = Pawn.thingIDNumber;
                 }
 
+                // 先用旧存档中保存的 difficulty 值恢复正在进行的动作，再切换到实时设置。
                 if (!bossDifficultyCaptured)
                 {
-                    ApplyDefaultDifficultySnapshot();
+                    ApplyDefaultDifficultySettings();
                 }
                 else
                 {
-                    ClampDifficultySnapshot();
+                    ClampDifficultyCache();
                 }
+
+                if (!actionSettingsCaptured)
+                {
+                    infrastructureApplyMobileCombatToSummons =
+                        difficultyApplyMobileCombatToSummons;
+                    currentWaveApplyMobileCombatToSummons =
+                        difficultyApplyMobileCombatToSummons;
+                    actionSettingsCaptured = true;
+                }
+
+                // 旧存档没有 retreatCommitted；已有撤退计时或已下达撤退命令时视为不可反悔。
+                if (!retreatCommitted && (retreatTick > 0 || retreatOrdered))
+                {
+                    retreatCommitted = true;
+                }
+
+                RefreshDifficultySettings();
             }
         }
     }

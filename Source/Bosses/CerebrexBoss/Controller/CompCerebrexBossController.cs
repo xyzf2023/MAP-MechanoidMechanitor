@@ -22,8 +22,8 @@ namespace MAP_MechanoidMechanitor
     /// 主脑（CerebrexCore）独立战斗控制器。所有战斗状态都由本组件保存在主脑建筑实例上，
     /// 不写入 MapComponent / GameComponent / WorldComponent / 任务组件。
     /// 对原版主脑的地图生成、稳定器、900 tick 互动、结局逻辑一律不修改。
-    /// 额外战斗技能参数在每场 BOSS 战开始时锁定为 difficulty 快照，
-    /// 战斗中修改 MOD 设置只影响下一场战斗。
+    /// 额外战斗技能参数在新行为开始时读取当前 MOD 设置；已经排定的冷却、已经开始的
+    /// 召唤批次、EMP 与带宽干扰保持各自的当前行为状态，不因中途修改设置而反向变化。
     /// </summary>
     public sealed class CompCerebrexBossController : ThingComp
     {
@@ -45,7 +45,8 @@ namespace MAP_MechanoidMechanitor
         public const float OriginalBrainBobHeight = 0.35f;
         public const int OriginalBrainBobPeriodTicks = 300;
 
-        // ===== 本场 BOSS 战难度快照（每场战斗开始时锁定，读取 ModSettings） =====
+        // 旧存档兼容标记。difficulty 字段不再代表整场 BOSS 战快照，
+        // 仅作为最近一次从 ModSettings 刷新的合法值缓存。
         private bool cerebrexBossSettingsCaptured;
         private bool difficultyEnableExtraSkills;
         private bool difficultyEnableSummoning;
@@ -76,6 +77,13 @@ namespace MAP_MechanoidMechanitor
         private int summonDropRetryCount;
         private Lord? assaultLord;
 
+        // 当前召唤批次局部锁定：同一批失败重试不能因设置中途变化而改变上限或机动作战。
+        private int summonBatchMaxLivingSummonedMechs =
+            CerebrexBossDifficultyValues.DefaultMaxLivingSummonedMechs;
+        private bool summonBatchApplyMobileCombatToSummons =
+            CerebrexBossDifficultyValues.DefaultApplyMobileCombatToSummons;
+        private bool summonBatchSettingsCaptured;
+
         private List<PendingCerebrexEmpHit> pendingEmpHits = new List<PendingCerebrexEmpHit>();
         private Dictionary<Thing, int> disabledPowerBuildings = new Dictionary<Thing, int>();
 
@@ -84,6 +92,12 @@ namespace MAP_MechanoidMechanitor
         private int empShockwaveReleaseTick;
         private int empWarningEndTick;
         private bool empShockwaveReleased;
+
+        // 当前 EMP 局部锁定：从预警开始到释放都使用同一组半径/持续时间；
+        // 冲击波释放后，每个 PendingCerebrexEmpHit 继续保存自己的释放参数。
+        private float empCastRadius = CerebrexBossDifficultyValues.DefaultEmpRadius;
+        private int empCastBaseDurationTicks = CerebrexBossDifficultyValues.DefaultEmpBaseDurationTicks;
+        private bool empCastSettingsCaptured;
 
         // 多目标带宽干扰状态（本场战斗）
         private bool bandwidthInterferenceActive;
@@ -147,7 +161,7 @@ namespace MAP_MechanoidMechanitor
 
         private void InitializeTimers()
         {
-            CaptureDifficultySnapshot();
+            RefreshDifficultySettings();
 
             int now = Find.TickManager.TicksGame;
             nextSummonTick = now + FirstSummonDelayTicks;
@@ -160,15 +174,15 @@ namespace MAP_MechanoidMechanitor
         }
 
         // ----------------------------------------------------------------
-        // 本场难度快照
+        // 实时难度设置
         // ----------------------------------------------------------------
 
-        private void CaptureDifficultySnapshot()
+        private void RefreshDifficultySettings()
         {
             MAPMechanitorModSettings? settings = MAPMechanitorMod.Settings;
             if (settings == null)
             {
-                ApplyDefaultDifficultySnapshot();
+                ApplyDefaultDifficultySettings();
                 return;
             }
 
@@ -218,7 +232,7 @@ namespace MAP_MechanoidMechanitor
             cerebrexBossSettingsCaptured = true;
         }
 
-        private void ApplyDefaultDifficultySnapshot()
+        private void ApplyDefaultDifficultySettings()
         {
             difficultyEnableExtraSkills =
                 CerebrexBossDifficultyValues.DefaultEnableExtraSkills;
@@ -256,7 +270,7 @@ namespace MAP_MechanoidMechanitor
             cerebrexBossSettingsCaptured = true;
         }
 
-        private void ClampDifficultySnapshot()
+        private void ClampDifficultyCache()
         {
             difficultySummonIntervalTicks =
                 CerebrexBossDifficultyValues.ClampSummonIntervalTicks(
@@ -306,6 +320,15 @@ namespace MAP_MechanoidMechanitor
             Scribe_Collections.Look(ref pendingSummonKinds, "pendingSummonKinds", LookMode.Def);
             Scribe_Values.Look(ref summonDropRetryCount, "summonDropRetryCount", 0);
             Scribe_References.Look(ref assaultLord, "assaultLord");
+            Scribe_Values.Look(
+                ref summonBatchMaxLivingSummonedMechs,
+                "summonBatchMaxLivingSummonedMechs",
+                CerebrexBossDifficultyValues.DefaultMaxLivingSummonedMechs);
+            Scribe_Values.Look(
+                ref summonBatchApplyMobileCombatToSummons,
+                "summonBatchApplyMobileCombatToSummons",
+                CerebrexBossDifficultyValues.DefaultApplyMobileCombatToSummons);
+            Scribe_Values.Look(ref summonBatchSettingsCaptured, "summonBatchSettingsCaptured", false);
             Scribe_Collections.Look(ref pendingEmpHits, "pendingEmpHits", LookMode.Deep);
             Scribe_Collections.Look(ref disabledPowerBuildings, "disabledPowerBuildings", LookMode.Reference, LookMode.Value);
             Scribe_Values.Look(ref empWarningActive, "empWarningActive", false);
@@ -313,6 +336,15 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref empShockwaveReleaseTick, "empShockwaveReleaseTick", 0);
             Scribe_Values.Look(ref empWarningEndTick, "empWarningEndTick", 0);
             Scribe_Values.Look(ref empShockwaveReleased, "empShockwaveReleased", false);
+            Scribe_Values.Look(
+                ref empCastRadius,
+                "empCastRadius",
+                CerebrexBossDifficultyValues.DefaultEmpRadius);
+            Scribe_Values.Look(
+                ref empCastBaseDurationTicks,
+                "empCastBaseDurationTicks",
+                CerebrexBossDifficultyValues.DefaultEmpBaseDurationTicks);
+            Scribe_Values.Look(ref empCastSettingsCaptured, "empCastSettingsCaptured", false);
 
             // 旧存档单目标带宽状态（仅用于迁移；新存档不写入这些键）
             Scribe_Values.Look(ref bandwidthInterferenceActive, "bandwidthInterferenceActive", false);
@@ -327,7 +359,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Collections.Look(ref bandwidthTargetRecords, "bandwidthTargetRecords", LookMode.Deep);
             Scribe_Collections.Look(ref bandwidthBerserkRecords, "bandwidthBerserkRecords", LookMode.Deep);
 
-            // 本场难度快照
+            // 保留旧 difficulty 键用于旧存档读取与回滚兼容；正常战斗会实时刷新这些缓存。
             Scribe_Values.Look(ref cerebrexBossSettingsCaptured, "cerebrexBossSettingsCaptured", false);
             Scribe_Values.Look(ref difficultyEnableExtraSkills, "difficultyEnableExtraSkills", CerebrexBossDifficultyValues.DefaultEnableExtraSkills);
             Scribe_Values.Look(ref difficultyEnableSummoning, "difficultyEnableSummoning", CerebrexBossDifficultyValues.DefaultEnableSummoning);
@@ -363,15 +395,54 @@ namespace MAP_MechanoidMechanitor
             disabledPowerBuildings ??= new Dictionary<Thing, int>();
             bandwidthVisuals.ResetTransientState();
 
-            // 旧存档未捕获战斗快照时锁定为默认值；已捕获的新存档只钳制，不重新读取全局设置。
+            // 先读取并钳制旧存档保存的 difficulty 值，用于恢复已经开始的动作；
+            // 随后再刷新当前 ModSettings，后续新行为全部使用实时设置。
             if (!cerebrexBossSettingsCaptured)
             {
-                ApplyDefaultDifficultySnapshot();
+                ApplyDefaultDifficultySettings();
             }
             else
             {
-                ClampDifficultySnapshot();
+                ClampDifficultyCache();
             }
+
+            if (pendingSummonKinds.Count > 0 && !summonBatchSettingsCaptured)
+            {
+                summonBatchMaxLivingSummonedMechs = difficultyMaxLivingSummonedMechs;
+                summonBatchApplyMobileCombatToSummons = difficultyApplyMobileCombatToSummons;
+                summonBatchSettingsCaptured = true;
+            }
+            else if (pendingSummonKinds.Count == 0)
+            {
+                summonBatchSettingsCaptured = false;
+            }
+
+            if (empWarningActive && !empCastSettingsCaptured)
+            {
+                empCastRadius = difficultyEmpRadius;
+                empCastBaseDurationTicks = difficultyEmpBaseDurationTicks;
+                empCastSettingsCaptured = true;
+            }
+
+            foreach (PendingCerebrexEmpHit? hit in pendingEmpHits)
+            {
+                if (hit == null)
+                {
+                    continue;
+                }
+
+                if (hit.radiusAtRelease <= 0f)
+                {
+                    hit.radiusAtRelease = difficultyEmpRadius;
+                }
+
+                if (hit.baseDurationTicksAtRelease <= 0)
+                {
+                    hit.baseDurationTicksAtRelease = difficultyEmpBaseDurationTicks;
+                }
+            }
+
+            RefreshDifficultySettings();
 
             bandwidthAffectedOverseers ??= new List<Pawn>();
 
@@ -619,9 +690,14 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 读档后发现没有待重试单位但重试计数残留，重置以免新一波继承旧计数。
-            if (pendingSummonKinds.Count == 0 && summonDropRetryCount != 0)
+            if (pendingSummonKinds.Count == 0)
             {
-                summonDropRetryCount = 0;
+                if (summonDropRetryCount != 0)
+                {
+                    summonDropRetryCount = 0;
+                }
+
+                summonBatchSettingsCaptured = false;
             }
 
             if (summonedMechs.Count > 0 && assaultLord == null && parent.Spawned && parent.Map != null && CanRunAutomatically())
@@ -668,51 +744,38 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 7. 检查增援计时（受总开关 + 召唤技能开关门控）。
+            // 新行为门控始终读取当前 ModSettings；已经排定的 nextXXXTick 不倒推重算。
+            RefreshDifficultySettings();
+
+            // 7. 检查增援计时（受总开关 + 召唤技能开关门控）。关闭期间保留已排定 Tick，
+            //    重新开启后若冷却早已到期，则下一 Tick 即可发动。
             int now = Find.TickManager.TicksGame;
-            if (now >= nextSummonTick)
+            if (now >= nextSummonTick
+                && difficultyEnableExtraSkills
+                && difficultyEnableSummoning)
             {
-                if (difficultyEnableExtraSkills && difficultyEnableSummoning)
-                {
-                    TrySummonWave(force: false);
-                }
-                else
-                {
-                    nextSummonTick = now + difficultySummonIntervalTicks;
-                }
+                TrySummonWave(force: false);
             }
 
             // 8. 检查 EMP 计时（受总开关 + EMP 开关门控）。
-            if (!empWarningActive && now >= nextEmpTick)
+            if (!empWarningActive
+                && now >= nextEmpTick
+                && difficultyEnableExtraSkills
+                && difficultyEnableEmp)
             {
-                if (difficultyEnableExtraSkills && difficultyEnableEmp)
-                {
-                    StartEmpWarning(force: false);
-                }
-                else
-                {
-                    nextEmpTick = now + Rand.RangeInclusive(
-                        difficultyEmpCooldownMinTicks,
-                        difficultyEmpCooldownMaxTicks);
-                }
+                StartEmpWarning(force: false);
             }
 
             // 9. 检查带宽干扰计时（受总开关 + 带宽技能开关门控）。
-            if (!bandwidthInterferenceActive && now >= nextBandwidthTick)
+            if (!bandwidthInterferenceActive
+                && now >= nextBandwidthTick
+                && difficultyEnableExtraSkills
+                && difficultyEnableBandwidthInterference)
             {
-                if (difficultyEnableExtraSkills && difficultyEnableBandwidthInterference)
+                // 自动尝试失败（如无合法目标）仅延迟 60 tick 再次尝试，不进入完整冷却。
+                if (!TryStartBandwidthInterference(force: false))
                 {
-                    // 自动尝试失败（如无合法目标）仅延迟 60 tick 再次尝试，不进入完整冷却。
-                    if (!TryStartBandwidthInterference(force: false))
-                    {
-                        nextBandwidthTick = now + 60;
-                    }
-                }
-                else
-                {
-                    nextBandwidthTick = now + Rand.RangeInclusive(
-                        difficultyBandwidthCooldownMinTicks,
-                        difficultyBandwidthCooldownMaxTicks);
+                    nextBandwidthTick = now + 60;
                 }
             }
         }
@@ -777,22 +840,32 @@ namespace MAP_MechanoidMechanitor
                 return 0;
             }
 
+            // DEV 调用可能不经过 CompTick；在入口统一刷新，当前批次重试仍使用自己的锁定值。
+            RefreshDifficultySettings();
             int now = Find.TickManager.TicksGame;
 
             // 先处理失败空投的重试（同一批次共用重试轮数；允许重复 PawnKind）。
             if (pendingSummonKinds.Count > 0)
             {
+                if (!summonBatchSettingsCaptured)
+                {
+                    summonBatchMaxLivingSummonedMechs = difficultyMaxLivingSummonedMechs;
+                    summonBatchApplyMobileCombatToSummons = difficultyApplyMobileCombatToSummons;
+                    summonBatchSettingsCaptured = true;
+                }
+
                 if (summonDropRetryCount >= MaxDropRetryAttempts)
                 {
                     pendingSummonKinds.Clear();
                     summonDropRetryCount = 0;
+                    summonBatchSettingsCaptured = false;
                     nextSummonTick = now + difficultySummonIntervalTicks;
                     return 0;
                 }
 
                 EnsureAssaultLord();
                 int living = CountLivingSummonedMechs();
-                int avail = difficultyMaxLivingSummonedMechs - living;
+                int avail = summonBatchMaxLivingSummonedMechs - living;
                 if (avail <= 0)
                 {
                     summonDropRetryCount++;
@@ -819,13 +892,14 @@ namespace MAP_MechanoidMechanitor
                     parent.Position,
                     mechFaction,
                     this,
-                    difficultyApplyMobileCombatToSummons);
+                    summonBatchApplyMobileCombatToSummons);
                 summonDropRetryCount++;
 
-                // 当前批次全部成功或彻底放弃后，重置本批次重试计数，下一波拥有完整20次机会。
+                // 当前批次全部成功或彻底放弃后，重置本批次重试计数与动作锁定。
                 if (pendingSummonKinds.Count == 0)
                 {
                     summonDropRetryCount = 0;
+                    summonBatchSettingsCaptured = false;
                 }
 
                 nextSummonTick = pendingSummonKinds.Count > 0
@@ -834,14 +908,18 @@ namespace MAP_MechanoidMechanitor
                 return spawned;
             }
 
-            // 没有待重试单位：开始一批新的正常召唤，重置本批次重试计数。
+            // 没有待重试单位：开始一批新的正常召唤，并锁定本批次需要保持一致的参数。
             summonDropRetryCount = 0;
+            summonBatchMaxLivingSummonedMechs = difficultyMaxLivingSummonedMechs;
+            summonBatchApplyMobileCombatToSummons = difficultyApplyMobileCombatToSummons;
+            summonBatchSettingsCaptured = true;
 
             int livingCount = CountLivingSummonedMechs();
-            int availableSlots = difficultyMaxLivingSummonedMechs - livingCount;
+            int availableSlots = summonBatchMaxLivingSummonedMechs - livingCount;
             int count = Mathf.Min(difficultyMechsPerWave, availableSlots);
             if (count <= 0)
             {
+                summonBatchSettingsCaptured = false;
                 nextSummonTick = now + difficultySummonIntervalTicks;
                 return 0;
             }
@@ -859,6 +937,7 @@ namespace MAP_MechanoidMechanitor
 
             if (chosen.Count == 0)
             {
+                summonBatchSettingsCaptured = false;
                 nextSummonTick = now + difficultySummonIntervalTicks;
                 return 0;
             }
@@ -871,7 +950,12 @@ namespace MAP_MechanoidMechanitor
                 parent.Position,
                 mechFaction,
                 this,
-                difficultyApplyMobileCombatToSummons);
+                summonBatchApplyMobileCombatToSummons);
+
+            if (pendingSummonKinds.Count == 0)
+            {
+                summonBatchSettingsCaptured = false;
+            }
 
             nextSummonTick = pendingSummonKinds.Count > 0
                 ? now + DropRetryDelayTicks
@@ -910,6 +994,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            RefreshDifficultySettings();
+            empCastRadius = difficultyEmpRadius;
+            empCastBaseDurationTicks = difficultyEmpBaseDurationTicks;
+            empCastSettingsCaptured = true;
+
             int now = Find.TickManager.TicksGame;
             empWarningActive = true;
             empWarningStartTick = now;
@@ -937,6 +1026,9 @@ namespace MAP_MechanoidMechanitor
             {
                 TriggerEmpShockwave();
                 empShockwaveReleased = true;
+
+                // 当前这发 EMP 已锁定；这里只为下一发排程，使用释放时的最新冷却设置。
+                RefreshDifficultySettings();
                 nextEmpTick = now + Rand.RangeInclusive(
                     difficultyEmpCooldownMinTicks,
                     difficultyEmpCooldownMaxTicks);
@@ -955,6 +1047,9 @@ namespace MAP_MechanoidMechanitor
             empShockwaveReleaseTick = 0;
             empWarningEndTick = 0;
             empShockwaveReleased = false;
+            empCastRadius = 0f;
+            empCastBaseDurationTicks = 0;
+            empCastSettingsCaptured = false;
         }
 
         public static float CalculateOriginalBrainZOffset(int tick)
@@ -1017,7 +1112,18 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            PlayEmpShockwaveVisual();
+            // 兼容旧存档恰好停在 EMP 预警中的情况。
+            if (!empCastSettingsCaptured)
+            {
+                RefreshDifficultySettings();
+                empCastRadius = difficultyEmpRadius;
+                empCastBaseDurationTicks = difficultyEmpBaseDurationTicks;
+                empCastSettingsCaptured = true;
+            }
+
+            float radius = empCastRadius;
+            int baseDurationTicks = empCastBaseDurationTicks;
+            PlayEmpShockwaveVisual(radius);
 
             Map map = parent.Map;
             int now = Find.TickManager.TicksGame;
@@ -1031,13 +1137,18 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 float distance = parent.Position.DistanceTo(p.Position);
-                if (distance > difficultyEmpRadius)
+                if (distance > radius)
                 {
                     continue;
                 }
 
                 int delay = Mathf.CeilToInt(distance / EmpPropagationSpeed);
-                pendingEmpHits.Add(new PendingCerebrexEmpHit(p, now + delay));
+                pendingEmpHits.Add(
+                    new PendingCerebrexEmpHit(
+                        p,
+                        now + delay,
+                        radius,
+                        baseDurationTicks));
                 addedThisRelease.Add(p);
             }
 
@@ -1046,13 +1157,18 @@ namespace MAP_MechanoidMechanitor
                 if (thing is Building b && !addedThisRelease.Contains(b) && IsValidEmpTarget(b))
                 {
                     float distance = parent.Position.DistanceTo(b.Position);
-                    if (distance > difficultyEmpRadius)
+                    if (distance > radius)
                     {
                         continue;
                     }
 
                     int delay = Mathf.CeilToInt(distance / EmpPropagationSpeed);
-                    pendingEmpHits.Add(new PendingCerebrexEmpHit(b, now + delay));
+                    pendingEmpHits.Add(
+                        new PendingCerebrexEmpHit(
+                            b,
+                            now + delay,
+                            radius,
+                            baseDurationTicks));
                     addedThisRelease.Add(b);
                 }
             }
@@ -1088,7 +1204,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 float distance = parent.Position.DistanceTo(t.Position);
-                if (distance > difficultyEmpRadius)
+                if (distance > hit.radiusAtRelease)
                 {
                     pendingEmpHits.RemoveAt(i);
                     continue;
@@ -1100,7 +1216,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                ApplyEmpToTarget(t);
+                ApplyEmpToTarget(t, hit.baseDurationTicksAtRelease);
                 pendingEmpHits.RemoveAt(i);
             }
         }
@@ -1157,7 +1273,7 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private int CalculateEmpDuration(Thing target)
+        private int CalculateEmpDuration(Thing target, int baseDurationTicks)
         {
             float resistance = 0f;
             StatDef? stat = DefDatabase<StatDef>.GetNamedSilentFail("EMPResistance");
@@ -1167,12 +1283,12 @@ namespace MAP_MechanoidMechanitor
             }
 
             return Mathf.RoundToInt(
-                difficultyEmpBaseDurationTicks * Mathf.Clamp01(1f - resistance));
+                baseDurationTicks * Mathf.Clamp01(1f - resistance));
         }
 
-        private void ApplyEmpToTarget(Thing target)
+        private void ApplyEmpToTarget(Thing target, int baseDurationTicks)
         {
-            int duration = CalculateEmpDuration(target);
+            int duration = CalculateEmpDuration(target, baseDurationTicks);
             if (duration <= 0)
             {
                 return;
@@ -1192,11 +1308,11 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void PlayEmpShockwaveVisual()
+        private void PlayEmpShockwaveVisual(float radius)
         {
             EffecterDef? effecterDef = DefDatabase<EffecterDef>.GetNamedSilentFail("BlastMechBandShockwave");
             SoundDef? soundDef = DefDatabase<SoundDef>.GetNamedSilentFail("Explosion_MechBandShockwave");
-            float visualScale = difficultyEmpRadius / OriginalShockwaveRadius;
+            float visualScale = radius / OriginalShockwaveRadius;
             Effecter? effecter = effecterDef?.Spawn(parent.Position, parent.Map, visualScale);
             effecter?.Cleanup();
             soundDef?.PlayOneShot(new TargetInfo(parent.Position, parent.Map));
@@ -1257,6 +1373,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            RefreshDifficultySettings();
+            int durationTicks = difficultyBandwidthDurationTicks;
             List<Pawn> targets = FindBandwidthTargets(difficultyBandwidthMaxTargets);
             if (targets.Count == 0)
             {
@@ -1393,13 +1511,13 @@ namespace MAP_MechanoidMechanitor
                         continue;
                     }
 
-                    TryBerserk(p, ov);
+                    TryBerserk(p, ov, durationTicks);
                 }
             }
 
             bandwidthInterferenceActive = true;
             bandwidthInterferenceEndTick =
-                Find.TickManager.TicksGame + difficultyBandwidthDurationTicks;
+                Find.TickManager.TicksGame + durationTicks;
             return true;
         }
 
@@ -1483,7 +1601,7 @@ namespace MAP_MechanoidMechanitor
                 .ToList();
         }
 
-        private void TryBerserk(Pawn p, Pawn? originalOverseer)
+        private void TryBerserk(Pawn p, Pawn? originalOverseer, int durationTicks)
         {
             bool started = p.mindState.mentalStateHandler.TryStartMentalState(
                 MentalStateDefOf.BerserkMechanoid,
@@ -1503,7 +1621,7 @@ namespace MAP_MechanoidMechanitor
 
             if (p.MentalState != null)
             {
-                p.MentalState.forceRecoverAfterTicks = difficultyBandwidthDurationTicks;
+                p.MentalState.forceRecoverAfterTicks = durationTicks;
             }
 
             if (!bandwidthBerserkRecords.Any(r => r.pawn == p))
@@ -1863,6 +1981,8 @@ namespace MAP_MechanoidMechanitor
 
             if (startCooldown)
             {
+                // 当前干扰已经结束；为下一轮排程时读取最新冷却设置。
+                RefreshDifficultySettings();
                 nextBandwidthTick = Find.TickManager.TicksGame + Rand.RangeInclusive(
                     difficultyBandwidthCooldownMinTicks,
                     difficultyBandwidthCooldownMaxTicks);
@@ -1882,6 +2002,7 @@ namespace MAP_MechanoidMechanitor
             bandwidthTargetsUsedThisBattle.Clear();
             pendingSummonKinds.Clear();
             summonDropRetryCount = 0;
+            summonBatchSettingsCaptured = false;
         }
 
         public void Notify_CoreDeactivationStarted()
@@ -1903,6 +2024,7 @@ namespace MAP_MechanoidMechanitor
             bandwidthTargetsUsedThisBattle.Clear();
             pendingSummonKinds.Clear();
             summonDropRetryCount = 0;
+            summonBatchSettingsCaptured = false;
             disabledPowerBuildings.Clear();
         }
 

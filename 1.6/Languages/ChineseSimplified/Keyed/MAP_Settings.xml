@@ -61,7 +61,7 @@
 
   <!-- 模块：正义 BOSS 难度 -->
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>正义 BOSS 战难度</MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」-重装指挥单元的BOSS战难度。注意：战斗过程中修改只会影响下一场 BOSS 战。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」-重装指挥单元的BOSS战难度。战斗过程中修改会影响尚未开始的后续阶段；已经开始的召唤波次和已经确定的撤退流程不会重新计算。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>启用正义 BOSS 详细诊断日志</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>开发者功能，开启后「正义」BOSS战将生成详细的日志。</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>召唤高角护盾</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>
@@ -87,7 +87,7 @@
 
   <!-- 模块：机械主脑 BOSS 战难度 -->
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section>机械主脑 BOSS 战难度</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section>
-  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>调整机械主脑战斗时的额外战斗技能参数。注意：无法在战斗过程中修改。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>调整机械主脑战斗时的额外战斗技能参数。战斗过程中修改会影响后续技能；已经开始的技能和已经排定的冷却不会重新计算。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Label>启用机械主脑额外 BOSS 技能（总开关）</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Label>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>开启后，允许主脑使用额外技能。</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>
   <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection>召唤机械族</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection>
