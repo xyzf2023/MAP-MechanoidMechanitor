@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <HediffDef>
+    <defName>MAP_StartingPawnValueProtection</defName>
+    <label>开局价值保护</label>
+    <description>用于暂时降低角色在价值与威胁计算中的权重。</description>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_StartingPawnValueProtection</hediffClass>
+    <isBad>false</isBad>
+    <initialSeverity>0</initialSeverity>
+    <minSeverity>0</minSeverity>
+    <maxSeverity>1</maxSeverity>
+    <duplicationAllowed>false</duplicationAllowed>
+    <everCurableByItem>false</everCurableByItem>
+    <stages>
+      <li>
+        <minSeverity>0</minSeverity>
+        <becomeVisible>false</becomeVisible>
+      </li>
+    </stages>
+  </HediffDef>
+</Defs>

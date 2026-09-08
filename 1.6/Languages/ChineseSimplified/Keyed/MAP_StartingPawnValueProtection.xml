@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Section>开局价值保护</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Section>
+
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Label>启用机械族机械师开局价值保护</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Label>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Description>开启后，在使用机械族机械师剧本开局时，为机械族机械师添加一个隐藏健康状态，以降低其价值。价值降低的幅度随时间流逝而减少。这有助于在开局机械族价值高昂时维护游戏平衡。</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Description>
+
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Label>为其他机械族添加开局价值保护</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Label>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Description>开启后，在使用机械族机械师剧本开局时，额外为其他机械族添加一个隐藏健康状态，以降低其价值。</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Description>
+
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Duration.Label>调整价值保护持续时间：{0} 天</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Duration.Label>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.MinimumFactor.Label>调整价值保护最低倍率：{0}%</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.MinimumFactor.Label>
+</LanguageData>
