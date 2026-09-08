@@ -66,11 +66,6 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidPrioritizedWorkOrders_Description".Translate());
 
             listing.CheckboxLabeled(
-                "允许普通剧本使用机械族机械师剧情风格",
-                ref Settings.enableStoryStylesForGeneralScenarios,
-                "启用后，不含“机械族机械师”专用剧本词条的普通剧本也会在新游戏开始前显示机械族机械师剧情风格页面。该设置仅影响之后创建的新游戏，不会修改已有存档，也不会让普通剧本启用机械族机械师专用的纯机械族开局规则。");
-
-            listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label"
                     .Translate(),
                 ref Settings.enableImmediateDraftStateRefresh,
