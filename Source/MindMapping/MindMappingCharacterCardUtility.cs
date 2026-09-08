@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -414,25 +415,34 @@ namespace MAP_MechanoidMechanitor
                     break;
                 }
 
-                if (needScroll)
+                bool scrolled = needScroll;
+                if (scrolled)
                 {
+                    // 与原版 BeginScrollView 参数一致：滚动范围、内容高度、滚动位置保存方式均不变。
                     Widgets.BeginScrollView(
                         new Rect(0f, 0f, leftWidth, leftRect.height),
                         ref leftRectScrollPos,
                         new Rect(0f, 0f, leftWidth - 16f, contentHeight));
                 }
 
-                float num = 0f;
-                for (int i = 0; i < sections.Count; i++)
+                // 一旦开启滚动，无论绘制 delegate 是否抛出异常，都必须通过 finally 收尾 EndScrollView，
+                // 以保证 GUI 裁剪栈平衡；禁止用 catch 吞掉绘制异常，禁止提前结束外层 Group。
+                try
                 {
-                    LeftRectSection section = sections[i];
-                    section.drawer(new Rect(0f, num, leftWidth - 5f, section.rect.height));
-                    num += section.calculatedSize;
+                    float num = 0f;
+                    for (int i = 0; i < sections.Count; i++)
+                    {
+                        LeftRectSection section = sections[i];
+                        section.drawer(new Rect(0f, num, leftWidth - 5f, section.rect.height));
+                        num += section.calculatedSize;
+                    }
                 }
-
-                if (needScroll)
+                finally
                 {
-                    Widgets.EndScrollView();
+                    if (scrolled)
+                    {
+                        Widgets.EndScrollView();
+                    }
                 }
             }
             finally
@@ -446,9 +456,11 @@ namespace MAP_MechanoidMechanitor
             List<MindMappingTraitData> list = new List<MindMappingTraitData>();
             for (int i = 0; i < data.Traits.Count; i++)
             {
-                if (data.Traits[i].Def != null)
+                // 元素本身或 Def 为空时静默跳过，避免后续访问 .Def 触发 NRE。
+                MindMappingTraitData? trait = data.Traits[i];
+                if (trait != null && trait.Def != null)
                 {
-                    list.Add(data.Traits[i]);
+                    list.Add(trait);
                 }
             }
             return list;
@@ -765,8 +777,9 @@ namespace MAP_MechanoidMechanitor
         {
             for (int i = 0; i < data.Skills.Count; i++)
             {
-                MindMappingSkillData skill = data.Skills[i];
-                if (skill.Def == skillDef)
+                // 元素本身或 Def 为空时跳过，避免直接读取 .Def 触发 NRE。
+                MindMappingSkillData? skill = data.Skills[i];
+                if (skill != null && skill.Def == skillDef)
                 {
                     return skill;
                 }
@@ -830,9 +843,18 @@ namespace MAP_MechanoidMechanitor
                 return string.Empty;
             }
             StringBuilder sb = new StringBuilder();
+            // 与原版 BackstoryDef.FullDescriptionFor(Pawn) 对齐：标题在最上方，之后为主体描述。
             sb.AppendLineTagged(backstory.TitleCapFor(DisplayGender(data)));
 
-            bool anyDetail = false;
+            // 主体描述：必须用 Def 的 description 字段，不得硬编码；无 Pawn 条件下安全解析。
+            // 即便该背景没有技能加成或工作限制，只要描述存在也必须保留（不再退化成标题）。
+            string description = ResolveSnapshotDescription(backstory.description, data);
+            if (!description.NullOrEmpty())
+            {
+                sb.AppendLineTagged(description);
+                sb.AppendLine();
+            }
+
             if (backstory.skillGains != null)
             {
                 foreach (SkillGain gain in backstory.skillGains)
@@ -843,7 +865,6 @@ namespace MAP_MechanoidMechanitor
                     }
                     sb.AppendLine("  " + gain.skill.skillLabel.CapitalizeFirst() + ": "
                         + gain.amount.ToString("+0;-0;0"));
-                    anyDetail = true;
                 }
             }
             if (backstory.DisabledWorkTypes != null)
@@ -856,13 +877,7 @@ namespace MAP_MechanoidMechanitor
                     }
                     sb.AppendLine("  " + disabledWorkType.gerundLabel.CapitalizeFirst() + " "
                         + "DisabledLower".Translate());
-                    anyDetail = true;
                 }
-            }
-            if (!anyDetail)
-            {
-                sb.Clear();
-                sb.Append(backstory.TitleCapFor(DisplayGender(data)));
             }
             return sb.ToString().TrimEndNewlines();
         }
@@ -875,10 +890,22 @@ namespace MAP_MechanoidMechanitor
                 return string.Empty;
             }
             StringBuilder sb = new StringBuilder();
+            // 与原版 Trait.TipString(Pawn) 对齐：先特性主体描述，空行，再技能/属性等静态效果。
             sb.AppendLineTagged(TraitLabelCap(trait, data));
 
             TraitDegreeData? degreeData = GetDegreeData(def, trait.Degree);
-            bool anyDetail = false;
+            if (degreeData != null)
+            {
+                // 当前 Degree 的主体描述：必须用 TraitDegreeData.description，不得只读取 TraitDef 通用标签。
+                // 即便该特性没有技能或属性数值效果，只要描述存在也必须保留（不再退化成特性名）。
+                string description = ResolveSnapshotDescription(degreeData.description, data);
+                if (!description.NullOrEmpty())
+                {
+                    sb.AppendLineTagged(description);
+                    sb.AppendLine();
+                }
+            }
+
             if (degreeData != null)
             {
                 if (degreeData.skillGains != null)
@@ -891,7 +918,6 @@ namespace MAP_MechanoidMechanitor
                         }
                         sb.AppendLine("  " + gain.skill.skillLabel.CapitalizeFirst() + ": "
                             + gain.amount.ToString("+0;-0;0"));
-                        anyDetail = true;
                     }
                 }
                 if (degreeData.statOffsets != null)
@@ -904,7 +930,6 @@ namespace MAP_MechanoidMechanitor
                         }
                         sb.AppendLine("  " + statOffset.stat.LabelCap + ": "
                             + statOffset.ValueToStringAsOffset);
-                        anyDetail = true;
                     }
                 }
                 if (degreeData.statFactors != null)
@@ -917,14 +942,8 @@ namespace MAP_MechanoidMechanitor
                         }
                         sb.AppendLine("  " + statFactor.stat.LabelCap + ": "
                             + statFactor.ToStringAsFactor);
-                        anyDetail = true;
                     }
                 }
-            }
-            if (!anyDetail)
-            {
-                sb.Clear();
-                sb.Append(TraitLabelCap(trait, data));
             }
             return sb.ToString().TrimEndNewlines();
         }
@@ -953,14 +972,9 @@ namespace MAP_MechanoidMechanitor
             }
             sb.AppendLineTagged(("SkillLevel".Translate().CapitalizeFirst() + ": ").AsTipTitle()
                 + level.ToString());
-            if (skill != null && !skill.PassionRecorded)
-            {
-                // 八.13：快照未记录兴趣时明确标注“未记录”，不得当成无兴趣。
-                sb.AppendLine();
-                sb.AppendLine("  - " + "MAP_MindMapping.Details.Passion".Translate()
-                    + ": " + "MAP_MindMapping.Details.NotRecorded".Translate());
-            }
-            else if (passion != Passion.None)
+            // 兴趣归一化后，PassionRecorded == false 仅作为极端异常数据的防御状态；
+            // 此处不再向玩家显示“未记录”。明确的 Passion.None 不显示兴趣图标/文本，保持原版表现。
+            if (passion != Passion.None)
             {
                 sb.AppendLine();
                 sb.AppendLine("  - " + passion.GetLabel() + ": x"
@@ -994,6 +1008,102 @@ namespace MAP_MechanoidMechanitor
                 }
             }
             return sb.ToString().TrimEndNewlines();
+        }
+
+        // ================================================================
+        //  无 Pawn 的 Def 描述安全解析
+        // ================================================================
+        //
+        // 原版 BackstoryDef.FullDescriptionFor(Pawn) / Trait.TipString(Pawn) 会通过
+        //   description.Formatted(p.Named("PAWN")).AdjustedFor(p).Resolve()
+        // 解析主体描述，其中依赖真实 Pawn 处理 {PAWN_name} 等命名与性别化语法。
+        // 本 MOD 严禁构造/依赖 Pawn，因此这里只接收 Def 的静态描述字符串与 MindMappingData
+        // 快照，使用快照姓名与已保存性别做最小、安全替换；任何无法安全解析的 PAWN 语法标记
+        // 都会被剥离，绝不把 {PAWN...}/[PAWN...] 原始占位符显示给玩家。
+        // 文本每次依据当前语言从 Def 重新生成（不写回存档），切换语言后仍正确。
+
+        /// <summary>匹配 Def 描述中的 PAWN 语法标记（原版语法系统使用 [PAWN_xxx]，
+        /// 而源码/翻译中常以 {PAWN_xxx} 书写；性别化调用形如 {PAWN_gender?he:she}，
+        /// 二者都需覆盖，避免原始占位符暴露给玩家）。</summary>
+        private static readonly Regex PawnGrammarToken = new Regex(
+            @"[\[\{]PAWN[A-Za-z0-9_?:]*[\]\}]",
+            RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// 将 Def 静态描述按快照姓名与性别安全解析为可显示文本。
+        /// 只接受静态描述与 MindMappingData，不构造 Pawn，不调用原版语法系统。
+        /// </summary>
+        private static string ResolveSnapshotDescription(string rawDescription, MindMappingData data)
+        {
+            if (rawDescription.NullOrEmpty())
+            {
+                return string.Empty;
+            }
+            string name = DisplayName(data);
+            Gender gender = DisplayGender(data);
+            bool female = gender == Gender.Female;
+            bool neuter = gender == Gender.None;
+            string resolved = PawnGrammarToken.Replace(rawDescription, (Match m) =>
+                ResolvePawnGrammarToken(m.Value, name, female, neuter));
+            // 最后做一次 Resolve 以处理任意残留的翻译键（Def.description 通常已本地化，此处为保险）。
+            return ((TaggedString)resolved).Resolve();
+        }
+
+        /// <summary>
+        /// 将单个 PAWN 语法标记替换为快照可安全确定的文本。无法安全解析的标记（如 gender? 调用
+        /// 或未知子符号）返回空字符串，以“省略动态片段”的方式降级，绝不直接暴露原始占位符。
+        /// </summary>
+        private static string ResolvePawnGrammarToken(string token, string name, bool female, bool neuter)
+        {
+            string inner = token.Substring(1, token.Length - 2);
+            if (inner.StartsWith("PAWN_GENDER", StringComparison.OrdinalIgnoreCase))
+            {
+                // 原版性别化调用格式：PAWN_gender?maleForm:femaleForm
+                int q = inner.IndexOf('?');
+                int colon = inner.IndexOf(':');
+                if (q >= 0 && colon > q)
+                {
+                    string maleForm = inner.Substring(q + 1, colon - q - 1);
+                    string femaleForm = inner.Substring(colon + 1);
+                    return female ? femaleForm : maleForm;
+                }
+                return string.Empty;
+            }
+
+            switch (inner.ToLowerInvariant())
+            {
+                case "pawn_name":
+                case "pawn_label":
+                case "pawn_fullname":
+                case "pawn_shortname":
+                    return name;
+                case "pawn_he":
+                    return neuter ? "they" : (female ? "she" : "he");
+                case "pawn_him":
+                    return neuter ? "them" : (female ? "her" : "him");
+                case "pawn_his":
+                    return neuter ? "their" : (female ? "her" : "his");
+                case "pawn_her":
+                    return neuter ? "them" : (female ? "her" : "him");
+                case "pawn_hers":
+                    return neuter ? "theirs" : (female ? "hers" : "his");
+                case "pawn_himself":
+                    return neuter ? "themself" : (female ? "herself" : "himself");
+                case "pawn_herself":
+                    return "herself";
+                case "pawn_them":
+                    return "them";
+                case "pawn_they":
+                    return "they";
+                case "pawn_their":
+                    return "their";
+                case "pawn_themselves":
+                    return "themselves";
+                case "pawn_themself":
+                    return "themself";
+                default:
+                    return string.Empty;
+            }
         }
     }
 }

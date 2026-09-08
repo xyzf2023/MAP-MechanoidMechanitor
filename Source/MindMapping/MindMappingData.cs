@@ -53,6 +53,18 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref Level, "level", 0);
             Scribe_Values.Look(ref PassionValue, "passion", RimWorld.Passion.None);
             Scribe_Values.Look(ref PassionRecorded, "passionRecorded", false);
+
+            // 旧心智快照兼容：技能兴趣未记录（PassionRecorded == false）时，永久归一化为
+            // “无兴趣”（Passion.None）并标记为已记录，玩家下次保存后写入存档。
+            // 深度保存的列表元素只会在 LoadingVars 阶段进入 ExposeData（Scribe_Collections 对
+            // List<Deep> 没有 PostLoadInit 分支），故在读取完成阶段（LoadingVars）完成归一化。
+            // Scribe 键值名称（passion / passionRecorded）保持不变。新扫描数据已设
+            // PassionRecorded = true 且保存真实兴趣，此分支不会触发，不会改写真实兴趣。
+            if (Scribe.mode == LoadSaveMode.LoadingVars && !PassionRecorded)
+            {
+                PassionValue = RimWorld.Passion.None;
+                PassionRecorded = true;
+            }
         }
     }
 
@@ -316,6 +328,15 @@ namespace MAP_MechanoidMechanitor
             ideologyName ??= string.Empty;
             traits ??= new List<MindMappingTraitData>();
             skills ??= new List<MindMappingSkillData>();
+
+            if (Scribe.mode == LoadSaveMode.LoadingVars)
+            {
+                // 仅清理列表中的 null 元素（显示层仍保留空值保护）。不得删除“对象存在但 Def 为空”
+                // 的条目，以免改写存档含义；其显示由 MindMappingCharacterCardUtility 静默跳过。
+                // 不改变有效条目的顺序、等级、兴趣或特性度数。
+                traits.RemoveAll((MindMappingTraitData t) => t == null);
+                skills.RemoveAll((MindMappingSkillData s) => s == null);
+            }
         }
 
         private Name BuildName()
