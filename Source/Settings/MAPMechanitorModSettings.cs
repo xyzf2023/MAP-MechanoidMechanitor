@@ -22,14 +22,20 @@ namespace MAP_MechanoidMechanitor
         public bool enableMoonImplants = true;
 
         /// <summary>
-        /// 普通剧本新游戏静默配置使用的普通派系前哨生成频率。
+        /// 默认关闭。开启后，不含机械族机械师剧本词条的普通剧本也会在新游戏流程中
+        /// 显示机械族机械师剧情风格页面。该设置只控制新游戏页面入口，不控制已建立存档的运行状态。
+        /// </summary>
+        public bool enableStoryStylesForGeneralScenarios = false;
+
+        /// <summary>
+        /// 普通剧本未启用剧情风格选择页时，新游戏静默配置使用的普通派系前哨生成频率。
         /// 初始值按当前 Classic 预设设为 Low；保存后与 Classic 完全解耦。
         /// </summary>
         public MechanoidMechanitorFactionOutpostFrequency generalScenarioFactionOutpostFrequency =
             DefaultGeneralScenarioFactionOutpostFrequency;
 
         /// <summary>
-        /// 普通剧本新游戏静默配置使用的机械巢节点生成频率。
+        /// 普通剧本未启用剧情风格选择页时，新游戏静默配置使用的机械巢节点生成频率。
         /// 初始值按当前 Classic 预设设为 Low；保存后与 Classic 完全解耦。
         /// </summary>
         public MechanoidMechanitorMechHiveNodeFrequency generalScenarioMechHiveNodeFrequency =
@@ -467,6 +473,10 @@ namespace MAP_MechanoidMechanitor
                 "enableLoverImplants",
                 true);
             Scribe_Values.Look(
+                ref enableStoryStylesForGeneralScenarios,
+                "enableStoryStylesForGeneralScenarios",
+                false);
+            Scribe_Values.Look(
                 ref generalScenarioFactionOutpostFrequency,
                 "generalScenarioFactionOutpostFrequency",
                 DefaultGeneralScenarioFactionOutpostFrequency);
@@ -642,11 +652,11 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref cerebrexBossEmpCooldownMinTicks,
                 "cerebrexBossEmpCooldownMinTicks",
-                CerebrexBossDifficultyValues.DefaultBandwidthCooldownMinTicks);
+                CerebrexBossDifficultyValues.DefaultEmpCooldownMinTicks);
             Scribe_Values.Look(
                 ref cerebrexBossEmpCooldownMaxTicks,
                 "cerebrexBossEmpCooldownMaxTicks",
-                CerebrexBossDifficultyValues.DefaultBandwidthCooldownMaxTicks);
+                CerebrexBossDifficultyValues.DefaultEmpCooldownMaxTicks);
             Scribe_Values.Look(
                 ref cerebrexBossEmpBaseDurationTicks,
                 "cerebrexBossEmpBaseDurationTicks",
