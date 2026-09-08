@@ -7,7 +7,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 普通新游戏未启用剧情风格选择页时，在原版正式开始新游戏前静默建立一份
-    /// GeneralScenario 来源的中性剧情配置。只作用于新游戏入口；读档不会经过此方法，
+    /// GeneralScenario 来源的默认剧情配置。只作用于新游戏入口；读档不会经过此方法，
     /// 因而不会为历史普通存档补写配置。
     /// </summary>
     [HarmonyPatch(typeof(PageUtility), nameof(PageUtility.InitGameStart))]
