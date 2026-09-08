@@ -4,40 +4,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 为未手动进入剧情风格选择页的普通新游戏创建静默剧情配置。
-    /// 这些默认值与 Classic 预设仅在初始设计上保持一致；运行时不读取 Classic Def，
-    /// 后续修改 Classic 也不会改变玩家已保存的 MOD 设置或既有存档。
+    /// 模板默认值最初参考 Classic，但运行时不读取 Classic Def；玩家保存后的模板和
+    /// 已创建存档都不会跟随 Classic 或之后的 MOD 设置变化。
     /// </summary>
     public static class MechanoidMechanitorGeneralScenarioDefaultConfigurationUtility
     {
         public static MechanoidMechanitorStoryConfiguration CreateForNewGame()
         {
             MAPMechanitorModSettings? settings = MAPMechanitorMod.Settings;
-            settings?.NormalizeGeneralScenarioDefaultSettings();
+            MechanoidMechanitorGeneralScenarioTemplateModSettings template =
+                MechanoidMechanitorGeneralScenarioTemplateSettings.Current;
+            MechanoidMechanitorGeneralScenarioTemplateSettings.Normalize(settings, template);
 
             MechanoidMechanitorStoryConfiguration configuration =
                 new MechanoidMechanitorStoryConfiguration
                 {
                     ordinaryFactionRelationsMode =
-                        MechanoidMechanitorOrdinaryFactionRelationsMode.Default,
+                        template.generalScenarioOrdinaryFactionRelationsMode,
                     factionOutpostFrequency =
                         settings?.generalScenarioFactionOutpostFrequency
                         ?? MAPMechanitorModSettings
                             .DefaultGeneralScenarioFactionOutpostFrequency,
-                    hostileFactionOutpostWeight = 100,
-                    neutralFactionOutpostWeight = 100,
-                    allyFactionOutpostWeight = 100,
+                    hostileFactionOutpostWeight =
+                        template.generalScenarioHostileFactionOutpostWeight,
+                    allyFactionOutpostWeight =
+                        template.generalScenarioAllyFactionOutpostWeight,
+                    neutralFactionOutpostWeight =
+                        template.generalScenarioNeutralFactionOutpostWeight,
                     mechHiveRelationMode =
-                        MechanoidMechanitorMechHiveRelationMode.Default,
+                        template.generalScenarioMechHiveRelationMode,
                     insectRelationMode =
-                        MechanoidMechanitorInsectRelationMode.Default,
+                        template.generalScenarioInsectRelationMode,
                     mechHiveNodeFrequency =
                         settings?.generalScenarioMechHiveNodeFrequency
                         ?? MAPMechanitorModSettings
                             .DefaultGeneralScenarioMechHiveNodeFrequency,
-                    purgeDirectiveEnabled = false,
-                    symbiosisCovenantEnabled = false,
+                    purgeDirectiveEnabled =
+                        template.generalScenarioPurgeDirectiveEnabled,
+                    symbiosisCovenantEnabled =
+                        template.generalScenarioSymbiosisCovenantEnabled,
                     ideologyAdaptationLevel =
-                        MechanoidMechanitorIdeologyAdaptationLevel.Disabled
+                        template.generalScenarioIdeologyAdaptationLevel
                 };
 
             MechanoidMechanitorStoryConfigurationContext context =

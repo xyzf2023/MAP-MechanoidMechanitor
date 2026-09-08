@@ -1,10 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section>普通剧本默认世界内容</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section>
-  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Description>当未启用“允许普通剧本使用机械族机械师剧情风格”时，新建普通游戏会静默使用以下生成频率。修改仅影响之后创建的新游戏，不影响已有存档。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Description>
-  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.DisabledNotice>当前已启用普通剧本剧情风格选择，以下默认值暂不参与新游戏初始化。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.DisabledNotice>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section>普通剧本默认剧情配置</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Description>当未启用“允许普通剧本使用机械族机械师剧情风格”时，新建普通游戏会静默使用以下配置。修改仅影响之后创建的新游戏，不影响已有存档；普通派系关系不提供逐派系“自定义”模式。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.DisabledNotice>当前已启用普通剧本剧情风格选择，以下默认配置暂不参与新游戏初始化。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.DisabledNotice>
+
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFaction.Subsection>普通派系</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFaction.Subsection>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFactionRelations.Label>普通派系关系</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFactionRelations.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFactionRelations.Description>决定普通新存档与所有普通派系的初始关系模式。此处不提供需要绑定具体世界派系实例的逐派系“自定义”模式。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFactionRelations.Description>
   <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Label>普通派系前哨生成频率</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Label>
   <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Description>决定未手动选择剧情风格的普通新存档中普通派系前哨的自然生成频率。默认值为“频率：低”；创建存档后该值会保存进存档，不再跟随此设置变化。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Description>
+
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.HostileFactions.Subsection>机械巢与虫巢</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.HostileFactions.Subsection>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveRelation.Label>与机械巢关系</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveRelation.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveRelation.Description>决定普通新存档与机械巢的初始关系模式。若实际世界中不存在机械巢，创建新游戏时会自动恢复为默认关系。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveRelation.Description>
   <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Label>机械巢节点生成频率</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Label>
   <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Description>决定未手动选择剧情风格的普通新存档中机械巢节点的自然生成频率。默认值为“频率：低”；创建存档后该值会保存进存档，不再跟随此设置变化。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.InsectRelation.Label>与虫巢关系</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.InsectRelation.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.InsectRelation.Description>决定普通新存档与虫巢派系的初始关系模式。若实际世界中不存在虫族派系，创建新游戏时会自动恢复为默认关系。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.InsectRelation.Description>
+
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Routes.Subsection>剧情路线</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Routes.Subsection>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Label>肃清指令</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Description>决定普通新存档是否启用肃清指令路线。肃清指令与共生盟约互斥。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.DisabledReason>只有将机械巢关系设为“盟友”后才能启用肃清指令。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.DisabledReason>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Label>共生盟约</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Description>决定普通新存档是否启用共生盟约路线。共生盟约与肃清指令互斥。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.DisabledReason>当前普通派系关系被永久锁定，不满足共生盟约的启用条件。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.DisabledReason>
+
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Ideology.Subsection>文化适配</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Ideology.Subsection>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.IdeologyAdaptation.Label>文化适配程度</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.IdeologyAdaptation.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.IdeologyAdaptation.Description>决定普通新存档中机械族机械师使用的文化适配等级。默认值为“全部启用”。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.IdeologyAdaptation.Description>
 </LanguageData>
