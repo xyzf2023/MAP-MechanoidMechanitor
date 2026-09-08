@@ -56,8 +56,8 @@ namespace MAP_MechanoidMechanitor
 
             // 旧心智快照兼容：技能兴趣未记录（PassionRecorded == false）时，永久归一化为
             // “无兴趣”（Passion.None）并标记为已记录，玩家下次保存后写入存档。
-            // 深度保存的列表元素只会在 LoadingVars 阶段进入 ExposeData（Scribe_Collections 对
-            // List<Deep> 没有 PostLoadInit 分支），故在读取完成阶段（LoadingVars）完成归一化。
+            // 深度保存的列表元素会先在 LoadingVars 阶段进入 ExposeData，之后虽然还会收到
+            // PostLoadInit，但本归一化明确只在 LoadingVars 执行，因此不会重复修改数据。
             // Scribe 键值名称（passion / passionRecorded）保持不变。新扫描数据已设
             // PassionRecorded = true 且保存真实兴趣，此分支不会触发，不会改写真实兴趣。
             if (Scribe.mode == LoadSaveMode.LoadingVars && !PassionRecorded)
@@ -112,6 +112,8 @@ namespace MAP_MechanoidMechanitor
         public BackstoryDef? Adulthood => adulthood;
 
         public string FullName => BuildName().ToStringFull;
+
+        internal Name GrammarName => BuildName();
 
         public int ChronologicalAgeYears
             => (int)(chronologicalAgeTicks / GenDate.TicksPerYear);

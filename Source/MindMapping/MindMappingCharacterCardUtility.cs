@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.Grammar;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -1014,24 +1015,33 @@ namespace MAP_MechanoidMechanitor
         //  无 Pawn 的 Def 描述安全解析
         // ================================================================
         //
-        // 原版 BackstoryDef.FullDescriptionFor(Pawn) / Trait.TipString(Pawn) 会通过
-        //   description.Formatted(p.Named("PAWN")).AdjustedFor(p).Resolve()
-        // 解析主体描述，其中依赖真实 Pawn 处理 {PAWN_name} 等命名与性别化语法。
-        // 本 MOD 严禁构造/依赖 Pawn，因此这里只接收 Def 的静态描述字符串与 MindMappingData
-        // 快照，使用快照姓名与已保存性别做最小、安全替换；任何无法安全解析的 PAWN 语法标记
-        // 都会被剥离，绝不把 {PAWN...}/[PAWN...] 原始占位符显示给玩家。
-        // 文本每次依据当前语言从 Def 重新生成（不写回存档），切换语言后仍正确。
+        // 原版背景与特性描述包含两种 PAWN 语法：
+        // - {PAWN_xxx}：Formatted 阶段使用的格式化标记；
+        // - [PAWN_xxx]：AdjustedFor 阶段使用的语法规则。
+        //
+        // 这里不构造 Pawn。简单花括号标记先转换为对应的方括号规则，再通过
+        // GrammarUtility.RulesForPawn 的“Name + Gender”重载生成原版规则。
+        // 性别分支同样调用 GrammarResolverSimple 的原版实现，因此会服从当前语言。
 
-        /// <summary>匹配 Def 描述中的 PAWN 语法标记（原版语法系统使用 [PAWN_xxx]，
-        /// 而源码/翻译中常以 {PAWN_xxx} 书写；性别化调用形如 {PAWN_gender?he:she}，
-        /// 二者都需覆盖，避免原始占位符暴露给玩家）。</summary>
-        private static readonly Regex PawnGrammarToken = new Regex(
-            @"[\[\{]PAWN[A-Za-z0-9_?:]*[\]\}]",
+        /// <summary>
+        /// 匹配 {PAWN_gender ? male : female} 或包含第三个中性形式的性别分支。
+        /// 参数内容交给原版 ResolveGenderSymbol 解释，保留原版空格与 Gender.None 行为。
+        /// </summary>
+        private static readonly Regex PawnGenderFormatterToken = new Regex(
+            @"\{\s*PAWN_gender\s*\?\s*([^{}]+)\}",
             RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// 将 Def 静态描述按快照姓名与性别安全解析为可显示文本。
-        /// 只接受静态描述与 MindMappingData，不构造 Pawn，不调用原版语法系统。
+        /// 匹配 {PAWN_nameDef}、{PAWN_pronoun} 等无参数格式化标记。
+        /// 转换后由原版 DynamicWrapper 与 RulesForPawn 解析，不在 MOD 中维护代词表。
+        /// </summary>
+        private static readonly Regex PawnSimpleFormatterToken = new Regex(
+            @"\{\s*(PAWN_[A-Za-z0-9]+)\s*\}",
+            RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// 使用心智快照中的姓名、性别与年龄解析 Def 描述。
+        /// 不创建 Pawn，不保存解析后的文本；每次显示都按当前语言重新生成。
         /// </summary>
         private static string ResolveSnapshotDescription(string rawDescription, MindMappingData data)
         {
@@ -1039,71 +1049,48 @@ namespace MAP_MechanoidMechanitor
             {
                 return string.Empty;
             }
-            string name = DisplayName(data);
+
             Gender gender = DisplayGender(data);
-            bool female = gender == Gender.Female;
-            bool neuter = gender == Gender.None;
-            string resolved = PawnGrammarToken.Replace(rawDescription, (Match m) =>
-                ResolvePawnGrammarToken(m.Value, name, female, neuter));
-            // 最后做一次 Resolve 以处理任意残留的翻译键（Def.description 通常已本地化，此处为保险）。
+
+            // Formatted(Pawn.Named("PAWN")) 所处理的性别函数，改由原版公共解析器
+            // 直接使用快照性别完成。两参数时 Gender.None 与原版一样采用第一个参数。
+            string formatted = PawnGenderFormatterToken.Replace(rawDescription, (Match match) =>
+                GrammarResolverSimple.ResolveGenderSymbol(
+                    gender,
+                    animal: false,
+                    match.Groups[1].Value,
+                    rawDescription));
+
+            // TraitDef 常用花括号，而部分 TraitDef 与 BackstoryDef 使用方括号。
+            // 统一成原版 DynamicWrapper 能处理的方括号规则。
+            formatted = PawnSimpleFormatterToken.Replace(
+                formatted,
+                (Match match) => "[" + match.Groups[1].Value + "]");
+
+            GrammarRequest request = default(GrammarRequest);
+            request.Includes.Add(RulePackDefOf.DynamicWrapper);
+            request.Rules.Add(new Rule_String("RULE", formatted));
+            request.Rules.AddRange(GrammarUtility.RulesForPawn(
+                pawnSymbol: "PAWN",
+                name: data.GrammarName,
+                title: null,
+                kind: PawnKindDefOf.Colonist,
+                gender: gender,
+                faction: null,
+                age: data.BiologicalAgeYears,
+                chronologicalAge: data.ChronologicalAgeYears,
+                relationInfo: string.Empty,
+                everBeenColonistOrTameAnimal: false,
+                everBeenQuestLodger: false,
+                isFactionLeader: false,
+                royalTitles: null,
+                cubeInterest: false,
+                labelNoParenthesis: data.ShortName,
+                constants: request.Constants,
+                addTags: true));
+
+            string resolved = GrammarResolver.Resolve("r_root", request);
             return ((TaggedString)resolved).Resolve();
-        }
-
-        /// <summary>
-        /// 将单个 PAWN 语法标记替换为快照可安全确定的文本。无法安全解析的标记（如 gender? 调用
-        /// 或未知子符号）返回空字符串，以“省略动态片段”的方式降级，绝不直接暴露原始占位符。
-        /// </summary>
-        private static string ResolvePawnGrammarToken(string token, string name, bool female, bool neuter)
-        {
-            string inner = token.Substring(1, token.Length - 2);
-            if (inner.StartsWith("PAWN_GENDER", StringComparison.OrdinalIgnoreCase))
-            {
-                // 原版性别化调用格式：PAWN_gender?maleForm:femaleForm
-                int q = inner.IndexOf('?');
-                int colon = inner.IndexOf(':');
-                if (q >= 0 && colon > q)
-                {
-                    string maleForm = inner.Substring(q + 1, colon - q - 1);
-                    string femaleForm = inner.Substring(colon + 1);
-                    return female ? femaleForm : maleForm;
-                }
-                return string.Empty;
-            }
-
-            switch (inner.ToLowerInvariant())
-            {
-                case "pawn_name":
-                case "pawn_label":
-                case "pawn_fullname":
-                case "pawn_shortname":
-                    return name;
-                case "pawn_he":
-                    return neuter ? "they" : (female ? "she" : "he");
-                case "pawn_him":
-                    return neuter ? "them" : (female ? "her" : "him");
-                case "pawn_his":
-                    return neuter ? "their" : (female ? "her" : "his");
-                case "pawn_her":
-                    return neuter ? "them" : (female ? "her" : "him");
-                case "pawn_hers":
-                    return neuter ? "theirs" : (female ? "hers" : "his");
-                case "pawn_himself":
-                    return neuter ? "themself" : (female ? "herself" : "himself");
-                case "pawn_herself":
-                    return "herself";
-                case "pawn_them":
-                    return "them";
-                case "pawn_they":
-                    return "they";
-                case "pawn_their":
-                    return "their";
-                case "pawn_themselves":
-                    return "themselves";
-                case "pawn_themself":
-                    return "themself";
-                default:
-                    return string.Empty;
-            }
         }
     }
 }
