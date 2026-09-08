@@ -69,7 +69,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             IdeologyAdaptationLevels =
             {
                 MechanoidMechanitorIdeologyAdaptationLevel.Disabled,
-                MechanoidMechanitorIdeologyAdaptationLevel.Basic,
                 MechanoidMechanitorIdeologyAdaptationLevel.Partial,
                 MechanoidMechanitorIdeologyAdaptationLevel.Full
             };
