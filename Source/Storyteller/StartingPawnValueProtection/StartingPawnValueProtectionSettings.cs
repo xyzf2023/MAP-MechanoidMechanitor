@@ -158,6 +158,13 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 严禁在游戏/设置 Scribe 正在读写时嵌套启动另一份设置文件的 Scribe。
+            // 正常流程会在 StaticConstructorOnStartup 阶段预载；若预载异常，LoadedGame 后会重试。
+            if (Scribe.mode != LoadSaveMode.Inactive)
+            {
+                return;
+            }
+
             string? modIdentifier = ResolveModIdentifier();
             if (modIdentifier.NullOrEmpty())
             {
