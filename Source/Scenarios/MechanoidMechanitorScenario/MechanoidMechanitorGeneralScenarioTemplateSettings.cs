@@ -6,7 +6,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
-    /// 普通剧本未启用剧情风格选择页时使用的独立默认剧情模板设置。
+    /// 普通剧本使用的独立默认剧情模板设置。
     /// 两个生成频率继续使用 MAPMechanitorModSettings 中已有字段；其余不依赖具体世界
     /// Faction 实例的字段保存在本 Settings 对象中。普通派系逐派系 Custom 模式明确不支持。
     /// </summary>
