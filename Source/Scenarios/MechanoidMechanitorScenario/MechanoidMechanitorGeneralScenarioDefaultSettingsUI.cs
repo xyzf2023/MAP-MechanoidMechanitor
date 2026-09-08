@@ -93,8 +93,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     .Translate());
 
             bool outerEnabled = GUI.enabled;
-            bool templateEnabled = outerEnabled && !settings.enableStoryStylesForGeneralScenarios;
-            GUI.enabled = templateEnabled;
 
             DrawSubsectionLabel(
                 listing,
@@ -125,7 +123,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     MechanoidMechanitorGeneralScenarioTemplateSettings.Normalize(settings, template);
                 });
 
-            bool outpostWeightsEnabled = templateEnabled
+            bool outpostWeightsEnabled = outerEnabled
                 && settings.generalScenarioFactionOutpostFrequency
                     != MechanoidMechanitorFactionOutpostFrequency.Off;
             DrawWeightRow(
@@ -199,7 +197,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     ? "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Description"
                     : "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.DisabledReason",
                 template.generalScenarioPurgeDirectiveEnabled,
-                templateEnabled && purgeAvailable,
+                outerEnabled && purgeAvailable,
                 value =>
                 {
                     template.generalScenarioPurgeDirectiveEnabled = value;
@@ -221,7 +219,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     ? "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Description"
                     : "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.DisabledReason",
                 template.generalScenarioSymbiosisCovenantEnabled,
-                templateEnabled && symbiosisAvailable,
+                outerEnabled && symbiosisAvailable,
                 value =>
                 {
                     template.generalScenarioSymbiosisCovenantEnabled = value;
@@ -250,12 +248,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 });
 
             GUI.enabled = outerEnabled;
-            if (settings.enableStoryStylesForGeneralScenarios)
-            {
-                listing.Label(
-                    "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.DisabledNotice"
-                        .Translate());
-            }
         }
 
         private static void DrawSubsectionLabel(Listing_Standard listing, string key)
