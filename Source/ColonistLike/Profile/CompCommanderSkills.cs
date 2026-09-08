@@ -45,7 +45,9 @@ namespace MAP_MechanoidMechanitor
                 ApplySkillLevels(pawn, props);
                 if (MechanoidMechanitorRoleUtility.HasNativeMechanitorMarker(pawn))
                 {
-                    MechanoidMechanitorSkillUtility.PromoteNonePassionsToMinor(pawn);
+                    // 只在真正首次完成技能初始化时读取“最低为好奇”设置并应用兴趣下限；
+                    // 玩家之后修改设置、读档、组件重建或角色重入图都不会追溯调整既有兴趣。
+                    MechanoidMechanitorSkillUtility.ApplyConfiguredInitialPassionFloor(pawn);
                 }
 
                 skillsInitialized = true;

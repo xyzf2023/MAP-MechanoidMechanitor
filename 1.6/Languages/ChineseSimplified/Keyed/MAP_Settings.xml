@@ -33,6 +33,10 @@
   <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>启用肃清指令UI加载界面</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>
   <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>开启时，显示联络主脑时的进度条界面。</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>
 
+  <!-- 模块：技能兴趣下限 -->
+  <MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Label>机械族机械师技能兴趣度最低为好奇</MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Label>
+  <MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description>开启后，所有机械族机械师的技能兴趣度不会低于好奇。</MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description>
+
   <!-- 模块：共生盟约 -->
   <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>共生盟约</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>
   <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>共生盟约成长倍率：×{0}</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>

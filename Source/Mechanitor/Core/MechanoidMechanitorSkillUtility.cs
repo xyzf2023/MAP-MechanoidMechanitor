@@ -100,5 +100,57 @@ namespace MAP_MechanoidMechanitor
                 }
             }
         }
+
+        /// <summary>
+        /// “机械族机械师技能兴趣度最低为好奇”设置是否开启。
+        /// MAPMechanitorMod.Settings 尚未初始化（为 null）时按默认开启处理。
+        /// </summary>
+        internal static bool IsMinimumMinorPassionSettingEnabled()
+        {
+            return MAPMechanitorMod.Settings?.ensureMechanoidMechanitorMinimumMinorPassion
+                ?? true;
+        }
+
+        /// <summary>
+        /// 对“真正首次完成技能初始化”的机械族机械师应用配置化兴趣下限。
+        /// 设置开启时把所有 Passion.None 提升为 Passion.Minor；设置关闭时不修改任何兴趣。
+        /// 调用方必须各自保证只在首次初始化执行一次（原生机械族机械师：
+        /// CompCommanderSkills.skillsInitialized；后天机械族机械师：
+        /// MechanoidMechanitorRecord.InitialPassionPolicyApplied），
+        /// 严禁在修改设置、读档、Tick、Getter、UI 绘制或周期维护入口追溯修改既有 Pawn。
+        /// </summary>
+        internal static void ApplyConfiguredInitialPassionFloor(Pawn? pawn)
+        {
+            if (IsMinimumMinorPassionSettingEnabled())
+            {
+                PromoteNonePassionsToMinor(pawn);
+            }
+        }
+
+        /// <summary>
+        /// 解析心智映射导入后的单个技能兴趣。
+        /// 优先级：轨道数据网络（狂热）&gt; 心智核心保存兴趣 &gt; “最低为好奇”设置。
+        /// 轨道数据网络已解锁时返回 Passion.Major，不受此设置影响，心智核心中的
+        /// None/Minor 不可能把网络狂热降级；
+        /// 未解锁且设置开启时把无兴趣提升为好奇（None → Minor，Minor/Major 保持不变）；
+        /// 未解锁且设置关闭时精确返回核心保存兴趣（允许把目标现有兴趣覆盖为
+        /// Passion.None，也允许 Minor/Major 原样写入）。
+        /// </summary>
+        internal static Passion ResolveImportedPassion(
+            Passion savedPassion,
+            bool orbitalDataNetworkUnlocked)
+        {
+            if (orbitalDataNetworkUnlocked)
+            {
+                return Passion.Major;
+            }
+
+            if (!IsMinimumMinorPassionSettingEnabled())
+            {
+                return savedPassion;
+            }
+
+            return savedPassion == Passion.None ? Passion.Minor : savedPassion;
+        }
     }
 }

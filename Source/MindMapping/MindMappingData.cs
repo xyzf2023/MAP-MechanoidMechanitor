@@ -283,6 +283,13 @@ namespace MAP_MechanoidMechanitor
             SetBackstories(pawn, childhood, adulthood);
             ReplaceNonGeneTraits(pawn, traits);
 
+            // 兴趣解析优先级：轨道数据网络（狂热）> 心智核心保存兴趣 > “最低为好奇”设置。
+            // 轨道数据网络已解锁时最终兴趣为狂热且不受设置影响；未解锁时才依据核心保存的
+            // PassionValue 与设置解析。旧快照“未记录兴趣”在载入时已永久归一化为 None，
+            // 这里按正常保存兴趣处理，不重复做兼容归一化。
+            bool orbitalNetworkUnlocked =
+                ResearchFeatureUnlockUtility.IsOrbitalDataNetworkUnlocked();
+
             for (int i = 0; i < skills.Count; i++)
             {
                 MindMappingSkillData saved = skills[i];
@@ -296,9 +303,42 @@ namespace MAP_MechanoidMechanitor
                 {
                     record.Level = saved.Level;
                 }
+
+                record.passion =
+                    MechanoidMechanitorSkillUtility.ResolveImportedPassion(
+                        saved.PassionValue,
+                        orbitalNetworkUnlocked);
             }
 
+            ImportSavedIdeology(pawn);
+
             NotifyPersonalityChanged(pawn);
+        }
+
+        /// <summary>
+        /// 从心智核心导入文化（仅限以下条件全部满足时）：
+        /// Ideology DLC 已启用、文化适配为“部分启用/全部启用”、目标已是正式注册的
+        /// 机械族机械师、本快照已记录文化且确实有文化、保存的 Ideology 引用有效（非 null）。
+        /// 统一调用 MechanoidMechanitorIdeologyAdaptationUtility.TrySetIdeo 这一现有公共入口，
+        /// 由它负责 100% 认可度、成员增减通知与缓存刷新；这里禁止直接写 pawn.ideo
+        /// 内部字段或复制 SetIdeo 的副作用。
+        /// 边界：文化适配为“不启用/基础功能”、目标非机械族机械师、核心记录“原角色没有文化”、
+        /// 核心文化引用已失效或为 null、旧快照没有记录文化时，一律保持目标当前文化；
+        /// 文化导入失败不会影响姓名、背景、特性、技能等其余数据的导入。
+        /// </summary>
+        private void ImportSavedIdeology(Pawn pawn)
+        {
+            if (!ideologyRecorded || !hadIdeology || ideology == null)
+            {
+                return;
+            }
+
+            if (pawn.Ideo == ideology)
+            {
+                return;
+            }
+
+            MechanoidMechanitorIdeologyAdaptationUtility.TrySetIdeo(pawn, ideology);
         }
 
         public void ExposeData()

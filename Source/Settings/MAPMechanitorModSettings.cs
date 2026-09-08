@@ -322,6 +322,18 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool enableMaxLevelPsychicCoreMentalStateRecovery = true;
 
+        /// <summary>
+        /// 默认开启。开启后，机械族机械师在“首次技能初始化”与“心智映射数据导入”时的
+        /// 技能兴趣度最低为“好奇”（Passion.Minor）：
+        /// 首次初始化时把 Passion.None 提升为 Passion.Minor；心智映射导入保存为无兴趣的数据时
+        /// 同样按此下限处理（轨道数据网络已解锁时保持狂热，不受此设置影响）。
+        /// 关闭后保留原版或心智核心保存的无兴趣（Passion.None），也允许心智映射把目标的
+        /// 既有兴趣精确覆盖回无兴趣。
+        /// 本设置是全局 MOD 设置（非存档快照），只影响之后新注册、升格或主动导入心智数据的
+        /// 机械族机械师；修改设置不会扫描、遍历或修改任何已经存在的 Pawn。
+        /// </summary>
+        public bool ensureMechanoidMechanitorMinimumMinorPassion = true;
+
         // ===== 共生盟约全局设置（所有存档共享） =====
 
         /// <summary>
@@ -698,6 +710,12 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref enableMaxLevelPsychicCoreMentalStateRecovery,
                 "enableMaxLevelPsychicCoreMentalStateRecovery",
+                true);
+
+            // 全局 MOD 设置。旧设置文件缺少该字段时按默认 true 处理（最低为好奇）。
+            Scribe_Values.Look(
+                ref ensureMechanoidMechanitorMinimumMinorPassion,
+                "ensureMechanoidMechanitorMinimumMinorPassion",
                 true);
 
             Scribe_Values.Look(

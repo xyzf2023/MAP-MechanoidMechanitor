@@ -147,6 +147,11 @@ namespace MAP_MechanoidMechanitor
                 ref Settings.enablePurgeDirectiveUiLoadingScreen,
                 "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description".Translate());
 
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Label".Translate(),
+                ref Settings.ensureMechanoidMechanitorMinimumMinorPassion,
+                "MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description".Translate());
+
             DrawRecreationSettings(listing);
 
             DrawSymbiosisCovenantSettings(listing);
