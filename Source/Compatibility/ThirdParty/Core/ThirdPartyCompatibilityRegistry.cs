@@ -25,6 +25,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new GlitterworldDestroyer5ClusterReceiverCompatibility(),
             new GlitterworldDestroyer5ExpansionCompatibility(),
             new GlitterworldDestroyer5ExpansionMechFusionCompatibility(),
+            new MechFusionAbilityGrantCompatibility(),
+            new MechFusionCastEligibilityCompatibility(),
             new ProgressionEducationCompatibility(),
             new DeadManSwitchCompatibility(),
             new VanillaPsycastsExpandedCompatibility()

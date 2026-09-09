@@ -88,32 +88,12 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
             for (int i = 0; i < mechanitors.Count; i++)
             {
                 Pawn pawn = mechanitors[i];
-                if (pawn == null || pawn.Destroyed || pawn.Dead)
+                if (!MechFusionCompatibleMechanitorUtility.IsEligibleMechanitor(pawn))
                 {
                     continue;
                 }
 
                 if (pawn.health == null || pawn.health.hediffSet == null)
-                {
-                    continue;
-                }
-
-                if (pawn.Faction != Faction.OfPlayer)
-                {
-                    continue;
-                }
-
-                if (!pawn.RaceProps.IsMechanoid)
-                {
-                    continue;
-                }
-
-                if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
-                {
-                    continue;
-                }
-
-                if (pawn.mechanitor == null)
                 {
                     continue;
                 }
