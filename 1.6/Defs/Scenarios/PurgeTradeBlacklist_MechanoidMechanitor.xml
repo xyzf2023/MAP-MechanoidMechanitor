@@ -3,7 +3,30 @@
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorPurgeTradeBlacklistDef>
     <defName>MAP_PurgeTradeBlacklist_Core</defName>
     <thingDefs>
-      <!-- 空黑名单：可用 li MayRequire="Package.Id" 追加禁售 ThingDef -->
+      <!-- Biotech：依赖实例数据或不适合作为普通调拨物资 -->
+      <li MayRequire="ludeon.rimworld.biotech">Xenogerm</li>
+      <li MayRequire="ludeon.rimworld.biotech">HumanOvum</li>
+      <li MayRequire="ludeon.rimworld.biotech">HumanEmbryo</li>
+      <li MayRequire="ludeon.rimworld.biotech">Genepack</li>
+
+      <!-- Anomaly：特殊实体、异常科技资源与进度物品 -->
+      <li MayRequire="ludeon.rimworld.anomaly">RevenantSpine</li>
+      <li MayRequire="ludeon.rimworld.anomaly">Shard</li>
+      <li MayRequire="ludeon.rimworld.anomaly">GoldenCube</li>
+      <li MayRequire="ludeon.rimworld.anomaly">MonolithFragment</li>
+
+      <!-- Odyssey：生成时携带地点任务的地图 -->
+      <li MayRequire="ludeon.rimworld.odyssey">Map</li>
+
+      <!-- Ideology：专用于文化圣物的物品模板 -->
+      <li MayRequire="ludeon.rimworld.ideology">RelicInertCup</li>
+      <li MayRequire="ludeon.rimworld.ideology">RelicInertPendant</li>
+      <li MayRequire="ludeon.rimworld.ideology">RelicInertBox</li>
+      <li MayRequire="ludeon.rimworld.ideology">RelicInertTablet</li>
+      <li MayRequire="ludeon.rimworld.ideology">RelicInertFragment</li>
+      <li MayRequire="ludeon.rimworld.ideology">RelicInertSwordHandle</li>
+      <li MayRequire="ludeon.rimworld.ideology">RelicInertArk</li>
+      <li MayRequire="ludeon.rimworld.ideology">RelicInertCube</li>
     </thingDefs>
     <mechPawnKinds>
       <!-- 机械族调拨黑名单：填写 PawnKindDef 的 defName，可用 li MayRequire="Package.Id" 追加兼容项 -->
