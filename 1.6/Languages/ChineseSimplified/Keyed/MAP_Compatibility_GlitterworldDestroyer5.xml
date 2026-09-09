@@ -2,4 +2,7 @@
 <LanguageData>
   <MAP_GD5.PurgeResearchSupport.Title>主脑科技支持</MAP_GD5.PurgeResearchSupport.Title>
   <MAP_GD5.PurgeResearchSupport.Text>主脑向我们传输了{0}相关数据。该研究已完成。</MAP_GD5.PurgeResearchSupport.Text>
+  <MAP_GD5.ClusterReceiver.PurgeDisabled>我们不应该干涉机械巢的其他集群。我们可以通过提升肃清评级的方式获取相关科技。</MAP_GD5.ClusterReceiver.PurgeDisabled>
+  <MAP_GD5.ClusterReceiver.NoResponse.Title>扫描无反应</MAP_GD5.ClusterReceiver.NoResponse.Title>
+  <MAP_GD5.ClusterReceiver.NoResponse.Text>接收器发出一阵沙沙声，但是似乎没有扫描到有效信息。</MAP_GD5.ClusterReceiver.NoResponse.Text>
 </LanguageData>
