@@ -1,4 +1,5 @@
 using Verse;
+using RimWorld;
 
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion
 {
