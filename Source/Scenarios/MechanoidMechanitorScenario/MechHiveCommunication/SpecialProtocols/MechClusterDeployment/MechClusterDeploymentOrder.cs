@@ -12,7 +12,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public const int DefaultThreatPoints = 10000;
 
-        public const int CreditsPerThousandPoints = 250;
+        public const int CreditsPerThousandPoints = 150;
 
         public const int ConditionCauserSurcharge = 375;
 

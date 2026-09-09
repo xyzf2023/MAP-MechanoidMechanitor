@@ -52,7 +52,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return 0;
             }
 
-            return (int)(((long)points + 19L) / 20L);
+            return (int)(((long)points + 9L) / 10L);
         }
 
         public string GetTemplateLabel(Map? map = null)
