@@ -20,6 +20,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
         {
             new GlitterworldDestroyer5Compatibility(),
             new GlitterworldDestroyer5DryseaCompatibility(),
+            new GlitterworldDestroyer5CerebrexTakeoverResearchCompatibility(),
             new GlitterworldDestroyer5ExpansionCompatibility(),
             new GlitterworldDestroyer5ExpansionMechFusionCompatibility(),
             new ProgressionEducationCompatibility(),
