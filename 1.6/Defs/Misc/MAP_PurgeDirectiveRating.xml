@@ -43,6 +43,10 @@
     <goodsMaterialTier1MaxValue>10</goodsMaterialTier1MaxValue>
     <goodsOtherTier1MaxValue>50</goodsOtherTier1MaxValue>
 
+    <!-- 机械巢节点建设贡献评级：仅实际满足当前节点需求的物资价值参与评级。
+         超额同类物资、非需求物资与不足需求时的整批额度兑换均不增加评级。 -->
+    <nodeDemandDeliveryRatingMultiplier>0.075</nodeDemandDeliveryRatingMultiplier>
+
     <!-- 特殊协议威胁点上限（按等级 L1..L5）。0 表示该等级锁定。
          部队支援：L1锁定, L2&le;5000, L3&le;10000, L4&le;20000, L5无硬上限(2147483647)。
          机械集群：L1~L3锁定, L4&le;5000, L5&le;10000。环境影响器仅在 L5 解锁。 -->

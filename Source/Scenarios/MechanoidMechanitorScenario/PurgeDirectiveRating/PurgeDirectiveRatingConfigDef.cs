@@ -50,6 +50,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public float goodsMaterialTier1MaxValue = 10f;
         public float goodsOtherTier1MaxValue = 50f;
 
+        // ===== 机械巢节点建设贡献评级 =====
+        // 仅实际满足节点当前需求的物资价值参与评级；超额与非需求交付只结算肃清额度。
+        public float nodeDemandDeliveryRatingMultiplier = 0.075f;
+
         // ===== 特殊协议分级上限（按等级 L1..L5，下标 0..4） =====
         // 0 表示在该等级锁定。列表末项使用 int.MaxValue 表示「无硬上限」（沿用原版警告机制）。
         // 部队支援：L1锁定, L2≤5000, L3≤10000, L4≤20000, L5无硬上限。
@@ -142,6 +146,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || goodsOtherTier1MaxValue < 0f)
             {
                 yield return $"{defName}: goods tier thresholds must be non-negative.";
+            }
+
+            if (nodeDemandDeliveryRatingMultiplier < 0f)
+            {
+                yield return $"{defName}: nodeDemandDeliveryRatingMultiplier cannot be negative.";
             }
 
             if (mechForceSupportMaxThreatPointsByLevel == null

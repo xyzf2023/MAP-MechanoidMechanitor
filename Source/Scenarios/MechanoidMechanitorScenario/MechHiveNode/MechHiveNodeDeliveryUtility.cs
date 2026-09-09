@@ -7,9 +7,10 @@ using Verse;
 namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
-    /// 机械巢节点材料交付与肃清额度换算的公共计算。价值一律以实际 <see cref="Thing.MarketValue"/>
+    /// 机械巢节点材料交付与肃清额度/评级换算的公共计算。价值一律以实际 <see cref="Thing.MarketValue"/>
     /// （单件市场价值）× 实际结算数量计算，兼容品质/材质/耐久度及其他 MOD 的价值修改。
-    /// 额度奖励先按倍率汇总价值再向下取整，最后通过统一肃清额度接口增加。
+    /// 满足当前需求的部分按 0.5 折算肃清额度，并按评级配置额外增加节点评级；
+    /// 超额或非需求部分仅按 0.2 折算肃清额度，不增加评级。
     /// </summary>
     public static class MechHiveNodeDeliveryUtility
     {
@@ -93,7 +94,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return removedValue;
         }
 
-        /// <summary>按倍率汇总价值向下取整后，通过统一肃清额度接口增加。仅在肃清指令开启时生效。</summary>
+        /// <summary>
+        /// 按倍率汇总价值向下取整后增加肃清额度。仅在肃清指令可用时生效。
+        /// 当前仅有 DeliveryQuotaMultiplier(0.5) 表示“实际满足节点需求”的交付，
+        /// 此时在额度成功结算后，再按统一评级配置对同一有效需求价值增加节点评级；
+        /// ExcessQuotaMultiplier(0.2) 及其他倍率只增加额度，不增加评级。
+        /// </summary>
         public static void TryAddPurgeQuota(float totalValue, float multiplier)
         {
             if (totalValue <= 0f || multiplier <= 0f)
@@ -107,10 +113,72 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             int amount = Mathf.FloorToInt(totalValue * multiplier);
-            if (amount > 0)
+            if (amount <= 0 || !TryAddPurgeCreditsOnly(amount))
             {
-                GameComponent_MechanoidMechanitorStoryState.TryAddPurgeDirectiveRewardPoints(amount);
+                return;
             }
+
+            if (!Mathf.Approximately(multiplier, DeliveryQuotaMultiplier)
+                || GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                return;
+            }
+
+            float ratingMultiplier = PurgeDirectiveRatingUtility.Config.nodeDemandDeliveryRatingMultiplier;
+            if (ratingMultiplier <= 0f)
+            {
+                return;
+            }
+
+            int ratingAmount = Mathf.FloorToInt(totalValue * ratingMultiplier);
+            if (ratingAmount > 0)
+            {
+                PurgeDirectiveRatingUtility.TryAddRating(ratingAmount);
+            }
+        }
+
+        /// <summary>
+        /// 节点交付专用的“只增加肃清额度”入口。普通肃清状态直接写入额度字段，不同步增加评级；
+        /// 接管主脑后仅在节点作用域内转入主脑资源额度。所有路径均先做 int 溢出保护。
+        /// </summary>
+        private static bool TryAddPurgeCreditsOnly(int amount)
+        {
+            if (amount <= 0)
+            {
+                return false;
+            }
+
+            if (GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                GameComponent_CerebrexTakeoverState? takeoverState =
+                    GameComponent_CerebrexTakeoverState.Current;
+                return takeoverState != null
+                    && CerebrexTakeoverNodeScope.Active
+                    && takeoverState.TryAddCredits(amount);
+            }
+
+            if (!GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive)
+            {
+                return false;
+            }
+
+            MechanoidMechanitorPurgeDirectiveRuntimeState? runtime =
+                Current.Game?
+                    .GetComponent<GameComponent_MechanoidMechanitorStoryState>()?
+                    .PurgeDirectiveRuntimeState;
+            if (runtime == null)
+            {
+                return false;
+            }
+
+            long next = (long)runtime.RewardPoints + amount;
+            if (next > int.MaxValue)
+            {
+                return false;
+            }
+
+            runtime.AddRewardPoints(amount);
+            return true;
         }
     }
 }
