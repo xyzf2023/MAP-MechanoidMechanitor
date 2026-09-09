@@ -1,5 +1,6 @@
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
+using Verse;
 
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
 {

@@ -210,7 +210,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                     PackageId,
                     "安装闪耀世界毁灭者5巨型集群接收器兼容补丁时发生异常。",
                     ex,
-                    doEffect);
+                    doEffect!);
             }
 
             return ThirdPartyCompatibilityResult.CreateApplied(
