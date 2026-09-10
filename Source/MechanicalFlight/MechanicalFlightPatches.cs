@@ -530,7 +530,7 @@ namespace MAP_MechanoidMechanitor
                     MechanicalFlightUtility.TryStartAerialMove(flyer, cell)),
                 MenuOptionPriority.High)
             {
-                isGoto = true,
+                // 不标记为原版 Goto，避免多选时 Selector 绕过此回调并改走群体移动。
                 autoTakeable = allSelectedPawnsFlying && !occupied,
                 autoTakeablePriority = 10000f
             });
