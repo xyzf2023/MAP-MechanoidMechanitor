@@ -243,13 +243,15 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < pawns.Count; i++)
             {
                 Pawn candidate = pawns[i];
-                if (!candidate.RaceProps.mechEnabledWorkTypes.Contains(workType))
-                {
-                    continue;
-                }
-
                 if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(candidate))
                 {
+                    // 机械族机械师的可用工作类型可能来自升格后的动态授权，
+                    // 不能再以升格前种族的 mechEnabledWorkTypes 提前排除。
+                    if (candidate.WorkTypeIsDisabled(workType))
+                    {
+                        continue;
+                    }
+
                     if (ProductivityCoreUtility.HasActiveEffect(candidate))
                     {
                         pawn = candidate;
@@ -281,6 +283,12 @@ namespace MAP_MechanoidMechanitor
                         return;
                     }
 
+                    continue;
+                }
+
+                // 普通机械体仍严格遵循原版种族工作表。
+                if (!candidate.RaceProps.mechEnabledWorkTypes.Contains(workType))
+                {
                     continue;
                 }
 
@@ -341,29 +349,15 @@ namespace MAP_MechanoidMechanitor
                         break;
                     }
 
-                    if (!candidate.RaceProps.mechEnabledWorkTypes.Contains(WorkTypeDefOf.Mining))
-                    {
-                        continue;
-                    }
-
                     if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(candidate))
                     {
-                        if (MechanoidMechanitorSkillUtility.TryGetPreferredSkillLevel(
-                                candidate,
-                                SkillDefOf.Mining,
-                                out int miningLevel))
-                        {
-                            if (miningLevel > 0)
-                            {
-                                hasMiner = true;
-                                break;
-                            }
-
-                            // 真实采矿技能为 0 时，不允许固定机械技能覆盖。
-                            continue;
-                        }
-
-                        if (candidate.RaceProps.mechFixedSkillLevel > 0)
+                        if (MechanoidMechanitorWorkAlertUtility
+                                .IsAvailableMechanitorForWork(
+                                    candidate,
+                                    map,
+                                    WorkTypeDefOf.Mining,
+                                    SkillDefOf.Mining,
+                                    minimumSkill: 1))
                         {
                             hasMiner = true;
                             break;
@@ -372,7 +366,10 @@ namespace MAP_MechanoidMechanitor
                         continue;
                     }
 
+                    // 普通机械体仍严格遵循原版种族工作表和固定机械技能。
                     if (candidate.IsColonyMechPlayerControlled
+                        && candidate.RaceProps.mechEnabledWorkTypes.Contains(
+                            WorkTypeDefOf.Mining)
                         && candidate.RaceProps.mechFixedSkillLevel > 0)
                     {
                         hasMiner = true;
