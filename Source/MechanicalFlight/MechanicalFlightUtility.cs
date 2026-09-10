@@ -205,9 +205,14 @@ namespace MAP_MechanoidMechanitor
                 record.Phase = MechanicalFlightPhase.Hovering;
             }
 
-            if (!pawn.Drafted && pawn.CurJob?.playerForced != true)
+            if (!pawn.Drafted)
             {
                 pawn.pather?.StopDead();
+                if (!TryBeginLanding(pawn))
+                {
+                    ClearRuntimeState(record, forceLand: true);
+                }
+                return;
             }
 
             MechanicalFlightPresentationUtility.Tick(pawn, record);
@@ -243,6 +248,10 @@ namespace MAP_MechanoidMechanitor
             if (forceLand && pawn?.flight?.Flying == true)
             {
                 pawn.flight.ForceLand();
+            }
+            if (pawn?.CurJob != null)
+            {
+                pawn.CurJob.flying = false;
             }
             record.ResetRuntimeState();
             MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
@@ -317,6 +326,10 @@ namespace MAP_MechanoidMechanitor
         {
             if (pawn == null || record?.Profile == null || !pawn.Spawned
                 || pawn.Map == null || pawn.Dead || pawn.Downed)
+            {
+                return "MAP_MechanicalFlight_Unavailable".Translate();
+            }
+            if (!pawn.Drafted)
             {
                 return "MAP_MechanicalFlight_Unavailable".Translate();
             }

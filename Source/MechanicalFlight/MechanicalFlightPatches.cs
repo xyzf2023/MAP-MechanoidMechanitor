@@ -17,6 +17,7 @@ namespace MAP_MechanoidMechanitor
                 yield return gizmo;
             }
             if (__instance != null && __instance.Faction == Faction.OfPlayer
+                && __instance.Drafted
                 && GameComponent_MechanicalFlightRegistry.IsAuthorized(__instance))
             {
                 yield return MechanicalFlightUtility.MakeCommand(__instance);
@@ -85,12 +86,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            bool meleeOrTouch = job.def?.defName == "AttackMelee"
-                || job.def?.defName == "CastAbilityTouch"
-                || job.verbToUse?.IsMeleeAttack == true;
-            bool compatible = !meleeOrTouch && job.def != null
-                && (job.def.ifFlyingKeepFlying || HoverCompatibleJobs.Contains(job.def.defName));
-            if (compatible)
+            if (IsHoverCompatible(job))
             {
                 job.flying = true;
                 return false;
@@ -106,6 +102,53 @@ namespace MAP_MechanoidMechanitor
                 Messages.Message("MAP_MechanicalFlight_GroundJobBlocked".Translate(), pawn,
                     MessageTypeDefOf.RejectInput, false);
             }
+            return false;
+        }
+
+        internal static bool IsHoverCompatible(Job? job)
+        {
+            if (job?.def == null)
+            {
+                return false;
+            }
+
+            bool meleeOrTouch = job.def.defName == "AttackMelee"
+                || job.def.defName == "CastAbilityTouch"
+                || job.verbToUse?.IsMeleeAttack == true;
+            return !meleeOrTouch
+                && (job.def.ifFlyingKeepFlying || HoverCompatibleJobs.Contains(job.def.defName));
+        }
+    }
+
+    [HarmonyPatch(typeof(Pawn_JobTracker), nameof(Pawn_JobTracker.TryTakeOrderedJob))]
+    internal static class MechanicalFlightUnreachableOrderPatch
+    {
+        private static readonly AccessTools.FieldRef<Pawn_JobTracker, Pawn> PawnField =
+            AccessTools.FieldRefAccess<Pawn_JobTracker, Pawn>("pawn");
+
+        public static bool Prefix(Pawn_JobTracker __instance, Job job, ref bool __result)
+        {
+            Pawn pawn = PawnField(__instance);
+            if (!MechanicalFlightUtility.IsActivelyFlying(pawn)
+                || MechanicalFlightJobPatch.IsHoverCompatible(job)
+                || job == null || !job.targetA.IsValid)
+            {
+                return true;
+            }
+
+            LocalTargetInfo target = job.targetA;
+            if (target.HasThing && target.Thing.MapHeld != pawn.MapHeld)
+            {
+                __result = false;
+                return false;
+            }
+            if (pawn.CanReach(target, PathEndMode.Touch, Danger.Deadly))
+            {
+                return true;
+            }
+
+            pawn.pather?.StopDead();
+            __result = false;
             return false;
         }
     }
@@ -297,13 +340,19 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(Pawn_PathFollower), "CostToPayThisTick")]
     internal static class MechanicalFlightSpeedPatch
     {
-        public static void Postfix(Pawn ___pawn, ref float __result)
+        public static void Postfix(Pawn_PathFollower __instance, Pawn ___pawn,
+            ref float __result)
         {
             if (GameComponent_MechanicalFlightRegistry.TryGetRecord(___pawn, out var record)
                 && record?.ConsumesFlightEnergy == true && record.Profile != null)
             {
-                __result *= record.Profile.pathSpeedMultiplier
-                    * MechanicalFlightPresentationUtility.FlightTravelRamp(___pawn);
+                float cellsPerSecond = Mathf.Max(0.01f,
+                    record.Profile.flightCellsPerSecond);
+                bool diagonal = __instance.nextCell.x != ___pawn.Position.x
+                    && __instance.nextCell.z != ___pawn.Position.z;
+                float ticksForCell = 60f / cellsPerSecond
+                    * (diagonal ? Mathf.Sqrt(2f) : 1f);
+                __result = __instance.nextCellCostTotal / Mathf.Max(1f, ticksForCell);
             }
         }
     }

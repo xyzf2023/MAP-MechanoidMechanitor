@@ -16,7 +16,6 @@ namespace MAP_MechanoidMechanitor
             public int LastFrame = -1;
             public Vector3 LastDrawPos;
             public bool HasLastDrawPos;
-            public float ExhaustStretch;
             public int LastHorizontalMotionTick = -999999;
             public float HorizontalDirection;
         }
@@ -34,9 +33,9 @@ namespace MAP_MechanoidMechanitor
         private static readonly Dictionary<int, int> LastGroundWashTick = new();
         private static readonly Dictionary<string, Graphic[]> FlameGraphics = new();
         private static readonly Dictionary<string, Graphic[]> CoreGraphics = new();
-        private static readonly Dictionary<string, Graphic> GlowGraphics = new();
+        private static readonly Dictionary<string, Graphic[]> GlowGraphics = new();
         private static Graphic[]? groundWashGraphics;
-        private const int StretchSteps = 6;
+        private const int PulseSteps = 8;
 
         public static Vector3 HoverVisualOffset(
             Pawn pawn,
@@ -103,18 +102,7 @@ namespace MAP_MechanoidMechanitor
             state.HasLastDrawPos = true;
             state.Angle = Mathf.MoveTowards(state.Angle, target,
                 Mathf.Max(profile.minimumTiltStep, Time.deltaTime * profile.tiltSpeed));
-            float stretchTarget = MechanicalFlightUtility.HasHoverVisual(pawn)
-                && pawn.pather?.MovingNow == true ? FlightTravelRamp(pawn) : 0f;
-            state.ExhaustStretch = Mathf.MoveTowards(state.ExhaustStretch, stretchTarget,
-                Mathf.Max(profile.minimumExhaustStretchStep,
-                    Time.deltaTime * profile.exhaustStretchSpeed));
             return state.Angle;
-        }
-
-        public static float FlightTravelRamp(Pawn pawn)
-        {
-            float height = pawn?.flight?.PositionOffsetFactor ?? 0f;
-            return Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.12f, 0.65f, height));
         }
 
         public static void DrawThrusterVisual(
@@ -132,18 +120,17 @@ namespace MAP_MechanoidMechanitor
 
             Graphic[] flames = GetFlameGraphics(profile);
             Graphic[] cores = GetCoreGraphics(profile);
-            Graphic glow = GetGlowGraphic(profile);
-            TiltStates.TryGetValue(pawn.thingIDNumber, out TiltState? state);
-            int index = Mathf.Clamp(Mathf.RoundToInt((state?.ExhaustStretch ?? 0f)
-                * (StretchSteps - 1)), 0, StretchSteps - 1);
-            float pulse = 1f + Mathf.Sin((Find.TickManager.TicksGame + pawn.thingIDNumber)
-                * 0.32f) * 0.08f;
+            Graphic[] glows = GetGlowGraphics(profile);
+            float pulse = (Mathf.Sin((Find.TickManager.TicksGame + pawn.thingIDNumber)
+                * 0.24f) + 1f) * 0.5f;
+            int index = Mathf.Clamp(Mathf.RoundToInt(pulse * (PulseSteps - 1)),
+                0, PulseSteps - 1);
             Quaternion rotation = Quaternion.AngleAxis(tiltAngle, Vector3.up);
             Vector3 exhaust = bodyDrawLoc
-                + rotation * new Vector3(0f, 0f, -0.72f * pulse);
+                + rotation * new Vector3(0f, 0f, -0.72f);
             exhaust.y = AltitudeLayer.Projectile.AltitudeFor();
 
-            glow.Draw(exhaust + rotation * new Vector3(0f, 0f, 0.25f),
+            glows[index].Draw(exhaust + rotation * new Vector3(0f, 0f, 0.25f),
                 Rot4.North, pawn, tiltAngle);
             float flameAngle = tiltAngle + profile.thrusterAngleOffset;
             flames[index].Draw(exhaust, Rot4.North, pawn, flameAngle);
@@ -202,15 +189,16 @@ namespace MAP_MechanoidMechanitor
         {
             if (!FlameGraphics.TryGetValue(profile.thrusterFlameTexture, out Graphic[]? graphics))
             {
-                graphics = new Graphic[StretchSteps];
-                for (int i = 0; i < StretchSteps; i++)
+                graphics = new Graphic[PulseSteps];
+                for (int i = 0; i < PulseSteps; i++)
                 {
-                    float t = i / (float)(StretchSteps - 1);
+                    float t = i / (float)(PulseSteps - 1);
                     graphics[i] = GraphicDatabase.Get<Graphic_Single>(
                         profile.thrusterFlameTexture, ShaderDatabase.MoteGlow,
-                        new Vector2(Mathf.Lerp(0.92f, 0.58f, t),
-                            Mathf.Lerp(2.07f, 3.375f, t)),
-                        new Color(0.3f, 0.72f, 1f, 0.76f));
+                        new Vector2(0.78f, 2.55f),
+                        new Color(Mathf.Lerp(0.27f, 0.34f, t),
+                            Mathf.Lerp(0.67f, 0.78f, t), 1f,
+                            Mathf.Lerp(0.68f, 0.82f, t)));
                 }
                 FlameGraphics[profile.thrusterFlameTexture] = graphics;
             }
@@ -221,31 +209,38 @@ namespace MAP_MechanoidMechanitor
         {
             if (!CoreGraphics.TryGetValue(profile.thrusterFlameTexture, out Graphic[]? graphics))
             {
-                graphics = new Graphic[StretchSteps];
-                for (int i = 0; i < StretchSteps; i++)
+                graphics = new Graphic[PulseSteps];
+                for (int i = 0; i < PulseSteps; i++)
                 {
-                    float t = i / (float)(StretchSteps - 1);
+                    float t = i / (float)(PulseSteps - 1);
                     graphics[i] = GraphicDatabase.Get<Graphic_Single>(
                         profile.thrusterFlameTexture, ShaderDatabase.TransparentPostLight,
-                        new Vector2(Mathf.Lerp(0.42f, 0.25f, t),
-                            Mathf.Lerp(1.41f, 2.28f, t)),
-                        new Color(0.9f, 0.98f, 1f, 0.96f));
+                        new Vector2(Mathf.Lerp(0.40f, 0.44f, t), 1.75f),
+                        new Color(0.9f, 0.98f, 1f,
+                            Mathf.Lerp(0.88f, 0.98f, t)));
                 }
                 CoreGraphics[profile.thrusterFlameTexture] = graphics;
             }
             return graphics;
         }
 
-        private static Graphic GetGlowGraphic(MechanicalFlightProfileDef profile)
+        private static Graphic[] GetGlowGraphics(MechanicalFlightProfileDef profile)
         {
-            if (!GlowGraphics.TryGetValue(profile.thrusterGlowTexture, out Graphic? graphic))
+            if (!GlowGraphics.TryGetValue(profile.thrusterGlowTexture,
+                    out Graphic[]? graphics))
             {
-                graphic = GraphicDatabase.Get<Graphic_Single>(profile.thrusterGlowTexture,
-                    ShaderDatabase.MoteGlow, new Vector2(1.15f, 1.15f),
-                    new Color(0.7f, 0.9f, 1f, 0.74f));
-                GlowGraphics[profile.thrusterGlowTexture] = graphic;
+                graphics = new Graphic[PulseSteps];
+                for (int i = 0; i < PulseSteps; i++)
+                {
+                    float t = i / (float)(PulseSteps - 1);
+                    graphics[i] = GraphicDatabase.Get<Graphic_Single>(
+                        profile.thrusterGlowTexture, ShaderDatabase.MoteGlow,
+                        new Vector2(1.15f, 1.15f),
+                        new Color(0.7f, 0.9f, 1f, Mathf.Lerp(0.62f, 0.80f, t)));
+                }
+                GlowGraphics[profile.thrusterGlowTexture] = graphics;
             }
-            return graphic;
+            return graphics;
         }
 
         private static void ResetTilt(Pawn pawn)

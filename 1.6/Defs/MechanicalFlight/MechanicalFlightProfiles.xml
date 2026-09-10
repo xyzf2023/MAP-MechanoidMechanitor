@@ -7,15 +7,13 @@
     <automaticLandingEnergy>0.15</automaticLandingEnergy>
     <energyDrainFraction>0.005</energyDrainFraction>
     <energyDrainIntervalTicks>60</energyDrainIntervalTicks>
-    <pathSpeedMultiplier>24</pathSpeedMultiplier>
+    <flightCellsPerSecond>20</flightCellsPerSecond>
     <hoverExtraVisualHeight>2.5</hoverExtraVisualHeight>
-    <hoverBobAmplitude>0.6</hoverBobAmplitude>
+    <hoverBobAmplitude>0.15</hoverBobAmplitude>
     <hoverBobPeriodTicks>100</hoverBobPeriodTicks>
     <maximumTiltAngle>45</maximumTiltAngle>
     <minimumTiltStep>0.7</minimumTiltStep>
     <tiltSpeed>130</tiltSpeed>
-    <minimumExhaustStretchStep>0.012</minimumExhaustStretchStep>
-    <exhaustStretchSpeed>2.8</exhaustStretchSpeed>
     <thrusterAngleOffset>5</thrusterAngleOffset>
     <thrusterSparkFleck>MAP_Fleck_MechanicalFlightThrusterSpark</thrusterSparkFleck>
     <thrusterSparkIntervalTicks>11</thrusterSparkIntervalTicks>

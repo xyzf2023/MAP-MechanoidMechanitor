@@ -33,7 +33,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            energy.CurLevel = Mathf.Max(0f, energy.CurLevel - Mathf.Max(0f, fraction));
+            energy.CurLevelPercentage = Mathf.Max(0f,
+                energy.CurLevelPercentage - Mathf.Max(0f, fraction));
             return true;
         }
     }

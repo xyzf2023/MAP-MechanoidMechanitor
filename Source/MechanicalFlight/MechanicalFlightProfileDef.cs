@@ -9,16 +9,14 @@ namespace MAP_MechanoidMechanitor
         public float automaticLandingEnergy = 0.15f;
         public float energyDrainFraction = 0.005f;
         public int energyDrainIntervalTicks = 60;
-        public float pathSpeedMultiplier = 24f;
+        public float flightCellsPerSecond = 20f;
 
         public float hoverExtraVisualHeight = 2.5f;
-        public float hoverBobAmplitude = 0.6f;
+        public float hoverBobAmplitude = 0.15f;
         public float hoverBobPeriodTicks = 100f;
         public float maximumTiltAngle = 45f;
         public float minimumTiltStep = 0.7f;
         public float tiltSpeed = 130f;
-        public float minimumExhaustStretchStep = 0.012f;
-        public float exhaustStretchSpeed = 2.8f;
         public float thrusterAngleOffset = 5f;
         public string thrusterFlameTexture =
             "Things/Mote/MechanicalFlight/ThrusterFlame";
