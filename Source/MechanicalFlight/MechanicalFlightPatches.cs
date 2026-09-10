@@ -337,7 +337,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             IntVec3 previousNextCell = pather.nextCell;
-            pather.nextCell = pather.curPath.ConsumeNextNode();
+            pather.nextCell = pather.curPath!.ConsumeNextNode();
             if (previousNextCell == pather.nextCell)
             {
                 if (pather.curPath.NodesLeftCount <= 1)
