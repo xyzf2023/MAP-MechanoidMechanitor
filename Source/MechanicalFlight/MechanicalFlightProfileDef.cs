@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor
         public float automaticLandingEnergy = 0.15f;
         public float energyDrainFraction = 0.005f;
         public int energyDrainIntervalTicks = 60;
-        public float flightCellsPerSecond = 20f;
+        public float flightCellsPerSecond = 30f;
 
         public float hoverExtraVisualHeight = 2.5f;
         public float hoverBobAmplitude = 0.15f;

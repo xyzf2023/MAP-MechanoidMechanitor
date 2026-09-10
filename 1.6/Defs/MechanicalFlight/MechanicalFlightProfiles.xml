@@ -7,7 +7,7 @@
     <automaticLandingEnergy>0.15</automaticLandingEnergy>
     <energyDrainFraction>0.005</energyDrainFraction>
     <energyDrainIntervalTicks>60</energyDrainIntervalTicks>
-    <flightCellsPerSecond>20</flightCellsPerSecond>
+    <flightCellsPerSecond>30</flightCellsPerSecond>
     <hoverExtraVisualHeight>2.5</hoverExtraVisualHeight>
     <hoverBobAmplitude>0.15</hoverBobAmplitude>
     <hoverBobPeriodTicks>100</hoverBobPeriodTicks>

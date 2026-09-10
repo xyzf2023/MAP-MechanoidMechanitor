@@ -163,6 +163,23 @@ namespace MAP_MechanoidMechanitor
                 "destination");
         private static readonly AccessTools.FieldRef<PawnPath, int> CurNodeIndexField =
             AccessTools.FieldRefAccess<PawnPath, int>("curNodeIndex");
+        private static readonly AccessTools.FieldRef<Pawn_PathFollower, bool> MovingField =
+            AccessTools.FieldRefAccess<Pawn_PathFollower, bool>("moving");
+        private static readonly AccessTools.FieldRef<Pawn_PathFollower, PathEndMode> PathEndModeField =
+            AccessTools.FieldRefAccess<Pawn_PathFollower, PathEndMode>("peMode");
+        private static readonly AccessTools.FieldRef<Pawn_PathFollower, float>
+            CachedMovePercentageField =
+                AccessTools.FieldRefAccess<Pawn_PathFollower, float>("cachedMovePercentage");
+        private static readonly AccessTools.FieldRef<Pawn_PathFollower, bool>
+            CachedCollisionField =
+                AccessTools.FieldRefAccess<Pawn_PathFollower, bool>("cachedWillCollideNextCell");
+        private static readonly AccessTools.FieldRef<Pawn_PathFollower, IntVec3> LastCellField =
+            AccessTools.FieldRefAccess<Pawn_PathFollower, IntVec3>("lastCell");
+        private static readonly AccessTools.FieldRef<Pawn_PathFollower, int>
+            LastEnteredCellTickField =
+                AccessTools.FieldRefAccess<Pawn_PathFollower, int>("lastEnteredCellTick");
+        private static readonly AccessTools.FieldRef<Pawn_PathFollower, int> LastMovedTickField =
+            AccessTools.FieldRefAccess<Pawn_PathFollower, int>("lastMovedTick");
 
         public static bool Prefix(Pawn_PathFollower __instance)
         {
@@ -174,12 +191,124 @@ namespace MAP_MechanoidMechanitor
             IntVec3 destination = DestinationField(__instance).Cell;
             if (!destination.IsValid || !destination.InBounds(pawn.Map))
             {
+                return false;
+            }
+
+            AssignDirectPath(__instance, pawn, destination);
+            return false;
+        }
+
+        internal static bool IsActive(Pawn? pawn)
+        {
+            return pawn?.Map != null && MechanicalFlightUtility.IsActivelyFlying(pawn);
+        }
+
+        internal static bool TryStartDirectPath(
+            Pawn_PathFollower pather,
+            Pawn pawn,
+            LocalTargetInfo destination,
+            PathEndMode pathEndMode)
+        {
+            if (!destination.IsValid || pawn.Map == null
+                || !destination.Cell.InBounds(pawn.Map)
+                || (destination.HasThing && destination.Thing.MapHeld != pawn.MapHeld))
+            {
+                NotifyFailed(pather, pawn);
+                return false;
+            }
+
+            pather.StopDead();
+            DestinationField(pather) = destination;
+            PathEndModeField(pather) = pathEndMode;
+            pather.lastPathedTargetPosition = destination.Cell;
+            if (pawn.Position == destination.Cell)
+            {
+                NotifyArrived(pather, pawn);
                 return true;
             }
 
-            __instance.curPathRequest?.Dispose();
-            __instance.curPathRequest = null;
-            __instance.curPath?.ReleaseToPool();
+            MovingField(pather) = true;
+            pawn.jobs.posture = PawnPosture.Standing;
+            CachedMovePercentageField(pather) = 0f;
+            CachedCollisionField(pather) = false;
+            pather.curPathJobIsStale = false;
+            AssignDirectPath(pather, pawn, destination.Cell);
+            return true;
+        }
+
+        internal static void TickDirectPath(Pawn_PathFollower pather, Pawn pawn)
+        {
+            if (!MovingField(pather) || pawn.Map == null || pawn.Downed
+                || pawn.stances.FullBodyBusy)
+            {
+                return;
+            }
+
+            LocalTargetInfo target = DestinationField(pather);
+            IntVec3 destination = target.Cell;
+            if (!destination.IsValid || !destination.InBounds(pawn.Map))
+            {
+                NotifyFailed(pather, pawn);
+                return;
+            }
+            if (target.HasThing && target.Thing.MapHeld != pawn.MapHeld)
+            {
+                NotifyFailed(pather, pawn);
+                return;
+            }
+            if (pawn.Position == destination)
+            {
+                NotifyArrived(pather, pawn);
+                return;
+            }
+
+            if (pather.curPath == null
+                || pather.lastPathedTargetPosition != destination)
+            {
+                pather.nextCell = pawn.Position;
+                pather.nextCellCostLeft = 0f;
+                AssignDirectPath(pather, pawn, destination);
+            }
+            if (!pather.nextCell.IsValid || pather.nextCell == pawn.Position)
+            {
+                if (!SetupNextCell(pather, pawn, destination))
+                {
+                    return;
+                }
+            }
+
+            pather.nextCellCostLeft -= 1f;
+            CachedMovePercentageField(pather) = Mathf.Clamp01(
+                1f - pather.nextCellCostLeft / pather.nextCellCostTotal);
+            CachedCollisionField(pather) = false;
+            if (pather.nextCellCostLeft > 0f)
+            {
+                LastMovedTickField(pather) = Find.TickManager.TicksGame;
+                return;
+            }
+
+            IntVec3 previous = pawn.Position;
+            LastCellField(pather) = previous;
+            pawn.Position = pather.nextCell;
+            pather.lastMoveDirection = (pather.nextCell - previous).AngleFlat;
+            LastEnteredCellTickField(pather) = GenTicks.TicksGame;
+            LastMovedTickField(pather) = GenTicks.TicksGame;
+            if (pawn.Position == destination)
+            {
+                NotifyArrived(pather, pawn);
+                return;
+            }
+            SetupNextCell(pather, pawn, destination);
+        }
+
+        private static void AssignDirectPath(
+            Pawn_PathFollower pather,
+            Pawn pawn,
+            IntVec3 destination)
+        {
+            pather.curPathRequest?.Dispose();
+            pather.curPathRequest = null;
+            pather.curPath?.ReleaseToPool();
             PawnPath path = pawn.Map.pawnPathPool.GetPath();
             List<IntVec3> cells = BuildLine(pawn.Position, destination);
             for (int i = cells.Count - 1; i >= 0; i--)
@@ -187,13 +316,76 @@ namespace MAP_MechanoidMechanitor
                 path.AddNode(cells[i]);
             }
             CurNodeIndexField(path) = cells.Count - 1;
-            __instance.curPath = path;
-            return false;
+            pather.curPath = path;
+            pather.lastPathedTargetPosition = destination;
+            pather.curPathJobIsStale = false;
         }
 
-        internal static bool IsActive(Pawn? pawn)
+        private static bool SetupNextCell(
+            Pawn_PathFollower pather,
+            Pawn pawn,
+            IntVec3 destination)
         {
-            return pawn?.Map != null && MechanicalFlightUtility.IsActivelyFlying(pawn);
+            if (pather.curPath == null || pather.curPath.NodesLeftCount <= 1)
+            {
+                if (pawn.Position == destination)
+                {
+                    NotifyArrived(pather, pawn);
+                    return false;
+                }
+                AssignDirectPath(pather, pawn, destination);
+            }
+
+            IntVec3 previousNextCell = pather.nextCell;
+            pather.nextCell = pather.curPath.ConsumeNextNode();
+            if (previousNextCell == pather.nextCell)
+            {
+                if (pather.curPath.NodesLeftCount <= 1)
+                {
+                    NotifyFailed(pather, pawn);
+                    return false;
+                }
+                pather.nextCell = pather.curPath.ConsumeNextNode();
+            }
+
+            float cellsPerSecond = 30f;
+            if (GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
+                && record?.Profile != null)
+            {
+                cellsPerSecond = Mathf.Max(0.01f, record.Profile.flightCellsPerSecond);
+            }
+            bool diagonal = pather.nextCell.x != pawn.Position.x
+                && pather.nextCell.z != pawn.Position.z;
+            float ticksForCell = 60f / cellsPerSecond
+                * (diagonal ? Mathf.Sqrt(2f) : 1f);
+            pather.nextCellCostTotal = Mathf.Max(0.01f, ticksForCell);
+            pather.nextCellCostLeft = Mathf.Max(
+                pather.nextCellCostTotal + Mathf.Min(pather.nextCellCostLeft, 0f),
+                0.01f);
+            CachedMovePercentageField(pather) = Mathf.Clamp01(
+                1f - pather.nextCellCostLeft / pather.nextCellCostTotal);
+            CachedCollisionField(pather) = false;
+            return true;
+        }
+
+        private static void NotifyArrived(Pawn_PathFollower pather, Pawn pawn)
+        {
+            bool notifyDriver = pawn.jobs.curJob != null && !pather.curPathJobIsStale;
+            pather.StopDead();
+            if (notifyDriver)
+            {
+                pawn.jobs.curDriver.Notify_PatherArrived();
+            }
+        }
+
+        private static void NotifyFailed(Pawn_PathFollower pather, Pawn pawn)
+        {
+            bool notifyDriver = pawn.jobs.curJob != null && !pather.curPathJobIsStale;
+            pather.StopDead();
+            if (notifyDriver)
+            {
+                pawn.jobs.curDriver.Notify_PatherFailed();
+            }
         }
 
         private static List<IntVec3> BuildLine(IntVec3 start, IntVec3 end)
@@ -230,17 +422,37 @@ namespace MAP_MechanoidMechanitor
     }
 
     [HarmonyPatch(typeof(Pawn_PathFollower), nameof(Pawn_PathFollower.StartPath))]
-    internal static class MechanicalFlightUndraftedHoldPatch
+    internal static class MechanicalFlightStartPathPatch
     {
-        public static bool Prefix(Pawn ___pawn)
+        public static bool Prefix(Pawn_PathFollower __instance, LocalTargetInfo dest,
+            PathEndMode peMode, Pawn ___pawn)
         {
-            if (MechanicalFlightUtility.IsActivelyFlying(___pawn) && !___pawn.Drafted
-                && ___pawn.CurJob?.playerForced != true)
+            if (!MechanicalFlightStraightPathPatch.IsActive(___pawn))
             {
-                ___pawn.pather?.StopDead();
+                return true;
+            }
+            if (!___pawn.Drafted && ___pawn.CurJob?.playerForced != true)
+            {
+                __instance.StopDead();
                 return false;
             }
-            return true;
+            MechanicalFlightStraightPathPatch.TryStartDirectPath(
+                __instance, ___pawn, dest, peMode);
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(Pawn_PathFollower), nameof(Pawn_PathFollower.PatherTick))]
+    internal static class MechanicalFlightPatherTickPatch
+    {
+        public static bool Prefix(Pawn_PathFollower __instance, Pawn ___pawn)
+        {
+            if (!MechanicalFlightStraightPathPatch.IsActive(___pawn))
+            {
+                return true;
+            }
+            MechanicalFlightStraightPathPatch.TickDirectPath(__instance, ___pawn);
+            return false;
         }
     }
 
