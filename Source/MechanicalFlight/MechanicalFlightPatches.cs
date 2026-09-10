@@ -261,7 +261,7 @@ namespace MAP_MechanoidMechanitor
     {
         public static void Postfix(Pawn ___pawn, ref Building __result)
         {
-            if (MechanicalFlightStraightPathPatch.IsActive(___pawn)) __result = null;
+            if (MechanicalFlightStraightPathPatch.IsActive(___pawn)) __result = null!;
         }
     }
 
@@ -270,7 +270,7 @@ namespace MAP_MechanoidMechanitor
     {
         public static void Postfix(Pawn ___pawn, ref Building_Door __result)
         {
-            if (MechanicalFlightStraightPathPatch.IsActive(___pawn)) __result = null;
+            if (MechanicalFlightStraightPathPatch.IsActive(___pawn)) __result = null!;
         }
     }
 

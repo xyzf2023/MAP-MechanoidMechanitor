@@ -3,6 +3,7 @@ using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -16,7 +17,12 @@ namespace MAP_MechanoidMechanitor
 
         public static void BreakThinRoofArea(Pawn pawn, MechanicalFlightProfileDef profile)
         {
-            Map? map = pawn?.Map;
+            if (pawn == null)
+            {
+                return;
+            }
+
+            Map? map = pawn.Map;
             if (map == null)
             {
                 return;
@@ -107,7 +113,7 @@ namespace MAP_MechanoidMechanitor
             }
             foreach (Section section in sections)
             {
-                SectionLayer? layer = section?.GetLayer(typeof(SectionLayer_LightingOverlay));
+                SectionLayer? layer = section.GetLayer(typeof(SectionLayer_LightingOverlay));
                 if (layer == null)
                 {
                     continue;
