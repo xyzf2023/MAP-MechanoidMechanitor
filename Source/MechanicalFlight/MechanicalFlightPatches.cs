@@ -538,6 +538,18 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    [HarmonyPatch(typeof(PawnUtility), nameof(PawnUtility.ShouldCollideWithPawns))]
+    internal static class MechanicalFlightCollisionVolumePatch
+    {
+        public static void Postfix(Pawn p, ref bool __result)
+        {
+            if (MechanicalFlightUtility.IsActivelyFlying(p))
+            {
+                __result = false;
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(Pawn_PathFollower), "TryRecoverFromUnwalkablePosition")]
     internal static class MechanicalFlightRecoveryPatch
     {
