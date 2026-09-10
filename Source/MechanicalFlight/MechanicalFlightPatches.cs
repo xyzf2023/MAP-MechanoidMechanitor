@@ -597,6 +597,21 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    [HarmonyPatch(typeof(JobGiver_MoveToStandable), "TryGiveJob")]
+    internal static class MechanicalFlightMoveToStandablePatch
+    {
+        public static bool Prefix(Pawn pawn, ref Job __result)
+        {
+            if (!MechanicalFlightUtility.IsAirborne(pawn))
+            {
+                return true;
+            }
+
+            __result = null!;
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(Pawn_PathFollower), "TryRecoverFromUnwalkablePosition")]
     internal static class MechanicalFlightRecoveryPatch
     {
