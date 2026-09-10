@@ -34,7 +34,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (Current.Game.GetComponent<GameComponent_MechanoidMechanitorRegistry>() == null
-                || Current.Game.GetComponent<GameComponent_SyntheticCompanionRegistry>() == null)
+                || Current.Game.GetComponent<GameComponent_SyntheticCompanionRegistry>() == null
+                || Current.Game.GetComponent<GameComponent_MechanicalFlightRegistry>() == null)
             {
                 Messages.Message(
                     "无法打开角色注册表：注册表组件不可用。",
@@ -114,6 +115,22 @@ namespace MAP_MechanoidMechanitor
                     () => TryAuthorizeCompanion(localPawn)));
             }
 
+            bool hasFlightRecord =
+                GameComponent_MechanicalFlightRegistry.HasAuthorizationRecord(clickedPawn);
+            if (hasFlightRecord)
+            {
+                options.Add(new FloatMenuOption(
+                    "加入飞行授权注册表（已经注册）",
+                    null));
+            }
+            else
+            {
+                Pawn localPawn = clickedPawn;
+                options.Add(new FloatMenuOption(
+                    "加入飞行授权注册表",
+                    () => TryAuthorizeFlight(localPawn)));
+            }
+
             Find.WindowStack.Add(new FloatMenu(options, clickedPawn.LabelShortCap));
         }
 
@@ -148,6 +165,24 @@ namespace MAP_MechanoidMechanitor
             {
                 Messages.Message(
                     "加入仿生伴侣注册表失败：" + pawn.LabelShortCap + "。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+            }
+        }
+
+        private static void TryAuthorizeFlight(Pawn pawn)
+        {
+            if (GameComponent_MechanicalFlightRegistry.TryAuthorize(pawn))
+            {
+                Messages.Message(
+                    "已加入飞行授权注册表：" + pawn.LabelShortCap + "。",
+                    MessageTypeDefOf.TaskCompletion,
+                    historical: false);
+            }
+            else
+            {
+                Messages.Message(
+                    "加入飞行授权注册表失败：" + pawn.LabelShortCap + "。",
                     MessageTypeDefOf.RejectInput,
                     historical: false);
             }

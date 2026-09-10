@@ -35,6 +35,9 @@ namespace MAP_MechanoidMechanitor
         // ColonistLikeTimetable：允许拥有并使用原版 Pawn_TimetableTracker 数据层与真实 CurrentAssignment。
         // ClassroomTeaching：允许作为第三方课堂教育系统的教师候选（Skill / Daycare）。
         ColonistLikeTimetable = 1 << 19,
-        ClassroomTeaching = 1 << 20
+        ClassroomTeaching = 1 << 20,
+
+        // 通用机械飞行资格仅来自独立飞行授权注册表；不改变既有能力位。
+        Flight = 1 << 21
     }
 }

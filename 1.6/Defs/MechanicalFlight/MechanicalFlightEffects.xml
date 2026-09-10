@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <FleckDef ParentName="FleckBase_Thrown">
+    <defName>MAP_Fleck_MechanicalFlightThrusterSpark</defName>
+    <graphicData>
+      <texPath>Things/Mote/MechanicalFlight/ThrusterSpark</texPath>
+      <shaderType>TransparentPostLight</shaderType>
+      <renderInstanced>true</renderInstanced>
+    </graphicData>
+    <altitudeLayer>Projectile</altitudeLayer>
+    <solidTime>0.05</solidTime>
+    <fadeOutTime>0.25</fadeOutTime>
+    <growthRate>-0.5</growthRate>
+  </FleckDef>
+</Defs>

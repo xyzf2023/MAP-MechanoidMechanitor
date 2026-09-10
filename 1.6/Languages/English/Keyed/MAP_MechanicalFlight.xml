@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanicalFlight_TakeoffLabel>Begin flight</MAP_MechanicalFlight_TakeoffLabel>
+  <MAP_MechanicalFlight_TakeoffDesc>Begin sustained flight. Consumes 0.5% maximum energy immediately and another 0.5% every 60 ticks.</MAP_MechanicalFlight_TakeoffDesc>
+  <MAP_MechanicalFlight_LandLabel>End flight</MAP_MechanicalFlight_LandLabel>
+  <MAP_MechanicalFlight_LandDesc>End flight and land at the current position.</MAP_MechanicalFlight_LandDesc>
+  <MAP_MechanicalFlight_AerialMove>Aerial move</MAP_MechanicalFlight_AerialMove>
+  <MAP_MechanicalFlight_Unavailable>Flight is currently unavailable.</MAP_MechanicalFlight_Unavailable>
+  <MAP_MechanicalFlight_Landing>Landing is in progress.</MAP_MechanicalFlight_Landing>
+  <MAP_MechanicalFlight_NoEnergyNeed>This mechanoid has no usable energy source.</MAP_MechanicalFlight_NoEnergyNeed>
+  <MAP_MechanicalFlight_LowEnergy>Energy is below {0}; flight cannot begin.</MAP_MechanicalFlight_LowEnergy>
+  <MAP_MechanicalFlight_ThickRoofTakeoff>Cannot take off beneath an overhead mountain.</MAP_MechanicalFlight_ThickRoofTakeoff>
+  <MAP_MechanicalFlight_ThickRoofLanding>Cannot land beneath an overhead mountain.</MAP_MechanicalFlight_ThickRoofLanding>
+  <MAP_MechanicalFlight_InvalidLanding>The current position is not safe for landing.</MAP_MechanicalFlight_InvalidLanding>
+  <MAP_MechanicalFlight_Cooling>The flight system is not ready.</MAP_MechanicalFlight_Cooling>
+  <MAP_MechanicalFlight_GroundJobBlocked>Cannot land here to perform a ground-level job.</MAP_MechanicalFlight_GroundJobBlocked>
+</LanguageData>

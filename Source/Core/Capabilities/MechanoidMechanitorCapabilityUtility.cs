@@ -22,6 +22,11 @@ namespace MAP_MechanoidMechanitor
                 return SyntheticCompanionStateUtility.IsSyntheticCompanion(pawn);
             }
 
+            if (capability == MechanoidMechanitorCapability.Flight)
+            {
+                return GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn);
+            }
+
             return (GetCapabilities(pawn) & capability) == capability;
         }
 
@@ -37,7 +42,18 @@ namespace MAP_MechanoidMechanitor
             AddCapabilitiesFromMechanitorIdentity(pawn, ref capabilities);
             AddCapabilitiesFromSyntheticCompanionAuthorization(pawn, ref capabilities);
             AddCapabilitiesFromDataProcessingAllocation(pawn, ref capabilities);
+            AddCapabilitiesFromMechanicalFlightAuthorization(pawn, ref capabilities);
             return capabilities;
+        }
+
+        private static void AddCapabilitiesFromMechanicalFlightAuthorization(
+            Pawn pawn,
+            ref MechanoidMechanitorCapability capabilities)
+        {
+            if (GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn))
+            {
+                capabilities |= MechanoidMechanitorCapability.Flight;
+            }
         }
 
         private static void AddCapabilitiesFromRealComponents(

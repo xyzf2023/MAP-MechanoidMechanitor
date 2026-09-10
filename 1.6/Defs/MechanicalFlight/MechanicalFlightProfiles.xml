@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.MechanicalFlightProfileDef>
+    <defName>MAP_DefaultMechanicalFlightProfile</defName>
+    <label>默认机械飞行配置</label>
+    <minimumTakeoffEnergy>0.20</minimumTakeoffEnergy>
+    <automaticLandingEnergy>0.15</automaticLandingEnergy>
+    <energyDrainFraction>0.005</energyDrainFraction>
+    <energyDrainIntervalTicks>60</energyDrainIntervalTicks>
+    <pathSpeedMultiplier>24</pathSpeedMultiplier>
+    <hoverExtraVisualHeight>2.5</hoverExtraVisualHeight>
+    <hoverBobAmplitude>0.6</hoverBobAmplitude>
+    <hoverBobPeriodTicks>100</hoverBobPeriodTicks>
+    <maximumTiltAngle>45</maximumTiltAngle>
+    <minimumTiltStep>0.7</minimumTiltStep>
+    <tiltSpeed>130</tiltSpeed>
+    <minimumExhaustStretchStep>0.012</minimumExhaustStretchStep>
+    <exhaustStretchSpeed>2.8</exhaustStretchSpeed>
+    <thrusterAngleOffset>5</thrusterAngleOffset>
+    <thrusterSparkFleck>MAP_Fleck_MechanicalFlightThrusterSpark</thrusterSparkFleck>
+    <thrusterSparkIntervalTicks>11</thrusterSparkIntervalTicks>
+    <hoverGlowRadius>4.5</hoverGlowRadius>
+    <hoverGlowColor>(105,190,255,0)</hoverGlowColor>
+    <roofBreakRadius>1</roofBreakRadius>
+    <clearBuildRoofArea>true</clearBuildRoofArea>
+    <markNoRoofArea>true</markNoRoofArea>
+  </MAP_MechanoidMechanitor.MechanicalFlightProfileDef>
+</Defs>

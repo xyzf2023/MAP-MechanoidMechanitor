@@ -8,14 +8,15 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 开发者模式角色注册表管理窗口：查看/删除机械族机械师与动态仿生伴侣持久记录。
+    /// 开发者模式角色注册表管理窗口：查看/删除机械族机械师、仿生伴侣与飞行授权记录。
     /// </summary>
     public sealed class Dialog_RoleRegistryDebug : Window
     {
         private enum Tab
         {
             MechanoidMechanitor,
-            SyntheticCompanion
+            SyntheticCompanion,
+            MechanicalFlight
         }
 
         private const float TitleHeight = 32f;
@@ -31,6 +32,8 @@ namespace MAP_MechanoidMechanitor
             new List<MechanoidMechanitorRegistrySnapshotEntry>();
         private readonly List<SyntheticCompanionAuthorizationRecord> companionRows =
             new List<SyntheticCompanionAuthorizationRecord>();
+        private readonly List<MechanicalFlightAuthorizationRecord> flightRows =
+            new List<MechanicalFlightAuthorizationRecord>();
 
         public override Vector2 InitialSize => new Vector2(720f, 560f);
 
@@ -95,9 +98,13 @@ namespace MAP_MechanoidMechanitor
                 {
                     DrawMechanitorTab(listRect);
                 }
-                else
+                else if (currentTab == Tab.SyntheticCompanion)
                 {
                     DrawCompanionTab(listRect);
+                }
+                else
+                {
+                    DrawFlightTab(listRect);
                 }
             }
             finally
@@ -131,6 +138,14 @@ namespace MAP_MechanoidMechanitor
                     scrollPosition = Vector2.zero;
                 },
                 () => currentTab == Tab.SyntheticCompanion));
+            tabs.Add(new TabRecord(
+                "飞行授权 (0)",
+                () =>
+                {
+                    currentTab = Tab.MechanicalFlight;
+                    scrollPosition = Vector2.zero;
+                },
+                () => currentTab == Tab.MechanicalFlight));
         }
 
         private void UpdateTabLabels()
@@ -138,12 +153,14 @@ namespace MAP_MechanoidMechanitor
             EnsureTabs();
             tabs[0].label = "机械族机械师 (" + mechanitorRows.Count + ")";
             tabs[1].label = "仿生伴侣 (" + companionRows.Count + ")";
+            tabs[2].label = "飞行授权 (" + flightRows.Count + ")";
         }
 
         private void RefreshSnapshots()
         {
             mechanitorRows.Clear();
             companionRows.Clear();
+            flightRows.Clear();
 
             IReadOnlyList<MechanoidMechanitorRegistrySnapshotEntry> mechanitorSnapshot =
                 GameComponent_MechanoidMechanitorRegistry.GetPersistentRecordSnapshot();
@@ -162,6 +179,14 @@ namespace MAP_MechanoidMechanitor
             }
 
             companionRows.Sort(CompareCompanionRecords);
+
+            IReadOnlyList<MechanicalFlightAuthorizationRecord> flightSnapshot =
+                GameComponent_MechanicalFlightRegistry.GetAuthorizationRecordSnapshot();
+            for (int i = 0; i < flightSnapshot.Count; i++)
+            {
+                flightRows.Add(flightSnapshot[i]);
+            }
+            flightRows.Sort(CompareFlightRecords);
             UpdateTabLabels();
         }
 
@@ -198,6 +223,19 @@ namespace MAP_MechanoidMechanitor
             return string.Compare(
                 pawnA?.LabelShortCap,
                 pawnB?.LabelShortCap,
+                StringComparison.CurrentCulture);
+        }
+
+        private static int CompareFlightRecords(
+            MechanicalFlightAuthorizationRecord a,
+            MechanicalFlightAuthorizationRecord b)
+        {
+            Pawn? pawnA = a.Pawn;
+            Pawn? pawnB = b.Pawn;
+            int idCompare = (pawnA?.thingIDNumber ?? int.MaxValue)
+                .CompareTo(pawnB?.thingIDNumber ?? int.MaxValue);
+            return idCompare != 0 ? idCompare : string.Compare(
+                pawnA?.LabelShortCap, pawnB?.LabelShortCap,
                 StringComparison.CurrentCulture);
         }
 
@@ -252,6 +290,28 @@ namespace MAP_MechanoidMechanitor
                 y += RowHeight + 4f;
             }
 
+            Widgets.EndScrollView();
+        }
+
+        private void DrawFlightTab(Rect listRect)
+        {
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.UpperLeft;
+            if (flightRows.Count == 0)
+            {
+                DrawCenteredMessage(listRect, "当前没有飞行授权注册记录。");
+                return;
+            }
+
+            float viewHeight = flightRows.Count * (RowHeight + 4f);
+            Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, viewHeight);
+            Widgets.BeginScrollView(listRect, ref scrollPosition, viewRect);
+            float y = 0f;
+            for (int i = 0; i < flightRows.Count; i++)
+            {
+                DrawFlightRow(new Rect(0f, y, viewRect.width, RowHeight), flightRows[i]);
+                y += RowHeight + 4f;
+            }
             Widgets.EndScrollView();
         }
 
@@ -357,6 +417,39 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        private void DrawFlightRow(
+            Rect rowRect,
+            MechanicalFlightAuthorizationRecord record)
+        {
+            Widgets.DrawHighlightIfMouseover(rowRect);
+            Pawn? pawn = record.Pawn;
+            if (pawn == null)
+            {
+                return;
+            }
+            Rect textRect = rowRect;
+            textRect.xMax -= DeleteButtonWidth + 8f;
+            string line1 = pawn.LabelShortCap + "  |  " + (pawn.KindLabel ?? "?")
+                + "  |  " + pawn.ThingID;
+            string line2 = "阵营：" + DescribeFaction(pawn) + "  |  状态："
+                + DescribePawnStatus(pawn) + "  |  飞行阶段：" + record.Phase
+                + "  |  配置：" + (record.Profile?.defName ?? "无");
+            Text.Anchor = TextAnchor.UpperLeft;
+            Widgets.Label(new Rect(textRect.x + 4f, textRect.y + 4f,
+                textRect.width - 8f, Text.LineHeight), line1);
+            GUI.color = new Color(0.75f, 0.75f, 0.75f);
+            Widgets.Label(new Rect(textRect.x + 4f,
+                textRect.y + 4f + Text.LineHeight, textRect.width - 8f,
+                Text.LineHeight), line2);
+            GUI.color = Color.white;
+            Rect deleteRect = new Rect(rowRect.xMax - DeleteButtonWidth,
+                rowRect.y + (rowRect.height - 30f) / 2f, DeleteButtonWidth, 30f);
+            if (Widgets.ButtonText(deleteRect, "删除"))
+            {
+                ConfirmDeleteFlight(pawn);
+            }
+        }
+
         private void ConfirmDeleteMechanitor(Pawn pawn, MechanoidMechanitorOrigin origin)
         {
             string message =
@@ -424,6 +517,26 @@ namespace MAP_MechanoidMechanitor
                     }
                 },
                 destructive: true));
+        }
+
+        private void ConfirmDeleteFlight(Pawn pawn)
+        {
+            string message = "确认从飞行授权注册表删除 " + pawn.LabelShortCap
+                + "（" + pawn.ThingID + "）的动态授权？";
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(message, () =>
+            {
+                if (GameComponent_MechanicalFlightRegistry.TryRevokeAuthorization(pawn))
+                {
+                    Messages.Message("已撤销飞行动态授权：" + pawn.LabelShortCap + "。",
+                        MessageTypeDefOf.TaskCompletion, historical: false);
+                    RefreshSnapshots();
+                }
+                else
+                {
+                    Messages.Message("撤销飞行动态授权失败：" + pawn.LabelShortCap + "。",
+                        MessageTypeDefOf.RejectInput, historical: false);
+                }
+            }, destructive: true));
         }
 
         private static void DrawCenteredMessage(Rect rect, string message)
