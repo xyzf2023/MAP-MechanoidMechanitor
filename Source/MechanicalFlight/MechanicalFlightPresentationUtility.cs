@@ -390,16 +390,11 @@ namespace MAP_MechanoidMechanitor
 
         private static void RevealFlightFogArea(IntVec3 center, Map map)
         {
-            const float radius = 1.45f;
-            int cellRadius = Mathf.CeilToInt(radius);
+            const int cellRadius = 2;
             for (int x = -cellRadius; x <= cellRadius; x++)
             {
                 for (int z = -cellRadius; z <= cellRadius; z++)
                 {
-                    if (x * x + z * z > radius * radius)
-                    {
-                        continue;
-                    }
                     IntVec3 cell = center + new IntVec3(x, 0, z);
                     if (cell.InBounds(map) && map.fogGrid.IsFogged(cell))
                     {

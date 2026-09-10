@@ -86,6 +86,13 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (IsMeleeOrTouch(job))
+            {
+                // 飞行状态不因近战或接触任务自动降落，也不允许其借用飞行移动。
+                job.flying = true;
+                return false;
+            }
+
             if (IsHoverCompatible(job))
             {
                 job.flying = true;
@@ -105,18 +112,19 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
+        internal static bool IsMeleeOrTouch(Job? job)
+        {
+            return job?.def != null
+                && (job.def.defName == "AttackMelee"
+                    || job.def.defName == "CastAbilityTouch"
+                    || job.verbToUse?.IsMeleeAttack == true);
+        }
+
         internal static bool IsHoverCompatible(Job? job)
         {
-            if (job?.def == null)
-            {
-                return false;
-            }
-
-            bool meleeOrTouch = job.def.defName == "AttackMelee"
-                || job.def.defName == "CastAbilityTouch"
-                || job.verbToUse?.IsMeleeAttack == true;
-            return !meleeOrTouch
-                && (job.def.ifFlyingKeepFlying || HoverCompatibleJobs.Contains(job.def.defName));
+            return job?.def != null && !IsMeleeOrTouch(job)
+                && (job.def.ifFlyingKeepFlying
+                    || HoverCompatibleJobs.Contains(job.def.defName));
         }
     }
 
@@ -129,9 +137,18 @@ namespace MAP_MechanoidMechanitor
         public static bool Prefix(Pawn_JobTracker __instance, Job job, ref bool __result)
         {
             Pawn pawn = PawnField(__instance);
-            if (!MechanicalFlightUtility.IsActivelyFlying(pawn)
-                || MechanicalFlightJobPatch.IsHoverCompatible(job)
-                || job == null || !job.targetA.IsValid)
+            if (!MechanicalFlightUtility.IsActivelyFlying(pawn) || job == null)
+            {
+                return true;
+            }
+            if (MechanicalFlightJobPatch.IsMeleeOrTouch(job))
+            {
+                pawn.pather?.StopDead();
+                __result = false;
+                return false;
+            }
+            if (MechanicalFlightJobPatch.IsHoverCompatible(job)
+                || !job.targetA.IsValid)
             {
                 return true;
             }
@@ -150,6 +167,29 @@ namespace MAP_MechanoidMechanitor
             pawn.pather?.StopDead();
             __result = false;
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(AttackTargetFinder),
+        nameof(AttackTargetFinder.BestAttackTarget))]
+    internal static class MechanicalFlightMeleeTargetPatch
+    {
+        public static void Prefix(IAttackTargetSearcher searcher,
+            ref System.Predicate<Thing> validator)
+        {
+            if (searcher?.CurrentEffectiveVerb?.IsMeleeAttack != true)
+            {
+                return;
+            }
+
+            bool airborneSearcher = searcher.Thing is Pawn searcherPawn
+                && MechanicalFlightUtility.IsAirborne(searcherPawn);
+            System.Predicate<Thing>? originalValidator = validator;
+            validator = target =>
+                !airborneSearcher
+                && !(target is Pawn targetPawn
+                    && MechanicalFlightUtility.IsAirborne(targetPawn))
+                && (originalValidator == null || originalValidator(target));
         }
     }
 
@@ -477,14 +517,21 @@ namespace MAP_MechanoidMechanitor
             bool occupied = cell.GetThingList(flyers[0].Map).Exists(thing =>
                 thing is Pawn || thing.def.category == ThingCategory.Item
                 || thing.HostileTo(flyers[0]));
+            bool allSelectedPawnsFlying = flyers.Count == selectedPawns.Count;
             __result ??= new List<FloatMenuOption>();
+            if (allSelectedPawnsFlying)
+            {
+                // 原版征召移动会先吸附到附近可站立格；飞行时必须保留原始点击格。
+                __result.RemoveAll(option => option.isGoto);
+            }
             __result.Insert(0, new FloatMenuOption(
                 "MAP_MechanicalFlight_AerialMove".Translate(),
                 () => flyers.ForEach(flyer =>
                     MechanicalFlightUtility.TryStartAerialMove(flyer, cell)),
                 MenuOptionPriority.High)
             {
-                autoTakeable = flyers.Count == selectedPawns.Count && !occupied,
+                isGoto = true,
+                autoTakeable = allSelectedPawnsFlying && !occupied,
                 autoTakeablePriority = 10000f
             });
         }
@@ -578,6 +625,43 @@ namespace MAP_MechanoidMechanitor
                     * (diagonal ? Mathf.Sqrt(2f) : 1f);
                 __result = __instance.nextCellCostTotal / Mathf.Max(1f, ticksForCell);
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(JobDriver_AttackMelee),
+        nameof(JobDriver_AttackMelee.TryMakePreToilReservations))]
+    internal static class MechanicalFlightMeleeJobPatch
+    {
+        public static bool Prefix(JobDriver_AttackMelee __instance, ref bool __result)
+        {
+            Thing? target = __instance.job?.targetA.Thing;
+            if (!MechanicalFlightUtility.IsAirborne(__instance.pawn)
+                && !(target is Pawn targetPawn
+                    && MechanicalFlightUtility.IsAirborne(targetPawn)))
+            {
+                return true;
+            }
+
+            __result = false;
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(Pawn_MeleeVerbs), nameof(Pawn_MeleeVerbs.TryMeleeAttack))]
+    internal static class MechanicalFlightMeleeExecutionPatch
+    {
+        public static bool Prefix(Pawn_MeleeVerbs __instance, Thing target,
+            ref bool __result)
+        {
+            if (!MechanicalFlightUtility.IsAirborne(__instance.Pawn)
+                && !(target is Pawn targetPawn
+                    && MechanicalFlightUtility.IsAirborne(targetPawn)))
+            {
+                return true;
+            }
+
+            __result = false;
+            return false;
         }
     }
 
