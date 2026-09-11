@@ -528,8 +528,52 @@ namespace MAP_MechanoidMechanitor
         })]
     internal static class MechanicalFlightMouseAnchorPatch
     {
+        private const float ExtendedHorizontalRadius = 0.55f;
+        private const float ExtendedVerticalRadius = 1.35f;
+
         public static void Prefix() =>
             MechanicalFlightGroundAnchorContext.BeginLegacySelection();
+
+        public static void Postfix(
+            Vector3 clickPos,
+            float pawnWideClickRadius,
+            TargetingParameters clickParams,
+            ITargetingSource source,
+            ref List<Thing> __result)
+        {
+            // Selector 使用1格宽选取半径；0.8格调用来自浮动菜单等其他交互，
+            // 不应因本次左键选中手感调整而扩大目标获取范围。
+            if (pawnWideClickRadius < 0.999f || Find.CurrentMap == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<Pawn> pawns = Find.CurrentMap.mapPawns.AllPawnsSpawned;
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                Pawn pawn = pawns[i];
+                if (!MechanicalFlightUtility.HasHoverVisual(pawn)
+                    || pawn.IsHiddenFromPlayer()
+                    || __result.Contains(pawn)
+                    || !clickParams.CanTarget(pawn, source))
+                {
+                    continue;
+                }
+
+                // 当前上下文中的 DrawPos 是修改前的原版飞行选中点：
+                // 保留0.6格原版偏移，但排除额外2.5格悬浮显示高度。
+                Vector3 selectionCenter = pawn.DrawPos;
+                float normalizedX =
+                    (clickPos.x - selectionCenter.x) / ExtendedHorizontalRadius;
+                float normalizedZ =
+                    (clickPos.z - selectionCenter.z) / ExtendedVerticalRadius;
+                if (normalizedX * normalizedX + normalizedZ * normalizedZ <= 1f)
+                {
+                    // 仅追加候选，不替换或强制置顶，保留原版连续点击轮换逻辑。
+                    __result.Add(pawn);
+                }
+            }
+        }
 
         public static Exception Finalizer(Exception __exception)
         {
