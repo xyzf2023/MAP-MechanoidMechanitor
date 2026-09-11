@@ -11,9 +11,27 @@ namespace MAP_MechanoidMechanitor
             bool includeMechanoidMechanitorSelf)
         {
             HashSet<Pawn> result = new HashSet<Pawn>();
+            FillControlledMechsAndSelf(
+                provider,
+                includeMechanoidMechanitorSelf,
+                result);
+            return result;
+        }
+
+        /// <summary>
+        /// 无分配填充：调用方复用 destination，方法开始时明确清空。
+        /// 判定来源与 CollectControlledMechsAndSelf 完全一致，仅允许
+        /// 真实受控且通过 IsActualOverseerOf / GetOverseer 校验的目标。
+        /// </summary>
+        public static void FillControlledMechsAndSelf(
+            Pawn? provider,
+            bool includeMechanoidMechanitorSelf,
+            HashSet<Pawn> destination)
+        {
+            destination.Clear();
             if (!IsValidProvider(provider))
             {
-                return result;
+                return;
             }
 
             Pawn_MechanitorTracker? mechanitor = provider!.mechanitor;
@@ -47,7 +65,7 @@ namespace MAP_MechanoidMechanitor
 
                         if (isActuallyControlledByProvider)
                         {
-                            result.Add(controlledPawn);
+                            destination.Add(controlledPawn);
                         }
                     }
                 }
@@ -57,10 +75,8 @@ namespace MAP_MechanoidMechanitor
                 && IsValidMechRecipient(provider)
                 && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(provider))
             {
-                result.Add(provider);
+                destination.Add(provider);
             }
-
-            return result;
         }
 
         public static bool HasHediff(Pawn? pawn, HediffDef? hediffDef)

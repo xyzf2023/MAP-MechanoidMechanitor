@@ -68,6 +68,11 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
+            if (pawn == null || pawn.RaceProps?.IsMechanoid != true)
+            {
+                return false;
+            }
+
             return MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
                 || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
         }

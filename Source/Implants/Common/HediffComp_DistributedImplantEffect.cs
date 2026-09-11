@@ -10,6 +10,12 @@ namespace MAP_MechanoidMechanitor
         private List<Pawn>? affectedPawns = new List<Pawn>();
         private int ticksUntilSync;
 
+        // 仅运行时缓冲区：desiredBuffer 由填充接口复用，rejectedBuffer 收集
+        // 不满足 CanApplyTo 的对象；affectedPawnSet 是 affectedPawns 的查询镜像。
+        private readonly HashSet<Pawn> desiredBuffer = new HashSet<Pawn>();
+        private readonly List<Pawn> rejectedBuffer = new List<Pawn>();
+        private HashSet<Pawn>? affectedPawnSet;
+
         protected abstract HediffDef DistributedHediffDef { get; }
 
         protected virtual bool IncludeMechanoidMechanitorSelf => true;
@@ -55,55 +61,100 @@ namespace MAP_MechanoidMechanitor
             {
                 affectedPawns ??= new List<Pawn>();
                 affectedPawns.RemoveAll(pawn => pawn == null);
+                RebuildAffectedPawnSet();
             }
         }
 
         private void SyncEffects()
         {
             Pawn provider = Pawn;
-            HashSet<Pawn> desired = ImplantEffectUtility.CollectControlledMechsAndSelf(
+            ImplantEffectUtility.FillControlledMechsAndSelf(
                 provider,
-                IncludeMechanoidMechanitorSelf);
-            desired.RemoveWhere(recipient => !CanApplyTo(recipient, recipient == provider));
+                IncludeMechanoidMechanitorSelf,
+                desiredBuffer);
 
-            affectedPawns ??= new List<Pawn>();
-            for (int i = affectedPawns.Count - 1; i >= 0; i--)
+            // 先收集不满足 CanApplyTo 的对象再从 desiredBuffer 删除，
+            // 避免 RemoveWhere 的捕获闭包分配。
+            rejectedBuffer.Clear();
+            foreach (Pawn recipient in desiredBuffer)
             {
-                Pawn previous = affectedPawns[i];
-                if (previous == null || !desired.Contains(previous))
+                if (!CanApplyTo(recipient, recipient == provider))
                 {
-                    RemoveEffect(previous);
-                    affectedPawns.RemoveAt(i);
+                    rejectedBuffer.Add(recipient);
                 }
             }
 
-            foreach (Pawn recipient in desired)
+            for (int i = 0; i < rejectedBuffer.Count; i++)
+            {
+                desiredBuffer.Remove(rejectedBuffer[i]);
+            }
+            rejectedBuffer.Clear();
+
+            affectedPawns ??= new List<Pawn>();
+            affectedPawnSet ??= new HashSet<Pawn>();
+
+            for (int i = affectedPawns.Count - 1; i >= 0; i--)
+            {
+                Pawn previous = affectedPawns[i];
+                if (previous == null || !desiredBuffer.Contains(previous))
+                {
+                    RemoveEffect(previous);
+                    affectedPawns.RemoveAt(i);
+                    if (previous != null)
+                    {
+                        affectedPawnSet.Remove(previous);
+                    }
+                }
+            }
+
+            foreach (Pawn recipient in desiredBuffer)
             {
                 if (!ImplantEffectUtility.HasHediff(recipient, DistributedHediffDef))
                 {
                     recipient.health.AddHediff(DistributedHediffDef);
                 }
 
-                if (!affectedPawns.Contains(recipient))
+                if (affectedPawnSet.Add(recipient))
                 {
                     affectedPawns.Add(recipient);
                 }
             }
+
+            desiredBuffer.Clear();
         }
 
         private void RemoveAllEffects()
         {
+            if (affectedPawns != null)
+            {
+                for (int i = affectedPawns.Count - 1; i >= 0; i--)
+                {
+                    RemoveEffect(affectedPawns[i]);
+                }
+
+                affectedPawns.Clear();
+            }
+
+            affectedPawnSet?.Clear();
+        }
+
+        private void RebuildAffectedPawnSet()
+        {
+            affectedPawnSet ??= new HashSet<Pawn>();
+            affectedPawnSet.Clear();
             if (affectedPawns == null)
             {
                 return;
             }
 
-            for (int i = affectedPawns.Count - 1; i >= 0; i--)
+            for (int i = 0; i < affectedPawns.Count; i++)
             {
-                RemoveEffect(affectedPawns[i]);
+                Pawn? pawn = affectedPawns[i];
+                if (pawn != null)
+                {
+                    affectedPawnSet.Add(pawn);
+                }
             }
-
-            affectedPawns.Clear();
         }
 
         private void RemoveEffect(Pawn? recipient)

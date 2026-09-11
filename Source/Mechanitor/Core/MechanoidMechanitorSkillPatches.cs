@@ -231,76 +231,91 @@ namespace MAP_MechanoidMechanitor
             ref Pawn pawn,
             ref bool __result)
         {
-            pawn = null!;
-            __result = false;
-            if (!ModsConfig.BiotechActive || Find.CurrentMap == null)
+            Pawn? originalPawn = pawn;
+            bool originalResult = __result;
+
+            // 原版候选不是机械族机械师时，原版正结果可直接复用。
+            if (originalResult
+                && originalPawn != null
+                && !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(originalPawn))
             {
                 return;
             }
+
+            if (!ModsConfig.BiotechActive || Find.CurrentMap == null)
+            {
+                // 环境不完整时不无条件破坏原版结果。
+                return;
+            }
+
+            // 原版候选是机械族机械师：必须用本 MOD 真实技能规则重新验证。
+            if (originalResult
+                && originalPawn != null
+                && CanCandidateDoWork(originalPawn, workType, skillRequired))
+            {
+                return;
+            }
+
+            // 只有需要补充搜索时，才清空原版结果并扫描玩家派系 Pawn。
+            pawn = null!;
+            __result = false;
 
             List<Pawn> pawns =
                 Find.CurrentMap.mapPawns.PawnsInFaction(Faction.OfPlayer);
             for (int i = 0; i < pawns.Count; i++)
             {
                 Pawn candidate = pawns[i];
-                if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(candidate))
-                {
-                    // 机械族机械师的可用工作类型可能来自升格后的动态授权，
-                    // 不能再以升格前种族的 mechEnabledWorkTypes 提前排除。
-                    if (candidate.WorkTypeIsDisabled(workType))
-                    {
-                        continue;
-                    }
-
-                    if (ProductivityCoreUtility.HasActiveEffect(candidate))
-                    {
-                        pawn = candidate;
-                        __result = true;
-                        return;
-                    }
-
-                    if (MechanoidMechanitorSkillUtility.TryGetPreferredWorkTypeSkillLevel(
-                            candidate,
-                            workType,
-                            out int preferredLevel))
-                    {
-                        if (preferredLevel >= skillRequired)
-                        {
-                            pawn = candidate;
-                            __result = true;
-                            return;
-                        }
-
-                        // 已存在真实 SkillRecord 时，不允许原版固定机械技能把低技能覆盖掉。
-                        continue;
-                    }
-
-                    // 只有真实技能基础设施缺失时才退回机械族固定技能。
-                    if (candidate.RaceProps.mechFixedSkillLevel >= skillRequired)
-                    {
-                        pawn = candidate;
-                        __result = true;
-                        return;
-                    }
-
-                    continue;
-                }
-
-                // 普通机械体仍严格遵循原版种族工作表。
-                if (!candidate.RaceProps.mechEnabledWorkTypes.Contains(workType))
-                {
-                    continue;
-                }
-
-                if (candidate.IsColonyMech
-                    && candidate.GetOverseer() != null
-                    && candidate.RaceProps.mechFixedSkillLevel >= skillRequired)
+                if (CanCandidateDoWork(candidate, workType, skillRequired))
                 {
                     pawn = candidate;
                     __result = true;
                     return;
                 }
             }
+        }
+
+        private static bool CanCandidateDoWork(
+            Pawn candidate,
+            WorkTypeDef workType,
+            int skillRequired)
+        {
+            if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(candidate))
+            {
+                // 机械族机械师的可用工作类型可能来自升格后的动态授权，
+                // 不能再以升格前种族的 mechEnabledWorkTypes 提前排除。
+                if (candidate.WorkTypeIsDisabled(workType))
+                {
+                    return false;
+                }
+
+                if (ProductivityCoreUtility.HasActiveEffect(candidate))
+                {
+                    return true;
+                }
+
+                if (MechanoidMechanitorSkillUtility.TryGetPreferredWorkTypeSkillLevel(
+                        candidate,
+                        workType,
+                        out int preferredLevel))
+                {
+                    // 已存在真实 SkillRecord 时必须使用真实技能等级；
+                    // 真实技能低于要求时判为失败，不得被 mechFixedSkillLevel 覆盖。
+                    return preferredLevel >= skillRequired;
+                }
+
+                // 只有真实技能基础设施缺失时才退回机械族固定技能。
+                return candidate.RaceProps.mechFixedSkillLevel >= skillRequired;
+            }
+
+            // 普通机械体仍严格遵循原版种族工作表。
+            if (!candidate.RaceProps.mechEnabledWorkTypes.Contains(workType))
+            {
+                return false;
+            }
+
+            return candidate.IsColonyMech
+                && candidate.GetOverseer() != null
+                && candidate.RaceProps.mechFixedSkillLevel >= skillRequired;
         }
     }
 

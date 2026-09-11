@@ -7,6 +7,11 @@ namespace MAP_MechanoidMechanitor
 {
     public sealed class Hediff_PsychicCore : Hediff_Level
     {
+        private const int PsyfocusRecoverySettlementTicks = 60;
+        private const int MaxPendingPsyfocusRecoveryTicks = PsyfocusRecoverySettlementTicks;
+
+        private int pendingPsyfocusRecoveryTicks;
+
         public override void PostAdd(DamageInfo? dinfo)
         {
             if (pawn?.RaceProps.IsMechanoid == true)
@@ -55,15 +60,27 @@ namespace MAP_MechanoidMechanitor
 
             TryRecoverMentalStateAtMaxLevel(delta);
 
-            // 第三方状态结束回调可能改变角色状态，恢复前再次校验存活与植入体仍在位。
-            if (pawn == null
-                || pawn.Destroyed
+            if (delta > 0)
+            {
+                pendingPsyfocusRecoveryTicks += delta;
+            }
+
+            // 累计不足60 Tick 时不执行恢复计算，避免每 Tick 重复查询。
+            if (pendingPsyfocusRecoveryTicks < PsyfocusRecoverySettlementTicks)
+            {
+                return;
+            }
+
+            // 结算前重新校验：第三方状态结束回调可能改变角色状态与植入体状态。
+            if (pawn.Destroyed
                 || pawn.Dead
                 || pawn.health?.hediffSet == null
                 || !pawn.health.hediffSet.hediffs.Contains(this)
                 || pawn.psychicEntropy == null
                 || !pawn.HasPsylink)
             {
+                // 不满足恢复条件时丢弃本轮累计时间，禁止补发离线期间的恢复。
+                pendingPsyfocusRecoveryTicks = 0;
                 return;
             }
 
@@ -71,12 +88,35 @@ namespace MAP_MechanoidMechanitor
                 PsychicCoreUtility.GetTotalPsyfocusRecoveryPerHour(pawn, level);
             if (totalPerHour <= 0f)
             {
+                pendingPsyfocusRecoveryTicks = 0;
                 return;
             }
 
+            int elapsedTicks = pendingPsyfocusRecoveryTicks;
+            pendingPsyfocusRecoveryTicks = 0;
             float offset =
-                totalPerHour * delta / GenDate.TicksPerHour;
+                totalPerHour * elapsedTicks / GenDate.TicksPerHour;
             pawn.psychicEntropy.OffsetPsyfocusDirectly(offset);
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            Scribe_Values.Look(
+                ref pendingPsyfocusRecoveryTicks,
+                "pendingPsyfocusRecoveryTicks",
+                0);
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                if (pendingPsyfocusRecoveryTicks < 0)
+                {
+                    pendingPsyfocusRecoveryTicks = 0;
+                }
+                else if (pendingPsyfocusRecoveryTicks > MaxPendingPsyfocusRecoveryTicks)
+                {
+                    pendingPsyfocusRecoveryTicks = MaxPendingPsyfocusRecoveryTicks;
+                }
+            }
         }
 
         private void TryRecoverMentalStateAtMaxLevel(int delta)
