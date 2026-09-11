@@ -69,6 +69,24 @@ namespace MAP_MechanoidMechanitor
         private Vector2 detailScrollPosition;
         private int lastCleanupTick = -99999;
 
+        private const int TargetCacheRefreshIntervalFrames = 15;
+
+        private sealed class TargetSortEntry
+        {
+            public Pawn Pawn = null!;
+            public bool IsSelf;
+            public bool IsPinned;
+            public int PinOrder;
+            public int Priority;
+            public string SortLabel = string.Empty;
+        }
+
+        // 窗口生命周期内的目标列表缓存：不写入存档，关闭窗口即清空。
+        private List<TargetSortEntry>? cachedTargets;
+        private List<Pawn>? cachedTargetPawns;
+        private int lastTargetRefreshFrame = -1;
+        private bool targetCacheDirty = true;
+
         // 复制/粘贴运行时剪贴板：非 static、不序列化、不跨窗口保存。
         private DataProcessingDynamicTargetSettingsSnapshot? settingsClipboard;
         private Pawn? settingsClipboardSource;
@@ -102,6 +120,12 @@ namespace MAP_MechanoidMechanitor
             // 关闭仪表盘后复制内容必须彻底消失。
             settingsClipboard = null;
             settingsClipboardSource = null;
+
+            // 目标缓存只在窗口生命周期内有效。
+            cachedTargets = null;
+            cachedTargetPawns = null;
+            lastTargetRefreshFrame = -1;
+            targetCacheDirty = true;
 
             base.PostClose();
         }
@@ -192,10 +216,36 @@ namespace MAP_MechanoidMechanitor
         private List<Pawn> CollectTargets(
             GameComponent_DataProcessingAllocationRegistry registry)
         {
-            List<Pawn> result = new List<Pawn>();
+            int frame = Time.frameCount;
+            bool cacheExpired = frame < lastTargetRefreshFrame
+                || frame - lastTargetRefreshFrame
+                    >= TargetCacheRefreshIntervalFrames;
+            if (targetCacheDirty
+                || cachedTargets == null
+                || cachedTargetPawns == null
+                || cacheExpired
+                || !TargetCacheMatchesRegistry(registry))
+            {
+                RebuildTargetCache(registry);
+                lastTargetRefreshFrame = frame;
+                targetCacheDirty = false;
+            }
+
+            return cachedTargetPawns!;
+        }
+
+        private void RebuildTargetCache(
+            GameComponent_DataProcessingAllocationRegistry registry)
+        {
+            cachedTargets ??= new List<TargetSortEntry>();
+            cachedTargets.Clear();
+            cachedTargetPawns ??= new List<Pawn>();
+            cachedTargetPawns.Clear();
+
             if (registry.IsValidAllocationPairForList(overseer, overseer))
             {
-                result.Add(overseer);
+                cachedTargets.Add(CreateTargetSortEntry(
+                    registry, overseer, isSelf: true));
             }
 
             if (overseer.mechanitor != null)
@@ -207,38 +257,55 @@ namespace MAP_MechanoidMechanitor
                     if (!ReferenceEquals(target, overseer)
                         && registry.IsValidAllocationPairForList(overseer, target))
                     {
-                        result.Add(target);
+                        cachedTargets.Add(CreateTargetSortEntry(
+                            registry, target, isSelf: false));
                     }
                 }
             }
 
-            result.Sort((left, right) => CompareTargets(registry, left, right));
-            return result;
+            cachedTargets.Sort(CompareTargetEntries);
+            for (int i = 0; i < cachedTargets.Count; i++)
+            {
+                cachedTargetPawns.Add(cachedTargets[i].Pawn);
+            }
         }
 
-        private int CompareTargets(
+        private TargetSortEntry CreateTargetSortEntry(
             GameComponent_DataProcessingAllocationRegistry registry,
-            Pawn left,
-            Pawn right)
+            Pawn target,
+            bool isSelf)
         {
-            bool leftSelf = ReferenceEquals(left, overseer);
-            bool rightSelf = ReferenceEquals(right, overseer);
-            if (leftSelf != rightSelf)
+            bool isPinned = registry.IsPinned(overseer, target);
+            return new TargetSortEntry
             {
-                return leftSelf ? -1 : 1;
+                Pawn = target,
+                IsSelf = isSelf,
+                IsPinned = isPinned,
+                PinOrder = isPinned ? registry.GetPinOrder(overseer, target) : 0,
+                Priority = registry.GetDynamicTargetRecord(overseer, target)?.priority ?? 3,
+                SortLabel = target.LabelShortCap.ToString()
+            };
+        }
+
+        // 比较器只读取快照字段，绝不在排序过程中查询注册表。
+        // 排序规则与原实现一致：自身、钉选、钉选顺序、排序名称（不含动态优先级）。
+        private static int CompareTargetEntries(
+            TargetSortEntry left,
+            TargetSortEntry right)
+        {
+            if (left.IsSelf != right.IsSelf)
+            {
+                return left.IsSelf ? -1 : 1;
             }
 
-            bool leftPinned = registry.IsPinned(overseer, left);
-            bool rightPinned = registry.IsPinned(overseer, right);
-            if (leftPinned != rightPinned)
+            if (left.IsPinned != right.IsPinned)
             {
-                return leftPinned ? -1 : 1;
+                return left.IsPinned ? -1 : 1;
             }
 
-            if (leftPinned && rightPinned)
+            if (left.IsPinned && right.IsPinned)
             {
-                int pinCompare = registry.GetPinOrder(overseer, left)
-                    .CompareTo(registry.GetPinOrder(overseer, right));
+                int pinCompare = left.PinOrder.CompareTo(right.PinOrder);
                 if (pinCompare != 0)
                 {
                     return pinCompare;
@@ -246,9 +313,52 @@ namespace MAP_MechanoidMechanitor
             }
 
             return string.Compare(
-                left.LabelShortCap.ToString(),
-                right.LabelShortCap.ToString(),
+                left.SortLabel,
+                right.SortLabel,
                 StringComparison.CurrentCulture);
+        }
+
+        // 每帧廉价校验快照关键字段：钉选/顺序/优先级变化立即触发重建；
+        // 目标死亡、销毁或 Discarded 时立即刷新。
+        private bool TargetCacheMatchesRegistry(
+            GameComponent_DataProcessingAllocationRegistry registry)
+        {
+            if (cachedTargets == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < cachedTargets.Count; i++)
+            {
+                TargetSortEntry entry = cachedTargets[i];
+                Pawn target = entry.Pawn;
+                if (target == null || target.Dead || target.Destroyed
+                    || target.Discarded)
+                {
+                    return false;
+                }
+
+                bool isPinned = registry.IsPinned(overseer, target);
+                if (isPinned != entry.IsPinned)
+                {
+                    return false;
+                }
+
+                if (isPinned
+                    && registry.GetPinOrder(overseer, target) != entry.PinOrder)
+                {
+                    return false;
+                }
+
+                int priority =
+                    registry.GetDynamicTargetRecord(overseer, target)?.priority ?? 3;
+                if (priority != entry.Priority)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void EnsureSelectedTarget(List<Pawn> targets)

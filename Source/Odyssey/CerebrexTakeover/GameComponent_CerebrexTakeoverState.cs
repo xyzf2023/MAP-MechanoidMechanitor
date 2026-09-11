@@ -104,6 +104,9 @@ namespace MAP_MechanoidMechanitor
 
             CerebrexTakeoverRelationUtility.EnsureTakeoverRelations();
 
+            // 接管成功入口：立即无处罚结束全部活动评级任务。
+            PurgeDirectiveQuestScheduler.NotifyCerebrexTakenOver();
+
             return true;
         }
 

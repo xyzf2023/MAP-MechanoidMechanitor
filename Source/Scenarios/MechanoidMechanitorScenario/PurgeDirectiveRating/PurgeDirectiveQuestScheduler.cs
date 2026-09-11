@@ -20,6 +20,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         private const int CheckIntervalTicks = 2500;
 
+        // 主脑接管清理是否已完成（仅运行时）：首次检测到接管时清理一次，之后只廉价返回。
+        private static bool takeoverCleanupCompleted;
+
         private static readonly QuestScriptDef? questScriptDef =
             PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig != null
                 ? DefDatabase<QuestScriptDef>.GetNamedSilentFail(
@@ -53,8 +56,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 读档后至少重新校验一次主脑接管状态。
+            takeoverCleanupCompleted = false;
+
             GameComponent_MechanoidMechanitorStoryState? story =
-                Current.Game?.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
+                CurrentGameComponentCache<GameComponent_MechanoidMechanitorStoryState>.Get();
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = story?.PurgeDirectiveRuntimeState;
             if (rs != null)
             {
@@ -65,34 +71,38 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static void Tick()
         {
             GameComponent_MechanoidMechanitorStoryState? story =
-                Current.Game?.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
-            if (story == null)
-            {
-                return;
-            }
-
-            // 接管主脑：安全结束所有活动评级任务（无处罚），不再生成新任务。
-            if (GameComponent_CerebrexTakeoverState.IsActive)
-            {
-                EndAllActivePurgeQuestsWithoutPenalty();
-                return;
-            }
-
-            // 不生成任务的条件：未激活评级系统（含接管主脑、肃清额度未启用）、触发最终红色惩罚。
-            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive()
-                || PurgeDirectiveRatingUtility.IsFinalPenaltyTriggered())
-            {
-                return;
-            }
-
-            MechanoidMechanitorPurgeDirectiveRuntimeState? rs = story.PurgeDirectiveRuntimeState;
+                CurrentGameComponentCache<GameComponent_MechanoidMechanitorStoryState>.Get();
+            MechanoidMechanitorPurgeDirectiveRuntimeState? rs =
+                story?.PurgeDirectiveRuntimeState;
             if (rs == null)
             {
                 return;
             }
 
+            // 接管主脑：安全结束所有活动评级任务（无处罚），不再生成新任务。
+            // 首次检测执行一次清理，之后每 Tick 只廉价返回。
+            if (GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                if (!takeoverCleanupCompleted)
+                {
+                    EndAllActivePurgeQuestsWithoutPenalty();
+                    takeoverCleanupCompleted = true;
+                }
+                return;
+            }
+            takeoverCleanupCompleted = false;
+
             int now = Find.TickManager.TicksGame;
+
+            // 正常流程：未到检查时间立即返回，不执行评级/惩罚/任务条件查询。
             if (rs.NextPurgeQuestCheckTick > 0 && now < rs.NextPurgeQuestCheckTick)
+            {
+                return;
+            }
+
+            // 到期后再检查评级系统、最终惩罚与任务生成条件。
+            if (!PurgeDirectiveRatingUtility.IsRatingSystemActive()
+                || PurgeDirectiveRatingUtility.IsFinalPenaltyTriggered())
             {
                 return;
             }
@@ -127,6 +137,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             GenerateQuest(target, cfg);
+        }
+
+        /// <summary>接管成功入口：立即无处罚清理活动评级任务，并阻止后续任务生成。</summary>
+        public static void NotifyCerebrexTakenOver()
+        {
+            EndAllActivePurgeQuestsWithoutPenalty();
+            takeoverCleanupCompleted = true;
         }
 
         /// <summary>是否满足「可生成任务」的全部前置：游戏存在、叙事者允许暴力任务、机械巢可联络、无活动任务。</summary>

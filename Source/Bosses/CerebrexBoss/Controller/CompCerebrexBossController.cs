@@ -68,6 +68,12 @@ namespace MAP_MechanoidMechanitor
         private bool initialized;
         private bool stopped;
 
+        // 玩家存在性检查缓存（仅运行时，不写存档）：最多每30 Tick 扫描一次。
+        private int nextPlayerPresenceCheckTick;
+        private bool cachedPlayerPawnPresent;
+
+        private const int PlayerPresenceCheckIntervalTicks = 30;
+
         private int nextSummonTick;
         private int nextEmpTick;
         private int nextBandwidthTick;
@@ -126,6 +132,10 @@ namespace MAP_MechanoidMechanitor
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
+
+            // 主脑生成/读档/换图后下一 Tick 立即重新计算玩家存在性。
+            nextPlayerPresenceCheckTick = 0;
+            cachedPlayerPawnPresent = false;
 
             if (!initialized)
             {
@@ -738,6 +748,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 已进入重试的增援批次必须使用最新玩家存在性，不受30 Tick缓存暂停。
+            if (pendingSummonKinds.Count > 0)
+            {
+                nextPlayerPresenceCheckTick = 0;
+            }
+
             // 6. 检查自动运行条件。
             if (!CanRunAutomatically())
             {
@@ -782,6 +798,7 @@ namespace MAP_MechanoidMechanitor
 
         private bool CanRunAutomatically()
         {
+            // 以下廉价条件仍每 Tick 即时判断。
             if (!ModsConfig.OdysseyActive
                 || stopped
                 || !parent.Spawned
@@ -793,8 +810,40 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return parent.Map.mapPawns.AllPawnsSpawned.Any(
-                p => p != null && !p.Dead && p.Faction == Faction.OfPlayer);
+            // 缓存只用于“是否允许新的自动技能排程”，最多每30 Tick扫描一次。
+            int now = Find.TickManager.TicksGame;
+            if (now >= nextPlayerPresenceCheckTick)
+            {
+                cachedPlayerPawnPresent = HasActionablePlayerPawn(parent.Map);
+                nextPlayerPresenceCheckTick =
+                    now + PlayerPresenceCheckIntervalTicks;
+            }
+
+            return cachedPlayerPawnPresent;
+        }
+
+        // 纯机械族机械师殖民地可能没有人类殖民者，因此只按玩家派系 Pawn 判断。
+        private static bool HasActionablePlayerPawn(Map map)
+        {
+            List<Pawn> pawns = map.mapPawns.PawnsInFaction(Faction.OfPlayer);
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                Pawn pawn = pawns[i];
+                if (pawn == null
+                    || pawn.Dead
+                    || pawn.Destroyed
+                    || pawn.Discarded
+                    || !pawn.Spawned
+                    || pawn.Map != map
+                    || pawn.Faction != Faction.OfPlayer)
+                {
+                    continue;
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         // ----------------------------------------------------------------
