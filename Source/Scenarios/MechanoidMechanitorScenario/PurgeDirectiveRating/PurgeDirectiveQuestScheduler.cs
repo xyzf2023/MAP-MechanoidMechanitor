@@ -122,7 +122,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             // 已有活动任务（含待接受邀请）则跳过，保证 maxActive 限制。
-            if (!CanGenerateQuest(story))
+            if (!CanGenerateQuest(story!))
             {
                 return;
             }

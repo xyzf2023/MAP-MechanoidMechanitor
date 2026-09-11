@@ -482,7 +482,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (!cell.WalkableBy(map, pawn)
                     || !TouchPathEndModeUtility.IsAdjacentOrInsideAndAllowedToTouch(
-                        cell, resolved, map))
+                        cell, resolved, map.pathing.For(pawn)))
                 {
                     continue;
                 }
@@ -709,6 +709,7 @@ namespace MAP_MechanoidMechanitor
             if (!TryResolveDirectDestination(
                     pawn, target, ref resolvedMode, out IntVec3 resolved))
             {
+                destination = IntVec3.Invalid;
                 return false;
             }
 
@@ -769,7 +770,7 @@ namespace MAP_MechanoidMechanitor
 
             LocalTargetInfo resolved = (LocalTargetInfo)target.ToTargetInfo(map);
             return TouchPathEndModeUtility.IsAdjacentOrInsideAndAllowedToTouch(
-                cell, resolved, map);
+                cell, resolved, map.pathing.For(pawn));
         }
 
         private static void NotifyArrived(Pawn_PathFollower pather, Pawn pawn)
