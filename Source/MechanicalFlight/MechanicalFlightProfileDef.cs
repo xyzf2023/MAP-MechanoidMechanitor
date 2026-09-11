@@ -10,6 +10,8 @@ namespace MAP_MechanoidMechanitor
         public float energyDrainFraction = 0.005f;
         public int energyDrainIntervalTicks = 60;
         public float flightCellsPerSecond = 30f;
+        public float takeoffTravelRampStartFactor = 0.12f;
+        public float takeoffTravelRampFullSpeedFactor = 0.65f;
 
         public float lowEnergyWarningThreshold = 0.10f;
         public int emergencyLandingSearchRadius = 3;
@@ -30,6 +32,9 @@ namespace MAP_MechanoidMechanitor
             "Things/Mote/MechanicalFlight/ThrusterGlow";
         public FleckDef? thrusterSparkFleck;
         public int thrusterSparkIntervalTicks = 11;
+        public float thrusterCruiseWidthFactor = 0.62f;
+        public float thrusterCruiseLengthFactor = 1.62f;
+        public FleckDef? landingGlowFleck;
         public bool drawThruster = true;
         public bool drawGroundWash = true;
         public bool allowTilt = true;

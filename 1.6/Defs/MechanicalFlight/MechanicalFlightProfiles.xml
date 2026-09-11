@@ -8,6 +8,8 @@
     <energyDrainFraction>0.005</energyDrainFraction>
     <energyDrainIntervalTicks>60</energyDrainIntervalTicks>
     <flightCellsPerSecond>30</flightCellsPerSecond>
+    <takeoffTravelRampStartFactor>0.12</takeoffTravelRampStartFactor>
+    <takeoffTravelRampFullSpeedFactor>0.65</takeoffTravelRampFullSpeedFactor>
     <lowEnergyWarningThreshold>0.10</lowEnergyWarningThreshold>
     <emergencyLandingSearchRadius>3</emergencyLandingSearchRadius>
     <crashDamagePerWeightClass>30</crashDamagePerWeightClass>
@@ -22,6 +24,9 @@
     <thrusterAngleOffset>5</thrusterAngleOffset>
     <thrusterSparkFleck>MAP_Fleck_MechanicalFlightThrusterSpark</thrusterSparkFleck>
     <thrusterSparkIntervalTicks>11</thrusterSparkIntervalTicks>
+    <thrusterCruiseWidthFactor>0.62</thrusterCruiseWidthFactor>
+    <thrusterCruiseLengthFactor>1.62</thrusterCruiseLengthFactor>
+    <landingGlowFleck>MAP_Fleck_MechanicalFlightThrusterGlow</landingGlowFleck>
     <hoverGlowRadius>4.5</hoverGlowRadius>
     <hoverGlowColor>(105,190,255,0)</hoverGlowColor>
     <roofBreakRadius>1</roofBreakRadius>
