@@ -268,6 +268,26 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
+        internal static bool TryGetDirectPathDrawData(
+            Pawn? pawn,
+            out Vector3 currentGroundPosition,
+            out Vector3 destinationGroundPosition)
+        {
+            if (pawn != null && IsActive(pawn)
+                && pawn.pather?.MovingNow == true
+                && DirectMotionStates.TryGetValue(
+                    pawn, out DirectFlightMotionState? state))
+            {
+                currentGroundPosition = state.ExactGroundPosition;
+                destinationGroundPosition = state.DestinationGroundPosition;
+                return true;
+            }
+
+            currentGroundPosition = default;
+            destinationGroundPosition = default;
+            return false;
+        }
+
         internal static void ClearMotion(Pawn? pawn)
         {
             if (pawn != null)
@@ -489,6 +509,30 @@ namespace MAP_MechanoidMechanitor
                 }
             }
             return cells;
+        }
+    }
+
+    [HarmonyPatch(typeof(PawnPath), nameof(PawnPath.DrawPath))]
+    internal static class MechanicalFlightPathDrawingPatch
+    {
+        public static bool Prefix(Pawn pathingPawn)
+        {
+            if (!MechanicalFlightStraightPathPatch.TryGetDirectPathDrawData(
+                    pathingPawn, out Vector3 current, out Vector3 destination))
+            {
+                return true;
+            }
+
+            float altitude = AltitudeLayer.Item.AltitudeFor();
+            current.y = altitude;
+            destination.y = altitude;
+            if ((destination - current).sqrMagnitude > 0.0001f)
+            {
+                GenDraw.DrawLineBetween(current, destination);
+            }
+
+            // 连续飞行只显示剩余直线，不再绘制兼容用网格PawnPath。
+            return false;
         }
     }
 
