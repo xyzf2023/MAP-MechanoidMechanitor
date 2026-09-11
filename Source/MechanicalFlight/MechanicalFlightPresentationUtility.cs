@@ -442,15 +442,27 @@ namespace MAP_MechanoidMechanitor
 
     internal static class MechanicalFlightGroundAnchorContext
     {
-        [ThreadStatic] private static int depth;
+        [ThreadStatic] private static int groundAnchorDepth;
+        [ThreadStatic] private static int legacySelectionDepth;
 
-        internal static bool Active => depth > 0;
-        internal static void Begin() => depth++;
+        internal static bool Active => groundAnchorDepth > 0;
+        internal static bool LegacySelectionActive => legacySelectionDepth > 0;
+
+        internal static void Begin() => groundAnchorDepth++;
         internal static void End()
         {
-            if (depth > 0)
+            if (groundAnchorDepth > 0)
             {
-                depth--;
+                groundAnchorDepth--;
+            }
+        }
+
+        internal static void BeginLegacySelection() => legacySelectionDepth++;
+        internal static void EndLegacySelection()
+        {
+            if (legacySelectionDepth > 0)
+            {
+                legacySelectionDepth--;
             }
         }
     }
@@ -482,6 +494,13 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 鼠标选取沿用原版飞行 DrawPos：保留0.6格偏移，
+            // 但不加入本系统额外的悬浮显示高度。
+            if (MechanicalFlightGroundAnchorContext.LegacySelectionActive)
+            {
+                return;
+            }
+
             __result += MechanicalFlightPresentationUtility.HoverVisualOffset(
                 pawn, record);
         }
@@ -509,11 +528,12 @@ namespace MAP_MechanoidMechanitor
         })]
     internal static class MechanicalFlightMouseAnchorPatch
     {
-        public static void Prefix() => MechanicalFlightGroundAnchorContext.Begin();
+        public static void Prefix() =>
+            MechanicalFlightGroundAnchorContext.BeginLegacySelection();
 
         public static Exception Finalizer(Exception __exception)
         {
-            MechanicalFlightGroundAnchorContext.End();
+            MechanicalFlightGroundAnchorContext.EndLegacySelection();
             return __exception;
         }
     }
