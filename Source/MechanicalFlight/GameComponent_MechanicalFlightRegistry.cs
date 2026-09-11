@@ -13,9 +13,34 @@ namespace MAP_MechanoidMechanitor
         private List<MechanicalFlightAuthorizationRecord> authorizationRecords = new();
         private Dictionary<Pawn, MechanicalFlightAuthorizationRecord> recordByPawn = new();
         private List<MechanicalFlightAuthorizationRecord> activeRecords = new();
+        private readonly List<MechanicalFlightAuthorizationRecord> tickSnapshot = new();
 
-        private static GameComponent_MechanicalFlightRegistry? CurrentRegistry =>
-            Current.Game?.GetComponent<GameComponent_MechanicalFlightRegistry>();
+        private static Game? cachedRegistryGame;
+        private static GameComponent_MechanicalFlightRegistry? cachedRegistry;
+
+        private static GameComponent_MechanicalFlightRegistry? CurrentRegistry
+        {
+            get
+            {
+                Game? game = Current.Game;
+                if (game == null)
+                {
+                    cachedRegistryGame = null;
+                    cachedRegistry = null;
+                    return null;
+                }
+                if (!ReferenceEquals(cachedRegistryGame, game))
+                {
+                    cachedRegistryGame = game;
+                    cachedRegistry = game.GetComponent<GameComponent_MechanicalFlightRegistry>();
+                }
+                else if (cachedRegistry == null)
+                {
+                    cachedRegistry = game.GetComponent<GameComponent_MechanicalFlightRegistry>();
+                }
+                return cachedRegistry;
+            }
+        }
 
         public GameComponent_MechanicalFlightRegistry(Game game)
         {
@@ -109,7 +134,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            MechanicalFlightUtility.ClearRuntimeState(record, forceLand: true);
+            MechanicalFlightUtility.ClearRuntimeState(record, forceLand: false);
             registry.authorizationRecords.RemoveAll(candidate =>
                 candidate != null && ReferenceEquals(candidate.Pawn, pawn));
             registry.recordByPawn.Remove(pawn);
@@ -142,20 +167,37 @@ namespace MAP_MechanoidMechanitor
         public override void GameComponentTick()
         {
             base.GameComponentTick();
-            for (int i = activeRecords.Count - 1; i >= 0; i--)
+            tickSnapshot.Clear();
+            tickSnapshot.AddRange(activeRecords);
+            for (int i = 0; i < tickSnapshot.Count; i++)
             {
-                MechanicalFlightAuthorizationRecord? record = activeRecords[i];
-                if (record == null || record.Pawn == null || record.Pawn.Discarded)
+                MechanicalFlightAuthorizationRecord? record = tickSnapshot[i];
+                if (record == null)
                 {
-                    activeRecords.RemoveAt(i);
+                    continue;
+                }
+
+                Pawn? pawn = record.Pawn;
+                if (pawn == null || pawn.Discarded)
+                {
+                    MechanicalFlightUtility.CleanupUnavailableRecord(record);
+                    RemoveRecord(record);
+                    continue;
+                }
+
+                if (!record.IsRuntimeActive)
+                {
+                    continue;
+                }
+
+                if (!recordByPawn.TryGetValue(
+                        pawn, out MechanicalFlightAuthorizationRecord? current)
+                    || !ReferenceEquals(current, record))
+                {
                     continue;
                 }
 
                 MechanicalFlightUtility.Tick(record);
-                if (!record.IsRuntimeActive)
-                {
-                    activeRecords.Remove(record);
-                }
             }
         }
 
@@ -171,22 +213,38 @@ namespace MAP_MechanoidMechanitor
                 "mechanicalFlightAuthorizationRecords", LookMode.Deep);
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
+                // 只重建纯数据缓存；Pawn 尚未 Spawn，真正的飞行恢复在 LoadedGame。
                 RebuildCaches();
-                MechanicalFlightUtility.ReconcileAfterLoad(activeRecords);
             }
         }
 
         public override void StartedNewGame()
         {
             base.StartedNewGame();
+            cachedRegistryGame = Current.Game;
+            cachedRegistry = this;
             RebuildCaches();
         }
 
         public override void LoadedGame()
         {
             base.LoadedGame();
+            cachedRegistryGame = Current.Game;
+            cachedRegistry = this;
             RebuildCaches();
             MechanicalFlightUtility.ReconcileAfterLoad(activeRecords);
+        }
+
+        private void RemoveRecord(MechanicalFlightAuthorizationRecord record)
+        {
+            Pawn? pawn = record.Pawn;
+            authorizationRecords.Remove(record);
+            activeRecords.Remove(record);
+            if (pawn != null)
+            {
+                recordByPawn.Remove(pawn);
+            }
+            record.ResetRuntimeState();
         }
 
         private MechanicalFlightAuthorizationRecord? FindRecord(Pawn pawn)

@@ -59,13 +59,23 @@ namespace MAP_MechanoidMechanitor
                 ignoredThings.Add(corpse);
             }
 
-            ResolveCrashImpact(
-                pawn,
-                state.Profile,
-                state.Map,
-                state.Position,
-                ignoredThings);
-            FinishCrash(pawn, state.Record, resumeEnergyShutdown: false);
+            try
+            {
+                ResolveCrashImpact(
+                    pawn,
+                    state.Profile,
+                    state.Map,
+                    state.Position,
+                    ignoredThings);
+            }
+            catch (Exception exception)
+            {
+                Log.Error("[MAP-机械族机械师] 死亡坠毁结算异常：" + exception);
+            }
+            finally
+            {
+                FinishCrash(pawn, state.Record, resumeEnergyShutdown: false);
+            }
         }
 
         internal static bool TryCrashFromDowned(Pawn? pawn)
@@ -103,6 +113,11 @@ namespace MAP_MechanoidMechanitor
             {
                 return true;
             }
+            if (record.Phase == MechanicalFlightPhase.Landing)
+            {
+                // 普通降落已经进入原版着陆倒计时，不允许改判为迫降。
+                return true;
+            }
 
             MechanicalFlightEnergyUtility.TrySetEnergyFraction(pawn, 0f);
             if (!TryFindSafeLandingCell(pawn, record.Profile, out IntVec3 target))
@@ -122,11 +137,8 @@ namespace MAP_MechanoidMechanitor
             {
                 pawn.drafter.Drafted = false;
             }
+            // 唯一入口：就地进入迫降或创建/修复迫降移动任务。
             StartOrRepairEmergencyJob(pawn, record);
-            if (record.Phase == MechanicalFlightPhase.EmergencyLanding)
-            {
-                BeginEmergencyLanding(pawn, record);
-            }
             return true;
         }
 
@@ -135,7 +147,7 @@ namespace MAP_MechanoidMechanitor
             Pawn? pawn = record.Pawn;
             if (pawn?.Map == null || pawn.Dead || !pawn.Spawned)
             {
-                MechanicalFlightUtility.ClearRuntimeState(record, forceLand: true);
+                MechanicalFlightUtility.ClearRuntimeState(record, forceLand: false);
                 return;
             }
             if (pawn.Downed)
@@ -192,32 +204,65 @@ namespace MAP_MechanoidMechanitor
 
             if (record.Phase == MechanicalFlightPhase.EmergencyApproach)
             {
-                if (!record.EmergencyLandingTarget.IsValid
-                    || !record.EmergencyLandingTarget.InBounds(pawn.Map))
+                MechanicalFlightUtility.VanillaFlightState approachState =
+                    MechanicalFlightUtility.GetVanillaFlightState(pawn);
+                if (approachState == MechanicalFlightUtility.VanillaFlightState.Grounded)
                 {
                     Crash(pawn, record);
                     return;
                 }
-                if (!pawn.flight.Flying)
+                if (approachState == MechanicalFlightUtility.VanillaFlightState.Unknown
+                    && !pawn.flight.Flying)
                 {
                     pawn.flight.StartFlying();
+                    if (!pawn.flight.Flying)
+                    {
+                        Crash(pawn, record);
+                        return;
+                    }
                 }
-                if (!pawn.flight.Flying)
+                if (!TryValidateOrReplanEmergencyTarget(pawn, record))
                 {
                     Crash(pawn, record);
                     return;
                 }
-                StartOrRepairEmergencyJob(pawn, record);
-            }
-            else if (record.Phase == MechanicalFlightPhase.EmergencyLanding)
-            {
-                if (pawn.flight.Flying)
+                if (pawn.Position == record.EmergencyLandingTarget)
                 {
-                    pawn.flight.ForceLand();
+                    BeginEmergencyLanding(pawn, record);
                 }
                 else
                 {
+                    StartOrRepairEmergencyJob(pawn, record);
+                }
+            }
+            else if (record.Phase == MechanicalFlightPhase.EmergencyLanding)
+            {
+                MechanicalFlightUtility.VanillaFlightState state =
+                    MechanicalFlightUtility.GetVanillaFlightState(pawn);
+                if (state == MechanicalFlightUtility.VanillaFlightState.Grounded)
+                {
                     CompleteLandingAndShutdown(pawn, record);
+                    return;
+                }
+                if (state == MechanicalFlightUtility.VanillaFlightState.Landing)
+                {
+                    // 保留原版降落进度，不做任何重置。
+                    return;
+                }
+                if (!TryValidateOrReplanEmergencyTarget(pawn, record))
+                {
+                    Crash(pawn, record);
+                    return;
+                }
+                if (pawn.Position == record.EmergencyLandingTarget)
+                {
+                    BeginEmergencyLanding(pawn, record);
+                }
+                else
+                {
+                    record.Phase = MechanicalFlightPhase.EmergencyApproach;
+                    GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+                    StartOrRepairEmergencyJob(pawn, record);
                 }
             }
             else if (record.Phase == MechanicalFlightPhase.Crashing)
@@ -246,16 +291,42 @@ namespace MAP_MechanoidMechanitor
                 pawn);
         }
 
+        private static bool TryValidateOrReplanEmergencyTarget(
+            Pawn pawn,
+            MechanicalFlightAuthorizationRecord record)
+        {
+            Map? map = pawn.Map;
+            if (map == null)
+            {
+                return false;
+            }
+
+            IntVec3 target = record.EmergencyLandingTarget;
+            if (target.IsValid && target.InBounds(map)
+                && IsSafeLandingCell(target, pawn, map))
+            {
+                return true;
+            }
+
+            if (!TryFindSafeLandingCell(pawn, record.Profile, out IntVec3 newTarget))
+            {
+                return false;
+            }
+            record.EmergencyLandingTarget = newTarget;
+            return true;
+        }
+
         private static void StartOrRepairEmergencyJob(
             Pawn pawn,
             MechanicalFlightAuthorizationRecord record)
         {
-            IntVec3 target = record.EmergencyLandingTarget;
-            if (!target.IsValid || pawn.Map == null || !target.InBounds(pawn.Map))
+            if (!TryValidateOrReplanEmergencyTarget(pawn, record))
             {
                 Crash(pawn, record);
                 return;
             }
+
+            IntVec3 target = record.EmergencyLandingTarget;
             if (pawn.Position == target)
             {
                 pawn.pather?.StopDead();
@@ -263,15 +334,26 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (record.Phase != MechanicalFlightPhase.EmergencyApproach)
+            {
+                record.Phase = MechanicalFlightPhase.EmergencyApproach;
+                GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            }
+
             if (pawn.CurJobDef != MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding
-                || pawn.CurJob?.targetA.Cell != target)
+                || pawn.CurJob?.targetA.Cell != target
+                || !pawn.Map.reservationManager.ReservedBy(
+                    new LocalTargetInfo(target), pawn))
             {
                 Job job = JobMaker.MakeJob(
                     MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding, target);
                 job.flying = true;
                 pawn.jobs.StartJob(job, JobCondition.InterruptForced, null,
                     resumeCurJobAfterwards: false, cancelBusyStances: true,
-                    thinkTree: null, tag: JobTag.SatisfyingNeeds);
+                    thinkTree: null, tag: JobTag.SatisfyingNeeds,
+                    fromQueue: false, canReturnCurJobToPool: false,
+                    keepCarryingThingOverride: null, continueSleeping: false,
+                    addToJobsThisTick: true, preToilReservationsCanFail: true);
             }
             else if (pawn.pather?.MovingNow != true)
             {
@@ -287,16 +369,26 @@ namespace MAP_MechanoidMechanitor
             {
                 return;
             }
-            if (pawn.Map == null || pawn.Position != record.EmergencyLandingTarget
-                || !IsSafeLandingCell(pawn.Position, pawn, pawn.Map))
+            if (pawn.Map == null)
             {
                 Crash(pawn, record);
+                return;
+            }
+            if (!TryValidateOrReplanEmergencyTarget(pawn, record))
+            {
+                Crash(pawn, record);
+                return;
+            }
+            if (pawn.Position != record.EmergencyLandingTarget)
+            {
+                StartOrRepairEmergencyJob(pawn, record);
                 return;
             }
 
             record.Phase = MechanicalFlightPhase.EmergencyLanding;
             record.TicksUntilNextEnergyDrain = 0;
             pawn.pather?.StopDead();
+            MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             if (pawn.CurJob != null)
             {
                 pawn.CurJob.flying = false;
@@ -314,6 +406,7 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightAuthorizationRecord record)
         {
             pawn.pather?.StopDead();
+            MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             if (pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding)
             {
                 pawn.jobs.EndCurrentJob(JobCondition.Succeeded);
@@ -414,17 +507,29 @@ namespace MAP_MechanoidMechanitor
             Map? map = pawn.Map;
             if (map == null || !pawn.Spawned)
             {
-                MechanicalFlightUtility.ClearRuntimeState(record, forceLand: true);
+                MechanicalFlightUtility.ClearRuntimeState(record, forceLand: false);
                 return;
             }
 
             record.Phase = MechanicalFlightPhase.Crashing;
             IntVec3 center = pawn.Position;
-            pawn.pather?.StopDead();
-            pawn.flight?.ForceLand();
+            try
+            {
+                pawn.pather?.StopDead();
+                MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+                pawn.flight?.ForceLand();
 
-            ResolveCrashImpact(pawn, record.Profile, map, center, null);
-            FinishCrash(pawn, record, resumeEnergyShutdown: true);
+                ResolveCrashImpact(pawn, record.Profile, map, center, null);
+            }
+            catch (Exception exception)
+            {
+                Log.Error("[MAP-机械族机械师] 坠毁结算异常：" + exception);
+            }
+            finally
+            {
+                // 一次坠毁最多执行一次爆炸；无论结算是否异常都完成状态清理。
+                FinishCrash(pawn, record, resumeEnergyShutdown: true);
+            }
         }
 
         private static void ResolveCrashImpact(
@@ -485,17 +590,41 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightAuthorizationRecord record,
             bool resumeEnergyShutdown)
         {
-            if (pawn.jobs != null
-                && pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding)
+            try
             {
-                pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                if (pawn.jobs != null
+                    && pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding)
+                {
+                    pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                }
             }
-            record.ResetRuntimeState();
-            MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
-            GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
-            if (resumeEnergyShutdown && !pawn.Dead)
+            catch (Exception exception)
             {
-                pawn.needs?.energy?.NeedInterval();
+                Log.Error("[MAP-机械族机械师] 坠毁任务清理异常：" + exception);
+            }
+
+            bool pendingShutdown = record.PendingShutdownAfterLanding;
+            record.ResetRuntimeState();
+            try
+            {
+                MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
+                GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            }
+            catch (Exception exception)
+            {
+                Log.Error("[MAP-机械族机械师] 坠毁表现状态清理异常：" + exception);
+            }
+
+            if ((resumeEnergyShutdown || pendingShutdown) && !pawn.Dead)
+            {
+                try
+                {
+                    pawn.needs?.energy?.NeedInterval();
+                }
+                catch (Exception exception)
+                {
+                    Log.Error("[MAP-机械族机械师] 坠毁后能量处理异常：" + exception);
+                }
             }
         }
 

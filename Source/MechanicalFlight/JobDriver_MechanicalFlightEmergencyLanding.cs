@@ -17,8 +17,8 @@ namespace MAP_MechanoidMechanitor
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
         {
-            // 飞行目标可能无法从地面到达；状态机在选点时已经检查占用与预留。
-            return true;
+            // 飞行目标可能无法从地面到达；预留由状态机复核，但必须真实持有目标格。
+            return pawn.Reserve(job.targetA, job, 1, -1, null, errorOnFailed);
         }
     }
 }

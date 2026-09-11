@@ -10,6 +10,9 @@ namespace MAP_MechanoidMechanitor
         private int ticksUntilNextEnergyDrain;
         private IntVec3 emergencyLandingTarget = IntVec3.Invalid;
         private bool lowEnergyWarningSent;
+        private bool pendingShutdownAfterLanding;
+        private bool groundLandingBlockedNoticeSent;
+        private bool groundJobBlockedNoticeSent;
 
         public Pawn? Pawn => pawn;
         public MechanicalFlightProfileDef? Profile => profile;
@@ -43,6 +46,21 @@ namespace MAP_MechanoidMechanitor
             get => lowEnergyWarningSent;
             internal set => lowEnergyWarningSent = value;
         }
+        public bool PendingShutdownAfterLanding
+        {
+            get => pendingShutdownAfterLanding;
+            internal set => pendingShutdownAfterLanding = value;
+        }
+        public bool GroundLandingBlockedNoticeSent
+        {
+            get => groundLandingBlockedNoticeSent;
+            internal set => groundLandingBlockedNoticeSent = value;
+        }
+        public bool GroundJobBlockedNoticeSent
+        {
+            get => groundJobBlockedNoticeSent;
+            internal set => groundJobBlockedNoticeSent = value;
+        }
 
         public MechanicalFlightAuthorizationRecord()
         {
@@ -65,6 +83,9 @@ namespace MAP_MechanoidMechanitor
             ticksUntilNextEnergyDrain = 0;
             emergencyLandingTarget = IntVec3.Invalid;
             lowEnergyWarningSent = false;
+            pendingShutdownAfterLanding = false;
+            groundLandingBlockedNoticeSent = false;
+            groundJobBlockedNoticeSent = false;
         }
 
         public void ExposeData()
@@ -78,6 +99,12 @@ namespace MAP_MechanoidMechanitor
                 "emergencyLandingTarget", IntVec3.Invalid);
             Scribe_Values.Look(ref lowEnergyWarningSent,
                 "lowEnergyWarningSent", false);
+            Scribe_Values.Look(ref pendingShutdownAfterLanding,
+                "pendingShutdownAfterLanding", false);
+            Scribe_Values.Look(ref groundLandingBlockedNoticeSent,
+                "groundLandingBlockedNoticeSent", false);
+            Scribe_Values.Look(ref groundJobBlockedNoticeSent,
+                "groundJobBlockedNoticeSent", false);
         }
     }
 }

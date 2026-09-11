@@ -117,9 +117,10 @@ namespace MAP_MechanoidMechanitor
             }
             else
             {
-                job.flying = true;
-                Messages.Message("MAP_MechanicalFlight_GroundJobBlocked".Translate(), pawn,
-                    MessageTypeDefOf.RejectInput, false);
+                // 无法降落：不能悬停在非法位置执行贴地任务，安全结束该任务。
+                job.flying = false;
+                MechanicalFlightUtility.NotifyGroundJobBlocked(pawn, job.playerForced);
+                pawn.jobs.EndCurrentJob(JobCondition.Incompletable);
             }
             return false;
         }
@@ -149,12 +150,25 @@ namespace MAP_MechanoidMechanitor
         public static bool Prefix(Pawn_JobTracker __instance, Job job, ref bool __result)
         {
             Pawn pawn = PawnField(__instance);
+            if (pawn == null || job == null)
+            {
+                return true;
+            }
             if (MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
             {
                 __result = false;
                 return false;
             }
-            if (!MechanicalFlightUtility.IsActivelyFlying(pawn) || job == null)
+            // 近战/接触任务在进入原版预留检查前拒绝，避免原版 Warning/Errored 链。
+            if (MechanicalFlightJobPatch.IsMeleeOrTouch(job)
+                && (MechanicalFlightUtility.IsAirborne(pawn)
+                    || (job.targetA.Thing is Pawn targetPawn
+                        && MechanicalFlightUtility.IsAirborne(targetPawn))))
+            {
+                __result = false;
+                return false;
+            }
+            if (!MechanicalFlightUtility.IsActivelyFlying(pawn))
             {
                 return true;
             }
@@ -178,11 +192,72 @@ namespace MAP_MechanoidMechanitor
             }
             if (pawn.CanReach(target, PathEndMode.Touch, Danger.Deadly))
             {
-                return true;
+                if (MechanicalFlightUtility.TryBeginLanding(pawn))
+                {
+                    return true;
+                }
+                // 地面路径可达但当前格无法安全降落：拒绝命令并给出一次提示。
+                MechanicalFlightUtility.NotifyGroundJobBlocked(pawn, true);
+                pawn.pather?.StopDead();
+                __result = false;
+                return false;
             }
 
             pawn.pather?.StopDead();
             __result = false;
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(Pawn_JobTracker), nameof(Pawn_JobTracker.StartJob))]
+    internal static class MechanicalFlightJobStartPatch
+    {
+        private static readonly AccessTools.FieldRef<Pawn_JobTracker, Pawn> PawnField =
+            AccessTools.FieldRefAccess<Pawn_JobTracker, Pawn>("pawn");
+
+        public static bool Prefix(Pawn_JobTracker __instance, Job newJob)
+        {
+            Pawn pawn = PawnField(__instance);
+            if (pawn == null || newJob == null)
+            {
+                return true;
+            }
+
+            // 紧急迫降流程必须始终允许自身的任务启动。
+            if (MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
+            {
+                return true;
+            }
+
+            // 近战/接触任务分配层的最后防线：不允许进入原版预留失败告警链。
+            if (MechanicalFlightJobPatch.IsMeleeOrTouch(newJob))
+            {
+                if (MechanicalFlightUtility.IsAirborne(pawn))
+                {
+                    return false;
+                }
+                if (newJob.targetA.Thing is Pawn targetPawn
+                    && MechanicalFlightUtility.IsAirborne(targetPawn))
+                {
+                    return false;
+                }
+                return true;
+            }
+
+            if (!MechanicalFlightUtility.IsActivelyFlying(pawn))
+            {
+                return true;
+            }
+            if (MechanicalFlightJobPatch.IsHoverCompatible(newJob))
+            {
+                return true;
+            }
+
+            if (MechanicalFlightUtility.TryBeginLanding(pawn))
+            {
+                return true;
+            }
+            MechanicalFlightUtility.NotifyGroundJobBlocked(pawn, newJob.playerForced);
             return false;
         }
     }
@@ -256,13 +331,10 @@ namespace MAP_MechanoidMechanitor
             {
                 return true;
             }
-            IntVec3 destination = DestinationField(__instance).Cell;
-            if (!destination.IsValid || !destination.InBounds(pawn.Map))
-            {
-                return false;
-            }
 
-            AssignDirectPath(__instance, pawn, destination);
+            // 统一转发到完整的直线移动初始化入口，补齐 moving/posture/缓存/旧路径释放。
+            TryStartDirectPath(
+                __instance, pawn, DestinationField(__instance), PathEndModeField(__instance));
             return false;
         }
 
@@ -326,9 +398,11 @@ namespace MAP_MechanoidMechanitor
             LocalTargetInfo destination,
             PathEndMode pathEndMode)
         {
-            if (!destination.IsValid || pawn.Map == null
-                || !destination.Cell.InBounds(pawn.Map)
-                || (destination.HasThing && destination.Thing.MapHeld != pawn.MapHeld))
+            if (pawn.Map == null || !destination.IsValid
+                || destination.ThingDestroyed
+                || (destination.HasThing && destination.Thing.MapHeld != pawn.MapHeld)
+                || !TryResolveDirectDestination(
+                    pawn, destination, ref pathEndMode, out IntVec3 destinationCell))
             {
                 NotifyFailed(pather, pawn);
                 return false;
@@ -338,8 +412,8 @@ namespace MAP_MechanoidMechanitor
             pather.StopDead();
             DestinationField(pather) = destination;
             PathEndModeField(pather) = pathEndMode;
-            pather.lastPathedTargetPosition = destination.Cell;
-            if (pawn.Position == destination.Cell)
+            pather.lastPathedTargetPosition = destinationCell;
+            if (pawn.Position == destinationCell)
             {
                 NotifyArrived(pather, pawn);
                 return true;
@@ -350,8 +424,78 @@ namespace MAP_MechanoidMechanitor
             CachedMovePercentageField(pather) = 0f;
             CachedCollisionField(pather) = false;
             pather.curPathJobIsStale = false;
-            AssignDirectPath(pather, pawn, destination.Cell, exactStart);
+            AssignDirectPath(pather, pawn, destinationCell, exactStart);
             return true;
+        }
+
+        // 按原版 PathEndMode 语义解析直线飞行的实际终点格：
+        // OnCell 直接使用目标格；Touch/ClosestTouch 在目标占用区扩展 1 格内选择
+        // 最近的可通行接触格，避免停进工作台、容器、墙等目标 Thing 的占用格。
+        private static bool TryResolveDirectDestination(
+            Pawn pawn,
+            LocalTargetInfo destination,
+            ref PathEndMode pathEndMode,
+            out IntVec3 result)
+        {
+            result = IntVec3.Invalid;
+            Map? map = pawn.Map;
+            if (map == null || !destination.IsValid)
+            {
+                return false;
+            }
+
+            TargetInfo targetInfo = destination.ToTargetInfo(map);
+            targetInfo = GenPath.ResolvePathMode(pawn, targetInfo, ref pathEndMode);
+            LocalTargetInfo resolved = (LocalTargetInfo)targetInfo;
+            if (!resolved.IsValid)
+            {
+                return false;
+            }
+
+            if (pathEndMode == PathEndMode.OnCell || pathEndMode == PathEndMode.None)
+            {
+                result = resolved.Cell;
+                return result.IsValid && result.InBounds(map);
+            }
+
+            CellRect occupied = resolved.HasThing
+                ? resolved.Thing.OccupiedRect()
+                : CellRect.SingleCell(resolved.Cell);
+            CellRect candidates = occupied.ExpandedBy(1).ClipInsideMap(map);
+            float bestDistance = float.MaxValue;
+            IntVec3 best = IntVec3.Invalid;
+            foreach (IntVec3 cell in candidates)
+            {
+                // Touch 语义只允许停在目标占用区域旁，不进入目标 Thing 的占用格。
+                if (occupied.Contains(cell))
+                {
+                    continue;
+                }
+                if (!cell.WalkableBy(map, pawn))
+                {
+                    continue;
+                }
+                float distance = cell.DistanceToSquared(pawn.Position);
+                if (!best.IsValid || distance < bestDistance
+                    || (Mathf.Approximately(distance, bestDistance)
+                        && CellComesFirst(cell, best)))
+                {
+                    best = cell;
+                    bestDistance = distance;
+                }
+            }
+
+            if (!best.IsValid)
+            {
+                return false;
+            }
+            result = best;
+            return true;
+        }
+
+        private static bool CellComesFirst(IntVec3 left, IntVec3 right)
+        {
+            return left.z < right.z || (left.z == right.z && left.x < right.x);
         }
 
         internal static void TickDirectPath(Pawn_PathFollower pather, Pawn pawn)
@@ -363,21 +507,41 @@ namespace MAP_MechanoidMechanitor
             }
 
             LocalTargetInfo target = DestinationField(pather);
-            IntVec3 destination = target.Cell;
-            if (!destination.IsValid || !destination.InBounds(pawn.Map)
-                || (target.HasThing && target.Thing.MapHeld != pawn.MapHeld))
+            if (!target.IsValid)
             {
                 NotifyFailed(pather, pawn);
                 return;
             }
+            if (target.HasThing)
+            {
+                Thing thing = target.Thing;
+                if (thing.Destroyed || !thing.Spawned
+                    || thing.MapHeld != pawn.MapHeld)
+                {
+                    NotifyFailed(pather, pawn);
+                    return;
+                }
+            }
+
+            PathEndMode pathEndMode = PathEndModeField(pather);
+            if (!TryResolveDirectDestination(
+                    pawn, target, ref pathEndMode, out IntVec3 destination))
+            {
+                NotifyFailed(pather, pawn);
+                return;
+            }
+            if (pathEndMode != PathEndModeField(pather))
+            {
+                PathEndModeField(pather) = pathEndMode;
+            }
+            pather.lastPathedTargetPosition = destination;
 
             Vector3 destinationGroundPosition = destination.ToVector3Shifted();
             if (!DirectMotionStates.TryGetValue(
                     pawn, out DirectFlightMotionState? state)
                 || state.DestinationGroundPosition != destinationGroundPosition)
             {
-                AssignDirectPath(pather, pawn, destination);
-                state = DirectMotionStates[pawn];
+                state = AssignDirectPath(pather, pawn, destination);
             }
 
             float cellsPerSecond = 30f;
@@ -437,7 +601,7 @@ namespace MAP_MechanoidMechanitor
                 ? nextLogicalCell : pawn.Position;
         }
 
-        private static void AssignDirectPath(
+        private static DirectFlightMotionState AssignDirectPath(
             Pawn_PathFollower pather,
             Pawn pawn,
             IntVec3 destination,
@@ -463,7 +627,7 @@ namespace MAP_MechanoidMechanitor
                         pawn, out DirectFlightMotionState? existing)
                     ? existing.ExactGroundPosition
                     : pawn.Position.ToVector3Shifted());
-            DirectMotionStates[pawn] = new DirectFlightMotionState
+            DirectFlightMotionState state = new()
             {
                 StartGroundPosition = startGroundPosition,
                 ExactGroundPosition = startGroundPosition,
@@ -471,6 +635,8 @@ namespace MAP_MechanoidMechanitor
                 TotalDistance = Vector3.Distance(
                     startGroundPosition, destinationGroundPosition)
             };
+            DirectMotionStates[pawn] = state;
+            return state;
         }
 
         private static void NotifyArrived(Pawn_PathFollower pather, Pawn pawn)
@@ -611,12 +777,12 @@ namespace MAP_MechanoidMechanitor
                 thing is Pawn || thing.def.category == ThingCategory.Item
                 || thing.HostileTo(flyers[0]));
             bool allSelectedPawnsFlying = flyers.Count == selectedPawns.Count;
+            List<Pawn>? groundPawns = allSelectedPawnsFlying
+                ? null
+                : selectedPawns.FindAll(pawn => pawn != null && !flyers.Contains(pawn));
             __result ??= new List<FloatMenuOption>();
-            if (allSelectedPawnsFlying)
-            {
-                // 原版征召移动会先吸附到附近可站立格；飞行时必须保留原始点击格。
-                __result.RemoveAll(option => option.isGoto);
-            }
+            // 原版征召移动会先吸附到附近可站立格；无论是否混编，飞行单位都不能接受该目标。
+            __result.RemoveAll(option => option.isGoto);
             __result.Insert(0, new FloatMenuOption(
                 "MAP_MechanicalFlight_AerialMove".Translate(),
                 () =>
@@ -641,6 +807,59 @@ namespace MAP_MechanoidMechanitor
                 autoTakeable = allSelectedPawnsFlying && !occupied,
                 autoTakeablePriority = 10000f
             });
+
+            if (groundPawns != null && groundPawns.Count > 0)
+            {
+                // 地面单位保持原版多选 Goto 与吸附行为，单独走原版控制器。
+                FloatMenuOption groundOption = new(
+                    "GoHere".Translate(),
+                    () => ExecuteGroundGoto(groundPawns, cell),
+                    MenuOptionPriority.GoHere)
+                {
+                    isGoto = true
+                };
+                __result.Insert(1, groundOption);
+            }
+        }
+
+        private static void ExecuteGroundGoto(List<Pawn> groundPawns, IntVec3 clickedCell)
+        {
+            Map? map = Find.CurrentMap;
+            if (map == null || !clickedCell.InBounds(map))
+            {
+                return;
+            }
+            IntVec3 snapped = CellFinder.StandableCellNear(clickedCell, map, 2.9f);
+            if (!snapped.IsValid)
+            {
+                return;
+            }
+
+            MultiPawnGotoController controller = Find.Selector.gotoController;
+            controller.StartInteraction(snapped);
+            bool addedAny = false;
+            for (int i = 0; i < groundPawns.Count; i++)
+            {
+                Pawn pawn = groundPawns[i];
+                if (pawn == null || !pawn.Spawned || pawn.Map != map)
+                {
+                    continue;
+                }
+                if (!FloatMenuOptionProvider_DraftedMove.PawnCanGoto(pawn, snapped).Accepted)
+                {
+                    continue;
+                }
+                controller.AddPawn(pawn);
+                addedAny = true;
+            }
+            if (addedAny)
+            {
+                controller.FinalizeInteraction();
+            }
+            else
+            {
+                controller.Deactivate();
+            }
         }
     }
 
@@ -727,26 +946,6 @@ namespace MAP_MechanoidMechanitor
             if (!MechanicalFlightStraightPathPatch.IsActive(___pawn)) return true;
             __result = false;
             return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(Pawn_PathFollower), "CostToPayThisTick")]
-    internal static class MechanicalFlightSpeedPatch
-    {
-        public static void Postfix(Pawn_PathFollower __instance, Pawn ___pawn,
-            ref float __result)
-        {
-            if (GameComponent_MechanicalFlightRegistry.TryGetRecord(___pawn, out var record)
-                && record?.UsesAerialMovement == true && record.Profile != null)
-            {
-                float cellsPerSecond = Mathf.Max(0.01f,
-                    record.Profile.flightCellsPerSecond);
-                bool diagonal = __instance.nextCell.x != ___pawn.Position.x
-                    && __instance.nextCell.z != ___pawn.Position.z;
-                float ticksForCell = 60f / cellsPerSecond
-                    * (diagonal ? Mathf.Sqrt(2f) : 1f);
-                __result = __instance.nextCellCostTotal / Mathf.Max(1f, ticksForCell);
-            }
         }
     }
 

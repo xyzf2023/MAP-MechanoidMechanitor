@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -91,6 +92,113 @@ namespace MAP_MechanoidMechanitor
                 codes.Insert(index, loadEquipmentDrawPos);
                 originalCall.opcode = OpCodes.Call;
                 originalCall.operand = helperMethod;
+            }
+
+            return codes;
+        }
+    }
+
+    [HarmonyPatch(typeof(Verb), "TryCastNextBurstShot")]
+    internal static class MechanicalFlightMuzzleFlashPatch
+    {
+        private const string LogPrefix =
+            "[MAP-机械族机械师] MechanicalFlightMuzzleFlashPatch：";
+
+        internal static Vector3 GetMuzzlePosition(Thing caster)
+        {
+            // 仅对仍具有飞行悬浮视觉的机械体，将枪口火光移到与武器/弹丸一致的视觉锚点。
+            if (caster is Pawn pawn && MechanicalFlightUtility.HasHoverVisual(pawn))
+            {
+                return pawn.DrawPos;
+            }
+            // 与原版 IntVec3 重载内部的 cell.ToVector3Shifted() 保持一致。
+            return caster.Position.ToVector3Shifted();
+        }
+
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> Transpiler(
+            IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> original = new List<CodeInstruction>(instructions);
+            List<CodeInstruction> codes = new List<CodeInstruction>(original);
+            // 原版调用的是 FleckMaker.Static(IntVec3, Map, FleckDef, float) 重载。
+            MethodInfo? fleckStaticCell = AccessTools.Method(
+                typeof(FleckMaker),
+                nameof(FleckMaker.Static),
+                new[] { typeof(IntVec3), typeof(Map), typeof(FleckDef), typeof(float) });
+            MethodInfo? fleckStaticVector = AccessTools.Method(
+                typeof(FleckMaker),
+                nameof(FleckMaker.Static),
+                new[] { typeof(Vector3), typeof(Map), typeof(FleckDef), typeof(float) });
+            MethodInfo? helperMethod = AccessTools.Method(
+                typeof(MechanicalFlightMuzzleFlashPatch), nameof(GetMuzzlePosition));
+
+            if (fleckStaticCell == null || fleckStaticVector == null
+                || helperMethod == null)
+            {
+                Log.Error($"{LogPrefix}未找到 FleckMaker.Static 重载或辅助方法，补丁未应用。");
+                return original;
+            }
+
+            int fleckMatches = 0;
+            int replaced = 0;
+            for (int i = 0; i < codes.Count; i++)
+            {
+                CodeInstruction instruction = codes[i];
+                if ((instruction.opcode != OpCodes.Call
+                        && instruction.opcode != OpCodes.Callvirt)
+                    || !(instruction.operand is MethodInfo method)
+                    || !method.Equals(fleckStaticCell))
+                {
+                    continue;
+                }
+
+                fleckMatches++;
+                int lowerBound = i - 12;
+                if (lowerBound < 1)
+                {
+                    lowerBound = 1;
+                }
+
+                for (int j = i - 1; j >= lowerBound; j--)
+                {
+                    CodeInstruction candidate = codes[j];
+                    if ((candidate.opcode != OpCodes.Call
+                            && candidate.opcode != OpCodes.Callvirt)
+                        || !(candidate.operand is MethodInfo positionGetter)
+                        || positionGetter.Name != "get_Position")
+                    {
+                        continue;
+                    }
+
+                    CodeInstruction previous = codes[j - 1];
+                    bool casterLoad =
+                        (previous.opcode == OpCodes.Ldfld
+                            && previous.operand is FieldInfo field
+                            && field.Name == "caster")
+                        || ((previous.opcode == OpCodes.Call
+                                || previous.opcode == OpCodes.Callvirt)
+                            && previous.operand is MethodInfo casterGetter
+                            && casterGetter.Name == "get_Caster");
+                    if (!casterLoad)
+                    {
+                        break;
+                    }
+
+                    candidate.opcode = OpCodes.Call;
+                    candidate.operand = helperMethod;
+                    instruction.opcode = OpCodes.Call;
+                    instruction.operand = fleckStaticVector;
+                    replaced++;
+                    break;
+                }
+            }
+
+            if (fleckMatches != 1 || replaced != 1)
+            {
+                Log.Error($"{LogPrefix}Verb.TryCastNextBurstShot 中枪口 Fleck 预期匹配 1 处，"
+                    + $"实际 Fleck {fleckMatches} 处、替换 {replaced} 处，补丁未应用。");
+                return original;
             }
 
             return codes;

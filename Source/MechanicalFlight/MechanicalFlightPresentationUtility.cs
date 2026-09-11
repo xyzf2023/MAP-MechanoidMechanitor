@@ -640,15 +640,29 @@ namespace MAP_MechanoidMechanitor
     {
         private static readonly AccessTools.FieldRef<PawnRenderer, Pawn> PawnField =
             AccessTools.FieldRefAccess<PawnRenderer, Pawn>("pawn");
-        public static void Prefix(PawnRenderer __instance, ref Vector3 drawLoc)
+
+        // 原版飞行分支使用 pawn.DrawPos 而不是 drawLoc；这里复用地面锚点上下文，
+        // 让本次 DrawPos 读取落在真实逻辑地面锚点上，从而不再跟随额外悬浮高度。
+        public static void Prefix(PawnRenderer __instance, out bool __state)
         {
             Pawn pawn = PawnField(__instance);
-            if (GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
+            __state = GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn, out MechanicalFlightAuthorizationRecord? record)
                 && record != null && pawn.Spawned
-                && MechanicalFlightUtility.HasHoverVisual(pawn))
+                && MechanicalFlightUtility.HasHoverVisual(pawn);
+            if (__state)
             {
-                drawLoc -= MechanicalFlightPresentationUtility.HoverVisualOffset(pawn, record);
+                MechanicalFlightGroundAnchorContext.Begin();
             }
+        }
+
+        public static Exception Finalizer(Exception __exception, bool __state)
+        {
+            if (__state)
+            {
+                MechanicalFlightGroundAnchorContext.End();
+            }
+            return __exception;
         }
     }
 }

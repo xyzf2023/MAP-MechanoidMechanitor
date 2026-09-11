@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
+using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -9,9 +12,37 @@ namespace MAP_MechanoidMechanitor
     [StaticConstructorOnStartup]
     public static class MechanicalFlightUtility
     {
+        internal enum VanillaFlightState
+        {
+            Unknown = -1,
+            Grounded = 0,
+            Flying = 1,
+            TakingOff = 2,
+            Landing = 3
+        }
+
         private static readonly Texture2D FlightIcon =
             ContentFinder<Texture2D>.Get("UI/Commands/MechanicalFlight", false)
             ?? TexCommand.Install;
+
+        private static readonly FieldInfo? VanillaFlightStateField =
+            AccessTools.Field(typeof(Pawn_FlightTracker), "flightState");
+
+        internal static VanillaFlightState GetVanillaFlightState(Pawn? pawn)
+        {
+            Pawn_FlightTracker? tracker = pawn?.flight;
+            if (tracker == null || VanillaFlightStateField == null)
+            {
+                return VanillaFlightState.Unknown;
+            }
+
+            object? value = VanillaFlightStateField.GetValue(tracker);
+            if (value == null)
+            {
+                return VanillaFlightState.Unknown;
+            }
+            return (VanillaFlightState)Convert.ToInt32(value);
+        }
 
         public static bool IsAirborne(Pawn? pawn)
         {
@@ -124,6 +155,9 @@ namespace MAP_MechanoidMechanitor
             record.Phase = MechanicalFlightPhase.TakingOff;
             record.EmergencyLandingTarget = IntVec3.Invalid;
             record.LowEnergyWarningSent = false;
+            record.PendingShutdownAfterLanding = false;
+            record.GroundLandingBlockedNoticeSent = false;
+            record.GroundJobBlockedNoticeSent = false;
             record.TicksUntilNextEnergyDrain =
                 Mathf.Max(1, profile.energyDrainIntervalTicks);
             if (pawn.CurJob != null)
@@ -170,8 +204,13 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanicalFlightRoofUtility.BreakThinRoofArea(pawn, profile);
             }
+            pawn.pather?.StopDead();
+            MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             record.Phase = MechanicalFlightPhase.Landing;
             record.TicksUntilNextEnergyDrain = 0;
+            record.PendingShutdownAfterLanding = false;
+            record.GroundLandingBlockedNoticeSent = false;
+            record.GroundJobBlockedNoticeSent = false;
             if (pawn.CurJob != null)
             {
                 pawn.CurJob.flying = false;
@@ -187,7 +226,7 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightProfileDef? profile = record.Profile;
             if (pawn == null || profile == null || pawn.Dead || !pawn.Spawned || pawn.Map == null)
             {
-                ClearRuntimeState(record, forceLand: true);
+                ClearRuntimeState(record, forceLand: false);
                 return;
             }
 
@@ -207,9 +246,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (pawn.flight?.Flying != true)
                 {
-                    record.ResetRuntimeState();
-                    MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
-                    GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+                    CompleteNormalLanding(pawn, record);
                 }
                 return;
             }
@@ -231,7 +268,16 @@ namespace MAP_MechanoidMechanitor
                 pawn.pather?.StopDead();
                 if (!TryBeginLanding(pawn))
                 {
-                    ClearRuntimeState(record, forceLand: true);
+                    // 当前位置不能安全降落：保留飞行与记录，恢复征召让玩家继续操控。
+                    NotifyGroundLandingBlocked(pawn, record);
+                    if (pawn.drafter != null && !pawn.Drafted)
+                    {
+                        pawn.drafter.Drafted = true;
+                        return;
+                    }
+                    // 无征召控制器的机械体（非玩家/异常授权）沿用清理路径，避免无限悬停。
+                    // 不强制降落，交由原版飞行状态机自行处理。
+                    ClearRuntimeState(record, forceLand: false);
                 }
                 return;
             }
@@ -271,6 +317,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? pawn = record.Pawn;
             if (forceLand && pawn?.flight?.Flying == true)
             {
+                pawn.pather?.StopDead();
+                MechanicalFlightStraightPathPatch.ClearMotion(pawn);
                 pawn.flight.ForceLand();
             }
             if (pawn?.CurJob != null)
@@ -286,6 +334,61 @@ namespace MAP_MechanoidMechanitor
             GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
         }
 
+        internal static void CompleteNormalLanding(
+            Pawn pawn,
+            MechanicalFlightAuthorizationRecord record)
+        {
+            bool pendingShutdown = record.PendingShutdownAfterLanding;
+            MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+            if (pawn.CurJob != null)
+            {
+                pawn.CurJob.flying = false;
+            }
+            record.ResetRuntimeState();
+            MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
+            GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            if (pendingShutdown && !pawn.Dead && pawn.Spawned)
+            {
+                pawn.needs?.energy?.NeedInterval();
+            }
+        }
+
+        internal static void CleanupUnavailableRecord(
+            MechanicalFlightAuthorizationRecord record)
+        {
+            MechanicalFlightPresentationUtility.NotifyFlightEnded(record.Pawn);
+            record.ResetRuntimeState();
+        }
+
+        internal static void NotifyGroundLandingBlocked(
+            Pawn pawn,
+            MechanicalFlightAuthorizationRecord record)
+        {
+            if (record.GroundLandingBlockedNoticeSent)
+            {
+                return;
+            }
+            record.GroundLandingBlockedNoticeSent = true;
+            Messages.Message("MAP_MechanicalFlight_InvalidLanding".Translate(), pawn,
+                MessageTypeDefOf.RejectInput, false);
+        }
+
+        internal static void NotifyGroundJobBlocked(Pawn pawn, bool showMessage)
+        {
+            if (!showMessage)
+            {
+                return;
+            }
+            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
+                || record == null || record.GroundJobBlockedNoticeSent)
+            {
+                return;
+            }
+            record.GroundJobBlockedNoticeSent = true;
+            Messages.Message("MAP_MechanicalFlight_GroundJobBlocked".Translate(), pawn,
+                MessageTypeDefOf.RejectInput, false);
+        }
+
         internal static void ReconcileAfterLoad(
             IReadOnlyList<MechanicalFlightAuthorizationRecord> activeRecords)
         {
@@ -293,7 +396,8 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanicalFlightAuthorizationRecord record = activeRecords[i];
                 Pawn? pawn = record.Pawn;
-                if (pawn == null || pawn.Dead || !pawn.Spawned || pawn.flight == null)
+                if (pawn == null || pawn.Dead || !pawn.Spawned || pawn.Map == null
+                    || pawn.flight == null)
                 {
                     ClearRuntimeState(record, forceLand: false);
                     continue;
@@ -305,18 +409,51 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (record.ConsumesFlightEnergy && !pawn.flight.Flying)
+                if (record.ConsumesFlightEnergy)
                 {
-                    pawn.flight.StartFlying();
-                    if (!pawn.flight.Flying)
+                    VanillaFlightState state = GetVanillaFlightState(pawn);
+                    if (state == VanillaFlightState.Grounded)
                     {
                         ClearRuntimeState(record, forceLand: false);
+                        continue;
                     }
+                    if (state == VanillaFlightState.Landing)
+                    {
+                        record.Phase = MechanicalFlightPhase.Landing;
+                        record.TicksUntilNextEnergyDrain = 0;
+                        if (pawn.CurJob != null)
+                        {
+                            pawn.CurJob.flying = false;
+                        }
+                        GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+                        continue;
+                    }
+                    if (!pawn.flight.Flying)
+                    {
+                        pawn.flight.StartFlying();
+                        if (!pawn.flight.Flying)
+                        {
+                            ClearRuntimeState(record, forceLand: false);
+                        }
+                    }
+                    continue;
                 }
-                else if (record.Phase == MechanicalFlightPhase.Landing
-                    && pawn.flight.Flying)
+
+                if (record.Phase == MechanicalFlightPhase.Landing)
                 {
-                    pawn.flight.ForceLand();
+                    VanillaFlightState state = GetVanillaFlightState(pawn);
+                    if (state == VanillaFlightState.Landing)
+                    {
+                        continue;
+                    }
+                    if (state == VanillaFlightState.TakingOff
+                        || state == VanillaFlightState.Flying
+                        || (state == VanillaFlightState.Unknown && pawn.flight.Flying))
+                    {
+                        pawn.flight.ForceLand();
+                        continue;
+                    }
+                    CompleteNormalLanding(pawn, record);
                 }
             }
         }

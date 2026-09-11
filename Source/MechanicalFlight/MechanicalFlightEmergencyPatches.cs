@@ -24,6 +24,19 @@ namespace MAP_MechanoidMechanitor
                 // 紧急流程中冻结零能量，落地后再交还原版关机逻辑。
                 return false;
             }
+            if (record.Phase == MechanicalFlightPhase.Landing
+                && pawn.flight?.Flying == true)
+            {
+                // 普通降落期间能量归零：继续完成当前降落，落地后再执行原版关机。
+                float landingNextLevel = __instance.CurLevel - __instance.FallPerDay / 400f;
+                if (landingNextLevel > 0f)
+                {
+                    return true;
+                }
+                __instance.CurLevel = 0f;
+                record.PendingShutdownAfterLanding = true;
+                return false;
+            }
 
             float nextLevel = __instance.CurLevel - __instance.FallPerDay / 400f;
             if (nextLevel > 0f || pawn.flight?.Flying != true)
