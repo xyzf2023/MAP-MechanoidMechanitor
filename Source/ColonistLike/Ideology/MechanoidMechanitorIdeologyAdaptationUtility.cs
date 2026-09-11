@@ -46,18 +46,19 @@ namespace MAP_MechanoidMechanitor
                 && GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _);
         }
 
+        // 资格事实来源统一收口到能力层，本模块仅作转发门面。
         public static bool AllowsIdeologyMembership(Pawn? pawn)
         {
-            return ModsConfig.IdeologyActive
-                && IsAtLeast(MechanoidMechanitorIdeologyAdaptationLevel.Partial)
-                && IsRegisteredMechanoidMechanitor(pawn);
+            return MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.IdeologyMembership);
         }
 
         public static bool AllowsIdeologyFullParticipation(Pawn? pawn)
         {
-            return ModsConfig.IdeologyActive
-                && IsAtLeast(MechanoidMechanitorIdeologyAdaptationLevel.Full)
-                && IsRegisteredMechanoidMechanitor(pawn);
+            return MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn,
+                MechanoidMechanitorCapability.IdeologyFullParticipation);
         }
 
         public static bool ShouldCountAsIdeoBeliever(Pawn? pawn)

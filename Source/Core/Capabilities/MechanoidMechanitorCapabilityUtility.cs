@@ -27,6 +27,13 @@ namespace MAP_MechanoidMechanitor
                 return GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn);
             }
 
+            // 意识形态两项能力位可由档位 + 注册表直接得出，跳过完整能力汇总。
+            if (capability == MechanoidMechanitorCapability.IdeologyMembership
+                || capability == MechanoidMechanitorCapability.IdeologyFullParticipation)
+            {
+                return (GetIdeologyCapabilities(pawn) & capability) == capability;
+            }
+
             return (GetCapabilities(pawn) & capability) == capability;
         }
 
@@ -165,17 +172,7 @@ namespace MAP_MechanoidMechanitor
                 | MechanoidMechanitorCapability.ClassroomTeaching
                 | MechanoidMechanitorCapability.Psycasting;
 
-            MechanoidMechanitorIdeologyAdaptationLevel ideologyLevel =
-                MechanoidMechanitorIdeologyAdaptationUtility.GetEffectiveLevel();
-            if (ideologyLevel >= MechanoidMechanitorIdeologyAdaptationLevel.Partial)
-            {
-                capabilities |= MechanoidMechanitorCapability.IdeologyMembership;
-            }
-
-            if (ideologyLevel >= MechanoidMechanitorIdeologyAdaptationLevel.Full)
-            {
-                capabilities |= MechanoidMechanitorCapability.IdeologyFullParticipation;
-            }
+            capabilities |= GetIdeologyCapabilities(pawn);
 
             if (!GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
                     pawn,
@@ -193,6 +190,35 @@ namespace MAP_MechanoidMechanitor
                 | MechanoidMechanitorCapability.TravelLeadCaravan
                 | MechanoidMechanitorCapability.TravelCollectItems
                 | MechanoidMechanitorCapability.TravelRefreshTrackers;
+        }
+
+        /// <summary>
+        /// 意识形态能力位的唯一事实来源。只读取文化适配档位与注册表身份，
+        /// 不回调 AllowsIdeology...，避免与意识形态模块形成递归。
+        /// </summary>
+        private static MechanoidMechanitorCapability GetIdeologyCapabilities(
+            Pawn? pawn)
+        {
+            if (pawn == null
+                || pawn.Destroyed
+                || !GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
+                    pawn,
+                    out _))
+            {
+                return MechanoidMechanitorCapability.None;
+            }
+
+            MechanoidMechanitorIdeologyAdaptationLevel level =
+                MechanoidMechanitorIdeologyAdaptationUtility.GetEffectiveLevel();
+            if (level >= MechanoidMechanitorIdeologyAdaptationLevel.Full)
+            {
+                return MechanoidMechanitorCapability.IdeologyMembership
+                    | MechanoidMechanitorCapability.IdeologyFullParticipation;
+            }
+
+            return level >= MechanoidMechanitorIdeologyAdaptationLevel.Partial
+                ? MechanoidMechanitorCapability.IdeologyMembership
+                : MechanoidMechanitorCapability.None;
         }
 
         /// <summary>
