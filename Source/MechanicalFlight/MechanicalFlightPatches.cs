@@ -196,6 +196,17 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(Pawn_PathFollower), "SetNewPathRequest")]
     internal static class MechanicalFlightStraightPathPatch
     {
+        private sealed class DirectFlightMotionState
+        {
+            public Vector3 StartGroundPosition;
+            public Vector3 ExactGroundPosition;
+            public Vector3 DestinationGroundPosition;
+            public float TotalDistance;
+        }
+
+        private static readonly Dictionary<Pawn, DirectFlightMotionState>
+            DirectMotionStates = new();
+
         private static readonly AccessTools.FieldRef<Pawn_PathFollower, Pawn> PawnField =
             AccessTools.FieldRefAccess<Pawn_PathFollower, Pawn>("pawn");
         private static readonly AccessTools.FieldRef<Pawn_PathFollower, LocalTargetInfo>
@@ -243,6 +254,35 @@ namespace MAP_MechanoidMechanitor
             return pawn?.Map != null && MechanicalFlightUtility.IsActivelyFlying(pawn);
         }
 
+        internal static bool TryGetExactGroundDrawPos(Pawn pawn, out Vector3 drawPos)
+        {
+            if (IsActive(pawn) && pawn.pather?.MovingNow == true
+                && DirectMotionStates.TryGetValue(
+                    pawn, out DirectFlightMotionState? state))
+            {
+                drawPos = state.ExactGroundPosition;
+                return true;
+            }
+
+            drawPos = default;
+            return false;
+        }
+
+        internal static void ClearMotion(Pawn? pawn)
+        {
+            if (pawn != null)
+            {
+                DirectMotionStates.Remove(pawn);
+            }
+        }
+
+        private static Vector3 CurrentGroundPosition(Pawn pawn)
+        {
+            return TryGetExactGroundDrawPos(pawn, out Vector3 exact)
+                ? exact
+                : pawn.Position.ToVector3Shifted();
+        }
+
         internal static bool TryStartDirectPath(
             Pawn_PathFollower pather,
             Pawn pawn,
@@ -257,6 +297,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            Vector3 exactStart = CurrentGroundPosition(pawn);
             pather.StopDead();
             DestinationField(pather) = destination;
             PathEndModeField(pather) = pathEndMode;
@@ -272,7 +313,7 @@ namespace MAP_MechanoidMechanitor
             CachedMovePercentageField(pather) = 0f;
             CachedCollisionField(pather) = false;
             pather.curPathJobIsStale = false;
-            AssignDirectPath(pather, pawn, destination.Cell);
+            AssignDirectPath(pather, pawn, destination.Cell, exactStart);
             return true;
         }
 
@@ -286,65 +327,84 @@ namespace MAP_MechanoidMechanitor
 
             LocalTargetInfo target = DestinationField(pather);
             IntVec3 destination = target.Cell;
-            if (!destination.IsValid || !destination.InBounds(pawn.Map))
+            if (!destination.IsValid || !destination.InBounds(pawn.Map)
+                || (target.HasThing && target.Thing.MapHeld != pawn.MapHeld))
             {
                 NotifyFailed(pather, pawn);
-                return;
-            }
-            if (target.HasThing && target.Thing.MapHeld != pawn.MapHeld)
-            {
-                NotifyFailed(pather, pawn);
-                return;
-            }
-            if (pawn.Position == destination)
-            {
-                NotifyArrived(pather, pawn);
                 return;
             }
 
-            if (pather.curPath == null
-                || pather.lastPathedTargetPosition != destination)
+            Vector3 destinationGroundPosition = destination.ToVector3Shifted();
+            if (!DirectMotionStates.TryGetValue(
+                    pawn, out DirectFlightMotionState? state)
+                || state.DestinationGroundPosition != destinationGroundPosition)
             {
-                pather.nextCell = pawn.Position;
-                pather.nextCellCostLeft = 0f;
                 AssignDirectPath(pather, pawn, destination);
-            }
-            if (!pather.nextCell.IsValid || pather.nextCell == pawn.Position)
-            {
-                if (!SetupNextCell(pather, pawn, destination))
-                {
-                    return;
-                }
+                state = DirectMotionStates[pawn];
             }
 
-            pather.nextCellCostLeft -= 1f;
-            CachedMovePercentageField(pather) = Mathf.Clamp01(
-                1f - pather.nextCellCostLeft / pather.nextCellCostTotal);
+            float cellsPerSecond = 30f;
+            if (GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn, out MechanicalFlightAuthorizationRecord? record)
+                && record?.Profile != null)
+            {
+                cellsPerSecond = Mathf.Max(0.01f,
+                    record.Profile.flightCellsPerSecond);
+            }
+
+            Vector3 previousExact = state.ExactGroundPosition;
+            state.ExactGroundPosition = Vector3.MoveTowards(
+                previousExact, state.DestinationGroundPosition,
+                cellsPerSecond / 60f);
+            Vector3 movement = state.ExactGroundPosition - previousExact;
+            if (movement.sqrMagnitude > 0.000001f)
+            {
+                pather.lastMoveDirection = movement.AngleFlat();
+            }
+
+            IntVec3 exactCell = IntVec3.FromVector3(state.ExactGroundPosition);
+            if (exactCell.InBounds(pawn.Map) && exactCell != pawn.Position)
+            {
+                LastCellField(pather) = pawn.Position;
+                pawn.Position = exactCell;
+                LastEnteredCellTickField(pather) = GenTicks.TicksGame;
+            }
+
+            float remaining = Vector3.Distance(
+                state.ExactGroundPosition, state.DestinationGroundPosition);
+            float total = Mathf.Max(0.0001f, state.TotalDistance);
+            CachedMovePercentageField(pather) =
+                Mathf.Clamp01(1f - remaining / total);
+            pather.nextCellCostTotal = total * 60f / cellsPerSecond;
+            pather.nextCellCostLeft = remaining * 60f / cellsPerSecond;
             CachedCollisionField(pather) = false;
-            if (pather.nextCellCostLeft > 0f)
-            {
-                LastMovedTickField(pather) = Find.TickManager.TicksGame;
-                return;
-            }
-
-            IntVec3 previous = pawn.Position;
-            LastCellField(pather) = previous;
-            pawn.Position = pather.nextCell;
-            pather.lastMoveDirection = (pather.nextCell - previous).AngleFlat;
-            LastEnteredCellTickField(pather) = GenTicks.TicksGame;
             LastMovedTickField(pather) = GenTicks.TicksGame;
-            if (pawn.Position == destination)
+
+            if (remaining <= 0.0001f)
             {
+                if (pawn.Position != destination)
+                {
+                    LastCellField(pather) = pawn.Position;
+                    pawn.Position = destination;
+                    LastEnteredCellTickField(pather) = GenTicks.TicksGame;
+                }
+                pawn.Drawer.tweener.ResetTweenedPosToRoot();
                 NotifyArrived(pather, pawn);
                 return;
             }
-            SetupNextCell(pather, pawn, destination);
+
+            Vector3 lookAhead = Vector3.MoveTowards(
+                state.ExactGroundPosition, state.DestinationGroundPosition, 1f);
+            IntVec3 nextLogicalCell = IntVec3.FromVector3(lookAhead);
+            pather.nextCell = nextLogicalCell.InBounds(pawn.Map)
+                ? nextLogicalCell : pawn.Position;
         }
 
         private static void AssignDirectPath(
             Pawn_PathFollower pather,
             Pawn pawn,
-            IntVec3 destination)
+            IntVec3 destination,
+            Vector3? exactStart = null)
         {
             pather.curPathRequest?.Dispose();
             pather.curPathRequest = null;
@@ -359,58 +419,27 @@ namespace MAP_MechanoidMechanitor
             pather.curPath = path;
             pather.lastPathedTargetPosition = destination;
             pather.curPathJobIsStale = false;
-        }
 
-        private static bool SetupNextCell(
-            Pawn_PathFollower pather,
-            Pawn pawn,
-            IntVec3 destination)
-        {
-            if (pather.curPath == null || pather.curPath.NodesLeftCount <= 1)
+            Vector3 destinationGroundPosition = destination.ToVector3Shifted();
+            Vector3 startGroundPosition = exactStart
+                ?? (DirectMotionStates.TryGetValue(
+                        pawn, out DirectFlightMotionState? existing)
+                    ? existing.ExactGroundPosition
+                    : pawn.Position.ToVector3Shifted());
+            DirectMotionStates[pawn] = new DirectFlightMotionState
             {
-                if (pawn.Position == destination)
-                {
-                    NotifyArrived(pather, pawn);
-                    return false;
-                }
-                AssignDirectPath(pather, pawn, destination);
-            }
-
-            IntVec3 previousNextCell = pather.nextCell;
-            pather.nextCell = pather.curPath!.ConsumeNextNode();
-            if (previousNextCell == pather.nextCell)
-            {
-                if (pather.curPath.NodesLeftCount <= 1)
-                {
-                    NotifyFailed(pather, pawn);
-                    return false;
-                }
-                pather.nextCell = pather.curPath.ConsumeNextNode();
-            }
-
-            float cellsPerSecond = 30f;
-            if (GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                && record?.Profile != null)
-            {
-                cellsPerSecond = Mathf.Max(0.01f, record.Profile.flightCellsPerSecond);
-            }
-            bool diagonal = pather.nextCell.x != pawn.Position.x
-                && pather.nextCell.z != pawn.Position.z;
-            float ticksForCell = 60f / cellsPerSecond
-                * (diagonal ? Mathf.Sqrt(2f) : 1f);
-            pather.nextCellCostTotal = Mathf.Max(0.01f, ticksForCell);
-            pather.nextCellCostLeft = Mathf.Max(
-                pather.nextCellCostTotal + Mathf.Min(pather.nextCellCostLeft, 0f),
-                0.01f);
-            CachedMovePercentageField(pather) = Mathf.Clamp01(
-                1f - pather.nextCellCostLeft / pather.nextCellCostTotal);
-            CachedCollisionField(pather) = false;
-            return true;
+                StartGroundPosition = startGroundPosition,
+                ExactGroundPosition = startGroundPosition,
+                DestinationGroundPosition = destinationGroundPosition,
+                TotalDistance = Vector3.Distance(
+                    startGroundPosition, destinationGroundPosition)
+            };
         }
 
         private static void NotifyArrived(Pawn_PathFollower pather, Pawn pawn)
         {
             bool notifyDriver = pawn.jobs.curJob != null && !pather.curPathJobIsStale;
+            ClearMotion(pawn);
             pather.StopDead();
             if (notifyDriver)
             {
@@ -421,6 +450,8 @@ namespace MAP_MechanoidMechanitor
         private static void NotifyFailed(Pawn_PathFollower pather, Pawn pawn)
         {
             bool notifyDriver = pawn.jobs.curJob != null && !pather.curPathJobIsStale;
+            ClearMotion(pawn);
+            pawn.Drawer.tweener.ResetTweenedPosToRoot();
             pather.StopDead();
             if (notifyDriver)
             {
@@ -526,8 +557,22 @@ namespace MAP_MechanoidMechanitor
             }
             __result.Insert(0, new FloatMenuOption(
                 "MAP_MechanicalFlight_AerialMove".Translate(),
-                () => flyers.ForEach(flyer =>
-                    MechanicalFlightUtility.TryStartAerialMove(flyer, cell)),
+                () =>
+                {
+                    Map? feedbackMap = null;
+                    for (int i = 0; i < flyers.Count; i++)
+                    {
+                        Pawn flyer = flyers[i];
+                        if (MechanicalFlightUtility.TryStartAerialMove(flyer, cell))
+                        {
+                            feedbackMap ??= flyer.Map;
+                        }
+                    }
+                    if (feedbackMap != null)
+                    {
+                        FleckMaker.Static(cell, feedbackMap, FleckDefOf.FeedbackGoto);
+                    }
+                },
                 MenuOptionPriority.High)
             {
                 // 不标记为原版 Goto，避免多选时 Selector 绕过此回调并改走群体移动。

@@ -214,6 +214,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
             CleanupGlow(pawn);
+            MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             TiltStates.Remove(pawn.thingIDNumber);
             LastGroundWashTick.Remove(pawn.thingIDNumber);
         }
@@ -484,6 +485,15 @@ namespace MAP_MechanoidMechanitor
                 || record == null)
             {
                 return;
+            }
+
+            if (MechanicalFlightStraightPathPatch.TryGetExactGroundDrawPos(
+                    pawn, out Vector3 exactGroundDrawPos))
+            {
+                __result.x = exactGroundDrawPos.x;
+                __result.z = exactGroundDrawPos.z
+                    + MechanicalFlightPresentationUtility.VanillaFlightDrawOffset
+                    * pawn.flight.PositionOffsetFactor;
             }
 
             if (MechanicalFlightGroundAnchorContext.Active)
