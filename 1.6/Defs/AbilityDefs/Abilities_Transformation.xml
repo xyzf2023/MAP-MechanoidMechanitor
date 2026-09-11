@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <AbilityDef MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_Ability_MechBuildingConversion</defName>
+    <label>建筑转换</label>
+    <description>将当前机械体收存并转换为其预设的建筑形态。不同机械体可以拥有不同的建筑形态；此能力与合体能力分别授予。</description>
+    <iconPath>UI/MM_Custom</iconPath>
+    <jobDef>CastAbilityOnThingWithoutWeapon</jobDef>
+    <targetRequired>false</targetRequired>
+    <canUseAoeToGetTargets>false</canUseAoeToGetTargets>
+    <displayGizmoWhileUndrafted>true</displayGizmoWhileUndrafted>
+    <disableGizmoWhileUndrafted>false</disableGizmoWhileUndrafted>
+    <casterMustBeCapableOfViolence>false</casterMustBeCapableOfViolence>
+    <verbProperties>
+      <verbClass>Verb_CastAbility</verbClass>
+      <warmupTime>0</warmupTime>
+      <range>-1</range>
+      <drawAimPie>false</drawAimPie>
+      <onlyManualCast>true</onlyManualCast>
+      <targetParams>
+        <canTargetSelf>true</canTargetSelf>
+      </targetParams>
+    </verbProperties>
+    <comps>
+      <li Class="CompProperties_AbilityEffect">
+        <compClass>MAP_MechanoidMechanitor.CompAbilityEffect_MechBuildingConversion</compClass>
+      </li>
+    </comps>
+  </AbilityDef>
+</Defs>

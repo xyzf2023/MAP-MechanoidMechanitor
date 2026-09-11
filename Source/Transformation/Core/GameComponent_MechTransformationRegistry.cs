@@ -160,6 +160,58 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
+        /// <summary>
+        /// 仅供载体已经损毁或丢失后的保底恢复使用。正常转换仍应走严格的
+        /// TryBeginTransition，不能借此绕过有效载体核对。
+        /// </summary>
+        internal static bool TryBeginRecoveryToPawn(
+            Pawn? pawn,
+            Thing? expectedCarrier,
+            out MechTransformationRecord? record,
+            out string? failureReason)
+        {
+            record = null;
+            failureReason = null;
+            if (pawn == null || pawn.Destroyed || pawn.Discarded)
+            {
+                failureReason = "原始机械体不可用。";
+                return false;
+            }
+
+            if (!TryGetRecord(pawn, out record) || record == null)
+            {
+                failureReason = "不存在可恢复的形态记录。";
+                return false;
+            }
+
+            if (record.TransitionInProgress)
+            {
+                failureReason = "机械体正在进行另一项形态转换。";
+                return false;
+            }
+
+            if (record.CurrentForm == MechTransformationForm.Pawn)
+            {
+                failureReason = "机械体已经处于 Pawn 形态。";
+                return false;
+            }
+
+            if (expectedCarrier != null
+                && !ReferenceEquals(record.ExternalCarrier, expectedCarrier))
+            {
+                failureReason = "待恢复载体与形态记录不一致。";
+                return false;
+            }
+
+            if (!record.BeginTransition(MechTransformationForm.Pawn))
+            {
+                failureReason = "无法锁定本次紧急恢复。";
+                return false;
+            }
+
+            return true;
+        }
+
         public static bool TryCommitTransition(
             Pawn? pawn,
             Thing? targetCarrier,

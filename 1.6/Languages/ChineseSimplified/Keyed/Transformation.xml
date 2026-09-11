@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Transformation.InProgress>另一项形态转换正在进行。</MAP_MechanoidMechanitor.Transformation.InProgress>
+  <MAP_MechanoidMechanitor.Transformation.Building.Restore.Label>恢复机械体形态</MAP_MechanoidMechanitor.Transformation.Building.Restore.Label>
+  <MAP_MechanoidMechanitor.Transformation.Building.Restore.Description>解除建筑形态并恢复原始机械体。机械体的身份、机械师关系和其他 Pawn 数据不会被生成第二份副本。</MAP_MechanoidMechanitor.Transformation.Building.Restore.Description>
+  <MAP_MechanoidMechanitor.Transformation.Building.StoredPawn>原始机械体：{0}</MAP_MechanoidMechanitor.Transformation.Building.StoredPawn>
+  <MAP_MechanoidMechanitor.Transformation.Building.PawnUnavailable>该机械体目前无法转换为建筑形态。</MAP_MechanoidMechanitor.Transformation.Building.PawnUnavailable>
+  <MAP_MechanoidMechanitor.Transformation.Building.PawnDowned>倒地的机械体无法主动转换为建筑形态。</MAP_MechanoidMechanitor.Transformation.Building.PawnDowned>
+  <MAP_MechanoidMechanitor.Transformation.Building.NoCapability>该机体没有建筑转换能力。</MAP_MechanoidMechanitor.Transformation.Building.NoCapability>
+  <MAP_MechanoidMechanitor.Transformation.Building.NotPawnForm>必须先恢复为机械体形态。</MAP_MechanoidMechanitor.Transformation.Building.NotPawnForm>
+  <MAP_MechanoidMechanitor.Transformation.Building.MissingProfile>该机体没有配置对应的建筑形态。</MAP_MechanoidMechanitor.Transformation.Building.MissingProfile>
+  <MAP_MechanoidMechanitor.Transformation.Building.InvalidDef>配置的建筑形态不是有效建筑。</MAP_MechanoidMechanitor.Transformation.Building.InvalidDef>
+  <MAP_MechanoidMechanitor.Transformation.Building.MissingCarrierComp>配置的建筑缺少通用形态载体组件或建筑形态组件。</MAP_MechanoidMechanitor.Transformation.Building.MissingCarrierComp>
+  <MAP_MechanoidMechanitor.Transformation.Building.InvalidStuff>建筑形态需要材料，但没有配置有效材料。</MAP_MechanoidMechanitor.Transformation.Building.InvalidStuff>
+  <MAP_MechanoidMechanitor.Transformation.Building.NoPlacement>附近没有足以容纳建筑形态的安全位置。</MAP_MechanoidMechanitor.Transformation.Building.NoPlacement>
+  <MAP_MechanoidMechanitor.Transformation.Building.NoRestorePlacement>附近没有可供原始机械体恢复的位置。</MAP_MechanoidMechanitor.Transformation.Building.NoRestorePlacement>
+  <MAP_MechanoidMechanitor.Transformation.Building.CarrierUnavailable>建筑形态当前不可用。</MAP_MechanoidMechanitor.Transformation.Building.CarrierUnavailable>
+  <MAP_MechanoidMechanitor.Transformation.Building.BrokenLink>建筑形态与原始机械体的身份链接不一致。</MAP_MechanoidMechanitor.Transformation.Building.BrokenLink>
+  <MAP_MechanoidMechanitor.Transformation.Building.SourceDead>原始机械体已经死亡；摧毁建筑形态后将尝试恢复其尸体。</MAP_MechanoidMechanitor.Transformation.Building.SourceDead>
+  <MAP_MechanoidMechanitor.Transformation.Building.Unavailable>目前无法进行建筑转换。</MAP_MechanoidMechanitor.Transformation.Building.Unavailable>
+  <MAP_MechanoidMechanitor.Transformation.Building.RestoreFailed>目前无法恢复原始机械体。</MAP_MechanoidMechanitor.Transformation.Building.RestoreFailed>
+  <MAP_MechanoidMechanitor.Transformation.Building.UnexpectedFailure>建筑转换发生异常；原始机械体数据已尽可能保留。</MAP_MechanoidMechanitor.Transformation.Building.UnexpectedFailure>
+  <MAP_MechanoidMechanitor.Transformation.Building.Converted>{0} 已转换为建筑形态。</MAP_MechanoidMechanitor.Transformation.Building.Converted>
+  <MAP_MechanoidMechanitor.Transformation.Building.Restored>{0} 已恢复为机械体形态。</MAP_MechanoidMechanitor.Transformation.Building.Restored>
+  <MAP_MechanoidMechanitor.Transformation.Building.EmergencyRestored>{0} 的建筑载体已损毁，原始机械体已紧急恢复。</MAP_MechanoidMechanitor.Transformation.Building.EmergencyRestored>
+</LanguageData>
