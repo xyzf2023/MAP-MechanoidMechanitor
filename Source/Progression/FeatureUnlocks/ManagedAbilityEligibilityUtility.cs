@@ -1,4 +1,5 @@
 using MAP_MechanoidMechanitor.Scenarios;
+using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -44,8 +45,13 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool IsResearchConsciousnessRecipient(Pawn pawn)
+        private static bool IsResearchConsciousnessRecipient(Pawn? pawn)
         {
+            if (pawn == null)
+            {
+                return false;
+            }
+
             if (JusticePawnUtility.IsJustice(pawn))
             {
                 return true;

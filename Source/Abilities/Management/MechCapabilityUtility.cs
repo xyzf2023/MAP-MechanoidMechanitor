@@ -11,7 +11,12 @@ namespace MAP_MechanoidMechanitor
     {
         public static bool HasCapability(Pawn? pawn, string? capabilityId)
         {
-            if (pawn == null || pawn.Destroyed || string.IsNullOrEmpty(capabilityId))
+            if (pawn == null || pawn.Destroyed)
+            {
+                return false;
+            }
+
+            if (capabilityId == null || capabilityId.Length == 0)
             {
                 return false;
             }
