@@ -30,12 +30,14 @@ namespace MAP_MechanoidMechanitor
             List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
             MethodInfo? pawnDrawPosGetter = AccessTools.PropertyGetter(
                 typeof(Pawn), nameof(Pawn.DrawPos));
+            MethodInfo? thingDrawPosGetter = AccessTools.PropertyGetter(
+                typeof(Thing), nameof(Thing.DrawPos));
             MethodInfo? helperMethod = AccessTools.Method(
                 typeof(MechanicalFlightEquipmentAimPatch), nameof(GetAimOrigin));
 
-            if (pawnDrawPosGetter == null)
+            if (pawnDrawPosGetter == null && thingDrawPosGetter == null)
             {
-                Log.Error($"{LogPrefix}未找到 Pawn.DrawPos getter，补丁未应用。");
+                Log.Error($"{LogPrefix}未找到 DrawPos getter，补丁未应用。");
                 return codes;
             }
 
@@ -46,24 +48,28 @@ namespace MAP_MechanoidMechanitor
             }
 
             List<int> matches = new List<int>();
-            for (int i = 0; i < codes.Count; i++)
+            for (int i = 1; i < codes.Count; i++)
             {
                 CodeInstruction instruction = codes[i];
                 if ((instruction.opcode == OpCodes.Call
                         || instruction.opcode == OpCodes.Callvirt)
                     && instruction.operand is MethodInfo method
-                    && method.Equals(pawnDrawPosGetter))
+                    && (method.Equals(pawnDrawPosGetter)
+                        || method.Equals(thingDrawPosGetter))
+                    && codes[i - 1].opcode == OpCodes.Ldarg_0)
                 {
                     matches.Add(i);
                 }
             }
 
-            // 原版这里只应有两次 pawn.DrawPos：一次用于判断瞄准向量是否接近零，
-            // 一次用于真正计算 AngleFlat。数量不符时宁可保持原版，避免误改其他绘制逻辑。
+            // 原版这里只应有两次由参数 pawn（arg0）直接读取的 DrawPos：
+            // 一次用于判断瞄准向量是否接近零，一次用于真正计算 AngleFlat。
+            // 同时兼容 IL 将虚属性调用记录为 Pawn.DrawPos 或 Thing.DrawPos 的情况；
+            // 通过前置 ldarg.0 限定射手自身，避免误匹配目标 Thing.DrawPos。
             if (matches.Count != 2)
             {
                 Log.Error($"{LogPrefix}PawnRenderUtility.DrawEquipmentAndApparelExtras 中 "
-                    + $"Pawn.DrawPos getter 预期 2 处，实际找到 {matches.Count} 处，补丁未应用。");
+                    + $"射手 DrawPos 读取预期 2 处，实际找到 {matches.Count} 处，补丁未应用。");
                 return codes;
             }
 
