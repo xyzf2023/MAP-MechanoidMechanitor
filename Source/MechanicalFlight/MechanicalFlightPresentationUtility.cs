@@ -36,13 +36,15 @@ namespace MAP_MechanoidMechanitor
         private static readonly Dictionary<string, Graphic[]> GlowGraphics = new();
         private static Graphic[]? groundWashGraphics;
         private const int PulseSteps = 8;
+        internal const float VanillaFlightDrawOffset = 0.6f;
 
         public static Vector3 HoverVisualOffset(
             Pawn pawn,
             MechanicalFlightAuthorizationRecord record)
         {
             MechanicalFlightProfileDef? profile = record.Profile;
-            if (profile == null || !MechanicalFlightUtility.HasHoverVisual(pawn))
+            if (profile == null || !MechanicalFlightUtility.HasHoverVisual(pawn)
+                || !CanUseHoverVisualOffset(pawn, profile))
             {
                 return Vector3.zero;
             }
@@ -53,6 +55,37 @@ namespace MAP_MechanoidMechanitor
             float height = profile.hoverExtraVisualHeight
                 + Mathf.Sin(phase) * profile.hoverBobAmplitude;
             return new Vector3(0f, 0f, height * pawn.flight.PositionOffsetFactor);
+        }
+
+        public static Vector3 GroundAnchorDrawPos(Pawn pawn)
+        {
+            Vector3 drawPos = pawn.DrawPos;
+            if (pawn.flight == null || !MechanicalFlightUtility.HasHoverVisual(pawn)
+                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn, out MechanicalFlightAuthorizationRecord? record)
+                || record == null)
+            {
+                return drawPos;
+            }
+
+            drawPos -= HoverVisualOffset(pawn, record);
+            drawPos -= new Vector3(0f, 0f,
+                VanillaFlightDrawOffset * pawn.flight.PositionOffsetFactor);
+            return drawPos;
+        }
+
+        private static bool CanUseHoverVisualOffset(
+            Pawn pawn,
+            MechanicalFlightProfileDef profile)
+        {
+            if (!pawn.Spawned || pawn.Map == null)
+            {
+                return false;
+            }
+
+            float shiftedZ = pawn.Position.ToVector3Shifted().z
+                + profile.hoverExtraVisualHeight;
+            return shiftedZ >= 0f && shiftedZ < pawn.Map.Size.z;
         }
 
         public static float FlightTiltAngle(
@@ -264,8 +297,9 @@ namespace MAP_MechanoidMechanitor
             LastGroundWashTick[pawn.thingIDNumber] = tick;
 
             Map map = pawn.Map;
+            Vector3 groundAnchor = GroundAnchorDrawPos(pawn);
             if (pawn.Position.GetTerrain(map).IsWater
-                || !pawn.DrawPos.ShouldSpawnMotesAt(map, false))
+                || !groundAnchor.ShouldSpawnMotesAt(map, false))
             {
                 return;
             }
@@ -273,7 +307,7 @@ namespace MAP_MechanoidMechanitor
                 ? FleckDefOf.AirPuff : FleckDefOf.DustPuffThick;
             float angle = Rand.Range(0f, 360f);
             float radians = angle * Mathf.Deg2Rad;
-            Vector3 position = pawn.DrawPos + new Vector3(Mathf.Cos(radians), 0f,
+            Vector3 position = groundAnchor + new Vector3(Mathf.Cos(radians), 0f,
                 Mathf.Sin(radians)) * Rand.Range(1f, 1.5f);
             FleckCreationData data = FleckMaker.GetDataStatic(position, map, fleck,
                 Rand.Range(1.15f, 1.45f));
@@ -296,7 +330,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            Vector3 body = pawn.DrawPos + HoverVisualOffset(pawn, record);
+            Vector3 body = pawn.DrawPos;
             float tilt = FlightTiltAngle(pawn, record);
             Quaternion rotation = Quaternion.AngleAxis(tilt, Vector3.up);
             Vector3 position = body + rotation * new Vector3(
@@ -327,6 +361,7 @@ namespace MAP_MechanoidMechanitor
                     ShaderDatabase.TransparentPostLight, new Vector2(1.4f, 1.4f),
                     new Color(0.78f, 0.73f, 0.65f, 0.22f))
             };
+            Vector3 groundAnchor = GroundAnchorDrawPos(pawn);
             int ticks = Find.TickManager.TicksGame + pawn.thingIDNumber;
             float cycle = ticks % 54 / 54f;
             float turn = ticks / 54 * 41f + pawn.thingIDNumber % 360;
@@ -334,7 +369,7 @@ namespace MAP_MechanoidMechanitor
             {
                 float phase = Mathf.Repeat(cycle + i / 3f, 1f);
                 float angle = (turn + i * 120f) * Mathf.Deg2Rad;
-                Vector3 pos = pawn.DrawPos + new Vector3(Mathf.Cos(angle), 0f,
+                Vector3 pos = groundAnchor + new Vector3(Mathf.Cos(angle), 0f,
                     Mathf.Sin(angle)) * Mathf.Lerp(0.35f, 1.65f, phase);
                 pos.y = AltitudeLayer.Filth.AltitudeFor();
                 groundWashGraphics[i].Draw(pos, Rot4.North, pawn, 0f);
@@ -405,42 +440,107 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    internal static class MechanicalFlightGroundAnchorContext
+    {
+        [ThreadStatic] private static int depth;
+
+        internal static bool Active => depth > 0;
+        internal static void Begin() => depth++;
+        internal static void End()
+        {
+            if (depth > 0)
+            {
+                depth--;
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Pawn_DrawTracker), nameof(Pawn_DrawTracker.DrawPos),
+        MethodType.Getter)]
+    internal static class MechanicalFlightPawnDrawPosPatch
+    {
+        private static readonly AccessTools.FieldRef<Pawn_DrawTracker, Pawn> PawnField =
+            AccessTools.FieldRefAccess<Pawn_DrawTracker, Pawn>("pawn");
+
+        public static void Postfix(Pawn_DrawTracker __instance, ref Vector3 __result)
+        {
+            Pawn pawn = PawnField(__instance);
+            if (pawn.flight == null || !pawn.Spawned
+                || !MechanicalFlightUtility.HasHoverVisual(pawn)
+                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn, out MechanicalFlightAuthorizationRecord? record)
+                || record == null)
+            {
+                return;
+            }
+
+            if (MechanicalFlightGroundAnchorContext.Active)
+            {
+                __result -= new Vector3(0f, 0f,
+                    MechanicalFlightPresentationUtility.VanillaFlightDrawOffset
+                    * pawn.flight.PositionOffsetFactor);
+                return;
+            }
+
+            __result += MechanicalFlightPresentationUtility.HoverVisualOffset(
+                pawn, record);
+        }
+    }
+
+    [HarmonyPatch(typeof(SelectionDrawer),
+        nameof(SelectionDrawer.DrawSelectionBracketFor),
+        new Type[] { typeof(object), typeof(Material) })]
+    internal static class MechanicalFlightSelectionAnchorPatch
+    {
+        public static void Prefix() => MechanicalFlightGroundAnchorContext.Begin();
+
+        public static Exception Finalizer(Exception __exception)
+        {
+            MechanicalFlightGroundAnchorContext.End();
+            return __exception;
+        }
+    }
+
+    [HarmonyPatch(typeof(GenUI), nameof(GenUI.ThingsUnderMouse),
+        new Type[]
+        {
+            typeof(Vector3), typeof(float), typeof(TargetingParameters),
+            typeof(ITargetingSource)
+        })]
+    internal static class MechanicalFlightMouseAnchorPatch
+    {
+        public static void Prefix() => MechanicalFlightGroundAnchorContext.Begin();
+
+        public static Exception Finalizer(Exception __exception)
+        {
+            MechanicalFlightGroundAnchorContext.End();
+            return __exception;
+        }
+    }
+
     [HarmonyPatch(typeof(PawnRenderer), nameof(PawnRenderer.DynamicDrawPhaseAt))]
     internal static class MechanicalFlightDynamicDrawPatch
     {
         private static readonly AccessTools.FieldRef<PawnRenderer, Pawn> PawnField =
             AccessTools.FieldRefAccess<PawnRenderer, Pawn>("pawn");
-        [ThreadStatic] private static HashSet<PawnRenderer>? offsetInProgress;
-        private static HashSet<PawnRenderer> OffsetInProgress =>
-            offsetInProgress ??= new HashSet<PawnRenderer>();
 
-        internal static bool IsOffsetInProgress(PawnRenderer renderer) =>
-            OffsetInProgress.Contains(renderer);
-
-        public static void Prefix(PawnRenderer __instance, DrawPhase phase, ref Vector3 drawLoc)
+        public static void Prefix(PawnRenderer __instance, DrawPhase phase,
+            Vector3 drawLoc)
         {
             Pawn pawn = PawnField(__instance);
-            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
+            if (phase != DrawPhase.Draw
+                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn, out MechanicalFlightAuthorizationRecord? record)
                 || record == null || !pawn.Spawned
                 || !MechanicalFlightUtility.HasHoverVisual(pawn))
             {
                 return;
             }
-            drawLoc += MechanicalFlightPresentationUtility.HoverVisualOffset(pawn, record);
-            OffsetInProgress.Add(__instance);
-            if (phase == DrawPhase.Draw)
-            {
-                float angle = MechanicalFlightPresentationUtility.FlightTiltAngle(pawn, record);
-                MechanicalFlightPresentationUtility.DrawThrusterVisual(
-                    pawn, record, drawLoc, angle);
-            }
-        }
 
-        public static void Postfix(PawnRenderer __instance) => OffsetInProgress.Remove(__instance);
-        public static Exception Finalizer(PawnRenderer __instance, Exception __exception)
-        {
-            OffsetInProgress.Remove(__instance);
-            return __exception;
+            float angle = MechanicalFlightPresentationUtility.FlightTiltAngle(
+                pawn, record);
+            MechanicalFlightPresentationUtility.DrawThrusterVisual(
+                pawn, record, drawLoc, angle);
         }
     }
 
@@ -457,27 +557,6 @@ namespace MAP_MechanoidMechanitor
                 && MechanicalFlightUtility.HasHoverVisual(pawn))
             {
                 angle += MechanicalFlightPresentationUtility.FlightTiltAngle(pawn, record);
-            }
-        }
-    }
-
-    [HarmonyPatch(typeof(PawnRenderer), "ParallelPreRenderPawnAt")]
-    internal static class MechanicalFlightPreRenderPatch
-    {
-        private static readonly AccessTools.FieldRef<PawnRenderer, Pawn> PawnField =
-            AccessTools.FieldRefAccess<PawnRenderer, Pawn>("pawn");
-        public static void Prefix(PawnRenderer __instance, ref Vector3 drawLoc)
-        {
-            if (MechanicalFlightDynamicDrawPatch.IsOffsetInProgress(__instance))
-            {
-                return;
-            }
-            Pawn pawn = PawnField(__instance);
-            if (GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                && record != null && pawn.Spawned
-                && MechanicalFlightUtility.HasHoverVisual(pawn))
-            {
-                drawLoc += MechanicalFlightPresentationUtility.HoverVisualOffset(pawn, record);
             }
         }
     }

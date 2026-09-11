@@ -695,12 +695,6 @@ namespace MAP_MechanoidMechanitor
                 && __instance.DrawPos.ShouldSpawnMotesAt(__instance.Map, false))
             {
                 Vector3 position = __instance.DrawPos;
-                if (GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                        __instance, out var record) && record != null)
-                {
-                    position += MechanicalFlightPresentationUtility.HoverVisualOffset(
-                        __instance, record);
-                }
                 FleckMaker.ThrowAirPuffUp(position, __instance.Map);
             }
             return false;
