@@ -1,4 +1,3 @@
-using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -312,26 +311,6 @@ namespace MAP_MechanoidMechanitor
                 DefDatabase<HediffDef>.GetNamedSilentFail(
                     PsychicReceiverHediffDefName);
             return psychicReceiverHediffDef;
-        }
-    }
-
-    [HarmonyPatch(
-        typeof(MechanoidMechanitorCapabilityUtility),
-        nameof(MechanoidMechanitorCapabilityUtility.GetCapabilities))]
-    public static class Patch_MechanoidMechanitorCapabilityUtility_GetCapabilities_Psycasting
-    {
-        [HarmonyPostfix]
-        public static void Postfix(
-            Pawn? pawn,
-            ref MechanoidMechanitorCapability __result)
-        {
-            if (pawn != null
-                && GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
-                    pawn,
-                    out _))
-            {
-                __result |= MechanoidMechanitorCapability.Psycasting;
-            }
         }
     }
 }

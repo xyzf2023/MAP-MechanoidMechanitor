@@ -155,13 +155,15 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 所有正式机械族机械师（Native + Acquired）天然获得 timetable 数据层与课堂教师候选能力。
-            // 这一分支在“是否为后天机械师”的二次判断之前执行，确保非后天机械师同样获得两项能力。
+            // 这一分支在“是否为后天机械师”的二次判断之前执行，确保非后天机械师同样获得这些能力。
+            // Psycasting 是能力层自身的正式能力来源，不再由外部 Harmony 补丁注入。
             capabilities |= MechanoidMechanitorCapability.ImplantInstallation
                 | MechanoidMechanitorCapability.ShuttlePilot
                 | MechanoidMechanitorCapability.ColonistLikeSocialTab
                 | MechanoidMechanitorCapability.Royalty
                 | MechanoidMechanitorCapability.ColonistLikeTimetable
-                | MechanoidMechanitorCapability.ClassroomTeaching;
+                | MechanoidMechanitorCapability.ClassroomTeaching
+                | MechanoidMechanitorCapability.Psycasting;
 
             MechanoidMechanitorIdeologyAdaptationLevel ideologyLevel =
                 MechanoidMechanitorIdeologyAdaptationUtility.GetEffectiveLevel();
