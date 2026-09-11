@@ -51,18 +51,8 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static GameComponent_MechanoidMechanitorRegistry? CurrentRegistry
-        {
-            get
-            {
-                if (Current.Game == null)
-                {
-                    return null;
-                }
-
-                return Current.Game.GetComponent<GameComponent_MechanoidMechanitorRegistry>();
-            }
-        }
+        private static GameComponent_MechanoidMechanitorRegistry? CurrentRegistry =>
+            CurrentGameComponentCache<GameComponent_MechanoidMechanitorRegistry>.Get();
 
         public GameComponent_MechanoidMechanitorRegistry(Game game)
         {

@@ -12,18 +12,8 @@ namespace MAP_MechanoidMechanitor
         private Dictionary<Pawn, MechanicalChildcareAuthorizationRecord> recordByPawn =
             new Dictionary<Pawn, MechanicalChildcareAuthorizationRecord>();
 
-        private static GameComponent_MechanicalChildcareRegistry? CurrentRegistry
-        {
-            get
-            {
-                if (Current.Game == null)
-                {
-                    return null;
-                }
-
-                return Current.Game.GetComponent<GameComponent_MechanicalChildcareRegistry>();
-            }
-        }
+        private static GameComponent_MechanicalChildcareRegistry? CurrentRegistry =>
+            CurrentGameComponentCache<GameComponent_MechanicalChildcareRegistry>.Get();
 
         public GameComponent_MechanicalChildcareRegistry(Game game)
         {

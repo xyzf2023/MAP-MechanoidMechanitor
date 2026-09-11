@@ -34,7 +34,31 @@ namespace MAP_MechanoidMechanitor
                 return (GetIdeologyCapabilities(pawn) & capability) == capability;
             }
 
+            // 作息查询高频触发；只查询单项来源，不执行完整能力聚合。
+            if (capability == MechanoidMechanitorCapability.ColonistLikeTimetable)
+            {
+                return HasColonistLikeTimetableCapability(pawn);
+            }
+
             return (GetCapabilities(pawn) & capability) == capability;
+        }
+
+        /// <summary>
+        /// ColonistLikeTimetable 单项快速判断，能力来源与 GetCapabilities 严格一致：
+        /// 正式机械族机械师来自权威注册表；非机械师机械族来自真实
+        /// CompColonistLikeTimetableUser。不回退到仿生伴侣、数据处理或飞行授权。
+        /// </summary>
+        private static bool HasColonistLikeTimetableCapability(Pawn pawn)
+        {
+            if (pawn.RaceProps?.IsMechanoid != true)
+            {
+                return false;
+            }
+
+            return GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
+                       pawn,
+                       out _)
+                || pawn.GetComp<CompColonistLikeTimetableUser>() != null;
         }
 
         public static MechanoidMechanitorCapability GetCapabilities(Pawn? pawn)

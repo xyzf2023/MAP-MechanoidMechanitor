@@ -268,18 +268,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             IsPurgeDirectiveActive
             && IsMechanoidMechanitorScenarioStoryConfiguration;
 
-        private static GameComponent_MechanoidMechanitorStoryState? CurrentComponent
-        {
-            get
-            {
-                if (Current.Game == null)
-                {
-                    return null;
-                }
-
-                return Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
-            }
-        }
+        private static GameComponent_MechanoidMechanitorStoryState? CurrentComponent =>
+            CurrentGameComponentCache<GameComponent_MechanoidMechanitorStoryState>.Get();
 
         public GameComponent_MechanoidMechanitorStoryState(Game game)
         {

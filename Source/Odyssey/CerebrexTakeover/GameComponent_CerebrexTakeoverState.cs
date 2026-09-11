@@ -42,18 +42,8 @@ namespace MAP_MechanoidMechanitor
         public Thing? PendingCore => pendingCore;
         public Pawn? PendingPawn => pendingPawn;
 
-        public static GameComponent_CerebrexTakeoverState? Current
-        {
-            get
-            {
-                if (Verse.Current.Game == null)
-                {
-                    return null;
-                }
-
-                return Verse.Current.Game.GetComponent<GameComponent_CerebrexTakeoverState>();
-            }
-        }
+        public static GameComponent_CerebrexTakeoverState? Current =>
+            CurrentGameComponentCache<GameComponent_CerebrexTakeoverState>.Get();
 
         public static bool IsActive =>
             ModsConfig.OdysseyActive && Current?.takeoverActive == true;

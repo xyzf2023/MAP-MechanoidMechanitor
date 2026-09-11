@@ -92,6 +92,12 @@ namespace MAP_MechanoidMechanitor
             GroundStates.Remove(pawn.thingIDNumber);
         }
 
+        internal static void ClearAllRuntimeState()
+        {
+            HeightStates.Clear();
+            GroundStates.Clear();
+        }
+
         internal static float GetHeightFactor(
             Pawn pawn,
             MechanicalFlightAuthorizationRecord record)

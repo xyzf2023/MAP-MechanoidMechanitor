@@ -19,18 +19,8 @@ namespace MAP_MechanoidMechanitor
         private Dictionary<Pawn, SyntheticCompanionAuthorizationRecord> recordByPawn =
             new Dictionary<Pawn, SyntheticCompanionAuthorizationRecord>();
 
-        private static GameComponent_SyntheticCompanionRegistry? CurrentRegistry
-        {
-            get
-            {
-                if (Current.Game == null)
-                {
-                    return null;
-                }
-
-                return Current.Game.GetComponent<GameComponent_SyntheticCompanionRegistry>();
-            }
-        }
+        private static GameComponent_SyntheticCompanionRegistry? CurrentRegistry =>
+            CurrentGameComponentCache<GameComponent_SyntheticCompanionRegistry>.Get();
 
         public GameComponent_SyntheticCompanionRegistry(Game game)
         {

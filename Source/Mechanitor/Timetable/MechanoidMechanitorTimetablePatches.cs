@@ -34,8 +34,12 @@ namespace MAP_MechanoidMechanitor
         public static void Postfix(Pawn_TimetableTracker __instance, ref TimeAssignmentDef __result)
         {
             Pawn? pawn = MechanoidMechanitorTimetablePatches.PawnFieldRef(__instance);
-            if (pawn != null
-                && MechanoidMechanitorCapabilityUtility.HasCapability(
+            if (pawn?.RaceProps?.IsMechanoid != true)
+            {
+                return;
+            }
+
+            if (MechanoidMechanitorCapabilityUtility.HasCapability(
                     pawn,
                     MechanoidMechanitorCapability.ColonistLikeTimetable))
             {

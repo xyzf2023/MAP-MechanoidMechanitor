@@ -62,18 +62,8 @@ namespace MAP_MechanoidMechanitor
             new HashSet<Pawn>(new ReferencePawnEqualityComparer());
         private int globalTransitionRetryEarliestTick;
 
-        public static GameComponent_DataProcessingAllocationRegistry? CurrentRegistry
-        {
-            get
-            {
-                if (Current.Game == null)
-                {
-                    return null;
-                }
-
-                return Current.Game.GetComponent<GameComponent_DataProcessingAllocationRegistry>();
-            }
-        }
+        public static GameComponent_DataProcessingAllocationRegistry? CurrentRegistry =>
+            CurrentGameComponentCache<GameComponent_DataProcessingAllocationRegistry>.Get();
 
         public GameComponent_DataProcessingAllocationRegistry(Game game)
         {

@@ -38,6 +38,11 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        internal static void ClearAllRuntimeState()
+        {
+            ExhaustStates.Clear();
+        }
+
         internal static float ExhaustStretch(Pawn pawn)
         {
             if (!ExhaustStates.TryGetValue(pawn.thingIDNumber, out ExhaustState? state))

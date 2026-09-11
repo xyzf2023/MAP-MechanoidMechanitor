@@ -254,17 +254,15 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!IsWhitelistedJob(job.def)
+                || !IsManagedRecreationJobGiver(
+                    job.jobGiver as ThinkNode_JobGiver))
             {
                 return false;
             }
 
-            if (!IsWhitelistedJob(job.def))
-            {
-                return false;
-            }
-
-            return IsManagedRecreationJobGiver(job.jobGiver as ThinkNode_JobGiver);
+            return MechanoidMechanitorRoleUtility
+                .IsMechanoidMechanitor(pawn);
         }
 
         /// <summary>

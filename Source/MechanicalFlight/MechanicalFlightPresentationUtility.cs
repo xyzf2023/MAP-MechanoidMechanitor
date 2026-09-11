@@ -226,6 +226,8 @@ namespace MAP_MechanoidMechanitor
             TiltStates.Clear();
             GlowStates.Clear();
             LastGroundWashTick.Clear();
+            MechanicalFlightVisualSmoothing.ClearAllRuntimeState();
+            MechanicalFlightCruisePresentation.ClearAllRuntimeState();
         }
 
         private static Graphic[] GetFlameGraphics(MechanicalFlightProfileDef profile)

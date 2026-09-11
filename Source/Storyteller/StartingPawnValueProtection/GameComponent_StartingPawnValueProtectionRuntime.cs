@@ -46,18 +46,7 @@ namespace MAP_MechanoidMechanitor
                 : 0f;
         }
 
-        public static GameComponent_StartingPawnValueProtectionRuntime? Current
-        {
-            get
-            {
-                if (Verse.Current.Game == null)
-                {
-                    return null;
-                }
-
-                return Verse.Current.Game
-                    .GetComponent<GameComponent_StartingPawnValueProtectionRuntime>();
-            }
-        }
+        public static GameComponent_StartingPawnValueProtectionRuntime? Current =>
+            CurrentGameComponentCache<GameComponent_StartingPawnValueProtectionRuntime>.Get();
     }
 }
