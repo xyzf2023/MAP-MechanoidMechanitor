@@ -292,7 +292,8 @@ namespace MAP_MechanoidMechanitor
             if (!cell.InBounds(map) || !cell.Standable(map)
                 || !cell.WalkableBy(map, pawn)
                 || MechanicalFlightRoofUtility.HasThickRoof(cell, map)
-                || cell.GetTerrain(map).dangerous || !pawn.CanReserve(cell)
+                || cell.GetTerrain(map).dangerous || cell.ContainsStaticFire(map)
+                || !pawn.CanReserve(cell)
                 || cell.GetFirstBuilding(map) != null)
             {
                 return false;
