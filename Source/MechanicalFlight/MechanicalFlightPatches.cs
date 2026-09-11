@@ -294,7 +294,15 @@ namespace MAP_MechanoidMechanitor
             public Vector3 ExactGroundPosition;
             public Vector3 DestinationGroundPosition;
             public float TotalDistance;
+            public LocalTargetInfo SourceTarget;
+            public PathEndMode SourcePathEndMode;
+            public IntVec3 ResolvedDestination;
+            public IntVec3 LastTargetPosition;
+            public CellRect LastTargetOccupiedRect;
+            public int NextDestinationValidationTick;
         }
+
+        private const int DestinationValidationIntervalTicks = 30;
 
         private static readonly Dictionary<Pawn, DirectFlightMotionState>
             DirectMotionStates = new();
@@ -429,7 +437,8 @@ namespace MAP_MechanoidMechanitor
             CachedMovePercentageField(pather) = 0f;
             CachedCollisionField(pather) = false;
             pather.curPathJobIsStale = false;
-            AssignDirectPath(pather, pawn, destinationCell, exactStart);
+            AssignDirectPath(
+                pather, pawn, destinationCell, exactStart, destination, pathEndMode);
             return true;
         }
 
@@ -526,8 +535,10 @@ namespace MAP_MechanoidMechanitor
             }
 
             PathEndMode pathEndMode = PathEndModeField(pather);
-            if (!TryResolveDirectDestination(
-                    pawn, target, ref pathEndMode, out IntVec3 destination))
+            DirectMotionStates.TryGetValue(
+                pawn, out DirectFlightMotionState? state);
+            if (!TryGetCachedOrResolvedDestination(
+                    pawn, target, ref pathEndMode, ref state, out IntVec3 destination))
             {
                 NotifyFailed(pather, pawn);
                 return;
@@ -539,11 +550,11 @@ namespace MAP_MechanoidMechanitor
             pather.lastPathedTargetPosition = destination;
 
             Vector3 destinationGroundPosition = destination.ToVector3Shifted();
-            if (!DirectMotionStates.TryGetValue(
-                    pawn, out DirectFlightMotionState? state)
+            if (state == null
                 || state.DestinationGroundPosition != destinationGroundPosition)
             {
-                state = AssignDirectPath(pather, pawn, destination);
+                state = AssignDirectPath(
+                    pather, pawn, destination, null, target, pathEndMode);
             }
 
             float cellsPerSecond = 30f;
@@ -585,6 +596,13 @@ namespace MAP_MechanoidMechanitor
 
             if (remaining <= 0.0001f)
             {
+                // 正式到达前最终验证缓存终点仍然合法；失效时立即失败，
+                // 不允许瞬移进已经不安全的格子。
+                if (!IsCachedDirectDestinationValid(pawn, target, state))
+                {
+                    NotifyFailed(pather, pawn);
+                    return;
+                }
                 if (pawn.Position != destination)
                 {
                     LastCellField(pather) = pawn.Position;
@@ -607,7 +625,9 @@ namespace MAP_MechanoidMechanitor
             Pawn_PathFollower pather,
             Pawn pawn,
             IntVec3 destination,
-            Vector3? exactStart = null)
+            Vector3? exactStart,
+            LocalTargetInfo sourceTarget,
+            PathEndMode sourcePathEndMode)
         {
             pather.curPathRequest?.Dispose();
             pather.curPathRequest = null;
@@ -637,8 +657,119 @@ namespace MAP_MechanoidMechanitor
                 TotalDistance = Vector3.Distance(
                     startGroundPosition, destinationGroundPosition)
             };
+            RefreshDirectDestinationCache(
+                state,
+                sourceTarget,
+                sourcePathEndMode,
+                destination,
+                GenTicks.TicksGame);
             DirectMotionStates[pawn] = state;
             return state;
+        }
+
+        // 复用缓存的解析终点：仅当目标、PathEndMode、Thing 位置/占用矩形、
+        // 缓存格合法性或30 Tick 保险验证之一发生变化时才重新完整解析。
+        private static bool TryGetCachedOrResolvedDestination(
+            Pawn pawn,
+            LocalTargetInfo target,
+            ref PathEndMode pathEndMode,
+            ref DirectFlightMotionState? state,
+            out IntVec3 destination)
+        {
+            int tick = GenTicks.TicksGame;
+            bool mustResolve = state == null
+                || !state.SourceTarget.IsValid
+                || state.SourceTarget != target
+                || state.SourcePathEndMode != pathEndMode
+                || tick >= state.NextDestinationValidationTick;
+
+            if (!mustResolve && target.HasThing)
+            {
+                Thing thing = target.Thing;
+                if (thing.Position != state!.LastTargetPosition
+                    || !thing.OccupiedRect().Equals(state.LastTargetOccupiedRect))
+                {
+                    mustResolve = true;
+                }
+            }
+
+            if (!mustResolve
+                && !IsCachedDirectDestinationValid(pawn, target, state!))
+            {
+                mustResolve = true;
+            }
+
+            if (!mustResolve)
+            {
+                destination = state!.ResolvedDestination;
+                return true;
+            }
+
+            PathEndMode resolvedMode = pathEndMode;
+            if (!TryResolveDirectDestination(
+                    pawn, target, ref resolvedMode, out IntVec3 resolved))
+            {
+                return false;
+            }
+
+            pathEndMode = resolvedMode;
+            destination = resolved;
+            if (state != null)
+            {
+                RefreshDirectDestinationCache(
+                    state, target, resolvedMode, resolved, tick);
+            }
+            return true;
+        }
+
+        private static void RefreshDirectDestinationCache(
+            DirectFlightMotionState state,
+            LocalTargetInfo target,
+            PathEndMode pathEndMode,
+            IntVec3 destination,
+            int tick)
+        {
+            state.SourceTarget = target;
+            state.SourcePathEndMode = pathEndMode;
+            state.ResolvedDestination = destination;
+            state.LastTargetPosition = target.HasThing
+                ? target.Thing.Position
+                : IntVec3.Invalid;
+            state.LastTargetOccupiedRect = target.HasThing
+                ? target.Thing.OccupiedRect()
+                : default;
+            state.NextDestinationValidationTick =
+                tick + DestinationValidationIntervalTicks;
+        }
+
+        private static bool IsCachedDirectDestinationValid(
+            Pawn pawn,
+            LocalTargetInfo target,
+            DirectFlightMotionState state)
+        {
+            Map? map = pawn.Map;
+            IntVec3 cell = state.ResolvedDestination;
+            if (map == null || !cell.IsValid || !cell.InBounds(map))
+            {
+                return false;
+            }
+
+            PathEndMode resolvedMode = state.SourcePathEndMode;
+            if (resolvedMode == PathEndMode.OnCell
+                || resolvedMode == PathEndMode.None)
+            {
+                // OnCell / None 只要求目标格合法且位于地图内，不新增 WalkableBy 条件。
+                return true;
+            }
+
+            if (!cell.WalkableBy(map, pawn))
+            {
+                return false;
+            }
+
+            LocalTargetInfo resolved = (LocalTargetInfo)target.ToTargetInfo(map);
+            return TouchPathEndModeUtility.IsAdjacentOrInsideAndAllowedToTouch(
+                cell, resolved, map);
         }
 
         private static void NotifyArrived(Pawn_PathFollower pather, Pawn pawn)

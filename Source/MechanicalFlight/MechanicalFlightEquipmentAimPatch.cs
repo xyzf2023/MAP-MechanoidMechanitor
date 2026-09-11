@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor
         {
             // 仅在仍具有空中视觉偏移时改用武器当前的实际绘制锚点。
             // 普通 Pawn 与已经完全落地的机械体继续严格使用原版 Pawn.DrawPos。
-            return MechanicalFlightUtility.HasHoverVisual(pawn)
+            return MechanicalFlightUtility.TryGetHoverVisualState(pawn, out _, out _)
                 ? equipmentDrawPos
                 : pawn.DrawPos;
         }
@@ -107,7 +107,8 @@ namespace MAP_MechanoidMechanitor
         internal static Vector3 GetMuzzlePosition(Thing caster)
         {
             // 仅对仍具有飞行悬浮视觉的机械体，将枪口火光移到与武器/弹丸一致的视觉锚点。
-            if (caster is Pawn pawn && MechanicalFlightUtility.HasHoverVisual(pawn))
+            if (caster is Pawn pawn
+                && MechanicalFlightUtility.TryGetHoverVisualState(pawn, out _, out _))
             {
                 return pawn.DrawPos;
             }

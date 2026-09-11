@@ -23,6 +23,9 @@ namespace MAP_MechanoidMechanitor
             internal float Progress;
             internal MechanicalFlightPhase Phase;
             internal int LastFrame = -1;
+            internal int ExtraHoverHeightFrame = -1;
+            internal float CachedExtraHoverHeight;
+            internal MechanicalFlightProfileDef? CachedExtraHoverHeightProfile;
         }
 
         private sealed class GroundState
@@ -239,6 +242,33 @@ namespace MAP_MechanoidMechanitor
                 return 0f;
             }
 
+            // 同一帧、同一 Pawn、同一 Profile 只计算一次；
+            // Profile 变化或状态清理（HeightStates 移除）时缓存自然失效。
+            if (HeightStates.TryGetValue(
+                    pawn.thingIDNumber, out HeightState? state))
+            {
+                int frame = RealTime.frameCount;
+                if (state.ExtraHoverHeightFrame == frame
+                    && ReferenceEquals(
+                        state.CachedExtraHoverHeightProfile, profile))
+                {
+                    return state.CachedExtraHoverHeight;
+                }
+
+                float cachedHeight = ComputeExtraHoverHeight(pawn, profile);
+                state.ExtraHoverHeightFrame = frame;
+                state.CachedExtraHoverHeightProfile = profile;
+                state.CachedExtraHoverHeight = cachedHeight;
+                return cachedHeight;
+            }
+
+            return ComputeExtraHoverHeight(pawn, profile);
+        }
+
+        private static float ComputeExtraHoverHeight(
+            Pawn pawn,
+            MechanicalFlightProfileDef profile)
+        {
             float period = Mathf.Max(1f, profile.hoverBobPeriodTicks);
             float phase = (Find.TickManager.TicksGame
                 + pawn.thingIDNumber % 100) / period * Mathf.PI * 2f;
@@ -457,17 +487,16 @@ namespace MAP_MechanoidMechanitor
             ref Vector3 __result)
         {
             Pawn pawn = PawnField(__instance);
-            if (pawn.flight == null || !pawn.Spawned
-                || !MechanicalFlightUtility.HasHoverVisual(pawn)
-                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                    pawn, out MechanicalFlightAuthorizationRecord? record)
-                || record?.Profile == null
+            if (!MechanicalFlightUtility.TryGetHoverVisualState(
+                    pawn,
+                    out MechanicalFlightAuthorizationRecord? record,
+                    out MechanicalFlightProfileDef? profile)
+                || record == null || profile == null
                 || record.Phase == MechanicalFlightPhase.Crashing)
             {
                 return;
             }
 
-            MechanicalFlightProfileDef profile = record.Profile;
             if (MechanicalFlightVisualSmoothing.TryGetGroundCorrection(
                     pawn, record, out Vector3 groundCorrection))
             {
@@ -512,17 +541,16 @@ namespace MAP_MechanoidMechanitor
         {
             if (MechanicalFlightGroundAnchorContext.Active
                 || MechanicalFlightGroundAnchorContext.LegacySelectionActive
-                || pawn.flight == null || !pawn.Spawned
-                || !MechanicalFlightUtility.HasHoverVisual(pawn)
-                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                    pawn, out MechanicalFlightAuthorizationRecord? record)
-                || record?.Profile == null
+                || !MechanicalFlightUtility.TryGetHoverVisualState(
+                    pawn,
+                    out MechanicalFlightAuthorizationRecord? record,
+                    out MechanicalFlightProfileDef? profile)
+                || record == null || profile == null
                 || record.Phase == MechanicalFlightPhase.Crashing)
             {
                 return;
             }
 
-            MechanicalFlightProfileDef profile = record.Profile;
             float logicalFactor = Mathf.Clamp01(
                 pawn.flight.PositionOffsetFactor);
             float visualFactor = MechanicalFlightVisualSmoothing.GetHeightFactor(

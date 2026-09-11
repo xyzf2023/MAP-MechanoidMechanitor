@@ -14,6 +14,11 @@ namespace MAP_MechanoidMechanitor
         private bool groundLandingBlockedNoticeSent;
         private bool groundJobBlockedNoticeSent;
 
+        // 运行时字段（不序列化）：迫降目标下一次完整验证 Tick 与验证时所在 Map。
+        // 读档后默认 0/null，迫使恢复迫降流程时立即重新验证。
+        internal int NextEmergencyTargetValidationTick;
+        internal Map? EmergencyTargetMap;
+
         public Pawn? Pawn => pawn;
         public MechanicalFlightProfileDef? Profile => profile;
         public MechanicalFlightPhase Phase
@@ -86,6 +91,8 @@ namespace MAP_MechanoidMechanitor
             pendingShutdownAfterLanding = false;
             groundLandingBlockedNoticeSent = false;
             groundJobBlockedNoticeSent = false;
+            NextEmergencyTargetValidationTick = 0;
+            EmergencyTargetMap = null;
         }
 
         public void ExposeData()

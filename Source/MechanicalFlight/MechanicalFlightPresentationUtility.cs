@@ -31,6 +31,7 @@ namespace MAP_MechanoidMechanitor
         private static readonly Dictionary<int, TiltState> TiltStates = new();
         private static readonly Dictionary<Pawn, GlowState> GlowStates = new();
         private static readonly Dictionary<int, int> LastGroundWashTick = new();
+        private static readonly Dictionary<int, IntVec3> LastRevealedFogCell = new();
         private static readonly Dictionary<string, Graphic[]> FlameGraphics = new();
         private static readonly Dictionary<string, Graphic[]> CoreGraphics = new();
         private static readonly Dictionary<string, Graphic[]> GlowGraphics = new();
@@ -43,26 +44,26 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightAuthorizationRecord record)
         {
             MechanicalFlightProfileDef? profile = record.Profile;
-            if (profile == null || !MechanicalFlightUtility.HasHoverVisual(pawn)
-                || !CanUseHoverVisualOffset(pawn, profile))
+            if (profile == null
+                || !MechanicalFlightUtility.HasHoverVisual(pawn, record))
             {
                 return Vector3.zero;
             }
 
-            float period = Mathf.Max(1f, profile.hoverBobPeriodTicks);
-            float phase = (Find.TickManager.TicksGame + pawn.thingIDNumber % 100)
-                / period * Mathf.PI * 2f;
-            float height = profile.hoverExtraVisualHeight
-                + Mathf.Sin(phase) * profile.hoverBobAmplitude;
-            return new Vector3(0f, 0f, height * pawn.flight.PositionOffsetFactor);
+            // 与 TotalVisualZOffset / 起降过渡共用同一帧缓存的悬浮高度。
+            float height = MechanicalFlightVisualSmoothing.ExtraHoverHeight(
+                pawn, profile);
+            return new Vector3(
+                0f, 0f, height * pawn.flight.PositionOffsetFactor);
         }
 
         public static Vector3 GroundAnchorDrawPos(Pawn pawn)
         {
             Vector3 drawPos = pawn.DrawPos;
-            if (pawn.flight == null || !MechanicalFlightUtility.HasHoverVisual(pawn)
-                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                    pawn, out MechanicalFlightAuthorizationRecord? record)
+            if (!MechanicalFlightUtility.TryGetHoverVisualState(
+                    pawn,
+                    out MechanicalFlightAuthorizationRecord? record,
+                    out _)
                 || record == null)
             {
                 return drawPos;
@@ -72,20 +73,6 @@ namespace MAP_MechanoidMechanitor
             drawPos -= new Vector3(0f, 0f,
                 VanillaFlightDrawOffset * pawn.flight.PositionOffsetFactor);
             return drawPos;
-        }
-
-        private static bool CanUseHoverVisualOffset(
-            Pawn pawn,
-            MechanicalFlightProfileDef profile)
-        {
-            if (!pawn.Spawned || pawn.Map == null)
-            {
-                return false;
-            }
-
-            float shiftedZ = pawn.Position.ToVector3Shifted().z
-                + profile.hoverExtraVisualHeight;
-            return shiftedZ >= 0f && shiftedZ < pawn.Map.Size.z;
         }
 
         public static float FlightTiltAngle(
@@ -112,7 +99,8 @@ namespace MAP_MechanoidMechanitor
             float target = 0f;
             Vector3 drawPos = pawn.DrawPos;
             int tick = Find.TickManager.TicksGame;
-            if (MechanicalFlightUtility.HasHoverVisual(pawn) && pawn.pather?.MovingNow == true)
+            if (MechanicalFlightUtility.HasHoverVisual(pawn, record)
+                && pawn.pather?.MovingNow == true)
             {
                 float horizontal = state.HasLastDrawPos ? drawPos.x - state.LastDrawPos.x : 0f;
                 if (Mathf.Abs(horizontal) >= 0.0005f)
@@ -146,7 +134,7 @@ namespace MAP_MechanoidMechanitor
         {
             MechanicalFlightProfileDef? profile = record.Profile;
             if (profile == null || !profile.drawThruster
-                || !MechanicalFlightUtility.HasHoverVisual(pawn))
+                || !MechanicalFlightUtility.HasHoverVisual(pawn, record))
             {
                 return;
             }
@@ -182,7 +170,7 @@ namespace MAP_MechanoidMechanitor
 
             if (pawn.Faction == Faction.OfPlayer)
             {
-                RevealFlightFogArea(pawn.Position, pawn.Map);
+                TryRevealFlightFog(pawn);
             }
             if (profile.drawGroundWash)
             {
@@ -217,6 +205,7 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             TiltStates.Remove(pawn.thingIDNumber);
             LastGroundWashTick.Remove(pawn.thingIDNumber);
+            LastRevealedFogCell.Remove(pawn.thingIDNumber);
         }
 
         internal static void ClearAllRuntimeState()
@@ -226,6 +215,7 @@ namespace MAP_MechanoidMechanitor
             TiltStates.Clear();
             GlowStates.Clear();
             LastGroundWashTick.Clear();
+            LastRevealedFogCell.Clear();
             MechanicalFlightVisualSmoothing.ClearAllRuntimeState();
             MechanicalFlightCruisePresentation.ClearAllRuntimeState();
         }
@@ -435,6 +425,20 @@ namespace MAP_MechanoidMechanitor
             return hour >= 19 || hour < 6;
         }
 
+        private static void TryRevealFlightFog(Pawn pawn)
+        {
+            int key = pawn.thingIDNumber;
+            IntVec3 center = pawn.Position;
+            if (LastRevealedFogCell.TryGetValue(key, out IntVec3 last)
+                && last == center)
+            {
+                return;
+            }
+
+            LastRevealedFogCell[key] = center;
+            RevealFlightFogArea(center, pawn.Map);
+        }
+
         private static void RevealFlightFogArea(IntVec3 center, Map map)
         {
             const int cellRadius = 2;
@@ -500,10 +504,10 @@ namespace MAP_MechanoidMechanitor
         public static void Postfix(Pawn_DrawTracker __instance, ref Vector3 __result)
         {
             Pawn pawn = PawnField(__instance);
-            if (pawn.flight == null || !pawn.Spawned
-                || !MechanicalFlightUtility.HasHoverVisual(pawn)
-                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                    pawn, out MechanicalFlightAuthorizationRecord? record)
+            if (!MechanicalFlightUtility.TryGetHoverVisualState(
+                    pawn,
+                    out MechanicalFlightAuthorizationRecord? record,
+                    out _)
                 || record == null)
             {
                 return;
@@ -585,16 +589,21 @@ namespace MAP_MechanoidMechanitor
         {
             // Selector 使用1格宽选取半径；0.8格调用来自浮动菜单等其他交互，
             // 不应因本次左键选中手感调整而扩大目标获取范围。
-            if (pawnWideClickRadius < 0.999f || Find.CurrentMap == null)
+            Map? map = Find.CurrentMap;
+            if (pawnWideClickRadius < 0.999f || map == null)
             {
                 return;
             }
 
-            IReadOnlyList<Pawn> pawns = Find.CurrentMap.mapPawns.AllPawnsSpawned;
-            for (int i = 0; i < pawns.Count; i++)
+            IReadOnlyList<MechanicalFlightAuthorizationRecord> records =
+                GameComponent_MechanicalFlightRegistry.GetActiveRecordsForReading();
+            for (int i = 0; i < records.Count; i++)
             {
-                Pawn pawn = pawns[i];
-                if (!MechanicalFlightUtility.HasHoverVisual(pawn)
+                MechanicalFlightAuthorizationRecord? record = records[i];
+                Pawn? pawn = record?.Pawn;
+                if (pawn == null || pawn.Dead || pawn.Destroyed || pawn.Discarded
+                    || !pawn.Spawned || pawn.Map != map
+                    || !MechanicalFlightUtility.HasHoverVisual(pawn, record!)
                     || pawn.IsHiddenFromPlayer()
                     || __result.Contains(pawn)
                     || !clickParams.CanTarget(pawn, source))
@@ -635,10 +644,11 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn pawn = PawnField(__instance);
             if (phase != DrawPhase.Draw
-                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                    pawn, out MechanicalFlightAuthorizationRecord? record)
-                || record == null || !pawn.Spawned
-                || !MechanicalFlightUtility.HasHoverVisual(pawn))
+                || !MechanicalFlightUtility.TryGetHoverVisualState(
+                    pawn,
+                    out MechanicalFlightAuthorizationRecord? record,
+                    out _)
+                || record == null)
             {
                 return;
             }
@@ -658,9 +668,9 @@ namespace MAP_MechanoidMechanitor
         public static void Prefix(PawnRenderer __instance, ref float angle)
         {
             Pawn pawn = PawnField(__instance);
-            if (GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                && record != null && pawn.Spawned
-                && MechanicalFlightUtility.HasHoverVisual(pawn))
+            if (MechanicalFlightUtility.TryGetHoverVisualState(
+                    pawn, out var record, out _)
+                && record != null)
             {
                 angle += MechanicalFlightPresentationUtility.FlightTiltAngle(pawn, record);
             }
@@ -678,10 +688,8 @@ namespace MAP_MechanoidMechanitor
         public static void Prefix(PawnRenderer __instance, out bool __state)
         {
             Pawn pawn = PawnField(__instance);
-            __state = GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                    pawn, out MechanicalFlightAuthorizationRecord? record)
-                && record != null && pawn.Spawned
-                && MechanicalFlightUtility.HasHoverVisual(pawn);
+            __state = MechanicalFlightUtility.TryGetHoverVisualState(
+                pawn, out _, out _);
             if (__state)
             {
                 MechanicalFlightGroundAnchorContext.BeginShadowCompensation();

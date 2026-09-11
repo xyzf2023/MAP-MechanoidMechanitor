@@ -95,6 +95,16 @@ namespace MAP_MechanoidMechanitor
             return snapshot;
         }
 
+        /// <summary>
+        /// 无分配只读入口：直接暴露当前活跃运行记录列表，调用方不得修改。
+        /// </summary>
+        internal static IReadOnlyList<MechanicalFlightAuthorizationRecord>
+            GetActiveRecordsForReading()
+        {
+            GameComponent_MechanicalFlightRegistry? registry = CurrentRegistry;
+            return registry != null ? registry.activeRecords : EmptySnapshot;
+        }
+
         public static bool TryAuthorize(
             Pawn? pawn,
             MechanicalFlightProfileDef? profile = null)

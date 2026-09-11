@@ -64,8 +64,47 @@ namespace MAP_MechanoidMechanitor
 
         public static bool HasHoverVisual(Pawn? pawn)
         {
-            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                || record == null || pawn?.flight == null)
+            return TryGetHoverVisualState(pawn, out _, out _);
+        }
+
+        /// <summary>
+        /// 统一悬浮视觉查询：一次完成 Pawn 非空、已 Spawn、Map 存在、flight 存在、
+        /// 授权记录存在、Profile 存在以及当前应显示悬浮视觉的全部检查。
+        /// 调用方拿到 record 后不得再次通过 HasHoverVisual(pawn) 重复查询注册表。
+        /// </summary>
+        internal static bool TryGetHoverVisualState(
+            Pawn? pawn,
+            out MechanicalFlightAuthorizationRecord? record,
+            out MechanicalFlightProfileDef? profile)
+        {
+            record = null;
+            profile = null;
+            if (pawn?.Spawned != true || pawn.Map == null || pawn.flight == null)
+            {
+                return false;
+            }
+
+            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out record)
+                || record == null || record.Profile == null)
+            {
+                return false;
+            }
+
+            if (!HasHoverVisual(pawn, record))
+            {
+                record = null;
+                return false;
+            }
+
+            profile = record.Profile;
+            return true;
+        }
+
+        internal static bool HasHoverVisual(
+            Pawn pawn,
+            MechanicalFlightAuthorizationRecord record)
+        {
+            if (pawn.flight == null)
             {
                 return false;
             }

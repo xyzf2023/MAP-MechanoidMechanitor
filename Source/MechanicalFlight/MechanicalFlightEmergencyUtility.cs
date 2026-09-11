@@ -9,6 +9,8 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MechanicalFlightEmergencyUtility
     {
+        private const int EmergencyTargetValidationIntervalTicks = 30;
+
         internal struct DeathCrashState
         {
             internal bool ShouldCrash;
@@ -127,6 +129,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             record.EmergencyLandingTarget = target;
+            record.EmergencyTargetMap = pawn.Map;
+            record.NextEmergencyTargetValidationTick =
+                GenTicks.TicksGame + EmergencyTargetValidationIntervalTicks;
             record.TicksUntilNextEnergyDrain = 0;
             record.Phase = pawn.Position == target
                 ? MechanicalFlightPhase.EmergencyLanding
@@ -221,7 +226,8 @@ namespace MAP_MechanoidMechanitor
                         return;
                     }
                 }
-                if (!TryValidateOrReplanEmergencyTarget(pawn, record))
+                if (!TryValidateOrReplanEmergencyTarget(
+                        pawn, record, forceValidation: true))
                 {
                     Crash(pawn, record);
                     return;
@@ -247,7 +253,8 @@ namespace MAP_MechanoidMechanitor
                     StartOrRepairEmergencyJob(pawn, record);
                     return;
                 }
-                if (!TryValidateOrReplanEmergencyTarget(pawn, record))
+                if (!TryValidateOrReplanEmergencyTarget(
+                        pawn, record, forceValidation: true))
                 {
                     Crash(pawn, record);
                     return;
@@ -282,7 +289,8 @@ namespace MAP_MechanoidMechanitor
 
         private static bool TryValidateOrReplanEmergencyTarget(
             Pawn pawn,
-            MechanicalFlightAuthorizationRecord record)
+            MechanicalFlightAuthorizationRecord record,
+            bool forceValidation)
         {
             Map? map = pawn.Map;
             if (map == null)
@@ -291,9 +299,27 @@ namespace MAP_MechanoidMechanitor
             }
 
             IntVec3 target = record.EmergencyLandingTarget;
+            if (!target.IsValid
+                || !target.InBounds(map)
+                || !ReferenceEquals(record.EmergencyTargetMap, map))
+            {
+                // 目标越界或 Map 变化必须立即强制验证。
+                forceValidation = true;
+            }
+
+            if (!forceValidation
+                && GenTicks.TicksGame < record.NextEmergencyTargetValidationTick)
+            {
+                // 未到检查时间且目标基础状态正常：复用上一次的安全判定。
+                return true;
+            }
+
             if (target.IsValid && target.InBounds(map)
                 && IsSafeLandingCell(target, pawn, map))
             {
+                record.EmergencyTargetMap = map;
+                record.NextEmergencyTargetValidationTick =
+                    GenTicks.TicksGame + EmergencyTargetValidationIntervalTicks;
                 return true;
             }
 
@@ -302,6 +328,9 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
             record.EmergencyLandingTarget = newTarget;
+            record.EmergencyTargetMap = map;
+            record.NextEmergencyTargetValidationTick =
+                GenTicks.TicksGame + EmergencyTargetValidationIntervalTicks;
             return true;
         }
 
@@ -309,7 +338,24 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             MechanicalFlightAuthorizationRecord record)
         {
-            if (!TryValidateOrReplanEmergencyTarget(pawn, record))
+            Map? map = pawn.Map;
+            if (map == null)
+            {
+                Crash(pawn, record);
+                return;
+            }
+
+            // 预约丢失或任务丢失时立即强制重新验证目标；正常情况下按30 Tick节流。
+            IntVec3 previousTarget = record.EmergencyLandingTarget;
+            bool jobOrReservationMissing =
+                !previousTarget.IsValid
+                || pawn.CurJobDef
+                    != MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding
+                || pawn.CurJob?.targetA.Cell != previousTarget
+                || !map.reservationManager.ReservedBy(
+                    new LocalTargetInfo(previousTarget), pawn);
+            if (!TryValidateOrReplanEmergencyTarget(
+                    pawn, record, jobOrReservationMissing))
             {
                 Crash(pawn, record);
                 return;
@@ -372,7 +418,8 @@ namespace MAP_MechanoidMechanitor
                 Crash(pawn, record);
                 return;
             }
-            if (!TryValidateOrReplanEmergencyTarget(pawn, record))
+            if (!TryValidateOrReplanEmergencyTarget(
+                    pawn, record, forceValidation: true))
             {
                 Crash(pawn, record);
                 return;
