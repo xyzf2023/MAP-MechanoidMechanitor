@@ -39,7 +39,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (!(parent is Building_SubcoreScanner scanner)
                 || !MindMappingScannerUtility.IsRipscanner(scanner)
-                || DefDatabase<ResearchProjectDef>.GetNamedSilentFail("MAP_MindMapping")?.IsFinished != true)
+                || !ResearchFeatureUnlockUtility.IsMindMappingUnlocked())
             {
                 yield break;
             }

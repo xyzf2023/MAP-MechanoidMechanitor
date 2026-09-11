@@ -11,12 +11,22 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class ResearchFeatureUnlockUtility
     {
+        public const string MindMappingResearchDefName = "MAP_MindMapping";
+
         private static ResearchProjectDef? cachedStandardMechtech;
         private static bool standardMechtechMissingLogged;
+        private static ResearchProjectDef? cachedMindMapping;
+        private static bool mindMappingMissingLogged;
 
         public static bool IsStandardMechtechFinished()
         {
             ResearchProjectDef? research = GetStandardMechtech();
+            return research != null && research.IsFinished;
+        }
+
+        public static bool IsMindMappingUnlocked()
+        {
+            ResearchProjectDef? research = GetMindMappingResearch();
             return research != null && research.IsFinished;
         }
 
@@ -38,6 +48,26 @@ namespace MAP_MechanoidMechanitor
             }
 
             return cachedStandardMechtech;
+        }
+
+        private static ResearchProjectDef? GetMindMappingResearch()
+        {
+            if (cachedMindMapping != null)
+            {
+                return cachedMindMapping;
+            }
+
+            cachedMindMapping =
+                DefDatabase<ResearchProjectDef>.GetNamedSilentFail(
+                    MindMappingResearchDefName);
+            if (cachedMindMapping == null && !mindMappingMissingLogged)
+            {
+                mindMappingMissingLogged = true;
+                Log.Error(
+                    "[MAP-机械族机械师] 找不到 MindMapping 科研 Def。");
+            }
+
+            return cachedMindMapping;
         }
 
         public static bool IsAbilityUnlocked(ManagedResearchAbilityDescriptor descriptor)
