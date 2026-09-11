@@ -10,6 +10,9 @@
     <expandingIcon>true</expandingIcon>
     <expandingIconPriority>70</expandingIconPriority>
     <selectable>true</selectable>
+    <comps>
+      <li Class="WorldObjectCompProperties_FormCaravan" />
+    </comps>
     <IncidentTargetTags>
       <li>Map_Misc</li>
     </IncidentTargetTags>
