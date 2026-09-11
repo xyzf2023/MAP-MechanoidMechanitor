@@ -365,7 +365,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechanicalFlightCruisePresentation.DrawThrusterVisual(
-                pawn, record, bodyDrawLoc, tiltAngle);
+                pawn, record!, bodyDrawLoc, tiltAngle);
             return false;
         }
     }
