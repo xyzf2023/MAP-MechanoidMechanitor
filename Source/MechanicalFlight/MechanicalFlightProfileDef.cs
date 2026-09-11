@@ -10,8 +10,6 @@ namespace MAP_MechanoidMechanitor
         public float energyDrainFraction = 0.005f;
         public int energyDrainIntervalTicks = 60;
         public float flightCellsPerSecond = 30f;
-        public float takeoffTravelRampStartFactor = 0.12f;
-        public float takeoffTravelRampFullSpeedFactor = 0.65f;
 
         public float lowEnergyWarningThreshold = 0.10f;
         public int emergencyLandingSearchRadius = 3;

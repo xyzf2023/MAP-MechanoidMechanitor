@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -10,112 +7,6 @@ using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
-    /// <summary>
-    /// 通用机械飞行的起飞巡航曲线。只限制 TakingOff 阶段的水平速度；
-    /// 稳定悬浮和紧急迫降继续使用配置中的完整飞行速度。
-    /// </summary>
-    internal static class MechanicalFlightCruiseUtility
-    {
-        internal static float TravelRamp(
-            Pawn? pawn,
-            MechanicalFlightAuthorizationRecord? record)
-        {
-            MechanicalFlightProfileDef? profile = record?.Profile;
-            if (pawn?.flight == null || profile == null
-                || record!.Phase != MechanicalFlightPhase.TakingOff)
-            {
-                return 1f;
-            }
-
-            float start = Mathf.Clamp01(profile.takeoffTravelRampStartFactor);
-            float full = Mathf.Clamp01(profile.takeoffTravelRampFullSpeedFactor);
-            if (full <= start)
-            {
-                full = Mathf.Min(1f, start + 0.001f);
-            }
-
-            float progress = Mathf.InverseLerp(
-                start, full, pawn.flight.PositionOffsetFactor);
-            return Mathf.SmoothStep(0f, 1f, progress);
-        }
-
-        internal static float RampAdjustedFlightSpeed(
-            MechanicalFlightProfileDef profile,
-            Pawn pawn)
-        {
-            float baseSpeed = Mathf.Max(0.01f, profile.flightCellsPerSecond);
-            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                    pawn, out MechanicalFlightAuthorizationRecord? record)
-                || record?.Profile != profile)
-            {
-                return baseSpeed;
-            }
-
-            // TickDirectPath 后续会再次以 0.01 做最小值保护。
-            // 起飞最初阶段保持这一极小值，避免除零，同时视觉上等同原地抬升。
-            return baseSpeed * TravelRamp(pawn, record);
-        }
-    }
-
-    /// <summary>
-    /// 将连续直线飞行实际使用的 flightCellsPerSecond 替换为起飞曲线后的速度。
-    /// 仅替换 TickDirectPath 内唯一一次配置速度读取，不接管或复制现有寻路逻辑。
-    /// </summary>
-    [HarmonyPatch(typeof(MechanicalFlightStraightPathPatch), "TickDirectPath")]
-    internal static class MechanicalFlightTakeoffAccelerationPatch
-    {
-        private const string LogPrefix =
-            "[MAP-机械族机械师] MechanicalFlightTakeoffAccelerationPatch：";
-
-        [HarmonyTranspiler]
-        public static IEnumerable<CodeInstruction> Transpiler(
-            IEnumerable<CodeInstruction> instructions)
-        {
-            List<CodeInstruction> codes = new(instructions);
-            FieldInfo? speedField = AccessTools.Field(
-                typeof(MechanicalFlightProfileDef),
-                nameof(MechanicalFlightProfileDef.flightCellsPerSecond));
-            MethodInfo? helper = AccessTools.Method(
-                typeof(MechanicalFlightCruiseUtility),
-                nameof(MechanicalFlightCruiseUtility.RampAdjustedFlightSpeed));
-
-            if (speedField == null || helper == null)
-            {
-                Log.Error($"{LogPrefix}未找到速度字段或辅助方法，起飞加速曲线未应用。");
-                return codes;
-            }
-
-            List<int> matches = new();
-            for (int i = 0; i < codes.Count; i++)
-            {
-                if (codes[i].opcode == OpCodes.Ldfld
-                    && Equals(codes[i].operand, speedField))
-                {
-                    matches.Add(i);
-                }
-            }
-
-            if (matches.Count != 1)
-            {
-                Log.Error($"{LogPrefix}TickDirectPath 中 flightCellsPerSecond 读取预期 1 处，"
-                    + $"实际找到 {matches.Count} 处，起飞加速曲线未应用。");
-                return codes;
-            }
-
-            int index = matches[0];
-            CodeInstruction original = codes[index];
-            CodeInstruction loadPawn = new(OpCodes.Ldarg_1);
-            loadPawn.labels.AddRange(original.labels);
-            original.labels.Clear();
-            loadPawn.blocks.AddRange(original.blocks);
-            original.blocks.Clear();
-            codes.Insert(index, loadPawn);
-            original.opcode = OpCodes.Call;
-            original.operand = helper;
-            return codes;
-        }
-    }
-
     internal static class MechanicalFlightCruisePresentation
     {
         private const int PulseSteps = 8;
@@ -147,9 +38,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        internal static float ExhaustStretch(
-            Pawn pawn,
-            MechanicalFlightAuthorizationRecord record)
+        internal static float ExhaustStretch(Pawn pawn)
         {
             if (!ExhaustStates.TryGetValue(pawn.thingIDNumber, out ExhaustState? state))
             {
@@ -165,7 +54,7 @@ namespace MAP_MechanoidMechanitor
             state.LastFrame = Time.frameCount;
             float target = MechanicalFlightUtility.HasHoverVisual(pawn)
                 && pawn.pather?.MovingNow == true
-                ? MechanicalFlightCruiseUtility.TravelRamp(pawn, record)
+                ? 1f
                 : 0f;
             state.Stretch = Mathf.MoveTowards(
                 state.Stretch,
@@ -192,7 +81,7 @@ namespace MAP_MechanoidMechanitor
                 * 0.24f) + 1f) * 0.5f;
             int pulseIndex = Mathf.Clamp(
                 Mathf.RoundToInt(pulse * (PulseSteps - 1)), 0, PulseSteps - 1);
-            float stretch = ExhaustStretch(pawn, record);
+            float stretch = ExhaustStretch(pawn);
             int stretchIndex = Mathf.Clamp(
                 Mathf.RoundToInt(stretch * (StretchSteps - 1)), 0, StretchSteps - 1);
 
@@ -344,7 +233,7 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 保留现有推进焰绘制入口，但以“脉动 × 巡航拉伸”的缓存图形替换固定长度版本。
+    /// 保留现有推进焰绘制入口，以“脉动 × 移动拉伸”的缓存图形替换固定长度版本。
     /// </summary>
     [HarmonyPatch(typeof(MechanicalFlightPresentationUtility),
         nameof(MechanicalFlightPresentationUtility.DrawThrusterVisual))]

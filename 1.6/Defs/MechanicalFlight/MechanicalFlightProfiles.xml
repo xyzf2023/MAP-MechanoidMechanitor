@@ -8,8 +8,6 @@
     <energyDrainFraction>0.005</energyDrainFraction>
     <energyDrainIntervalTicks>60</energyDrainIntervalTicks>
     <flightCellsPerSecond>30</flightCellsPerSecond>
-    <takeoffTravelRampStartFactor>0.12</takeoffTravelRampStartFactor>
-    <takeoffTravelRampFullSpeedFactor>0.65</takeoffTravelRampFullSpeedFactor>
     <lowEnergyWarningThreshold>0.10</lowEnergyWarningThreshold>
     <emergencyLandingSearchRadius>3</emergencyLandingSearchRadius>
     <crashDamagePerWeightClass>30</crashDamagePerWeightClass>
