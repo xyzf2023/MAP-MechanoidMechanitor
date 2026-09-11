@@ -219,6 +219,15 @@ namespace MAP_MechanoidMechanitor
             LastGroundWashTick.Remove(pawn.thingIDNumber);
         }
 
+        internal static void ClearAllRuntimeState()
+        {
+            // 游戏切换时旧 Map 已不再参与绘制；清空引用即可释放 Pawn/Map，
+            // 图形资源缓存不含游戏对象，可以跨存档继续复用。
+            TiltStates.Clear();
+            GlowStates.Clear();
+            LastGroundWashTick.Clear();
+        }
+
         private static Graphic[] GetFlameGraphics(MechanicalFlightProfileDef profile)
         {
             if (!FlameGraphics.TryGetValue(profile.thrusterFlameTexture, out Graphic[]? graphics))
@@ -445,9 +454,11 @@ namespace MAP_MechanoidMechanitor
     {
         [ThreadStatic] private static int groundAnchorDepth;
         [ThreadStatic] private static int legacySelectionDepth;
+        [ThreadStatic] private static int shadowCompensationDepth;
 
         internal static bool Active => groundAnchorDepth > 0;
         internal static bool LegacySelectionActive => legacySelectionDepth > 0;
+        internal static bool ShadowCompensationActive => shadowCompensationDepth > 0;
 
         internal static void Begin() => groundAnchorDepth++;
         internal static void End()
@@ -464,6 +475,15 @@ namespace MAP_MechanoidMechanitor
             if (legacySelectionDepth > 0)
             {
                 legacySelectionDepth--;
+            }
+        }
+
+        internal static void BeginShadowCompensation() => shadowCompensationDepth++;
+        internal static void EndShadowCompensation()
+        {
+            if (shadowCompensationDepth > 0)
+            {
+                shadowCompensationDepth--;
             }
         }
     }
@@ -494,6 +514,16 @@ namespace MAP_MechanoidMechanitor
                 __result.z = exactGroundDrawPos.z
                     + MechanicalFlightPresentationUtility.VanillaFlightDrawOffset
                     * pawn.flight.PositionOffsetFactor;
+            }
+
+            if (MechanicalFlightGroundAnchorContext.ShadowCompensationActive)
+            {
+                // DrawShadowInternal 随后还会减去完整 PositionOffsetFactor。
+                // 此处补足原版 DrawPos 的剩余 0.4，使最终阴影恰好回到地面锚点。
+                __result += new Vector3(0f, 0f,
+                    (1f - MechanicalFlightPresentationUtility.VanillaFlightDrawOffset)
+                    * pawn.flight.PositionOffsetFactor);
+                return;
             }
 
             if (MechanicalFlightGroundAnchorContext.Active)
@@ -641,8 +671,8 @@ namespace MAP_MechanoidMechanitor
         private static readonly AccessTools.FieldRef<PawnRenderer, Pawn> PawnField =
             AccessTools.FieldRefAccess<PawnRenderer, Pawn>("pawn");
 
-        // 原版飞行分支使用 pawn.DrawPos 而不是 drawLoc；这里复用地面锚点上下文，
-        // 让本次 DrawPos 读取落在真实逻辑地面锚点上，从而不再跟随额外悬浮高度。
+        // 原版飞行分支会在 pawn.DrawPos 之后再减去完整的 PositionOffsetFactor；
+        // 使用独立上下文只补偿该次读取，避免影响选框所需的地面锚点语义。
         public static void Prefix(PawnRenderer __instance, out bool __state)
         {
             Pawn pawn = PawnField(__instance);
@@ -652,7 +682,7 @@ namespace MAP_MechanoidMechanitor
                 && MechanicalFlightUtility.HasHoverVisual(pawn);
             if (__state)
             {
-                MechanicalFlightGroundAnchorContext.Begin();
+                MechanicalFlightGroundAnchorContext.BeginShadowCompensation();
             }
         }
 
@@ -660,7 +690,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (__state)
             {
-                MechanicalFlightGroundAnchorContext.End();
+                MechanicalFlightGroundAnchorContext.EndShadowCompensation();
             }
             return __exception;
         }

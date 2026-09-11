@@ -119,8 +119,7 @@ namespace MAP_MechanoidMechanitor
         public static IEnumerable<CodeInstruction> Transpiler(
             IEnumerable<CodeInstruction> instructions)
         {
-            List<CodeInstruction> original = new List<CodeInstruction>(instructions);
-            List<CodeInstruction> codes = new List<CodeInstruction>(original);
+            List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
             // 原版调用的是 FleckMaker.Static(IntVec3, Map, FleckDef, float) 重载。
             MethodInfo? fleckStaticCell = AccessTools.Method(
                 typeof(FleckMaker),
@@ -137,11 +136,12 @@ namespace MAP_MechanoidMechanitor
                 || helperMethod == null)
             {
                 Log.Error($"{LogPrefix}未找到 FleckMaker.Static 重载或辅助方法，补丁未应用。");
-                return original;
+                return codes;
             }
 
             int fleckMatches = 0;
-            int replaced = 0;
+            int matchedPositionIndex = -1;
+            int matchedFleckIndex = -1;
             for (int i = 0; i < codes.Count; i++)
             {
                 CodeInstruction instruction = codes[i];
@@ -180,27 +180,37 @@ namespace MAP_MechanoidMechanitor
                                 || previous.opcode == OpCodes.Callvirt)
                             && previous.operand is MethodInfo casterGetter
                             && casterGetter.Name == "get_Caster");
-                    if (!casterLoad)
+                    if (casterLoad)
                     {
-                        break;
+                        if (matchedPositionIndex != -1)
+                        {
+                            matchedPositionIndex = -2;
+                        }
+                        else
+                        {
+                            matchedPositionIndex = j;
+                            matchedFleckIndex = i;
+                        }
                     }
-
-                    candidate.opcode = OpCodes.Call;
-                    candidate.operand = helperMethod;
-                    instruction.opcode = OpCodes.Call;
-                    instruction.operand = fleckStaticVector;
-                    replaced++;
                     break;
                 }
             }
 
-            if (fleckMatches != 1 || replaced != 1)
+            // 先完成全部定位和唯一性校验，再修改指令对象。这样失败回退时
+            // 返回的 codes 仍是完全未改动的原始 IL。
+            if (fleckMatches != 1 || matchedPositionIndex < 0
+                || matchedFleckIndex < 0)
             {
                 Log.Error($"{LogPrefix}Verb.TryCastNextBurstShot 中枪口 Fleck 预期匹配 1 处，"
-                    + $"实际 Fleck {fleckMatches} 处、替换 {replaced} 处，补丁未应用。");
-                return original;
+                    + $"实际 Fleck {fleckMatches} 处、有效位置 "
+                    + $"{(matchedPositionIndex >= 0 ? 1 : 0)} 处，补丁未应用。");
+                return codes;
             }
 
+            codes[matchedPositionIndex].opcode = OpCodes.Call;
+            codes[matchedPositionIndex].operand = helperMethod;
+            codes[matchedFleckIndex].opcode = OpCodes.Call;
+            codes[matchedFleckIndex].operand = fleckStaticVector;
             return codes;
         }
     }

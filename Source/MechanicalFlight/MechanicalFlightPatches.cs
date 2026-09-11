@@ -385,6 +385,11 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        internal static void ClearAllMotion()
+        {
+            DirectMotionStates.Clear();
+        }
+
         private static Vector3 CurrentGroundPosition(Pawn pawn)
         {
             return TryGetExactGroundDrawPos(pawn, out Vector3 exact)
@@ -466,12 +471,9 @@ namespace MAP_MechanoidMechanitor
             IntVec3 best = IntVec3.Invalid;
             foreach (IntVec3 cell in candidates)
             {
-                // Touch 语义只允许停在目标占用区域旁，不进入目标 Thing 的占用格。
-                if (occupied.Contains(cell))
-                {
-                    continue;
-                }
-                if (!cell.WalkableBy(map, pawn))
+                if (!cell.WalkableBy(map, pawn)
+                    || !TouchPathEndModeUtility.IsAdjacentOrInsideAndAllowedToTouch(
+                        cell, resolved, map))
                 {
                     continue;
                 }
@@ -779,7 +781,8 @@ namespace MAP_MechanoidMechanitor
             bool allSelectedPawnsFlying = flyers.Count == selectedPawns.Count;
             List<Pawn>? groundPawns = allSelectedPawnsFlying
                 ? null
-                : selectedPawns.FindAll(pawn => pawn != null && !flyers.Contains(pawn));
+                : selectedPawns.FindAll(pawn => pawn != null && pawn.Drafted
+                    && pawn.Spawned && !flyers.Contains(pawn));
             __result ??= new List<FloatMenuOption>();
             // 原版征召移动会先吸附到附近可站立格；无论是否混编，飞行单位都不能接受该目标。
             __result.RemoveAll(option => option.isGoto);
@@ -841,7 +844,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < groundPawns.Count; i++)
             {
                 Pawn pawn = groundPawns[i];
-                if (pawn == null || !pawn.Spawned || pawn.Map != map)
+                if (pawn == null || !pawn.Drafted || !pawn.Spawned || pawn.Map != map)
                 {
                     continue;
                 }

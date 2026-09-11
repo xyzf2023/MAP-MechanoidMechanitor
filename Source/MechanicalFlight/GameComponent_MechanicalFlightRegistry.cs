@@ -134,6 +134,13 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            // 授权记录不能在空中直接移除，否则原版飞行跟踪器和路径状态会失去
+            // 对应状态机。先要求其正常/迫降完成，再允许撤销。
+            if (record.IsRuntimeActive)
+            {
+                return false;
+            }
+
             MechanicalFlightUtility.ClearRuntimeState(record, forceLand: false);
             registry.authorizationRecords.RemoveAll(candidate =>
                 candidate != null && ReferenceEquals(candidate.Pawn, pawn));
@@ -223,6 +230,8 @@ namespace MAP_MechanoidMechanitor
             base.StartedNewGame();
             cachedRegistryGame = Current.Game;
             cachedRegistry = this;
+            MechanicalFlightPresentationUtility.ClearAllRuntimeState();
+            MechanicalFlightStraightPathPatch.ClearAllMotion();
             RebuildCaches();
         }
 
@@ -231,6 +240,8 @@ namespace MAP_MechanoidMechanitor
             base.LoadedGame();
             cachedRegistryGame = Current.Game;
             cachedRegistry = this;
+            MechanicalFlightPresentationUtility.ClearAllRuntimeState();
+            MechanicalFlightStraightPathPatch.ClearAllMotion();
             RebuildCaches();
             MechanicalFlightUtility.ReconcileAfterLoad(activeRecords);
         }
