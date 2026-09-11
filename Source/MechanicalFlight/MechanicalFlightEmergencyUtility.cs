@@ -226,14 +226,8 @@ namespace MAP_MechanoidMechanitor
                     Crash(pawn, record);
                     return;
                 }
-                if (pawn.Position == record.EmergencyLandingTarget)
-                {
-                    BeginEmergencyLanding(pawn, record);
-                }
-                else
-                {
-                    StartOrRepairEmergencyJob(pawn, record);
-                }
+                // 即使已经站在落点，也必须先创建迫降 Job 并真实持有预留。
+                StartOrRepairEmergencyJob(pawn, record);
             }
             else if (record.Phase == MechanicalFlightPhase.EmergencyLanding)
             {
@@ -246,7 +240,11 @@ namespace MAP_MechanoidMechanitor
                 }
                 if (state == MechanicalFlightUtility.VanillaFlightState.Landing)
                 {
-                    // 保留原版降落进度，不做任何重置。
+                    // 保留原版降落进度，但清除旧版本可能保存下来的残留路径，
+                    // 并补建迫降 Job/预留。
+                    pawn.pather?.StopDead();
+                    MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+                    StartOrRepairEmergencyJob(pawn, record);
                     return;
                 }
                 if (!TryValidateOrReplanEmergencyTarget(pawn, record))
@@ -254,16 +252,7 @@ namespace MAP_MechanoidMechanitor
                     Crash(pawn, record);
                     return;
                 }
-                if (pawn.Position == record.EmergencyLandingTarget)
-                {
-                    BeginEmergencyLanding(pawn, record);
-                }
-                else
-                {
-                    record.Phase = MechanicalFlightPhase.EmergencyApproach;
-                    GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
-                    StartOrRepairEmergencyJob(pawn, record);
-                }
+                StartOrRepairEmergencyJob(pawn, record);
             }
             else if (record.Phase == MechanicalFlightPhase.Crashing)
             {
@@ -327,33 +316,42 @@ namespace MAP_MechanoidMechanitor
             }
 
             IntVec3 target = record.EmergencyLandingTarget;
-            if (pawn.Position == target)
-            {
-                pawn.pather?.StopDead();
-                BeginEmergencyLanding(pawn, record);
-                return;
-            }
-
-            if (record.Phase != MechanicalFlightPhase.EmergencyApproach)
+            bool alreadyAtTarget = pawn.Position == target;
+            if (!alreadyAtTarget
+                && record.Phase != MechanicalFlightPhase.EmergencyApproach)
             {
                 record.Phase = MechanicalFlightPhase.EmergencyApproach;
                 GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
             }
 
-            if (pawn.CurJobDef != MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding
-                || pawn.CurJob?.targetA.Cell != target
-                || !pawn.Map.reservationManager.ReservedBy(
-                    new LocalTargetInfo(target), pawn))
+            bool hasEmergencyJob =
+                pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding
+                && pawn.CurJob?.targetA.Cell == target;
+            bool holdsReservation = hasEmergencyJob
+                && pawn.Map.reservationManager.ReservedBy(
+                    new LocalTargetInfo(target), pawn);
+            if (!hasEmergencyJob || !holdsReservation)
             {
                 Job job = JobMaker.MakeJob(
                     MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding, target);
-                job.flying = true;
+                job.flying = !alreadyAtTarget;
                 pawn.jobs.StartJob(job, JobCondition.InterruptForced, null,
                     resumeCurJobAfterwards: false, cancelBusyStances: true,
                     thinkTree: null, tag: JobTag.SatisfyingNeeds,
                     fromQueue: false, canReturnCurJobToPool: false,
                     keepCarryingThingOverride: null, continueSleeping: false,
                     addToJobsThisTick: true, preToilReservationsCanFail: true);
+                return;
+            }
+
+            if (alreadyAtTarget)
+            {
+                pawn.pather?.StopDead();
+                MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+                if (record.Phase != MechanicalFlightPhase.EmergencyLanding)
+                {
+                    BeginEmergencyLanding(pawn, record);
+                }
             }
             else if (pawn.pather?.MovingNow != true)
             {
@@ -379,7 +377,12 @@ namespace MAP_MechanoidMechanitor
                 Crash(pawn, record);
                 return;
             }
-            if (pawn.Position != record.EmergencyLandingTarget)
+            if (pawn.Position != record.EmergencyLandingTarget
+                || pawn.CurJobDef
+                    != MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding
+                || pawn.CurJob?.targetA.Cell != record.EmergencyLandingTarget
+                || !pawn.Map.reservationManager.ReservedBy(
+                    new LocalTargetInfo(record.EmergencyLandingTarget), pawn))
             {
                 StartOrRepairEmergencyJob(pawn, record);
                 return;

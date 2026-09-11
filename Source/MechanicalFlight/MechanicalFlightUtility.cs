@@ -204,6 +204,8 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanicalFlightRoofUtility.BreakThinRoofArea(pawn, profile);
             }
+            bool interruptMovingFlightJob = pawn.CurJob?.flying == true
+                && pawn.pather?.MovingNow == true;
             pawn.pather?.StopDead();
             MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             record.Phase = MechanicalFlightPhase.Landing;
@@ -217,6 +219,12 @@ namespace MAP_MechanoidMechanitor
             }
             pawn.flight?.ForceLand();
             GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            if (interruptMovingFlightJob && pawn.CurJob != null)
+            {
+                // StopDead 不会结束等待 PatherArrival 的 Toil；主动结束原飞行移动任务，
+                // 避免降落后任务永远等待一条已经清除的路径。
+                pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+            }
             return true;
         }
 
@@ -419,6 +427,10 @@ namespace MAP_MechanoidMechanitor
                     }
                     if (state == VanillaFlightState.Landing)
                     {
+                        bool interruptMovingFlightJob = pawn.CurJob?.flying == true
+                            && pawn.pather?.MovingNow == true;
+                        pawn.pather?.StopDead();
+                        MechanicalFlightStraightPathPatch.ClearMotion(pawn);
                         record.Phase = MechanicalFlightPhase.Landing;
                         record.TicksUntilNextEnergyDrain = 0;
                         if (pawn.CurJob != null)
@@ -426,6 +438,10 @@ namespace MAP_MechanoidMechanitor
                             pawn.CurJob.flying = false;
                         }
                         GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+                        if (interruptMovingFlightJob && pawn.CurJob != null)
+                        {
+                            pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+                        }
                         continue;
                     }
                     if (!pawn.flight.Flying)
@@ -444,6 +460,8 @@ namespace MAP_MechanoidMechanitor
                     VanillaFlightState state = GetVanillaFlightState(pawn);
                     if (state == VanillaFlightState.Landing)
                     {
+                        pawn.pather?.StopDead();
+                        MechanicalFlightStraightPathPatch.ClearMotion(pawn);
                         continue;
                     }
                     if (state == VanillaFlightState.TakingOff
