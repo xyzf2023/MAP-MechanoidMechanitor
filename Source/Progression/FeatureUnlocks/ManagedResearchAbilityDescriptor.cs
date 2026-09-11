@@ -4,29 +4,57 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 受科研管理的能力描述。后续可追加 Reconstruction / Hack 等项，无需复制迁移逻辑。
+    /// 由统一能力层管理的能力描述。
+    /// 名称为兼容既有代码而保留；除科研能力外，也支持机体能力及“科研+机体”联合资格。
     /// </summary>
     public sealed class ManagedResearchAbilityDescriptor
     {
         public ManagedResearchAbilityDescriptor(
             string id,
             string abilityDefName,
-            string researchProjectDefName,
-            string unlockLetterDescriptionKey)
+            string? researchProjectDefName,
+            string? unlockLetterDescriptionKey,
+            ManagedAbilityGrantPolicy grantPolicy =
+                ManagedAbilityGrantPolicy.ResearchConsciousness,
+            ManagedAbilityTransferPolicy transferPolicy =
+                ManagedAbilityTransferPolicy.TransferWithConsciousness,
+            string? requiredCapabilityId = null,
+            bool sendResearchUnlockLetter = true,
+            bool removeWhenIneligible = true)
         {
             Id = id;
             AbilityDefName = abilityDefName;
             ResearchProjectDefName = researchProjectDefName;
             UnlockLetterDescriptionKey = unlockLetterDescriptionKey;
+            GrantPolicy = grantPolicy;
+            TransferPolicy = transferPolicy;
+            RequiredCapabilityId = requiredCapabilityId;
+            SendResearchUnlockLetter = sendResearchUnlockLetter;
+            RemoveWhenIneligible = removeWhenIneligible;
         }
 
         public string Id { get; }
 
         public string AbilityDefName { get; }
 
-        public string ResearchProjectDefName { get; }
+        public string? ResearchProjectDefName { get; }
 
-        public string UnlockLetterDescriptionKey { get; }
+        public string? UnlockLetterDescriptionKey { get; }
+
+        public ManagedAbilityGrantPolicy GrantPolicy { get; }
+
+        public ManagedAbilityTransferPolicy TransferPolicy { get; }
+
+        public string? RequiredCapabilityId { get; }
+
+        public bool SendResearchUnlockLetter { get; }
+
+        public bool RemoveWhenIneligible { get; }
+
+        public bool ParticipatesInResearchUnlockNotifications =>
+            SendResearchUnlockLetter
+            && !string.IsNullOrEmpty(ResearchProjectDefName)
+            && !string.IsNullOrEmpty(UnlockLetterDescriptionKey);
 
         private AbilityDef? cachedAbilityDef;
         private ResearchProjectDef? cachedResearchDef;
@@ -59,13 +87,19 @@ namespace MAP_MechanoidMechanitor
         {
             get
             {
+                if (string.IsNullOrEmpty(ResearchProjectDefName))
+                {
+                    return null;
+                }
+
                 if (cachedResearchDef != null)
                 {
                     return cachedResearchDef;
                 }
 
                 cachedResearchDef =
-                    DefDatabase<ResearchProjectDef>.GetNamedSilentFail(ResearchProjectDefName);
+                    DefDatabase<ResearchProjectDef>.GetNamedSilentFail(
+                        ResearchProjectDefName);
                 if (cachedResearchDef == null && !researchDefMissingLogged)
                 {
                     researchDefMissingLogged = true;
@@ -81,6 +115,12 @@ namespace MAP_MechanoidMechanitor
         {
             ResearchProjectDef? research = ResearchProjectDef;
             return research != null && research.IsFinished;
+        }
+
+        public bool IsResearchRequirementSatisfied()
+        {
+            return string.IsNullOrEmpty(ResearchProjectDefName)
+                || IsResearchFinished();
         }
     }
 }

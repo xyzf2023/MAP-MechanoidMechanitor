@@ -40,6 +40,12 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < all.Count; i++)
             {
                 ManagedResearchAbilityDescriptor descriptor = all[i];
+                if (descriptor.TransferPolicy
+                    != ManagedAbilityTransferPolicy.TransferWithConsciousness)
+                {
+                    continue;
+                }
+
                 AbilityDef? abilityDef = descriptor.AbilityDef;
                 if (abilityDef == null)
                 {

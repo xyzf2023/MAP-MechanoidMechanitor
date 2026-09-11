@@ -48,7 +48,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            bool shouldHave = ResearchFeatureUnlockUtility.ShouldPawnHaveAbility(pawn, descriptor);
+            bool shouldHave = ManagedAbilityEligibilityUtility.ShouldPawnHaveAbility(pawn, descriptor);
             Pawn_AbilityTracker? tracker = pawn!.abilities;
             Ability? existing = tracker?.GetAbility(abilityDef);
 
@@ -68,7 +68,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (existing == null || tracker == null)
+            if (existing == null || tracker == null || !descriptor.RemoveWhenIneligible)
             {
                 return;
             }

@@ -663,6 +663,11 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < all.Count; i++)
             {
                 ManagedResearchAbilityDescriptor descriptor = all[i];
+                if (!descriptor.ParticipatesInResearchUnlockNotifications)
+                {
+                    continue;
+                }
+
                 bool current = ResearchFeatureUnlockUtility.IsAbilityUnlocked(descriptor);
                 if (!lastKnownUnlockStates.TryGetValue(descriptor.Id, out bool previous))
                 {
@@ -801,7 +806,8 @@ namespace MAP_MechanoidMechanitor
             {
                 string id = ids[i];
                 ManagedResearchAbilityDescriptor? descriptor = FindAbilityDescriptorById(id);
-                if (descriptor == null)
+                if (descriptor == null
+                    || !descriptor.ParticipatesInResearchUnlockNotifications)
                 {
                     pendingUnlockLetterIds.Remove(id);
                     continue;
@@ -908,7 +914,8 @@ namespace MAP_MechanoidMechanitor
             AbilityDef abilityDef)
         {
             TaggedString abilityLabel = abilityDef.LabelCap;
-            TaggedString description = descriptor.UnlockLetterDescriptionKey.Translate();
+            TaggedString description =
+                descriptor.UnlockLetterDescriptionKey!.Translate();
             TaggedString title = AbilityUnlockLetterTitleKey.Translate(abilityLabel);
             TaggedString text = GameComponent_MechanoidMechanitorScenarioState.IsEnabled
                 ? AbilityUnlockLetterSpecialScenarioTextKey.Translate(abilityLabel, description)
@@ -1004,6 +1011,11 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < all.Count; i++)
             {
                 ManagedResearchAbilityDescriptor descriptor = all[i];
+                if (!descriptor.ParticipatesInResearchUnlockNotifications)
+                {
+                    continue;
+                }
+
                 bool current = ResearchFeatureUnlockUtility.IsAbilityUnlocked(descriptor);
                 if (!lastKnownUnlockStates.TryGetValue(descriptor.Id, out bool previous)
                     || previous != current)
@@ -1043,6 +1055,11 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < all.Count; i++)
             {
                 ManagedResearchAbilityDescriptor descriptor = all[i];
+                if (!descriptor.ParticipatesInResearchUnlockNotifications)
+                {
+                    continue;
+                }
+
                 lastKnownUnlockStates[descriptor.Id] =
                     ResearchFeatureUnlockUtility.IsAbilityUnlocked(descriptor);
             }

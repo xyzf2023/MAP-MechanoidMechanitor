@@ -96,44 +96,9 @@ namespace MAP_MechanoidMechanitor
             Pawn? pawn,
             ManagedResearchAbilityDescriptor descriptor)
         {
-            if (pawn == null
-                || pawn.Destroyed
-                || pawn.Dead
-                || descriptor == null
-                || !IsAbilityUnlocked(descriptor))
-            {
-                return false;
-            }
-
-            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
-            {
-                return false;
-            }
-
-            if (JusticePawnUtility.IsJustice(pawn))
-            {
-                return true;
-            }
-
-            if (GameComponent_MechanoidMechanitorScenarioState.IsEnabled
-                && GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(pawn))
-            {
-                return true;
-            }
-
-            // 轨道数据网络研究完成后，机械意识已通过轨道网络同步给全体已注册机械族机械师，
-            // 原本仅供“机械意识载体”使用的已解锁科研能力应分发至所有符合资格的机械族机械师。
-            // 资格仍限定在“机械族机械师剧本”（普通剧本绝不因该科研而扩大能力持有范围），
-            // 且 Pawn 必须已注册、存活、初始化完成并属于玩家阵营。
-            if (IsOrbitalDataNetworkUnlocked()
-                && GameComponent_MechanoidMechanitorScenarioState.IsEnabled
-                && GameComponent_MechanoidMechanitorRegistry.IsPawnAliveAndInitialized(pawn)
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
-            {
-                return true;
-            }
-
-            return false;
+            return ManagedAbilityEligibilityUtility.ShouldPawnHaveAbility(
+                pawn,
+                descriptor);
         }
     }
 }
