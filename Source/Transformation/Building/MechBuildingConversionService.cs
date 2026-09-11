@@ -178,7 +178,13 @@ namespace MAP_MechanoidMechanitor
                 map,
                 buildingDef,
                 buildingRotation,
-                searchRadius);
+                searchRadius,
+                cell => CanPlaceWithoutWiping(
+                    pawn,
+                    buildingDef,
+                    map,
+                    cell,
+                    buildingRotation));
 
             if (!spawnCell.IsValid)
             {
@@ -484,6 +490,44 @@ namespace MAP_MechanoidMechanitor
                     $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}）：{ex}");
                 return false;
             }
+        }
+
+        private static bool CanPlaceWithoutWiping(
+            Pawn sourcePawn,
+            ThingDef buildingDef,
+            Map map,
+            IntVec3 root,
+            Rot4 rotation)
+        {
+            foreach (IntVec3 cell in GenAdj.CellsOccupiedBy(
+                         root,
+                         rotation,
+                         buildingDef.Size))
+            {
+                if (!cell.InBounds(map))
+                {
+                    return false;
+                }
+
+                System.Collections.Generic.List<Thing> things =
+                    cell.GetThingList(map);
+                for (int i = 0; i < things.Count; i++)
+                {
+                    Thing existing = things[i];
+                    if (ReferenceEquals(existing, sourcePawn))
+                    {
+                        continue;
+                    }
+
+                    if (existing is Pawn
+                        || GenSpawn.SpawningWipes(buildingDef, existing.def))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         private static void RollBackConversion(
