@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>MAP_MechanicalFlightEmergencyLanding</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_MechanicalFlightEmergencyLanding</driverClass>
+    <reportString>performing an emergency landing.</reportString>
+    <playerInterruptible>false</playerInterruptible>
+    <forceCompleteBeforeNextJob>true</forceCompleteBeforeNextJob>
+    <casualInterruptible>false</casualInterruptible>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+    <suspendable>false</suspendable>
+    <sleepCanInterrupt>false</sleepCanInterrupt>
+    <neverFleeFromEnemies>true</neverFleeFromEnemies>
+    <neverShowWeapon>true</neverShowWeapon>
+    <ifFlyingKeepFlying>true</ifFlyingKeepFlying>
+  </JobDef>
+</Defs>

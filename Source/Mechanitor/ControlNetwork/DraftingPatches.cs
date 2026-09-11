@@ -40,10 +40,15 @@ namespace MAP_MechanoidMechanitor
     public static class DraftingPatches_DraftedSetter
     {
         [HarmonyPrefix]
-        public static void Prefix(Pawn_DraftController __instance, out bool __state)
+        public static void Prefix(Pawn_DraftController __instance, ref bool value,
+            out bool __state)
         {
             // 记录修改前的征召状态。
             __state = __instance.Drafted;
+            if (value && MechanicalFlightEmergencyUtility.IsEmergencySequence(__instance.pawn))
+            {
+                value = false;
+            }
         }
 
         [HarmonyPostfix]
@@ -68,6 +73,12 @@ namespace MAP_MechanoidMechanitor
             if (mech == null || !ModsConfig.BiotechActive)
             {
                 return true;
+            }
+
+            if (MechanicalFlightEmergencyUtility.IsEmergencySequence(mech))
+            {
+                __result = "MAP_MechanicalFlight_EmergencyLandingBlocked".Translate();
+                return false;
             }
 
             if (mech.Faction == null || !mech.Faction.IsPlayerSafe())

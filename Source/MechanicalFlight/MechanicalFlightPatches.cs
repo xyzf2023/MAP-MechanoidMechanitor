@@ -12,8 +12,13 @@ namespace MAP_MechanoidMechanitor
     {
         public static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Pawn __instance)
         {
+            bool emergency = MechanicalFlightEmergencyUtility.IsEmergencySequence(__instance);
             foreach (Gizmo gizmo in __result)
             {
+                if (emergency && gizmo is Command command)
+                {
+                    command.Disable("MAP_MechanicalFlight_EmergencyLandingBlocked".Translate());
+                }
                 yield return gizmo;
             }
             if (__instance != null && __instance.Faction == Faction.OfPlayer
@@ -49,7 +54,7 @@ namespace MAP_MechanoidMechanitor
             AccessTools.FieldRefAccess<Pawn_FlightTracker, Pawn>("pawn");
         public static void Postfix(Pawn_FlightTracker __instance, ref int __result)
         {
-            if (MechanicalFlightUtility.IsActivelyFlying(PawnField(__instance)))
+            if (MechanicalFlightUtility.UsesAerialMovement(PawnField(__instance)))
             {
                 __result = int.MaxValue;
             }
@@ -78,6 +83,13 @@ namespace MAP_MechanoidMechanitor
             }
             if (job == null)
             {
+                return false;
+            }
+            if (MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
+            {
+                job.flying = GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn, out var emergencyRecord)
+                    && emergencyRecord?.Phase == MechanicalFlightPhase.EmergencyApproach;
                 return false;
             }
             if (!MechanicalFlightUtility.IsActivelyFlying(pawn))
@@ -137,6 +149,11 @@ namespace MAP_MechanoidMechanitor
         public static bool Prefix(Pawn_JobTracker __instance, Job job, ref bool __result)
         {
             Pawn pawn = PawnField(__instance);
+            if (MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
+            {
+                __result = false;
+                return false;
+            }
             if (!MechanicalFlightUtility.IsActivelyFlying(pawn) || job == null)
             {
                 return true;
@@ -251,7 +268,7 @@ namespace MAP_MechanoidMechanitor
 
         internal static bool IsActive(Pawn? pawn)
         {
-            return pawn?.Map != null && MechanicalFlightUtility.IsActivelyFlying(pawn);
+            return pawn?.Map != null && MechanicalFlightUtility.UsesAerialMovement(pawn);
         }
 
         internal static bool TryGetExactGroundDrawPos(Pawn pawn, out Vector3 drawPos)
@@ -546,7 +563,8 @@ namespace MAP_MechanoidMechanitor
             {
                 return true;
             }
-            if (!___pawn.Drafted && ___pawn.CurJob?.playerForced != true)
+            if (!___pawn.Drafted && ___pawn.CurJob?.playerForced != true
+                && !MechanicalFlightEmergencyUtility.IsEmergencySequence(___pawn))
             {
                 __instance.StopDead();
                 return false;
@@ -679,7 +697,7 @@ namespace MAP_MechanoidMechanitor
     {
         public static void Postfix(Pawn p, ref bool __result)
         {
-            if (MechanicalFlightUtility.IsActivelyFlying(p))
+            if (MechanicalFlightUtility.UsesAerialMovement(p))
             {
                 __result = false;
             }
@@ -719,7 +737,7 @@ namespace MAP_MechanoidMechanitor
             ref float __result)
         {
             if (GameComponent_MechanicalFlightRegistry.TryGetRecord(___pawn, out var record)
-                && record?.ConsumesFlightEnergy == true && record.Profile != null)
+                && record?.UsesAerialMovement == true && record.Profile != null)
             {
                 float cellsPerSecond = Mathf.Max(0.01f,
                     record.Profile.flightCellsPerSecond);

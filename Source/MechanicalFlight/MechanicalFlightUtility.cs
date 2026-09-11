@@ -25,6 +25,12 @@ namespace MAP_MechanoidMechanitor
                 && record?.ConsumesFlightEnergy == true;
         }
 
+        public static bool UsesAerialMovement(Pawn? pawn)
+        {
+            return GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
+                && record?.UsesAerialMovement == true;
+        }
+
         public static bool HasHoverVisual(Pawn? pawn)
         {
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
@@ -33,8 +39,9 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return record.ConsumesFlightEnergy
-                || (record.Phase == MechanicalFlightPhase.Landing
+            return record.UsesAerialMovement
+                || ((record.Phase == MechanicalFlightPhase.Landing
+                        || record.Phase == MechanicalFlightPhase.EmergencyLanding)
                     && pawn.flight.PositionOffsetFactor > 0f);
         }
 
@@ -115,6 +122,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             record.Phase = MechanicalFlightPhase.TakingOff;
+            record.EmergencyLandingTarget = IntVec3.Invalid;
+            record.LowEnergyWarningSent = false;
             record.TicksUntilNextEnergyDrain =
                 Mathf.Max(1, profile.energyDrainIntervalTicks);
             if (pawn.CurJob != null)
@@ -182,6 +191,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (record.IsEmergencySequence)
+            {
+                MechanicalFlightEmergencyUtility.Tick(record);
+                return;
+            }
+
             if (record.Phase == MechanicalFlightPhase.Landing)
             {
                 if (pawn.flight?.Flying != true)
@@ -232,10 +247,19 @@ namespace MAP_MechanoidMechanitor
                     Mathf.Max(1, profile.energyDrainIntervalTicks);
             }
 
-            if (!MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out float energy)
-                || energy < profile.automaticLandingEnergy)
+            if (!MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out float energy))
             {
-                // 本阶段只复用普通降落，不额外搜索厚岩顶外的安全格。
+                TryBeginLanding(pawn);
+                return;
+            }
+
+            MechanicalFlightEmergencyUtility.TrySendLowEnergyWarning(pawn, record, energy);
+            if (energy <= 0f)
+            {
+                MechanicalFlightEmergencyUtility.TryBeginEmergencySequence(pawn);
+            }
+            else if (energy < profile.automaticLandingEnergy)
+            {
                 TryBeginLanding(pawn);
             }
         }
@@ -253,6 +277,10 @@ namespace MAP_MechanoidMechanitor
             {
                 pawn.CurJob.flying = false;
             }
+            if (pawn?.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding)
+            {
+                pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
+            }
             record.ResetRuntimeState();
             MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
             GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
@@ -268,6 +296,12 @@ namespace MAP_MechanoidMechanitor
                 if (pawn == null || pawn.Dead || !pawn.Spawned || pawn.flight == null)
                 {
                     ClearRuntimeState(record, forceLand: false);
+                    continue;
+                }
+
+                if (record.IsEmergencySequence)
+                {
+                    MechanicalFlightEmergencyUtility.ReconcileAfterLoad(record);
                     continue;
                 }
 
@@ -328,6 +362,10 @@ namespace MAP_MechanoidMechanitor
                 || pawn.Map == null || pawn.Dead || pawn.Downed)
             {
                 return "MAP_MechanicalFlight_Unavailable".Translate();
+            }
+            if (record.IsEmergencySequence)
+            {
+                return "MAP_MechanicalFlight_EmergencyLandingBlocked".Translate();
             }
             if (!pawn.Drafted)
             {

@@ -14,6 +14,9 @@
   <MAP_MechanicalFlight_InvalidLanding>当前位置无法安全降落。</MAP_MechanicalFlight_InvalidLanding>
   <MAP_MechanicalFlight_Cooling>飞行系统尚未准备完毕。</MAP_MechanicalFlight_Cooling>
   <MAP_MechanicalFlight_GroundJobBlocked>当前位置无法降落，不能执行贴地工作。</MAP_MechanicalFlight_GroundJobBlocked>
+  <MAP_MechanicalFlight_LowEnergyLetterLabel>能量不足以维持飞行</MAP_MechanicalFlight_LowEnergyLetterLabel>
+  <MAP_MechanicalFlight_LowEnergyLetterText>目前{0}的能量不足以维持飞行，请尽快寻找落点。</MAP_MechanicalFlight_LowEnergyLetterText>
+  <MAP_MechanicalFlight_EmergencyLandingBlocked>正在执行紧急迫降，无法下达命令。</MAP_MechanicalFlight_EmergencyLandingBlocked>
   <MAP_MechanicalFlight_CaravanLaunchLabel>机械飞行</MAP_MechanicalFlight_CaravanLaunchLabel>
   <MAP_MechanicalFlight_CaravanLaunchDesc>使远行队通过机械飞行直线前往指定地点，可以越过不可通行地块。世界地图飞行不消耗机械能量。</MAP_MechanicalFlight_CaravanLaunchDesc>
   <MAP_MechanicalFlight_CaravanUnavailable>当前远行队无法进行机械飞行。</MAP_MechanicalFlight_CaravanUnavailable>

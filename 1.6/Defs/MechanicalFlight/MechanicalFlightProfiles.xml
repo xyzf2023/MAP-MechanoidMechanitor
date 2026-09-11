@@ -8,6 +8,11 @@
     <energyDrainFraction>0.005</energyDrainFraction>
     <energyDrainIntervalTicks>60</energyDrainIntervalTicks>
     <flightCellsPerSecond>30</flightCellsPerSecond>
+    <lowEnergyWarningThreshold>0.10</lowEnergyWarningThreshold>
+    <emergencyLandingSearchRadius>3</emergencyLandingSearchRadius>
+    <crashDamagePerWeightClass>30</crashDamagePerWeightClass>
+    <crashExplosionRadius>1</crashExplosionRadius>
+    <crashRoofCollapseRadius>2</crashRoofCollapseRadius>
     <hoverExtraVisualHeight>2.5</hoverExtraVisualHeight>
     <hoverBobAmplitude>0.15</hoverBobAmplitude>
     <hoverBobPeriodTicks>100</hoverBobPeriodTicks>

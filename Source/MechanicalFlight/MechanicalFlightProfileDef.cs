@@ -11,6 +11,12 @@ namespace MAP_MechanoidMechanitor
         public int energyDrainIntervalTicks = 60;
         public float flightCellsPerSecond = 30f;
 
+        public float lowEnergyWarningThreshold = 0.10f;
+        public int emergencyLandingSearchRadius = 3;
+        public int crashDamagePerWeightClass = 30;
+        public int crashExplosionRadius = 1;
+        public int crashRoofCollapseRadius = 2;
+
         public float hoverExtraVisualHeight = 2.5f;
         public float hoverBobAmplitude = 0.15f;
         public float hoverBobPeriodTicks = 100f;
@@ -43,6 +49,9 @@ namespace MAP_MechanoidMechanitor
         Grounded,
         TakingOff,
         Hovering,
-        Landing
+        Landing,
+        EmergencyApproach,
+        EmergencyLanding,
+        Crashing
     }
 }

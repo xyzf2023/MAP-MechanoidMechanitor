@@ -14,6 +14,9 @@
   <MAP_MechanicalFlight_InvalidLanding>The current position is not safe for landing.</MAP_MechanicalFlight_InvalidLanding>
   <MAP_MechanicalFlight_Cooling>The flight system is not ready.</MAP_MechanicalFlight_Cooling>
   <MAP_MechanicalFlight_GroundJobBlocked>Cannot land here to perform a ground-level job.</MAP_MechanicalFlight_GroundJobBlocked>
+  <MAP_MechanicalFlight_LowEnergyLetterLabel>Insufficient energy to maintain flight</MAP_MechanicalFlight_LowEnergyLetterLabel>
+  <MAP_MechanicalFlight_LowEnergyLetterText>{0} does not have enough energy to maintain flight. Find a landing site as soon as possible.</MAP_MechanicalFlight_LowEnergyLetterText>
+  <MAP_MechanicalFlight_EmergencyLandingBlocked>Emergency landing is in progress; orders are unavailable.</MAP_MechanicalFlight_EmergencyLandingBlocked>
   <MAP_MechanicalFlight_CaravanLaunchLabel>Mechanical flight</MAP_MechanicalFlight_CaravanLaunchLabel>
   <MAP_MechanicalFlight_CaravanLaunchDesc>Fly directly to a selected destination, crossing impassable terrain. World-map flight consumes no mech energy.</MAP_MechanicalFlight_CaravanLaunchDesc>
   <MAP_MechanicalFlight_CaravanUnavailable>This caravan cannot use mechanical flight right now.</MAP_MechanicalFlight_CaravanUnavailable>

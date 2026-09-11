@@ -55,5 +55,16 @@ namespace MAP_MechanoidMechanitor
             return pawn != null
                 && DefaultProvider.TryConsumeMaximumEnergyFraction(pawn, fraction);
         }
+
+        public static bool TrySetEnergyFraction(Pawn? pawn, float fraction)
+        {
+            Need_MechEnergy? energy = pawn?.needs?.energy;
+            if (energy == null)
+            {
+                return false;
+            }
+            energy.CurLevelPercentage = Mathf.Clamp01(fraction);
+            return true;
+        }
     }
 }
