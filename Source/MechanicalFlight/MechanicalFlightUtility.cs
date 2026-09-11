@@ -197,6 +197,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (pawn.Downed)
+            {
+                MechanicalFlightEmergencyUtility.TryCrashFromDowned(pawn);
+                return;
+            }
+
             if (record.Phase == MechanicalFlightPhase.Landing)
             {
                 if (pawn.flight?.Flying != true)
@@ -231,12 +237,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechanicalFlightPresentationUtility.Tick(pawn, record);
-
-            if (pawn.Downed)
-            {
-                TryBeginLanding(pawn);
-                return;
-            }
 
             record.TicksUntilNextEnergyDrain--;
             if (record.TicksUntilNextEnergyDrain <= 0)

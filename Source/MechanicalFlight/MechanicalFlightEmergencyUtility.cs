@@ -9,6 +9,82 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MechanicalFlightEmergencyUtility
     {
+        internal struct DeathCrashState
+        {
+            internal bool ShouldCrash;
+            internal MechanicalFlightAuthorizationRecord? Record;
+            internal MechanicalFlightProfileDef? Profile;
+            internal Map? Map;
+            internal IntVec3 Position;
+        }
+
+        internal static void CaptureDeathCrash(
+            Pawn? pawn,
+            out DeathCrashState state)
+        {
+            state = default;
+            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn, out MechanicalFlightAuthorizationRecord? record)
+                || record == null || pawn == null || pawn.Dead
+                || !pawn.Spawned || pawn.Map == null
+                || !record.IsRuntimeActive
+                || record.Phase == MechanicalFlightPhase.Crashing
+                || !MechanicalFlightUtility.HasHoverVisual(pawn))
+            {
+                return;
+            }
+
+            state.ShouldCrash = true;
+            state.Record = record;
+            state.Profile = record.Profile;
+            state.Map = pawn.Map;
+            state.Position = pawn.Position;
+        }
+
+        internal static void ResolveDeathCrash(
+            Pawn pawn,
+            DeathCrashState state)
+        {
+            if (!state.ShouldCrash || !pawn.Dead || state.Record == null
+                || state.Map == null || !state.Position.InBounds(state.Map))
+            {
+                return;
+            }
+
+            state.Record.Phase = MechanicalFlightPhase.Crashing;
+            List<Thing> ignoredThings = new() { pawn };
+            Corpse? corpse = pawn.Corpse;
+            if (corpse != null && !corpse.Destroyed)
+            {
+                ignoredThings.Add(corpse);
+            }
+
+            ResolveCrashImpact(
+                pawn,
+                state.Profile,
+                state.Map,
+                state.Position,
+                ignoredThings);
+            FinishCrash(pawn, state.Record, resumeEnergyShutdown: false);
+        }
+
+        internal static bool TryCrashFromDowned(Pawn? pawn)
+        {
+            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn, out MechanicalFlightAuthorizationRecord? record)
+                || record == null || pawn == null || !pawn.Downed || pawn.Dead
+                || !pawn.Spawned || pawn.Map == null
+                || !record.IsRuntimeActive
+                || record.Phase == MechanicalFlightPhase.Crashing
+                || !MechanicalFlightUtility.HasHoverVisual(pawn))
+            {
+                return false;
+            }
+
+            Crash(pawn, record);
+            return true;
+        }
+
         public static bool IsEmergencySequence(Pawn? pawn)
         {
             return GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
@@ -347,7 +423,17 @@ namespace MAP_MechanoidMechanitor
             pawn.pather?.StopDead();
             pawn.flight?.ForceLand();
 
-            MechanicalFlightProfileDef? profile = record.Profile;
+            ResolveCrashImpact(pawn, record.Profile, map, center, null);
+            FinishCrash(pawn, record, resumeEnergyShutdown: true);
+        }
+
+        private static void ResolveCrashImpact(
+            Pawn pawn,
+            MechanicalFlightProfileDef? profile,
+            Map map,
+            IntVec3 center,
+            List<Thing>? ignoredThings)
+        {
             int damage = GetWeightClassMultiplier(pawn)
                 * Math.Max(0, profile?.crashDamagePerWeightClass ?? 30);
             int explosionRadius = Math.Max(0, profile?.crashExplosionRadius ?? 1);
@@ -358,7 +444,8 @@ namespace MAP_MechanoidMechanitor
             }
             GenExplosion.DoExplosion(center, map, explosionRadius + 0.5f,
                 DamageDefOf.Bomb, pawn, damAmount: damage,
-                damageFalloff: false, overrideCells: explosionCells);
+                damageFalloff: false, ignoredThings: ignoredThings,
+                overrideCells: explosionCells);
 
             List<Thing> centerThings = new(center.GetThingList(map));
             for (int i = 0; i < centerThings.Count; i++)
@@ -391,14 +478,22 @@ namespace MAP_MechanoidMechanitor
                 RoofCollapserImmediate.DropRoofInCells(collapseCells, map);
             }
 
-            if (pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding)
+        }
+
+        private static void FinishCrash(
+            Pawn pawn,
+            MechanicalFlightAuthorizationRecord record,
+            bool resumeEnergyShutdown)
+        {
+            if (pawn.jobs != null
+                && pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding)
             {
                 pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
             }
             record.ResetRuntimeState();
             MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
             GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
-            if (!pawn.Dead)
+            if (resumeEnergyShutdown && !pawn.Dead)
             {
                 pawn.needs?.energy?.NeedInterval();
             }
