@@ -14,4 +14,17 @@
   <MAP_MechanicalFlight_InvalidLanding>The current position is not safe for landing.</MAP_MechanicalFlight_InvalidLanding>
   <MAP_MechanicalFlight_Cooling>The flight system is not ready.</MAP_MechanicalFlight_Cooling>
   <MAP_MechanicalFlight_GroundJobBlocked>Cannot land here to perform a ground-level job.</MAP_MechanicalFlight_GroundJobBlocked>
+  <MAP_MechanicalFlight_CaravanLaunchLabel>Mechanical flight</MAP_MechanicalFlight_CaravanLaunchLabel>
+  <MAP_MechanicalFlight_CaravanLaunchDesc>Fly directly to a selected destination, crossing impassable terrain. World-map flight consumes no mech energy.</MAP_MechanicalFlight_CaravanLaunchDesc>
+  <MAP_MechanicalFlight_CaravanUnavailable>This caravan cannot use mechanical flight right now.</MAP_MechanicalFlight_CaravanUnavailable>
+  <MAP_MechanicalFlight_CaravanNoMechanoid>This caravan has no mechanoid members.</MAP_MechanicalFlight_CaravanNoMechanoid>
+  <MAP_MechanicalFlight_CaravanMemberCannotFly>{0} is not capable of flight.</MAP_MechanicalFlight_CaravanMemberCannotFly>
+  <MAP_MechanicalFlight_CaravanNoOwner>This caravan has no member capable of leading it.</MAP_MechanicalFlight_CaravanNoOwner>
+  <MAP_MechanicalFlight_CaravanInvalidDestination>Select another valid tile as the destination.</MAP_MechanicalFlight_CaravanInvalidDestination>
+  <MAP_MechanicalFlight_CaravanWrongLayer>Mechanical flight to another planet layer is not currently supported.</MAP_MechanicalFlight_CaravanWrongLayer>
+  <MAP_MechanicalFlight_CaravanImpassableDestination>Flight can cross impassable terrain, but a caravan cannot be formed here.</MAP_MechanicalFlight_CaravanImpassableDestination>
+  <MAP_MechanicalFlight_CaravanTargetLabel>Fly to {0}</MAP_MechanicalFlight_CaravanTargetLabel>
+  <MAP_MechanicalFlight_CaravanInspect>Destination: {0}\nMembers: {1}</MAP_MechanicalFlight_CaravanInspect>
+  <MAP_MechanicalFlight_CaravanArrived>The mechanical-flight caravan has arrived.</MAP_MechanicalFlight_CaravanArrived>
+  <MAP_MechanicalFlight_CaravanLaunchFailed>Mechanical flight failed to start. Caravan contents were restored where possible.</MAP_MechanicalFlight_CaravanLaunchFailed>
 </LanguageData>
