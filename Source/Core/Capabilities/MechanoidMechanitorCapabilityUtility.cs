@@ -27,6 +27,12 @@ namespace MAP_MechanoidMechanitor
                 return GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn);
             }
 
+            // 自由殖民者替代资格由剧本状态与机械意识宿主身份动态提供。
+            if (capability == MechanoidMechanitorCapability.FreeColonistEquivalent)
+            {
+                return IsScenarioFreeColonistEquivalent(pawn);
+            }
+
             // 意识形态两项能力位可由档位 + 注册表直接得出，跳过完整能力汇总。
             if (capability == MechanoidMechanitorCapability.IdeologyMembership
                 || capability == MechanoidMechanitorCapability.IdeologyFullParticipation)
@@ -71,6 +77,7 @@ namespace MAP_MechanoidMechanitor
             MechanoidMechanitorCapability capabilities = MechanoidMechanitorCapability.None;
             AddCapabilitiesFromRealComponents(pawn, ref capabilities);
             AddCapabilitiesFromMechanitorIdentity(pawn, ref capabilities);
+            AddCapabilitiesFromScenarioState(pawn, ref capabilities);
             AddCapabilitiesFromSyntheticCompanionAuthorization(pawn, ref capabilities);
             AddCapabilitiesFromDataProcessingAllocation(pawn, ref capabilities);
             AddCapabilitiesFromMechanicalFlightAuthorization(pawn, ref capabilities);
@@ -84,6 +91,30 @@ namespace MAP_MechanoidMechanitor
             if (GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn))
             {
                 capabilities |= MechanoidMechanitorCapability.Flight;
+            }
+        }
+
+        /// <summary>
+        /// 专属剧本中当前机械意识宿主的全局自由殖民者替代资格。
+        /// 仅由场景状态与注册表身份动态决定，不来自 ThingDef Comp。
+        /// </summary>
+        private static bool IsScenarioFreeColonistEquivalent(Pawn pawn)
+        {
+            return GameComponent_MechanoidMechanitorScenarioState.IsEnabled
+                && GameComponent_MechanoidMechanitorRegistry
+                    .IsMechanicalConsciousnessHost(pawn)
+                && GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
+                    pawn,
+                    out _);
+        }
+
+        private static void AddCapabilitiesFromScenarioState(
+            Pawn pawn,
+            ref MechanoidMechanitorCapability capabilities)
+        {
+            if (IsScenarioFreeColonistEquivalent(pawn))
+            {
+                capabilities |= MechanoidMechanitorCapability.FreeColonistEquivalent;
             }
         }
 
@@ -111,11 +142,6 @@ namespace MAP_MechanoidMechanitor
                 {
                     capabilities |= MechanoidMechanitorCapability.TravelRefreshTrackers;
                 }
-            }
-
-            if (pawn.GetComp<CompFreeColonistEquivalentUser>() != null)
-            {
-                capabilities |= MechanoidMechanitorCapability.FreeColonistEquivalent;
             }
 
             CompColonistLikeFloatMenuUser? floatMenuComp =

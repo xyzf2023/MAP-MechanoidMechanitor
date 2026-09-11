@@ -11,6 +11,9 @@ namespace MAP_MechanoidMechanitor
         TravelCollectItems = 1 << 1,
         TravelRefreshTrackers = 1 << 2,
 
+        /// <summary>
+        /// 专属剧本中当前机械意识宿主的全局自由殖民者替代资格。
+        /// </summary>
         FreeColonistEquivalent = 1 << 3,
         ColonistLikeFloatMenu = 1 << 4,
         HumanWeapons = 1 << 5,

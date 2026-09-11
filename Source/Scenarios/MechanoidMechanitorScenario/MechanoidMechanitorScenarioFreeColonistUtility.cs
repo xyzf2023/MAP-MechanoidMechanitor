@@ -136,8 +136,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (!GameComponent_MechanoidMechanitorRegistry.IsMechanicalConsciousnessHost(pawn)
-                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn,
+                    MechanoidMechanitorCapability.FreeColonistEquivalent))
             {
                 return false;
             }
