@@ -163,8 +163,14 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            DefModExtension_MechBuildingConversion profile = null!;
-            MechBuildingConversionProfileUtility.TryGetProfile(pawn, out profile);
+            if (!MechBuildingConversionProfileUtility.TryGetProfile(
+                    pawn,
+                    out DefModExtension_MechBuildingConversion? profile)
+                || profile == null)
+            {
+                return false;
+            }
+
             ThingDef buildingDef = profile.buildingFormDef!;
             Map map = pawn.Map;
             IntVec3 originalPosition = pawn.Position;
