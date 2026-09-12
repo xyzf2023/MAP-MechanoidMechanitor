@@ -219,7 +219,9 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < authorizationRecords.Count; i++)
             {
                 Pawn? pawn = authorizationRecords[i].Pawn;
-                if (pawn != null && !pawn.Destroyed)
+                // 运行时基础设施（WorkSettings / WorkType 优先级 / Notify）只对当前真正可工作的
+                // Pawn 初始化；死亡、尸体中的 Pawn 仍保留持久授权记录，但不执行基础设施。
+                if (pawn != null && !pawn.Dead && !pawn.Destroyed && !pawn.Discarded)
                 {
                     authorizedPawns.Add(pawn);
                 }
@@ -269,7 +271,8 @@ namespace MAP_MechanoidMechanitor
             {
                 AnimalHandlingWorkAuthorizationRecord record = authorizationRecords[i];
                 Pawn? pawn = record.Pawn;
-                if (pawn != null && !pawn.Destroyed)
+                // 死亡 / Destroyed 但未 Discarded 的 Pawn 仍可进入索引，复活后同一引用可直接恢复授权。
+                if (pawn != null && !pawn.Discarded)
                 {
                     recordByPawn[pawn] = record;
                 }
@@ -296,7 +299,9 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Pawn? pawn = record.Pawn;
-                if (pawn == null || pawn.Destroyed)
+                // 只有 null 或永久 Discarded 才允许删除持久授权记录；
+                // 死亡 / 尸体中的 Pawn / Destroyed 但未 Discarded 都必须保留，等待复活后继续生效。
+                if (pawn == null || pawn.Discarded)
                 {
                     continue;
                 }
