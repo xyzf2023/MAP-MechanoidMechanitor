@@ -11,6 +11,14 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     internal static class MechCapabilityUtility
     {
+        /// <summary>
+        /// Def Provider 当前只允许提供的机体固有转换类能力。
+        /// 其他能力位即使被错误写入 Def，也会在这里被过滤，继续由各自权威系统提供。
+        /// </summary>
+        private const MechanoidMechanitorCapability SupportedProviderCapabilities =
+            MechanoidMechanitorCapability.BuildingConversion
+            | MechanoidMechanitorCapability.Fusion;
+
         internal static MechanoidMechanitorCapability GetProvidedCapabilities(
             Pawn? pawn)
         {
@@ -43,7 +51,8 @@ namespace MAP_MechanoidMechanitor
         {
             if (pawn == null
                 || pawn.Destroyed
-                || capability == MechanoidMechanitorCapability.None)
+                || capability == MechanoidMechanitorCapability.None
+                || (capability & SupportedProviderCapabilities) != capability)
             {
                 return false;
             }
@@ -88,7 +97,7 @@ namespace MAP_MechanoidMechanitor
                 result |= capabilities[i];
             }
 
-            return result;
+            return result & SupportedProviderCapabilities;
         }
 
         private static bool DefProvidesCapability(
