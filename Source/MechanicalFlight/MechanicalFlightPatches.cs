@@ -223,10 +223,11 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            // 紧急迫降流程必须始终允许自身的任务启动。
+            // 紧急状态仅允许机械飞行自身的迫降 Job 启动。
             if (MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
             {
-                return true;
+                return newJob.def
+                    == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding;
             }
 
             // 近战/接触任务分配层的最后防线：不允许进入原版预留失败告警链。

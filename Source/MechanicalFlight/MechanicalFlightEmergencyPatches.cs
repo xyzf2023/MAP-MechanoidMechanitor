@@ -60,6 +60,45 @@ namespace MAP_MechanoidMechanitor
             }
         }
     }
+
+    [HarmonyPatch(typeof(Ability), nameof(Ability.CanCast), MethodType.Getter)]
+    internal static class MechanicalFlightAbilityCastPatch
+    {
+        public static void Postfix(Ability __instance, ref AcceptanceReport __result)
+        {
+            if (MechanicalFlightEmergencyUtility.IsEmergencySequence(__instance.pawn))
+            {
+                __result = "MAP_MechanicalFlight_EmergencyLandingBlocked".Translate();
+            }
+        }
+    }
+
+    [HarmonyPatch(
+        typeof(Verb_CastAbility),
+        nameof(Verb_CastAbility.TryStartCastOn),
+        new[]
+        {
+            typeof(LocalTargetInfo),
+            typeof(LocalTargetInfo),
+            typeof(bool),
+            typeof(bool),
+            typeof(bool),
+            typeof(bool)
+        })]
+    internal static class MechanicalFlightAbilityExecutionPatch
+    {
+        public static bool Prefix(Verb_CastAbility __instance, ref bool __result)
+        {
+            Ability? ability = __instance?.Ability;
+            if (!MechanicalFlightEmergencyUtility.IsEmergencySequence(ability?.pawn))
+            {
+                return true;
+            }
+
+            __result = false;
+            return false;
+        }
+    }
     [HarmonyPatch(typeof(Pawn_HealthTracker), "MakeDowned")]
     internal static class MechanicalFlightDownedCrashPatch
     {
