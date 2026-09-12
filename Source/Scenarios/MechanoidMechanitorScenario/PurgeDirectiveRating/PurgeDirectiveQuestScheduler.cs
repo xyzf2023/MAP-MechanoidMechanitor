@@ -94,20 +94,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             int now = Find.TickManager.TicksGame;
 
-            // 正常流程：未到检查时间立即返回，不执行评级/惩罚/任务条件查询。
-            if (rs.NextPurgeQuestCheckTick > 0 && now < rs.NextPurgeQuestCheckTick)
+            // 未到检查时间时立即返回。
+            if (rs.NextPurgeQuestCheckTick > 0
+                && now < rs.NextPurgeQuestCheckTick)
             {
                 return;
             }
 
-            // 到期后再检查评级系统、最终惩罚与任务生成条件。
+            // 检查已经到期。无论后面的评级、惩罚、配置、冷却和任务条件
+            // 是否满足，都先安排下一次检查，防止失败条件在每 Tick 重复查询。
+            rs.SetNextPurgeQuestCheckTick(now + CheckIntervalTicks);
+
+            // 以下条件只在每次调度检查到期时执行。
             if (!PurgeDirectiveRatingUtility.IsRatingSystemActive()
                 || PurgeDirectiveRatingUtility.IsFinalPenaltyTriggered())
             {
                 return;
             }
-
-            rs.SetNextPurgeQuestCheckTick(now + CheckIntervalTicks);
 
             PurgeDirectiveRatingConfigDef cfg = RatingConfig;
             if (cfg == null || questScriptDef == null)
