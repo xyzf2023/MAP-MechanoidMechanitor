@@ -404,7 +404,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (quest == null || site == null || map == null)
             {
                 Messages.Message(
-                    "MAP_SymbiosisCovenantCerebrexSupport_AcceptFailInvalid".Translate(),
+                    "MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailInvalid".Translate(),
                     MessageTypeDefOf.RejectInput);
                 return;
             }
