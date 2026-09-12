@@ -111,7 +111,7 @@ namespace MAP_MechanoidMechanitor
         {
             GameComponent_MechanicalFlightRegistry? registry = CurrentRegistry;
             if (registry == null || pawn == null || pawn.Destroyed || pawn.Discarded
-                || pawn.RaceProps?.IsMechanoid != true || registry.FindRecord(pawn) != null)
+                || registry.FindRecord(pawn) != null)
             {
                 return false;
             }

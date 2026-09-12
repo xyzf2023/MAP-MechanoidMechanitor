@@ -355,6 +355,13 @@ namespace MAP_MechanoidMechanitor
 
             MechanicalFlightPresentationUtility.Tick(pawn, record);
 
+            // 没有机械能需求的 Pawn 使用无能源型飞行：不扣除机械能，
+            // 也不参与低能量警告、自动降落和耗尽迫降。
+            if (!MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out float energy))
+            {
+                return;
+            }
+
             record.TicksUntilNextEnergyDrain--;
             if (record.TicksUntilNextEnergyDrain <= 0)
             {
@@ -362,12 +369,10 @@ namespace MAP_MechanoidMechanitor
                     pawn, profile.energyDrainFraction);
                 record.TicksUntilNextEnergyDrain =
                     Mathf.Max(1, profile.energyDrainIntervalTicks);
-            }
-
-            if (!MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out float energy))
-            {
-                TryBeginLanding(pawn);
-                return;
+                if (!MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out energy))
+                {
+                    return;
+                }
             }
 
             MechanicalFlightEmergencyUtility.TrySendLowEnergyWarning(pawn, record, energy);
@@ -612,11 +617,8 @@ namespace MAP_MechanoidMechanitor
                     ? null
                     : "MAP_MechanicalFlight_InvalidLanding".Translate();
             }
-            if (!MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out float energy))
-            {
-                return "MAP_MechanicalFlight_NoEnergyNeed".Translate();
-            }
-            if (energy < record.Profile.minimumTakeoffEnergy)
+            if (MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out float energy)
+                && energy < record.Profile.minimumTakeoffEnergy)
             {
                 return "MAP_MechanicalFlight_LowEnergy".Translate(
                     record.Profile.minimumTakeoffEnergy.ToStringPercent());

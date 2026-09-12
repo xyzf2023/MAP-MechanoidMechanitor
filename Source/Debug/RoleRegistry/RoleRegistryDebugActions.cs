@@ -6,7 +6,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 角色注册表开发者指令：打开管理窗口，以及地图点击注册机械族。
+    /// 角色注册表开发者指令：打开管理窗口，以及地图点击注册 Pawn。
     /// </summary>
     public static class RoleRegistryDebugActions
     {
@@ -49,7 +49,7 @@ namespace MAP_MechanoidMechanitor
 
         [DebugAction(
             "MAP-机械族机械师",
-            "添加机械族到角色注册表...",
+            "添加目标到角色注册表...",
             false,
             false,
             false,
@@ -59,20 +59,10 @@ namespace MAP_MechanoidMechanitor
             false,
             actionType = DebugActionType.ToolMapForPawns,
             allowedGameStates = AllowedGameStates.PlayingOnMap)]
-        private static void AddMechanoidToRoleRegistry(Pawn clickedPawn)
+        private static void AddPawnToRoleRegistry(Pawn clickedPawn)
         {
             if (clickedPawn == null
-                || clickedPawn.RaceProps == null
-                || !clickedPawn.RaceProps.IsMechanoid)
-            {
-                Messages.Message(
-                    "拒绝添加：目标不是有效机械族。",
-                    MessageTypeDefOf.RejectInput,
-                    historical: false);
-                return;
-            }
-
-            if (clickedPawn.Dead || clickedPawn.Destroyed || clickedPawn.Discarded)
+                || clickedPawn.Dead || clickedPawn.Destroyed || clickedPawn.Discarded)
             {
                 Messages.Message(
                     "拒绝添加：目标已死亡、已销毁或已永久丢弃。",
@@ -83,36 +73,39 @@ namespace MAP_MechanoidMechanitor
 
             List<FloatMenuOption> options = new List<FloatMenuOption>();
 
-            bool hasMechanitorRecord =
-                GameComponent_MechanoidMechanitorRegistry.HasPersistentRecord(clickedPawn);
-            if (hasMechanitorRecord)
+            if (clickedPawn.RaceProps?.IsMechanoid == true)
             {
-                options.Add(new FloatMenuOption(
-                    "加入机械族机械师注册表（已经注册）",
-                    null));
-            }
-            else
-            {
-                Pawn localPawn = clickedPawn;
-                options.Add(new FloatMenuOption(
-                    "加入机械族机械师注册表",
-                    () => TryRegisterMechanitor(localPawn)));
-            }
+                bool hasMechanitorRecord =
+                    GameComponent_MechanoidMechanitorRegistry.HasPersistentRecord(clickedPawn);
+                if (hasMechanitorRecord)
+                {
+                    options.Add(new FloatMenuOption(
+                        "加入机械族机械师注册表（已经注册）",
+                        null));
+                }
+                else
+                {
+                    Pawn localPawn = clickedPawn;
+                    options.Add(new FloatMenuOption(
+                        "加入机械族机械师注册表",
+                        () => TryRegisterMechanitor(localPawn)));
+                }
 
-            bool hasCompanionRecord =
-                GameComponent_SyntheticCompanionRegistry.HasAuthorizationRecord(clickedPawn);
-            if (hasCompanionRecord)
-            {
-                options.Add(new FloatMenuOption(
-                    "加入仿生伴侣注册表（已经注册）",
-                    null));
-            }
-            else
-            {
-                Pawn localPawn = clickedPawn;
-                options.Add(new FloatMenuOption(
-                    "加入仿生伴侣注册表",
-                    () => TryAuthorizeCompanion(localPawn)));
+                bool hasCompanionRecord =
+                    GameComponent_SyntheticCompanionRegistry.HasAuthorizationRecord(clickedPawn);
+                if (hasCompanionRecord)
+                {
+                    options.Add(new FloatMenuOption(
+                        "加入仿生伴侣注册表（已经注册）",
+                        null));
+                }
+                else
+                {
+                    Pawn localPawn = clickedPawn;
+                    options.Add(new FloatMenuOption(
+                        "加入仿生伴侣注册表",
+                        () => TryAuthorizeCompanion(localPawn)));
+                }
             }
 
             bool hasFlightRecord =
