@@ -117,21 +117,9 @@ namespace MAP_MechanoidMechanitor
 
         public static bool CanEverFlyWithAuthorization(Pawn? pawn)
         {
-            if (!GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn) || pawn == null)
-            {
-                return false;
-            }
-
-            if (pawn.IsMutant && pawn.mutant?.Def?.disableFlying == true)
-            {
-                return false;
-            }
-
-            if (!pawn.RaceProps.canFlyInVacuum && pawn.MapHeld?.Biome?.inVacuum == true)
-            {
-                return false;
-            }
-            return true;
+            // 机械飞行授权是独立资格来源，不继承原版生物飞行的 Mutant、真空或飞行时长限制。
+            return pawn != null
+                && GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn);
         }
 
         public static Command_Action MakeCommand(Pawn pawn)
