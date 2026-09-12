@@ -543,10 +543,14 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (kv.Value > nowTicks)
+                // 截止 Tick 已过：不再注册到运行时缓存，并从主脑自己的持久字典清理。
+                if (kv.Value <= nowTicks)
                 {
-                    CerebrexPowerDisruptionUtility.Register(kv.Key, kv.Value);
+                    expired.Add(kv.Key);
+                    continue;
                 }
+
+                CerebrexPowerDisruptionUtility.Register(kv.Key, kv.Value);
             }
 
             foreach (Thing t in expired)

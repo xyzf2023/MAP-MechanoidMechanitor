@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using HarmonyLib;
 using RimWorld;
 using Verse;
 
@@ -6,12 +7,23 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 静态辅助：追踪被主脑 EMP 冲击波瘫痪的用电建筑，按截止 tick 判定是否仍应断电。
-    /// 该字典为运行时状态，不随存档保存；各主脑组件会在读档后把尚未过期的记录重新注册进来。
+    /// 该字典为当前 Game 的运行时缓存，不随存档保存；持久权威状态保存在各主脑组件的
+    /// disabledPowerBuildings 中，各主脑组件会在读档后把尚未过期的记录重新注册进来。
+    /// 静态缓存绝不能跨 Game 生存，必须在开始新游戏 / 开始加载另一个 Game 时显式清空。
     /// </summary>
     public static class CerebrexPowerDisruptionUtility
     {
         private static readonly Dictionary<Thing, int> disabledUntilByThing =
             new Dictionary<Thing, int>();
+
+        /// <summary>
+        /// 清空当前 Game 的运行时缓存。开始新游戏或开始加载另一个 Game 时必须调用，
+        /// 防止上一局的静态状态污染新存档。本方法只清运行时缓存，不触碰任何持久数据。
+        /// </summary>
+        public static void ResetRuntimeState()
+        {
+            disabledUntilByThing.Clear();
+        }
 
         /// <summary>
         /// 登记一座建筑被断电到指定 tick。同一建筑保留更晚的截止时间。
@@ -63,6 +75,33 @@ namespace MAP_MechanoidMechanitor
             }
 
             return true;
+        }
+    }
+
+    /// <summary>
+    /// 加载另一个存档前清空静态断电缓存，确保不同 Game 之间不共享运行时状态。
+    /// 之后各主脑组件会在自己读档恢复阶段从持久数据重新注册。
+    /// </summary>
+    [HarmonyPatch(typeof(Game), nameof(Game.LoadGame))]
+    internal static class CerebrexPowerDisruptionCacheResetOnLoadPatch
+    {
+        [HarmonyPrefix]
+        private static void Prefix()
+        {
+            CerebrexPowerDisruptionUtility.ResetRuntimeState();
+        }
+    }
+
+    /// <summary>
+    /// 开始新游戏前清空静态断电缓存，与读档路径保持同一语义。
+    /// </summary>
+    [HarmonyPatch(typeof(GameComponentUtility), nameof(GameComponentUtility.StartedNewGame))]
+    internal static class CerebrexPowerDisruptionCacheResetOnNewGamePatch
+    {
+        [HarmonyPrefix]
+        private static void Prefix()
+        {
+            CerebrexPowerDisruptionUtility.ResetRuntimeState();
         }
     }
 }
