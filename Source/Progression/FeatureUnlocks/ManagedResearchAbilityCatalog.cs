@@ -51,7 +51,8 @@ namespace MAP_MechanoidMechanitor
                 unlockLetterDescriptionKey: null,
                 grantPolicy: ManagedAbilityGrantPolicy.Capability,
                 transferPolicy: ManagedAbilityTransferPolicy.ReevaluateTargetChassis,
-                requiredCapabilityId: MechCapabilityIds.BuildingConversion,
+                requiredCapability:
+                    MechanoidMechanitorCapability.BuildingConversion,
                 sendResearchUnlockLetter: false);
 
         // 三个科研能力均已接入统一解锁同步与意识迁移冷却逻辑。

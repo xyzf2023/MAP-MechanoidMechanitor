@@ -27,6 +27,13 @@ namespace MAP_MechanoidMechanitor
                 return GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn);
             }
 
+            // 建筑转换与合体资格来自 Def Provider 声明；单项查询只扫描提供者，不做完整能力汇总。
+            if (capability == MechanoidMechanitorCapability.BuildingConversion
+                || capability == MechanoidMechanitorCapability.Fusion)
+            {
+                return MechCapabilityUtility.HasProvidedCapability(pawn, capability);
+            }
+
             // 自由殖民者替代资格由剧本状态与机械意识宿主身份动态提供。
             if (capability == MechanoidMechanitorCapability.FreeColonistEquivalent)
             {
@@ -81,7 +88,15 @@ namespace MAP_MechanoidMechanitor
             AddCapabilitiesFromSyntheticCompanionAuthorization(pawn, ref capabilities);
             AddCapabilitiesFromDataProcessingAllocation(pawn, ref capabilities);
             AddCapabilitiesFromMechanicalFlightAuthorization(pawn, ref capabilities);
+            AddCapabilitiesFromDefProviders(pawn, ref capabilities);
             return capabilities;
+        }
+
+        private static void AddCapabilitiesFromDefProviders(
+            Pawn pawn,
+            ref MechanoidMechanitorCapability capabilities)
+        {
+            capabilities |= MechCapabilityUtility.GetProvidedCapabilities(pawn);
         }
 
         private static void AddCapabilitiesFromMechanicalFlightAuthorization(

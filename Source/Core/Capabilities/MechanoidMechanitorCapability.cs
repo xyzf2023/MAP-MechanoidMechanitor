@@ -41,6 +41,11 @@ namespace MAP_MechanoidMechanitor
         ClassroomTeaching = 1 << 20,
 
         // 通用机械飞行资格仅来自独立飞行授权注册表；不改变既有能力位。
-        Flight = 1 << 21
+        Flight = 1 << 21,
+
+        // 建筑转换与合体资格互相独立，可单独拥有、同时拥有或都没有。
+        // 两者均来自 DefModExtension_MechCapabilityProvider 声明，不改变既有能力位。
+        BuildingConversion = 1 << 22,
+        Fusion = 1 << 23
     }
 }

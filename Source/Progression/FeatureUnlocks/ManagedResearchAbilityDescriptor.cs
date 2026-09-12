@@ -18,7 +18,8 @@ namespace MAP_MechanoidMechanitor
                 ManagedAbilityGrantPolicy.ResearchConsciousness,
             ManagedAbilityTransferPolicy transferPolicy =
                 ManagedAbilityTransferPolicy.TransferWithConsciousness,
-            string? requiredCapabilityId = null,
+            MechanoidMechanitorCapability requiredCapability =
+                MechanoidMechanitorCapability.None,
             bool sendResearchUnlockLetter = true,
             bool removeWhenIneligible = true)
         {
@@ -28,7 +29,7 @@ namespace MAP_MechanoidMechanitor
             UnlockLetterDescriptionKey = unlockLetterDescriptionKey;
             GrantPolicy = grantPolicy;
             TransferPolicy = transferPolicy;
-            RequiredCapabilityId = requiredCapabilityId;
+            RequiredCapability = requiredCapability;
             SendResearchUnlockLetter = sendResearchUnlockLetter;
             RemoveWhenIneligible = removeWhenIneligible;
         }
@@ -45,7 +46,7 @@ namespace MAP_MechanoidMechanitor
 
         public ManagedAbilityTransferPolicy TransferPolicy { get; }
 
-        public string? RequiredCapabilityId { get; }
+        public MechanoidMechanitorCapability RequiredCapability { get; }
 
         public bool SendResearchUnlockLetter { get; }
 

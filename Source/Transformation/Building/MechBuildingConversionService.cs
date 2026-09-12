@@ -37,25 +37,26 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechCapabilityUtility.HasCapability(
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
                     pawn,
-                    MechCapabilityIds.BuildingConversion))
+                    MechanoidMechanitorCapability.BuildingConversion))
             {
                 failureReason =
                     "MAP_MechanoidMechanitor.Transformation.Building.NoCapability".Translate();
                 return false;
             }
 
-            if (GameComponent_MechTransformationRegistry.TryGetRecord(
-                    pawn,
-                    out MechTransformationRecord? record)
-                && record != null
-                && (record.TransitionInProgress
-                    || record.CurrentForm != MechTransformationForm.Pawn))
+            if (MechTransformationUtility.IsTransitionInProgress(pawn))
             {
-                failureReason = record.TransitionInProgress
-                    ? "MAP_MechanoidMechanitor.Transformation.InProgress".Translate()
-                    : "MAP_MechanoidMechanitor.Transformation.Building.NotPawnForm".Translate();
+                failureReason =
+                    "MAP_MechanoidMechanitor.Transformation.InProgress".Translate();
+                return false;
+            }
+
+            if (!MechTransformationUtility.IsInPawnForm(pawn))
+            {
+                failureReason =
+                    "MAP_MechanoidMechanitor.Transformation.Building.NotPawnForm".Translate();
                 return false;
             }
 
@@ -106,12 +107,13 @@ namespace MAP_MechanoidMechanitor
 
             CompMechFormCarrier? carrierComp =
                 carrier.TryGetComp<CompMechFormCarrier>();
-            Pawn? sourcePawn = carrierComp?.SourcePawn;
             if (carrierComp?.Committed != true
                 || carrierComp.CarrierForm != MechTransformationForm.Building
+                || !MechTransformationUtility.TryResolveSourcePawn(
+                    carrier,
+                    out Pawn? sourcePawn)
                 || sourcePawn == null
-                || sourcePawn.Destroyed
-                || sourcePawn.Discarded)
+                || sourcePawn.Destroyed)
             {
                 failureReason =
                     "MAP_MechanoidMechanitor.Transformation.Building.BrokenLink".Translate();

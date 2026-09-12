@@ -1,28 +1,55 @@
-using System;
 using System.Collections.Generic;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 集中解析机体能力来源。当前支持 Pawn ThingDef、PawnKindDef 与 HediffDef。
+    /// 将 Pawn 的 ThingDef、PawnKindDef 与 HediffDef 上声明的
+    /// DefModExtension_MechCapabilityProvider 解析为统一的能力位。
+    /// 这里只是 MechanoidMechanitorCapabilityUtility 的一种数据来源，
+    /// 不构成独立的字符串能力判断层，业务代码不得直接据此判定具体能力。
     /// </summary>
-    public static class MechCapabilityUtility
+    internal static class MechCapabilityUtility
     {
-        public static bool HasCapability(Pawn? pawn, string? capabilityId)
+        internal static MechanoidMechanitorCapability GetProvidedCapabilities(
+            Pawn? pawn)
         {
             if (pawn == null || pawn.Destroyed)
             {
-                return false;
+                return MechanoidMechanitorCapability.None;
             }
 
-            if (capabilityId == null || capabilityId.Length == 0)
+            MechanoidMechanitorCapability capabilities =
+                GetProvidedCapabilities(pawn.def)
+                | GetProvidedCapabilities(pawn.kindDef);
+
+            List<Hediff>? hediffs = pawn.health?.hediffSet?.hediffs;
+            if (hediffs == null)
+            {
+                return capabilities;
+            }
+
+            for (int i = 0; i < hediffs.Count; i++)
+            {
+                capabilities |= GetProvidedCapabilities(hediffs[i]?.def);
+            }
+
+            return capabilities;
+        }
+
+        internal static bool HasProvidedCapability(
+            Pawn? pawn,
+            MechanoidMechanitorCapability capability)
+        {
+            if (pawn == null
+                || pawn.Destroyed
+                || capability == MechanoidMechanitorCapability.None)
             {
                 return false;
             }
 
-            if (DefProvidesCapability(pawn.def, capabilityId)
-                || DefProvidesCapability(pawn.kindDef, capabilityId))
+            if (DefProvidesCapability(pawn.def, capability)
+                || DefProvidesCapability(pawn.kindDef, capability))
             {
                 return true;
             }
@@ -35,8 +62,7 @@ namespace MAP_MechanoidMechanitor
 
             for (int i = 0; i < hediffs.Count; i++)
             {
-                Hediff hediff = hediffs[i];
-                if (DefProvidesCapability(hediff?.def, capabilityId))
+                if (DefProvidesCapability(hediffs[i]?.def, capability))
                 {
                     return true;
                 }
@@ -45,28 +71,31 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static bool DefProvidesCapability(Def? def, string capabilityId)
+        private static MechanoidMechanitorCapability GetProvidedCapabilities(Def? def)
         {
             DefModExtension_MechCapabilityProvider? extension =
                 def?.GetModExtension<DefModExtension_MechCapabilityProvider>();
-            List<string>? capabilities = extension?.capabilities;
+            List<MechanoidMechanitorCapability>? capabilities =
+                extension?.capabilities;
             if (capabilities == null)
             {
-                return false;
+                return MechanoidMechanitorCapability.None;
             }
 
+            MechanoidMechanitorCapability result = MechanoidMechanitorCapability.None;
             for (int i = 0; i < capabilities.Count; i++)
             {
-                if (string.Equals(
-                        capabilities[i],
-                        capabilityId,
-                        StringComparison.Ordinal))
-                {
-                    return true;
-                }
+                result |= capabilities[i];
             }
 
-            return false;
+            return result;
+        }
+
+        private static bool DefProvidesCapability(
+            Def? def,
+            MechanoidMechanitorCapability capability)
+        {
+            return (GetProvidedCapabilities(def) & capability) == capability;
         }
     }
 }

@@ -23,9 +23,12 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            bool hasCapability = MechCapabilityUtility.HasCapability(
-                pawn,
-                descriptor.RequiredCapabilityId);
+            // 策略要求能力但未声明具体能力位时安全失败，避免误判为有资格。
+            bool hasCapability = descriptor.RequiredCapability
+                    != MechanoidMechanitorCapability.None
+                && MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn,
+                    descriptor.RequiredCapability);
 
             switch (descriptor.GrantPolicy)
             {
