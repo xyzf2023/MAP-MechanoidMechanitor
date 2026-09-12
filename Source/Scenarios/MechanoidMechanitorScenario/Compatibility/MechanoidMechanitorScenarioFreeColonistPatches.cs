@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
@@ -6,6 +7,98 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
+    /// <summary>
+    /// 为自由殖民者兼容补丁构建由本 MOD 持有的结果列表。
+    /// 不直接修改原版或性能 MOD 返回的临时 / 缓存列表，避免污染外部缓存。
+    /// </summary>
+    internal static class MechanoidMechanitorScenarioFreeColonistResultUtility
+    {
+        private sealed class MapResultBuffers
+        {
+            public readonly List<Pawn> FreeColonistsPrimary = new List<Pawn>();
+            public readonly List<Pawn> FreeColonistsSecondary = new List<Pawn>();
+            public readonly List<Pawn> FreeColonistsSpawnedPrimary = new List<Pawn>();
+            public readonly List<Pawn> FreeColonistsSpawnedSecondary = new List<Pawn>();
+
+            public List<Pawn> GetWritableBuffer(
+                List<Pawn> source,
+                bool requireSpawned)
+            {
+                List<Pawn> primary = requireSpawned
+                    ? FreeColonistsSpawnedPrimary
+                    : FreeColonistsPrimary;
+                List<Pawn> secondary = requireSpawned
+                    ? FreeColonistsSpawnedSecondary
+                    : FreeColonistsSecondary;
+
+                // 正常情况下 source 来自原版或性能 MOD，与本地缓冲区不同。
+                // 保留备用缓冲区，防止其他缓存补丁在后续调用中返回了我们上次的结果。
+                return ReferenceEquals(source, primary)
+                    ? secondary
+                    : primary;
+            }
+        }
+
+        private static readonly ConditionalWeakTable<MapPawns, MapResultBuffers>
+            MapBuffers =
+                new ConditionalWeakTable<MapPawns, MapResultBuffers>();
+
+        public static List<Pawn> BuildMapResult(
+            MapPawns mapPawns,
+            List<Pawn> source,
+            bool requireSpawned)
+        {
+            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
+            {
+                return source;
+            }
+
+            IReadOnlyList<Pawn> registeredMechanitors =
+                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
+            List<Pawn>? augmentedResult = null;
+
+            for (int i = 0; i < registeredMechanitors.Count; i++)
+            {
+                Pawn pawn = registeredMechanitors[i];
+                if (!MechanoidMechanitorScenarioFreeColonistUtility
+                        .IsEligibleForMapFreeColonistAppend(
+                            pawn,
+                            mapPawns,
+                            requireSpawned))
+                {
+                    continue;
+                }
+
+                List<Pawn> currentResult = augmentedResult ?? source;
+                if (currentResult.Contains(pawn))
+                {
+                    continue;
+                }
+
+                if (augmentedResult == null)
+                {
+                    MapResultBuffers buffers =
+                        MapBuffers.GetValue(
+                            mapPawns,
+                            CreateMapResultBuffers);
+                    augmentedResult =
+                        buffers.GetWritableBuffer(source, requireSpawned);
+                    augmentedResult.Clear();
+                    augmentedResult.AddRange(source);
+                }
+
+                augmentedResult.Add(pawn);
+            }
+
+            return augmentedResult ?? source;
+        }
+
+        private static MapResultBuffers CreateMapResultBuffers(MapPawns _)
+        {
+            return new MapResultBuffers();
+        }
+    }
+
     [HarmonyPatch(
         typeof(MapPawns),
         nameof(MapPawns.FreeColonists),
@@ -22,29 +115,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
-            {
-                return;
-            }
-
-            IReadOnlyList<Pawn> registeredMechanitors =
-                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
-            for (int i = 0; i < registeredMechanitors.Count; i++)
-            {
-                Pawn pawn = registeredMechanitors[i];
-                if (!MechanoidMechanitorScenarioFreeColonistUtility.IsEligibleForMapFreeColonistAppend(
-                        pawn,
+            __result =
+                MechanoidMechanitorScenarioFreeColonistResultUtility
+                    .BuildMapResult(
                         __instance,
-                        requireSpawned: false))
-                {
-                    continue;
-                }
-
-                if (!__result.Contains(pawn))
-                {
-                    __result.Add(pawn);
-                }
-            }
+                        __result,
+                        requireSpawned: false);
         }
     }
 
@@ -64,29 +140,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!GameComponent_MechanoidMechanitorScenarioState.IsEnabled)
-            {
-                return;
-            }
-
-            IReadOnlyList<Pawn> registeredMechanitors =
-                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
-            for (int i = 0; i < registeredMechanitors.Count; i++)
-            {
-                Pawn pawn = registeredMechanitors[i];
-                if (!MechanoidMechanitorScenarioFreeColonistUtility.IsEligibleForMapFreeColonistAppend(
-                        pawn,
+            __result =
+                MechanoidMechanitorScenarioFreeColonistResultUtility
+                    .BuildMapResult(
                         __instance,
-                        requireSpawned: true))
-                {
-                    continue;
-                }
-
-                if (!__result.Contains(pawn))
-                {
-                    __result.Add(pawn);
-                }
-            }
+                        __result,
+                        requireSpawned: true);
         }
     }
 
@@ -136,7 +195,11 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            __result.Add(host);
+            List<Pawn> augmentedResult =
+                new List<Pawn>(__result.Count + 1);
+            augmentedResult.AddRange(__result);
+            augmentedResult.Add(host);
+            __result = augmentedResult;
         }
     }
 }
