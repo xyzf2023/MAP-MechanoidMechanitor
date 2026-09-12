@@ -31,7 +31,6 @@ namespace MAP_MechanoidMechanitor
         private const string AssaultProtocolDefName = "MAP_CommandFocus_AssaultProtocol";
 
         private static HediffDef? dataStreamDistributionDef;
-        private static HediffDef? legacyCommandFocusDef;
         private static HediffDef? generalTuningDef;
         private static HediffDef? productionCoordinationDef;
         private static HediffDef? fireControlCalculationDef;
@@ -40,11 +39,6 @@ namespace MAP_MechanoidMechanitor
         public static HediffDef? DataStreamDistributionDef =>
             dataStreamDistributionDef ??=
                 DefDatabase<HediffDef>.GetNamedSilentFail(DataStreamDistributionDefName);
-
-        /// <summary>旧 MAP_CommandFocus 仅用于旧存档载入兼容与清理，载入后应转为通用调谐。</summary>
-        public static HediffDef? LegacyCommandFocusDef =>
-            legacyCommandFocusDef ??=
-                DefDatabase<HediffDef>.GetNamedSilentFail(LegacyCommandFocusDefName);
 
         public static HediffDef? GeneralTuningDef =>
             generalTuningDef ??=

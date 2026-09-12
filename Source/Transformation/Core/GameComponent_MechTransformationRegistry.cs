@@ -49,21 +49,6 @@ namespace MAP_MechanoidMechanitor
             return registry.recordByPawn!.TryGetValue(pawn, out record);
         }
 
-        public static bool TryGetRecordById(
-            string? transformationId,
-            out MechTransformationRecord? record)
-        {
-            record = null;
-            GameComponent_MechTransformationRegistry? registry = CurrentRegistry;
-            if (registry == null || string.IsNullOrEmpty(transformationId))
-            {
-                return false;
-            }
-
-            registry.EnsureIndexes();
-            return registry.recordById!.TryGetValue(transformationId!, out record);
-        }
-
         public static MechTransformationRecord? GetOrCreateRecord(Pawn? pawn)
         {
             GameComponent_MechTransformationRegistry? registry = CurrentRegistry;

@@ -5,15 +5,6 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    [Flags]
-    public enum MechanoidMechanitorIdentity
-    {
-        None = 0,
-        Native = 1,
-        Acquired = 2,
-        MechanicalConsciousnessHost = 4
-    }
-
     public static class MechanoidMechanitorRoleUtility
     {
         public const int AcquiredBaseExtraBandwidth = 20;
@@ -87,36 +78,6 @@ namespace MAP_MechanoidMechanitor
         {
             return GameComponent_MechanoidMechanitorRegistry
                 .IsMechanicalConsciousnessHost(pawn);
-        }
-
-        public static bool CanHostMechanicalConsciousness(Pawn? pawn)
-        {
-            return GameComponent_MechanoidMechanitorRegistry
-                .CanHostMechanicalConsciousness(pawn);
-        }
-
-        public static MechanoidMechanitorIdentity GetIdentity(Pawn? pawn)
-        {
-            if (pawn == null)
-            {
-                return MechanoidMechanitorIdentity.None;
-            }
-
-            MechanoidMechanitorIdentity result = MechanoidMechanitorIdentity.None;
-            if (IsNativeMechanoidMechanitor(pawn))
-            {
-                result |= MechanoidMechanitorIdentity.Native;
-            }
-            if (IsAcquiredMechanoidMechanitor(pawn))
-            {
-                result |= MechanoidMechanitorIdentity.Acquired;
-            }
-            if (IsMechanicalConsciousnessHost(pawn))
-            {
-                result |= MechanoidMechanitorIdentity.MechanicalConsciousnessHost;
-            }
-
-            return result;
         }
 
         public static bool CanBecomeAcquiredMechanoidMechanitor(Pawn? pawn)

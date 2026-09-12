@@ -632,29 +632,6 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        public static bool SetMechanicalConsciousnessHost(
-            Pawn? pawn,
-            bool promoteIfNeeded = false)
-        {
-            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
-            if (registry == null
-                || pawn == null
-                || !MechanoidMechanitorScenarioUtility.IsScenarioActive)
-            {
-                return false;
-            }
-
-            if (!PrepareHost(pawn, promoteIfNeeded))
-            {
-                return false;
-            }
-
-            registry.mechanicalConsciousnessHost = pawn;
-            FinalizeHostAssignment(pawn);
-            registry.SynchronizeMechanicalConsciousnessHediff();
-            return true;
-        }
-
         internal static bool TryReplaceMechanicalConsciousnessHost(
             Pawn expectedCurrentHost,
             Pawn newHost)

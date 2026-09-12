@@ -121,12 +121,6 @@ namespace MAP_MechanoidMechanitor
             return MechanoidMechanitorRoleUtility.RequiresExternalOverseer(pawn);
         }
 
-        public static bool CanControlMechs(Pawn? pawn)
-        {
-            return PassesMechanitorNodeControllerBasics(pawn)
-                && MechanoidMechanitorRoleUtility.UsesVanillaControlPath(pawn);
-        }
-
         public static int GetExtraMechBandwidth(Pawn? pawn)
         {
             return MechanoidMechanitorRoleUtility.GetExtraMechBandwidth(pawn);

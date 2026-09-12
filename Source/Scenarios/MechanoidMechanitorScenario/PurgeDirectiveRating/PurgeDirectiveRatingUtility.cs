@@ -366,10 +366,5 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (rs == null) return false;
             return rs.RewardPoints >= finalCost;
         }
-
-        // ===== 兼容旧调用（保留符号，内部指向新实现） =====
-
-        [System.Obsolete("Use Config.GetRatingLevel")]
-        public static int GetRatingLevel(int value) => Config.GetRatingLevel(value);
     }
 }

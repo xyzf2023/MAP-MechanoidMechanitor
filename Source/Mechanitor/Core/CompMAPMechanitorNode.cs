@@ -1,4 +1,3 @@
-using System;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -35,25 +34,6 @@ namespace MAP_MechanoidMechanitor
 
         public int MaxIntrinsicBandwidth => NodeProps?.maxIntrinsicBandwidth ?? 0;
 
-        public bool AllowsBossChipBandwidthUpgrade =>
-            NodeProps?.allowBossChipBandwidthUpgrade ?? false;
-
-        public int RemainingIntrinsicBandwidth
-        {
-            get
-            {
-                if (!AllowsBossChipBandwidthUpgrade
-                    || MaxIntrinsicBandwidth <= 0
-                    || NodeProps == null
-                    || BaseExtraMechBandwidth >= MaxIntrinsicBandwidth)
-                {
-                    return 0;
-                }
-
-                return Math.Max(0, MaxIntrinsicBandwidth - CurrentIntrinsicBandwidth);
-            }
-        }
-
         public static bool PawnHasNode(Pawn? pawn)
         {
             return TryGetNodeComp(pawn, out _);
@@ -69,13 +49,6 @@ namespace MAP_MechanoidMechanitor
 
             comp = pawn.GetComp<CompMAPMechanitorNode>();
             return comp != null;
-        }
-
-        public int AddChipBandwidth(int requestedAmount)
-        {
-            return MechanoidMechanitorRoleUtility.AddChipBandwidth(
-                parent as Pawn,
-                requestedAmount);
         }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)

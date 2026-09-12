@@ -22,8 +22,6 @@ namespace MAP_MechanoidMechanitor
 
         public Pawn? SourcePawn => sourcePawn;
 
-        public string? TransformationId => transformationId;
-
         public MechTransformationForm CarrierForm => carrierForm;
 
         public bool Committed => committed;

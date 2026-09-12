@@ -121,14 +121,5 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsParallelThoughtMatrixUnlocked() =>
             IsFeatureUnlocked(ManagedResearchFeatureCatalog.ParallelThoughtMatrix);
-
-        public static bool ShouldPawnHaveAbility(
-            Pawn? pawn,
-            ManagedResearchAbilityDescriptor descriptor)
-        {
-            return ManagedAbilityEligibilityUtility.ShouldPawnHaveAbility(
-                pawn,
-                descriptor);
-        }
     }
 }
