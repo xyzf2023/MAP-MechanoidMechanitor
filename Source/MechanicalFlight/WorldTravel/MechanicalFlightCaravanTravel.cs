@@ -176,8 +176,10 @@ namespace MAP_MechanoidMechanitor
                     "[MAP-机械族机械师] 机械飞行远行队重建异常后接管 partial Caravan：" +
                     DescribeCaravan(recoveredCaravan) +
                     "；未入队 Pawn=" + unplacedPawns.Count);
-                CompleteCaravanArrival(recoveredCaravan, looseThings, tile);
+                // 先完成 Pawn 所有权修复，再转移物资。否则 partial Caravan 在 AddPawn 前抛异常时
+                // 可能暂时没有成员，提前处理物资会误判为“无接收者”并触发最终处置。
                 EnsurePawnsHaveStableOwner(unplacedPawns, recoveredCaravan, "partial Caravan 修复");
+                CompleteCaravanArrival(recoveredCaravan, looseThings, tile);
                 return;
             }
 
@@ -463,8 +465,9 @@ namespace MAP_MechanoidMechanitor
             {
                 Log.Error(
                     "[MAP-机械族机械师] 最终恢复接管 Caravan：" + DescribeCaravan(recoveredCaravan));
-                CompleteCaravanArrival(recoveredCaravan, looseThings, landingTile);
+                // 与主抵达路径保持同一事务顺序：先稳定 Pawn 所有权，再允许货物离开运输舱。
                 EnsurePawnsHaveStableOwner(unplacedPawns, recoveredCaravan, "最终恢复");
+                CompleteCaravanArrival(recoveredCaravan, looseThings, landingTile);
                 return;
             }
 
@@ -658,6 +661,17 @@ namespace MAP_MechanoidMechanitor
                 Log.Error(
                     "[MAP-机械族机械师] 把 Pawn 加入 Caravan 时异常：" +
                     pawn + "：" + exception);
+
+                // Caravan.AddPawn / 后续 PassToWorld 都可能在已经产生部分有效结果后抛异常。
+                // catch 后必须重新检查真实所有权；只要 Pawn 已经属于一个仍有效的目标 Caravan，
+                // 就将本次操作视为成功，禁止上层再次把它拆出 Caravan 并转成孤立 WorldPawn。
+                if (!caravan.Destroyed && caravan.Spawned && caravan.ContainsPawn(pawn))
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 加入 Caravan 过程中虽发生异常，但 Pawn 已具有稳定 Caravan 所有权：" +
+                        pawn + "；Caravan=" + DescribeCaravan(caravan));
+                    return true;
+                }
             }
             return false;
         }
