@@ -105,6 +105,10 @@ namespace MAP_MechanoidMechanitor
         private int empCastBaseDurationTicks = CerebrexBossDifficultyValues.DefaultEmpBaseDurationTicks;
         private bool empCastSettingsCaptured;
 
+        // 仅运行时标记：PostLoadInit 纯数据规范阶段因 EMP 时间字段结构损坏取消了本轮预警，
+        // 需要在主脑真正 Spawn 后补排下一发冷却。不写入存档，不改变 Scribe key。
+        private bool empWarningInvalidatedOnLoad;
+
         // 多目标带宽干扰状态（本场战斗）
         private bool bandwidthInterferenceActive;
         private List<CerebrexBandwidthTargetRecord> bandwidthTargetRecords =
@@ -146,6 +150,7 @@ namespace MAP_MechanoidMechanitor
             if (respawningAfterLoad)
             {
                 ReconcileCoreCombatStateAfterLoad();
+                ReconcileCombatStateAfterSpawn();
             }
         }
 
@@ -390,12 +395,20 @@ namespace MAP_MechanoidMechanitor
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
-                PostLoadCleanup();
+                NormalizeLoadedPersistentState();
             }
         }
 
-        private void PostLoadCleanup()
+        /// <summary>
+        /// PostLoadInit 阶段：只做完全依赖存档数据自身的规范化（null 清理、旧数据迁移、
+        /// 数值钳制、纯数学结构校验等）。此时地图 Thing 尚未 Spawn，parent.Spawned == false、
+        /// parent.Map == null 是合法暂态，禁止据此判定 EMP / 带宽干扰损坏或提前结束。
+        /// 依赖 Spawn / Map / Lord / Pawn 运行时状态的对账见 ReconcileCombatStateAfterSpawn()。
+        /// </summary>
+        private void NormalizeLoadedPersistentState()
         {
+            empWarningInvalidatedOnLoad = false;
+
             summonedMechs ??= new List<Pawn>();
             pendingSummonKinds ??= new List<PawnKindDef>();
             pendingEmpHits ??= new List<PendingCerebrexEmpHit>();
@@ -543,6 +556,9 @@ namespace MAP_MechanoidMechanitor
 
             disabledPowerBuildings.Remove(null!);
 
+            // 纯存档数据的结构校验：只检查 EMP 时间字段自身是否自洽。
+            // 此阶段地图 Thing 尚未 Spawn，禁止用 Spawned / Map / stopped 判断可否继续；
+            // 运行时对账统一交给 PostSpawnSetup(respawningAfterLoad)。
             if (empWarningActive)
             {
                 int expectedReleaseTick = empWarningStartTick
@@ -550,24 +566,15 @@ namespace MAP_MechanoidMechanitor
                     + EmpWarningHoldTicks
                     + EmpWarningSlamTicks;
                 int expectedEndTick = expectedReleaseTick + EmpWarningRecoveryTicks;
-                bool empStateBroken = !ModsConfig.OdysseyActive
-                    || stopped
-                    || !parent.Spawned
-                    || parent.Destroyed
-                    || parent.Map == null
-                    || empWarningStartTick <= 0
+                bool empStateStructurallyBroken = empWarningStartTick <= 0
                     || empShockwaveReleaseTick != expectedReleaseTick
                     || empWarningEndTick != expectedEndTick;
 
-                if (empStateBroken)
+                if (empStateStructurallyBroken)
                 {
+                    // 结构损坏：仅做数据层取消，Spawn 后由对账补排冷却。
+                    empWarningInvalidatedOnLoad = true;
                     ResetEmpWarningState();
-                    if (!stopped && ModsConfig.OdysseyActive && parent.Spawned && !parent.Destroyed && parent.Map != null)
-                    {
-                        nextEmpTick = nowTicks + Rand.RangeInclusive(
-                            difficultyEmpCooldownMinTicks,
-                            difficultyEmpCooldownMaxTicks);
-                    }
                 }
             }
             else
@@ -575,13 +582,64 @@ namespace MAP_MechanoidMechanitor
                 ResetEmpWarningState();
             }
 
+            // 读档后发现没有待重试单位但重试计数残留，重置以免新一波继承旧计数。
+            if (pendingSummonKinds.Count == 0)
+            {
+                if (summonDropRetryCount != 0)
+                {
+                    summonDropRetryCount = 0;
+                }
+
+                summonBatchSettingsCaptured = false;
+            }
+        }
+
+        /// <summary>
+        /// PostSpawnSetup(respawningAfterLoad) 阶段才允许执行的运行时对账：依赖
+        /// parent.Spawned / parent.Map / Lord / 地图实体 / Pawn 当前状态。
+        /// PostLoadInit 阶段绝对不得调用；非 respawning 生成也不调用。
+        /// </summary>
+        private void ReconcileCombatStateAfterSpawn()
+        {
+            if (parent == null || parent.Destroyed || !parent.Spawned || parent.Map == null)
+            {
+                return;
+            }
+
+            int nowTicks = Find.TickManager.TicksGame;
+
+            // 1. EMP：存档中已经开始的整轮优先继续，只有真正不可继续（DLC 关闭 / 战斗停止）
+            //    才取消；取消后补排下一发冷却，不重新随机本轮已经锁定的 EMP 参数。
+            if (empWarningInvalidatedOnLoad)
+            {
+                empWarningInvalidatedOnLoad = false;
+                if (!stopped && ModsConfig.OdysseyActive)
+                {
+                    RefreshDifficultySettings();
+                    nextEmpTick = nowTicks + Rand.RangeInclusive(
+                        difficultyEmpCooldownMinTicks,
+                        difficultyEmpCooldownMaxTicks);
+                }
+            }
+
+            if (empWarningActive && (!ModsConfig.OdysseyActive || stopped))
+            {
+                ResetEmpWarningState();
+                if (!stopped && ModsConfig.OdysseyActive)
+                {
+                    RefreshDifficultySettings();
+                    nextEmpTick = nowTicks + Rand.RangeInclusive(
+                        difficultyEmpCooldownMinTicks,
+                        difficultyEmpCooldownMaxTicks);
+                }
+            }
+
+            // 2. 带宽干扰：Spawn 后只清理真正失效项，保留仍有效目标与当前轮结束 Tick；
+            //    只有现有正常结束条件真正成立时才结束整轮，禁止因加载阶段无 Map 而结束。
             if (bandwidthInterferenceActive)
             {
                 bool baseBroken = !ModsConfig.OdysseyActive
                     || stopped
-                    || !parent.Spawned
-                    || parent.Destroyed
-                    || parent.Map == null
                     || bandwidthTargetRecords.Count == 0;
 
                 if (baseBroken)
@@ -699,18 +757,8 @@ namespace MAP_MechanoidMechanitor
                 bandwidthTargetsUsedThisBattle.RemoveAll(p => p == null || p.Discarded);
             }
 
-            // 读档后发现没有待重试单位但重试计数残留，重置以免新一波继承旧计数。
-            if (pendingSummonKinds.Count == 0)
-            {
-                if (summonDropRetryCount != 0)
-                {
-                    summonDropRetryCount = 0;
-                }
-
-                summonBatchSettingsCaptured = false;
-            }
-
-            if (summonedMechs.Count > 0 && assaultLord == null && parent.Spawned && parent.Map != null && CanRunAutomatically())
+            // 读档发现召唤单位仍存在但没有 Lord：Spawn 并确认可自动运行后补建。
+            if (summonedMechs.Count > 0 && assaultLord == null && CanRunAutomatically())
             {
                 EnsureAssaultLord();
             }
