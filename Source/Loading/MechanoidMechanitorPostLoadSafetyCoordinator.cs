@@ -17,6 +17,11 @@ namespace MAP_MechanoidMechanitor
     internal static class MechanoidMechanitorPostLoadSafetyCoordinator
     {
         private const int RetryIntervalTicks = 60;
+
+        // 读档后二次同步的总安全期限（游戏 Tick）：约 30 秒正常游戏时间。
+        // 从 LoadedGame 完成开始计时，大型存档的 LongEvent 加载时间不计入。
+        private const int MaxSafetyBarrierTicks = 1800;
+
         private const int ReflectionFailureLogKeyBase = 0x4D41504F; // "MAPO"
 
         private static readonly Dictionary<Pawn, MechWorkModeDef?> PendingWorkModes =
@@ -83,6 +88,13 @@ namespace MAP_MechanoidMechanitor
         private static bool invokingDeferredEffects;
         private static int earliestCoordinatorTick;
 
+        // 以下均为纯运行态，不写入存档：
+        // failSafeDeadlineTick 是本次读档后处理的总截止 Tick；
+        // terminalFailureDetected / terminalFailureReason 记录不可能自行恢复的永久故障。
+        private static int failSafeDeadlineTick;
+        private static bool terminalFailureDetected;
+        private static string? terminalFailureReason;
+
         internal static bool LoadInProgress => loadInProgress;
 
         internal static bool ShouldDeferPositiveRestore =>
@@ -125,7 +137,9 @@ namespace MAP_MechanoidMechanitor
             loadedGamePassCompleted = true;
 
             TickManager? tickManager = Current.Game?.tickManager;
-            earliestCoordinatorTick = (tickManager?.TicksGame ?? 0) + 1;
+            int nowTicks = tickManager?.TicksGame ?? 0;
+            earliestCoordinatorTick = nowTicks + 1;
+            failSafeDeadlineTick = nowTicks + MaxSafetyBarrierTicks;
         }
 
         internal static void AbortLoad()
@@ -193,7 +207,19 @@ namespace MAP_MechanoidMechanitor
             }
 
             TickManager? tickManager = Current.Game?.tickManager;
-            if (tickManager == null || tickManager.TicksGame < earliestCoordinatorTick)
+            if (tickManager == null)
+            {
+                return;
+            }
+
+            // 永久故障立即释放；达到总安全期限时进入 fail-safe，绝不无限保持 loadInProgress。
+            // 该判定必须先于 retry 间隔门控执行，确保期限一到必然被检查。
+            if (TryHandleFailSafe(tickManager.TicksGame))
+            {
+                return;
+            }
+
+            if (tickManager.TicksGame < earliestCoordinatorTick)
             {
                 return;
             }
@@ -203,6 +229,11 @@ namespace MAP_MechanoidMechanitor
                 if (TryRestorePositiveSources())
                 {
                     positiveSourcesReady = true;
+                }
+                else if (terminalFailureDetected)
+                {
+                    FailSafeCompleteLoad(
+                        terminalFailureReason ?? "正面来源恢复永久故障");
                 }
                 else
                 {
@@ -218,6 +249,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            TickManager? tickManager = Current.Game?.tickManager;
+            if (tickManager != null && TryHandleFailSafe(tickManager.TicksGame))
+            {
+                return;
+            }
+
             GameComponent_DataProcessingAllocationRegistry? registry =
                 GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
 
@@ -225,6 +262,12 @@ namespace MAP_MechanoidMechanitor
             {
                 if (!TryReadDataReconciliationPending(registry, out bool pending))
                 {
+                    if (terminalFailureDetected)
+                    {
+                        FailSafeCompleteLoad(
+                            terminalFailureReason ?? "数据处理校正状态永久不可读");
+                    }
+
                     return;
                 }
 
@@ -238,16 +281,100 @@ namespace MAP_MechanoidMechanitor
 
             if (!TryApplyDeferredEffects(registry))
             {
-                TickManager? tickManager = Current.Game?.tickManager;
+                if (terminalFailureDetected)
+                {
+                    FailSafeCompleteLoad(
+                        terminalFailureReason ?? "延后效果应用永久故障");
+                    return;
+                }
+
                 earliestCoordinatorTick =
                     (tickManager?.TicksGame ?? earliestCoordinatorTick) + RetryIntervalTicks;
                 return;
             }
 
+            FinishLoadNormally();
+        }
+
+        /// <summary>
+        /// 永久故障判定与总安全期限处理。返回 true 表示本次读档后处理已经结束
+        /// （正常收尾或 fail-safe 释放），调用方必须立即返回。
+        /// 超时且只差延后效果时，允许在此执行最后一次 best-effort；
+        /// 数据处理本身仍未校正时，绝不强制执行延后效果。
+        /// </summary>
+        private static bool TryHandleFailSafe(int nowTicks)
+        {
+            if (terminalFailureDetected)
+            {
+                FailSafeCompleteLoad(terminalFailureReason ?? "永久故障");
+                return true;
+            }
+
+            if (failSafeDeadlineTick <= 0 || nowTicks < failSafeDeadlineTick)
+            {
+                return false;
+            }
+
+            if (positiveSourcesReady && dataProcessingReconciled && !deferredEffectsApplied)
+            {
+                GameComponent_DataProcessingAllocationRegistry? registry =
+                    GameComponent_DataProcessingAllocationRegistry.CurrentRegistry;
+                if (TryApplyDeferredEffects(registry))
+                {
+                    FinishLoadNormally();
+                    return true;
+                }
+            }
+
+            FailSafeCompleteLoad("读档安全屏障超时");
+            return true;
+        }
+
+        private static void FinishLoadNormally()
+        {
             deferredEffectsApplied = true;
             MechanoidMechanitorLoadDeathGuard.EndLoad();
             loadInProgress = false;
+            failSafeDeadlineTick = 0;
             ClearQueues();
+        }
+
+        /// <summary>
+        /// 释放读档安全屏障，但不等同于 AbortLoad：此时游戏本身已经正常加载，
+        /// 只是本 MOD 的二次同步未能全部完成。不得在此强制执行剩余破坏性同步。
+        /// </summary>
+        private static void FailSafeCompleteLoad(string reason)
+        {
+            int nowTicks = Current.Game?.tickManager?.TicksGame ?? -1;
+            Log.Error(
+                "[MAP-机械族机械师] 读档安全协调进入 fail-safe，本次后处理未全部完成：" +
+                "reason=" + reason +
+                "，tick=" + nowTicks +
+                "，positiveSourcesReady=" + positiveSourcesReady +
+                "，dataProcessingReconciled=" + dataProcessingReconciled +
+                "，deferredEffectsApplied=" + deferredEffectsApplied +
+                "，PendingWorkModes=" + PendingWorkModes.Count +
+                "，PendingDynamicConsciousnessRefresh=" + PendingDynamicConsciousnessRefresh.Count +
+                "，PendingDataTargets=" + PendingDataTargets.Count +
+                "，PendingDataOverseers=" + PendingDataOverseers.Count);
+
+            MechanoidMechanitorLoadDeathGuard.EndLoad();
+            loadInProgress = false;
+            ClearQueues();
+
+            terminalFailureDetected = false;
+            terminalFailureReason = null;
+            failSafeDeadlineTick = 0;
+            earliestCoordinatorTick = 0;
+        }
+
+        private static void MarkTerminalFailure(string phase)
+        {
+            if (!terminalFailureDetected)
+            {
+                terminalFailureDetected = true;
+                terminalFailureReason = phase;
+            }
         }
 
         private static bool TryRestorePositiveSources()
@@ -481,9 +608,11 @@ namespace MAP_MechanoidMechanitor
             {
                 if (DataReconciliationPendingField == null)
                 {
+                    // 字段缺失属于 DLL 加载后不可能自行恢复的永久故障：立即标记并进入 fail-safe。
+                    MarkTerminalFailure("缺少字段 pendingPostLoadDynamicReconciliation");
                     Log.ErrorOnce(
                         "[MAP-机械族机械师] 无法读取读档数据处理校正状态，" +
-                        "已保持安全屏障并等待后续重试。",
+                        "已标记永久故障并准备释放安全屏障。",
                         ReflectionFailureLogKeyBase + 1);
                     return false;
                 }
@@ -510,6 +639,8 @@ namespace MAP_MechanoidMechanitor
         {
             if (method == null)
             {
+                // 方法缺失属于永久故障：标记后由调用方立即 fail-safe，不再每 60 Tick 重试。
+                MarkTerminalFailure("缺少方法：" + phase);
                 Log.ErrorOnce(
                     "[MAP-机械族机械师] 读档安全协调缺少方法：" + phase,
                     ReflectionFailureLogKeyBase + phase.GetHashCode());
@@ -564,6 +695,7 @@ namespace MAP_MechanoidMechanitor
             result = null;
             if (method == null)
             {
+                MarkTerminalFailure("缺少方法：" + phase);
                 Log.ErrorOnce(
                     "[MAP-机械族机械师] 读档安全协调缺少方法：" + phase,
                     ReflectionFailureLogKeyBase + phase.GetHashCode());
@@ -619,6 +751,9 @@ namespace MAP_MechanoidMechanitor
             invokingPositiveRestore = false;
             invokingDeferredEffects = false;
             earliestCoordinatorTick = 0;
+            failSafeDeadlineTick = 0;
+            terminalFailureDetected = false;
+            terminalFailureReason = null;
             ClearQueues();
             MechanoidMechanitorLoadDeathGuard.Reset(game);
         }
