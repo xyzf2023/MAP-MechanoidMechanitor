@@ -461,9 +461,7 @@ namespace MAP_MechanoidMechanitor
             {
                 pawn.jobs.EndCurrentJob(JobCondition.Succeeded);
             }
-            record.ResetRuntimeState();
-            MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
-            GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            MechanicalFlightUtility.FinalizeRuntimeState(pawn, record);
 
             // 状态先恢复为地面，再让原版完整处理自我关机、休眠 Hediff 与休眠任务。
             pawn.needs?.energy?.NeedInterval();
@@ -508,12 +506,9 @@ namespace MAP_MechanoidMechanitor
 
         internal static bool IsSafeLandingCell(IntVec3 cell, Pawn pawn, Map map)
         {
-            if (!cell.InBounds(map) || !cell.Standable(map)
-                || !cell.WalkableBy(map, pawn)
-                || MechanicalFlightRoofUtility.HasThickRoof(cell, map)
-                || cell.GetTerrain(map).dangerous || cell.ContainsStaticFire(map)
-                || !pawn.CanReserve(cell)
-                || cell.GetFirstBuilding(map) != null)
+            // 先套用普通降落共享的基础物理规则，再追加迫降专属的战略安全条件。
+            if (!MechanicalFlightUtility.IsBaseLandingCellValid(cell, pawn, map)
+                || !pawn.CanReserve(cell))
             {
                 return false;
             }
@@ -654,11 +649,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool pendingShutdown = record.PendingShutdownAfterLanding;
-            record.ResetRuntimeState();
             try
             {
-                MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
-                GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+                MechanicalFlightUtility.FinalizeRuntimeState(pawn, record);
             }
             catch (Exception exception)
             {

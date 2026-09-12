@@ -38,9 +38,7 @@ namespace MAP_MechanoidMechanitor
         private static readonly Dictionary<int, HeightState> HeightStates = new();
         private static readonly Dictionary<int, GroundState> GroundStates = new();
 
-        internal static void BeginTakeoff(
-            Pawn pawn,
-            MechanicalFlightAuthorizationRecord record)
+        internal static void BeginTakeoff(Pawn pawn)
         {
             HeightStates[pawn.thingIDNumber] = new HeightState
             {
@@ -419,11 +417,9 @@ namespace MAP_MechanoidMechanitor
     internal static class MechanicalFlightVisualTakeoffPatch
     {
         [HarmonyPrefix]
-        public static void Prefix(
-            Pawn pawn,
-            MechanicalFlightAuthorizationRecord record)
+        public static void Prefix(Pawn pawn)
         {
-            MechanicalFlightVisualSmoothing.BeginTakeoff(pawn, record);
+            MechanicalFlightVisualSmoothing.BeginTakeoff(pawn);
         }
     }
 

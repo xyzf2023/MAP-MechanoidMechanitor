@@ -290,7 +290,6 @@ namespace MAP_MechanoidMechanitor
     {
         private sealed class DirectFlightMotionState
         {
-            public Vector3 StartGroundPosition;
             public Vector3 ExactGroundPosition;
             public Vector3 DestinationGroundPosition;
             public float TotalDistance;
@@ -651,7 +650,6 @@ namespace MAP_MechanoidMechanitor
                     : pawn.Position.ToVector3Shifted());
             DirectFlightMotionState state = new()
             {
-                StartGroundPosition = startGroundPosition,
                 ExactGroundPosition = startGroundPosition,
                 DestinationGroundPosition = destinationGroundPosition,
                 TotalDistance = Vector3.Distance(

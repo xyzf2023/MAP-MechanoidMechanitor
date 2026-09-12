@@ -32,11 +32,6 @@ namespace MAP_MechanoidMechanitor
         private static readonly Dictionary<Pawn, GlowState> GlowStates = new();
         private static readonly Dictionary<int, int> LastGroundWashTick = new();
         private static readonly Dictionary<int, IntVec3> LastRevealedFogCell = new();
-        private static readonly Dictionary<string, Graphic[]> FlameGraphics = new();
-        private static readonly Dictionary<string, Graphic[]> CoreGraphics = new();
-        private static readonly Dictionary<string, Graphic[]> GlowGraphics = new();
-        private static Graphic[]? groundWashGraphics;
-        private const int PulseSteps = 8;
         internal const float VanillaFlightDrawOffset = 0.6f;
 
         public static Vector3 HoverVisualOffset(
@@ -132,32 +127,9 @@ namespace MAP_MechanoidMechanitor
             Vector3 bodyDrawLoc,
             float tiltAngle)
         {
-            MechanicalFlightProfileDef? profile = record.Profile;
-            if (profile == null || !profile.drawThruster
-                || !MechanicalFlightUtility.HasHoverVisual(pawn, record))
-            {
-                return;
-            }
-
-            Graphic[] flames = GetFlameGraphics(profile);
-            Graphic[] cores = GetCoreGraphics(profile);
-            Graphic[] glows = GetGlowGraphics(profile);
-            float pulse = (Mathf.Sin((Find.TickManager.TicksGame + pawn.thingIDNumber)
-                * 0.24f) + 1f) * 0.5f;
-            int index = Mathf.Clamp(Mathf.RoundToInt(pulse * (PulseSteps - 1)),
-                0, PulseSteps - 1);
-            Quaternion rotation = Quaternion.AngleAxis(tiltAngle, Vector3.up);
-            Vector3 exhaust = bodyDrawLoc
-                + rotation * new Vector3(0f, 0f, -0.72f);
-            exhaust.y = AltitudeLayer.Projectile.AltitudeFor();
-
-            glows[index].Draw(exhaust + rotation * new Vector3(0f, 0f, 0.25f),
-                Rot4.North, pawn, tiltAngle);
-            float flameAngle = tiltAngle + profile.thrusterAngleOffset;
-            flames[index].Draw(exhaust, Rot4.North, pawn, flameAngle);
-            cores[index].Draw(exhaust + rotation * new Vector3(0f, 0f, 0.17f),
-                Rot4.North, pawn, flameAngle);
-            DrawPersistentGroundWash(pawn, profile);
+            // 唯一实际推进焰实现：巡飞表现层负责脉动与移动拉伸缓存。
+            MechanicalFlightCruisePresentation.DrawThrusterVisual(
+                pawn, record, bodyDrawLoc, tiltAngle);
         }
 
         internal static void Tick(Pawn pawn, MechanicalFlightAuthorizationRecord record)
@@ -218,64 +190,6 @@ namespace MAP_MechanoidMechanitor
             LastRevealedFogCell.Clear();
             MechanicalFlightVisualSmoothing.ClearAllRuntimeState();
             MechanicalFlightCruisePresentation.ClearAllRuntimeState();
-        }
-
-        private static Graphic[] GetFlameGraphics(MechanicalFlightProfileDef profile)
-        {
-            if (!FlameGraphics.TryGetValue(profile.thrusterFlameTexture, out Graphic[]? graphics))
-            {
-                graphics = new Graphic[PulseSteps];
-                for (int i = 0; i < PulseSteps; i++)
-                {
-                    float t = i / (float)(PulseSteps - 1);
-                    graphics[i] = GraphicDatabase.Get<Graphic_Single>(
-                        profile.thrusterFlameTexture, ShaderDatabase.MoteGlow,
-                        new Vector2(0.78f, 2.55f),
-                        new Color(Mathf.Lerp(0.27f, 0.34f, t),
-                            Mathf.Lerp(0.67f, 0.78f, t), 1f,
-                            Mathf.Lerp(0.68f, 0.82f, t)));
-                }
-                FlameGraphics[profile.thrusterFlameTexture] = graphics;
-            }
-            return graphics;
-        }
-
-        private static Graphic[] GetCoreGraphics(MechanicalFlightProfileDef profile)
-        {
-            if (!CoreGraphics.TryGetValue(profile.thrusterFlameTexture, out Graphic[]? graphics))
-            {
-                graphics = new Graphic[PulseSteps];
-                for (int i = 0; i < PulseSteps; i++)
-                {
-                    float t = i / (float)(PulseSteps - 1);
-                    graphics[i] = GraphicDatabase.Get<Graphic_Single>(
-                        profile.thrusterFlameTexture, ShaderDatabase.TransparentPostLight,
-                        new Vector2(Mathf.Lerp(0.40f, 0.44f, t), 1.75f),
-                        new Color(0.9f, 0.98f, 1f,
-                            Mathf.Lerp(0.88f, 0.98f, t)));
-                }
-                CoreGraphics[profile.thrusterFlameTexture] = graphics;
-            }
-            return graphics;
-        }
-
-        private static Graphic[] GetGlowGraphics(MechanicalFlightProfileDef profile)
-        {
-            if (!GlowGraphics.TryGetValue(profile.thrusterGlowTexture,
-                    out Graphic[]? graphics))
-            {
-                graphics = new Graphic[PulseSteps];
-                for (int i = 0; i < PulseSteps; i++)
-                {
-                    float t = i / (float)(PulseSteps - 1);
-                    graphics[i] = GraphicDatabase.Get<Graphic_Single>(
-                        profile.thrusterGlowTexture, ShaderDatabase.MoteGlow,
-                        new Vector2(1.15f, 1.15f),
-                        new Color(0.7f, 0.9f, 1f, Mathf.Lerp(0.62f, 0.80f, t)));
-                }
-                GlowGraphics[profile.thrusterGlowTexture] = graphics;
-            }
-            return graphics;
         }
 
         private static void ResetTilt(Pawn pawn)
@@ -343,39 +257,6 @@ namespace MAP_MechanoidMechanitor
             data.velocitySpeed = Rand.Range(1.2f, 2.2f);
             data.rotationRate = Rand.Range(-90f, 90f);
             pawn.Map.flecks.CreateFleck(data);
-        }
-
-        private static void DrawPersistentGroundWash(Pawn pawn, MechanicalFlightProfileDef profile)
-        {
-            if (!profile.drawGroundWash || pawn.Position.GetTerrain(pawn.Map).IsWater)
-            {
-                return;
-            }
-            groundWashGraphics ??= new[]
-            {
-                GraphicDatabase.Get<Graphic_Single>("Things/Mote/DustPuff",
-                    ShaderDatabase.TransparentPostLight, new Vector2(0.9f, 0.9f),
-                    new Color(0.78f, 0.73f, 0.65f, 0.52f)),
-                GraphicDatabase.Get<Graphic_Single>("Things/Mote/DustPuff",
-                    ShaderDatabase.TransparentPostLight, new Vector2(1.15f, 1.15f),
-                    new Color(0.78f, 0.73f, 0.65f, 0.37f)),
-                GraphicDatabase.Get<Graphic_Single>("Things/Mote/DustPuff",
-                    ShaderDatabase.TransparentPostLight, new Vector2(1.4f, 1.4f),
-                    new Color(0.78f, 0.73f, 0.65f, 0.22f))
-            };
-            Vector3 groundAnchor = GroundAnchorDrawPos(pawn);
-            int ticks = Find.TickManager.TicksGame + pawn.thingIDNumber;
-            float cycle = ticks % 54 / 54f;
-            float turn = ticks / 54 * 41f + pawn.thingIDNumber % 360;
-            for (int i = 0; i < 3; i++)
-            {
-                float phase = Mathf.Repeat(cycle + i / 3f, 1f);
-                float angle = (turn + i * 120f) * Mathf.Deg2Rad;
-                Vector3 pos = groundAnchor + new Vector3(Mathf.Cos(angle), 0f,
-                    Mathf.Sin(angle)) * Mathf.Lerp(0.35f, 1.65f, phase);
-                pos.y = AltitudeLayer.Filth.AltitudeFor();
-                groundWashGraphics[i].Draw(pos, Rot4.North, pawn, 0f);
-            }
         }
 
         private static void EnsureGlow(Pawn pawn, MechanicalFlightProfileDef profile)

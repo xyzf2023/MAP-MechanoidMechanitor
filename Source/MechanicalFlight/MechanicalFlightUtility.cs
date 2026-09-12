@@ -220,7 +220,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechanicalFlightProfileDef? profile = record.Profile;
-            if (profile == null || MechanicalFlightRoofUtility.HasThickRoof(pawn.Position, pawn.Map))
+            if (profile == null)
             {
                 if (showMessage)
                 {
@@ -229,12 +229,15 @@ namespace MAP_MechanoidMechanitor
                 }
                 return false;
             }
-            if (!pawn.Position.WalkableBy(pawn.Map, pawn))
+            if (!IsBaseLandingCellValid(pawn.Position, pawn, pawn.Map))
             {
                 if (showMessage)
                 {
-                    Messages.Message("MAP_MechanicalFlight_InvalidLanding".Translate(), pawn,
-                        MessageTypeDefOf.RejectInput, false);
+                    Messages.Message(
+                        MechanicalFlightRoofUtility.HasThickRoof(pawn.Position, pawn.Map)
+                            ? "MAP_MechanicalFlight_ThickRoofLanding".Translate()
+                            : "MAP_MechanicalFlight_InvalidLanding".Translate(),
+                        pawn, MessageTypeDefOf.RejectInput, false);
                 }
                 return false;
             }
@@ -264,6 +267,39 @@ namespace MAP_MechanoidMechanitor
                 // 避免降落后任务永远等待一条已经清除的路径。
                 pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
             }
+            return true;
+        }
+
+        /// <summary>
+        /// 普通降落与紧急迫降共享的基础物理落点合法性判断。
+        /// 只描述“格子本身能否承载机械体”；紧急迫降专属的预留、监狱格与
+        /// 交互格限制继续由 MechanicalFlightEmergencyUtility 追加。
+        /// </summary>
+        internal static bool IsBaseLandingCellValid(
+            IntVec3 cell,
+            Pawn pawn,
+            Map map)
+        {
+            if (!cell.InBounds(map)
+                || !cell.Standable(map)
+                || !cell.WalkableBy(map, pawn)
+                || MechanicalFlightRoofUtility.HasThickRoof(cell, map)
+                || cell.GetTerrain(map).dangerous
+                || cell.ContainsStaticFire(map)
+                || cell.GetFirstBuilding(map) != null)
+            {
+                return false;
+            }
+
+            List<Thing> things = cell.GetThingList(map);
+            for (int i = 0; i < things.Count; i++)
+            {
+                if (things[i] is Pawn other && !ReferenceEquals(other, pawn))
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
@@ -357,6 +393,19 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        /// <summary>
+        /// 四条飞行结束路径共用的最小收尾：清空运行态、通知表现层、通知注册表。
+        /// ForceLand、StopDead、pendingShutdown、坠毁保护等差异仍由各调用路径自行处理。
+        /// </summary>
+        internal static void FinalizeRuntimeState(
+            Pawn? pawn,
+            MechanicalFlightAuthorizationRecord record)
+        {
+            record.ResetRuntimeState();
+            MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
+            GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+        }
+
         internal static void ClearRuntimeState(
             MechanicalFlightAuthorizationRecord record,
             bool forceLand)
@@ -376,9 +425,7 @@ namespace MAP_MechanoidMechanitor
             {
                 pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
             }
-            record.ResetRuntimeState();
-            MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
-            GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            FinalizeRuntimeState(pawn, record);
         }
 
         internal static void CompleteNormalLanding(
@@ -391,9 +438,7 @@ namespace MAP_MechanoidMechanitor
             {
                 pawn.CurJob.flying = false;
             }
-            record.ResetRuntimeState();
-            MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
-            GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            FinalizeRuntimeState(pawn, record);
             if (pendingShutdown && !pawn.Dead && pawn.Spawned)
             {
                 pawn.needs?.energy?.NeedInterval();

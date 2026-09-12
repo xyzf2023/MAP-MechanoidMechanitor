@@ -237,33 +237,6 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    /// <summary>
-    /// 保留现有推进焰绘制入口，以“脉动 × 移动拉伸”的缓存图形替换固定长度版本。
-    /// </summary>
-    [HarmonyPatch(typeof(MechanicalFlightPresentationUtility),
-        nameof(MechanicalFlightPresentationUtility.DrawThrusterVisual))]
-    internal static class MechanicalFlightThrusterStretchPatch
-    {
-        [HarmonyPrefix]
-        public static bool Prefix(
-            Pawn pawn,
-            MechanicalFlightAuthorizationRecord record,
-            Vector3 bodyDrawLoc,
-            float tiltAngle)
-        {
-            MechanicalFlightProfileDef? profile = record?.Profile;
-            if (profile == null || !profile.drawThruster
-                || !MechanicalFlightUtility.HasHoverVisual(pawn))
-            {
-                return true;
-            }
-
-            MechanicalFlightCruisePresentation.DrawThrusterVisual(
-                pawn, record!, bodyDrawLoc, tiltAngle);
-            return false;
-        }
-    }
-
     [HarmonyPatch(typeof(MechanicalFlightPresentationUtility), "NotifyFlightStarted")]
     internal static class MechanicalFlightCruiseStartResetPatch
     {
