@@ -1182,8 +1182,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     color = MechanoidOvermindUiStyle.Error;
                 }
                 else if (statusKey.IndexOf("Accepted", StringComparison.Ordinal) >= 0
-                    || statusKey.IndexOf("DropStarted", StringComparison.Ordinal) >= 0
-                    || statusKey.IndexOf("CreditsSpent", StringComparison.Ordinal) >= 0
                     || statusKey.IndexOf("Connected", StringComparison.Ordinal) >= 0)
                 {
                     color = MechanoidOvermindUiStyle.AccentBright;

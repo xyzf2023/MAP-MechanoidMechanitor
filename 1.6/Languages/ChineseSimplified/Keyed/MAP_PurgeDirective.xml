@@ -128,8 +128,6 @@
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingForceSupportMap>请选择部队支援目标地图</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingForceSupportMap>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingForceSupportLocation>请选择部队支援部署位置</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SelectingForceSupportLocation>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CheckingPermission>正在确认节点权限</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CheckingPermission>
-  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CreditsSpent>肃清额度已扣除</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CreditsSpent>
-  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.DropStarted>投送序列已启动</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.DropStarted>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Accepted>调拨请求已接受</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Accepted>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.InsufficientCredits>肃清额度不足</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.InsufficientCredits>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.ConnectionLost>连接失效：肃清指令或机械巢盟友关系不可用</MAP_MechanoidMechanitor.PurgeDirective.Communication.Error.ConnectionLost>
