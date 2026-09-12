@@ -523,7 +523,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             for (int i = 0; i < components.Count; i++)
             {
                 MechanoidMechanitorStoryComponentDef component = components[i];
-                string? value = component.Worker.GetSummaryValue(configuration);
+                MechanoidMechanitorStoryComponentWorker? worker = component.Worker;
+                if (worker == null)
+                {
+                    continue;
+                }
+
+                string? value = worker.GetSummaryValue(configuration);
                 if (value.NullOrEmpty())
                 {
                     continue;

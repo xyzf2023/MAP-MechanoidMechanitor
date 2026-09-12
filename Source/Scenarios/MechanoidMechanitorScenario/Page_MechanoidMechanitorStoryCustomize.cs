@@ -124,7 +124,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 float rightHeight = 0f;
                 for (int i = 0; i < components.Count; i++)
                 {
-                    MechanoidMechanitorStoryComponentWorker worker = components[i].Worker;
+                    MechanoidMechanitorStoryComponentWorker? worker = components[i].Worker;
+                    if (worker == null)
+                    {
+                        continue;
+                    }
+
                     if (worker.DrawInRightColumn)
                     {
                         if (rightHeight > 0f)
@@ -152,12 +157,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 contentHeight = 0f;
                 for (int i = 0; i < components.Count; i++)
                 {
-                    if (i > 0)
+                    MechanoidMechanitorStoryComponentWorker? worker = components[i].Worker;
+                    if (worker == null)
+                    {
+                        continue;
+                    }
+
+                    if (contentHeight > 0f)
                     {
                         contentHeight += MechanoidMechanitorStoryComponentWorker.CardGap;
                     }
 
-                    contentHeight += components[i].Worker.GetHeight(context, availableWidth);
+                    contentHeight += worker.GetHeight(context, availableWidth);
                 }
             }
 
@@ -184,7 +195,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 for (int i = 0; i < components.Count; i++)
                 {
-                    MechanoidMechanitorStoryComponentWorker worker = components[i].Worker;
+                    MechanoidMechanitorStoryComponentWorker? worker = components[i].Worker;
+                    if (worker == null)
+                    {
+                        continue;
+                    }
+
                     if (worker.DrawInRightColumn)
                     {
                         if (rightY > 0f)
@@ -214,12 +230,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 float y = 0f;
                 for (int i = 0; i < components.Count; i++)
                 {
-                    if (i > 0)
+                    MechanoidMechanitorStoryComponentWorker? worker = components[i].Worker;
+                    if (worker == null)
+                    {
+                        continue;
+                    }
+
+                    if (y > 0f)
                     {
                         y += MechanoidMechanitorStoryComponentWorker.CardGap;
                     }
 
-                    MechanoidMechanitorStoryComponentWorker worker = components[i].Worker;
                     float height = worker.GetHeight(context, availableWidth);
                     worker.Draw(new Rect(HorizontalPadding, y, availableWidth, height), context);
                     y += height;
@@ -420,7 +441,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 .AllDefsListForReading
                 .OrderBy(def => def.displayOrder)
                 .ThenBy(def => def.defName, StringComparer.Ordinal)
-                .Where(def => def.Worker.ShouldShow(context))
+                .Where(def => def.Worker?.ShouldShow(context) == true)
                 .ToList();
         }
 
