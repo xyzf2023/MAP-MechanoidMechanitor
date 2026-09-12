@@ -80,14 +80,21 @@ namespace MAP_MechanoidMechanitor
             List<Thing> looseThings = new List<Thing>();
             for (int i = 0; i < transporters.Count; i++)
             {
-                ThingOwner container = transporters[i].innerContainer;
+                ThingOwner? container = transporters[i]?.innerContainer;
+                if (container == null)
+                {
+                    continue;
+                }
                 List<Thing> snapshot = container.ToList();
                 for (int j = 0; j < snapshot.Count; j++)
                 {
                     Thing thing = snapshot[j];
-                    if (thing is Pawn pawn && !pawn.Dead && !pawn.Destroyed && !pawn.Discarded)
+                    if (thing is Pawn pawn)
                     {
-                        caravanPawns.Add(pawn);
+                        if (IsUsablePawn(pawn))
+                        {
+                            caravanPawns.Add(pawn);
+                        }
                     }
                     else if (!thing.Destroyed && !thing.Discarded)
                     {
@@ -96,29 +103,40 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            // 核心前置条件不满足：不进入自定义事务，直接交还原版 FormCaravan 作为
-            // 最终处理路径，避免内容被原版 transporters.Clear()/Destroy() 丢弃。
-            if (Faction.OfPlayer == null
-                || caravanPawns.Count == 0
-                || !TryResolveLandingTile(tile, out PlanetTile landingTile)
-                || landingTile.LayerDef == null
-                || !landingTile.LayerDef.canFormCaravans)
+            PlanetTile landingTile = tile;
+            bool canRunCustomArrival =
+                Faction.OfPlayer != null
+                && caravanPawns.Count > 0
+                && TryResolveLandingTile(tile, out landingTile)
+                && landingTile.LayerDef != null
+                && landingTile.LayerDef.canFormCaravans;
+
+            // 核心前置条件不满足：交还原版 FormCaravan 作为第一处理路径；
+            // 若原版再次异常，仍由最终恢复逻辑保证 Pawn / 物资安全归属。
+            if (!canRunCustomArrival)
             {
                 Log.Error(
                     "[MAP-机械族机械师] 机械飞行远行队抵达失败：没有可用于重建远行队的存活成员" +
                     "或合法降落地块，已交还原版处理。");
-                RunVanillaFormCaravanFallback(transporters, tile);
+                List<Caravan> caravansBeforeFallback = Find.WorldObjects.Caravans.ToList();
+                if (!TryRunVanillaFormCaravanFallback(transporters, tile))
+                {
+                    FinalRecoverContents(
+                        caravanPawns, looseThings, landingTile, caravansBeforeFallback);
+                }
                 return;
             }
 
-            // 阶段 2：建立新的 Caravan。仅 Pawn 必须先离开旧容器（与原版 FormCaravan 一致）；
-            // 物资仍留在容器中，等 Caravan 成为权威 Owner 后再逐项 best-effort 转移。
+            // 阶段 2：Pawn 必须先离开旧容器才能进入 Caravan（与原版 FormCaravan 一致）；
+            // 物资仍留在容器中，等 Caravan 成为权威 Owner 后再逐项安全转移。
             for (int i = 0; i < caravanPawns.Count; i++)
             {
-                caravanPawns[i].holdingOwner?.Remove(caravanPawns[i]);
+                RemoveFromHolder(caravanPawns[i]);
             }
 
-            Caravan? caravan;
+            List<Caravan> caravansBefore = Find.WorldObjects.Caravans.ToList();
+            Caravan? caravan = null;
+            bool makeCaravanThrew = false;
             try
             {
                 caravan = CaravanMaker.MakeCaravan(
@@ -127,30 +145,59 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception exception)
             {
-                // Caravan 尚未真正建立：可以安全恢复尚未进入任何 Caravan 的 Pawn，
-                // 再交还原版 FormCaravan 兜底，避免重复归属或丢人。
+                makeCaravanThrew = true;
                 Log.Error("[MAP-机械族机械师] 机械飞行远行队重建时发生核心异常：" + exception);
-                RestoreToContainers(
-                    transporters,
-                    caravanPawns.Where(pawn => pawn.GetCaravan() == null).Cast<Thing>());
-                RunVanillaFormCaravanFallback(transporters, tile);
+            }
+
+            if (caravan != null)
+            {
+                EnsurePawnsHaveStableOwner(caravanPawns, caravan, "MakeCaravan 成功后的所有权校验");
+                CompleteCaravanArrival(caravan, looseThings, tile);
                 return;
             }
 
-            if (caravan == null)
+            if (!makeCaravanThrew)
             {
                 Log.Error("[MAP-机械族机械师] 机械飞行远行队重建失败：CaravanMaker 返回空。");
-                RestoreToContainers(
-                    transporters,
-                    caravanPawns.Where(pawn => pawn.GetCaravan() == null).Cast<Thing>());
-                RunVanillaFormCaravanFallback(transporters, tile);
+            }
+
+            // 阶段 3：CaravanMaker 不是事务式 API。异常后世界中可能已经留下一个
+            // “半创建 Caravan”（已加入 WorldObjects，但未完成初始化或只加入了部分 Pawn）。
+            // 优先修复它，避免创建第二个 Caravan 造成 Pawn 分裂。
+            if (TryRecoverPartialCaravan(
+                    caravansBefore,
+                    caravanPawns,
+                    landingTile,
+                    ensureNewCaravanUniqueId: true,
+                    out Caravan recoveredCaravan,
+                    out List<Pawn> unplacedPawns))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 机械飞行远行队重建异常后接管 partial Caravan：" +
+                    DescribeCaravan(recoveredCaravan) +
+                    "；未入队 Pawn=" + unplacedPawns.Count);
+                CompleteCaravanArrival(recoveredCaravan, looseThings, tile);
+                EnsurePawnsHaveStableOwner(unplacedPawns, recoveredCaravan, "partial Caravan 修复");
                 return;
             }
 
-            // 阶段 3/4：Caravan 已是权威 Owner，此后禁止把任何内容回滚到 transporter。
-            TryRestoreCaravanName(caravan);
-            TransferLooseThingsToCaravan(caravan, looseThings);
-            NotifyCaravanArrived(caravan, tile);
+            Log.Error(
+                "[MAP-机械族机械师] 机械飞行远行队重建异常且未识别到 partial Caravan，" +
+                "已将内容恢复至运输舱并交还原版 FormCaravan。");
+
+            // 阶段 4：没有任何 partial Caravan 可修复，才允许恢复内容并进入原版兜底。
+            RestoreToContainers(transporters, caravanPawns.Where(PawnNeedsStableOwner));
+            List<Caravan> caravansBeforeFallbackTwo = Find.WorldObjects.Caravans.ToList();
+            if (TryRunVanillaFormCaravanFallback(transporters, tile))
+            {
+                EnsurePawnsHaveStableOwner(caravanPawns, null, "原版 FormCaravan 兜底成功后的所有权校验");
+                return;
+            }
+
+            // 阶段 5：原版兜底同样失败，进入最终恢复，绝不让 Pawn / 物资无主地留在运输舱里。
+            Log.Error("[MAP-机械族机械师] 原版 FormCaravan 兜底再次失败，进入最终恢复。");
+            FinalRecoverContents(
+                caravanPawns, looseThings, landingTile, caravansBeforeFallbackTwo);
         }
 
         public override void ExposeData()
@@ -163,14 +210,16 @@ namespace MAP_MechanoidMechanitor
 
         private void TryRestoreCaravanName(Caravan caravan)
         {
-            if (originalCaravanName.NullOrEmpty())
-            {
-                return;
-            }
-
             try
             {
-                caravan.Name = originalCaravanName;
+                if (!originalCaravanName.NullOrEmpty())
+                {
+                    caravan.Name = originalCaravanName;
+                }
+                else if (caravan.Name.NullOrEmpty())
+                {
+                    caravan.Name = CaravanNameGenerator.GenerateCaravanName(caravan);
+                }
             }
             catch (Exception exception)
             {
@@ -189,20 +238,124 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (!TryGiveThingToCaravanPawn(caravan, thing, out string failureReason))
+                {
+                    if (ThingHasStableOwner(thing))
+                    {
+                        Log.Warning(
+                            "[MAP-机械族机械师] 机械飞行远行队物资已属于其它稳定 Caravan，不做处置：" +
+                            thing + "；" + failureReason);
+                        continue;
+                    }
+                    // 只有连“仍合法的 Caravan Pawn inventory”都无法承载时，才允许最终处置。
+                    EmergencyDisposeThing(
+                        thing, "Caravan=" + DescribeCaravan(caravan) + "；" + failureReason);
+                }
+            }
+        }
+
+        private static bool TryGiveThingToCaravanPawn(
+            Caravan caravan, Thing thing, out string failureReason)
+        {
+            failureReason = string.Empty;
+            ThingOwner? originalOwner;
+            Pawn? receiver = null;
+            try
+            {
+                // 原版 CaravanInventoryUtility.GiveThing 在找不到接收者时会直接 Destroy 物品。
+                // 因此这里先做与原版一致的接收者预检，只有确认存在接收 Pawn 才脱离原 Owner。
+                originalOwner = thing.holdingOwner;
+                receiver = CaravanInventoryUtility.FindPawnToMoveInventoryTo(
+                    thing, caravan.PawnsListForReading, null);
+            }
+            catch (Exception exception)
+            {
+                originalOwner = thing.holdingOwner;
+                failureReason = "寻找接收 Pawn 时异常：" + exception;
+            }
+
+            if (receiver == null && caravan.PawnsListForReading.Count == 0)
+            {
+                failureReason = failureReason.NullOrEmpty()
+                    ? "Caravan 没有任何可接收物资的 Pawn"
+                    : failureReason;
+                return false;
+            }
+
+            RemoveFromHolder(thing);
+
+            if (receiver != null
+                && receiver.inventory != null
+                && receiver.inventory.innerContainer.TryAdd(thing))
+            {
+                return true;
+            }
+
+            // 预检接收者失败时的二级兜底：逐个尝试 Caravan 成员的 inventory（TryAdd 不会 Destroy 物品）。
+            for (int i = 0; i < caravan.PawnsListForReading.Count; i++)
+            {
+                Pawn candidate = caravan.PawnsListForReading[i];
+                if (candidate == null
+                    || candidate == receiver
+                    || candidate.inventory == null)
+                {
+                    continue;
+                }
+                if (candidate.inventory.innerContainer.TryAdd(thing))
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 机械飞行远行队物资首选接收者失败，已改由其他成员接收：" +
+                        thing + "；Caravan=" + DescribeCaravan(caravan));
+                    return true;
+                }
+            }
+
+            bool restored = false;
+            if (originalOwner != null && !thing.Destroyed && thing.holdingOwner == null)
+            {
                 try
                 {
-                    // CaravanInventoryUtility.GiveThing 要求目标不在其它容器中，
-                    // 因此先脱离旧运输舱容器，再交给已经建立的 Caravan。
-                    thing.holdingOwner?.Remove(thing);
-                    CaravanInventoryUtility.GiveThing(caravan, thing);
+                    restored = originalOwner.TryAdd(thing);
                 }
                 catch (Exception exception)
                 {
-                    // 单个物资转移失败只记录，不回滚已经成功建立的 Caravan。
                     Log.Error(
-                        "[MAP-机械族机械师] 机械飞行远行队抵达时转移物资失败：" +
+                        "[MAP-机械族机械师] 恢复物资原 Owner 时异常：" +
                         thing + "：" + exception);
                 }
+            }
+
+            failureReason =
+                "receiver=" + (receiver?.ToString() ?? "null") +
+                "；恢复原 Owner=" + restored +
+                "；当前 ParentHolder=" +
+                (thing.holdingOwner?.Owner.ToStringSafe() ?? "null") +
+                (failureReason.NullOrEmpty() ? string.Empty : "；" + failureReason);
+            Log.Error(
+                "[MAP-机械族机械师] 机械飞行远行队物资接收失败：" +
+                thing + "；" + failureReason);
+            return false;
+        }
+
+        private static void EmergencyDisposeThing(Thing thing, string reason)
+        {
+            Log.Error(
+                "[MAP-机械族机械师] 机械飞行远行队最终处置物资（无法安全归属）：" +
+                thing + "；ParentHolder=" +
+                (thing?.holdingOwner?.Owner.ToStringSafe() ?? "null") +
+                "；原因：" + reason);
+            try
+            {
+                if (thing == null || thing.Destroyed || thing.Discarded)
+                {
+                    return;
+                }
+                RemoveFromHolder(thing);
+                thing.DestroyOrPassToWorld();
+            }
+            catch (Exception exception)
+            {
+                Log.Error("[MAP-机械族机械师] 最终处置物资时异常：" + exception);
             }
         }
 
@@ -279,7 +432,345 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static void RunVanillaFormCaravanFallback(
+        private void CompleteCaravanArrival(
+            Caravan caravan, List<Thing> looseThings, PlanetTile tile)
+        {
+            // Caravan 已成为权威 Owner；此后禁止把任何内容回滚到运输舱。
+            TryRestoreCaravanName(caravan);
+            TransferLooseThingsToCaravan(caravan, looseThings);
+            NotifyCaravanArrived(caravan, tile);
+        }
+
+        private void FinalRecoverContents(
+            List<Pawn> caravanPawns,
+            List<Thing> looseThings,
+            PlanetTile landingTile,
+            List<Caravan> caravansBefore)
+        {
+            Log.Error(
+                "[MAP-机械族机械师] 机械飞行远行队进入最终恢复：Tile=" + landingTile +
+                "；Pawn 数=" + caravanPawns.Count + "；物资数=" + looseThings.Count);
+
+            // 优先级 1/2/3：已存在且合法的 Caravan、可修复的 partial Caravan、
+            // 或原版兜底过程留下的 Caravan，统一按“识别 + 修复 + 合并”处理。
+            if (TryRecoverPartialCaravan(
+                    caravansBefore,
+                    caravanPawns,
+                    landingTile,
+                    ensureNewCaravanUniqueId: false,
+                    out Caravan recoveredCaravan,
+                    out List<Pawn> unplacedPawns))
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 最终恢复接管 Caravan：" + DescribeCaravan(recoveredCaravan));
+                CompleteCaravanArrival(recoveredCaravan, looseThings, landingTile);
+                EnsurePawnsHaveStableOwner(unplacedPawns, recoveredCaravan, "最终恢复");
+                return;
+            }
+
+            // 优先级 4：确实没有任何 Caravan 可用时，Pawn 转入世界 Pawn 最终归宿；
+            // 物资在尝试过所有 Caravan 成员后仍无法归属时执行明确处置。
+            Log.Error(
+                "[MAP-机械族机械师] 最终恢复未找到任何可用 Caravan：" +
+                "Pawn 转入世界 Pawn 最终归宿，物资执行最终处置。");
+            EnsurePawnsHaveStableOwner(caravanPawns, null, "最终恢复：无可用 Caravan");
+            for (int i = 0; i < looseThings.Count; i++)
+            {
+                Thing thing = looseThings[i];
+                if (ThingHasStableOwner(thing))
+                {
+                    continue;
+                }
+                EmergencyDisposeThing(
+                    thing, "最终恢复：没有可用于接收物资的 Caravan Pawn");
+            }
+        }
+
+        private static bool TryRecoverPartialCaravan(
+            List<Caravan> caravansBefore,
+            List<Pawn> caravanPawns,
+            PlanetTile landingTile,
+            bool ensureNewCaravanUniqueId,
+            out Caravan recoveredCaravan,
+            out List<Pawn> unplacedPawns)
+        {
+            recoveredCaravan = null!;
+            unplacedPawns = new List<Pawn>();
+
+            List<Caravan> newCaravans = Find.WorldObjects.Caravans
+                .Where(candidate => !caravansBefore.Contains(candidate))
+                .ToList();
+            List<Caravan> involvedCaravans = new List<Caravan>();
+            for (int i = 0; i < caravanPawns.Count; i++)
+            {
+                Caravan? owner = caravanPawns[i]?.GetCaravan();
+                if (owner != null && !involvedCaravans.Contains(owner))
+                {
+                    involvedCaravans.Add(owner);
+                }
+            }
+            for (int i = 0; i < newCaravans.Count; i++)
+            {
+                if (!involvedCaravans.Contains(newCaravans[i]))
+                {
+                    involvedCaravans.Add(newCaravans[i]);
+                }
+            }
+
+            // 只接管“仍在世界对象列表中且未被销毁”的 Caravan，损坏对象一律不动。
+            List<Caravan> usableCaravans = involvedCaravans
+                .Where(candidate => candidate != null
+                    && !candidate.Destroyed
+                    && candidate.Spawned
+                    && (candidate.Faction == null || candidate.Faction == Faction.OfPlayer))
+                .ToList();
+            if (usableCaravans.Count == 0)
+            {
+                return false;
+            }
+
+            // 多个 partial Caravan 时禁止再建第三个：选择持有本次 Pawn 最多的作为主 Caravan，
+            // 其余只收拢 Pawn，绝不在其它 Caravan 仍持有 Pawn 时销毁它。
+            Caravan mainCaravan = usableCaravans
+                .OrderByDescending(candidate => caravanPawns.Count(
+                    pawn => pawn != null && pawn.GetCaravan() == candidate))
+                .ThenBy(candidate => candidate.ID)
+                .First();
+            if (usableCaravans.Count > 1)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 机械飞行远行队检测到多个 partial Caravan：" +
+                    string.Join("；", usableCaravans.Select(DescribeCaravan)) +
+                    "。已选择主 Caravan=" + DescribeCaravan(mainCaravan));
+            }
+
+            for (int i = 0; i < usableCaravans.Count; i++)
+            {
+                Caravan other = usableCaravans[i];
+                if (other == mainCaravan)
+                {
+                    continue;
+                }
+                for (int j = 0; j < caravanPawns.Count; j++)
+                {
+                    Pawn pawn = caravanPawns[j];
+                    if (pawn == null || pawn.GetCaravan() != other)
+                    {
+                        continue;
+                    }
+                    other.RemovePawn(pawn);
+                    if (!TryAddPawnToCaravan(mainCaravan, pawn))
+                    {
+                        PassPawnToWorldSafely(pawn, "多个 partial Caravan 合并失败");
+                    }
+                }
+
+                if (other.PawnsListForReading.Count == 0
+                    && CaravanInventoryUtility.AllInventoryItems(other).Count == 0)
+                {
+                    other.Destroy();
+                }
+                else
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 异常 Caravan 仍持有内容，保留不销毁：" +
+                        DescribeCaravan(other));
+                }
+            }
+
+            if (mainCaravan.Faction != Faction.OfPlayer)
+            {
+                mainCaravan.SetFaction(Faction.OfPlayer);
+            }
+            if (!mainCaravan.Tile.Valid && landingTile.Valid)
+            {
+                mainCaravan.Tile = landingTile;
+            }
+            if (ensureNewCaravanUniqueId && newCaravans.Contains(mainCaravan))
+            {
+                // 自定义 MakeCaravan 只有在最后一步才会设置 uniqueId；异常中断时必然尚未设置。
+                // 原版 fallback 可能在建队成功后异常，此时 uniqueId 已设置，不能重复补设。
+                TryEnsureCaravanUniqueId(mainCaravan);
+            }
+
+            for (int i = 0; i < caravanPawns.Count; i++)
+            {
+                Pawn pawn = caravanPawns[i];
+                if (!IsUsablePawn(pawn) || mainCaravan.ContainsPawn(pawn))
+                {
+                    continue;
+                }
+                Caravan? owner = pawn.GetCaravan();
+                if (owner != null && owner != mainCaravan
+                    && !owner.Destroyed && owner.Spawned)
+                {
+                    continue;
+                }
+                if (!TryAddPawnToCaravan(mainCaravan, pawn))
+                {
+                    unplacedPawns.Add(pawn);
+                }
+            }
+
+            recoveredCaravan = mainCaravan;
+            return true;
+        }
+
+        private static void TryEnsureCaravanUniqueId(Caravan caravan)
+        {
+            try
+            {
+                caravan.SetUniqueId(Find.UniqueIDsManager.GetNextCaravanID());
+            }
+            catch (Exception exception)
+            {
+                Log.Error("[MAP-机械族机械师] 为 partial Caravan 补设 uniqueId 失败：" + exception);
+            }
+        }
+
+        private static bool TryAddPawnToCaravan(Caravan caravan, Pawn pawn)
+        {
+            try
+            {
+                if (caravan.ContainsPawn(pawn))
+                {
+                    return true;
+                }
+                if (pawn.holdingOwner != null)
+                {
+                    pawn.holdingOwner.Remove(pawn);
+                }
+                caravan.AddPawn(pawn, addCarriedPawnToWorldPawnsIfAny: true);
+                if (caravan.ContainsPawn(pawn))
+                {
+                    if (!pawn.IsWorldPawn())
+                    {
+                        Find.WorldPawns.PassToWorld(pawn);
+                    }
+                    return true;
+                }
+                Log.Error(
+                    "[MAP-机械族机械师] 无法把 Pawn 加入 Caravan：" +
+                    pawn + "；Caravan=" + DescribeCaravan(caravan));
+            }
+            catch (Exception exception)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 把 Pawn 加入 Caravan 时异常：" +
+                    pawn + "：" + exception);
+            }
+            return false;
+        }
+
+        private static void EnsurePawnsHaveStableOwner(
+            IEnumerable<Pawn> pawns, Caravan? preferredCaravan, string context)
+        {
+            List<Pawn> pawnList = pawns.ToList();
+            for (int i = 0; i < pawnList.Count; i++)
+            {
+                Pawn pawn = pawnList[i];
+                if (!IsUsablePawn(pawn) || !PawnNeedsStableOwner(pawn))
+                {
+                    continue;
+                }
+                if (preferredCaravan != null
+                    && !preferredCaravan.Destroyed
+                    && preferredCaravan.Spawned
+                    && TryAddPawnToCaravan(preferredCaravan, pawn))
+                {
+                    continue;
+                }
+                PassPawnToWorldSafely(pawn, context);
+            }
+        }
+
+        private static void PassPawnToWorldSafely(Pawn pawn, string context)
+        {
+            try
+            {
+                // 原版 PassToWorld 前置条件：Pawn 未 Spawned 且未在 WorldPawns 中。
+                if (pawn.Spawned)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] Pawn 最终归宿拒绝处理已在地图上的 Pawn：" +
+                        pawn + "；" + context);
+                    return;
+                }
+                RemoveFromHolder(pawn);
+                if (!Find.WorldPawns.Contains(pawn))
+                {
+                    Find.WorldPawns.PassToWorld(pawn, PawnDiscardDecideMode.KeepForever);
+                }
+                // WorldPawnGC 只会保留 ForcefullyKeptPawns 中的无归属世界 Pawn，
+                // 否则玩家机械体可能在后续 GC 中被静默回收。
+                Find.WorldPawns.ForcefullyKeptPawns.Add(pawn);
+                Log.Error(
+                    "[MAP-机械族机械师] Pawn 最终归宿：已转入世界 Pawn 并锁定：" +
+                    pawn + "；" + context);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] Pawn 最终归宿处理异常：" + pawn + "：" + exception);
+            }
+        }
+
+        private static void RemoveFromHolder(Thing thing)
+        {
+            if (thing == null || thing.Destroyed || thing.Discarded)
+            {
+                return;
+            }
+            try
+            {
+                thing.holdingOwner?.Remove(thing);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 内容脱离原 Owner 时异常：" + thing + "：" + exception);
+            }
+        }
+
+        private static bool IsUsablePawn(Pawn pawn)
+        {
+            return pawn != null && !pawn.Dead && !pawn.Destroyed && !pawn.Discarded;
+        }
+
+        private static bool PawnNeedsStableOwner(Pawn pawn)
+        {
+            if (!IsUsablePawn(pawn))
+            {
+                return false;
+            }
+            Caravan? caravan = pawn.GetCaravan();
+            return caravan == null || caravan.Destroyed || !caravan.Spawned;
+        }
+
+        private static bool ThingHasStableOwner(Thing thing)
+        {
+            if (thing == null || thing.Destroyed || thing.Discarded)
+            {
+                return true;
+            }
+            Caravan? caravan = thing.GetCaravan();
+            return caravan != null && !caravan.Destroyed && caravan.Spawned;
+        }
+
+        private static string DescribeCaravan(Caravan caravan)
+        {
+            if (caravan == null)
+            {
+                return "null";
+            }
+            return "ID=" + caravan.ID +
+                "；Name=" + (caravan.Name ?? "null") +
+                "；Pawn 数=" + caravan.PawnsListForReading.Count +
+                "；Tile=" + caravan.Tile +
+                "；Spawned=" + caravan.Spawned;
+        }
+
+        private static bool TryRunVanillaFormCaravanFallback(
             List<ActiveTransporterInfo> transporters, PlanetTile tile)
         {
             try
@@ -288,12 +779,14 @@ namespace MAP_MechanoidMechanitor
                 // 不依赖 transporter 在返回后继续存在，与原版生命周期完全一致。
                 new TransportersArrivalAction_FormCaravan()
                     .Arrived(transporters, tile);
+                return true;
             }
             catch (Exception exception)
             {
                 Log.Error(
                     "[MAP-机械族机械师] 机械飞行远行队交还原版 FormCaravan 兜底失败：" +
                     exception);
+                return false;
             }
         }
 
@@ -303,13 +796,35 @@ namespace MAP_MechanoidMechanitor
             ActiveTransporterInfo? first = transporters.FirstOrDefault();
             if (first == null)
             {
+                Log.Error("[MAP-机械族机械师] 没有可用运输舱，无法恢复内容。");
                 return;
             }
             foreach (Thing thing in things.ToList())
             {
-                if (thing != null && !thing.Destroyed && thing.ParentHolder == null)
+                if (thing == null || thing.Destroyed || thing.Discarded || thing.Spawned)
                 {
-                    first.innerContainer.TryAdd(thing);
+                    continue;
+                }
+                try
+                {
+                    if (!first.innerContainer.Contains(thing) && thing.holdingOwner != null)
+                    {
+                        thing.holdingOwner.Remove(thing);
+                    }
+                    if (!first.innerContainer.Contains(thing)
+                        && !first.innerContainer.TryAdd(thing))
+                    {
+                        Log.Error(
+                            "[MAP-机械族机械师] 内容恢复至运输舱失败：" + thing +
+                            "；ParentHolder=" +
+                            (thing.holdingOwner?.Owner.ToStringSafe() ?? "null"));
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 内容恢复至运输舱时异常：" +
+                        thing + "：" + exception);
                 }
             }
         }
