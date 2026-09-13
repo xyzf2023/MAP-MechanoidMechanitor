@@ -8,7 +8,8 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 合体渲染替换。只对存在有效活动合体记录的人类启用；
-    /// 人类身体、头部、外观与普通服装不再绘制，改为在人类位置绘制源机械族。
+    /// 人类身体、头部、外观与普通服装不再绘制，改为在人类位置绘制源机械族，
+    /// 之后只单独补绘人类主武器一次。
     /// </summary>
     [HarmonyPatch(typeof(PawnRenderer), nameof(PawnRenderer.RenderPawnAt))]
     internal static class MechFusionRenderPawnPatch
@@ -38,12 +39,28 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            MechFusionRenderUtility.DrawWearerEquipment(
+            MechFusionRenderUtility.DrawWearerWeaponOnly(
                 wearer,
                 drawLoc,
                 rotation,
                 neverAimWeapon);
             return false;
+        }
+    }
+
+    /// <summary>
+    /// 作为合体外观绘制 source Pawn 时，跳过其 Equipment 与 Apparel extras：
+    /// 不显示 source 自己的武器，也不触发任何 WornApparel.DrawWornExtras。
+    /// 普通机械族与其他 Pawn 渲染完全不受影响。
+    /// </summary>
+    [HarmonyPatch(
+        typeof(PawnRenderUtility),
+        nameof(PawnRenderUtility.DrawEquipmentAndApparelExtras))]
+    internal static class MechFusionSkipSourceExtrasPatch
+    {
+        public static bool Prefix(Pawn pawn)
+        {
+            return !MechFusionRenderUtility.IsRenderingSourcePawn(pawn);
         }
     }
 
@@ -105,9 +122,11 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            MechFusionRenderUtility.BeginSourceRender();
+            MechFusionRenderUtility.BeginSourceRender(source);
             try
             {
+                // 不把 wearer 的 overrideApparelColor / overrideHairColor 应用给 source，
+                // source 外观与人类颜色覆盖完全隔离。
                 __instance.RenderPawn(
                     source,
                     renderTexture,
@@ -120,8 +139,8 @@ namespace MAP_MechanoidMechanitor
                     renderClothes,
                     portrait,
                     positionOffset,
-                    overrideApparelColor,
-                    overrideHairColor,
+                    null,
+                    null,
                     stylingStation);
             }
             finally

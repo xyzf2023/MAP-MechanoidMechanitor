@@ -97,6 +97,28 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
+        /// <summary>
+        /// 窄范围立即坠毁入口：只接受当前真实处于活动飞行状态、且已显示悬浮
+        /// 视觉的 Pawn，复用现有 Crash 结算。不搜索安全落点，不进入普通 Landing，
+        /// 也不创建第二套爆炸、塌方或飞行清理代码。
+        /// </summary>
+        internal static bool TryCrashImmediately(Pawn? pawn)
+        {
+            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn, out MechanicalFlightAuthorizationRecord? record)
+                || record == null || pawn == null || pawn.Dead || pawn.Downed
+                || !pawn.Spawned || pawn.Map == null
+                || !record.IsRuntimeActive
+                || record.Phase == MechanicalFlightPhase.Crashing
+                || !MechanicalFlightUtility.HasHoverVisual(pawn))
+            {
+                return false;
+            }
+
+            Crash(pawn, record);
+            return true;
+        }
+
         public static bool IsEmergencySequence(Pawn? pawn)
         {
             return GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
