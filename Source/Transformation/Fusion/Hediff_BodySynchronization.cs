@@ -37,7 +37,7 @@ namespace MAP_MechanoidMechanitor
                 AppendAbsolute(
                     builder,
                     StatDefOf.MoveSpeed,
-                    GetForcedMoveSpeed(session));
+                    MechFusionStatUtility.GetForcedMoveSpeed(session));
                 AppendAbsolute(
                     builder,
                     StatDefOf.ArmorRating_Sharp,
@@ -66,13 +66,6 @@ namespace MAP_MechanoidMechanitor
 
                 return builder.ToString().TrimEnd('\r', '\n');
             }
-        }
-
-        private static float GetForcedMoveSpeed(MechFusionSession session)
-        {
-            session.TryGetStatOffset(StatDefOf.MoveSpeed, out float offset);
-            session.TryGetStatFactor(StatDefOf.MoveSpeed, out float factor);
-            return (session.MoveSpeedBase + offset) * factor;
         }
 
         private static void AppendAbsolute(
