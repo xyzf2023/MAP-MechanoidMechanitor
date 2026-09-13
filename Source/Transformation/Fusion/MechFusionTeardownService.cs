@@ -518,6 +518,7 @@ namespace MAP_MechanoidMechanitor
             {
                 RemoveFromWorldPawns(source);
                 caravan.AddPawn(source, addCarriedPawnToWorldPawnsIfAny: true);
+                RestoreOriginalSourceIdentity(session, source);
                 return true;
             }
 
@@ -548,6 +549,9 @@ namespace MAP_MechanoidMechanitor
                 map,
                 rotation,
                 WipeMode.VanishOrMoveAside);
+            // SpawnSetup 及第三方生成补丁可能再次处理阵营或监管状态；
+            // 生成结束后做一次幂等复核，确保最终落地状态与快照一致。
+            RestoreOriginalSourceIdentity(session, source);
             return true;
         }
 
@@ -568,7 +572,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             Pawn? originalOverseer = session.OriginalOverseer;
-            if (originalOverseer == null
+            if (source.Dead
+                || originalOverseer == null
                 || originalOverseer.Destroyed
                 || originalOverseer.Discarded
                 || originalOverseer.Dead
