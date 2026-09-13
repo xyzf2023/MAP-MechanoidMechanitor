@@ -67,17 +67,6 @@ namespace MAP_MechanoidMechanitor
             Dictionary<StatDef, float> factors =
                 new Dictionary<StatDef, float>();
 
-            AddOffset(offsets, StatDefOf.Insulation_Cold, 50f);
-            AddOffset(offsets, StatDefOf.Insulation_Heat, 50f);
-            AddOffset(offsets, StatDefOf.ToxicEnvironmentResistance, 1f);
-
-            StatDef? vacuumResistance =
-                DefDatabase<StatDef>.GetNamedSilentFail("VacuumResistance");
-            if (vacuumResistance != null)
-            {
-                AddOffset(offsets, vacuumResistance, 1f);
-            }
-
             float aimingDelay =
                 sourceDef.GetStatValueAbstract(StatDefOf.AimingDelayFactor);
             if (Math.Abs(aimingDelay - 1f) > Epsilon)

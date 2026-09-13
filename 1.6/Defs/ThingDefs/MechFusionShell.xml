@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
   <!--
-    唯一的固定合体服装。禁止运行时动态创建 Def，禁止按机械族改写本 Def，
-    所有实例差异保存在合体记录中，并由窄范围 Stat 补丁按实例提供。
-    本 Def 不含 Stuff、不含 CompQuality、不产生品质。
+    唯一的固定合体服装。禁止运行时动态创建 Def，禁止按机械族改写本 Def。
+    固定环境能力由本 Def 提供；因源机械族而异的实例属性保存在合体记录中，
+    并由窄范围 Stat 补丁按实例提供。本 Def 不含 Stuff、不含 CompQuality、不产生品质。
   -->
   <ThingDef>
     <defName>MAP_MechFusionShell</defName>
@@ -50,7 +50,13 @@
       <Flammability>0</Flammability>
       <DeteriorationRate>0</DeteriorationRate>
       <EquipDelay>0</EquipDelay>
+      <Insulation_Cold>50</Insulation_Cold>
+      <Insulation_Heat>50</Insulation_Heat>
     </statBases>
+    <equippedStatOffsets>
+      <ToxicEnvironmentResistance>1</ToxicEnvironmentResistance>
+      <VacuumResistance MayRequire="Ludeon.RimWorld.Odyssey">1</VacuumResistance>
+    </equippedStatOffsets>
     <thingCategories>
       <li>ApparelArmor</li>
     </thingCategories>
