@@ -163,8 +163,11 @@ namespace MAP_MechanoidMechanitor
 
             bool transitionStarted = TryBeginReturnToPawnForm(session, source);
 
+            MechFusionWhitelistUtility.RevokeAll(session, wearer);
             MechFusionBodySynchronizationUtility.RemoveFromWearer(wearer);
+            MechFusionSourceUtility.RemoveDormantGuard(source);
             MechFusionEnergyUtility.WriteBackToSource(session, source);
+            MechFusionStatCacheUtility.Invalidate(session);
 
             if (!TryRestoreSourcePawn(session, source, out bool deferred))
             {

@@ -154,6 +154,8 @@ namespace MAP_MechanoidMechanitor
 
             RepairShellSessionId(session, apparel!);
             MechFusionBodySynchronizationUtility.ApplyToWearer(session);
+            MechFusionWhitelistUtility.RepairAfterLoad(session, wearer);
+            MechFusionStatCacheUtility.Invalidate(session);
             session.UpdateRecoveryLocation(
                 wearer!.Map,
                 wearer.Position,

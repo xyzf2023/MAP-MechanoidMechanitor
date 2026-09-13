@@ -27,6 +27,18 @@ namespace MAP_MechanoidMechanitor
         private Map? pendingMap;
         private IntVec3 pendingPosition = IntVec3.Invalid;
         private Rot4 pendingRotation = Rot4.South;
+        private List<MechFusionStatEntry> statOffsets =
+            new List<MechFusionStatEntry>();
+        private List<MechFusionStatEntry> statFactors =
+            new List<MechFusionStatEntry>();
+        private List<MechFusionWhitelistEntry> whitelistEntries =
+            new List<MechFusionWhitelistEntry>();
+        private float armorSharp;
+        private float armorBlunt;
+        private float armorHeat;
+        private float moveSpeedBase;
+        private Dictionary<StatDef, float>? offsetLookup;
+        private Dictionary<StatDef, float>? factorLookup;
 
         public string SessionId
         {
@@ -70,6 +82,23 @@ namespace MAP_MechanoidMechanitor
         public IntVec3 PendingPosition => pendingPosition;
 
         public Rot4 PendingRotation => pendingRotation;
+
+        public float ArmorSharp => armorSharp;
+
+        public float ArmorBlunt => armorBlunt;
+
+        public float ArmorHeat => armorHeat;
+
+        public float MoveSpeedBase => moveSpeedBase;
+
+        public IReadOnlyList<MechFusionWhitelistEntry> WhitelistEntries
+        {
+            get
+            {
+                whitelistEntries ??= new List<MechFusionWhitelistEntry>();
+                return whitelistEntries;
+            }
+        }
 
         public bool IsActive =>
             state == MechFusionSessionState.Starting
@@ -179,6 +208,126 @@ namespace MAP_MechanoidMechanitor
             pendingRotation = rotation.IsValid ? rotation : Rot4.South;
         }
 
+        internal void SetSnapshot(
+            List<MechFusionStatEntry> offsets,
+            List<MechFusionStatEntry> factors,
+            float sharp,
+            float blunt,
+            float heat,
+            float speedBase)
+        {
+            statOffsets = offsets ?? new List<MechFusionStatEntry>();
+            statFactors = factors ?? new List<MechFusionStatEntry>();
+            armorSharp = sharp;
+            armorBlunt = blunt;
+            armorHeat = heat;
+            moveSpeedBase = speedBase;
+            offsetLookup = null;
+            factorLookup = null;
+        }
+
+        internal bool TryGetStatOffset(StatDef? stat, out float value)
+        {
+            value = 0f;
+            if (stat == null)
+            {
+                return false;
+            }
+
+            EnsureLookups();
+            return offsetLookup!.TryGetValue(stat, out value);
+        }
+
+        internal bool TryGetStatFactor(StatDef? stat, out float value)
+        {
+            value = 1f;
+            if (stat == null)
+            {
+                return false;
+            }
+
+            EnsureLookups();
+            return factorLookup!.TryGetValue(stat, out value);
+        }
+
+        internal void AddWhitelistEntry(MechFusionWhitelistEntry entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            whitelistEntries ??= new List<MechFusionWhitelistEntry>();
+            whitelistEntries.Add(entry);
+        }
+
+        internal void CollectAffectedStats(HashSet<StatDef> result)
+        {
+            if (result == null)
+            {
+                return;
+            }
+
+            statOffsets ??= new List<MechFusionStatEntry>();
+            statFactors ??= new List<MechFusionStatEntry>();
+            for (int i = 0; i < statOffsets.Count; i++)
+            {
+                if (statOffsets[i]?.stat != null)
+                {
+                    result.Add(statOffsets[i].stat!);
+                }
+            }
+
+            for (int i = 0; i < statFactors.Count; i++)
+            {
+                if (statFactors[i]?.stat != null)
+                {
+                    result.Add(statFactors[i].stat!);
+                }
+            }
+        }
+
+        private void EnsureLookups()
+        {
+            if (offsetLookup != null && factorLookup != null)
+            {
+                return;
+            }
+
+            offsetLookup = new Dictionary<StatDef, float>();
+            factorLookup = new Dictionary<StatDef, float>();
+            statOffsets ??= new List<MechFusionStatEntry>();
+            statFactors ??= new List<MechFusionStatEntry>();
+
+            for (int i = 0; i < statOffsets.Count; i++)
+            {
+                StatDef? stat = statOffsets[i]?.stat;
+                if (stat == null)
+                {
+                    continue;
+                }
+
+                float sum = offsetLookup.TryGetValue(stat, out float existing)
+                    ? existing
+                    : 0f;
+                offsetLookup[stat] = sum + statOffsets[i].value;
+            }
+
+            for (int i = 0; i < statFactors.Count; i++)
+            {
+                StatDef? stat = statFactors[i]?.stat;
+                if (stat == null)
+                {
+                    continue;
+                }
+
+                float product = factorLookup.TryGetValue(stat, out float existing)
+                    ? existing
+                    : 1f;
+                factorLookup[stat] = product * statFactors[i].value;
+            }
+        }
+
         public void ExposeData()
         {
             Scribe_Values.Look(ref sessionId, "sessionId");
@@ -209,10 +358,31 @@ namespace MAP_MechanoidMechanitor
                 ref pendingRotation,
                 "pendingRotation",
                 Rot4.South);
+            Scribe_Collections.Look(
+                ref statOffsets,
+                "statOffsets",
+                LookMode.Deep);
+            Scribe_Collections.Look(
+                ref statFactors,
+                "statFactors",
+                LookMode.Deep);
+            Scribe_Collections.Look(
+                ref whitelistEntries,
+                "whitelistEntries",
+                LookMode.Deep);
+            Scribe_Values.Look(ref armorSharp, "armorSharp");
+            Scribe_Values.Look(ref armorBlunt, "armorBlunt");
+            Scribe_Values.Look(ref armorHeat, "armorHeat");
+            Scribe_Values.Look(ref moveSpeedBase, "moveSpeedBase");
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 EnsureInitialized();
+                statOffsets ??= new List<MechFusionStatEntry>();
+                statFactors ??= new List<MechFusionStatEntry>();
+                whitelistEntries ??= new List<MechFusionWhitelistEntry>();
+                offsetLookup = null;
+                factorLookup = null;
             }
         }
     }

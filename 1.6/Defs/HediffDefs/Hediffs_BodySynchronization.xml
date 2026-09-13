@@ -12,4 +12,18 @@
     <isBad>false</isBad>
     <scenarioCanAdd>false</scenarioCanAdd>
   </HediffDef>
+  <!--
+    合体期间的内部维持标记：让原版 WorldPawns 不 mothball 源机械族，
+    保证 Hediff 与限时 Comp 继续按原版节奏推进。不承载任何实例数据。
+  -->
+  <HediffDef>
+    <defName>MAP_FusionDormantGuard</defName>
+    <label>合体休眠维持</label>
+    <description>合体期间维持源机械族健康状态计时。</description>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_FusionDormantGuard" />
+    </comps>
+  </HediffDef>
 </Defs>

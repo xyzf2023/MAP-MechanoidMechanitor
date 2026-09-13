@@ -150,6 +150,7 @@ namespace MAP_MechanoidMechanitor
                     source,
                     PawnDiscardDecideMode.KeepForever);
                 sourceStored = true;
+                MechFusionSourceUtility.ApplyDormantGuard(source);
 
                 if (!GameComponent_MechTransformationRegistry.TryCommitTransition(
                         source,
@@ -176,7 +177,10 @@ namespace MAP_MechanoidMechanitor
                     wearer.Map,
                     wearer.Position,
                     wearer.Rotation);
+                MechFusionSnapshotBuilder.Capture(session, source);
                 MechFusionBodySynchronizationUtility.ApplyToWearer(session);
+                MechFusionWhitelistUtility.ApplyAll(session, wearer);
+                MechFusionStatCacheUtility.Invalidate(session);
                 RefreshAfterStart(source, wearer);
                 Messages.Message(
                     "MAP_MechanoidMechanitor.Fusion.Started".Translate(
@@ -230,6 +234,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (sourceStored && !source.Destroyed && !source.Discarded)
                 {
+                    MechFusionSourceUtility.RemoveDormantGuard(source);
                     if (Find.WorldPawns.Contains(source))
                     {
                         Find.WorldPawns.RemovePawn(source);
