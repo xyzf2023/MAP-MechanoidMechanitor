@@ -124,6 +124,24 @@ namespace MAP_MechanoidMechanitor
             set => energyTickAccumulator = Math.Max(0, value);
         }
 
+        public IReadOnlyList<MechFusionStatEntry> StatOffsets
+        {
+            get
+            {
+                statOffsets ??= new List<MechFusionStatEntry>();
+                return statOffsets;
+            }
+        }
+
+        public IReadOnlyList<MechFusionStatEntry> StatFactors
+        {
+            get
+            {
+                statFactors ??= new List<MechFusionStatEntry>();
+                return statFactors;
+            }
+        }
+
         public IReadOnlyList<MechFusionWhitelistEntry> WhitelistEntries
         {
             get
