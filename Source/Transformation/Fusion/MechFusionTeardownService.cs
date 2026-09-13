@@ -24,6 +24,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (session.TeardownCompleted)
+            {
+                return false;
+            }
+
             if (session.IsPendingRecovery)
             {
                 return TryRecoverPendingSession(session);

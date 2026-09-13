@@ -20,4 +20,8 @@
   <MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>合体机械能量：{0:0.#} / {1:0.#}\n地面基础消耗：{2:0.#}%/游戏日\n飞行消耗：起飞扣除最大能量 0.5%，飞行中每 60 Tick 扣除最大能量 0.5%。</MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>
   <MAP_MechanoidMechanitor.Fusion.Stability.Label>结构稳定值</MAP_MechanoidMechanitor.Fusion.Stability.Label>
   <MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>结构稳定值：{0}\n稳定值低于或等于 50% 时，每次受击有 {1}% 概率使人类同步承受该次伤害。</MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>
+  <MAP_MechanoidMechanitor.Fusion.Release.Label>解除合体</MAP_MechanoidMechanitor.Fusion.Release.Label>
+  <MAP_MechanoidMechanitor.Fusion.Release.Description>解除本次合体并恢复真实源机械族；飞行中必须先着陆。</MAP_MechanoidMechanitor.Fusion.Release.Description>
+  <MAP_MechanoidMechanitor.Fusion.Release.Flying>飞行中无法手动解除合体，请先着陆。</MAP_MechanoidMechanitor.Fusion.Release.Flying>
+  <MAP_MechanoidMechanitor.Fusion.Release.InProgress>正在执行其他合体退出事务。</MAP_MechanoidMechanitor.Fusion.Release.InProgress>
 </LanguageData>

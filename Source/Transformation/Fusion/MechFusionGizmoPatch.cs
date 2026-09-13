@@ -35,6 +35,8 @@ namespace MAP_MechanoidMechanitor
                         session,
                         MechFusionBarKind.Stability);
                 }
+
+                yield return BuildManualReleaseCommand(__instance, session);
             }
 
             if (!ShouldShowFor(__instance))
@@ -83,6 +85,42 @@ namespace MAP_MechanoidMechanitor
                 command.Disable(
                     "MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable"
                         .Translate());
+            }
+
+            return command;
+        }
+
+        private static Command BuildManualReleaseCommand(
+            Pawn wearer,
+            MechFusionSession session)
+        {
+            Command_Action command = new Command_Action
+            {
+                defaultLabel =
+                    "MAP_MechanoidMechanitor.Fusion.Release.Label".Translate(),
+                defaultDesc =
+                    "MAP_MechanoidMechanitor.Fusion.Release.Description"
+                        .Translate(),
+                icon = TexCommand.ReleaseAnimals,
+                action = delegate
+                {
+                    MechFusionTeardownService.TryTeardown(
+                        session,
+                        MechFusionExitReason.Manual,
+                        force: false);
+                }
+            };
+
+            if (session.IsEnding)
+            {
+                command.Disable(
+                    "MAP_MechanoidMechanitor.Fusion.Release.InProgress"
+                        .Translate());
+            }
+            else if (MechanicalFlightUtility.IsAirborne(wearer))
+            {
+                command.Disable(
+                    "MAP_MechanoidMechanitor.Fusion.Release.Flying".Translate());
             }
 
             return command;

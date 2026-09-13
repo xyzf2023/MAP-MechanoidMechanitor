@@ -40,6 +40,7 @@ namespace MAP_MechanoidMechanitor
         private bool temporaryFlightAuthorized;
         private bool flightAuthorizationGrantedByFusion;
         private int energyTickAccumulator;
+        private bool teardownCompleted;
         private Dictionary<StatDef, float>? offsetLookup;
         private Dictionary<StatDef, float>? factorLookup;
 
@@ -122,6 +123,13 @@ namespace MAP_MechanoidMechanitor
 
         public bool IsPendingRecovery =>
             state == MechFusionSessionState.PendingRecovery;
+
+        public bool TeardownCompleted => teardownCompleted;
+
+        internal void MarkTeardownCompleted()
+        {
+            teardownCompleted = true;
+        }
 
         public MechFusionSession()
         {
@@ -402,6 +410,9 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref flightAuthorizationGrantedByFusion,
                 "flightAuthorizationGrantedByFusion");
+            Scribe_Values.Look(
+                ref energyTickAccumulator,
+                "energyTickAccumulator");
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {

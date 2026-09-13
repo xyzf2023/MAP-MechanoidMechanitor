@@ -161,6 +161,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             registry.EnsureIndexes();
+            session.MarkTeardownCompleted();
             registry.sessions.Remove(session);
             if (session.SourcePawn != null)
             {
