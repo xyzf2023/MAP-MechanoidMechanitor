@@ -284,13 +284,13 @@ namespace MAP_MechanoidMechanitor
                 record.CancelTransition();
             }
 
-            if (record.CurrentForm == MechTransformationForm.Pawn)
+            Thing? previousCarrier = record.ExternalCarrier;
+            if (record.CurrentForm != MechTransformationForm.Pawn
+                || previousCarrier != null)
             {
-                return true;
+                record.CommitTransition(MechTransformationForm.Pawn, null);
             }
 
-            Thing? previousCarrier = record.ExternalCarrier;
-            record.CommitTransition(MechTransformationForm.Pawn, null);
             previousCarrier?.TryGetComp<CompMechFormCarrier>()?.ClearLink();
             return true;
         }

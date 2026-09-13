@@ -194,6 +194,11 @@ namespace MAP_MechanoidMechanitor
 
             MechanicalFlightEnergyUtility.TryConsumeMaximumEnergyFraction(
                 pawn, profile.energyDrainFraction);
+            if (MechFusionEnergyUtility.TryHandleDepletedFlightEnergy(pawn))
+            {
+                return false;
+            }
+
             GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
             MechanicalFlightPresentationUtility.NotifyFlightStarted(pawn, record);
             return true;
@@ -376,6 +381,12 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechanicalFlightEmergencyUtility.TrySendLowEnergyWarning(pawn, record, energy);
+            if (energy <= 0f
+                && MechFusionEnergyUtility.TryHandleDepletedFlightEnergy(pawn))
+            {
+                return;
+            }
+
             if (energy <= 0f)
             {
                 MechanicalFlightEmergencyUtility.TryBeginEmergencySequence(pawn);

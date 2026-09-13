@@ -59,6 +59,29 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
+        /// 飞行系统在准备进入普通机械族的低能量迫降前调用。
+        /// 合体能源已经归零时，立即交给合体解除事务处理；返回 true 后，
+        /// 飞行调用方必须停止本轮普通迫降逻辑，避免抢先安全着陆。
+        /// </summary>
+        internal static bool TryHandleDepletedFlightEnergy(Pawn? pawn)
+        {
+            if (!TryGetActiveSessionForWearer(
+                    pawn,
+                    out MechFusionSession? session)
+                || session == null
+                || session.CurrentEnergy > 0f)
+            {
+                return false;
+            }
+
+            MechFusionTeardownService.TryTeardown(
+                session,
+                MechFusionExitReason.EnergyDepleted,
+                force: false);
+            return true;
+        }
+
+        /// <summary>
         /// 合体地面基础消耗：20%/游戏日 × 源机械族 MechEnergyUsageFactor，
         /// 每 60 Tick 按实际经过 Tick 结算一次。
         /// </summary>

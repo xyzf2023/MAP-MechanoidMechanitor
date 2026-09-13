@@ -233,14 +233,67 @@ namespace MAP_MechanoidMechanitor
         {
             Log.Error(
                 "[MAP-机械族机械师] 发现共享源 Pawn 或目标人类的多条合体记录，" +
-                "已保留链接最完整的一条，只清理本条重复记录自身可证明拥有的服装：" +
+                "已保留链接最完整的一条，并清理重复记录能够独立证明拥有的临时效果：" +
                 $"session={duplicate.SessionId}。");
 
-            try
+            Pawn? duplicateWearer = duplicate.WearerPawn;
+            bool wearerSharedWithKeeper = keeper != null
+                && duplicateWearer != null
+                && ReferenceEquals(duplicateWearer, keeper.WearerPawn);
+
+            if (!wearerSharedWithKeeper && duplicateWearer != null)
             {
-                if (duplicate.FusionApparel is Apparel apparel
-                    && !apparel.Destroyed)
+                TryCleanupDuplicateStep(
+                    duplicate,
+                    "撤销重复会话临时飞行授权",
+                    () =>
+                    {
+                        if (duplicate.FlightAuthorizationGrantedByFusion
+                            && !MechFusionFlightUtility.TryRevokeTemporaryFlight(
+                                duplicate))
+                        {
+                            if (GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                                    duplicateWearer,
+                                    out MechanicalFlightAuthorizationRecord? record)
+                                && record != null)
+                            {
+                                MechanicalFlightUtility.ClearRuntimeState(
+                                    record,
+                                    forceLand: true);
+                            }
+
+                            if (!MechFusionFlightUtility.TryRevokeTemporaryFlight(
+                                    duplicate))
+                            {
+                                throw new InvalidOperationException(
+                                    "重复会话的临时飞行授权无法撤销。");
+                            }
+                        }
+                    });
+                TryCleanupDuplicateStep(
+                    duplicate,
+                    "撤销重复会话白名单效果",
+                    () => MechFusionWhitelistUtility.RevokeAll(
+                        duplicate,
+                        duplicateWearer));
+                TryCleanupDuplicateStep(
+                    duplicate,
+                    "移除重复会话机体同调",
+                    () => MechFusionBodySynchronizationUtility.RemoveFromWearer(
+                        duplicateWearer));
+            }
+
+            TryCleanupDuplicateStep(
+                duplicate,
+                "清理重复会话服装",
+                () =>
                 {
+                    if (duplicate.FusionApparel is not Apparel apparel
+                        || apparel.Destroyed)
+                    {
+                        return;
+                    }
+
                     CompMechFusionShell? shellComp =
                         apparel.TryGetComp<CompMechFusionShell>();
                     bool ownedByDuplicate = shellComp != null
@@ -249,27 +302,42 @@ namespace MAP_MechanoidMechanitor
                     bool referencedByKeeper = ReferenceEquals(
                         keeper?.FusionApparel,
                         apparel);
-                    if (ownedByDuplicate && !referencedByKeeper)
+                    if (!ownedByDuplicate || referencedByKeeper)
                     {
-                        Pawn? wearer = duplicate.WearerPawn;
-                        if (wearer?.apparel != null
-                            && wearer.apparel.Wearing(apparel))
-                        {
-                            wearer.apparel.Remove(apparel);
-                        }
-
-                        apparel.Destroy(DestroyMode.Vanish);
+                        return;
                     }
-                }
+
+                    if (duplicateWearer?.apparel != null
+                        && duplicateWearer.apparel.Wearing(apparel))
+                    {
+                        duplicateWearer.apparel.Remove(apparel);
+                    }
+
+                    apparel.Destroy(DestroyMode.Vanish);
+                });
+
+            GameComponent_MechFusionSessionRegistry.RemoveSession(duplicate);
+        }
+
+        private static bool TryCleanupDuplicateStep(
+            MechFusionSession session,
+            string stepName,
+            Action action)
+        {
+            try
+            {
+                action();
+                return true;
             }
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 清理重复合体会话的服装时发生异常：" +
-                    $"session={duplicate.SessionId}：{ex}");
+                    "[MAP-机械族机械师] 清理重复合体会话步骤失败（" +
+                    stepName +
+                    "）：" +
+                    $"session={session.SessionId}：{ex}");
+                return false;
             }
-
-            GameComponent_MechFusionSessionRegistry.RemoveSession(duplicate);
         }
 
         private static void RepairActiveSession(MechFusionSession session)
@@ -282,7 +350,11 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool wearerUsable =
-                wearer != null && !wearer.Destroyed && !wearer.Discarded;
+                wearer != null
+                && !wearer.Destroyed
+                && !wearer.Discarded
+                && !wearer.Dead
+                && !wearer.Downed;
             Apparel? apparel = session.FusionApparel as Apparel;
             bool apparelUsable = apparel != null && !apparel.Destroyed;
 

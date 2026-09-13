@@ -164,15 +164,17 @@ namespace MAP_MechanoidMechanitor
                     wearer.Position,
                     wearer.Rotation);
                 MechFusionSnapshotBuilder.Capture(session, source);
-                MechFusionBodySynchronizationUtility.ApplyToWearer(session);
+                // 先标记“已尝试”，再调用可能含第三方扩展的应用逻辑；
+                // 即使调用中途抛出异常，回滚也会按幂等入口尝试清理。
                 transaction.BodySynchronizationApplied = true;
-                MechFusionWhitelistUtility.ApplyAll(session, wearer);
+                MechFusionBodySynchronizationUtility.ApplyToWearer(session);
                 transaction.WhitelistApplied = true;
+                MechFusionWhitelistUtility.ApplyAll(session, wearer);
+                transaction.TemporaryFlightApplied = true;
                 MechFusionFlightUtility.ApplyTemporaryFlight(
                     session,
                     source,
                     wearer);
-                transaction.TemporaryFlightApplied = true;
                 MechFusionStatCacheUtility.Invalidate(session);
                 RefreshAfterStart(source, wearer);
                 Messages.Message(
@@ -221,11 +223,13 @@ namespace MAP_MechanoidMechanitor
             bool sourceRestoreDeferred = false;
             bool transformationRestoreFailed = false;
             bool flightRevokeIncomplete = false;
+            bool cleanupIncomplete = false;
 
             if (transaction.TemporaryFlightApplied)
             {
                 TryRollbackStep(
                     session,
+                    ref cleanupIncomplete,
                     "撤销临时飞行授权",
                     () =>
                     {
@@ -241,6 +245,7 @@ namespace MAP_MechanoidMechanitor
             {
                 TryRollbackStep(
                     session,
+                    ref cleanupIncomplete,
                     "撤销白名单效果",
                     () => MechFusionWhitelistUtility.RevokeAll(session, wearer));
             }
@@ -249,6 +254,7 @@ namespace MAP_MechanoidMechanitor
             {
                 TryRollbackStep(
                     session,
+                    ref cleanupIncomplete,
                     "移除机体同调",
                     () => MechFusionBodySynchronizationUtility.RemoveFromWearer(
                         wearer));
@@ -256,6 +262,7 @@ namespace MAP_MechanoidMechanitor
 
             TryRollbackStep(
                 session,
+                ref cleanupIncomplete,
                 "移除休眠维持标记",
                 () => MechFusionSourceUtility.RemoveDormantGuard(source));
 
@@ -263,6 +270,7 @@ namespace MAP_MechanoidMechanitor
             {
                 TryRollbackStep(
                     session,
+                    ref cleanupIncomplete,
                     "恢复源机械族容器",
                     () =>
                     {
@@ -273,8 +281,7 @@ namespace MAP_MechanoidMechanitor
                         if (!MechFusionTeardownService.TryRestoreSourcePawn(
                                 session,
                                 source,
-                                out bool deferred)
-                            && deferred)
+                                out _))
                         {
                             sourceRestoreDeferred = true;
                         }
@@ -285,6 +292,7 @@ namespace MAP_MechanoidMechanitor
             {
                 TryRollbackStep(
                     session,
+                    ref cleanupIncomplete,
                     "恢复形态记录",
                     () =>
                     {
@@ -299,9 +307,16 @@ namespace MAP_MechanoidMechanitor
             {
                 TryRollbackStep(
                     session,
+                    ref cleanupIncomplete,
                     "取消未提交的形态转换",
-                    () => GameComponent_MechTransformationRegistry
-                        .TryCancelTransition(source));
+                    () =>
+                    {
+                        if (!GameComponent_MechTransformationRegistry
+                                .TryCancelTransition(source))
+                        {
+                            transformationRestoreFailed = true;
+                        }
+                    });
             }
 
             Thing? apparel = transaction.Apparel;
@@ -309,6 +324,7 @@ namespace MAP_MechanoidMechanitor
             {
                 TryRollbackStep(
                     session,
+                    ref cleanupIncomplete,
                     "移除并销毁合体外甲",
                     () =>
                     {
@@ -333,6 +349,7 @@ namespace MAP_MechanoidMechanitor
             {
                 TryRollbackStep(
                     session,
+                    ref cleanupIncomplete,
                     "恢复被本次穿戴脱下的服装",
                     () => RestoreDroppedApparel(
                         wearer,
@@ -341,7 +358,8 @@ namespace MAP_MechanoidMechanitor
 
             if (sourceRestoreDeferred
                 || transformationRestoreFailed
-                || flightRevokeIncomplete)
+                || flightRevokeIncomplete
+                || cleanupIncomplete)
             {
                 // 真实源 Pawn 尚未回到合法容器、形态未恢复或飞行授权未撤销：
                 // 保留会话继续延迟修复。
@@ -353,7 +371,8 @@ namespace MAP_MechanoidMechanitor
                     $"session={session.SessionId}，" +
                     $"sourceRestoreDeferred={sourceRestoreDeferred}，" +
                     $"transformationRestoreFailed={transformationRestoreFailed}，" +
-                    $"flightRevokeIncomplete={flightRevokeIncomplete}。");
+                    $"flightRevokeIncomplete={flightRevokeIncomplete}，" +
+                    $"cleanupIncomplete={cleanupIncomplete}。");
                 return;
             }
 
@@ -362,6 +381,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void TryRollbackStep(
             MechFusionSession session,
+            ref bool cleanupIncomplete,
             string stepName,
             Action action)
         {
@@ -371,6 +391,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
+                cleanupIncomplete = true;
                 Log.Error(
                     "[MAP-机械族机械师] 合体回滚步骤失败（" + stepName + "），" +
                     "继续尝试其他不依赖步骤：" +
