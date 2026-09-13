@@ -29,6 +29,12 @@ namespace MAP_MechanoidMechanitor
                 yield return new Gizmo_MechFusionBar(
                     session,
                     MechFusionBarKind.Energy);
+                if (session.MaxStability > 0f)
+                {
+                    yield return new Gizmo_MechFusionBar(
+                        session,
+                        MechFusionBarKind.Stability);
+                }
             }
 
             if (!ShouldShowFor(__instance))

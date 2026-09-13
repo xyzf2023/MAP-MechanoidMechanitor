@@ -274,6 +274,15 @@ namespace MAP_MechanoidMechanitor
 
                 if (session.IsActive)
                 {
+                    if (session.SourcePawn?.Dead == true)
+                    {
+                        MechFusionTeardownService.TryTeardown(
+                            session,
+                            MechFusionExitReason.StabilityDepleted,
+                            force: false);
+                        continue;
+                    }
+
                     MechFusionEnergyUtility.TickSession(session);
                 }
             }

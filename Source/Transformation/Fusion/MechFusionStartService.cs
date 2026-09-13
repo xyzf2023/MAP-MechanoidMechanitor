@@ -120,6 +120,9 @@ namespace MAP_MechanoidMechanitor
                 session.BindApparel(apparel);
 
                 MechFusionEnergyUtility.CaptureInitialEnergy(session, source);
+                MechFusionStabilityUtility.CaptureInitialStability(
+                    session,
+                    source);
 
                 wearer.apparel!.Wear(
                     (Apparel)apparel,

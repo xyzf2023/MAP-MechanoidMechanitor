@@ -168,6 +168,7 @@ namespace MAP_MechanoidMechanitor
             MechFusionBodySynchronizationUtility.RemoveFromWearer(wearer);
             MechFusionSourceUtility.RemoveDormantGuard(source);
             MechFusionEnergyUtility.WriteBackToSource(session, source);
+            MechFusionStabilityUtility.SettleSourcePartDurability(session, source);
             MechFusionStatCacheUtility.Invalidate(session);
 
             if (!TryRestoreSourcePawn(session, source, out bool deferred))
