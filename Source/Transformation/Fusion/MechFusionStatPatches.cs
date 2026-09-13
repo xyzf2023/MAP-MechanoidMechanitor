@@ -43,4 +43,33 @@ namespace MAP_MechanoidMechanitor
             }
         }
     }
+
+    /// <summary>
+    /// 移速必须在原版 FinalizeValue 完成全部容量、地形与最小值处理后覆盖，
+    /// 才能真正实现“强制使用机械族速度”。其他 Stat 仍沿用未最终化入口。
+    /// </summary>
+    [HarmonyPatch(typeof(StatWorker), nameof(StatWorker.FinalizeValue))]
+    internal static class MechFusionMoveSpeedFinalPatch
+    {
+        private static readonly AccessTools.FieldRef<StatWorker, StatDef>
+            StatField = AccessTools.FieldRefAccess<StatWorker, StatDef>("stat");
+
+        public static void Postfix(
+            StatWorker __instance,
+            StatRequest req,
+            ref float val)
+        {
+            if (!GameComponent_MechFusionSessionRegistry.HasAnySession
+                || StatField(__instance) != StatDefOf.MoveSpeed
+                || req.Thing is not Pawn pawn
+                || !MechFusionStatUtility.TryGetForcedMoveSpeed(
+                    pawn,
+                    out float forcedSpeed))
+            {
+                return;
+            }
+
+            val = forcedSpeed;
+        }
+    }
 }
