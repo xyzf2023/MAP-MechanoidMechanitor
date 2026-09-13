@@ -135,5 +135,50 @@ namespace MAP_MechanoidMechanitor
             bestPathSteps = bestSteps;
             return true;
         }
+
+        /// <summary>
+        /// 把源机械族安全迁移到规划落点。只使用原版地图内重定位链：
+        /// Thing.Position 负责 ThingGrid、CoverGrid、Region、可达性与地图网格，
+        /// Pawn.Notify_Teleported 负责绘制插值、pather 路径与 Job 通知。
+        /// endCurrentJob:false 保证合体接近 Job 在迁移后继续执行。
+        /// </summary>
+        internal static bool ApplyRelocation(
+            Pawn? source,
+            IntVec3 landingCell,
+            out string? failureReason)
+        {
+            failureReason = null;
+            if (source?.Map == null
+                || source.Destroyed
+                || source.Discarded
+                || source.Dead
+                || !source.Spawned)
+            {
+                failureReason =
+                    "MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable"
+                        .Translate();
+                return false;
+            }
+
+            if (!landingCell.InBounds(source.Map)
+                || !MechanicalFlightUtility.IsBaseLandingCellValid(
+                    landingCell,
+                    source,
+                    source.Map))
+            {
+                failureReason =
+                    "MAP_MechanoidMechanitor.Fusion.Approach.LandingInvalid"
+                        .Translate();
+                return false;
+            }
+
+            source.pather?.StopDead();
+            MechanicalFlightStraightPathPatch.ClearMotion(source);
+            source.Position = landingCell;
+            source.Notify_Teleported(
+                endCurrentJob: false,
+                resetTweenedPos: true);
+            return true;
+        }
     }
 }

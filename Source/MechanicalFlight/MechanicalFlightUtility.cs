@@ -109,6 +109,12 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
+            {
+                // 合体快速转移使用专用垂直绘制偏移，不依赖原版 PositionOffsetFactor。
+                return true;
+            }
+
             return record.UsesAerialMovement
                 || ((record.Phase == MechanicalFlightPhase.Landing
                         || record.Phase == MechanicalFlightPhase.EmergencyLanding)
@@ -205,10 +211,194 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
+        /// <summary>
+        /// 合体快速转移专用升空：复用统一起飞资格与一次性起飞能源规则，
+        /// 但使用 FusionAscent/FusionDescent 相位与专用垂直绘制偏移，
+        /// 不启动原版飞行状态机，也不参与每 60 Tick 的持续飞行耗能。
+        /// </summary>
+        internal static bool TryBeginFusionTakeoff(Pawn? pawn)
+        {
+            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
+                || record == null || pawn == null
+                || record.Purpose != MechanicalFlightPurpose.Normal
+                || record.IsRuntimeActive
+                || !CanBeginTakeoff(pawn, record, requireDrafted: false, out _))
+            {
+                return false;
+            }
+
+            MechanicalFlightProfileDef profile = record.Profile!;
+            if (profile.breakThinRoofOnTakeoff)
+            {
+                MechanicalFlightRoofUtility.BreakThinRoofArea(pawn, profile);
+            }
+
+            record.Purpose = MechanicalFlightPurpose.FusionRelocation;
+            record.Phase = MechanicalFlightPhase.FusionAscent;
+            record.EmergencyLandingTarget = IntVec3.Invalid;
+            record.LowEnergyWarningSent = false;
+            record.PendingShutdownAfterLanding = false;
+            record.GroundLandingBlockedNoticeSent = false;
+            record.GroundJobBlockedNoticeSent = false;
+            record.TicksUntilNextEnergyDrain =
+                Mathf.Max(1, profile.energyDrainIntervalTicks);
+
+            MechanicalFlightEnergyUtility.TryConsumeMaximumEnergyFraction(
+                pawn, profile.energyDrainFraction);
+
+            GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            MechanicalFlightPresentationUtility.NotifyFlightStarted(pawn, record);
+            MechanicalFlightVisualSmoothing.BeginFusionAscent(pawn);
+            return true;
+        }
+
+        /// <summary>
+        /// 合体快速转移的降落阶段：真实 Pawn 已经在规划落点，
+        /// 只负责切换相位并启动垂直降落表现。
+        /// </summary>
+        internal static bool TryBeginFusionDescent(Pawn? pawn)
+        {
+            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
+                || record == null || pawn == null
+                || record.Purpose != MechanicalFlightPurpose.FusionRelocation
+                || record.Phase != MechanicalFlightPhase.FusionAscent)
+            {
+                return false;
+            }
+
+            if (record.Profile?.breakThinRoofOnLanding == true)
+            {
+                MechanicalFlightRoofUtility.BreakThinRoofArea(
+                    pawn,
+                    record.Profile);
+            }
+
+            record.Phase = MechanicalFlightPhase.FusionDescent;
+            GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            MechanicalFlightVisualSmoothing.BeginFusionDescent(pawn);
+            return true;
+        }
+
+        /// <summary>
+        /// 合体快速转移落地完成：清空全部特殊飞行运行态，不留任何半空状态。
+        /// </summary>
+        internal static void CompleteFusionLanding(Pawn? pawn)
+        {
+            if (pawn == null
+                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn,
+                    out MechanicalFlightAuthorizationRecord? record)
+                || record == null
+                || record.Purpose != MechanicalFlightPurpose.FusionRelocation)
+            {
+                return;
+            }
+
+            pawn.pather?.StopDead();
+            MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+            if (pawn.CurJob != null)
+            {
+                pawn.CurJob.flying = false;
+            }
+
+            MechanicalFlightProfileDef? profile = record.Profile;
+            if (profile != null && !pawn.Dead && !pawn.Downed
+                && pawn.Spawned && pawn.Map != null)
+            {
+                MechanicalFlightCruisePresentation.PlayLandingEffects(
+                    pawn,
+                    profile);
+            }
+
+            FinalizeRuntimeState(pawn, record);
+        }
+
+        /// <summary>
+        /// 安全取消合体快速转移。真实地图位置在升空阶段保持不变，
+        /// 在重定位后一定位于已验证的合法落点，因此直接回到地面态即可。
+        /// </summary>
+        internal static void CancelFusionRelocation(Pawn? pawn)
+        {
+            if (pawn == null
+                || !GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn,
+                    out MechanicalFlightAuthorizationRecord? record)
+                || record == null
+                || record.Purpose != MechanicalFlightPurpose.FusionRelocation)
+            {
+                return;
+            }
+
+            pawn.pather?.StopDead();
+            MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+            if (pawn.CurJob != null)
+            {
+                pawn.CurJob.flying = false;
+            }
+
+            FinalizeRuntimeState(pawn, record);
+        }
+
+        private static void TickFusionRelocation(
+            Pawn pawn,
+            MechanicalFlightAuthorizationRecord record)
+        {
+            if (record.Phase == MechanicalFlightPhase.Grounded)
+            {
+                CancelFusionRelocation(pawn);
+                return;
+            }
+
+            if (pawn.Downed)
+            {
+                // 保持统一倒地安全处理；未进入坠毁时至少回到合法地面态。
+                if (!MechanicalFlightEmergencyUtility.TryCrashFromDowned(pawn))
+                {
+                    CancelFusionRelocation(pawn);
+                }
+                return;
+            }
+
+            MechanicalFlightPresentationUtility.Tick(pawn, record);
+        }
+
+        /// <summary>
+        /// 合体快速转移的当前垂直绘制因子（0 = 贴地，1 = 最大高度）。
+        /// 只在 FusionRelocation 运行期间有非零值。
+        /// </summary>
+        internal static float GetFusionRelocationVisualFactor(Pawn? pawn)
+        {
+            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn,
+                    out MechanicalFlightAuthorizationRecord? record)
+                || record == null
+                || record.Purpose != MechanicalFlightPurpose.FusionRelocation)
+            {
+                return 0f;
+            }
+
+            return MechanicalFlightVisualSmoothing.FusionVisualFactor(
+                pawn!,
+                record);
+        }
+
+        /// <summary>
+        /// 合体快速转移当前是否仍在活动（用于 Job 的异常收尾判断）。
+        /// </summary>
+        internal static bool IsFusionRelocating(Pawn? pawn)
+        {
+            return GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                    pawn,
+                    out MechanicalFlightAuthorizationRecord? record)
+                && record != null
+                && record.Purpose == MechanicalFlightPurpose.FusionRelocation;
+        }
+
         public static bool TryBeginLanding(Pawn? pawn, bool showMessage = false)
         {
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                || record == null || pawn?.Map == null || !record.ConsumesFlightEnergy)
+                || record == null || pawn?.Map == null || !record.ConsumesFlightEnergy
+                || record.Purpose != MechanicalFlightPurpose.Normal)
             {
                 return false;
             }
@@ -304,6 +494,12 @@ namespace MAP_MechanoidMechanitor
             if (pawn == null || profile == null || pawn.Dead || !pawn.Spawned || pawn.Map == null)
             {
                 ClearRuntimeState(record, forceLand: false);
+                return;
+            }
+
+            if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
+            {
+                TickFusionRelocation(pawn, record);
                 return;
             }
 
@@ -500,6 +696,21 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
+                {
+                    // 合体快速转移的升降纯视觉进度不写入存档：
+                    // 真实地图位置始终是合法地面格，读档后直接清除运行态，
+                    // 由合体接近 Job 重新规划，绝不制造半空悬挂或丢 Pawn。
+                    if (pawn.CurJob != null)
+                    {
+                        pawn.CurJob.flying = false;
+                    }
+                    pawn.pather?.StopDead();
+                    MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+                    FinalizeRuntimeState(pawn, record);
+                    continue;
+                }
+
                 if (record.IsEmergencySequence)
                 {
                     MechanicalFlightEmergencyUtility.ReconcileAfterLoad(record);
@@ -634,6 +845,11 @@ namespace MAP_MechanoidMechanitor
             if (record.IsEmergencySequence)
             {
                 return "MAP_MechanicalFlight_EmergencyLandingBlocked".Translate();
+            }
+            if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
+            {
+                // 合体快速转移期间不接受普通起飞/降落操控。
+                return "MAP_MechanicalFlight_Unavailable".Translate();
             }
             if (requireDrafted && !pawn.Drafted)
             {

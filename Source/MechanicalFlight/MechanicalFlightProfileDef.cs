@@ -55,6 +55,18 @@ namespace MAP_MechanoidMechanitor
         Landing,
         EmergencyApproach,
         EmergencyLanding,
-        Crashing
+        Crashing,
+        FusionAscent,
+        FusionDescent
+    }
+
+    /// <summary>
+    /// 机械飞行的运行用途。普通飞行与合体快速转移共用同一套授权、起飞和
+    /// 落地规则，但两者互不接管对方的运行语义。
+    /// </summary>
+    public enum MechanicalFlightPurpose
+    {
+        Normal,
+        FusionRelocation
     }
 }

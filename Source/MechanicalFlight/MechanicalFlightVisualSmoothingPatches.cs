@@ -16,6 +16,15 @@ namespace MAP_MechanoidMechanitor
         private const float LandingDurationTicks = 25f;
         private const float MaximumGroundSeparationPadding = 0.05f;
 
+        private const float FusionAscentDurationTicks = 24f;
+        private const float FusionDescentDurationTicks = 24f;
+
+        /// <summary>
+        /// 合体快速转移的最大垂直绘制高度（地图格）。机械族会明显飞出
+        /// 正常可见区域，真实地图位置在升空阶段始终不变。
+        /// </summary>
+        internal const float FusionFlightDrawHeight = 16f;
+
         private sealed class HeightState
         {
             internal float Factor;
@@ -35,8 +44,19 @@ namespace MAP_MechanoidMechanitor
             internal int LastFrame = -1;
         }
 
+        private sealed class FusionState
+        {
+            internal float StartFactor;
+            internal float TargetFactor;
+            internal float Progress;
+            internal float Factor;
+            internal bool Ascent;
+            internal int LastFrame = -1;
+        }
+
         private static readonly Dictionary<int, HeightState> HeightStates = new();
         private static readonly Dictionary<int, GroundState> GroundStates = new();
+        private static readonly Dictionary<int, FusionState> FusionStates = new();
 
         internal static void BeginTakeoff(Pawn pawn)
         {
@@ -82,6 +102,101 @@ namespace MAP_MechanoidMechanitor
             };
         }
 
+        /// <summary>
+        /// 开始合体快速转移的垂直升空表现。真实地图位置不变，
+        /// 只让绘制偏移平滑加速到最大高度。
+        /// </summary>
+        internal static void BeginFusionAscent(Pawn pawn)
+        {
+            float start = FusionStates.TryGetValue(
+                pawn.thingIDNumber,
+                out FusionState? existing)
+                ? existing!.Factor
+                : 0f;
+            FusionStates[pawn.thingIDNumber] = new FusionState
+            {
+                StartFactor = start,
+                TargetFactor = 1f,
+                Progress = 0f,
+                Factor = start,
+                Ascent = true,
+                LastFrame = RealTime.frameCount
+            };
+        }
+
+        /// <summary>
+        /// 开始合体快速转移的垂直降落表现。真实 Pawn 已经在落点上，
+        /// 只让绘制偏移从高空平滑归零。
+        /// </summary>
+        internal static void BeginFusionDescent(Pawn pawn)
+        {
+            float start = FusionStates.TryGetValue(
+                pawn.thingIDNumber,
+                out FusionState? existing)
+                ? existing!.Factor
+                : 1f;
+            FusionStates[pawn.thingIDNumber] = new FusionState
+            {
+                StartFactor = start,
+                TargetFactor = 0f,
+                Progress = 0f,
+                Factor = start,
+                Ascent = false,
+                LastFrame = RealTime.frameCount
+            };
+        }
+
+        /// <summary>
+        /// 合体快速转移专用垂直绘制因子（0 = 贴地，1 = 最大高度）。
+        /// </summary>
+        internal static float FusionVisualFactor(
+            Pawn pawn,
+            MechanicalFlightAuthorizationRecord record)
+        {
+            if (record.Purpose != MechanicalFlightPurpose.FusionRelocation)
+            {
+                return 0f;
+            }
+
+            return GetFusionFactor(pawn, record.Phase);
+        }
+
+        private static float GetFusionFactor(
+            Pawn pawn,
+            MechanicalFlightPhase phase)
+        {
+            if (!FusionStates.TryGetValue(
+                    pawn.thingIDNumber,
+                    out FusionState? state))
+            {
+                // 缺少运行态时按相位给出安全值：
+                // 升空阶段视为已不可见，降落阶段视为已落地。
+                return phase == MechanicalFlightPhase.FusionAscent ? 1f : 0f;
+            }
+
+            int frame = RealTime.frameCount;
+            if (state.LastFrame == frame)
+            {
+                return state.Factor;
+            }
+
+            state.LastFrame = frame;
+            float deltaTicks = GameDeltaTicks();
+            float duration = state.Ascent
+                ? FusionAscentDurationTicks
+                : FusionDescentDurationTicks;
+            state.Progress = Mathf.Clamp01(
+                state.Progress + deltaTicks / Mathf.Max(1f, duration));
+            float eased = state.Ascent
+                ? state.Progress * state.Progress
+                : 1f - (1f - state.Progress) * (1f - state.Progress);
+            state.Factor = Mathf.Lerp(
+                state.StartFactor,
+                state.TargetFactor,
+                eased);
+            return state.Factor;
+        }
+
         internal static void Cleanup(Pawn? pawn)
         {
             if (pawn == null)
@@ -91,12 +206,14 @@ namespace MAP_MechanoidMechanitor
 
             HeightStates.Remove(pawn.thingIDNumber);
             GroundStates.Remove(pawn.thingIDNumber);
+            FusionStates.Remove(pawn.thingIDNumber);
         }
 
         internal static void ClearAllRuntimeState()
         {
             HeightStates.Clear();
             GroundStates.Clear();
+            FusionStates.Clear();
         }
 
         internal static float GetHeightFactor(
@@ -109,6 +226,13 @@ namespace MAP_MechanoidMechanitor
             if (record.Phase == MechanicalFlightPhase.Crashing)
             {
                 return logicalFactor;
+            }
+
+            if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
+            {
+                // 合体快速转移使用独立的 FusionVisualFactor，不参与
+                // 普通起降与悬浮的高度状态机。
+                return 0f;
             }
 
             if (!HeightStates.TryGetValue(
@@ -500,6 +624,33 @@ namespace MAP_MechanoidMechanitor
                 __result.z += groundCorrection.z;
             }
 
+            if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
+            {
+                // 合体快速转移使用专用垂直绘制偏移；地面锚点、鼠标选取与
+                // 阴影绘制保持各自的地面基准。
+                if (MechanicalFlightGroundAnchorContext.Active
+                    || MechanicalFlightGroundAnchorContext.LegacySelectionActive
+                    || MechanicalFlightGroundAnchorContext
+                        .ShadowCompensationActive)
+                {
+                    return;
+                }
+
+                float fusionFactor =
+                    MechanicalFlightVisualSmoothing.FusionVisualFactor(
+                        pawn,
+                        record);
+                if (fusionFactor <= 0.0001f)
+                {
+                    return;
+                }
+
+                __result.z += MechanicalFlightVisualSmoothing
+                    .FusionFlightDrawHeight * fusionFactor;
+                __result.y += VanillaFlightYOffset * fusionFactor;
+                return;
+            }
+
             // 地面锚点和鼠标选取继续沿用各自现有的垂直基准，
             // 只同步新的水平绘制位置。
             if (MechanicalFlightGroundAnchorContext.Active
@@ -544,6 +695,18 @@ namespace MAP_MechanoidMechanitor
                 || record == null || profile == null
                 || record.Phase == MechanicalFlightPhase.Crashing)
             {
+                return;
+            }
+
+            if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
+            {
+                // DrawPos 已经加入合体专用垂直偏移，这里抵消它，
+                // 让地面清洗/烟尘继续使用真实地面锚点。
+                __result.z -= MechanicalFlightVisualSmoothing
+                    .FusionFlightDrawHeight
+                    * MechanicalFlightVisualSmoothing.FusionVisualFactor(
+                        pawn,
+                        record);
                 return;
             }
 

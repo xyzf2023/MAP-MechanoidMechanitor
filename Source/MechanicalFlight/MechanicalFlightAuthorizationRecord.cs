@@ -7,6 +7,7 @@ namespace MAP_MechanoidMechanitor
         private Pawn? pawn;
         private MechanicalFlightProfileDef? profile;
         private MechanicalFlightPhase phase;
+        private MechanicalFlightPurpose purpose;
         private int ticksUntilNextEnergyDrain;
         private IntVec3 emergencyLandingTarget = IntVec3.Invalid;
         private bool lowEnergyWarningSent;
@@ -25,6 +26,11 @@ namespace MAP_MechanoidMechanitor
         {
             get => phase;
             internal set => phase = value;
+        }
+        public MechanicalFlightPurpose Purpose
+        {
+            get => purpose;
+            internal set => purpose = value;
         }
         public int TicksUntilNextEnergyDrain
         {
@@ -85,6 +91,7 @@ namespace MAP_MechanoidMechanitor
         internal void ResetRuntimeState()
         {
             phase = MechanicalFlightPhase.Grounded;
+            purpose = MechanicalFlightPurpose.Normal;
             ticksUntilNextEnergyDrain = 0;
             emergencyLandingTarget = IntVec3.Invalid;
             lowEnergyWarningSent = false;
@@ -100,6 +107,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_References.Look(ref pawn, "pawn");
             Scribe_Defs.Look(ref profile, "profile");
             Scribe_Values.Look(ref phase, "phase", MechanicalFlightPhase.Grounded);
+            Scribe_Values.Look(ref purpose, "purpose", MechanicalFlightPurpose.Normal);
             Scribe_Values.Look(ref ticksUntilNextEnergyDrain,
                 "ticksUntilNextEnergyDrain", 0);
             Scribe_Values.Look(ref emergencyLandingTarget,
