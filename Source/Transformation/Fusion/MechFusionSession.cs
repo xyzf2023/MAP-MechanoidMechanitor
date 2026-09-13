@@ -37,6 +37,9 @@ namespace MAP_MechanoidMechanitor
         private float armorBlunt;
         private float armorHeat;
         private float moveSpeedBase;
+        private bool temporaryFlightAuthorized;
+        private bool flightAuthorizationGrantedByFusion;
+        private int energyTickAccumulator;
         private Dictionary<StatDef, float>? offsetLookup;
         private Dictionary<StatDef, float>? factorLookup;
 
@@ -90,6 +93,17 @@ namespace MAP_MechanoidMechanitor
         public float ArmorHeat => armorHeat;
 
         public float MoveSpeedBase => moveSpeedBase;
+
+        public bool TemporaryFlightAuthorized => temporaryFlightAuthorized;
+
+        public bool FlightAuthorizationGrantedByFusion =>
+            flightAuthorizationGrantedByFusion;
+
+        internal int EnergyTickAccumulator
+        {
+            get => energyTickAccumulator;
+            set => energyTickAccumulator = Math.Max(0, value);
+        }
 
         public IReadOnlyList<MechFusionWhitelistEntry> WhitelistEntries
         {
@@ -261,6 +275,14 @@ namespace MAP_MechanoidMechanitor
             whitelistEntries.Add(entry);
         }
 
+        internal void SetTemporaryFlightState(
+            bool authorized,
+            bool grantedByFusion)
+        {
+            temporaryFlightAuthorized = authorized;
+            flightAuthorizationGrantedByFusion = grantedByFusion;
+        }
+
         internal void CollectAffectedStats(HashSet<StatDef> result)
         {
             if (result == null)
@@ -374,6 +396,12 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref armorBlunt, "armorBlunt");
             Scribe_Values.Look(ref armorHeat, "armorHeat");
             Scribe_Values.Look(ref moveSpeedBase, "moveSpeedBase");
+            Scribe_Values.Look(
+                ref temporaryFlightAuthorized,
+                "temporaryFlightAuthorized");
+            Scribe_Values.Look(
+                ref flightAuthorizationGrantedByFusion,
+                "flightAuthorizationGrantedByFusion");
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {

@@ -180,6 +180,10 @@ namespace MAP_MechanoidMechanitor
                 MechFusionSnapshotBuilder.Capture(session, source);
                 MechFusionBodySynchronizationUtility.ApplyToWearer(session);
                 MechFusionWhitelistUtility.ApplyAll(session, wearer);
+                MechFusionFlightUtility.ApplyTemporaryFlight(
+                    session,
+                    source,
+                    wearer);
                 MechFusionStatCacheUtility.Invalidate(session);
                 RefreshAfterStart(source, wearer);
                 Messages.Message(

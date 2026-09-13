@@ -21,6 +21,16 @@ namespace MAP_MechanoidMechanitor
                 yield return gizmo;
             }
 
+            if (MechFusionEnergyUtility.TryGetActiveSessionForWearer(
+                    __instance,
+                    out MechFusionSession? session)
+                && session != null)
+            {
+                yield return new Gizmo_MechFusionBar(
+                    session,
+                    MechFusionBarKind.Energy);
+            }
+
             if (!ShouldShowFor(__instance))
             {
                 yield break;

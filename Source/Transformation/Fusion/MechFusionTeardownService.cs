@@ -163,6 +163,7 @@ namespace MAP_MechanoidMechanitor
 
             bool transitionStarted = TryBeginReturnToPawnForm(session, source);
 
+            MechFusionFlightUtility.RevokeTemporaryFlight(session);
             MechFusionWhitelistUtility.RevokeAll(session, wearer);
             MechFusionBodySynchronizationUtility.RemoveFromWearer(wearer);
             MechFusionSourceUtility.RemoveDormantGuard(source);
@@ -215,6 +216,12 @@ namespace MAP_MechanoidMechanitor
 
             GameComponent_MechFusionSessionRegistry.RemoveSession(session);
             RefreshAfterEnd(source, wearer);
+            Need_MechEnergy? energy = source.needs?.energy;
+            if (energy != null && energy.CurLevel <= 0f && !source.Dead)
+            {
+                energy.NeedInterval();
+            }
+
             Messages.Message(
                 "MAP_MechanoidMechanitor.Fusion.Ended".Translate(
                     source.LabelShortCap,

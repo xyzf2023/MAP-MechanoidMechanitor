@@ -269,6 +269,12 @@ namespace MAP_MechanoidMechanitor
                 if (session.IsPendingRecovery)
                 {
                     MechFusionTeardownService.TryRecoverPendingSession(session);
+                    continue;
+                }
+
+                if (session.IsActive)
+                {
+                    MechFusionEnergyUtility.TickSession(session);
                 }
             }
         }
