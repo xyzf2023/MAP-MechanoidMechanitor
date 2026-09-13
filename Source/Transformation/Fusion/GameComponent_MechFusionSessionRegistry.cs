@@ -12,22 +12,12 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public sealed class GameComponent_MechFusionSessionRegistry : GameComponent
     {
-        private sealed class PendingFusionStart
-        {
-            public Pawn Source = null!;
-            public Pawn Wearer = null!;
-            public bool SendFailureMessage;
-        }
-
         private List<MechFusionSession> sessions = new List<MechFusionSession>();
         private Dictionary<string, MechFusionSession>? sessionById;
         private Dictionary<Pawn, MechFusionSession>? sessionByWearer;
         private Dictionary<Pawn, MechFusionSession>? sessionBySource;
         private readonly List<MechFusionSession> tickSnapshot =
             new List<MechFusionSession>();
-
-        private static readonly List<PendingFusionStart> PendingStarts =
-            new List<PendingFusionStart>();
 
         private static Game? cachedRegistryGame;
         private static GameComponent_MechFusionSessionRegistry? cachedRegistry;
@@ -168,75 +158,8 @@ namespace MAP_MechanoidMechanitor
             registry.RebuildIndexes();
         }
 
-        internal static bool TryQueueStart(
-            Pawn? source,
-            Pawn? wearer,
-            bool sendFailureMessage,
-            out string? failureReason)
-        {
-            failureReason = null;
-            if (!MechFusionValidator.CanStart(source, wearer, out failureReason))
-            {
-                return false;
-            }
-
-            for (int i = 0; i < PendingStarts.Count; i++)
-            {
-                PendingFusionStart existing = PendingStarts[i];
-                if (ReferenceEquals(existing.Source, source)
-                    && ReferenceEquals(existing.Wearer, wearer))
-                {
-                    return true;
-                }
-            }
-
-            PendingStarts.Add(new PendingFusionStart
-            {
-                Source = source!,
-                Wearer = wearer!,
-                SendFailureMessage = sendFailureMessage
-            });
-            return true;
-        }
-
-        private static void ClearPendingStarts()
-        {
-            PendingStarts.Clear();
-        }
-
-        private void ProcessPendingStarts()
-        {
-            if (PendingStarts.Count == 0)
-            {
-                return;
-            }
-
-            PendingFusionStart[] pending = PendingStarts.ToArray();
-            PendingStarts.Clear();
-            for (int i = 0; i < pending.Length; i++)
-            {
-                PendingFusionStart entry = pending[i];
-                if (!MechFusionStartService.TryStartFusion(
-                        entry.Source,
-                        entry.Wearer,
-                        out string? failureReason)
-                    && entry.SendFailureMessage)
-                {
-                    Messages.Message(
-                        failureReason
-                            ?? "MAP_MechanoidMechanitor.Fusion.Failure.Unexpected"
-                                .Translate(),
-                        entry.Source,
-                        MessageTypeDefOf.RejectInput,
-                        historical: false);
-                }
-            }
-        }
-
-        public override void GameComponentTick()
-        {
+        public override void GameComponentTick()        {
             base.GameComponentTick();
-            ProcessPendingStarts();
 
             if (sessions.Count == 0)
             {
@@ -307,7 +230,6 @@ namespace MAP_MechanoidMechanitor
                 StringComparer.Ordinal);
             sessionByWearer = new Dictionary<Pawn, MechFusionSession>();
             sessionBySource = new Dictionary<Pawn, MechFusionSession>();
-            ClearPendingStarts();
         }
 
         public override void LoadedGame()
@@ -316,7 +238,6 @@ namespace MAP_MechanoidMechanitor
             cachedRegistryGame = Current.Game;
             cachedRegistry = this;
             RebuildIndexes();
-            ClearPendingStarts();
             MechFusionRepairUtility.RepairAfterLoad();
         }
 

@@ -20,6 +20,7 @@ namespace MAP_MechanoidMechanitor
                 || source.Destroyed
                 || source.Discarded
                 || source.Dead
+                || source.Downed
                 || !source.Spawned
                 || source.Map == null)
             {

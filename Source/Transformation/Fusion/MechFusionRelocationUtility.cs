@@ -137,6 +137,39 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
+        /// 重定位前对已规划落点的二次验证：格子本身仍合法，
+        /// 且从落点仍能实际走到 wearer 周围相邻格。
+        /// </summary>
+        internal static bool IsLandingCellStillValid(
+            Pawn source,
+            Pawn wearer,
+            IntVec3 cell,
+            out int pathSteps)
+        {
+            pathSteps = 0;
+            Map? map = source.Map;
+            if (map == null || wearer.Map != map || !cell.InBounds(map))
+            {
+                return false;
+            }
+
+            if (!MechanicalFlightUtility.IsBaseLandingCellValid(
+                    cell,
+                    source,
+                    map))
+            {
+                return false;
+            }
+
+            return MechFusionApproachUtility.TryComputePathSteps(
+                source,
+                cell,
+                new LocalTargetInfo(wearer),
+                PathEndMode.Touch,
+                out pathSteps);
+        }
+
+        /// <summary>
         /// 把源机械族安全迁移到规划落点。只使用原版地图内重定位链：
         /// Thing.Position 负责 ThingGrid、CoverGrid、Region、可达性与地图网格，
         /// Pawn.Notify_Teleported 负责绘制插值、pather 路径与 Job 通知。
