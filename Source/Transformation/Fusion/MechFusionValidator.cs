@@ -29,8 +29,14 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechFusionEligibilityUtility.EnsureEligibilityRecord(source)
-                || !MechFusionEligibilityUtility.HasFusionEligibility(source))
+            if (!MechFusionEligibilityUtility.HasFusionEligibility(source))
+            {
+                // 正常自动注册仍由先天 Comp 负责；这里只为已有先天标记但尚未登记
+                // 的 Pawn 补登记一次，DEV 临时记录不依赖本步骤。
+                MechFusionEligibilityUtility.EnsureEligibilityRecord(source);
+            }
+
+            if (!MechFusionEligibilityUtility.HasFusionEligibility(source))
             {
                 failureReason =
                     "MAP_MechanoidMechanitor.Fusion.Failure.NoEligibility"

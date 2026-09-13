@@ -15,7 +15,7 @@ namespace MAP_MechanoidMechanitor
 
         bool Matches(Pawn sourcePawn, Hediff? hediff);
 
-        string CapturePayload(Pawn sourcePawn);
+        string CapturePayload(Pawn sourcePawn, Hediff matchedHediff);
 
         void Apply(MechFusionSession session, Pawn wearer, string payload);
 
@@ -100,16 +100,19 @@ namespace MAP_MechanoidMechanitor
                     string payload;
                     try
                     {
-                        payload = rule.CapturePayload(sourcePawn);
+                        // 捕获阶段直接收到已经命中的 Hediff，不再重复扫描全部 Hediff。
+                        payload = rule.CapturePayload(sourcePawn, hediff!);
                     }
                     catch (Exception ex)
                     {
                         Log.Error(
                             "[MAP-机械族机械师] 合体白名单规则捕获载荷失败：" +
-                            $"rule={rule.RuleId}：{ex}");
+                            $"rule={rule.RuleId}：" + ex);
                         continue;
                     }
 
+                    // 每个匹配项生成自己的可保存条目；同一 RuleId 的不同植入体
+                    // 不会被错误合并。
                     session.AddWhitelistEntry(new MechFusionWhitelistEntry
                     {
                         ruleId = rule.RuleId,

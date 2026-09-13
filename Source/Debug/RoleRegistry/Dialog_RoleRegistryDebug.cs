@@ -8,7 +8,8 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 开发者模式角色注册表管理窗口：查看/删除机械族机械师、仿生伴侣与飞行授权记录。
+    /// 开发者模式角色注册表管理窗口：查看/删除机械族机械师、仿生伴侣、飞行授权
+    /// 与合体资格记录。
     /// </summary>
     public sealed class Dialog_RoleRegistryDebug : Window
     {
@@ -16,7 +17,8 @@ namespace MAP_MechanoidMechanitor
         {
             MechanoidMechanitor,
             SyntheticCompanion,
-            MechanicalFlight
+            MechanicalFlight,
+            MechFusion
         }
 
         private const float TitleHeight = 32f;
@@ -34,6 +36,8 @@ namespace MAP_MechanoidMechanitor
             new List<SyntheticCompanionAuthorizationRecord>();
         private readonly List<MechanicalFlightAuthorizationRecord> flightRows =
             new List<MechanicalFlightAuthorizationRecord>();
+        private readonly List<MechFusionEligibilityRecord> fusionRows =
+            new List<MechFusionEligibilityRecord>();
 
         public override Vector2 InitialSize => new Vector2(720f, 560f);
 
@@ -102,9 +106,13 @@ namespace MAP_MechanoidMechanitor
                 {
                     DrawCompanionTab(listRect);
                 }
-                else
+                else if (currentTab == Tab.MechanicalFlight)
                 {
                     DrawFlightTab(listRect);
+                }
+                else
+                {
+                    DrawMechFusionTab(listRect);
                 }
             }
             finally
@@ -146,6 +154,14 @@ namespace MAP_MechanoidMechanitor
                     scrollPosition = Vector2.zero;
                 },
                 () => currentTab == Tab.MechanicalFlight));
+            tabs.Add(new TabRecord(
+                "合体资格 (0)",
+                () =>
+                {
+                    currentTab = Tab.MechFusion;
+                    scrollPosition = Vector2.zero;
+                },
+                () => currentTab == Tab.MechFusion));
         }
 
         private void UpdateTabLabels()
@@ -154,6 +170,7 @@ namespace MAP_MechanoidMechanitor
             tabs[0].label = "机械族机械师 (" + mechanitorRows.Count + ")";
             tabs[1].label = "仿生伴侣 (" + companionRows.Count + ")";
             tabs[2].label = "飞行授权 (" + flightRows.Count + ")";
+            tabs[3].label = "合体资格 (" + fusionRows.Count + ")";
         }
 
         private void RefreshSnapshots()
@@ -161,6 +178,7 @@ namespace MAP_MechanoidMechanitor
             mechanitorRows.Clear();
             companionRows.Clear();
             flightRows.Clear();
+            fusionRows.Clear();
 
             IReadOnlyList<MechanoidMechanitorRegistrySnapshotEntry> mechanitorSnapshot =
                 GameComponent_MechanoidMechanitorRegistry.GetPersistentRecordSnapshot();
@@ -186,7 +204,17 @@ namespace MAP_MechanoidMechanitor
             {
                 flightRows.Add(flightSnapshot[i]);
             }
+
             flightRows.Sort(CompareFlightRecords);
+
+            IReadOnlyList<MechFusionEligibilityRecord> fusionSnapshot =
+                GameComponent_MechFusionRegistry.GetEligibilityRecordSnapshot();
+            for (int i = 0; i < fusionSnapshot.Count; i++)
+            {
+                fusionRows.Add(fusionSnapshot[i]);
+            }
+
+            fusionRows.Sort(CompareFusionRecords);
             UpdateTabLabels();
         }
 
@@ -229,6 +257,19 @@ namespace MAP_MechanoidMechanitor
         private static int CompareFlightRecords(
             MechanicalFlightAuthorizationRecord a,
             MechanicalFlightAuthorizationRecord b)
+        {
+            Pawn? pawnA = a.Pawn;
+            Pawn? pawnB = b.Pawn;
+            int idCompare = (pawnA?.thingIDNumber ?? int.MaxValue)
+                .CompareTo(pawnB?.thingIDNumber ?? int.MaxValue);
+            return idCompare != 0 ? idCompare : string.Compare(
+                pawnA?.LabelShortCap, pawnB?.LabelShortCap,
+                StringComparison.CurrentCulture);
+        }
+
+        private static int CompareFusionRecords(
+            MechFusionEligibilityRecord a,
+            MechFusionEligibilityRecord b)
         {
             Pawn? pawnA = a.Pawn;
             Pawn? pawnB = b.Pawn;
@@ -313,6 +354,92 @@ namespace MAP_MechanoidMechanitor
                 y += RowHeight + 4f;
             }
             Widgets.EndScrollView();
+        }
+
+        private void DrawMechFusionTab(Rect listRect)
+        {
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.UpperLeft;
+            if (fusionRows.Count == 0)
+            {
+                DrawCenteredMessage(listRect, "当前没有合体资格注册记录。");
+                return;
+            }
+
+            float viewHeight = fusionRows.Count * (RowHeight + 4f);
+            Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, viewHeight);
+            Widgets.BeginScrollView(listRect, ref scrollPosition, viewRect);
+            float y = 0f;
+            for (int i = 0; i < fusionRows.Count; i++)
+            {
+                DrawMechFusionRow(
+                    new Rect(0f, y, viewRect.width, RowHeight),
+                    fusionRows[i]);
+                y += RowHeight + 4f;
+            }
+            Widgets.EndScrollView();
+        }
+
+        private void DrawMechFusionRow(
+            Rect rowRect,
+            MechFusionEligibilityRecord record)
+        {
+            Widgets.DrawHighlightIfMouseover(rowRect);
+            Pawn? pawn = record.Pawn;
+            if (pawn == null)
+            {
+                return;
+            }
+
+            Rect textRect = rowRect;
+            textRect.xMax -= DeleteButtonWidth + 8f;
+
+            bool hasInnate =
+                MechFusionEligibilityUtility.HasInnateFusionMarker(pawn);
+            bool isFusing =
+                GameComponent_MechFusionSessionRegistry.TryGetSessionForSource(
+                    pawn,
+                    out MechFusionSession? session)
+                && session != null
+                && session.IsActive;
+
+            string line1 = pawn.LabelShortCap
+                + "  |  "
+                + (pawn.KindLabel ?? "?")
+                + "  |  "
+                + pawn.ThingID;
+            string line2 = "阵营："
+                + DescribeFaction(pawn)
+                + "  |  状态："
+                + DescribePawnStatus(pawn)
+                + "  |  先天标记："
+                + (hasInnate ? "是" : "否")
+                + "  |  合体状态："
+                + (isFusing ? "正在合体" : "未合体");
+
+            Text.Anchor = TextAnchor.UpperLeft;
+            Widgets.Label(
+                new Rect(textRect.x + 4f, textRect.y + 4f, textRect.width - 8f, Text.LineHeight),
+                line1);
+            GUI.color = new Color(0.75f, 0.75f, 0.75f);
+            Widgets.Label(
+                new Rect(
+                    textRect.x + 4f,
+                    textRect.y + 4f + Text.LineHeight,
+                    textRect.width - 8f,
+                    Text.LineHeight),
+                line2);
+            GUI.color = Color.white;
+
+            Rect deleteRect = new Rect(
+                rowRect.xMax - DeleteButtonWidth,
+                rowRect.y + (rowRect.height - 30f) / 2f,
+                DeleteButtonWidth,
+                30f);
+            if (Widgets.ButtonText(deleteRect, "删除"))
+            {
+                ConfirmDeleteMechFusion(pawn);
+            }
         }
 
         private void DrawMechanitorRow(
@@ -448,6 +575,57 @@ namespace MAP_MechanoidMechanitor
             {
                 ConfirmDeleteFlight(pawn);
             }
+        }
+
+        private void ConfirmDeleteMechFusion(Pawn pawn)
+        {
+            if (GameComponent_MechFusionSessionRegistry.TryGetSessionForSource(
+                    pawn,
+                    out MechFusionSession? session)
+                && session != null
+                && session.IsActive)
+            {
+                Messages.Message(
+                    "无法删除合体资格："
+                    + pawn.LabelShortCap
+                    + " 正在作为合体源机械族，请先解除合体。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+                return;
+            }
+
+            string message = "确认从合体资格注册表删除 "
+                + pawn.LabelShortCap
+                + "（"
+                + pawn.ThingID
+                + "）？";
+            if (MechFusionEligibilityUtility.HasInnateFusionMarker(pawn))
+            {
+                message +=
+                    "\n\n注意：该 Pawn 的静态先天标记仍然存在，之后 Spawn、初始化或重新读档时可能重新注册。";
+            }
+
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                message,
+                () =>
+                {
+                    if (GameComponent_MechFusionRegistry.TryUnregisterFromDebug(pawn))
+                    {
+                        Messages.Message(
+                            "已从合体资格注册表删除 " + pawn.LabelShortCap + "。",
+                            MessageTypeDefOf.TaskCompletion,
+                            historical: false);
+                        RefreshSnapshots();
+                    }
+                    else
+                    {
+                        Messages.Message(
+                            "删除合体资格记录失败：" + pawn.LabelShortCap + "。",
+                            MessageTypeDefOf.RejectInput,
+                            historical: false);
+                    }
+                },
+                destructive: true));
         }
 
         private void ConfirmDeleteMechanitor(Pawn pawn, MechanoidMechanitorOrigin origin)

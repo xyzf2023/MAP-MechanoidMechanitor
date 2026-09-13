@@ -35,7 +35,8 @@ namespace MAP_MechanoidMechanitor
 
             if (Current.Game.GetComponent<GameComponent_MechanoidMechanitorRegistry>() == null
                 || Current.Game.GetComponent<GameComponent_SyntheticCompanionRegistry>() == null
-                || Current.Game.GetComponent<GameComponent_MechanicalFlightRegistry>() == null)
+                || Current.Game.GetComponent<GameComponent_MechanicalFlightRegistry>() == null
+                || Current.Game.GetComponent<GameComponent_MechFusionRegistry>() == null)
             {
                 Messages.Message(
                     "无法打开角色注册表：注册表组件不可用。",
@@ -105,6 +106,22 @@ namespace MAP_MechanoidMechanitor
                     options.Add(new FloatMenuOption(
                         "加入仿生伴侣注册表",
                         () => TryAuthorizeCompanion(localPawn)));
+                }
+
+                bool hasFusionRecord =
+                    GameComponent_MechFusionRegistry.HasEligibility(clickedPawn);
+                if (hasFusionRecord)
+                {
+                    options.Add(new FloatMenuOption(
+                        "加入合体资格注册表（已经注册）",
+                        null));
+                }
+                else
+                {
+                    Pawn localPawn = clickedPawn;
+                    options.Add(new FloatMenuOption(
+                        "加入合体资格注册表",
+                        () => TryRegisterMechFusion(localPawn)));
                 }
             }
 
@@ -176,6 +193,24 @@ namespace MAP_MechanoidMechanitor
             {
                 Messages.Message(
                     "加入飞行授权注册表失败：" + pawn.LabelShortCap + "。",
+                    MessageTypeDefOf.RejectInput,
+                    historical: false);
+            }
+        }
+
+        private static void TryRegisterMechFusion(Pawn pawn)
+        {
+            if (GameComponent_MechFusionRegistry.TryRegisterFromDebug(pawn))
+            {
+                Messages.Message(
+                    "已加入合体资格注册表：" + pawn.LabelShortCap + "。",
+                    MessageTypeDefOf.TaskCompletion,
+                    historical: false);
+            }
+            else
+            {
+                Messages.Message(
+                    "加入合体资格注册表失败：" + pawn.LabelShortCap + "。",
                     MessageTypeDefOf.RejectInput,
                     historical: false);
             }

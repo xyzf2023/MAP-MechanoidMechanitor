@@ -55,8 +55,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (pawn == null
                 || pawn.Destroyed
-                || pawn.Discarded
-                || !MechFusionEligibilityUtility.HasInnateFusionMarker(pawn))
+                || pawn.Discarded)
             {
                 return false;
             }
@@ -69,6 +68,42 @@ namespace MAP_MechanoidMechanitor
 
             registry.EnsureIndexes();
             return registry.recordByPawn!.ContainsKey(pawn);
+        }
+
+        /// <summary>
+        /// 只读资格记录快照：新集合披露，不暴露内部可变列表；
+        /// 过滤 null、Discarded 与重复记录。DEV 窗口只读取快照。
+        /// </summary>
+        public static IReadOnlyList<MechFusionEligibilityRecord>
+            GetEligibilityRecordSnapshot()
+        {
+            GameComponent_MechFusionRegistry? registry = CurrentRegistry;
+            if (registry == null)
+            {
+                return Array.Empty<MechFusionEligibilityRecord>();
+            }
+
+            List<MechFusionEligibilityRecord> snapshot =
+                new List<MechFusionEligibilityRecord>();
+            HashSet<Pawn> seen = new HashSet<Pawn>();
+            List<MechFusionEligibilityRecord> records =
+                registry.eligibilityRecords;
+            for (int i = 0; i < records.Count; i++)
+            {
+                MechFusionEligibilityRecord? record = records[i];
+                Pawn? pawn = record?.Pawn;
+                if (record == null
+                    || pawn == null
+                    || pawn.Discarded
+                    || !seen.Add(pawn))
+                {
+                    continue;
+                }
+
+                snapshot.Add(record);
+            }
+
+            return snapshot;
         }
 
         public static bool TryGetRecord(
@@ -135,6 +170,43 @@ namespace MAP_MechanoidMechanitor
             registry.eligibilityRecords.Remove(record);
             registry.recordByPawn.Remove(pawn);
             return true;
+        }
+
+        /// <summary>
+        /// 开发者模式临时注册入口：允许把任意有效、未死亡、未 Destroyed、
+        /// 未 Discarded 的机械族 Pawn 加入合体资格注册表，不要求其带
+        /// CompMechFusionInnate；重新读档执行正式资格校验时会按先天标记移除。
+        /// </summary>
+        public static bool TryRegisterFromDebug(Pawn? pawn)
+        {
+            GameComponent_MechFusionRegistry? registry = CurrentRegistry;
+            if (registry == null
+                || pawn == null
+                || pawn.Dead
+                || pawn.Destroyed
+                || pawn.Discarded
+                || pawn.RaceProps == null
+                || !pawn.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            registry.EnsureIndexes();
+            if (registry.recordByPawn!.ContainsKey(pawn))
+            {
+                return false;
+            }
+
+            MechFusionEligibilityRecord created =
+                new MechFusionEligibilityRecord(pawn);
+            registry.eligibilityRecords.Add(created);
+            registry.recordByPawn[pawn] = created;
+            return true;
+        }
+
+        public static bool TryUnregisterFromDebug(Pawn? pawn)
+        {
+            return RemoveEligibility(pawn);
         }
 
         public override void ExposeData()

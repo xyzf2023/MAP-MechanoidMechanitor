@@ -145,55 +145,47 @@ namespace MAP_MechanoidMechanitor
         private static List<FloatMenuOption> BuildTargetOptions(Pawn source)
         {
             List<FloatMenuOption> options = new List<FloatMenuOption>();
-            Map? map = source.Map;
-            if (map?.mapPawns == null)
+            Pawn? wearer = ResolveOverseerCandidate(source);
+            if (wearer == null
+                || !MechFusionValidator.CanStart(source, wearer, out _))
             {
                 return options;
             }
 
-            IReadOnlyList<Pawn> spawned = map.mapPawns.AllPawnsSpawned;
-            for (int i = 0; i < spawned.Count; i++)
-            {
-                Pawn candidate = spawned[i];
-                if (candidate == null
-                    || candidate == source
-                    || !candidate.RaceProps.Humanlike
-                    || candidate.Faction == null
-                    || !candidate.Faction.IsPlayerSafe())
+            options.Add(new FloatMenuOption(
+                wearer.LabelShortCap,
+                delegate
                 {
-                    continue;
-                }
-
-                if (!MechFusionValidator.CanStart(
-                        source,
-                        candidate,
-                        out _))
-                {
-                    continue;
-                }
-
-                Pawn wearer = candidate;
-                options.Add(new FloatMenuOption(
-                    wearer.LabelShortCap,
-                    delegate
+                    if (!GameComponent_MechFusionSessionRegistry.TryQueueStart(
+                            source,
+                            wearer,
+                            sendFailureMessage: true,
+                            out string? queueFailure)
+                        && !string.IsNullOrEmpty(queueFailure))
                     {
-                        if (!GameComponent_MechFusionSessionRegistry.TryQueueStart(
-                                source,
-                                wearer,
-                                sendFailureMessage: true,
-                                out string? queueFailure)
-                            && !string.IsNullOrEmpty(queueFailure))
-                        {
-                            Messages.Message(
-                                queueFailure!,
-                                source,
-                                MessageTypeDefOf.RejectInput,
-                                historical: false);
-                        }
-                    }));
+                        Messages.Message(
+                            queueFailure!,
+                            source,
+                            MessageTypeDefOf.RejectInput,
+                            historical: false);
+                    }
+                }));
+            return options;
+        }
+
+        /// <summary>
+        /// 合法目标只能是 source 当前的人类监管者。优先直接读取 GetOverseer；
+        /// 只有监管者关系无法由此反映时才走不遍历全地图的关系入口。
+        /// </summary>
+        private static Pawn? ResolveOverseerCandidate(Pawn source)
+        {
+            Pawn? overseer = source.GetOverseer();
+            if (overseer != null)
+            {
+                return overseer;
             }
 
-            return options;
+            return MAPOverseerRelationDirectionUtility.FindActualOverseer(source);
         }
     }
 }
