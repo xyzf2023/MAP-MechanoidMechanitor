@@ -297,6 +297,17 @@ namespace MAP_MechanoidMechanitor
             originalOverseer = sourcePawn?.GetOverseer()
                 ?? MAPOverseerRelationDirectionUtility.FindActualOverseer(
                     sourcePawn);
+            if (originalOverseer == null
+                && sourcePawn != null
+                && wearerPawn != null
+                && !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(
+                    sourcePawn))
+            {
+                // 旧版合体统一要求 wearer 就是监管者；若失控流程已删除关系，
+                // 仍可由会话两端引用恢复原方向。
+                originalOverseer = wearerPawn;
+            }
+
             Faction? player = Faction.OfPlayerSilentFail;
             if (player != null
                 && wearerPawn?.Faction?.IsPlayerSafe() == true
