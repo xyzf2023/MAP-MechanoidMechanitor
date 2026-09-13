@@ -1,13 +1,15 @@
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 合体的双向右键入口：
     /// 选中有资格的机械族右键合法人类，或选中合法人类右键有资格机械族。
-    /// 配对资格与实际执行始终交给统一 Validator 和延迟队列。
+    /// 两种操作都统一给源机械族下达合体接近 Job，正式合体仍由
+    /// MechFusionStartService.TryStartFusion 统一执行。
     /// </summary>
     public sealed class FloatMenuOptionProvider_MechFusion
         : FloatMenuOptionProvider
@@ -59,19 +61,21 @@ namespace MAP_MechanoidMechanitor
                 label,
                 delegate
                 {
-                    if (!GameComponent_MechFusionSessionRegistry.TryQueueStart(
-                            source,
-                            wearer,
-                            sendFailureMessage: true,
-                            out string? queueFailure)
-                        && !string.IsNullOrEmpty(queueFailure))
+                    Job job = JobMaker.MakeJob(
+                        MAPMechanitor_JobDefOf.MAP_MechFusionApproach,
+                        wearer);
+                    if (source.jobs != null
+                        && source.jobs.TryTakeOrderedJob(job, JobTag.Misc))
                     {
-                        Messages.Message(
-                            queueFailure!,
-                            source,
-                            MessageTypeDefOf.RejectInput,
-                            historical: false);
+                        return;
                     }
+
+                    Messages.Message(
+                        "MAP_MechanoidMechanitor.Fusion.Approach.OrderFailed"
+                            .Translate(),
+                        source,
+                        MessageTypeDefOf.RejectInput,
+                        historical: false);
                 });
         }
 

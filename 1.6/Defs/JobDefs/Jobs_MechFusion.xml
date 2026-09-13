@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>MAP_MechFusionApproach</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_MechFusionApproach</driverClass>
+    <reportString>approaching TargetA to fuse.</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+    <neverFleeFromEnemies>true</neverFleeFromEnemies>
+    <neverShowWeapon>true</neverShowWeapon>
+  </JobDef>
+</Defs>

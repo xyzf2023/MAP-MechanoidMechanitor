@@ -16,6 +16,8 @@
   <MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>目标人类无法穿戴合体外甲。</MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>
   <MAP_MechanoidMechanitor.Fusion.Failure.ShellMissing>未找到固定的合体外甲定义。</MAP_MechanoidMechanitor.Fusion.Failure.ShellMissing>
   <MAP_MechanoidMechanitor.Fusion.Failure.Unexpected>合体过程发生异常，已尝试回滚。</MAP_MechanoidMechanitor.Fusion.Failure.Unexpected>
+  <MAP_MechanoidMechanitor.Fusion.Approach.OrderFailed>无法下达合体接近指令，请稍后重试。</MAP_MechanoidMechanitor.Fusion.Approach.OrderFailed>
+  <MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>机械族无法走到目标人类身边，合体已取消。</MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>
   <MAP_MechanoidMechanitor.Fusion.Energy.Label>机械能量</MAP_MechanoidMechanitor.Fusion.Energy.Label>
   <MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>合体机械能量：{0:0.#} / {1:0.#}\n地面基础消耗：{2:0.#}%/游戏日\n飞行消耗：起飞扣除最大能量 0.5%，飞行中每 60 Tick 扣除最大能量 0.5%。</MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>
   <MAP_MechanoidMechanitor.Fusion.Stability.Label>结构稳定值</MAP_MechanoidMechanitor.Fusion.Stability.Label>

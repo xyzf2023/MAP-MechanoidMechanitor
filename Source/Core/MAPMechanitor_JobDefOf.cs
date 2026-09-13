@@ -18,6 +18,7 @@ namespace MAP_MechanoidMechanitor
         public static JobDef MAP_ContactMechanoidOvermind = null!;
         public static JobDef MAP_MechanoidMechanitorSelfRepair = null!;
         public static JobDef MAP_MechanicalFlightEmergencyLanding = null!;
+        public static JobDef MAP_MechFusionApproach = null!;
 
         public static JobDef MAP_AscendWithMindData = null!;
         public static JobDef MAP_ImportMindData = null!;
