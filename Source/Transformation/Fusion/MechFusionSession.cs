@@ -18,6 +18,9 @@ namespace MAP_MechanoidMechanitor
         private Pawn? wearerPawn;
         private Thing? fusionApparel;
         private ThingDef? sourceThingDef;
+        private Faction? originalSourceFaction;
+        private Pawn? originalOverseer;
+        private bool originalSourceStateCaptured;
         private MechFusionSessionState state;
         private MechFusionExitReason exitReason;
         private float currentEnergy;
@@ -71,6 +74,10 @@ namespace MAP_MechanoidMechanitor
         public Thing? FusionApparel => fusionApparel;
 
         public ThingDef? SourceThingDef => sourceThingDef;
+
+        public Faction? OriginalSourceFaction => originalSourceFaction;
+
+        public Pawn? OriginalOverseer => originalOverseer;
 
         public MechFusionSessionState State => state;
 
@@ -228,6 +235,7 @@ namespace MAP_MechanoidMechanitor
             wearerPawn = wearer;
             fusionApparel = apparel;
             sourceThingDef = sourceDef;
+            CaptureOriginalSourceState(source);
             this.startTick = startTick;
             state = MechFusionSessionState.Starting;
             EnsureInitialized();
@@ -245,6 +253,42 @@ namespace MAP_MechanoidMechanitor
         internal void BindApparel(Thing? apparel)
         {
             fusionApparel = apparel;
+        }
+
+        private void CaptureOriginalSourceState(Pawn source)
+        {
+            originalSourceFaction = source.Faction;
+            originalOverseer = source.GetOverseer()
+                ?? MAPOverseerRelationDirectionUtility.FindActualOverseer(source);
+            originalSourceStateCaptured = true;
+        }
+
+        /// <summary>
+        /// 旧存档中的活动会话可能没有新增的身份快照。由于旧版开始合体时只允许
+        /// 玩家安全阵营来源，若源 Pawn 已异常敌对，则以玩家阵营作为安全迁移值。
+        /// 新创建会话始终使用合体开始前的精确快照。
+        /// </summary>
+        internal void EnsureOriginalSourceStateForRecovery()
+        {
+            if (originalSourceStateCaptured)
+            {
+                return;
+            }
+
+            originalSourceFaction = sourcePawn?.Faction;
+            originalOverseer = sourcePawn?.GetOverseer()
+                ?? MAPOverseerRelationDirectionUtility.FindActualOverseer(
+                    sourcePawn);
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player != null
+                && wearerPawn?.Faction?.IsPlayerSafe() == true
+                && (originalSourceFaction == null
+                    || originalSourceFaction.HostileTo(player)))
+            {
+                originalSourceFaction = player;
+            }
+
+            originalSourceStateCaptured = true;
         }
 
         internal void SetState(MechFusionSessionState newState)
@@ -455,6 +499,13 @@ namespace MAP_MechanoidMechanitor
             Scribe_References.Look(ref wearerPawn, "wearerPawn");
             Scribe_References.Look(ref fusionApparel, "fusionApparel");
             Scribe_Defs.Look(ref sourceThingDef, "sourceThingDef");
+            Scribe_References.Look(
+                ref originalSourceFaction,
+                "originalSourceFaction");
+            Scribe_References.Look(ref originalOverseer, "originalOverseer");
+            Scribe_Values.Look(
+                ref originalSourceStateCaptured,
+                "originalSourceStateCaptured");
             Scribe_Values.Look(
                 ref state,
                 "state",
