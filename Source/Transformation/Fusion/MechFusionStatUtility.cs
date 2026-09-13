@@ -38,9 +38,8 @@ namespace MAP_MechanoidMechanitor
 
             if (stat == StatDefOf.MoveSpeed)
             {
-                session.TryGetStatOffset(stat, out float speedOffset);
-                session.TryGetStatFactor(stat, out float speedFactor);
-                value = (session.MoveSpeedBase + speedOffset) * speedFactor;
+                // MoveSpeed 必须在 StatWorker.FinalizeValue 完成后强制覆盖，
+                // 否则会再次受到人类 Moving 容量与 0.15 最小值钳制。
                 return;
             }
 
@@ -55,6 +54,29 @@ namespace MAP_MechanoidMechanitor
             {
                 value *= factor;
             }
+        }
+
+        internal static bool TryGetForcedMoveSpeed(
+            Pawn pawn,
+            out float value)
+        {
+            value = 0f;
+            if (pawn == null
+                || !GameComponent_MechFusionSessionRegistry.TryGetSessionForWearer(
+                    pawn,
+                    out MechFusionSession? session)
+                || session == null
+                || !session.IsActive)
+            {
+                return false;
+            }
+
+            session.TryGetStatOffset(StatDefOf.MoveSpeed, out float offset);
+            session.TryGetStatFactor(StatDefOf.MoveSpeed, out float factor);
+            value = Math.Max(
+                0f,
+                (session.MoveSpeedBase + offset) * factor);
+            return true;
         }
 
         internal static void ApplyToApparel(
