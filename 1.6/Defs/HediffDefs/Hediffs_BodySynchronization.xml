@@ -6,6 +6,7 @@
   -->
   <HediffDef>
     <defName>MAP_BodySynchronization</defName>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_BodySynchronization</hediffClass>
     <label>机体同调</label>
     <description>TODO</description>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
