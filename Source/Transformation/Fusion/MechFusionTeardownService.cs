@@ -185,6 +185,11 @@ namespace MAP_MechanoidMechanitor
                 session.ResetPendingRecoveryAttempts();
             }
 
+            if (!TryCommitRestoredSourceEnergy(session, source))
+            {
+                return false;
+            }
+
             if (!session.TransformationRestored)
             {
                 if (!TryRestoreTransformationRecord(session, source))
@@ -352,12 +357,6 @@ namespace MAP_MechanoidMechanitor
 
             MechFusionSourceUtility.RemoveDormantGuard(source);
 
-            if (!session.EnergyWrittenBack)
-            {
-                MechFusionEnergyUtility.WriteBackToSource(session, source);
-                session.MarkEnergyWrittenBack();
-            }
-
             if (!session.StabilitySettled)
             {
                 // 部位耐久结算只允许执行一次，延迟恢复与读档继续都被该标记拦截。
@@ -369,6 +368,36 @@ namespace MAP_MechanoidMechanitor
 
             MechFusionStatCacheUtility.Invalidate(session);
             return true;
+        }
+
+        /// <summary>
+        /// 源 Pawn 完成地图、远行队或现有合法容器恢复后，才把 Session 中的
+        /// 权威能源提交给最终 Need 实例。存活源 Pawn 写回失败时保留会话重试；
+        /// 死亡源 Pawn 不要求能源提交，不阻塞尸体恢复与会话收束。
+        /// </summary>
+        private static bool TryCommitRestoredSourceEnergy(
+            MechFusionSession session,
+            Pawn source)
+        {
+            if (source.Dead || session.EnergyWrittenBack)
+            {
+                return true;
+            }
+
+            if (MechFusionEnergyUtility.TryWriteBackToSource(session, source))
+            {
+                session.MarkEnergyWrittenBack();
+                return true;
+            }
+
+            session.SetState(MechFusionSessionState.Ending);
+            session.TeardownDeferred = true;
+            Log.Warning(
+                "[MAP-机械族机械师] 源机械族已恢复，但最终能源暂时无法写入，" +
+                "已保留合体会话等待下一轮重试：" +
+                $"pawn={source.LabelShort}（{source.ThingID}），" +
+                $"session={session.SessionId}。");
+            return false;
         }
 
         private static bool TryBeginReturnToPawnForm(
@@ -599,6 +628,7 @@ namespace MAP_MechanoidMechanitor
             Pawn source)
         {
             if (!session.SourceRestored
+                || (!source.Dead && !session.EnergyWrittenBack)
                 || !session.TransformationRestored
                 || !session.ApparelRemoved)
             {
