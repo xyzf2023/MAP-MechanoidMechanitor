@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!--
+    唯一的固定合体服装。禁止运行时动态创建 Def，禁止按机械族改写本 Def，
+    所有实例差异保存在合体记录中，并由窄范围 Stat 补丁按实例提供。
+    本 Def 不含 Stuff、不含 CompQuality、不产生品质。
+  -->
+  <ThingDef>
+    <defName>MAP_MechFusionShell</defName>
+    <label>合体外甲</label>
+    <description>供机械族与机械族机械师合体后使用的固定外壳。</description>
+    <thingClass>Apparel</thingClass>
+    <category>Item</category>
+    <altitudeLayer>Item</altitudeLayer>
+    <selectable>true</selectable>
+    <rotatable>false</rotatable>
+    <useHitPoints>true</useHitPoints>
+    <drawerType>MapMeshOnly</drawerType>
+    <tickerType>Never</tickerType>
+    <graphicData>
+      <texPath>Things/Apparel/MAP_MechFusionShell</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+    <apparel>
+      <bodyPartGroups>
+        <li>Torso</li>
+        <li>Neck</li>
+        <li>Shoulders</li>
+        <li>Arms</li>
+        <li>Hands</li>
+        <li>Legs</li>
+        <li>Feet</li>
+        <li>Waist</li>
+        <li>FullHead</li>
+        <li>Eyes</li>
+        <li>Teeth</li>
+        <li>Mouth</li>
+      </bodyPartGroups>
+      <wornGraphicPath>Things/Apparel/MAP_MechFusionShell</wornGraphicPath>
+      <layers>
+        <li>Middle</li>
+        <li>Shell</li>
+        <li>Overhead</li>
+        <li>EyeCover</li>
+      </layers>
+    </apparel>
+    <statBases>
+      <MaxHitPoints>400</MaxHitPoints>
+      <Mass>5</Mass>
+      <Flammability>0</Flammability>
+      <DeteriorationRate>0</DeteriorationRate>
+      <EquipDelay>0</EquipDelay>
+    </statBases>
+    <thingCategories>
+      <li>ApparelArmor</li>
+    </thingCategories>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechFormCarrier" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechFusionShell" />
+    </comps>
+  </ThingDef>
+</Defs>

@@ -44,7 +44,8 @@ namespace MAP_MechanoidMechanitor
         Flight = 1 << 21,
 
         // 建筑转换与合体资格互相独立，可单独拥有、同时拥有或都没有。
-        // 两者均来自 DefModExtension_MechCapabilityProvider 声明，不改变既有能力位。
+        // 建筑转换来自 DefModExtension_MechCapabilityProvider 声明；
+        // 合体只能是先天能力，唯一事实来源是 CompMechFusionInnate 标记与合体资格注册表。
         BuildingConversion = 1 << 22,
         Fusion = 1 << 23
     }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!--
+    合体状态的可见标记与属性快照载体。这里不写入任何具体机械族的属性，
+    实例差异只保存在权威合体记录中，由窄范围 Stat 补丁按实例应用。
+  -->
+  <HediffDef>
+    <defName>MAP_BodySynchronization</defName>
+    <label>机体同调</label>
+    <description>TODO</description>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+  </HediffDef>
+</Defs>

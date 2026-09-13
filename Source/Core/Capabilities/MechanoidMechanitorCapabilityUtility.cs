@@ -27,11 +27,16 @@ namespace MAP_MechanoidMechanitor
                 return GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn);
             }
 
-            // 建筑转换与合体资格来自 Def Provider 声明；单项查询只扫描提供者，不做完整能力汇总。
-            if (capability == MechanoidMechanitorCapability.BuildingConversion
-                || capability == MechanoidMechanitorCapability.Fusion)
+            // 建筑转换资格来自 Def Provider 声明；单项查询只扫描提供者，不做完整能力汇总。
+            if (capability == MechanoidMechanitorCapability.BuildingConversion)
             {
                 return MechCapabilityUtility.HasProvidedCapability(pawn, capability);
+            }
+
+            // 合体资格只能是先天能力，唯一事实来源是合体资格注册表。
+            if (capability == MechanoidMechanitorCapability.Fusion)
+            {
+                return MechFusionEligibilityUtility.HasFusionEligibility(pawn);
             }
 
             // 自由殖民者替代资格由剧本状态与机械意识宿主身份动态提供。
@@ -89,7 +94,21 @@ namespace MAP_MechanoidMechanitor
             AddCapabilitiesFromDataProcessingAllocation(pawn, ref capabilities);
             AddCapabilitiesFromMechanicalFlightAuthorization(pawn, ref capabilities);
             AddCapabilitiesFromDefProviders(pawn, ref capabilities);
+            AddCapabilitiesFromFusionEligibility(pawn, ref capabilities);
             return capabilities;
+        }
+
+        /// <summary>
+        /// 合体资格只从先天资格注册表加入一次；其他能力位保持原有来源。
+        /// </summary>
+        private static void AddCapabilitiesFromFusionEligibility(
+            Pawn pawn,
+            ref MechanoidMechanitorCapability capabilities)
+        {
+            if (MechFusionEligibilityUtility.HasFusionEligibility(pawn))
+            {
+                capabilities |= MechanoidMechanitorCapability.Fusion;
+            }
         }
 
         private static void AddCapabilitiesFromDefProviders(

@@ -13,11 +13,12 @@ namespace MAP_MechanoidMechanitor
     {
         /// <summary>
         /// Def Provider 当前只允许提供的机体固有转换类能力。
+        /// 合体只能是先天能力，已改由合体资格注册表提供，绝不允许经
+        /// ThingDef/PawnKindDef/Hediff 的 Provider 声明取得。
         /// 其他能力位即使被错误写入 Def，也会在这里被过滤，继续由各自权威系统提供。
         /// </summary>
         private const MechanoidMechanitorCapability SupportedProviderCapabilities =
-            MechanoidMechanitorCapability.BuildingConversion
-            | MechanoidMechanitorCapability.Fusion;
+            MechanoidMechanitorCapability.BuildingConversion;
 
         internal static MechanoidMechanitorCapability GetProvidedCapabilities(
             Pawn? pawn)
