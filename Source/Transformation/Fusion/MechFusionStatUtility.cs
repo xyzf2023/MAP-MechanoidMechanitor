@@ -71,12 +71,24 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            value = GetForcedMoveSpeed(session);
+            return true;
+        }
+
+        internal static float GetForcedMoveSpeed(MechFusionSession session)
+        {
+            float baseSpeed = session.MoveSpeedBase;
+            if (baseSpeed <= Epsilon && session.SourceThingDef != null)
+            {
+                // 旧版活动会话没有可靠的 moveSpeedBase 时，从保存的源 Def
+                // 恢复基础速度；新会话仍使用合体开始时写入的快照。
+                baseSpeed = session.SourceThingDef.GetStatValueAbstract(
+                    StatDefOf.MoveSpeed);
+            }
+
             session.TryGetStatOffset(StatDefOf.MoveSpeed, out float offset);
             session.TryGetStatFactor(StatDefOf.MoveSpeed, out float factor);
-            value = Math.Max(
-                0f,
-                (session.MoveSpeedBase + offset) * factor);
-            return true;
+            return Math.Max(0f, (baseSpeed + offset) * factor);
         }
 
         internal static void ApplyToApparel(
