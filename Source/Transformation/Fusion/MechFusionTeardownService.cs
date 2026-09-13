@@ -331,7 +331,16 @@ namespace MAP_MechanoidMechanitor
 
             if (!session.WhitelistRevoked)
             {
-                MechFusionWhitelistUtility.RevokeAll(session, wearer);
+                if (!MechFusionWhitelistUtility.RevokeAll(session, wearer))
+                {
+                    session.TeardownDeferred = true;
+                    Log.Warning(
+                        "[MAP-机械族机械师] 至少一条白名单效果尚未撤销完成，" +
+                        "已保留会话等待下一轮清理：" +
+                        $"session={session.SessionId}。");
+                    return false;
+                }
+
                 session.MarkWhitelistRevoked();
             }
 
@@ -671,7 +680,14 @@ namespace MAP_MechanoidMechanitor
                 {
                     if (!session.WhitelistRevoked)
                     {
-                        MechFusionWhitelistUtility.RevokeAll(session, wearer);
+                        if (!MechFusionWhitelistUtility.RevokeAll(
+                                session,
+                                wearer))
+                        {
+                            throw new InvalidOperationException(
+                                "至少一条白名单效果撤销失败。");
+                        }
+
                         session.MarkWhitelistRevoked();
                     }
                 });
@@ -774,7 +790,14 @@ namespace MAP_MechanoidMechanitor
                 {
                     if (!session.WhitelistRevoked)
                     {
-                        MechFusionWhitelistUtility.RevokeAll(session, wearer);
+                        if (!MechFusionWhitelistUtility.RevokeAll(
+                                session,
+                                wearer))
+                        {
+                            throw new InvalidOperationException(
+                                "至少一条白名单效果撤销失败。");
+                        }
+
                         session.MarkWhitelistRevoked();
                     }
                 });

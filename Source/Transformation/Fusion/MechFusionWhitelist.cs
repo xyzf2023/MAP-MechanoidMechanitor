@@ -160,15 +160,16 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        internal static void RevokeAll(
+        internal static bool RevokeAll(
             MechFusionSession session,
             Pawn? wearer)
         {
             if (wearer == null)
             {
-                return;
+                return true;
             }
 
+            bool allSucceeded = true;
             IReadOnlyList<MechFusionWhitelistEntry> entries =
                 session.WhitelistEntries;
             for (int i = 0; i < entries.Count; i++)
@@ -188,11 +189,15 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
+                    allSucceeded = false;
                     Log.Error(
-                        "[MAP-机械族机械师] 撤销合体白名单规则效果失败：" +
+                        "[MAP-机械族机械师] 撤销合体白名单规则效果失败，" +
+                        "将保留会话并在后续重试：" +
                         $"rule={entry.ruleId}：{ex}");
                 }
             }
+
+            return allSucceeded;
         }
 
         internal static void RepairAfterLoad(

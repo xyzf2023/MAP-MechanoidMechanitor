@@ -247,7 +247,16 @@ namespace MAP_MechanoidMechanitor
                     session,
                     ref cleanupIncomplete,
                     "撤销白名单效果",
-                    () => MechFusionWhitelistUtility.RevokeAll(session, wearer));
+                    () =>
+                    {
+                        if (!MechFusionWhitelistUtility.RevokeAll(
+                                session,
+                                wearer))
+                        {
+                            throw new InvalidOperationException(
+                                "至少一条白名单效果撤销失败。");
+                        }
+                    });
             }
 
             if (transaction.BodySynchronizationApplied)

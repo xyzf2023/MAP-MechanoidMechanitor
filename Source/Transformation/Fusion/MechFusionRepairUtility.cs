@@ -273,9 +273,16 @@ namespace MAP_MechanoidMechanitor
                 TryCleanupDuplicateStep(
                     duplicate,
                     "撤销重复会话白名单效果",
-                    () => MechFusionWhitelistUtility.RevokeAll(
-                        duplicate,
-                        duplicateWearer));
+                    () =>
+                    {
+                        if (!MechFusionWhitelistUtility.RevokeAll(
+                                duplicate,
+                                duplicateWearer))
+                        {
+                            throw new InvalidOperationException(
+                                "重复会话至少一条白名单效果撤销失败。");
+                        }
+                    });
                 TryCleanupDuplicateStep(
                     duplicate,
                     "移除重复会话机体同调",
