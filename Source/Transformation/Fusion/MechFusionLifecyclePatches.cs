@@ -7,6 +7,9 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 合体强制退出边界。人类死亡或倒地时统一进入解除流程；
     /// 飞行中由统一解除流程先完成着陆或坠毁，再恢复真实源机械族。
+    /// 若死亡/倒地发生在活动伤害上下文内（伤害泄漏导致），只登记最高优先级
+    /// 退出请求，等最外层 TakeDamage 结束后再统一解除，避免在 DamageWorker
+    /// 尚未返回时移除会话或结算源机械族部位耐久。
     /// </summary>
     [HarmonyPatch(
         typeof(Pawn),
@@ -35,6 +38,13 @@ namespace MAP_MechanoidMechanitor
                     corpse.Rotation);
             }
 
+            if (MechFusionDamageContext.TryRegisterExitRequest(
+                    __instance,
+                    MechFusionExitReason.HumanDeathOrDowned))
+            {
+                return;
+            }
+
             MechFusionTeardownService.TryTeardown(
                 session,
                 MechFusionExitReason.HumanDeathOrDowned,
@@ -58,6 +68,13 @@ namespace MAP_MechanoidMechanitor
                     out MechFusionSession? session)
                 || session == null
                 || !session.IsActive)
+            {
+                return;
+            }
+
+            if (MechFusionDamageContext.TryRegisterExitRequest(
+                    pawn,
+                    MechFusionExitReason.HumanDeathOrDowned))
             {
                 return;
             }

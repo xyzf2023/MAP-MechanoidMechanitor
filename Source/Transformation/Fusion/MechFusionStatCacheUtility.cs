@@ -48,12 +48,12 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (wearer != null)
+                if (wearer != null && !wearer.Destroyed)
                 {
                     worker.ClearCacheForThing(wearer);
                 }
 
-                if (apparel != null)
+                if (apparel != null && !apparel.Destroyed)
                 {
                     worker.ClearCacheForThing(apparel);
                 }

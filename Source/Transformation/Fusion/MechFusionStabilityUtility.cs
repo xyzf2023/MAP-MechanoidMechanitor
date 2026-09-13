@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
@@ -64,19 +65,40 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (context.Session.CurrentStability <= 0f)
+            MechFusionSession session = context.Session;
+            MechFusionExitReason? reason = context.PendingExitReason;
+            if (session.CurrentStability <= 0f
+                && (reason == null
+                    || MechFusionExitReason.StabilityDepleted.GetPriority()
+                        < reason.Value.GetPriority()))
             {
-                MechFusionTeardownService.TryTeardown(
-                    context.Session,
-                    MechFusionExitReason.StabilityDepleted,
-                    force: false);
+                reason = MechFusionExitReason.StabilityDepleted;
             }
+
+            if (reason == null)
+            {
+                return;
+            }
+
+            MechFusionTeardownService.TryTeardown(
+                session,
+                reason.Value,
+                force: false);
+        }
+
+        private sealed class PlannedPartLoss
+        {
+            public BodyPartRecord Part = null!;
+            public float Loss;
+            public bool Critical;
         }
 
         /// <summary>
         /// 解除合体时对源机械族所有仍存在部位施加精确耐久损失：
         /// TargetHP = floor(CurrentPartHP × R)，R = 当前稳定值 / 最大稳定值。
-        /// 该结算经过内部健康入口而不是伤害管线，不会再进入结构路由。
+        /// 先一次性计算全部目标，再按“非关键部位优先，可能直接致死的关键部位最后”
+        /// 的顺序尽可能完成，绝不因中途死亡而跳过剩余部位的乘算。
+        /// 该结算经过 AddHediff 健康入口而不是伤害管线，不会再进入结构路由。
         /// </summary>
         internal static void SettleSourcePartDurability(
             MechFusionSession session,
@@ -90,37 +112,53 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (session.StabilitySettled)
+            {
+                return;
+            }
+
             float ratio = session.MaxStability > 0f
                 ? Mathf.Clamp01(session.CurrentStability / session.MaxStability)
                 : 0f;
 
             HediffSet? hediffSet = source.health?.hediffSet;
-            if (hediffSet != null && !source.Dead)
+            if (hediffSet != null)
             {
-                List<BodyPartRecord> parts =
-                    new List<BodyPartRecord>(hediffSet.GetNotMissingParts());
-                for (int i = 0; i < parts.Count; i++)
+                List<PlannedPartLoss> planned = BuildPlannedPartLosses(
+                    hediffSet,
+                    ratio);
+
+                int unapplied = 0;
+                for (int i = 0; i < planned.Count; i++)
                 {
-                    if (source.Dead)
-                    {
-                        break;
-                    }
-
-                    BodyPartRecord part = parts[i];
-                    float currentHp = hediffSet.GetPartHealth(part);
-                    if (currentHp <= 0f)
+                    PlannedPartLoss plan = planned[i];
+                    if (hediffSet.PartIsMissing(plan.Part)
+                        || hediffSet.GetPartHealth(plan.Part) <= 0f)
                     {
                         continue;
                     }
 
-                    float targetHp = Mathf.Floor(currentHp * ratio);
-                    float loss = currentHp - targetHp;
-                    if (loss <= LossEpsilon)
+                    try
                     {
-                        continue;
+                        ApplyExactPartLoss(source, plan.Part, plan.Loss);
                     }
+                    catch (Exception ex)
+                    {
+                        unapplied++;
+                        Log.Error(
+                            "[MAP-机械族机械师] 源机械族部位耐久结算失败：" +
+                            $"pawn={source.LabelShort}（{source.ThingID}），" +
+                            $"part={plan.Part.def?.defName}：{ex}");
+                    }
+                }
 
-                    ApplyExactPartLoss(source, part, loss);
+                if (unapplied > 0)
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 源机械族部位耐久结算未能完成全部部位，" +
+                        "尸体部位状态需要进游戏确认：" +
+                        $"pawn={source.LabelShort}（{source.ThingID}），" +
+                        $"unapplied={unapplied}。");
                 }
             }
 
@@ -128,6 +166,59 @@ namespace MAP_MechanoidMechanitor
             {
                 source.Kill(null);
             }
+        }
+
+        private static List<PlannedPartLoss> BuildPlannedPartLosses(
+            HediffSet hediffSet,
+            float ratio)
+        {
+            List<PlannedPartLoss> planned = new List<PlannedPartLoss>();
+            List<BodyPartRecord> parts =
+                new List<BodyPartRecord>(hediffSet.GetNotMissingParts());
+            for (int i = 0; i < parts.Count; i++)
+            {
+                BodyPartRecord part = parts[i];
+                if (hediffSet.PartIsMissing(part))
+                {
+                    continue;
+                }
+
+                float currentHp = hediffSet.GetPartHealth(part);
+                if (currentHp <= 0f)
+                {
+                    continue;
+                }
+
+                float targetHp = Mathf.Floor(currentHp * ratio);
+                float loss = currentHp - targetHp;
+                if (loss <= LossEpsilon)
+                {
+                    continue;
+                }
+
+                planned.Add(new PlannedPartLoss
+                {
+                    Part = part,
+                    Loss = loss,
+                    Critical = IsCriticalPart(part)
+                });
+            }
+
+            // false 排在 true 前面：非关键部位优先，关键部位最后处理。
+            planned.Sort((left, right) => left.Critical.CompareTo(right.Critical));
+            return planned;
+        }
+
+        private static bool IsCriticalPart(BodyPartRecord part)
+        {
+            if (part.IsCorePart)
+            {
+                return true;
+            }
+
+            List<BodyPartTagDef>? tags = part.def?.tags;
+            return tags != null
+                && tags.Contains(BodyPartTagDefOf.ConsciousnessSource);
         }
 
         private static void ApplyExactPartLoss(

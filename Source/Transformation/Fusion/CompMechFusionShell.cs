@@ -21,6 +21,30 @@ namespace MAP_MechanoidMechanitor
 
         public string? SessionId => sessionId;
 
+        /// <summary>
+        /// 仅当会话ID有效、会话处于 Active 且本服装确实是该会话的载体时返回会话。
+        /// 活动耐久豁免与实例属性读取都必须经过这里，损坏链接不得被保护。
+        /// </summary>
+        internal MechFusionSession? GetActiveSession()
+        {
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                return null;
+            }
+
+            if (!GameComponent_MechFusionSessionRegistry.TryGetSessionById(
+                    sessionId,
+                    out MechFusionSession? session)
+                || session == null
+                || !session.IsActive
+                || !ReferenceEquals(session.FusionApparel, parent))
+            {
+                return null;
+            }
+
+            return session;
+        }
+
         internal void AssignSession(string value)
         {
             sessionId = value;
