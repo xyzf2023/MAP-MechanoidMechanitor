@@ -98,7 +98,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!IsOverseerOf(source, wearer))
+            if (!IsAuthorizedPair(source, wearer))
             {
                 failureReason =
                     "MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer"
@@ -137,6 +137,17 @@ namespace MAP_MechanoidMechanitor
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 普通机械族仍只能与其实际监管者合体；注册表中的机械族机械师
+        /// 不需要外部监管者，可以选择任意通过基础校验的合法人类目标。
+        /// 禁止把“当前没有监管者”本身当作豁免条件。
+        /// </summary>
+        internal static bool IsAuthorizedPair(Pawn source, Pawn wearer)
+        {
+            return MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(source)
+                || IsOverseerOf(source, wearer);
         }
 
         internal static ThingDef? GetShellDef()
