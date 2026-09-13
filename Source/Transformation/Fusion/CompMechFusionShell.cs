@@ -36,5 +36,17 @@ namespace MAP_MechanoidMechanitor
             base.PostExposeData();
             Scribe_Values.Look(ref sessionId, "sessionId");
         }
+
+        public override void Notify_Unequipped(Pawn pawn)
+        {
+            base.Notify_Unequipped(pawn);
+            MechFusionTeardownService.NotifyShellUnequipped(this, pawn);
+        }
+
+        public override void PostDestroy(DestroyMode mode, Map previousMap)
+        {
+            base.PostDestroy(mode, previousMap);
+            MechFusionTeardownService.NotifyShellDestroyed(this, previousMap);
+        }
     }
 }

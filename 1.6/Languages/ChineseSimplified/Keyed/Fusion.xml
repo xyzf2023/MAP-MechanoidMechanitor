@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Fusion.Gizmo.Label>合体</MAP_MechanoidMechanitor.Fusion.Gizmo.Label>
+  <MAP_MechanoidMechanitor.Fusion.Gizmo.Description>与该机械族当前合法的人类监管者合体，机械族被收纳进合体外甲。</MAP_MechanoidMechanitor.Fusion.Gizmo.Description>
+  <MAP_MechanoidMechanitor.Fusion.NoTarget>没有可作为合体目标的合法人类监管者。</MAP_MechanoidMechanitor.Fusion.NoTarget>
+  <MAP_MechanoidMechanitor.Fusion.Started>{0} 与 {1} 完成合体。</MAP_MechanoidMechanitor.Fusion.Started>
+  <MAP_MechanoidMechanitor.Fusion.Ended>{0} 与 {1} 的合体已解除。</MAP_MechanoidMechanitor.Fusion.Ended>
+  <MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable>执行合体的机械族当前不可用。</MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable>
+  <MAP_MechanoidMechanitor.Fusion.Failure.NoEligibility>该机械族没有先天合体资格。</MAP_MechanoidMechanitor.Fusion.Failure.NoEligibility>
+  <MAP_MechanoidMechanitor.Fusion.Failure.SourceFormInvalid>机械族当前形态无法执行合体。</MAP_MechanoidMechanitor.Fusion.Failure.SourceFormInvalid>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>合体目标当前不可用。</MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>合体目标必须是人类。</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>目标人类必须是该机械族当前合法的监管者。</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>
+  <MAP_MechanoidMechanitor.Fusion.Failure.NotSameMap>双方必须位于同一地图。</MAP_MechanoidMechanitor.Fusion.Failure.NotSameMap>
+  <MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>双方之一已经处于合体事务中。</MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>
+  <MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>目标人类无法穿戴合体外甲。</MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>
+  <MAP_MechanoidMechanitor.Fusion.Failure.ShellMissing>未找到固定的合体外甲定义。</MAP_MechanoidMechanitor.Fusion.Failure.ShellMissing>
+  <MAP_MechanoidMechanitor.Fusion.Failure.Unexpected>合体过程发生异常，已尝试回滚。</MAP_MechanoidMechanitor.Fusion.Failure.Unexpected>
+</LanguageData>
