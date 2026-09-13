@@ -290,6 +290,90 @@ namespace MAP_MechanoidMechanitor
                         duplicateWearer));
             }
 
+            Pawn? duplicateSource = duplicate.SourcePawn;
+            bool sourceSharedWithKeeper = keeper != null
+                && duplicateSource != null
+                && ReferenceEquals(duplicateSource, keeper.SourcePawn);
+            if (!sourceSharedWithKeeper
+                && duplicateSource != null
+                && !duplicateSource.Destroyed
+                && !duplicateSource.Discarded)
+            {
+                TryCleanupDuplicateStep(
+                    duplicate,
+                    "移除重复会话源机械族休眠标记",
+                    () => MechFusionSourceUtility.RemoveDormantGuard(
+                        duplicateSource));
+                TryCleanupDuplicateStep(
+                    duplicate,
+                    "结算重复会话源机械族能源与耐久",
+                    () =>
+                    {
+                        if (!duplicate.EnergyWrittenBack)
+                        {
+                            MechFusionEnergyUtility.WriteBackToSource(
+                                duplicate,
+                                duplicateSource);
+                            duplicate.MarkEnergyWrittenBack();
+                        }
+
+                        if (!duplicate.StabilitySettled)
+                        {
+                            MechFusionStabilityUtility.SettleSourcePartDurability(
+                                duplicate,
+                                duplicateSource);
+                            duplicate.MarkStabilitySettled();
+                        }
+                    });
+                TryCleanupDuplicateStep(
+                    duplicate,
+                    "恢复重复会话独立源机械族",
+                    () =>
+                    {
+                        if (!duplicate.SourceRestored)
+                        {
+                            bool restored =
+                                MechFusionTeardownService.TryRestoreSourcePawn(
+                                    duplicate,
+                                    duplicateSource,
+                                    out bool deferred);
+                            if (restored)
+                            {
+                                duplicate.MarkSourceRestored();
+                            }
+                            else if (deferred)
+                            {
+                                // 重复记录不能进入会影响保留会话的通用重试流程；
+                                // TryRestoreSourcePawn 已确保真实 Pawn 留在 WorldPawns。
+                                duplicate.MarkSourceRestored();
+                                Log.Warning(
+                                    "[MAP-机械族机械师] 重复会话的独立源机械族暂时无法回到地图，" +
+                                    "已安全保留在 WorldPawns：" +
+                                    $"pawn={duplicateSource.LabelShort}（{duplicateSource.ThingID}）。");
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException(
+                                    "重复会话的独立源机械族无法恢复合法容器。");
+                            }
+                        }
+
+                        if (!duplicate.TransformationRestored)
+                        {
+                            if (!MechFusionTeardownService
+                                    .TryRestoreTransformationRecord(
+                                        duplicate,
+                                        duplicateSource))
+                            {
+                                throw new InvalidOperationException(
+                                    "重复会话的独立源机械族形态无法恢复。");
+                            }
+
+                            duplicate.MarkTransformationRestored();
+                        }
+                    });
+            }
+
             TryCleanupDuplicateStep(
                 duplicate,
                 "清理重复会话服装",
