@@ -49,14 +49,14 @@ namespace MAP_MechanoidMechanitor
                 { "GeneralLabor", new[] { "GeneralLaborSpeed" } }
             };
 
-        internal static void Capture(MechFusionSession session, Pawn source)
+        internal static void Capture(MechFusionSession session, Pawn? source)
         {
-            if (session == null)
+            if (session == null || source == null)
             {
                 return;
             }
 
-            ThingDef? sourceDef = source?.def;
+            ThingDef? sourceDef = source.def;
             if (sourceDef == null)
             {
                 return;

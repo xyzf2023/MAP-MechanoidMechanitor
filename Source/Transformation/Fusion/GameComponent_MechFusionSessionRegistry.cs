@@ -115,7 +115,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             registry.EnsureIndexes();
-            return registry.sessionById!.TryGetValue(id, out session);
+            return registry.sessionById!.TryGetValue(id!, out session);
         }
 
         internal static IReadOnlyList<MechFusionSession> GetSessionsForReading()

@@ -1,3 +1,4 @@
+using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -34,8 +35,8 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public sealed class MechFusionWhitelistEntry : IExposable
     {
-        public string ruleId = string.Empty;
-        public string payload = string.Empty;
+        public string? ruleId;
+        public string? payload;
 
         public void ExposeData()
         {

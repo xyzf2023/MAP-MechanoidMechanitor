@@ -146,7 +146,7 @@ namespace MAP_MechanoidMechanitor
 
                 try
                 {
-                    rule.Apply(session, wearer, entry.payload);
+                    rule.Apply(session, wearer, entry.payload ?? string.Empty);
                 }
                 catch (Exception ex)
                 {
@@ -181,7 +181,7 @@ namespace MAP_MechanoidMechanitor
 
                 try
                 {
-                    rule.Revoke(session, wearer, entry.payload);
+                    rule.Revoke(session, wearer, entry.payload ?? string.Empty);
                 }
                 catch (Exception ex)
                 {
@@ -219,7 +219,10 @@ namespace MAP_MechanoidMechanitor
 
                 try
                 {
-                    rule.RepairAfterLoad(session, wearer, entry.payload);
+                    rule.RepairAfterLoad(
+                        session,
+                        wearer,
+                        entry.payload ?? string.Empty);
                 }
                 catch (Exception ex)
                 {
