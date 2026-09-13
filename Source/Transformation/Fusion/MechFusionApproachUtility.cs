@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -129,9 +130,8 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (!TryComputePathSteps(
+                if (!TryComputeCurrentPawnPathSteps(
                         source,
-                        source.Position,
                         new LocalTargetInfo(candidate),
                         PathEndMode.OnCell,
                         out int steps))
@@ -157,25 +157,24 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 同步计算一次路径并返回实际路径步数（节点数 - 1）。
+        /// 从 source 当前真实位置计算一次路径并返回实际路径步数（节点数 - 1）。
         /// PawnPath 必定在这里释放，调用方永远不会拿到路径对象。
         /// </summary>
-        internal static bool TryComputePathSteps(
+        internal static bool TryComputeCurrentPawnPathSteps(
             Pawn source,
-            IntVec3 start,
             LocalTargetInfo target,
             PathEndMode pathEndMode,
             out int steps)
         {
             steps = 0;
             Map? map = source.Map;
-            if (map == null || !start.InBounds(map))
+            if (map == null || !source.Spawned)
             {
                 return false;
             }
 
             PawnPath path = map.pathFinder.FindPathNow(
-                start,
+                source.Position,
                 target,
                 source,
                 null,
@@ -194,6 +193,138 @@ namespace MAP_MechanoidMechanitor
             {
                 path.Dispose();
             }
+        }
+
+        /// <summary>
+        /// 以“假设 source 真的站在 start”为前提计算实际步行路径步数。
+        /// 不能使用 Pawn 形式的 FindPathNow：PathRequest.ValidateInt 在
+        /// TraverseMode.ByPawn 下会先执行 pawn.CanReach（基于 Pawn 当前真实
+        /// 位置），导致“假想落点可达、当前真实位置不可达”的 B 路径被错误拒绝。
+        /// 这里先用同一套 ByPawn 规则做以 start 为权威的可达性预检，再用携带
+        /// 相同 source 通行属性的 PassDoors TraverseParms 取得路径，最后按
+        /// ByPawn 的门与围栏规则逐格复核，保证与真实地面移动一致。
+        /// </summary>
+        internal static bool TryComputeHypotheticalPathSteps(
+            Pawn source,
+            IntVec3 start,
+            LocalTargetInfo target,
+            PathEndMode pathEndMode,
+            out int steps)
+        {
+            steps = 0;
+            Map? map = source.Map;
+            if (map == null || !start.InBounds(map) || !target.IsValid)
+            {
+                return false;
+            }
+
+            bool canBashDoors = source.CurJob?.canBashDoors == true;
+            bool canBashFences = source.CurJob?.canBashFences == true;
+            TraverseParms byPawnParms = TraverseParms.For(
+                source,
+                Danger.Deadly,
+                TraverseMode.ByPawn,
+                canBashDoors,
+                alwaysUseAvoidGrid: false,
+                canBashFences: canBashFences);
+
+            // 以假想 start 为权威、完全按 ByPawn 规则判断可达性。
+            if (!map.reachability.CanReach(
+                    start,
+                    target,
+                    pathEndMode,
+                    byPawnParms))
+            {
+                return false;
+            }
+
+            // PathRequest.ValidateInt 在非 ByPawn 模式下才会使用传入 start
+            // 做可达性预检；其他通行属性与 ByPawn 完全一致。
+            TraverseParms hypotheticalParms = byPawnParms;
+            hypotheticalParms.mode = TraverseMode.PassDoors;
+
+            PawnPath path = map.pathFinder.FindPathNow(
+                start,
+                target,
+                hypotheticalParms,
+                null,
+                pathEndMode);
+            try
+            {
+                if (!path.Found
+                    || !IsHypotheticalPathPassableForPawn(
+                        path,
+                        source,
+                        byPawnParms))
+                {
+                    return false;
+                }
+
+                steps = Mathf.Max(0, path.NodesReversed.Count - 1);
+                return true;
+            }
+            finally
+            {
+                path.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// 复核 PassDoors 规划路径在 ByPawn 规则下是否真的可通行：
+        /// 只补齐 PassDoors 与 ByPawn 存在差异的门与围栏规则，
+        /// 不复制其他寻路规则。
+        /// </summary>
+        private static bool IsHypotheticalPathPassableForPawn(
+            PawnPath path,
+            Pawn source,
+            TraverseParms byPawnParms)
+        {
+            Map? map = source.Map;
+            if (map == null)
+            {
+                return false;
+            }
+
+            List<IntVec3> nodes = path.NodesReversed;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                IntVec3 cell = nodes[i];
+                Building? edifice = cell.GetEdifice(map);
+                if (edifice is Building_Door door)
+                {
+                    if (!byPawnParms.canBashDoors
+                        && door.IsForbiddenToPass(source))
+                    {
+                        return false;
+                    }
+
+                    if (door.PawnCanOpen(source) && !door.FreePassage)
+                    {
+                        continue;
+                    }
+
+                    if (door.CanPhysicallyPass(source))
+                    {
+                        continue;
+                    }
+
+                    if (byPawnParms.canBashDoors)
+                    {
+                        continue;
+                    }
+
+                    return false;
+                }
+
+                if (byPawnParms.fenceBlocked
+                    && !byPawnParms.canBashFences
+                    && edifice?.def.building?.isFence == true)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

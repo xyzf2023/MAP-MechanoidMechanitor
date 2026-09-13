@@ -3,7 +3,7 @@
   <JobDef>
     <defName>MAP_MechFusionApproach</defName>
     <driverClass>MAP_MechanoidMechanitor.JobDriver_MechFusionApproach</driverClass>
-    <reportString>approaching TargetA to fuse.</reportString>
+    <reportString>正在接近 TargetA 以进行合体。</reportString>
     <playerInterruptible>true</playerInterruptible>
     <casualInterruptible>false</casualInterruptible>
     <checkOverrideOnDamage>Never</checkOverrideOnDamage>

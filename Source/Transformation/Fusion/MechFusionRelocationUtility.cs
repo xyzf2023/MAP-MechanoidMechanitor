@@ -103,7 +103,7 @@ namespace MAP_MechanoidMechanitor
                         continue;
                     }
 
-                    if (!MechFusionApproachUtility.TryComputePathSteps(
+                    if (!MechFusionApproachUtility.TryComputeHypotheticalPathSteps(
                             source,
                             cell,
                             new LocalTargetInfo(wearer),
@@ -161,7 +161,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return MechFusionApproachUtility.TryComputePathSteps(
+            return MechFusionApproachUtility.TryComputeHypotheticalPathSteps(
                 source,
                 cell,
                 new LocalTargetInfo(wearer),

@@ -18,8 +18,7 @@ namespace MAP_MechanoidMechanitor
         {
             Takeoff,
             Ascending,
-            Descending,
-            Done
+            Descending
         }
 
         private const int TransitionDelayTicks = 5;
@@ -37,6 +36,10 @@ namespace MAP_MechanoidMechanitor
         private int flightLegsUsed;
         private int phaseDeadlineTick;
 
+        // 读档后不恢复飞行视觉与旧规划：首个 Tick 安全回到重规划入口。
+        // 只存在于运行期，不写入存档。
+        private bool needsReplanAfterLoad;
+
         private Pawn? Wearer => job.targetA.Thing as Pawn;
 
         private static int CurrentTick => Find.TickManager?.TicksGame ?? 0;
@@ -45,6 +48,18 @@ namespace MAP_MechanoidMechanitor
         {
             // 只借道目标人类身边，不预留人类本身，避免打断目标当前的工作。
             return true;
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                // 此时 base 已经完成 SetupToils；这里只设置标记，
+                // 绝不在 ExposeData 阶段引用 Toil 或 JumpToToil。
+                plan = null;
+                needsReplanAfterLoad = true;
+            }
         }
 
         protected override IEnumerable<Toil> MakeNewToils()
@@ -129,6 +144,11 @@ namespace MAP_MechanoidMechanitor
 
         private void UpdateGroundApproach()
         {
+            if (TryHandleLoadRecovery())
+            {
+                return;
+            }
+
             Pawn? wearer = Wearer;
             if (!IsWearerUsable(wearer))
             {
@@ -148,8 +168,9 @@ namespace MAP_MechanoidMechanitor
 
             if (IsAdjacentToWearer(wearer!))
             {
+                // 已到达合法相邻格：明确跳入折跃，绝不按顺序落入飞行 Toil。
                 pawn.pather?.StopDead();
-                pawn.jobs?.curDriver?.ReadyForNextToil();
+                JumpTo(transitionToil);
                 return;
             }
 
@@ -235,12 +256,12 @@ namespace MAP_MechanoidMechanitor
 
             if (IsAdjacentToWearer(wearer!))
             {
-                // 目标已经移动到自己身边：不需要起飞，下一 Tick 回到地面接近。
+                // 目标已经移动到自己身边：不需要起飞，直接进入折跃。
                 if (plan != null)
                 {
                     plan.UseFlight = false;
                 }
-                flightStage = FusionFlightStage.Done;
+                JumpTo(transitionToil);
                 return;
             }
 
@@ -276,6 +297,11 @@ namespace MAP_MechanoidMechanitor
 
         private void UpdateFusionFlight()
         {
+            if (TryHandleLoadRecovery())
+            {
+                return;
+            }
+
             Pawn? wearer = Wearer;
             if (!IsWearerUsable(wearer))
             {
@@ -295,6 +321,15 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (plan?.UseFlight != true
+                || !MechanicalFlightUtility.IsFusionRelocating(pawn))
+            {
+                // 飞行运行态或规划已经不完整（例如读档清理、异常取消）：
+                // 不空转、不恢复半空动画，直接回到重规划入口。
+                RestartPlanning();
+                return;
+            }
+
             switch (flightStage)
             {
                 case FusionFlightStage.Ascending:
@@ -303,10 +338,6 @@ namespace MAP_MechanoidMechanitor
 
                 case FusionFlightStage.Descending:
                     UpdateFusionDescent();
-                    return;
-
-                case FusionFlightStage.Done:
-                    ReturnToGroundApproachOrFail();
                     return;
             }
         }
@@ -369,7 +400,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechanicalFlightUtility.CompleteFusionLanding(pawn);
-            flightStage = FusionFlightStage.Done;
             if (plan != null)
             {
                 plan.UseFlight = false;
@@ -383,6 +413,40 @@ namespace MAP_MechanoidMechanitor
         private void AbortFusionFlight()
         {
             MechanicalFlightUtility.CancelFusionRelocation(pawn);
+        }
+
+        /// <summary>
+        /// 读档后的安全恢复：飞行运行态已由统一飞行注册表清理。
+        /// 只在运行期第一个 Tick 回到重规划入口，最多重新计算一次方案，
+        /// 绝不尝试恢复升空/降落进度。
+        /// </summary>
+        private bool TryHandleLoadRecovery()
+        {
+            if (!needsReplanAfterLoad)
+            {
+                return false;
+            }
+
+            needsReplanAfterLoad = false;
+            RestartPlanning();
+            return true;
+        }
+
+        /// <summary>
+        /// 丢弃运行期规划并回到 ValidateAndPlan 重新规划。
+        /// 只允许在 Tick 中调用，禁止在读档阶段引用 Toil。
+        /// </summary>
+        private void RestartPlanning()
+        {
+            if (MechanicalFlightUtility.IsFusionRelocating(pawn))
+            {
+                MechanicalFlightUtility.CancelFusionRelocation(pawn);
+            }
+
+            plan = null;
+            flightStage = FusionFlightStage.Takeoff;
+            flightLegsUsed = 0;
+            JumpTo(validateToil);
         }
 
         private void ReturnToGroundApproachOrFail()
