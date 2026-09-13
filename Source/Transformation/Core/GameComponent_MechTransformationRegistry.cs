@@ -266,6 +266,35 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
+        /// <summary>
+        /// 仅供合体异常收束使用：形态记录已经损坏（载体已销毁或丢失、恢复流程无法
+        /// 通过严格入口）时，强行把记录恢复到 Pawn 形态并解除载体链接。
+        /// 不创建、不移动、不恢复任何 Pawn 实例。
+        /// </summary>
+        internal static bool TryForceRestorePawnForm(Pawn? pawn)
+        {
+            if (!TryGetRecord(pawn, out MechTransformationRecord? record)
+                || record == null)
+            {
+                return false;
+            }
+
+            if (record.TransitionInProgress)
+            {
+                record.CancelTransition();
+            }
+
+            if (record.CurrentForm == MechTransformationForm.Pawn)
+            {
+                return true;
+            }
+
+            Thing? previousCarrier = record.ExternalCarrier;
+            record.CommitTransition(MechTransformationForm.Pawn, null);
+            previousCarrier?.TryGetComp<CompMechFormCarrier>()?.ClearLink();
+            return true;
+        }
+
         public override void ExposeData()
         {
             Scribe_Collections.Look(

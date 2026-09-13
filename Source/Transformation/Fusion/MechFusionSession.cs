@@ -43,6 +43,15 @@ namespace MAP_MechanoidMechanitor
         private bool flightAuthorizationGrantedByFusion;
         private int energyTickAccumulator;
         private bool teardownCompleted;
+        private bool flightRevoked;
+        private bool whitelistRevoked;
+        private bool synchronizationRemoved;
+        private bool energyWrittenBack;
+        private bool stabilitySettled;
+        private bool sourceRestored;
+        private bool transformationRestored;
+        private bool apparelRemoved;
+        private int pendingRecoveryAttempts;
         private Dictionary<StatDef, float>? offsetLookup;
         private Dictionary<StatDef, float>? factorLookup;
 
@@ -128,9 +137,80 @@ namespace MAP_MechanoidMechanitor
 
         public bool TeardownCompleted => teardownCompleted;
 
+        public bool FlightRevoked => flightRevoked;
+
+        public bool WhitelistRevoked => whitelistRevoked;
+
+        public bool SynchronizationRemoved => synchronizationRemoved;
+
+        public bool EnergyWrittenBack => energyWrittenBack;
+
+        public bool StabilitySettled => stabilitySettled;
+
+        public bool SourceRestored => sourceRestored;
+
+        public bool TransformationRestored => transformationRestored;
+
+        public bool ApparelRemoved => apparelRemoved;
+
+        public int PendingRecoveryAttempts => pendingRecoveryAttempts;
+
         internal void MarkTeardownCompleted()
         {
             teardownCompleted = true;
+        }
+
+        internal void MarkFlightRevoked()
+        {
+            flightRevoked = true;
+        }
+
+        internal void MarkWhitelistRevoked()
+        {
+            whitelistRevoked = true;
+        }
+
+        internal void MarkSynchronizationRemoved()
+        {
+            synchronizationRemoved = true;
+        }
+
+        internal void MarkEnergyWrittenBack()
+        {
+            energyWrittenBack = true;
+        }
+
+        internal void MarkStabilitySettled()
+        {
+            stabilitySettled = true;
+        }
+
+        internal void MarkSourceRestored()
+        {
+            sourceRestored = true;
+        }
+
+        internal void MarkTransformationRestored()
+        {
+            transformationRestored = true;
+        }
+
+        internal void MarkApparelRemoved()
+        {
+            apparelRemoved = true;
+        }
+
+        internal void IncrementPendingRecoveryAttempts()
+        {
+            if (pendingRecoveryAttempts < int.MaxValue)
+            {
+                pendingRecoveryAttempts++;
+            }
+        }
+
+        internal void ResetPendingRecoveryAttempts()
+        {
+            pendingRecoveryAttempts = 0;
         }
 
         public MechFusionSession()
@@ -174,7 +254,15 @@ namespace MAP_MechanoidMechanitor
 
         internal void SetExitReason(MechFusionExitReason reason)
         {
-            if (state != MechFusionSessionState.Ending)
+            if (state != MechFusionSessionState.Ending
+                && state != MechFusionSessionState.PendingRecovery)
+            {
+                exitReason = reason;
+                return;
+            }
+
+            // 数值越小优先级越高；只在更高优先级到达时更新最终退出原因。
+            if (reason.GetPriority() < exitReason.GetPriority())
             {
                 exitReason = reason;
             }
@@ -415,6 +503,21 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref energyTickAccumulator,
                 "energyTickAccumulator");
+            Scribe_Values.Look(ref flightRevoked, "flightRevoked");
+            Scribe_Values.Look(ref whitelistRevoked, "whitelistRevoked");
+            Scribe_Values.Look(
+                ref synchronizationRemoved,
+                "synchronizationRemoved");
+            Scribe_Values.Look(ref energyWrittenBack, "energyWrittenBack");
+            Scribe_Values.Look(ref stabilitySettled, "stabilitySettled");
+            Scribe_Values.Look(ref sourceRestored, "sourceRestored");
+            Scribe_Values.Look(
+                ref transformationRestored,
+                "transformationRestored");
+            Scribe_Values.Look(ref apparelRemoved, "apparelRemoved");
+            Scribe_Values.Look(
+                ref pendingRecoveryAttempts,
+                "pendingRecoveryAttempts");
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {

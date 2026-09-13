@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -8,10 +9,31 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 合体开始的唯一事务入口。任一步骤失败都会按反向顺序回滚，
     /// 不留下半合体状态、无主服装或被吞掉的真实 Pawn。
+    /// 形态提交前后的回滚路径严格区分：未提交用取消锁，已提交则通过
+    /// 正式恢复入口把形态记录还原为 Pawn，绝不只依赖 TryCancelTransition。
     /// </summary>
     public static class MechFusionStartService
     {
-        private const int RestoreSearchRadius = 8;
+        private sealed class StartTransaction
+        {
+            public MechFusionSession Session = null!;
+            public Pawn Source = null!;
+            public Pawn Wearer = null!;
+            public Map? Map;
+            public IntVec3 OriginalPosition = IntVec3.Invalid;
+            public Rot4 OriginalRotation = Rot4.South;
+            public bool TransitionBegun;
+            public bool ApparelCreated;
+            public bool ApparelWorn;
+            public bool SourceStored;
+            public bool TransformationCommitted;
+            public bool BodySynchronizationApplied;
+            public bool WhitelistApplied;
+            public bool TemporaryFlightApplied;
+            public bool WearAttempted;
+            public Thing? Apparel;
+            public List<Apparel>? PreWornApparel;
+        }
 
         public static bool TryStartFusion(
             Pawn? sourcePawn,
@@ -56,14 +78,15 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            Map map = source.Map;
-            IntVec3 originalPosition = source.Position;
-            Rot4 originalRotation = source.Rotation;
-            bool transitionStarted = false;
-            Thing? apparel = null;
-            bool apparelCreated = false;
-            bool apparelWorn = false;
-            bool sourceStored = false;
+            StartTransaction transaction = new StartTransaction
+            {
+                Session = session,
+                Source = source,
+                Wearer = wearer,
+                Map = source.Map,
+                OriginalPosition = source.Position,
+                OriginalRotation = source.Rotation
+            };
 
             try
             {
@@ -73,23 +96,13 @@ namespace MAP_MechanoidMechanitor
                         out _,
                         out failureReason))
                 {
-                    RollbackStart(
-                        session,
-                        source,
-                        wearer,
-                        map,
-                        originalPosition,
-                        originalRotation,
-                        transitionStarted,
-                        apparel,
-                        apparelCreated,
-                        apparelWorn,
-                        sourceStored);
+                    RollbackStart(transaction);
                     return false;
                 }
 
-                transitionStarted = true;
-                apparel = ThingMaker.MakeThing(shellDef);
+                transaction.TransitionBegun = true;
+                Thing apparel = ThingMaker.MakeThing(shellDef);
+                transaction.Apparel = apparel;
                 CompMechFusionShell? shellComp =
                     apparel.TryGetComp<CompMechFusionShell>();
                 if (shellComp == null
@@ -100,23 +113,12 @@ namespace MAP_MechanoidMechanitor
                             .Translate();
                     Log.Error(
                         "[MAP-机械族机械师] 合体外甲缺少必要的载体或连接组件。");
-                    RollbackStart(
-                        session,
-                        source,
-                        wearer,
-                        map,
-                        originalPosition,
-                        originalRotation,
-                        transitionStarted,
-                        apparel,
-                        apparelCreated,
-                        apparelWorn,
-                        sourceStored);
+                    RollbackStart(transaction);
                     return false;
                 }
 
                 shellComp.AssignSession(session.SessionId);
-                apparelCreated = true;
+                transaction.ApparelCreated = true;
                 session.BindApparel(apparel);
 
                 MechFusionEnergyUtility.CaptureInitialEnergy(session, source);
@@ -124,6 +126,8 @@ namespace MAP_MechanoidMechanitor
                     session,
                     source);
 
+                transaction.PreWornApparel = SnapshotWornApparel(wearer);
+                transaction.WearAttempted = true;
                 wearer.apparel!.Wear(
                     (Apparel)apparel,
                     dropReplacedApparel: true);
@@ -132,27 +136,16 @@ namespace MAP_MechanoidMechanitor
                     failureReason =
                         "MAP_MechanoidMechanitor.Fusion.Failure.CannotWear"
                             .Translate();
-                    RollbackStart(
-                        session,
-                        source,
-                        wearer,
-                        map,
-                        originalPosition,
-                        originalRotation,
-                        transitionStarted,
-                        apparel,
-                        apparelCreated,
-                        apparelWorn,
-                        sourceStored);
+                    RollbackStart(transaction);
                     return false;
                 }
 
-                apparelWorn = true;
+                transaction.ApparelWorn = true;
                 source.DeSpawn(DestroyMode.Vanish);
                 Find.WorldPawns.PassToWorld(
                     source,
                     PawnDiscardDecideMode.KeepForever);
-                sourceStored = true;
+                transaction.SourceStored = true;
                 MechFusionSourceUtility.ApplyDormantGuard(source);
 
                 if (!GameComponent_MechTransformationRegistry.TryCommitTransition(
@@ -160,21 +153,11 @@ namespace MAP_MechanoidMechanitor
                         apparel,
                         out failureReason))
                 {
-                    RollbackStart(
-                        session,
-                        source,
-                        wearer,
-                        map,
-                        originalPosition,
-                        originalRotation,
-                        transitionStarted,
-                        apparel,
-                        apparelCreated,
-                        apparelWorn,
-                        sourceStored);
+                    RollbackStart(transaction);
                     return false;
                 }
 
+                transaction.TransformationCommitted = true;
                 session.SetState(MechFusionSessionState.Active);
                 session.UpdateRecoveryLocation(
                     wearer.Map,
@@ -182,11 +165,14 @@ namespace MAP_MechanoidMechanitor
                     wearer.Rotation);
                 MechFusionSnapshotBuilder.Capture(session, source);
                 MechFusionBodySynchronizationUtility.ApplyToWearer(session);
+                transaction.BodySynchronizationApplied = true;
                 MechFusionWhitelistUtility.ApplyAll(session, wearer);
+                transaction.WhitelistApplied = true;
                 MechFusionFlightUtility.ApplyTemporaryFlight(
                     session,
                     source,
                     wearer);
+                transaction.TemporaryFlightApplied = true;
                 MechFusionStatCacheUtility.Invalidate(session);
                 RefreshAfterStart(source, wearer);
                 Messages.Message(
@@ -200,18 +186,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
-                RollbackStart(
-                    session,
-                    source,
-                    wearer,
-                    map,
-                    originalPosition,
-                    originalRotation,
-                    transitionStarted,
-                    apparel,
-                    apparelCreated,
-                    apparelWorn,
-                    sourceStored);
+                RollbackStart(transaction);
                 Log.Error(
                     "[MAP-机械族机械师] 合体开始事务发生异常，已尝试回滚：" +
                     $"source={source.LabelShort}（{source.ThingID}），" +
@@ -223,90 +198,232 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void RollbackStart(
-            MechFusionSession session,
-            Pawn source,
-            Pawn wearer,
-            Map? map,
-            IntVec3 originalPosition,
-            Rot4 originalRotation,
-            bool transitionStarted,
-            Thing? apparel,
-            bool apparelCreated,
-            bool apparelWorn,
-            bool sourceStored)
+        private static List<Apparel>? SnapshotWornApparel(Pawn wearer)
         {
+            if (wearer?.apparel == null)
+            {
+                return null;
+            }
+
+            List<Apparel> worn = wearer.apparel.WornApparel;
+            return worn.Count == 0 ? null : new List<Apparel>(worn);
+        }
+
+        private static void RollbackStart(StartTransaction transaction)
+        {
+            MechFusionSession session = transaction.Session;
+            Pawn source = transaction.Source;
+            Pawn wearer = transaction.Wearer;
+
+            session.SetExitReason(MechFusionExitReason.LoadRepair);
             session.SetState(MechFusionSessionState.Ending);
+
+            bool sourceRestoreDeferred = false;
+            bool transformationRestoreFailed = false;
+            bool flightRevokeIncomplete = false;
+
+            if (transaction.TemporaryFlightApplied)
+            {
+                TryRollbackStep(
+                    session,
+                    "撤销临时飞行授权",
+                    () =>
+                    {
+                        if (!MechFusionFlightUtility.TryRevokeTemporaryFlight(
+                                session))
+                        {
+                            flightRevokeIncomplete = true;
+                        }
+                    });
+            }
+
+            if (transaction.WhitelistApplied)
+            {
+                TryRollbackStep(
+                    session,
+                    "撤销白名单效果",
+                    () => MechFusionWhitelistUtility.RevokeAll(session, wearer));
+            }
+
+            if (transaction.BodySynchronizationApplied)
+            {
+                TryRollbackStep(
+                    session,
+                    "移除机体同调",
+                    () => MechFusionBodySynchronizationUtility.RemoveFromWearer(
+                        wearer));
+            }
+
+            TryRollbackStep(
+                session,
+                "移除休眠维持标记",
+                () => MechFusionSourceUtility.RemoveDormantGuard(source));
+
+            if (transaction.SourceStored || !source.Spawned)
+            {
+                TryRollbackStep(
+                    session,
+                    "恢复源机械族容器",
+                    () =>
+                    {
+                        session.UpdateRecoveryLocation(
+                            transaction.Map,
+                            transaction.OriginalPosition,
+                            transaction.OriginalRotation);
+                        if (!MechFusionTeardownService.TryRestoreSourcePawn(
+                                session,
+                                source,
+                                out bool deferred)
+                            && deferred)
+                        {
+                            sourceRestoreDeferred = true;
+                        }
+                    });
+            }
+
+            if (transaction.TransformationCommitted)
+            {
+                TryRollbackStep(
+                    session,
+                    "恢复形态记录",
+                    () =>
+                    {
+                        if (!MechFusionTeardownService
+                            .TryRestoreTransformationRecord(session, source))
+                        {
+                            transformationRestoreFailed = true;
+                        }
+                    });
+            }
+            else if (transaction.TransitionBegun)
+            {
+                TryRollbackStep(
+                    session,
+                    "取消未提交的形态转换",
+                    () => GameComponent_MechTransformationRegistry
+                        .TryCancelTransition(source));
+            }
+
+            Thing? apparel = transaction.Apparel;
+            if (transaction.ApparelCreated && apparel != null)
+            {
+                TryRollbackStep(
+                    session,
+                    "移除并销毁合体外甲",
+                    () =>
+                    {
+                        if (apparel.Destroyed)
+                        {
+                            return;
+                        }
+
+                        if (transaction.ApparelWorn
+                            && wearer.apparel != null
+                            && apparel is Apparel wornApparel
+                            && wearer.apparel.Wearing(wornApparel))
+                        {
+                            wearer.apparel.Remove(wornApparel);
+                        }
+
+                        apparel.Destroy(DestroyMode.Vanish);
+                    });
+            }
+
+            if (transaction.WearAttempted)
+            {
+                TryRollbackStep(
+                    session,
+                    "恢复被本次穿戴脱下的服装",
+                    () => RestoreDroppedApparel(
+                        wearer,
+                        transaction.PreWornApparel));
+            }
+
+            if (sourceRestoreDeferred
+                || transformationRestoreFailed
+                || flightRevokeIncomplete)
+            {
+                // 真实源 Pawn 尚未回到合法容器、形态未恢复或飞行授权未撤销：
+                // 保留会话继续延迟修复。
+                session.SetState(MechFusionSessionState.PendingRecovery);
+                session.TeardownDeferred = false;
+                Log.Error(
+                    "[MAP-机械族机械师] 合体开始回滚未能完全收束，" +
+                    "已保留会话等待延迟修复：" +
+                    $"session={session.SessionId}，" +
+                    $"sourceRestoreDeferred={sourceRestoreDeferred}，" +
+                    $"transformationRestoreFailed={transformationRestoreFailed}，" +
+                    $"flightRevokeIncomplete={flightRevokeIncomplete}。");
+                return;
+            }
+
+            GameComponent_MechFusionSessionRegistry.RemoveSession(session);
+        }
+
+        private static void TryRollbackStep(
+            MechFusionSession session,
+            string stepName,
+            Action action)
+        {
             try
             {
-                if (sourceStored && !source.Destroyed && !source.Discarded)
-                {
-                    MechFusionSourceUtility.RemoveDormantGuard(source);
-                    if (Find.WorldPawns.Contains(source))
-                    {
-                        Find.WorldPawns.RemovePawn(source);
-                    }
-
-                    if (!source.Spawned && map != null && !map.Disposed)
-                    {
-                        IntVec3 restoreCell = CellFinder.FindNoWipeSpawnLocNear(
-                            originalPosition,
-                            map,
-                            source.def,
-                            originalRotation,
-                            RestoreSearchRadius);
-                        if (restoreCell.IsValid)
-                        {
-                            GenSpawn.Spawn(
-                                source,
-                                restoreCell,
-                                map,
-                                originalRotation,
-                                WipeMode.VanishOrMoveAside);
-                        }
-                        else
-                        {
-                            Find.WorldPawns.PassToWorld(
-                                source,
-                                PawnDiscardDecideMode.KeepForever);
-                            Log.Error(
-                                "[MAP-机械族机械师] 合体回滚时地图上没有安全位置，" +
-                                "原始 Pawn 已保留在 WorldPawns：" +
-                                $"pawn={source.LabelShort}（{source.ThingID}）。");
-                        }
-                    }
-                }
-
-                if (apparelWorn
-                    && apparel != null
-                    && !apparel.Destroyed
-                    && wearer.apparel != null
-                    && apparel is Apparel wornApparel
-                    && wearer.apparel.Wearing(wornApparel))
-                {
-                    wearer.apparel.Remove(wornApparel);
-                }
-
-                if (apparelCreated && apparel != null && !apparel.Destroyed)
-                {
-                    apparel.Destroy(DestroyMode.Vanish);
-                }
-
-                if (transitionStarted)
-                {
-                    GameComponent_MechTransformationRegistry.TryCancelTransition(
-                        source);
-                }
+                action();
             }
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 合体回滚过程中发生异常：" +
-                    $"source={source.LabelShort}（{source.ThingID}）：{ex}");
+                    "[MAP-机械族机械师] 合体回滚步骤失败（" + stepName + "），" +
+                    "继续尝试其他不依赖步骤：" +
+                    $"session={session.SessionId}：{ex}");
             }
-            finally
+        }
+
+        private static void RestoreDroppedApparel(
+            Pawn wearer,
+            List<Apparel>? preWornApparel)
+        {
+            if (preWornApparel == null || preWornApparel.Count == 0)
             {
-                GameComponent_MechFusionSessionRegistry.RemoveSession(session);
+                return;
+            }
+
+            if (wearer.Destroyed
+                || wearer.Discarded
+                || wearer.Dead
+                || wearer.apparel == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < preWornApparel.Count; i++)
+            {
+                Apparel apparel = preWornApparel[i];
+                if (apparel == null || apparel.Destroyed || apparel.Discarded)
+                {
+                    continue;
+                }
+
+                if (wearer.apparel.Wearing(apparel)
+                    || apparel.Wearer != null
+                    || !ApparelUtility.HasPartsToWear(wearer, apparel.def)
+                    || !apparel.PawnCanWear(wearer, ignoreGender: true))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    wearer.apparel.Wear(apparel, dropReplacedApparel: true);
+                }
+                catch (Exception ex)
+                {
+                    // 恢复失败时只保留服装在地图上，绝不销毁。
+                    Log.Error(
+                        "[MAP-机械族机械师] 恢复合体失败时被脱下的服装失败，" +
+                        "服装保留在地图上：" +
+                        $"wearer={wearer.LabelShort}（{wearer.ThingID}），" +
+                        $"apparel={apparel.ThingID}：{ex}");
+                }
             }
         }
 

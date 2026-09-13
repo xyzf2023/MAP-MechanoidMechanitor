@@ -9,25 +9,36 @@ namespace MAP_MechanoidMechanitor
     /// 解除合体的唯一幂等入口。手动解除、能源归零、稳定值归零、
     /// 目标死亡或倒地、服装异常、读档不一致都必须调用这里，
     /// 不允许复制多套清理代码或直接 Destroy 服装代替解除逻辑。
+    /// 清理分阶段推进，每阶段完成即落盘标记，延迟恢复与读档后继续时
+    /// 绝不重复结算源机械族部位耐久、能源写回、白名单撤销或服装清理。
     /// </summary>
     public static class MechFusionTeardownService
     {
         private const int RestoreSearchRadius = 8;
+        private const int MaxPendingRecoveryAttempts = 600;
 
         public static bool TryTeardown(
             MechFusionSession? session,
             MechFusionExitReason reason,
             bool force)
         {
-            if (session == null)
+            if (session == null || session.TeardownCompleted)
             {
                 return false;
             }
 
-            if (session.TeardownCompleted)
+            if (!session.IsEnding
+                && reason == MechFusionExitReason.Manual
+                && MechanicalFlightUtility.IsAirborne(session.WearerPawn))
             {
+                session.SetExitReason(reason);
+                Log.Warning(
+                    "[MAP-机械族机械师] 飞行中禁止手动解除合体，未执行任何清理：" +
+                    $"session={session.SessionId}。");
                 return false;
             }
+
+            session.SetExitReason(reason);
 
             if (session.IsPendingRecovery)
             {
@@ -39,7 +50,6 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            session.SetExitReason(reason);
             session.SetState(MechFusionSessionState.Ending);
             session.TeardownDeferred = false;
             return ExecuteTeardown(session);
@@ -63,27 +73,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            Pawn? source = session.SourcePawn;
-            if (source == null || source.Destroyed || source.Discarded)
-            {
-                Log.Error(
-                    "[MAP-机械族机械师] 待恢复合体会话的源 Pawn 已不可用，" +
-                    "已移除记录：" + $"session={session.SessionId}。");
-                GameComponent_MechFusionSessionRegistry.RemoveSession(session);
-                return false;
-            }
-
-            if (!TryRestoreSourcePawn(session, source, out bool deferred))
-            {
-                return !deferred;
-            }
-
-            FinishAfterSourceRestored(
-                session,
-                source,
-                TryBeginReturnToPawnForm(session, source),
-                session.WearerPawn);
-            return true;
+            return ExecuteTeardown(session);
         }
 
         internal static void NotifyShellUnequipped(
@@ -122,119 +112,254 @@ namespace MAP_MechanoidMechanitor
 
         private static bool ExecuteTeardown(MechFusionSession session)
         {
+            try
+            {
+                return ExecuteTeardownInternal(session);
+            }
+            catch (Exception ex)
+            {
+                // 任何未预期异常都保留会话并标记延迟重试，绝不静默吞掉真实 Pawn。
+                session.TeardownDeferred = true;
+                Log.Error(
+                    "[MAP-机械族机械师] 解除合体事务发生异常，已保留会话等待重试：" +
+                    $"session={session.SessionId}：{ex}");
+                return false;
+            }
+        }
+
+        private static bool ExecuteTeardownInternal(MechFusionSession session)
+        {
             Pawn? source = session.SourcePawn;
             Pawn? wearer = session.WearerPawn;
 
-            // 源引用暂时无法解析时保留记录与服装，等待延迟修复，绝不生成复制 Pawn。
             if (source == null)
             {
-                Log.Error(
-                    "[MAP-机械族机械师] 合体解除时源 Pawn 引用无法解析，" +
-                    "已保留记录与服装等待延迟修复：" +
-                    $"session={session.SessionId}。");
-                return false;
+                return HandleMissingSourceReference(session, wearer);
             }
 
             if (source.Destroyed || source.Discarded)
             {
-                Log.Error(
-                    "[MAP-机械族机械师] 合体解除时源 Pawn 已被销毁或丢弃，" +
-                    "已直接移除会话记录，未生成复制 Pawn：" +
-                    $"session={session.SessionId}。");
-                RemoveApparel(session, wearer);
-                GameComponent_MechFusionSessionRegistry.RemoveSession(session);
+                CleanupUnrecoverableSource(session, source, wearer);
                 return false;
             }
 
-            if (wearer != null
-                && (wearer.Spawned || wearer.GetCaravan() != null)
-                && MechanicalFlightUtility.IsAirborne(wearer))
+            if (!HandleAirborneExit(session, wearer))
             {
-                if (session.ExitReason == MechFusionExitReason.FlightCrash)
+                return false;
+            }
+
+            if (!RunWearerCleanupSteps(session, source, wearer))
+            {
+                return false;
+            }
+
+            if (!session.SourceRestored)
+            {
+                if (!TryRestoreSourcePawn(session, source, out bool deferred))
                 {
-                    MechanicalFlightEmergencyUtility.TryBeginEmergencySequence(wearer);
-                }
-                else
-                {
-                    MechanicalFlightUtility.TryBeginLanding(wearer);
+                    session.SetState(MechFusionSessionState.PendingRecovery);
+                    session.TeardownDeferred = false;
+                    if (deferred)
+                    {
+                        session.UpdateRecoveryLocation(
+                            session.PendingMap,
+                            session.PendingPosition,
+                            session.PendingRotation);
+                        Log.Warning(
+                            "[MAP-机械族机械师] 合体解除时找不到安全容器，" +
+                            "源 Pawn 已在 WorldPawns 等待恢复：" +
+                            $"pawn={source.LabelShort}（{source.ThingID}）。");
+                    }
+                    else
+                    {
+                        Log.Error(
+                            "[MAP-机械族机械师] 合体解除时源 Pawn 无法恢复合法容器，" +
+                            "已保留会话等待重试：" +
+                            $"pawn={source.LabelShort}（{source.ThingID}）。");
+                    }
+
+                    return false;
                 }
 
+                session.MarkSourceRestored();
+                session.ResetPendingRecoveryAttempts();
+            }
+
+            if (!session.TransformationRestored)
+            {
+                if (!TryRestoreTransformationRecord(session, source))
+                {
+                    session.SetState(MechFusionSessionState.Ending);
+                    session.TeardownDeferred = true;
+                    Log.Error(
+                        "[MAP-机械族机械师] 合体解除后未能恢复形态记录，" +
+                        "已保留会话继续尝试修复，不视为完全结束：" +
+                        $"pawn={source.LabelShort}（{source.ThingID}）。");
+                    return false;
+                }
+
+                session.MarkTransformationRestored();
+            }
+
+            if (!session.ApparelRemoved)
+            {
+                RemoveApparel(session, wearer);
+                session.MarkApparelRemoved();
+            }
+
+            if (!CanDeleteSession(session, source))
+            {
+                session.TeardownDeferred = true;
+                Log.Warning(
+                    "[MAP-机械族机械师] 合体解除收束条件尚未全部满足，" +
+                    "已保留会话等待下一轮校验：" +
+                    $"session={session.SessionId}。");
+                return false;
+            }
+
+            FinalizeSession(session, source);
+            return true;
+        }
+
+        /// <summary>
+        /// 源引用暂时不可用时保留记录与服装，等待 Tick 与读档修复重试；
+        /// 只有达到重试上限且确认引用永久丢失后，才清理人类侧残留并结束会话。
+        /// </summary>
+        private static bool HandleMissingSourceReference(
+            MechFusionSession session,
+            Pawn? wearer)
+        {
+            session.SetState(MechFusionSessionState.PendingRecovery);
+            session.TeardownDeferred = false;
+            session.IncrementPendingRecoveryAttempts();
+
+            if (session.PendingRecoveryAttempts < MaxPendingRecoveryAttempts)
+            {
+                if (session.PendingRecoveryAttempts <= 1)
+                {
+                    Log.Error(
+                        "[MAP-机械族机械师] 合体解除时源 Pawn 引用无法解析，" +
+                        "已保留记录与服装等待延迟修复：" +
+                        $"session={session.SessionId}。");
+                }
+
+                return false;
+            }
+
+            Log.Error(
+                "[MAP-机械族机械师] 合体解除时源 Pawn 引用已确定永久丢失，" +
+                "只能清理目标人类上的本 MOD 效果、临时飞行授权与合体服装，" +
+                "不生成替代 Pawn：" +
+                $"session={session.SessionId}。");
+            CleanupLostSourceSession(session, wearer);
+            return false;
+        }
+
+        private static bool HandleAirborneExit(
+            MechFusionSession session,
+            Pawn? wearer)
+        {
+            if (wearer == null || !MechanicalFlightUtility.IsAirborne(wearer))
+            {
+                return true;
+            }
+
+            MechFusionExitReason reason = session.ExitReason;
+
+            if (wearer.Dead || wearer.Downed)
+            {
+                // 飞行系统自身的死亡/倒地逻辑会立即坠毁；这里只负责收尾，
+                // 不重复调用坠毁入口，避免二次爆炸与二次坠毁。
+                MechFusionFlightUtility.EnsureVanillaFlightEnds(wearer);
                 if (MechanicalFlightUtility.IsAirborne(wearer))
                 {
                     session.TeardownDeferred = true;
                     return false;
                 }
+
+                return true;
             }
 
-            bool transitionStarted = TryBeginReturnToPawnForm(session, source);
-
-            MechFusionFlightUtility.RevokeTemporaryFlight(session);
-            MechFusionWhitelistUtility.RevokeAll(session, wearer);
-            MechFusionBodySynchronizationUtility.RemoveFromWearer(wearer);
-            MechFusionSourceUtility.RemoveDormantGuard(source);
-            MechFusionEnergyUtility.WriteBackToSource(session, source);
-            MechFusionStabilityUtility.SettleSourcePartDurability(session, source);
-            MechFusionStatCacheUtility.Invalidate(session);
-
-            if (!TryRestoreSourcePawn(session, source, out bool deferred))
+            if (MechFusionFlightUtility.RequiresImmediateCrash(reason))
             {
-                if (deferred)
+                if (!MechanicalFlightEmergencyUtility.TryCrashImmediately(wearer))
                 {
-                    session.SetState(MechFusionSessionState.PendingRecovery);
-                    session.UpdateRecoveryLocation(
-                        session.PendingMap,
-                        session.PendingPosition,
-                        session.PendingRotation);
                     Log.Warning(
-                        "[MAP-机械族机械师] 合体解除时找不到安全容器，" +
-                        "源 Pawn 保留在 WorldPawns 等待恢复：" +
-                        $"pawn={source.LabelShort}（{source.ThingID}）。");
-                    return false;
+                        "[MAP-机械族机械师] 合体空中退出时无法立即进入坠毁流程，" +
+                        "等待飞行系统清理：" +
+                        $"pawn={wearer.LabelShort}（{wearer.ThingID}）。");
                 }
+            }
+            else if (reason == MechFusionExitReason.FlightCrash)
+            {
+                MechanicalFlightEmergencyUtility.TryBeginEmergencySequence(wearer);
+            }
+            else
+            {
+                MechanicalFlightUtility.TryBeginLanding(wearer);
+            }
 
-                GameComponent_MechFusionSessionRegistry.RemoveSession(session);
+            if (MechanicalFlightUtility.IsAirborne(wearer))
+            {
+                session.TeardownDeferred = true;
                 return false;
             }
 
-            FinishAfterSourceRestored(session, source, transitionStarted, wearer);
+            session.TeardownDeferred = false;
             return true;
         }
 
-        private static void FinishAfterSourceRestored(
+        private static bool RunWearerCleanupSteps(
             MechFusionSession session,
             Pawn source,
-            bool transitionStarted,
             Pawn? wearer)
         {
-            RemoveApparel(session, wearer);
-
-            if (transitionStarted
-                && !GameComponent_MechTransformationRegistry.TryCommitTransition(
-                    source,
-                    targetCarrier: null,
-                    out string? commitFailure))
+            if (!session.FlightRevoked)
             {
-                Log.Warning(
-                    "[MAP-机械族机械师] 合体解除后未能提交形态恢复：" +
-                    $"pawn={source.LabelShort}（{source.ThingID}），" +
-                    $"reason={commitFailure ?? "未知"}。");
+                if (!MechFusionFlightUtility.TryRevokeTemporaryFlight(session))
+                {
+                    session.TeardownDeferred = true;
+                    Log.Warning(
+                        "[MAP-机械族机械师] 临时飞行授权尚未撤销完成，" +
+                        "已保留会话等待下一轮清理：" +
+                        $"session={session.SessionId}。");
+                    return false;
+                }
+
+                session.MarkFlightRevoked();
             }
 
-            GameComponent_MechFusionSessionRegistry.RemoveSession(session);
-            RefreshAfterEnd(source, wearer);
-            Need_MechEnergy? energy = source.needs?.energy;
-            if (energy != null && energy.CurLevel <= 0f && !source.Dead)
+            if (!session.WhitelistRevoked)
             {
-                energy.NeedInterval();
+                MechFusionWhitelistUtility.RevokeAll(session, wearer);
+                session.MarkWhitelistRevoked();
             }
 
-            Messages.Message(
-                "MAP_MechanoidMechanitor.Fusion.Ended".Translate(
-                    source.LabelShortCap,
-                    wearer?.LabelShortCap ?? "-"),
-                source,
-                MessageTypeDefOf.NeutralEvent,
-                historical: false);
+            if (!session.SynchronizationRemoved)
+            {
+                MechFusionBodySynchronizationUtility.RemoveFromWearer(wearer);
+                session.MarkSynchronizationRemoved();
+            }
+
+            MechFusionSourceUtility.RemoveDormantGuard(source);
+
+            if (!session.EnergyWrittenBack)
+            {
+                MechFusionEnergyUtility.WriteBackToSource(session, source);
+                session.MarkEnergyWrittenBack();
+            }
+
+            if (!session.StabilitySettled)
+            {
+                // 部位耐久结算只允许执行一次，延迟恢复与读档继续都被该标记拦截。
+                MechFusionStabilityUtility.SettleSourcePartDurability(
+                    session,
+                    source);
+                session.MarkStabilitySettled();
+            }
+
+            MechFusionStatCacheUtility.Invalidate(session);
+            return true;
         }
 
         private static bool TryBeginReturnToPawnForm(
@@ -263,14 +388,74 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        private static bool TryRestoreSourcePawn(
+        internal static bool TryRestoreTransformationRecord(
+            MechFusionSession session,
+            Pawn source)
+        {
+            if (!GameComponent_MechTransformationRegistry.TryGetRecord(
+                    source,
+                    out MechTransformationRecord? record)
+                || record == null)
+            {
+                // 没有形态记录说明本次合体从未提交形态，视为已恢复。
+                return true;
+            }
+
+            if (record.CurrentForm == MechTransformationForm.Pawn)
+            {
+                if (record.ExternalCarrier == null
+                    || record.ExternalCarrier.Destroyed)
+                {
+                    return true;
+                }
+
+                if (record.TransitionInProgress)
+                {
+                    return GameComponent_MechTransformationRegistry
+                        .TryCommitTransition(source, null, out _);
+                }
+
+                return GameComponent_MechTransformationRegistry
+                    .TryForceRestorePawnForm(source);
+            }
+
+            if (record.TransitionInProgress)
+            {
+                return GameComponent_MechTransformationRegistry
+                    .TryCommitTransition(source, null, out _);
+            }
+
+            if (TryBeginReturnToPawnForm(session, source)
+                && GameComponent_MechTransformationRegistry.TryCommitTransition(
+                    source,
+                    null,
+                    out _))
+            {
+                return true;
+            }
+
+            Log.Warning(
+                "[MAP-机械族机械师] 形态记录无法通过标准入口恢复，" +
+                "尝试强制恢复并解除载体链接：" +
+                $"pawn={source.LabelShort}（{source.ThingID}）。");
+            return GameComponent_MechTransformationRegistry
+                .TryForceRestorePawnForm(source);
+        }
+
+        internal static bool TryRestoreSourcePawn(
             MechFusionSession session,
             Pawn source,
             out bool deferred)
         {
             deferred = false;
+            if (source.Destroyed || source.Discarded)
+            {
+                return false;
+            }
+
             if (source.Spawned)
             {
+                RemoveFromWorldPawns(source);
                 return true;
             }
 
@@ -355,7 +540,214 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        private static void RemoveApparel(
+        private static bool CanDeleteSession(
+            MechFusionSession session,
+            Pawn source)
+        {
+            if (!session.SourceRestored
+                || !session.TransformationRestored
+                || !session.ApparelRemoved)
+            {
+                return false;
+            }
+
+            if (source.Destroyed || source.Discarded)
+            {
+                return false;
+            }
+
+            bool inWorldPawns = Find.WorldPawns.Contains(source);
+            bool inCaravan = source.GetCaravan() != null;
+            bool inCorpse = source.Corpse != null;
+            if (!source.Spawned && !inCaravan && !inWorldPawns && !inCorpse)
+            {
+                return false;
+            }
+
+            if (inWorldPawns
+                && (source.Spawned
+                    || inCaravan
+                    || (inCorpse && source.Corpse!.Spawned)))
+            {
+                return false;
+            }
+
+            if (GameComponent_MechTransformationRegistry.TryGetRecord(
+                    source,
+                    out MechTransformationRecord? record)
+                && record != null)
+            {
+                if (record.CurrentForm != MechTransformationForm.Pawn)
+                {
+                    return false;
+                }
+
+                if (record.ExternalCarrier != null
+                    && !record.ExternalCarrier.Destroyed)
+                {
+                    return false;
+                }
+            }
+
+            if (session.FusionApparel is Thing apparel
+                && !apparel.Destroyed
+                && apparel.TryGetComp<CompMechFormCarrier>()
+                    is CompMechFormCarrier carrier
+                && carrier.Committed)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void FinalizeSession(
+            MechFusionSession session,
+            Pawn source)
+        {
+            Pawn? wearer = session.WearerPawn;
+            GameComponent_MechFusionSessionRegistry.RemoveSession(session);
+            RefreshAfterEnd(source, wearer);
+
+            Need_MechEnergy? energy = source.needs?.energy;
+            if (energy != null && energy.CurLevel <= 0f && !source.Dead)
+            {
+                energy.NeedInterval();
+            }
+
+            Messages.Message(
+                "MAP_MechanoidMechanitor.Fusion.Ended".Translate(
+                    source.LabelShortCap,
+                    wearer?.LabelShortCap ?? "-"),
+                source,
+                MessageTypeDefOf.NeutralEvent,
+                historical: false);
+        }
+
+        /// <summary>
+        /// 源 Pawn 已销毁或永久丢弃：不可能恢复原 Pawn，但人类身上的本 MOD
+        /// 效果、临时飞行授权与合体服装必须完整清理，并尽量修复损坏的形态记录。
+        /// </summary>
+        private static void CleanupUnrecoverableSource(
+            MechFusionSession session,
+            Pawn source,
+            Pawn? wearer)
+        {
+            Log.Error(
+                "[MAP-机械族机械师] 合体解除时源 Pawn 已被销毁或永久丢弃，" +
+                "已清理目标人类效果与合体服装，明确无法恢复源 Pawn，" +
+                "未生成任何复制 Pawn：" +
+                $"session={session.SessionId}。");
+
+            TryCleanupStep(session, "撤销临时飞行授权", () =>
+            {
+                if (!session.FlightRevoked
+                    && MechFusionFlightUtility.TryRevokeTemporaryFlight(session))
+                {
+                    session.MarkFlightRevoked();
+                }
+            });
+            TryCleanupStep(session, "撤销白名单效果", () =>
+            {
+                if (!session.WhitelistRevoked)
+                {
+                    MechFusionWhitelistUtility.RevokeAll(session, wearer);
+                    session.MarkWhitelistRevoked();
+                }
+            });
+            TryCleanupStep(session, "移除机体同调", () =>
+            {
+                if (!session.SynchronizationRemoved)
+                {
+                    MechFusionBodySynchronizationUtility.RemoveFromWearer(
+                        wearer);
+                    session.MarkSynchronizationRemoved();
+                }
+            });
+            TryCleanupStep(session, "移除休眠维持标记", () =>
+            {
+                MechFusionSourceUtility.RemoveDormantGuard(source);
+            });
+            TryCleanupStep(session, "修复损坏形态记录", () =>
+            {
+                GameComponent_MechTransformationRegistry.TryForceRestorePawnForm(
+                    source);
+            });
+            TryCleanupStep(session, "清理合体服装", () =>
+            {
+                if (!session.ApparelRemoved)
+                {
+                    RemoveApparel(session, wearer);
+                    session.MarkApparelRemoved();
+                }
+            });
+
+            MechFusionStatCacheUtility.Invalidate(session);
+            GameComponent_MechFusionSessionRegistry.RemoveSession(session);
+            RefreshAfterEnd(null, wearer);
+        }
+
+        private static void CleanupLostSourceSession(
+            MechFusionSession session,
+            Pawn? wearer)
+        {
+            TryCleanupStep(session, "撤销临时飞行授权", () =>
+            {
+                if (!session.FlightRevoked
+                    && MechFusionFlightUtility.TryRevokeTemporaryFlight(session))
+                {
+                    session.MarkFlightRevoked();
+                }
+            });
+            TryCleanupStep(session, "撤销白名单效果", () =>
+            {
+                if (!session.WhitelistRevoked)
+                {
+                    MechFusionWhitelistUtility.RevokeAll(session, wearer);
+                    session.MarkWhitelistRevoked();
+                }
+            });
+            TryCleanupStep(session, "移除机体同调", () =>
+            {
+                if (!session.SynchronizationRemoved)
+                {
+                    MechFusionBodySynchronizationUtility.RemoveFromWearer(
+                        wearer);
+                    session.MarkSynchronizationRemoved();
+                }
+            });
+            TryCleanupStep(session, "清理合体服装", () =>
+            {
+                if (!session.ApparelRemoved)
+                {
+                    RemoveApparel(session, wearer);
+                    session.MarkApparelRemoved();
+                }
+            });
+
+            MechFusionStatCacheUtility.Invalidate(session);
+            GameComponent_MechFusionSessionRegistry.RemoveSession(session);
+            RefreshAfterEnd(null, wearer);
+        }
+
+        private static void TryCleanupStep(
+            MechFusionSession session,
+            string stepName,
+            Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 合体异常清理步骤失败（" + stepName + "）：" +
+                    $"session={session.SessionId}：{ex}");
+            }
+        }
+
+        internal static void RemoveApparel(
             MechFusionSession session,
             Pawn? wearer)
         {
@@ -377,11 +769,6 @@ namespace MAP_MechanoidMechanitor
 
         private static void RemoveFromWorldPawns(Pawn pawn)
         {
-            if (pawn.Spawned)
-            {
-                return;
-            }
-
             if (Find.WorldPawns.Contains(pawn))
             {
                 Find.WorldPawns.RemovePawn(pawn);
@@ -390,7 +777,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void EnsureWorldPawn(Pawn pawn)
         {
-            if (pawn.Spawned || pawn.Destroyed || pawn.Discarded)
+            if (pawn.Destroyed || pawn.Discarded)
             {
                 return;
             }
@@ -415,10 +802,13 @@ namespace MAP_MechanoidMechanitor
             return corpse;
         }
 
-        private static void RefreshAfterEnd(Pawn source, Pawn? wearer)
+        private static void RefreshAfterEnd(Pawn? source, Pawn? wearer)
         {
             wearer?.Drawer?.renderer?.SetAllGraphicsDirty();
-            source.Drawer?.renderer?.SetAllGraphicsDirty();
+            if (source != null && !source.Destroyed)
+            {
+                source.Drawer?.renderer?.SetAllGraphicsDirty();
+            }
         }
     }
 }

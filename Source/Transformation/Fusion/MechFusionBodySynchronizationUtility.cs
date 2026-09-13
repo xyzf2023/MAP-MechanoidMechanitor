@@ -31,7 +31,7 @@ namespace MAP_MechanoidMechanitor
         internal static void RemoveFromWearer(Pawn? wearer)
         {
             HediffSet? hediffSet = wearer?.health?.hediffSet;
-            if (wearer == null || hediffSet == null || wearer.Dead)
+            if (wearer == null || hediffSet == null)
             {
                 return;
             }
@@ -42,6 +42,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 死亡本身不是拒绝清理的理由：尸体复活后必须不残留“机体同调”。
             Hediff? hediff = hediffSet.GetFirstHediffOfDef(def);
             if (hediff != null)
             {

@@ -163,17 +163,9 @@ namespace MAP_MechanoidMechanitor
             registry.EnsureIndexes();
             session.MarkTeardownCompleted();
             registry.sessions.Remove(session);
-            if (session.SourcePawn != null)
-            {
-                registry.sessionBySource!.Remove(session.SourcePawn);
-            }
-
-            if (session.WearerPawn != null)
-            {
-                registry.sessionByWearer!.Remove(session.WearerPawn);
-            }
-
-            registry.sessionById!.Remove(session.SessionId);
+            // 直接按 Pawn 删除索引会误删共享同一 Pawn 的其他会话索引，
+            // 因此统一按剩余会话重建，保证索引与列表始终一致。
+            registry.RebuildIndexes();
         }
 
         internal static bool TryQueueStart(
