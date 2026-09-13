@@ -523,6 +523,14 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
+                if (!IsAdjacentToWearer(wearer))
+                {
+                    // 折跃效果到正式合体之间目标又移动：不允许远距离直接合体，
+                    // 回到地面接近重新靠近；再次相邻后允许重新播放折跃效果。
+                    JumpTo(approachToil);
+                    return;
+                }
+
                 if (!MechFusionStartService.TryStartFusion(
                         pawn,
                         wearer,

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -200,9 +199,10 @@ namespace MAP_MechanoidMechanitor
         /// 不能使用 Pawn 形式的 FindPathNow：PathRequest.ValidateInt 在
         /// TraverseMode.ByPawn 下会先执行 pawn.CanReach（基于 Pawn 当前真实
         /// 位置），导致“假想落点可达、当前真实位置不可达”的 B 路径被错误拒绝。
-        /// 这里先用同一套 ByPawn 规则做以 start 为权威的可达性预检，再用携带
-        /// 相同 source 通行属性的 PassDoors TraverseParms 取得路径，最后按
-        /// ByPawn 的门与围栏规则逐格复核，保证与真实地面移动一致。
+        /// 这里保持完整的 ByPawn 寻路规则，只在同步调用期间通过
+        /// MechFusionHypotheticalPathContext 把该次 ValidateInt 的起点可达性
+        /// 校验切换为以 start 为权威；不再使用 PassDoors 后验过滤，
+        /// 因此存在合法绕路时不会被更短的非法门路线误判失败。
         /// </summary>
         internal static bool TryComputeHypotheticalPathSteps(
             Pawn source,
@@ -238,24 +238,20 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // PathRequest.ValidateInt 在非 ByPawn 模式下才会使用传入 start
-            // 做可达性预检；其他通行属性与 ByPawn 完全一致。
-            TraverseParms hypotheticalParms = byPawnParms;
-            hypotheticalParms.mode = TraverseMode.PassDoors;
+            PawnPath path;
+            using (MechFusionHypotheticalPathContext.Begin(source, start))
+            {
+                path = map.pathFinder.FindPathNow(
+                    start,
+                    target,
+                    byPawnParms,
+                    null,
+                    pathEndMode);
+            }
 
-            PawnPath path = map.pathFinder.FindPathNow(
-                start,
-                target,
-                hypotheticalParms,
-                null,
-                pathEndMode);
             try
             {
-                if (!path.Found
-                    || !IsHypotheticalPathPassableForPawn(
-                        path,
-                        source,
-                        byPawnParms))
+                if (!path.Found)
                 {
                     return false;
                 }
@@ -267,64 +263,6 @@ namespace MAP_MechanoidMechanitor
             {
                 path.Dispose();
             }
-        }
-
-        /// <summary>
-        /// 复核 PassDoors 规划路径在 ByPawn 规则下是否真的可通行：
-        /// 只补齐 PassDoors 与 ByPawn 存在差异的门与围栏规则，
-        /// 不复制其他寻路规则。
-        /// </summary>
-        private static bool IsHypotheticalPathPassableForPawn(
-            PawnPath path,
-            Pawn source,
-            TraverseParms byPawnParms)
-        {
-            Map? map = source.Map;
-            if (map == null)
-            {
-                return false;
-            }
-
-            List<IntVec3> nodes = path.NodesReversed;
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                IntVec3 cell = nodes[i];
-                Building? edifice = cell.GetEdifice(map);
-                if (edifice is Building_Door door)
-                {
-                    if (!byPawnParms.canBashDoors
-                        && door.IsForbiddenToPass(source))
-                    {
-                        return false;
-                    }
-
-                    if (door.PawnCanOpen(source) && !door.FreePassage)
-                    {
-                        continue;
-                    }
-
-                    if (door.CanPhysicallyPass(source))
-                    {
-                        continue;
-                    }
-
-                    if (byPawnParms.canBashDoors)
-                    {
-                        continue;
-                    }
-
-                    return false;
-                }
-
-                if (byPawnParms.fenceBlocked
-                    && !byPawnParms.canBashFences
-                    && edifice?.def.building?.isFence == true)
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
     }
 }
