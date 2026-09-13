@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using RimWorld;
 using UnityEngine;
@@ -44,6 +45,97 @@ namespace MAP_MechanoidMechanitor
                 drawLoc,
                 rotation,
                 neverAimWeapon);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 合体源机械族实时绘制时按“附着在目标殖民者位置的站立外观”处理：
+    /// 原版 GetBodyPos 对非站立 Pawn 会访问 ParentHolder.ParentHolder，
+    /// 而合体源已存入 WorldPawns，ParentHolder 可能为空。仅在合体渲染上下文
+    /// 命中时直接使用目标殖民者传入的 drawLoc 并显示完整身体；其余 Pawn 原样放行。
+    /// Priority.First 确保先于 SyntheticLovinRenderPatches 的同名补丁执行。
+    /// 目标方法只在补丁初始化时按精确签名解析并缓存，不逐帧反射。
+    /// </summary>
+    [HarmonyPatch]
+    internal static class MechFusionSourceBodyPosPatch
+    {
+        private const int ErrorKeyTargetMethodNotFound = 2147045619;
+
+        private static MethodBase? cachedTargetMethod;
+
+        private static bool Prepare()
+        {
+            if (TargetMethod() != null)
+            {
+                return true;
+            }
+
+            Log.ErrorOnce(
+                "[MAP-机械族机械师] 未找到 PawnRenderer.GetBodyPos"
+                + "(Vector3, PawnPosture, out bool)，合体源站立外观补丁未应用。",
+                ErrorKeyTargetMethodNotFound);
+            return false;
+        }
+
+        private static MethodBase? TargetMethod()
+        {
+            if (cachedTargetMethod != null)
+            {
+                return cachedTargetMethod;
+            }
+
+            cachedTargetMethod = AccessTools.Method(
+                typeof(PawnRenderer),
+                "GetBodyPos",
+                new[]
+                {
+                    typeof(Vector3),
+                    typeof(PawnPosture),
+                    typeof(bool).MakeByRefType()
+                });
+            return cachedTargetMethod;
+        }
+
+        [HarmonyPriority(Priority.First)]
+        [HarmonyPrefix]
+        public static bool Prefix(
+            Pawn ___pawn,
+            Vector3 drawLoc,
+            ref bool showBody,
+            ref Vector3 __result)
+        {
+            if (!MechFusionRenderUtility.IsRenderingSourcePawn(___pawn))
+            {
+                return true;
+            }
+
+            showBody = true;
+            __result = drawLoc;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 合体源机械族实时绘制时身体角度固定为站立角度 0f：
+    /// 原版 BodyAngle 的非站立分支同样访问 ParentHolder.ParentHolder，
+    /// 会在 GetBodyPos 之后再次空引用。仅在合体渲染上下文命中时接管，
+    /// 其余 Pawn 原样放行。Priority.First 确保先于 SyntheticLovinRenderPatches
+    /// 的同名补丁执行。朝向仍由 TryRenderSourceAt 传入的目标殖民者 rotOverride 决定。
+    /// </summary>
+    [HarmonyPatch(typeof(PawnRenderer), nameof(PawnRenderer.BodyAngle))]
+    internal static class MechFusionSourceBodyAnglePatch
+    {
+        [HarmonyPriority(Priority.First)]
+        [HarmonyPrefix]
+        public static bool Prefix(Pawn ___pawn, ref float __result)
+        {
+            if (!MechFusionRenderUtility.IsRenderingSourcePawn(___pawn))
+            {
+                return true;
+            }
+
+            __result = 0f;
             return false;
         }
     }
