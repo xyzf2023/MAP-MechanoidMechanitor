@@ -306,17 +306,9 @@ namespace MAP_MechanoidMechanitor
                         duplicateSource));
                 TryCleanupDuplicateStep(
                     duplicate,
-                    "结算重复会话源机械族能源与耐久",
+                    "结算重复会话源机械族耐久",
                     () =>
                     {
-                        if (!duplicate.EnergyWrittenBack)
-                        {
-                            MechFusionEnergyUtility.WriteBackToSource(
-                                duplicate,
-                                duplicateSource);
-                            duplicate.MarkEnergyWrittenBack();
-                        }
-
                         if (!duplicate.StabilitySettled)
                         {
                             MechFusionStabilityUtility.SettleSourcePartDurability(
@@ -327,7 +319,7 @@ namespace MAP_MechanoidMechanitor
                     });
                 TryCleanupDuplicateStep(
                     duplicate,
-                    "恢复重复会话独立源机械族",
+                    "恢复重复会话独立源机械族并提交能源",
                     () =>
                     {
                         if (!duplicate.SourceRestored)
@@ -370,6 +362,24 @@ namespace MAP_MechanoidMechanitor
                             }
 
                             duplicate.MarkTransformationRestored();
+                        }
+
+                        // 兼容旧存档：旧版的 EnergyWrittenBack 只表示“尝试过”，
+                        // 因此恢复容器后始终幂等重写一次最终 Session 能源。
+                        if (!duplicateSource.Dead)
+                        {
+                            if (!MechFusionEnergyUtility.TryWriteBackToSource(
+                                    duplicate,
+                                    duplicateSource))
+                            {
+                                throw new InvalidOperationException(
+                                    "重复会话源机械族恢复后无法提交最终能源。");
+                            }
+
+                            if (!duplicate.EnergyWrittenBack)
+                            {
+                                duplicate.MarkEnergyWrittenBack();
+                            }
                         }
                     });
             }
