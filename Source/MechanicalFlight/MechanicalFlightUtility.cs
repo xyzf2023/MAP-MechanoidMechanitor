@@ -162,7 +162,8 @@ namespace MAP_MechanoidMechanitor
         public static bool TryBeginTakeoff(Pawn? pawn)
         {
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                || record == null || pawn == null || !CanStartFlight(pawn, record))
+                || record == null || pawn == null
+                || !CanBeginTakeoff(pawn, record, requireDrafted: true, out _))
             {
                 return false;
             }
@@ -584,22 +585,46 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool CanStartFlight(
-            Pawn pawn,
-            MechanicalFlightAuthorizationRecord record)
+        /// <summary>
+        /// 纯起飞可行性判断，无任何副作用。普通玩家起飞与合体快速转移规划
+        /// 共用同一套屋顶、能源、冷却与征召规则，禁止在别处复制第二套。
+        /// requireDrafted 为 false 时允许未征召机械族进入合体快速转移。
+        /// </summary>
+        internal static bool CanBeginTakeoff(
+            Pawn? pawn,
+            bool requireDrafted,
+            out string? disabledReason)
         {
-            return GetDisabledReason(pawn, record).NullOrEmpty();
+            GameComponent_MechanicalFlightRegistry.TryGetRecord(
+                pawn,
+                out MechanicalFlightAuthorizationRecord? record);
+            return CanBeginTakeoff(
+                pawn,
+                record,
+                requireDrafted,
+                out disabledReason);
+        }
+
+        internal static bool CanBeginTakeoff(
+            Pawn? pawn,
+            MechanicalFlightAuthorizationRecord? record,
+            bool requireDrafted,
+            out string? disabledReason)
+        {
+            disabledReason = GetDisabledReason(pawn, record, requireDrafted);
+            return disabledReason.NullOrEmpty();
         }
 
         private static string? GetDisabledReason(Pawn pawn)
         {
             GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record);
-            return GetDisabledReason(pawn, record);
+            return GetDisabledReason(pawn, record, requireDrafted: true);
         }
 
         private static string? GetDisabledReason(
             Pawn? pawn,
-            MechanicalFlightAuthorizationRecord? record)
+            MechanicalFlightAuthorizationRecord? record,
+            bool requireDrafted)
         {
             if (pawn == null || record?.Profile == null || !pawn.Spawned
                 || pawn.Map == null || pawn.Dead || pawn.Downed)
@@ -610,7 +635,7 @@ namespace MAP_MechanoidMechanitor
             {
                 return "MAP_MechanicalFlight_EmergencyLandingBlocked".Translate();
             }
-            if (!pawn.Drafted)
+            if (requireDrafted && !pawn.Drafted)
             {
                 return "MAP_MechanicalFlight_Unavailable".Translate();
             }
