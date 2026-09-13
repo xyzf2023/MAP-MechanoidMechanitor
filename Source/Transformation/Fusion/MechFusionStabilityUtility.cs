@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using RimWorld;
+using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
@@ -99,15 +100,16 @@ namespace MAP_MechanoidMechanitor
         /// 先一次性计算全部目标，再按“非关键部位优先，可能直接致死的关键部位最后”
         /// 的顺序尽可能完成，绝不因中途死亡而跳过剩余部位的乘算。
         /// 该结算经过 AddHediff 健康入口而不是伤害管线，不会再进入结构路由。
+        ///
+        /// 任何可能致死的结算都必须在源 Pawn 已恢复到地图、远行队或合法尸体
+        /// 容器后执行。后台 WorldPawns 只用于合体期间临时保管真实 Pawn，不能
+        /// 在那里触发 Pawn.Kill，否则原版会把世界 Pawn 直接销毁而不留下地图尸体。
         /// </summary>
         internal static void SettleSourcePartDurability(
             MechFusionSession session,
             Pawn? source)
         {
-            if (session == null
-                || source == null
-                || source.Destroyed
-                || source.Discarded)
+            if (session == null || source == null)
             {
                 return;
             }
@@ -115,6 +117,34 @@ namespace MAP_MechanoidMechanitor
             if (session.StabilitySettled)
             {
                 return;
+            }
+
+            if (source.Discarded)
+            {
+                throw new InvalidOperationException(
+                    "源机械族已被永久丢弃，无法安全结算结构耐久：" +
+                    $"pawn={source.LabelShort}（{source.ThingID}）。");
+            }
+
+            if (source.Destroyed)
+            {
+                if (HasValidCorpse(source))
+                {
+                    // 正常死亡后的 Pawn 会处在 Corpse 内并带有 Destroyed 标记；
+                    // 已死亡时无需再次施加结构伤害。
+                    return;
+                }
+
+                throw new InvalidOperationException(
+                    "源机械族已销毁且不存在合法尸体，无法安全结算结构耐久：" +
+                    $"pawn={source.LabelShort}（{source.ThingID}）。");
+            }
+
+            if (!IsInDeathSafeContainer(source))
+            {
+                throw new InvalidOperationException(
+                    "源机械族尚未恢复到可安全承载死亡结果的容器，禁止结算结构耐久：" +
+                    $"pawn={source.LabelShort}（{source.ThingID}）。");
             }
 
             float ratio = session.MaxStability > 0f
@@ -166,6 +196,24 @@ namespace MAP_MechanoidMechanitor
             {
                 source.Kill(null);
             }
+        }
+
+        private static bool IsInDeathSafeContainer(Pawn source)
+        {
+            if (source.Spawned || source.GetCaravan() != null)
+            {
+                return true;
+            }
+
+            return HasValidCorpse(source);
+        }
+
+        private static bool HasValidCorpse(Pawn source)
+        {
+            Corpse? corpse = source.Corpse;
+            return corpse != null
+                && !corpse.Destroyed
+                && (corpse.Spawned || corpse.ParentHolder != null);
         }
 
         private static List<PlannedPartLoss> BuildPlannedPartLosses(

@@ -137,7 +137,7 @@ namespace MAP_MechanoidMechanitor
                 return HandleMissingSourceReference(session, wearer);
             }
 
-            if (source.Destroyed || source.Discarded)
+            if (IsSourceTrulyUnrecoverable(source))
             {
                 CleanupUnrecoverableSource(session, source, wearer);
                 return false;
@@ -148,15 +148,25 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!RunWearerCleanupSteps(session, source, wearer))
+            if (!RunWearerCleanupSteps(session, wearer))
             {
                 return false;
             }
 
-            if (!session.SourceRestored)
+            // 源机械体必须先离开合体期间的 WorldPawns 临时仓库，进入地图、
+            // 远行队或合法尸体容器。只有这样后续结构耐久结算即使致死，
+            // 原版也能产生正常尸体，而不是把后台 WorldPawn 直接销毁。
+            // 旧存档可能错误地写有 SourceRestored=true，因此同时校验实际容器。
+            if (!session.SourceRestored || !IsSourceInRestoredContainer(source))
             {
                 if (!TryRestoreSourcePawn(session, source, out bool deferred))
                 {
+                    if (IsSourceTrulyUnrecoverable(source))
+                    {
+                        CleanupUnrecoverableSource(session, source, wearer);
+                        return false;
+                    }
+
                     session.SetState(MechFusionSessionState.PendingRecovery);
                     session.TeardownDeferred = false;
                     if (deferred)
@@ -167,7 +177,7 @@ namespace MAP_MechanoidMechanitor
                             session.PendingRotation);
                         Log.Warning(
                             "[MAP-机械族机械师] 合体解除时找不到安全容器，" +
-                            "源 Pawn 已在 WorldPawns 等待恢复：" +
+                            "源 Pawn 已安全保留并等待恢复：" +
                             $"pawn={source.LabelShort}（{source.ThingID}）。");
                     }
                     else
@@ -181,15 +191,16 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
-                session.MarkSourceRestored();
+                if (!session.SourceRestored)
+                {
+                    session.MarkSourceRestored();
+                }
+
                 session.ResetPendingRecoveryAttempts();
             }
 
-            if (!TryCommitRestoredSourceEnergy(session, source))
-            {
-                return false;
-            }
-
+            // 先恢复形态，再提交权威能源。这样即使后续结构结算致死，
+            // 尸体中的真实 Pawn 也已经脱离 Merged 形态并完成最终能源同步。
             if (!session.TransformationRestored)
             {
                 if (!TryRestoreTransformationRecord(session, source))
@@ -205,6 +216,27 @@ namespace MAP_MechanoidMechanitor
 
                 session.MarkTransformationRestored();
             }
+
+            if (!TryCommitRestoredSourceEnergy(session, source))
+            {
+                return false;
+            }
+
+            // DormantGuard 只服务于合体期间的 WorldPawns 暂存状态；源 Pawn 已经
+            // 恢复到死亡安全容器后再移除，避免等待恢复期间 Hediff 计时被冻结。
+            MechFusionSourceUtility.RemoveDormantGuard(source);
+
+            if (!session.StabilitySettled)
+            {
+                // 这是唯一允许结构结算致死的阶段。此时 SourceRestored 已经成立，
+                // StabilityUtility 还会再次校验实际容器，形成双重保险。
+                MechFusionStabilityUtility.SettleSourcePartDurability(
+                    session,
+                    source);
+                session.MarkStabilitySettled();
+            }
+
+            MechFusionStatCacheUtility.Invalidate(session);
 
             if (!session.ApparelRemoved)
             {
@@ -316,7 +348,6 @@ namespace MAP_MechanoidMechanitor
 
         private static bool RunWearerCleanupSteps(
             MechFusionSession session,
-            Pawn source,
             Pawn? wearer)
         {
             if (!session.FlightRevoked)
@@ -353,17 +384,6 @@ namespace MAP_MechanoidMechanitor
             {
                 MechFusionBodySynchronizationUtility.RemoveFromWearer(wearer);
                 session.MarkSynchronizationRemoved();
-            }
-
-            MechFusionSourceUtility.RemoveDormantGuard(source);
-
-            if (!session.StabilitySettled)
-            {
-                // 部位耐久结算只允许执行一次，延迟恢复与读档继续都被该标记拦截。
-                MechFusionStabilityUtility.SettleSourcePartDurability(
-                    session,
-                    source);
-                session.MarkStabilitySettled();
             }
 
             MechFusionStatCacheUtility.Invalidate(session);
@@ -492,18 +512,6 @@ namespace MAP_MechanoidMechanitor
             out bool deferred)
         {
             deferred = false;
-            if (source.Destroyed || source.Discarded)
-            {
-                return false;
-            }
-
-            RestoreOriginalSourceIdentity(session, source);
-
-            if (source.Spawned)
-            {
-                RemoveFromWorldPawns(source);
-                return true;
-            }
 
             Pawn? wearer = session.WearerPawn;
             Caravan? caravan = wearer?.GetCaravan();
@@ -517,20 +525,88 @@ namespace MAP_MechanoidMechanitor
                 ? wearer.Rotation
                 : session.PendingRotation;
 
-            if (source.Dead)
+            // 正常死亡后的真实 Pawn 会带有 Destroyed 标记，但仍被 Corpse 持有。
+            // 这种情况不是“源 Pawn 丢失”；若尸体已经有合法容器则直接成功，
+            // 若尸体暂时悬空则尝试放回远行队或最近恢复位置。
+            Corpse? existingCorpse = GetRecoverableCorpse(source);
+            if (existingCorpse != null)
             {
-                if (map == null || map.Disposed || !anchor.IsValid)
+                if (IsCorpseInLegalContainer(existingCorpse))
                 {
-                    EnsureWorldPawn(source);
                     return true;
                 }
 
-                RemoveFromWorldPawns(source);
-                Corpse corpse = EnsureCorpse(source);
+                if (caravan != null)
+                {
+                    caravan.AddPawnOrItem(
+                        existingCorpse,
+                        addCarriedPawnToWorldPawnsIfAny: true);
+                    return true;
+                }
+
+                if (map == null || map.Disposed || !anchor.IsValid)
+                {
+                    deferred = true;
+                    return false;
+                }
+
                 IntVec3 corpseCell = CellFinder.FindNoWipeSpawnLocNear(
                     anchor,
                     map,
-                    corpse.def,
+                    existingCorpse.def,
+                    rotation,
+                    RestoreSearchRadius);
+                if (!corpseCell.IsValid)
+                {
+                    deferred = true;
+                    return false;
+                }
+
+                GenSpawn.Spawn(
+                    existingCorpse,
+                    corpseCell,
+                    map,
+                    rotation,
+                    WipeMode.VanishOrMoveAside);
+                return true;
+            }
+
+            if (source.Destroyed || source.Discarded)
+            {
+                return false;
+            }
+
+            RestoreOriginalSourceIdentity(session, source);
+
+            if (source.Spawned)
+            {
+                RemoveFromWorldPawns(source);
+                return true;
+            }
+
+            if (source.Dead)
+            {
+                if (caravan != null)
+                {
+                    RemoveFromWorldPawns(source);
+                    Corpse corpse = EnsureCorpse(source);
+                    caravan.AddPawnOrItem(
+                        corpse,
+                        addCarriedPawnToWorldPawnsIfAny: true);
+                    return true;
+                }
+
+                if (map == null || map.Disposed || !anchor.IsValid)
+                {
+                    EnsureWorldPawn(source);
+                    deferred = true;
+                    return false;
+                }
+
+                IntVec3 corpseCell = CellFinder.FindNoWipeSpawnLocNear(
+                    anchor,
+                    map,
+                    source.RaceProps.corpseDef,
                     rotation,
                     RestoreSearchRadius);
                 if (!corpseCell.IsValid)
@@ -540,6 +616,8 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
+                RemoveFromWorldPawns(source);
+                Corpse corpse = EnsureCorpse(source);
                 GenSpawn.Spawn(
                     corpse,
                     corpseCell,
@@ -636,28 +714,13 @@ namespace MAP_MechanoidMechanitor
             if (!session.SourceRestored
                 || (!source.Dead && !session.EnergyWrittenBack)
                 || !session.TransformationRestored
+                || !session.StabilitySettled
                 || !session.ApparelRemoved)
             {
                 return false;
             }
 
-            if (source.Destroyed || source.Discarded)
-            {
-                return false;
-            }
-
-            bool inWorldPawns = Find.WorldPawns.Contains(source);
-            bool inCaravan = source.GetCaravan() != null;
-            bool inCorpse = source.Corpse != null;
-            if (!source.Spawned && !inCaravan && !inWorldPawns && !inCorpse)
-            {
-                return false;
-            }
-
-            if (inWorldPawns
-                && (source.Spawned
-                    || inCaravan
-                    || (inCorpse && source.Corpse!.Spawned)))
+            if (!IsSourceInRestoredContainer(source))
             {
                 return false;
             }
@@ -962,6 +1025,54 @@ namespace MAP_MechanoidMechanitor
             }
 
             apparel.Destroy(DestroyMode.Vanish);
+        }
+
+        private static bool IsSourceTrulyUnrecoverable(Pawn source)
+        {
+            if (source.Discarded)
+            {
+                return true;
+            }
+
+            if (!source.Destroyed)
+            {
+                return false;
+            }
+
+            return GetRecoverableCorpse(source) == null;
+        }
+
+        private static bool IsSourceInRestoredContainer(Pawn source)
+        {
+            if (source.Discarded)
+            {
+                return false;
+            }
+
+            if (source.Dead)
+            {
+                Corpse? corpse = GetRecoverableCorpse(source);
+                return corpse != null && IsCorpseInLegalContainer(corpse);
+            }
+
+            if (source.Destroyed || Find.WorldPawns.Contains(source))
+            {
+                return false;
+            }
+
+            return source.Spawned || source.GetCaravan() != null;
+        }
+
+        private static Corpse? GetRecoverableCorpse(Pawn source)
+        {
+            Corpse? corpse = source.Corpse;
+            return corpse != null && !corpse.Destroyed ? corpse : null;
+        }
+
+        private static bool IsCorpseInLegalContainer(Corpse corpse)
+        {
+            return !corpse.Destroyed
+                && (corpse.Spawned || corpse.ParentHolder != null);
         }
 
         private static void RemoveFromWorldPawns(Pawn pawn)
