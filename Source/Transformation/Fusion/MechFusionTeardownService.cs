@@ -379,14 +379,20 @@ namespace MAP_MechanoidMechanitor
             MechFusionSession session,
             Pawn source)
         {
-            if (source.Dead || session.EnergyWrittenBack)
+            if (source.Dead)
             {
                 return true;
             }
 
+            // 兼容旧存档：旧版 EnergyWrittenBack 只表示“尝试过写回”，
+            // 可能发生在 SpawnSetup 重建最终 Need 之前，因此恢复后始终幂等重写。
             if (MechFusionEnergyUtility.TryWriteBackToSource(session, source))
             {
-                session.MarkEnergyWrittenBack();
+                if (!session.EnergyWrittenBack)
+                {
+                    session.MarkEnergyWrittenBack();
+                }
+
                 return true;
             }
 
