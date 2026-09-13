@@ -462,6 +462,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            RestoreOriginalSourceIdentity(session, source);
+
             if (source.Spawned)
             {
                 RemoveFromWorldPawns(source);
@@ -547,6 +549,44 @@ namespace MAP_MechanoidMechanitor
                 rotation,
                 WipeMode.VanishOrMoveAside);
             return true;
+        }
+
+        /// <summary>
+        /// 合体期间源 Pawn 可能被失控或第三方生命周期逻辑改写阵营。
+        /// 恢复到地图或远行队前先还原合体开始时的身份；监管关系只为
+        /// 原本确有监管者的普通机械族补回，机械族机械师保持无监管者结构。
+        /// </summary>
+        private static void RestoreOriginalSourceIdentity(
+            MechFusionSession session,
+            Pawn source)
+        {
+            session.EnsureOriginalSourceStateForRecovery();
+            Faction? originalFaction = session.OriginalSourceFaction;
+            if (source.Faction != originalFaction)
+            {
+                source.SetFactionDirect(originalFaction);
+            }
+
+            Pawn? originalOverseer = session.OriginalOverseer;
+            if (originalOverseer == null
+                || originalOverseer.Destroyed
+                || originalOverseer.Discarded
+                || originalOverseer.Dead
+                || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(source)
+                || MechFusionValidator.IsOverseerOf(source, originalOverseer))
+            {
+                return;
+            }
+
+            if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(
+                    originalOverseer,
+                    source))
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 已恢复合体源机械族阵营，但原监管关系暂时无法恢复：" +
+                    $"source={source.LabelShort}（{source.ThingID}），" +
+                    $"overseer={originalOverseer.LabelShort}（{originalOverseer.ThingID}）。");
+            }
         }
 
         private static bool CanDeleteSession(
