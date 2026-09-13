@@ -28,17 +28,52 @@ namespace MAP_MechanoidMechanitor
             session.SetEnergy(current, max);
         }
 
-        internal static void WriteBackToSource(
+        /// <summary>
+        /// 将权威合体记录中的最终能源提交给已经恢复完成的真实源 Pawn。
+        /// 如果生命周期整理暂时移除了 MechEnergy Need，会先按原版规则重新整理
+        /// Needs，再写入最终值。只有实际存在可写入的能源 Need 时才返回 true；
+        /// 调用方只能在返回 true 后标记 EnergyWrittenBack。
+        /// </summary>
+        internal static bool TryWriteBackToSource(
             MechFusionSession session,
             Pawn? sourcePawn)
         {
-            Need_MechEnergy? energy = sourcePawn?.needs?.energy;
-            if (energy == null || session.MaxEnergy <= 0f)
+            if (session == null
+                || sourcePawn == null
+                || sourcePawn.Destroyed
+                || sourcePawn.Discarded)
             {
-                return;
+                return false;
+            }
+
+            // 旧存档若没有有效的合体能源载荷，不阻塞整个解除事务。
+            if (session.MaxEnergy <= 0f)
+            {
+                return true;
+            }
+
+            Pawn_NeedsTracker? needs = sourcePawn.needs;
+            if (needs == null)
+            {
+                return false;
+            }
+
+            Need_MechEnergy? energy = needs.energy;
+            if (energy == null)
+            {
+                // SpawnSetup、阵营/监管恢复等生命周期步骤可能重新整理 Needs。
+                // 在最终提交点再按原版规则校正一次，避免新建 Need 停留在默认 50%。
+                needs.AddOrRemoveNeedsAsAppropriate();
+                energy = needs.energy;
+            }
+
+            if (energy == null)
+            {
+                return false;
             }
 
             energy.CurLevel = session.CurrentEnergy;
+            return true;
         }
 
         internal static bool TryGetActiveSessionForWearer(
