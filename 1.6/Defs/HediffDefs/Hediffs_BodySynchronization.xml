@@ -19,6 +19,7 @@
   -->
   <HediffDef>
     <defName>MAP_FusionDormantGuard</defName>
+    <hediffClass>HediffWithComps</hediffClass>
     <label>合体休眠维持</label>
     <description>合体期间维持源机械族健康状态计时。</description>
     <isBad>false</isBad>
