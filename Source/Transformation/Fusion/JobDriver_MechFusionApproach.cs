@@ -233,6 +233,17 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (IsAdjacentToWearer(wearer!))
+            {
+                // 目标已经移动到自己身边：不需要起飞，下一 Tick 回到地面接近。
+                if (plan != null)
+                {
+                    plan.UseFlight = false;
+                }
+                flightStage = FusionFlightStage.Done;
+                return;
+            }
+
             if (!MechFusionRelocationUtility.CanSourceUseFusionFlight(pawn))
             {
                 // 飞行资格在最后阶段发生变化：回到地面方案。

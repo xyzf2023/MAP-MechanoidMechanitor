@@ -589,9 +589,9 @@ namespace MAP_MechanoidMechanitor
                 if (caravan != null)
                 {
                     RemoveFromWorldPawns(source);
-                    Corpse corpse = EnsureCorpse(source);
+                    Corpse caravanCorpse = EnsureCorpse(source);
                     caravan.AddPawnOrItem(
-                        corpse,
+                        caravanCorpse,
                         addCarriedPawnToWorldPawnsIfAny: true);
                     return true;
                 }
