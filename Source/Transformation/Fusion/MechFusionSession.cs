@@ -432,7 +432,14 @@ namespace MAP_MechanoidMechanitor
             }
 
             EnsureLookups();
-            return factorLookup!.TryGetValue(stat, out value);
+            if (factorLookup!.TryGetValue(stat, out float storedValue))
+            {
+                value = storedValue;
+                return true;
+            }
+
+            value = 1f;
+            return false;
         }
 
         internal void AddWhitelistEntry(MechFusionWhitelistEntry entry)

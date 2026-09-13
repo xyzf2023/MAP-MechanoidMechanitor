@@ -87,7 +87,11 @@ namespace MAP_MechanoidMechanitor
             }
 
             session.TryGetStatOffset(StatDefOf.MoveSpeed, out float offset);
-            session.TryGetStatFactor(StatDefOf.MoveSpeed, out float factor);
+            float factor = session.TryGetStatFactor(
+                StatDefOf.MoveSpeed,
+                out float storedFactor)
+                    ? storedFactor
+                    : 1f;
             return Math.Max(0f, (baseSpeed + offset) * factor);
         }
 
