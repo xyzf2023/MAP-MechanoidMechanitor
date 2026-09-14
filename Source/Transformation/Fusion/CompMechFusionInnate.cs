@@ -11,9 +11,9 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 先天合体标记。合体只能是机械族的先天能力：该组件只负责在 Pawn 创建、
-    /// Spawn 与读档时向唯一的合体资格注册表登记，不提供任何后天授予入口，
-    /// 也不在 Hediff 或 PawnKindDef 上扫描资格。
+    /// 先天合体标记。该组件只负责在 Pawn 创建、Spawn 与读档时向唯一的
+    /// 合体资格注册表自动登记，不提供普通游戏中的后天授予入口，也不在
+    /// Hediff 或 PawnKindDef 上扫描资格。已登记记录由注册表持久保存。
     /// </summary>
     public sealed class CompMechFusionInnate : ThingComp
     {

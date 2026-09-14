@@ -6,9 +6,10 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 先天合体资格的唯一权威注册表。资格只能来自机械族 ThingDef 上的
-    /// CompMechFusionInnate 标记；PawnKindDef 与 Hediff 不再参与 Fusion 授予。
-    /// 形态与本次合体实例分别由 GameComponent_MechTransformationRegistry 和
+    /// 合体资格的唯一权威注册表。CompMechFusionInnate 负责为新 Pawn 自动登记，
+    /// 已登记记录（包括 DEV 授权）则作为持久化事实来源；PawnKindDef 与 Hediff
+    /// 不参与 Fusion 授予。形态与本次合体实例分别由
+    /// GameComponent_MechTransformationRegistry 和
     /// GameComponent_MechFusionSessionRegistry 管理，三者不混用。
     /// </summary>
     public sealed class GameComponent_MechFusionRegistry : GameComponent
@@ -173,9 +174,9 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 开发者模式临时注册入口：允许把任意有效、未死亡、未 Destroyed、
+        /// 开发者模式持久注册入口：允许把任意有效、未死亡、未 Destroyed、
         /// 未 Discarded 的机械族 Pawn 加入合体资格注册表，不要求其带
-        /// CompMechFusionInnate；重新读档执行正式资格校验时会按先天标记移除。
+        /// CompMechFusionInnate；记录会随存档保存并在读档后继续生效。
         /// </summary>
         public static bool TryRegisterFromDebug(Pawn? pawn)
         {
@@ -238,7 +239,7 @@ namespace MAP_MechanoidMechanitor
             cachedRegistryGame = Current.Game;
             cachedRegistry = this;
             RebuildIndexes();
-            ValidateAfterLoad();
+            RegisterEligiblePawnsInWorld();
         }
 
         private void EnsureIndexes()
@@ -272,32 +273,6 @@ namespace MAP_MechanoidMechanitor
 
                 recordByPawn[pawn] = record;
             }
-        }
-
-        /// <summary>
-        /// 读档后的统一校验：真实 ThingDef 已不含先天标记的 Pawn 一律移除资格；
-        /// 仍含标记但旧存档缺少记录的 Pawn 补登记。
-        /// </summary>
-        private void ValidateAfterLoad()
-        {
-            for (int i = eligibilityRecords.Count - 1; i >= 0; i--)
-            {
-                Pawn? pawn = eligibilityRecords[i]?.Pawn;
-                if (pawn == null
-                    || pawn.Destroyed
-                    || pawn.Discarded
-                    || !MechFusionEligibilityUtility.HasInnateFusionMarker(pawn))
-                {
-                    if (pawn != null)
-                    {
-                        recordByPawn?.Remove(pawn);
-                    }
-
-                    eligibilityRecords.RemoveAt(i);
-                }
-            }
-
-            RegisterEligiblePawnsInWorld();
         }
 
         private void RegisterEligiblePawnsInWorld()
