@@ -10,6 +10,7 @@ namespace MAP_MechanoidMechanitor
     /// 职责严格限制为：判断是否显示、缓存原版充电图标、绘制 24×24 按钮、打开个人阈值窗口。
     /// 不新增 Gizmo、不新增 Assign/Schedule 表列、不修改任何充电 AI。
     /// </summary>
+    [StaticConstructorOnStartup]
     internal static class MechanoidMechanitorRechargeInspectPaneUtility
     {
         // 与原版 Inspect Pane 顶部小按钮（遇敌反应等）完全一致的尺寸。
