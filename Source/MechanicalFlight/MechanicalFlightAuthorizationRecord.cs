@@ -1,11 +1,24 @@
+using System;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
+    [Flags]
+    public enum MechanicalFlightAuthorizationSource
+    {
+        None = 0,
+        Legacy = 1 << 0,
+        Direct = 1 << 1,
+        Innate = 1 << 2,
+        TemporaryFusion = 1 << 3,
+        Debug = 1 << 4
+    }
+
     public sealed class MechanicalFlightAuthorizationRecord : IExposable
     {
         private Pawn? pawn;
         private MechanicalFlightProfileDef? profile;
+        private MechanicalFlightAuthorizationSource authorizationSources;
         private MechanicalFlightPhase phase;
         private MechanicalFlightPurpose purpose;
         private int ticksUntilNextEnergyDrain;
@@ -22,6 +35,7 @@ namespace MAP_MechanoidMechanitor
 
         public Pawn? Pawn => pawn;
         public MechanicalFlightProfileDef? Profile => profile;
+        public MechanicalFlightAuthorizationSource AuthorizationSources => authorizationSources;
         public MechanicalFlightPhase Phase
         {
             get => phase;
@@ -77,10 +91,46 @@ namespace MAP_MechanoidMechanitor
         {
         }
 
-        public MechanicalFlightAuthorizationRecord(Pawn pawn, MechanicalFlightProfileDef profile)
+        public MechanicalFlightAuthorizationRecord(
+            Pawn pawn,
+            MechanicalFlightProfileDef profile,
+            MechanicalFlightAuthorizationSource authorizationSource)
         {
             this.pawn = pawn;
             this.profile = profile;
+            authorizationSources = authorizationSource;
+        }
+
+        internal bool HasAuthorizationSource(
+            MechanicalFlightAuthorizationSource source)
+        {
+            return source != MechanicalFlightAuthorizationSource.None
+                && (authorizationSources & source) == source;
+        }
+
+        internal bool AddAuthorizationSource(
+            MechanicalFlightAuthorizationSource source)
+        {
+            if (source == MechanicalFlightAuthorizationSource.None
+                || HasAuthorizationSource(source))
+            {
+                return false;
+            }
+
+            authorizationSources |= source;
+            return true;
+        }
+
+        internal bool RemoveAuthorizationSource(
+            MechanicalFlightAuthorizationSource source)
+        {
+            if (!HasAuthorizationSource(source))
+            {
+                return false;
+            }
+
+            authorizationSources &= ~source;
+            return true;
         }
 
         internal void SetProfile(MechanicalFlightProfileDef newProfile)
@@ -106,6 +156,10 @@ namespace MAP_MechanoidMechanitor
         {
             Scribe_References.Look(ref pawn, "pawn");
             Scribe_Defs.Look(ref profile, "profile");
+            Scribe_Values.Look(
+                ref authorizationSources,
+                "authorizationSources",
+                MechanicalFlightAuthorizationSource.Legacy);
             Scribe_Values.Look(ref phase, "phase", MechanicalFlightPhase.Grounded);
             Scribe_Values.Look(ref purpose, "purpose", MechanicalFlightPurpose.Normal);
             Scribe_Values.Look(ref ticksUntilNextEnergyDrain,

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RimWorld.Planet;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -58,6 +59,15 @@ namespace MAP_MechanoidMechanitor
                 && registry.FindRecord(pawn) != null;
         }
 
+        public static bool HasAuthorizationSource(
+            Pawn? pawn,
+            MechanicalFlightAuthorizationSource source)
+        {
+            return TryGetRecord(pawn, out MechanicalFlightAuthorizationRecord? record)
+                && record != null
+                && record.HasAuthorizationSource(source);
+        }
+
         public static bool TryGetRecord(
             Pawn? pawn,
             out MechanicalFlightAuthorizationRecord? record)
@@ -105,15 +115,81 @@ namespace MAP_MechanoidMechanitor
             return registry != null ? registry.activeRecords : EmptySnapshot;
         }
 
-        public static bool TryAuthorize(
+        public static bool EnsureInnateAuthorization(
             Pawn? pawn,
             MechanicalFlightProfileDef? profile = null)
         {
-            GameComponent_MechanicalFlightRegistry? registry = CurrentRegistry;
-            if (registry == null || pawn == null || pawn.Destroyed || pawn.Discarded
-                || registry.FindRecord(pawn) != null)
+            if (pawn == null
+                || pawn.Destroyed
+                || pawn.Discarded
+                || pawn.GetComp<CompMechanicalFlightInnate>() == null)
             {
                 return false;
+            }
+
+            GameComponent_MechanicalFlightRegistry? registry = CurrentRegistry;
+            if (registry == null)
+            {
+                return false;
+            }
+
+            profile ??= pawn.GetComp<CompMechanicalFlightInnate>()?.Props.profile;
+            profile ??= DefDatabase<MechanicalFlightProfileDef>.GetNamedSilentFail(
+                DefaultProfileDefName);
+            if (profile == null)
+            {
+                Log.Error("[MAP-机械族机械师] 无法登记先天飞行能力：飞行配置不存在。");
+                return false;
+            }
+
+            MechanicalFlightAuthorizationRecord? existing = registry.FindRecord(pawn);
+            if (existing != null)
+            {
+                existing.SetProfile(profile);
+                existing.AddAuthorizationSource(
+                    MechanicalFlightAuthorizationSource.Innate);
+                return true;
+            }
+
+            MechanicalFlightAuthorizationRecord created = new(
+                pawn,
+                profile,
+                MechanicalFlightAuthorizationSource.Innate);
+            registry.authorizationRecords.Add(created);
+            registry.recordByPawn[pawn] = created;
+            return true;
+        }
+
+        public static bool TryAuthorize(
+            Pawn? pawn,
+            MechanicalFlightProfileDef? profile = null,
+            MechanicalFlightAuthorizationSource source =
+                MechanicalFlightAuthorizationSource.Direct)
+        {
+            GameComponent_MechanicalFlightRegistry? registry = CurrentRegistry;
+            if (registry == null
+                || pawn == null
+                || pawn.Destroyed
+                || pawn.Discarded
+                || source == MechanicalFlightAuthorizationSource.None)
+            {
+                return false;
+            }
+
+            MechanicalFlightAuthorizationRecord? existing = registry.FindRecord(pawn);
+            if (existing != null)
+            {
+                if (!existing.AddAuthorizationSource(source))
+                {
+                    return false;
+                }
+
+                if (source == MechanicalFlightAuthorizationSource.Innate
+                    && profile != null)
+                {
+                    existing.SetProfile(profile);
+                }
+                return true;
             }
 
             profile ??= DefDatabase<MechanicalFlightProfileDef>.GetNamedSilentFail(
@@ -124,9 +200,44 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            MechanicalFlightAuthorizationRecord record = new(pawn, profile);
+            MechanicalFlightAuthorizationRecord record = new(pawn, profile, source);
             registry.authorizationRecords.Add(record);
             registry.recordByPawn[pawn] = record;
+            return true;
+        }
+
+        public static bool TryRemoveAuthorizationSource(
+            Pawn? pawn,
+            MechanicalFlightAuthorizationSource source)
+        {
+            GameComponent_MechanicalFlightRegistry? registry = CurrentRegistry;
+            if (registry == null
+                || pawn == null
+                || source == MechanicalFlightAuthorizationSource.None)
+            {
+                return false;
+            }
+
+            MechanicalFlightAuthorizationRecord? record = registry.FindRecord(pawn);
+            if (record == null || !record.HasAuthorizationSource(source))
+            {
+                return false;
+            }
+
+            MechanicalFlightAuthorizationSource remaining =
+                record.AuthorizationSources & ~source;
+            if (remaining != MechanicalFlightAuthorizationSource.None)
+            {
+                return record.RemoveAuthorizationSource(source);
+            }
+
+            if (record.IsRuntimeActive)
+            {
+                return false;
+            }
+
+            MechanicalFlightUtility.ClearRuntimeState(record, forceLand: false);
+            registry.RemoveRecord(record);
             return true;
         }
 
@@ -253,7 +364,73 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightPresentationUtility.ClearAllRuntimeState();
             MechanicalFlightStraightPathPatch.ClearAllMotion();
             RebuildCaches();
+            ReconcileInnateAuthorizationsAfterLoad();
             MechanicalFlightUtility.ReconcileAfterLoad(activeRecords);
+        }
+
+        private void ReconcileInnateAuthorizationsAfterLoad()
+        {
+            for (int i = authorizationRecords.Count - 1; i >= 0; i--)
+            {
+                MechanicalFlightAuthorizationRecord record = authorizationRecords[i];
+                Pawn? pawn = record.Pawn;
+                if (!record.HasAuthorizationSource(
+                        MechanicalFlightAuthorizationSource.Innate)
+                    || pawn?.GetComp<CompMechanicalFlightInnate>() != null)
+                {
+                    continue;
+                }
+
+                MechanicalFlightAuthorizationSource remaining =
+                    record.AuthorizationSources
+                    & ~MechanicalFlightAuthorizationSource.Innate;
+                if (remaining != MechanicalFlightAuthorizationSource.None)
+                {
+                    record.RemoveAuthorizationSource(
+                        MechanicalFlightAuthorizationSource.Innate);
+                    continue;
+                }
+
+                MechanicalFlightUtility.ClearRuntimeState(record, forceLand: true);
+                RemoveRecord(record);
+            }
+
+            RegisterInnatePawnsInWorld();
+        }
+
+        private static void RegisterInnatePawnsInWorld()
+        {
+            WorldPawns? worldPawns = Find.WorldPawns;
+            if (worldPawns != null)
+            {
+                List<Pawn> allWorldPawns = worldPawns.AllPawnsAliveOrDead;
+                for (int i = 0; i < allWorldPawns.Count; i++)
+                {
+                    Pawn pawn = allWorldPawns[i];
+                    CompMechanicalFlightInnate? comp =
+                        pawn.GetComp<CompMechanicalFlightInnate>();
+                    if (comp != null)
+                    {
+                        EnsureInnateAuthorization(pawn, comp.Props.profile);
+                    }
+                }
+            }
+
+            List<Map> maps = Find.Maps;
+            for (int i = 0; i < maps.Count; i++)
+            {
+                IReadOnlyList<Pawn> spawned = maps[i].mapPawns.AllPawnsSpawned;
+                for (int j = 0; j < spawned.Count; j++)
+                {
+                    Pawn pawn = spawned[j];
+                    CompMechanicalFlightInnate? comp =
+                        pawn.GetComp<CompMechanicalFlightInnate>();
+                    if (comp != null)
+                    {
+                        EnsureInnateAuthorization(pawn, comp.Props.profile);
+                    }
+                }
+            }
         }
 
         private void RemoveRecord(MechanicalFlightAuthorizationRecord record)

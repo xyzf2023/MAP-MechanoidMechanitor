@@ -182,7 +182,9 @@ namespace MAP_MechanoidMechanitor
 
         private static void TryAuthorizeFlight(Pawn pawn)
         {
-            if (GameComponent_MechanicalFlightRegistry.TryAuthorize(pawn))
+            if (GameComponent_MechanicalFlightRegistry.TryAuthorize(
+                    pawn,
+                    source: MechanicalFlightAuthorizationSource.Debug))
             {
                 Messages.Message(
                     "已加入飞行授权注册表：" + pawn.LabelShortCap + "。",

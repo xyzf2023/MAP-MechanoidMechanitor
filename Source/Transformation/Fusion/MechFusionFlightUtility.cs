@@ -39,7 +39,9 @@ namespace MAP_MechanoidMechanitor
 
             bool grantedByFusion = false;
             if (!GameComponent_MechanicalFlightRegistry.HasAuthorizationRecord(wearer)
-                && GameComponent_MechanicalFlightRegistry.TryAuthorize(wearer))
+                && GameComponent_MechanicalFlightRegistry.TryAuthorize(
+                    wearer,
+                    source: MechanicalFlightAuthorizationSource.TemporaryFusion))
             {
                 grantedByFusion = true;
             }
@@ -88,8 +90,26 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (!GameComponent_MechanicalFlightRegistry.TryRevokeAuthorization(wearer)
-                && GameComponent_MechanicalFlightRegistry.HasAuthorizationRecord(wearer))
+            bool revoked;
+            if (GameComponent_MechanicalFlightRegistry.HasAuthorizationSource(
+                    wearer,
+                    MechanicalFlightAuthorizationSource.TemporaryFusion))
+            {
+                revoked = GameComponent_MechanicalFlightRegistry
+                    .TryRemoveAuthorizationSource(
+                        wearer,
+                        MechanicalFlightAuthorizationSource.TemporaryFusion);
+            }
+            else
+            {
+                // 兼容旧存档：旧版合体临时记录没有来源字段，但会话能证明其归属。
+                revoked = GameComponent_MechanicalFlightRegistry
+                    .TryRevokeAuthorization(wearer);
+            }
+
+            if (!revoked
+                && GameComponent_MechanicalFlightRegistry
+                    .HasAuthorizationRecord(wearer))
             {
                 return false;
             }
@@ -157,7 +177,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (SourceGrantsFlight(source)
-                && GameComponent_MechanicalFlightRegistry.TryAuthorize(wearer))
+                && GameComponent_MechanicalFlightRegistry.TryAuthorize(
+                    wearer,
+                    source: MechanicalFlightAuthorizationSource.TemporaryFusion))
             {
                 session.SetTemporaryFlightState(true, true);
                 return;
