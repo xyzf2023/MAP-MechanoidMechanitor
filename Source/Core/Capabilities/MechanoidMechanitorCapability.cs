@@ -2,7 +2,6 @@ using System;
 
 namespace MAP_MechanoidMechanitor
 {
-    [Flags]
     public enum MechanoidMechanitorCapability
     {
         None = 0,
