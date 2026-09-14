@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -38,6 +39,12 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
+            if (pawn.CurJobDef
+                == MAPMechanitor_JobDefOf.MAP_ChariotConvertToBuilding)
+            {
+                yield break;
+            }
+
             Command_Action command = new Command_Action
             {
                 defaultLabel =
@@ -47,13 +54,15 @@ namespace MAP_MechanoidMechanitor
                 icon = ConvertIcon,
                 action = delegate
                 {
-                    if (!GameComponent_MechBuildingConversionQueue
-                            .TryQueueConversion(pawn, out string? failureReason))
+                    Job job = JobMaker.MakeJob(
+                        MAPMechanitor_JobDefOf.MAP_ChariotConvertToBuilding,
+                        pawn);
+                    if (pawn.jobs == null
+                        || !pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
                     {
                         Messages.Message(
-                            failureReason
-                                ?? "MAP_MechanoidMechanitor.Transformation.Building.Unavailable"
-                                    .Translate(),
+                            "MAP_MechanoidMechanitor.Transformation.Building.Unavailable"
+                                .Translate(),
                             pawn,
                             MessageTypeDefOf.RejectInput,
                             historical: false);

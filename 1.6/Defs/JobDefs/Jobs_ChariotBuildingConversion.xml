@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <JobDef>
+    <defName>MAP_ChariotConvertToBuilding</defName>
+    <label>转换为建筑形态</label>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_ChariotConvertToBuilding</driverClass>
+    <reportString>正在转换为建筑形态。</reportString>
+    <casualInterruptible>true</casualInterruptible>
+    <playerInterruptible>true</playerInterruptible>
+    <neverShowWeapon>true</neverShowWeapon>
+  </JobDef>
+</Defs>

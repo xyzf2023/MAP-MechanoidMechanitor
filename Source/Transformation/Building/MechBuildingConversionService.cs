@@ -1,6 +1,7 @@
 using System;
 using RimWorld;
 using RimWorld.Planet;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -260,6 +261,11 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
+                FleckMaker.ThrowDustPuffThick(
+                    building.DrawPos,
+                    map,
+                    2f,
+                    Color.white);
                 Messages.Message(
                     "MAP_MechanoidMechanitor.Transformation.Building.Converted"
                         .Translate(pawn.LabelShortCap),
@@ -327,6 +333,15 @@ namespace MAP_MechanoidMechanitor
             }
 
             carrier.Destroy(DestroyMode.Vanish);
+            if (restoredThing != null && restoredThing.Spawned)
+            {
+                FleckMaker.ThrowDustPuffThick(
+                    restoredThing.DrawPos,
+                    map,
+                    2f,
+                    Color.white);
+            }
+
             Messages.Message(
                 "MAP_MechanoidMechanitor.Transformation.Building.Restored"
                     .Translate(sourcePawn.LabelShortCap),
