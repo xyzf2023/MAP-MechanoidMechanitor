@@ -906,6 +906,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            List<Pawn> commandableFlyers = flyers.FindAll(pawn =>
+                MechanicalFlightUtility.CanIssueAerialMove(pawn, cell));
             bool occupied = cell.GetThingList(flyers[0].Map).Exists(thing =>
                 thing is Pawn || thing.def.category == ThingCategory.Item
                 || thing.HostileTo(flyers[0]));
@@ -917,30 +919,44 @@ namespace MAP_MechanoidMechanitor
             __result ??= new List<FloatMenuOption>();
             // 原版征召移动会先吸附到附近可站立格；无论是否混编，飞行单位都不能接受该目标。
             __result.RemoveAll(option => option.isGoto);
-            __result.Insert(0, new FloatMenuOption(
-                "MAP_MechanicalFlight_AerialMove".Translate(),
-                () =>
-                {
-                    Map? feedbackMap = null;
-                    for (int i = 0; i < flyers.Count; i++)
-                    {
-                        Pawn flyer = flyers[i];
-                        if (MechanicalFlightUtility.TryStartAerialMove(flyer, cell))
-                        {
-                            feedbackMap ??= flyer.Map;
-                        }
-                    }
-                    if (feedbackMap != null)
-                    {
-                        FleckMaker.Static(cell, feedbackMap, FleckDefOf.FeedbackGoto);
-                    }
-                },
-                MenuOptionPriority.High)
+            FloatMenuOption aerialMoveOption;
+            if (commandableFlyers.Count == 0)
             {
-                // 不标记为原版 Goto，避免多选时 Selector 绕过此回调并改走群体移动。
-                autoTakeable = allSelectedPawnsFlying && !occupied,
-                autoTakeablePriority = 10000f
-            });
+                aerialMoveOption = new FloatMenuOption(
+                    "MAP_MechanicalFlight_AerialMove".Translate()
+                        + ": "
+                        + "MAP_MechanicalFlight_OutsideCommandRange".Translate(),
+                    null,
+                    MenuOptionPriority.High);
+            }
+            else
+            {
+                aerialMoveOption = new FloatMenuOption(
+                    "MAP_MechanicalFlight_AerialMove".Translate(),
+                    () =>
+                    {
+                        Map? feedbackMap = null;
+                        for (int i = 0; i < commandableFlyers.Count; i++)
+                        {
+                            Pawn flyer = commandableFlyers[i];
+                            if (MechanicalFlightUtility.TryStartAerialMove(flyer, cell))
+                            {
+                                feedbackMap ??= flyer.Map;
+                            }
+                        }
+                        if (feedbackMap != null)
+                        {
+                            FleckMaker.Static(cell, feedbackMap, FleckDefOf.FeedbackGoto);
+                        }
+                    },
+                    MenuOptionPriority.High);
+            }
+
+            // 不标记为原版 Goto，避免多选时 Selector 绕过此回调并改走群体移动。
+            aerialMoveOption.autoTakeable =
+                commandableFlyers.Count > 0 && allSelectedPawnsFlying && !occupied;
+            aerialMoveOption.autoTakeablePriority = 10000f;
+            __result.Insert(0, aerialMoveOption);
 
             if (groundPawns != null && groundPawns.Count > 0)
             {
