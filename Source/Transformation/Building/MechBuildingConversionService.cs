@@ -15,6 +15,25 @@ namespace MAP_MechanoidMechanitor
         private const int RestoreSearchRadius = 8;
         private const float FractionEpsilon = 0.0001f;
 
+        internal static bool IsActiveBuildingSource(Pawn? pawn)
+        {
+            if (pawn == null
+                || !GameComponent_MechTransformationRegistry.TryGetRecord(
+                    pawn,
+                    out MechTransformationRecord? record)
+                || record == null
+                || record.CurrentForm != MechTransformationForm.Building)
+            {
+                return false;
+            }
+
+            Thing? carrier = record.ExternalCarrier;
+            CompMechFormCarrier? carrierComp =
+                carrier?.TryGetComp<CompMechFormCarrier>();
+            return carrierComp?.Committed == true
+                && ReferenceEquals(carrierComp.SourcePawn, pawn);
+        }
+
         public static bool CanConvert(Pawn? pawn, out string? failureReason)
         {
             failureReason = null;
@@ -220,6 +239,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 InitializeBuildingDurability(pawn, building, buildingComp);
+                buildingComp.CaptureSourceState(pawn);
 
                 if (!GameComponent_MechTransformationRegistry.TryBeginTransition(
                         pawn,
@@ -238,6 +258,7 @@ namespace MAP_MechanoidMechanitor
                     pawn,
                     PawnDiscardDecideMode.KeepForever);
                 pawnStored = true;
+                MechFusionSourceUtility.ApplyDormantGuard(pawn);
 
                 GenSpawn.Spawn(
                     building,
@@ -316,7 +337,11 @@ namespace MAP_MechanoidMechanitor
 
             CompMechFormCarrier carrierComp =
                 carrier.TryGetComp<CompMechFormCarrier>()!;
-            Pawn sourcePawn = carrierComp.SourcePawn!;
+            CompMechBuildingForm buildingComp =
+                carrier.TryGetComp<CompMechBuildingForm>()!;
+            Pawn sourcePawn =
+                carrierComp.SourcePawn ?? buildingComp.StoredSourcePawn!;
+            buildingComp.EnsureSourceStateForRecovery(sourcePawn);
             Map map = carrier.Map;
             IntVec3 position = carrier.Position;
             Rot4 rotation = carrier.Rotation;
@@ -324,6 +349,7 @@ namespace MAP_MechanoidMechanitor
             if (!TryRestorePawn(
                     sourcePawn,
                     carrier,
+                    buildingComp,
                     map,
                     position,
                     rotation,
@@ -339,6 +365,7 @@ namespace MAP_MechanoidMechanitor
                 carrier,
                 sourcePawn,
                 useDestructionSnapshot: false);
+            MechFusionSourceUtility.RemoveDormantGuard(sourcePawn);
             restoredThing = ResolveRestoredThing(sourcePawn, restoredThing);
             carrier.Destroy(DestroyMode.Vanish);
             if (restoredThing != null && restoredThing.Spawned)
@@ -375,9 +402,22 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            CompMechBuildingForm? buildingComp =
+                carrier.TryGetComp<CompMechBuildingForm>();
+            if (buildingComp == null)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 建筑载体销毁后缺少建筑形态状态组件，" +
+                    $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），" +
+                    $"carrier={carrier.ThingID}。");
+                return;
+            }
+
+            buildingComp.EnsureSourceStateForRecovery(sourcePawn);
             if (!TryRestorePawn(
                     sourcePawn,
                     carrier,
+                    buildingComp,
                     map,
                     position,
                     rotation,
@@ -397,6 +437,7 @@ namespace MAP_MechanoidMechanitor
                 carrier,
                 sourcePawn,
                 useDestructionSnapshot: true);
+            MechFusionSourceUtility.RemoveDormantGuard(sourcePawn);
             restoredThing = ResolveRestoredThing(sourcePawn, restoredThing);
             if (restoredThing != null && restoredThing.Spawned)
             {
@@ -490,6 +531,7 @@ namespace MAP_MechanoidMechanitor
         private static bool TryRestorePawn(
             Pawn sourcePawn,
             Thing carrier,
+            CompMechBuildingForm buildingState,
             Map map,
             IntVec3 position,
             Rot4 rotation,
@@ -538,6 +580,14 @@ namespace MAP_MechanoidMechanitor
             bool removedFromWorld = false;
             try
             {
+                if (!buildingState.RestoreSourceIdentity(sourcePawn))
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 建筑形态恢复前已还原源机械族派系，" +
+                        "但原监管控制组位置暂时无法精确恢复：" +
+                        $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}）。");
+                }
+
                 if (Find.WorldPawns.Contains(sourcePawn))
                 {
                     Find.WorldPawns.RemovePawn(sourcePawn);
@@ -569,6 +619,27 @@ namespace MAP_MechanoidMechanitor
                         map,
                         rotation,
                         WipeMode.VanishOrMoveAside);
+                }
+
+                // SpawnSetup 及第三方补丁可能再次处理派系、监管关系或 Needs；
+                // 生成后做第二次身份复核，再提交转换前保存的权威电量。
+                if (!buildingState.RestoreSourceIdentity(sourcePawn))
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 建筑形态恢复后已还原源机械族派系，" +
+                        "但原监管控制组位置暂时无法精确恢复：" +
+                        $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}）。");
+                }
+
+                if (!buildingState.TryWriteBackEnergy(sourcePawn))
+                {
+                    failureReason =
+                        "恢复机械族能源需求失败，已回滚本次建筑形态恢复。";
+                    RollBackRestore(sourcePawn, restoredThing, removedFromWorld);
+                    GameComponent_MechTransformationRegistry
+                        .TryCancelTransition(sourcePawn);
+                    restoredThing = null;
+                    return false;
                 }
 
                 if (!GameComponent_MechTransformationRegistry.TryCommitTransition(
@@ -686,6 +757,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
+            MechFusionSourceUtility.RemoveDormantGuard(pawn);
             GameComponent_MechTransformationRegistry.TryCancelTransition(pawn);
         }
 

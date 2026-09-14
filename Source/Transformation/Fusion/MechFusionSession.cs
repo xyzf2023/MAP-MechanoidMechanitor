@@ -20,6 +20,7 @@ namespace MAP_MechanoidMechanitor
         private ThingDef? sourceThingDef;
         private Faction? originalSourceFaction;
         private Pawn? originalOverseer;
+        private int originalControlGroupIndex = -1;
         private bool originalSourceStateCaptured;
         private MechFusionSessionState state;
         private MechFusionExitReason exitReason;
@@ -78,6 +79,8 @@ namespace MAP_MechanoidMechanitor
         public Faction? OriginalSourceFaction => originalSourceFaction;
 
         public Pawn? OriginalOverseer => originalOverseer;
+
+        public int OriginalControlGroupIndex => originalControlGroupIndex;
 
         public MechFusionSessionState State => state;
 
@@ -278,6 +281,10 @@ namespace MAP_MechanoidMechanitor
             originalSourceFaction = source.Faction;
             originalOverseer = source.GetOverseer()
                 ?? MAPOverseerRelationDirectionUtility.FindActualOverseer(source);
+            originalControlGroupIndex =
+                MechControlGroupPositionUtility.Capture(
+                    originalOverseer,
+                    source);
             originalSourceStateCaptured = true;
         }
 
@@ -297,6 +304,10 @@ namespace MAP_MechanoidMechanitor
             originalOverseer = sourcePawn?.GetOverseer()
                 ?? MAPOverseerRelationDirectionUtility.FindActualOverseer(
                     sourcePawn);
+            originalControlGroupIndex =
+                MechControlGroupPositionUtility.Capture(
+                    originalOverseer,
+                    sourcePawn);
             if (originalOverseer == null
                 && sourcePawn != null
                 && wearerPawn != null
@@ -306,6 +317,10 @@ namespace MAP_MechanoidMechanitor
                 // 旧版合体统一要求 wearer 就是监管者；若失控流程已删除关系，
                 // 仍可由会话两端引用恢复原方向。
                 originalOverseer = wearerPawn;
+                originalControlGroupIndex =
+                    MechControlGroupPositionUtility.Capture(
+                        originalOverseer,
+                        sourcePawn);
             }
 
             Faction? player = Faction.OfPlayerSilentFail;
@@ -539,6 +554,10 @@ namespace MAP_MechanoidMechanitor
                 ref originalSourceFaction,
                 "originalSourceFaction");
             Scribe_References.Look(ref originalOverseer, "originalOverseer");
+            Scribe_Values.Look(
+                ref originalControlGroupIndex,
+                "originalControlGroupIndex",
+                -1);
             Scribe_Values.Look(
                 ref originalSourceStateCaptured,
                 "originalSourceStateCaptured");

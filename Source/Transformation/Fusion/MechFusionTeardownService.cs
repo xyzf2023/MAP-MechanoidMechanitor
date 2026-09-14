@@ -690,20 +690,22 @@ namespace MAP_MechanoidMechanitor
                 || originalOverseer.Destroyed
                 || originalOverseer.Discarded
                 || originalOverseer.Dead
-                || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(source)
-                || MechFusionValidator.IsOverseerOf(source, originalOverseer))
+                || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(source))
             {
                 return;
             }
 
-            if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(
+            if (!MechControlGroupPositionUtility.TryRestore(
                     originalOverseer,
-                    source))
+                    source,
+                    session.OriginalControlGroupIndex))
             {
                 Log.Warning(
-                    "[MAP-机械族机械师] 已恢复合体源机械族阵营，但原监管关系暂时无法恢复：" +
+                    "[MAP-机械族机械师] 已恢复合体源机械族阵营和监管者，" +
+                    "但无法精确恢复原控制组位置：" +
                     $"source={source.LabelShort}（{source.ThingID}），" +
-                    $"overseer={originalOverseer.LabelShort}（{originalOverseer.ThingID}）。");
+                    $"overseer={originalOverseer.LabelShort}（{originalOverseer.ThingID}），" +
+                    $"groupIndex={session.OriginalControlGroupIndex}。");
             }
         }
 

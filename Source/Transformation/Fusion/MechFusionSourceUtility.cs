@@ -67,7 +67,8 @@ namespace MAP_MechanoidMechanitor
         public static bool Prefix(Need_MechEnergy __instance)
         {
             Pawn pawn = PawnField(__instance);
-            return !MechFusionSourceUtility.IsActiveMergedSource(pawn);
+            return !MechFusionSourceUtility.IsActiveMergedSource(pawn)
+                && !MechBuildingConversionService.IsActiveBuildingSource(pawn);
         }
     }
 }
