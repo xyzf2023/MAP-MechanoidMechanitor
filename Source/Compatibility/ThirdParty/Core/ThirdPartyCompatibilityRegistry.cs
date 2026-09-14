@@ -19,6 +19,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
         private static readonly IThirdPartyCompatibilityModule[] Modules =
         {
             new GlitterworldDestroyer5Compatibility(),
+            new GlitterworldDestroyer5CataphractCentipedeWeaponCompatibility(),
             new GlitterworldDestroyer5DryseaCompatibility(),
             new GlitterworldDestroyer5CerebrexTakeoverResearchCompatibility(),
             new GlitterworldDestroyer5PurgeDirectiveResearchCompatibility(),
