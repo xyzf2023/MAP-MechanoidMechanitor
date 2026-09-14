@@ -464,7 +464,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return IsWithinWeaponRange(actor, props, thing.Position)
+            return !thing.Fogged()
+                && IsWithinWeaponRange(actor, props, thing.Position)
                 && GenSight.LineOfSight(
                     actor.Position,
                     thing.Position,
@@ -479,6 +480,7 @@ namespace MAP_MechanoidMechanitor
             return cell.IsValid
                 && actor.Map != null
                 && cell.InBounds(actor.Map)
+                && !cell.Fogged(actor.Map)
                 && IsWithinWeaponRange(actor, props, cell)
                 && GenSight.LineOfSight(actor.Position, cell, actor.Map);
         }

@@ -13,6 +13,7 @@ namespace MAP_MechanoidMechanitor
         private int energyTickAccumulator;
         private int damageTickAccumulator;
         private bool firingStarted;
+        private Pawn? laserSourcePawn;
         private List<int>? ignitionAttemptedThingIds;
 
         private MoteDualAttached? beamMote;
@@ -86,6 +87,7 @@ namespace MAP_MechanoidMechanitor
             firing.initAction = delegate
             {
                 firingStarted = true;
+                laserSourcePawn = LaserComp?.parent as Pawn;
                 FaceBeamTarget();
             };
             firing.tickAction = TickFiring;
@@ -194,13 +196,19 @@ namespace MAP_MechanoidMechanitor
             beamSustainer = null;
             beamMote = null;
 
-            if (firingStarted
-                && ChariotLaserContextUtility.TryGetSourceComp(
-                    pawn,
-                    out CompChariotLaserSystem? comp))
+            if (!firingStarted)
             {
-                comp?.StartCooldown();
+                return;
             }
+
+            CompChariotLaserSystem? comp =
+                laserSourcePawn?.GetComp<CompChariotLaserSystem>();
+            if (comp == null)
+            {
+                ChariotLaserContextUtility.TryGetSourceComp(pawn, out comp);
+            }
+
+            comp?.StartCooldown();
         }
 
         protected void TryIgniteOnce(
@@ -290,6 +298,7 @@ namespace MAP_MechanoidMechanitor
                 ref damageTickAccumulator,
                 "damageTickAccumulator");
             Scribe_Values.Look(ref firingStarted, "firingStarted");
+            Scribe_References.Look(ref laserSourcePawn, "laserSourcePawn");
             Scribe_Collections.Look(
                 ref ignitionAttemptedThingIds,
                 "ignitionAttemptedThingIds",
