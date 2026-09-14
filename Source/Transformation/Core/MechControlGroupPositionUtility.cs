@@ -76,7 +76,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             tracker.UnassignPawnFromAnyControlGroup(subject);
-            tracker.AssignPawnControlGroup(subject, desired);
+            tracker.AssignPawnControlGroup(subject, desired.WorkMode);
             tracker.Notify_BandwidthChanged();
             if (ReferenceEquals(tracker.GetControlGroup(subject), desired))
             {
@@ -88,7 +88,7 @@ namespace MAP_MechanoidMechanitor
             tracker.UnassignPawnFromAnyControlGroup(subject);
             if (current != null && groups.Contains(current))
             {
-                tracker.AssignPawnControlGroup(subject, current);
+                tracker.AssignPawnControlGroup(subject, current.WorkMode);
             }
             else
             {
