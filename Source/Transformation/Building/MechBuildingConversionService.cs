@@ -502,9 +502,14 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
+                int settlementSeed =
+                    MechPartDurabilityUtility.CreateSettlementSeed(
+                        sourcePawn,
+                        carrier.thingIDNumber);
                 MechPartDurabilityUtility.SettleCurrentPartDurability(
                     sourcePawn,
-                    settlementRatio);
+                    settlementRatio,
+                    settlementSeed);
             }
             catch (Exception ex)
             {
