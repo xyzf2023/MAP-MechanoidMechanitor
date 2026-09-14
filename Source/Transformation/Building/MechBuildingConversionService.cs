@@ -8,11 +8,12 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 建筑转换的唯一写入入口。具体机械体只提供“能力标记”和“建筑 Def 配置”，
-    /// 不再各自实现 Pawn 收存、恢复与回滚。
+    /// 不再各自实现 Pawn 收存、恢复、耐久换算与回滚。
     /// </summary>
     public static class MechBuildingConversionService
     {
         private const int RestoreSearchRadius = 8;
+        private const float FractionEpsilon = 0.0001f;
 
         public static bool CanConvert(Pawn? pawn, out string? failureReason)
         {
@@ -218,6 +219,8 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
+                InitializeBuildingDurability(pawn, building, buildingComp);
+
                 if (!GameComponent_MechTransformationRegistry.TryBeginTransition(
                         pawn,
                         MechTransformationForm.Building,
@@ -332,6 +335,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            SettleBuildingDurability(
+                carrier,
+                sourcePawn,
+                useDestructionSnapshot: false);
+            restoredThing = ResolveRestoredThing(sourcePawn, restoredThing);
             carrier.Destroy(DestroyMode.Vanish);
             if (restoredThing != null && restoredThing.Spawned)
             {
@@ -385,12 +393,98 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            SettleBuildingDurability(
+                carrier,
+                sourcePawn,
+                useDestructionSnapshot: true);
+            restoredThing = ResolveRestoredThing(sourcePawn, restoredThing);
+            if (restoredThing != null && restoredThing.Spawned)
+            {
+                FleckMaker.ThrowDustPuffThick(
+                    restoredThing.DrawPos,
+                    map,
+                    2f,
+                    Color.white);
+            }
+
             Messages.Message(
                 "MAP_MechanoidMechanitor.Transformation.Building.EmergencyRestored"
                     .Translate(sourcePawn.LabelShortCap),
                 restoredThing ?? sourcePawn,
                 MessageTypeDefOf.NegativeEvent,
                 historical: false);
+        }
+
+        private static void InitializeBuildingDurability(
+            Pawn pawn,
+            Thing building,
+            CompMechBuildingForm buildingComp)
+        {
+            float pawnIntegrity =
+                MechPartDurabilityUtility.GetStructuralIntegrity(pawn);
+            int maximum = Math.Max(1, building.MaxHitPoints);
+            building.HitPoints = Mathf.Clamp(
+                Mathf.RoundToInt(maximum * pawnIntegrity),
+                1,
+                maximum);
+            buildingComp.CaptureInitialHealthFraction(
+                (float)building.HitPoints / maximum);
+        }
+
+        private static void SettleBuildingDurability(
+            Thing carrier,
+            Pawn sourcePawn,
+            bool useDestructionSnapshot)
+        {
+            CompMechBuildingForm? buildingComp =
+                carrier.TryGetComp<CompMechBuildingForm>();
+            if (buildingComp == null
+                || !buildingComp.TryGetDurabilityFractions(
+                    useDestructionSnapshot,
+                    out float initialFraction,
+                    out float currentFraction))
+            {
+                // 旧存档中的建筑没有转换时基线；不能凭空把既有建筑损伤
+                // 追溯成 Pawn 伤势，因此安全地跳过一次结算。
+                Log.Warning(
+                    "[MAP-机械族机械师] 建筑形态缺少初始耐久基线，" +
+                    "本次恢复不追加部位伤势：" +
+                    $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），" +
+                    $"carrier={carrier.ThingID}。");
+                return;
+            }
+
+            float cappedCurrent = Mathf.Min(currentFraction, initialFraction);
+            float settlementRatio = initialFraction > FractionEpsilon
+                ? Mathf.Clamp01(cappedCurrent / initialFraction)
+                : 0f;
+
+            try
+            {
+                MechPartDurabilityUtility.SettleCurrentPartDurability(
+                    sourcePawn,
+                    settlementRatio);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 建筑耐久无法安全映射回机械族伤势：" +
+                    $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），" +
+                    $"carrier={carrier.ThingID}：{ex}");
+            }
+        }
+
+        private static Thing? ResolveRestoredThing(
+            Pawn sourcePawn,
+            Thing? restoredThing)
+        {
+            Corpse? corpse = sourcePawn.Corpse;
+            if (corpse != null && !corpse.Destroyed)
+            {
+                return corpse;
+            }
+
+            return !sourcePawn.Destroyed ? sourcePawn : restoredThing;
         }
 
         private static bool TryRestorePawn(

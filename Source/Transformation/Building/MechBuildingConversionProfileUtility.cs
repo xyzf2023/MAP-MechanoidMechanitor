@@ -37,7 +37,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (buildingDef.category != ThingCategory.Building)
+            if (buildingDef.category != ThingCategory.Building
+                || !buildingDef.useHitPoints)
             {
                 failureReason =
                     "MAP_MechanoidMechanitor.Transformation.Building.InvalidDef".Translate();

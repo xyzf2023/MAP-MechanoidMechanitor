@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -14,7 +15,7 @@ namespace MAP_MechanoidMechanitor
 
     /// <summary>
     /// 建筑形态专用交互层。身份引用仍由通用 CompMechFormCarrier 保存。
-    /// 建筑恢复机械体时由本 Comp 维护 180 ticks 读条，完成后仍通过安全队列执行实体替换。
+    /// 同时保存进入建筑形态时的实际耐久比例，供恢复机械体时只结算建筑阶段新增损伤。
     /// </summary>
     public sealed class CompMechBuildingForm : ThingComp
     {
@@ -26,6 +27,29 @@ namespace MAP_MechanoidMechanitor
         private bool restoreQueued;
         private int remainingRestoreTicks;
         private Effecter? progressBarEffecter;
+        private bool hasInitialHealthFraction;
+        private float initialHealthFraction = 1f;
+        private bool hasDestructionHealthSnapshot;
+        private float destructionHealthFraction = 1f;
+
+        internal void CaptureInitialHealthFraction(float fraction)
+        {
+            initialHealthFraction = Mathf.Clamp01(fraction);
+            hasInitialHealthFraction = true;
+        }
+
+        internal bool TryGetDurabilityFractions(
+            bool useDestructionSnapshot,
+            out float initialFraction,
+            out float currentFraction)
+        {
+            initialFraction = Mathf.Clamp01(initialHealthFraction);
+            currentFraction = useDestructionSnapshot
+                && hasDestructionHealthSnapshot
+                    ? Mathf.Clamp01(destructionHealthFraction)
+                    : GetCurrentHealthFraction();
+            return hasInitialHealthFraction;
+        }
 
         public override void PostExposeData()
         {
@@ -38,11 +62,22 @@ namespace MAP_MechanoidMechanitor
                 ref remainingRestoreTicks,
                 "remainingRestoreTicks",
                 defaultValue: 0);
+            Scribe_Values.Look(
+                ref hasInitialHealthFraction,
+                "hasInitialHealthFraction",
+                defaultValue: false);
+            Scribe_Values.Look(
+                ref initialHealthFraction,
+                "initialHealthFraction",
+                defaultValue: 1f);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 restoreQueued = false;
                 progressBarEffecter = null;
+                hasDestructionHealthSnapshot = false;
+                destructionHealthFraction = 1f;
+                initialHealthFraction = Mathf.Clamp01(initialHealthFraction);
                 if (!restoreInProgress)
                 {
                     remainingRestoreTicks = 0;
@@ -152,6 +187,8 @@ namespace MAP_MechanoidMechanitor
 
         public override void PostDestroy(DestroyMode mode, Map previousMap)
         {
+            destructionHealthFraction = GetCurrentHealthFraction();
+            hasDestructionHealthSnapshot = true;
             CancelRestoreWarmup();
             base.PostDestroy(mode, previousMap);
             if (previousMap == null)
@@ -174,6 +211,17 @@ namespace MAP_MechanoidMechanitor
                 previousMap,
                 lastMapPosition.IsValid ? lastMapPosition : parent.Position,
                 lastMapRotation);
+        }
+
+        private float GetCurrentHealthFraction()
+        {
+            if (!parent.def.useHitPoints || parent.MaxHitPoints <= 0)
+            {
+                return 1f;
+            }
+
+            return Mathf.Clamp01(
+                (float)parent.HitPoints / parent.MaxHitPoints);
         }
 
         private void BeginRestoreWarmup()
