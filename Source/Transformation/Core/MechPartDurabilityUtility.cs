@@ -13,7 +13,6 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     internal static class MechPartDurabilityUtility
     {
-        private const float LossEpsilon = 0.001f;
         private const float DamagePacketFraction = 0.1f;
         private const float MinimumWeight = 0.0001f;
         private const float InnerPartWeightFactor = 0.35f;
@@ -230,6 +229,7 @@ namespace MAP_MechanoidMechanitor
                 if (wouldDestroyPart)
                 {
                     float subtreeCost = GetSubtreeStructuralHitPoints(
+                        source,
                         candidate.Part,
                         hediffSet);
                     if (subtreeCost > remainingLoss)
@@ -417,28 +417,36 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < parts.Count; i++)
             {
                 BodyPartRecord part = parts[i];
-                if (hediffSet.PartIsMissing(part)
-                    || part.def.GetMaxHealth(pawn) <= 0f)
+                float maximum = part.def.GetMaxHealth(pawn);
+                if (hediffSet.PartIsMissing(part) || maximum <= 0f)
                 {
                     continue;
                 }
 
-                total += Mathf.Max(0f, hediffSet.GetPartHealth(part));
+                total += Mathf.Clamp(
+                    hediffSet.GetPartHealth(part),
+                    0f,
+                    maximum);
             }
 
             return total;
         }
 
         private static float GetSubtreeStructuralHitPoints(
+            Pawn pawn,
             BodyPartRecord root,
             HediffSet hediffSet)
         {
             float total = 0f;
             foreach (BodyPartRecord part in root.GetPartAndAllChildParts())
             {
-                if (!hediffSet.PartIsMissing(part))
+                float maximum = part.def.GetMaxHealth(pawn);
+                if (!hediffSet.PartIsMissing(part) && maximum > 0f)
                 {
-                    total += Mathf.Max(0f, hediffSet.GetPartHealth(part));
+                    total += Mathf.Clamp(
+                        hediffSet.GetPartHealth(part),
+                        0f,
+                        maximum);
                 }
             }
 
