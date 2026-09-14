@@ -180,7 +180,7 @@ namespace MAP_MechanoidMechanitor
             int iterationLimit = Math.Max(32, partCount * 8);
             HashSet<BodyPartRecord> blockedParts =
                 new HashSet<BodyPartRecord>();
-            Random random = new Random(settlementSeed & int.MaxValue);
+            System.Random random = new System.Random(settlementSeed & int.MaxValue);
             BodyPartRecord? lastPart = null;
 
             for (int iteration = 0;
@@ -376,7 +376,7 @@ namespace MAP_MechanoidMechanitor
 
         private static DamageCandidate SelectCandidate(
             List<DamageCandidate> candidates,
-            Random random)
+            System.Random random)
         {
             double totalWeight = 0d;
             for (int i = 0; i < candidates.Count; i++)
