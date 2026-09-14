@@ -84,9 +84,9 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 解除合体时对源机械族所有仍存在部位施加精确耐久损失：
-        /// TargetHP = floor(CurrentPartHP × R)，R = 当前稳定值 / 最大稳定值。
-        /// 安全容器检查、结算顺序和死亡处理与建筑形态共用同一实现。
+        /// 解除合体时按剩余稳定值比例计算源机械族的结构总损失，再由通用
+        /// 部位耐久工具把损失分配为受控的局部伤势。安全容器检查、
+        /// 结算顺序和死亡处理与建筑形态共用同一实现。
         /// </summary>
         internal static void SettleSourcePartDurability(
             MechFusionSession session,
@@ -100,9 +100,14 @@ namespace MAP_MechanoidMechanitor
             float ratio = session.MaxStability > 0f
                 ? Mathf.Clamp01(session.CurrentStability / session.MaxStability)
                 : 0f;
+            int settlementSeed =
+                MechPartDurabilityUtility.CreateSettlementSeed(
+                    source,
+                    session.SessionId);
             MechPartDurabilityUtility.SettleCurrentPartDurability(
                 source,
-                ratio);
+                ratio,
+                settlementSeed);
         }
     }
 }
