@@ -140,6 +140,15 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 合体快速转移的隐藏换位帧只允许逻辑 Position 改变，
+            // 不得在新 landingCell 提前留下迷雾揭示、地面气流或悬浮光照。
+            if (record.Purpose == MechanicalFlightPurpose.FusionRelocation
+                && MechanicalFlightVisualSmoothing.IsFusionHidden(pawn))
+            {
+                CleanupGlow(pawn);
+                return;
+            }
+
             if (pawn.Faction == Faction.OfPlayer)
             {
                 TryRevealFlightFog(pawn);
