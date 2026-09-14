@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="LightMechanoid">
+    <defName>MAP_Mech_Chariot</defName>
+    <label>战车</label>
+    <description>能够作为独立哨兵行动，并可转换为装甲或驻定形态的智能机械体。掌部搭载可持续扫射的高能光束。</description>
+
+    <statBases>
+      <MarketValue>4500</MarketValue>
+      <MoveSpeed>4.2</MoveSpeed>
+      <ArmorRating_Blunt>1.20</ArmorRating_Blunt>
+      <ArmorRating_Sharp>1.20</ArmorRating_Sharp>
+      <ArmorRating_Heat>2.0</ArmorRating_Heat>
+
+      <!-- LightMechanoid 的体型系数为 0.7；428.6 × 0.7 ≈ 300 kg。 -->
+      <CarryingCapacity>428.6</CarryingCapacity>
+
+      <BandwidthCost>2</BandwidthCost>
+      <MechEnergyLossPerHP>0.40</MechEnergyLossPerHP>
+    </statBases>
+
+    <race>
+      <baseHealthScale>3</baseHealthScale>
+
+
+      <lifeStageAges Inherit="False">
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>0</minAge>
+          <soundWounded>Pawn_Mech_Militor_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Militor_Death</soundDeath>
+          <soundCall>Pawn_Mech_Militor_Call</soundCall>
+        </li>
+        <li MayRequire="Ludeon.RimWorld.Biotech">
+          <def>MechanoidFullyFormed</def>
+          <minAge>100</minAge>
+          <soundWounded>Pawn_Mech_Militor_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Militor_Death</soundDeath>
+          <soundCall>Pawn_Mech_Militor_Call</soundCall>
+        </li>
+      </lifeStageAges>
+    </race>
+
+    <modExtensions>
+      <!-- 提供建筑转换能力。 -->
+      <li Class="MAP_MechanoidMechanitor.DefModExtension_MechCapabilityProvider">
+        <capabilities>
+          <li>BuildingConversion</li>
+        </capabilities>
+      </li>
+
+      <!-- 指定战车对应的建筑形态。 -->
+      <li Class="MAP_MechanoidMechanitor.DefModExtension_MechBuildingConversion">
+        <buildingFormDef>MAP_Building_Chariot</buildingFormDef>
+        <placementSearchRadius>8</placementSearchRadius>
+      </li>
+    </modExtensions>
+
+    <comps>
+      <!-- 战车天生拥有合体资格。 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechFusionInnate" />
+    </comps>
+  </ThingDef>
+
+  <PawnKindDef ParentName="LightMechanoidKind">
+    <defName>MAP_PawnKind_Chariot</defName>
+    <label>战车</label>
+    <race>MAP_Mech_Chariot</race>
+    <defaultFactionDef>PlayerColony</defaultFactionDef>
+
+    <combatPower>200</combatPower>
+    <weaponMoney>9999~9999</weaponMoney>
+
+    <allowInMechClusters>false</allowInMechClusters>
+    <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
+
+    <lifeStages>
+      <li>
+        <bodyGraphicData>
+          <texPath>Chariot/Chariot</texPath>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>2.35</drawSize>
+          <shadowData>
+            <volume>(0.35,0.45,0.35)</volume>
+            <offset>(0,0,-0.2)</offset>
+          </shadowData>
+        </bodyGraphicData>
+      </li>
+      <li>
+        <bodyGraphicData>
+          <texPath>Chariot/Chariot</texPath>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>2.35</drawSize>
+          <shadowData>
+            <volume>(0.35,0.45,0.35)</volume>
+            <offset>(0,0,-0.2)</offset>
+          </shadowData>
+        </bodyGraphicData>
+      </li>
+    </lifeStages>
+
+  </PawnKindDef>
+</Defs>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="BuildingBase">
+    <defName>MAP_Building_Chariot</defName>
+    <label>战车(展开）</label>
+    <description>战车展开并固定自身后的驻定形态。</description>
+
+    <thingClass>Verse.Building</thingClass>
+    <category>Building</category>
+    <altitudeLayer>Building</altitudeLayer>
+
+    <passability>Standable</passability>
+    <pathCost>0</pathCost>
+    <fillPercent>0.5</fillPercent>
+
+    <size>(1,1)</size>
+    <rotatable>true</rotatable>
+    <selectable>true</selectable>
+    <useHitPoints>true</useHitPoints>
+
+    <graphicData>
+      <texPath>Chariot/ChariotBuilding</texPath>
+      <graphicClass>Graphic_Multi</graphicClass>
+      <drawSize>(2,2)</drawSize>
+    </graphicData>
+
+    <statBases>
+      <MaxHitPoints>500</MaxHitPoints>
+      <Flammability>0.05</Flammability>
+    </statBases>
+
+    <comps>
+      <!-- 通用形态载体：保存原机械体引用与形态状态。 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechFormCarrier" />
+
+      <!-- 通用建筑形态交互：负责恢复 Pawn 与异常销毁后的紧急恢复。 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingForm" />
+    </comps>
+  </ThingDef>
+</Defs>
