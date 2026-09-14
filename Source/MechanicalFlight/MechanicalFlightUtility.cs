@@ -151,9 +151,29 @@ namespace MAP_MechanoidMechanitor
             return command;
         }
 
+        internal static bool CanIssueAerialMove(Pawn? pawn, IntVec3 cell)
+        {
+            if (pawn?.Spawned != true
+                || pawn.Map == null
+                || pawn.Faction != Faction.OfPlayer
+                || !pawn.Drafted
+                || !IsActivelyFlying(pawn)
+                || !cell.InBounds(pawn.Map))
+            {
+                return false;
+            }
+
+            // 飞行移动跳过地面可达性，但殖民地机械族仍必须遵守原版命令范围。
+            // 统一调用原版入口，使量子通讯器、代理子链、数据处理分配及
+            // 无监管者节点等现有范围豁免继续由 CommandRangePatches 处理。
+            return !pawn.IsColonyMech
+                || MechanitorUtility.InMechanitorCommandRange(pawn, cell);
+        }
+
         public static bool TryStartAerialMove(Pawn? pawn, IntVec3 cell)
         {
-            if (pawn?.Map == null || !IsActivelyFlying(pawn) || !cell.InBounds(pawn.Map))
+            // 执行层再次校验，防止菜单生成后状态变化或其它调用入口绕过范围限制。
+            if (!CanIssueAerialMove(pawn, cell))
             {
                 return false;
             }
@@ -162,7 +182,7 @@ namespace MAP_MechanoidMechanitor
             job.locomotionUrgency = LocomotionUrgency.Sprint;
             job.expiryInterval = -1;
             job.flying = true;
-            return pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+            return pawn!.jobs.TryTakeOrderedJob(job, JobTag.Misc);
         }
 
         public static bool TryBeginTakeoff(Pawn? pawn)

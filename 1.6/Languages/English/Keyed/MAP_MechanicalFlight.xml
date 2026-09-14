@@ -30,4 +30,5 @@
   <MAP_MechanicalFlight_CaravanInspect>Destination: {0}\nMembers: {1}</MAP_MechanicalFlight_CaravanInspect>
   <MAP_MechanicalFlight_CaravanArrived>The mechanical-flight caravan has arrived.</MAP_MechanicalFlight_CaravanArrived>
   <MAP_MechanicalFlight_CaravanLaunchFailed>Mechanical flight failed to start. Caravan contents were restored where possible.</MAP_MechanicalFlight_CaravanLaunchFailed>
+  <MAP_MechanicalFlight_OutsideCommandRange>Outside mechanitor command range</MAP_MechanicalFlight_OutsideCommandRange>
 </LanguageData>

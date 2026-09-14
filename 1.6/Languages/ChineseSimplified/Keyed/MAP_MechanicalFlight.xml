@@ -30,4 +30,5 @@
   <MAP_MechanicalFlight_CaravanInspect>目的地：{0}\n成员：{1}</MAP_MechanicalFlight_CaravanInspect>
   <MAP_MechanicalFlight_CaravanArrived>机械飞行远行队已抵达目的地。</MAP_MechanicalFlight_CaravanArrived>
   <MAP_MechanicalFlight_CaravanLaunchFailed>机械飞行启动失败，远行队内容已尝试恢复。</MAP_MechanicalFlight_CaravanLaunchFailed>
+  <MAP_MechanicalFlight_OutsideCommandRange>超出机械族机械师指挥范围</MAP_MechanicalFlight_OutsideCommandRange>
 </LanguageData>
