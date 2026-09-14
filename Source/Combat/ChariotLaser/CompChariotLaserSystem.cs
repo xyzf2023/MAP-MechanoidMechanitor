@@ -189,6 +189,7 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    [StaticConstructorOnStartup]
     internal static class ChariotLaserCommandUtility
     {
         private static readonly Texture2D LaserIcon =

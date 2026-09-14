@@ -22,6 +22,7 @@ namespace MAP_MechanoidMechanitor
     /// 战车专用建筑转换组件。组件本身是资格与建筑配置的唯一事实来源，
     /// 并直接提供转换按钮，不经过科研能力同步器或 Pawn_AbilityTracker。
     /// </summary>
+    [StaticConstructorOnStartup]
     public sealed class CompChariotBuildingConversion : ThingComp
     {
         private static readonly Texture2D ConvertIcon =

@@ -8,31 +8,21 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
+    [StaticConstructorOnStartup]
     public static class MechanoidMechanitorMechHiveCommunicationUtility
     {
         private const string MechanoidFactionIconPath =
             "World/WorldObjects/Expanding/Mechanoids";
 
-        private static Texture2D? cachedContactOvermindIcon;
+        private static readonly Texture2D cachedContactOvermindIcon =
+            ContentFinder<Texture2D>.Get(MechanoidFactionIconPath);
 
         private static Color? cachedContactOvermindIconColor;
 
         public static string ContactOvermindLabel =>
             "MAP_MechanoidMechanitor.PurgeDirective.Communication.ContactOvermind".Translate();
 
-        public static Texture2D ContactOvermindIcon
-        {
-            get
-            {
-                if (cachedContactOvermindIcon == null)
-                {
-                    cachedContactOvermindIcon =
-                        ContentFinder<Texture2D>.Get(MechanoidFactionIconPath);
-                }
-
-                return cachedContactOvermindIcon;
-            }
-        }
+        public static Texture2D ContactOvermindIcon => cachedContactOvermindIcon;
 
         public static Color ContactOvermindIconColor
         {

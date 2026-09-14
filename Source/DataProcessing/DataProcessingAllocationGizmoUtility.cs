@@ -7,6 +7,7 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     ///     数据处理分配 Gizmo 的显示判断与命令创建逻辑集中处，供机械族与人类机械师两套补丁共用。
     /// </summary>
+    [StaticConstructorOnStartup]
     public static class DataProcessingAllocationGizmoUtility
     {
         private static readonly Texture2D DataProcessingAllocationIcon =

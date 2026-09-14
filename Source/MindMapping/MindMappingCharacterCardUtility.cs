@@ -23,6 +23,7 @@ namespace MAP_MechanoidMechanitor
     /// - ITab_MindMappingDetails 负责取数据、IsVisible、UpdateSize、FillTab
     ///   并持有左栏滚动位置（以 ref 传入）。
     /// </summary>
+    [StaticConstructorOnStartup]
     public static class MindMappingCharacterCardUtility
     {
         // —— 与原版角色卡一致的常量 ——

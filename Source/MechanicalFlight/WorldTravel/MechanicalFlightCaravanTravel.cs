@@ -844,6 +844,7 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    [StaticConstructorOnStartup]
     public static class MechanicalFlightCaravanUtility
     {
         private static readonly Texture2D FlightIcon =

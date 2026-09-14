@@ -5,13 +5,11 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
+    [StaticConstructorOnStartup]
     public sealed class HediffComp_PortableComms : HediffComp
     {
-        private static Texture2D? cachedIcon;
-
-        private static Texture2D Icon =>
-            cachedIcon ??=
-                ContentFinder<Texture2D>.Get("UI/Commands/LaunchReport");
+        private static readonly Texture2D Icon =
+            ContentFinder<Texture2D>.Get("UI/Commands/LaunchReport");
 
         public override IEnumerable<Gizmo> CompGetGizmos()
         {

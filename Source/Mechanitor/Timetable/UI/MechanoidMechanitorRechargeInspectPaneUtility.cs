@@ -26,34 +26,13 @@ namespace MAP_MechanoidMechanitor
         private const string LogPrefix =
             "[MAP-机械族机械师] MechanoidMechanitorRechargeInspectPaneUtility：";
 
-        private static Texture2D? cachedIcon;
-        private static bool iconResolved;
+        private static readonly Texture2D? cachedIcon =
+            ContentFinder<Texture2D>.Get(RechargeIconPath, reportFailure: false);
 
         /// <summary>
-        /// 原版图标缓存。解析失败只记录一次，避免每帧刷日志。
+        /// 原版图标缓存。启动阶段已解析一次；若缺失则为 null，绘制时最多记录一次。
         /// </summary>
-        private static Texture2D? Icon
-        {
-            get
-            {
-                if (!iconResolved)
-                {
-                    iconResolved = true;
-                    cachedIcon = ContentFinder<Texture2D>.Get(
-                        RechargeIconPath,
-                        reportFailure: false);
-                    if (cachedIcon == null)
-                    {
-                        Log.ErrorOnce(
-                            $"{LogPrefix}未找到原版图标 {RechargeIconPath}，" +
-                            "个人充电阈值按钮不会显示。",
-                            ErrorKeyMissingIcon);
-                    }
-                }
-
-                return cachedIcon;
-            }
-        }
+        private static Texture2D? Icon => cachedIcon;
 
         /// <summary>
         /// 按钮显示条件。身份判断以注册表权威身份为准，
@@ -90,6 +69,10 @@ namespace MAP_MechanoidMechanitor
             Texture2D? icon = Icon;
             if (icon == null)
             {
+                Log.ErrorOnce(
+                    $"{LogPrefix}未找到原版图标 {RechargeIconPath}，" +
+                    "个人充电阈值按钮不会显示。",
+                    ErrorKeyMissingIcon);
                 return x;
             }
 

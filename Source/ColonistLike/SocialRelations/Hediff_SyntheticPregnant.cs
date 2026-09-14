@@ -11,12 +11,14 @@ namespace MAP_MechanoidMechanitor
     /// 仿生孕期。所有胎儿来源在受孕时快照，不依赖生产时的当前配偶。
     /// 达到 100% 后不再自动生产，改由玩家通过「开始分娩」指令主动触发产程。
     /// </summary>
+    [StaticConstructorOnStartup]
     public sealed class Hediff_SyntheticPregnant : HediffWithComps
     {
         private const float TicksPerDay = 60000f;
         private const string LogPrefix = "[MAP-机械族机械师] SyntheticPregnancy：";
 
-        private static Texture2D? cachedBirthIcon;
+        private static readonly Texture2D BirthIcon =
+            ContentFinder<Texture2D>.Get("UI/Icons/Rituals/GiveBirth");
 
         private Pawn? geneticParent;
         private PawnKindDef? childKindDef;
@@ -36,9 +38,6 @@ namespace MAP_MechanoidMechanitor
         public Gender? FixedGender => fixedGender >= 0 ? (Gender?)fixedGender : null;
 
         public bool ReadyForBirth => Severity >= 1f;
-
-        private static Texture2D BirthIcon =>
-            cachedBirthIcon ??= ContentFinder<Texture2D>.Get("UI/Icons/Rituals/GiveBirth");
 
         public void Initialize(
             Pawn geneticParentPawn,

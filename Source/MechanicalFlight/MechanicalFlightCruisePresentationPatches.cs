@@ -7,6 +7,7 @@ using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
+    [StaticConstructorOnStartup]
     internal static class MechanicalFlightCruisePresentation
     {
         private const int PulseSteps = 8;
@@ -28,7 +29,26 @@ namespace MAP_MechanoidMechanitor
         private static readonly Dictionary<int, ExhaustState> ExhaustStates = new();
         private static readonly Dictionary<MechanicalFlightProfileDef, ThrusterGraphicSet>
             ThrusterGraphics = new();
-        private static Graphic[]? groundWashGraphics;
+
+        // 固定地面尘环 Graphic：不依赖具体 MechanicalFlightProfileDef，于启动阶段主线程构建。
+        private static readonly Graphic[] groundWashGraphics =
+        {
+            GraphicDatabase.Get<Graphic_Single>(
+                "Things/Mote/DustPuff",
+                ShaderDatabase.TransparentPostLight,
+                new Vector2(0.9f, 0.9f),
+                new Color(0.78f, 0.73f, 0.65f, 0.52f)),
+            GraphicDatabase.Get<Graphic_Single>(
+                "Things/Mote/DustPuff",
+                ShaderDatabase.TransparentPostLight,
+                new Vector2(1.15f, 1.15f),
+                new Color(0.78f, 0.73f, 0.65f, 0.37f)),
+            GraphicDatabase.Get<Graphic_Single>(
+                "Things/Mote/DustPuff",
+                ShaderDatabase.TransparentPostLight,
+                new Vector2(1.4f, 1.4f),
+                new Color(0.78f, 0.73f, 0.65f, 0.22f))
+        };
 
         internal static void Reset(Pawn? pawn)
         {
@@ -200,25 +220,6 @@ namespace MAP_MechanoidMechanitor
             {
                 return;
             }
-
-            groundWashGraphics ??= new[]
-            {
-                GraphicDatabase.Get<Graphic_Single>(
-                    "Things/Mote/DustPuff",
-                    ShaderDatabase.TransparentPostLight,
-                    new Vector2(0.9f, 0.9f),
-                    new Color(0.78f, 0.73f, 0.65f, 0.52f)),
-                GraphicDatabase.Get<Graphic_Single>(
-                    "Things/Mote/DustPuff",
-                    ShaderDatabase.TransparentPostLight,
-                    new Vector2(1.15f, 1.15f),
-                    new Color(0.78f, 0.73f, 0.65f, 0.37f)),
-                GraphicDatabase.Get<Graphic_Single>(
-                    "Things/Mote/DustPuff",
-                    ShaderDatabase.TransparentPostLight,
-                    new Vector2(1.4f, 1.4f),
-                    new Color(0.78f, 0.73f, 0.65f, 0.22f))
-            };
 
             Vector3 groundAnchor = MechanicalFlightPresentationUtility.GroundAnchorDrawPos(pawn);
             int ticks = Find.TickManager.TicksGame + pawn.thingIDNumber;
