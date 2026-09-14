@@ -48,6 +48,34 @@
         <placementSearchRadius>8</placementSearchRadius>
       </li>
 
+      <!-- 两种激光共用源战车上的组件与冷却；合体形态也读取此组件。 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_ChariotLaserSystem">
+        <range>29.9</range>
+        <minRange>2.9</minRange>
+        <sweepMaxSpan>10</sweepMaxSpan>
+        <effectRadius>1.5</effectRadius>
+        <warmupTicks>60</warmupTicks>
+        <trackingDurationTicks>600</trackingDurationTicks>
+        <sweepDurationTicks>240</sweepDurationTicks>
+        <energyIntervalTicks>6</energyIntervalTicks>
+        <pawnDamageIntervalTicks>10</pawnDamageIntervalTicks>
+        <energyFractionPerInterval>0.0005</energyFractionPerInterval>
+        <trackingPrimaryDamage>3</trackingPrimaryDamage>
+        <trackingSplashDamage>1.5</trackingSplashDamage>
+        <sweepCenterDamage>4</sweepCenterDamage>
+        <sweepSplashDamage>2</sweepSplashDamage>
+        <buildingDamage>50</buildingDamage>
+        <armorPenetration>1.5</armorPenetration>
+        <trackingIgnitionChance>0.7</trackingIgnitionChance>
+        <splashIgnitionChance>0.3</splashIgnitionChance>
+        <sweepIgnitionChance>0.4</sweepIgnitionChance>
+        <cooldownTicks>180</cooldownTicks>
+        <heatDamageDef>MAP_ChariotLaserHeat</heatDamageDef>
+        <buildingDamageDef>MAP_ChariotLaserSiege</buildingDamageDef>
+        <beamMoteDef>Mote_MAP_ChariotLaserBeam</beamMoteDef>
+        <beamSoundDef>BeamGraser_Shooting</beamSoundDef>
+      </li>
+
       <!-- 战车天生拥有机械飞行资格。 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechanicalFlightInnate">
         <profile>MAP_DefaultMechanicalFlightProfile</profile>

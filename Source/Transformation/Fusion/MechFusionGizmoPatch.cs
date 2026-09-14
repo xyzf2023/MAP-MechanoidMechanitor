@@ -7,7 +7,7 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 合体期间 Gizmo 的唯一补充入口。开始合体改由双向右键菜单下达；
-    /// 这里只保留能源、结构稳定值和手动解除合体。
+    /// 这里保留能源、结构稳定值、源战车激光和手动解除合体。
     /// </summary>
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.GetGizmos))]
     internal static class MechFusionGizmoPatch
@@ -37,6 +37,19 @@ namespace MAP_MechanoidMechanitor
                 yield return new Gizmo_MechFusionBar(
                     session,
                     MechFusionBarKind.Stability);
+            }
+
+            CompChariotLaserSystem? laserComp =
+                session.SourcePawn?.GetComp<CompChariotLaserSystem>();
+            if (laserComp != null)
+            {
+                foreach (Gizmo gizmo in
+                         ChariotLaserCommandUtility.GetGizmos(
+                             __instance,
+                             laserComp))
+                {
+                    yield return gizmo;
+                }
             }
 
             yield return BuildManualReleaseCommand(__instance, session);

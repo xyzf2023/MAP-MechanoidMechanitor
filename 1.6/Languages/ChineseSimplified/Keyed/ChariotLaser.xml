@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.ChariotLaser.Tracking.Label>锁定激光</MAP_MechanoidMechanitor.ChariotLaser.Tracking.Label>
+  <MAP_MechanoidMechanitor.ChariotLaser.Tracking.Description>选择一个单位或建筑。蓄力1秒后持续追踪目标，最多发射10秒。每6游戏刻消耗0.05%最大能量；对建筑每6游戏刻造成50点伤害。</MAP_MechanoidMechanitor.ChariotLaser.Tracking.Description>
+  <MAP_MechanoidMechanitor.ChariotLaser.Sweep.Label>横扫激光</MAP_MechanoidMechanitor.ChariotLaser.Sweep.Label>
+  <MAP_MechanoidMechanitor.ChariotLaser.Sweep.Description>依次选择两个可见地点，第二点与第一点相距不得超过10格。蓄力1秒后沿两点横扫4秒，每6游戏刻消耗0.05%最大能量。</MAP_MechanoidMechanitor.ChariotLaser.Sweep.Description>
+  <MAP_MechanoidMechanitor.ChariotLaser.StopTracking.Label>停止锁定激光</MAP_MechanoidMechanitor.ChariotLaser.StopTracking.Label>
+  <MAP_MechanoidMechanitor.ChariotLaser.StopSweep.Label>停止横扫激光</MAP_MechanoidMechanitor.ChariotLaser.StopSweep.Label>
+  <MAP_MechanoidMechanitor.ChariotLaser.Stop.Description>立即中止本轮激光发射。</MAP_MechanoidMechanitor.ChariotLaser.Stop.Description>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.NotDrafted>必须先征召。</MAP_MechanoidMechanitor.ChariotLaser.Disabled.NotDrafted>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Emergency>紧急着陆期间无法发射。</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Emergency>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Cooldown>激光系统冷却中：{0}秒。</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Cooldown>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.NoEnergy>能量不足以支付下一次脉冲。</MAP_MechanoidMechanitor.ChariotLaser.Disabled.NoEnergy>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Busy>另一种激光模式正在发射。</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Busy>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Unavailable>当前无法发射战车激光。</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Unavailable>
+</LanguageData>

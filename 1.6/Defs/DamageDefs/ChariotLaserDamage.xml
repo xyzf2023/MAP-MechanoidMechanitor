@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <DamageDef ParentName="Beam">
+    <defName>MAP_ChariotLaserHeat</defName>
+    <label>战车激光热伤害</label>
+    <defaultDamage>3</defaultDamage>
+    <defaultArmorPenetration>1.5</defaultArmorPenetration>
+  </DamageDef>
+
+  <DamageDef ParentName="Beam">
+    <defName>MAP_ChariotLaserSiege</defName>
+    <label>战车激光攻城伤害</label>
+    <defaultDamage>50</defaultDamage>
+    <defaultArmorPenetration>1.5</defaultArmorPenetration>
+    <buildingDamageFactorImpassable>1</buildingDamageFactorImpassable>
+    <buildingDamageFactorPassable>1</buildingDamageFactorPassable>
+  </DamageDef>
+</Defs>

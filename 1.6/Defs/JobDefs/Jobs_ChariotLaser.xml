@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>MAP_ChariotTrackingLaser</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_ChariotTrackingLaser</driverClass>
+    <reportString>firing a tracking laser.</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+    <suspendable>false</suspendable>
+    <sleepCanInterrupt>false</sleepCanInterrupt>
+    <neverFleeFromEnemies>true</neverFleeFromEnemies>
+    <neverShowWeapon>true</neverShowWeapon>
+    <ifFlyingKeepFlying>true</ifFlyingKeepFlying>
+  </JobDef>
+
+  <JobDef>
+    <defName>MAP_ChariotSweepLaser</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_ChariotSweepLaser</driverClass>
+    <reportString>firing a sweeping laser.</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+    <suspendable>false</suspendable>
+    <sleepCanInterrupt>false</sleepCanInterrupt>
+    <neverFleeFromEnemies>true</neverFleeFromEnemies>
+    <neverShowWeapon>true</neverShowWeapon>
+    <ifFlyingKeepFlying>true</ifFlyingKeepFlying>
+  </JobDef>
+</Defs>

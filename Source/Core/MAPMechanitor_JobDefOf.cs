@@ -20,6 +20,8 @@ namespace MAP_MechanoidMechanitor
         public static JobDef MAP_MechanicalFlightEmergencyLanding = null!;
         public static JobDef MAP_MechFusionApproach = null!;
         public static JobDef MAP_ChariotConvertToBuilding = null!;
+        public static JobDef MAP_ChariotTrackingLaser = null!;
+        public static JobDef MAP_ChariotSweepLaser = null!;
 
         public static JobDef MAP_AscendWithMindData = null!;
         public static JobDef MAP_ImportMindData = null!;
