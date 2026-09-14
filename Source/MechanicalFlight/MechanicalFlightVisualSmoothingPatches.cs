@@ -16,14 +16,12 @@ namespace MAP_MechanoidMechanitor
         private const float LandingDurationTicks = 25f;
         private const float MaximumGroundSeparationPadding = 0.05f;
 
-        private const float FusionAscentDurationTicks = 24f;
-        private const float FusionDescentDurationTicks = 24f;
-
-        /// <summary>
-        /// 合体快速转移的最大垂直绘制高度（地图格）。机械族会明显飞出
-        /// 正常可见区域，真实地图位置在升空阶段始终不变。
-        /// </summary>
-        internal const float FusionFlightDrawHeight = 16f;
+        // 合体快速转移沿地图 +Z 方向退场/入场。
+        // 4 格缓冲确保 Pawn 贴图完整越过地图北边界；80 格/秒避免大地图上演出过慢。
+        private const float FusionMapBoundaryMargin = 4f;
+        private const float FusionHiddenDrawDistance = 64f;
+        private const float FusionBoundaryFlightCellsPerSecond = 80f;
+        private const float FusionPhaseTimeoutPaddingTicks = 120f;
 
         private sealed class HeightState
         {
@@ -50,7 +48,9 @@ namespace MAP_MechanoidMechanitor
             internal float TargetFactor;
             internal float Progress;
             internal float Factor;
+            internal float DurationTicks;
             internal bool Ascent;
+            internal bool Hidden;
             internal int LastFrame = -1;
         }
 
@@ -103,15 +103,15 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 开始合体快速转移的垂直升空表现。真实地图位置不变，
-        /// 只让绘制偏移平滑加速到最大高度。
+        /// 开始合体快速转移的地图北侧退场表现。
+        /// 真实地图位置不变，绘制位置沿 +Z 直线移动到 Map.Size.z + 4。
         /// </summary>
         internal static void BeginFusionAscent(Pawn pawn)
         {
             float start = FusionStates.TryGetValue(
                 pawn.thingIDNumber,
                 out FusionState? existing)
-                ? existing!.Factor
+                ? Mathf.Clamp01(existing!.Factor)
                 : 0f;
             FusionStates[pawn.thingIDNumber] = new FusionState
             {
@@ -119,35 +119,34 @@ namespace MAP_MechanoidMechanitor
                 TargetFactor = 1f,
                 Progress = 0f,
                 Factor = start,
+                DurationTicks = CalculateFusionDurationTicks(pawn, start, 1f),
                 Ascent = true,
+                Hidden = false,
                 LastFrame = RealTime.frameCount
             };
         }
 
         /// <summary>
-        /// 开始合体快速转移的垂直降落表现。真实 Pawn 已经在落点上，
-        /// 只让绘制偏移从高空平滑归零。
+        /// 开始合体快速转移的地图北侧入场表现。
+        /// 真实 Pawn 已在合法落点；绘制位置从该 x 列的地图北边界外沿 -Z 直线下降。
         /// </summary>
         internal static void BeginFusionDescent(Pawn pawn)
         {
-            float start = FusionStates.TryGetValue(
-                pawn.thingIDNumber,
-                out FusionState? existing)
-                ? existing!.Factor
-                : 1f;
             FusionStates[pawn.thingIDNumber] = new FusionState
             {
-                StartFactor = start,
+                StartFactor = 1f,
                 TargetFactor = 0f,
                 Progress = 0f,
-                Factor = start,
+                Factor = 1f,
+                DurationTicks = CalculateFusionDurationTicks(pawn, 1f, 0f),
                 Ascent = false,
+                Hidden = false,
                 LastFrame = RealTime.frameCount
             };
         }
 
         /// <summary>
-        /// 合体快速转移专用垂直绘制因子（0 = 贴地，1 = 最大高度）。
+        /// 合体快速转移专用垂直绘制因子（0 = 贴地，1 = 地图北边界外）。
         /// </summary>
         internal static float FusionVisualFactor(
             Pawn pawn,
@@ -161,6 +160,69 @@ namespace MAP_MechanoidMechanitor
             return GetFusionFactor(pawn, record.Phase);
         }
 
+        /// <summary>
+        /// 返回当前合体转移应叠加到真实地面位置上的 Z 偏移。
+        /// 正常升降以地图北边界为目标；隐藏换位阶段把绘制点暂放到更远的地图外，
+        /// 使 Pawn、选框与阴影补偿上下文都不会留在原地或落点上。
+        /// </summary>
+        internal static float FusionVisualZOffset(
+            Pawn pawn,
+            MechanicalFlightAuthorizationRecord record)
+        {
+            if (record.Purpose != MechanicalFlightPurpose.FusionRelocation
+                || pawn.Map == null)
+            {
+                return 0f;
+            }
+
+            float groundZ = pawn.Position.ToVector3Shifted().z;
+            if (IsFusionHidden(pawn))
+            {
+                return pawn.Map.Size.z + FusionHiddenDrawDistance - groundZ;
+            }
+
+            return FusionBoundaryOffset(pawn)
+                * FusionVisualFactor(pawn, record);
+        }
+
+        internal static void SetFusionHidden(Pawn pawn, bool hidden)
+        {
+            if (FusionStates.TryGetValue(
+                    pawn.thingIDNumber,
+                    out FusionState? state))
+            {
+                state.Hidden = hidden;
+            }
+        }
+
+        internal static bool IsFusionHidden(Pawn? pawn)
+        {
+            return pawn != null
+                && FusionStates.TryGetValue(
+                    pawn.thingIDNumber,
+                    out FusionState? state)
+                && state.Hidden;
+        }
+
+        /// <summary>
+        /// 当前升降阶段按实际地图距离计算的超时上限。
+        /// 演出本身按固定 80 格/秒推进，额外预留 120 Tick 处理低帧率和调度抖动。
+        /// </summary>
+        internal static int GetFusionPhaseTimeoutTicks(Pawn pawn)
+        {
+            if (FusionStates.TryGetValue(
+                    pawn.thingIDNumber,
+                    out FusionState? state))
+            {
+                return Mathf.Max(
+                    1,
+                    Mathf.CeilToInt(
+                        state.DurationTicks + FusionPhaseTimeoutPaddingTicks));
+            }
+
+            return Mathf.CeilToInt(FusionPhaseTimeoutPaddingTicks);
+        }
+
         private static float GetFusionFactor(
             Pawn pawn,
             MechanicalFlightPhase phase)
@@ -169,8 +231,7 @@ namespace MAP_MechanoidMechanitor
                     pawn.thingIDNumber,
                     out FusionState? state))
             {
-                // 缺少运行态时按相位给出安全值：
-                // 升空阶段视为已不可见，降落阶段视为已落地。
+                // 缺少运行态时保持旧的安全语义：升空视为已退场，降落视为已落地。
                 return phase == MechanicalFlightPhase.FusionAscent ? 1f : 0f;
             }
 
@@ -182,11 +243,9 @@ namespace MAP_MechanoidMechanitor
 
             state.LastFrame = frame;
             float deltaTicks = GameDeltaTicks();
-            float duration = state.Ascent
-                ? FusionAscentDurationTicks
-                : FusionDescentDurationTicks;
             state.Progress = Mathf.Clamp01(
-                state.Progress + deltaTicks / Mathf.Max(1f, duration));
+                state.Progress
+                + deltaTicks / Mathf.Max(1f, state.DurationTicks));
             float eased = state.Ascent
                 ? state.Progress * state.Progress
                 : 1f - (1f - state.Progress) * (1f - state.Progress);
@@ -195,6 +254,31 @@ namespace MAP_MechanoidMechanitor
                 state.TargetFactor,
                 eased);
             return state.Factor;
+        }
+
+        private static float FusionBoundaryOffset(Pawn pawn)
+        {
+            if (pawn.Map == null)
+            {
+                return 0f;
+            }
+
+            float groundZ = pawn.Position.ToVector3Shifted().z;
+            return Mathf.Max(
+                0f,
+                pawn.Map.Size.z + FusionMapBoundaryMargin - groundZ);
+        }
+
+        private static float CalculateFusionDurationTicks(
+            Pawn pawn,
+            float startFactor,
+            float targetFactor)
+        {
+            float distance = FusionBoundaryOffset(pawn)
+                * Mathf.Abs(targetFactor - startFactor);
+            return Mathf.Max(
+                1f,
+                distance / FusionBoundaryFlightCellsPerSecond * 60f);
         }
 
         internal static void Cleanup(Pawn? pawn)
@@ -626,12 +710,16 @@ namespace MAP_MechanoidMechanitor
 
             if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
             {
-                // 合体快速转移使用专用垂直绘制偏移；地面锚点、鼠标选取与
-                // 阴影绘制保持各自的地面基准。
-                if (MechanicalFlightGroundAnchorContext.Active
-                    || MechanicalFlightGroundAnchorContext.LegacySelectionActive
-                    || MechanicalFlightGroundAnchorContext
-                        .ShadowCompensationActive)
+                bool hidden = MechanicalFlightVisualSmoothing.IsFusionHidden(pawn);
+
+                // 正常升降时，地面锚点/旧选取/阴影仍保持地面基准；
+                // 隐藏换位阶段则故意让这些上下文也走地图外绘制坐标，
+                // 避免 Pawn 已“离场”后原地或落点仍残留选框/阴影。
+                if (!hidden
+                    && (MechanicalFlightGroundAnchorContext.Active
+                        || MechanicalFlightGroundAnchorContext.LegacySelectionActive
+                        || MechanicalFlightGroundAnchorContext
+                            .ShadowCompensationActive))
                 {
                     return;
                 }
@@ -640,13 +728,17 @@ namespace MAP_MechanoidMechanitor
                     MechanicalFlightVisualSmoothing.FusionVisualFactor(
                         pawn,
                         record);
-                if (fusionFactor <= 0.0001f)
+                float fusionOffset =
+                    MechanicalFlightVisualSmoothing.FusionVisualZOffset(
+                        pawn,
+                        record);
+                if (Mathf.Abs(fusionOffset) <= 0.0001f
+                    && fusionFactor <= 0.0001f)
                 {
                     return;
                 }
 
-                __result.z += MechanicalFlightVisualSmoothing
-                    .FusionFlightDrawHeight * fusionFactor;
+                __result.z += fusionOffset;
                 __result.y += VanillaFlightYOffset * fusionFactor;
                 return;
             }
@@ -700,13 +792,10 @@ namespace MAP_MechanoidMechanitor
 
             if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
             {
-                // DrawPos 已经加入合体专用垂直偏移，这里抵消它，
-                // 让地面清洗/烟尘继续使用真实地面锚点。
+                // DrawPos 已经加入合体专用地图北侧升降偏移；这里抵消它，
+                // 让地面清洗/烟尘继续使用真实合法地图格作为锚点。
                 __result.z -= MechanicalFlightVisualSmoothing
-                    .FusionFlightDrawHeight
-                    * MechanicalFlightVisualSmoothing.FusionVisualFactor(
-                        pawn,
-                        record);
+                    .FusionVisualZOffset(pawn, record);
                 return;
             }
 
