@@ -341,7 +341,7 @@ namespace MAP_MechanoidMechanitor
                     return;
 
                 case FusionFlightStage.HiddenRelocation:
-                    UpdateHiddenRelocation(wearer!);
+                    UpdateHiddenRelocation();
                     return;
 
                 case FusionFlightStage.WaitingForDescent:
@@ -382,28 +382,26 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
+            // 已飞出北边界：同一 Tick 立即隐藏并完成地图内逻辑换位；
+            // 真正开始下降则由 WaitingForDescent 强制推迟到下一渲染帧。
             MechanicalFlightVisualSmoothing.SetFusionHidden(pawn, true);
             flightStage = FusionFlightStage.HiddenRelocation;
             phaseDeadlineTick = CurrentTick + HiddenRelocationTimeoutTicks;
+            UpdateHiddenRelocation();
         }
 
-        private void UpdateHiddenRelocation(Pawn wearer)
+        private void UpdateHiddenRelocation()
         {
-            // 离场后到真正换位之间目标仍可能移动，再做最后一次落点/地面路径验证。
-            if (!ValidateLandingPlan(wearer))
+            if (plan?.UseFlight != true || !plan.LandingCell.IsValid)
             {
-                if (!TryBuildPlan() || plan?.UseFlight != true
-                    || !ValidateLandingPlan(wearer))
-                {
-                    AbortFusionFlight();
-                    ReturnToGroundApproachOrFail();
-                    return;
-                }
+                AbortFusionFlight();
+                ReturnToGroundApproachOrFail();
+                return;
             }
 
             if (!MechFusionRelocationUtility.ApplyRelocation(
                     pawn,
-                    plan!.LandingCell,
+                    plan.LandingCell,
                     out string? relocationFailure))
             {
                 AbortFusionFlight();
