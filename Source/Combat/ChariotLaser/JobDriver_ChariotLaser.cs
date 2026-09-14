@@ -44,6 +44,13 @@ namespace MAP_MechanoidMechanitor
         protected abstract TargetInfo CurrentBeamTarget(
             CompProperties_ChariotLaserSystem props);
 
+        protected virtual Vector3 CurrentBeamTargetOffset(
+            CompProperties_ChariotLaserSystem props,
+            TargetInfo target)
+        {
+            return Vector3.zero;
+        }
+
         protected abstract void ApplyEnergyInterval(
             CompProperties_ChariotLaserSystem props);
 
@@ -75,15 +82,17 @@ namespace MAP_MechanoidMechanitor
             }
 
             Toil warmup = Toils_General.Wait(initialProps.warmupTicks);
+            warmup.handlingFacing = true;
             warmup.tickAction = delegate
             {
                 FaceBeamTarget();
             };
-            warmup.WithProgressBarToilDelay(TargetIndex.A);
+            warmup.WithProgressBarToilDelay(TargetIndex.None);
             yield return warmup;
 
             Toil firing = ToilMaker.MakeToil("ChariotLaserFiring");
             firing.defaultCompleteMode = ToilCompleteMode.Never;
+            firing.handlingFacing = true;
             firing.initAction = delegate
             {
                 firingStarted = true;
@@ -150,8 +159,10 @@ namespace MAP_MechanoidMechanitor
             CompProperties_ChariotLaserSystem? props = LaserProps;
             if (props != null && pawn.rotationTracker != null)
             {
-                pawn.rotationTracker.FaceTarget(
-                    (LocalTargetInfo)CurrentBeamTarget(props));
+                TargetInfo target = CurrentBeamTarget(props);
+                pawn.rotationTracker.Face(
+                    target.CenterVector3
+                    + CurrentBeamTargetOffset(props, target));
             }
         }
 
@@ -164,8 +175,12 @@ namespace MAP_MechanoidMechanitor
             }
 
             TargetInfo target = CurrentBeamTarget(props);
+            Vector3 targetOffset =
+                CurrentBeamTargetOffset(props, target);
             Vector3 direction =
-                (target.CenterVector3 - pawn.DrawPos).Yto0().normalized;
+                (target.CenterVector3 + targetOffset - pawn.DrawPos)
+                    .Yto0()
+                    .normalized;
             if (beamMote == null || beamMote.Destroyed)
             {
                 beamMote = MoteMaker.MakeInteractionOverlay(
@@ -178,8 +193,20 @@ namespace MAP_MechanoidMechanitor
                 new TargetInfo(pawn),
                 target,
                 direction * 0.85f,
-                Vector3.zero);
+                targetOffset);
             beamMote?.Maintain();
+
+            if (props.muzzleFlashScale > 0.01f
+                && props.muzzleFlashIntervalTicks > 0
+                && (firingTicks == 1
+                    || firingTicks % props.muzzleFlashIntervalTicks == 0))
+            {
+                FleckMaker.Static(
+                    pawn.DrawPos + direction * 0.85f,
+                    pawn.Map,
+                    FleckDefOf.ShotFlash,
+                    props.muzzleFlashScale);
+            }
 
             if (beamSustainer == null || beamSustainer.Ended)
             {
@@ -418,6 +445,14 @@ namespace MAP_MechanoidMechanitor
             return new TargetInfo(CurrentImpactCell(props), pawn.Map);
         }
 
+        protected override Vector3 CurrentBeamTargetOffset(
+            CompProperties_ChariotLaserSystem props,
+            TargetInfo target)
+        {
+            return CurrentImpactPosition(props)
+                - target.Cell.ToVector3Shifted();
+        }
+
         protected override void ApplyEnergyInterval(
             CompProperties_ChariotLaserSystem props)
         {
@@ -451,6 +486,12 @@ namespace MAP_MechanoidMechanitor
         private IntVec3 CurrentImpactCell(
             CompProperties_ChariotLaserSystem props)
         {
+            return CurrentImpactPosition(props).ToIntVec3();
+        }
+
+        private Vector3 CurrentImpactPosition(
+            CompProperties_ChariotLaserSystem props)
+        {
             IntVec3 start = job.GetTarget(TargetIndex.A).Cell;
             IntVec3 end = job.GetTarget(TargetIndex.B).Cell;
             float duration = Mathf.Max(1f, props.sweepDurationTicks - 1f);
@@ -459,20 +500,31 @@ namespace MAP_MechanoidMechanitor
                 start.ToVector3Shifted(),
                 end.ToVector3Shifted(),
                 progress);
-            IntVec3 desired = IntVec3.FromVector3(interpolated);
             Map? map = pawn.Map;
             if (map == null)
             {
-                return desired;
+                return interpolated;
             }
 
+            IntVec3 desired = interpolated.ToIntVec3();
+            Vector3 source = pawn.Position.ToVector3Shifted();
+            Vector3 sourceToTarget = (interpolated - source).Yto0();
+            float visibleDistance = sourceToTarget.magnitude;
+            Vector3 direction = sourceToTarget.normalized;
             IntVec3 visible = GenSight.LastPointOnLineOfSight(
                 pawn.Position,
                 desired,
                 cell => cell.InBounds(map)
                     && cell.CanBeSeenOverFast(map),
                 skipFirstCell: true);
-            return visible.IsValid ? visible : desired;
+            if (visible.IsValid)
+            {
+                visibleDistance -= (desired - visible).LengthHorizontal;
+                return source
+                    + direction * Mathf.Max(0f, visibleDistance);
+            }
+
+            return interpolated;
         }
     }
 }

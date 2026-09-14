@@ -19,8 +19,10 @@ namespace MAP_MechanoidMechanitor
         public int energyIntervalTicks = 6;
         public int pawnDamageIntervalTicks = 10;
         public int cooldownTicks = 180;
+        public int muzzleFlashIntervalTicks = 22;
 
         public float energyFractionPerInterval = 0.0005f;
+        public float muzzleFlashScale = 9f;
         public float trackingPrimaryDamage = 3f;
         public float trackingSplashDamage = 1.5f;
         public float sweepCenterDamage = 4f;
@@ -332,7 +334,11 @@ namespace MAP_MechanoidMechanitor
             Find.Targeter.BeginTargeting(
                 parameters,
                 target => TryStartTrackingJob(actor, comp, target),
-                _ => DrawActorRange(actor, comp.Props),
+                target =>
+                {
+                    DrawActorRange(actor, comp.Props);
+                    DrawTargetHighlight(target);
+                },
                 target => IsValidTrackingTarget(actor, comp.Props, target),
                 actor);
         }
@@ -344,7 +350,11 @@ namespace MAP_MechanoidMechanitor
             Find.Targeter.BeginTargeting(
                 TargetingParameters.ForCell(),
                 first => BeginSweepEndTargeting(actor, comp, first.Cell),
-                _ => DrawActorRange(actor, comp.Props),
+                target =>
+                {
+                    DrawActorRange(actor, comp.Props);
+                    DrawTargetHighlight(target);
+                },
                 target => IsValidSweepStart(actor, comp.Props, target.Cell),
                 actor);
         }
@@ -366,9 +376,11 @@ namespace MAP_MechanoidMechanitor
                     comp,
                     first,
                     second.Cell),
-                _ =>
+                target =>
                 {
                     DrawActorRange(actor, comp.Props);
+                    GenDraw.DrawTargetHighlight(first);
+                    DrawTargetHighlight(target);
                     GenDraw.DrawRadiusRing(first, comp.Props.sweepMaxSpan);
                 },
                 target => IsValidSweepEnd(
@@ -505,6 +517,14 @@ namespace MAP_MechanoidMechanitor
                 (cell - actor.Position).LengthHorizontalSquared;
             return distanceSquared >= props.minRange * props.minRange
                 && distanceSquared <= props.range * props.range;
+        }
+
+        private static void DrawTargetHighlight(LocalTargetInfo target)
+        {
+            if (target.IsValid)
+            {
+                GenDraw.DrawTargetHighlight(target);
+            }
         }
 
         private static void DrawActorRange(
