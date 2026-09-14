@@ -37,15 +37,6 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                    pawn,
-                    MechanoidMechanitorCapability.BuildingConversion))
-            {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.NoCapability".Translate();
-                return false;
-            }
-
             if (MechTransformationUtility.IsTransitionInProgress(pawn))
             {
                 failureReason =
@@ -62,7 +53,7 @@ namespace MAP_MechanoidMechanitor
 
             if (!MechBuildingConversionProfileUtility.TryGetProfile(
                     pawn,
-                    out DefModExtension_MechBuildingConversion? profile)
+                    out CompProperties_ChariotBuildingConversion? profile)
                 || profile == null)
             {
                 failureReason =
@@ -167,7 +158,7 @@ namespace MAP_MechanoidMechanitor
 
             if (!MechBuildingConversionProfileUtility.TryGetProfile(
                     pawn,
-                    out DefModExtension_MechBuildingConversion? profile)
+                    out CompProperties_ChariotBuildingConversion? profile)
                 || profile == null)
             {
                 return false;

@@ -41,22 +41,13 @@
       </lifeStageAges>
     </race>
 
-    <modExtensions>
-      <!-- 提供建筑转换能力。 -->
-      <li Class="MAP_MechanoidMechanitor.DefModExtension_MechCapabilityProvider">
-        <capabilities>
-          <li>BuildingConversion</li>
-        </capabilities>
-      </li>
-
-      <!-- 指定战车对应的建筑形态。 -->
-      <li Class="MAP_MechanoidMechanitor.DefModExtension_MechBuildingConversion">
+    <comps>
+      <!-- 战车专用建筑转换：组件同时提供资格、目标建筑与转换按钮。 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_ChariotBuildingConversion">
         <buildingFormDef>MAP_Building_Chariot</buildingFormDef>
         <placementSearchRadius>8</placementSearchRadius>
       </li>
-    </modExtensions>
 
-    <comps>
       <!-- 战车天生拥有机械飞行资格。 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechanicalFlightInnate">
         <profile>MAP_DefaultMechanicalFlightProfile</profile>

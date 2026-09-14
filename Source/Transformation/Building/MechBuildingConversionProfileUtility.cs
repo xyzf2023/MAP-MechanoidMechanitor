@@ -4,14 +4,14 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 按固定优先级寻找建筑形态配置：Pawn ThingDef、PawnKindDef、HediffDef。
-    /// 这样能力来源和形态配置可以分别添加，也能让植入体提供独立建筑形态。
+    /// 战车建筑形态配置的唯一查询入口。
+    /// 只有 Pawn ThingDef 上的 CompChariotBuildingConversion 可以提供配置与资格。
     /// </summary>
     public static class MechBuildingConversionProfileUtility
     {
         public static bool TryGetProfile(
             Pawn? pawn,
-            out DefModExtension_MechBuildingConversion? profile)
+            out CompProperties_ChariotBuildingConversion? profile)
         {
             profile = null;
             if (pawn == null || pawn.Destroyed || pawn.Discarded)
@@ -19,37 +19,10 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            profile = pawn.def?.GetModExtension<DefModExtension_MechBuildingConversion>();
-            if (IsUsable(profile))
-            {
-                return true;
-            }
-
-            profile = pawn.kindDef?.GetModExtension<DefModExtension_MechBuildingConversion>();
-            if (IsUsable(profile))
-            {
-                return true;
-            }
-
-            List<Hediff>? hediffs = pawn.health?.hediffSet?.hediffs;
-            if (hediffs == null)
-            {
-                profile = null;
-                return false;
-            }
-
-            for (int i = 0; i < hediffs.Count; i++)
-            {
-                profile = hediffs[i]?.def?
-                    .GetModExtension<DefModExtension_MechBuildingConversion>();
-                if (IsUsable(profile))
-                {
-                    return true;
-                }
-            }
-
-            profile = null;
-            return false;
+            CompChariotBuildingConversion? comp =
+                pawn.GetComp<CompChariotBuildingConversion>();
+            profile = comp?.Props;
+            return profile?.buildingFormDef != null;
         }
 
         public static bool IsBuildingFormDefValid(
@@ -80,12 +53,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             return true;
-        }
-
-        private static bool IsUsable(
-            DefModExtension_MechBuildingConversion? profile)
-        {
-            return profile?.buildingFormDef != null;
         }
 
         private static bool HasComp(ThingDef thingDef, System.Type compClass)

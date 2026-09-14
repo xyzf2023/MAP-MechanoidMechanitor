@@ -27,12 +27,6 @@ namespace MAP_MechanoidMechanitor
                 return GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn);
             }
 
-            // 建筑转换资格来自 Def Provider 声明；单项查询只扫描提供者，不做完整能力汇总。
-            if (capability == MechanoidMechanitorCapability.BuildingConversion)
-            {
-                return MechCapabilityUtility.HasProvidedCapability(pawn, capability);
-            }
-
             // 合体资格只能是先天能力，唯一事实来源是合体资格注册表。
             if (capability == MechanoidMechanitorCapability.Fusion)
             {
@@ -93,7 +87,6 @@ namespace MAP_MechanoidMechanitor
             AddCapabilitiesFromSyntheticCompanionAuthorization(pawn, ref capabilities);
             AddCapabilitiesFromDataProcessingAllocation(pawn, ref capabilities);
             AddCapabilitiesFromMechanicalFlightAuthorization(pawn, ref capabilities);
-            AddCapabilitiesFromDefProviders(pawn, ref capabilities);
             AddCapabilitiesFromFusionEligibility(pawn, ref capabilities);
             return capabilities;
         }
@@ -109,13 +102,6 @@ namespace MAP_MechanoidMechanitor
             {
                 capabilities |= MechanoidMechanitorCapability.Fusion;
             }
-        }
-
-        private static void AddCapabilitiesFromDefProviders(
-            Pawn pawn,
-            ref MechanoidMechanitorCapability capabilities)
-        {
-            capabilities |= MechCapabilityUtility.GetProvidedCapabilities(pawn);
         }
 
         private static void AddCapabilitiesFromMechanicalFlightAuthorization(

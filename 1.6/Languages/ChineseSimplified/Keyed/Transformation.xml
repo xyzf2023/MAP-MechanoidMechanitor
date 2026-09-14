@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanoidMechanitor.Transformation.InProgress>另一项形态转换正在进行。</MAP_MechanoidMechanitor.Transformation.InProgress>
+  <MAP_MechanoidMechanitor.Transformation.Building.Convert.Label>建筑转换</MAP_MechanoidMechanitor.Transformation.Building.Convert.Label>
+  <MAP_MechanoidMechanitor.Transformation.Building.Convert.Description>将战车收存并转换为驻定建筑形态。</MAP_MechanoidMechanitor.Transformation.Building.Convert.Description>
   <MAP_MechanoidMechanitor.Transformation.Building.Restore.Label>恢复机械体形态</MAP_MechanoidMechanitor.Transformation.Building.Restore.Label>
   <MAP_MechanoidMechanitor.Transformation.Building.Restore.Description>解除建筑形态并恢复原始机械体。机械体的身份、机械师关系和其他 Pawn 数据不会被生成第二份副本。</MAP_MechanoidMechanitor.Transformation.Building.Restore.Description>
   <MAP_MechanoidMechanitor.Transformation.Building.StoredPawn>原始机械体：{0}</MAP_MechanoidMechanitor.Transformation.Building.StoredPawn>
   <MAP_MechanoidMechanitor.Transformation.Building.PawnUnavailable>该机械体目前无法转换为建筑形态。</MAP_MechanoidMechanitor.Transformation.Building.PawnUnavailable>
   <MAP_MechanoidMechanitor.Transformation.Building.PawnDowned>倒地的机械体无法主动转换为建筑形态。</MAP_MechanoidMechanitor.Transformation.Building.PawnDowned>
-  <MAP_MechanoidMechanitor.Transformation.Building.NoCapability>该机体没有建筑转换能力。</MAP_MechanoidMechanitor.Transformation.Building.NoCapability>
   <MAP_MechanoidMechanitor.Transformation.Building.NotPawnForm>必须先恢复为机械体形态。</MAP_MechanoidMechanitor.Transformation.Building.NotPawnForm>
   <MAP_MechanoidMechanitor.Transformation.Building.MissingProfile>该机体没有配置对应的建筑形态。</MAP_MechanoidMechanitor.Transformation.Building.MissingProfile>
   <MAP_MechanoidMechanitor.Transformation.Building.InvalidDef>配置的建筑形态不是有效建筑。</MAP_MechanoidMechanitor.Transformation.Building.InvalidDef>

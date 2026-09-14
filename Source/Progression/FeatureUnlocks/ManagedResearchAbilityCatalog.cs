@@ -12,8 +12,6 @@ namespace MAP_MechanoidMechanitor
         public const string MechRecodeAbilityDefName = "MAP_Ability_MechRecode";
         public const string MechReconstructionAbilityDefName = "MAP_Ability_MechReconstruction";
         public const string MechHackAbilityDefName = "MAP_Ability_MechHack";
-        public const string BuildingConversionAbilityDefName =
-            "MAP_Ability_MechBuildingConversion";
 
         public const string MechRecodeDescriptionKey =
             "MAP_MechanoidMechanitor.Justice.Unlock.Ability.MechRecode.Description";
@@ -43,25 +41,12 @@ namespace MAP_MechanoidMechanitor
                 researchProjectDefName: UltraMechtechDefName,
                 unlockLetterDescriptionKey: MechHackDescriptionKey);
 
-        public static readonly ManagedResearchAbilityDescriptor BuildingConversion =
-            new ManagedResearchAbilityDescriptor(
-                id: "BuildingConversion",
-                abilityDefName: BuildingConversionAbilityDefName,
-                researchProjectDefName: null,
-                unlockLetterDescriptionKey: null,
-                grantPolicy: ManagedAbilityGrantPolicy.Capability,
-                transferPolicy: ManagedAbilityTransferPolicy.ReevaluateTargetChassis,
-                requiredCapability:
-                    MechanoidMechanitorCapability.BuildingConversion,
-                sendResearchUnlockLetter: false);
-
         // 三个科研能力均已接入统一解锁同步与意识迁移冷却逻辑。
         private static readonly ManagedResearchAbilityDescriptor[] allInternal =
         {
             MechRecode,
             MechReconstruction,
-            MechHack,
-            BuildingConversion
+            MechHack
         };
 
         private static readonly ReadOnlyCollection<ManagedResearchAbilityDescriptor> allReadOnly =
