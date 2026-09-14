@@ -8,9 +8,9 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 合体接近 Job。始终由源机械族执行，targetA 为待合体的人类。
     /// 流程：完整校验 → 规划普通路径 A → 必要时合体快速飞行转移
-    /// （垂直升空 → 不可见阶段地图内重定位 → 垂直降落）→ 地面走到人类
-    /// 相邻格 → 折跃视觉 → 短暂延迟 → 现有 TryStartFusion 正式合体。
-    /// 规划结果只存在于运行期，读档后重新规划。
+    /// （沿地图 +Z 飞出北边界 → 隐藏并地图内重定位 → 下一帧从目标列北边界外
+    /// 垂直降落）→ 地面走到人类相邻格 → 折跃视觉 → 短暂延迟 →
+    /// 现有 TryStartFusion 正式合体。规划结果只存在于运行期，读档后重新规划。
     /// </summary>
     public sealed class JobDriver_MechFusionApproach : JobDriver
     {
@@ -18,12 +18,13 @@ namespace MAP_MechanoidMechanitor
         {
             Takeoff,
             Ascending,
+            HiddenRelocation,
+            WaitingForDescent,
             Descending
         }
 
         private const int TransitionDelayTicks = 5;
-        private const int FusionAscentTimeoutTicks = 120;
-        private const int FusionDescentTimeoutTicks = 120;
+        private const int HiddenRelocationTimeoutTicks = 120;
         private const int MaxFlightLegs = 2;
 
         private Toil validateToil = null!;
@@ -35,6 +36,7 @@ namespace MAP_MechanoidMechanitor
         private FusionFlightStage flightStage;
         private int flightLegsUsed;
         private int phaseDeadlineTick;
+        private int relocationFrame = -1;
 
         // 读档后不恢复飞行视觉与旧规划：首个 Tick 安全回到重规划入口。
         // 只存在于运行期，不写入存档。
@@ -240,6 +242,7 @@ namespace MAP_MechanoidMechanitor
         {
             flightStage = FusionFlightStage.Takeoff;
             phaseDeadlineTick = 0;
+            relocationFrame = -1;
 
             if (plan?.UseFlight != true || flightLegsUsed >= MaxFlightLegs)
             {
@@ -292,7 +295,8 @@ namespace MAP_MechanoidMechanitor
 
             flightLegsUsed++;
             flightStage = FusionFlightStage.Ascending;
-            phaseDeadlineTick = CurrentTick + FusionAscentTimeoutTicks;
+            phaseDeadlineTick = CurrentTick
+                + MechanicalFlightVisualSmoothing.GetFusionPhaseTimeoutTicks(pawn);
         }
 
         private void UpdateFusionFlight()
@@ -336,6 +340,14 @@ namespace MAP_MechanoidMechanitor
                     UpdateFusionAscent(wearer!);
                     return;
 
+                case FusionFlightStage.HiddenRelocation:
+                    UpdateHiddenRelocation(wearer!);
+                    return;
+
+                case FusionFlightStage.WaitingForDescent:
+                    UpdateWaitingForDescent();
+                    return;
+
                 case FusionFlightStage.Descending:
                     UpdateFusionDescent();
                     return;
@@ -357,7 +369,27 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 不可见阶段：真正迁移前再次验证落点与落地后可走路径。
+            // 机械族已经完整越过地图北边界。隐藏之前再次验证落点，
+            // 避免进入不可见阶段后才发现原规划已经完全失效。
+            if (!ValidateLandingPlan(wearer))
+            {
+                if (!TryBuildPlan() || plan?.UseFlight != true
+                    || !ValidateLandingPlan(wearer))
+                {
+                    AbortFusionFlight();
+                    ReturnToGroundApproachOrFail();
+                    return;
+                }
+            }
+
+            MechanicalFlightVisualSmoothing.SetFusionHidden(pawn, true);
+            flightStage = FusionFlightStage.HiddenRelocation;
+            phaseDeadlineTick = CurrentTick + HiddenRelocationTimeoutTicks;
+        }
+
+        private void UpdateHiddenRelocation(Pawn wearer)
+        {
+            // 离场后到真正换位之间目标仍可能移动，再做最后一次落点/地面路径验证。
             if (!ValidateLandingPlan(wearer))
             {
                 if (!TryBuildPlan() || plan?.UseFlight != true
@@ -379,6 +411,21 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 真实 Pawn 已经位于合法 landingCell，但仍保持地图外隐藏。
+            // 记录当前渲染帧，明确禁止同一帧立即开始下降。
+            relocationFrame = RealTime.frameCount;
+            flightStage = FusionFlightStage.WaitingForDescent;
+            phaseDeadlineTick = CurrentTick + HiddenRelocationTimeoutTicks;
+        }
+
+        private void UpdateWaitingForDescent()
+        {
+            if (RealTime.frameCount <= relocationFrame
+                && CurrentTick < phaseDeadlineTick)
+            {
+                return;
+            }
+
             if (!MechanicalFlightUtility.TryBeginFusionDescent(pawn))
             {
                 AbortFusionFlight();
@@ -387,7 +434,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             flightStage = FusionFlightStage.Descending;
-            phaseDeadlineTick = CurrentTick + FusionDescentTimeoutTicks;
+            phaseDeadlineTick = CurrentTick
+                + MechanicalFlightVisualSmoothing.GetFusionPhaseTimeoutTicks(pawn);
         }
 
         private void UpdateFusionDescent()
@@ -406,19 +454,22 @@ namespace MAP_MechanoidMechanitor
                 plan.LandingCell = IntVec3.Invalid;
             }
 
+            relocationFrame = -1;
+
             // 快速飞行只负责跨过远距离；落地后统一回到地面接近。
             JumpTo(approachToil);
         }
 
         private void AbortFusionFlight()
         {
+            relocationFrame = -1;
             MechanicalFlightUtility.CancelFusionRelocation(pawn);
         }
 
         /// <summary>
         /// 读档后的安全恢复：飞行运行态已由统一飞行注册表清理。
         /// 只在运行期第一个 Tick 回到重规划入口，最多重新计算一次方案，
-        /// 绝不尝试恢复升空/降落进度。
+        /// 绝不尝试恢复升空/隐藏/降落进度。
         /// </summary>
         private bool TryHandleLoadRecovery()
         {
@@ -446,6 +497,8 @@ namespace MAP_MechanoidMechanitor
             plan = null;
             flightStage = FusionFlightStage.Takeoff;
             flightLegsUsed = 0;
+            phaseDeadlineTick = 0;
+            relocationFrame = -1;
             JumpTo(validateToil);
         }
 
