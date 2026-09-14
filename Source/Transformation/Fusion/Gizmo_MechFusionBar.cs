@@ -82,7 +82,7 @@ namespace MAP_MechanoidMechanitor
                 new Rect(inner.x, inner.y, inner.width, 20f),
                 label);
 
-            Rect barRect = new Rect(inner.x, inner.y + 22f, inner.width, 16f);
+            Rect barRect = new Rect(inner.x, inner.y + 22f, inner.width, 24f);
             Widgets.FillableBar(
                 barRect,
                 fill,
