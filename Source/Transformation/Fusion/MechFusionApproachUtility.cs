@@ -6,13 +6,13 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 合体快速接近的集中调参。20 格按实际步行路径长度判断，
+    /// 合体快速接近的集中调参。8 格按实际步行路径长度判断，
     /// 8 格是落点搜索半径，5 格是最小飞行收益，避免为了一两格差距
     /// 执行完整升降动画。
     /// </summary>
     internal static class MechFusionApproachTuning
     {
-        internal const int MaximumGroundPathSteps = 20;
+        internal const int MaximumGroundPathSteps = 8;
         internal const int LandingSearchRadius = 8;
         internal const int MinimumFlightStepSaving = 5;
     }
@@ -68,7 +68,7 @@ namespace MAP_MechanoidMechanitor
                 && groundSteps
                     <= MechFusionApproachTuning.MaximumGroundPathSteps)
             {
-                // A <= 20：强制普通步行，绝不触发快速飞行。
+                // A <= 8：强制普通步行，绝不触发快速飞行。
                 return true;
             }
 
