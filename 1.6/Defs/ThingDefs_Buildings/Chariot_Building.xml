@@ -2,7 +2,7 @@
 <Defs>
   <ThingDef ParentName="BuildingBase">
     <defName>MAP_Building_Chariot</defName>
-    <label>战车(展开）</label>
+    <label>「战车」（展开）</label>
     <description>战车展开并固定自身后的驻定形态。</description>
 
     <thingClass>Verse.Building</thingClass>

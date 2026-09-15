@@ -2,7 +2,7 @@
 <Defs>
   <ThingDef ParentName="LightMechanoid">
     <defName>MAP_Mech_Chariot</defName>
-    <label>战车</label>
+    <label>「战车」</label>
     <description>能够作为独立哨兵行动，并可转换为装甲或驻定形态的智能机械体。掌部搭载可持续扫射的高能光束。</description>
 
     <statBases>
@@ -90,7 +90,7 @@
 
   <PawnKindDef ParentName="LightMechanoidKind">
     <defName>MAP_PawnKind_Chariot</defName>
-    <label>战车</label>
+    <label>「战车」</label>
     <race>MAP_Mech_Chariot</race>
     <defaultFactionDef>PlayerColony</defaultFactionDef>
 
