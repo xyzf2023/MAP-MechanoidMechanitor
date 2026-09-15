@@ -15,7 +15,7 @@ namespace MAP_MechanoidMechanitor
             HediffDef? activationDef = PsychicCoreUtility.PsychicActivationHediffDef;
             if (pawn?.health?.hediffSet == null
                 || activationDef == null
-                || !PsychicCoreUtility.HasPsychicCore(pawn))
+                || !PsychicCoreUtility.HasAuthorizedPsychicActivationSource(pawn))
             {
                 return;
             }

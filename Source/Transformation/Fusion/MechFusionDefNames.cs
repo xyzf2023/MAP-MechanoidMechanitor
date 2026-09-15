@@ -9,5 +9,7 @@ namespace MAP_MechanoidMechanitor
             "MAP_BodySynchronization";
         internal const string MechControlSynchronizationHediffDefName =
             "MAP_MechControlSynchronization";
+        internal const string PsychicSynchronizationHediffDefName =
+            "MAP_PsychicSynchronization";
     }
 }

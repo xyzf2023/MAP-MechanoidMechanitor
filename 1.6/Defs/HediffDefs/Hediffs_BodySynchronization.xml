@@ -27,6 +27,78 @@
     <scenarioCanAdd>false</scenarioCanAdd>
   </HediffDef>
   <!--
+    仅在合体源拥有心灵中枢时添加。Severity 直接保存合体瞬间映射的
+    心灵中枢等级；Def 层属性与目标自身心灵中枢正常叠加。
+  -->
+  <HediffDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
+    <defName>MAP_PsychicSynchronization</defName>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_PsychicSynchronization</hediffClass>
+    <label>灵能同调</label>
+    <description>TODO</description>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>false</priceImpact>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <initialSeverity>1</initialSeverity>
+    <minSeverity>1</minSeverity>
+    <maxSeverity>10</maxSeverity>
+    <levelIsQuantity>false</levelIsQuantity>
+    <duplicationAllowed>false</duplicationAllowed>
+    <stages>
+      <li>
+        <minSeverity>1</minSeverity>
+        <statOffsets><PsychicSensitivity>0.25</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.90</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>2</minSeverity>
+        <statOffsets><PsychicSensitivity>0.50</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.85</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>3</minSeverity>
+        <statOffsets><PsychicSensitivity>0.75</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.80</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>4</minSeverity>
+        <statOffsets><PsychicSensitivity>1.00</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.75</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>5</minSeverity>
+        <statOffsets><PsychicSensitivity>1.50</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.70</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>6</minSeverity>
+        <statOffsets><PsychicSensitivity>2.00</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.65</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>7</minSeverity>
+        <statOffsets><PsychicSensitivity>2.75</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.55</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>8</minSeverity>
+        <statOffsets><PsychicSensitivity>3.50</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.45</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>9</minSeverity>
+        <statOffsets><PsychicSensitivity>4.25</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.30</PsychicEntropyGain></statFactors>
+      </li>
+      <li>
+        <minSeverity>10</minSeverity>
+        <statOffsets><PsychicSensitivity>5.00</PsychicSensitivity></statOffsets>
+        <statFactors><PsychicEntropyGain>0.15</PsychicEntropyGain></statFactors>
+        <blocksMentalBreaks>true</blocksMentalBreaks>
+      </li>
+    </stages>
+  </HediffDef>
+  <!--
     合体期间的内部维持标记：让原版 WorldPawns 不 mothball 源机械族，
     保证 Hediff 与限时 Comp 继续按原版节奏推进。不承载任何实例数据。
   -->

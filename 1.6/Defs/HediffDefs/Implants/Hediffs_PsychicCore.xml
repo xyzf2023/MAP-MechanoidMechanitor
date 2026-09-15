@@ -18,13 +18,6 @@
     <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
     <levelIsQuantity>false</levelIsQuantity>
     <duplicationAllowed>false</duplicationAllowed>
-    <comps>
-      <li Class="HediffCompProperties_GiveAbility">
-        <abilityDefs>
-          <li>MAP_PsychicActivation</li>
-        </abilityDefs>
-      </li>
-    </comps>
     <stages>
       <li>
         <minSeverity>1</minSeverity>

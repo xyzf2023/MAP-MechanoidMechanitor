@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPrefix]
         public static bool Prefix(Pawn pawn)
         {
-            return !PsychicCoreUtility.HasPsychicCore(pawn);
+            return !PsychicCoreUtility.HasPsychicCoreEffect(pawn);
         }
     }
 
@@ -33,7 +33,7 @@ namespace MAP_MechanoidMechanitor
             ref Hediff? __result)
         {
             if (def == HediffDefOf.DisruptorFlash
-                && PsychicCoreUtility.HasPsychicCore(___pawn))
+                && PsychicCoreUtility.HasPsychicCoreEffect(___pawn))
             {
                 __result = null;
                 return false;

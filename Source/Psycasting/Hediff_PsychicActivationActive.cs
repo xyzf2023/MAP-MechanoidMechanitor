@@ -20,7 +20,7 @@ namespace MAP_MechanoidMechanitor
 
                 float bonus = PsychicCoreUtility.GetPsychicActivationBonusPerHour(
                     pawn,
-                    PsychicCoreUtility.GetPsychicCoreLevel(pawn));
+                    PsychicCoreUtility.GetEffectivePsychicCoreLevel(pawn));
                 if (bonus > 0f)
                 {
                     stringBuilder.AppendLine(

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -30,6 +31,8 @@ namespace MAP_MechanoidMechanitor
             "MAP.BodySynchronization";
         internal const string MechControlSynchronizationRuleId =
             "MAP.MechControlSynchronization";
+        internal const string PsychicSynchronizationRuleId =
+            "MAP.PsychicSynchronization";
 
         private static readonly Dictionary<string, IMechFusionHealthEffectRule>
             Rules = new Dictionary<string, IMechFusionHealthEffectRule>(
@@ -39,6 +42,7 @@ namespace MAP_MechanoidMechanitor
         {
             Register(new BodySynchronizationRule());
             Register(new MechControlSynchronizationRule());
+            Register(new PsychicSynchronizationRule());
         }
 
         public static IReadOnlyCollection<IMechFusionHealthEffectRule> AllRules =>
@@ -104,6 +108,31 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
         }
+
+        private sealed class PsychicSynchronizationRule
+            : IMechFusionHealthEffectRule
+        {
+            public string RuleId => PsychicSynchronizationRuleId;
+
+            public bool TryCapture(
+                Pawn sourcePawn,
+                out HediffDef? hediffDef,
+                out float severity)
+            {
+                hediffDef = null;
+                severity = -1f;
+                int coreLevel = PsychicCoreUtility.GetPsychicCoreLevel(sourcePawn);
+                if (coreLevel <= 0)
+                {
+                    return false;
+                }
+
+                hediffDef = DefDatabase<HediffDef>.GetNamedSilentFail(
+                    MechFusionDefNames.PsychicSynchronizationHediffDefName);
+                severity = coreLevel;
+                return true;
+            }
+        }
     }
 
     /// <summary>
@@ -147,12 +176,24 @@ namespace MAP_MechanoidMechanitor
                         continue;
                     }
 
-                    session.AddHealthEffectEntry(new MechFusionHealthEffectEntry
+                    var entry = new MechFusionHealthEffectEntry
                     {
                         ruleId = rule.RuleId,
                         hediffDef = hediffDef,
                         severity = severity
-                    });
+                    };
+
+                    if (rule.RuleId ==
+                        MechFusionHealthEffectRegistry.PsychicSynchronizationRuleId)
+                    {
+                        // 只在合体瞬间捕获一次。之后即使目标新获得启灵神经，
+                        // 读档修复也只能读取这里保存的结果，不得补发心灵活化。
+                        entry.psychicActivationAuthorizationCaptured = true;
+                        entry.psychicActivationAuthorized =
+                            session.WearerPawn?.HasPsylink == true;
+                    }
+
+                    session.AddHealthEffectEntry(entry);
                 }
                 catch (Exception ex)
                 {

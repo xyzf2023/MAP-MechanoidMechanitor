@@ -12,11 +12,22 @@ namespace MAP_MechanoidMechanitor
         public HediffDef? hediffDef;
         public float severity = -1f;
 
+        // 仅供“灵能同调”规则使用。两个字段共同区分“合体瞬间明确判定为否”
+        // 与旧存档/其他规则从未捕获过该资格；读档时禁止重新检查当前启灵神经。
+        public bool psychicActivationAuthorizationCaptured;
+        public bool psychicActivationAuthorized;
+
         public void ExposeData()
         {
             Scribe_Values.Look(ref ruleId, "ruleId");
             Scribe_Defs.Look(ref hediffDef, "hediffDef");
             Scribe_Values.Look(ref severity, "severity", -1f);
+            Scribe_Values.Look(
+                ref psychicActivationAuthorizationCaptured,
+                "psychicActivationAuthorizationCaptured");
+            Scribe_Values.Look(
+                ref psychicActivationAuthorized,
+                "psychicActivationAuthorized");
         }
     }
 }

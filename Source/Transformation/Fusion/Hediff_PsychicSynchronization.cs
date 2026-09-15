@@ -1,47 +1,33 @@
-using RimWorld;
 using System.Text;
+using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    public sealed class Hediff_PsychicCore : Hediff_Level
+    /// <summary>
+    /// 将合体源机械体的心灵中枢等级映射给目标人类。
+    /// Severity 直接表示合体瞬间冻结的等级；Def 层属性独立生效，
+    /// C# 层效果与真实心灵中枢共享统一的“取较高等级、只结算一次”入口。
+    /// </summary>
+    public sealed class Hediff_PsychicSynchronization : Hediff
     {
         private int pendingPsyfocusRecoveryTicks;
 
+        public int MappedLevel => Mathf.Clamp(
+            Mathf.RoundToInt(Severity),
+            1,
+            PsychicCoreUtility.MaxPsychicCoreLevel);
+
+        public override string Label =>
+            def.label + " (" + "LevelNum".Translate(MappedLevel).ToString() + ")";
+
         public override void PostAdd(DamageInfo? dinfo)
         {
-            if (pawn?.RaceProps.IsMechanoid == true)
-            {
-                MechanoidMechanitorPsycastUtility.EnsurePsycastInfrastructure(pawn);
-            }
-
             base.PostAdd(dinfo);
-            Severity = level;
-
+            Severity = MappedLevel;
             PsychicCoreUtility.ClearExistingDisruptorFlash(pawn);
-            MechanoidMechanitorPsycastUtility.SyncPsychicReceiver(pawn);
-            if (pawn?.RaceProps.IsMechanoid == true)
-            {
-                MechanoidMechanitorPsycastUtility.EnsurePsycastInfrastructure(pawn);
-            }
-
-            PsychicCoreUtility.TryGainPsylinkLevel(pawn);
             PsychicCoreUtility.SyncPsychicActivationAbility(pawn);
-        }
-
-        public override void ChangeLevel(int levelOffset)
-        {
-            int oldLevel = level;
-            base.ChangeLevel(levelOffset);
-            Severity = level;
-
-            int gainedLevels = level - oldLevel;
-            for (int i = 0; i < gainedLevels; i++)
-            {
-                PsychicCoreUtility.TryGainPsylinkLevel(pawn);
-            }
-
-            MechanoidMechanitorPsycastUtility.SyncPsychicReceiver(pawn);
         }
 
         public override void TickInterval(int delta)
@@ -112,7 +98,6 @@ namespace MAP_MechanoidMechanitor
         {
             base.PostRemoved();
             PsychicCoreUtility.SyncPsychicActivationAbility(pawn);
-            MechanoidMechanitorPsycastUtility.SyncPsychicReceiver(pawn);
         }
     }
 }
