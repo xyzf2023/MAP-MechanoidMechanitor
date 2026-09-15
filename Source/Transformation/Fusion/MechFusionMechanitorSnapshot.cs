@@ -17,6 +17,10 @@ namespace MAP_MechanoidMechanitor
         public bool implantEffectsCaptured;
         public bool grantsQuantumCommunicator;
         public bool grantsProxySubchain;
+        // 只记录自身分配的冻结校验值。实际分配与全部配置仍由数据处理注册表保存。
+        public bool fusionSelfAllocationCaptured;
+        public int fusionSelfAllocationSteps;
+        public DataProcessingSpecialization fusionSelfAllocationSpecialization;
         public int bandwidthBonus;
         public int controlGroupBonus;
         public int destinationStartGroupIndex;
@@ -43,6 +47,9 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref grantsProxySubchain,
                 "grantsProxySubchain");
+            Scribe_Values.Look(ref fusionSelfAllocationCaptured, "fusionSelfAllocationCaptured");
+            Scribe_Values.Look(ref fusionSelfAllocationSteps, "fusionSelfAllocationSteps");
+            Scribe_Values.Look(ref fusionSelfAllocationSpecialization, "fusionSelfAllocationSpecialization");
             Scribe_Values.Look(ref bandwidthBonus, "bandwidthBonus");
             Scribe_Values.Look(ref controlGroupBonus, "controlGroupBonus");
             Scribe_Values.Look(
@@ -67,6 +74,12 @@ namespace MAP_MechanoidMechanitor
             sourceGroups ??= new List<MechFusionControlGroupSnapshot>();
             destinationGroupBackups ??=
                 new List<MechFusionControlGroupSnapshot>();
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                fusionSelfAllocationSteps = System.Math.Max(0, fusionSelfAllocationSteps);
+                fusionSelfAllocationSpecialization = DataProcessingAllocationUtility
+                    .NormalizeSpecialization(fusionSelfAllocationSpecialization);
+            }
         }
     }
 
