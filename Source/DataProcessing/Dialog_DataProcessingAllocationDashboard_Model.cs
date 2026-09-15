@@ -8,82 +8,11 @@ namespace MAP_MechanoidMechanitor
 {
     public sealed partial class Dialog_DataProcessingAllocationDashboard : Window
     {
-        private struct TargetSnapshot
-        {
-            public DataProcessingDynamicTargetRecord? config;
-            public bool dynamicManaged;
-            public DataProcessingDynamicState state;
-            public DataProcessingSpecialization specialization;
-            public int actualSteps;
-            public int normalSteps;
-            public int requestedSteps;
-            public string quotaSource;
-
-            public bool IsLimited => actualSteps < requestedSteps;
-        }
-
-        private TargetSnapshot BuildSnapshot(
-            GameComponent_DataProcessingAllocationRegistry registry,
-            Pawn target)
-        {
-            bool globalEnabled = registry.IsDynamicAllocationEnabled(overseer);
-            DataProcessingDynamicTargetRecord? config =
-                registry.GetDynamicTargetRecord(overseer, target);
-            if (globalEnabled && config == null)
-            {
-                config = registry.GetOrCreateDynamicTargetRecord(overseer, target);
-            }
-
-            int actual = registry.GetStepsForOverseerTarget(overseer, target);
-            int normal = config?.normalSteps ?? actual;
-            DataProcessingSpecialization specialization =
-                registry.GetSpecializationForOverseerTarget(overseer, target);
-            bool dynamicManaged = globalEnabled && (config?.enabled ?? true);
-            DataProcessingDynamicState state = dynamicManaged
-                ? registry.GetCachedDynamicStateForTarget(target)
-                : DataProcessingDynamicState.Idle;
-
-            int requested = normal;
-            string source;
-            if (!dynamicManaged || config == null)
-            {
-                source = "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Fixed".Translate();
-            }
-            else if (state == DataProcessingDynamicState.Idle)
-            {
-                source = "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.Normal".Translate();
-            }
-            else if (config.advancedMaxEnabled)
-            {
-                requested = config.GetMaxStepsForSpecialization(specialization);
-                source = "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.SpecializationMax"
-                    .Translate(DataProcessingAllocationUtility.GetSpecializationLabel(specialization));
-            }
-            else
-            {
-                requested = config.commonMaxSteps;
-                source = "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Source.CommonMax".Translate();
-            }
-
-            return new TargetSnapshot
-            {
-                config = config,
-                dynamicManaged = dynamicManaged,
-                state = state,
-                specialization = specialization,
-                actualSteps = actual,
-                normalSteps = normal,
-                requestedSteps = Mathf.Max(normal, requested),
-                quotaSource = source
-            };
-        }
-
         private void DrawSpecializationButtons(
             Rect rect,
             GameComponent_DataProcessingAllocationRegistry registry,
             Pawn target,
-            DataProcessingSpecialization current,
-            bool dynamicManaged)
+            DataProcessingSpecialization current)
         {
             DataProcessingSpecialization[] values =
             {
@@ -109,66 +38,48 @@ namespace MAP_MechanoidMechanitor
                     buttonRect,
                     DataProcessingAllocationUtility.GetSpecializationLabel(value),
                     current == value);
-                if (clicked && current != value)
+                TooltipHandler.TipRegion(buttonRect, DataProcessingAllocationUtility.GetSpecializationTip(value));
+                if (clicked)
                 {
-                    if (dynamicManaged)
-                    {
-                        registry.SetDynamicTargetDefaultSpecialization(
-                            overseer,
-                            target,
-                            value);
-                    }
-                    else
-                    {
-                        registry.TrySetManualSpecialization(
-                            overseer,
-                            target,
-                            value);
-                    }
+                    registry.SetDashboardSpecialization(overseer, target, value);
                 }
             }
         }
 
-        private static void DrawStepEditor(
-            Rect rect,
-            ref float y,
-            string label,
-            int steps,
-            Action<int> setter,
-            int minimum = 0)
+        private void DrawScrollable(Rect rect, string key, Func<Rect, float> draw)
         {
-            Rect lineRect = new Rect(rect.x, y, rect.width, 34f);
-            Text.Font = GameFont.Small;
-            Text.Anchor = TextAnchor.MiddleLeft;
-            GUI.color = TextMain;
-            Widgets.Label(
-                new Rect(lineRect.x, lineRect.y, lineRect.width - 170f, lineRect.height),
-                label);
-
-            Rect minusRect = new Rect(lineRect.xMax - 164f, lineRect.y + 2f, 38f, 30f);
-            Rect valueRect = new Rect(minusRect.xMax + 6f, lineRect.y, 76f, lineRect.height);
-            Rect plusRect = new Rect(valueRect.xMax + 6f, minusRect.y, 38f, 30f);
-
-            if (DrawMiniButton(minusRect, "-", steps > minimum))
-            {
-                setter(Mathf.Max(minimum, steps - 1));
-            }
-
-            Text.Anchor = TextAnchor.MiddleCenter;
-            GUI.color = Accent;
-            Widgets.Label(
-                valueRect,
-                DataProcessingAllocationUtility.StepsToPercent(steps).ToStringPercent());
-
-            if (DrawMiniButton(plusRect, "+"))
-            {
-                setter(steps + 1);
-            }
-
-            Text.Anchor = TextAnchor.UpperLeft;
-            y += 42f;
+            if (rect.width <= 20f || rect.height <= 0f) return;
+            float height;
+            if (!scrollHeights.TryGetValue(key, out height)) height = rect.height;
+            height = Mathf.Max(height, rect.height);
+            detailScrollPosition.y = Mathf.Clamp(detailScrollPosition.y, 0f, Mathf.Max(0f, height - rect.height));
+            Rect view = new Rect(0f, 0f, rect.width - 16f, height);
+            Widgets.BeginScrollView(rect, ref detailScrollPosition, view);
+            try { scrollHeights[key] = Mathf.Max(rect.height, draw(view) + 12f); }
+            finally { Widgets.EndScrollView(); }
         }
 
+        private static void Paragraph(Rect rect, ref float y, string text, Color color)
+        {
+            Text.Font = GameFont.Small; Text.Anchor = TextAnchor.UpperLeft; Text.WordWrap = true; GUI.color = color;
+            float height = Mathf.Max(Text.LineHeight, Text.CalcHeight(text, rect.width));
+            Widgets.Label(new Rect(rect.x, y, rect.width, height), text);
+            y += height + 6f;
+        }
+
+        private static void Section(Rect rect, ref float y, string title)
+        {
+            y += 6f;
+            DrawSectionTitle(new Rect(rect.x, y, rect.width, 26f), title);
+            y += 34f;
+        }
+
+        private static bool Foldout(Rect rect, ref float y, string label, ref bool open)
+        {
+            if (DrawSecondaryButton(new Rect(rect.x, y, rect.width, ControlHeight), (open ? "▼ " : "▶ ") + label)) open = !open;
+            y += ControlRow;
+            return open;
+        }
         private static void DrawPriorityButtons(Rect rect, int current, Action<int> setter)
         {
             string[] labels =
@@ -205,7 +116,8 @@ namespace MAP_MechanoidMechanitor
                     buttonRect,
                     "MAP_MechanoidMechanitor.DataProcessing.DynamicSeconds".Translate(value),
                     current == value);
-                if (clicked && current != value)
+
+                if (clicked)
                 {
                     setter(value);
                 }
@@ -227,7 +139,7 @@ namespace MAP_MechanoidMechanitor
             Action<bool> setter)
         {
             bool changed = DrawCheckboxRow(
-                new Rect(rect.x, y, rect.width, 28f),
+                new Rect(rect.x, y, rect.width, ControlHeight),
                 label,
                 value,
                 out bool next);
@@ -235,9 +147,9 @@ namespace MAP_MechanoidMechanitor
             {
                 setter(next);
             }
-            y += 30f;
+            y += ControlRow;
 
-            Text.Font = GameFont.Tiny;
+            Text.Font = GameFont.Small;
             Text.Anchor = TextAnchor.UpperLeft;
             GUI.color = TextSecondary;
             float descriptionHeight = Text.CalcHeight(description, rect.width - 34f);
@@ -247,14 +159,5 @@ namespace MAP_MechanoidMechanitor
             y += descriptionHeight + 12f;
         }
 
-        private int GetRequestedSteps(
-            GameComponent_DataProcessingAllocationRegistry registry,
-            Pawn target,
-            out string quotaSource)
-        {
-            TargetSnapshot snapshot = BuildSnapshot(registry, target);
-            quotaSource = snapshot.quotaSource;
-            return snapshot.requestedSteps;
-        }
     }
 }

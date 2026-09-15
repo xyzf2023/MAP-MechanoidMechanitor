@@ -41,23 +41,16 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange",
                 "MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip");
 
+            // 两项能力同为 15% 解锁；未启用奥德赛时仅显示远行队能力。
+            string travelKey = ModsConfig.OdysseyActive
+                ? "MAP_MechanoidMechanitor.DataProcessing.EffectTravelAndPilot"
+                : "MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead";
             AddPermission(
                 result,
                 steps,
                 DataProcessingAllocationUtility.TravelNodeThresholdSteps,
-                "MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead",
-                "MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip");
-
-            if (ModsConfig.OdysseyActive)
-            {
-                AddPermission(
-                    result,
-                    steps,
-                    DataProcessingAllocationUtility.ShuttlePilotThresholdSteps,
-                    "MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot",
-                    "MAP_MechanoidMechanitor.DataProcessing.EffectShuttlePilot.Tooltip");
-            }
-
+                travelKey,
+                travelKey + ".Tooltip");
             return result;
         }
 

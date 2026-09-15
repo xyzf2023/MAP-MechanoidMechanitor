@@ -46,13 +46,6 @@
 
   <!-- 仪表盘（人类机械师）动态术语 -->
   <MAP_MechanoidMechanitor.Consciousness.Dashboard.Title>意识分配仪表盘</MAP_MechanoidMechanitor.Consciousness.Dashboard.Title>
-  <MAP_MechanoidMechanitor.Consciousness.Dashboard.BaseConsciousness>基础意识</MAP_MechanoidMechanitor.Consciousness.Dashboard.BaseConsciousness>
-  <MAP_MechanoidMechanitor.Consciousness.Dashboard.Current>当前</MAP_MechanoidMechanitor.Consciousness.Dashboard.Current>
-  <MAP_MechanoidMechanitor.Consciousness.Dashboard.Threshold>阈值</MAP_MechanoidMechanitor.Consciousness.Dashboard.Threshold>
-  <MAP_MechanoidMechanitor.Consciousness.Dashboard.FixedUsage>固定占用</MAP_MechanoidMechanitor.Consciousness.Dashboard.FixedUsage>
-  <MAP_MechanoidMechanitor.Consciousness.Dashboard.DynamicUsage>动态占用</MAP_MechanoidMechanitor.Consciousness.Dashboard.DynamicUsage>
-  <MAP_MechanoidMechanitor.Consciousness.Dashboard.UnmetRequest>未满足请求</MAP_MechanoidMechanitor.Consciousness.Dashboard.UnmetRequest>
-  <MAP_MechanoidMechanitor.Consciousness.Dashboard.TargetCount>目标数量：{0}</MAP_MechanoidMechanitor.Consciousness.Dashboard.TargetCount>
 
   <!-- 通用动态术语（占位符） -->
   <MAP_MechanoidMechanitor.Term.CurrentWithResource>当前{0}：{1}</MAP_MechanoidMechanitor.Term.CurrentWithResource>

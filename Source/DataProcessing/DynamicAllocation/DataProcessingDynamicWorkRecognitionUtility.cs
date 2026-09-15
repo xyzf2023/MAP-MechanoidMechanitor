@@ -131,8 +131,19 @@ namespace MAP_MechanoidMechanitor
 
         public static string GetSourceLabel(DataProcessingWorkRecognitionSource source)
         {
-            return ("MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source." + source)
-                .Translate();
+            // 仅供开发者模式的工作识别诊断显示。
+            switch (source)
+            {
+                case DataProcessingWorkRecognitionSource.NoPawn: return "目标不存在";
+                case DataProcessingWorkRecognitionSource.Drafted: return "目标已征召";
+                case DataProcessingWorkRecognitionSource.NoJob: return "当前没有Job";
+                case DataProcessingWorkRecognitionSource.ExplicitWork: return "JobDef兼容扩展：明确计为工作";
+                case DataProcessingWorkRecognitionSource.ExplicitNonWork: return "JobDef兼容扩展：明确排除";
+                case DataProcessingWorkRecognitionSource.StandardWorkGiver: return "标准WorkGiver工作";
+                case DataProcessingWorkRecognitionSource.VanillaSpecialJob: return "原版特殊工作白名单";
+                case DataProcessingWorkRecognitionSource.UnknownJob: return "无法可靠分类的Job";
+                default: return source.ToString();
+            }
         }
 
         private static bool IsVanillaSpecialWork(JobDef jobDef)

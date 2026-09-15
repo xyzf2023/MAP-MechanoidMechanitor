@@ -85,7 +85,7 @@ namespace MAP_MechanoidMechanitor
                     value ? DashboardButtonStyle.Primary : DashboardButtonStyle.Secondary,
                     selected: value,
                     enabled: active,
-                    font: GameFont.Tiny);
+                    font: GameFont.Small);
             }
             finally
             {
@@ -131,19 +131,11 @@ namespace MAP_MechanoidMechanitor
             Text.Anchor = TextAnchor.UpperLeft;
         }
 
-        private static void DrawPlainNotice(Rect rect, string text)
-        {
-            Text.Font = GameFont.Small;
-            Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = TextSecondary;
-            Widgets.Label(rect, text);
-        }
-
         private static void DrawWorkRecognitionDiagnostic(Rect rect, Pawn target, ref float y)
         {
             DrawSectionTitle(
                 new Rect(rect.x, y, rect.width, 24f),
-                "MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Diagnostic".Translate());
+                "工作识别诊断（开发者模式）");
             y += 30f;
 
             DataProcessingWorkRecognitionResult result =
@@ -152,21 +144,21 @@ namespace MAP_MechanoidMechanitor
             string workGiverName = result.workGiverDef?.defName ?? "-";
 
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.JobDef".Translate(),
+                "当前 JobDef",
                 jobDefName,
                 TextMain);
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.WorkGiver".Translate(),
+                "当前 WorkGiver",
                 workGiverName,
                 TextMain);
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Result".Translate(),
+                "识别结果",
                 result.countsAsWork
-                    ? "MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Yes".Translate()
-                    : "MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.No".Translate(),
+                    ? "工作"
+                    : "非工作",
                 result.countsAsWork ? Accent : TextSecondary);
             DrawInfoRow(rect, ref y,
-                "MAP_MechanoidMechanitor.DataProcessing.WorkRecognition.Source".Translate(),
+                "识别来源",
                 DataProcessingDynamicWorkRecognitionUtility.GetSourceLabel(result.source),
                 TextMain);
         }
@@ -179,7 +171,7 @@ namespace MAP_MechanoidMechanitor
                 DashboardButtonStyle.Secondary,
                 selected,
                 enabled: true,
-                font: GameFont.Tiny);
+                font: GameFont.Small);
         }
 
         private static bool DrawFlatButton(
@@ -282,15 +274,6 @@ namespace MAP_MechanoidMechanitor
             GUI.color = Color.white;
         }
 
-        private static Rect Inset(Rect rect, float horizontal, float vertical)
-        {
-            return new Rect(
-                rect.x + horizontal,
-                rect.y + vertical,
-                Mathf.Max(0f, rect.width - horizontal * 2f),
-                Mathf.Max(0f, rect.height - vertical * 2f));
-        }
-
         private static void DrawPortrait(Rect rect, Pawn target)
         {
             // 完全隔离自己的颜色状态：头像必须始终按原始颜色绘制，
@@ -349,15 +332,6 @@ namespace MAP_MechanoidMechanitor
             DrawPanel(rect, Panel, border);
         }
 
-        private static bool DrawPrimaryButton(Rect rect, string label, bool selected = false)
-        {
-            return DrawFlatButton(
-                rect,
-                label,
-                DashboardButtonStyle.Primary,
-                selected);
-        }
-
         private static bool DrawSecondaryButton(
             Rect rect,
             string label,
@@ -381,16 +355,6 @@ namespace MAP_MechanoidMechanitor
                 selected: false,
                 enabled: enabled,
                 font: GameFont.Small);
-        }
-
-        private static bool DrawDangerButton(Rect rect, string label, bool enabled = true)
-        {
-            return DrawFlatButton(
-                rect,
-                label,
-                DashboardButtonStyle.Danger,
-                selected: false,
-                enabled: enabled);
         }
 
         private static void Solid(Rect rect, Color color)

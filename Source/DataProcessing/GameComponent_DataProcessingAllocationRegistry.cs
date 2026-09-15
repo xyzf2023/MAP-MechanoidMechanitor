@@ -7,7 +7,7 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
-    public sealed class GameComponent_DataProcessingAllocationRegistry : GameComponent
+    public sealed partial class GameComponent_DataProcessingAllocationRegistry : GameComponent
     {
         private List<DataProcessingAllocationRecord> records = new List<DataProcessingAllocationRecord>();
         private Dictionary<Pawn, List<DataProcessingAllocationRecord>> recordsByOverseer =
@@ -480,7 +480,8 @@ namespace MAP_MechanoidMechanitor
 
             if (config == null)
             {
-                return;
+                // 首次开启动态前的手动设置也必须留下常态额度，包括手动设为零。
+                config = GetOrCreateDynamicTargetRecord(overseer, target);
             }
 
             config.normalSteps =
@@ -620,6 +621,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            EnsureQuotaMappingBeforeGlobalToggle(overseer);
             DataProcessingDynamicAllocationRecord? existing = FindDynamicAllocationRecord(overseer);
             if (existing != null)
             {
@@ -2409,9 +2411,7 @@ namespace MAP_MechanoidMechanitor
 
                 DataProcessingSpecialization desiredSpecialization =
                     evaluation.specialization;
-                int requestedSteps = evaluation.taskActive
-                    ? config.GetMaxStepsForSpecialization(evaluation.specialization)
-                    : config.normalSteps;
+                int requestedSteps = GetRequestedStepsForEvaluation(config, evaluation);
 
                 entries.Add(new PlanEntry
                 {
@@ -3306,6 +3306,8 @@ namespace MAP_MechanoidMechanitor
             recordByTarget.Clear();
             pinRecords.Clear();
             nextPinOrder = 0;
+            favoriteRecords?.Clear();
+            favoritesInitialized = true;
             specializationRecords.Clear();
             specializationRecordByTarget.Clear();
             dynamicAllocationRecords.Clear();
@@ -3621,6 +3623,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Collections.Look(ref records, "records", LookMode.Deep);
             Scribe_Collections.Look(ref pinRecords, "pinRecords", LookMode.Deep);
             Scribe_Values.Look(ref nextPinOrder, "nextPinOrder", 0);
+            ExposeFavorites();
             Scribe_Collections.Look(
                 ref specializationRecords,
                 "specializationRecords",

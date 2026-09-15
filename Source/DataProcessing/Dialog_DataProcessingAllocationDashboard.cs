@@ -7,35 +7,24 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 数据处理仪表盘：默认专注于监控当前状态，只有明确进入编辑模式后才展示设置控件。
+    /// 数据处理仪表盘：整合预算、即时编辑、效果和批量配置；窗口状态不写入存档。
     /// </summary>
     public sealed partial class Dialog_DataProcessingAllocationDashboard : Window
     {
         private enum DashboardMode
         {
             Monitor,
-            EditTarget,
-            GlobalSettings
-        }
-
-        private enum EditTab
-        {
-            Basic,
-            Rules,
-            Advanced
-        }
-
-        private enum GlobalDefaultsTab
-        {
-            Basic,
-            Rules,
-            Advanced
+            Defaults,
+            GlobalSettings,
+            Batch
         }
 
         private enum TargetFilter
         {
             All,
-            NeedsAttention
+            NeedsAttention,
+            Automatic,
+            Fixed
         }
 
         private static readonly Color Background = new Color(0.06f, 0.085f, 0.10f, 0.985f);
@@ -53,17 +42,17 @@ namespace MAP_MechanoidMechanitor
 
         private const float OuterPadding = 12f;
         private const float Gap = 10f;
-        private const float HeaderHeight = 84f;
-        private const float FooterHeight = 24f;
-        private const float LeftWidth = 310f;
-        private const float TargetRowHeight = 64f;
-        private const float TargetRowGap = 5f;
+        private const float HeaderHeight = 142f;
+        private const float ControlHeight = 36f;
+        private const float ControlRow = ControlHeight + 8f;
+        private const float GlobalControlHeight = 88f;
+        private const float LeftWidth = 350f;
+        private const float TargetRowHeight = 80f;
+        private const float TargetRowGap = 7f;
 
         private readonly Pawn overseer;
         private Pawn? selectedTarget;
 		private DashboardMode mode;
-		private EditTab editTab;
-		private GlobalDefaultsTab globalDefaultsTab;
 		private TargetFilter filter;
         private Vector2 targetScrollPosition;
         private Vector2 detailScrollPosition;
@@ -75,8 +64,8 @@ namespace MAP_MechanoidMechanitor
         {
             public Pawn Pawn = null!;
             public bool IsSelf;
-            public bool IsPinned;
-            public int PinOrder;
+            public bool IsFavorite;
+            public int FavoriteOrder;
             public int Priority;
             public string SortLabel = string.Empty;
         }
@@ -86,6 +75,8 @@ namespace MAP_MechanoidMechanitor
         private List<Pawn>? cachedTargetPawns;
         private int lastTargetRefreshFrame = -1;
         private bool targetCacheDirty = true;
+        // 收藏图标实时更新，排序值在本次窗口内固定，避免点击后目标跳位。
+        private readonly Dictionary<Pawn, int> windowFavoriteOrder = new Dictionary<Pawn, int>();
 
         // 复制/粘贴运行时剪贴板：非 static、不序列化、不跨窗口保存。
         private DataProcessingDynamicTargetSettingsSnapshot? settingsClipboard;
@@ -96,8 +87,8 @@ namespace MAP_MechanoidMechanitor
         {
             get
             {
-                float width = Mathf.Min(1000f, Mathf.Max(760f, UI.screenWidth - 80f));
-                float height = Mathf.Min(680f, Mathf.Max(540f, UI.screenHeight - 80f));
+                float width = Mathf.Min(1160f, UI.screenWidth - 40f);
+                float height = Mathf.Min(820f, UI.screenHeight - 40f);
                 return new Vector2(width, height);
             }
         }
@@ -106,6 +97,7 @@ namespace MAP_MechanoidMechanitor
         {
             this.overseer = overseer;
             forcePause = false;
+            closeOnAccept = false; // Enter 提交额度输入，不关闭整个窗口。
             doCloseButton = false;
             doCloseX = true;
             absorbInputAroundWindow = false;
@@ -115,15 +107,26 @@ namespace MAP_MechanoidMechanitor
             onlyOneOfTypeAllowed = true;
         }
 
+        public override void PostOpen()
+        {
+            base.PostOpen();
+            if (IsOverseerValid())
+                GameComponent_DataProcessingAllocationRegistry.CurrentRegistry?.EnsureDashboardConfiguration(overseer);
+        }
+
         public override void PostClose()
         {
+            FinishStepInput();
             // 关闭仪表盘后复制内容必须彻底消失。
             settingsClipboard = null;
             settingsClipboardSource = null;
+            batchTargets.Clear();
+            scrollHeights.Clear();
 
             // 目标缓存只在窗口生命周期内有效。
             cachedTargets = null;
             cachedTargetPawns = null;
+            windowFavoriteOrder.Clear();
             lastTargetRefreshFrame = -1;
             targetCacheDirty = true;
 
@@ -132,6 +135,7 @@ namespace MAP_MechanoidMechanitor
 
         public override void DoWindowContents(Rect inRect)
         {
+            stepInputDrawn = false;
             Color oldColor = GUI.color;
             GameFont oldFont = Text.Font;
             TextAnchor oldAnchor = Text.Anchor;
@@ -175,26 +179,38 @@ namespace MAP_MechanoidMechanitor
                 DrawHeader(headerRect, registry, targets.Count);
 
                 float bodyY = headerRect.yMax + Gap;
-                float bodyHeight = contentRect.yMax - bodyY - FooterHeight - Gap;
-                Rect bodyRect = new Rect(contentRect.x, bodyY, contentRect.width, bodyHeight);
-                Rect leftRect = new Rect(bodyRect.x, bodyRect.y, LeftWidth, bodyRect.height);
-                Rect rightRect = new Rect(
-                    leftRect.xMax + Gap,
-                    bodyRect.y,
-                    bodyRect.width - LeftWidth - Gap,
-                    bodyRect.height);
-
-                DrawTargetList(leftRect, registry, targets);
-                DrawDetail(rightRect, registry);
-
-                DrawFooter(new Rect(
-                    contentRect.x,
-                    bodyRect.yMax + Gap,
-                    contentRect.width,
-                    FooterHeight));
+                Rect bodyRect = new Rect(contentRect.x, bodyY, contentRect.width, Mathf.Max(1f, contentRect.yMax - bodyY));
+                bool narrow = bodyRect.width < 760f;
+                if (narrow)
+                {
+                    var dock = new Rect(bodyRect.x, bodyRect.y, bodyRect.width, GlobalControlHeight);
+                    bodyRect.yMin = dock.yMax + Gap;
+                    if (mode == DashboardMode.Monitor || mode == DashboardMode.Batch)
+                    {
+                        if (DrawSecondaryButton(new Rect(bodyRect.x, bodyRect.y, bodyRect.width, ControlHeight),
+                            narrowShowTargets ? (mode == DashboardMode.Batch ? L("BatchConfigure") : L("ShowDetail")) : L("ShowTargets")))
+                        { FinishStepInput(); narrowShowTargets = !narrowShowTargets; }
+                        bodyRect.yMin += ControlRow;
+                        if (narrowShowTargets) DrawTargetList(bodyRect, registry, targets);
+                        else DrawDetail(bodyRect, registry);
+                    }
+                    else DrawDetail(bodyRect, registry);
+                    DrawGlobalControl(dock, registry);
+                }
+                else
+                {
+                    float leftWidth = Mathf.Min(LeftWidth, bodyRect.width * 0.38f);
+                    Rect leftRect = new Rect(bodyRect.x, bodyRect.y + GlobalControlHeight + Gap, leftWidth, bodyRect.height - GlobalControlHeight - Gap);
+                    Rect rightRect = new Rect(leftRect.xMax + Gap, bodyRect.y,
+                        bodyRect.width - leftWidth - Gap, bodyRect.height);
+                    DrawTargetList(leftRect, registry, targets);
+                    DrawDetail(rightRect, registry);
+                    DrawGlobalControl(new Rect(leftRect.x, bodyRect.y, leftRect.width, GlobalControlHeight), registry);
+                }
             }
             finally
             {
+                FinishUnfocusedStepInput();
                 GUI.color = oldColor;
                 Text.Font = oldFont;
                 Text.Anchor = oldAnchor;
@@ -275,20 +291,32 @@ namespace MAP_MechanoidMechanitor
             Pawn target,
             bool isSelf)
         {
-            bool isPinned = registry.IsPinned(overseer, target);
+            int favoriteOrder = GetWindowFavoriteOrder(registry, target);
+            bool isFavorite = favoriteOrder != int.MaxValue;
             return new TargetSortEntry
             {
                 Pawn = target,
                 IsSelf = isSelf,
-                IsPinned = isPinned,
-                PinOrder = isPinned ? registry.GetPinOrder(overseer, target) : 0,
+                IsFavorite = isFavorite,
+                FavoriteOrder = favoriteOrder,
                 Priority = registry.GetDynamicTargetRecord(overseer, target)?.priority ?? 3,
                 SortLabel = target.LabelShortCap.ToString()
             };
         }
 
+        private int GetWindowFavoriteOrder(GameComponent_DataProcessingAllocationRegistry registry, Pawn target)
+        {
+            if (!windowFavoriteOrder.TryGetValue(target, out int order))
+            {
+                // 首次构建列表时记录；窗口期间新加入的目标在首次出现时记录。
+                order = registry.GetFavoriteOrder(overseer, target);
+                windowFavoriteOrder.Add(target, order);
+            }
+            return order;
+        }
+
         // 比较器只读取快照字段，绝不在排序过程中查询注册表。
-        // 排序规则与原实现一致：自身、钉选、钉选顺序、排序名称（不含动态优先级）。
+        // 排序规则与原实现一致：自身、收藏、收藏顺序、排序名称（不含动态优先级）。
         private static int CompareTargetEntries(
             TargetSortEntry left,
             TargetSortEntry right)
@@ -298,14 +326,14 @@ namespace MAP_MechanoidMechanitor
                 return left.IsSelf ? -1 : 1;
             }
 
-            if (left.IsPinned != right.IsPinned)
+            if (left.IsFavorite != right.IsFavorite)
             {
-                return left.IsPinned ? -1 : 1;
+                return left.IsFavorite ? -1 : 1;
             }
 
-            if (left.IsPinned && right.IsPinned)
+            if (left.IsFavorite && right.IsFavorite)
             {
-                int pinCompare = left.PinOrder.CompareTo(right.PinOrder);
+                int pinCompare = left.FavoriteOrder.CompareTo(right.FavoriteOrder);
                 if (pinCompare != 0)
                 {
                     return pinCompare;
@@ -318,7 +346,7 @@ namespace MAP_MechanoidMechanitor
                 StringComparison.CurrentCulture);
         }
 
-        // 每帧廉价校验快照关键字段：钉选/顺序/优先级变化立即触发重建；
+        // 每帧廉价校验优先级；收藏排序保持本次窗口的快照。
         // 目标死亡、销毁或 Discarded 时立即刷新。
         private bool TargetCacheMatchesRegistry(
             GameComponent_DataProcessingAllocationRegistry registry)
@@ -334,18 +362,6 @@ namespace MAP_MechanoidMechanitor
                 Pawn target = entry.Pawn;
                 if (target == null || target.Dead || target.Destroyed
                     || target.Discarded)
-                {
-                    return false;
-                }
-
-                bool isPinned = registry.IsPinned(overseer, target);
-                if (isPinned != entry.IsPinned)
-                {
-                    return false;
-                }
-
-                if (isPinned
-                    && registry.GetPinOrder(overseer, target) != entry.PinOrder)
                 {
                     return false;
                 }
@@ -368,323 +384,270 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            FinishStepInput();
             selectedTarget = targets.Count > 0 ? targets[0] : null;
-            mode = DashboardMode.Monitor;
         }
 
-        private void DrawHeader(
-            Rect rect,
-            GameComponent_DataProcessingAllocationRegistry registry,
-            int targetCount)
+        private enum TargetSort { Name, Deficit, Actual, Priority }
+        private TargetSort targetSort;
+        private string search = string.Empty;
+        private bool narrowShowTargets;
+        private readonly HashSet<Pawn> batchTargets = new HashSet<Pawn>();
+
+
+        private readonly Dictionary<string, float> scrollHeights = new Dictionary<string, float>();
+        private string inputScope = string.Empty;
+        private bool showAdvanced;
+        private static string L(string key) => ("MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2." + key).Translate();
+        private static string Percent(int steps) => DataProcessingAllocationUtility.StepsToPercent(steps).ToStringPercent();
+
+        private void OpenPage(DashboardMode next)
+        {
+            FinishStepInput();
+            if (next == mode) return;
+            RequestBatchExit(() =>
+            {
+                mode = next;
+                if (next == DashboardMode.Batch) { batchAdjustAll = false; batchFields.Clear(); }
+                detailScrollPosition = Vector2.zero;
+            });
+            GUI.FocusControl(null);
+        }
+
+        private void DrawHeader(Rect rect, GameComponent_DataProcessingAllocationRegistry registry, int targetCount)
         {
             DrawPanel(rect, Accent);
-            Rect inner = rect.ContractedBy(10f);
-
-            Text.Font = GameFont.Medium;
-            Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = TextMain;
-            Widgets.Label(
-                new Rect(inner.x, inner.y, 220f, 28f),
-                DataProcessingTerminologyUtility.GetDashboardTitleKey(overseer).Translate());
-
+            var inner = rect.ContractedBy(8f);
             Text.Font = GameFont.Small;
-            GUI.color = Accent;
-            Widgets.Label(
-                new Rect(inner.x, inner.y + 32f, 220f, Text.LineHeight),
-                overseer.LabelShortCap);
-            GUI.color = TextSecondary;
-            Widgets.Label(
-                new Rect(inner.x, inner.y + 52f, 220f, Text.LineHeight),
-                DataProcessingTerminologyUtility.GetTargetCountKey(overseer)
-                    .Translate(targetCount));
-
-            float current = DataProcessingAllocationUtility.GetCurrentConsciousness(overseer);
-            DataProcessingDynamicAllocationRecord? global =
-                registry.FindDynamicAllocationRecordForUI(overseer);
-            int thresholdPercent = global?.minConsciousnessPercent ?? 100;
-            float threshold = thresholdPercent / 100f;
-            float thresholdMargin = Mathf.Max(0f, current - threshold);
-
-            float statsX = inner.x + 240f;
-            const float controlsWidth = 250f;
-            float statsWidth = Mathf.Max(240f, inner.xMax - statsX - controlsWidth - 16f);
-            DrawHeaderStats(
-                new Rect(statsX, inner.y + 6f, statsWidth, 58f),
-                current,
-                threshold,
-                thresholdMargin);
-
-            Rect controlsRect = new Rect(
-                inner.xMax - controlsWidth,
-                inner.y + 5f,
-                controlsWidth,
-                58f);
-            bool dynamic = registry.IsDynamicAllocationEnabled(overseer);
-            Rect toggleRect = new Rect(
-                controlsRect.x,
-                controlsRect.y,
-                controlsRect.width,
-                27f);
-            if (DrawToggleRow(
-                    toggleRect,
-                    "MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation".Translate(),
-                    dynamic))
+            GUI.color = TextMain;
+            Widgets.Label(new Rect(inner.x, inner.y, inner.width, 26f),
+                overseer.LabelShortCap + " · " + DataProcessingTerminologyUtility.GetDashboardTitleKey(overseer).Translate());
+            var budget = registry.GetBudgetSnapshotForUI(overseer);
+            string[] labels = { L("Current"), L("Reserve"), L("Margin"), L("Deficit") };
+            string[] values = {
+                budget.available ? budget.current.ToStringPercent() : L("Pending"),
+                budget.threshold.ToStringPercent(),
+                budget.available ? (budget.current - budget.threshold).ToStringPercent() : L("Pending"),
+                Percent(budget.unmetSteps) + " / " + budget.limitedCount + L("Targets")
+            };
+            float width = (inner.width - 18f) / 4f;
+            for (int i = 0; i < 4; i++)
             {
-                if (!registry.TrySetDynamicAllocationEnabled(overseer, !dynamic))
+                Rect stat = new Rect(inner.x + i * (width + 6f), inner.y + 30f, width, 48f);
+                Text.Font = GameFont.Small;
+                GUI.color = i == 3 && budget.limitedCount > 0 ? Warning : TextSecondary;
+                Widgets.Label(new Rect(stat.x, stat.y, stat.width, 24f), labels[i]);
+                GUI.color = i == 2 && budget.available && budget.current < budget.threshold ? Warning : Accent;
+                Widgets.Label(new Rect(stat.x, stat.y + 24f, stat.width, 24f), values[i]);
+                TooltipHandler.TipRegion(stat, L("BudgetHelp"));
+                if (Widgets.ButtonInvisible(stat))
                 {
-                    Messages.Message(
-                        "MAP_MechanoidMechanitor.DataProcessing.DynamicAllocationFailed".Translate(),
-                        overseer,
-                        MessageTypeDefOf.RejectInput,
-                        historical: false);
+                    if (i == 3) { filter = TargetFilter.NeedsAttention; search = string.Empty; targetScrollPosition = Vector2.zero; narrowShowTargets = true; OpenPage(DashboardMode.Monitor); }
+                    else OpenPage(DashboardMode.GlobalSettings);
                 }
             }
+            string[] tabs = { L("TargetsPage") + " (" + targetCount + ")", L("BudgetPage"), L("DefaultsPage"), L("BatchPage") + " (" + batchTargets.Count + ")" };
+            DashboardMode[] modes = { DashboardMode.Monitor, DashboardMode.GlobalSettings, DashboardMode.Defaults, DashboardMode.Batch };
+            for (int i = 0; i < tabs.Length; i++)
+                if (DrawTabButton(new Rect(inner.x + i * (width + 6f), inner.y + 88f, width, ControlHeight), tabs[i], mode == modes[i]))
+                    OpenPage(modes[i]);
+        }
 
-            Rect globalRect = new Rect(
-                controlsRect.xMax - 142f,
-                controlsRect.y + 32f,
-                142f,
-                28f);
-            if (DrawSecondaryButton(
-                    globalRect,
-                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.GlobalSettings".Translate(),
-                    selected: mode == DashboardMode.GlobalSettings))
+        private void DrawGlobalControl(Rect rect, GameComponent_DataProcessingAllocationRegistry registry)
+        {
+            bool enabled = registry.IsDynamicAllocationEnabled(overseer);
+            DrawPanel(rect, enabled ? Accent : Border);
+            var inner = rect.ContractedBy(8f);
+            Text.Font = GameFont.Small; Text.Anchor = TextAnchor.MiddleLeft; GUI.color = TextMain;
+            Widgets.Label(new Rect(inner.x, inner.y, inner.width - 112f, ControlHeight), L("GlobalAutomatic"));
+            if (DrawFlatButton(new Rect(inner.xMax - 106f, inner.y, 106f, ControlHeight), L(enabled ? "Enabled" : "Disabled"),
+                enabled ? DashboardButtonStyle.Primary : DashboardButtonStyle.Secondary, selected: enabled))
             {
-                mode = DashboardMode.GlobalSettings;
-                detailScrollPosition = Vector2.zero;
+                FinishStepInput();
+                if (!registry.TrySetDynamicAllocationEnabled(overseer, !enabled))
+                    Messages.Message("MAP_MechanoidMechanitor.DataProcessing.DynamicAllocationFailed".Translate(), overseer, MessageTypeDefOf.RejectInput, false);
             }
+            Text.Anchor = TextAnchor.UpperLeft; Text.Font = GameFont.Small; GUI.color = TextSecondary;
+            Widgets.Label(new Rect(inner.x, inner.y + ControlRow, inner.width, 26f), L(enabled ? "AutomaticRunning" : "AutomaticStopped"));
+            if (!enabled) TooltipHandler.TipRegion(rect, L("GlobalPaused"));
         }
 
-        private static void DrawHeaderStats(
-            Rect rect,
-            float current,
-            float threshold,
-            float margin)
-        {
-            float width = (rect.width - 12f) / 3f;
-            DrawPlainStat(
-                new Rect(rect.x, rect.y, width, rect.height),
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Current".Translate(),
-                current.ToStringPercent(),
-                current < 0.50f ? Danger : TextMain);
-            DrawPlainStat(
-                new Rect(rect.x + width + 6f, rect.y, width, rect.height),
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Threshold".Translate(),
-                threshold.ToStringPercent(),
-                TextMain);
-            DrawPlainStat(
-                new Rect(rect.x + (width + 6f) * 2f, rect.y, width, rect.height),
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.Margin".Translate(),
-                margin.ToStringPercent(),
-                margin <= 0.0001f ? Warning : Accent);
-        }
-
-        private static void DrawPlainStat(Rect rect, string label, string value, Color valueColor)
-        {
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = TextSecondary;
-            Widgets.Label(new Rect(rect.x, rect.y, rect.width, 20f), label);
-            Text.Font = GameFont.Medium;
-            GUI.color = valueColor;
-            Widgets.Label(new Rect(rect.x, rect.y + 22f, rect.width, 30f), value);
-            Text.Anchor = TextAnchor.UpperLeft;
-        }
-
-        private void DrawTargetList(
-            Rect rect,
-            GameComponent_DataProcessingAllocationRegistry registry,
-            List<Pawn> targets)
+        private void DrawTargetList(Rect rect, GameComponent_DataProcessingAllocationRegistry registry, List<Pawn> targets)
         {
             DrawPanel(rect, Border);
-            Rect inner = rect.ContractedBy(10f);
-
-            Text.Font = GameFont.Small;
-            Text.Anchor = TextAnchor.UpperLeft;
-            GUI.color = TextMain;
-            Widgets.Label(
-                new Rect(inner.x, inner.y, inner.width, Text.LineHeight),
-                "MAP_MechanoidMechanitor.DataProcessing.SubjectsHeader".Translate());
-
-            Rect allRect = new Rect(inner.x, inner.y + 28f, 92f, 28f);
-            Rect attentionRect = new Rect(allRect.xMax + 6f, allRect.y, 116f, 28f);
-            if (DrawTabButton(
-                    allRect,
-                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAll".Translate(),
-                    filter == TargetFilter.All))
+            var inner = rect.ContractedBy(8f);
+            bool batch = mode == DashboardMode.Batch;
+            batchTargets.RemoveWhere(p => p == null || !targets.Contains(p));
+            float top = inner.y;
+            // 研究解锁后，自身固定在普通目标上方，不受搜索和排序影响。
+            if (ResearchFeatureUnlockUtility.IsSelfDirectiveFocusUnlocked())
             {
-                filter = TargetFilter.All;
-                targetScrollPosition = Vector2.zero;
+                DrawTargetRow(new Rect(inner.x, top, inner.width, TargetRowHeight), registry, overseer,
+                    registry.GetTargetSnapshotForUI(overseer, overseer));
+                top += TargetRowHeight + TargetRowGap;
             }
-            if (DrawTabButton(
-                    attentionRect,
-                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.FilterAttention".Translate(),
-                    filter == TargetFilter.NeedsAttention))
+            Text.Font = GameFont.Small; Text.Anchor = TextAnchor.UpperLeft; GUI.color = Color.white;
+            GUI.SetNextControlName("MAP_DP_Search");
+            Rect searchRect = new Rect(inner.x, top, inner.width, ControlHeight);
+            string nextSearch = Widgets.TextField(searchRect, search);
+            if (nextSearch.Length == 0 && GUI.GetNameOfFocusedControl() != "MAP_DP_Search")
             {
-                filter = TargetFilter.NeedsAttention;
-                targetScrollPosition = Vector2.zero;
+                GUI.color = TextSecondary;
+                Widgets.Label(new Rect(searchRect.x + 5f, searchRect.y + 3f, searchRect.width - 10f, 22f), L("SearchPlaceholder"));
             }
-
-            List<Pawn> visible = new List<Pawn>();
-            for (int i = 0; i < targets.Count; i++)
+            if (nextSearch != search) { search = nextSearch; targetScrollPosition = Vector2.zero; }
+            top += ControlRow;
+            float half = (inner.width - 6f) / 2f;
+            string[] filters = { L("All"), L("Limited"), L("Automatic"), L("Fixed") };
+            if (DrawSecondaryButton(new Rect(inner.x, top, half, ControlHeight), L("Filter") + filters[(int)filter]))
             {
-                Pawn target = targets[i];
-                if (filter == TargetFilter.All || NeedsAttention(registry, target))
+                var options = new List<FloatMenuOption>();
+                for (int i = 0; i < filters.Length; i++)
                 {
-                    visible.Add(target);
+                    TargetFilter captured = (TargetFilter)i;
+                    options.Add(new FloatMenuOption(filters[i], () => { filter = captured; targetScrollPosition = Vector2.zero; }));
                 }
+                Find.WindowStack.Add(new FloatMenu(options));
             }
-
-            Rect listRect = new Rect(
-                inner.x,
-                inner.y + 66f,
-                inner.width,
-                inner.height - 66f);
-            if (visible.Count == 0)
+            if (DrawSecondaryButton(new Rect(inner.x + half + 6f, top, half, ControlHeight), L("Sort") + L("Sort" + targetSort)))
             {
-                DrawCenteredMessage(
-                    listRect,
-                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.NoAttention".Translate());
-                return;
+                var options = new List<FloatMenuOption>();
+                foreach (TargetSort value in Enum.GetValues(typeof(TargetSort)))
+                {
+                    TargetSort captured = value;
+                    options.Add(new FloatMenuOption(L("Sort" + value), () => { targetSort = captured; targetScrollPosition = Vector2.zero; }));
+                }
+                Find.WindowStack.Add(new FloatMenu(options));
             }
-
-            float viewHeight = visible.Count * TargetRowHeight
-                + Mathf.Max(0, visible.Count - 1) * TargetRowGap;
-            Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, viewHeight);
-            Widgets.BeginScrollView(listRect, ref targetScrollPosition, viewRect);
+            top += ControlRow;
+            var visible = new List<Pawn>();
+            var snapshots = new Dictionary<Pawn, DataProcessingTargetUISnapshot>();
+            var favoriteOrder = new Dictionary<Pawn, int>();
+            foreach (var target in targets)
+            {
+                if (ReferenceEquals(target, overseer)) continue;
+                var snapshot = registry.GetTargetSnapshotForUI(overseer, target);
+                snapshots[target] = snapshot;
+                favoriteOrder[target] = GetWindowFavoriteOrder(registry, target);
+                if (target.LabelShortCap.ToString().IndexOf(search, StringComparison.CurrentCultureIgnoreCase) < 0) continue;
+                if (filter == TargetFilter.NeedsAttention && !snapshot.IsLimited) continue;
+                if (filter == TargetFilter.Automatic && !snapshot.dynamicManaged) continue;
+                if (filter == TargetFilter.Fixed && snapshot.dynamicManaged) continue;
+                visible.Add(target);
+            }
+            visible.Sort((a, b) =>
+            {
+                int favorites = favoriteOrder[a].CompareTo(favoriteOrder[b]);
+                if (favorites != 0) return favorites;
+                // 收藏组只按收藏先后排列，普通排序仅用于非收藏目标。
+                if (favoriteOrder[a] != int.MaxValue) return a.thingIDNumber.CompareTo(b.thingIDNumber);
+                int order = 0;
+                var sa = snapshots[a]; var sb = snapshots[b];
+                if (targetSort == TargetSort.Deficit) order = (sb.IsLimited ? sb.requestedSteps - sb.actualSteps : 0).CompareTo(sa.IsLimited ? sa.requestedSteps - sa.actualSteps : 0);
+                if (targetSort == TargetSort.Actual) order = sb.actualSteps.CompareTo(sa.actualSteps);
+                if (targetSort == TargetSort.Priority) order = (sa.config?.priority ?? 3).CompareTo(sb.config?.priority ?? 3);
+                if (order == 0) order = string.Compare(a.LabelShortCap.ToString(), b.LabelShortCap.ToString(), StringComparison.CurrentCulture);
+                return order != 0 ? order : a.thingIDNumber.CompareTo(b.thingIDNumber);
+            });
+            if (batch)
+            {
+                if (DrawSecondaryButton(new Rect(inner.x, top, half, ControlHeight), L("SelectVisible")))
+                {
+                    if (targets.Contains(overseer) && overseer.RaceProps?.IsMechanoid == true) batchTargets.Add(overseer);
+                    foreach (var target in visible) if (target.RaceProps?.IsMechanoid == true) batchTargets.Add(target);
+                }
+                if (DrawSecondaryButton(new Rect(inner.x + half + 6f, top, half, ControlHeight), L("ClearSelection"))) batchTargets.Clear();
+                top += ControlRow;
+            }
+            var listRect = new Rect(inner.x, top, inner.width, Mathf.Max(1f, inner.yMax - top));
+            if (visible.Count == 0) { DrawCenteredMessage(listRect, L("NoMatches")); return; }
+            var view = new Rect(0f, 0f, listRect.width - 16f, visible.Count * (TargetRowHeight + TargetRowGap));
+            Widgets.BeginScrollView(listRect, ref targetScrollPosition, view);
             try
             {
-                float y = 0f;
                 for (int i = 0; i < visible.Count; i++)
-                {
-                    DrawTargetRow(
-                        new Rect(0f, y, viewRect.width, TargetRowHeight),
-                        registry,
-                        visible[i]);
-                    y += TargetRowHeight + TargetRowGap;
-                }
+                    DrawTargetRow(new Rect(0f, i * (TargetRowHeight + TargetRowGap), view.width, TargetRowHeight), registry, visible[i], snapshots[visible[i]]);
             }
-            finally
-            {
-                Widgets.EndScrollView();
-            }
+            finally { Widgets.EndScrollView(); }
         }
 
-        private void DrawTargetRow(
-            Rect rect,
-            GameComponent_DataProcessingAllocationRegistry registry,
-            Pawn target)
+        private void DrawTargetRow(Rect rect, GameComponent_DataProcessingAllocationRegistry registry, Pawn target, DataProcessingTargetUISnapshot snapshot)
         {
-            bool selected = ReferenceEquals(selectedTarget, target);
+            bool batch = mode == DashboardMode.Batch;
+            bool selected = batch ? batchTargets.Contains(target) : ReferenceEquals(target, selectedTarget);
+            bool self = ReferenceEquals(target, overseer);
+            bool selectable = registry.IsValidAllocationPairForList(overseer, target)
+                && (!batch || target.RaceProps?.IsMechanoid == true);
             Solid(rect, selected ? PanelSelected : RowBackground);
             GUI.color = selected ? Accent : Border;
             Widgets.DrawBox(rect, selected ? 2 : 1);
-            Widgets.DrawHighlightIfMouseover(rect);
-
-            Rect portraitRect = new Rect(rect.x + 8f, rect.y + 8f, 48f, 48f);
-            DrawPortrait(portraitRect, target);
-
-            int actual = registry.GetStepsForOverseerTarget(overseer, target);
-            DataProcessingSpecialization specialization =
-                registry.GetSpecializationForOverseerTarget(overseer, target);
-            bool dynamic = registry.IsDynamicAllocationEnabledForTarget(overseer, target);
-            int requested = GetRequestedSteps(registry, target, out _);
-            bool limited = actual < requested;
-
-            float infoX = portraitRect.xMax + 9f;
-            float infoWidth = rect.xMax - infoX - 56f;
-            Text.Font = GameFont.Small;
-            GUI.color = TextMain;
-            Widgets.Label(
-                new Rect(infoX, rect.y + 7f, infoWidth, Text.LineHeight),
-                target.LabelShortCap);
-
-            Text.Font = GameFont.Tiny;
-            GUI.color = limited ? Warning : TextSecondary;
-            string stateLabel = dynamic
-                ? registry.GetCachedDynamicStateLabelForUI(target)
-                : "MAP_MechanoidMechanitor.DataProcessing.MatrixFixedStatus".Translate();
-            Widgets.Label(
-                new Rect(infoX, rect.y + 29f, infoWidth, Text.LineHeight),
-                stateLabel + " · "
-                    + DataProcessingAllocationUtility.GetSpecializationLabel(specialization));
-
-            Text.Anchor = TextAnchor.MiddleRight;
-            GUI.color = limited ? Warning : Accent;
-            Widgets.Label(
-                new Rect(rect.xMax - 54f, rect.y + 7f, 46f, 24f),
-                DataProcessingAllocationUtility.StepsToPercent(actual).ToStringPercent());
-            Text.Anchor = TextAnchor.UpperLeft;
-
-            if (limited)
+            float portraitX = rect.x + 8f;
+            if (batch)
             {
-                GUI.color = Warning;
-                Text.Anchor = TextAnchor.MiddleRight;
-                Widgets.Label(
-                    new Rect(rect.xMax - 72f, rect.y + 33f, 64f, 20f),
-                    "MAP_MechanoidMechanitor.DataProcessing.Dashboard.LimitedShort".Translate());
+                Rect check = new Rect(rect.x + 6f, rect.y + 25f, 24f, 24f);
+                bool marked = batchTargets.Contains(target);
+                // 复选框仅显示状态；整张卡片统一处理一次点击，避免重复切换。
+                GUI.color = selectable ? (marked ? Accent : Border) : Disabled;
+                Widgets.DrawBox(check, 1);
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.MiddleCenter;
+                Widgets.Label(check, marked ? "✓" : "");
                 Text.Anchor = TextAnchor.UpperLeft;
+                TooltipHandler.TipRegion(check, L(marked ? "Unselect" : "Select"));
+                portraitX += 30f;
             }
-
-            if (Widgets.ButtonInvisible(rect))
+            DrawPortrait(new Rect(portraitX, rect.y + 16f, 48f, 48f), target);
+            Rect star = new Rect(rect.xMax - 32f, rect.y + 6f, 26f, 26f);
+            if (!self && !batch)
             {
-                selectedTarget = target;
-                mode = DashboardMode.Monitor;
-                detailScrollPosition = Vector2.zero;
+                bool favorite = registry.IsFavorite(overseer, target);
+                if (DrawFlatButton(star, favorite ? "★" : "☆", DashboardButtonStyle.Compact, selected: favorite))
+                { registry.ToggleFavorite(overseer, target); }
+                TooltipHandler.TipRegion(star, L(favorite ? "Unfavorite" : "Favorite"));
+            }
+            Rect clickRect = batch ? rect : new Rect(portraitX, rect.y, rect.xMax - portraitX - 36f, rect.height);
+            float textX = portraitX + 56f;
+            float textWidth = Mathf.Max(1f, rect.xMax - textX - (batch ? 6f : 38f));
+            Text.Font = GameFont.Small; Text.Anchor = TextAnchor.UpperLeft; Text.WordWrap = false; GUI.color = TextMain;
+            Widgets.Label(new Rect(textX, rect.y + 5f, textWidth, 24f), target.LabelShortCap);
+            Text.Font = GameFont.Small; GUI.color = TextSecondary;
+            string state = self ? L("Self") : snapshot.evaluationPending ? L("Pending")
+                : snapshot.dynamicManaged ? registry.GetCachedDynamicStateLabelForUI(target) : L("Fixed");
+            Widgets.Label(new Rect(textX, rect.y + 29f, rect.xMax - textX - 6f, 24f),
+                state + " · " + DataProcessingAllocationUtility.GetSpecializationLabel(snapshot.specialization));
+            Text.Font = GameFont.Small; GUI.color = snapshot.IsLimited ? Warning : Accent;
+            Widgets.Label(new Rect(textX, rect.y + 53f, rect.xMax - textX - 6f, 24f),
+                Percent(snapshot.actualSteps) + (snapshot.IsLimited ? " / " + Percent(snapshot.requestedSteps) : ""));
+            Text.WordWrap = true;
+            TooltipHandler.TipRegion(clickRect, target.LabelShortCap + "\n" + L("ActualRequest") + ": "
+                + Percent(snapshot.actualSteps) + " / " + (snapshot.evaluationPending ? L("Pending") : Percent(snapshot.requestedSteps)));
+            if (!selectable) TooltipHandler.TipRegion(clickRect, L("SelfUnavailable"));
+            if (Widgets.ButtonInvisible(clickRect) && selectable)
+            {
+                FinishStepInput();
+                if (batch)
+                {
+                    if (!batchTargets.Remove(target)) batchTargets.Add(target);
+                }
+                else
+                {
+                    selectedTarget = target;
+                    mode = DashboardMode.Monitor;
+                    narrowShowTargets = false;
+                }
+                GUI.FocusControl(null);
             }
         }
-
-        private bool NeedsAttention(
-            GameComponent_DataProcessingAllocationRegistry registry,
-            Pawn target)
+        private void DrawDetail(Rect rect, GameComponent_DataProcessingAllocationRegistry registry)
         {
-            int actual = registry.GetStepsForOverseerTarget(overseer, target);
-            int requested = GetRequestedSteps(registry, target, out _);
-            return actual < requested
-                || (registry.IsDynamicAllocationEnabled(overseer)
-                    && !registry.IsDynamicAllocationEnabledForTarget(overseer, target));
+            DrawPanel(rect, Accent);
+            var inner = rect.ContractedBy(10f);
+            if (mode == DashboardMode.GlobalSettings) DrawGlobalSettings(inner, registry);
+            else if (mode == DashboardMode.Defaults) DrawDefaultsPage(inner, registry);
+            else if (mode == DashboardMode.Batch) DrawBatchPage(inner, registry);
+            else if (selectedTarget != null) DrawTargetMonitor(inner, registry, selectedTarget);
+            else DrawCenteredMessage(inner, L("NoMatches"));
         }
 
-        private void DrawDetail(
-            Rect rect,
-            GameComponent_DataProcessingAllocationRegistry registry)
-        {
-            DrawPanel(rect, mode == DashboardMode.Monitor ? Border : Accent);
-            Rect inner = rect.ContractedBy(12f);
-
-            if (mode == DashboardMode.GlobalSettings)
-            {
-                DrawGlobalSettings(inner, registry);
-                return;
-            }
-
-            if (selectedTarget == null)
-            {
-                DrawCenteredMessage(
-                    inner,
-                    "MAP_MechanoidMechanitor.DataProcessing.NoSubjects".Translate());
-                return;
-            }
-
-            if (mode == DashboardMode.EditTarget)
-            {
-                DrawTargetEditor(inner, registry, selectedTarget);
-            }
-            else
-            {
-                DrawTargetMonitor(inner, registry, selectedTarget);
-            }
-        }
-
-        private void DrawFooter(Rect rect)
-        {
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.MiddleLeft;
-            GUI.color = TextSecondary;
-            Widgets.Label(
-                rect,
-                "MAP_MechanoidMechanitor.DataProcessing.Dashboard.FooterHint".Translate());
-            Text.Anchor = TextAnchor.UpperLeft;
-        }
     }
 }

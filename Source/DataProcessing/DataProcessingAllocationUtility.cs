@@ -377,6 +377,24 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        internal static string GetSpecializationTip(DataProcessingSpecialization specialization)
+        {
+            specialization = DataProcessingAllocationUtility.NormalizeSpecialization(specialization);
+            switch (specialization)
+            {
+                case DataProcessingSpecialization.GeneralTuning:
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning.Tooltip".Translate();
+                case DataProcessingSpecialization.ProductionCoordination:
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination.Tooltip".Translate();
+                case DataProcessingSpecialization.FireControlCalculation:
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation.Tooltip".Translate();
+                case DataProcessingSpecialization.AssaultProtocol:
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol.Tooltip".Translate();
+                default:
+                    return "MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning.Tooltip".Translate();
+            }
+        }
+
         public static string GetSpecializationLabel(DataProcessingSpecialization specialization)
         {
             specialization = NormalizeSpecialization(specialization);

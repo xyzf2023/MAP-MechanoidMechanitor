@@ -678,6 +678,8 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
+                // 此前缀替代原总开关方法，必须在创建全局默认模板前保留固定额度。
+                __instance.EnsureQuotaMappingBeforeGlobalToggle(overseer);
                 List<DataProcessingDynamicAllocationRecord> records =
                     GetGlobalRecords(__instance);
                 DataProcessingDynamicAllocationRecord? existing = null;
