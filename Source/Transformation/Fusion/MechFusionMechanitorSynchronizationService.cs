@@ -61,11 +61,21 @@ namespace MAP_MechanoidMechanitor
             if (session == null
                 || source == null
                 || wearer == null
-                || session.MechanitorSnapshot != null
-                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(source))
+                || session.MechanitorSnapshot != null)
             {
                 return;
             }
+
+            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(source))
+            {
+                return;
+            }
+
+            Log.Message(
+                "[MAP-机械族机械师] 机控同调开始捕获：" +
+                $"session={session.SessionId}，" +
+                $"source={FormatPawnForLog(source)}，" +
+                $"wearer={FormatPawnForLog(wearer)}。");
 
             MechanoidMechanitorRoleUtility.EnsureRoleState(source);
             Pawn_MechanitorTracker? sourceTracker = source.mechanitor;
@@ -126,6 +136,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             session.SetMechanitorSnapshot(snapshot);
+            Log.Message(
+                "[MAP-机械族机械师] 机控同调捕获完成：" +
+                $"session={session.SessionId}，sourceGroups={groupCount}，" +
+                $"mechs={CountSnapshotMechs(snapshot)}，" +
+                $"bandwidthBonus={snapshot.bandwidthBonus}，" +
+                $"controlGroupBonus={snapshot.controlGroupBonus}，" +
+                $"destinationStartGroup={snapshot.destinationStartGroupIndex + 1}。");
         }
 
         /// <summary>
@@ -170,8 +187,31 @@ namespace MAP_MechanoidMechanitor
                 || snapshot.controlsRestored
                 || wearer == null)
             {
+                if (snapshot != null
+                    || (source != null
+                        && MechanoidMechanitorRoleUtility
+                            .IsMechanoidMechanitor(source)))
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 机控同调跳过接管：" +
+                        $"session={session?.SessionId ?? "null"}，" +
+                        $"snapshot={(snapshot != null)}，" +
+                        $"captured={snapshot?.captured.ToString() ?? "n/a"}，" +
+                        $"controlsRestored=" +
+                        $"{snapshot?.controlsRestored.ToString() ?? "n/a"}，" +
+                        $"wearer={FormatPawnForLog(wearer)}。");
+                }
+
                 return;
             }
+
+            Log.Message(
+                "[MAP-机械族机械师] 机控同调开始接管：" +
+                $"session={session.SessionId}，" +
+                $"source={FormatPawnForLog(source)}，" +
+                $"wearer={FormatPawnForLog(wearer)}，" +
+                $"mechs={CountSnapshotMechs(snapshot)}，" +
+                $"transferApplied={snapshot.transferApplied}。");
 
             PawnComponentsUtility.AddAndRemoveDynamicComponents(wearer);
             Pawn_MechanitorTracker? tracker = wearer.mechanitor;
@@ -231,6 +271,24 @@ namespace MAP_MechanoidMechanitor
                         wearer,
                         mech))
                 {
+                    if (!TrySetMechFaction(
+                            mech,
+                            wearer.Faction,
+                            out string existingFactionFailureReason))
+                    {
+                        LogTransferDiagnostic(
+                            session,
+                            "合体接管已有关系派系同步",
+                            wearer,
+                            mech,
+                            snapshot.destinationStartGroupIndex
+                                + mechSnapshot.sourceGroupIndex,
+                            existingFactionFailureReason);
+                        mechSnapshot.transferFailed = true;
+                        TryDisconnectCompletely(mech);
+                        LogTransferFailure(mech);
+                    }
+
                     continue;
                 }
 
@@ -256,6 +314,24 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (!TrySetMechFaction(
+                        mech,
+                        wearer.Faction,
+                        out string factionFailureReason))
+                {
+                    LogTransferDiagnostic(
+                        session,
+                        "合体接管派系同步",
+                        wearer,
+                        mech,
+                        destinationIndex,
+                        factionFailureReason);
+                    mechSnapshot.transferFailed = true;
+                    TryDisconnectCompletely(mech);
+                    LogTransferFailure(mech);
+                    continue;
+                }
+
                 RestoreMechSettings(mechSnapshot);
                 RestoreAssignedTick(
                     tracker.GetControlGroup(mech),
@@ -265,6 +341,7 @@ namespace MAP_MechanoidMechanitor
 
             source?.mechanitor?.Notify_BandwidthChanged();
             tracker.Notify_BandwidthChanged();
+            AuditTransferResults(session, snapshot, wearer, tracker);
             snapshot.transferApplied = true;
         }
 
@@ -299,6 +376,10 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 回转发生在源 Pawn 放回地图之前，不能等待 TryRestoreSourcePawn 才恢复阵营。
+            // 合体期间源 Pawn 的阵营可能变化；EnsureRoleState 只补空阵营，
+            // 非玩家阵营会令 IsMechanitor 拒绝监管，即使 Tracker 和带宽仍然完整。
+            MechFusionTeardownService.RestoreOriginalSourceIdentity(session, source);
             MechanoidMechanitorRoleUtility.EnsureRoleState(source);
             Pawn_MechanitorTracker? sourceTracker = source.mechanitor;
             if (sourceTracker == null)
@@ -367,6 +448,24 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                Faction? restoredFaction =
+                    mechSnapshot.originalFactionCaptured
+                        ? mechSnapshot.originalFaction
+                        : source.Faction;
+                if (!TrySetMechFaction(
+                        mech,
+                        restoredFaction,
+                        out string restoreFactionFailureReason))
+                {
+                    ResolveRestoreFailure(
+                        session,
+                        mechSnapshot,
+                        source,
+                        mechSnapshot.sourceGroupIndex,
+                        restoreFactionFailureReason);
+                    continue;
+                }
+
                 RestoreMechSettings(mechSnapshot);
                 RestoreAssignedTick(
                     sourceTracker.GetControlGroup(mech),
@@ -402,6 +501,23 @@ namespace MAP_MechanoidMechanitor
                             mech,
                             0,
                             additionalFailureReason);
+                        TryDisconnectCompletely(mech);
+                        LogTransferFailure(mech);
+                        continue;
+                    }
+
+                    if (!TrySetMechFaction(
+                            mech,
+                            source.Faction,
+                            out string additionalFactionFailureReason))
+                    {
+                        LogTransferDiagnostic(
+                            session,
+                            "解除合体期间新增机械体派系回转",
+                            source,
+                            mech,
+                            0,
+                            additionalFactionFailureReason);
                         TryDisconnectCompletely(mech);
                         LogTransferFailure(mech);
                     }
@@ -577,6 +693,8 @@ namespace MAP_MechanoidMechanitor
                 var mechSnapshot = new MechFusionControlledMechSnapshot
                 {
                     pawn = mech,
+                    originalFaction = mech.Faction,
+                    originalFactionCaptured = true,
                     sourceGroupIndex = groupIndex,
                     assignedTick = entry!.tickAssigned,
                     assignedOrder = i,
@@ -700,6 +818,46 @@ namespace MAP_MechanoidMechanitor
                     assigned[i].tickAssigned = assignedTick;
                     return;
                 }
+            }
+        }
+
+        private static bool TrySetMechFaction(
+            Pawn mech,
+            Faction? faction,
+            out string failureReason)
+        {
+            failureReason = string.Empty;
+            try
+            {
+                bool drafted = mech.Drafted;
+                List<MechFusionAllowedAreaSnapshot> allowedAreas =
+                    new List<MechFusionAllowedAreaSnapshot>();
+                CaptureAllowedAreas(mech, allowedAreas);
+                if (!ReferenceEquals(mech.Faction, faction))
+                {
+                    mech.SetFaction(faction);
+                    RestoreAllowedAreas(mech, allowedAreas);
+                    if (mech.drafter != null && mech.Drafted != drafted)
+                    {
+                        mech.drafter.Drafted = drafted;
+                    }
+                }
+
+                if (ReferenceEquals(mech.Faction, faction))
+                {
+                    return true;
+                }
+
+                failureReason =
+                    "SetFaction 后派系校验失败：" +
+                    $"expected={faction?.def?.defName ?? "null"}，" +
+                    $"actual={mech.Faction?.def?.defName ?? "null"}。";
+                return false;
+            }
+            catch (Exception exception)
+            {
+                failureReason = $"派系同步过程抛出异常：{exception}";
+                return false;
             }
         }
 
@@ -1054,6 +1212,8 @@ namespace MAP_MechanoidMechanitor
                     "[MAP-机械族机械师] 机控同调监管迁移诊断：" +
                     $"phase={phase}，session={session?.SessionId ?? "null"}，" +
                     $"overseer={FormatPawnForLog(overseer)}，" +
+                    $"overseerFaction={overseer?.Faction?.def?.defName ?? "null"}，" +
+                    $"overseerPlayerSafe={overseer?.Faction?.IsPlayerSafe() == true}，" +
                     $"mech={FormatPawnForLog(mech)}，" +
                     $"preferredGroup={preferredGroup}，" +
                     $"temporaryAccess={HasTemporaryMechanitorAccess(overseer)}，" +
@@ -1080,6 +1240,74 @@ namespace MAP_MechanoidMechanitor
             return pawn == null
                 ? "null"
                 : $"{pawn.LabelShort}（{pawn.ThingID}）";
+        }
+
+        private static int CountSnapshotMechs(
+            MechFusionMechanitorSnapshot snapshot)
+        {
+            int count = 0;
+            for (int i = 0; i < snapshot.sourceGroups.Count; i++)
+            {
+                count += snapshot.sourceGroups[i]?.mechs?.Count ?? 0;
+            }
+
+            return count;
+        }
+
+        private static void AuditTransferResults(
+            MechFusionSession session,
+            MechFusionMechanitorSnapshot snapshot,
+            Pawn wearer,
+            Pawn_MechanitorTracker tracker)
+        {
+            int expected = 0;
+            int actual = 0;
+            foreach (MechFusionControlledMechSnapshot mechSnapshot
+                     in EnumerateMechs(snapshot))
+            {
+                Pawn? mech = mechSnapshot.pawn;
+                if (mech == null
+                    || mech.Destroyed
+                    || mech.Discarded
+                    || mech.Dead
+                    || mechSnapshot.transferFailed)
+                {
+                    continue;
+                }
+
+                expected++;
+                bool relationCorrect =
+                    MAPOverseerRelationDirectionUtility.IsActualOverseerOf(
+                        wearer,
+                        mech);
+                MechanitorControlGroup? group = tracker.GetControlGroup(mech);
+                bool controlled = tracker.ControlledPawns?.Contains(mech) == true;
+                bool factionCorrect = ReferenceEquals(mech.Faction, wearer.Faction);
+                if (relationCorrect && group != null && controlled && factionCorrect)
+                {
+                    actual++;
+                    continue;
+                }
+
+                int groupIndex = group == null || tracker.controlGroups == null
+                    ? -1
+                    : tracker.controlGroups.IndexOf(group);
+                LogTransferDiagnostic(
+                    session,
+                    "合体接管后审计",
+                    wearer,
+                    mech,
+                    groupIndex,
+                    $"最终状态不一致：relationCorrect={relationCorrect}，" +
+                    $"group={(group != null)}，controlled={controlled}，" +
+                    $"factionCorrect={factionCorrect}，" +
+                    $"wearerFaction={wearer.Faction?.def?.defName ?? "null"}。");
+            }
+
+            Log.Message(
+                "[MAP-机械族机械师] 机控同调接管审计完成：" +
+                $"session={session.SessionId}，expected={expected}，" +
+                $"valid={actual}，failed={expected - actual}。");
         }
     }
 }

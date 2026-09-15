@@ -678,7 +678,7 @@ namespace MAP_MechanoidMechanitor
         /// 恢复到地图或远行队前先还原合体开始时的身份；监管关系只为
         /// 原本确有监管者的普通机械族补回，机械族机械师保持无监管者结构。
         /// </summary>
-        private static void RestoreOriginalSourceIdentity(
+        internal static void RestoreOriginalSourceIdentity(
             MechFusionSession session,
             Pawn source)
         {

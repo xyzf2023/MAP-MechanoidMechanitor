@@ -101,6 +101,8 @@ namespace MAP_MechanoidMechanitor
     public sealed class MechFusionControlledMechSnapshot : IExposable
     {
         public Pawn? pawn;
+        public Faction? originalFaction;
+        public bool originalFactionCaptured;
         public int sourceGroupIndex = -1;
         public int assignedTick;
         public int assignedOrder;
@@ -115,6 +117,10 @@ namespace MAP_MechanoidMechanitor
         public void ExposeData()
         {
             Scribe_References.Look(ref pawn, "pawn");
+            Scribe_References.Look(ref originalFaction, "originalFaction");
+            Scribe_Values.Look(
+                ref originalFactionCaptured,
+                "originalFactionCaptured");
             Scribe_Values.Look(
                 ref sourceGroupIndex,
                 "sourceGroupIndex",
