@@ -48,13 +48,11 @@ namespace MAP_MechanoidMechanitor
             yield return Require(typeof(DataProcessingDefaultTemplateAndCopyFixUtility),
                 "CollectActiveMechanoids");
 
-            // UI 的编译器闭包也可能持有读取调用；范围限于这四个已核查的窗口。
+            // UI 的编译器闭包也可能持有读取调用；数据处理窗口已全部合并到
+            // Dialog_DataProcessingAllocationDashboard 这一分部类，反射其单一 CLR 类型即可覆盖全部 UI 部分。
             foreach (Type type in new[]
             {
-                typeof(Dialog_DataProcessingAllocationDashboard),
-                typeof(Dialog_DataProcessingAllocationMatrix),
-                typeof(Dialog_DataProcessingAllocation),
-                typeof(Dialog_DataProcessingDynamicAllocationSettings)
+                typeof(Dialog_DataProcessingAllocationDashboard)
             })
             {
                 foreach (MethodBase method in DeclaredMethodsAndClosures(type))
