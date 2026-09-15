@@ -29,19 +29,4 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    /// <summary>
-    /// 白名单规则的序列化载荷。规则通过 ruleId 在注册表中查找，
-    /// 找不到已安装规则时安全跳过并保留可恢复状态。
-    /// </summary>
-    public sealed class MechFusionWhitelistEntry : IExposable
-    {
-        public string? ruleId;
-        public string? payload;
-
-        public void ExposeData()
-        {
-            Scribe_Values.Look(ref ruleId, "ruleId");
-            Scribe_Values.Look(ref payload, "payload");
-        }
-    }
 }

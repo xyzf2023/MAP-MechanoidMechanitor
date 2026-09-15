@@ -8,7 +8,7 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 本次合体实例的唯一权威数据。唯一保存源 Pawn、目标人类、合体服装实例、
-    /// 能源、结构稳定值、属性快照、白名单载荷与异常恢复信息；服装 Comp、
+    /// 能源、结构稳定值、属性快照、健康状态规则结果与异常恢复信息；服装 Comp、
     /// Gizmo、飞行与渲染系统只能读取这里。
     /// </summary>
     public sealed class MechFusionSession : IExposable
@@ -37,8 +37,8 @@ namespace MAP_MechanoidMechanitor
             new List<MechFusionStatEntry>();
         private List<MechFusionStatEntry> statFactors =
             new List<MechFusionStatEntry>();
-        private List<MechFusionWhitelistEntry> whitelistEntries =
-            new List<MechFusionWhitelistEntry>();
+        private List<MechFusionHealthEffectEntry> healthEffectEntries =
+            new List<MechFusionHealthEffectEntry>();
         private float armorSharp;
         private float armorBlunt;
         private float armorHeat;
@@ -145,12 +145,13 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        public IReadOnlyList<MechFusionWhitelistEntry> WhitelistEntries
+        public IReadOnlyList<MechFusionHealthEffectEntry> HealthEffectEntries
         {
             get
             {
-                whitelistEntries ??= new List<MechFusionWhitelistEntry>();
-                return whitelistEntries;
+                healthEffectEntries ??=
+                    new List<MechFusionHealthEffectEntry>();
+                return healthEffectEntries;
             }
         }
 
@@ -167,9 +168,9 @@ namespace MAP_MechanoidMechanitor
 
         public bool FlightRevoked => flightRevoked;
 
-        public bool WhitelistRevoked => whitelistRevoked;
-
-        public bool SynchronizationRemoved => synchronizationRemoved;
+        // 两个旧字段共同作为新健康状态管理层的迁移完成标记。
+        public bool HealthEffectsRevoked =>
+            whitelistRevoked && synchronizationRemoved;
 
         public bool EnergyWrittenBack => energyWrittenBack;
 
@@ -193,13 +194,9 @@ namespace MAP_MechanoidMechanitor
             flightRevoked = true;
         }
 
-        internal void MarkWhitelistRevoked()
+        internal void MarkHealthEffectsRevoked()
         {
             whitelistRevoked = true;
-        }
-
-        internal void MarkSynchronizationRemoved()
-        {
             synchronizationRemoved = true;
         }
 
@@ -457,15 +454,36 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        internal void AddWhitelistEntry(MechFusionWhitelistEntry entry)
+        internal bool HasHealthEffectRule(string? ruleId)
         {
-            if (entry == null)
+            if (string.IsNullOrEmpty(ruleId))
+            {
+                return false;
+            }
+
+            healthEffectEntries ??=
+                new List<MechFusionHealthEffectEntry>();
+            for (int i = 0; i < healthEffectEntries.Count; i++)
+            {
+                if (healthEffectEntries[i]?.ruleId == ruleId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        internal void AddHealthEffectEntry(MechFusionHealthEffectEntry entry)
+        {
+            if (entry == null || HasHealthEffectRule(entry.ruleId))
             {
                 return;
             }
 
-            whitelistEntries ??= new List<MechFusionWhitelistEntry>();
-            whitelistEntries.Add(entry);
+            healthEffectEntries ??=
+                new List<MechFusionHealthEffectEntry>();
+            healthEffectEntries.Add(entry);
         }
 
         internal void SetTemporaryFlightState(
@@ -593,7 +611,8 @@ namespace MAP_MechanoidMechanitor
                 "statFactors",
                 LookMode.Deep);
             Scribe_Collections.Look(
-                ref whitelistEntries,
+                ref healthEffectEntries,
+                // 保留旧键名，活动中的旧合体会话可以继续读取。
                 "whitelistEntries",
                 LookMode.Deep);
             Scribe_Values.Look(ref armorSharp, "armorSharp");
@@ -630,7 +649,8 @@ namespace MAP_MechanoidMechanitor
                 EnsureInitialized();
                 statOffsets ??= new List<MechFusionStatEntry>();
                 statFactors ??= new List<MechFusionStatEntry>();
-                whitelistEntries ??= new List<MechFusionWhitelistEntry>();
+                healthEffectEntries ??=
+                    new List<MechFusionHealthEffectEntry>();
                 offsetLookup = null;
                 factorLookup = null;
             }

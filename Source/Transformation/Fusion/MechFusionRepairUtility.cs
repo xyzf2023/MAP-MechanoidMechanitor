@@ -272,22 +272,17 @@ namespace MAP_MechanoidMechanitor
                     });
                 TryCleanupDuplicateStep(
                     duplicate,
-                    "撤销重复会话白名单效果",
+                    "撤销重复会话合体健康状态",
                     () =>
                     {
-                        if (!MechFusionWhitelistUtility.RevokeAll(
+                        if (!MechFusionHealthEffectManager.RevokeAll(
                                 duplicate,
                                 duplicateWearer))
                         {
                             throw new InvalidOperationException(
-                                "重复会话至少一条白名单效果撤销失败。");
+                                "重复会话至少一条合体健康状态撤销失败。");
                         }
                     });
-                TryCleanupDuplicateStep(
-                    duplicate,
-                    "移除重复会话机体同调",
-                    () => MechFusionBodySynchronizationUtility.RemoveFromWearer(
-                        duplicateWearer));
             }
 
             Pawn? duplicateSource = duplicate.SourcePawn;
@@ -566,8 +561,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechFusionSourceUtility.ApplyDormantGuard(source);
-            MechFusionBodySynchronizationUtility.ApplyToWearer(session);
-            MechFusionWhitelistUtility.RepairAfterLoad(session, wearerPawn);
+            MechFusionHealthEffectManager.RepairAfterLoad(session, wearerPawn);
             MechFusionFlightUtility.RepairAfterLoad(session);
             MechFusionStatCacheUtility.Invalidate(session);
             session.UpdateRecoveryLocation(

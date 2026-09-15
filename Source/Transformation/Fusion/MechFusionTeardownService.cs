@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
     /// 目标死亡或倒地、服装异常、读档不一致都必须调用这里，
     /// 不允许复制多套清理代码或直接 Destroy 服装代替解除逻辑。
     /// 清理分阶段推进，每阶段完成即落盘标记，延迟恢复与读档后继续时
-    /// 绝不重复结算源机械族部位耐久、能源写回、白名单撤销或服装清理。
+    /// 绝不重复结算源机械族部位耐久、能源写回、健康状态撤销或服装清理。
     /// </summary>
     public static class MechFusionTeardownService
     {
@@ -365,25 +365,19 @@ namespace MAP_MechanoidMechanitor
                 session.MarkFlightRevoked();
             }
 
-            if (!session.WhitelistRevoked)
+            if (!session.HealthEffectsRevoked)
             {
-                if (!MechFusionWhitelistUtility.RevokeAll(session, wearer))
+                if (!MechFusionHealthEffectManager.RevokeAll(session, wearer))
                 {
                     session.TeardownDeferred = true;
                     Log.Warning(
-                        "[MAP-机械族机械师] 至少一条白名单效果尚未撤销完成，" +
+                        "[MAP-机械族机械师] 至少一条合体健康状态尚未撤销完成，" +
                         "已保留会话等待下一轮清理：" +
                         $"session={session.SessionId}。");
                     return false;
                 }
 
-                session.MarkWhitelistRevoked();
-            }
-
-            if (!session.SynchronizationRemoved)
-            {
-                MechFusionBodySynchronizationUtility.RemoveFromWearer(wearer);
-                session.MarkSynchronizationRemoved();
+                session.MarkHealthEffectsRevoked();
             }
 
             MechFusionStatCacheUtility.Invalidate(session);
@@ -821,32 +815,20 @@ namespace MAP_MechanoidMechanitor
                 });
             cleanupComplete &= TryCleanupStep(
                 session,
-                "撤销白名单效果",
+                "撤销合体健康状态",
                 () =>
                 {
-                    if (!session.WhitelistRevoked)
+                    if (!session.HealthEffectsRevoked)
                     {
-                        if (!MechFusionWhitelistUtility.RevokeAll(
+                        if (!MechFusionHealthEffectManager.RevokeAll(
                                 session,
                                 wearer))
                         {
                             throw new InvalidOperationException(
-                                "至少一条白名单效果撤销失败。");
+                                "至少一条合体健康状态撤销失败。");
                         }
 
-                        session.MarkWhitelistRevoked();
-                    }
-                });
-            cleanupComplete &= TryCleanupStep(
-                session,
-                "移除机体同调",
-                () =>
-                {
-                    if (!session.SynchronizationRemoved)
-                    {
-                        MechFusionBodySynchronizationUtility.RemoveFromWearer(
-                            wearer);
-                        session.MarkSynchronizationRemoved();
+                        session.MarkHealthEffectsRevoked();
                     }
                 });
             cleanupComplete &= TryCleanupStep(
@@ -883,8 +865,7 @@ namespace MAP_MechanoidMechanitor
 
             if (!cleanupComplete
                 || !session.FlightRevoked
-                || !session.WhitelistRevoked
-                || !session.SynchronizationRemoved
+                || !session.HealthEffectsRevoked
                 || !session.ApparelRemoved)
             {
                 session.SetState(MechFusionSessionState.Ending);
@@ -931,32 +912,20 @@ namespace MAP_MechanoidMechanitor
                 });
             cleanupComplete &= TryCleanupStep(
                 session,
-                "撤销白名单效果",
+                "撤销合体健康状态",
                 () =>
                 {
-                    if (!session.WhitelistRevoked)
+                    if (!session.HealthEffectsRevoked)
                     {
-                        if (!MechFusionWhitelistUtility.RevokeAll(
+                        if (!MechFusionHealthEffectManager.RevokeAll(
                                 session,
                                 wearer))
                         {
                             throw new InvalidOperationException(
-                                "至少一条白名单效果撤销失败。");
+                                "至少一条合体健康状态撤销失败。");
                         }
 
-                        session.MarkWhitelistRevoked();
-                    }
-                });
-            cleanupComplete &= TryCleanupStep(
-                session,
-                "移除机体同调",
-                () =>
-                {
-                    if (!session.SynchronizationRemoved)
-                    {
-                        MechFusionBodySynchronizationUtility.RemoveFromWearer(
-                            wearer);
-                        session.MarkSynchronizationRemoved();
+                        session.MarkHealthEffectsRevoked();
                     }
                 });
             cleanupComplete &= TryCleanupStep(
@@ -973,8 +942,7 @@ namespace MAP_MechanoidMechanitor
 
             if (!cleanupComplete
                 || !session.FlightRevoked
-                || !session.WhitelistRevoked
-                || !session.SynchronizationRemoved
+                || !session.HealthEffectsRevoked
                 || !session.ApparelRemoved)
             {
                 session.TeardownDeferred = true;

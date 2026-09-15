@@ -27,8 +27,7 @@ namespace MAP_MechanoidMechanitor
             public bool ApparelWorn;
             public bool SourceStored;
             public bool TransformationCommitted;
-            public bool BodySynchronizationApplied;
-            public bool WhitelistApplied;
+            public bool HealthEffectsApplied;
             public bool TemporaryFlightApplied;
             public bool WearAttempted;
             public Thing? Apparel;
@@ -163,13 +162,14 @@ namespace MAP_MechanoidMechanitor
                     wearer.Map,
                     wearer.Position,
                     wearer.Rotation);
+                MechFusionHealthEffectManager.CaptureFromSource(
+                    session,
+                    source);
                 MechFusionSnapshotBuilder.Capture(session, source);
-                // 先标记“已尝试”，再调用可能含第三方扩展的应用逻辑；
-                // 即使调用中途抛出异常，回滚也会按幂等入口尝试清理。
-                transaction.BodySynchronizationApplied = true;
-                MechFusionBodySynchronizationUtility.ApplyToWearer(session);
-                transaction.WhitelistApplied = true;
-                MechFusionWhitelistUtility.ApplyAll(session, wearer);
+                // 先标记“已尝试”，再调用统一健康状态管理层；单条添加失败
+                // 只输出警告，若管理层外发生异常，事务回滚仍会幂等清理。
+                transaction.HealthEffectsApplied = true;
+                MechFusionHealthEffectManager.ApplyAll(session, wearer);
                 transaction.TemporaryFlightApplied = true;
                 MechFusionFlightUtility.ApplyTemporaryFlight(
                     session,
@@ -241,32 +241,22 @@ namespace MAP_MechanoidMechanitor
                     });
             }
 
-            if (transaction.WhitelistApplied)
+            if (transaction.HealthEffectsApplied)
             {
                 TryRollbackStep(
                     session,
                     ref cleanupIncomplete,
-                    "撤销白名单效果",
+                    "撤销合体健康状态",
                     () =>
                     {
-                        if (!MechFusionWhitelistUtility.RevokeAll(
+                        if (!MechFusionHealthEffectManager.RevokeAll(
                                 session,
                                 wearer))
                         {
                             throw new InvalidOperationException(
-                                "至少一条白名单效果撤销失败。");
+                                "至少一条合体健康状态撤销失败。");
                         }
                     });
-            }
-
-            if (transaction.BodySynchronizationApplied)
-            {
-                TryRollbackStep(
-                    session,
-                    ref cleanupIncomplete,
-                    "移除机体同调",
-                    () => MechFusionBodySynchronizationUtility.RemoveFromWearer(
-                        wearer));
             }
 
             TryRollbackStep(

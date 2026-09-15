@@ -113,7 +113,6 @@ namespace MAP_MechanoidMechanitor
                 armorBlunt,
                 armorHeat,
                 moveSpeedBase);
-            MechFusionWhitelistUtility.CaptureMatches(session, source);
         }
 
         private static void CapturePositiveHediffStages(
