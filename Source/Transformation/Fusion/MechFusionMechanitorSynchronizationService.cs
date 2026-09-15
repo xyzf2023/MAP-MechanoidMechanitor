@@ -178,6 +178,14 @@ namespace MAP_MechanoidMechanitor
             Hediff? synchronization = FindSynchronizationHediff(wearer);
             if (tracker == null || synchronization == null)
             {
+                LogTransferDiagnostic(
+                    session,
+                    "合体接管初始化",
+                    wearer,
+                    null,
+                    -1,
+                    $"必要组件缺失：tracker={(tracker != null)}，" +
+                    $"synchronizationHediff={(synchronization != null)}。");
                 MarkAllTransferFailures(snapshot);
                 return;
             }
@@ -185,8 +193,18 @@ namespace MAP_MechanoidMechanitor
             MAPMechanitorNodeLifecycleUtility.EnsureMechanitorTrackerCollections(
                 tracker);
             tracker.Notify_HediffStateChange(synchronization);
-            if (!CaptureDestinationBackups(snapshot, tracker))
+            if (!CaptureDestinationBackups(
+                    snapshot,
+                    tracker,
+                    out string backupFailureReason))
             {
+                LogTransferDiagnostic(
+                    session,
+                    "合体接管控制组快照",
+                    wearer,
+                    null,
+                    snapshot.destinationStartGroupIndex,
+                    backupFailureReason);
                 MarkAllTransferFailures(snapshot);
                 return;
             }
@@ -222,8 +240,16 @@ namespace MAP_MechanoidMechanitor
                         wearer,
                         mech,
                         destinationIndex,
-                        fallbackToFirstGroup: true))
+                        fallbackToFirstGroup: true,
+                        out string transferFailureReason))
                 {
+                    LogTransferDiagnostic(
+                        session,
+                        "合体接管",
+                        wearer,
+                        mech,
+                        destinationIndex,
+                        transferFailureReason);
                     mechSnapshot.transferFailed = true;
                     TryDisconnectCompletely(mech);
                     LogTransferFailure(mech);
@@ -280,7 +306,12 @@ namespace MAP_MechanoidMechanitor
                 foreach (MechFusionControlledMechSnapshot mechSnapshot
                          in EnumerateMechs(snapshot))
                 {
-                    ResolveRestoreFailure(mechSnapshot);
+                    ResolveRestoreFailure(
+                        session,
+                        mechSnapshot,
+                        source,
+                        mechSnapshot.sourceGroupIndex,
+                        "源机械师缺少 Mechanitor Tracker。");
                 }
 
                 if (!snapshot.wearerWasMechanitor)
@@ -324,9 +355,15 @@ namespace MAP_MechanoidMechanitor
                         source,
                         mech,
                         mechSnapshot.sourceGroupIndex,
-                        fallbackToFirstGroup: true))
+                        fallbackToFirstGroup: true,
+                        out string restoreFailureReason))
                 {
-                    ResolveRestoreFailure(mechSnapshot);
+                    ResolveRestoreFailure(
+                        session,
+                        mechSnapshot,
+                        source,
+                        mechSnapshot.sourceGroupIndex,
+                        restoreFailureReason);
                     continue;
                 }
 
@@ -355,8 +392,16 @@ namespace MAP_MechanoidMechanitor
                             source,
                             mech,
                             0,
-                            fallbackToFirstGroup: true))
+                            fallbackToFirstGroup: true,
+                            out string additionalFailureReason))
                     {
+                        LogTransferDiagnostic(
+                            session,
+                            "解除合体期间新增机械体回转",
+                            source,
+                            mech,
+                            0,
+                            additionalFailureReason);
                         TryDisconnectCompletely(mech);
                         LogTransferFailure(mech);
                     }
@@ -384,8 +429,10 @@ namespace MAP_MechanoidMechanitor
 
         private static bool CaptureDestinationBackups(
             MechFusionMechanitorSnapshot snapshot,
-            Pawn_MechanitorTracker tracker)
+            Pawn_MechanitorTracker tracker,
+            out string failureReason)
         {
+            failureReason = string.Empty;
             if (snapshot.destinationGroupsCaptured)
             {
                 return true;
@@ -396,6 +443,11 @@ namespace MAP_MechanoidMechanitor
             if (tracker.controlGroups == null
                 || tracker.controlGroups.Count < snapshot.destinationStartGroupIndex)
             {
+                failureReason =
+                    $"目标控制组不足：controlGroups=" +
+                    $"{tracker.controlGroups?.Count.ToString() ?? "null"}，" +
+                    $"destinationStart={snapshot.destinationStartGroupIndex}，" +
+                    $"sourceGroups={snapshot.sourceGroups.Count}，required={required}。";
                 return false;
             }
 
@@ -566,14 +618,17 @@ namespace MAP_MechanoidMechanitor
             Pawn overseer,
             Pawn mech,
             int preferredIndex,
-            bool fallbackToFirstGroup)
+            bool fallbackToFirstGroup,
+            out string failureReason)
         {
+            failureReason = string.Empty;
             try
             {
                 if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(
                         overseer,
                         mech))
                 {
+                    failureReason = "TryAssignActualOverseer 返回 false。";
                     return false;
                 }
 
@@ -581,6 +636,7 @@ namespace MAP_MechanoidMechanitor
                 if (tracker?.controlGroups == null
                     || tracker.controlGroups.Count == 0)
                 {
+                    failureReason = "监管关系写入后目标 Mechanitor Tracker 没有控制组。";
                     return false;
                 }
 
@@ -598,16 +654,30 @@ namespace MAP_MechanoidMechanitor
 
                 if (!fallbackToFirstGroup)
                 {
+                    failureReason =
+                        $"首选控制组分配未通过校验，且不允许回退：" +
+                        $"preferredIndex={preferredIndex}，" +
+                        $"controlGroups={tracker.controlGroups.Count}。";
                     return false;
                 }
 
                 tracker.controlGroups[0].Assign(mech);
-                return ReferenceEquals(
+                bool assignedToFallback = ReferenceEquals(
                     tracker.GetControlGroup(mech),
                     tracker.controlGroups[0]);
+                if (!assignedToFallback)
+                {
+                    failureReason =
+                        $"首选控制组与控制组1分配均未通过校验：" +
+                        $"preferredIndex={preferredIndex}，" +
+                        $"controlGroups={tracker.controlGroups.Count}。";
+                }
+
+                return assignedToFallback;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                failureReason = $"分配过程抛出异常：{exception}";
                 return false;
             }
         }
@@ -720,11 +790,22 @@ namespace MAP_MechanoidMechanitor
         }
 
         private static void ResolveRestoreFailure(
-            MechFusionControlledMechSnapshot snapshot)
+            MechFusionSession session,
+            MechFusionControlledMechSnapshot snapshot,
+            Pawn? overseer,
+            int preferredIndex,
+            string failureReason)
         {
             Pawn? mech = snapshot.pawn;
             if (mech != null && !mech.Destroyed && !mech.Discarded)
             {
+                LogTransferDiagnostic(
+                    session,
+                    "解除合体回转",
+                    overseer,
+                    mech,
+                    preferredIndex,
+                    failureReason);
                 TryDisconnectCompletely(mech);
                 LogTransferFailure(mech);
             }
@@ -943,6 +1024,62 @@ namespace MAP_MechanoidMechanitor
         private static void LogTransferFailure(Pawn mech)
         {
             Log.Warning($"{mech.ThingID}转移失败");
+        }
+
+        private static void LogTransferDiagnostic(
+            MechFusionSession? session,
+            string phase,
+            Pawn? overseer,
+            Pawn? mech,
+            int preferredIndex,
+            string failureReason)
+        {
+            try
+            {
+                Pawn_MechanitorTracker? tracker = overseer?.mechanitor;
+                Pawn? actualOverseer = mech == null
+                    ? null
+                    : MAPOverseerRelationDirectionUtility.FindActualOverseer(mech);
+                string preferredGroup = preferredIndex >= 0
+                    ? (preferredIndex + 1).ToString()
+                    : "n/a";
+                string canOversee = tracker != null && mech != null
+                    ? tracker.CanOverseeSubject(mech).ToString()
+                    : "n/a";
+                string bandwidthCost = mech != null
+                    ? mech.GetStatValue(StatDefOf.BandwidthCost).ToString("0.##")
+                    : "n/a";
+
+                Log.Warning(
+                    "[MAP-机械族机械师] 机控同调监管迁移诊断：" +
+                    $"phase={phase}，session={session?.SessionId ?? "null"}，" +
+                    $"overseer={FormatPawnForLog(overseer)}，" +
+                    $"mech={FormatPawnForLog(mech)}，" +
+                    $"preferredGroup={preferredGroup}，" +
+                    $"temporaryAccess={HasTemporaryMechanitorAccess(overseer)}，" +
+                    $"isMechanitor={(overseer != null && MechanitorUtility.IsMechanitor(overseer))}，" +
+                    $"tracker={(tracker != null)}，" +
+                    $"controlGroups={tracker?.controlGroups?.Count.ToString() ?? "null"}，" +
+                    $"totalBandwidth={tracker?.TotalBandwidth.ToString() ?? "n/a"}，" +
+                    $"usedBandwidth={tracker?.UsedBandwidth.ToString() ?? "n/a"}，" +
+                    $"bandwidthCost={bandwidthCost}，canOversee={canOversee}，" +
+                    $"actualOverseer={FormatPawnForLog(actualOverseer)}，" +
+                    $"mechFaction={mech?.Faction?.def?.defName ?? "null"}，" +
+                    $"reason={failureReason}");
+            }
+            catch (Exception exception)
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 机控同调监管迁移诊断日志生成失败：" +
+                    $"phase={phase}，reason={failureReason}，exception={exception}");
+            }
+        }
+
+        private static string FormatPawnForLog(Pawn? pawn)
+        {
+            return pawn == null
+                ? "null"
+                : $"{pawn.LabelShort}（{pawn.ThingID}）";
         }
     }
 }
