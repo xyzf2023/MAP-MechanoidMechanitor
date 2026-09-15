@@ -14,6 +14,19 @@
     <scenarioCanAdd>false</scenarioCanAdd>
   </HediffDef>
   <!--
+    仅在合体源为机械族机械师时添加。实例带宽、控制组和控制权快照
+    由 MechFusionSession 保存，本 Def 不承载固定数值。
+  -->
+  <HediffDef>
+    <defName>MAP_MechControlSynchronization</defName>
+    <hediffClass>MAP_MechanoidMechanitor.Hediff_MechControlSynchronization</hediffClass>
+    <label>机控同调</label>
+    <description>TODO</description>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+  </HediffDef>
+  <!--
     合体期间的内部维持标记：让原版 WorldPawns 不 mothball 源机械族，
     保证 Hediff 与限时 Comp 继续按原版节奏推进。不承载任何实例数据。
   -->

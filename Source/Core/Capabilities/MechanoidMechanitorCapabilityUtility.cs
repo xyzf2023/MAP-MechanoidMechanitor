@@ -27,6 +27,11 @@ namespace MAP_MechanoidMechanitor
                 return GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn);
             }
 
+            if (capability == MechanoidMechanitorCapability.MechanitorControl)
+            {
+                return HasMechanitorControlCapability(pawn);
+            }
+
             // 合体资格只能是先天能力，唯一事实来源是合体资格注册表。
             if (capability == MechanoidMechanitorCapability.Fusion)
             {
@@ -87,8 +92,27 @@ namespace MAP_MechanoidMechanitor
             AddCapabilitiesFromSyntheticCompanionAuthorization(pawn, ref capabilities);
             AddCapabilitiesFromDataProcessingAllocation(pawn, ref capabilities);
             AddCapabilitiesFromMechanicalFlightAuthorization(pawn, ref capabilities);
+            AddCapabilitiesFromMechanitorControl(pawn, ref capabilities);
             AddCapabilitiesFromFusionEligibility(pawn, ref capabilities);
             return capabilities;
+        }
+
+        private static bool HasMechanitorControlCapability(Pawn pawn)
+        {
+            return pawn.health?.hediffSet?.HasHediff(
+                       HediffDefOf.MechlinkImplant) == true
+                || MechFusionMechanitorSynchronizationService
+                    .HasTemporaryMechanitorAccess(pawn);
+        }
+
+        private static void AddCapabilitiesFromMechanitorControl(
+            Pawn pawn,
+            ref MechanoidMechanitorCapability capabilities)
+        {
+            if (HasMechanitorControlCapability(pawn))
+            {
+                capabilities |= MechanoidMechanitorCapability.MechanitorControl;
+            }
         }
 
         /// <summary>

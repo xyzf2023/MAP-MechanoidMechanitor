@@ -39,6 +39,7 @@ namespace MAP_MechanoidMechanitor
             new List<MechFusionStatEntry>();
         private List<MechFusionHealthEffectEntry> healthEffectEntries =
             new List<MechFusionHealthEffectEntry>();
+        private MechFusionMechanitorSnapshot? mechanitorSnapshot;
         private float armorSharp;
         private float armorBlunt;
         private float armorHeat;
@@ -154,6 +155,9 @@ namespace MAP_MechanoidMechanitor
                 return healthEffectEntries;
             }
         }
+
+        public MechFusionMechanitorSnapshot? MechanitorSnapshot =>
+            mechanitorSnapshot;
 
         public bool IsActive =>
             state == MechFusionSessionState.Starting
@@ -486,6 +490,12 @@ namespace MAP_MechanoidMechanitor
             healthEffectEntries.Add(entry);
         }
 
+        internal void SetMechanitorSnapshot(
+            MechFusionMechanitorSnapshot snapshot)
+        {
+            mechanitorSnapshot ??= snapshot;
+        }
+
         internal void SetTemporaryFlightState(
             bool authorized,
             bool grantedByFusion)
@@ -615,6 +625,9 @@ namespace MAP_MechanoidMechanitor
                 // 保留旧键名，活动中的旧合体会话可以继续读取。
                 "whitelistEntries",
                 LookMode.Deep);
+            Scribe_Deep.Look(
+                ref mechanitorSnapshot,
+                "mechanitorSynchronizationSnapshot");
             Scribe_Values.Look(ref armorSharp, "armorSharp");
             Scribe_Values.Look(ref armorBlunt, "armorBlunt");
             Scribe_Values.Look(ref armorHeat, "armorHeat");

@@ -148,7 +148,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!RunWearerCleanupSteps(session, wearer))
+            if (!RunWearerCleanupSteps(session, source, wearer))
             {
                 return false;
             }
@@ -348,6 +348,7 @@ namespace MAP_MechanoidMechanitor
 
         private static bool RunWearerCleanupSteps(
             MechFusionSession session,
+            Pawn source,
             Pawn? wearer)
         {
             if (!session.FlightRevoked)
@@ -367,6 +368,14 @@ namespace MAP_MechanoidMechanitor
 
             if (!session.HealthEffectsRevoked)
             {
+                MechFusionMechanitorSynchronizationService
+                    .PrepareForHealthEffectRemoval(
+                        session,
+                        source,
+                        wearer,
+                        sourceRecoverable: !source.Destroyed
+                            && !source.Discarded
+                            && !source.Dead);
                 if (!MechFusionHealthEffectManager.RevokeAll(session, wearer))
                 {
                     session.TeardownDeferred = true;
@@ -378,6 +387,8 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 session.MarkHealthEffectsRevoked();
+                MechFusionMechanitorSynchronizationService
+                    .NotifyHealthEffectsRevoked(session, wearer);
             }
 
             MechFusionStatCacheUtility.Invalidate(session);
@@ -815,6 +826,15 @@ namespace MAP_MechanoidMechanitor
                 });
             cleanupComplete &= TryCleanupStep(
                 session,
+                "处理无法回转的机控同调监管关系",
+                () => MechFusionMechanitorSynchronizationService
+                    .PrepareForHealthEffectRemoval(
+                        session,
+                        source,
+                        wearer,
+                        sourceRecoverable: false));
+            cleanupComplete &= TryCleanupStep(
+                session,
                 "撤销合体健康状态",
                 () =>
                 {
@@ -829,6 +849,8 @@ namespace MAP_MechanoidMechanitor
                         }
 
                         session.MarkHealthEffectsRevoked();
+                        MechFusionMechanitorSynchronizationService
+                            .NotifyHealthEffectsRevoked(session, wearer);
                     }
                 });
             cleanupComplete &= TryCleanupStep(
@@ -912,6 +934,15 @@ namespace MAP_MechanoidMechanitor
                 });
             cleanupComplete &= TryCleanupStep(
                 session,
+                "处理源引用丢失后的机控同调监管关系",
+                () => MechFusionMechanitorSynchronizationService
+                    .PrepareForHealthEffectRemoval(
+                        session,
+                        null,
+                        wearer,
+                        sourceRecoverable: false));
+            cleanupComplete &= TryCleanupStep(
+                session,
                 "撤销合体健康状态",
                 () =>
                 {
@@ -926,6 +957,8 @@ namespace MAP_MechanoidMechanitor
                         }
 
                         session.MarkHealthEffectsRevoked();
+                        MechFusionMechanitorSynchronizationService
+                            .NotifyHealthEffectsRevoked(session, wearer);
                     }
                 });
             cleanupComplete &= TryCleanupStep(

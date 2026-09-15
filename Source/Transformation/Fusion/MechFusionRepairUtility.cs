@@ -275,6 +275,12 @@ namespace MAP_MechanoidMechanitor
                     "撤销重复会话合体健康状态",
                     () =>
                     {
+                        MechFusionMechanitorSynchronizationService
+                            .PrepareForHealthEffectRemoval(
+                                duplicate,
+                                duplicate.SourcePawn,
+                                duplicateWearer,
+                                sourceRecoverable: false);
                         if (!MechFusionHealthEffectManager.RevokeAll(
                                 duplicate,
                                 duplicateWearer))
@@ -282,6 +288,11 @@ namespace MAP_MechanoidMechanitor
                             throw new InvalidOperationException(
                                 "重复会话至少一条合体健康状态撤销失败。");
                         }
+
+                        MechFusionMechanitorSynchronizationService
+                            .NotifyHealthEffectsRevoked(
+                                duplicate,
+                                duplicateWearer);
                     });
             }
 
@@ -561,7 +572,18 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechFusionSourceUtility.ApplyDormantGuard(source);
+            // 旧会话没有机控快照；迁移版首次读取时只针对机械师源补捕获。
+            MechFusionMechanitorSynchronizationService.EnsureLegacySnapshot(
+                session,
+                source,
+                wearerPawn);
+            MechFusionHealthEffectManager
+                .EnsureMechControlSynchronizationEntry(session);
             MechFusionHealthEffectManager.RepairAfterLoad(session, wearerPawn);
+            MechFusionMechanitorSynchronizationService.ApplyOrRepair(
+                session,
+                source,
+                wearerPawn);
             MechFusionFlightUtility.RepairAfterLoad(session);
             MechFusionStatCacheUtility.Invalidate(session);
             session.UpdateRecoveryLocation(

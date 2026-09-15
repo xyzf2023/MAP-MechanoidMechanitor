@@ -28,6 +28,8 @@ namespace MAP_MechanoidMechanitor
     {
         internal const string BodySynchronizationRuleId =
             "MAP.BodySynchronization";
+        internal const string MechControlSynchronizationRuleId =
+            "MAP.MechControlSynchronization";
 
         private static readonly Dictionary<string, IMechFusionHealthEffectRule>
             Rules = new Dictionary<string, IMechFusionHealthEffectRule>(
@@ -36,6 +38,7 @@ namespace MAP_MechanoidMechanitor
         static MechFusionHealthEffectRegistry()
         {
             Register(new BodySynchronizationRule());
+            Register(new MechControlSynchronizationRule());
         }
 
         public static IReadOnlyCollection<IMechFusionHealthEffectRule> AllRules =>
@@ -74,6 +77,30 @@ namespace MAP_MechanoidMechanitor
                 hediffDef = DefDatabase<HediffDef>.GetNamedSilentFail(
                     MechFusionDefNames.BodySynchronizationHediffDefName);
                 severity = -1f;
+                return true;
+            }
+        }
+
+        private sealed class MechControlSynchronizationRule
+            : IMechFusionHealthEffectRule
+        {
+            public string RuleId => MechControlSynchronizationRuleId;
+
+            public bool TryCapture(
+                Pawn sourcePawn,
+                out HediffDef? hediffDef,
+                out float severity)
+            {
+                hediffDef = null;
+                severity = -1f;
+                if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(
+                        sourcePawn))
+                {
+                    return false;
+                }
+
+                hediffDef = DefDatabase<HediffDef>.GetNamedSilentFail(
+                    MechFusionDefNames.MechControlSynchronizationHediffDefName);
                 return true;
             }
         }
@@ -249,6 +276,38 @@ namespace MAP_MechanoidMechanitor
             Pawn? wearer)
         {
             ApplyAll(session, wearer);
+        }
+
+        internal static void EnsureMechControlSynchronizationEntry(
+            MechFusionSession session)
+        {
+            if (session.MechanitorSnapshot == null
+                || session.HasHealthEffectRule(
+                    MechFusionHealthEffectRegistry
+                        .MechControlSynchronizationRuleId))
+            {
+                return;
+            }
+
+            HediffDef? def = DefDatabase<HediffDef>.GetNamedSilentFail(
+                MechFusionDefNames.MechControlSynchronizationHediffDefName);
+            if (def == null)
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 无法解析机控同调 HediffDef，" +
+                    $"session={session.SessionId}。");
+                return;
+            }
+
+            // 兼容功能加入前已在运行的机械师合体会话；
+            // 只补本规则，不重新评估其他“合体瞬间”规则。
+            session.AddHealthEffectEntry(new MechFusionHealthEffectEntry
+            {
+                ruleId = MechFusionHealthEffectRegistry
+                    .MechControlSynchronizationRuleId,
+                hediffDef = def,
+                severity = -1f
+            });
         }
 
         private static void EnsureBodySynchronizationEntry(

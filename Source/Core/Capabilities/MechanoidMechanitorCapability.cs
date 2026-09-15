@@ -42,6 +42,9 @@ namespace MAP_MechanoidMechanitor
         // 通用机械飞行资格仅来自独立飞行授权注册表；不改变既有能力位。
         Flight = 1 << 21,
 
+        // 原版机控中枢或合体期间“机控同调”提供的机械师控制系统接入。
+        MechanitorControl = 1 << 22,
+
         // 合体只能是先天能力，唯一事实来源是 CompMechFusionInnate 标记与合体资格注册表。
         // 保留原 bit 值，避免改变既有能力位的数值。
         Fusion = 1 << 23

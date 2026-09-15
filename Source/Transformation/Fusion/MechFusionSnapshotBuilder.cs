@@ -84,7 +84,12 @@ namespace MAP_MechanoidMechanitor
             float armorHeat = sourceDef.GetStatValueAbstract(
                 StatDefOf.ArmorRating_Heat);
 
-            CapturePositiveHediffStages(source, offsets, factors);
+            CapturePositiveHediffStages(
+                source,
+                offsets,
+                factors,
+                excludeMechanitorLimits:
+                    session.MechanitorSnapshot?.captured == true);
 
             FoldArmor(
                 offsets,
@@ -118,7 +123,8 @@ namespace MAP_MechanoidMechanitor
         private static void CapturePositiveHediffStages(
             Pawn source,
             Dictionary<StatDef, float> offsets,
-            Dictionary<StatDef, float> factors)
+            Dictionary<StatDef, float> factors,
+            bool excludeMechanitorLimits)
         {
             List<Hediff>? hediffs = source.health?.hediffSet?.hediffs;
             if (hediffs == null)
@@ -141,8 +147,18 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 float severity = hediff.Severity;
-                CaptureStageOffsets(source, stage, severity, offsets);
-                CaptureStageFactors(source, stage, severity, factors);
+                CaptureStageOffsets(
+                    source,
+                    stage,
+                    severity,
+                    offsets,
+                    excludeMechanitorLimits);
+                CaptureStageFactors(
+                    source,
+                    stage,
+                    severity,
+                    factors,
+                    excludeMechanitorLimits);
             }
         }
 
@@ -150,7 +166,8 @@ namespace MAP_MechanoidMechanitor
             Pawn source,
             HediffStage stage,
             float severity,
-            Dictionary<StatDef, float> offsets)
+            Dictionary<StatDef, float> offsets,
+            bool excludeMechanitorLimits)
         {
             if (stage.statOffsets != null)
             {
@@ -159,6 +176,15 @@ namespace MAP_MechanoidMechanitor
                     StatModifier? modifier = stage.statOffsets[i];
                     if (modifier?.stat == null)
                     {
+                        continue;
+                    }
+
+                    if (excludeMechanitorLimits
+                        && (modifier.stat == StatDefOf.MechBandwidth
+                            || modifier.stat == StatDefOf.MechControlGroups))
+                    {
+                        // 机械师两项上限由“机控同调”使用最终值快照提供，
+                        // 不得再从通用正面 Hediff 快照重复结算。
                         continue;
                     }
 
@@ -195,6 +221,13 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (excludeMechanitorLimits
+                    && (modifier.stat == StatDefOf.MechBandwidth
+                        || modifier.stat == StatDefOf.MechControlGroups))
+                {
+                    continue;
+                }
+
                 float value = modifier.valueBySeverity.Evaluate(severity);
                 if (Math.Abs(value) > Epsilon)
                 {
@@ -207,7 +240,8 @@ namespace MAP_MechanoidMechanitor
             Pawn source,
             HediffStage stage,
             float severity,
-            Dictionary<StatDef, float> factors)
+            Dictionary<StatDef, float> factors,
+            bool excludeMechanitorLimits)
         {
             if (stage.statFactors != null)
             {
@@ -215,6 +249,13 @@ namespace MAP_MechanoidMechanitor
                 {
                     StatModifier? modifier = stage.statFactors[i];
                     if (modifier?.stat == null)
+                    {
+                        continue;
+                    }
+
+                    if (excludeMechanitorLimits
+                        && (modifier.stat == StatDefOf.MechBandwidth
+                            || modifier.stat == StatDefOf.MechControlGroups))
                     {
                         continue;
                     }
@@ -250,6 +291,13 @@ namespace MAP_MechanoidMechanitor
                 StatModifierBySeverity? modifier =
                     stage.statFactorsBySeverity[i];
                 if (modifier?.stat == null || modifier.valueBySeverity == null)
+                {
+                    continue;
+                }
+
+                if (excludeMechanitorLimits
+                    && (modifier.stat == StatDefOf.MechBandwidth
+                        || modifier.stat == StatDefOf.MechControlGroups))
                 {
                     continue;
                 }

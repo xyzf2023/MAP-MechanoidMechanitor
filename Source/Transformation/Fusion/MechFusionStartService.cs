@@ -89,6 +89,9 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
+                // 必须早于 source.DeSpawn：原版机械师离图会解除其下属征召。
+                MechFusionMechanitorSynchronizationService
+                    .CaptureBeforeSourceDespawn(session, source, wearer);
                 if (!GameComponent_MechTransformationRegistry.TryBeginTransition(
                         source,
                         MechTransformationForm.Merged,
@@ -170,6 +173,10 @@ namespace MAP_MechanoidMechanitor
                 // 只输出警告，若管理层外发生异常，事务回滚仍会幂等清理。
                 transaction.HealthEffectsApplied = true;
                 MechFusionHealthEffectManager.ApplyAll(session, wearer);
+                MechFusionMechanitorSynchronizationService.ApplyOrRepair(
+                    session,
+                    source,
+                    wearer);
                 transaction.TemporaryFlightApplied = true;
                 MechFusionFlightUtility.ApplyTemporaryFlight(
                     session,
@@ -246,6 +253,18 @@ namespace MAP_MechanoidMechanitor
                 TryRollbackStep(
                     session,
                     ref cleanupIncomplete,
+                    "回转机控同调监管关系",
+                    () => MechFusionMechanitorSynchronizationService
+                        .PrepareForHealthEffectRemoval(
+                            session,
+                            source,
+                            wearer,
+                            sourceRecoverable: !source.Destroyed
+                                && !source.Discarded
+                                && !source.Dead));
+                TryRollbackStep(
+                    session,
+                    ref cleanupIncomplete,
                     "撤销合体健康状态",
                     () =>
                     {
@@ -256,6 +275,9 @@ namespace MAP_MechanoidMechanitor
                             throw new InvalidOperationException(
                                 "至少一条合体健康状态撤销失败。");
                         }
+
+                        MechFusionMechanitorSynchronizationService
+                            .NotifyHealthEffectsRevoked(session, wearer);
                     });
             }
 
