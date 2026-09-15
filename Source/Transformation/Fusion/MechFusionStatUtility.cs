@@ -55,10 +55,11 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (stat == StatDefOf.MoveSpeed)
+            if (stat == StatDefOf.MoveSpeed || stat == StatDefOf.Mass)
             {
-                // MoveSpeed 必须在 StatWorker.FinalizeValue 完成后强制覆盖，
-                // 否则会再次受到人类 Moving 容量与 0.15 最小值钳制。
+                // MoveSpeed 与 Mass 都在 StatWorker.FinalizeValue 后单独处理。
+                // Mass 必须保持为“人类正常最终重量 + 源机械族当前重量”，
+                // 不能再次套用源机械族 Hediff 的通用偏移/倍率。
                 return;
             }
 
@@ -115,6 +116,50 @@ namespace MAP_MechanoidMechanitor
                     ? storedFactor
                     : 1f;
             return Math.Max(0f, (baseSpeed + offset) * factor);
+        }
+
+        /// <summary>
+        /// 返回合体状态下应额外加入人类最终 Mass 的源机械族重量。
+        /// 源机械族真实 Pawn 在合体期间始终由会话保留，因此直接读取其当前
+        /// 最终 Mass；机械族主武器已在合体开始时转移给人类，不会重复计重。
+        /// 这里只增加 Pawn 总重量，不接入 GearAndInventoryMass，因此不会把
+        /// 机械体自身重量误判成人类携带负重。
+        /// </summary>
+        internal static bool TryGetFusionMassContribution(
+            Pawn pawn,
+            out float value)
+        {
+            value = 0f;
+            if (pawn == null
+                || !GameComponent_MechFusionSessionRegistry.TryGetSessionForWearer(
+                    pawn,
+                    out MechFusionSession? session)
+                || session == null
+                || !session.IsActive)
+            {
+                return false;
+            }
+
+            Pawn? source = session.SourcePawn;
+            if (source != null
+                && !source.Destroyed
+                && !source.Discarded
+                && !source.Dead)
+            {
+                value = Math.Max(0f, source.GetStatValue(StatDefOf.Mass));
+                return true;
+            }
+
+            if (session.SourceThingDef != null)
+            {
+                // 异常/旧存档降级路径：真实源 Pawn 不可读取时至少保留 Def 基础重量。
+                value = Math.Max(
+                    0f,
+                    session.SourceThingDef.GetStatValueAbstract(StatDefOf.Mass));
+                return true;
+            }
+
+            return false;
         }
 
         internal static void ApplyToApparel(

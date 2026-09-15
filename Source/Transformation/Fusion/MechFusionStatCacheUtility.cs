@@ -20,6 +20,7 @@ namespace MAP_MechanoidMechanitor
             HashSet<StatDef> stats = new HashSet<StatDef>
             {
                 StatDefOf.MoveSpeed,
+                StatDefOf.Mass,
                 StatDefOf.ArmorRating_Sharp,
                 StatDefOf.ArmorRating_Blunt,
                 StatDefOf.ArmorRating_Heat,

@@ -161,4 +161,34 @@ namespace MAP_MechanoidMechanitor
             val = forcedSpeed;
         }
     }
+
+    /// <summary>
+    /// 合体 Pawn 的最终重量等于人类按原版完整结算后的 Mass，再加上源机械族
+    /// 当前最终 Mass。只修改 Pawn 的最终总重量，不把机械体重量写入服装、装备
+    /// 或库存，因此不会参与 GearAndInventoryMass 的超负重判定。
+    /// </summary>
+    [HarmonyPatch(typeof(StatWorker), nameof(StatWorker.FinalizeValue))]
+    internal static class MechFusionMassFinalPatch
+    {
+        private static readonly AccessTools.FieldRef<StatWorker, StatDef>
+            StatField = AccessTools.FieldRefAccess<StatWorker, StatDef>("stat");
+
+        public static void Postfix(
+            StatWorker __instance,
+            StatRequest req,
+            ref float val)
+        {
+            if (!GameComponent_MechFusionSessionRegistry.HasAnySession
+                || StatField(__instance) != StatDefOf.Mass
+                || req.Thing is not Pawn pawn
+                || !MechFusionStatUtility.TryGetFusionMassContribution(
+                    pawn,
+                    out float sourceMass))
+            {
+                return;
+            }
+
+            val = Math.Max(0f, val + sourceMass);
+        }
+    }
 }

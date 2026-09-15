@@ -46,7 +46,7 @@
     </apparel>
     <statBases>
       <MaxHitPoints>400</MaxHitPoints>
-      <Mass>5</Mass>
+      <Mass>0</Mass>
       <Flammability>0</Flammability>
       <DeteriorationRate>0</DeteriorationRate>
       <EquipDelay>0</EquipDelay>
