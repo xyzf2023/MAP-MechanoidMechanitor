@@ -555,8 +555,19 @@ namespace MAP_MechanoidMechanitor
     {
         private static readonly AccessTools.FieldRef<PawnRenderer, Pawn> PawnField =
             AccessTools.FieldRefAccess<PawnRenderer, Pawn>("pawn");
-        public static void Prefix(PawnRenderer __instance, ref float angle)
+        public static void Prefix(
+            PawnRenderer __instance,
+            PawnRenderFlags flags,
+            ref float angle)
         {
+            // GetDrawParms 同时服务于地图绘制与 PortraitsCache 离屏头像渲染。
+            // UI 头像不应继承地图上的飞行倾角，否则头像首次在飞行中生成缓存时，
+            // 会以当时的倾斜姿态固定显示在机械控制组等界面中。
+            if (flags.FlagSet(PawnRenderFlags.Portrait))
+            {
+                return;
+            }
+
             Pawn pawn = PawnField(__instance);
             if (MechanicalFlightUtility.TryGetHoverVisualState(
                     pawn, out var record, out _)
