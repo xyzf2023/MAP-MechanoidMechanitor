@@ -262,6 +262,10 @@ namespace MAP_MechanoidMechanitor
                         $"hediff={def.defName}：{ex}");
                 }
             }
+
+            // 能力授权同样属于合体瞬间快照的派生结果。即使 Hediff 已经存在，
+            // 读档修复也应立即按已保存的资格同步，不能重新检查当前启灵神经。
+            PsychicCoreUtility.SyncPsychicActivationAbility(wearer);
         }
 
         internal static bool RevokeAll(
