@@ -56,6 +56,9 @@ namespace MAP_MechanoidMechanitor
         private bool sourceRestored;
         private bool transformationRestored;
         private bool apparelRemoved;
+        private ThingWithComps? originalWearerWeapon;
+        private ThingWithComps? sourceWeapon;
+        private bool weaponsRestored;
         private int pendingRecoveryAttempts;
         private Dictionary<StatDef, float>? offsetLookup;
         private Dictionary<StatDef, float>? factorLookup;
@@ -185,6 +188,12 @@ namespace MAP_MechanoidMechanitor
         public bool TransformationRestored => transformationRestored;
 
         public bool ApparelRemoved => apparelRemoved;
+
+        internal ThingWithComps? OriginalWearerWeapon => originalWearerWeapon;
+
+        internal ThingWithComps? SourceWeapon => sourceWeapon;
+
+        internal bool WeaponsRestored => weaponsRestored;
 
         public int PendingRecoveryAttempts => pendingRecoveryAttempts;
 
@@ -478,6 +487,19 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
+        internal void CaptureWeapons(
+            ThingWithComps? wearerWeapon,
+            ThingWithComps? mechWeapon)
+        {
+            originalWearerWeapon = wearerWeapon;
+            sourceWeapon = mechWeapon;
+        }
+
+        internal void MarkWeaponsRestored()
+        {
+            weaponsRestored = true;
+        }
+
         internal void AddHealthEffectEntry(MechFusionHealthEffectEntry entry)
         {
             if (entry == null || HasHealthEffectRule(entry.ruleId))
@@ -653,6 +675,11 @@ namespace MAP_MechanoidMechanitor
                 ref transformationRestored,
                 "transformationRestored");
             Scribe_Values.Look(ref apparelRemoved, "apparelRemoved");
+            Scribe_References.Look(
+                ref originalWearerWeapon,
+                "originalWearerWeapon");
+            Scribe_References.Look(ref sourceWeapon, "sourceWeapon");
+            Scribe_Values.Look(ref weaponsRestored, "weaponsRestored");
             Scribe_Values.Look(
                 ref pendingRecoveryAttempts,
                 "pendingRecoveryAttempts");

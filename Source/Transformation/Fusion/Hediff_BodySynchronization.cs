@@ -38,18 +38,6 @@ namespace MAP_MechanoidMechanitor
                     builder,
                     StatDefOf.MoveSpeed,
                     MechFusionStatUtility.GetForcedMoveSpeed(session));
-                AppendAbsolute(
-                    builder,
-                    StatDefOf.ArmorRating_Sharp,
-                    session.ArmorSharp);
-                AppendAbsolute(
-                    builder,
-                    StatDefOf.ArmorRating_Blunt,
-                    session.ArmorBlunt);
-                AppendAbsolute(
-                    builder,
-                    StatDefOf.ArmorRating_Heat,
-                    session.ArmorHeat);
                 AppendEntries(
                     builder,
                     session.StatOffsets,

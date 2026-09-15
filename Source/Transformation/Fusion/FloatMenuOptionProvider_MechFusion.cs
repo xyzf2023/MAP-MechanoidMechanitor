@@ -64,9 +64,27 @@ namespace MAP_MechanoidMechanitor
                     Job job = JobMaker.MakeJob(
                         MAPMechanitor_JobDefOf.MAP_MechFusionApproach,
                         wearer);
-                    if (source.jobs != null
-                        && source.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+                    if (source.jobs != null)
                     {
+                        job.playerForced = true;
+                        if (source.CurJob != null)
+                        {
+                            source.CurJob.playerInterruptedForced = true;
+                        }
+
+                        // StartJob 会结束旧 Job，但不会清除机械飞行层独立维护的
+                        // 直线路径绘制缓存。先同时停止原版 Pather 与该缓存，避免
+                        // 新命令开始后仍显示上一条移动路线。
+                        source.pather?.StopDead();
+                        MechanicalFlightStraightPathPatch.ClearMotion(source);
+                        source.jobs.ClearQueuedJobs();
+                        source.jobs.StartJob(
+                            job,
+                            JobCondition.InterruptForced,
+                            resumeCurJobAfterwards: false,
+                            cancelBusyStances: true,
+                            tag: JobTag.Misc,
+                            preToilReservationsCanFail: true);
                         return;
                     }
 

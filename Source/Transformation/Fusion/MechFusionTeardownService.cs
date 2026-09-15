@@ -226,6 +226,15 @@ namespace MAP_MechanoidMechanitor
             // 恢复到死亡安全容器后再移除，避免等待恢复期间 Hediff 计时被冻结。
             MechFusionSourceUtility.RemoveDormantGuard(source);
 
+            if (!session.WeaponsRestored)
+            {
+                MechFusionWeaponUtility.RestoreAfterTeardown(
+                    session,
+                    source,
+                    wearer);
+                session.MarkWeaponsRestored();
+            }
+
             if (!session.StabilitySettled)
             {
                 // 这是唯一允许结构结算致死的阶段。此时 SourceRestored 已经成立，
@@ -721,6 +730,7 @@ namespace MAP_MechanoidMechanitor
             if (!session.SourceRestored
                 || (!source.Dead && !session.EnergyWrittenBack)
                 || !session.TransformationRestored
+                || !session.WeaponsRestored
                 || !session.StabilitySettled
                 || !session.ApparelRemoved)
             {
@@ -766,6 +776,7 @@ namespace MAP_MechanoidMechanitor
             Pawn source)
         {
             Pawn? wearer = session.WearerPawn;
+            MechFusionVisualUtility.PlayTeardownTransition(source, wearer);
             GameComponent_MechFusionSessionRegistry.RemoveSession(session);
             RefreshAfterEnd(source, wearer);
 

@@ -30,6 +30,7 @@ namespace MAP_MechanoidMechanitor
             public bool HealthEffectsApplied;
             public bool TemporaryFlightApplied;
             public bool WearAttempted;
+            public bool WeaponTransferAttempted;
             public Thing? Apparel;
             public List<Apparel>? PreWornApparel;
         }
@@ -143,6 +144,11 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 transaction.ApparelWorn = true;
+                transaction.WeaponTransferAttempted = true;
+                MechFusionWeaponUtility.TransferForFusion(
+                    session,
+                    source,
+                    wearer);
                 source.DeSpawn(DestroyMode.Vanish);
                 Find.WorldPawns.PassToWorld(
                     source,
@@ -375,6 +381,18 @@ namespace MAP_MechanoidMechanitor
                     () => RestoreDroppedApparel(
                         wearer,
                         transaction.PreWornApparel));
+            }
+
+            if (transaction.WeaponTransferAttempted)
+            {
+                TryRollbackStep(
+                    session,
+                    ref cleanupIncomplete,
+                    "恢复合体前武器",
+                    () => MechFusionWeaponUtility.RollbackStart(
+                        session,
+                        source,
+                        wearer));
             }
 
             if (sourceRestoreDeferred

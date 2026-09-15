@@ -19,6 +19,11 @@ namespace MAP_MechanoidMechanitor
             PlaySkipSounds(source, wearer);
         }
 
+        internal static void PlayTeardownTransition(Pawn? source, Pawn? wearer)
+        {
+            PlayFusionTransition(source, wearer);
+        }
+
         internal static void FaceEachOther(Pawn? source, Pawn? wearer)
         {
             FaceTowards(source, wearer);
