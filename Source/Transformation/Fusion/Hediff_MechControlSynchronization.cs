@@ -52,22 +52,26 @@ namespace MAP_MechanoidMechanitor
         {
             get
             {
-                ResolveBonuses(out int bandwidth, out int controlGroups);
                 StringBuilder builder = new StringBuilder();
-                string baseTip = base.TipStringExtra;
+                string baseTip = base.TipStringExtra.TrimEnd('\r', '\n');
                 if (!baseTip.NullOrEmpty())
                 {
-                    builder.AppendLine(baseTip);
+                    builder.Append(baseTip);
                 }
 
-                builder.Append(" - ");
-                builder.Append(StatDefOf.MechBandwidth.LabelCap);
-                builder.Append(": +");
-                builder.AppendLine(bandwidth.ToString());
-                builder.Append(" - ");
-                builder.Append(StatDefOf.MechControlGroups.LabelCap);
-                builder.Append(": +");
-                builder.Append(controlGroups);
+                MechFusionMechanitorSnapshot? snapshot = ResolveSnapshot();
+                AppendEffectLine(
+                    builder,
+                    snapshot != null && !snapshot.wearerWasMechanitor,
+                    " - 机控系统已接入");
+                AppendEffectLine(
+                    builder,
+                    snapshot?.grantsQuantumCommunicator == true,
+                    " - 量子通讯器已启用");
+                AppendEffectLine(
+                    builder,
+                    snapshot?.grantsProxySubchain == true,
+                    " - 代理子链已启用");
                 return builder.ToString().TrimEnd('\r', '\n');
             }
         }
@@ -95,17 +99,45 @@ namespace MAP_MechanoidMechanitor
         {
             bandwidth = 0;
             controlGroups = 0;
-            if (pawn == null
-                || !GameComponent_MechFusionSessionRegistry.TryGetSessionForWearer(
-                    pawn,
-                    out MechFusionSession? session)
-                || session?.MechanitorSnapshot == null)
+            MechFusionMechanitorSnapshot? snapshot = ResolveSnapshot();
+            if (snapshot == null)
             {
                 return;
             }
 
-            bandwidth = session.MechanitorSnapshot.bandwidthBonus;
-            controlGroups = session.MechanitorSnapshot.controlGroupBonus;
+            bandwidth = snapshot.bandwidthBonus;
+            controlGroups = snapshot.controlGroupBonus;
+        }
+
+        private MechFusionMechanitorSnapshot? ResolveSnapshot()
+        {
+            if (pawn == null
+                || !GameComponent_MechFusionSessionRegistry.TryGetSessionForWearer(
+                    pawn,
+                    out MechFusionSession? session))
+            {
+                return null;
+            }
+
+            return session?.MechanitorSnapshot;
+        }
+
+        private static void AppendEffectLine(
+            StringBuilder builder,
+            bool shouldAppend,
+            string text)
+        {
+            if (!shouldAppend)
+            {
+                return;
+            }
+
+            if (builder.Length > 0)
+            {
+                builder.AppendLine();
+            }
+
+            builder.Append(text);
         }
     }
 }

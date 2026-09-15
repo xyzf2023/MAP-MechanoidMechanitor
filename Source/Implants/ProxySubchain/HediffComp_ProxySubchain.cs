@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor
             base.CompPostPostRemoved();
 
             Pawn? pawn = parent?.pawn;
-            if (pawn?.mechanitor != null && !ProxySubchainUtility.HasImplant(pawn))
+            if (pawn?.mechanitor != null && !ProxySubchainUtility.HasEffect(pawn))
             {
                 pawn.mechanitor.UndraftAllMechs();
             }

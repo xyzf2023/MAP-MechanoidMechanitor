@@ -14,6 +14,9 @@ namespace MAP_MechanoidMechanitor
         public bool captured;
         public bool wearerWasMechanitor;
         public bool wearerHadMechlink;
+        public bool implantEffectsCaptured;
+        public bool grantsQuantumCommunicator;
+        public bool grantsProxySubchain;
         public int bandwidthBonus;
         public int controlGroupBonus;
         public int destinationStartGroupIndex;
@@ -31,6 +34,15 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref captured, "captured");
             Scribe_Values.Look(ref wearerWasMechanitor, "wearerWasMechanitor");
             Scribe_Values.Look(ref wearerHadMechlink, "wearerHadMechlink");
+            Scribe_Values.Look(
+                ref implantEffectsCaptured,
+                "implantEffectsCaptured");
+            Scribe_Values.Look(
+                ref grantsQuantumCommunicator,
+                "grantsQuantumCommunicator");
+            Scribe_Values.Look(
+                ref grantsProxySubchain,
+                "grantsProxySubchain");
             Scribe_Values.Look(ref bandwidthBonus, "bandwidthBonus");
             Scribe_Values.Look(ref controlGroupBonus, "controlGroupBonus");
             Scribe_Values.Look(

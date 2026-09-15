@@ -16,6 +16,13 @@ namespace MAP_MechanoidMechanitor
                 MAPMechanitor_HediffDefOf.MAP_ProxySubchain);
         }
 
+        public static bool HasEffect(Pawn? pawn)
+        {
+            return HasImplant(pawn)
+                || MechFusionMechanitorSynchronizationService
+                    .GrantsProxySubchainEffect(pawn);
+        }
+
         public static bool CanMaintainControl(Pawn? pawn)
         {
             if (!IsEligibleHost(pawn))
@@ -275,7 +282,7 @@ namespace MAP_MechanoidMechanitor
                 && pawn.Faction.IsPlayerSafe()
                 && pawn.mechanitor != null
                 && MechanitorUtility.IsMechanitor(pawn)
-                && HasImplant(pawn);
+                && HasEffect(pawn);
         }
     }
 }

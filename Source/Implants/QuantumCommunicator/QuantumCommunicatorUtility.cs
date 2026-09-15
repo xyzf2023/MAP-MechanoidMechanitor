@@ -13,6 +13,13 @@ namespace MAP_MechanoidMechanitor
                 MAPMechanitor_HediffDefOf.MAP_QuantumCommunicator);
         }
 
+        public static bool HasEffect(Pawn? pawn)
+        {
+            return HasImplant(pawn)
+                || MechFusionMechanitorSynchronizationService
+                    .GrantsQuantumCommunicatorEffect(pawn);
+        }
+
         public static bool GrantsCommandRangeBypass(Pawn? mech)
         {
             if (mech == null)
@@ -24,7 +31,7 @@ namespace MAP_MechanoidMechanitor
             return overseer != null
                 && !overseer.Destroyed
                 && !overseer.Dead
-                && HasImplant(overseer);
+                && HasEffect(overseer);
         }
     }
 
@@ -36,7 +43,7 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPrefix]
         public static bool Prefix(Pawn_MechanitorTracker __instance)
         {
-            return !QuantumCommunicatorUtility.HasImplant(__instance.Pawn);
+            return !QuantumCommunicatorUtility.HasEffect(__instance.Pawn);
         }
     }
 }

@@ -34,6 +34,22 @@ namespace MAP_MechanoidMechanitor
                 && pawn.health.hediffSet.HasHediff(def);
         }
 
+        internal static bool GrantsQuantumCommunicatorEffect(Pawn? pawn)
+        {
+            return TryGetActiveSnapshot(
+                    pawn,
+                    out MechFusionMechanitorSnapshot? snapshot)
+                && snapshot!.grantsQuantumCommunicator;
+        }
+
+        internal static bool GrantsProxySubchainEffect(Pawn? pawn)
+        {
+            return TryGetActiveSnapshot(
+                    pawn,
+                    out MechFusionMechanitorSnapshot? snapshot)
+                && snapshot!.grantsProxySubchain;
+        }
+
         /// <summary>
         /// 必须在源机械师 DeSpawn 前调用；原版 DeSpawn 会解除下属征召。
         /// </summary>
@@ -86,6 +102,11 @@ namespace MAP_MechanoidMechanitor
                 captured = true,
                 wearerWasMechanitor = wearerWasMechanitor,
                 wearerHadMechlink = wearerHadMechlink,
+                implantEffectsCaptured = true,
+                grantsQuantumCommunicator =
+                    QuantumCommunicatorUtility.HasImplant(source),
+                grantsProxySubchain =
+                    ProxySubchainUtility.HasImplant(source),
                 bandwidthBonus = Math.Max(0, sourceTracker.TotalBandwidth),
                 controlGroupBonus = Math.Max(
                     0,
@@ -116,6 +137,25 @@ namespace MAP_MechanoidMechanitor
             Pawn? source,
             Pawn? wearer)
         {
+            MechFusionMechanitorSnapshot? snapshot =
+                session.MechanitorSnapshot;
+            if (snapshot != null)
+            {
+                if (!snapshot.implantEffectsCaptured
+                    && source != null
+                    && MechanoidMechanitorRoleUtility
+                        .IsMechanoidMechanitor(source))
+                {
+                    snapshot.grantsQuantumCommunicator =
+                        QuantumCommunicatorUtility.HasImplant(source);
+                    snapshot.grantsProxySubchain =
+                        ProxySubchainUtility.HasImplant(source);
+                    snapshot.implantEffectsCaptured = true;
+                }
+
+                return;
+            }
+
             CaptureBeforeSourceDespawn(session, source, wearer);
         }
 
@@ -878,6 +918,26 @@ namespace MAP_MechanoidMechanitor
         {
             return DefDatabase<HediffDef>.GetNamedSilentFail(
                 MechFusionDefNames.MechControlSynchronizationHediffDefName);
+        }
+
+        private static bool TryGetActiveSnapshot(
+            Pawn? pawn,
+            out MechFusionMechanitorSnapshot? snapshot)
+        {
+            snapshot = null;
+            if (!HasTemporaryMechanitorAccess(pawn)
+                || !GameComponent_MechFusionSessionRegistry
+                    .TryGetSessionForWearer(
+                        pawn,
+                        out MechFusionSession? session)
+                || session?.MechanitorSnapshot == null
+                || session.MechanitorSnapshot.controlsRestored)
+            {
+                return false;
+            }
+
+            snapshot = session.MechanitorSnapshot;
+            return true;
         }
 
         private static void LogTransferFailure(Pawn mech)
