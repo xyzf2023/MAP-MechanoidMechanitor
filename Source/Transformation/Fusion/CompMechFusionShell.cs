@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -43,6 +45,53 @@ namespace MAP_MechanoidMechanitor
             }
 
             return session;
+        }
+
+        /// <summary>
+        /// 由当前服装实例提供专属工作速度。数值仍只保存在权威会话中，
+        /// 组件只负责把已绑定会话的快照接入原版装备属性入口。
+        /// </summary>
+        internal bool TryGetWorkSpeedOffset(StatDef? stat, out float value)
+        {
+            value = 0f;
+            if (!MechFusionStatUtility.IsApparelWorkSpeedStat(stat))
+            {
+                return false;
+            }
+
+            MechFusionSession? session = GetActiveSession();
+            return session != null
+                && session.TryGetStatOffset(stat, out value)
+                && value != 0f;
+        }
+
+        public override IEnumerable<StatDrawEntry> SpecialDisplayStats()
+        {
+            MechFusionSession? session = GetActiveSession();
+            if (session == null)
+            {
+                yield break;
+            }
+
+            IReadOnlyList<MechFusionStatEntry> offsets = session.StatOffsets;
+            for (int i = 0; i < offsets.Count; i++)
+            {
+                MechFusionStatEntry? entry = offsets[i];
+                StatDef? stat = entry?.stat;
+                if (!MechFusionStatUtility.IsApparelWorkSpeedStat(stat)
+                    || entry!.value == 0f)
+                {
+                    continue;
+                }
+
+                yield return new StatDrawEntry(
+                    StatCategoryDefOf.EquippedStatOffsets,
+                    stat!,
+                    entry.value,
+                    StatRequest.ForEmpty(),
+                    ToStringNumberSense.Offset,
+                    forceUnfinalizedMode: true);
+            }
         }
 
         internal void AssignSession(string value)

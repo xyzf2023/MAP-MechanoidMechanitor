@@ -7,7 +7,7 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// “机体同调”的可见说明。实际加成仍由权威合体会话提供，
-    /// 本 Hediff 只在玩家查看健康状态时按当前会话生成文字，
+    /// 本 Hediff 只显示不属于合体外甲装备属性的当前会话效果，
     /// 不修改全局 HediffDef，也不复制实例数据。
     /// </summary>
     public sealed class Hediff_BodySynchronization : Hediff
@@ -53,11 +53,13 @@ namespace MAP_MechanoidMechanitor
                 AppendEntries(
                     builder,
                     session.StatOffsets,
-                    ToStringNumberSense.Offset);
+                    ToStringNumberSense.Offset,
+                    skipApparelWorkSpeedOffsets: true);
                 AppendEntries(
                     builder,
                     session.StatFactors,
-                    ToStringNumberSense.Factor);
+                    ToStringNumberSense.Factor,
+                    skipApparelWorkSpeedOffsets: false);
 
                 if (session.TemporaryFlightAuthorized)
                 {
@@ -86,13 +88,17 @@ namespace MAP_MechanoidMechanitor
         private static void AppendEntries(
             StringBuilder builder,
             IReadOnlyList<MechFusionStatEntry> entries,
-            ToStringNumberSense numberSense)
+            ToStringNumberSense numberSense,
+            bool skipApparelWorkSpeedOffsets)
         {
             for (int i = 0; i < entries.Count; i++)
             {
                 MechFusionStatEntry? entry = entries[i];
                 StatDef? stat = entry?.stat;
-                if (stat == null || stat == StatDefOf.MoveSpeed)
+                if (stat == null
+                    || stat == StatDefOf.MoveSpeed
+                    || (skipApparelWorkSpeedOffsets
+                        && MechFusionStatUtility.IsApparelWorkSpeedStat(stat)))
                 {
                     continue;
                 }

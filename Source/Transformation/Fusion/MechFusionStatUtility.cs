@@ -19,6 +19,25 @@ namespace MAP_MechanoidMechanitor
                 || stat == StatDefOf.ArmorRating_Heat;
         }
 
+        /// <summary>
+        /// 合体快照中的专属工作速度由合体外甲作为装备属性提供。
+        /// MoveSpeed 虽然同样以 Speed 结尾，但仍由最终值补丁强制覆盖，
+        /// 因此必须排除。原版的机械师专用工作速度位于 Mechanitor 分类，
+        /// 其余工作速度位于 PawnWork 分类；分类与名称双重限制避免误接管。
+        /// </summary>
+        internal static bool IsApparelWorkSpeedStat(StatDef? stat)
+        {
+            if (stat == null
+                || stat == StatDefOf.MoveSpeed
+                || stat.defName.IndexOf("Speed", StringComparison.Ordinal) < 0)
+            {
+                return false;
+            }
+
+            return stat.category == StatCategoryDefOf.PawnWork
+                || stat.category?.defName == "Mechanitor";
+        }
+
         internal static void ApplyToPawn(
             Pawn pawn,
             StatDef stat,
@@ -43,7 +62,10 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (session.TryGetStatOffset(stat, out float offset)
+            // 专属工作速度已经由 StatOffsetFromGear 从合体外甲读取。
+            // 此处不得再次添加，否则同一份快照会被结算两次。
+            if (!IsApparelWorkSpeedStat(stat)
+                && session.TryGetStatOffset(stat, out float offset)
                 && Math.Abs(offset) > Epsilon)
             {
                 value += offset;
