@@ -76,6 +76,8 @@ namespace MAP_MechanoidMechanitor
                 icon = Icon,
                 action = () =>
                 {
+                    if (GravityDisorderUtility.IsAffected(pawn))
+                        return;
                     var active = ProvidedSession(pawn);
                     if (active != null)
                     {
@@ -94,6 +96,8 @@ namespace MAP_MechanoidMechanitor
 
         private static string? DisabledReason(Pawn pawn, MechanicalFlightProfileDef? profile)
         {
+            if (GravityDisorderUtility.IsAffected(pawn))
+                return GravityDisorderUtility.BlockedReason;
             if (!pawn.Drafted)
                 return "MAP_GroupFlight_RequiresDraft".Translate();
             var session = ProvidedSession(pawn);

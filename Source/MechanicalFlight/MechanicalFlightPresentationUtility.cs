@@ -54,6 +54,8 @@ namespace MAP_MechanoidMechanitor
 
         public static Vector3 GroundAnchorDrawPos(Pawn pawn)
         {
+            if (GravityDisorderPresentation.ShouldDraw(pawn))
+                return GravityDisorderPresentation.GroundAnchor(pawn);
             Vector3 drawPos = pawn.DrawPos;
             if (!MechanicalFlightUtility.TryGetHoverVisualState(
                     pawn,
@@ -74,6 +76,8 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             MechanicalFlightAuthorizationRecord record)
         {
+            if (GravityDisorderPresentation.ShouldDraw(pawn))
+                return 0f;
             MechanicalFlightProfileDef? profile = record.Profile;
             if (profile == null || !profile.allowTilt)
             {
@@ -394,6 +398,9 @@ namespace MAP_MechanoidMechanitor
         public static void Postfix(Pawn_DrawTracker __instance, ref Vector3 __result)
         {
             Pawn pawn = PawnField(__instance);
+            // 后置的统一高度补丁负责重力紊乱，避免与已有飞行高度重复叠加。
+            if (GravityDisorderPresentation.ShouldDraw(pawn))
+                return;
             if (!MechanicalFlightUtility.TryGetHoverVisualState(
                     pawn,
                     out MechanicalFlightAuthorizationRecord? record,
@@ -493,6 +500,7 @@ namespace MAP_MechanoidMechanitor
                 Pawn? pawn = record?.Pawn;
                 if (pawn == null || pawn.Dead || pawn.Destroyed || pawn.Discarded
                     || !pawn.Spawned || pawn.Map != map
+                    || GravityDisorderPresentation.ShouldDraw(pawn)
                     || !MechanicalFlightUtility.HasHoverVisual(pawn, record!)
                     || pawn.IsHiddenFromPlayer()
                     || __result.Contains(pawn)

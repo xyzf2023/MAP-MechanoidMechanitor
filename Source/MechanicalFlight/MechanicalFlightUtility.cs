@@ -157,6 +157,7 @@ namespace MAP_MechanoidMechanitor
         internal static bool CanIssueAerialMove(Pawn? pawn, IntVec3 cell)
         {
             if (pawn?.Spawned != true
+                || GravityDisorderUtility.IsAffected(pawn)
                 || pawn.Map == null
                 || pawn.Faction != Faction.OfPlayer
                 || !pawn.Drafted
@@ -829,6 +830,9 @@ namespace MAP_MechanoidMechanitor
 
         private static void ToggleFlight(Pawn pawn)
         {
+            // 菜单生成后再获得健康状态，也不能通过旧按钮主动起降。
+            if (GravityDisorderUtility.IsAffected(pawn))
+                return;
             if (IsActivelyFlying(pawn))
             {
                 TryBeginLanding(pawn, showMessage: true);
@@ -893,6 +897,8 @@ namespace MAP_MechanoidMechanitor
             bool externallySupported = false,
             bool requireEnergy = true)
         {
+            if (GravityDisorderUtility.IsAffected(pawn))
+                return GravityDisorderUtility.BlockedReason;
             if (pawn == null || record?.Profile == null || !pawn.Spawned
                 || pawn.Map == null || pawn.Dead || pawn.Downed)
             {

@@ -9,6 +9,8 @@ namespace MAP_MechanoidMechanitor
     {
         internal static bool AllowsJob(Pawn pawn, Job? job)
         {
+            if (GravityDisorderUtility.IsWaitJob(job) && GravityDisorderUtility.IsAffected(pawn))
+                return true;
             if (!GroupFlightUtility.IsManaged(pawn) || job == null)
                 return true;
             if (job.def == null)

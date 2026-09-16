@@ -482,11 +482,8 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             MechanicalFlightProfileDef profile)
         {
-            float period = Mathf.Max(1f, profile.hoverBobPeriodTicks);
-            float phase = (Find.TickManager.TicksGame
-                + pawn.thingIDNumber % 100) / period * Mathf.PI * 2f;
-            return profile.hoverExtraVisualHeight
-                + Mathf.Sin(phase) * profile.hoverBobAmplitude;
+            return PawnHoverUtility.ExtraHeight(pawn, profile.hoverExtraVisualHeight,
+                profile.hoverBobAmplitude, profile.hoverBobPeriodTicks);
         }
 
         internal static float TotalVisualZOffset(
@@ -698,6 +695,8 @@ namespace MAP_MechanoidMechanitor
             ref Vector3 __result)
         {
             Pawn pawn = PawnField(__instance);
+            if (GravityDisorderPresentation.TryApplyDrawOffset(pawn, ref __result))
+                return;
             if (!MechanicalFlightUtility.TryGetHoverVisualState(
                     pawn,
                     out MechanicalFlightAuthorizationRecord? record,
@@ -785,6 +784,8 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPostfix]
         public static void Postfix(Pawn pawn, ref Vector3 __result)
         {
+            if (GravityDisorderPresentation.ShouldDraw(pawn))
+                return;
             if (MechanicalFlightGroundAnchorContext.Active
                 || MechanicalFlightGroundAnchorContext.LegacySelectionActive
                 || !MechanicalFlightUtility.TryGetHoverVisualState(

@@ -21,9 +21,9 @@ namespace MAP_MechanoidMechanitor
         public int crashExplosionRadius = 1;
         public int crashRoofCollapseRadius = 2;
 
-        public float hoverExtraVisualHeight = 2.5f;
-        public float hoverBobAmplitude = 0.15f;
-        public float hoverBobPeriodTicks = 100f;
+        public float hoverExtraVisualHeight = PawnHoverUtility.DefaultExtraHeight;
+        public float hoverBobAmplitude = PawnHoverUtility.DefaultBobAmplitude;
+        public float hoverBobPeriodTicks = PawnHoverUtility.DefaultBobPeriodTicks;
         public float maximumTiltAngle = 45f;
         public float minimumTiltStep = 0.7f;
         public float tiltSpeed = 130f;

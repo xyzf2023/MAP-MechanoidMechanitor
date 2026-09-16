@@ -78,6 +78,12 @@ namespace MAP_MechanoidMechanitor
         public static bool Prefix(Pawn_FlightTracker __instance, Job job)
         {
             Pawn pawn = PawnField(__instance);
+            if (GravityDisorderUtility.IsWaitJob(job) && GravityDisorderUtility.IsAffected(pawn))
+            {
+                // 只是失能占位，不触发起飞或降落；原有飞行运行记录继续由状态机维护。
+                job.flying = pawn.flight?.Flying == true;
+                return false;
+            }
             if (!GameComponent_MechanicalFlightRegistry.HasAuthorizationRecord(pawn))
             {
                 return true;
@@ -233,6 +239,9 @@ namespace MAP_MechanoidMechanitor
             {
                 return true;
             }
+
+            if (GravityDisorderUtility.IsWaitJob(newJob) && GravityDisorderUtility.IsAffected(pawn))
+                return true;
 
             if (!GroupFlightPatches.AllowsJob(pawn, newJob))
                 return false;

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThinkTreeDef>
+    <defName>MAP_GravityDisorderThinkTree</defName>
+    <thinkRoot Class="MAP_MechanoidMechanitor.JobGiver_GravityDisorder" />
+  </ThinkTreeDef>
+</Defs>
