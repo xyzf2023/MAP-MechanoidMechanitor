@@ -15,6 +15,12 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            // 移动热路径只检查组件和机动作战标记，不聚合其他能力。
+            if (capability == MechanoidMechanitorCapability.MovementCostImmunity)
+            {
+                return HasMovementCostImmunityCapability(pawn);
+            }
+
             // 仿生伴侣能力仅来自动态授权注册表，避免完整能力汇总。
             if (capability == MechanoidMechanitorCapability.SyntheticSpouseInteraction
                 || capability == MechanoidMechanitorCapability.SyntheticPregnancy)
@@ -78,6 +84,13 @@ namespace MAP_MechanoidMechanitor
                 || pawn.GetComp<CompColonistLikeTimetableUser>() != null;
         }
 
+        // 单项查询与完整汇总共用资格判断；两个来源不叠加、不另存状态。
+        private static bool HasMovementCostImmunityCapability(Pawn pawn)
+        {
+            return pawn.GetComp<CompMovementCostImmunity>() != null
+                || MechanoidMechanitorWorkModeUtility.HasMobileCombatFlag(pawn);
+        }
+
         public static MechanoidMechanitorCapability GetCapabilities(Pawn? pawn)
         {
             if (pawn == null)
@@ -86,6 +99,11 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechanoidMechanitorCapability capabilities = MechanoidMechanitorCapability.None;
+            if (HasMovementCostImmunityCapability(pawn))
+            {
+                capabilities |= MechanoidMechanitorCapability.MovementCostImmunity;
+            }
+
             AddCapabilitiesFromRealComponents(pawn, ref capabilities);
             AddCapabilitiesFromMechanitorIdentity(pawn, ref capabilities);
             AddCapabilitiesFromScenarioState(pawn, ref capabilities);

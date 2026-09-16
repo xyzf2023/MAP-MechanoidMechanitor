@@ -47,6 +47,9 @@ namespace MAP_MechanoidMechanitor
 
         // 合体只能是先天能力，唯一事实来源是 CompMechFusionInnate 标记与合体资格注册表。
         // 保留原 bit 值，避免改变既有能力位的数值。
-        Fusion = 1 << 23
+        Fusion = 1 << 23,
+
+        // 真实 Comp 或机动作战提供的地形、可通行物体与雪沙减速豁免。
+        MovementCostImmunity = 1 << 24
     }
 }
