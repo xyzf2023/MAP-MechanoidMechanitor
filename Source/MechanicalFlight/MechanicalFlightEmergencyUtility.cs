@@ -477,6 +477,7 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             MechanicalFlightAuthorizationRecord record)
         {
+            Map? pendingExitMap = record.PendingExitMap;
             pawn.pather?.StopDead();
             MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             if (pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding)
@@ -487,6 +488,7 @@ namespace MAP_MechanoidMechanitor
 
             // 状态先恢复为地面，再让原版完整处理自我关机、休眠 Hediff 与休眠任务。
             pawn.needs?.energy?.NeedInterval();
+            MechanicalFlightMapExitUtility.ResumeAfterLanding(pawn, pendingExitMap);
         }
 
         private static bool TryFindSafeLandingCell(

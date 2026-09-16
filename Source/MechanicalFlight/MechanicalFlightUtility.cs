@@ -182,6 +182,7 @@ namespace MAP_MechanoidMechanitor
             job.locomotionUrgency = LocomotionUrgency.Sprint;
             job.expiryInterval = -1;
             job.flying = true;
+            job.exitMapOnArrival = MechanicalFlightMapExitUtility.IsExitMove(pawn!, cell);
             return pawn!.jobs.TryTakeOrderedJob(job, JobTag.Misc);
         }
 
@@ -217,6 +218,7 @@ namespace MAP_MechanoidMechanitor
             if (pawn.CurJob != null)
             {
                 pawn.CurJob.flying = true;
+                MechanicalFlightMapExitUtility.NotifyJobStarted(pawn, pawn.CurJob);
             }
 
             MechanicalFlightEnergyUtility.TryConsumeFlightEnergy(pawn, profile);
@@ -650,6 +652,7 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             MechanicalFlightAuthorizationRecord record)
         {
+            Map? pendingExitMap = record.PendingExitMap;
             bool pendingShutdown = record.PendingShutdownAfterLanding;
             MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             if (pawn.CurJob != null)
@@ -661,6 +664,7 @@ namespace MAP_MechanoidMechanitor
             {
                 pawn.needs?.energy?.NeedInterval();
             }
+            MechanicalFlightMapExitUtility.ResumeAfterLanding(pawn, pendingExitMap);
         }
 
         internal static void CleanupUnavailableRecord(

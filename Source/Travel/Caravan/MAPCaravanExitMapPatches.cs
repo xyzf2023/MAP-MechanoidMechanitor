@@ -45,6 +45,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             curJob.exitMapOnArrival = true;
+            MechanicalFlightMapExitUtility.NotifyJobStarted(pawn, curJob);
         }
     }
 

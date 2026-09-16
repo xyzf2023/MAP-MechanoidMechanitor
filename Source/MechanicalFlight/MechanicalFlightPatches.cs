@@ -215,6 +215,15 @@ namespace MAP_MechanoidMechanitor
         private static readonly AccessTools.FieldRef<Pawn_JobTracker, Pawn> PawnField =
             AccessTools.FieldRefAccess<Pawn_JobTracker, Pawn>("pawn");
 
+        public static void Postfix(Pawn_JobTracker __instance, Job newJob)
+        {
+            Pawn pawn = PawnField(__instance);
+            if (newJob != null && pawn?.CurJob == newJob)
+            {
+                MechanicalFlightMapExitUtility.NotifyJobStarted(pawn, newJob);
+            }
+        }
+
         public static bool Prefix(Pawn_JobTracker __instance, Job newJob)
         {
             Pawn pawn = PawnField(__instance);

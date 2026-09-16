@@ -27,6 +27,8 @@ namespace MAP_MechanoidMechanitor
         private bool pendingShutdownAfterLanding;
         private bool groundLandingBlockedNoticeSent;
         private bool groundJobBlockedNoticeSent;
+        // 非空表示本次飞行有待落地重判的撤离意图；绑定地图防止跨图误用。
+        internal Map? PendingExitMap;
 
         // 运行时字段（不序列化）：迫降目标下一次完整验证 Tick 与验证时所在 Map。
         // 读档后默认 0/null，迫使恢复迫降流程时立即重新验证。
@@ -148,6 +150,7 @@ namespace MAP_MechanoidMechanitor
             pendingShutdownAfterLanding = false;
             groundLandingBlockedNoticeSent = false;
             groundJobBlockedNoticeSent = false;
+            PendingExitMap = null;
             NextEmergencyTargetValidationTick = 0;
             EmergencyTargetMap = null;
         }
@@ -174,6 +177,7 @@ namespace MAP_MechanoidMechanitor
                 "groundLandingBlockedNoticeSent", false);
             Scribe_Values.Look(ref groundJobBlockedNoticeSent,
                 "groundJobBlockedNoticeSent", false);
+            Scribe_References.Look(ref PendingExitMap, "pendingExitMap");
         }
     }
 }
