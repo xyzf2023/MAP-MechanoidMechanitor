@@ -8,6 +8,10 @@ namespace MAP_MechanoidMechanitor
         public float minimumTakeoffEnergy = 0.20f;
         public float automaticLandingEnergy = 0.15f;
         public float energyDrainFraction = 0.005f;
+        public float lightEnergyDrainMultiplier = 0.75f;
+        public float mediumEnergyDrainMultiplier = 1f;
+        public float heavyEnergyDrainMultiplier = 1.5f;
+        public float ultraHeavyEnergyDrainMultiplier = 2f;
         public int energyDrainIntervalTicks = 60;
         public float flightCellsPerSecond = 30f;
 

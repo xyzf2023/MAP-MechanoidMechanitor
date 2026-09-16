@@ -219,8 +219,7 @@ namespace MAP_MechanoidMechanitor
                 pawn.CurJob.flying = true;
             }
 
-            MechanicalFlightEnergyUtility.TryConsumeMaximumEnergyFraction(
-                pawn, profile.energyDrainFraction);
+            MechanicalFlightEnergyUtility.TryConsumeFlightEnergy(pawn, profile);
             if (MechFusionEnergyUtility.TryHandleDepletedFlightEnergy(pawn))
             {
                 return false;
@@ -263,8 +262,7 @@ namespace MAP_MechanoidMechanitor
             record.TicksUntilNextEnergyDrain =
                 Mathf.Max(1, profile.energyDrainIntervalTicks);
 
-            MechanicalFlightEnergyUtility.TryConsumeMaximumEnergyFraction(
-                pawn, profile.energyDrainFraction);
+            MechanicalFlightEnergyUtility.TryConsumeFlightEnergy(pawn, profile);
 
             GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
             MechanicalFlightPresentationUtility.NotifyFlightStarted(pawn, record);
@@ -587,8 +585,7 @@ namespace MAP_MechanoidMechanitor
             record.TicksUntilNextEnergyDrain--;
             if (record.TicksUntilNextEnergyDrain <= 0)
             {
-                MechanicalFlightEnergyUtility.TryConsumeMaximumEnergyFraction(
-                    pawn, profile.energyDrainFraction);
+                MechanicalFlightEnergyUtility.TryConsumeFlightEnergy(pawn, profile);
                 record.TicksUntilNextEnergyDrain =
                     Mathf.Max(1, profile.energyDrainIntervalTicks);
                 if (!MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out energy))

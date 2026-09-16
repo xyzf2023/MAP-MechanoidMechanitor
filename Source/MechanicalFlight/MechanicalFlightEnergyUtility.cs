@@ -68,6 +68,51 @@ namespace MAP_MechanoidMechanitor
                 && GetProvider(pawn).TryGetEnergyFraction(pawn, out fraction);
         }
 
+        /// <summary>
+        /// 起飞与持续飞行共用的耗能结算：基础比例乘重量级倍率，
+        /// 不叠加 MechEnergyUsageFactor，也不改变能源阈值和其它系统的扣能。
+        /// </summary>
+        public static bool TryConsumeFlightEnergy(
+            Pawn? pawn,
+            MechanicalFlightProfileDef profile)
+        {
+            return TryConsumeMaximumEnergyFraction(pawn,
+                profile.energyDrainFraction * GetFlightEnergyMultiplier(pawn, profile));
+        }
+
+        private static float GetFlightEnergyMultiplier(
+            Pawn? pawn,
+            MechanicalFlightProfileDef profile)
+        {
+            // 与能源提供器使用相同的有效合体判定；源机械族缺失时按未知重量级处理。
+            Pawn? source = MechFusionEnergyUtility.TryGetActiveSessionForWearer(
+                pawn, out MechFusionSession? session) ? session?.SourcePawn : pawn;
+            MechWeightClassDef? weightClass = source?.RaceProps?.mechWeightClass;
+            if (weightClass == null)
+            {
+                return 1f;
+            }
+
+            if (weightClass == MechWeightClassDefOf.Light)
+            {
+                return profile.lightEnergyDrainMultiplier;
+            }
+            if (weightClass == MechWeightClassDefOf.Medium)
+            {
+                return profile.mediumEnergyDrainMultiplier;
+            }
+            if (weightClass == MechWeightClassDefOf.Heavy)
+            {
+                return profile.heavyEnergyDrainMultiplier;
+            }
+            if (weightClass == MechWeightClassDefOf.UltraHeavy)
+            {
+                return profile.ultraHeavyEnergyDrainMultiplier;
+            }
+
+            return 1f;
+        }
+
         public static bool TryConsumeMaximumEnergyFraction(Pawn? pawn, float fraction)
         {
             return pawn != null
