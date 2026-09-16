@@ -7,6 +7,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpanded;
 using Verse;
 
@@ -30,6 +31,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new MechFusionCastEligibilityCompatibility(),
             new ProgressionEducationCompatibility(),
             new DeadManSwitchCompatibility(),
+            new SRTSExpandedCompatibility(),
             new VanillaPsycastsExpandedCompatibility()
         };
 
