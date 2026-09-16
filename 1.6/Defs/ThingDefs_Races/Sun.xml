@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <ThingDef ParentName="SuperHeavyMechanoid">
+    <defName>MAP_Mech_Sun</defName>
+    <label>「太阳」</label>
+    <description>TODO</description>
+    <race>
+      <body>Mech_Diabolus</body>
+      <baseBodySize>4</baseBodySize>
+      <lifeStageAges>
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>0</minAge>
+          <soundWounded>Pawn_Mech_Diabolus_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Diabolus_Death</soundDeath>
+          <soundCall>Pawn_Mech_Diabolus_Call</soundCall>
+        </li>
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>100</minAge>
+          <soundWounded>Pawn_Mech_Diabolus_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Diabolus_Death</soundDeath>
+          <soundCall>Pawn_Mech_Diabolus_Call</soundCall>
+        </li>
+      </lifeStageAges>
+      <baseHealthScale>4.5</baseHealthScale>
+      <detritusLeavings>
+        <li>
+          <def>ChunkMechanoidSlag</def>
+          <texOverrideIndex>3</texOverrideIndex>
+          <spawnChance>0.75</spawnChance>
+        </li>
+        <li>
+          <def>ChunkMechanoidSlag</def>
+          <texOverrideIndex>17</texOverrideIndex>
+          <spawnChance>0.75</spawnChance>
+        </li>
+        <li>
+          <def>ChunkMechanoidSlag</def>
+          <texOverrideIndex>1</texOverrideIndex>
+          <spawnChance>0.75</spawnChance>
+        </li>
+      </detritusLeavings>
+    </race>
+    <tools>
+      <li>
+        <label>head</label>
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+        <power>18</power>
+        <cooldownTime>2.6</cooldownTime>
+        <linkedBodyPartsGroup>HeadAttackTool</linkedBodyPartsGroup>
+        <ensureLinkedBodyPartsGroupAlwaysUsable>true</ensureLinkedBodyPartsGroupAlwaysUsable>
+      </li>
+    </tools>
+    <comps>
+      <li Class="CompProperties_TargetingBeam"></li>
+      <li Class="CompProperties_TurretGun">
+        <turretDef>Gun_ChargeBlasterTurret</turretDef>
+        <angleOffset>-90</angleOffset>
+        <renderNodeProperties>
+          <li>
+            <nodeClass>PawnRenderNode_TurretGun</nodeClass>
+            <workerClass>PawnRenderNodeWorker_TurretGun</workerClass>
+            <parentTagDef>Body</parentTagDef>
+            <overrideMeshSize>(1, 1)</overrideMeshSize>
+            <baseLayer>20</baseLayer>
+            <pawnType>Any</pawnType>
+            <drawData>
+              <dataWest>
+                <rotationOffset>180</rotationOffset>
+              </dataWest>
+            </drawData>
+          </li>
+        </renderNodeProperties>
+      </li>
+    </comps>
+    <statBases>
+      <BandwidthCost>5</BandwidthCost>
+      <EMPResistance>0.6</EMPResistance>
+      <MoveSpeed>2.4</MoveSpeed>
+    </statBases>
+    <killedLeavingsPlayerHostile>
+      <SignalChip>1</SignalChip>
+    </killedLeavingsPlayerHostile>
+  </ThingDef>
+
+  <PawnKindDef ParentName="HeavyMechanoidKind">
+    <defName>MAP_Mech_Sun</defName>
+    <label>「太阳」</label>
+    <race>MAP_Mech_Sun</race>
+    <combatPower>500</combatPower>
+    <maxPerGroup>3</maxPerGroup>
+    <isBoss>true</isBoss>
+    <allowInMechClusters>false</allowInMechClusters>
+    <lifeStages>
+      <li>
+        <bodyGraphicData>
+          <texPath>Things/Pawn/Mechanoid/Diabolus</texPath>
+          <maskPath>Things/Pawn/Mechanoid/AllegianceOverlays/Mech_Diablo</maskPath>
+          <shaderType>CutoutWithOverlay</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>3</drawSize>
+        </bodyGraphicData>
+      </li>
+      <li>
+        <bodyGraphicData>
+          <texPath>Things/Pawn/Mechanoid/DiabolusAncient</texPath>
+          <maskPath>Things/Pawn/Mechanoid/AllegianceOverlays/Mech_Diablo</maskPath>
+          <shaderType>CutoutWithOverlay</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>3</drawSize>
+        </bodyGraphicData>
+      </li>
+    </lifeStages>
+    <weaponTags>
+      <li>HellsphereCannonGun</li>
+    </weaponTags>
+    <abilities>
+      <li>FireBurst</li>
+    </abilities>
+  </PawnKindDef>
+
+</Defs>
+
