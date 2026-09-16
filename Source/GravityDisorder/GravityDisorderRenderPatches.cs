@@ -30,12 +30,15 @@ namespace MAP_MechanoidMechanitor
             out GravityDisorderPresentation.RenderContext __state)
         {
             __state = GravityDisorderPresentation.EnterRender(___pawn);
-            if (GravityDisorderPresentation.RenderingPawn != null)
+            if (GravityDisorderPresentation.InRenderContext(___pawn))
             {
                 // 地图倒地姿态不写入原版用于头像/缩放显示的共用图集。
                 disableCache = true;
-                neverAimWeapon = true;
-                rotOverride = null;
+                if (GravityDisorderPresentation.OverridePose(___pawn))
+                {
+                    neverAimWeapon = true;
+                    rotOverride = null;
+                }
             }
         }
 
@@ -72,7 +75,7 @@ namespace MAP_MechanoidMechanitor
         public static void Postfix(Pawn p, ref PawnPosture __result)
         {
             // 仅当前线程正在绘制的那个 Pawn；弹丸、医疗和任务查询保持原版语义。
-            if (GravityDisorderPresentation.InRenderContext(p))
+            if (GravityDisorderPresentation.OverridePose(p))
                 __result = PawnPosture.LayingOnGroundNormal;
         }
     }
@@ -81,12 +84,14 @@ namespace MAP_MechanoidMechanitor
     internal static class GravityDisorderBodyAnglePatch
     {
         [HarmonyPriority(Priority.First + 1)]
-        public static bool Prefix(Pawn ___pawn, PawnRenderFlags flags, ref float __result)
+        public static bool Prefix(PawnRenderer __instance, Pawn ___pawn,
+            PawnRenderFlags flags, ref float __result)
         {
             if (!GravityDisorderPresentation.InRenderContext(___pawn)
                 || flags.FlagSet(PawnRenderFlags.Portrait) || flags.FlagSet(PawnRenderFlags.Statue))
                 return true;
-            __result = GravityDisorderPresentation.BodyAngle(___pawn);
+            __result = GravityDisorderPresentation.RecoveredBodyAngle(
+                __instance, ___pawn, flags);
             return false;
         }
     }
@@ -94,15 +99,36 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(PawnRenderer), "GetBodyPos")]
     internal static class GravityDisorderBodyPositionPatch
     {
-        public static bool Prefix(Pawn ___pawn, Vector3 drawLoc, ref bool showBody,
-            ref Vector3 __result)
+        [HarmonyPriority(Priority.First + 1)]
+        public static bool Prefix(Pawn ___pawn, Vector3 drawLoc, ref PawnPosture posture,
+            ref bool showBody, ref Vector3 __result, out float __state)
         {
+            __state = -1f;
             if (!GravityDisorderPresentation.InRenderContext(___pawn))
                 return true;
+            __state = GravityDisorderPresentation.NormalHeightWeight(
+                GravityDisorderPresentation.RenderingSubject ?? ___pawn);
+            if (__state > 0f)
+            {
+                using (GravityDisorderPresentation.EnterNormalRender())
+                    posture = ___pawn.GetPosture();
+                return true;
+            }
             // 悬浮者即使在床格，也不能被原版床偏移/躺地绘制层拉回地面或藏起身体。
             __result = drawLoc;
             showBody = true;
             return false;
+        }
+
+        public static void Postfix(Vector3 drawLoc, ref bool showBody,
+            ref Vector3 __result, float __state)
+        {
+            if (__state < 0f)
+                return;
+            // 床偏移和倒地绘制层也随高度收尾，避免恢复时突然横移到床头。
+            __result = Vector3.Lerp(drawLoc, __result, __state);
+            if (__state < 1f)
+                showBody = true;
         }
     }
 
@@ -111,7 +137,7 @@ namespace MAP_MechanoidMechanitor
     {
         public static void Postfix(Pawn ___pawn, ref PawnDrawParms __result)
         {
-            if (!GravityDisorderPresentation.InRenderContext(___pawn)
+            if (!GravityDisorderPresentation.OverridePose(___pawn)
                 || __result.flags.FlagSet(PawnRenderFlags.Portrait)
                 || __result.flags.FlagSet(PawnRenderFlags.Statue))
                 return;
@@ -134,9 +160,25 @@ namespace MAP_MechanoidMechanitor
 
         public static void Postfix(Pawn __instance, ref bool __result)
         {
-            if (GravityDisorderPresentation.InRenderContext(__instance))
+            if (GravityDisorderPresentation.OverridePose(__instance))
                 __result = false;
         }
+    }
+
+    [HarmonyPatch(typeof(Pawn), nameof(Pawn.DeSpawn))]
+    internal static class GravityDisorderDespawnPresentationPatch
+    {
+        public static void Postfix(Pawn __instance) =>
+            GravityDisorderPresentation.ClearRecovery(__instance);
+    }
+
+    [HarmonyPatch(typeof(PawnRenderer), "DrawShadowInternal")]
+    internal static class GravityDisorderVanillaShadowPatch
+    {
+        // 姿态先恢复站立、高度尚未恢复时，仍由自定义阴影独占绘制。
+        // 同时涵盖合体源 Pawn，防止其原版阴影与外层主体补绘的阴影重叠。
+        public static bool Prefix(Pawn ___pawn) =>
+            !GravityDisorderPresentation.OwnsShadow(___pawn);
     }
 
     [HarmonyPatch(typeof(PawnRenderer), nameof(PawnRenderer.RenderShadowOnlyAt))]

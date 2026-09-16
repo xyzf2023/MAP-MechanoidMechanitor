@@ -11,12 +11,14 @@ namespace MAP_MechanoidMechanitor
         public override void PostAdd(DamageInfo? dinfo)
         {
             base.PostAdd(dinfo);
+            GravityDisorderPresentation.ClearRecovery(pawn);
             GravityDisorderUtility.EnsureControl(this);
         }
 
         public override void Notify_Spawned()
         {
             base.Notify_Spawned();
+            GravityDisorderPresentation.ClearRecovery(pawn);
             NeedsEntryCleanup = true;
         }
 
@@ -29,6 +31,7 @@ namespace MAP_MechanoidMechanitor
         public override void PostRemoved()
         {
             base.PostRemoved();
+            GravityDisorderPresentation.BeginRecovery(this);
             GravityDisorderUtility.ReleaseControl(pawn);
         }
     }
