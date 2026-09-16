@@ -5,6 +5,8 @@ namespace MAP_MechanoidMechanitor
     public sealed class CompProperties_MechanicalFlightInnate : CompProperties
     {
         public MechanicalFlightProfileDef? profile;
+        // 与飞行配置的重量级倍率相乘；未配置时不改变耗能。
+        public float energyDrainMultiplier = 1f;
 
         public CompProperties_MechanicalFlightInnate()
         {

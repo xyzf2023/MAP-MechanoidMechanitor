@@ -69,7 +69,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 起飞与持续飞行共用的耗能结算：基础比例乘重量级倍率，
+        /// 起飞与持续飞行共用的耗能结算：基础比例乘重量级倍率及先天飞行 Comp 倍率，
         /// 不叠加 MechEnergyUsageFactor，也不改变能源阈值和其它系统的扣能。
         /// </summary>
         public static bool TryConsumeFlightEnergy(
@@ -84,10 +84,19 @@ namespace MAP_MechanoidMechanitor
             Pawn? pawn,
             MechanicalFlightProfileDef profile)
         {
-            // 与能源提供器使用相同的有效合体判定；源机械族缺失时按未知重量级处理。
+            // 与能源提供器使用相同的有效合体判定；重量级和先天飞行倍率均读取源机械族。
             Pawn? source = MechFusionEnergyUtility.TryGetActiveSessionForWearer(
                 pawn, out MechFusionSession? session) ? session?.SourcePawn : pawn;
-            MechWeightClassDef? weightClass = source?.RaceProps?.mechWeightClass;
+            float innateMultiplier = source?.GetComp<CompMechanicalFlightInnate>()
+                ?.Props.energyDrainMultiplier ?? 1f;
+            return innateMultiplier * GetWeightClassEnergyMultiplier(
+                source?.RaceProps?.mechWeightClass, profile);
+        }
+
+        private static float GetWeightClassEnergyMultiplier(
+            MechWeightClassDef? weightClass,
+            MechanicalFlightProfileDef profile)
+        {
             if (weightClass == null)
             {
                 return 1f;
