@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using MAP_MechanoidMechanitor;
+using RimWorld;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded
