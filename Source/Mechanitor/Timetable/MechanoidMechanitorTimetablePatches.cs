@@ -51,11 +51,11 @@ namespace MAP_MechanoidMechanitor
 
     /// <summary>
     /// 原版 MainTabWindow_Schedule 中显示具备 ColonistLikeTimetable 能力的机械族 Pawn
-    /// （含正式机械族机械师，以及挂载 CompColonistLikeTimetableUser 的非机械师机械族）。
+    /// （含正式机械族机械师，以及组件配置允许显示的非机械师机械族）。
     /// 只 Patch Pawns getter，不改动 MapPawns.FreeColonists 等全局集合，
     /// 也不改动 MainTabWindow_PawnTable 的全局行为。
     /// 候选来自双来源：正式机械族机械师优先走权威 Registry，
-    /// 非机械师机械族（如恋人）走真实 CompColonistLikeTimetableUser 标记。
+    /// 非机械师机械族走真实 CompColonistLikeTimetableUser 标记及其显示配置。
     /// UI getter 不承担初始化副作用：timetable 非空应由对应生命周期保证，
     /// 极端异常下若 timetable 仍为 null，这里安全跳过，绝不在此 new Pawn_TimetableTracker。
     /// </summary>
@@ -77,10 +77,10 @@ namespace MAP_MechanoidMechanitor
 
             // 双来源枚举：
             //  A. 正式机械族机械师来自权威 Registry，避免对地图全部 Pawn 做 capability 聚合查询；
-            //  B. 挂载真实 CompColonistLikeTimetableUser 的非机械师机械族（如恋人），
+            //  B. 挂载真实 CompColonistLikeTimetableUser 且配置允许显示的非机械师机械族，
             //     仅作廉价 Race/Faction 过滤 + GetComp 标记，再对命中极少数 Pawn
             //     做 capability 一致性断言，显著降低昂贵查询次数。
-            // 使用 HashSet 去重，避免升格后的恋人同时出现在两来源中而重复加入。
+            // 使用 HashSet 去重，避免同一机械族同时出现在两来源中而重复加入。
             HashSet<Pawn> additions = new HashSet<Pawn>();
 
             foreach (Pawn pawn in
@@ -178,7 +178,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 廉价标记过滤：优先用真实 ThingComp 而非完整 capability 聚合。
-            if (pawn.GetComp<CompColonistLikeTimetableUser>() == null)
+            CompColonistLikeTimetableUser? timetableUser = pawn.GetComp<CompColonistLikeTimetableUser>();
+            if (timetableUser == null || !timetableUser.ShowInSchedule)
             {
                 return false;
             }

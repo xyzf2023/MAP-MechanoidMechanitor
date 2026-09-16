@@ -159,8 +159,10 @@
         <ensureEquipmentTracker>true</ensureEquipmentTracker>
       </li>
 
-      <!-- 恋人非机械族机械师：通过真实组件获得 timetable 数据层能力（不再硬编码身份） -->
-      <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeTimetableUser" />
+      <!-- 保留后台作息及课堂兼容，仅隐藏普通恋人的管制行；升格后按机械族机械师显示。 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeTimetableUser">
+        <showInSchedule>false</showInSchedule>
+      </li>
 
       <!-- 恋人非机械族机械师：通过真实组件获得课堂教师候选能力，并补齐教学基础设施 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_ClassroomTeachingUser" />
