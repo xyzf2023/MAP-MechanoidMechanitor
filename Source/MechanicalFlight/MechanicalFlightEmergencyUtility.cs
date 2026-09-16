@@ -82,6 +82,8 @@ namespace MAP_MechanoidMechanitor
 
         internal static bool TryCrashFromDowned(Pawn? pawn)
         {
+            if (pawn?.Downed == true && !pawn.Dead && GroupFlightUtility.HandleDowned(pawn))
+                return true;
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(
                     pawn, out MechanicalFlightAuthorizationRecord? record)
                 || record == null || pawn == null || !pawn.Downed || pawn.Dead
@@ -127,6 +129,8 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryBeginEmergencySequence(Pawn? pawn)
         {
+            if (pawn != null && GroupFlightUtility.HandleEnergyDepletion(pawn))
+                return true;
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
                 || record == null || pawn?.Map == null || pawn.Dead
                 || pawn.flight?.Flying != true || !record.IsRuntimeActive)
@@ -169,6 +173,35 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
+        // 外力飞行共用迫降路径、预留和重规划，但不清零能源、不改变征召。
+        internal static bool TryBeginGroupLanding(Pawn pawn, MechanicalFlightAuthorizationRecord record)
+        {
+            if (record.IsEmergencySequence || record.Phase == MechanicalFlightPhase.Landing)
+                return true;
+            if (pawn.Map == null || pawn.Dead || pawn.flight?.Flying != true)
+            {
+                MechanicalFlightUtility.ClearRuntimeState(record, true);
+                return false;
+            }
+            pawn.pather?.StopDead();
+            MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+            pawn.jobs.ClearQueuedJobs();
+            if (!TryFindSafeLandingCell(pawn, record.Profile, out IntVec3 target))
+            {
+                Crash(pawn, record);
+                return false;
+            }
+            record.EmergencyLandingTarget = target;
+            record.EmergencyTargetMap = pawn.Map;
+            record.NextEmergencyTargetValidationTick = 0;
+            record.TicksUntilNextEnergyDrain = 0;
+            // 即使原地着陆也从 Approach 进入，保证先持有预留再启动下降。
+            record.Phase = MechanicalFlightPhase.EmergencyApproach;
+            GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            StartOrRepairEmergencyJob(pawn, record);
+            return true;
+        }
+
         internal static void Tick(MechanicalFlightAuthorizationRecord record)
         {
             Pawn? pawn = record.Pawn;
@@ -177,7 +210,7 @@ namespace MAP_MechanoidMechanitor
                 MechanicalFlightUtility.ClearRuntimeState(record, forceLand: false);
                 return;
             }
-            if (pawn.Downed)
+            if (pawn.Downed && !GroupFlightUtility.AllowsDownedLanding(pawn))
             {
                 Crash(pawn, record);
                 return;
@@ -296,7 +329,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (record.LowEnergyWarningSent || record.Profile == null || pawn.Map == null
                 || energyFraction >= record.Profile.lowEnergyWarningThreshold
-                || pawn.Position.WalkableBy(pawn.Map, pawn))
+                || (!record.IsExternallyPowered && pawn.Position.WalkableBy(pawn.Map, pawn)))
             {
                 return;
             }
@@ -337,7 +370,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (target.IsValid && target.InBounds(map)
-                && IsSafeLandingCell(target, pawn, map))
+                && (GroupFlightUtility.Member(pawn) is GroupFlightMember member
+                    ? GroupFlightUtility.IsLandingCellValid(member, target)
+                    : IsSafeLandingCell(target, pawn, map)))
             {
                 record.EmergencyTargetMap = map;
                 record.NextEmergencyTargetValidationTick =
@@ -416,7 +451,9 @@ namespace MAP_MechanoidMechanitor
             {
                 pawn.pather?.StopDead();
                 MechanicalFlightStraightPathPatch.ClearMotion(pawn);
-                if (record.Phase != MechanicalFlightPhase.EmergencyLanding)
+                if (record.Phase != MechanicalFlightPhase.EmergencyLanding
+                    || MechanicalFlightUtility.GetVanillaFlightState(pawn)
+                        != MechanicalFlightUtility.VanillaFlightState.Landing)
                 {
                     BeginEmergencyLanding(pawn, record);
                 }
@@ -478,6 +515,7 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightAuthorizationRecord record)
         {
             Map? pendingExitMap = record.PendingExitMap;
+            bool resumeEnergy = !record.IsExternallyPowered || record.PendingShutdownAfterLanding;
             pawn.pather?.StopDead();
             MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             if (pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding)
@@ -487,7 +525,8 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightUtility.FinalizeRuntimeState(pawn, record);
 
             // 状态先恢复为地面，再让原版完整处理自我关机、休眠 Hediff 与休眠任务。
-            pawn.needs?.energy?.NeedInterval();
+            if (resumeEnergy)
+                pawn.needs?.energy?.NeedInterval();
             MechanicalFlightMapExitUtility.ResumeAfterLanding(pawn, pendingExitMap);
         }
 
@@ -496,6 +535,8 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightProfileDef? profile,
             out IntVec3 result)
         {
+            if (GroupFlightUtility.Member(pawn) is GroupFlightMember member)
+                return GroupFlightUtility.TryFindLandingCell(member, out result);
             result = IntVec3.Invalid;
             Map? map = pawn.Map;
             if (map == null)
@@ -673,6 +714,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool pendingShutdown = record.PendingShutdownAfterLanding;
+            resumeEnergyShutdown &= !record.IsExternallyPowered;
             try
             {
                 MechanicalFlightUtility.FinalizeRuntimeState(pawn, record);

@@ -39,6 +39,7 @@ namespace MAP_MechanoidMechanitor
         public FleckDef? landingGlowFleck;
         public bool drawThruster = true;
         public bool drawGroundWash = true;
+        public bool playLandingEffects = true;
         public bool allowTilt = true;
         public bool useHoverGlow = true;
         public float hoverGlowRadius = 4.5f;
@@ -71,6 +72,7 @@ namespace MAP_MechanoidMechanitor
     public enum MechanicalFlightPurpose
     {
         Normal,
-        FusionRelocation
+        FusionRelocation,
+        GroupAntigravity
     }
 }

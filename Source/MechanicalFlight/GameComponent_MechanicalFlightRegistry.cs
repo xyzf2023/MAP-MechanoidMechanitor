@@ -15,11 +15,38 @@ namespace MAP_MechanoidMechanitor
         private Dictionary<Pawn, MechanicalFlightAuthorizationRecord> recordByPawn = new();
         private List<MechanicalFlightAuthorizationRecord> activeRecords = new();
         private readonly List<MechanicalFlightAuthorizationRecord> tickSnapshot = new();
+        internal List<GroupFlightSession> GroupFlights = new();
+        internal readonly Dictionary<Pawn, GroupFlightMember> GroupMembers = new();
+
+        internal static MechanicalFlightAuthorizationRecord? EnsureRuntimeRecord(Pawn pawn)
+        {
+            var registry = CurrentRegistry;
+            if (registry == null || pawn.Destroyed || pawn.Discarded)
+                return null;
+            var record = registry.FindRecord(pawn);
+            if (record != null)
+                return record;
+            var profile = DefDatabase<MechanicalFlightProfileDef>.GetNamedSilentFail(
+                DefaultProfileDefName);
+            if (profile == null)
+                return null;
+            record = new MechanicalFlightAuthorizationRecord(
+                pawn, profile, MechanicalFlightAuthorizationSource.None);
+            registry.authorizationRecords.Add(record);
+            registry.recordByPawn[pawn] = record;
+            return record;
+        }
+
+        internal static void RemoveUnusedRuntimeRecord(MechanicalFlightAuthorizationRecord record)
+        {
+            if (!record.IsRuntimeActive && !record.HasSelfFlightAuthorization)
+                CurrentRegistry?.RemoveRecord(record);
+        }
 
         private static Game? cachedRegistryGame;
         private static GameComponent_MechanicalFlightRegistry? cachedRegistry;
 
-        private static GameComponent_MechanicalFlightRegistry? CurrentRegistry
+        internal static GameComponent_MechanicalFlightRegistry? CurrentRegistry
         {
             get
             {
@@ -49,7 +76,8 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsAuthorized(Pawn? pawn)
         {
-            return TryGetRecord(pawn, out _);
+            return TryGetRecord(pawn, out var record)
+                && record?.HasSelfFlightAuthorization == true;
         }
 
         public static bool HasAuthorizationRecord(Pawn? pawn)
@@ -295,6 +323,7 @@ namespace MAP_MechanoidMechanitor
         public override void GameComponentTick()
         {
             base.GameComponentTick();
+            GroupFlightUtility.TickGroups();
             tickSnapshot.Clear();
             tickSnapshot.AddRange(activeRecords);
             for (int i = 0; i < tickSnapshot.Count; i++)
@@ -339,6 +368,7 @@ namespace MAP_MechanoidMechanitor
 
             Scribe_Collections.Look(ref authorizationRecords,
                 "mechanicalFlightAuthorizationRecords", LookMode.Deep);
+            Scribe_Collections.Look(ref GroupFlights, "mechanicalGroupFlights", LookMode.Deep);
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 // 只重建纯数据缓存；Pawn 尚未 Spawn，真正的飞行恢复在 LoadedGame。
@@ -365,7 +395,8 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightStraightPathPatch.ClearAllMotion();
             RebuildCaches();
             ReconcileInnateAuthorizationsAfterLoad();
-            MechanicalFlightUtility.ReconcileAfterLoad(activeRecords);
+            GroupFlightUtility.ReconcileAfterLoad();
+            MechanicalFlightUtility.ReconcileAfterLoad(new List<MechanicalFlightAuthorizationRecord>(activeRecords));
         }
 
         private void ReconcileInnateAuthorizationsAfterLoad()
@@ -391,6 +422,11 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (record.IsExternallyPowered)
+                {
+                    record.RemoveAuthorizationSource(MechanicalFlightAuthorizationSource.Innate);
+                    continue;
+                }
                 MechanicalFlightUtility.ClearRuntimeState(record, forceLand: true);
                 RemoveRecord(record);
             }
@@ -472,7 +508,9 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanicalFlightAuthorizationRecord? record = authorizationRecords[i];
                 Pawn? pawn = record?.Pawn;
-                if (record == null || pawn == null || pawn.Discarded || !seen.Add(pawn))
+                if (record == null || pawn == null || pawn.Discarded
+                    || (!record.IsRuntimeActive && !record.HasSelfFlightAuthorization)
+                    || !seen.Add(pawn))
                 {
                     authorizationRecords.RemoveAt(i);
                 }
@@ -484,6 +522,7 @@ namespace MAP_MechanoidMechanitor
             CleanupInvalidRecords();
             recordByPawn = new Dictionary<Pawn, MechanicalFlightAuthorizationRecord>();
             activeRecords = new List<MechanicalFlightAuthorizationRecord>();
+            GroupFlightUtility.RebuildIndex(this);
             for (int i = 0; i < authorizationRecords.Count; i++)
             {
                 MechanicalFlightAuthorizationRecord record = authorizationRecords[i];

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GroupFlight_Label>群体反重力</MAP_GroupFlight_Label>
+  <MAP_GroupFlight_RequiresDraft>仅可在征召模式下使用</MAP_GroupFlight_RequiresDraft>
+  <MAP_GroupFlight_OutsideFormationBounds>该位置会使队形成员超出地图边界</MAP_GroupFlight_OutsideFormationBounds>
+  <MAP_GroupFlight_PassengerMoveBlocked>由群体反重力控制移动</MAP_GroupFlight_PassengerMoveBlocked>
+</LanguageData>

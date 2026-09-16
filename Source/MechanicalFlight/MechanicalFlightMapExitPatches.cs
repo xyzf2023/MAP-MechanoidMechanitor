@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
     {
         internal static bool IsExitMove(Pawn pawn, IntVec3 cell)
         {
-            return pawn.Map != null && pawn.Map.exitMapGrid.IsExitCell(cell)
+            return !GroupFlightUtility.IsManaged(pawn) && pawn.Map != null && pawn.Map.exitMapGrid.IsExitCell(cell)
                 && (!pawn.IsColonyMech
                     || MAPTravelUtility.IsEligibleRegisteredMechanoidMechanitor(pawn));
         }
@@ -18,7 +18,8 @@ namespace MAP_MechanoidMechanitor
         internal static void NotifyJobStarted(Pawn pawn, Job job)
         {
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                || record == null || !record.IsRuntimeActive || record.IsEmergencySequence)
+                || record == null || !record.IsRuntimeActive || record.IsEmergencySequence
+                || record.IsExternallyPowered)
             {
                 return;
             }
@@ -87,7 +88,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                && record != null && pawn.Spawned && pawn.Map.exitMapGrid.MapUsesExitGrid)
+                && record != null && !record.IsExternallyPowered
+                && pawn.Spawned && pawn.Map.exitMapGrid.MapUsesExitGrid)
             {
                 record.PendingExitMap = pawn.Map;
             }

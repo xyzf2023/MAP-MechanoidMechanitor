@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.MechanicalFlightProfileDef>
+    <defName>MAP_GroupAntigravityFlightProfile</defName>
+    <label>群体反重力飞行配置</label>
+    <minimumTakeoffEnergy>0.20</minimumTakeoffEnergy>
+    <automaticLandingEnergy>0.15</automaticLandingEnergy>
+    <lowEnergyWarningThreshold>0.10</lowEnergyWarningThreshold>
+    <energyDrainFraction>0.005</energyDrainFraction>
+    <energyDrainIntervalTicks>60</energyDrainIntervalTicks>
+    <emergencyLandingSearchRadius>10</emergencyLandingSearchRadius>
+    <drawThruster>false</drawThruster>
+    <drawGroundWash>false</drawGroundWash>
+    <allowTilt>false</allowTilt>
+    <useHoverGlow>false</useHoverGlow>
+    <playLandingEffects>false</playLandingEffects>
+  </MAP_MechanoidMechanitor.MechanicalFlightProfileDef>
+</Defs>

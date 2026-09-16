@@ -23,7 +23,8 @@ namespace MAP_MechanoidMechanitor
             }
             if (__instance != null && __instance.Faction == Faction.OfPlayer
                 && __instance.Drafted
-                && GameComponent_MechanicalFlightRegistry.IsAuthorized(__instance))
+                && GameComponent_MechanicalFlightRegistry.IsAuthorized(__instance)
+                && !GroupFlightUtility.IsManaged(__instance))
             {
                 yield return MechanicalFlightUtility.MakeCommand(__instance);
             }
@@ -77,7 +78,7 @@ namespace MAP_MechanoidMechanitor
         public static bool Prefix(Pawn_FlightTracker __instance, Job job)
         {
             Pawn pawn = PawnField(__instance);
-            if (!GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn))
+            if (!GameComponent_MechanicalFlightRegistry.HasAuthorizationRecord(pawn))
             {
                 return true;
             }
@@ -154,7 +155,8 @@ namespace MAP_MechanoidMechanitor
             {
                 return true;
             }
-            if (MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
+            if (!GroupFlightPatches.AllowsJob(pawn, job)
+                || MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
             {
                 __result = false;
                 return false;
@@ -231,6 +233,9 @@ namespace MAP_MechanoidMechanitor
             {
                 return true;
             }
+
+            if (!GroupFlightPatches.AllowsJob(pawn, newJob))
+                return false;
 
             // 紧急状态仅允许机械飞行自身的迫降 Job 启动。
             if (MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
@@ -362,6 +367,8 @@ namespace MAP_MechanoidMechanitor
 
         internal static bool TryGetExactGroundDrawPos(Pawn pawn, out Vector3 drawPos)
         {
+            if (GroupFlightUtility.TryGetGroundPosition(pawn, out drawPos))
+                return true;
             if (IsActive(pawn) && pawn.pather?.MovingNow == true
                 && DirectMotionStates.TryGetValue(
                     pawn, out DirectFlightMotionState? state))
@@ -420,11 +427,15 @@ namespace MAP_MechanoidMechanitor
             LocalTargetInfo destination,
             PathEndMode pathEndMode)
         {
+            if (GroupFlightUtility.BlocksIndependentMovement(pawn)
+                && !MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
+                return false;
             if (pawn.Map == null || !destination.IsValid
                 || destination.ThingDestroyed
                 || (destination.HasThing && destination.Thing.MapHeld != pawn.MapHeld)
                 || !TryResolveDirectDestination(
-                    pawn, destination, ref pathEndMode, out IntVec3 destinationCell))
+                    pawn, destination, ref pathEndMode, out IntVec3 destinationCell)
+                || !GroupFlightUtility.CanMoveFormationTo(pawn, destinationCell))
             {
                 NotifyFailed(pather, pawn);
                 return false;
@@ -442,7 +453,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             MovingField(pather) = true;
-            pawn.jobs.posture = PawnPosture.Standing;
+            if (!GroupFlightUtility.AllowsDownedLanding(pawn))
+                pawn.jobs.posture = PawnPosture.Standing;
             CachedMovePercentageField(pather) = 0f;
             CachedCollisionField(pather) = false;
             pather.curPathJobIsStale = false;
@@ -520,8 +532,9 @@ namespace MAP_MechanoidMechanitor
 
         internal static void TickDirectPath(Pawn_PathFollower pather, Pawn pawn)
         {
-            if (!MovingField(pather) || pawn.Map == null || pawn.Downed
-                || pawn.stances.FullBodyBusy)
+            bool controlledDescent = GroupFlightUtility.AllowsDownedLanding(pawn);
+            if (!MovingField(pather) || pawn.Map == null
+                || (!controlledDescent && (pawn.Downed || pawn.stances.FullBodyBusy)))
             {
                 return;
             }
@@ -576,9 +589,15 @@ namespace MAP_MechanoidMechanitor
             }
 
             Vector3 previousExact = state.ExactGroundPosition;
-            state.ExactGroundPosition = Vector3.MoveTowards(
+            Vector3 nextExact = Vector3.MoveTowards(
                 previousExact, state.DestinationGroundPosition,
                 cellsPerSecond / 60f);
+            if (!GroupFlightUtility.CanMoveFormationTo(pawn, IntVec3.FromVector3(nextExact)))
+            {
+                NotifyFailed(pather, pawn);
+                return;
+            }
+            state.ExactGroundPosition = nextExact;
             Vector3 movement = state.ExactGroundPosition - previousExact;
             if (movement.sqrMagnitude > 0.000001f)
             {
@@ -593,6 +612,7 @@ namespace MAP_MechanoidMechanitor
                 LastEnteredCellTickField(pather) = GenTicks.TicksGame;
             }
 
+            GroupFlightUtility.NotifyProviderMoved(pawn);
             float remaining = Vector3.Distance(
                 state.ExactGroundPosition, state.DestinationGroundPosition);
             float total = Mathf.Max(0.0001f, state.TotalDistance);
@@ -758,7 +778,8 @@ namespace MAP_MechanoidMechanitor
         {
             Map? map = pawn.Map;
             IntVec3 cell = state.ResolvedDestination;
-            if (map == null || !cell.IsValid || !cell.InBounds(map))
+            if (map == null || !cell.IsValid || !cell.InBounds(map)
+                || !GroupFlightUtility.CanMoveFormationTo(pawn, cell))
             {
                 return false;
             }
@@ -842,6 +863,8 @@ namespace MAP_MechanoidMechanitor
     {
         public static bool Prefix(Pawn pathingPawn)
         {
+            if (GroupFlightUtility.BlocksIndependentMovement(pathingPawn))
+                return false;
             if (!MechanicalFlightStraightPathPatch.TryGetDirectPathDrawData(
                     pathingPawn, out Vector3 current, out Vector3 destination))
             {
@@ -892,6 +915,12 @@ namespace MAP_MechanoidMechanitor
             {
                 return true;
             }
+            if (GroupFlightUtility.BlocksIndependentMovement(___pawn)
+                && !MechanicalFlightEmergencyUtility.IsEmergencySequence(___pawn))
+            {
+                __instance.StopDead();
+                return false;
+            }
             MechanicalFlightStraightPathPatch.TickDirectPath(__instance, ___pawn);
             return false;
         }
@@ -908,10 +937,25 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
             IntVec3 cell = IntVec3.FromVector3(clickPos);
+            __result ??= new List<FloatMenuOption>();
             List<Pawn> flyers = selectedPawns.FindAll(pawn => pawn?.Map != null
-                && cell.InBounds(pawn.Map) && MechanicalFlightUtility.IsActivelyFlying(pawn));
+                && cell.InBounds(pawn.Map) && (MechanicalFlightUtility.IsActivelyFlying(pawn)
+                    || GroupFlightUtility.IsManaged(pawn)));
             if (flyers.Count == 0)
             {
+                return;
+            }
+            // 已被携带/正在退出的 Pawn 不参与普通多选移动。
+            // 正常地面单位仍保留自己的 Goto 入口。
+            if (flyers.TrueForAll(GroupFlightUtility.BlocksIndependentMovement))
+            {
+                __result.RemoveAll(option => option.isGoto);
+                var ground = selectedPawns.FindAll(pawn => !GroupFlightUtility.IsManaged(pawn)
+                    && !MechanicalFlightUtility.IsAirborne(pawn) && pawn.Drafted);
+                if (ground.Count > 0)
+                    __result.Insert(0, new FloatMenuOption("GoHere".Translate(),
+                        () => ExecuteGroundGoto(ground, cell), MenuOptionPriority.GoHere)
+                        { isGoto = false, autoTakeable = true });
                 return;
             }
 
@@ -924,7 +968,7 @@ namespace MAP_MechanoidMechanitor
             List<Pawn>? groundPawns = allSelectedPawnsFlying
                 ? null
                 : selectedPawns.FindAll(pawn => pawn != null && pawn.Drafted
-                    && pawn.Spawned && !flyers.Contains(pawn));
+                    && pawn.Spawned && !flyers.Contains(pawn) && !GroupFlightUtility.IsManaged(pawn));
             __result ??= new List<FloatMenuOption>();
             // 原版征召移动会先吸附到附近可站立格；无论是否混编，飞行单位都不能接受该目标。
             __result.RemoveAll(option => option.isGoto);
@@ -934,7 +978,9 @@ namespace MAP_MechanoidMechanitor
                 aerialMoveOption = new FloatMenuOption(
                     "MAP_MechanicalFlight_AerialMove".Translate()
                         + ": "
-                        + "MAP_MechanicalFlight_OutsideCommandRange".Translate(),
+                        + (flyers.Exists(pawn => !GroupFlightUtility.CanMoveFormationTo(pawn, cell))
+                            ? "MAP_GroupFlight_OutsideFormationBounds".Translate()
+                            : "MAP_MechanicalFlight_OutsideCommandRange".Translate()),
                     null,
                     MenuOptionPriority.High);
             }

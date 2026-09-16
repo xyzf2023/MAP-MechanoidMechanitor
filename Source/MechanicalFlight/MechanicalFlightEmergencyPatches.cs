@@ -21,7 +21,15 @@ namespace MAP_MechanoidMechanitor
             }
             if (record.IsEmergencySequence)
             {
-                // 紧急流程中冻结零能量，落地后再交还原版关机逻辑。
+                if (record.IsExternallyPowered)
+                {
+                    // 受控退出仍有日常耗能；只延后零能量关机，不清空原有能源。
+                    float next = __instance.CurLevel - __instance.FallPerDay / 400f;
+                    if (next > 0f)
+                        return true;
+                    __instance.CurLevel = 0f;
+                    record.PendingShutdownAfterLanding = true;
+                }
                 return false;
             }
             if (record.Phase == MechanicalFlightPhase.Landing
@@ -133,6 +141,9 @@ namespace MAP_MechanoidMechanitor
             Pawn __instance,
             MechanicalFlightEmergencyUtility.DeathCrashState __state)
         {
+            // 先终止提供者的会话，避免其坠毁爆炸重入时重复处理乘员。
+            if (__instance.Dead)
+                GroupFlightUtility.NotifyProviderDied(__instance);
             MechanicalFlightEmergencyUtility.ResolveDeathCrash(__instance, __state);
         }
     }

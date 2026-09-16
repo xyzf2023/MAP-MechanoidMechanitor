@@ -27,6 +27,8 @@ namespace MAP_MechanoidMechanitor
 
         private static readonly FieldInfo? VanillaFlightStateField =
             AccessTools.Field(typeof(Pawn_FlightTracker), "flightState");
+        private static readonly AccessTools.FieldRef<Pawn_FlightTracker, int> FlightCooldown =
+            AccessTools.FieldRefAccess<Pawn_FlightTracker, int>("flightCooldownTicks");
 
         internal static VanillaFlightState GetVanillaFlightState(Pawn? pawn)
         {
@@ -53,7 +55,7 @@ namespace MAP_MechanoidMechanitor
         public static bool IsActivelyFlying(Pawn? pawn)
         {
             return GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                && record?.ConsumesFlightEnergy == true;
+                && record?.IsCruising == true;
         }
 
         public static bool UsesAerialMovement(Pawn? pawn)
@@ -125,7 +127,8 @@ namespace MAP_MechanoidMechanitor
         {
             // 机械飞行授权是独立资格来源，不继承原版生物飞行的 Mutant、真空或飞行时长限制。
             return pawn != null
-                && GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn);
+                && (GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn)
+                    || GroupFlightUtility.IsManaged(pawn));
         }
 
         public static Command_Action MakeCommand(Pawn pawn)
@@ -158,7 +161,9 @@ namespace MAP_MechanoidMechanitor
                 || pawn.Faction != Faction.OfPlayer
                 || !pawn.Drafted
                 || !IsActivelyFlying(pawn)
-                || !cell.InBounds(pawn.Map))
+                || !cell.InBounds(pawn.Map)
+                || GroupFlightUtility.BlocksIndependentMovement(pawn)
+                || !GroupFlightUtility.CanMoveFormationTo(pawn, cell))
             {
                 return false;
             }
@@ -182,7 +187,8 @@ namespace MAP_MechanoidMechanitor
             job.locomotionUrgency = LocomotionUrgency.Sprint;
             job.expiryInterval = -1;
             job.flying = true;
-            job.exitMapOnArrival = MechanicalFlightMapExitUtility.IsExitMove(pawn!, cell);
+            job.exitMapOnArrival = !GroupFlightUtility.IsManaged(pawn)
+                && MechanicalFlightMapExitUtility.IsExitMove(pawn!, cell);
             return pawn!.jobs.TryTakeOrderedJob(job, JobTag.Misc);
         }
 
@@ -190,6 +196,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
                 || record == null || pawn == null
+                || !record.HasSelfFlightAuthorization || GroupFlightUtility.IsManaged(pawn)
                 || !CanBeginTakeoff(pawn, record, requireDrafted: true, out _))
             {
                 return false;
@@ -416,9 +423,15 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryBeginLanding(Pawn? pawn, bool showMessage = false)
         {
+            if (GroupFlightUtility.IsProviding(pawn))
+            {
+                GroupFlightUtility.BeginGroupLanding(GroupFlightUtility.ProvidedSession(pawn)!, false);
+                return true;
+            }
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
-                || record == null || pawn?.Map == null || !record.ConsumesFlightEnergy
-                || record.Purpose != MechanicalFlightPurpose.Normal)
+                || record == null || pawn?.Map == null || !record.IsCruising
+                || (record.Purpose != MechanicalFlightPurpose.Normal
+                    && !record.IsExternallyPowered))
             {
                 return false;
             }
@@ -513,7 +526,13 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightProfileDef? profile = record.Profile;
             if (pawn == null || profile == null || pawn.Dead || !pawn.Spawned || pawn.Map == null)
             {
-                ClearRuntimeState(record, forceLand: false);
+                ClearRuntimeState(record, forceLand: record.IsExternallyPowered);
+                return;
+            }
+
+            if (record.IsExternallyPowered)
+            {
+                GroupFlightUtility.TickFlight(record);
                 return;
             }
 
@@ -621,9 +640,11 @@ namespace MAP_MechanoidMechanitor
             Pawn? pawn,
             MechanicalFlightAuthorizationRecord record)
         {
+            GroupFlightUtility.NotifyFlightEnded(record);
             record.ResetRuntimeState();
             MechanicalFlightPresentationUtility.NotifyFlightEnded(pawn);
             GameComponent_MechanicalFlightRegistry.NotifyRuntimeStateChanged(record);
+            GameComponent_MechanicalFlightRegistry.RemoveUnusedRuntimeRecord(record);
         }
 
         internal static void ClearRuntimeState(
@@ -635,6 +656,8 @@ namespace MAP_MechanoidMechanitor
             {
                 pawn.pather?.StopDead();
                 MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+                if (record.IsExternallyPowered)
+                    record.Phase = MechanicalFlightPhase.Landing;
                 pawn.flight.ForceLand();
             }
             if (pawn?.CurJob != null)
@@ -670,6 +693,7 @@ namespace MAP_MechanoidMechanitor
         internal static void CleanupUnavailableRecord(
             MechanicalFlightAuthorizationRecord record)
         {
+            GroupFlightUtility.NotifyFlightEnded(record);
             MechanicalFlightPresentationUtility.NotifyFlightEnded(record.Pawn);
             record.ResetRuntimeState();
         }
@@ -717,6 +741,12 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
+                if (record.IsExternallyPowered)
+                {
+                    GroupFlightUtility.ReconcileFlight(record);
+                    continue;
+                }
+
                 if (record.Purpose == MechanicalFlightPurpose.FusionRelocation)
                 {
                     // 合体快速转移的升降纯视觉进度不写入存档：
@@ -738,7 +768,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (record.ConsumesFlightEnergy)
+                if (record.IsCruising)
                 {
                     VanillaFlightState state = GetVanillaFlightState(pawn);
                     if (state == VanillaFlightState.Grounded)
@@ -841,9 +871,12 @@ namespace MAP_MechanoidMechanitor
             Pawn? pawn,
             MechanicalFlightAuthorizationRecord? record,
             bool requireDrafted,
-            out string? disabledReason)
+            out string? disabledReason,
+            bool externallySupported = false,
+            bool requireEnergy = true)
         {
-            disabledReason = GetDisabledReason(pawn, record, requireDrafted);
+            disabledReason = GetDisabledReason(pawn, record, requireDrafted,
+                externallySupported, requireEnergy);
             return disabledReason.NullOrEmpty();
         }
 
@@ -856,7 +889,9 @@ namespace MAP_MechanoidMechanitor
         private static string? GetDisabledReason(
             Pawn? pawn,
             MechanicalFlightAuthorizationRecord? record,
-            bool requireDrafted)
+            bool requireDrafted,
+            bool externallySupported = false,
+            bool requireEnergy = true)
         {
             if (pawn == null || record?.Profile == null || !pawn.Spawned
                 || pawn.Map == null || pawn.Dead || pawn.Downed)
@@ -880,7 +915,7 @@ namespace MAP_MechanoidMechanitor
             {
                 return "MAP_MechanicalFlight_Landing".Translate();
             }
-            if (record.ConsumesFlightEnergy)
+            if (record.IsCruising)
             {
                 if (MechanicalFlightRoofUtility.HasThickRoof(pawn.Position, pawn.Map))
                 {
@@ -890,7 +925,7 @@ namespace MAP_MechanoidMechanitor
                     ? null
                     : "MAP_MechanicalFlight_InvalidLanding".Translate();
             }
-            if (MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out float energy)
+            if (requireEnergy && MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out float energy)
                 && energy < record.Profile.minimumTakeoffEnergy)
             {
                 return "MAP_MechanicalFlight_LowEnergy".Translate(
@@ -900,7 +935,8 @@ namespace MAP_MechanoidMechanitor
             {
                 return "MAP_MechanicalFlight_ThickRoofTakeoff".Translate();
             }
-            if (pawn.flight == null || !pawn.flight.CanFlyNow)
+            if (pawn.flight == null || (!pawn.flight.CanFlyNow
+                && !(externallySupported && !pawn.flight.Flying && FlightCooldown(pawn.flight) <= 0)))
             {
                 return "MAP_MechanicalFlight_Cooling".Translate();
             }

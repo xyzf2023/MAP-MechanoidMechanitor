@@ -76,8 +76,11 @@ namespace MAP_MechanoidMechanitor
             Pawn? pawn,
             MechanicalFlightProfileDef profile)
         {
+            if (GroupFlightUtility.IsManaged(pawn) && !GroupFlightUtility.IsProviding(pawn))
+                return false;
             return TryConsumeMaximumEnergyFraction(pawn,
-                profile.energyDrainFraction * GetFlightEnergyMultiplier(pawn, profile));
+                profile.energyDrainFraction * (GetFlightEnergyMultiplier(pawn, profile)
+                    + 0.5f * GroupFlightUtility.PassengerCount(pawn)));
         }
 
         private static float GetFlightEnergyMultiplier(

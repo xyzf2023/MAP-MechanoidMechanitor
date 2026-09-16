@@ -38,7 +38,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             bool grantedByFusion = false;
-            if (!GameComponent_MechanicalFlightRegistry.HasAuthorizationRecord(wearer)
+            if (!GameComponent_MechanicalFlightRegistry.IsAuthorized(wearer)
                 && GameComponent_MechanicalFlightRegistry.TryAuthorize(
                     wearer,
                     source: MechanicalFlightAuthorizationSource.TemporaryFusion))
@@ -171,7 +171,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (GameComponent_MechanicalFlightRegistry.HasAuthorizationRecord(wearer))
+            if (GameComponent_MechanicalFlightRegistry.IsAuthorized(wearer))
             {
                 return;
             }

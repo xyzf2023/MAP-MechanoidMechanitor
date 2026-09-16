@@ -132,7 +132,7 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightProfileDef profile)
         {
             Map? map = pawn.Map;
-            if (!pawn.Spawned || map == null)
+            if (!pawn.Spawned || map == null || !profile.playLandingEffects)
             {
                 return;
             }

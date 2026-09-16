@@ -383,6 +383,13 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightAuthorizationRecord record,
             out Vector3 correction)
         {
+            var groupMember = GroupFlightUtility.Member(pawn);
+            Pawn? provider = groupMember?.Session?.Provider;
+            if (groupMember != null && provider != null && provider != pawn
+                && GroupFlightUtility.IsAttached(groupMember)
+                && GameComponent_MechanicalFlightRegistry.TryGetRecord(provider, out var providerRecord)
+                && providerRecord != null)
+                return TryGetGroundCorrection(provider, providerRecord, out correction);
             if (record.Phase == MechanicalFlightPhase.Crashing)
             {
                 correction = Vector3.zero;

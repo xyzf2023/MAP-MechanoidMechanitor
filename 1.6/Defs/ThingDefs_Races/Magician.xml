@@ -5,6 +5,11 @@
     <defName>MAP_Mech_Magician</defName>
     <label>「魔术师」</label>
     <description>TODO</description>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_GroupAntigravity">
+        <profile>MAP_GroupAntigravityFlightProfile</profile>
+      </li>
+    </comps>
   </ThingDef>
 
   <PawnKindDef ParentName="MechCentipedeBase">

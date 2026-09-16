@@ -36,7 +36,13 @@ namespace MAP_MechanoidMechanitor
         internal Map? EmergencyTargetMap;
 
         public Pawn? Pawn => pawn;
-        public MechanicalFlightProfileDef? Profile => profile;
+        // 自主资格的配置与本次外力飞行配置分离，读档/先天注册不能覆盖反重力表现。
+        private MechanicalFlightProfileDef? runtimeProfile;
+        public MechanicalFlightProfileDef? Profile => runtimeProfile ?? profile;
+        public bool HasSelfFlightAuthorization =>
+            authorizationSources != MechanicalFlightAuthorizationSource.None;
+        public bool IsExternallyPowered => purpose == MechanicalFlightPurpose.GroupAntigravity;
+        internal void SetRuntimeProfile(MechanicalFlightProfileDef? value) => runtimeProfile = value;
         public MechanicalFlightAuthorizationSource AuthorizationSources => authorizationSources;
         public MechanicalFlightPhase Phase
         {
@@ -55,10 +61,12 @@ namespace MAP_MechanoidMechanitor
         }
         public bool IsRuntimeActive => phase != MechanicalFlightPhase.Grounded;
         public bool UsesAerialMovement =>
-            ConsumesFlightEnergy || phase == MechanicalFlightPhase.EmergencyApproach;
-        public bool ConsumesFlightEnergy =>
+            IsCruising || phase == MechanicalFlightPhase.EmergencyApproach;
+        public bool IsCruising =>
             phase == MechanicalFlightPhase.TakingOff
             || phase == MechanicalFlightPhase.Hovering;
+        public bool ConsumesFlightEnergy => IsCruising
+            && (!IsExternallyPowered || GroupFlightUtility.IsProviding(pawn));
         public bool IsEmergencySequence =>
             phase == MechanicalFlightPhase.EmergencyApproach
             || phase == MechanicalFlightPhase.EmergencyLanding
@@ -144,6 +152,7 @@ namespace MAP_MechanoidMechanitor
         {
             phase = MechanicalFlightPhase.Grounded;
             purpose = MechanicalFlightPurpose.Normal;
+            runtimeProfile = null;
             ticksUntilNextEnergyDrain = 0;
             emergencyLandingTarget = IntVec3.Invalid;
             lowEnergyWarningSent = false;
@@ -159,6 +168,7 @@ namespace MAP_MechanoidMechanitor
         {
             Scribe_References.Look(ref pawn, "pawn");
             Scribe_Defs.Look(ref profile, "profile");
+            Scribe_Defs.Look(ref runtimeProfile, "runtimeProfile");
             Scribe_Values.Look(
                 ref authorizationSources,
                 "authorizationSources",
