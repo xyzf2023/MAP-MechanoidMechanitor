@@ -19,6 +19,8 @@ namespace MAP_MechanoidMechanitor
         private int lastEffectiveBoostPercent;
         private int fallbackTickCounter;
         private bool removalCleanupCompleted;
+        private int cachedPowerBoostPercent = -1;
+        private double cachedActivePowerConsumption;
 
         private CompProperties_ParallelThoughtArray Props
             => (CompProperties_ParallelThoughtArray)props;
@@ -158,7 +160,10 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            powerTrader.PowerOutput = -RequestedPowerConsumption;
+            float requestedOutput = -RequestedPowerConsumption;
+            // 比较未经过 EMP 遮罩的底层值，避免眩晕期间反复写入相同请求。
+            if (powerTrader.powerOutputInt != requestedOutput)
+                powerTrader.PowerOutput = requestedOutput;
         }
 
         public bool IsProvidingBoostTo(Pawn pawn)
@@ -174,6 +179,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public void ReevaluateOperatingState(bool forceRefresh)
         {
+            // 周期兜底及显式刷新仍读取最新 Def 参数；运行时缓存无需写入存档。
+            if (forceRefresh) cachedPowerBoostPercent = -1;
             UpdateRequestedPowerDraw();
 
             if (target != null && !IsTargetValid)
@@ -521,8 +528,12 @@ namespace MAP_MechanoidMechanitor
                 return Math.Max(0d, Props.idlePowerConsumption);
             }
 
-            return CalculateActivePowerConsumptionForBoost(
-                configuredBoostPercent);
+            if (cachedPowerBoostPercent != configuredBoostPercent)
+            {
+                cachedActivePowerConsumption = CalculateActivePowerConsumptionForBoost(configuredBoostPercent);
+                cachedPowerBoostPercent = configuredBoostPercent;
+            }
+            return cachedActivePowerConsumption;
         }
 
         private double CalculateActivePowerConsumptionForBoost(
