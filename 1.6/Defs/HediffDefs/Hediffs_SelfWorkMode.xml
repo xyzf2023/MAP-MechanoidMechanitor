@@ -11,8 +11,8 @@
       <li Class="MAP_MechanoidMechanitor.HediffCompProperties_MechanoidMechanitorModeRecovery">
         <repairInterval>600</repairInterval>
         <repairAmount>10</repairAmount>
-        <energyRestoreInterval>300</energyRestoreInterval>
-        <energyRestoreFraction>0.01</energyRestoreFraction>
+        <energyRestoreInterval>2500</energyRestoreInterval>
+        <energyRestoreFraction>0.005</energyRestoreFraction>
         <showRecoveryRates>true</showRecoveryRates>
       </li>
     </comps>
@@ -36,8 +36,8 @@
       <li Class="MAP_MechanoidMechanitor.HediffCompProperties_MechanoidMechanitorModeRecovery">
         <repairInterval>60</repairInterval>
         <repairAmount>30</repairAmount>
-        <energyRestoreInterval>300</energyRestoreInterval>
-        <energyRestoreFraction>0.01</energyRestoreFraction>
+        <energyRestoreInterval>2500</energyRestoreInterval>
+        <energyRestoreFraction>0.025</energyRestoreFraction>
         <showRecoveryRates>true</showRecoveryRates>
       </li>
     </comps>

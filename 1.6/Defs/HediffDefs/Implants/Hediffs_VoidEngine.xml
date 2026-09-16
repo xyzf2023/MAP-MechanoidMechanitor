@@ -48,15 +48,15 @@
     <levelIsQuantity>false</levelIsQuantity>
     <comps>
       <li Class="MAP_MechanoidMechanitor.HediffCompProperties_PeriodicEnergyRestore">
-        <intervalTicks>300</intervalTicks>
-        <restoreFraction>0.01</restoreFraction>
+        <intervalTicks>2500</intervalTicks>
+        <restoreFraction>0.002</restoreFraction>
       </li>
     </comps>
     <stages>
       <li>
         <minSeverity>1</minSeverity>
         <statFactors>
-          <MechEnergyUsageFactor>0</MechEnergyUsageFactor>
+          <MechEnergyUsageFactor>0.25</MechEnergyUsageFactor>
           <MechEnergyLossPerHP>0</MechEnergyLossPerHP>
         </statFactors>
       </li>

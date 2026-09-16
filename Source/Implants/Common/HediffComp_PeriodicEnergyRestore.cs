@@ -21,10 +21,10 @@ namespace MAP_MechanoidMechanitor
                     return string.Empty;
                 }
 
-                int energyPercentPerHour = Mathf.RoundToInt(
-                    Props.restoreFraction * 100f * TicksPerHour / Props.intervalTicks);
+                float energyPercentPerHour =
+                    Props.restoreFraction * 100f * TicksPerHour / Props.intervalTicks;
                 return "MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour"
-                    .Translate(energyPercentPerHour);
+                    .Translate(energyPercentPerHour.ToString("F1"));
             }
         }
 
