@@ -11,6 +11,14 @@
     </value>
   </Operation>
 
+  <!-- 将「战车」加入原版重型机械族复活配方 -->
+  <Operation Class="PatchOperationAdd">
+    <xpath>Defs/RecipeDef[defName="ResurrectHeavyMech"]/fixedIngredientFilter/thingDefs</xpath>
+    <value>
+      <li>Corpse_MAP_Mech_Chariot</li>
+    </value>
+  </Operation>
+
   <!-- 将「正义」加入原版超重型机械族复活配方 -->
   <Operation Class="PatchOperationAdd">
     <xpath>Defs/RecipeDef[defName="ResurrectUltraheavyMech"]/fixedIngredientFilter/thingDefs</xpath>

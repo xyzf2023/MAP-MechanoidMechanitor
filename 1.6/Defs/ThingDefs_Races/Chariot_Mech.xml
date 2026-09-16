@@ -21,7 +21,7 @@
 
     <race>
       <baseHealthScale>3</baseHealthScale>
-
+      <mechWeightClass>Heavy</mechWeightClass>
 
       <lifeStageAges Inherit="False">
         <li>
