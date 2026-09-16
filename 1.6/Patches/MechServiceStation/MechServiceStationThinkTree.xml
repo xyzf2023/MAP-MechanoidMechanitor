@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- 保持当前会话，含征召后手动使用；玩家的新排队命令仍在此节点之前。 -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/ThinkTreeDef[defName="Mechanoid"]/thinkRoot/subNodes/li[@Class="ThinkNode_ConditionalOfPlayerFaction"][1]</xpath>
+    <order>Prepend</order>
+    <value>
+      <li MayRequire="Ludeon.RimWorld.Biotech" Class="MAP_MechanoidMechanitor.JobGiver_ContinueMechServiceStation" />
+    </value>
+  </Operation>
+  <!-- 位于作息/原版充电分支之前；独立身份机械师无需通过原版监管状态条件。 -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/ThinkTreeDef[defName="Mechanoid"]/thinkRoot/subNodes/li[@Class="ThinkNode_ConditionalPlayerControlledMech"][1]</xpath>
+    <order>Prepend</order>
+    <value>
+      <li MayRequire="Ludeon.RimWorld.Biotech" Class="MAP_MechanoidMechanitor.JobGiver_MechServiceStation" />
+    </value>
+  </Operation>
+</Patch>

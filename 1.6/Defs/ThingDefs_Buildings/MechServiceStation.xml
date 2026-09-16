@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="BuildingBase" MayRequire="Ludeon.RimWorld.Biotech">
+    <defName>MAP_MechServiceStation</defName>
+    <label>机体整备台</label>
+    <description>为机械族快速充电并维修，不产生有毒垃圾包。</description>
+    <thingClass>Building</thingClass>
+    <tickerType>Normal</tickerType>
+    <drawerType>MapMeshAndRealTime</drawerType>
+    <altitudeLayer>FloorEmplacement</altitudeLayer>
+    <size>(4,4)</size>
+    <rotatable>false</rotatable>
+    <defaultPlacingRot>North</defaultPlacingRot>
+    <passability>Standable</passability>
+    <fillPercent>0</fillPercent>
+    <pathCost>0</pathCost>
+    <terrainAffordanceNeeded>Heavy</terrainAffordanceNeeded>
+    <graphicData>
+      <texPath>Buildings/MechServiceStation/Base</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <shaderType>Cutout</shaderType>
+      <drawSize>(4,4)</drawSize>
+    </graphicData>
+    <designationCategory>Biotech</designationCategory>
+    <researchPrerequisites><li>BasicMechtech</li></researchPrerequisites>
+    <statBases>
+      <MaxHitPoints>350</MaxHitPoints>
+      <WorkToBuild>3600</WorkToBuild>
+      <Flammability>0.05</Flammability>
+    </statBases>
+    <costList><Steel>120</Steel><ComponentIndustrial>4</ComponentIndustrial></costList>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerTrader</compClass>
+        <basePowerConsumption>400</basePowerConsumption>
+      </li>
+      <li Class="CompProperties_Flickable" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechServiceStation">
+        <energyPerTick>0.005</energyPerTick>
+        <repairIntervalTicks>60</repairIntervalTicks>
+        <repairAmount>10</repairAmount>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>

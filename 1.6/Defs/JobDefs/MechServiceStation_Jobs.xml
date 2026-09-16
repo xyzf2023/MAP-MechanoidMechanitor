@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>MAP_Job_UseMechServiceStation</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMechServiceStation</driverClass>
+    <reportString>正在使用机体整备台。</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <suspendable>false</suspendable>
+    <neverShowWeapon>true</neverShowWeapon>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+  </JobDef>
+</Defs>
