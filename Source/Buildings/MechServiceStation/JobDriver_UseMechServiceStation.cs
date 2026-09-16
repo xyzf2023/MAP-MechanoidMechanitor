@@ -12,6 +12,8 @@ namespace MAP_MechanoidMechanitor
         private int repairTicks;
         private int waitTicks;
         private bool servicing;
+        private bool undraftingForService;
+        public override bool PlayerInterruptable => !undraftingForService && base.PlayerInterruptable;
         public CompMechServiceStation? Station => job.targetA.Thing?.TryGetComp<CompMechServiceStation>();
         public bool IsServicing => servicing && Station is CompMechServiceStation station
             && station.Owns(pawn, job, token) && MechServicePolicyUtility.IsAllowed(station, pawn)
@@ -37,7 +39,9 @@ namespace MAP_MechanoidMechanitor
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
             AddFailCondition(() => Station == null || !MechServicePolicyUtility.IsAllowed(Station, pawn)
-                || Station.parent.IsForbidden(pawn));
+                || Station.parent.IsForbidden(pawn)
+                || (job.def == MechServiceStationDefOf.MAP_Job_ReceiveMechService
+                    && pawn.Position != Station.ServiceCell));
             AddFinishAction(condition =>
             {
                 servicing = false;
@@ -74,15 +78,28 @@ namespace MAP_MechanoidMechanitor
             service.handlingFacing = true;
             service.initAction = () =>
             {
+                // 原版取消征召会中断可打断任务；只在设置征召状态的瞬间保护本任务。
+                if (pawn.Drafted && pawn.drafter != null)
+                {
+                    undraftingForService = true;
+                    try { pawn.drafter.Drafted = false; }
+                    finally { undraftingForService = false; }
+                }
                 servicing = true;
+                pawn.jobs.posture = pawn.Downed ? PawnPosture.LayingOnGroundNormal : PawnPosture.Standing;
                 job.overrideFacing = Rot4.South;
                 pawn.Rotation = Rot4.South;
                 repairTicks = Mathf.Max(1, Station!.Props.repairIntervalTicks);
+                Station.UpdateRequestedPower();
             };
             service.tickIntervalAction = _ =>
             {
                 if (!IsServicing) EndJobWith(JobCondition.Incompletable);
-                else pawn.Rotation = Rot4.South;
+                else
+                {
+                    pawn.Rotation = Rot4.South;
+                    pawn.jobs.posture = pawn.Downed ? PawnPosture.LayingOnGroundNormal : PawnPosture.Standing;
+                }
             };
             yield return service;
         }
@@ -113,9 +130,9 @@ namespace MAP_MechanoidMechanitor
             CompMechServiceStation? station = Station;
             if (station == null || !IsServicing) return;
             pawn.Rotation = Rot4.South;
-            if (station.Complete(pawn))
+            if (station.Complete(pawn) && (!station.StandbyAfterService || station.Powered))
             {
-                EndJobWith(JobCondition.Succeeded);
+                CompleteService(station);
                 return;
             }
             if (!station.Powered)
@@ -123,8 +140,8 @@ namespace MAP_MechanoidMechanitor
                 station.Visuals.Stop();
                 return;
             }
-            bool charging = MechServiceNeedUtility.NeedsCharge(pawn);
-            bool repairing = MechServiceNeedUtility.NeedsRepair(pawn);
+            bool charging = station.NeedsCharge(pawn);
+            bool repairing = station.NeedsRepair(pawn);
             if (charging)
             {
                 Need_MechEnergy energy = pawn.needs.energy;
@@ -133,11 +150,29 @@ namespace MAP_MechanoidMechanitor
             if (repairing && --repairTicks <= 0)
             {
                 repairTicks = Mathf.Max(1, station.Props.repairIntervalTicks);
-                for (int i = 0; i < station.Props.repairAmount && MechServiceNeedUtility.NeedsRepair(pawn); i++)
+                for (int i = 0; i < station.Props.repairAmount && station.NeedsRepair(pawn); i++)
                     MechRepairUtility.RepairTick(pawn);
             }
-            station.Visuals.Tick(pawn, charging, repairing && MechServiceNeedUtility.NeedsRepair(pawn));
-            if (station.Complete(pawn)) EndJobWith(JobCondition.Succeeded);
+            station.Visuals.Tick(pawn, station.NeedsCharge(pawn), station.NeedsRepair(pawn));
+            if (station.Complete(pawn)) CompleteService(station);
+        }
+
+        private void CompleteService(CompMechServiceStation station)
+        {
+            if (!station.StandbyAfterService)
+            {
+                EndJobWith(JobCondition.Succeeded);
+                return;
+            }
+            // 先通过原版清理释放会话、预约和特效，禁止在交接间隙寻找自动工作。
+            Pawn user = pawn;
+            user.jobs.EndCurrentJob(JobCondition.Succeeded, startNewJob: false);
+            if (user.CurJob == null && MechServiceStandbyUtility.CanWait(user))
+            {
+                Job standby = JobMaker.MakeJob(MechServiceStationDefOf.MAP_Job_MechServiceStandby, station.parent);
+                standby.expiryInterval = -1;
+                user.jobs.StartJob(standby);
+            }
         }
 
         public override void ExposeData()

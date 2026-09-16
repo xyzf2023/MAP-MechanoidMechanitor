@@ -17,21 +17,22 @@ namespace MAP_MechanoidMechanitor
             CompMechServiceStation? station = clickedThing.TryGetComp<CompMechServiceStation>();
             Pawn pawn = context.FirstSelectedPawn;
             if (station == null || pawn == null || !MechServicePolicyUtility.IsLegalPawn(pawn)) yield break;
-            if (pawn.CurJobDef == MechServiceStationDefOf.MAP_Job_UseMechServiceStation
+            if (MechServicePolicyUtility.IsServiceJob(pawn)
                 && pawn.CurJob.targetA.Thing == clickedThing && pawn.CurJob.playerForced)
             {
                 yield return new FloatMenuOption("取消整备", () =>
                 {
-                    if (pawn.CurJobDef == MechServiceStationDefOf.MAP_Job_UseMechServiceStation
+                    if (MechServicePolicyUtility.IsServiceJob(pawn)
                         && pawn.CurJob.targetA.Thing == clickedThing)
                         pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
                 });
                 yield break;
             }
-            string? reason = !MechServicePolicyUtility.IsAllowed(station, pawn)
+            string? reason = !station.Enabled ? "整备台未启用"
+                : !MechServicePolicyUtility.IsAllowed(station, pawn)
                 ? station.Mode == MechServiceStationMode.AssignedOnly ? "仅限指定机械族" : "仅限机械族机械师"
                 : !station.Powered ? "未通电"
-                : !MechServiceNeedUtility.HasAnyNeed(pawn) ? "无需整备"
+                : !MechServicePolicyUtility.HasEntryNeed(station, pawn, true) ? "无需整备"
                 : !station.CanReach(pawn, true) ? "无法到达" : null;
             if (reason != null)
             {
@@ -42,8 +43,9 @@ namespace MAP_MechanoidMechanitor
             {
                 // 点击时再次校验，菜单打开期间可能修改模式或指定对象。
                 if (!MechServicePolicyUtility.IsAllowed(station, pawn)
-                    || !station.CanReach(pawn, true) || !MechServiceNeedUtility.HasAnyNeed(pawn)) return;
-                if (pawn.CurJobDef == MechServiceStationDefOf.MAP_Job_UseMechServiceStation
+                    || !station.Powered || !station.CanReach(pawn, true)
+                    || !MechServicePolicyUtility.HasEntryNeed(station, pawn, true)) return;
+                if (MechServicePolicyUtility.IsServiceJob(pawn)
                     && pawn.CurJob.targetA.Thing == clickedThing)
                 {
                     station.PromoteToManual(pawn, pawn.CurJob);

@@ -8,7 +8,7 @@
     <tickerType>Normal</tickerType>
     <drawerType>MapMeshAndRealTime</drawerType>
     <altitudeLayer>FloorEmplacement</altitudeLayer>
-    <size>(4,4)</size>
+    <size>(3,3)</size>
     <rotatable>false</rotatable>
     <defaultPlacingRot>North</defaultPlacingRot>
     <passability>Standable</passability>
@@ -20,6 +20,7 @@
       <graphicClass>Graphic_Single</graphicClass>
       <shaderType>Cutout</shaderType>
       <drawSize>(4,4)</drawSize>
+      <drawOffset>(0, 0, 0.5)</drawOffset>
     </graphicData>
     <designationCategory>Biotech</designationCategory>
     <researchPrerequisites><li>BasicMechtech</li></researchPrerequisites>
@@ -32,7 +33,7 @@
     <comps>
       <li Class="CompProperties_Power">
         <compClass>CompPowerTrader</compClass>
-        <basePowerConsumption>400</basePowerConsumption>
+        <basePowerConsumption>50</basePowerConsumption>
       </li>
       <li Class="CompProperties_Flickable" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechServiceStation">

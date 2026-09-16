@@ -7,6 +7,9 @@ namespace MAP_MechanoidMechanitor
     public static class MechServiceStationDefOf
     {
         public static JobDef MAP_Job_UseMechServiceStation = null!;
+        public static JobDef MAP_Job_MechServiceStandby = null!;
+        public static JobDef MAP_Job_HaulMechToServiceStation = null!;
+        public static JobDef MAP_Job_ReceiveMechService = null!;
 
         static MechServiceStationDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(MechServiceStationDefOf));
     }

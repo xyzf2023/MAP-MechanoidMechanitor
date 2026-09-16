@@ -1,6 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
   <JobDef>
+    <defName>MAP_Job_HaulMechToServiceStation</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_HaulMechToServiceStation</driverClass>
+    <reportString>正在将TargetA搬运至机体整备台。</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <suspendable>false</suspendable>
+    <neverShowWeapon>true</neverShowWeapon>
+  </JobDef>
+  <JobDef>
+    <defName>MAP_Job_ReceiveMechService</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMechServiceStation</driverClass>
+    <reportString>正在进行机体整备...</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <suspendable>false</suspendable>
+    <neverShowWeapon>true</neverShowWeapon>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+  </JobDef>
+  <JobDef>
     <defName>MAP_Job_UseMechServiceStation</defName>
     <driverClass>MAP_MechanoidMechanitor.JobDriver_UseMechServiceStation</driverClass>
     <reportString>正在使用机体整备台。</reportString>
@@ -8,6 +27,19 @@
     <casualInterruptible>false</casualInterruptible>
     <suspendable>false</suspendable>
     <neverShowWeapon>true</neverShowWeapon>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+  </JobDef>
+  <JobDef>
+    <defName>MAP_Job_MechServiceStandby</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_MechServiceStandby</driverClass>
+    <reportString>等待指令...</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <suspendable>false</suspendable>
+    <isIdle>true</isIdle>
+    <neverShowWeapon>true</neverShowWeapon>
+    <neverFleeFromEnemies>true</neverFleeFromEnemies>
+    <sleepCanInterrupt>false</sleepCanInterrupt>
     <checkOverrideOnDamage>Never</checkOverrideOnDamage>
   </JobDef>
 </Defs>

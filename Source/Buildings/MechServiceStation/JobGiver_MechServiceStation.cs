@@ -8,7 +8,7 @@ namespace MAP_MechanoidMechanitor
     public sealed class JobGiver_ContinueMechServiceStation : ThinkNode_JobGiver
     {
         protected override Job? TryGiveJob(Pawn pawn) =>
-            pawn.CurJobDef == MechServiceStationDefOf.MAP_Job_UseMechServiceStation
+            MechServicePolicyUtility.IsServiceJob(pawn)
             && pawn.jobs.curDriver is JobDriver_UseMechServiceStation driver
             && driver.Station is CompMechServiceStation station
             && MechServicePolicyUtility.IsAllowed(station, pawn) ? pawn.CurJob : null;
@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor
         protected override Job? TryGiveJob(Pawn pawn)
         {
             // 返回当前实例，原版不会重新开始同一任务或丢失手动请求来源。
-            if (pawn.CurJobDef == MechServiceStationDefOf.MAP_Job_UseMechServiceStation
+            if (MechServicePolicyUtility.IsServiceJob(pawn)
                 && pawn.jobs.curDriver is JobDriver_UseMechServiceStation driver
                 && driver.Station is CompMechServiceStation current
                 && MechServicePolicyUtility.IsAllowed(current, pawn)) return pawn.CurJob;
@@ -45,6 +45,22 @@ namespace MAP_MechanoidMechanitor
         public void Unregister(CompMechServiceStation station) => stations.Remove(station);
         public void DelayAutomaticRetry(Pawn pawn) => retryAfter[pawn] = Find.TickManager.TicksGame + 600;
 
+        public CompMechServiceStation? FindDeliveryStation(Pawn carrier, Pawn mech)
+        {
+            CompMechServiceStation? best = null;
+            int bestOccupied = int.MaxValue;
+            int bestDistance = int.MaxValue;
+            foreach (CompMechServiceStation station in stations)
+            {
+                if (!MechServiceHaulUtility.CanDeliver(carrier, mech, station)) continue;
+                int distance = mech.Position.DistanceToSquared(station.ServiceCell);
+                int occupied = station.IsOccupied ? 1 : 0;
+                if (occupied < bestOccupied || (occupied == bestOccupied && distance < bestDistance))
+                { best = station; bestDistance = distance; bestOccupied = occupied; }
+            }
+            return best;
+        }
+
         public CompMechServiceStation? FindStation(Pawn pawn)
         {
             if (retryAfter.TryGetValue(pawn, out int tick) && Find.TickManager.TicksGame < tick) return null;
@@ -54,7 +70,7 @@ namespace MAP_MechanoidMechanitor
             foreach (CompMechServiceStation station in stations)
             {
                 if (!station.CanRequest(pawn, false)) continue;
-                int occupied = station.Owner == null ? 0 : 1;
+                int occupied = station.IsOccupied ? 1 : 0;
                 int distance = pawn.Position.DistanceToSquared(station.ServiceCell);
                 if (occupied < bestOccupied || occupied == bestOccupied && distance < bestDistance)
                 {
@@ -81,7 +97,7 @@ namespace MAP_MechanoidMechanitor
             candidates.AddRange(map.mapPawns.AllPawnsSpawned);
             foreach (Pawn pawn in candidates)
             {
-                if (pawn.CurJobDef == MechServiceStationDefOf.MAP_Job_UseMechServiceStation
+                if (MechServicePolicyUtility.IsServiceJob(pawn)
                     || !MechServicePolicyUtility.CanAutoSeek(pawn)
                     || pawn.CurJob?.def.casualInterruptible == false) continue;
                 if (FindStation(pawn) != null) pawn.jobs.CheckForJobOverride();

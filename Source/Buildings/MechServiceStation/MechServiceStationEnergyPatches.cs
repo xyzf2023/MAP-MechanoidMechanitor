@@ -1,5 +1,6 @@
 using HarmonyLib;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -12,6 +13,30 @@ namespace MAP_MechanoidMechanitor
         internal static bool IsServicing(Need_MechEnergy energy) =>
             PawnField(energy)?.jobs?.curDriver is JobDriver_UseMechServiceStation driver
             && driver.IsPoweredService;
+
+        internal static bool IsCharging(Need_MechEnergy energy) =>
+            PawnField(energy)?.jobs?.curDriver is JobDriver_UseMechServiceStation driver
+            && driver.IsPoweredService && driver.Station!.NeedsCharge(PawnField(energy));
+    }
+
+    [HarmonyPatch(typeof(Pawn), nameof(Pawn.GetInspectString))]
+    internal static class MechServiceEnergyInspectPatch
+    {
+        public static void Postfix(Pawn __instance, ref string __result)
+        {
+            if (__instance.needs?.energy is not Need_MechEnergy energy
+                || __instance.jobs?.curDriver is not JobDriver_UseMechServiceStation driver
+                || !driver.IsPoweredService || energy.MaxLevel <= 0f || string.IsNullOrEmpty(__result)) return;
+
+            // 只替换原版能量行的显示；实际充电仍只由 ServiceTick 写入。
+            string prefix = "MechEnergy".Translate() + ": " + energy.CurLevelPercentage.ToStringPercent();
+            string original = prefix + " (-" + "PerDay".Translate((energy.FallPerDay / energy.MaxLevel).ToStringPercent()) + ")";
+            int percent = Mathf.Max(0, Mathf.RoundToInt(driver.Station!.Props.energyPerTick * 60000f / energy.MaxLevel * 100f));
+            string rate = driver.Station!.ChargingEnabled && energy.CurLevel < energy.MaxLevel && percent > 0
+                ? "+" + "PerDay".Translate(percent + "%")
+                : "-" + "PerDay".Translate("0%");
+            __result = __result.Replace(original, prefix + " (" + rate + ")");
+        }
     }
 
     [HarmonyPatch(typeof(Need_MechEnergy), nameof(Need_MechEnergy.FallPerDay), MethodType.Getter)]
@@ -29,7 +54,7 @@ namespace MAP_MechanoidMechanitor
         public static void Postfix(Need_MechEnergy __instance, ref int __result)
         {
             if (MechServiceEnergyContext.IsServicing(__instance))
-                __result = __instance.CurLevel < __instance.MaxLevel ? 1 : 0;
+                __result = MechServiceEnergyContext.IsCharging(__instance) ? 1 : 0;
         }
     }
 
