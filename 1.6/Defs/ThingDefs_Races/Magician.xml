@@ -9,6 +9,7 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_GroupAntigravity">
         <profile>MAP_GroupAntigravityFlightProfile</profile>
       </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_GravityField" />
     </comps>
   </ThingDef>
 

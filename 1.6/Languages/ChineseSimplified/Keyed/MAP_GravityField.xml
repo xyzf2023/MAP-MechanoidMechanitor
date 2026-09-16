@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GravityField_Label>重力立场</MAP_GravityField_Label>
+  <MAP_GravityField_Description>展开一个选择性重力立场，压制并无效化范围内所有敌方子弹，并抑制爆炸产生。\n展开瞬间消耗10%能量，随后每秒消耗1%能量。</MAP_GravityField_Description>
+  <MAP_GravityField_NotEnoughEnergy>展开重力立场需要至少10%的能量</MAP_GravityField_NotEnoughEnergy>
+  <MAP_GravityField_Unavailable>魔术师必须在地图上且能够行动</MAP_GravityField_Unavailable>
+</LanguageData>
