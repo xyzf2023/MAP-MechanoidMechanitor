@@ -41,7 +41,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool mapGarrisonInitialized;
 
         // 布局档位：由创建前哨时保存的完成态守军预算决定，保存后不再随财富或设置变化。
-        // 旧存档无此字段时由 ExposeData 自然回退 Baseline。
+        // 与预算同时固定并存档；地图生成和建成切换只读取，不重新选档。
         private FactionOutpostLayoutTier layoutTier =
             FactionOutpostLayoutTier.Baseline;
 
@@ -59,7 +59,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public bool MapGarrisonInitialized => mapGarrisonInitialized;
 
         /// <summary>
-        /// 当前前哨的布局档位；新前哨在创建时按完成态守军预算决定并保存，旧存档回退 Baseline。
+        /// 当前前哨创建时固定的布局档位，供建筑生成步骤选择尺寸与建筑群数量。
         /// </summary>
         public FactionOutpostLayoutTier LayoutTier => layoutTier;
 
@@ -195,12 +195,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 FactionOutpostLayoutUtility.GetTierForCompletedPoints(
                     completedGarrisonThreatPointsSnapshot);
 
-            // InitializeNewOutpost 成为唯一负责初始化布局 Part 的入口。
+            // 地点定义只表示建设阶段，布局档位由地图生成步骤读取。
             ReplaceSitePartForCurrentPhase();
         }
 
         /// <summary>
-        /// 按当前 phase 与布局档位重建 SitePart 列表（清空后只附加当前应使用的 Part）。
+        /// 仅按当前 phase 重建 SitePart 列表；建筑生成步骤另行读取已保存的布局档位。
         /// 创建路径、自然建成路径、DEV 建成路径都通过本方法切换 Part，不在此打开
         /// 原版自动 Pawn / Loot（SitePartParams 保持为空）。
         /// </summary>
@@ -209,8 +209,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             parts.Clear();
 
             SitePartDef partDef = IsCompleted
-                ? FactionOutpostLayoutUtility.GetCompletedSitePartDef(layoutTier)
-                : FactionOutpostLayoutUtility.GetBuildingSitePartDef(layoutTier);
+                ? FactionOutpostDefOf.MAP_FactionOutpost_Completed
+                : FactionOutpostDefOf.MAP_FactionOutpost_Building;
 
             AddPart(new SitePart(this, partDef, new SitePartParams()));
         }
@@ -635,7 +635,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_factionOutpost_mapGarrisonInitialized",
                 false);
 
-            // 布局档位：旧存档无此字段时自然回退 Baseline，不重新计算布局、不重建地图。
+            // 保存创建时固定的布局档位，读档不重新选档、不重建地图。
             Scribe_Values.Look(
                 ref layoutTier,
                 "MAP_factionOutpost_layoutTier",

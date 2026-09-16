@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-  <!--
-    普通派系前哨复用文化 DLC Work Site 的主体生成编排：
-    先用 GenStep_Outpost 交给原版 BaseGen 生成小型派系营地，再由 GenStep_Power
-    补全工业派系设施的供电。Pawn 与战利品均由本 MOD 自己管理，因此在这里关闭。
-  -->
+  <!-- 地点只区分建设阶段。建筑群尺寸读取前哨创建时固定的档位，
+       sizesByTier 顺序：Baseline、Expanded、Large、Fortress；0 表示不生成。
+       各步骤复用原版 GenStep_Outpost，全部建筑生成后统一供电，守军由 PostMapGenerate 生成。 -->
   <GenStepDef>
     <defName>MAP_FactionOutpost_Building_Outpost</defName>
     <linkWithSite>MAP_FactionOutpost_Building</linkWithSite>
     <order>400</order>
-    <genStep Class="GenStep_Outpost">
-      <size>20</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
+    <genStep Class="MAP_MechanoidMechanitor.Scenarios.GenStep_FactionOutpost">
+      <sizesByTier>
+        <li>20</li>
+        <li>22</li>
+        <li>24</li>
+        <li>26</li>
+      </sizesByTier>
     </genStep>
   </GenStepDef>
 
@@ -29,221 +28,47 @@
     <defName>MAP_FactionOutpost_Completed_MainOutpost</defName>
     <linkWithSite>MAP_FactionOutpost_Completed</linkWithSite>
     <order>400</order>
-    <genStep Class="GenStep_Outpost">
-      <size>24</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
+    <genStep Class="MAP_MechanoidMechanitor.Scenarios.GenStep_FactionOutpost">
+      <sizesByTier>
+        <li>24</li>
+        <li>26</li>
+        <li>30</li>
+        <li>34</li>
+      </sizesByTier>
     </genStep>
   </GenStepDef>
 
-  <!-- 建成前哨的次级建筑群：增加规模，与主建筑群分开生成，避免与主体重叠。 -->
   <GenStepDef>
     <defName>MAP_FactionOutpost_Completed_SecondaryOutpost</defName>
     <linkWithSite>MAP_FactionOutpost_Completed</linkWithSite>
     <order>401</order>
-    <genStep Class="GenStep_Outpost">
-      <size>16</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
+    <genStep Class="MAP_MechanoidMechanitor.Scenarios.GenStep_FactionOutpost">
+      <sizesByTier>
+        <li>16</li>
+        <li>18</li>
+        <li>20</li>
+        <li>24</li>
+      </sizesByTier>
+    </genStep>
+  </GenStepDef>
+
+  <GenStepDef>
+    <defName>MAP_FactionOutpost_Completed_ThirdOutpost</defName>
+    <linkWithSite>MAP_FactionOutpost_Completed</linkWithSite>
+    <order>402</order>
+    <genStep Class="MAP_MechanoidMechanitor.Scenarios.GenStep_FactionOutpost">
+      <sizesByTier>
+        <li>0</li>
+        <li>0</li>
+        <li>16</li>
+        <li>18</li>
+      </sizesByTier>
     </genStep>
   </GenStepDef>
 
   <GenStepDef>
     <defName>MAP_FactionOutpost_Completed_Power</defName>
     <linkWithSite>MAP_FactionOutpost_Completed</linkWithSite>
-    <order>410</order>
-    <genStep Class="GenStep_Power" />
-  </GenStepDef>
-
-  <!-- ===== 分档布局：建设中 ===== -->
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Building_Expanded_Outpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Building_Expanded</linkWithSite>
-    <order>400</order>
-    <genStep Class="GenStep_Outpost">
-      <size>22</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Building_Expanded_Power</defName>
-    <linkWithSite>MAP_FactionOutpost_Building_Expanded</linkWithSite>
-    <order>410</order>
-    <genStep Class="GenStep_Power" />
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Building_Large_Outpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Building_Large</linkWithSite>
-    <order>400</order>
-    <genStep Class="GenStep_Outpost">
-      <size>24</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Building_Large_Power</defName>
-    <linkWithSite>MAP_FactionOutpost_Building_Large</linkWithSite>
-    <order>410</order>
-    <genStep Class="GenStep_Power" />
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Building_Fortress_Outpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Building_Fortress</linkWithSite>
-    <order>400</order>
-    <genStep Class="GenStep_Outpost">
-      <size>26</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Building_Fortress_Power</defName>
-    <linkWithSite>MAP_FactionOutpost_Building_Fortress</linkWithSite>
-    <order>410</order>
-    <genStep Class="GenStep_Power" />
-  </GenStepDef>
-
-  <!-- ===== 分档布局：建成 ===== -->
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Expanded_MainOutpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Expanded</linkWithSite>
-    <order>400</order>
-    <genStep Class="GenStep_Outpost">
-      <size>26</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Expanded_SecondaryOutpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Expanded</linkWithSite>
-    <order>401</order>
-    <genStep Class="GenStep_Outpost">
-      <size>18</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Expanded_Power</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Expanded</linkWithSite>
-    <order>410</order>
-    <genStep Class="GenStep_Power" />
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Large_MainOutpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Large</linkWithSite>
-    <order>400</order>
-    <genStep Class="GenStep_Outpost">
-      <size>30</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Large_SecondaryOutpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Large</linkWithSite>
-    <order>401</order>
-    <genStep Class="GenStep_Outpost">
-      <size>20</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Large_ThirdOutpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Large</linkWithSite>
-    <order>402</order>
-    <genStep Class="GenStep_Outpost">
-      <size>16</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Large_Power</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Large</linkWithSite>
-    <order>410</order>
-    <genStep Class="GenStep_Power" />
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Fortress_MainOutpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Fortress</linkWithSite>
-    <order>400</order>
-    <genStep Class="GenStep_Outpost">
-      <size>34</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Fortress_SecondaryOutpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Fortress</linkWithSite>
-    <order>401</order>
-    <genStep Class="GenStep_Outpost">
-      <size>24</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Fortress_ThirdOutpost</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Fortress</linkWithSite>
-    <order>402</order>
-    <genStep Class="GenStep_Outpost">
-      <size>18</size>
-      <allowGeneratingThronerooms>false</allowGeneratingThronerooms>
-      <settlementDontGeneratePawns>true</settlementDontGeneratePawns>
-      <allowGeneratingFarms>false</allowGeneratingFarms>
-      <generateLoot>false</generateLoot>
-    </genStep>
-  </GenStepDef>
-
-  <GenStepDef>
-    <defName>MAP_FactionOutpost_Completed_Fortress_Power</defName>
-    <linkWithSite>MAP_FactionOutpost_Completed_Fortress</linkWithSite>
     <order>410</order>
     <genStep Class="GenStep_Power" />
   </GenStepDef>
