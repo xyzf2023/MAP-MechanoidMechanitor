@@ -268,7 +268,7 @@ namespace MAP_MechanoidMechanitor
                 int count = 0;
                 foreach (Pawn target in targets)
                 {
-                    if (target == null
+                    if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target) || target == null
                         || target.Discarded
                         || target.RaceProps?.IsMechanoid != true)
                     {
@@ -334,6 +334,8 @@ namespace MAP_MechanoidMechanitor
             DataProcessingDynamicTargetSettingsSnapshot? snapshot,
             DataProcessingTargetCopyMode mode)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (registry == null
                 || overseer == null
                 || target == null
@@ -410,7 +412,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            List<Pawn> overseen = overseer.mechanitor.OverseenPawns;
+            List<Pawn> overseen = DataProcessingOverseerResolver.GetAllocationSubjects(overseer.mechanitor);
             for (int i = 0; i < overseen.Count; i++)
             {
                 Pawn target = overseen[i];

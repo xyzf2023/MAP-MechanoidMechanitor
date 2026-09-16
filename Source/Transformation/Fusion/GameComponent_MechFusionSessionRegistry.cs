@@ -156,10 +156,13 @@ namespace MAP_MechanoidMechanitor
             // 直接按 Pawn 删除索引会误删共享同一 Pawn 的其他会话索引，
             // 因此统一按剩余会话重建，保证索引与列表始终一致。
             registry.RebuildIndexes();
+            DataProcessingPawnLifecycleCoordinator.EnqueueReactivation(session.SourcePawn);
+            DataProcessingPawnLifecycleCoordinator.EnqueueReactivation(session.WearerPawn);
         }
 
         public override void GameComponentTick()        {
             base.GameComponentTick();
+            GameComponent_DataProcessingAllocationRegistry.CurrentRegistry?.ValidateFusionAllocations();
 
             if (sessions.Count == 0)
             {

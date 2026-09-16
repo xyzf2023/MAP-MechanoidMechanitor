@@ -319,7 +319,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry registry,
             Pawn target)
         {
-            Pawn? externalOverseer = target.GetOverseer();
+            Pawn? externalOverseer = DataProcessingOverseerResolver.GetAllocationOverseer(target);
             if (IsActive(externalOverseer)
                 && registry.IsValidAllocationPairForList(
                     externalOverseer,

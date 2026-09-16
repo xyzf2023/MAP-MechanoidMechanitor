@@ -161,7 +161,7 @@ namespace MAP_MechanoidMechanitor
             rect.yMin += ControlRow;
             inputScope = "Batch:" + (batchAdjustAll ? "All" : "Selected");
             var targets = CollectTargets(registry);
-            batchTargets.RemoveWhere(p => p == null || !targets.Contains(p));
+            batchTargets.RemoveWhere(p => p == null || !targets.Contains(p) || DataProcessingOverseerResolver.IsFrozenSelf(overseer, p));
             if (batchDraft == null)
             {
                 batchDraft = new DataProcessingDynamicTargetRecord();

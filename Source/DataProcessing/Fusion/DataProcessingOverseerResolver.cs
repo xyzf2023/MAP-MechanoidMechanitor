@@ -12,8 +12,48 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     internal static class DataProcessingOverseerResolver
     {
-        [ThreadStatic] internal static MechFusionSession? TransferSession;
-        [ThreadStatic] internal static HashSet<Pawn>? TransferTargets;
+        [ThreadStatic] private static MechFusionSession? TransferSession;
+        [ThreadStatic] private static HashSet<Pawn>? TransferTargets;
+
+        internal static IDisposable BeginControlTransfer(MechFusionSession session)
+        {
+            return new ControlTransferScope(session);
+        }
+
+        private sealed class ControlTransferScope : IDisposable
+        {
+            private readonly MechFusionSession? previousSession = TransferSession;
+            private readonly HashSet<Pawn>? previousTargets = TransferTargets;
+            private bool disposed;
+
+            internal ControlTransferScope(MechFusionSession session)
+            {
+                var targets = new HashSet<Pawn>();
+                MechFusionMechanitorSnapshot? snapshot = session.MechanitorSnapshot;
+                if (snapshot != null)
+                {
+                    foreach (MechFusionControlGroupSnapshot group in snapshot.sourceGroups)
+                    {
+                        if (group == null) continue;
+                        foreach (MechFusionControlledMechSnapshot mech in group.mechs)
+                            if (mech?.pawn != null) targets.Add(mech.pawn);
+                    }
+                    if (!snapshot.wearerWasMechanitor && session.WearerPawn?.mechanitor != null)
+                        foreach (Pawn pawn in session.WearerPawn.mechanitor.OverseenPawns)
+                            targets.Add(pawn);
+                }
+                TransferSession = session;
+                TransferTargets = targets;
+            }
+
+            public void Dispose()
+            {
+                if (disposed) return;
+                disposed = true;
+                TransferSession = previousSession;
+                TransferTargets = previousTargets;
+            }
+        }
 
         private sealed class ImportedTargets
         {
@@ -192,13 +232,13 @@ namespace MAP_MechanoidMechanitor
             return session.MechanitorSnapshot!.fusionSelfAllocationCaptured;
         }
 
-        internal static void EndBeforeSelfReclaim(Pawn? owner, string reason)
+        internal static void EndBeforeSelfReclaim(Pawn? owner, string reason, bool includeZeroSteps = false)
         {
             if (!TryGetSourceSession(owner, out MechFusionSession? session)
                 || !session!.IsActive)
                 return;
             MechFusionMechanitorSnapshot snapshot = session.MechanitorSnapshot!;
-            if (snapshot.fusionSelfAllocationCaptured && snapshot.fusionSelfAllocationSteps <= 0)
+            if (!includeZeroSteps && snapshot.fusionSelfAllocationCaptured && snapshot.fusionSelfAllocationSteps <= 0)
                 return;
             ExitForSafety(session, reason);
         }

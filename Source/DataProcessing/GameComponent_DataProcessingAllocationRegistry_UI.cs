@@ -9,6 +9,7 @@ namespace MAP_MechanoidMechanitor
     {
         public DataProcessingDynamicTargetRecord? config;
         public bool dynamicManaged;
+        public bool frozenSelf;
         public bool evaluationPending;
         public bool taskActive;
         public DataProcessingDynamicState state;
@@ -60,6 +61,7 @@ namespace MAP_MechanoidMechanitor
             foreach (var target in targets)
             {
                 if (target == null || target.Dead || target.Destroyed || target.Discarded
+                    || DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)
                     || !IsValidAllocationPairForList(overseer, target)
                     || FindDynamicTargetRecord(overseer, target) != null) continue;
                 int fixedSteps = GetStepsForOverseerTarget(overseer, target);
@@ -93,6 +95,13 @@ namespace MAP_MechanoidMechanitor
                 netCost = GetBudgetCostUnits(overseer, target, actual) * 0.025f
             };
             result.requestedSpecialization = result.specialization;
+            result.frozenSelf = DataProcessingOverseerResolver.IsFrozenSelf(overseer, target);
+            if (result.frozenSelf)
+            {
+                result.dynamicManaged = false;
+                result.requestedSteps = actual;
+                return result;
+            }
             result.evaluationPending = pendingPostLoadDynamicReconciliation
                 || pendingGlobalTransitionOverseers.Contains(overseer);
             if (result.dynamicManaged)
@@ -159,6 +168,7 @@ namespace MAP_MechanoidMechanitor
             foreach (var target in targets)
             {
                 if (target == null || !seen.Add(target) || target.Dead || target.Destroyed || target.Discarded
+                    || DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)
                     || target.RaceProps?.IsMechanoid != true || !IsValidAllocationPairForList(overseer, target)) continue;
                 var config = GetOrCreateDynamicTargetRecord(overseer, target);
                 if (selectedSpecialization.HasValue && !TrySetManualSpecialization(overseer, target, selectedSpecialization.Value)) continue;
@@ -209,6 +219,7 @@ namespace MAP_MechanoidMechanitor
         /// <summary>手动特化立即生效，并保持到下一次自动规则检查。</summary>
         public bool SetDashboardSpecialization(Pawn overseer, Pawn target, DataProcessingSpecialization specialization)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
             if (!IsValidAllocationPairForList(overseer, target)) return false;
             var config = GetOrCreateDynamicTargetRecord(overseer, target);
             if (!TrySetManualSpecialization(overseer, target, specialization)) return false;

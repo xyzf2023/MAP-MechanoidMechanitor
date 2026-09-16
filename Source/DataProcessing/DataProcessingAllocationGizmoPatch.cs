@@ -54,6 +54,20 @@ namespace MAP_MechanoidMechanitor
             {
                 yield return DataProcessingAllocationGizmoUtility.MakeCommand(__instance);
             }
+
+            if (!__instance.Dead && !__instance.Destroyed
+                && ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked()
+                && DataProcessingOverseerResolver.TryGetWearerSession(__instance, out MechFusionSession? session)
+                && session!.IsActive)
+            {
+                Pawn source = session.SourcePawn!;
+                Command_Action command = DataProcessingAllocationGizmoUtility.MakeCommand(source);
+                command.defaultLabel = "数据处理分配（合体）";
+                command.defaultDesc = $"通过当前合体载体管理{source.LabelShortCap}的数据处理分配。"
+                    + "\n分配记录、意识预算和数据流分发代价仍属于源机械族。"
+                    + "\n自身分配在本次合体期间冻结，解除合体后才能修改。";
+                yield return command;
+            }
         }
     }
 }

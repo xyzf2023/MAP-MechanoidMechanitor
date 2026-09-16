@@ -8,6 +8,11 @@ namespace MAP_MechanoidMechanitor
         private void DrawBasicEdit(Rect rect, ref float y, GameComponent_DataProcessingAllocationRegistry registry,
             Pawn target, DataProcessingTargetUISnapshot snapshot)
         {
+            if (snapshot.frozenSelf)
+            {
+                DrawFrozenSelfDetails(rect, ref y, registry, target, snapshot);
+                return;
+            }
             var config = snapshot.config ?? new DataProcessingDynamicTargetRecord(overseer, target,
                 snapshot.actualSteps, snapshot.specialization);
             bool global = registry.IsDynamicAllocationEnabled(overseer);

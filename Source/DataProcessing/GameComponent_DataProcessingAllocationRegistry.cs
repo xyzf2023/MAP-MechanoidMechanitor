@@ -187,6 +187,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? target,
             DataProcessingSpecialization specialization)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             specialization = DataProcessingAllocationUtility.NormalizeSpecialization(specialization);
 
             if (!DataProcessingAllocationUtility.IsValidAllocationPair(overseer, target))
@@ -233,6 +235,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? target,
             DataProcessingSpecialization specialization)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (!TrySetSpecialization(
                     overseer,
                     target,
@@ -267,6 +271,8 @@ namespace MAP_MechanoidMechanitor
 
         public bool TryAddStep(Pawn? overseer, Pawn? target)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (!ResearchFeatureUnlockUtility.IsDataProcessingAllocationUnlocked()
                 || !DataProcessingAllocationUtility.IsValidAllocationPair(
                     overseer,
@@ -338,6 +344,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? overseer,
             Pawn? target)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null
                 || target == null
                 || !DataProcessingAllocationUtility
@@ -403,6 +411,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? target,
             int steps)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return;
+
             if (overseer == null || target == null)
             {
                 return;
@@ -475,6 +485,8 @@ namespace MAP_MechanoidMechanitor
             Pawn overseer,
             Pawn target)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return;
+
             DataProcessingDynamicTargetRecord? config =
                 FindDynamicTargetRecord(overseer, target);
 
@@ -494,6 +506,8 @@ namespace MAP_MechanoidMechanitor
 
         public void ClearTarget(Pawn? target)
         {
+            DataProcessingOverseerResolver.EndBeforeSelfReclaim(target, "清空自身分配", includeZeroSteps: true);
+
             if (target == null)
             {
                 return;
@@ -524,6 +538,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public void ClearOverseerActualAllocations(Pawn? overseer)
         {
+            DataProcessingOverseerResolver.EndBeforeSelfReclaim(overseer, "外部算力回收或清空分配");
+
             if (overseer == null)
             {
                 return;
@@ -590,6 +606,8 @@ namespace MAP_MechanoidMechanitor
 
         public void ClearOverseer(Pawn? overseer)
         {
+            DataProcessingOverseerResolver.EndBeforeSelfReclaim(overseer, "清空自身配置", includeZeroSteps: true);
+
             if (overseer == null)
             {
                 return;
@@ -750,7 +768,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < targets.Count; i++)
             {
                 Pawn target = targets[i];
-                if (target == null || target.Destroyed)
+                if (target == null || target.Destroyed || DataProcessingOverseerResolver.IsFrozenSelf(overseer, target))
                 {
                     continue;
                 }
@@ -773,7 +791,7 @@ namespace MAP_MechanoidMechanitor
                 });
             }
 
-            if (entries.Count == 0)
+            if (entries.Count == 0 && !DataProcessingOverseerResolver.IsFrozenSelf(overseer, overseer))
             {
                 return true;
             }
@@ -906,7 +924,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            List<Pawn> overseen = overseer.mechanitor.OverseenPawns;
+            List<Pawn> overseen = DataProcessingOverseerResolver.GetAllocationSubjects(overseer.mechanitor);
             for (int i = 0; i < overseen.Count; i++)
             {
                 Pawn target = overseen[i];
@@ -942,7 +960,8 @@ namespace MAP_MechanoidMechanitor
                 for (int j = 0; j < targets.Count; j++)
                 {
                     Pawn? target = targets[j];
-                    if (target == null || target.Destroyed)
+                    if (target == null || target.Destroyed
+                        || DataProcessingOverseerResolver.IsFrozenSelf(rec.overseer, target))
                     {
                         continue;
                     }
@@ -1001,6 +1020,8 @@ namespace MAP_MechanoidMechanitor
 
         private void CleanupInvalidDynamicAllocationRecords()
         {
+            if (ShouldDeferFusionOwnershipCleanup()) return;
+
             dynamicAllocationRecords ??=
                 new List<DataProcessingDynamicAllocationRecord>();
 
@@ -1096,6 +1117,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public string GetCachedDynamicStateLabelForUI(Pawn? target)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(target, target)) return "合体中：自身分配已冻结";
+
             DataProcessingDynamicState state = GetCachedDynamicStateForTarget(target);
             return ("MAP_MechanoidMechanitor.DataProcessing.DynamicState" + state).Translate();
         }
@@ -1104,6 +1127,22 @@ namespace MAP_MechanoidMechanitor
             Pawn overseer,
             Pawn target)
         {
+            // 冻结期间只返回配置副本，防止旧消费者通过可变记录绕过写入入口。
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target))
+            {
+                DataProcessingDynamicTargetRecord? frozen = FindDynamicTargetRecord(overseer, target);
+                var copy = new DataProcessingDynamicTargetRecord(overseer, target,
+                    GetStepsForOverseerTarget(overseer, target),
+                    GetSpecializationForOverseerTarget(overseer, target));
+                if (frozen != null)
+                {
+                    DataProcessingDynamicTargetSettingsSnapshot.Capture(frozen)
+                        .ApplyTo(copy, DataProcessingTargetCopyMode.AllSettings);
+                    copy.defaultSpecialization = frozen.defaultSpecialization;
+                }
+                return copy;
+            }
+
             DataProcessingDynamicTargetRecord? existing =
                 FindDynamicTargetRecord(overseer, target);
             if (existing != null)
@@ -1287,7 +1326,7 @@ namespace MAP_MechanoidMechanitor
 
             foreach (Pawn target in targets)
             {
-                if (target == null)
+                if (target == null || DataProcessingOverseerResolver.IsFrozenSelf(overseer, target))
                 {
                     continue;
                 }
@@ -1370,6 +1409,8 @@ namespace MAP_MechanoidMechanitor
             Pawn target,
             DataProcessingSpecialization specialization)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return;
+
             if (overseer == null || target == null)
             {
                 return;
@@ -1402,6 +1443,8 @@ namespace MAP_MechanoidMechanitor
             DataProcessingDynamicTargetSettingsSnapshot? snapshot,
             DataProcessingTargetCopyMode mode)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null || snapshot == null)
             {
                 return false;
@@ -1478,6 +1521,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? target,
             bool enabled)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null)
             {
                 return false;
@@ -1513,6 +1558,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? target,
             int normalSteps)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null)
             {
                 return false;
@@ -1541,6 +1588,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? target,
             DataProcessingSpecialization specialization)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null)
             {
                 return false;
@@ -1569,6 +1618,8 @@ namespace MAP_MechanoidMechanitor
 
         public bool SetDynamicTargetPriority(Pawn? overseer, Pawn? target, int priority)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null)
             {
                 return false;
@@ -1592,6 +1643,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? target,
             int seconds)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null)
             {
                 return false;
@@ -1616,6 +1669,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? target,
             int commonMaxSteps)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null)
             {
                 return false;
@@ -1640,6 +1695,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? target,
             bool advanced)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null)
             {
                 return false;
@@ -1664,6 +1721,8 @@ namespace MAP_MechanoidMechanitor
             DataProcessingSpecialization specialization,
             int maxSteps)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null)
             {
                 return false;
@@ -1706,6 +1765,8 @@ namespace MAP_MechanoidMechanitor
             string rule,
             bool value)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
+
             if (overseer == null || target == null)
             {
                 return false;
@@ -1762,6 +1823,7 @@ namespace MAP_MechanoidMechanitor
             Pawn overseer,
             Pawn target)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return;
             DataProcessingDynamicTargetRecord? config =
                 FindDynamicTargetRecord(
                     overseer,
@@ -1836,6 +1898,8 @@ namespace MAP_MechanoidMechanitor
         private void CleanupInvalidDynamicTargetRecords(
             HashSet<Pawn>? affectedOverseers = null)
         {
+            if (ShouldDeferFusionOwnershipCleanup()) return;
+
             dynamicTargetRecords ??=
                 new List<DataProcessingDynamicTargetRecord>();
 
@@ -1937,7 +2001,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 优先查外部监管者，避免把本身也是机械族机械师、但实际正被其他监管的目标误判给自己。
-            Pawn? externalOverseer = target.GetOverseer();
+            Pawn? externalOverseer = DataProcessingOverseerResolver.GetAllocationOverseer(target);
             if (externalOverseer != null
                 && DataProcessingAllocationUtility.IsValidAllocationPair(
                     externalOverseer,
@@ -2076,6 +2140,7 @@ namespace MAP_MechanoidMechanitor
                  i++)
             {
                 Pawn target = dueTargets[i];
+                if (DataProcessingOverseerResolver.IsFrozenSelf(target, target)) continue;
 
                 DataProcessingDynamicTargetRecord? config =
                     FindDynamicTargetRecord(
@@ -2377,7 +2442,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < targets.Count; i++)
             {
                 Pawn target = targets[i];
-                if (target == null || target.Destroyed)
+                if (target == null || target.Destroyed || DataProcessingOverseerResolver.IsFrozenSelf(overseer, target))
                 {
                     continue;
                 }
@@ -2424,7 +2489,7 @@ namespace MAP_MechanoidMechanitor
                 });
             }
 
-            if (entries.Count == 0)
+            if (entries.Count == 0 && !DataProcessingOverseerResolver.IsFrozenSelf(overseer, overseer))
             {
                 return true;
             }
@@ -2451,11 +2516,17 @@ namespace MAP_MechanoidMechanitor
             DataProcessingDynamicAllocationRecord? overseerRecord =
                 FindDynamicAllocationRecord(overseer);
 
+            // 自身条目不参与调整，但仍保留真实记录并预扣净成本。
+            if (!TryPrepareFrozenSelfPlan(overseer, entries, out float frozenCost))
+                return false;
+
             // 可靠读取基础数据处理；读取失败则本轮放弃。
             if (!TryCalculateAllocationFreeConsciousness(overseer, out float baseConsciousness))
             {
                 return false;
             }
+
+            baseConsciousness -= frozenCost;
 
             float dynamicThreshold =
                 treatAllEntriesAsFixed
@@ -2976,6 +3047,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         private void SetActualStepsWithoutSync(Pawn overseer, Pawn? target, int steps)
         {
+            if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return;
+
             if (target == null)
             {
                 return;
@@ -3070,6 +3143,8 @@ namespace MAP_MechanoidMechanitor
 
         public void CleanupInvalidPinRecords()
         {
+            if (ShouldDeferFusionOwnershipCleanup()) return;
+
             pinRecords ??= new List<DataProcessingAllocationPinRecord>();
 
             HashSet<(int overseerId, int targetId)> seenPairs = new HashSet<(int, int)>();
@@ -3100,6 +3175,8 @@ namespace MAP_MechanoidMechanitor
         public void CleanupInvalidRecords(
             bool synchronizeHediffs = true)
         {
+            if (ShouldDeferFusionOwnershipCleanup()) return;
+
             HashSet<Pawn> affectedTargets = new HashSet<Pawn>();
             HashSet<Pawn> affectedOverseers = new HashSet<Pawn>();
 
@@ -3251,6 +3328,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool ClearAllAllocationsAndEffects()
         {
+            EndFusionsBeforeClearingAllocations();
+
             HashSet<Pawn> overseers = new HashSet<Pawn>();
             HashSet<Pawn> targets = new HashSet<Pawn>();
 
@@ -3373,6 +3452,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool ClearSelfAllocationsAndEffects()
         {
+            EndFusionsBeforeClearingAllocations();
+
             HashSet<Pawn> affected = new HashSet<Pawn>();
             List<DataProcessingAllocationRecord> toRemove =
                 new List<DataProcessingAllocationRecord>();
@@ -3773,6 +3854,7 @@ namespace MAP_MechanoidMechanitor
                 for (int j = 0; j < targets.Count; j++)
                 {
                     Pawn target = targets[j];
+                    if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) continue;
 
                     DataProcessingDynamicTargetRecord? existing =
                         FindDynamicTargetRecord(overseer: null, target);
@@ -3969,7 +4051,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (targets.Count == 0)
+            if (targets.Count == 0 && !DataProcessingOverseerResolver.IsFrozenSelf(overseer, overseer))
             {
                 RemoveHediff(
                     overseer,
@@ -4631,6 +4713,8 @@ namespace MAP_MechanoidMechanitor
 
         private void CleanupInvalidSpecializationRecords()
         {
+            if (ShouldDeferFusionOwnershipCleanup()) return;
+
             specializationRecords ??= new List<DataProcessingSpecializationRecord>();
 
             Dictionary<Pawn, DataProcessingSpecializationRecord> validByTarget =
@@ -5053,6 +5137,15 @@ namespace MAP_MechanoidMechanitor
             Pawn overseer,
             Dictionary<DataProcessingAllocationRecord, int> plannedReduction)
         {
+            foreach (var pair in plannedReduction)
+            {
+                if (pair.Value > 0 && ReferenceEquals(pair.Key?.target, overseer))
+                {
+                    DataProcessingOverseerResolver.EndBeforeSelfReclaim(overseer, "意识保护需要回收自身分配");
+                    break;
+                }
+            }
+
             if (plannedReduction.Count == 0)
             {
                 return;
@@ -5067,13 +5160,13 @@ namespace MAP_MechanoidMechanitor
             {
                 DataProcessingAllocationRecord record = snapshot[i].Key;
                 int reduction = snapshot[i].Value;
-                if (record == null || reduction <= 0)
+                if (record == null || reduction <= 0 || !ReferenceEquals(FindRecord(overseer, record.target!), record))
                 {
                     continue;
                 }
 
                 Pawn? target = record.target;
-                record.steps -= reduction;
+                record.steps = Mathf.Max(0, record.steps - reduction);
                 anyChanged = true;
 
                 if (record.steps <= 0)

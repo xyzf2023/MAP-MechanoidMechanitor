@@ -136,6 +136,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             session.SetMechanitorSnapshot(snapshot);
+            DataProcessingOverseerResolver.CaptureFrozenSelf(session);
             Log.Message(
                 "[MAP-机械族机械师] 机控同调捕获完成：" +
                 $"session={session.SessionId}，sourceGroups={groupCount}，" +
@@ -181,6 +182,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? source,
             Pawn? wearer)
         {
+            using var dataProcessingTransfer = DataProcessingOverseerResolver.BeginControlTransfer(session);
+
             MechFusionMechanitorSnapshot? snapshot = session.MechanitorSnapshot;
             if (snapshot == null
                 || !snapshot.captured
@@ -355,6 +358,8 @@ namespace MAP_MechanoidMechanitor
             Pawn? wearer,
             bool sourceRecoverable)
         {
+            using var dataProcessingTransfer = DataProcessingOverseerResolver.BeginControlTransfer(session);
+
             MechFusionMechanitorSnapshot? snapshot = session.MechanitorSnapshot;
             if (snapshot == null || !snapshot.captured || snapshot.controlsRestored)
             {

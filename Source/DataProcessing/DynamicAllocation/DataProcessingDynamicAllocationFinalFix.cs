@@ -237,7 +237,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < targets.Count; i++)
             {
                 Pawn target = targets[i];
-                if (target == null || target.Destroyed)
+                if (target == null || target.Destroyed || DataProcessingOverseerResolver.IsFrozenSelf(overseer, target))
                 {
                     continue;
                 }
@@ -474,6 +474,7 @@ namespace MAP_MechanoidMechanitor
                 for (int j = 0; j < targets.Count; j++)
                 {
                     Pawn target = targets[j];
+                    if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) continue;
                     DataProcessingDynamicTargetRecord? existing =
                         registry.GetDynamicTargetRecord(null, target);
 
@@ -770,6 +771,7 @@ namespace MAP_MechanoidMechanitor
                 Pawn overseer,
                 Pawn target)
             {
+                if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) return false;
                 DataProcessingDynamicTargetRecord? config =
                     __instance.GetDynamicTargetRecord(overseer, target);
                 if (config == null)

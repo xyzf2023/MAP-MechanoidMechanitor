@@ -22,7 +22,7 @@ namespace MAP_MechanoidMechanitor
             string source = !snapshot.dynamicManaged ? L("Fixed") : snapshot.taskActive
                 ? (snapshot.config?.advancedMaxEnabled == true ? L("SeparateMaximum") : L("TaskMaximum"))
                 : L("NormalRequest");
-            string state = snapshot.dynamicManaged ? registry.GetCachedDynamicStateLabelForUI(target) : L("Fixed");
+            string state = snapshot.frozenSelf || snapshot.dynamicManaged ? registry.GetCachedDynamicStateLabelForUI(target) : L("Fixed");
             string runtime = state + " → " + DataProcessingAllocationUtility.GetSpecializationLabel(snapshot.specialization)
                 + " · " + source;
             // 详细因果及收益在同一可滚动区域；固定头部不会吞掉小窗口内容。
@@ -78,7 +78,7 @@ namespace MAP_MechanoidMechanitor
             {
                 options.Add(new FloatMenuOption(L("CopyQuota"), () => CaptureSettings(registry, target, DataProcessingTargetCopyMode.QuotaOnly)));
                 options.Add(new FloatMenuOption(L("CopyAll"), () => CaptureSettings(registry, target, DataProcessingTargetCopyMode.AllSettings)));
-                if (settingsClipboard != null)
+                if (settingsClipboard != null && !DataProcessingOverseerResolver.IsFrozenSelf(overseer, target))
                     options.Add(new FloatMenuOption(L("Paste"), () => ConfirmBatch(registry, new List<Pawn> { target },
                         settingsClipboard!, settingsClipboardMode)));
             }

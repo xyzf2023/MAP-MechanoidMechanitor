@@ -167,7 +167,7 @@ namespace MAP_MechanoidMechanitor
                 return null;
             }
 
-            Pawn? externalOverseer = target.GetOverseer();
+            Pawn? externalOverseer = DataProcessingOverseerResolver.GetAllocationOverseer(target);
             if (externalOverseer != null
                 && !externalOverseer.Dead
                 && !externalOverseer.Destroyed

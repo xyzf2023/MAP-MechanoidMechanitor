@@ -128,7 +128,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry registry,
             Pawn target)
         {
-            Pawn? current = target.GetOverseer();
+            Pawn? current = DataProcessingOverseerResolver.GetAllocationOverseer(target);
             if (current == null
                 || ReferenceEquals(current, target)
                 || IsDormant(current)

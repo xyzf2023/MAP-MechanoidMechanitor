@@ -583,7 +583,7 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
             }
-            else if (target.GetOverseer() != overseer)
+            else if (DataProcessingOverseerResolver.GetAllocationOverseer(target) != overseer)
             {
                 return false;
             }

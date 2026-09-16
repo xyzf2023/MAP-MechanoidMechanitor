@@ -575,6 +575,7 @@ namespace MAP_MechanoidMechanitor
                 for (int j = 0; j < currentTargets.Count; j++)
                 {
                     Pawn target = currentTargets[j];
+                    if (DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) continue;
                     DataProcessingDynamicTargetRecord? config =
                         registry.GetDynamicTargetRecord(
                             overseer: null,
@@ -627,6 +628,8 @@ namespace MAP_MechanoidMechanitor
                 {
                     continue;
                 }
+
+                if (DataProcessingOverseerResolver.IsFrozenSelf(config.overseer, target)) continue;
 
                 bool explicitlyRequested = requested.Contains(target);
                 if (!scanAll && !explicitlyRequested)
@@ -738,7 +741,7 @@ namespace MAP_MechanoidMechanitor
                 return result;
             }
 
-            List<Pawn> overseen = overseer.mechanitor.OverseenPawns;
+            List<Pawn> overseen = DataProcessingOverseerResolver.GetAllocationSubjects(overseer.mechanitor);
             for (int i = 0; i < overseen.Count; i++)
             {
                 Pawn target = overseen[i];
@@ -757,7 +760,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_DataProcessingAllocationRegistry registry,
             Pawn target)
         {
-            Pawn? externalOverseer = target.GetOverseer();
+            Pawn? externalOverseer = DataProcessingOverseerResolver.GetAllocationOverseer(target);
             if (externalOverseer != null
                 && !externalOverseer.Dead
                 && !externalOverseer.Destroyed

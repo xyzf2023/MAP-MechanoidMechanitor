@@ -266,7 +266,7 @@ namespace MAP_MechanoidMechanitor
 
             if (overseer.mechanitor != null)
             {
-                List<Pawn> overseen = overseer.mechanitor.OverseenPawns;
+                List<Pawn> overseen = DataProcessingOverseerResolver.GetAllocationSubjects(overseer.mechanitor);
                 for (int i = 0; i < overseen.Count; i++)
                 {
                     Pawn target = overseen[i];
@@ -477,7 +477,7 @@ namespace MAP_MechanoidMechanitor
             DrawPanel(rect, Border);
             var inner = rect.ContractedBy(8f);
             bool batch = mode == DashboardMode.Batch;
-            batchTargets.RemoveWhere(p => p == null || !targets.Contains(p));
+            batchTargets.RemoveWhere(p => p == null || !targets.Contains(p) || DataProcessingOverseerResolver.IsFrozenSelf(overseer, p));
             float top = inner.y;
             // 研究解锁后，自身固定在普通目标上方，不受搜索和排序影响。
             if (ResearchFeatureUnlockUtility.IsSelfDirectiveFocusUnlocked())
@@ -553,8 +553,8 @@ namespace MAP_MechanoidMechanitor
             {
                 if (DrawSecondaryButton(new Rect(inner.x, top, half, ControlHeight), L("SelectVisible")))
                 {
-                    if (targets.Contains(overseer) && overseer.RaceProps?.IsMechanoid == true) batchTargets.Add(overseer);
-                    foreach (var target in visible) if (target.RaceProps?.IsMechanoid == true) batchTargets.Add(target);
+                    if (targets.Contains(overseer) && overseer.RaceProps?.IsMechanoid == true && !DataProcessingOverseerResolver.IsFrozenSelf(overseer, overseer)) batchTargets.Add(overseer);
+                    foreach (var target in visible) if (target.RaceProps?.IsMechanoid == true && !DataProcessingOverseerResolver.IsFrozenSelf(overseer, target)) batchTargets.Add(target);
                 }
                 if (DrawSecondaryButton(new Rect(inner.x + half + 6f, top, half, ControlHeight), L("ClearSelection"))) batchTargets.Clear();
                 top += ControlRow;
@@ -577,7 +577,7 @@ namespace MAP_MechanoidMechanitor
             bool selected = batch ? batchTargets.Contains(target) : ReferenceEquals(target, selectedTarget);
             bool self = ReferenceEquals(target, overseer);
             bool selectable = registry.IsValidAllocationPairForList(overseer, target)
-                && (!batch || target.RaceProps?.IsMechanoid == true);
+                && (!batch || (target.RaceProps?.IsMechanoid == true && !snapshot.frozenSelf));
             Solid(rect, selected ? PanelSelected : RowBackground);
             GUI.color = selected ? Accent : Border;
             Widgets.DrawBox(rect, selected ? 2 : 1);
@@ -611,7 +611,7 @@ namespace MAP_MechanoidMechanitor
             Text.Font = GameFont.Small; Text.Anchor = TextAnchor.UpperLeft; Text.WordWrap = false; GUI.color = TextMain;
             Widgets.Label(new Rect(textX, rect.y + 5f, textWidth, 24f), target.LabelShortCap);
             Text.Font = GameFont.Small; GUI.color = TextSecondary;
-            string state = self ? L("Self") : snapshot.evaluationPending ? L("Pending")
+            string state = snapshot.frozenSelf ? "合体中：自身分配已冻结" : self ? L("Self") : snapshot.evaluationPending ? L("Pending")
                 : snapshot.dynamicManaged ? registry.GetCachedDynamicStateLabelForUI(target) : L("Fixed");
             Widgets.Label(new Rect(textX, rect.y + 29f, rect.xMax - textX - 6f, 24f),
                 state + " · " + DataProcessingAllocationUtility.GetSpecializationLabel(snapshot.specialization));
