@@ -206,4 +206,41 @@
       <MAP_BionicCompanionModule>1</MAP_BionicCompanionModule>
     </products>
   </RecipeDef>
+
+  <RecipeDef MayRequire="Ludeon.RimWorld.Biotech">
+    <defName>MAP_Make_MindMappingAutonomousDirectiveCore</defName>
+    <label>制作自律指令核心（空白）</label>
+    <description>TODO</description>
+    <jobString>正在制作自律指令核心（空白）。</jobString>
+    <researchPrerequisite>MAP_MindMapping</researchPrerequisite>
+    <workAmount>8000</workAmount>
+    <workSpeedStat>GeneralLaborSpeed</workSpeedStat>
+    <effectWorking>Cook</effectWorking>
+    <soundWorking>Recipe_Machining</soundWorking>
+    <recipeUsers>
+      <li>TableMachining</li>
+    </recipeUsers>
+    <ingredients>
+      <li><filter><thingDefs><li>ComponentSpacer</li></thingDefs></filter><count>12</count></li>
+      <li><filter><thingDefs><li>Mechlink</li></thingDefs></filter><count>1</count></li>
+      <li><filter><thingDefs><li>Plasteel</li></thingDefs></filter><count>30</count></li>
+      <li><filter><thingDefs><li>Gold</li></thingDefs></filter><count>20</count></li>
+      <li><filter><thingDefs><li>MAP_QuantumComputingChip</li></thingDefs></filter><count>1</count></li>
+      <li><filter><thingDefs><li>AIPersonaCore</li></thingDefs></filter><count>1</count></li>
+    </ingredients>
+    <fixedIngredientFilter>
+      <thingDefs>
+        <li>ComponentSpacer</li>
+        <li>Mechlink</li>
+        <li>Plasteel</li>
+        <li>Gold</li>
+        <li>MAP_QuantumComputingChip</li>
+        <li>AIPersonaCore</li>
+      </thingDefs>
+    </fixedIngredientFilter>
+    <products>
+      <MAP_MindMappingAutonomousDirectiveCore>1</MAP_MindMappingAutonomousDirectiveCore>
+    </products>
+  </RecipeDef>
+
 </Defs>
