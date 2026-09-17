@@ -26,7 +26,7 @@ namespace MAP_MechanoidMechanitor
     public sealed class CompChariotBuildingConversion : ThingComp
     {
         private static readonly Texture2D ConvertIcon =
-            ContentFinder<Texture2D>.Get("UI/MM_Custom");
+            ContentFinder<Texture2D>.Get("UI/BuildingConversion");
 
         public CompProperties_ChariotBuildingConversion Props =>
             (CompProperties_ChariotBuildingConversion)props;

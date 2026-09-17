@@ -8,7 +8,7 @@
     <texture>UI/MechanicalFlight</texture>
     <useDynamicDrawer>true</useDynamicDrawer>
     <expandingIcon>true</expandingIcon>
-    <expandingIconTexture>UI/MechanicalFlight</expandingIconTexture>
+    <expandingIconTexture>UI/MechanicalFlyingCaravan</expandingIconTexture>
     <expandingIconPriority>60</expandingIconPriority>
     <expandingIconDrawSize>0.75</expandingIconDrawSize>
     <expandMore>true</expandMore>

@@ -22,7 +22,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         private static readonly Texture2D FlightIcon =
-            ContentFinder<Texture2D>.Get("UIMechanicalFlight", false)
+            ContentFinder<Texture2D>.Get("UI/MechanicalFlight", false)
             ?? TexCommand.Install;
 
         private static readonly FieldInfo? VanillaFlightStateField =

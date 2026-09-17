@@ -13,7 +13,7 @@ namespace MAP_MechanoidMechanitor
         internal const int Radius = 8;
         internal const int LandingRadius = 10;
         private static readonly Texture2D Icon =
-            ContentFinder<Texture2D>.Get("UI/Commands/MechanicalFlight", false) ?? TexCommand.Install;
+            ContentFinder<Texture2D>.Get("UI/GroupAntigravity", false) ?? TexCommand.Install;//群体反重力贴图路径
 
         internal static GroupFlightMember? Member(Pawn? pawn)
         {

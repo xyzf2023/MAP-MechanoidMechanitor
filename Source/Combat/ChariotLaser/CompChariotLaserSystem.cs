@@ -192,9 +192,15 @@ namespace MAP_MechanoidMechanitor
     [StaticConstructorOnStartup]
     internal static class ChariotLaserCommandUtility
     {
-        private static readonly Texture2D LaserIcon =
+        private static readonly Texture2D TrackingLaserIcon =
             ContentFinder<Texture2D>.Get(
-                "UI/Commands/Attack",
+                "UI/LaserFocus",
+                reportFailure: false)
+            ?? TexCommand.Attack;
+
+        private static readonly Texture2D SweepLaserIcon =
+            ContentFinder<Texture2D>.Get(
+                "UI/LaserSweep",
                 reportFailure: false)
             ?? TexCommand.Attack;
 
@@ -239,7 +245,7 @@ namespace MAP_MechanoidMechanitor
                         .Translate()
                     : "MAP_MechanoidMechanitor.ChariotLaser.Tracking.Description"
                         .Translate(),
-                icon = LaserIcon,
+                icon = TrackingLaserIcon,
                 action = active
                     ? () => actor.jobs?.EndCurrentJob(
                         JobCondition.InterruptForced)
@@ -273,7 +279,7 @@ namespace MAP_MechanoidMechanitor
                         .Translate()
                     : "MAP_MechanoidMechanitor.ChariotLaser.Sweep.Description"
                         .Translate(),
-                icon = LaserIcon,
+                icon = SweepLaserIcon,
                 action = active
                     ? () => actor.jobs?.EndCurrentJob(
                         JobCondition.InterruptForced)

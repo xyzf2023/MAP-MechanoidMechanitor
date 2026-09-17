@@ -104,7 +104,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = ActivateLabelKey.Translate(),
                 defaultDesc = ActivateDescriptionKey.Translate(),
-                icon = TexCommand.DesirePower,
+                icon = ContentFinder<Texture2D>.Get("UI/ActivateJustice"),
                 action = BeginInitialization,
             };
 

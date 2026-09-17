@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 
@@ -393,7 +394,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = "整备策略",
                 defaultDesc = "设置使用模式、指定机械族、机械族机械师优先、整备功能和完成后待命。\n当前：" + MechServicePolicyUtility.Label(mode),
-                icon = parent.def.uiIcon,
+                icon = ContentFinder<Texture2D>.Get("UI/MaintenancePolicy"),
                 action = () => Find.WindowStack.Add(new Dialog_MechServiceStationPolicy(this))
             };
         }

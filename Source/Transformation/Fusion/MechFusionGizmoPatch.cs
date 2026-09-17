@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -66,7 +67,7 @@ namespace MAP_MechanoidMechanitor
                 defaultDesc =
                     "MAP_MechanoidMechanitor.Fusion.Release.Description"
                         .Translate(),
-                icon = TexCommand.ReleaseAnimals,
+                icon = ContentFinder<Texture2D>.Get("UI/Disengage"),
                 action = delegate
                 {
                     MechFusionTeardownService.TryTeardown(
