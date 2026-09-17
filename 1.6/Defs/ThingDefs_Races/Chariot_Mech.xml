@@ -1,26 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-  <ThingDef ParentName="LightMechanoid">
+  <ThingDef ParentName="BaseMechanoid">
     <defName>MAP_Mech_Chariot</defName>
     <label>「战车」</label>
     <description>能够作为独立哨兵行动，并可转换为装甲或驻定形态的智能机械体。掌部搭载可持续扫射的高能光束。</description>
 
+    <intelligence>ToolUser</intelligence>
+    <thinkTreeMain>Mechanoid</thinkTreeMain>
+    <baseBodySize>2</baseBodySize>
+    <controlGroupPortraitZoom>1.0</controlGroupPortraitZoom>
+    <controlTakingTime>18</controlTakingTime>
+
     <statBases>
-      <MarketValue>4500</MarketValue>
+      <MarketValue>1500</MarketValue>
       <MoveSpeed>4.2</MoveSpeed>
       <ArmorRating_Blunt>1.20</ArmorRating_Blunt>
       <ArmorRating_Sharp>1.20</ArmorRating_Sharp>
       <ArmorRating_Heat>2.0</ArmorRating_Heat>
-
-      <!-- LightMechanoid 的体型系数为 0.7；428.6 × 0.7 ≈ 300 kg。 -->
-      <CarryingCapacity>428.6</CarryingCapacity>
-
-      <BandwidthCost>2</BandwidthCost>
+      <CarryingCapacity>500</CarryingCapacity>
+      <BandwidthCost>3</BandwidthCost>
       <MechEnergyLossPerHP>0.40</MechEnergyLossPerHP>
     </statBases>
 
+    <tools Inherit="False">
+      <li>
+        <label>左机械拳</label>
+        <labelNoLocation>机械拳</labelNoLocation>
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+        <power>12</power>
+        <armorPenetration>0.18</armorPenetration>
+        <cooldownTime>1.2</cooldownTime>
+        <linkedBodyPartsGroup>LeftHand</linkedBodyPartsGroup>
+      </li>
+
+      <li>
+        <label>右机械拳</label>
+        <labelNoLocation>机械拳</labelNoLocation>
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+        <power>12</power>
+        <armorPenetration>0.18</armorPenetration>
+        <cooldownTime>1.2</cooldownTime>
+        <linkedBodyPartsGroup>RightHand</linkedBodyPartsGroup>
+      </li>
+
+      <li>
+        <label>头撞</label>
+        <labelNoLocation>头撞</labelNoLocation>
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+        <power>5</power>
+        <armorPenetration>0.08</armorPenetration>
+        <cooldownTime>2</cooldownTime>
+        <linkedBodyPartsGroup>HeadAttackTool</linkedBodyPartsGroup>
+        <ensureLinkedBodyPartsGroupAlwaysUsable>true</ensureLinkedBodyPartsGroupAlwaysUsable>
+        <chanceFactor>0.2</chanceFactor>
+      </li>
+    </tools>
+
+    <butcherProducts>
+      <li>
+        <thingDef>Steel</thingDef>
+        <count>30</count>
+      </li>
+      <li>
+        <thingDef>Plasteel</thingDef>
+        <count>10</count>
+      </li>
+    </butcherProducts>
+
     <race>
+      <body>MAP_Body_Chariot</body>
       <baseHealthScale>3</baseHealthScale>
+      <soundMeleeHitPawn>Pawn_Melee_MechanoidBash_HitPawn</soundMeleeHitPawn>
+      <soundMeleeHitBuilding>Pawn_Melee_MechanoidBash_HitBuilding</soundMeleeHitBuilding>
+      <soundMeleeMiss>Pawn_Melee_MechanoidBash_Miss</soundMeleeMiss>
       <mechWeightClass>Heavy</mechWeightClass>
 
       <lifeStageAges Inherit="False">
@@ -78,25 +136,24 @@
         <beamSoundDef>BeamGraser_Shooting</beamSoundDef>
       </li>
 
-      <!-- 战车天生拥有机械飞行资格。 -->
+      <!-- 战车天生拥有飞行资格 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechanicalFlightInnate">
         <profile>MAP_DefaultMechanicalFlightProfile</profile>
         <energyDrainMultiplier>0.25</energyDrainMultiplier>
       </li>
 
-      <!-- 战车天生拥有合体资格。 -->
+      <!-- 战车天生拥有合体资格 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechFusionInnate" />
     </comps>
   </ThingDef>
 
-  <PawnKindDef ParentName="LightMechanoidKind">
-    <defName>MAP_PawnKind_Chariot</defName>
+  <PawnKindDef ParentName="BaseMechanoidKind">
+    <defName>MAP_Mech_Chariot</defName>
     <label>「战车」</label>
     <race>MAP_Mech_Chariot</race>
     <defaultFactionDef>PlayerColony</defaultFactionDef>
 
-    <combatPower>200</combatPower>
-    <weaponMoney>9999~9999</weaponMoney>
+    <combatPower>225</combatPower>
 
     <allowInMechClusters>false</allowInMechClusters>
     <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
