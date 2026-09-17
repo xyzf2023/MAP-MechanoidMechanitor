@@ -3,13 +3,7 @@
   <ThingDef ParentName="BaseMechanoid">
     <defName>MAP_Mech_Chariot</defName>
     <label>「战车」</label>
-    <description>能够作为独立哨兵行动，并可转换为装甲或驻定形态的智能机械体。掌部搭载可持续扫射的高能光束。</description>
-
-    <intelligence>ToolUser</intelligence>
-    <thinkTreeMain>Mechanoid</thinkTreeMain>
-    <baseBodySize>2</baseBodySize>
-    <controlGroupPortraitZoom>1.0</controlGroupPortraitZoom>
-    <controlTakingTime>18</controlTakingTime>
+    <description>为与人类协同作战而设计的外骨骼机械体。「战车」能将自身结构展开为包覆穿戴者的机械外骨骼，在提供坚固防护的同时，将机体的动力与作战系统直接交由穿戴者使用。\n\n「战车」搭载了先进的无工质推进系统与高能激光武器。其机体针对飞行进行了专门调整，能够长时间滞空，并以高能光束持续压制目标。此外，机体还可转换为驻定形态，以适应不同的作战与部署需求。\n\n选中战车，右键其监管者以下达合体命令。\n\n升格为机械族机械师的战车可以与任意人类合体。部分量子机械科技插件在合体状态下还能够与穿戴者产生额外的协同效果。</description>
 
     <statBases>
       <MarketValue>1500</MarketValue>
@@ -20,6 +14,7 @@
       <CarryingCapacity>500</CarryingCapacity>
       <BandwidthCost>3</BandwidthCost>
       <MechEnergyLossPerHP>0.40</MechEnergyLossPerHP>
+      <ControlTakingTime>18</ControlTakingTime>
     </statBases>
 
     <tools Inherit="False">
@@ -63,17 +58,14 @@
     </tools>
 
     <butcherProducts>
-      <li>
-        <thingDef>Steel</thingDef>
-        <count>30</count>
-      </li>
-      <li>
-        <thingDef>Plasteel</thingDef>
-        <count>10</count>
-      </li>
+      <Steel>30</Steel>
+      <Plasteel>10</Plasteel>
     </butcherProducts>
 
     <race>
+      <intelligence>ToolUser</intelligence>
+      <thinkTreeMain>Mechanoid</thinkTreeMain>
+      <baseBodySize>2</baseBodySize>
       <body>MAP_Body_Chariot</body>
       <baseHealthScale>3</baseHealthScale>
       <soundMeleeHitPawn>Pawn_Melee_MechanoidBash_HitPawn</soundMeleeHitPawn>
@@ -152,6 +144,7 @@
     <label>「战车」</label>
     <race>MAP_Mech_Chariot</race>
     <defaultFactionDef>PlayerColony</defaultFactionDef>
+    <controlGroupPortraitZoom>1.0</controlGroupPortraitZoom>
 
     <combatPower>225</combatPower>
 
