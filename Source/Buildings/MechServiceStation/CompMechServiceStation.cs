@@ -309,7 +309,7 @@ namespace MAP_MechanoidMechanitor
             TryResumeStandbyService();
             UpdateRequestedPower();
             if (owner?.jobs?.curDriver is not JobDriver_UseMechServiceStation driver || !driver.IsServicing)
-                visuals?.Stop();
+                visuals?.TickIdle();
             else driver.ServiceTick();
             UpdateRequestedPower();
         }
@@ -324,6 +324,7 @@ namespace MAP_MechanoidMechanitor
         {
             map.GetComponent<MapComponent_MechServiceStations>().Unregister(this);
             ClearOwner();
+            visuals?.Reset();
             manualQueue.Clear();
             base.PostDeSpawn(map, mode);
         }

@@ -9,6 +9,7 @@ namespace MAP_MechanoidMechanitor
     {
         private readonly CompMechServiceStation station;
         private readonly Graphic[] arms = new Graphic[4];
+        private const float ArmStep = 1f / 48f;
         private Mote? chargeMote;
         private Pawn? visualPawn;
         private float extension;
@@ -21,7 +22,16 @@ namespace MAP_MechanoidMechanitor
 
         public void Tick(Pawn pawn, bool charging, bool repairingNow)
         {
-            if (visualPawn != pawn) Stop();
+            if (visualPawn != pawn)
+            {
+                // 交接时先沿旧机体的姿态收臂，避免体型或维修落点突变。
+                if (extension > 0f)
+                {
+                    TickIdle();
+                    return;
+                }
+                Stop();
+            }
             visualPawn = pawn;
             if (charging)
             {
@@ -34,12 +44,10 @@ namespace MAP_MechanoidMechanitor
             repairing = repairingNow;
             if (!repairing)
             {
-                // 纯充电、待机和维修完成时静止收起，不继续播放收臂或焊接动画。
-                extension = 0f;
-                cycle = 0;
+                Retract();
                 return;
             }
-            extension = Mathf.MoveTowards(extension, 1f, 1f / 48f);
+            extension = Mathf.MoveTowards(extension, 1f, ArmStep);
             if (extension < 1f) return;
             cycle++;
             for (int side = 0; side < 2; side++)
@@ -73,8 +81,28 @@ namespace MAP_MechanoidMechanitor
         public void Stop()
         {
             StopCharging();
-            visualPawn = null;
             repairing = false;
+            if (extension == 0f) visualPawn = null;
+        }
+
+        // 会话结束后仍由建筑 Tick 驱动；固定维修周期，从当前落点反向收回。
+        public void TickIdle()
+        {
+            Stop();
+            Retract();
+        }
+
+        private void Retract()
+        {
+            extension = Mathf.MoveTowards(extension, 0f, ArmStep);
+            if (extension > 0f) return;
+            cycle = 0;
+        }
+
+        public void Reset()
+        {
+            Stop();
+            visualPawn = null;
             extension = 0f;
             cycle = 0;
         }

@@ -137,7 +137,7 @@ namespace MAP_MechanoidMechanitor
             }
             if (!station.Powered)
             {
-                station.Visuals.Stop();
+                station.Visuals.TickIdle();
                 return;
             }
             bool charging = station.NeedsCharge(pawn);
