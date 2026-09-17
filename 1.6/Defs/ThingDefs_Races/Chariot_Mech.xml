@@ -110,10 +110,10 @@
         <energyIntervalTicks>6</energyIntervalTicks>
         <pawnDamageIntervalTicks>10</pawnDamageIntervalTicks>
         <energyFractionPerInterval>0.0005</energyFractionPerInterval>
-        <trackingPrimaryDamage>3</trackingPrimaryDamage>
-        <trackingSplashDamage>1.5</trackingSplashDamage>
-        <sweepCenterDamage>4</sweepCenterDamage>
-        <sweepSplashDamage>2</sweepSplashDamage>
+        <trackingPrimaryDamage>9</trackingPrimaryDamage>
+        <trackingSplashDamage>4.5</trackingSplashDamage>
+        <sweepCenterDamage>12</sweepCenterDamage>
+        <sweepSplashDamage>6</sweepSplashDamage>
         <buildingDamage>50</buildingDamage>
         <armorPenetration>1.5</armorPenetration>
         <trackingIgnitionChance>0.7</trackingIgnitionChance>

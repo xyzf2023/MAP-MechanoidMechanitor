@@ -22,10 +22,10 @@ namespace MAP_MechanoidMechanitor
 
         public float energyFractionPerInterval = 0.0005f;
         public float muzzleFlashScale = 9f;
-        public float trackingPrimaryDamage = 3f;
-        public float trackingSplashDamage = 1.5f;
-        public float sweepCenterDamage = 4f;
-        public float sweepSplashDamage = 2f;
+        public float trackingPrimaryDamage = 9f;
+        public float trackingSplashDamage = 4.5f;
+        public float sweepCenterDamage = 12f;
+        public float sweepSplashDamage = 6f;
         public float buildingDamage = 50f;
         public float armorPenetration = 1.5f;
         public float trackingIgnitionChance = 0.7f;
