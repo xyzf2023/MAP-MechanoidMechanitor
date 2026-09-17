@@ -5,28 +5,10 @@ namespace MAP_MechanoidMechanitor
 {
     public sealed class HediffComp_PeriodicEnergyRestore : HediffComp
     {
-        private const float TicksPerHour = 2500f;
-
         private int ticksUntilRestore;
 
         private HediffCompProperties_PeriodicEnergyRestore Props =>
             (HediffCompProperties_PeriodicEnergyRestore)props;
-
-        public override string CompTipStringExtra
-        {
-            get
-            {
-                if (Props.intervalTicks <= 0 || Props.restoreFraction <= 0f)
-                {
-                    return string.Empty;
-                }
-
-                float energyPercentPerHour =
-                    Props.restoreFraction * 100f * TicksPerHour / Props.intervalTicks;
-                return "MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour"
-                    .Translate(energyPercentPerHour.ToString("F1"));
-            }
-        }
 
         public override void CompPostMake()
         {

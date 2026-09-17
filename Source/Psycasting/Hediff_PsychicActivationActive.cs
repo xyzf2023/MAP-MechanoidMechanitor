@@ -1,36 +1,9 @@
-using RimWorld;
-using System.Text;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
+    // 保留旧存档中的具体类型；说明由 Def 配置的公共组件提供。
     public sealed class Hediff_PsychicActivationActive : HediffWithComps
     {
-        public override string TipStringExtra
-        {
-            get
-            {
-                StringBuilder stringBuilder = new StringBuilder();
-                string baseTip = base.TipStringExtra;
-                if (!baseTip.NullOrEmpty())
-                {
-                    stringBuilder.Append(baseTip);
-                    stringBuilder.AppendLine();
-                }
-
-                float bonus = PsychicCoreUtility.GetPsychicActivationBonusPerHour(
-                    pawn,
-                    PsychicCoreUtility.GetEffectivePsychicCoreLevel(pawn));
-                if (bonus > 0f)
-                {
-                    stringBuilder.AppendLine(
-                        " - 精神力自动恢复："
-                        + PsychicCoreUtility.FormatPsyfocusPercent(bonus)
-                        + "/小时");
-                }
-
-                return stringBuilder.ToString().TrimEnd('\n', '\r');
-            }
-        }
     }
 }

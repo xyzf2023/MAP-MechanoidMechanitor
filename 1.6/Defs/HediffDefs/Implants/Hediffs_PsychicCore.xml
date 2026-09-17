@@ -3,6 +3,13 @@
   <HediffDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
     <defName>MAP_PsychicCore</defName>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_PsychicCore</hediffClass>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_PsychicCore" />
+        </providers>
+      </li>
+    </comps>
     <descriptionHyperlinks>
       <ThingDef>MAP_PsychicCore</ThingDef>
     </descriptionHyperlinks>
@@ -90,6 +97,11 @@
       <li Class="HediffCompProperties_Disappears">
         <disappearsAfterTicks>15000~15000</disappearsAfterTicks>
         <showRemainingTime>true</showRemainingTime>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_PsychicActivation" />
+        </providers>
       </li>
     </comps>
     <stages>

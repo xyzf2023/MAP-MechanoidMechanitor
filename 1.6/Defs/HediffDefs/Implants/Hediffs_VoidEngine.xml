@@ -51,6 +51,11 @@
         <intervalTicks>2500</intervalTicks>
         <restoreFraction>0.002</restoreFraction>
       </li>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_PeriodicEnergyRestore" />
+        </providers>
+      </li>
     </comps>
     <stages>
       <li>

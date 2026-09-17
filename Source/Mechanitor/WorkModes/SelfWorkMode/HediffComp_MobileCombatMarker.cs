@@ -13,10 +13,6 @@ namespace MAP_MechanoidMechanitor
 
     public class HediffComp_MobileCombatMarker : HediffComp
     {
-        // 与“机体同调”的额外效果说明保持相同的列表格式。
-        public override string CompTipStringExtra =>
-            "MAP_MechanoidMechanitor.WorkMode.MobileCombat.MovementCostImmunity".Translate();
-
         public override void CompPostPostAdd(DamageInfo? dinfo)
         {
             base.CompPostPostAdd(dinfo);

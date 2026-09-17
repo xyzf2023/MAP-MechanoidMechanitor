@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- 列表前缀和换行由公共说明组件添加。 -->
+  <MAP_MechanoidMechanitor.HediffExtra.PsyfocusPerHour>精神力自动恢复：{0}/小时</MAP_MechanoidMechanitor.HediffExtra.PsyfocusPerHour>
+  <MAP_MechanoidMechanitor.HediffExtra.BlocksMentalBreaks>不再陷入精神崩溃</MAP_MechanoidMechanitor.HediffExtra.BlocksMentalBreaks>
+  <MAP_MechanoidMechanitor.HediffExtra.StatValue>{0}: {1}</MAP_MechanoidMechanitor.HediffExtra.StatValue>
+  <MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized>飞行能力：已准许</MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized>
+  <MAP_MechanoidMechanitor.HediffExtra.StructuralStabilization>结构自稳：已启用</MAP_MechanoidMechanitor.HediffExtra.StructuralStabilization>
+  <MAP_MechanoidMechanitor.HediffExtra.MechanitorConnected>机控系统已接入</MAP_MechanoidMechanitor.HediffExtra.MechanitorConnected>
+  <MAP_MechanoidMechanitor.HediffExtra.QuantumCommunicator>量子通讯器已启用</MAP_MechanoidMechanitor.HediffExtra.QuantumCommunicator>
+  <MAP_MechanoidMechanitor.HediffExtra.ProxySubchain>代理子链已启用</MAP_MechanoidMechanitor.HediffExtra.ProxySubchain>
+</LanguageData>

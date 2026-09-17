@@ -2,9 +2,9 @@
 <LanguageData>
 
   <!-- 模块：机械族机械师工作模式与恢复效果 -->
-  <MAP_MechanoidMechanitor.WorkMode.MobileCombat.MovementCostImmunity> - 移动速度无视地形影响</MAP_MechanoidMechanitor.WorkMode.MobileCombat.MovementCostImmunity>
-  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerHour>  - 自我修复：{0}点/小时</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerHour>
-  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerSecond>  - 自我修复：{0}点/秒</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerSecond>
-  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour>  - 能量恢复：{0}%/小时</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour>
+  <MAP_MechanoidMechanitor.WorkMode.MobileCombat.MovementCostImmunity>移动速度无视地形影响</MAP_MechanoidMechanitor.WorkMode.MobileCombat.MovementCostImmunity>
+  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerHour>自我修复：{0}点/小时</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerHour>
+  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerSecond>自我修复：{0}点/秒</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerSecond>
+  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour>能量恢复：{0}%/小时</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour>
 
 </LanguageData>

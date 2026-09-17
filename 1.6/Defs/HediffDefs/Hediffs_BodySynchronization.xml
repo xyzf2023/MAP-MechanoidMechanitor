@@ -7,6 +7,13 @@
   <HediffDef>
     <defName>MAP_BodySynchronization</defName>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_BodySynchronization</hediffClass>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_BodySynchronization" />
+        </providers>
+      </li>
+    </comps>
     <label>机体同调</label>
     <description>TODO</description>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
@@ -20,6 +27,13 @@
   <HediffDef>
     <defName>MAP_MechControlSynchronization</defName>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_MechControlSynchronization</hediffClass>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_MechControlSynchronization" />
+        </providers>
+      </li>
+    </comps>
     <label>机控同调</label>
     <description>TODO</description>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
@@ -33,6 +47,13 @@
   <HediffDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
     <defName>MAP_PsychicSynchronization</defName>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_PsychicSynchronization</hediffClass>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_PsychicCore" />
+        </providers>
+      </li>
+    </comps>
     <label>灵能同调</label>
     <description>TODO</description>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>

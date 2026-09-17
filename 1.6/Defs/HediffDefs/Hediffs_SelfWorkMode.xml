@@ -13,7 +13,11 @@
         <repairAmount>10</repairAmount>
         <energyRestoreInterval>2500</energyRestoreInterval>
         <energyRestoreFraction>0.005</energyRestoreFraction>
-        <showRecoveryRates>true</showRecoveryRates>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_WorkModeRecovery" />
+        </providers>
       </li>
     </comps>
     <stages>
@@ -38,7 +42,11 @@
         <repairAmount>30</repairAmount>
         <energyRestoreInterval>2500</energyRestoreInterval>
         <energyRestoreFraction>0.025</energyRestoreFraction>
-        <showRecoveryRates>true</showRecoveryRates>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_WorkModeRecovery" />
+        </providers>
       </li>
     </comps>
     <stages>

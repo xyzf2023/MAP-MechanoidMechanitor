@@ -53,6 +53,11 @@
         <repairAmount>10</repairAmount>
         <requiresAutoRepair>true</requiresAutoRepair>
       </li>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_MechRepair" />
+        </providers>
+      </li>
     </comps>
     <stages>
       <li>
@@ -116,7 +121,13 @@
         <repairIntervalTicks>6</repairIntervalTicks>
         <repairAmount>10</repairAmount>
         <requiresAutoRepair>false</requiresAutoRepair>
-        <displayRateUnit>PerSecond</displayRateUnit>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_MechRepair">
+            <displayRateUnit>PerSecond</displayRateUnit>
+          </li>
+        </providers>
       </li>
     </comps>
     <stages>

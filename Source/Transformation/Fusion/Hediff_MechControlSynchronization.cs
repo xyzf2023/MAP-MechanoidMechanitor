@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 using RimWorld;
 using Verse;
 
@@ -9,7 +8,7 @@ namespace MAP_MechanoidMechanitor
     /// “机控同调”的可见载体。动态 StatStage 只读取合体会话中的不可变快照；
     /// 控制权和控制组迁移由 MechFusionMechanitorSynchronizationService 负责。
     /// </summary>
-    public sealed class Hediff_MechControlSynchronization : Hediff
+    public sealed class Hediff_MechControlSynchronization : HediffWithComps
     {
         private HediffStage? cachedStage;
         private int cachedBandwidth = int.MinValue;
@@ -45,34 +44,6 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 return cachedStage;
-            }
-        }
-
-        public override string TipStringExtra
-        {
-            get
-            {
-                StringBuilder builder = new StringBuilder();
-                string baseTip = base.TipStringExtra.TrimEnd('\r', '\n');
-                if (!baseTip.NullOrEmpty())
-                {
-                    builder.Append(baseTip);
-                }
-
-                MechFusionMechanitorSnapshot? snapshot = ResolveSnapshot();
-                AppendEffectLine(
-                    builder,
-                    snapshot != null && !snapshot.wearerWasMechanitor,
-                    " - 机控系统已接入");
-                AppendEffectLine(
-                    builder,
-                    snapshot?.grantsQuantumCommunicator == true,
-                    " - 量子通讯器已启用");
-                AppendEffectLine(
-                    builder,
-                    snapshot?.grantsProxySubchain == true,
-                    " - 代理子链已启用");
-                return builder.ToString().TrimEnd('\r', '\n');
             }
         }
 
@@ -120,24 +91,6 @@ namespace MAP_MechanoidMechanitor
             }
 
             return session?.MechanitorSnapshot;
-        }
-
-        private static void AppendEffectLine(
-            StringBuilder builder,
-            bool shouldAppend,
-            string text)
-        {
-            if (!shouldAppend)
-            {
-                return;
-            }
-
-            if (builder.Length > 0)
-            {
-                builder.AppendLine();
-            }
-
-            builder.Append(text);
         }
     }
 }

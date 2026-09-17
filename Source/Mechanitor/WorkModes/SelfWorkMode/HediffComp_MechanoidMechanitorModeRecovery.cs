@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -12,7 +11,6 @@ namespace MAP_MechanoidMechanitor
         public int repairAmount = 10;
         public int energyRestoreInterval = 300;
         public float energyRestoreFraction = 0.01f;
-        public bool showRecoveryRates;
 
         public HediffCompProperties_MechanoidMechanitorModeRecovery()
         {
@@ -22,50 +20,8 @@ namespace MAP_MechanoidMechanitor
 
     public class HediffComp_MechanoidMechanitorModeRecovery : HediffComp
     {
-        private const float TicksPerHour = 2500f;
-
         public HediffCompProperties_MechanoidMechanitorModeRecovery Props =>
             (HediffCompProperties_MechanoidMechanitorModeRecovery)props;
-
-        public override string CompTipStringExtra
-        {
-            get
-            {
-                if (!Props.showRecoveryRates)
-                {
-                    return string.Empty;
-                }
-
-                StringBuilder result = new StringBuilder();
-                if (Props.repairInterval > 0 && Props.repairAmount > 0)
-                {
-                    int repairPerHour = Mathf.RoundToInt(
-                        Props.repairAmount * TicksPerHour / Props.repairInterval);
-                    result.Append(
-                        "MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerHour"
-                            .Translate(repairPerHour));
-                }
-
-                if (Props.energyRestoreInterval > 0 && Props.energyRestoreFraction > 0f)
-                {
-                    if (result.Length > 0)
-                    {
-                        result.AppendLine();
-                    }
-
-                    float energyPercentPerHour =
-                        Props.energyRestoreFraction
-                            * 100f
-                            * TicksPerHour
-                            / Props.energyRestoreInterval;
-                    result.Append(
-                        "MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour"
-                            .Translate(energyPercentPerHour.ToString("F1")));
-                }
-
-                return result.ToString();
-            }
-        }
 
         public override void CompPostTickInterval(ref float severityAdjustment, int delta)
         {

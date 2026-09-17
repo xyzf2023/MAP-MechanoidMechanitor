@@ -1,5 +1,4 @@
 using RimWorld;
-using System.Text;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -68,43 +67,6 @@ namespace MAP_MechanoidMechanitor
                         : System.Math.Min(
                             pendingPsyfocusRecoveryTicks,
                             PsychicCoreUtility.PsyfocusRecoverySettlementTicks);
-            }
-        }
-
-        public override string TipStringExtra
-        {
-            get
-            {
-                StringBuilder stringBuilder = new StringBuilder();
-                string baseTip = base.TipStringExtra;
-                if (!baseTip.NullOrEmpty())
-                {
-                    stringBuilder.Append(baseTip);
-                    stringBuilder.AppendLine();
-                }
-
-                if (PsychicCoreUtility.IsRuntimeEffectExecutor(this))
-                {
-                    int effectiveLevel =
-                        PsychicCoreUtility.GetEffectivePsychicCoreLevel(pawn);
-                    float basePerHour =
-                        PsychicCoreUtility.GetPassivePsyfocusRecoveryPerHour(
-                            effectiveLevel);
-                    if (basePerHour > 0f)
-                    {
-                        stringBuilder.AppendLine(
-                            " - 精神力自动恢复："
-                            + PsychicCoreUtility.FormatPsyfocusPercent(basePerHour)
-                            + "/小时");
-                    }
-
-                    if (CurStage is { blocksMentalBreaks: true })
-                    {
-                        stringBuilder.AppendLine(" - 不再陷入精神崩溃");
-                    }
-                }
-
-                return stringBuilder.ToString().TrimEnd('\n', '\r');
             }
         }
 

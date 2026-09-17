@@ -28,6 +28,11 @@
     <isBad>false</isBad>
     <comps>
       <li Class="MAP_MechanoidMechanitor.HediffCompProperties_MobileCombatMarker" />
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <translationKeys>
+          <li>MAP_MechanoidMechanitor.WorkMode.MobileCombat.MovementCostImmunity</li>
+        </translationKeys>
+      </li>
     </comps>
     <stages>
       <li>

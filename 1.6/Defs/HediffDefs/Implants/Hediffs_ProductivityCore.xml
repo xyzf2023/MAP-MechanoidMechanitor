@@ -44,7 +44,16 @@
     <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
     <levelIsQuantity>false</levelIsQuantity>
     <comps>
-      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ProductivityCoreActiveTooltip"/>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">
+        <providers>
+          <li Class="MAP_MechanoidMechanitor.HediffExtraDescriptionProvider_ProductivityCore" />
+        </providers>
+        <translationKeys>
+          <li>MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.IgnoreSkillRequirements</li>
+          <li>MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoFoodPoisoning</li>
+          <li>MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoSurgeryFailure</li>
+        </translationKeys>
+      </li>
     </comps>
     <stages>
       <li>

@@ -1,4 +1,3 @@
-using System.Text;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -10,7 +9,7 @@ namespace MAP_MechanoidMechanitor
     /// Severity 直接表示合体瞬间冻结的等级；Def 层属性独立生效，
     /// C# 层效果与真实心灵中枢共享统一的“取较高等级、只结算一次”入口。
     /// </summary>
-    public sealed class Hediff_PsychicSynchronization : Hediff
+    public sealed class Hediff_PsychicSynchronization : HediffWithComps
     {
         private int pendingPsyfocusRecoveryTicks;
 
@@ -54,43 +53,6 @@ namespace MAP_MechanoidMechanitor
                         : System.Math.Min(
                             pendingPsyfocusRecoveryTicks,
                             PsychicCoreUtility.PsyfocusRecoverySettlementTicks);
-            }
-        }
-
-        public override string TipStringExtra
-        {
-            get
-            {
-                StringBuilder stringBuilder = new StringBuilder();
-                string baseTip = base.TipStringExtra;
-                if (!baseTip.NullOrEmpty())
-                {
-                    stringBuilder.Append(baseTip);
-                    stringBuilder.AppendLine();
-                }
-
-                if (PsychicCoreUtility.IsRuntimeEffectExecutor(this))
-                {
-                    int effectiveLevel =
-                        PsychicCoreUtility.GetEffectivePsychicCoreLevel(pawn);
-                    float basePerHour =
-                        PsychicCoreUtility.GetPassivePsyfocusRecoveryPerHour(
-                            effectiveLevel);
-                    if (basePerHour > 0f)
-                    {
-                        stringBuilder.AppendLine(
-                            " - 精神力自动恢复："
-                            + PsychicCoreUtility.FormatPsyfocusPercent(basePerHour)
-                            + "/小时");
-                    }
-
-                    if (CurStage is { blocksMentalBreaks: true })
-                    {
-                        stringBuilder.AppendLine(" - 不再陷入精神崩溃");
-                    }
-                }
-
-                return stringBuilder.ToString().TrimEnd('\n', '\r');
             }
         }
 
