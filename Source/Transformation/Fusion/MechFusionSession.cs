@@ -28,6 +28,10 @@ namespace MAP_MechanoidMechanitor
         private float maxEnergy;
         private float currentStability;
         private float maxStability;
+        private bool repairBeaconCaptured;
+        private bool repairBeaconAuthorized;
+        internal float PendingStabilityRepair;
+        internal int StabilityRepairTicks;
         private int startTick;
         private bool teardownDeferred;
         private Map? pendingMap;
@@ -97,6 +101,16 @@ namespace MAP_MechanoidMechanitor
         public float CurrentStability => currentStability;
 
         public float MaxStability => maxStability;
+
+        internal bool RepairBeaconCaptured => repairBeaconCaptured;
+        internal bool RepairBeaconAuthorized => repairBeaconAuthorized;
+
+        internal void CaptureRepairBeacon(bool authorized)
+        {
+            if (repairBeaconCaptured) return;
+            repairBeaconAuthorized = authorized;
+            repairBeaconCaptured = true;
+        }
 
         public int StartTick => startTick;
 
@@ -623,6 +637,10 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref maxEnergy, "maxEnergy");
             Scribe_Values.Look(ref currentStability, "currentStability");
             Scribe_Values.Look(ref maxStability, "maxStability");
+            Scribe_Values.Look(ref repairBeaconCaptured, "repairBeaconCaptured");
+            Scribe_Values.Look(ref repairBeaconAuthorized, "repairBeaconAuthorized");
+            Scribe_Values.Look(ref PendingStabilityRepair, "pendingStabilityRepair");
+            Scribe_Values.Look(ref StabilityRepairTicks, "stabilityRepairTicks");
             Scribe_Values.Look(ref startTick, "startTick");
             Scribe_Values.Look(ref teardownDeferred, "teardownDeferred");
             Scribe_References.Look(ref pendingMap, "pendingMap");

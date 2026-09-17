@@ -90,6 +90,8 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
+                // 监管关系与限时效果必须在离图、迁移控制权之前捕获。
+                MechFusionRepairBeaconUtility.Capture(session, source);
                 // 必须早于 source.DeSpawn：原版机械师离图会解除其下属征召。
                 MechFusionMechanitorSynchronizationService
                     .CaptureBeforeSourceDespawn(session, source, wearer);

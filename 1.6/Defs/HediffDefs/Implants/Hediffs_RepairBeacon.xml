@@ -126,4 +126,24 @@
     </stages>
     <duplicationAllowed>false</duplicationAllowed>
   </HediffDef>
+  
+  <HediffDef MayRequire="ludeon.rimworld.biotech">
+    <defName>MAP_FusionStructuralRepair</defName>
+    <hediffClass>HediffWithComps</hediffClass>
+    <label>结构修复</label>
+    <description>修复信标正在引导合体机械族修复自身结构稳定值。</description>
+    <descriptionShort>每小时恢复最大结构稳定值的10%。</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <priceImpact>false</priceImpact>
+    <scenarioCanAdd>false</scenarioCanAdd>
+    <initialSeverity>1</initialSeverity>
+    <duplicationAllowed>false</duplicationAllowed>
+    <comps>
+      <li Class="HediffCompProperties_Disappears">
+        <disappearsAfterTicks>15000~15000</disappearsAfterTicks>
+        <showRemainingTime>true</showRemainingTime>
+      </li>
+    </comps>
+  </HediffDef>
 </Defs>

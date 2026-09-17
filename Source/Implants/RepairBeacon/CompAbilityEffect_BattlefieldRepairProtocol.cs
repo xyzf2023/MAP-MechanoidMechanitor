@@ -30,6 +30,7 @@ namespace MAP_MechanoidMechanitor
                     recipient,
                     MAPMechanitor_HediffDefOf.MAP_BattlefieldRepairProtocolActive);
             }
+            MechFusionRepairBeaconUtility.OnProtocolApplied(mechanitor, DurationTicks);
         }
 
         private static void AddOrRefreshTimedHediff(Pawn pawn, HediffDef hediffDef)

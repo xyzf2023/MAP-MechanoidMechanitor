@@ -13,6 +13,38 @@ namespace MAP_MechanoidMechanitor
     {
         internal const float BaseStability = 500f;
 
+        internal const float PassiveRepairFractionPerHour = 0.02f;
+        internal const float ProtocolRepairFractionPerHour = 0.10f;
+
+        internal static void TickRepair(MechFusionSession session)
+        {
+            if (session.State != MechFusionSessionState.Active
+                || session.CurrentStability <= 0f || session.MaxStability <= 0f
+                || session.WearerPawn == null || session.WearerPawn.Dead
+                || session.WearerPawn.Destroyed) return;
+
+            bool rapid = MechFusionHealthEffectManager.HasActiveTimedEffect(
+                session, MechFusionRepairBeaconUtility.StructuralRepairRuleId);
+            float fraction = rapid ? ProtocolRepairFractionPerHour
+                : session.RepairBeaconAuthorized ? PassiveRepairFractionPerHour : 0f;
+
+            // 每 tick 按当时档位累计，每 60 tick 结算，避免大稳定值下的浮点小量损失。
+            // 满值不蓄积修复额度；两种速度互斥。
+            if (session.CurrentStability >= session.MaxStability)
+            {
+                session.PendingStabilityRepair = 0f;
+                session.StabilityRepairTicks = 0;
+                return;
+            }
+            session.PendingStabilityRepair += session.MaxStability * fraction / 2500f;
+            if (++session.StabilityRepairTicks < 60) return;
+            session.SetStability(
+                session.CurrentStability + session.PendingStabilityRepair,
+                session.MaxStability);
+            session.PendingStabilityRepair = 0f;
+            session.StabilityRepairTicks = 0;
+        }
+
         internal static void CaptureInitialStability(
             MechFusionSession session,
             Pawn source)

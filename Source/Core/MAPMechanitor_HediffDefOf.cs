@@ -17,6 +17,7 @@ namespace MAP_MechanoidMechanitor
         public static HediffDef MAP_RepairBoost = null!;
         public static HediffDef MAP_BeaconRepairGuidance = null!;
         public static HediffDef MAP_BattlefieldRepairProtocolActive = null!;
+        public static HediffDef MAP_FusionStructuralRepair = null!;
         public static HediffDef MAP_QuantumCommunicator = null!;
         public static HediffDef MAP_ProxySubchain = null!;
 

@@ -141,6 +141,60 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     internal static class MechFusionHealthEffectManager
     {
+        internal static void AddOrRefreshTimedEffect(
+            MechFusionSession session, string ruleId, HediffDef def,
+            int durationTicks, bool applyImmediately = true)
+        {
+            if (!session.IsActive || durationTicks <= 0 || def == null) return;
+            MechFusionHealthEffectEntry? entry = null;
+            foreach (MechFusionHealthEffectEntry candidate in session.HealthEffectEntries)
+            {
+                if (candidate?.ruleId == ruleId)
+                {
+                    entry = candidate;
+                    break;
+                }
+            }
+            if (entry == null)
+            {
+                entry = new MechFusionHealthEffectEntry { ruleId = ruleId, hediffDef = def };
+                session.AddHealthEffectEntry(entry);
+            }
+            entry.hediffDef = def;
+            entry.expiresAtTick = (Find.TickManager?.TicksGame ?? 0) + durationTicks;
+            if (applyImmediately) ApplyAll(session, session.WearerPawn);
+        }
+
+        internal static void ExpireTimedEffects(MechFusionSession session)
+        {
+            Pawn? wearer = session.WearerPawn;
+            if (wearer?.health?.hediffSet == null) return;
+            int now = Find.TickManager?.TicksGame ?? 0;
+            IReadOnlyList<MechFusionHealthEffectEntry> entries = session.HealthEffectEntries;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                MechFusionHealthEffectEntry? entry = entries[i];
+                if (entry?.hediffDef == null || entry.expiresAtTick < 0
+                    || entry.expiresAtTick > now) continue;
+                Hediff? existing = wearer.health.hediffSet.GetFirstHediffOfDef(entry.hediffDef);
+                if (existing != null) wearer.health.RemoveHediff(existing);
+            }
+        }
+
+        internal static bool HasActiveTimedEffect(MechFusionSession session, string ruleId)
+        {
+            if (session.State != MechFusionSessionState.Active) return false;
+            int now = Find.TickManager?.TicksGame ?? 0;
+            IReadOnlyList<MechFusionHealthEffectEntry> entries = session.HealthEffectEntries;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                MechFusionHealthEffectEntry? entry = entries[i];
+                if (entry?.ruleId == ruleId && entry.expiresAtTick > now)
+                    return ImplantEffectUtility.HasHediff(session.WearerPawn, entry.hediffDef);
+            }
+            return false;
+        }
+
         internal static void CaptureFromSource(
             MechFusionSession session,
             Pawn? sourcePawn)
@@ -209,6 +263,7 @@ namespace MAP_MechanoidMechanitor
             Pawn? wearer)
         {
             EnsureBodySynchronizationEntry(session);
+            ExpireTimedEffects(session);
             if (wearer?.health?.hediffSet == null)
             {
                 Log.Warning(
@@ -231,8 +286,15 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (wearer.health.hediffSet.HasHediff(def))
+                int remaining = entry.expiresAtTick < 0
+                    ? -1 : entry.expiresAtTick - (Find.TickManager?.TicksGame ?? 0);
+                if (entry.expiresAtTick >= 0 && remaining <= 0) continue;
+
+                Hediff? existing = wearer.health.hediffSet.GetFirstHediffOfDef(def);
+                if (existing != null)
                 {
+                    if (remaining > 0)
+                        existing.TryGetComp<HediffComp_Disappears>()?.SetDuration(remaining);
                     continue;
                 }
 
@@ -245,6 +307,8 @@ namespace MAP_MechanoidMechanitor
                     }
 
                     wearer.health.AddHediff(hediff);
+                    if (remaining > 0)
+                        hediff.TryGetComp<HediffComp_Disappears>()?.SetDuration(remaining);
                     if (!wearer.health.hediffSet.HasHediff(def))
                     {
                         Log.Warning(
@@ -320,6 +384,8 @@ namespace MAP_MechanoidMechanitor
             MechFusionSession session,
             Pawn? wearer)
         {
+            // 旧存档仅补捕获一次；新存档明确为否的资格也不会重新判定。
+            MechFusionRepairBeaconUtility.Capture(session, session.SourcePawn);
             ApplyAll(session, wearer);
         }
 

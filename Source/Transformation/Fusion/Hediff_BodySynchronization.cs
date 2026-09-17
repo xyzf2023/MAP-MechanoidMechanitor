@@ -54,6 +54,13 @@ namespace MAP_MechanoidMechanitor
                     builder.AppendLine(" - 飞行能力：已准许");
                 }
 
+                if (session.RepairBeaconAuthorized
+                    && !ImplantEffectUtility.HasHediff(
+                        pawn, MAPMechanitor_HediffDefOf.MAP_FusionStructuralRepair))
+                {
+                    builder.AppendLine(" - 结构自稳：已启用");
+                }
+
                 return builder.ToString().TrimEnd('\r', '\n');
             }
         }

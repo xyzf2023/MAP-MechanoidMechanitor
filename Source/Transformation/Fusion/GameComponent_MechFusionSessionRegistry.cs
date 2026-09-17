@@ -203,6 +203,11 @@ namespace MAP_MechanoidMechanitor
                     }
 
                     MechFusionEnergyUtility.TickSession(session);
+                    if (session.State == MechFusionSessionState.Active)
+                    {
+                        MechFusionHealthEffectManager.ExpireTimedEffects(session);
+                        MechFusionStabilityUtility.TickRepair(session);
+                    }
                 }
             }
         }
