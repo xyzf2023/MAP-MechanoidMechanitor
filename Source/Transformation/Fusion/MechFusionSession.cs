@@ -32,6 +32,9 @@ namespace MAP_MechanoidMechanitor
         private bool repairBeaconAuthorized;
         private bool voidEngineCaptured;
         private bool voidEngineAuthorized;
+        private bool productivityCoreCaptured;
+        private int productivityCoreLevel;
+        private float productivityCoreWorkSpeedOffset;
         internal float PendingStabilityRepair;
         internal int StabilityRepairTicks;
         private int startTick;
@@ -109,6 +112,18 @@ namespace MAP_MechanoidMechanitor
 
         internal bool VoidEngineCaptured => voidEngineCaptured;
         internal bool VoidEngineAuthorized => voidEngineAuthorized;
+
+        internal bool ProductivityCoreCaptured => productivityCoreCaptured;
+        internal int ProductivityCoreLevel => productivityCoreLevel;
+        internal float ProductivityCoreWorkSpeedOffset => productivityCoreWorkSpeedOffset;
+
+        internal void CaptureProductivityCore(int level, float workSpeedOffset)
+        {
+            if (productivityCoreCaptured) return;
+            productivityCoreLevel = level;
+            productivityCoreWorkSpeedOffset = workSpeedOffset;
+            productivityCoreCaptured = true;
+        }
 
         internal void CaptureVoidEngine(bool authorized)
         {
@@ -655,6 +670,10 @@ namespace MAP_MechanoidMechanitor
             // 旧存档缺少资格时不按读档后的监管关系补发；下一次合体重新捕获。
             Scribe_Values.Look(ref voidEngineCaptured, "voidEngineCaptured");
             Scribe_Values.Look(ref voidEngineAuthorized, "voidEngineAuthorized");
+            // 缺少快照的旧会话保持零加成，不在读档时重新捕获。
+            Scribe_Values.Look(ref productivityCoreCaptured, "productivityCoreCaptured");
+            Scribe_Values.Look(ref productivityCoreLevel, "productivityCoreLevel");
+            Scribe_Values.Look(ref productivityCoreWorkSpeedOffset, "productivityCoreWorkSpeedOffset");
             Scribe_Values.Look(ref PendingStabilityRepair, "pendingStabilityRepair");
             Scribe_Values.Look(ref StabilityRepairTicks, "stabilityRepairTicks");
             Scribe_Values.Look(ref startTick, "startTick");

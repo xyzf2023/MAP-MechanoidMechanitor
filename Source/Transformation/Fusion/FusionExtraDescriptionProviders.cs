@@ -31,6 +31,11 @@ namespace MAP_MechanoidMechanitor
             {
                 yield return new HediffExtraDescriptionEntry("MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized");
             }
+            if (MechFusionProductivityCoreUtility.IsRunning(session))
+            {
+                yield return new HediffExtraDescriptionEntry(
+                    "MAP_MechanoidMechanitor.HediffExtra.ProductivityCoreLevel", session.ProductivityCoreLevel);
+            }
             if (MechFusionVoidEngineUtility.IsRunning(session))
             {
                 yield return new HediffExtraDescriptionEntry("MAP_MechanoidMechanitor.HediffExtra.VoidEngineRunning");

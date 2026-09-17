@@ -64,6 +64,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 核心速度使用独立快照，仅由机体同调提供，不写入外甲属性以免重复。
+            if (stat == StatDefOf.WorkSpeedGlobal && MechFusionProductivityCoreUtility.IsRunning(session))
+            {
+                value += session.ProductivityCoreWorkSpeedOffset;
+            }
+
             // 专属工作速度已经由 StatOffsetFromGear 从合体外甲读取。
             // 此处不得再次添加，否则同一份快照会被结算两次。
             if (!IsApparelWorkSpeedStat(stat)

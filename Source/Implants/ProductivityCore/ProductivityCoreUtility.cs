@@ -27,6 +27,9 @@ namespace MAP_MechanoidMechanitor
 
         public static int GetEffectiveLevelForWorker(Pawn? worker)
         {
+            int fusionLevel = MechFusionProductivityCoreUtility.GetLevel(worker);
+            if (fusionLevel > 0) return fusionLevel;
+
             if (worker == null || !worker.RaceProps.IsMechanoid)
             {
                 return 0;
@@ -51,7 +54,8 @@ namespace MAP_MechanoidMechanitor
         {
             return ImplantEffectUtility.HasHediff(
                 pawn,
-                MAPMechanitor_HediffDefOf.MAP_ProductivityCoreActive);
+                MAPMechanitor_HediffDefOf.MAP_ProductivityCoreActive)
+                || MechFusionProductivityCoreUtility.GetLevel(pawn) > 0;
         }
 
         public static float WorkSpeedOffsetPerLevel
