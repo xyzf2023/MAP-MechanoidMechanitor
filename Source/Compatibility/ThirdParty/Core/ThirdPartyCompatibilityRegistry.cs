@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using HarmonyLib;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
@@ -31,6 +32,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new MechFusionCastEligibilityCompatibility(),
             new ProgressionEducationCompatibility(),
             new DeadManSwitchCompatibility(),
+            new MobileDragoonCompatibility(),
             new SRTSExpandedCompatibility(),
             new VanillaPsycastsExpandedCompatibility()
         };

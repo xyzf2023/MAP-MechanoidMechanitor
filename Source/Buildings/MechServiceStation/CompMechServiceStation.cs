@@ -406,7 +406,7 @@ namespace MAP_MechanoidMechanitor
             string state = waiting != null && owner == null ? "占用：机械族待命中..."
                 : !Powered && owner != null ? "断电暂停"
                 : charging && repairing ? "正在维修并充电"
-                : charging ? "正在充电" : repairing ? "正在维修" : "未待命中...";
+                : charging ? "正在充电" : repairing ? "正在维修" : "待命中...";
             return state + "\n整备策略：" + MechServicePolicyUtility.Label(mode)
                 + (assignedPawn == null || (mode != MechServiceStationMode.AssignedOnly && mode != MechServiceStationMode.AssignedPriority)
                     ? "" : "\n指定机械族：" + assignedPawn.LabelShortCap)
