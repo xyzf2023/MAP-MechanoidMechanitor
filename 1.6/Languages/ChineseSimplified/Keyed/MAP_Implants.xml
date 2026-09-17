@@ -12,5 +12,10 @@
 
   <!-- 模块：效能核心游戏效果 -->
   <MAP_MechanoidMechanitor.Implants.ProductivityCore.WorkSpeedOffset>效能核心：+{0}</MAP_MechanoidMechanitor.Implants.ProductivityCore.WorkSpeedOffset>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.WorkSpeed> - 工作速度 +{0}</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.WorkSpeed>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.Quality> - 制作物品质量偏移 +{0}</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.Quality>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.IgnoreSkillRequirements> - 工作不受技能等级限制</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.IgnoreSkillRequirements>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoFoodPoisoning> - 烹饪的食物不会导致食物中毒</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoFoodPoisoning>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoSurgeryFailure> - 手术不会失败</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoSurgeryFailure>
 
 </LanguageData>

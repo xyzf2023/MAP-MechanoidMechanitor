@@ -43,6 +43,9 @@
     <maxSeverity>1</maxSeverity>
     <keepOnBodyPartRestoration>true</keepOnBodyPartRestoration>
     <levelIsQuantity>false</levelIsQuantity>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ProductivityCoreActiveTooltip"/>
+    </comps>
     <stages>
       <li>
         <minSeverity>1</minSeverity>
