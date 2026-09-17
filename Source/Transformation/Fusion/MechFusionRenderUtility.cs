@@ -1,4 +1,7 @@
 using System;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
+using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -15,6 +18,52 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     internal static class MechFusionRenderUtility
     {
+        // 仅缓存当前帧的地图外观，不进入存档，也不让静态缓存持有 Pawn。
+        private sealed class SilhouetteFrame
+        {
+            internal Graphic? Graphic;
+            internal Vector3 Position;
+            internal Rot4 Rotation;
+            internal int Frame = -1;
+        }
+
+        private static readonly ConditionalWeakTable<Pawn, SilhouetteFrame>
+            SilhouetteFrames = new ConditionalWeakTable<Pawn, SilhouetteFrame>();
+
+        private static readonly AccessTools.FieldRef<PawnRenderer, Graphic>
+            SilhouetteGraphicField =
+                AccessTools.FieldRefAccess<PawnRenderer, Graphic>("silhouetteGraphic");
+
+        private static readonly AccessTools.FieldRef<PawnRenderer, Vector3>
+            SilhouettePositionField =
+                AccessTools.FieldRefAccess<PawnRenderer, Vector3>("silhouettePos");
+
+        private static readonly Func<Thing, Color> GetHighlightColor =
+            (Func<Thing, Color>)Delegate.CreateDelegate(
+                typeof(Func<Thing, Color>),
+                AccessTools.Method(typeof(SilhouetteUtility), "GetColor"));
+
+        private static readonly Func<Color, MaterialPropertyBlock> GetHighlightProperties =
+            (Func<Color, MaterialPropertyBlock>)Delegate.CreateDelegate(
+                typeof(Func<Color, MaterialPropertyBlock>),
+                AccessTools.Method(typeof(SilhouetteUtility), "GetCachedMaterialPropertyBlock"));
+
+        // 原版 PreRenderResults 是私有值类型；一次性生成清理委托，避免逐帧反射或装箱。
+        private static readonly Action<PawnRenderer> ClearPreRenderResults =
+            CreateClearPreRenderResults();
+
+        private static Action<PawnRenderer> CreateClearPreRenderResults()
+        {
+            ParameterExpression renderer = Expression.Parameter(typeof(PawnRenderer));
+            MemberExpression results = Expression.Field(
+                renderer, AccessTools.Field(typeof(PawnRenderer), "results"));
+            return Expression.Lambda<Action<PawnRenderer>>(
+                Expression.Block(
+                    Expression.Assign(results, Expression.Default(results.Type)),
+                    Expression.Empty()),
+                renderer).Compile();
+        }
+
         [ThreadStatic]
         private static bool renderingSource;
 
@@ -74,6 +123,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (SilhouetteFrames.TryGetValue(wearer, out SilhouetteFrame previousFrame))
+            {
+                previousFrame.Frame = -1;
+            }
+
             renderingSource = true;
             renderingSourcePawn = source;
             try
@@ -86,6 +140,7 @@ namespace MAP_MechanoidMechanitor
 
                 renderer.EnsureGraphicsInitialized();
                 renderer.RenderPawnAt(drawLoc, rotation, neverAimWeapon);
+                CompleteWearerRender(wearer, renderer, drawLoc, rotation);
                 return true;
             }
             catch (Exception ex)
@@ -100,6 +155,29 @@ namespace MAP_MechanoidMechanitor
                 renderingSource = false;
                 renderingSourcePawn = null;
             }
+        }
+
+        private static void CompleteWearerRender(
+            Pawn wearer,
+            PawnRenderer sourceRenderer,
+            Vector3 drawLoc,
+            Rot4 rotation)
+        {
+            SilhouetteFrame frame = SilhouetteFrames.GetValue(
+                wearer, _ => new SilhouetteFrame());
+            frame.Graphic = sourceRenderer.SilhouetteGraphic;
+            frame.Position = frame.Graphic != null ? sourceRenderer.SilhouettePos : drawLoc;
+            frame.Rotation = rotation;
+
+            PawnRenderer wearerRenderer = wearer.Drawer.renderer;
+            // DynamicDrawManager 在 DrawSilhouetteJob 之前读取这些字段。
+            // 保留人类自己的图形，避免机械族图案进入以人类 Def 为键的原版材质缓存。
+            SilhouetteGraphicField(wearerRenderer) =
+                wearer.ageTracker.CurLifeStage.silhouetteGraphicData?.Graphic
+                ?? BaseContent.BadGraphic;
+            SilhouettePositionField(wearerRenderer) = frame.Position;
+            ClearPreRenderResults(wearerRenderer);
+            frame.Frame = RealTime.frameCount;
         }
 
         /// <summary>
@@ -180,9 +258,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        internal static bool TryDrawSourceSilhouette(
-            Pawn wearer,
-            Matrix4x4 trs)
+        internal static bool TryDrawSourceSilhouette(Pawn wearer)
         {
             if (renderingSource)
             {
@@ -195,20 +271,35 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            PawnRenderer? renderer = source.Drawer?.renderer;
-            if (renderer == null)
+            if (!SilhouetteFrames.TryGetValue(wearer, out SilhouetteFrame frame)
+                || frame.Frame != RealTime.frameCount
+                || frame.Graphic == null)
             {
+                // 只使用本帧成功绘制的数据，读档首帧或绘制失败时不复用旧位置。
                 return true;
             }
 
-            renderer.EnsureGraphicsInitialized();
-            if (renderer.SilhouetteGraphic == null)
-            {
-                // 源机械族尚未完成一次绘制：本次吞掉人类剪影，避免叠加。
-                return true;
-            }
+            // 与原版 ComputeSilhouetteMatricesJob 一致，但尺寸和位置来自当前合体外观。
+            Vector2 size = frame.Graphic.drawSize;
+            Vector3 scale = Find.CameraDriver.InverseFovScale;
+            scale.x *= size.x + SilhouetteUtility.AdjustScale(size.x);
+            scale.z *= size.y + SilhouetteUtility.AdjustScale(size.y);
+            Matrix4x4 trs = Matrix4x4.TRS(
+                frame.Position.SetToAltitude(AltitudeLayer.Silhouettes),
+                Quaternion.identity,
+                scale);
 
-            SilhouetteUtility.DrawSilhouetteJob(source, trs);
+            // GetColoredVersion 复用原版 GraphicDatabase；不更改源 Pawn 的阵营或朝向。
+            Graphic graphic = frame.Graphic.GetColoredVersion(
+                ShaderDatabase.Silhouette, Color.white, Color.white);
+            bool west = frame.Rotation == Rot4.West;
+            Mesh mesh = west
+                ? MeshPool.GridPlaneFlip(Vector2.one)
+                : MeshPool.GridPlane(Vector2.one);
+            Material material = west ? graphic.MatWest : graphic.MatEast;
+            MaterialPropertyBlock properties =
+                GetHighlightProperties(GetHighlightColor(wearer));
+            GenDraw.DrawMeshNowOrLater(mesh, trs, material, false, properties);
             return true;
         }
 

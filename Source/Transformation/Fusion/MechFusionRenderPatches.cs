@@ -176,10 +176,10 @@ namespace MAP_MechanoidMechanitor
         nameof(SilhouetteUtility.DrawSilhouetteJob))]
     internal static class MechFusionSilhouettePatch
     {
-        public static bool Prefix(Thing thing, Matrix4x4 trs)
+        public static bool Prefix(Thing thing)
         {
             return thing is not Pawn pawn
-                || !MechFusionRenderUtility.TryDrawSourceSilhouette(pawn, trs);
+                || !MechFusionRenderUtility.TryDrawSourceSilhouette(pawn);
         }
     }
 
