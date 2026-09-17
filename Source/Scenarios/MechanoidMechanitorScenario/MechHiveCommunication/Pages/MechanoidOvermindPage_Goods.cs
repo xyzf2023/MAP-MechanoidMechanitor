@@ -21,7 +21,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float IconSize = 32f;
 
-        private const float SpecPanelHeight = 120f;
+        private static float SpecPanelHeight => GameComponent_OvermindEconomy.Enabled ? 192f : 120f;
 
         private string search = string.Empty;
 
@@ -476,16 +476,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     MechanoidOvermindUiStyle.Error);
             }
 
-            RefreshPriceIfNeeded(entry);
+            RefreshPriceIfNeeded(entry, order);
 
             float infoY = y + 36f;
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(inner.x, infoY, inner.width * 0.6f, 22f),
-                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.EstimatedCredits".Translate(
-                    cachedEstimatedCredits),
+                new Rect(inner.x, infoY, inner.width, 22f),
+                (GameComponent_OvermindEconomy.Enabled
+                    ? (selectedCount > 0 ? "MAP_OvermindEconomy.Estimate" : "MAP_OvermindEconomy.NextPrice")
+                    : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.EstimatedCredits").Translate(
+                    cachedEstimatedCredits,
+                    ((double)cachedEstimatedCredits / Math.Max(1, selectedCount)).ToString("0.##")),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.AccentBright);
+
+            if (GameComponent_OvermindEconomy.Enabled)
+            {
+                MechanoidOvermindThingSpec? spec = BuildCurrentSpec(entry);
+                GameComponent_OvermindEconomy? economy = GameComponent_OvermindEconomy.Current;
+                if (spec != null && economy != null)
+                {
+                    Rect details = new Rect(inner.x, infoY + 25f, inner.width, 44f);
+                    MechanoidOvermindUiStyle.DrawLabel(details, economy.Describe(spec, order),
+                        GameFont.Tiny, TextAnchor.UpperLeft, MechanoidOvermindUiStyle.TextSecondary);
+                    TooltipHandler.TipRegion(details, "MAP_OvermindEconomy.DetailsTip".Translate());
+                }
+            }
 
             if (selectedCount > 0
                 && MechanoidOvermindUiStyle.DrawActionButton(
@@ -512,12 +528,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 countEditBuffer = next ?? string.Empty;
                 if (int.TryParse(next, out int parsed)
                     && parsed >= 0
-                    && parsed <= MechanoidOvermindOrder.MaxCount)
+                    && parsed <= MechanoidOvermindOrder.ThingMaxCount)
                 {
                     MechanoidOvermindThingSpec? spec = BuildCurrentSpec(entry);
                     if (spec != null)
                     {
-                        order.SetThingCount(spec, parsed);
+                        int maximum = GameComponent_OvermindEconomy.Enabled
+                            ? GameComponent_OvermindEconomy.Current?.AvailableCount(spec, order) ?? 0
+                            : MechanoidOvermindOrder.ThingMaxCount;
+                        order.SetThingCount(spec, Math.Min(parsed, maximum));
                         selectedCount = order.GetThingCount(spec);
                         syncedOrderRevision = order.Revision;
                         priceDirty = true;
@@ -541,20 +560,33 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            order.SetThingCount(spec, count);
+            int maximum = GameComponent_OvermindEconomy.Enabled
+                ? GameComponent_OvermindEconomy.Current?.AvailableCount(spec, order) ?? 0
+                : MechanoidOvermindOrder.ThingMaxCount;
+            order.SetThingCount(spec, Math.Min(count, maximum));
             selectedCount = order.GetThingCount(spec);
             countEditBuffer = selectedCount.ToString();
             syncedOrderRevision = order.Revision;
             priceDirty = true;
         }
 
-        private void RefreshPriceIfNeeded(MechanoidOvermindThingCatalogEntry entry)
+        private void RefreshPriceIfNeeded(MechanoidOvermindThingCatalogEntry entry, MechanoidOvermindOrder order)
         {
             MechanoidOvermindThingSpec? spec = BuildCurrentSpec(entry);
             if (spec == null)
             {
                 cachedUnitMarketValue = 0f;
                 cachedEstimatedCredits = 0;
+                return;
+            }
+
+            if (GameComponent_OvermindEconomy.Enabled)
+            {
+                // 时间、全局需求与其他规格均能改变价格，不复用旧的静态价格缓存。
+                GameComponent_OvermindEconomy? economy = GameComponent_OvermindEconomy.Current;
+                cachedEstimatedCredits = 0;
+                economy?.TryEstimateLine(spec, selectedCount, order, out cachedEstimatedCredits);
+                priceDirty = true;
                 return;
             }
 

@@ -149,6 +149,8 @@ namespace MAP_MechanoidMechanitor
 
             DrawRecreationSettings(listing);
 
+            OvermindEconomySettings.Draw(listing, Settings.overmindEconomy);
+
             DrawSymbiosisCovenantSettings(listing);
 
             DrawStrategicNodeSettings(listing);

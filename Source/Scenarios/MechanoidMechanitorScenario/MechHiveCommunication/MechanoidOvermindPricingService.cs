@@ -260,6 +260,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            if (GameComponent_OvermindEconomy.Enabled && order.ThingLines.Count > 0)
+            {
+                GameComponent_OvermindEconomy? economy = GameComponent_OvermindEconomy.Current;
+                return economy != null && economy.TryCost(order, out thingCost);
+            }
+
             IReadOnlyList<MechanoidOvermindOrderLine_Thing> lines = order.ThingLines;
             if (lines.Count == 0)
             {

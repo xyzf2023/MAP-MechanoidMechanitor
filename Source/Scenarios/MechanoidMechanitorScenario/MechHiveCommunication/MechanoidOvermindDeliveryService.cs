@@ -132,6 +132,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             MechanoidOvermindPricingService.ClearThingMarketValueCache();
+            GameComponent_OvermindEconomy.Current?.Prepare(true);
             // 先校验订单本身有效（pre-discount），再计算含评级折扣的最终费用。
             if (!order.TryGetCosts(out _, out _, out int preTotalCost) || preTotalCost < 0)
             {
@@ -180,8 +181,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             ActiveTransporterInfo? info = null;
             bool spent = false;
+            OvermindEconomyReservation? reservation = null;
             try
             {
+                if (GameComponent_OvermindEconomy.Enabled && order.ThingLines.Count > 0)
+                {
+                    GameComponent_OvermindEconomy? economy = GameComponent_OvermindEconomy.Current;
+                    if (economy == null || !economy.TryReserve(order, out reservation))
+                        return MechanoidOvermindDeliveryResult.Failed(GameComponent_OvermindEconomy.SupplyError);
+                }
+
                 info = new ActiveTransporterInfo
                 {
                     leaveSlag = false,
@@ -215,6 +224,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 // MakeDropPodAt 正常返回即视为投送已提交（Contents 已挂到 ActiveTransporter）。
                 // 传入实际联络的机械巢派系，由原版按 FactionDef.dropPodActive / dropPodIncoming 选用机械族空投仓。
                 DropPodUtility.MakeDropPodAt(dropCell, map, info, mechHive);
+                reservation?.Commit();
                 return MechanoidOvermindDeliveryResult.Succeeded(finalCost);
             }
             catch (Exception ex)
@@ -224,6 +234,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 if (IsDropCommitted(info))
                 {
+                    reservation?.Commit();
                     // 投送对象已进入地图持有链：不退款、不清理内容。
                     return MechanoidOvermindDeliveryResult.Succeeded(finalCost);
                 }
@@ -236,6 +247,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 return MechanoidOvermindDeliveryResult.Failed(
                     spent ? ErrorDropFailed : ErrorGenerationFailed);
+            }
+            finally
+            {
+                reservation?.Dispose();
             }
         }
 
@@ -467,7 +482,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindOrderLine_Thing line = thingLines[i];
                 if (line?.Spec?.Def == null
                     || line.Count <= 0
-                    || line.Count > MechanoidOvermindOrder.MaxCount)
+                    || line.Count > MechanoidOvermindOrder.ThingMaxCount)
                 {
                     return false;
                 }

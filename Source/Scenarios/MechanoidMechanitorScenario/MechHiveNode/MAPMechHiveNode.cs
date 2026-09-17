@@ -410,9 +410,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            GameComponent_OvermindEconomy.Current?.Prepare(true);
             materialDelivered = true;
             naturalTimerStopped = true;
             acceleratedCompletionTick = Find.TickManager.TicksGame + AcceleratedCompletionDelayTicks;
+            GameComponent_OvermindEconomy.Current?.Prepare(true);
         }
 
         protected override void Tick()

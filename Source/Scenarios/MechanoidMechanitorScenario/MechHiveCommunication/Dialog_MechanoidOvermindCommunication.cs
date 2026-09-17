@@ -1613,7 +1613,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             bool connected = MechanoidMechanitorMechHiveCommunicationUtility
                 .TryGetContactableMechHive(out _);
+            bool supplyAvailable = GameComponent_OvermindEconomy.HasSupply(order);
             bool canConfirm = costsOk
+                && supplyAvailable
                 && !order.IsEmpty
                 && connected
                 && cachedDropValid
@@ -1651,7 +1653,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     : MechanoidOvermindUiStyle.TextSecondary);
 
             Rect statusRect = new Rect(0f, summaryHeight, rect.width, statusHeight);
-            if (!cachedDropValid)
+            if (!supplyAvailable)
+            {
+                MechanoidOvermindUiStyle.DrawLabel(statusRect,
+                    GameComponent_OvermindEconomy.SupplyError.Translate(), GameFont.Tiny,
+                    TextAnchor.MiddleLeft, MechanoidOvermindUiStyle.Error);
+            }
+            else if (!cachedDropValid)
             {
                 MechanoidOvermindUiStyle.DrawLabel(
                     statusRect,

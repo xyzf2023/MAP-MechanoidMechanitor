@@ -7,6 +7,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         public const int MaxCount = 500;
 
+        // 原限制保留给机械族；动态物资按价值限购，并另限每次投送的实体堆数。
+        public static int ThingMaxCount => GameComponent_OvermindEconomy.Enabled ? 50000 : MaxCount;
+        public const int MaxThingStacks = 2048;
+
         private readonly List<MechanoidOvermindOrderLine_Mech> mechLines =
             new List<MechanoidOvermindOrderLine_Mech>();
 
@@ -121,9 +125,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 count = 0;
             }
-            else if (count > MaxCount)
+            else if (count > ThingMaxCount)
             {
-                count = MaxCount;
+                count = ThingMaxCount;
             }
 
             for (int i = 0; i < thingLines.Count; i++)

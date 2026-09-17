@@ -85,6 +85,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool enablePurgeDirectiveUiLoadingScreen = true;
 
+        public OvermindEconomySettings overmindEconomy = new OvermindEconomySettings();
+
         /// <summary>
         /// 每级效能核心提供的机械族全局工作速度偏移百分比。
         /// </summary>
@@ -452,6 +454,8 @@ namespace MAP_MechanoidMechanitor
         public override void ExposeData()
         {
             base.ExposeData();
+            Scribe_Deep.Look(ref overmindEconomy, "overmindEconomy");
+            if (overmindEconomy == null) overmindEconomy = new OvermindEconomySettings();
             Scribe_Values.Look(
                 ref addMechanoidMechanitorsToWorkTab,
                 "addMechanoidMechanitorsToWorkTab",

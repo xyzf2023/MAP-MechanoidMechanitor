@@ -215,6 +215,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             float excessSameValue = sameMaterialTotal - deliveredValue;
 
+            GameComponent_OvermindEconomy? economy = GameComponent_OvermindEconomy.Current;
+            Dictionary<ThingDef, double>? benefits = purge ? economy?.CaptureBenefits(transporters) : null;
+
             node.NotifyMaterialsDelivered();
 
             if (purge)
@@ -230,6 +233,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             // 节点消费内容：不发送遗弃通知。
             FinalizeConsumedContents(transporters, tile);
+            if (benefits != null) economy?.ApplyBenefits(benefits);
             Messages.Message(
                 "MAP_MechanoidMechanitor.MechHiveNode.Transport.DeliveredMessage".Translate(),
                 new GlobalTargetInfo(tile),
@@ -239,6 +243,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static void SettleQuotaOnly(List<ActiveTransporterInfo> transporters, PlanetTile tile)
         {
+            GameComponent_OvermindEconomy? economy = GameComponent_OvermindEconomy.Current;
+            Dictionary<ThingDef, double>? benefits = economy?.CaptureBenefits(transporters);
             float totalValue = 0f;
             for (int i = 0; i < transporters.Count; i++)
             {
@@ -261,6 +267,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             // 节点消费内容：不发送遗弃通知。
             FinalizeConsumedContents(transporters, tile);
+            if (benefits != null) economy?.ApplyBenefits(benefits);
             Messages.Message(
                 "MAP_MechanoidMechanitor.MechHiveNode.Transport.QuotaMessage".Translate(),
                 new GlobalTargetInfo(tile),
