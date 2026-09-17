@@ -135,7 +135,7 @@ namespace MAP_MechanoidMechanitor
                     actor,
                     out float energy)
                 || energy + 0.000001f
-                    < comp.Props.energyFractionPerInterval)
+                    < MechanicalFlightEnergyUtility.GetFinalConsumptionFraction(actor, comp.Props.energyFractionPerInterval))
             {
                 reason =
                     "MAP_MechanoidMechanitor.ChariotLaser.Disabled.NoEnergy"
@@ -153,7 +153,7 @@ namespace MAP_MechanoidMechanitor
             return MechanicalFlightEnergyUtility.TryGetEnergyFraction(
                        actor,
                        out float energy)
-                && energy + 0.000001f >= props.energyFractionPerInterval
+                && energy + 0.000001f >= MechanicalFlightEnergyUtility.GetFinalConsumptionFraction(actor, props.energyFractionPerInterval)
                 && MechanicalFlightEnergyUtility
                     .TryConsumeMaximumEnergyFraction(
                         actor,

@@ -46,6 +46,7 @@ namespace MAP_MechanoidMechanitor
             if (pawn == null
                 || stat == null
                 || IsArmorStat(stat)
+                || MechFusionVoidEngineUtility.IsEnergyStat(stat)
                 || !GameComponent_MechFusionSessionRegistry.TryGetSessionForWearer(
                     pawn,
                     out MechFusionSession? session)

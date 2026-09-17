@@ -117,8 +117,8 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 合体地面基础消耗：20%/游戏日 × 源机械族 MechEnergyUsageFactor，
-        /// 每 60 Tick 按实际经过 Tick 结算一次。
+        /// 合体地面基础消耗：20%/游戏日 × 排除虚空供能状态后的源机械族耗能系数。
+        /// 每 60 Tick 按实际经过 Tick 结算；机体同调的最终倍率由会话统一施加。
         /// </summary>
         internal static void TickSession(MechFusionSession session)
         {
@@ -164,7 +164,7 @@ namespace MAP_MechanoidMechanitor
                 return 1f;
             }
 
-            float value = source.GetStatValue(stat);
+            float value = MechFusionVoidEngineUtility.GetUsageFactor(source, stat);
             if (float.IsNaN(value))
             {
                 return 1f;
@@ -178,7 +178,8 @@ namespace MAP_MechanoidMechanitor
         {
             return GroundFractionPerDay
                 * 100f
-                * GetMechEnergyUsageFactor(session);
+                * GetMechEnergyUsageFactor(session)
+                * MechFusionVoidEngineUtility.ConsumptionFactor(session);
         }
     }
 

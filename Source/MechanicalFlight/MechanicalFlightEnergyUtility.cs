@@ -131,6 +131,14 @@ namespace MAP_MechanoidMechanitor
                 && GetProvider(pawn).TryConsumeMaximumEnergyFraction(pawn, fraction);
         }
 
+        /// <summary>仅预估实际费用供支付检查使用；扣款仍传入原始费用，避免重复减耗。</summary>
+        public static float GetFinalConsumptionFraction(Pawn? pawn, float fraction)
+        {
+            return Mathf.Max(0f, fraction)
+                * (MechFusionEnergyUtility.TryGetActiveSessionForWearer(pawn, out MechFusionSession? session)
+                    && session != null ? MechFusionVoidEngineUtility.ConsumptionFactor(session) : 1f);
+        }
+
         public static bool TrySetEnergyFraction(Pawn? pawn, float fraction)
         {
             return pawn != null

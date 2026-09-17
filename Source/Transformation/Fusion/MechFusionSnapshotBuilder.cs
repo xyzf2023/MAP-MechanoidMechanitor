@@ -426,6 +426,8 @@ namespace MAP_MechanoidMechanitor
                 new List<MechFusionStatEntry>();
             foreach (KeyValuePair<StatDef, float> pair in values)
             {
+                // 能源由合体会话独立结算，不再复制到人类属性，避免供能状态重复生效。
+                if (MechFusionVoidEngineUtility.IsEnergyStat(pair.Key)) continue;
                 result.Add(new MechFusionStatEntry(pair.Key, pair.Value));
             }
 

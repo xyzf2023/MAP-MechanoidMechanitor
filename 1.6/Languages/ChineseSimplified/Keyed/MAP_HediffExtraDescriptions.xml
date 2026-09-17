@@ -4,7 +4,8 @@
   <MAP_MechanoidMechanitor.HediffExtra.PsyfocusPerHour>精神力自动恢复：{0}/小时</MAP_MechanoidMechanitor.HediffExtra.PsyfocusPerHour>
   <MAP_MechanoidMechanitor.HediffExtra.BlocksMentalBreaks>不再陷入精神崩溃</MAP_MechanoidMechanitor.HediffExtra.BlocksMentalBreaks>
   <MAP_MechanoidMechanitor.HediffExtra.StatValue>{0}: {1}</MAP_MechanoidMechanitor.HediffExtra.StatValue>
-  <MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized>飞行能力：已准许</MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized>
+  <MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized>飞行能力：已就绪</MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized>
+  <MAP_MechanoidMechanitor.HediffExtra.VoidEngineRunning>虚空引擎：运行中</MAP_MechanoidMechanitor.HediffExtra.VoidEngineRunning>
   <MAP_MechanoidMechanitor.HediffExtra.StructuralStabilization>结构自稳：已启用</MAP_MechanoidMechanitor.HediffExtra.StructuralStabilization>
   <MAP_MechanoidMechanitor.HediffExtra.MechanitorConnected>机控系统已接入</MAP_MechanoidMechanitor.HediffExtra.MechanitorConnected>
   <MAP_MechanoidMechanitor.HediffExtra.QuantumCommunicator>量子通讯器已启用</MAP_MechanoidMechanitor.HediffExtra.QuantumCommunicator>

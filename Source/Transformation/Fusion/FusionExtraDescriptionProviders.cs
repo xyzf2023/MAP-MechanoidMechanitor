@@ -31,6 +31,10 @@ namespace MAP_MechanoidMechanitor
             {
                 yield return new HediffExtraDescriptionEntry("MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized");
             }
+            if (MechFusionVoidEngineUtility.IsRunning(session))
+            {
+                yield return new HediffExtraDescriptionEntry("MAP_MechanoidMechanitor.HediffExtra.VoidEngineRunning");
+            }
             if (session.RepairBeaconAuthorized
                 && !ImplantEffectUtility.HasHediff(hediff.pawn, MAPMechanitor_HediffDefOf.MAP_FusionStructuralRepair))
             {
@@ -52,7 +56,7 @@ namespace MAP_MechanoidMechanitor
             {
                 MechFusionStatEntry? entry = entries[i];
                 StatDef? stat = entry?.stat;
-                if (stat == null || stat == StatDefOf.MoveSpeed
+                if (stat == null || MechFusionVoidEngineUtility.IsEnergyStat(stat) || stat == StatDefOf.MoveSpeed
                     || (skipApparelWorkSpeedOffsets && MechFusionStatUtility.IsApparelWorkSpeedStat(stat)))
                 {
                     continue;

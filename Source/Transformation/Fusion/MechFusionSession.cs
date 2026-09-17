@@ -30,6 +30,8 @@ namespace MAP_MechanoidMechanitor
         private float maxStability;
         private bool repairBeaconCaptured;
         private bool repairBeaconAuthorized;
+        private bool voidEngineCaptured;
+        private bool voidEngineAuthorized;
         internal float PendingStabilityRepair;
         internal int StabilityRepairTicks;
         private int startTick;
@@ -104,6 +106,16 @@ namespace MAP_MechanoidMechanitor
 
         internal bool RepairBeaconCaptured => repairBeaconCaptured;
         internal bool RepairBeaconAuthorized => repairBeaconAuthorized;
+
+        internal bool VoidEngineCaptured => voidEngineCaptured;
+        internal bool VoidEngineAuthorized => voidEngineAuthorized;
+
+        internal void CaptureVoidEngine(bool authorized)
+        {
+            if (voidEngineCaptured) return;
+            voidEngineAuthorized = authorized;
+            voidEngineCaptured = true;
+        }
 
         internal void CaptureRepairBeacon(bool authorized)
         {
@@ -397,7 +409,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            currentEnergy = Math.Max(0f, currentEnergy - amount);
+            currentEnergy = Math.Max(0f, currentEnergy
+                - amount * MechFusionVoidEngineUtility.ConsumptionFactor(this));
         }
 
         internal void SetStability(float current, float max)
@@ -639,6 +652,9 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref maxStability, "maxStability");
             Scribe_Values.Look(ref repairBeaconCaptured, "repairBeaconCaptured");
             Scribe_Values.Look(ref repairBeaconAuthorized, "repairBeaconAuthorized");
+            // 旧存档缺少资格时不按读档后的监管关系补发；下一次合体重新捕获。
+            Scribe_Values.Look(ref voidEngineCaptured, "voidEngineCaptured");
+            Scribe_Values.Look(ref voidEngineAuthorized, "voidEngineAuthorized");
             Scribe_Values.Look(ref PendingStabilityRepair, "pendingStabilityRepair");
             Scribe_Values.Look(ref StabilityRepairTicks, "stabilityRepairTicks");
             Scribe_Values.Look(ref startTick, "startTick");
