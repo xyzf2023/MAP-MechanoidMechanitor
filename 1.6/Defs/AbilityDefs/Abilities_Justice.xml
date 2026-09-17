@@ -3,7 +3,7 @@
   <AbilityDef>
     <defName>MAP_Ability_MechRecode</defName>
     <label>机体再编码</label>
-    <description>「正义」将尝试修改敌方机械体尸体的敌我识别系统，使该机械体尸体的阵营变成我方。仅可选择敌方机械体尸体作为目标。</description>
+    <description>尝试修改敌方机械体尸体的敌我识别系统，使该机械体尸体的阵营变成我方。仅可选择敌方机械体尸体作为目标。</description>
     <iconPath>UI/MM_MechRecode</iconPath>
     <jobDef>MAP_Job_MechRecode</jobDef>
     <hasExternallyHandledCooldown>true</hasExternallyHandledCooldown>
@@ -42,7 +42,7 @@
   <AbilityDef>
     <defName>MAP_Ability_MechReconstruction</defName>
     <label>机体重构</label>
-    <description>「正义」将尝试修复友方机械体尸体的全部损伤并将其重新启动。</description>
+    <description>尝试修复友方机械体尸体的全部损伤并将其重新启动。</description>
     <iconPath>UI/MM_MechReconstruction</iconPath>
     <cooldownTicksRange>240000~240000</cooldownTicksRange>
     <warmupStartSound>MechResurrect_Warmup</warmupStartSound>
@@ -86,7 +86,7 @@
   <AbilityDef>
     <defName>MAP_Ability_MechHack</defName>
     <label>机体骇入</label>
-    <description>「正义」将尝试骇入一台非我方机械体。将一台目标内的非我方存活机械体的阵营改为我方。</description>
+    <description>尝试骇入一台非我方机械体。将一台目标内的非我方存活机械体的阵营改为我方。</description>
     <iconPath>UI/MM_MechHack</iconPath>
     <cooldownTicksRange>300000~300000</cooldownTicksRange>
     <jobDef>MAP_Job_MechHack</jobDef>
