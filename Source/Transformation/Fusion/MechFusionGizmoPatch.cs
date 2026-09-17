@@ -6,7 +6,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 合体期间 Gizmo 的唯一补充入口。开始合体改由双向右键菜单下达；
+    /// 合体期间 Gizmo 的唯一补充入口。开始合体由机械族侧右键菜单下达；
     /// 这里保留能源、结构稳定值、源战车激光和手动解除合体。
     /// </summary>
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.GetGizmos))]

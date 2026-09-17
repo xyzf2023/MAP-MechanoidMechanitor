@@ -67,6 +67,8 @@ namespace MAP_MechanoidMechanitor
         protected override IEnumerable<Toil> MakeNewToils()
         {
             this.FailOnDespawnedOrNull(TargetIndex.A);
+            // 覆盖接近、飞行和折跃等待阶段，精神状态出现后不再继续执行玩家合体指令。
+            this.FailOn(() => pawn.InMentalState);
             this.AddFinishAction(delegate
             {
                 if (MechanicalFlightUtility.IsFusionRelocating(pawn))

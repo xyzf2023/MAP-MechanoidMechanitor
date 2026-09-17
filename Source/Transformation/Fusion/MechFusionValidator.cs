@@ -21,6 +21,7 @@ namespace MAP_MechanoidMechanitor
                 || source.Discarded
                 || source.Dead
                 || source.Downed
+                || source.InMentalState
                 || !source.Spawned
                 || source.Map == null)
             {

@@ -6,10 +6,9 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 合体的双向右键入口：
-    /// 选中有资格的机械族右键合法人类，或选中合法人类右键有资格机械族。
-    /// 两种操作都统一给源机械族下达合体接近 Job，正式合体仍由
-    /// MechFusionStartService.TryStartFusion 统一执行。
+    /// 合体的机械族侧右键入口：
+    /// 选中有资格的机械族右键合法人类，给源机械族下达合体接近 Job。
+    /// 正式合体仍由 MechFusionStartService.TryStartFusion 统一执行。
     /// </summary>
     public sealed class FloatMenuOptionProvider_MechFusion
         : FloatMenuOptionProvider
@@ -32,14 +31,13 @@ namespace MAP_MechanoidMechanitor
             Pawn clickedPawn,
             FloatMenuContext context)
         {
-            Pawn? selected = context.FirstSelectedPawn;
-            if (!TryResolvePair(
-                    selected,
-                    clickedPawn,
-                    out Pawn? source,
-                    out Pawn? wearer)
-                || source == null
-                || wearer == null)
+            Pawn? source = context.FirstSelectedPawn;
+            Pawn wearer = clickedPawn;
+            if (source == null
+                || wearer == null
+                || ReferenceEquals(source, wearer)
+                || !MechFusionEligibilityUtility.HasFusionEligibility(source)
+                || !wearer.RaceProps.Humanlike)
             {
                 yield break;
             }
@@ -61,6 +59,17 @@ namespace MAP_MechanoidMechanitor
                 label,
                 delegate
                 {
+                    // 菜单打开后双方状态仍可能变化，必须在打断源机械族任务前重新校验。
+                    if (!MechFusionValidator.CanStart(source, wearer, out string? orderFailureReason))
+                    {
+                        Messages.Message(
+                            orderFailureReason ?? string.Empty,
+                            source,
+                            MessageTypeDefOf.RejectInput,
+                            historical: false);
+                        return;
+                    }
+
                     Job job = JobMaker.MakeJob(
                         MAPMechanitor_JobDefOf.MAP_MechFusionApproach,
                         wearer);
@@ -95,40 +104,6 @@ namespace MAP_MechanoidMechanitor
                         MessageTypeDefOf.RejectInput,
                         historical: false);
                 });
-        }
-
-        private static bool TryResolvePair(
-            Pawn? selected,
-            Pawn? clicked,
-            out Pawn? source,
-            out Pawn? wearer)
-        {
-            source = null;
-            wearer = null;
-            if (selected == null
-                || clicked == null
-                || ReferenceEquals(selected, clicked))
-            {
-                return false;
-            }
-
-            if (MechFusionEligibilityUtility.HasFusionEligibility(selected)
-                && clicked.RaceProps.Humanlike)
-            {
-                source = selected;
-                wearer = clicked;
-                return true;
-            }
-
-            if (selected.RaceProps.Humanlike
-                && MechFusionEligibilityUtility.HasFusionEligibility(clicked))
-            {
-                source = clicked;
-                wearer = selected;
-                return true;
-            }
-
-            return false;
         }
     }
 }
