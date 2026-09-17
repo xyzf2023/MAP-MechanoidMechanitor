@@ -243,4 +243,36 @@
     </products>
   </RecipeDef>
 
+  <RecipeDef MayRequire="Ludeon.RimWorld.Biotech">
+    <defName>MAP_Make_ReactionlessThruster</defName>
+    <label>制作无工质推进器</label>
+    <description>制作一个无工质推进器。</description>
+    <jobString>正在制作无工质推进器。</jobString>
+    <researchPrerequisite>MAP_FieldPropulsion</researchPrerequisite>
+    <workAmount>2000</workAmount>
+    <workSpeedStat>GeneralLaborSpeed</workSpeedStat>
+    <effectWorking>Cook</effectWorking>
+    <soundWorking>Recipe_Machining</soundWorking>
+    <recipeUsers>
+      <li>TableMachining</li>
+    </recipeUsers>
+    <ingredients>
+      <li><filter><thingDefs><li>Plasteel</li></thingDefs></filter><count>30</count></li>
+      <li><filter><thingDefs><li>ComponentSpacer</li></thingDefs></filter><count>6</count></li>
+      <li><filter><thingDefs><li>Uranium</li></thingDefs></filter><count>20</count></li>
+      <li><filter><thingDefs><li>Gold</li></thingDefs></filter><count>1</count></li>
+    </ingredients>
+    <fixedIngredientFilter>
+      <thingDefs>
+        <li>Plasteel</li>
+        <li>ComponentSpacer</li>
+        <li>Uranium</li>
+        <li>Gold</li>
+      </thingDefs>
+    </fixedIngredientFilter>
+    <products>
+      <MAP_ReactionlessThruster>1</MAP_ReactionlessThruster>
+    </products>
+  </RecipeDef>
+
 </Defs>

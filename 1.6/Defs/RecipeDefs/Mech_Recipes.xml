@@ -319,7 +319,7 @@
             <li>Steel</li>
           </thingDefs>
         </filter>
-        <count>100</count>
+        <count>80</count>
       </li>
       <li>
         <filter>
@@ -335,7 +335,7 @@
             <li>ComponentIndustrial</li>
           </thingDefs>
         </filter>
-        <count>8</count>
+        <count>2</count>
       </li>
       <li>
         <filter>
@@ -343,7 +343,15 @@
             <li>ComponentSpacer</li>
           </thingDefs>
         </filter>
-        <count>6</count>
+        <count>1</count>
+      </li>
+      <li>
+        <filter>
+          <thingDefs>
+            <li>MAP_ReactionlessThruster</li>
+          </thingDefs>
+        </filter>
+        <count>1</count>
       </li>
     </ingredients>
     <fixedIngredientFilter>
@@ -353,6 +361,7 @@
         <li>Plasteel</li>
         <li>ComponentIndustrial</li>
         <li>ComponentSpacer</li>
+        <li>MAP_ReactionlessThruster</li>
       </thingDefs>
     </fixedIngredientFilter>
     <products>

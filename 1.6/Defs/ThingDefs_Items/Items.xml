@@ -50,6 +50,20 @@
     </comps>
   </ThingDef>
 
+  <ThingDef ParentName="MAP_MechanoidMechanitorInstallableModuleBase">
+    <defName>MAP_ReactionlessThruster</defName>
+    <label>无工质推进器</label>
+    <description>利用场推进技术产生推力的机械族模块，无需喷射推进工质即可驱动机体升空。安装后，机械族将获得自主飞行能力，飞行时仍需消耗自身能量。\n\n选中机械族，右键点击此物品即可下达安装命令。已拥有自主飞行能力的机械族无法重复安装。</description>
+    <graphicData>
+      <texPath>Things/FieldPropulsion</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>1.0</drawSize>
+    </graphicData>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_ReactionlessThrusterInstallEffect"/>
+    </comps>
+  </ThingDef>
+
   <ThingDef ParentName="MAP_MechanoidMechanitorInstallableModuleBase" MayRequire="Ludeon.RimWorld.Biotech">
     <defName>MAP_MindMappingAutonomousDirectiveCore</defName>
     <label>自律指令核心（空白）</label>
