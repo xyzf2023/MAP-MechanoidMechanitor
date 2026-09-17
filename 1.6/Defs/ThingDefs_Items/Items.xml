@@ -49,4 +49,23 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_BionicCompanionModuleInstallEffect"/>
     </comps>
   </ThingDef>
+
+  <ThingDef ParentName="MAP_MechanoidMechanitorInstallableModuleBase" MayRequire="Ludeon.RimWorld.Biotech">
+    <defName>MAP_MindMappingAutonomousDirectiveCore</defName>
+    <label>自律指令核心（空白）</label>
+    <description>TODO</description>
+    <graphicData>
+      <texPath>Things/AutonomousDirectiveCore</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>1.0</drawSize>
+    </graphicData>
+    <comps Inherit="False">
+      <li Class="CompProperties_Forbiddable"/>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MindMappingAutonomousDirectiveCore"/>
+    </comps>
+    <inspectorTabs>
+      <li>MAP_MechanoidMechanitor.ITab_MindMappingDetails</li>
+    </inspectorTabs>
+  </ThingDef>
+
 </Defs>
