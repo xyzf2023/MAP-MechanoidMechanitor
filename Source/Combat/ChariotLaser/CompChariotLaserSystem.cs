@@ -18,7 +18,6 @@ namespace MAP_MechanoidMechanitor
         public int sweepDurationTicks = 240;
         public int energyIntervalTicks = 6;
         public int pawnDamageIntervalTicks = 10;
-        public int cooldownTicks = 180;
         public int muzzleFlashIntervalTicks = 22;
 
         public float energyFractionPerInterval = 0.0005f;
@@ -45,27 +44,12 @@ namespace MAP_MechanoidMechanitor
     }
 
     /// <summary>
-    /// 战车激光的资格、参数与共享冷却。融合形态读取源战车上的同一个组件，
-    /// 因而冷却不会因合体/解除合体而重置。
+    /// 战车激光的资格与参数。融合形态读取源战车上的同一个组件。
     /// </summary>
     public sealed class CompChariotLaserSystem : ThingComp
     {
-        private int cooldownUntilTick;
-
         public CompProperties_ChariotLaserSystem Props =>
             (CompProperties_ChariotLaserSystem)props;
-
-        public int CooldownTicksRemaining =>
-            Mathf.Max(0, cooldownUntilTick - Find.TickManager.TicksGame);
-
-        public bool IsOnCooldown => CooldownTicksRemaining > 0;
-
-        public void StartCooldown()
-        {
-            cooldownUntilTick = Mathf.Max(
-                cooldownUntilTick,
-                Find.TickManager.TicksGame + Props.cooldownTicks);
-        }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
@@ -83,9 +67,6 @@ namespace MAP_MechanoidMechanitor
         public override void PostExposeData()
         {
             base.PostExposeData();
-            Scribe_Values.Look(
-                ref cooldownUntilTick,
-                "chariotLaserCooldownUntilTick");
         }
     }
 
@@ -147,15 +128,6 @@ namespace MAP_MechanoidMechanitor
                 reason =
                     "MAP_MechanoidMechanitor.ChariotLaser.Disabled.Emergency"
                         .Translate();
-                return false;
-            }
-
-            if (comp.IsOnCooldown)
-            {
-                reason =
-                    "MAP_MechanoidMechanitor.ChariotLaser.Disabled.Cooldown"
-                        .Translate(
-                            (comp.CooldownTicksRemaining / 60f).ToString("0.0"));
                 return false;
             }
 

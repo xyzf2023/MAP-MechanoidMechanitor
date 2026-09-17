@@ -119,7 +119,6 @@
         <trackingIgnitionChance>0.7</trackingIgnitionChance>
         <splashIgnitionChance>0.3</splashIgnitionChance>
         <sweepIgnitionChance>0.4</sweepIgnitionChance>
-        <cooldownTicks>180</cooldownTicks>
         <muzzleFlashIntervalTicks>22</muzzleFlashIntervalTicks>
         <muzzleFlashScale>9</muzzleFlashScale>
         <heatDamageDef>MAP_ChariotLaserHeat</heatDamageDef>
