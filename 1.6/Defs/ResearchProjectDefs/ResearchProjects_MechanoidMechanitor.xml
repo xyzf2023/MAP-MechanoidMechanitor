@@ -21,7 +21,7 @@
   <ResearchProjectDef>
     <defName>MAP_QuantumStructuralRestoration</defName>
     <label>量子结构复原</label>
-    <description>利用量子运算建立机械体完整结构的高精度状态模型，并将受损部位与基准结构持续比对，以生成可由机械族自身执行的精密修复序列。\n\n研究完成后可制造「修复信标」。</description>
+    <description>利用量子运算建立机械体完整结构的高精度状态模型，并将受损部位与基准结构持续比对，以生成可由机械族自身执行的精密修复序列。\n\n研究此科技以解锁“修复信标”的制作方式。</description>
     <baseCost>2000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
@@ -35,7 +35,7 @@
   <ResearchProjectDef>
     <defName>MAP_QuantumVacuumExtraction</defName>
     <label>量子真空汲取</label>
-    <description>利用量子运算预测并稳定转瞬即逝的虚空泡，从量子真空的涨落中持续提取可用能量，再经由机械师的监管链路将其输送至受监管机械族。\n\n研究完成后可制造「虚空引擎」。</description>
+    <description>利用量子运算预测并稳定转瞬即逝的虚空泡，从量子真空的涨落中持续提取可用能量，再经由机械师的监管链路将其输送至受监管机械族。\n\n研究此科技以解锁“虚空引擎”的制作方式。</description>
     <baseCost>2000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
@@ -66,7 +66,7 @@
   <ResearchProjectDef>
     <defName>MAP_QuantumTaskComputation</defName>
     <label>量子作业演算</label>
-    <description>利用量子运算同时处理大量作业变量，为机械族计算更高效、更精确的执行方案。研究完成后可制造效能核心。</description>
+    <description>利用量子运算同时处理大量作业变量，为机械族计算更高效、更精确的执行方案。\n\n研究此科技以解锁“效能核心”的制作方式。</description>
     <baseCost>5000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
@@ -224,7 +224,7 @@
   <ResearchProjectDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
     <defName>MAP_ArtificialPsychicPathway</defName>
     <label>人工灵能通路</label>
-    <description>研究如何利用启灵装置构建人工灵能通路，从而更好地感知、传导并驾驭灵能。机械族机械师可以通过这项技术获得使用灵能的能力，普通灵能者亦能从中获益。\n\n研究完成后可制造「心灵中枢」。</description>
+    <description>研究如何利用启灵装置构建人工灵能通路，从而更好地感知、传导并驾驭灵能。机械族机械师可以通过这项技术获得使用灵能的能力，普通灵能者亦能从中获益。\n\n研究此科技以解锁“心灵中枢”的制作方式。</description>
     <baseCost>5000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
@@ -252,7 +252,7 @@
   <ResearchProjectDef>
     <defName>MAP_QuantumProxyProtocol</defName>
     <label>量子代理协议</label>
-    <description>将机械指挥代理的基础决策能力与量子运算技术结合，使微型代理人工智能能够接入机械师的控制网络，并在机械师失去指挥能力时临时维持既有的机控连接。\n\n研究完成后可制造「代理子链」。</description>
+    <description>将机械指挥代理的基础决策能力与量子运算技术结合，使微型代理人工智能能够接入机械师的控制网络，并在机械师失去指挥能力时临时维持既有的机控连接。\n\n研究此科技以解锁“代理子链”的制作方式。</description>
     <baseCost>3000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
@@ -297,7 +297,7 @@
   <ResearchProjectDef>
     <defName>MAP_BionicCompanionEngineering</defName>
     <label>仿生伴侣工程</label>
-    <description>在仿生结构与认知架构的基础上，整合情感模拟系统与人工孕育装置，使机械体能够参与更亲密的关系，并成为新生命的孕育载体。\n\n研究此科技以解锁仿生伴侣模块的制作方式。安装该模块后，机械族将获得情感模拟与人工孕育能力。</description>
+    <description>在仿生结构与认知架构的基础上，整合情感模拟系统与人工孕育装置，使机械体能够参与更亲密的关系，并成为新生命的孕育载体。\n\n研究此科技以解锁“仿生伴侣模块”的制作方式。安装该模块后，机械族将获得情感模拟与人工孕育能力。</description>
     <baseCost>5000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>
@@ -307,5 +307,35 @@
     <researchViewX>2.00</researchViewX>
     <researchViewY>5.00</researchViewY>
   </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_FieldPropulsion</defName>
+    <label>场推进技术</label>
+    <description>通过对局域场效应的深入研究，我们掌握了将能量直接转化为推进力的方法，并以此开发出适用于机械体的飞行装置，使其能够稳定悬浮并进行空中机动。\n\n研究此科技以解锁“无工质推进器”的制作方式。安装推进器后，机械族将获得飞行能力。</description>
+    <baseCost>3500</baseCost>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>UltraMechtech</li>
+    </prerequisites>
+    <researchViewX>0.00</researchViewX>
+    <researchViewY>5.83</researchViewY>
+  </ResearchProjectDef>
+
+  <ResearchProjectDef>
+    <defName>MAP_HumanMechSynchronization</defName>
+    <label>机体同调工程</label>
+    <description>进一步研究仿生机械结构、神经同步与无工质动力系统，我们掌握了制造可由人类穿戴的特殊机械族的方法。这类机械族能够以外骨骼形态包覆并保护穿戴者；解除穿戴后，则仍可作为独立机械族保持完整的作战能力。\n\n研究此科技以解锁机械族「战车」的培育方式。「战车」是一种特殊的外骨骼机械体，能够以外骨骼形态与其监管者合体，并使合体者获得其飞行与激光武器系统的使用能力。\n\n当「战车」安装部分量子机械科技物品后，与监管者合体还会产生额外的特殊效果。</description>
+    <baseCost>5000</baseCost>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <prerequisites>
+      <li>MAP_FieldPropulsion</li>
+      <li>MAP_BionicMechanicalStructure</li>
+    </prerequisites>
+    <researchViewX>1.00</researchViewX>
+    <researchViewY>5.83</researchViewY>
+  </ResearchProjectDef>
+
 
 </Defs>
