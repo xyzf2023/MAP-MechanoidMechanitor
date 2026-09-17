@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using MAP_MechanoidMechanitor.Scenarios;
 using UnityEngine;
@@ -17,8 +19,31 @@ namespace MAP_MechanoidMechanitor
 
         private string? productivityCoreWorkSpeedBuffer;
         private bool productivityCoreWorkSpeedFieldWasFocused;
-        private Vector2 settingsScrollPosition;
-        private float settingsContentHeight = 1200f;
+        private enum SettingsPage
+        {
+            Interface,
+            Mech,
+            Start,
+            World,
+            Boss,
+            Diagnostics
+        }
+
+        private static readonly string[] SettingsPageKeys =
+        {
+            "MAP_Settings.Page.Interface",
+            "MAP_Settings.Page.Mech",
+            "MAP_Settings.Page.Start",
+            "MAP_Settings.Page.World",
+            "MAP_Settings.Page.Boss",
+            "MAP_Settings.Page.Diagnostics"
+        };
+
+        // 仅保存界面状态，不写入 MOD 设置或存档。
+        private SettingsPage settingsPage;
+        private readonly Vector2[] settingsScrollPositions = new Vector2[SettingsPageKeys.Length];
+        private readonly float[] settingsContentHeights = new float[SettingsPageKeys.Length];
+        private readonly HashSet<string> collapsedSettingsGroups = new HashSet<string>();
 
         public MAPMechanitorMod(ModContentPack content) : base(content)
         {
@@ -32,29 +57,136 @@ namespace MAP_MechanoidMechanitor
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
-            float viewWidth =
-                Mathf.Max(1f, inRect.width - SettingsScrollbarReserve);
+            if (Settings == null)
+            {
+                return;
+            }
 
-            float viewHeight =
-                Mathf.Max(inRect.height, settingsContentHeight);
+            float navigationWidth = Mathf.Min(150f, inRect.width * 0.24f);
+            for (int i = 0; i < SettingsPageKeys.Length; i++)
+            {
+                Rect row = new Rect(inRect.x, inRect.y + i * 40f, navigationWidth, 36f);
+                if (i == (int)settingsPage)
+                {
+                    Widgets.DrawHighlight(row);
+                }
+                Widgets.DrawHighlightIfMouseover(row);
+                Widgets.Label(new Rect(row.x + 8f, row.y + 6f, row.width - 16f, row.height),
+                    SettingsPageKeys[i].Translate());
+                if (Widgets.ButtonInvisible(row) && i != (int)settingsPage)
+                {
+                    CommitProductivityCoreWorkSpeedBuffer();
+                    productivityCoreWorkSpeedFieldWasFocused = false;
+                    GUI.FocusControl(null);
+                    settingsPage = (SettingsPage)i;
+                }
+            }
 
-            Rect viewRect = new Rect(
-                0f,
-                0f,
-                viewWidth,
-                viewHeight);
+            Widgets.DrawLineVertical(inRect.x + navigationWidth + 6f, inRect.y, inRect.height);
+            Rect contentRect = new Rect(
+                inRect.x + navigationWidth + 18f, inRect.y,
+                Mathf.Max(1f, inRect.width - navigationWidth - 18f), inRect.height);
+            int pageIndex = (int)settingsPage;
+            float viewWidth = Mathf.Max(1f, contentRect.width - SettingsScrollbarReserve);
+            Rect viewRect = new Rect(0f, 0f, viewWidth,
+                Mathf.Max(contentRect.height, settingsContentHeights[pageIndex]));
 
-            Widgets.BeginScrollView(
-                inRect,
-                ref settingsScrollPosition,
-                viewRect);
-
-            Listing_Standard listing = new Listing_Standard();
-            // Keep settings in one vertical column so the scroll view can measure
-            // the full content height instead of letting Listing auto-create columns.
-            listing.maxOneColumn = true;
+            Widgets.BeginScrollView(contentRect, ref settingsScrollPositions[pageIndex], viewRect);
+            Listing_Standard listing = new Listing_Standard { maxOneColumn = true };
             listing.Begin(viewRect);
 
+            switch (settingsPage)
+            {
+                case SettingsPage.Interface:
+                    DrawInterfaceSettings(listing);
+                    break;
+                case SettingsPage.Mech:
+                    DrawSettingsGroup(listing, "MAP_Settings.Group.Implants", DrawImplantSettings);
+                    DrawSettingsGroup(listing, "MAP_Settings.Group.Cores", DrawCoreSettings);
+                    DrawSettingsGroup(listing, "MAP_Settings.Group.SkillsAndOffspring", DrawSkillsAndOffspringSettings);
+                    DrawJusticeAbilitySettings(listing);
+                    DrawSettingsGroup(listing,
+                        "MAP_MechanoidMechanitor.Settings.Recreation.Section", DrawRecreationSettings);
+                    break;
+                case SettingsPage.Start:
+                    DrawSettingsGroup(listing,
+                        "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section",
+                        group => MechanoidMechanitorGeneralScenarioDefaultSettingsUI.Draw(group, false));
+                    DrawSettingsGroup(listing,
+                        "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Section",
+                        StartingPawnValueProtectionSettingsUI.Draw);
+                    break;
+                case SettingsPage.World:
+                    DrawSettingsGroup(listing,
+                        "MAP_MechanoidMechanitor.Settings.StrategicNodes.Section", DrawStrategicNodeSettings);
+                    DrawSettingsGroup(listing,
+                        "MAP_MechanoidMechanitor.Settings.Insects.Section", DrawInsectStorySettings);
+                    DrawSymbiosisCovenantSettings(listing);
+                    DrawSettingsGroup(listing, "MAP_OvermindEconomy.Settings.Title",
+                        group => OvermindEconomySettings.Draw(group, Settings.overmindEconomy, false));
+                    break;
+                case SettingsPage.Boss:
+                    DrawSettingsGroup(listing,
+                        "MAP_MechanoidMechanitor.Settings.JusticeBoss.Section", DrawJusticeBossDifficultySettings);
+                    if (ModsConfig.OdysseyActive)
+                    {
+                        DrawSettingsGroup(listing,
+                            "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section", DrawCerebrexBossDifficultySettings);
+                    }
+                    break;
+                case SettingsPage.Diagnostics:
+                    DrawDiagnosticsSettings(listing);
+                    break;
+            }
+
+            settingsContentHeights[pageIndex] =
+                Mathf.Max(contentRect.height, listing.CurHeight + SettingsBottomPadding);
+            listing.End();
+            Widgets.EndScrollView();
+
+            // 收起分组后立即收回多余滚动距离，避免停在内容下方的空白区域。
+            settingsScrollPositions[pageIndex].y = Mathf.Clamp(
+                settingsScrollPositions[pageIndex].y, 0f,
+                Mathf.Max(0f, settingsContentHeights[pageIndex] - contentRect.height));
+        }
+
+        private void DrawSettingsGroup(
+            Listing_Standard listing, string titleKey, Action<Listing_Standard> drawContents)
+        {
+            bool expanded = !collapsedSettingsGroups.Contains(titleKey);
+            string title = (expanded ? "▼ " : "▶ ") + titleKey.Translate();
+            Rect header = listing.GetRect(
+                Mathf.Max(30f, Text.CalcHeight(title, listing.ColumnWidth - 12f) + 8f));
+            Widgets.DrawHighlight(header);
+            Widgets.DrawHighlightIfMouseover(header);
+            Widgets.Label(new Rect(header.x + 6f, header.y + 4f,
+                header.width - 12f, header.height - 4f), title);
+            if (Widgets.ButtonInvisible(header))
+            {
+                CommitProductivityCoreWorkSpeedBuffer();
+                productivityCoreWorkSpeedFieldWasFocused = false;
+                GUI.FocusControl(null);
+                if (expanded)
+                {
+                    collapsedSettingsGroups.Add(titleKey);
+                }
+                else
+                {
+                    collapsedSettingsGroups.Remove(titleKey);
+                }
+                expanded = !expanded;
+            }
+
+            listing.Gap(4f);
+            if (expanded)
+            {
+                drawContents(listing);
+            }
+            listing.Gap(8f);
+        }
+
+        private void DrawInterfaceSettings(Listing_Standard listing)
+        {
             listing.CheckboxLabeled(
                 "将机械族机械师显示在工作标签页",
                 ref Settings!.addMechanoidMechanitorsToWorkTab,
@@ -72,26 +204,6 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description"
                     .Translate());
 
-            listing.CheckboxLabeled(
-                "MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Label".Translate(),
-                ref Settings.preventMechanoidMechanitorDeathDuringLoad,
-                "MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description"
-                    .Translate());
-
-            listing.CheckboxLabeled(
-                "MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label"
-                    .Translate(),
-                ref Settings.enableLoadDeathDiagnosticLogging,
-                "MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description"
-                    .Translate());
-
-            listing.CheckboxLabeled(
-                "MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Label"
-                    .Translate(),
-                ref Settings.enableCompatibilityDetailedLogging,
-                "MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Description"
-                    .Translate());
-
             bool previousEnablePortraitDisplayForAllSaves =
                 Settings.enablePortraitDisplayForAllSaves;
             listing.CheckboxLabeled(
@@ -105,8 +217,16 @@ namespace MAP_MechanoidMechanitor
             }
 
             listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label".Translate(),
+                ref Settings.enablePurgeDirectiveUiLoadingScreen,
+                "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description".Translate());
+        }
+
+        private void DrawImplantSettings(Listing_Standard listing)
+        {
+            listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.BrainImplants.Label".Translate(),
-                ref Settings.enableMechanoidMechanitorBrainImplants,
+                ref Settings!.enableMechanoidMechanitorBrainImplants,
                 "MAP_MechanoidMechanitor.Settings.BrainImplants.Description".Translate());
             if (MechanoidMechanitorBrainImplantFeatureState.RestartRequired)
             {
@@ -124,53 +244,68 @@ namespace MAP_MechanoidMechanitor
                 listing.Label(
                     "MAP_MechanoidMechanitor.Settings.MoonImplants.RestartRequired".Translate());
             }
+        }
 
+        private void DrawCoreSettings(Listing_Standard listing)
+        {
             DrawProductivityCoreWorkSpeedSetting(listing);
 
             listing.CheckboxLabeled(
                 "允许满级心灵中枢自动清除精神状态",
-                ref Settings.enableMaxLevelPsychicCoreMentalStateRecovery,
+                ref Settings!.enableMaxLevelPsychicCoreMentalStateRecovery,
                 "开启后，每10秒将尝试清除安装了满级心灵中枢的角色的精神状态。");
+        }
+
+        private void DrawSkillsAndOffspringSettings(Listing_Standard listing)
+        {
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Label".Translate(),
+                ref Settings!.ensureMechanoidMechanitorMinimumMinorPassion,
+                "MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description".Translate());
 
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label".Translate(),
                 ref Settings.syntheticOffspringInheritXenogenes,
                 "MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description".Translate());
+        }
+
+        private void DrawDiagnosticsSettings(Listing_Standard listing)
+        {
+            MAPMechanitorModSettings settings = Settings!;
 
             listing.CheckboxLabeled(
-                "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label".Translate(),
-                ref Settings.enablePurgeDirectiveUiLoadingScreen,
-                "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description".Translate());
+                "MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Label".Translate(),
+                ref settings.preventMechanoidMechanitorDeathDuringLoad,
+                "MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description"
+                    .Translate());
 
             listing.CheckboxLabeled(
-                "MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Label".Translate(),
-                ref Settings.ensureMechanoidMechanitorMinimumMinorPassion,
-                "MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description".Translate());
+                "MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label"
+                    .Translate(),
+                ref settings.enableLoadDeathDiagnosticLogging,
+                "MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description"
+                    .Translate());
 
-            DrawRecreationSettings(listing);
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Label"
+                    .Translate(),
+                ref settings.enableCompatibilityDetailedLogging,
+                "MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Description"
+                    .Translate());
 
-            OvermindEconomySettings.Draw(listing, Settings.overmindEconomy);
-
-            DrawSymbiosisCovenantSettings(listing);
-
-            DrawStrategicNodeSettings(listing);
-
-            DrawInsectStorySettings(listing);
-
-            DrawJusticeAbilitySettings(listing);
-
-            DrawJusticeBossDifficultySettings(listing);
-
-            DrawCerebrexBossDifficultySettings(listing);
-
-            settingsContentHeight =
-                Mathf.Max(
-                    inRect.height,
-                    listing.CurHeight + SettingsBottomPadding);
-
-            listing.End();
-
-            Widgets.EndScrollView();
+            bool diagnosticLoggingBefore =
+                settings.enableJusticeBossDiagnosticLogging;
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label"
+                    .Translate(),
+                ref settings.enableJusticeBossDiagnosticLogging,
+                "MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description"
+                    .Translate());
+            if (diagnosticLoggingBefore
+                != settings.enableJusticeBossDiagnosticLogging)
+            {
+                JusticeBossDiagnosticsRuntime.Refresh();
+            }
         }
 
         private static void DrawInsectStorySettings(Listing_Standard listing)
@@ -179,11 +314,6 @@ namespace MAP_MechanoidMechanitor
             {
                 return;
             }
-
-            listing.GapLine();
-
-            listing.Label(
-                "MAP_MechanoidMechanitor.Settings.Insects.Section".Translate());
 
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label"
@@ -263,11 +393,6 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            listing.GapLine();
-
-            listing.Label(
-                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section".Translate());
-
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label"
                     .Translate(),
@@ -283,11 +408,6 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            listing.GapLine();
-
-            listing.Label(
-                "MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section".Translate());
-
             int tenths = Mathf.Clamp(
                 Settings.symbiosisCovenantGrowthMultiplierTenths,
                 MAPMechanitorModSettings.MinSymbiosisCovenantGrowthMultiplierTenths,
@@ -295,7 +415,8 @@ namespace MAP_MechanoidMechanitor
 
             // 滑块直接走整数档位 5..20，显示时才 /10，
             // 绝不保存 Slider 返回的 float，避免留下无法稳定复现的小数档位。
-            float sliderValue = listing.SliderLabeled(
+            float sliderValue = DrawSettingsSlider(
+                listing,
                 "MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label"
                     .Translate(
                         (tenths / 10f).ToString("0.0", CultureInfo.CurrentCulture))
@@ -324,26 +445,8 @@ namespace MAP_MechanoidMechanitor
 
             MAPMechanitorModSettings settings = Settings;
 
-            listing.GapLine();
-            listing.Label(
-                "MAP_MechanoidMechanitor.Settings.JusticeBoss.Section".Translate());
-
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.JusticeBoss.Description".Translate());
-
-            bool diagnosticLoggingBefore =
-                settings.enableJusticeBossDiagnosticLogging;
-            listing.CheckboxLabeled(
-                "MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label"
-                    .Translate(),
-                ref settings.enableJusticeBossDiagnosticLogging,
-                "MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description"
-                    .Translate());
-            if (diagnosticLoggingBefore
-                != settings.enableJusticeBossDiagnosticLogging)
-            {
-                JusticeBossDiagnosticsRuntime.Refresh();
-            }
 
             if (ModsConfig.RoyaltyActive)
             {
@@ -439,10 +542,6 @@ namespace MAP_MechanoidMechanitor
 
             // 进入方法前保存原始 GUI.enabled，方法结束前恢复，避免影响后续其他 MOD 设置整体变灰。
             bool outerEnabled = GUI.enabled;
-
-            listing.GapLine();
-            listing.Label(
-                "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section".Translate());
 
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description".Translate());
@@ -642,12 +741,6 @@ namespace MAP_MechanoidMechanitor
 
             MAPMechanitorModSettings settings = Settings;
 
-            listing.GapLine();
-
-            listing.Label(
-                "MAP_MechanoidMechanitor.Settings.StrategicNodes.Section"
-                    .Translate());
-
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.StrategicNodes.Description"
                     .Translate());
@@ -718,11 +811,6 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            listing.GapLine();
-
-            listing.Label(
-                "MAP_MechanoidMechanitor.Settings.Recreation.Section".Translate());
-
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.Recreation.Description".Translate());
 
@@ -751,6 +839,30 @@ namespace MAP_MechanoidMechanitor
                     100);
         }
 
+        // 左侧导航会缩小内容区，标签按实际高度换行，保留原有文字和滑块取值规则。
+        internal static float DrawSettingsSlider(
+            Listing_Standard listing, string label, float value, float min, float max,
+            float labelRatio = 0.62f, string? tooltip = null)
+        {
+            float labelWidth = Mathf.Max(1f, listing.ColumnWidth * labelRatio - 8f);
+            Rect row = listing.GetRect(Mathf.Max(30f, Text.CalcHeight(label, labelWidth)));
+            Rect labelRect = new Rect(row.x, row.y, labelWidth, row.height);
+            TextAnchor previousAnchor = Text.Anchor;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Widgets.Label(labelRect, label);
+            Text.Anchor = previousAnchor;
+            if (tooltip != null)
+            {
+                TooltipHandler.TipRegion(labelRect, tooltip);
+            }
+            Rect sliderRect = new Rect(row.x + listing.ColumnWidth * labelRatio,
+                row.y, listing.ColumnWidth * (1f - labelRatio), row.height);
+            float result = Widgets.HorizontalSlider(
+                sliderRect, value, min, max, middleAlignment: true);
+            listing.Gap(listing.verticalSpacing);
+            return result;
+        }
+
         private static int DrawIntSliderSetting(
             Listing_Standard listing,
             string labelKey,
@@ -761,7 +873,8 @@ namespace MAP_MechanoidMechanitor
         {
             int clamped = Mathf.Clamp(value, min, max);
 
-            float sliderValue = listing.SliderLabeled(
+            float sliderValue = DrawSettingsSlider(
+                listing,
                 labelKey.Translate(clamped).ToString(),
                 clamped,
                 min,
@@ -790,7 +903,8 @@ namespace MAP_MechanoidMechanitor
         {
             int clamped = Mathf.Clamp(value, min, max);
 
-            float sliderValue = listing.SliderLabeled(
+            float sliderValue = DrawSettingsSlider(
+                listing,
                 labelKey.Translate(clamped).ToString(),
                 clamped,
                 min,
@@ -815,7 +929,8 @@ namespace MAP_MechanoidMechanitor
                     "0.##",
                     CultureInfo.CurrentCulture);
 
-            float sliderValue = listing.SliderLabeled(
+            float sliderValue = DrawSettingsSlider(
+                listing,
                 "MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Label"
                     .Translate(secondsText)
                     .ToString(),
@@ -858,7 +973,8 @@ namespace MAP_MechanoidMechanitor
                     "0.##",
                     CultureInfo.CurrentCulture);
 
-            float sliderValue = listing.SliderLabeled(
+            float sliderValue = DrawSettingsSlider(
+                listing,
                 labelKey.Translate(secondsText).ToString(),
                 clamped,
                 min,
@@ -886,7 +1002,8 @@ namespace MAP_MechanoidMechanitor
             float clamped = Mathf.Clamp(value, min, max);
             float safeStep = step <= 0f ? 1f : step;
 
-            float sliderValue = listing.SliderLabeled(
+            float sliderValue = DrawSettingsSlider(
+                listing,
                 labelKey.Translate(clamped.ToString("0.#", CultureInfo.CurrentCulture))
                     .ToString(),
                 clamped,
@@ -915,16 +1032,17 @@ namespace MAP_MechanoidMechanitor
             productivityCoreWorkSpeedBuffer ??= FormatWorkSpeedPercent(
                 Settings!.productivityCoreWorkSpeedOffsetPercentPerLevel);
 
-            Rect row = listing.GetRect(30f);
+            string label =
+                "MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label".Translate();
+            Rect row = listing.GetRect(Mathf.Max(30f,
+                Text.CalcHeight(label, Mathf.Max(1f, listing.ColumnWidth - 150f))));
             Rect labelRect = new Rect(row.x, row.y, row.width - 150f, row.height);
-            Widgets.Label(
-                labelRect,
-                "MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label".Translate());
+            Widgets.Label(labelRect, label);
             TooltipHandler.TipRegion(
                 labelRect,
                 "MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description".Translate());
 
-            Rect fieldRect = new Rect(row.xMax - 140f, row.y, 110f, row.height);
+            Rect fieldRect = new Rect(row.xMax - 140f, row.y, 110f, 30f);
             GUI.SetNextControlName(ProductivityCoreWorkSpeedControlName);
             productivityCoreWorkSpeedBuffer = Widgets.TextField(
                 fieldRect,

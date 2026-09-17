@@ -203,29 +203,14 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    /// <summary>
-    /// 将本功能设置段插入现有设置列表。挂在 DrawRecreationSettings 前缀上，
-    /// 以复用原设置页的 Listing 与滚动高度计算，不改动原设置文件。
-    /// </summary>
-    [HarmonyPatch(typeof(MAPMechanitorMod), "DrawRecreationSettings")]
-    internal static class StartingPawnValueProtectionSettings_Draw_Patch
+    /// <summary>由 MOD 设置页直接绘制开局价值保护选项。</summary>
+    internal static class StartingPawnValueProtectionSettingsUI
     {
-        [HarmonyPrefix]
-        private static void Prefix(Listing_Standard listing)
-        {
-            DrawSettings(listing);
-        }
-
-        private static void DrawSettings(Listing_Standard listing)
+        internal static void Draw(Listing_Standard listing)
         {
             StartingPawnValueProtectionModSettings settings =
                 StartingPawnValueProtectionSettings.Data;
             settings.Normalize();
-
-            listing.GapLine();
-            listing.Label(
-                "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Section"
-                    .Translate());
 
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Label"
@@ -234,11 +219,13 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Description"
                     .Translate());
 
-            Rect otherMechsRow = listing.GetRect(30f);
+            string otherMechsLabel =
+                "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Label".Translate();
+            Rect otherMechsRow = listing.GetRect(Mathf.Max(30f,
+                Text.CalcHeight(otherMechsLabel, Mathf.Max(1f, listing.ColumnWidth - 30f))));
             Widgets.CheckboxLabeled(
                 otherMechsRow,
-                "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Label"
-                    .Translate(),
+                otherMechsLabel,
                 ref settings.protectOtherStartingMechs,
                 disabled: !settings.enableMechanitorStartingValueProtection);
             TooltipHandler.TipRegion(
@@ -274,7 +261,8 @@ namespace MAP_MechanoidMechanitor
             int clamped = Mathf.Clamp(value, min, max);
             int safeStep = Mathf.Max(1, step);
 
-            float sliderValue = listing.SliderLabeled(
+            float sliderValue = MAPMechanitorMod.DrawSettingsSlider(
+                listing,
                 labelKey.Translate(clamped).ToString(),
                 clamped,
                 min,

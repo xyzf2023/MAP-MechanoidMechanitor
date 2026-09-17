@@ -59,10 +59,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        public static void Draw(Listing_Standard listing, OvermindEconomySettings settings)
+        public static void Draw(
+            Listing_Standard listing, OvermindEconomySettings settings, bool showHeading = true)
         {
-            listing.GapLine();
-            listing.Label("MAP_OvermindEconomy.Settings.Title".Translate());
+            if (showHeading)
+            {
+                listing.GapLine();
+                listing.Label("MAP_OvermindEconomy.Settings.Title".Translate());
+            }
             // 修改前按旧快照结算，修改后再应用新速率。
             GameComponent_OvermindEconomy.Current?.Prepare();
             listing.CheckboxLabeled("MAP_OvermindEconomy.Settings.Enabled".Translate(),

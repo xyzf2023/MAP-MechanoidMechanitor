@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using HarmonyLib;
 using MAP_MechanoidMechanitor;
 using UnityEngine;
 using Verse;
@@ -73,7 +72,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidMechanitorIdeologyAdaptationLevel.Full
             };
 
-        public static void Draw(Listing_Standard listing)
+        public static void Draw(Listing_Standard listing, bool showHeading = true)
         {
             MAPMechanitorModSettings? settings = MAPMechanitorMod.Settings;
             if (settings == null)
@@ -85,9 +84,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidMechanitorGeneralScenarioTemplateSettings.Current;
             MechanoidMechanitorGeneralScenarioTemplateSettings.Normalize(settings, template);
 
-            listing.Label(
-                "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section"
-                    .Translate());
+            if (showHeading)
+            {
+                listing.Label(
+                    "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section"
+                        .Translate());
+            }
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Description"
                     .Translate());
@@ -265,7 +267,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Func<T, string> labelSelector,
             Action<T> setter)
         {
-            Rect row = listing.GetRect(RowHeight);
+            Rect row = listing.GetRect(Mathf.Max(RowHeight,
+                Text.CalcHeight(labelKey.Translate(),
+                    Mathf.Max(1f, listing.ColumnWidth * LabelRatio))));
             DrawRowLabel(row, labelKey, descriptionKey, out Rect buttonRect);
             if (!Widgets.ButtonText(buttonRect, labelSelector(currentValue)))
             {
@@ -293,7 +297,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool enabled,
             Action<bool> setter)
         {
-            Rect row = listing.GetRect(RowHeight);
+            Rect row = listing.GetRect(Mathf.Max(RowHeight,
+                Text.CalcHeight(labelKey.Translate(),
+                    Mathf.Max(1f, listing.ColumnWidth * LabelRatio))));
             DrawRowLabel(row, labelKey, descriptionKey, out Rect buttonRect);
 
             bool previousEnabled = GUI.enabled;
@@ -316,7 +322,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ref int value,
             bool enabled)
         {
-            Rect row = listing.GetRect(RowHeight);
+            Rect row = listing.GetRect(Mathf.Max(RowHeight,
+                Text.CalcHeight(labelKey.Translate(),
+                    Mathf.Max(1f, listing.ColumnWidth * LabelRatio))));
             TooltipHandler.TipRegion(
                 row,
                 "MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Tooltip".Translate());
@@ -393,21 +401,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     "MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.High".Translate(),
                 _ => frequency.ToString()
             };
-        }
-    }
-
-    /// <summary>
-    /// 将普通剧本默认剧情配置插入现有设置页。补丁只扩展本 MOD 自己的战略节点设置绘制入口，
-    /// 不修改运行期世界逻辑。
-    /// </summary>
-    [HarmonyPatch(typeof(MAPMechanitorMod), "DrawStrategicNodeSettings")]
-    public static class MechanoidMechanitorGeneralScenarioDefaultSettingsPatch
-    {
-        [HarmonyPrefix]
-        public static void Prefix(Listing_Standard listing)
-        {
-            listing.GapLine();
-            MechanoidMechanitorGeneralScenarioDefaultSettingsUI.Draw(listing);
         }
     }
 }
