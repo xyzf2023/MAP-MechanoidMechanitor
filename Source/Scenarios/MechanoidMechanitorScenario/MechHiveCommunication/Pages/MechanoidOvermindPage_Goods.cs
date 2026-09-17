@@ -64,12 +64,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private int cachedEstimatedCredits;
 
+        private double cachedUnitPrice;
+        private bool showDetailedPrice;
+
         private int cachedPricedCount = int.MinValue;
 
         private bool priceDirty = true;
 
-        public void Draw(Rect inRect, MechanoidOvermindOrder order)
+        public void Draw(Rect inRect, MechanoidOvermindOrder order, bool detailedPrice)
         {
+            showDetailedPrice = detailedPrice;
             using (MechanoidOvermindUiStyle.Push())
             {
                 MechanoidOvermindUiStyle.DrawPanel(inRect);
@@ -476,16 +480,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     MechanoidOvermindUiStyle.Error);
             }
 
-            RefreshPriceIfNeeded(entry, order);
+            RefreshPriceIfNeeded(entry);
 
             float infoY = y + 36f;
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(inner.x, infoY, inner.width, 22f),
                 (GameComponent_OvermindEconomy.Enabled
-                    ? (selectedCount > 0 ? "MAP_OvermindEconomy.Estimate" : "MAP_OvermindEconomy.NextPrice")
+                    ? "MAP_OvermindEconomy.NextPrice"
                     : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.EstimatedCredits").Translate(
-                    cachedEstimatedCredits,
-                    ((double)cachedEstimatedCredits / Math.Max(1, selectedCount)).ToString("0.##")),
+                    GameComponent_OvermindEconomy.Enabled ? cachedUnitPrice.ToString("0.####") : cachedEstimatedCredits.ToString()),
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.AccentBright);
@@ -497,9 +500,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (spec != null && economy != null)
                 {
                     Rect details = new Rect(inner.x, infoY + 25f, inner.width, 44f);
-                    MechanoidOvermindUiStyle.DrawLabel(details, economy.Describe(spec, order),
+                    MechanoidOvermindUiStyle.DrawLabel(details, economy.Describe(spec, order, showDetailedPrice),
                         GameFont.Tiny, TextAnchor.UpperLeft, MechanoidOvermindUiStyle.TextSecondary);
-                    TooltipHandler.TipRegion(details, "MAP_OvermindEconomy.DetailsTip".Translate());
+                    TooltipHandler.TipRegion(details, (showDetailedPrice
+                        ? "MAP_OvermindEconomy.DetailsTip" : "MAP_OvermindEconomy.PriceTip").Translate());
                 }
             }
 
@@ -570,22 +574,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             priceDirty = true;
         }
 
-        private void RefreshPriceIfNeeded(MechanoidOvermindThingCatalogEntry entry, MechanoidOvermindOrder order)
+        private void RefreshPriceIfNeeded(MechanoidOvermindThingCatalogEntry entry)
         {
             MechanoidOvermindThingSpec? spec = BuildCurrentSpec(entry);
             if (spec == null)
             {
                 cachedUnitMarketValue = 0f;
                 cachedEstimatedCredits = 0;
+                cachedUnitPrice = 0d;
                 return;
             }
 
             if (GameComponent_OvermindEconomy.Enabled)
             {
-                // 时间、全局需求与其他规格均能改变价格，不复用旧的静态价格缓存。
+                // 单价不随本次输入数量变化；成交后更新采购压力，时间和需求仍可影响报价。
                 GameComponent_OvermindEconomy? economy = GameComponent_OvermindEconomy.Current;
-                cachedEstimatedCredits = 0;
-                economy?.TryEstimateLine(spec, selectedCount, order, out cachedEstimatedCredits);
+                cachedUnitPrice = 0d;
+                economy?.TryGetUnitPrice(spec, out cachedUnitPrice);
                 priceDirty = true;
                 return;
             }

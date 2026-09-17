@@ -25,7 +25,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             doCloseButton = false;
             absorbInputAroundWindow = false;
             closeOnClickedOutside = false;
+            closeOnAccept = false;
+            forceCatchAcceptAndCancelEventEvenIfUnfocused = true;
         }
+
+        public override void OnAcceptKeyPressed() => Event.current?.Use();
 
         public override void DoWindowContents(Rect inRect)
         {
@@ -115,18 +119,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             owner.DevForceMojibake = forceMojibake;
             y += 32f;
 
-            bool bootLoop = owner.DevBootLoopTest;
+            bool detailedPrices = owner.DevShowDetailedGoodsPrice;
             Widgets.CheckboxLabeled(
                 new Rect(scrollView.x, y, scrollView.width, 28f),
-                "循环播放启动动画（保持本窗口开启以便停止）",
-                ref bootLoop);
-            owner.DevBootLoopTest = bootLoop;
+                "显示物资请求详细价格计算",
+                ref detailedPrices);
+            owner.DevShowDetailedGoodsPrice = detailedPrices;
             y += 34f;
-
-            DrawButtonRow(
-                scrollView,
-                ref y,
-                Command("重新播放一次启动动画", owner.DevRestartBootOnce));
 
             Widgets.EndScrollView();
         }

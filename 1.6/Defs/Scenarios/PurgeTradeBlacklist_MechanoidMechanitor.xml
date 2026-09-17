@@ -3,6 +3,7 @@
   <MAP_MechanoidMechanitor.Scenarios.MechanoidMechanitorPurgeTradeBlacklistDef>
     <defName>MAP_PurgeTradeBlacklist_Core</defName>
     <thingDefs>
+      <li>Skull</li>
       <!-- Biotech：依赖实例数据或不适合作为普通调拨物资 -->
       <li MayRequire="ludeon.rimworld.biotech">Xenogerm</li>
       <li MayRequire="ludeon.rimworld.biotech">HumanOvum</li>
@@ -31,6 +32,8 @@
     <mechPawnKinds>
       <!-- 机械族调拨黑名单：填写 PawnKindDef 的 defName，可用 li MayRequire="Package.Id" 追加兼容项 -->
       <li>MAP_Mech_JusticeBOSS</li>
+      <li>MAP_Mech_Magician</li>
+      <li>MAP_Mech_Sun</li>
       <li MayRequire="fxz.glitterworlddestroyer.mk5">Mech_BlackScyther</li>
       <li MayRequire="fxz.glitterworlddestroyer.mk5">Mech_BlackLancer</li>
       <li MayRequire="fxz.glitterworlddestroyer.mk5">Mech_BlackTesseron</li>

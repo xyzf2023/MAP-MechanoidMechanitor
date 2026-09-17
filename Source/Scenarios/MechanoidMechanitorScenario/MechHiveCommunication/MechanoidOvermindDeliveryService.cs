@@ -482,7 +482,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindOrderLine_Thing line = thingLines[i];
                 if (line?.Spec?.Def == null
                     || line.Count <= 0
-                    || line.Count > MechanoidOvermindOrder.ThingMaxCount)
+                    || line.Count > MechanoidOvermindOrder.ThingMaxCount
+                    || !MechanoidOvermindCatalogService.TryFindThingCatalogEntry(line.Spec.Def, out _))
                 {
                     return false;
                 }

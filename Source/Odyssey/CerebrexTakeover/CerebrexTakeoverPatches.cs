@@ -735,7 +735,8 @@ namespace MAP_MechanoidMechanitor
 
             __0 = CerebrexTakeoverDialogueScope.PurgeCreditsResponse
                 ? "MAP_CerebrexTakeover.PurgeCreditsResponse".Translate().RawText
-                : "…";
+                // 单个 Unicode 省略号只有一个打字单位；逐点输出并沿用打字机暂停标记。
+                : ".[[PAUSE]].[[PAUSE]].";
         }
     }
 

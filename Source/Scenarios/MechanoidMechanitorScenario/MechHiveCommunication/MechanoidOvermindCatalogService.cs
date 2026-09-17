@@ -81,6 +81,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
     public static class MechanoidOvermindCatalogService
     {
+        // 建筑需显式在 ThingDef.tradeTags 中声明可由主脑调拨；其它合法性条件仍适用。
+        public const string PurchasableBuildingTag = "MAP_OvermindPurchasable";
         private static List<MechanoidOvermindMechCatalogEntry>? mechCatalog;
 
         private static List<MechanoidOvermindThingCatalogEntry>? thingCatalog;
@@ -464,6 +466,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             if (def == ThingDefOf.Silver || def.IsCorpse)
+            {
+                return false;
+            }
+
+            // 使用储存筛选的分类树，包含子分类及第三方 MOD 加入的物品。
+            ThingCategoryDef? rawFood = DefDatabase<ThingCategoryDef>.GetNamedSilentFail("FoodRaw");
+            if ((rawFood != null && def.IsWithinCategory(rawFood))
+                || def.IsWithinCategory(ThingCategoryDefOf.Leathers)
+                || def.IsWithinCategory(ThingCategoryDefOf.Wools)
+                || def.IsWithinCategory(ThingCategoryDefOf.Drugs))
+            {
+                return false;
+            }
+
+            if (def.category == ThingCategory.Building
+                && (def.tradeTags == null || !def.tradeTags.Contains(PurchasableBuildingTag)))
             {
                 return false;
             }

@@ -43,6 +43,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static int Tier(ThingDef def)
         {
+            if (def.IsMedicine || def.IsApparel
+                || def.IsWithinCategory(ThingCategoryDefOf.Medicine)
+                || def.IsWithinCategory(ThingCategoryDefOf.Apparel)) return 2;
             OvermindEconomyExtension? extension = def.GetModExtension<OvermindEconomyExtension>();
             if (extension != null && extension.tier >= 0 && extension.tier <= 2) return extension.tier;
             MechanoidOvermindThingCategory category = MechanoidOvermindCatalogService.ClassifyThing(def);
@@ -181,15 +184,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return basePrice + ordinaryUplift + specificUplift + demandFloor * extra;
         }
 
-        private double PressureIntegral(OvermindEconomyRecord record, double value)
+        private double PurchaseMultiplier(OvermindEconomyRecord record)
         {
             double slope = applied.Factor(OvermindEconomyOption.PressureStrength) / Capacity(record.Def, applied);
             double cap = applied.Factor(OvermindEconomyOption.PressureCap);
-            if (slope <= 0d || cap <= 0d) return value;
-            double start = Math.Min(cap, record.PurchasedValue * slope);
-            double ramp = Math.Min(value, Math.Max(0d, (cap - start) / slope));
-            return ramp * (1d + start) + 0.5d * slope * ramp * ramp
-                + (value - ramp) * (1d + cap);
+            return 1d + Math.Min(cap, record.PurchasedValue * slope);
         }
 
         public bool TryCost(MechanoidOvermindOrder order, out int cost)
@@ -201,31 +200,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
             foreach (KeyValuePair<ThingDef, double> pair in values)
             {
                 OvermindEconomyRecord record = GetRecord(pair.Key);
-                total += StartingPrice(record) * PressureIntegral(record, pair.Value);
+                // 整笔订单使用成交前的当前价格；本次购买只影响成交后的报价。
+                total += StartingPrice(record) * PurchaseMultiplier(record) * pair.Value;
             }
             if (double.IsNaN(total) || double.IsInfinity(total) || total > int.MaxValue) return false;
             cost = values.Count == 0 ? 0 : Math.Max(1, (int)Math.Ceiling(total));
             return true;
         }
 
-        public bool TryEstimateLine(MechanoidOvermindThingSpec spec, int count,
-            MechanoidOvermindOrder order, out int cost)
+        public bool TryGetUnitPrice(MechanoidOvermindThingSpec spec, out double price)
         {
-            cost = 0;
+            price = 0d;
             PrepareQuote();
             if (!MechanoidOvermindPricingService.TryGetThingUnitMarketValue(spec, out float unitValue)) return false;
-            double lineValue = unitValue * (double)Math.Max(1, count);
-            double totalValue = lineValue;
-            foreach (var line in order.ThingLines)
-                if (line.Spec.Def == spec.Def && !line.Spec.Equals(spec)
-                    && MechanoidOvermindPricingService.TryGetThingUnitMarketValue(line.Spec, out float other))
-                    totalValue += other * (double)line.Count;
             OvermindEconomyRecord record = GetRecord(spec.Def);
-            // 同类规格按基础价值分摊合并报价；整数取整由最终订单统一完成。
-            double estimated = StartingPrice(record) * PressureIntegral(record, totalValue)
-                * lineValue / totalValue * Math.Max(0d, 1d - PurgeDirectiveRatingUtility.GetDiscountRate());
-            if (double.IsNaN(estimated) || double.IsInfinity(estimated) || estimated > int.MaxValue) return false;
-            cost = Math.Max(1, (int)Math.Ceiling(estimated));
+            price = StartingPrice(record) * PurchaseMultiplier(record) * unitValue
+                * Math.Max(0d, 1d - PurgeDirectiveRatingUtility.GetDiscountRate());
+            if (double.IsNaN(price) || double.IsInfinity(price) || price < 0d || price > int.MaxValue)
+            {
+                price = 0d;
+                return false;
+            }
             return true;
         }
 
@@ -255,10 +250,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 Math.Max(0d, Math.Floor((remaining + 0.000001d) / unitValue)));
         }
 
-        public string Describe(MechanoidOvermindThingSpec spec, MechanoidOvermindOrder order)
+        public string Describe(MechanoidOvermindThingSpec spec, MechanoidOvermindOrder order, bool detailed)
         {
             PrepareQuote();
             OvermindEconomyRecord record = GetRecord(spec.Def);
+            if (!detailed)
+            {
+                // 相对原始基础费用的总波动，合并基础、建设、交付和采购因素；评级折扣单独应用。
+                double change = (StartingPrice(record) * PurchaseMultiplier(record) * 5d - 1d) * 100d;
+                return "MAP_OvermindEconomy.StockCompact".Translate(AvailableCount(spec, order))
+                    + "\n" + "MAP_OvermindEconomy.Fluctuation".Translate(change.ToString("+0.#;-0.#;0"));
+            }
             double capacity = Capacity(spec.Def, applied);
             double daily = capacity / applied.Days(OvermindEconomyOption.RefillDays);
             MechanoidOvermindPricingService.TryGetThingUnitMarketValue(spec, out float unitValue);
@@ -327,9 +329,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 OvermindEconomyRecord record = GetRecord(pair.Key);
                 record.Supply = Math.Max(0d, record.Supply - pair.Value);
-                record.PurchasedValue += pair.Value;
             }
             return true;
+        }
+
+        internal void CompletePurchase(Dictionary<ThingDef, double> values)
+        {
+            foreach (var pair in values) GetRecord(pair.Key).PurchasedValue += pair.Value;
         }
 
         internal void Rollback(Dictionary<ThingDef, double> values)
@@ -338,7 +344,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 OvermindEconomyRecord record = GetRecord(pair.Key);
                 record.Supply = Math.Min(Capacity(pair.Key, applied), record.Supply + pair.Value);
-                record.PurchasedValue = Math.Max(0d, record.PurchasedValue - pair.Value);
             }
         }
 
@@ -374,7 +379,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool finished;
         internal OvermindEconomyReservation(GameComponent_OvermindEconomy economy, Dictionary<ThingDef, double> values)
         { this.economy = economy; this.values = values; }
-        public void Commit() { finished = true; }
+        public void Commit()
+        {
+            if (finished) return;
+            finished = true;
+            economy.CompletePurchase(values);
+        }
         public void Dispose()
         {
             if (finished) return;

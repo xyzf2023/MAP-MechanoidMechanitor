@@ -29,9 +29,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float Gap = 8f;
 
-        private const float OrderRowHeight = 50f;
+        private const float OrderRowHeight = 28f;
 
-        private const float OrderRowStride = 52f;
+        private const float OrderRowStride = 30f;
 
         private const float DropCacheRealtimeSeconds = 1f;
 
@@ -133,6 +133,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool devControlsEnabled;
 
+        private bool showDetailedGoodsPrice;
+
         private bool transitioning;
 
         private bool suspendingForMapTargeting;
@@ -184,6 +186,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             doCloseButton = false;
             absorbInputAroundWindow = false;
             closeOnClickedOutside = false;
+            closeOnAccept = false;
+            forceCatchAcceptAndCancelEventEvenIfUnfocused = true;
 
             bool loadingScreenEnabled =
                 MAPMechanitorMod.Settings?.enablePurgeDirectiveUiLoadingScreen ?? true;
@@ -202,6 +206,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.PreOpen();
             Find.TickManager?.Pause();
+        }
+
+        public override void OnAcceptKeyPressed()
+        {
+            // Enter 既不关闭窗口，也不提交订单或触发当前控件。
+            Event.current?.Use();
         }
 
         public override void PreClose()
@@ -978,7 +988,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case MechanoidOvermindPageKind.Goods:
                     if (activeOrder != null)
                     {
-                        goodsPage.Draw(contentRect, activeOrder);
+                        goodsPage.Draw(contentRect, activeOrder, DevShowDetailedGoodsPrice);
                     }
 
                     break;
@@ -1144,23 +1154,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 devControlsEnabled = false;
                 bootLoopTestEnabled = false;
                 forceMojibakeDialogue = false;
+                showDetailedGoodsPrice = false;
             }
 
             if (!devControlsEnabled)
             {
                 bootLoopTestEnabled = false;
                 forceMojibakeDialogue = false;
+                showDetailedGoodsPrice = false;
             }
 
             const float edgePad = 8f;
             const float itemGap = 4f;
             const float disconnectW = 110f;
             const float devToggleW = 54f;
+            const float creditsW = 96f;
+            const float maxRatingW = 112f;
+            const float loopW = 144f;
 
             bool showDevToggle = Prefs.DevMode;
+            bool showQuickControls = showDevToggle && devControlsEnabled;
             bool freezeDev = !bootPage && transitioning;
             float rightClusterW = disconnectW
-                + (showDevToggle ? itemGap + devToggleW : 0f);
+                + (showDevToggle ? itemGap + devToggleW : 0f)
+                + (showQuickControls ? creditsW + maxRatingW + loopW + itemGap * 3f : 0f);
 
             string statusText;
             Color color = MechanoidOvermindUiStyle.TextSecondary;
@@ -1234,9 +1251,37 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     {
                         bootLoopTestEnabled = false;
                         forceMojibakeDialogue = false;
+                        showDetailedGoodsPrice = false;
                     }
                 }
             }
+
+            if (showQuickControls)
+            {
+                bool previousEnabled = GUI.enabled;
+                bool shortcutsEnabled = previousEnabled && !freezeDev && devControlsEnabled;
+                GUI.enabled = shortcutsEnabled;
+                cursorX -= itemGap + loopW;
+                bool loop = DevBootLoopTest;
+                Widgets.CheckboxLabeled(new Rect(cursorX, rect.y + 6f, loopW, rect.height - 12f),
+                    "循环播放启动动画", ref loop);
+                DevBootLoopTest = loop;
+                cursorX -= itemGap + maxRatingW;
+                if (MechanoidOvermindUiStyle.DrawActionButton(
+                    new Rect(cursorX, buttonY, maxRatingW, buttonH), "等级设为满级", shortcutsEnabled))
+                    PurgeDirectiveRatingUtility.SetRatingDirect(PurgeDirectiveRatingUtility.Config.maxRatingValue);
+                cursorX -= itemGap + creditsW;
+                if (MechanoidOvermindUiStyle.DrawActionButton(
+                    new Rect(cursorX, buttonY, creditsW, buttonH), "额度+1000", shortcutsEnabled))
+                    DevAdjustPurgeCredits(1000);
+                GUI.enabled = previousEnabled;
+            }
+        }
+
+        internal bool DevShowDetailedGoodsPrice
+        {
+            get => Prefs.DevMode && devControlsEnabled && showDetailedGoodsPrice;
+            set => showDetailedGoodsPrice = Prefs.DevMode && devControlsEnabled && value;
         }
 
         internal bool DevForceMojibake
@@ -1263,17 +1308,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     StartBootSequence();
                 }
             }
-        }
-
-        internal void DevRestartBootOnce()
-        {
-            if (!Prefs.DevMode || !devControlsEnabled)
-            {
-                return;
-            }
-
-            bootLoopTestEnabled = false;
-            StartBootSequence();
         }
 
         internal void DevAdjustPurgeCredits(int delta)
@@ -1474,7 +1508,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidOvermindUiStyle.DrawPanel(listRect, alt: true, cornerMarks: false);
             int lineCount = order.MechLines.Count + order.ThingLines.Count;
             float viewHeight = Mathf.Max(listRect.height, lineCount * OrderRowStride + 4f);
-            Rect viewRect = new Rect(0f, 0f, listRect.width - 16f, viewHeight);
+            bool scrolling = viewHeight > listRect.height;
+            Rect viewRect = new Rect(0f, 0f, Mathf.Max(1f, listRect.width - (scrolling ? 16f : 0f)), viewHeight);
+            orderScroll.y = Mathf.Clamp(orderScroll.y, 0f, Mathf.Max(0f, viewHeight - listRect.height));
             Widgets.BeginScrollView(listRect, ref orderScroll, viewRect);
 
             if (lineCount > 0)
@@ -1486,7 +1522,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 for (int i = first; i <= last; i++)
                 {
                     float y = 2f + i * OrderRowStride;
-                    Rect rowRect = new Rect(4f, y, viewRect.width - 8f, OrderRowHeight);
+                    Rect rowRect = new Rect(0f, y, viewRect.width, OrderRowHeight);
                     if (i < order.MechLines.Count)
                     {
                         MechanoidOvermindOrderLine_Mech mechLine = order.MechLines[i];
@@ -1566,16 +1602,20 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool DrawOrderLine(Rect rect, string name, string meta)
         {
             Widgets.DrawBoxSolid(rect, MechanoidOvermindUiStyle.Panel);
-            MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rect.x + 6f, rect.y + 4f, rect.width - 70f, 18f),
-                name);
-            MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(rect.x + 6f, rect.y + 24f, rect.width - 70f, 20f),
-                meta);
-
-            return MechanoidOvermindUiStyle.DrawActionButton(
-                new Rect(rect.xMax - 58f, rect.y + 11f, 52f, 28f),
-                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Remove".Translate());
+            Rect removeRect = new Rect(rect.xMax - 26f, rect.y + 2f, 24f, rect.height - 4f);
+            float contentWidth = Mathf.Max(1f, removeRect.x - rect.x - 12f);
+            using (MechanoidOvermindUiStyle.Push())
+            {
+                Text.Font = GameFont.Tiny;
+                float metaWidth = Mathf.Min(Text.CalcSize(meta).x, contentWidth * 0.57f);
+                Rect nameRect = new Rect(rect.x + 6f, rect.y, Mathf.Max(1f, contentWidth - metaWidth - 6f), rect.height);
+                Rect metaRect = new Rect(removeRect.x - 6f - metaWidth, rect.y, metaWidth, rect.height);
+                MechanoidOvermindUiStyle.DrawLabel(nameRect, name.Truncate(nameRect.width), GameFont.Tiny);
+                MechanoidOvermindUiStyle.DrawSecondaryLabel(metaRect, meta.Truncate(metaRect.width), TextAnchor.MiddleRight);
+            }
+            TooltipHandler.TipRegion(new Rect(rect.x, rect.y, contentWidth + 6f, rect.height), name + "\n" + meta);
+            TooltipHandler.TipRegion(removeRect, "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Remove".Translate());
+            return MechanoidOvermindUiStyle.DrawActionButton(removeRect, "×");
         }
 
         private void DrawOrderFooter(
