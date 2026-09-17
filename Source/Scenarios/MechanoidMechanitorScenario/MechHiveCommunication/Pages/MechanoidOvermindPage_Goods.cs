@@ -21,7 +21,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float IconSize = 32f;
 
-        private static float SpecPanelHeight => GameComponent_OvermindEconomy.Enabled ? 192f : 120f;
+        private static float SpecPanelHeight => GameComponent_OvermindEconomy.Enabled ? 140f : 94f;
 
         private string search = string.Empty;
 
@@ -147,7 +147,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Food".Translate(),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Medicine".Translate(),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Material".Translate(),
-                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Building".Translate(),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Special".Translate(),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Other".Translate()
             };
@@ -160,7 +159,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindThingCategory.Food,
                 MechanoidOvermindThingCategory.Medicine,
                 MechanoidOvermindThingCategory.Material,
-                MechanoidOvermindThingCategory.Building,
                 MechanoidOvermindThingCategory.Special,
                 MechanoidOvermindThingCategory.Other
             };
@@ -415,14 +413,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int thingRequiredLevel = PurgeDirectiveRatingUtility.RequiredLevelForThing(entry.Def);
 
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(x, y, inner.width, 22f),
+                new Rect(x, y, inner.width - (selectedCount > 0 ? 128f : 0f), 22f),
                 entry.Def.LabelCap,
                 GameFont.Small);
-            y += 26f;
+            if (selectedCount > 0
+                && MechanoidOvermindUiStyle.DrawActionButton(
+                    new Rect(inner.xMax - 120f, y, 120f, 22f),
+                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem".Translate()))
+            {
+                ApplyThingCount(order, entry, 0);
+            }
+            y += 24f;
 
             if (thingUnlocked && entry.MadeFromStuff)
             {
-                Rect stuffRect = new Rect(x, y, 220f, 28f);
+                Rect stuffRect = new Rect(x, y, 220f, 24f);
                 string stuffLabel = selectedStuff != null
                     ? selectedStuff.LabelCap
                     : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Stuff.None".Translate();
@@ -439,7 +444,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (thingUnlocked && entry.HasQuality)
             {
-                Rect qualityRect = new Rect(x, y, 180f, 28f);
+                Rect qualityRect = new Rect(x, y, 180f, 24f);
                 if (MechanoidOvermindUiStyle.DrawActionButton(
                         qualityRect,
                         "MAP_MechanoidMechanitor.PurgeDirective.Communication.Quality".Translate(
@@ -453,18 +458,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (thingUnlocked)
             {
-                Rect countRect = new Rect(x, y, 56f, 28f);
+                Rect countRect = new Rect(x, y, 56f, 24f);
                 DrawCountField(countRect, order, entry);
 
                 if (MechanoidOvermindUiStyle.DrawActionButton(
-                        new Rect(countRect.xMax + 4f, y, 24f, 28f),
+                        new Rect(countRect.xMax + 4f, y, 24f, 24f),
                         "-"))
                 {
                     ApplyThingCount(order, entry, selectedCount - 1);
                 }
 
                 if (MechanoidOvermindUiStyle.DrawActionButton(
-                        new Rect(countRect.xMax + 32f, y, 24f, 28f),
+                        new Rect(countRect.xMax + 32f, y, 24f, 24f),
                         "+"))
                 {
                     ApplyThingCount(order, entry, selectedCount + 1);
@@ -473,7 +478,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             else
             {
                 MechanoidOvermindUiStyle.DrawLabel(
-                    new Rect(x, y, 300f, 28f),
+                    new Rect(x, y, 300f, 24f),
                     PurgeDirectiveRatingUtility.GetThingLockReason(entry.Def),
                     GameFont.Small,
                     TextAnchor.MiddleLeft,
@@ -482,7 +487,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             RefreshPriceIfNeeded(entry);
 
-            float infoY = y + 36f;
+            float infoY = y + 28f;
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(inner.x, infoY, inner.width, 22f),
                 (GameComponent_OvermindEconomy.Enabled
@@ -499,20 +504,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 GameComponent_OvermindEconomy? economy = GameComponent_OvermindEconomy.Current;
                 if (spec != null && economy != null)
                 {
-                    Rect details = new Rect(inner.x, infoY + 25f, inner.width, 44f);
+                    Rect details = new Rect(inner.x, infoY + 24f, inner.width, 44f);
                     MechanoidOvermindUiStyle.DrawLabel(details, economy.Describe(spec, order, showDetailedPrice),
                         GameFont.Tiny, TextAnchor.UpperLeft, MechanoidOvermindUiStyle.TextSecondary);
                     TooltipHandler.TipRegion(details, (showDetailedPrice
                         ? "MAP_OvermindEconomy.DetailsTip" : "MAP_OvermindEconomy.PriceTip").Translate());
                 }
-            }
-
-            if (selectedCount > 0
-                && MechanoidOvermindUiStyle.DrawActionButton(
-                    new Rect(inner.xMax - 140f, inner.yMax - 34f, 140f, 30f),
-                    "MAP_MechanoidMechanitor.PurgeDirective.Communication.ClearItem".Translate()))
-            {
-                ApplyThingCount(order, entry, 0);
             }
         }
 

@@ -33,7 +33,7 @@
   <MAP_OvermindEconomy.Settings.MaterialPrice>常用工业材料基础售价倍率</MAP_OvermindEconomy.Settings.MaterialPrice>
   <MAP_OvermindEconomy.Settings.MaterialPrice.Desc>调整钢铁、塑钢及零部件等材料在物资调拨中的基础售价。×1沿用原基础费用，即市场价值的20%；×2表示基础费用翻倍。此后仍会计算建设加价、采购涨价、交付优惠和评级折扣；建设期间的最低成交价仍然有效。</MAP_OvermindEconomy.Settings.MaterialPrice.Desc>
   <MAP_OvermindEconomy.Settings.OrdinaryPrice>普通装备及其他物资基础售价倍率</MAP_OvermindEconomy.Settings.OrdinaryPrice>
-  <MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>调整不属于工业材料或稀缺档位的商品，例如普通武器和允许购买的建筑的基础售价。服装和医疗药品归入稀缺档位。×1沿用原基础费用，即市场价值的20%；数值越大，购买越贵。此后仍会计算各项动态价格变化和评级折扣，不会改变这些物品的供应额度。</MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>
+  <MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>调整不属于工业材料或稀缺档位的商品，例如普通武器的基础售价。服装和医疗药品归入稀缺档位，建筑不参与交易。×1沿用原基础费用，即市场价值的20%；数值越大，购买越贵。此后仍会计算各项动态价格变化和评级折扣，不会改变这些物品的供应额度。</MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>
   <MAP_OvermindEconomy.Settings.ScarcePrice>食物、药品及服装基础售价倍率</MAP_OvermindEconomy.Settings.ScarcePrice>
   <MAP_OvermindEconomy.Settings.ScarcePrice.Desc>调整可售食物、医疗药品和服装等稀缺档位商品的基础售价，不要求存在建设需求。默认×3表示按原基础费用的3倍起价，而非市场价值的3倍。交付优惠可以降低这部分基础价格，采购压力仍会使其上涨；供应量由稀缺物资供应上限倍率单独控制。被排除的生食及药物与成瘾品不会因此重新进入售卖目录。</MAP_OvermindEconomy.Settings.ScarcePrice.Desc>
   <MAP_OvermindEconomy.Settings.MaterialSupply>常用工业材料供应上限倍率</MAP_OvermindEconomy.Settings.MaterialSupply>

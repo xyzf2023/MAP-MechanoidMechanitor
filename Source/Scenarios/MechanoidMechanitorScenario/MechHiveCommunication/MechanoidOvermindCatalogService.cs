@@ -81,8 +81,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
     public static class MechanoidOvermindCatalogService
     {
-        // 建筑需显式在 ThingDef.tradeTags 中声明可由主脑调拨；其它合法性条件仍适用。
-        public const string PurchasableBuildingTag = "MAP_OvermindPurchasable";
         private static List<MechanoidOvermindMechCatalogEntry>? mechCatalog;
 
         private static List<MechanoidOvermindThingCatalogEntry>? thingCatalog;
@@ -480,8 +478,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (def.category == ThingCategory.Building
-                && (def.tradeTags == null || !def.tradeTags.Contains(PurchasableBuildingTag)))
+            if (def.category == ThingCategory.Building)
             {
                 return false;
             }
@@ -524,9 +521,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            bool isHaulableItem = def.category == ThingCategory.Item && def.EverHaulable;
-            bool isMinifiableBuilding = def.category == ThingCategory.Building && def.Minifiable;
-            return isHaulableItem || isMinifiableBuilding;
+            return def.category == ThingCategory.Item && def.EverHaulable;
         }
 
         private static bool LooksSpecialTradeItem(ThingDef def)

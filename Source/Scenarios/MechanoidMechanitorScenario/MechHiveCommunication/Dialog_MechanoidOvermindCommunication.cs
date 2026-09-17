@@ -1522,7 +1522,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 for (int i = first; i <= last; i++)
                 {
                     float y = 2f + i * OrderRowStride;
-                    Rect rowRect = new Rect(0f, y, viewRect.width, OrderRowHeight);
+                    Rect rowRect = new Rect(3f, y, Mathf.Max(1f, viewRect.width - 6f), OrderRowHeight);
                     if (i < order.MechLines.Count)
                     {
                         MechanoidOvermindOrderLine_Mech mechLine = order.MechLines[i];
@@ -1596,10 +1596,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     .Translate(line.Count);
             }
 
-            return DrawOrderLine(rect, line.Spec.Def.LabelCap, meta);
+            string compactMeta = "×" + line.Count;
+            if (hasStuff)
+            {
+                compactMeta += " · " + line.Spec.Stuff!.LabelCap;
+            }
+            if (hasQuality)
+            {
+                compactMeta += " · " + line.Spec.Quality.GetLabel().CapitalizeFirst();
+            }
+            return DrawOrderLine(rect, line.Spec.Def.LabelCap, meta, compactMeta);
         }
 
-        private bool DrawOrderLine(Rect rect, string name, string meta)
+        private bool DrawOrderLine(Rect rect, string name, string meta, string? compactMeta = null)
         {
             Widgets.DrawBoxSolid(rect, MechanoidOvermindUiStyle.Panel);
             Rect removeRect = new Rect(rect.xMax - 26f, rect.y + 2f, 24f, rect.height - 4f);
@@ -1607,11 +1616,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             using (MechanoidOvermindUiStyle.Push())
             {
                 Text.Font = GameFont.Tiny;
-                float metaWidth = Mathf.Min(Text.CalcSize(meta).x, contentWidth * 0.57f);
-                Rect nameRect = new Rect(rect.x + 6f, rect.y, Mathf.Max(1f, contentWidth - metaWidth - 6f), rect.height);
-                Rect metaRect = new Rect(removeRect.x - 6f - metaWidth, rect.y, metaWidth, rect.height);
+                string displayMeta = compactMeta ?? meta;
+                float metaWidth = Mathf.Min(Text.CalcSize(displayMeta).x + 1f, Mathf.Max(1f, contentWidth - 30f));
+                float nameWidth = Mathf.Min(Text.CalcSize(name).x + 1f, Mathf.Max(1f, contentWidth - metaWidth - 6f));
+                Rect nameRect = new Rect(rect.x + 6f, rect.y, nameWidth, rect.height);
+                Rect metaRect = new Rect(nameRect.xMax + 6f, rect.y, metaWidth, rect.height);
                 MechanoidOvermindUiStyle.DrawLabel(nameRect, name.Truncate(nameRect.width), GameFont.Tiny);
-                MechanoidOvermindUiStyle.DrawSecondaryLabel(metaRect, meta.Truncate(metaRect.width), TextAnchor.MiddleRight);
+                MechanoidOvermindUiStyle.DrawSecondaryLabel(metaRect, displayMeta.Truncate(metaRect.width), TextAnchor.MiddleLeft);
             }
             TooltipHandler.TipRegion(new Rect(rect.x, rect.y, contentWidth + 6f, rect.height), name + "\n" + meta);
             TooltipHandler.TipRegion(removeRect, "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Remove".Translate());
