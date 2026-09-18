@@ -99,8 +99,7 @@
       <li>
         <bodyGraphicData>
           <texPath>Mech/Sun/Sun</texPath>
-          <maskPath>Things/Pawn/Mechanoid/AllegianceOverlays/Mech_Diablo</maskPath>
-          <shaderType>CutoutWithOverlay</shaderType>
+          <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>3</drawSize>
         </bodyGraphicData>
@@ -108,8 +107,7 @@
       <li>
         <bodyGraphicData>
           <texPath>Mech/Sun/Sun</texPath>
-          <maskPath>Things/Pawn/Mechanoid/AllegianceOverlays/Mech_Diablo</maskPath>
-          <shaderType>CutoutWithOverlay</shaderType>
+          <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>3</drawSize>
         </bodyGraphicData>

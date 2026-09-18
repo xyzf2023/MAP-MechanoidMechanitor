@@ -22,8 +22,7 @@
       <li MayRequire="Ludeon.RimWorld.Biotech">
         <bodyGraphicData>
           <texPath>Mech/Magician/Magician</texPath>
-          <maskPath>Things/Pawn/Mechanoid/AllegianceOverlays/CentipedeGunner</maskPath>
-          <shaderType>CutoutWithOverlay</shaderType>
+          <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>3</drawSize>
           <shadowData>
@@ -34,8 +33,7 @@
       <li>
         <bodyGraphicData>
           <texPath>Mech/Magician/Magician</texPath>
-          <maskPath>Things/Pawn/Mechanoid/AllegianceOverlays/CentipedeGunner</maskPath>
-          <shaderType>CutoutWithOverlay</shaderType>
+          <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>3</drawSize>
           <shadowData>
