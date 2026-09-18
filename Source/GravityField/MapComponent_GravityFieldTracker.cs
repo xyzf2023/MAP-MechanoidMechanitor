@@ -5,10 +5,12 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    /// <summary>仅维护本地图已展开力场的运行时索引，读档由 Pawn Comp 重新登记。</summary>
+    /// <summary>维护力场索引和短暂偏转表现；读档由 Pawn Comp 重新登记，不保存视觉副本。</summary>
     public sealed class MapComponent_GravityFieldTracker : MapComponent
     {
         private readonly List<CompGravityField> fields = new();
+        private readonly List<GravityFieldProjectileVisual> projectileVisuals = new();
+        private const int MaxProjectileVisuals = 256;
 
         public MapComponent_GravityFieldTracker(Map map) : base(map) { }
 
@@ -30,8 +32,7 @@ namespace MAP_MechanoidMechanitor
                 if (CanIntercept(field, projectile)
                     && SegmentTouchesCircle(field.Center, field.Props.radius, start, end))
                 {
-                    // Impact(null, true) 会使原版爆炸弹引爆；直接销毁才是彻底无效化。
-                    projectile.Destroy(DestroyMode.Vanish);
+                    Intercept(projectile, field, start, end);
                     return true;
                 }
             }
@@ -49,8 +50,53 @@ namespace MAP_MechanoidMechanitor
                 if (projectiles[i] is Projectile projectile && projectile.Spawned
                     && CanIntercept(field, projectile)
                     && Contains(field, projectile.ExactPosition))
-                    projectile.Destroy(DestroyMode.Vanish);
+                    Intercept(projectile, field, projectile.ExactPosition, projectile.ExactPosition);
             }
+        }
+
+        private void Intercept(Projectile projectile, CompGravityField field, Vector3 start, Vector3 end)
+        {
+            try
+            {
+                if (projectileVisuals.Count < MaxProjectileVisuals)
+                {
+                    var visual = GravityFieldProjectileVisual.TryCreate(projectile,
+                        field.Center, field.Props.radius, start, end);
+                    if (visual != null)
+                        projectileVisuals.Add(visual);
+                }
+            }
+            catch (System.Exception exception)
+            {
+                // 第三方射弹的材质读取失败也不能阻止真实拦截。
+                Log.ErrorOnce("[MAP] Gravity field projectile visual: " + exception, 193847201);
+            }
+            finally
+            {
+                // Impact(null, true) 会使原版爆炸弹引爆；直接销毁才是彻底无效化。
+                projectile.Destroy(DestroyMode.Vanish);
+            }
+        }
+
+        public override void MapComponentTick()
+        {
+            for (int i = projectileVisuals.Count - 1; i >= 0; i--)
+            {
+                if (!projectileVisuals[i].Tick(map))
+                    projectileVisuals.RemoveAt(i);
+            }
+        }
+
+        public override void MapComponentDraw()
+        {
+            for (int i = 0; i < projectileVisuals.Count; i++)
+                projectileVisuals[i].Draw();
+        }
+
+        public override void MapRemoved()
+        {
+            projectileVisuals.Clear();
+            fields.Clear();
         }
 
         public bool SuppressesExplosion(IntVec3 center)
