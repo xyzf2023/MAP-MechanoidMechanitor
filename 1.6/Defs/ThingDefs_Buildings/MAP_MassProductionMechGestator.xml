@@ -45,6 +45,8 @@
       <Flammability>0.5</Flammability>
     </statBases>
     <size>(3,3)</size>
+    <constructionSkillPrerequisite>12</constructionSkillPrerequisite>
+    <terrainAffordanceNeeded>Heavy</terrainAffordanceNeeded>
     <costList>
       <Steel>500</Steel>
       <ComponentIndustrial>10</ComponentIndustrial>
