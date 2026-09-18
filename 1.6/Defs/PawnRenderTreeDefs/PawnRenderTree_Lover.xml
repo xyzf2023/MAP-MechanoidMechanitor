@@ -11,7 +11,7 @@
       <children>
 
         <!-- 完整机械体：正常状态显示；真正躺床 Lovin 时隐藏。
-             图像由 PawnRenderNode_AnimalPart_Body 从 PawnKind.bodyGraphicData（Lover/Lover）获取，
+             图像由 PawnRenderNode_AnimalPart_Body 从 PawnKind.bodyGraphicData（Mech/Lover/Lover）获取，
              不再依赖 story.bodyType.bodyNakedGraphicPath。 -->
         <li>
           <debugLabel>Full Body</debugLabel>
@@ -45,12 +45,12 @@
         </li>
 
         <!-- Lovin 专用头部贴图：仅在真正躺床 Lovin 时显示。
-             图像直接由 RenderTree 的 Lover/Loverhead Graphic_Multi 提供，不依赖 Humanlike HeadType。 -->
+             图像直接由 RenderTree 的 Mech/Lover/Loverhead Graphic_Multi 提供，不依赖 Humanlike HeadType。 -->
         <li>
           <debugLabel>Lovin Head</debugLabel>
           <nodeClass>PawnRenderNode</nodeClass>
           <workerClass>MAP_MechanoidMechanitor.PawnRenderNodeWorker_LoverLovinHead</workerClass>
-          <texPath>Lover/Loverhead</texPath>
+          <texPath>Mech/Lover/Loverhead</texPath>
           <tagDef>Head</tagDef>
           <skipFlag>Head</skipFlag>
           <pawnType>Any</pawnType>

@@ -124,7 +124,7 @@
     <lifeStages>
       <li>
         <bodyGraphicData>
-          <texPath>Hermit/Hermit</texPath>
+          <texPath>Mech/Hermit/Hermit</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>2</drawSize>
@@ -135,7 +135,7 @@
       </li>
       <li>
         <bodyGraphicData>
-          <texPath>Hermit/Hermit</texPath>
+          <texPath>Mech/Hermit/Hermit</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>2</drawSize>

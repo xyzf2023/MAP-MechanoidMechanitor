@@ -122,7 +122,7 @@
     <lifeStages Inherit="False">
       <li>
         <bodyGraphicData>
-          <texPath>Justice/Justice</texPath>
+          <texPath>Mech/Justice/Justice</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>2</drawSize>
@@ -134,7 +134,7 @@
       </li>
       <li>
         <bodyGraphicData>
-          <texPath>Justice/Justice</texPath>
+          <texPath>Mech/Justice/Justice</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>2</drawSize>

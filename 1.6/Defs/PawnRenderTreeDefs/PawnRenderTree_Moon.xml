@@ -64,7 +64,7 @@
           <debugLabel>Head</debugLabel>
           <nodeClass>MAP_MechanoidMechanitor.PawnRenderNode_MoonHead</nodeClass>
           <workerClass>PawnRenderNodeWorker_Head</workerClass>
-          <texPath>Moon/Head/MoonHead</texPath>
+          <texPath>Mech/Moon/Head/MoonHead</texPath>
           <tagDef>Head</tagDef>
           <skipFlag>Head</skipFlag>
           <pawnType>Any</pawnType>

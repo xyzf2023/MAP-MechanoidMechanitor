@@ -91,7 +91,7 @@
       <Plasteel>10</Plasteel>
     </butcherProducts>
 
-    <uiIconPath>Moon/Moon_fullbody</uiIconPath>
+    <uiIconPath>Mech/Moon/Moon_fullbody</uiIconPath>
 
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_ColonistLikeSocialTabUser" />
@@ -153,7 +153,7 @@
     <lifeStages Inherit="False">
       <li>
         <bodyGraphicData>
-          <texPath>Moon/MoonBody</texPath>
+          <texPath>Mech/Moon/MoonBody</texPath>
           <shaderType>CutoutComplex</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>1.6</drawSize>

@@ -3,7 +3,7 @@
 
   <HeadTypeDef ParentName="AverageBase">
     <defName>MAP_MoonHead</defName>
-    <graphicPath>Moon/Head/MoonHead</graphicPath>
+    <graphicPath>Mech/Moon/Head/MoonHead</graphicPath>
     <gender>None</gender>
     <eyeOffsetEastWest>(0.13, 0, 0.17)</eyeOffsetEastWest>
     <selectionWeight>0</selectionWeight>

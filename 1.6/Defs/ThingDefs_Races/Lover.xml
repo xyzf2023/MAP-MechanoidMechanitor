@@ -202,7 +202,7 @@
     <lifeStages Inherit="False">
       <li>
         <bodyGraphicData>
-          <texPath>Lover/Lover</texPath>
+          <texPath>Mech/Lover/Lover</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
           <drawSize>1.4</drawSize>

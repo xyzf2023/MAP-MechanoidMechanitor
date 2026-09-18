@@ -20,7 +20,7 @@
     <useHitPoints>true</useHitPoints>
 
     <graphicData>
-      <texPath>Chariot/ChariotBuilding</texPath>
+      <texPath>Mech/Chariot/ChariotBuilding</texPath>
       <graphicClass>Graphic_Multi</graphicClass>
       <drawSize>(2,2)</drawSize>
     </graphicData>

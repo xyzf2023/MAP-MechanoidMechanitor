@@ -21,7 +21,7 @@
     <lifeStages Inherit="False">
       <li MayRequire="Ludeon.RimWorld.Biotech">
         <bodyGraphicData>
-          <texPath>Things/Pawn/Mechanoid/CentipedeGunnerClean</texPath>
+          <texPath>Mech/Magician/Magician</texPath>
           <maskPath>Things/Pawn/Mechanoid/AllegianceOverlays/CentipedeGunner</maskPath>
           <shaderType>CutoutWithOverlay</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
@@ -33,7 +33,7 @@
       </li>
       <li>
         <bodyGraphicData>
-          <texPath>Things/Pawn/Mechanoid/CentipedeGunner</texPath>
+          <texPath>Mech/Magician/Magician</texPath>
           <maskPath>Things/Pawn/Mechanoid/AllegianceOverlays/CentipedeGunner</maskPath>
           <shaderType>CutoutWithOverlay</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
