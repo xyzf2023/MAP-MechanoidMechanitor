@@ -40,7 +40,7 @@ namespace MAP_MechanoidMechanitor
         {
             record = null;
             GameComponent_MechTransformationRegistry? registry = CurrentRegistry;
-            if (registry == null || pawn == null)
+            if (registry == null || pawn == null || pawn.Discarded)
             {
                 return false;
             }
@@ -297,6 +297,11 @@ namespace MAP_MechanoidMechanitor
 
         public override void ExposeData()
         {
+            if (Scribe.mode == LoadSaveMode.Saving)
+            {
+                RemoveDiscardedRecords();
+            }
+
             Scribe_Collections.Look(
                 ref records,
                 "mechTransformationRecords",
@@ -330,6 +335,25 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        internal static void NotifyPawnDiscarded(Pawn pawn)
+        {
+            if (pawn.Discarded)
+            {
+                CurrentRegistry?.RemoveDiscardedRecords();
+            }
+        }
+
+        private void RemoveDiscardedRecords()
+        {
+            // 死亡或 Destroyed 的尸体仍可能复活，只有永久 Discarded 才注销。
+            if (records.RemoveAll(record => record?.SourcePawn == null
+                    || record.SourcePawn.Discarded) > 0)
+            {
+                recordByPawn = null;
+                recordById = null;
+            }
+        }
+
         private void RebuildIndexes(bool validate)
         {
             recordByPawn = new Dictionary<Pawn, MechTransformationRecord>();
@@ -340,7 +364,7 @@ namespace MAP_MechanoidMechanitor
             {
                 MechTransformationRecord? record = records[i];
                 Pawn? pawn = record?.SourcePawn;
-                if (record == null || pawn == null)
+                if (record == null || pawn == null || pawn.Discarded)
                 {
                     records.RemoveAt(i);
                     continue;

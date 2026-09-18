@@ -18,11 +18,11 @@ namespace MAP_MechanoidMechanitor
             public Rot4 Rotation;
         }
 
-        private static readonly HashSet<Pawn> PendingConversions =
+        private readonly HashSet<Pawn> PendingConversions =
             new HashSet<Pawn>();
-        private static readonly HashSet<Thing> PendingRestores =
+        private readonly HashSet<Thing> PendingRestores =
             new HashSet<Thing>();
-        private static readonly List<PendingEmergencyRestore> PendingEmergencyRestores =
+        private readonly List<PendingEmergencyRestore> PendingEmergencyRestores =
             new List<PendingEmergencyRestore>();
 
         public GameComponent_MechBuildingConversionQueue(Game game)
@@ -40,7 +40,15 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            PendingConversions.Add(pawn!);
+            GameComponent_MechBuildingConversionQueue? queue =
+                Current.Game?.GetComponent<GameComponent_MechBuildingConversionQueue>();
+            if (queue == null)
+            {
+                failureReason = "建筑形态转换队列不可用。";
+                return false;
+            }
+
+            queue.PendingConversions.Add(pawn!);
             return true;
         }
 
@@ -56,7 +64,15 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            PendingRestores.Add(carrier!);
+            GameComponent_MechBuildingConversionQueue? queue =
+                Current.Game?.GetComponent<GameComponent_MechBuildingConversionQueue>();
+            if (queue == null)
+            {
+                failureReason = "建筑形态转换队列不可用。";
+                return false;
+            }
+
+            queue.PendingRestores.Add(carrier!);
             return true;
         }
 
@@ -72,9 +88,16 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            for (int i = 0; i < PendingEmergencyRestores.Count; i++)
+            GameComponent_MechBuildingConversionQueue? queue =
+                Current.Game?.GetComponent<GameComponent_MechBuildingConversionQueue>();
+            if (queue == null)
             {
-                PendingEmergencyRestore existing = PendingEmergencyRestores[i];
+                return;
+            }
+
+            for (int i = 0; i < queue.PendingEmergencyRestores.Count; i++)
+            {
+                PendingEmergencyRestore existing = queue.PendingEmergencyRestores[i];
                 if (ReferenceEquals(existing.Carrier, carrier)
                     || ReferenceEquals(existing.SourcePawn, sourcePawn))
                 {
@@ -82,7 +105,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            PendingEmergencyRestores.Add(new PendingEmergencyRestore
+            queue.PendingEmergencyRestores.Add(new PendingEmergencyRestore
             {
                 Carrier = carrier,
                 SourcePawn = sourcePawn,
@@ -149,7 +172,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void ClearQueues()
+        private void ClearQueues()
         {
             PendingConversions.Clear();
             PendingRestores.Clear();

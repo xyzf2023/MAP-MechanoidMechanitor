@@ -23,11 +23,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // 主脑接管清理是否已完成（仅运行时）：首次检测到接管时清理一次，之后只廉价返回。
         private static bool takeoverCleanupCompleted;
 
-        private static readonly QuestScriptDef? questScriptDef =
-            PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig != null
-                ? DefDatabase<QuestScriptDef>.GetNamedSilentFail(
-                    PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig.questScriptDef)
-                : null;
+        // 配置可能由其他启动构造器补齐或由开发模式重载。复用配置 Def 的实时解析，
+        // 不把启动时的空结果或旧引用永久保存；调度查询已有 2500 tick 节流。
+        private static QuestScriptDef? QuestScript =>
+            PurgeDirectiveQuestConfigDefOf.MAP_PurgeDirectiveQuestConfig?.QuestScript;
 
         static PurgeDirectiveQuestScheduler()
         {
@@ -113,8 +112,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             PurgeDirectiveRatingConfigDef cfg = RatingConfig;
-            if (cfg == null || questScriptDef == null)
+            if (cfg == null)
             {
+                return;
+            }
+
+            if (QuestScript == null)
+            {
+                Log.ErrorOnce(
+                    "[MAP-机械族机械师] 肃清评级任务定义不可用，请检查 "
+                    + "MAP_PurgeDirectiveQuestConfig.questScriptDef；后续调度检查会重新解析。",
+                    1871462931);
                 return;
             }
 
@@ -205,6 +213,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>活动任务计数：本MOD肃清任务中尚未真正结束的（含待接受邀请与进行中）都计入。</summary>
         private static bool AnyActivePurgeQuest()
         {
+            QuestScriptDef? questScriptDef = QuestScript;
             if (questScriptDef == null)
             {
                 return false;
@@ -235,6 +244,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>接管主脑发生时：无处罚结束所有尚未真正结束的活动评级任务（含待接受邀请）。</summary>
         private static void EndAllActivePurgeQuestsWithoutPenalty()
         {
+            QuestScriptDef? questScriptDef = QuestScript;
             if (questScriptDef == null)
             {
                 return;
@@ -262,6 +272,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static void GenerateQuest(WorldObject target, PurgeDirectiveRatingConfigDef cfg)
         {
+            QuestScriptDef? questScriptDef = QuestScript;
             if (cfg == null || questScriptDef == null)
             {
                 return;

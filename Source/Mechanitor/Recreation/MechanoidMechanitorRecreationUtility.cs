@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using RimWorld;
 using Verse;
@@ -40,10 +41,10 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// DEV 临时标记：请求目标 Pawn 下一次空闲时强制尝试娱乐。
-        /// 不需要保存，不需要 GameComponent；读档丢失无影响。
+        /// 不需要保存；以 Pawn 弱引用为键，避免换局后 ThingID 复用误消费旧标记。
         /// </summary>
-        private static readonly HashSet<int> debugForceNextRecreationPawnIds =
-            new HashSet<int>();
+        private static readonly ConditionalWeakTable<Pawn, object> debugForceNextRecreationPawns =
+            new ConditionalWeakTable<Pawn, object>();
 
         private static void EnsureCaches()
         {
@@ -370,7 +371,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            debugForceNextRecreationPawnIds.Add(pawn.thingIDNumber);
+            debugForceNextRecreationPawns.GetOrCreateValue(pawn);
         }
 
         /// <summary>
@@ -384,7 +385,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return debugForceNextRecreationPawnIds.Remove(pawn.thingIDNumber);
+            return debugForceNextRecreationPawns.Remove(pawn);
         }
     }
 }

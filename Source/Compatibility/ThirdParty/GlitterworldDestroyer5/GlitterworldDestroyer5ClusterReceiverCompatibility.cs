@@ -204,6 +204,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
             }
             catch (Exception ex)
             {
+                UnpatchQuietly(harmony, canBeUsedBy!, canBeUsedPrefix);
+                UnpatchQuietly(harmony, doEffect!, doEffectPrefix);
                 return ThirdPartyCompatibilityResult.CreateFailed(
                     ModuleId,
                     DisplayName,
@@ -228,6 +230,21 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                 DisplayName,
                 PackageId,
                 reason);
+        }
+
+        private static void UnpatchQuietly(
+            Harmony harmony,
+            MethodInfo original,
+            MethodInfo patch)
+        {
+            try
+            {
+                harmony.Unpatch(original, patch);
+            }
+            catch
+            {
+                // 回滚失败不得掩盖最初的补丁安装异常。
+            }
         }
 
         private static ResearchProjectDef? ResolveResearch(

@@ -103,22 +103,21 @@ namespace MAP_MechanoidMechanitor
 
         internal static void BeginLoadSession(string reason)
         {
-            if (!Enabled)
-            {
-                return;
-            }
-
             try
             {
+                bool enabled = Enabled;
                 lock (Sync)
                 {
                     WatchedPawnIds.Clear();
                     FirstDeathLoggedPawnIds.Clear();
                     sequence = 0;
-                    loadSessionActive = true;
+                    loadSessionActive = enabled;
                 }
 
-                WriteCore("SESSION.BEGIN", null, "REASON=" + SafeText(reason), null);
+                if (enabled)
+                {
+                    WriteCore("SESSION.BEGIN", null, "REASON=" + SafeText(reason), null);
+                }
             }
             catch
             {
@@ -128,14 +127,9 @@ namespace MAP_MechanoidMechanitor
 
         internal static void EndLoadSession(string reason, Exception? exception)
         {
-            if (!Enabled)
-            {
-                return;
-            }
-
             try
             {
-                if (LoadSessionActive)
+                if (Enabled && LoadSessionActive)
                 {
                     WriteCore(
                         "SESSION.END",
@@ -154,6 +148,9 @@ namespace MAP_MechanoidMechanitor
                 lock (Sync)
                 {
                     loadSessionActive = false;
+                    WatchedPawnIds.Clear();
+                    FirstDeathLoggedPawnIds.Clear();
+                    sequence = 0;
                 }
             }
         }
