@@ -256,7 +256,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool TryGiveThingToCaravanPawn(
+        internal static bool TryGiveThingToCaravanPawn(
             Caravan caravan, Thing thing, out string failureReason)
         {
             failureReason = string.Empty;
@@ -1053,17 +1053,30 @@ namespace MAP_MechanoidMechanitor
             }
 
             List<Thing> snapshot = transporter.innerContainer.ToList();
+            // 装载时货物在 Pawn 前面；回滚必须先恢复成员，货物才有接收者。
+            for (int i = 0; i < snapshot.Count; i++)
+            {
+                if (snapshot[i] is Pawn pawn && !pawn.Dead)
+                {
+                    transporter.innerContainer.Remove(pawn);
+                    caravan.AddPawn(pawn, addCarriedPawnToWorldPawnsIfAny: false);
+                }
+            }
+
             for (int i = 0; i < snapshot.Count; i++)
             {
                 Thing thing = snapshot[i];
-                transporter.innerContainer.Remove(thing);
-                if (thing is Pawn pawn && !pawn.Dead)
+                if (thing.Destroyed || (thing is Pawn pawn && !pawn.Dead))
                 {
-                    caravan.AddPawn(pawn, addCarriedPawnToWorldPawnsIfAny: false);
+                    continue;
                 }
-                else if (!thing.Destroyed)
+
+                // 保留原 Owner，由抵达流程的公共转移方法接收或恢复，避免 GiveThing 销毁货物。
+                if (!MechanicalFlyingCaravanArrivalAction.TryGiveThingToCaravanPawn(
+                        caravan, thing, out string failureReason))
                 {
-                    CaravanInventoryUtility.GiveThing(caravan, thing);
+                    Log.Error("[MAP-机械族机械师] 起飞回滚时恢复货物失败：" +
+                        thing + "；" + failureReason);
                 }
             }
         }

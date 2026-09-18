@@ -224,24 +224,28 @@ namespace MAP_MechanoidMechanitor
             Hediff oldDirectAddedPart =
                 pawn.health.hediffSet.GetDirectlyAddedPartFor(selectedPart);
 
-            List<ThingDef> returnedItems =
+            List<Hediff> returnedItems =
                 CollectReturnedItems(pawn, selectedPart);
 
-            pawn.health.RestorePart(selectedPart);
-
-            Hediff installed =
-                pawn.health.AddHediff(recipe.addsHediff, selectedPart);
+            Hediff installed;
+            try
+            {
+                pawn.health.RestorePart(selectedPart);
+                installed = pawn.health.AddHediff(recipe.addsHediff, selectedPart);
+            }
+            finally
+            {
+                // 正常完成或中途抛异常，都只返还已从身体移除的旧植入物。
+                SpawnReturnedItems(pawn, returnedItems);
+            }
 
             if (installed == null
                 || installed.Part != selectedPart
                 || !pawn.health.hediffSet.hediffs.Contains(installed))
             {
-                SpawnReturnedItems(pawn, returnedItems);
                 failureReason = "MAP_MechanoidMechanitor.HumanImplant.InstallFailed".Translate();
                 return false;
             }
-
-            SpawnReturnedItems(pawn, returnedItems);
 
             oldDirectAddedPart?.Notify_SurgicallyReplaced(pawn);
 
@@ -252,10 +256,10 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 收集目标部位及其所有下级部位中需要返还的植入物物品（HediffDef.spawnThingOnRemoved）。
+        /// 收集目标部位及其所有下级部位中有返还物的旧植入物，保留引用以判断是否已移除。
         /// 不去重，因为同种植入物可能分别安装在不同下级部位。
         /// </summary>
-        private static List<ThingDef> CollectReturnedItems(
+        private static List<Hediff> CollectReturnedItems(
             Pawn pawn,
             BodyPartRecord selectedPart)
         {
@@ -263,7 +267,7 @@ namespace MAP_MechanoidMechanitor
                 new HashSet<BodyPartRecord>(
                     selectedPart.GetPartAndAllChildParts());
 
-            List<ThingDef> result = new List<ThingDef>();
+            List<Hediff> result = new List<Hediff>();
 
             List<Hediff> hediffs = pawn.health.hediffSet.hediffs;
             for (int i = 0; i < hediffs.Count; i++)
@@ -276,7 +280,7 @@ namespace MAP_MechanoidMechanitor
                     && !hediff.def.keepOnBodyPartRestoration
                     && hediff.def.spawnThingOnRemoved != null)
                 {
-                    result.Add(hediff.def.spawnThingOnRemoved);
+                    result.Add(hediff);
                 }
             }
 
@@ -285,16 +289,22 @@ namespace MAP_MechanoidMechanitor
 
         private static void SpawnReturnedItems(
             Pawn pawn,
-            List<ThingDef> returnedDefs)
+            List<Hediff> oldImplants)
         {
-            if (pawn?.Map == null || returnedDefs.NullOrEmpty())
+            if (pawn?.Map == null || oldImplants.NullOrEmpty())
             {
                 return;
             }
 
-            for (int i = 0; i < returnedDefs.Count; i++)
+            for (int i = 0; i < oldImplants.Count; i++)
             {
-                ThingDef def = returnedDefs[i];
+                Hediff oldImplant = oldImplants[i];
+                if (pawn.health.hediffSet.hediffs.Contains(oldImplant))
+                {
+                    continue;
+                }
+
+                ThingDef def = oldImplant.def.spawnThingOnRemoved;
                 if (def == null)
                 {
                     continue;

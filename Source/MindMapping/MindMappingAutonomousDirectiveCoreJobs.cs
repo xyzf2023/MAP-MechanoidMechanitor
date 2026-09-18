@@ -356,8 +356,15 @@ namespace MAP_MechanoidMechanitor
             }
 
             MindMappingData data = MindMappingData.Capture(pawn);
-            MindMappingData.ResetToAcquiredBaseline(pawn);
-            core.Store(data);
+            try
+            {
+                MindMappingData.ResetToAcquiredBaseline(pawn);
+            }
+            finally
+            {
+                // 重置中途抛异常时也保留完整原人格，异常继续交给 Job 处理。
+                core.Store(data);
+            }
             return TrySetMappedPersonality(pawn, false);
         }
 

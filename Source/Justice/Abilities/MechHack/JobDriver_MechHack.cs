@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
@@ -213,26 +214,36 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            targetPawn.SetFaction(Faction.OfPlayer);
-
-            // 由统一工具负责旧监管者清理、关系写入、控制组分配与带宽刷新。
-            if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(pawn, targetPawn))
+            bool succeeded = false;
+            try
             {
-                Log.Warning(
-                    "[MAP-机械族机械师] 骇入监管者分配失败：" +
-                    $"{targetPawn.LabelShort}（{targetPawn.kindDef?.defName ?? "unknown"}），正在回滚。");
+                targetPawn.SetFaction(Faction.OfPlayer);
 
-                RollbackFailedHack(targetPawn, hackedFaction, oldOverseer);
-                EndJobWith(JobCondition.Incompletable);
-                return;
+                // 由统一工具负责旧监管者清理、关系写入、控制组分配与带宽刷新。
+                if (!MAPOverseerAssignmentUtility.TryAssignActualOverseer(pawn, targetPawn))
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 骇入监管者分配失败：" +
+                        $"{targetPawn.LabelShort}（{targetPawn.kindDef?.defName ?? "unknown"}），正在回滚。");
+                }
+                else if (!VerifyHackSucceeded(targetPawn))
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 骇入控制权转移失败：" +
+                        $"{targetPawn.LabelShort}（{targetPawn.kindDef?.defName ?? "unknown"}），正在回滚。");
+                }
+                else
+                {
+                    succeeded = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("[MAP-机械族机械师] 骇入控制权转移时发生异常，正在回滚：" + ex);
             }
 
-            if (!VerifyHackSucceeded(targetPawn))
+            if (!succeeded)
             {
-                Log.Warning(
-                    "[MAP-机械族机械师] 骇入控制权转移失败：" +
-                    $"{targetPawn.LabelShort}（{targetPawn.kindDef?.defName ?? "unknown"}），正在回滚。");
-
                 RollbackFailedHack(targetPawn, hackedFaction, oldOverseer);
                 EndJobWith(JobCondition.Incompletable);
                 return;
