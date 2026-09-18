@@ -5,10 +5,10 @@
     <label>飞行中的远行队</label>
     <description>正在通过机械飞行前往目的地的远行队。</description>
     <worldObjectClass>MAP_MechanoidMechanitor.WorldObject_MechanicalFlyingCaravan</worldObjectClass>
-    <texture>UI/MechanicalFlight</texture>
+    <texture>UI/Commands/MM_MechanicalFlight</texture>
     <useDynamicDrawer>true</useDynamicDrawer>
     <expandingIcon>true</expandingIcon>
-    <expandingIconTexture>UI/MechanicalFlyingCaravan</expandingIconTexture>
+    <expandingIconTexture>UI/WorldObjects/MM_MechanicalFlyingCaravan</expandingIconTexture>
     <expandingIconPriority>60</expandingIconPriority>
     <expandingIconDrawSize>0.75</expandingIconDrawSize>
     <expandMore>true</expandMore>

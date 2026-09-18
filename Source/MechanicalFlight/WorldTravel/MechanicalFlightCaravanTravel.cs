@@ -848,7 +848,7 @@ namespace MAP_MechanoidMechanitor
     public static class MechanicalFlightCaravanUtility
     {
         private static readonly Texture2D FlightIcon =
-            ContentFinder<Texture2D>.Get("UI/MechanicalFlight", false)//远行队飞行的贴图路径
+            ContentFinder<Texture2D>.Get("UI/Commands/MM_MechanicalFlight", false)//远行队飞行的贴图路径
             ?? CompLaunchable.LaunchCommandTex;
 
         public static AcceptanceReport CanLaunch(Caravan? caravan)

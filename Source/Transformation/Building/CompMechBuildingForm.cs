@@ -338,7 +338,7 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Transformation.Building.Restore.Label".Translate(),
                 defaultDesc =
                     "MAP_MechanoidMechanitor.Transformation.Building.Restore.Description".Translate(),
-                icon = ContentFinder<Texture2D>.Get("UI/BuildingConversion"),
+                icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_BuildingConversion"),
                 action = BeginRestoreWarmup
             };
 

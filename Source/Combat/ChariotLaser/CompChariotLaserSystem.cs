@@ -166,13 +166,13 @@ namespace MAP_MechanoidMechanitor
     {
         private static readonly Texture2D TrackingLaserIcon =
             ContentFinder<Texture2D>.Get(
-                "UI/LaserFocus",
+                "UI/Commands/MM_LaserFocus",
                 reportFailure: false)
             ?? TexCommand.Attack;
 
         private static readonly Texture2D SweepLaserIcon =
             ContentFinder<Texture2D>.Get(
-                "UI/LaserSweep",
+                "UI/Commands/MM_LaserSweep",
                 reportFailure: false)
             ?? TexCommand.Attack;
 

@@ -4,7 +4,7 @@
     <defName>MAP_PsychicActivation</defName>
     <label>心灵活化</label>
     <description>主动激发心灵中枢，使灵能通路在短时间内进入高度活跃状态。\n持续期间使用者的灵能将得到进一步强化，并获得额外的精神力恢复能力。\n额外恢复效果随心灵中枢等级提升而提升。效果持续六个小时。</description>
-    <iconPath>UI/MAP_PsychicActivation</iconPath>
+    <iconPath>UI/Abilities/MM_PsychicActivation</iconPath>
     <cooldownTicksRange>180000~180000</cooldownTicksRange>
     <jobDef>CastAbilityOnThingWithoutWeapon</jobDef>
     <targetRequired>false</targetRequired>

@@ -8,7 +8,7 @@ namespace MAP_MechanoidMechanitor
     internal static class GravityFieldPresentation
     {
         internal static readonly Texture2D Icon =
-            ContentFinder<Texture2D>.Get("UI/ToggleGravityField", false) ?? TexCommand.Install;//重力场开关贴图
+            ContentFinder<Texture2D>.Get("UI/Commands/MM_ToggleGravityField", false) ?? TexCommand.Install;//重力场开关贴图
         private static readonly Material FieldMaterial =
             MaterialPool.MatFrom("Other/ForceField", ShaderDatabase.MoteGlow);
         private static readonly MaterialPropertyBlock PropertyBlock = new();

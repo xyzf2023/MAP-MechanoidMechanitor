@@ -11,7 +11,7 @@ namespace MAP_MechanoidMechanitor
     public static class DataProcessingAllocationGizmoUtility
     {
         private static readonly Texture2D DataProcessingAllocationIcon =
-            ContentFinder<Texture2D>.Get("UI/MM_DataProcessingAllocation");
+            ContentFinder<Texture2D>.Get("UI/Commands/MM_DataProcessingAllocation");
 
         /// <summary>
         ///     机械族机械师是否显示“数据处理分配” Gizmo。

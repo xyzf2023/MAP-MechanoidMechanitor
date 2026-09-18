@@ -78,7 +78,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = LabelKey.Translate(),
                 defaultDesc = DescriptionKey.Translate(),
-                icon = ContentFinder<Texture2D>.Get("UI/MM_TransferMechanicalConsciousness"),
+                icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_TransferMechanicalConsciousness"),
                 action = delegate
                 {
                     OpenTransferTargetMenu(source);
@@ -211,7 +211,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = HandoffLabelKey.Translate(),
                 defaultDesc = HandoffDescriptionKey.Translate(),
-                icon = ContentFinder<Texture2D>.Get("UI/MM_TransferMechanicalConsciousness"),
+                icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_TransferMechanicalConsciousness"),
                 action = delegate
                 {
                     OpenControlHandoffTargetMenu(source);

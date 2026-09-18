@@ -5,7 +5,7 @@
     <label>经典</label>
     <description>经典的游戏体验。不启用任何额外故事线，体验完全自由的机械族殖民地。</description>
     <displayOrder>100</displayOrder>
-    <iconPath>UI/Classic</iconPath>
+    <iconPath>UI/Scenarios/MM_Classic</iconPath>
     <presetConfiguration>
       <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>
       <factionOutpostFrequency>Low</factionOutpostFrequency>
@@ -22,7 +22,7 @@
     <label>共生盟约</label>
     <description>扮演脱离主脑控制的机械族，通过互惠行动逐步取得其他派系的信任、建立共同防卫关系，并邀请他们加入反抗主脑的共生盟约。</description>
     <displayOrder>200</displayOrder>
-    <iconPath>UI/SymbiosisCovenant</iconPath>
+    <iconPath>UI/Scenarios/MM_SymbiosisCovenant</iconPath>
     <presetConfiguration>
       <ordinaryFactionRelationsMode>AllHostile</ordinaryFactionRelationsMode>
       <factionOutpostFrequency>Medium</factionOutpostFrequency>
@@ -39,7 +39,7 @@
     <label>肃清指令</label>
     <description>扮演主脑部署的杀戮机器，无情地清理所有有机智慧生物；通过各种任务获取主脑信任，以获取来自机械巢的支持。</description>
     <displayOrder>300</displayOrder>
-    <iconPath>UI/PurgeDirective</iconPath>
+    <iconPath>UI/Scenarios/MM_PurgeDirective</iconPath>
     <presetConfiguration>
       <ordinaryFactionRelationsMode>AllPermanentHostile</ordinaryFactionRelationsMode>
       <factionOutpostFrequency>Medium</factionOutpostFrequency>
@@ -56,7 +56,7 @@
     <label>自定义</label>
     <description>自由组合本局启用的剧情组件。</description>
     <displayOrder>400</displayOrder>
-    <iconPath>UI/MM_Custom</iconPath>
+    <iconPath>UI/Scenarios/MM_Custom</iconPath>
     <opensCustomizePage>true</opensCustomizePage>
     <presetConfiguration>
       <ordinaryFactionRelationsMode>Default</ordinaryFactionRelationsMode>

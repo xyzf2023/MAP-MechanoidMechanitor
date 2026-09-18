@@ -395,7 +395,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = "整备策略",
                 defaultDesc = "设置使用模式、指定机械族、机械族机械师优先、整备功能和完成后待命。\n当前：" + MechServicePolicyUtility.Label(mode),
-                icon = ContentFinder<Texture2D>.Get("UI/MaintenancePolicy"),
+                icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_MaintenancePolicy"),
                 action = () => Find.WindowStack.Add(new Dialog_MechServiceStationPolicy(this))
             };
         }

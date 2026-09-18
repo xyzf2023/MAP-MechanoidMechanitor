@@ -28,7 +28,7 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = LovinToggleLabelKey.Translate(),
                 defaultDesc = LovinToggleDescKey.Translate(),
-                icon = ContentFinder<Texture2D>.Get("UI/LovinJob"),
+                icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_LovinJob"),
                 isActive = () =>
                     SyntheticCompanionStateUtility.IsLovinWithSpouseEnabled(pawn),
                 toggleAction = () =>

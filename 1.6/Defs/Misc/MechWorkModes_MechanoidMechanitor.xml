@@ -12,7 +12,7 @@
     <defName>MAP_WorkMode_EfficientExecution</defName>
     <label>工作（高效执行）</label>
     <uiOrder>150</uiOrder>
-    <iconPath>UI/EfficientExecution</iconPath>
+    <iconPath>UI/WorkModes/MM_EfficientExecution</iconPath>
   </MechWorkModeDef>
 
   <MechWorkModeDef>

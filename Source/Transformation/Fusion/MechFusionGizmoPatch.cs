@@ -67,7 +67,7 @@ namespace MAP_MechanoidMechanitor
                 defaultDesc =
                     "MAP_MechanoidMechanitor.Fusion.Release.Description"
                         .Translate(),
-                icon = ContentFinder<Texture2D>.Get("UI/Disengage"),
+                icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_Disengage"),
                 action = delegate
                 {
                     MechFusionTeardownService.TryTeardown(
