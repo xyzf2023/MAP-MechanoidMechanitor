@@ -13,23 +13,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
         None = 0,
         MechClusterDeployment = 1,
         MechForceSupport = 2,
+        BandwidthSupport = 3,
     }
 
     public sealed class MechanoidOvermindPage_SpecialProtocols
     {
         private SpecialProtocolKind expandedProtocol = SpecialProtocolKind.None;
+        private MechanoidOvermindPage_BandwidthSupport? bandwidthPage;
+        private Vector2 scrollPosition;
 
         public SpecialProtocolKind ExpandedProtocol => expandedProtocol;
+        public MechanoidOvermindPage_BandwidthSupport? BandwidthPage => bandwidthPage;
 
         public void ResetExpansionState()
         {
+            bandwidthPage?.CommitPendingEdits();
             expandedProtocol = SpecialProtocolKind.None;
+            bandwidthPage = null;
+            scrollPosition = Vector2.zero;
         }
 
         public void CollapseExpandedProtocol(
             MechClusterDeploymentOrder? clusterOrder,
             MechForceSupportOrder? forceSupportOrder)
         {
+            bandwidthPage?.CommitPendingEdits();
             if (expandedProtocol == SpecialProtocolKind.None)
             {
                 return;
@@ -37,6 +45,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             ClearProtocolOrder(expandedProtocol, clusterOrder, forceSupportOrder);
             expandedProtocol = SpecialProtocolKind.None;
+            bandwidthPage = null;
         }
 
         public void Draw(
@@ -44,11 +53,36 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechClusterDeploymentOrder clusterOrder,
             MechForceSupportOrder forceSupportOrder)
         {
+            MechanoidOvermindUiStyle.DrawPanel(inRect);
+            Rect viewport = inRect.ContractedBy(16f);
+            bool clusterAvailable = PurgeDirectiveRatingUtility.IsClusterAvailable()
+                && MechClusterDeploymentService.TryResolveAvailableMap(out Map? availableClusterMap)
+                && availableClusterMap != null;
+            bool forceSupportAvailable = PurgeDirectiveRatingUtility.IsForceSupportAvailable()
+                && MechForceSupportService.HasAvailableMap();
+            bool bandwidthAvailable = GameComponent_OvermindBandwidthSupport.Available
+                && GameComponent_OvermindBandwidthSupport.Current != null;
+            int visibleCount = (clusterAvailable ? 1 : 0) + (forceSupportAvailable ? 1 : 0)
+                + (bandwidthAvailable ? 1 : 0);
+            float configHeight = expandedProtocol == SpecialProtocolKind.None ? 0f
+                : expandedProtocol == SpecialProtocolKind.BandwidthSupport
+                    ? (bandwidthPage?.ContentHeight ?? 150f) + 24f : 190f;
+            Rect view = new Rect(0f, 0f, Mathf.Max(1f, viewport.width - 20f),
+                Mathf.Max(viewport.height, 58f + visibleCount * 102f
+                    + (expandedProtocol == SpecialProtocolKind.None ? 0f : configHeight + 4f)));
+            Widgets.BeginScrollView(viewport, ref scrollPosition, view);
+            try { DrawContent(view, configHeight, clusterOrder, forceSupportOrder); }
+            finally { Widgets.EndScrollView(); }
+        }
+
+        private void DrawContent(
+            Rect inner,
+            float configHeight,
+            MechClusterDeploymentOrder clusterOrder,
+            MechForceSupportOrder forceSupportOrder)
+        {
             using (MechanoidOvermindUiStyle.Push())
             {
-                MechanoidOvermindUiStyle.DrawPanel(inRect);
-                Rect inner = inRect.ContractedBy(16f);
-
                 MechanoidOvermindUiStyle.DrawLabel(
                     new Rect(inner.x, inner.y, inner.width, 24f),
                     "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Body".Translate(),
@@ -66,12 +100,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     && clusterMap != null;
                 bool forceSupportMapAvailable = MechForceSupportService.HasAvailableMap();
 
-                // 评级未达 1 级（且未接管主脑）时协议关闭，但仍显示并标注所需评级。
+                // 只显示当前评级和地图条件均满足的协议。
                 bool clusterRatingAvailable = PurgeDirectiveRatingUtility.IsClusterAvailable();
                 bool forceSupportRatingAvailable = PurgeDirectiveRatingUtility.IsForceSupportAvailable();
 
                 bool clusterAvailable = clusterMapAvailable && clusterRatingAvailable;
                 bool forceSupportAvailable = forceSupportMapAvailable && forceSupportRatingAvailable;
+                bool bandwidthAvailable = GameComponent_OvermindBandwidthSupport.Available
+                    && GameComponent_OvermindBandwidthSupport.Current != null;
 
                 if (expandedProtocol == SpecialProtocolKind.MechClusterDeployment
                     && !clusterAvailable)
@@ -92,26 +128,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     expandedProtocol = SpecialProtocolKind.None;
                 }
 
-                if (!clusterAvailable && !forceSupportAvailable)
+                if (expandedProtocol == SpecialProtocolKind.BandwidthSupport && !bandwidthAvailable)
+                    CollapseExpandedProtocol(clusterOrder, forceSupportOrder);
+
+                if (!clusterAvailable && !forceSupportAvailable && !bandwidthAvailable)
                 {
                     DrawEmptyState(inner);
                     return;
                 }
 
-                float cardsHeight = Mathf.Min(
-                    202f,
-                    Mathf.Max(190f, inner.height * 0.38f));
-                float cardHeight = (cardsHeight - 8f) * 0.5f;
-                Rect clusterCardRect = new Rect(
-                    inner.x,
-                    inner.y + 58f,
-                    inner.width,
-                    cardHeight);
-                Rect forceSupportCardRect = new Rect(
-                    inner.x,
-                    clusterCardRect.yMax + 8f,
-                    inner.width,
-                    cardHeight);
+                const float cardHeight = 94f;
+                // 本次绘制使用同一份展开状态计算位置；点击切换后，下次绘制再更新布局。
+                SpecialProtocolKind layoutProtocol = expandedProtocol;
+                float expandedHeight = configHeight + 12f;
+                float nextY = inner.y + 58f;
+                Rect NextCard(SpecialProtocolKind kind, bool available)
+                {
+                    if (!available) return Rect.zero;
+                    Rect card = new Rect(inner.x, nextY, inner.width, cardHeight);
+                    nextY += cardHeight + 8f + (layoutProtocol == kind ? expandedHeight : 0f);
+                    return card;
+                }
+                Rect clusterCardRect = NextCard(SpecialProtocolKind.MechClusterDeployment, clusterAvailable);
+                Rect forceSupportCardRect = NextCard(SpecialProtocolKind.MechForceSupport, forceSupportAvailable);
+                Rect bandwidthCardRect = NextCard(SpecialProtocolKind.BandwidthSupport, bandwidthAvailable);
 
                 string clusterMeta = clusterMap != null
                     ? "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.CardMeta"
@@ -123,7 +163,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     clusterMeta += "  " + "MAP_PurgeDirectiveRating.RequiredLevel".Translate(1);
                 }
 
-                DrawProtocolCard(
+                if (clusterAvailable) DrawProtocolCard(
                     clusterCardRect,
                     SpecialProtocolKind.MechClusterDeployment,
                     "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.Title",
@@ -141,7 +181,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     forceSupportMeta += "  " + "MAP_PurgeDirectiveRating.RequiredLevel".Translate(1);
                 }
 
-                DrawProtocolCard(
+                if (forceSupportAvailable) DrawProtocolCard(
                     forceSupportCardRect,
                     SpecialProtocolKind.MechForceSupport,
                     "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.ForceSupport.Title",
@@ -151,16 +191,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     clusterOrder,
                     forceSupportOrder);
 
-                if (expandedProtocol == SpecialProtocolKind.None)
+                var bandwidth = GameComponent_OvermindBandwidthSupport.Current;
+                if (bandwidthAvailable) DrawProtocolCard(
+                    bandwidthCardRect,
+                    SpecialProtocolKind.BandwidthSupport,
+                    "MAP_BandwidthSupport.Title",
+                    "MAP_BandwidthSupport.Description",
+                    bandwidth != null && bandwidth.Activated
+                        ? "MAP_BandwidthSupport.Allocated".Translate(bandwidth.Allocated, bandwidth.Total).ToString()
+                        : "MAP_BandwidthSupport.Activate".Translate().ToString(),
+                    bandwidthAvailable,
+                    clusterOrder,
+                    forceSupportOrder);
+
+                if (expandedProtocol == SpecialProtocolKind.None || expandedProtocol != layoutProtocol)
                 {
                     return;
                 }
 
+                Rect selectedCardRect = layoutProtocol == SpecialProtocolKind.MechClusterDeployment
+                    ? clusterCardRect : layoutProtocol == SpecialProtocolKind.MechForceSupport
+                        ? forceSupportCardRect : bandwidthCardRect;
                 Rect configRect = new Rect(
                     inner.x,
-                    forceSupportCardRect.yMax + 12f,
+                    selectedCardRect.yMax + 12f,
                     inner.width,
-                    Mathf.Max(96f, inner.yMax - forceSupportCardRect.yMax - 12f));
+                    configHeight);
                 if (expandedProtocol == SpecialProtocolKind.MechClusterDeployment
                     && clusterMap != null)
                 {
@@ -170,6 +226,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 else if (expandedProtocol == SpecialProtocolKind.MechForceSupport)
                 {
                     DrawForceSupportConfiguration(configRect, forceSupportOrder);
+                }
+                else if (expandedProtocol == SpecialProtocolKind.BandwidthSupport && bandwidth != null)
+                {
+                    bandwidthPage ??= new MechanoidOvermindPage_BandwidthSupport(bandwidth);
+                    bandwidthPage.Draw(configRect);
                 }
             }
         }
@@ -257,14 +318,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechClusterDeploymentOrder clusterOrder,
             MechForceSupportOrder forceSupportOrder)
         {
+            bandwidthPage?.CommitPendingEdits();
             if (expandedProtocol == kind)
             {
                 ClearProtocolOrder(kind, clusterOrder, forceSupportOrder);
                 expandedProtocol = SpecialProtocolKind.None;
+                bandwidthPage = null;
                 return;
             }
 
             ClearProtocolOrder(expandedProtocol, clusterOrder, forceSupportOrder);
+            bandwidthPage = null;
             expandedProtocol = kind;
         }
 

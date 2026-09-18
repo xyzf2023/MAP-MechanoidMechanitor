@@ -26,6 +26,12 @@
     <discountLevel5>0.20</discountLevel5>
     <takeoverDiscount>0.20</takeoverDiscount>
 
+    <!-- 带宽支持：全局基础配额；每单位扩展带宽的周期额度消耗。 -->
+    <bandwidthSupportBaseByLevel><li>10</li><li>20</li><li>30</li><li>40</li><li>50</li></bandwidthSupportBaseByLevel>
+    <bandwidthSupportCostByLevel><li>30</li><li>25</li><li>20</li><li>15</li><li>10</li></bandwidthSupportCostByLevel>
+    <bandwidthSupportUnit>5</bandwidthSupportUnit>
+    <bandwidthSupportPeriodDays>15</bandwidthSupportPeriodDays>
+
     <!-- 机械族重量级所需最低评级等级。判级只按 MechWeightClassDef；
          null 或原版 Light/Medium/Heavy/UltraHeavy 按对应等级；
          非空且不等于原版四种重量级的第三方自定义重量级按四级处理。 -->

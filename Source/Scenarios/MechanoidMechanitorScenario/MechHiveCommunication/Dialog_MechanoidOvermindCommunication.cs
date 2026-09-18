@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MAP_MechanoidMechanitor;
 using RimWorld;
 using UnityEngine;
@@ -881,7 +882,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         && activeProtocolOrder != null)
                     || (specialProtocolsPage.ExpandedProtocol
                             == SpecialProtocolKind.MechForceSupport
-                        && activeForceSupportOrder != null);
+                        && activeForceSupportOrder != null)
+                    || (specialProtocolsPage.ExpandedProtocol == SpecialProtocolKind.BandwidthSupport
+                        && specialProtocolsPage.BandwidthPage != null);
             }
 
             float dialogueH;
@@ -935,6 +938,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         DrawMechForceSupportOrderPanel(
                             orderRect,
                             activeForceSupportOrder);
+                    }
+                    else if (specialProtocolsPage.ExpandedProtocol == SpecialProtocolKind.BandwidthSupport
+                        && specialProtocolsPage.BandwidthPage is MechanoidOvermindPage_BandwidthSupport bandwidthPage)
+                    {
+                        DrawBandwidthSupportOrderPanel(orderRect, bandwidthPage);
                     }
                 }
                 else if (activeOrder != null)
@@ -1758,6 +1766,78 @@ namespace MAP_MechanoidMechanitor.Scenarios
             GUI.EndGroup();
         }
 
+
+        private Vector2 bandwidthOrderScroll;
+
+        private void DrawBandwidthSupportOrderPanel(Rect rect, MechanoidOvermindPage_BandwidthSupport page)
+        {
+            BandwidthSupportOrder order = page.Order;
+            MechanoidOvermindUiStyle.DrawPanel(rect);
+            Rect inner = rect.ContractedBy(8f);
+            MechanoidOvermindUiStyle.DrawLabel(new Rect(inner.x, inner.y, inner.width, 24f),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Title".Translate());
+            const float footerHeight = 126f;
+            Rect listRect = new Rect(inner.x, inner.y + 28f, inner.width,
+                Mathf.Max(0f, inner.height - 28f - footerHeight - 6f));
+            var state = GameComponent_OvermindBandwidthSupport.Current;
+            var lines = new List<string>();
+            if (state != null)
+            {
+                if (order.Requested != state.Requested)
+                    lines.Add((GameComponent_OvermindBandwidthSupport.TakenOver
+                        ? "MAP_BandwidthSupport.RequestedTotal" : "MAP_BandwidthSupport.RequestedExtension")
+                        .Translate() + ": " + state.Requested + " → " + order.Requested);
+                foreach (var pair in order.Allocations)
+                {
+                    int current = state.AllocatedTo(pair.Key);
+                    if (current != pair.Value)
+                        lines.Add(pair.Key.LabelShort + ": " + current + " → " + pair.Value);
+                }
+            }
+            if (lines.Count == 0) lines.Add("MAP_BandwidthSupport.NoPendingOrder".Translate());
+            if (listRect.height > 12f)
+            {
+                MechanoidOvermindUiStyle.DrawPanel(listRect, alt: true, cornerMarks: false);
+                Rect viewport = listRect.ContractedBy(6f);
+                Rect view = new Rect(0f, 0f, Mathf.Max(1f, viewport.width - 20f),
+                    Mathf.Max(viewport.height, 26f + lines.Count * 24f));
+                Widgets.BeginScrollView(viewport, ref bandwidthOrderScroll, view);
+                MechanoidOvermindUiStyle.DrawLabel(new Rect(0f, 0f, view.width, 24f),
+                    "MAP_BandwidthSupport.Title".Translate(), color: MechanoidOvermindUiStyle.AccentBright);
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    Rect row = new Rect(0f, 26f + i * 24f, view.width, 22f);
+                    MechanoidOvermindUiStyle.DrawSecondaryLabel(row, lines[i]);
+                    TooltipHandler.TipRegion(row, lines[i]);
+                }
+                Widgets.EndScrollView();
+            }
+            float availableFooterHeight = Mathf.Max(0f, Mathf.Min(footerHeight, inner.height - 28f));
+            Rect footer = new Rect(inner.x, inner.yMax - availableFooterHeight,
+                inner.width, availableFooterHeight);
+            if (availableFooterHeight < 26f) return;
+            int credits = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRewardPoints();
+            MechanoidOvermindUiStyle.DrawLabel(new Rect(footer.x, footer.y, footer.width, 24f),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Total".Translate(order.Cost),
+                color: MechanoidOvermindUiStyle.AccentBright);
+            MechanoidOvermindUiStyle.DrawSecondaryLabel(new Rect(footer.x, footer.y + 26f, footer.width, 20f),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.CurrentCredits".Translate(credits));
+            MechanoidOvermindUiStyle.DrawSecondaryLabel(new Rect(footer.x, footer.y + 48f, footer.width, 20f),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.BalanceAfter".Translate(credits - order.Cost));
+            if (order.HasChanges && !order.CanExecute)
+                MechanoidOvermindUiStyle.DrawSecondaryLabel(new Rect(footer.x, footer.y + 70f, footer.width, 20f),
+                    "MAP_BandwidthSupport.InvalidOrder".Translate());
+            float buttonWidth = Mathf.Min(94f, (footer.width - 8f) * 0.5f);
+            float x = footer.x + (footer.width - buttonWidth * 2f - 8f) * 0.5f;
+            if (MechanoidOvermindUiStyle.DrawActionButton(new Rect(x, footer.yMax - 26f, buttonWidth, 26f),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Clear".Translate(), !transitioning))
+                page.ResetOrder();
+            if (MechanoidOvermindUiStyle.DrawActionButton(
+                new Rect(x + buttonWidth + 8f, footer.yMax - 26f, buttonWidth, 26f),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Order.Confirm".Translate(),
+                !transitioning && order.CanExecute, emphasized: true))
+                page.ExecuteOrder();
+        }
 
         private void DrawSpecialProtocolOrderPanel(
             Rect rect,

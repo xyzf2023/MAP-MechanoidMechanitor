@@ -110,6 +110,8 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
+                using var bandwidthTransfer = Scenarios.GameComponent_OvermindBandwidthSupport.Current
+                    ?.BeginTransfer(resolvedSource, resolvedTarget);
                 MergeTargetSkillsFromSource(resolvedSource, resolvedTarget);
                 ApplyChipBandwidthTransfer(
                     sourceRecord,
@@ -128,6 +130,7 @@ namespace MAP_MechanoidMechanitor
                         resolvedTarget))
                 {
                     rollbackAttempted = true;
+                    bandwidthTransfer?.Dispose();
                     RollbackTransferBestEffort(
                         resolvedSource,
                         resolvedTarget,
@@ -154,6 +157,7 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 transactionCommitted = true;
+                bandwidthTransfer?.Commit();
                 ApplyManagedAbilityTransferBestEffort(
                     resolvedSource,
                     resolvedTarget,

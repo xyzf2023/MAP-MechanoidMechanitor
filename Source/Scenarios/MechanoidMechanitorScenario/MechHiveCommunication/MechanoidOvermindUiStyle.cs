@@ -219,13 +219,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        public static bool DrawActionButton(Rect rect, string label, bool enabled = true)
+        public static bool DrawActionButton(Rect rect, string label, bool enabled = true, bool emphasized = false)
         {
             using (Push())
             {
-                Widgets.DrawBoxSolid(rect, enabled ? PanelAlt : Panel);
+                bool hovered = enabled && Mouse.IsOver(rect);
+                Widgets.DrawBoxSolid(rect, !enabled ? Panel
+                    : hovered ? NavSelectedFill : emphasized ? Accent : PanelAlt);
                 Color previous = GUI.color;
-                GUI.color = enabled ? Accent : Disabled;
+                GUI.color = !enabled ? Disabled : hovered || emphasized ? AccentBright : Accent;
                 Widgets.DrawBox(rect, 1);
                 GUI.color = previous;
 
@@ -241,6 +243,71 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 return Widgets.ButtonInvisible(rect);
+            }
+        }
+
+        private static GUIStyle? numberInputStyle;
+
+        /// <summary>通讯面板共用的整数调节器：统一底色、边框、焦点与加减按钮。</summary>
+        public static bool DrawNumberStepper(Rect rect, string controlName, ref int value,
+            ref string buffer, int step = 1, int max = int.MaxValue)
+        {
+            using (Push())
+            {
+                Text.Font = GameFont.Small;
+                GUI.color = Color.white;
+                if (numberInputStyle == null)
+                {
+                    numberInputStyle = new GUIStyle(Text.CurTextFieldStyle)
+                    {
+                        alignment = TextAnchor.MiddleCenter,
+                        padding = new RectOffset(6, 6, 0, 0)
+                    };
+                    numberInputStyle.normal.background = null;
+                    numberInputStyle.hover.background = null;
+                    numberInputStyle.active.background = null;
+                    numberInputStyle.focused.background = null;
+                    numberInputStyle.normal.textColor = TextPrimary;
+                    numberInputStyle.hover.textColor = TextPrimary;
+                    numberInputStyle.active.textColor = AccentBright;
+                    numberInputStyle.focused.textColor = AccentBright;
+                }
+                float buttonWidth = rect.height;
+                Rect field = new Rect(rect.x + buttonWidth + 4f, rect.y,
+                    rect.width - buttonWidth * 2f - 8f, rect.height);
+                // 点击空白/其他控件也必须释放文本框焦点。
+                if (Event.current.rawType == EventType.MouseDown
+                    && GUI.GetNameOfFocusedControl() == controlName
+                    && !field.Contains(Event.current.mousePosition))
+                    GUI.FocusControl(null);
+                if (DrawActionButton(new Rect(rect.x, rect.y, buttonWidth, rect.height), "−", value > 0))
+                {
+                    value = Math.Max(0, value - step);
+                    buffer = value.ToString();
+                    GUI.FocusControl(null);
+                }
+                Widgets.DrawBoxSolid(field, Background);
+                DrawBorder(field);
+                if (GUI.GetNameOfFocusedControl() == controlName)
+                    Widgets.DrawBoxSolid(new Rect(field.x, field.yMax - 2f, field.width, 2f), AccentBright);
+                GUI.SetNextControlName(controlName);
+                buffer = GUI.TextField(field.ContractedBy(2f), buffer, 10, numberInputStyle);
+                bool valid = int.TryParse(buffer, System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out int parsed);
+                if (valid)
+                {
+                    value = Math.Min(parsed, max);
+                    if (parsed > max) buffer = value.ToString();
+                }
+                if (DrawActionButton(new Rect(rect.xMax - buttonWidth, rect.y, buttonWidth, rect.height),
+                    "+", value < max))
+                {
+                    value = (int)Math.Min(max, (long)value + step);
+                    buffer = value.ToString();
+                    valid = true;
+                    GUI.FocusControl(null);
+                }
+                return valid;
             }
         }
 

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_BandwidthSupport.Title>带宽支持</MAP_BandwidthSupport.Title>
+  <MAP_BandwidthSupport.NoPendingOrder>暂无待执行调整。</MAP_BandwidthSupport.NoPendingOrder>
+  <MAP_BandwidthSupport.InvalidOrder>请检查额度、配额及对象资格。</MAP_BandwidthSupport.InvalidOrder>
+  <MAP_BandwidthSupport.TotalLabel>支援总量</MAP_BandwidthSupport.TotalLabel>
+  <MAP_BandwidthSupport.BaseLabel>基础带宽</MAP_BandwidthSupport.BaseLabel>
+  <MAP_BandwidthSupport.ExtensionLabel>扩展带宽</MAP_BandwidthSupport.ExtensionLabel>
+  <MAP_BandwidthSupport.UnallocatedLabel>待分配带宽</MAP_BandwidthSupport.UnallocatedLabel>
+  <MAP_BandwidthSupport.BaseTooltip>当前肃清评级下，机械巢可为我们免费提供的带宽量。</MAP_BandwidthSupport.BaseTooltip>
+  <MAP_BandwidthSupport.ExtensionTooltip>当前我们需要使用肃清额度获取的额外带宽量。</MAP_BandwidthSupport.ExtensionTooltip>
+  <MAP_BandwidthSupport.UnallocatedTooltip>当前可由我们自行分配的带宽总量。</MAP_BandwidthSupport.UnallocatedTooltip>
+  <MAP_BandwidthSupport.TotalTooltip>当前机械巢可供分配的带宽总量。</MAP_BandwidthSupport.TotalTooltip>
+  <MAP_BandwidthSupport.AddTarget>添加分配对象</MAP_BandwidthSupport.AddTarget>
+  <MAP_BandwidthSupport.NoTargets>尚未添加分配对象。</MAP_BandwidthSupport.NoTargets>
+  <MAP_BandwidthSupport.NoAdditionalTargets>没有可添加的分配对象。</MAP_BandwidthSupport.NoAdditionalTargets>
+  <MAP_BandwidthSupport.CycleLabel>周期消耗</MAP_BandwidthSupport.CycleLabel>
+  <MAP_BandwidthSupport.CycleValue>{0} 额度 / {1} 天</MAP_BandwidthSupport.CycleValue>
+  <MAP_BandwidthSupport.SettlementLabel>下次核算</MAP_BandwidthSupport.SettlementLabel>
+  <MAP_BandwidthSupport.DaysValue>{0} 天后</MAP_BandwidthSupport.DaysValue>
+  <MAP_BandwidthSupport.CreditsLabel>可用肃清额度</MAP_BandwidthSupport.CreditsLabel>
+  <MAP_BandwidthSupport.AllocationTitle>带宽分配</MAP_BandwidthSupport.AllocationTitle>
+  <MAP_BandwidthSupport.CurrentAllocation>当前支援 +{0}</MAP_BandwidthSupport.CurrentAllocation>
+  <MAP_BandwidthSupport.Description>向机械巢请求额外带宽支援。</MAP_BandwidthSupport.Description>
+  <MAP_BandwidthSupport.ExpandedDescription>向机械巢请求轨道带宽服务器的使用资格，来为指定机械师提供带宽。</MAP_BandwidthSupport.ExpandedDescription>
+  <MAP_BandwidthSupport.TakeoverDescription>主脑按需提供控制带宽，可分配给指定机械师。</MAP_BandwidthSupport.TakeoverDescription>
+  <MAP_BandwidthSupport.Unavailable>带宽支持不可用。</MAP_BandwidthSupport.Unavailable>
+  <MAP_BandwidthSupport.Activate>申请支持</MAP_BandwidthSupport.Activate>
+  <MAP_BandwidthSupport.Base>基础带宽：{0}</MAP_BandwidthSupport.Base>
+  <MAP_BandwidthSupport.Extension>扩展带宽：{0}</MAP_BandwidthSupport.Extension>
+  <MAP_BandwidthSupport.Cycle>周期消耗：{0} 肃清额度 / {1} 天　　下次核算：{2} 天后</MAP_BandwidthSupport.Cycle>
+  <MAP_BandwidthSupport.Credits>可用肃清额度：{0}</MAP_BandwidthSupport.Credits>
+  <MAP_BandwidthSupport.RequestedTotal>申请带宽</MAP_BandwidthSupport.RequestedTotal>
+  <MAP_BandwidthSupport.RequestedExtension>申请扩展带宽</MAP_BandwidthSupport.RequestedExtension>
+  <MAP_BandwidthSupport.Apply>确认调整</MAP_BandwidthSupport.Apply>
+  <MAP_BandwidthSupport.Withdraw>撤回扩展</MAP_BandwidthSupport.Withdraw>
+  <MAP_BandwidthSupport.NextCycle>下次核算时生效。</MAP_BandwidthSupport.NextCycle>
+  <MAP_BandwidthSupport.ImmediateCost>本次消耗：{0} 额度</MAP_BandwidthSupport.ImmediateCost>
+  <MAP_BandwidthSupport.Allocated>已分配：{0} / {1}</MAP_BandwidthSupport.Allocated>
+  <MAP_BandwidthSupport.Assign>分配</MAP_BandwidthSupport.Assign>
+  <MAP_BandwidthSupport.Clear>清除</MAP_BandwidthSupport.Clear>
+  <MAP_BandwidthSupport.NoMechanitors>没有可接受带宽支持的机械师。</MAP_BandwidthSupport.NoMechanitors>
+  <MAP_BandwidthSupport.Rejected>调整失败：请检查可用额度、剩余带宽及机械师资格。</MAP_BandwidthSupport.Rejected>
+  <MAP_BandwidthSupport.BaseRaised>基础带宽由 {0} 提高至 {1}。</MAP_BandwidthSupport.BaseRaised>
+  <MAP_BandwidthSupport.BaseWillFall>下次核算时，基础带宽将调整为 {0}。</MAP_BandwidthSupport.BaseWillFall>
+  <MAP_BandwidthSupport.Shortage>下次核算需消耗 {0} 肃清额度。提示；当前额度不足，扩展带宽可能被回收。</MAP_BandwidthSupport.Shortage>
+  <MAP_BandwidthSupport.Recalled>肃清额度不足，已回收 {0} 扩展带宽。</MAP_BandwidthSupport.Recalled>
+</LanguageData>

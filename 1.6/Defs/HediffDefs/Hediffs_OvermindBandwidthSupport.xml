@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <HediffDef>
+    <defName>MAP_OvermindBandwidthSupport</defName>
+    <label>主脑带宽支持</label>
+    <description>向机械巢轨道服务器请求的带宽处理服务器正在为该单位提供额外带宽。</description>
+    <hediffClass>MAP_MechanoidMechanitor.Scenarios.Hediff_OvermindBandwidthSupport</hediffClass>
+    <isBad>false</isBad>
+    <duplicationAllowed>false</duplicationAllowed>
+    <initialSeverity>1</initialSeverity>
+  </HediffDef>
+</Defs>

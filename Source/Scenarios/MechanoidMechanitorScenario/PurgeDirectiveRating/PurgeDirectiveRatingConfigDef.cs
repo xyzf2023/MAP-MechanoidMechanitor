@@ -65,6 +65,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // 环境影响器（condition causer）只在达到该等级后允许。
         public int mechClusterEnvironmentMinLevel = 5;
 
+        // 带宽支持独立计价，不经过物资/机械族交易折扣。
+        public List<int> bandwidthSupportBaseByLevel = new List<int> { 10, 20, 30, 40, 50 };
+        public List<int> bandwidthSupportCostByLevel = new List<int> { 30, 25, 20, 15, 10 };
+        public int bandwidthSupportUnit = 5;
+        public int bandwidthSupportPeriodDays = 15;
+
         // ===== 肃清评级任务调度（唯一权威数值源） =====
         public int questMinRatingLevel = 1;       // 额定最低等级（修复后 0 点即一级，此值仅用于下限保护）
         public int questMaxActive = 1;            // 同一时间最多 1 个（含待接受邀请）
@@ -101,6 +107,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override IEnumerable<string> ConfigErrors()
         {
+            if (bandwidthSupportBaseByLevel == null || bandwidthSupportBaseByLevel.Count != 5
+                || bandwidthSupportBaseByLevel.Exists(value => value < 0)
+                || bandwidthSupportCostByLevel == null || bandwidthSupportCostByLevel.Count != 5
+                || bandwidthSupportCostByLevel.Exists(value => value < 0)
+                || bandwidthSupportUnit <= 0 || bandwidthSupportPeriodDays <= 0)
+                yield return $"{defName}: invalid bandwidth support configuration.";
+
             foreach (string error in base.ConfigErrors())
             {
                 yield return error;
