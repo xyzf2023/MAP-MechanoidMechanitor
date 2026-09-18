@@ -153,6 +153,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 先确认历史去重状态；只有奖励已存在或本次实际提交成功，才标记为已处理。
             if (!baseRewardHandled)
             {
+                if (string.IsNullOrEmpty(targetStableId))
+                {
+                    targetStableId = PurgeDirectiveQuestTargetUtility.TryGetStableId(targetWorldObject);
+                }
+
+                if (string.IsNullOrEmpty(targetStableId))
+                {
+                    // 连去重身份也已丢失时无法安全补奖；明确结束，避免永久占用任务槽。
+                    Log.Error("[MAP-机械族机械师] 已完成肃清任务丢失目标及稳定 ID，无法安全补发基础奖励，已无处罚结束。");
+                    EndWithoutPenalty();
+                    return;
+                }
+
                 MechanoidMechanitorPurgeDirectiveRuntimeState? runtime =
                     PurgeDirectiveRatingUtility.Runtime;
                 if (!string.IsNullOrEmpty(targetStableId)
@@ -161,9 +174,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     baseRewardHandled = true;
                 }
-                else if (targetWorldObject != null
-                    && PurgeDirectiveRatingUtility.TryGrantWorldTargetBaseReward(
-                        targetWorldObject,
+                else if (PurgeDirectiveRatingUtility.TryGrantWorldTargetBaseRewardForId(
+                        targetStableId,
                         baseReward))
                 {
                     baseRewardHandled = true;

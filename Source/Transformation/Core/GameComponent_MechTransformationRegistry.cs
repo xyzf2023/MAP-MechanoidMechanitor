@@ -439,6 +439,12 @@ namespace MAP_MechanoidMechanitor
 
             if (carrier == null)
             {
+                if (record.CurrentForm == MechTransformationForm.Building
+                    && GameComponent_MechBuildingConversionQueue.HasPendingRecovery(record))
+                {
+                    return;
+                }
+
                 Log.Error(
                     "[MAP-机械族机械师] 外部形态缺少载体，原始 Pawn 数据仍被保留：" +
                     $"pawn={pawn.LabelShort}（{pawn.ThingID}），form={record.CurrentForm}。");

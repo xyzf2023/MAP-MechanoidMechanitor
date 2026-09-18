@@ -361,7 +361,7 @@ namespace MAP_MechanoidMechanitor
             if (!TryRestorePawn(
                     sourcePawn,
                     carrier,
-                    buildingComp,
+                    buildingComp.SourceState,
                     map,
                     position,
                     rotation,
@@ -398,66 +398,86 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        internal static void TryEmergencyRestore(
-            Thing carrier,
-            Pawn sourcePawn,
-            Map map,
-            IntVec3 position,
-            Rot4 rotation)
+        internal static bool TryEmergencyRestore(MechBuildingEmergencyRestoreRecord entry)
         {
-            if (carrier == null
-                || sourcePawn == null
-                || map == null
-                || sourcePawn.Destroyed
-                || sourcePawn.Discarded)
+            Pawn? sourcePawn = entry.SourcePawn;
+            if (sourcePawn == null || sourcePawn.Discarded)
             {
-                return;
+                return true;
             }
 
-            CompMechBuildingForm? buildingComp =
-                carrier.TryGetComp<CompMechBuildingForm>();
-            if (buildingComp == null)
+            if (!GameComponent_MechTransformationRegistry.TryGetRecord(
+                    sourcePawn, out MechTransformationRecord? record)
+                || record == null
+                || record.TransformationId != entry.TransformationId)
             {
-                Log.Error(
-                    "[MAP-机械族机械师] 建筑载体销毁后缺少建筑形态状态组件，" +
-                    $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），" +
-                    $"carrier={carrier.ThingID}。");
-                return;
+                Log.ErrorOnce("[MAP-机械族机械师] 建筑恢复凭据与当前形态身份不一致，已保留快照。",
+                    entry.CarrierId ^ 0x4D424549);
+                return false;
             }
 
-            buildingComp.EnsureSourceStateForRecovery(sourcePawn);
+            // 上次已经提交恢复但通知抛异常时，只移除请求，不再次生成或结算伤势。
+            if (record.CurrentForm == MechTransformationForm.Pawn
+                && record.ExternalCarrier == null)
+            {
+                return true;
+            }
+
+            Thing? carrier = record.ExternalCarrier;
+            if (record.CurrentForm != MechTransformationForm.Building
+                || sourcePawn.Spawned || sourcePawn.Destroyed
+                || (carrier != null
+                    && (!carrier.Destroyed || carrier.thingIDNumber != entry.CarrierId)))
+            {
+                Log.ErrorOnce("[MAP-机械族机械师] 建筑恢复状态冲突，已保留快照等待处理。",
+                    entry.CarrierId ^ 0x4D424553);
+                return false;
+            }
+
+            // 地图被移除时保留凭据，不擅自选择其他地图或丢弃源 Pawn。
+            Map? map = entry.Map;
+            if (map == null || map.Disposed || !Find.Maps.Contains(map))
+            {
+                Log.ErrorOnce("[MAP-机械族机械师] 建筑原地图已移除，已保留源 Pawn 与恢复快照。",
+                    entry.CarrierId ^ 0x4D42454D);
+                return false;
+            }
+
             if (!TryRestorePawn(
                     sourcePawn,
                     carrier,
-                    buildingComp,
+                    entry.SourceState,
                     map,
-                    position,
-                    rotation,
+                    entry.Position,
+                    entry.Rotation,
                     emergencyRecovery: true,
                     out Thing? restoredThing,
                     out string? failureReason))
             {
-                Log.Error(
-                    "[MAP-机械族机械师] 建筑载体销毁后无法恢复原始 Pawn，" +
-                    "记录仍被保留以便后续人工恢复：" +
-                    $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），" +
-                    $"carrier={carrier.ThingID}，reason={failureReason ?? "未知"}。");
-                return;
+                Log.ErrorOnce(
+                    "[MAP-机械族机械师] 建筑载体销毁后无法恢复原始 Pawn，将保留快照重试：" +
+                    $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），reason={failureReason ?? "未知"}。",
+                    entry.CarrierId ^ 0x4D424546);
+                return false;
             }
 
-            SettleBuildingDurability(
-                carrier,
-                sourcePawn,
-                useDestructionSnapshot: true);
+            if (entry.HasDurabilitySnapshot)
+            {
+                SettleBuildingDurability(sourcePawn, entry.CarrierId,
+                    entry.InitialHealthFraction, entry.CurrentHealthFraction);
+            }
+            else
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 建筑形态缺少初始耐久基线，本次紧急恢复不追加部位伤势：" +
+                    $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），carrier={entry.CarrierId}。");
+            }
+
             MechFusionSourceUtility.RemoveDormantGuard(sourcePawn);
             restoredThing = ResolveRestoredThing(sourcePawn, restoredThing);
             if (restoredThing != null && restoredThing.Spawned)
             {
-                FleckMaker.ThrowDustPuffThick(
-                    restoredThing.DrawPos,
-                    map,
-                    2f,
-                    Color.white);
+                FleckMaker.ThrowDustPuffThick(restoredThing.DrawPos, map, 2f, Color.white);
             }
 
             Messages.Message(
@@ -466,6 +486,7 @@ namespace MAP_MechanoidMechanitor
                 restoredThing ?? sourcePawn,
                 MessageTypeDefOf.NegativeEvent,
                 historical: false);
+            return true;
         }
 
         private static void InitializeBuildingDurability(
@@ -507,6 +528,12 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            SettleBuildingDurability(sourcePawn, carrier.thingIDNumber, initialFraction, currentFraction);
+        }
+
+        private static void SettleBuildingDurability(
+            Pawn sourcePawn, int carrierId, float initialFraction, float currentFraction)
+        {
             float cappedCurrent = Mathf.Min(currentFraction, initialFraction);
             float settlementRatio = initialFraction > FractionEpsilon
                 ? Mathf.Clamp01(cappedCurrent / initialFraction)
@@ -517,7 +544,7 @@ namespace MAP_MechanoidMechanitor
                 int settlementSeed =
                     MechPartDurabilityUtility.CreateSettlementSeed(
                         sourcePawn,
-                        carrier.thingIDNumber);
+                        carrierId);
                 MechPartDurabilityUtility.SettleCurrentPartDurability(
                     sourcePawn,
                     settlementRatio,
@@ -528,7 +555,7 @@ namespace MAP_MechanoidMechanitor
                 Log.Error(
                     "[MAP-机械族机械师] 建筑耐久无法安全映射回机械族伤势：" +
                     $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），" +
-                    $"carrier={carrier.ThingID}：{ex}");
+                    $"carrier={carrierId}：{ex}");
             }
         }
 
@@ -547,8 +574,8 @@ namespace MAP_MechanoidMechanitor
 
         private static bool TryRestorePawn(
             Pawn sourcePawn,
-            Thing carrier,
-            CompMechBuildingForm buildingState,
+            Thing? carrier,
+            MechBuildingSourceState buildingState,
             Map map,
             IntVec3 position,
             Rot4 rotation,

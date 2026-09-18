@@ -3732,6 +3732,18 @@ namespace MAP_MechanoidMechanitor
                 RebuildCaches();
                 CleanupInvalidRecords(
                     synchronizeHediffs: false);
+                // 运行入口 AddRecord 规定一个目标只能有一条分配记录。
+                // 保留最后一条，与 recordByTarget 的既有索引规则一致，避免总额双计。
+                HashSet<Pawn> seenTargets = new HashSet<Pawn>();
+                for (int i = records.Count - 1; i >= 0; i--)
+                {
+                    Pawn? target = records[i].target;
+                    if (target != null && !seenTargets.Add(target))
+                    {
+                        records.RemoveAt(i);
+                    }
+                }
+
                 CleanupInvalidSpecializationRecords();
                 CleanupInvalidDynamicAllocationRecords();
                 CleanupInvalidDynamicTargetRecords();

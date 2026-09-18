@@ -2717,6 +2717,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 participantFactions.RemoveAll(f => f == null);
                 supportRecords ??= new List<SymbiosisCovenantJointOperationFactionSupportRecord>();
                 spawnedAidTags ??= new List<string>();
+                if (stage == SymbiosisCovenantJointOperationStage.TargetMapEntered
+                    && !targetThreatConfirmed
+                    && threatInitializationDeadlineTick < 0)
+                {
+                    // 缺失的截止 tick 是未初始化标记，不是已经过期。
+                    // 只修复缺失值，保留正常存档已经排定或已经到期的窗口。
+                    int now = Find.TickManager?.TicksGame ?? 0;
+                    threatInitializationDeadlineTick =
+                        Math.Max(now, deploymentDueTick) + ThreatInitializationDeadlineTicks;
+                }
+
                 // 兼容旧存档：确保本 Part 在 OfferPending 阶段也能监听目标完成信号。
                 signalListenMode = QuestPart.SignalListenMode.OngoingOrNotYetAccepted;
 

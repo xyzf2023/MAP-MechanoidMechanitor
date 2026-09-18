@@ -35,16 +35,11 @@ namespace MAP_MechanoidMechanitor
 
         // 建筑形态自己的权威身份与能源快照。通用形态记录只负责
         // Pawn/Building 链接，不承担具体能力数据。
-        private Pawn? storedSourcePawn;
-        private Faction? originalSourceFaction;
-        private Pawn? originalOverseer;
-        private int originalControlGroupIndex = -1;
-        private bool sourceStateCaptured;
-        private float storedEnergy;
-        private float storedMaxEnergy;
-        private bool energyCaptured;
+        private readonly MechBuildingSourceState sourceState = new MechBuildingSourceState();
 
-        internal Pawn? StoredSourcePawn => storedSourcePawn;
+        internal Pawn? StoredSourcePawn => sourceState.StoredSourcePawn;
+
+        internal MechBuildingSourceState SourceState => sourceState;
 
         internal void CaptureInitialHealthFraction(float fraction)
         {
@@ -67,124 +62,12 @@ namespace MAP_MechanoidMechanitor
 
         internal void CaptureSourceState(Pawn source)
         {
-            storedSourcePawn = source;
-            originalSourceFaction = source.Faction;
-            originalOverseer = source.GetOverseer()
-                ?? MAPOverseerRelationDirectionUtility.FindActualOverseer(source);
-            originalControlGroupIndex =
-                MechControlGroupPositionUtility.Capture(
-                    originalOverseer,
-                    source);
-            sourceStateCaptured = true;
-            CaptureEnergy(source);
+            sourceState.CaptureSourceState(source);
         }
 
         internal void EnsureSourceStateForRecovery(Pawn source)
         {
-            storedSourcePawn ??= source;
-            if (!sourceStateCaptured)
-            {
-                Faction? candidate = parent.Faction;
-                Faction? player = Faction.OfPlayerSilentFail;
-                if (candidate == null
-                    || (player != null && candidate.HostileTo(player)))
-                {
-                    candidate = source.Faction;
-                }
-
-                if (player != null
-                    && (candidate == null || candidate.HostileTo(player)))
-                {
-                    // 旧存档中的建筑转换只允许玩家安全阵营来源。
-                    candidate = player;
-                }
-
-                originalSourceFaction = candidate;
-                originalOverseer = source.GetOverseer()
-                    ?? MAPOverseerRelationDirectionUtility.FindActualOverseer(
-                        source);
-                originalControlGroupIndex =
-                    MechControlGroupPositionUtility.Capture(
-                        originalOverseer,
-                        source);
-                sourceStateCaptured = true;
-            }
-
-            if (!energyCaptured)
-            {
-                // 旧存档无法追溯转换瞬间的电量，只能以当前真实 Pawn 值迁移；
-                // 新转换始终在离开地图前精确捕获。
-                CaptureEnergy(source);
-            }
-        }
-
-        internal bool RestoreSourceIdentity(Pawn source)
-        {
-            EnsureSourceStateForRecovery(source);
-            if (source.Faction != originalSourceFaction)
-            {
-                source.SetFactionDirect(originalSourceFaction);
-            }
-
-            Pawn? overseer = originalOverseer;
-            if (source.Dead
-                || overseer == null
-                || overseer.Dead
-                || overseer.Destroyed
-                || overseer.Discarded
-                || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(source))
-            {
-                return true;
-            }
-
-            return MechControlGroupPositionUtility.TryRestore(
-                overseer,
-                source,
-                originalControlGroupIndex);
-        }
-
-        internal bool TryWriteBackEnergy(Pawn source)
-        {
-            EnsureSourceStateForRecovery(source);
-            if (!energyCaptured || source.Dead)
-            {
-                return true;
-            }
-
-            Pawn_NeedsTracker? needs = source.needs;
-            if (needs == null)
-            {
-                return false;
-            }
-
-            Need_MechEnergy? energy = needs.energy;
-            if (energy == null)
-            {
-                needs.AddOrRemoveNeedsAsAppropriate();
-                energy = needs.energy;
-            }
-
-            if (energy == null)
-            {
-                return false;
-            }
-
-            energy.CurLevel = Mathf.Clamp(storedEnergy, 0f, energy.MaxLevel);
-            return true;
-        }
-
-        private void CaptureEnergy(Pawn source)
-        {
-            Need_MechEnergy? energy = source.needs?.energy;
-            float fallbackMax = source.RaceProps?.maxMechEnergy ?? 100f;
-            storedMaxEnergy = energy?.MaxLevel ?? fallbackMax;
-            storedEnergy = energy?.CurLevel ?? storedMaxEnergy;
-            if (storedMaxEnergy > 0f)
-            {
-                storedEnergy = Mathf.Clamp(storedEnergy, 0f, storedMaxEnergy);
-            }
-
-            energyCaptured = true;
+            sourceState.EnsureSourceStateForRecovery(source, parent.Faction);
         }
 
         public override void PostExposeData()
@@ -214,25 +97,8 @@ namespace MAP_MechanoidMechanitor
                 ref destructionHealthFraction,
                 "destructionHealthFraction",
                 defaultValue: 1f);
-            Scribe_References.Look(ref storedSourcePawn, "storedSourcePawn");
-            Scribe_References.Look(
-                ref originalSourceFaction,
-                "originalSourceFaction");
-            Scribe_References.Look(ref originalOverseer, "originalOverseer");
-            Scribe_Values.Look(
-                ref originalControlGroupIndex,
-                "originalControlGroupIndex",
-                -1);
-            Scribe_Values.Look(
-                ref sourceStateCaptured,
-                "sourceStateCaptured",
-                defaultValue: false);
-            Scribe_Values.Look(ref storedEnergy, "storedEnergy");
-            Scribe_Values.Look(ref storedMaxEnergy, "storedMaxEnergy");
-            Scribe_Values.Look(
-                ref energyCaptured,
-                "energyCaptured",
-                defaultValue: false);
+            // 保持既有建筑存档的节点层级和键名。
+            sourceState.ExposeData();
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -241,8 +107,6 @@ namespace MAP_MechanoidMechanitor
                 destructionHealthFraction =
                     Mathf.Clamp01(destructionHealthFraction);
                 initialHealthFraction = Mathf.Clamp01(initialHealthFraction);
-                storedEnergy = Mathf.Max(0f, storedEnergy);
-                storedMaxEnergy = Mathf.Max(0f, storedMaxEnergy);
                 if (!restoreInProgress)
                 {
                     remainingRestoreTicks = 0;
@@ -262,7 +126,7 @@ namespace MAP_MechanoidMechanitor
 
             CompMechFormCarrier? carrier =
                 parent.TryGetComp<CompMechFormCarrier>();
-            Pawn? source = carrier?.SourcePawn ?? storedSourcePawn;
+            Pawn? source = carrier?.SourcePawn ?? StoredSourcePawn;
             if (carrier?.Committed == true
                 && carrier.CarrierForm == MechTransformationForm.Building
                 && source != null
@@ -360,7 +224,7 @@ namespace MAP_MechanoidMechanitor
         {
             CompMechFormCarrier? carrier =
                 parent.TryGetComp<CompMechFormCarrier>();
-            Pawn? sourcePawn = carrier?.SourcePawn ?? storedSourcePawn;
+            Pawn? sourcePawn = carrier?.SourcePawn ?? StoredSourcePawn;
             if (carrier?.Committed != true || sourcePawn == null)
             {
                 return string.Empty;
@@ -383,7 +247,7 @@ namespace MAP_MechanoidMechanitor
 
             CompMechFormCarrier? carrier =
                 parent.TryGetComp<CompMechFormCarrier>();
-            Pawn? sourcePawn = carrier?.SourcePawn ?? storedSourcePawn;
+            Pawn? sourcePawn = carrier?.SourcePawn ?? StoredSourcePawn;
             if (carrier?.Committed != true
                 || carrier.CarrierForm != MechTransformationForm.Building
                 || sourcePawn == null)

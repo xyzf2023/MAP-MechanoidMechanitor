@@ -287,17 +287,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool TryGrantWorldTargetBaseReward(WorldObject? target, int points)
         {
             if (!IsRatingSystemActive() || target == null || points <= 0) return false;
+            return TryGrantWorldTargetBaseRewardForId(
+                PurgeDirectiveQuestTargetUtility.TryGetStableId(target), points);
+        }
+
+        // 已确认完成的任务可在世界目标销毁后使用其持久 ID 继续同一次奖励提交。
+        internal static bool TryGrantWorldTargetBaseRewardForId(string? stableId, int points)
+        {
+            if (!IsRatingSystemActive() || string.IsNullOrEmpty(stableId) || points <= 0) return false;
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = Runtime;
             if (rs == null) return false;
 
-            string? stableId = PurgeDirectiveQuestTargetUtility.TryGetStableId(target);
-            if (stableId == null) return false;
-            if (rs.HasAwardedBaseReward(stableId)) return false;
+            if (rs.HasAwardedBaseReward(stableId!)) return false;
 
             // 先尝试发放（同时校验系统仍激活、额度不溢出），成功后再标记，保证原子性。
             bool granted = TryAddPurgeDirectiveRewardPoints(points);
             if (!granted) return false;
-            rs.MarkBaseRewardAwarded(stableId);
+            rs.MarkBaseRewardAwarded(stableId!);
             return true;
         }
 

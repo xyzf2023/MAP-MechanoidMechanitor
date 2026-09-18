@@ -652,6 +652,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 waves ??= new List<SymbiosisCovenantCerebrexSupportWaveRecord>();
                 evacVehicles ??= new List<SymbiosisCovenantCerebrexSupportEvacVehicle>();
                 waves.RemoveAll(w => w == null);
+                evacVehicles.RemoveAll(v => v == null);
                 foreach (SymbiosisCovenantCerebrexSupportEvacVehicle v in evacVehicles)
                 {
                     v.PostLoadInit();

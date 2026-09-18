@@ -142,6 +142,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit || Scribe.mode == LoadSaveMode.Saving)
             {
+                tmpSavedPawns ??= new List<Pawn>();
+                tmpSavedPawns.RemoveAll(pawn => pawn == null || pawn.Discarded);
+                if (tmpSavedPawns.Count > 0 && stock == null)
+                {
+                    // 仅恢复已有库存引用，不生成一批新货物覆盖存档。
+                    stock = new ThingOwner<Thing>(this) { dontTickContents = true };
+                }
+
                 for (int i = 0; i < tmpSavedPawns.Count; i++)
                 {
                     stock.TryAdd(tmpSavedPawns[i], canMergeWithExistingStacks: false);

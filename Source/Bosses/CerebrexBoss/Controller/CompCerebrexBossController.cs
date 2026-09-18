@@ -470,8 +470,7 @@ namespace MAP_MechanoidMechanitor
             bandwidthAffectedOverseers ??= new List<Pawn>();
 
             // 旧存档单目标状态迁移为多目标记录。
-            if (bandwidthInterferenceActive
-                && bandwidthTargetRecords.Count == 0
+            if (bandwidthTargetRecords.Count == 0
                 && legacyBandwidthTarget != null)
             {
                 bandwidthTargetRecords.Add(
@@ -485,7 +484,7 @@ namespace MAP_MechanoidMechanitor
                 foreach (Pawn p in legacyBandwidthBerserkPawns)
                 {
                     if (p != null
-                        && !bandwidthBerserkRecords.Any(r => r.pawn == p))
+                        && !bandwidthBerserkRecords.Any(r => r != null && r.pawn == p))
                     {
                         bandwidthBerserkRecords.Add(
                             new CerebrexBandwidthBerserkRecord(
@@ -557,8 +556,6 @@ namespace MAP_MechanoidMechanitor
             {
                 disabledPowerBuildings.Remove(t);
             }
-
-            disabledPowerBuildings.Remove(null!);
 
             // 纯存档数据的结构校验：只检查 EMP 时间字段自身是否自洽。
             // 此阶段地图 Thing 尚未 Spawn，禁止用 Spawned / Map / stopped 判断可否继续；
