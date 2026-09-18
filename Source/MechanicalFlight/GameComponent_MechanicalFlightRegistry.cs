@@ -323,6 +323,12 @@ namespace MAP_MechanoidMechanitor
         public override void GameComponentTick()
         {
             base.GameComponentTick();
+            // 地面态记录不会进入 activeRecords；定期回收永久丢弃的 Pawn，
+            // 同时清理权威列表和查询索引。死亡但仍可复活的 Pawn 必须保留授权。
+            if (GenTicks.TicksGame % 2500 == 0)
+            {
+                CleanupDiscardedRecords();
+            }
             GroupFlightUtility.TickGroups();
             tickSnapshot.Clear();
             tickSnapshot.AddRange(activeRecords);
@@ -363,6 +369,7 @@ namespace MAP_MechanoidMechanitor
             base.ExposeData();
             if (Scribe.mode == LoadSaveMode.Saving)
             {
+                CleanupDiscardedRecords();
                 CleanupInvalidRecords();
             }
 
@@ -498,6 +505,23 @@ namespace MAP_MechanoidMechanitor
                 }
             }
             return null;
+        }
+
+        private void CleanupDiscardedRecords()
+        {
+            for (int i = authorizationRecords.Count - 1; i >= 0; i--)
+            {
+                MechanicalFlightAuthorizationRecord? record = authorizationRecords[i];
+                if (record == null)
+                {
+                    authorizationRecords.RemoveAt(i);
+                }
+                else if (record.Pawn == null || record.Pawn.Discarded)
+                {
+                    MechanicalFlightUtility.CleanupUnavailableRecord(record);
+                    RemoveRecord(record);
+                }
+            }
         }
 
         private void CleanupInvalidRecords()

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -7,14 +7,19 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// 静态辅助：追踪被主脑 EMP 冲击波瘫痪的用电建筑，按截止 tick 判定是否仍应断电。
-    /// 该字典为当前 Game 的运行时缓存，不随存档保存；持久权威状态保存在各主脑组件的
+    /// 该弱键表为当前 Game 的运行时缓存，不随存档保存；持久权威状态保存在各主脑组件的
     /// disabledPowerBuildings 中，各主脑组件会在读档后把尚未过期的记录重新注册进来。
     /// 静态缓存绝不能跨 Game 生存，必须在开始新游戏 / 开始加载另一个 Game 时显式清空。
     /// </summary>
     public static class CerebrexPowerDisruptionUtility
     {
-        private static readonly Dictionary<Thing, int> disabledUntilByThing =
-            new Dictionary<Thing, int>();
+        private sealed class DisruptionState
+        {
+            public int UntilTick;
+        }
+
+        // 建筑停止被查询后也不能由静态缓存保活；持久记录仍由主脑组件负责。
+        private static ConditionalWeakTable<Thing, DisruptionState> disabledUntilByThing = new();
 
         /// <summary>
         /// 清空当前 Game 的运行时缓存。开始新游戏或开始加载另一个 Game 时必须调用，
@@ -22,7 +27,7 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static void ResetRuntimeState()
         {
-            disabledUntilByThing.Clear();
+            disabledUntilByThing = new ConditionalWeakTable<Thing, DisruptionState>();
         }
 
         /// <summary>
@@ -30,21 +35,21 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static void Register(Thing thing, int disabledUntilTick)
         {
-            if (thing == null)
+            if (thing == null || thing.Destroyed || thing.Discarded)
             {
                 return;
             }
 
-            if (disabledUntilByThing.TryGetValue(thing, out int existing))
+            if (disabledUntilByThing.TryGetValue(thing, out DisruptionState existing))
             {
-                if (disabledUntilTick > existing)
+                if (disabledUntilTick > existing.UntilTick)
                 {
-                    disabledUntilByThing[thing] = disabledUntilTick;
+                    existing.UntilTick = disabledUntilTick;
                 }
             }
             else
             {
-                disabledUntilByThing[thing] = disabledUntilTick;
+                disabledUntilByThing.Add(thing, new DisruptionState { UntilTick = disabledUntilTick });
             }
         }
 
@@ -58,17 +63,25 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (thing == null || thing.Destroyed)
+            if (thing == null)
             {
                 return false;
             }
 
-            if (!disabledUntilByThing.TryGetValue(thing, out int until))
+            if (thing.Destroyed || thing.Discarded)
+            {
+                disabledUntilByThing.Remove(thing);
+                return false;
+            }
+
+            TickManager? tickManager = Current.Game?.tickManager;
+            if (tickManager == null
+                || !disabledUntilByThing.TryGetValue(thing, out DisruptionState state))
             {
                 return false;
             }
 
-            if (Find.TickManager.TicksGame >= until)
+            if (tickManager.TicksGame >= state.UntilTick)
             {
                 disabledUntilByThing.Remove(thing);
                 return false;

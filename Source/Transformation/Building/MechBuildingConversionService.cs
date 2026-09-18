@@ -260,6 +260,18 @@ namespace MAP_MechanoidMechanitor
                 pawnStored = true;
                 MechFusionSourceUtility.ApplyDormantGuard(pawn);
 
+                // DeSpawn / PassToWorld / Hediff 回调可能在原落点生成其他 Thing。
+                // 必须在不可逆的 WipeMode.Vanish 前复检，而非只依赖转换前的搜索。
+                if (!CanPlaceWithoutWiping(pawn, buildingDef, map, spawnCell, buildingRotation))
+                {
+                    RollBackConversion(pawn, building, map, originalPosition,
+                        originalRotation, pawnStored, buildingSpawned);
+                    Reject(pawn,
+                        "MAP_MechanoidMechanitor.Transformation.Building.NoPlacement".Translate(),
+                        sendFailureMessage);
+                    return false;
+                }
+
                 GenSpawn.Spawn(
                     building,
                     spawnCell,
@@ -546,6 +558,15 @@ namespace MAP_MechanoidMechanitor
         {
             restoredThing = null;
             failureReason = null;
+
+            // 紧急恢复在下一 Tick 执行，此时捕获的地图可能已经移除或释放。
+            // 在锁定形态、搜索落点及取出 WorldPawn 之前拒绝失效地图。
+            if (map == null || map.Disposed || map.Parent == null
+                || Current.Game == null || !Find.Maps.Contains(map))
+            {
+                failureReason = "原地图已移除，无法在该地图恢复机械体。";
+                return false;
+            }
 
             bool transitionStarted = emergencyRecovery
                 ? GameComponent_MechTransformationRegistry.TryBeginRecoveryToPawn(

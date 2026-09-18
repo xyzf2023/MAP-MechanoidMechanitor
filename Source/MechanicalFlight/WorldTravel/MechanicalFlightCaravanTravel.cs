@@ -287,8 +287,7 @@ namespace MAP_MechanoidMechanitor
             RemoveFromHolder(thing);
 
             if (receiver != null
-                && receiver.inventory != null
-                && receiver.inventory.innerContainer.TryAdd(thing))
+                && TryAddCargoToPawn(receiver, thing, ref failureReason))
             {
                 return true;
             }
@@ -303,7 +302,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     continue;
                 }
-                if (candidate.inventory.innerContainer.TryAdd(thing))
+                if (TryAddCargoToPawn(candidate, thing, ref failureReason))
                 {
                     Log.Warning(
                         "[MAP-机械族机械师] 机械飞行远行队物资首选接收者失败，已改由其他成员接收：" +
@@ -337,6 +336,23 @@ namespace MAP_MechanoidMechanitor
                 "[MAP-机械族机械师] 机械飞行远行队物资接收失败：" +
                 thing + "；" + failureReason);
             return false;
+        }
+
+        private static bool TryAddCargoToPawn(Pawn receiver, Thing thing, ref string failureReason)
+        {
+            try
+            {
+                return receiver.inventory != null
+                    && receiver.inventory.innerContainer.TryAdd(thing);
+            }
+            catch (Exception exception)
+            {
+                // TryAdd 的通知/补丁可能在接收前或接收后抛异常。先检查实际归属，
+                // 已入队或堆叠合并的物资不能再次转移；未接收的继续尝试其他成员。
+                failureReason = "接收物资时异常：" + exception;
+                Log.Error("[MAP-机械族机械师] 远行队物资接收异常：" + thing + "；" + failureReason);
+                return ThingHasStableOwner(thing);
+            }
         }
 
         private static void EmergencyDisposeThing(Thing thing, string reason)

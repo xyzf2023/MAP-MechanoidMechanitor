@@ -88,7 +88,8 @@ namespace MAP_MechanoidMechanitor
             {
                 return true;
             }
-            if (job == null)
+            // ReadyForNextToil 可能已结束/替换传入任务；不能修改新任务的飞行状态。
+            if (job == null || !ReferenceEquals(pawn.CurJob, job))
             {
                 return false;
             }
@@ -127,7 +128,9 @@ namespace MAP_MechanoidMechanitor
                 // 无法降落：不能悬停在非法位置执行贴地任务，安全结束该任务。
                 job.flying = false;
                 MechanicalFlightUtility.NotifyGroundJobBlocked(pawn, job.playerForced);
-                pawn.jobs.EndCurrentJob(JobCondition.Incompletable);
+                // 此处仍在 StartJob 内。释放任务和预留即可，交给后续原版 Tick
+                // 寻找新任务，避免立即再次选中同一个不可落地任务而递归启动。
+                pawn.jobs.EndCurrentJob(JobCondition.Incompletable, startNewJob: false);
             }
             return false;
         }
