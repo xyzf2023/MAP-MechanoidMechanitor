@@ -3,7 +3,7 @@
   <ThingDef ParentName="BuildingBase" MayRequire="Ludeon.RimWorld.Biotech">
     <defName>MAP_MechServiceStation</defName>
     <label>机体整备台</label>
-    <description>为机械族快速充电并维修，不产生有毒垃圾包。</description>
+    <description>使用超凡科技铸造而成的维修/充电一体化机械族设备。\n\n该整备台能够快速为机械族充电和修复机体，且不会产生有毒垃圾包。机械族可根据整备策略自动使用整备台，并可调整充电、维修及整备完成后的待命行为。\n\n该建筑的耗电量随使用变化。</description>
     <thingClass>Building</thingClass>
     <tickerType>Normal</tickerType>
     <drawerType>MapMeshAndRealTime</drawerType>
@@ -23,13 +23,21 @@
       <drawOffset>(0, 0, 0.5)</drawOffset>
     </graphicData>
     <designationCategory>Biotech</designationCategory>
-    <researchPrerequisites><li>BasicMechtech</li></researchPrerequisites>
+    <researchPrerequisites>
+      <li>UltraMechtech</li>
+    </researchPrerequisites>
+    <constructionSkillPrerequisite>12</constructionSkillPrerequisite>
     <statBases>
       <MaxHitPoints>350</MaxHitPoints>
-      <WorkToBuild>3600</WorkToBuild>
+      <WorkToBuild>8000</WorkToBuild>
       <Flammability>0.05</Flammability>
     </statBases>
-    <costList><Steel>120</Steel><ComponentIndustrial>4</ComponentIndustrial></costList>
+    <costList>
+      <Steel>200</Steel>
+      <Plasteel>50</Plasteel>
+      <ComponentIndustrial>6</ComponentIndustrial>
+      <ComponentSpacer>2</ComponentSpacer>
+    </costList>
     <comps>
       <li Class="CompProperties_Power">
         <compClass>CompPowerTrader</compClass>
