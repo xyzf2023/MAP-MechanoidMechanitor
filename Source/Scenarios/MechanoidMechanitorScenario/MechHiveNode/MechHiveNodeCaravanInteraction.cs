@@ -181,11 +181,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            float removedValue = MechHiveNodeDeliveryUtility.TryConsumeFromCaravan(caravan, def, need);
+            float removedValue = MechHiveNodeDeliveryUtility.TryConsumeFromCaravan(
+                caravan, def, need, out bool quotaUnavailable);
             if (removedValue < 0f)
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.MechHiveNode.Caravan.Insufficient".Translate(),
+                    (quotaUnavailable
+                        ? "MAP_MechanoidMechanitor.MechHiveNode.Caravan.QuotaUnavailable"
+                        : "MAP_MechanoidMechanitor.MechHiveNode.Caravan.Insufficient").Translate(),
                     new GlobalTargetInfo(caravan.Tile),
                     MessageTypeDefOf.RejectInput,
                     historical: false);

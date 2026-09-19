@@ -51,10 +51,17 @@ namespace MAP_MechanoidMechanitor
                 .FinalizeGestatedPawns(bill, producer, style, bill.graphicIndexOverride)
                 .ToList();
 
-            bill.Notify_IterationCompleted(producer, new List<Thing>());
-
-            // Notify_IterationCompleted 已正常返回：本轮绝对不得再次结算。
+            // 原版先递减 repeatCount，再调用配方回调。必须在外部回调前持久落锁，
+            // 否则回调抛错并读档后会再次递减；已成型产物沿现有提交后路径继续释放。
             comp.MarkSettlementCommitted(bill, producer, updateResourceCounts);
+            try
+            {
+                bill.Notify_IterationCompleted(producer, new List<Thing>());
+            }
+            catch (Exception ex)
+            {
+                Log.Error("[MAP-机械族机械师] 量产培育结算通知失败，保留提交状态并继续释放产物：" + ex);
+            }
 
             if (!EnsureSettlementPostconditions(gestator, bill, product))
             {

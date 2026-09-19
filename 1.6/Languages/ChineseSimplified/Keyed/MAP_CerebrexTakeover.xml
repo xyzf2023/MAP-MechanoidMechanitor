@@ -5,5 +5,5 @@
   <MAP_CerebrexTakeover.Letter.Label>机械主脑已接管</MAP_CerebrexTakeover.Letter.Label>
   <MAP_CerebrexTakeover.Letter.Text>{PAWN}已接管机械主脑。机械巢已接受新的控制链路，并与殖民地建立盟友关系。现在可以通过通讯台调用机械巢的资源。</MAP_CerebrexTakeover.Letter.Text>
   <MAP_CerebrexTakeover.Credits>{PAWN}开始向主脑核心写入新的控制指令。细密的神经网阵剧烈震颤，电光在晶格深处急促闪动。片刻后，紊乱的脉动逐渐平息。一道回应沿着链路传来，随后是无数道——机械主巢接受了新的指挥者。\n\n庞大的机械网络在{PAWN}面前展开。轨道上的制造设施、沉睡的战争机器，以及往来于星球上空的运输舱，如今都在等待新的指令。曾经带来毁灭的力量，将被赋予怎样的用途？\n\n核心仍在低鸣，等待着回答。你的故事还在继续...</MAP_CerebrexTakeover.Credits>
-  <MAP_CerebrexTakeover.PurgeCreditsResponse>每日机械巢都会产生等效于2000额度的可调配资源，并增加2000额度。同时，协助建设机械节点也能帮助机械巢腾出更多可用物资，进而获取额度。</MAP_CerebrexTakeover.PurgeCreditsResponse>
+  <MAP_CerebrexTakeover.PurgeCreditsResponse>每日机械巢会增加2000资源额度，每日生成最多将余额补至20000；达到此额度时不生成，也不积攒待补发份额。节点交付收入与退款不受每日生成上限限制。协助建设机械节点也能帮助机械巢腾出更多可用物资，进而获取额度。</MAP_CerebrexTakeover.PurgeCreditsResponse>
 </LanguageData>

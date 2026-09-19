@@ -20,7 +20,7 @@
   <MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>机械族无法走到目标人类身边，合体已取消。</MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>
   <MAP_MechanoidMechanitor.Fusion.Approach.LandingInvalid>合体飞行落点已失效，正在重新规划。</MAP_MechanoidMechanitor.Fusion.Approach.LandingInvalid>
   <MAP_MechanoidMechanitor.Fusion.Energy.Label>机械能量</MAP_MechanoidMechanitor.Fusion.Energy.Label>
-  <MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>合体机械能量：{0:0.#} / {1:0.#}\n地面基础消耗：{2:0.#}%/游戏日\n飞行消耗：起飞扣除最大能量 0.5%，飞行中每 60 Tick 扣除最大能量 0.5%。</MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>
+  <MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>合体机械能量：{0:0.#} / {1:0.#}\n基础消耗：{2:0.#}%/游戏日（飞行期间仍结算）\n额外飞行消耗按当前飞行配置结算；标准基础费用为起飞0.5%最大能量、之后每60 Tick再消耗0.5%，并应用重量级、先天飞行倍率及群体飞行乘员修正。合体减耗效果继续作用于最终费用。</MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>
   <MAP_MechanoidMechanitor.Fusion.Stability.Label>结构稳定值</MAP_MechanoidMechanitor.Fusion.Stability.Label>
   <MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>结构稳定值：{0}\n稳定值低于或等于 50% 时，每次受击有 {1}% 概率使人类同步承受该次伤害。</MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>
   <MAP_MechanoidMechanitor.Fusion.Release.Label>解除合体</MAP_MechanoidMechanitor.Fusion.Release.Label>

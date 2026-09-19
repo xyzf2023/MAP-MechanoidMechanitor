@@ -19,6 +19,8 @@
   <MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Label>提供材料</MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Label>
   <MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Desc>向该节点提供所需材料，以加快其建设。</MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Desc>
   <MAP_MechanoidMechanitor.MechHiveNode.Caravan.Insufficient>远行队携带的目标材料不足以满足当前需求。</MAP_MechanoidMechanitor.MechHiveNode.Caravan.Insufficient>
+  <MAP_MechanoidMechanitor.MechHiveNode.Caravan.QuotaUnavailable>当前无法结算交付额度：账户不可用、余额将溢出或材料价值无效。材料尚未扣除。</MAP_MechanoidMechanitor.MechHiveNode.Caravan.QuotaUnavailable>
+  <MAP_MechanoidMechanitor.MechHiveNode.QuotaFailed>节点交付额度未能入账，详情已记录到日志。交付流程可能已经消费物资，此提示不代表退款或回滚。</MAP_MechanoidMechanitor.MechHiveNode.QuotaFailed>
   <MAP_MechanoidMechanitor.MechHiveNode.Caravan.Delivered>已向机械巢节点提供材料，其建设将会加快。</MAP_MechanoidMechanitor.MechHiveNode.Caravan.Delivered>
 
   <!-- 模块：运输舱交付 -->

@@ -537,7 +537,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     + "MAP_MechanoidMechanitor.PurgeDirective.Communication.SpecialProtocols.Cluster.ThreatOption"
                         .Translate(
                             captured,
-                            MechClusterDeploymentOrder.ComputeCost(captured, false));
+                            MechClusterDeploymentOrder.ComputeCost(captured,
+                                order.ConditionCauser != null
+                                    && MechClusterDeploymentService.IsConditionCauser(order.ConditionCauser, captured)));
                 options.Add(new FloatMenuOption(
                     label,
                     () => order.SetThreatPoints(captured)));

@@ -296,7 +296,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Faction? proposer;
             if (forcedParticipants != null && forcedParticipants.Count > 0)
             {
-                participants = forcedParticipants.ToList();
+                participants = forcedParticipants.Distinct().ToList();
                 // 校验每个参与者资格（与目标不同派系、非玩家、能生成 Combat 编组、
                 // 与目标敌对、非战败/隐藏/临时）。
                 foreach (Faction participant in participants)

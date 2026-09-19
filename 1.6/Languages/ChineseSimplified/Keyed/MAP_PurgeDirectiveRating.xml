@@ -109,6 +109,7 @@
 
   <!-- ===== 肃清节点评级：任务完成信件 ===== -->
   <MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>肃清指令节点：目标肃清</MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>
-  <MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>你已肃清 {0}（当前{1}）。本次肃清额度 +{2}。</MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>
+  <MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>你已肃清 {0}（当前{1}）。本任务累计实际发放肃清额度 +{2}；攻克目标时已经另行发放的基础奖励不重复计入。</MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>
+  <MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>你已肃清 {0}（当前{1}）。奖励已结算。此旧任务未保存实际到账金额，已有基础奖励不会重复发放。</MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>
 
 </LanguageData>

@@ -422,6 +422,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             IntVec3 center)
         {
             if (session == null
+                || Faction.OfMechanoids == null
                 || !IsDeploymentTargetMapValid(session.Map)
                 || (session.ConditionCauser != null
                     && !IsConditionCauser(session.ConditionCauser, session.ThreatPoints)))

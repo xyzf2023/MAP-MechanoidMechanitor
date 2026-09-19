@@ -50,13 +50,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             PurgeDirectiveTargetType targetType,
             int totalReward)
         {
+            SendQuestCompleteLetter(target, targetType, (long)totalReward);
+        }
+
+        public static void SendQuestCompleteLetter(
+            RimWorld.Planet.WorldObject? target,
+            PurgeDirectiveTargetType targetType,
+            long totalReward)
+        {
             if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
             {
                 return;
             }
 
             TaggedString title = "MAP_PurgeDirectiveRating.Letter.QuestComplete.Title".Translate();
-            TaggedString text = "MAP_PurgeDirectiveRating.Letter.QuestComplete.Text".Translate(
+            string textKey = totalReward >= 0
+                ? "MAP_PurgeDirectiveRating.Letter.QuestComplete.Text"
+                : "MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText";
+            TaggedString text = textKey.Translate(
                 target != null ? target.LabelCap : "?",
                 PurgeDirectiveRatingDisplay.RatingName(
                     PurgeDirectiveRatingUtility.CurrentRatingLevel),

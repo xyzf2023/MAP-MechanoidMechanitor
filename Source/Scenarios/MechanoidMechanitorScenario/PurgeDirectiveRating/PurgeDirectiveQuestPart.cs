@@ -54,6 +54,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool endPending;
         private QuestEndOutcome pendingEndOutcome = QuestEndOutcome.Unknown;
         private bool completionLetterHandled;
+        // 只记录本任务实际写入的额度；旧档缺少凭据时为 -1，不根据现配置猜测历史收入。
+        private long creditedByQuest;
         private bool ending;
 
         public bool IsOperationActive => stage == Stage.OperationActive;
@@ -228,14 +230,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         baseReward))
                 {
                     baseRewardHandled = true;
+                    if (creditedByQuest >= 0) creditedByQuest += baseReward;
                 }
             }
 
             if (!extraRewardHandled)
             {
-                int extra = PurgeDirectiveRatingUtility.GetQuestExtraReward(targetType);
+                int extra = Math.Max(0, rewardValue);
                 extraRewardHandled = extra <= 0
                     || PurgeDirectiveRatingUtility.TryAddPurgeDirectiveRewardPoints(extra);
+                if (extraRewardHandled && creditedByQuest >= 0) creditedByQuest += extra;
             }
 
             // 奖励没有真正写入时保持操作阶段并由 Tick 重试，禁止虚假标记成功。
@@ -306,8 +310,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         PurgeDirectiveRatingLetterUtility.SendQuestCompleteLetter(
                             targetWorldObject,
                             targetType,
-                            (PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig?.questBaseRewardPoints ?? 200)
-                                + PurgeDirectiveRatingUtility.GetQuestExtraReward(targetType));
+                            creditedByQuest);
                     }
                     catch (Exception ex)
                     {
@@ -417,6 +420,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref endPending, "pdqEndPending", false);
             Scribe_Values.Look(ref pendingEndOutcome, "pdqPendingEndOutcome", QuestEndOutcome.Unknown);
             Scribe_Values.Look(ref completionLetterHandled, "pdqCompletionLetterHandled", false);
+            Scribe_Values.Look(ref creditedByQuest, "pdqCreditedByQuest", -1L);
         }
     }
 }

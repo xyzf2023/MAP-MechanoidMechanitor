@@ -267,7 +267,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 同额度与评级的正式奖励入口：肃清额度与评级值同时增加等量数值，且先做溢出检查。
+        /// 正式奖励入口：额度增加完整奖励，评级增加同一基础数值但受评级上限钳制；先做额度溢出检查。
         /// 退款、订单取消返款、DEV 调额度不得走此入口（它们不应改评级）。
         /// 返回 false 表示未真正发放（评级系统未激活或额度加法会失败）。
         /// </summary>
@@ -282,7 +282,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             long nextCredits = (long)rs.RewardPoints + points;
             if (nextCredits > int.MaxValue) return false;
 
-            // 评级值与额度同步增加等量数值
+            // 评级独立封顶，不削减本次应得额度。
             if (!TryAddRating(points)) return false;
             rs.AddRewardPoints((int)nextCredits - rs.RewardPoints);
             return true;

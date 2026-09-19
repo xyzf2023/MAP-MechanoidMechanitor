@@ -553,13 +553,14 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (totalValue > 0f && multiplier > 0f)
+            if (!MechHiveNodeDeliveryUtility.TryCalculateQuota(totalValue, multiplier, out int amount))
             {
-                int amount = Mathf.FloorToInt(totalValue * multiplier);
-                if (amount > 0)
-                {
-                    GameComponent_CerebrexTakeoverState.Current?.TryAddCredits(amount);
-                }
+                MechHiveNodeDeliveryUtility.ReportQuotaFailure(totalValue, multiplier);
+            }
+            else if (amount > 0
+                && GameComponent_CerebrexTakeoverState.Current?.TryAddCredits(amount) != true)
+            {
+                MechHiveNodeDeliveryUtility.ReportQuotaFailure(totalValue, multiplier);
             }
 
             return false;

@@ -2354,7 +2354,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void BeginSuccess(string reason = "TargetCleared", bool completionBeforeAcceptance = false)
         {
-            if (successApplied || failureApplied || invalidEndApplied)
+            if (successApplied || failureApplied || invalidEndApplied || declinedOrExpiredApplied)
             {
                 return;
             }
@@ -2390,7 +2390,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void BeginFailure(string reason)
         {
-            if (successApplied || failureApplied || invalidEndApplied)
+            if (successApplied || failureApplied || invalidEndApplied || declinedOrExpiredApplied)
             {
                 return;
             }
@@ -2403,7 +2403,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void BeginInvalidEnd(string reason)
         {
-            if (successApplied || failureApplied || invalidEndApplied)
+            if (successApplied || failureApplied || invalidEndApplied || declinedOrExpiredApplied)
             {
                 return;
             }
@@ -2448,7 +2448,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (successApplied || failureApplied || invalidEndApplied)
+            if (successApplied || failureApplied || invalidEndApplied || declinedOrExpiredApplied)
             {
                 return;
             }
@@ -2489,7 +2489,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (successApplied || failureApplied || invalidEndApplied)
+            if (successApplied || failureApplied || invalidEndApplied || declinedOrExpiredApplied)
             {
                 return false;
             }
@@ -2615,7 +2615,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public override void Notify_PreCleanup()
         {
             base.Notify_PreCleanup();
-            if (successApplied || failureApplied || invalidEndApplied)
+            if (successApplied || failureApplied || invalidEndApplied || declinedOrExpiredApplied)
             {
                 return;
             }
@@ -2768,6 +2768,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 participantFactions ??= new List<Faction>();
                 participantFactions.RemoveAll(f => f == null);
+                participantFactions = participantFactions.Distinct().ToList();
                 supportRecords ??= new List<SymbiosisCovenantJointOperationFactionSupportRecord>();
                 spawnedAidTags ??= new List<string>();
                 if (stage == SymbiosisCovenantJointOperationStage.TargetMapEntered
@@ -2971,7 +2972,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             foreach (Faction faction in participantFactions)
             {
-                if (IsParticipantStillValid(faction))
+                if (IsParticipantStillValid(faction) && !result.Contains(faction))
                 {
                     result.Add(faction);
                 }

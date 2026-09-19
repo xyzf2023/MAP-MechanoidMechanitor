@@ -379,6 +379,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 recentChanges ??= new List<SymbiosisCovenantTrustChange>();
                 trust = GameComponent_SymbiosisCovenantState.ClampTrust(trust);
+                // 缺省 trust=-100 也用于合法省略的最低信任记录，不能按当前关系重建。
+                // 窗口已获额度只修复负数；不按当前倍率裁剪历史收入，否则会重新开放额度。
+                goodwillTrustGainedInWindow = Math.Max(0, goodwillTrustGainedInWindow);
+                tradeTrustGainedInWindow = Math.Max(0, tradeTrustGainedInWindow);
                 if (invitationFailureCount < 0)
                 {
                     invitationFailureCount = 0;

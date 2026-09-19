@@ -137,10 +137,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static void DrawCurrentState(Rect view, ref float y)
         {
-            GameComponent_MechanoidMechanitorStoryState? story =
-                Current.Game?.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
-            int rating = story?.PurgeDirectiveRuntimeState?.RatingValue ?? 0;
-            int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
+            PurgeDirectiveRatingDisplay display = PurgeDirectiveRatingDisplay.Build();
+            string rating = display.IsTakeover
+                ? display.RatingNameText
+                : $"{display.RatingValue}（{display.CurrentLevel}级）";
             int credits =
                 GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRewardPoints();
             string takeover = GameComponent_CerebrexTakeoverState.IsActive ? "主脑受控" : "常态";
@@ -149,7 +149,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Widgets.DrawMenuSection(rect);
             Widgets.Label(
                 rect.ContractedBy(8f),
-                $"当前状态：节点评级 {rating}（{level}级）　肃清额度 {credits}　交易状态 {takeover}");
+                $"当前状态：节点评级 {rating}　肃清额度 {credits}　交易状态 {takeover}");
             y += rect.height + 8f;
         }
 

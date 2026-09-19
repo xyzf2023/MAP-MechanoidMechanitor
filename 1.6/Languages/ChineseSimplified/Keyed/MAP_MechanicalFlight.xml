@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanicalFlight_TakeoffLabel>启动飞行</MAP_MechanicalFlight_TakeoffLabel>
-  <MAP_MechanicalFlight_TakeoffDesc>启动持续飞行。启动时立即消耗0.5%最大能量，之后每60 Tick消耗0.5%。</MAP_MechanicalFlight_TakeoffDesc>
+  <MAP_MechanicalFlight_TakeoffDesc>启动持续飞行。起飞与持续飞行按当前飞行配置额外耗能；标准基础费用为起飞0.5%最大能量、之后每60 Tick再消耗0.5%，实际费用受重量级、先天飞行倍率和群体飞行乘员等修正。飞行耗能不取代机械体原有耗能，原版能量提示中的日耗不包含这部分额外费用。</MAP_MechanicalFlight_TakeoffDesc>
   <MAP_MechanicalFlight_LandLabel>结束飞行</MAP_MechanicalFlight_LandLabel>
   <MAP_MechanicalFlight_LandDesc>结束飞行并在当前位置降落。</MAP_MechanicalFlight_LandDesc>
   <MAP_MechanicalFlight_AerialMove>空中移动</MAP_MechanicalFlight_AerialMove>

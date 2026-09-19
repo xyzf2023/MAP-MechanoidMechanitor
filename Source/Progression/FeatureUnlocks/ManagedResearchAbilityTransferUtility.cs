@@ -196,7 +196,7 @@ namespace MAP_MechanoidMechanitor
                     targetAbility,
                     resultRemaining,
                     snapshot.TargetRemainingCooldown);
-                ManagedResearchAbilitySyncUtility.SafeRemoveAbility(source, abilityDef);
+                RemoveSourceAbilityIfIneligible(source, abilityDef);
                 return ManagedResearchAbilityTransferApplyResult.Success;
             }
 
@@ -218,9 +218,23 @@ namespace MAP_MechanoidMechanitor
                     targetAbility.StartCooldown(snapshot.SourceRemainingCooldown);
                 }
 
-                ManagedResearchAbilitySyncUtility.SafeRemoveAbility(source, abilityDef);
+                RemoveSourceAbilityIfIneligible(source, abilityDef);
                 return ManagedResearchAbilityTransferApplyResult.Success;
             }
+        }
+
+        private static void RemoveSourceAbilityIfIneligible(Pawn source, AbilityDef abilityDef)
+        {
+            ManagedResearchAbilityDescriptor? descriptor =
+                ManagedResearchAbilitySyncUtility.FindDescriptor(abilityDef);
+            // 轨道数据网络可能让失去意识宿主身份的源机械师仍有科研能力资格。
+            // 保留其原能力实例与冷却，避免先删后补把独立享有的能力刷新为零冷却。
+            if (descriptor != null && ManagedAbilityEligibilityUtility.ShouldPawnHaveAbility(source, descriptor))
+            {
+                return;
+            }
+
+            ManagedResearchAbilitySyncUtility.SafeRemoveAbility(source, abilityDef);
         }
 
         private static void LogTargetPreparationFailed(

@@ -56,6 +56,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         public static float TryConsumeFromCaravan(Caravan caravan, ThingDef def, int count)
         {
+            return TryConsumeFromCaravan(caravan, def, count, out _);
+        }
+
+        public static float TryConsumeFromCaravan(
+            Caravan caravan, ThingDef def, int count, out bool quotaUnavailable)
+        {
+            quotaUnavailable = false;
             if (caravan == null || def == null || count <= 0)
             {
                 return -1f;
@@ -68,7 +75,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             float removedValue = 0f;
             int remaining = count;
-            List<Thing> items = CaravanInventoryUtility.AllInventoryItems(caravan);
+            // 原版返回共享静态列表；价值查询和 Destroy 回调都可能再次查询它。
+            List<Thing> items = new List<Thing>(CaravanInventoryUtility.AllInventoryItems(caravan));
+            List<KeyValuePair<Thing, int>> allocations = new List<KeyValuePair<Thing, int>>();
             for (int i = 0; i < items.Count && remaining > 0; i++)
             {
                 Thing thing = items[i];
@@ -80,6 +89,28 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 int take = Mathf.Min(remaining, thing.stackCount);
                 removedValue += thing.MarketValue * take;
                 remaining -= take;
+                allocations.Add(new KeyValuePair<Thing, int>(thing, take));
+            }
+
+            if (remaining > 0)
+            {
+                return -1f;
+            }
+
+            // 正常中立建设不要求肃清奖励；奖励路线则先拒绝无账户、非法价值及溢出，
+            // 避免已知无法入账时仍消耗材料；这不承诺外部销毁回调异常时全量回滚。
+            if ((GameComponent_CerebrexTakeoverState.IsActive
+                    || GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive)
+                && !CanAddPurgeQuota(removedValue, DeliveryQuotaMultiplier))
+            {
+                quotaUnavailable = true;
+                return -1f;
+            }
+
+            for (int i = 0; i < allocations.Count; i++)
+            {
+                Thing thing = allocations[i].Key;
+                int take = allocations[i].Value;
 
                 if (take >= thing.stackCount)
                 {
@@ -92,6 +123,56 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return removedValue;
+        }
+
+        private static bool CanAddPurgeQuota(float totalValue, float multiplier)
+        {
+            if (!TryCalculateQuota(totalValue, multiplier, out int amount))
+            {
+                return false;
+            }
+
+            if (GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                return GameComponent_CerebrexTakeoverState.Current != null
+                    && (long)GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRewardPoints()
+                        + amount <= int.MaxValue;
+            }
+
+            MechanoidMechanitorPurgeDirectiveRuntimeState? runtime = PurgeDirectiveRatingUtility.Runtime;
+            return runtime != null && (long)runtime.RewardPoints + amount <= int.MaxValue;
+        }
+
+        internal static bool TryCalculateQuota(float totalValue, float multiplier, out int amount)
+        {
+            // 保留原有 float 乘法再向下取整的计价，只在转 int 前排除非法值和溢出。
+            double rounded = System.Math.Floor(totalValue * multiplier);
+            amount = 0;
+            if (float.IsNaN(totalValue) || float.IsInfinity(totalValue) || totalValue < 0f
+                || float.IsNaN(multiplier) || float.IsInfinity(multiplier) || multiplier <= 0f
+                || double.IsNaN(rounded) || double.IsInfinity(rounded) || rounded > int.MaxValue)
+            {
+                return false;
+            }
+
+            amount = (int)rounded;
+            return true;
+        }
+
+        internal static void ReportQuotaFailure(float totalValue, float multiplier)
+        {
+            Log.Error($"[MAP-机械族机械师] 节点交付额度结算失败：价值={totalValue}，倍率={multiplier}，"
+                + $"接管={GameComponent_CerebrexTakeoverState.IsActive}。未登记成功，也未自动补偿物资。");
+            try
+            {
+                Messages.Message("MAP_MechanoidMechanitor.MechHiveNode.QuotaFailed".Translate(),
+                    MessageTypeDefOf.NegativeEvent, historical: false);
+            }
+            catch (System.Exception ex)
+            {
+                // 失败提示不是交付提交点，通知异常不能再次打断运输容器的既定收尾。
+                Log.Error("[MAP-机械族机械师] 节点交付失败提示发送异常：" + ex);
+            }
         }
 
         /// <summary>
@@ -112,9 +193,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            int amount = Mathf.FloorToInt(totalValue * multiplier);
-            if (amount <= 0 || !TryAddPurgeCreditsOnly(amount))
+            if (!TryCalculateQuota(totalValue, multiplier, out int amount))
             {
+                ReportQuotaFailure(totalValue, multiplier);
+                return;
+            }
+            if (amount == 0) return;
+            if (!TryAddPurgeCreditsOnly(amount))
+            {
+                ReportQuotaFailure(totalValue, multiplier);
                 return;
             }
 
