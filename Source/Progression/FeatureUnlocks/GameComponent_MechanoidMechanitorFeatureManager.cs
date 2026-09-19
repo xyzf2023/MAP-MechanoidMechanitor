@@ -239,24 +239,27 @@ namespace MAP_MechanoidMechanitor
             if (pendingForcedSync)
             {
                 TryProcessPendingForcedSync();
-                return;
             }
 
+            // 全量同步的失败退避不得阻塞独立队列；各队列仍使用自己的到期时间。
             ProcessPendingPawnSyncs();
             ProcessPendingDynamicConsciousnessRefresh();
-            TryRunUnlockStateSafetyCheck();
+            if (!pendingForcedSync)
+            {
+                TryRunUnlockStateSafetyCheck();
+            }
         }
 
         /// <summary>
-        /// 是否存在本帧可尝试执行的到期任务。pendingForcedSync 优先：未到期时阻塞其他任务。
+        /// 是否存在本帧可尝试执行的到期任务。全量同步与独立队列分别检查到期时间。
         /// </summary>
         private bool HasDueWork(TickManager tickManager)
         {
             int ticksGame = tickManager.TicksGame;
 
-            if (pendingForcedSync)
+            if (pendingForcedSync && ticksGame >= nextForcedSyncAttemptTick)
             {
-                return ticksGame >= nextForcedSyncAttemptTick;
+                return true;
             }
 
             if (pendingPawnSyncs.Count > 0
@@ -271,7 +274,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            return ticksGame >= nextUnlockStateSafetyCheckTick;
+            return !pendingForcedSync && ticksGame >= nextUnlockStateSafetyCheckTick;
         }
 
         private void TryProcessPendingForcedSync()

@@ -6,7 +6,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
 {
     /// <summary>
     /// 闪耀世界毁灭者5集群科技支持的共享实现。
-    /// 研究完成状态作为唯一幂等依据；只有本次实际完成目标科技时才发送支持信件。
+    /// 研究完成状态作为科研幂等依据；本次实际完成的科技另行登记支持信件。
     /// </summary>
     internal static class GlitterworldDestroyer5ResearchSupportUtility
     {
@@ -45,20 +45,6 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                     doCompletionDialog: false,
                     researcher: null,
                     doCompletionLetter: false);
-
-                if (!research.IsFinished)
-                {
-                    Log.Error(
-                        "[MAP-机械族机械师] 闪耀世界毁灭者5集群科技支持失败："
-                        + diagnosticContext
-                        + "；"
-                        + research.defName
-                        + " 在 FinishProject 调用后仍未完成。");
-                    return false;
-                }
-
-                SendResearchSupportLetter(research);
-                return true;
             }
             catch (Exception ex)
             {
@@ -69,11 +55,28 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                     + research.defName
                     + "。\n"
                     + ex);
+                // FinishProject 可能在写入完成进度后才由其他回调抛出。
+                // 以实际科研状态决定是否已提交，不因通知失败让调用者重复结算。
+                if (!research.IsFinished)
+                {
+                    return false;
+                }
+            }
+
+            if (!research.IsFinished)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] 闪耀世界毁灭者5集群科技支持失败："
+                    + diagnosticContext + "；" + research.defName
+                    + " 在 FinishProject 调用后仍未完成。");
                 return false;
             }
+
+            GameComponent_GD5ResearchSupport.QueueSupportLetter(research);
+            return true;
         }
 
-        private static void SendResearchSupportLetter(ResearchProjectDef research)
+        internal static void SendResearchSupportLetter(ResearchProjectDef research)
         {
             TaggedString title = "MAP_GD5.PurgeResearchSupport.Title".Translate();
             TaggedString text = "MAP_GD5.PurgeResearchSupport.Text".Translate(

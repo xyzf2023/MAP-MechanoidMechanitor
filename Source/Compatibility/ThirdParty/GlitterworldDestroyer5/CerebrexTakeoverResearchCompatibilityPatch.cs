@@ -5,7 +5,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
 {
     /// <summary>
-    /// 仅在主脑接管从“未接管”成功转换为“已接管”时触发一次。
+    /// 在主脑接管成功时立即尝试，失败后由兼容状态组件按已持久化的接管状态补做。
     /// 研究完成失败不得中断主脑接管流程。
     /// </summary>
     internal static class CerebrexTakeoverResearchCompatibilityPatch
@@ -31,6 +31,16 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                 return;
             }
 
+            EnsureTakeoverResearchCompleted();
+        }
+
+        internal static void EnsureTakeoverResearchCompleted()
+        {
+            if (!GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                return;
+            }
+
             ResearchProjectDef? research = targetResearch;
             ResearchManager? manager = Find.ResearchManager;
             if (research == null || manager == null || research.IsFinished)
@@ -45,6 +55,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                     doCompletionDialog: false,
                     researcher: null,
                     doCompletionLetter: false);
+                if (!research.IsFinished)
+                {
+                    Log.Warning(
+                        "[MAP-机械族机械师] 主脑接管集群科技尚未完成，将在后续安全 tick 重试。");
+                }
             }
             catch (Exception ex)
             {

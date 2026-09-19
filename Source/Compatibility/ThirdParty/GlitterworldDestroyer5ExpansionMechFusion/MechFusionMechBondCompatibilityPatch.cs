@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -53,6 +54,18 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
         /// </summary>
         internal static void GrantMechBondIfMissing()
         {
+            try
+            {
+                GrantMechBondCore();
+            }
+            catch (Exception ex)
+            {
+                Log.Error("[MAP-机械族机械师] MechFusion MechBond 补发批次失败，已隔离异常：\n" + ex);
+            }
+        }
+
+        private static void GrantMechBondCore()
+        {
             ResearchProjectDef? theory =
                 DefDatabase<ResearchProjectDef>.GetNamedSilentFail(
                     TheoryResearchDefName);
@@ -83,27 +96,30 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                 return;
             }
 
-            IReadOnlyList<Pawn> mechanitors =
-                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
+            List<Pawn> mechanitors = new List<Pawn>(
+                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors);
             for (int i = 0; i < mechanitors.Count; i++)
             {
                 Pawn pawn = mechanitors[i];
-                if (!MechFusionCompatibleMechanitorUtility.IsEligibleMechanitor(pawn))
+                try
                 {
-                    continue;
-                }
+                    if (!MechFusionCompatibleMechanitorUtility.IsEligibleMechanitor(pawn)
+                        || pawn.health?.hediffSet == null)
+                    {
+                        continue;
+                    }
 
-                if (pawn.health == null || pawn.health.hediffSet == null)
+                    if (!pawn.health.hediffSet.HasHediff(mechBondDef))
+                    {
+                        pawn.health.AddHediff(mechBondDef);
+                    }
+                }
+                catch (Exception ex)
                 {
-                    continue;
+                    Log.Error(
+                        "[MAP-机械族机械师] MechFusion MechBond 补发失败，继续处理其他机械师："
+                        + $"pawn={pawn?.ThingID}。\n{ex}");
                 }
-
-                if (pawn.health.hediffSet.HasHediff(mechBondDef))
-                {
-                    continue;
-                }
-
-                pawn.health.AddHediff(mechBondDef);
             }
         }
     }

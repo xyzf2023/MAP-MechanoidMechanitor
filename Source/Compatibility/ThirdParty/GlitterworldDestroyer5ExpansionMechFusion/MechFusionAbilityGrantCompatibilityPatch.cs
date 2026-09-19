@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -87,34 +88,54 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
         private static void GrantAbilityToRegisteredMechanitorsIfMissing(
             AbilityDef abilityDef)
         {
-            IReadOnlyList<Pawn> mechanitors =
-                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
+            try
+            {
+                GrantAbilityToRegisteredMechanitorsCore(abilityDef);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(
+                    "[MAP-机械族机械师] MechFusion 科研能力补发批次失败，已隔离异常："
+                    + abilityDef.defName + "。\n" + ex);
+            }
+        }
+
+        private static void GrantAbilityToRegisteredMechanitorsCore(AbilityDef abilityDef)
+        {
+            // 能力初始化可能回调身份注册表；使用快照避免批次中途改变目标集合。
+            List<Pawn> mechanitors = new List<Pawn>(
+                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors);
             for (int i = 0; i < mechanitors.Count; i++)
             {
                 Pawn pawn = mechanitors[i];
-                if (!MechFusionCompatibleMechanitorUtility.IsEligibleMechanitor(pawn))
+                try
                 {
-                    continue;
-                }
+                    if (!MechFusionCompatibleMechanitorUtility.IsEligibleMechanitor(pawn))
+                    {
+                        continue;
+                    }
 
-                Pawn_AbilityTracker? abilityTracker = pawn.abilities;
-                if (abilityTracker == null)
+                    Pawn_AbilityTracker? abilityTracker = pawn.abilities;
+                    if (abilityTracker == null)
+                    {
+                        Log.Error(
+                            "[MAP-机械族机械师] 第三方兼容（MechFusion 科研能力补发）："
+                            + $"机械族机械师 {pawn.LabelShortCap} 缺少 Pawn_AbilityTracker，"
+                            + $"无法补发能力 {abilityDef.defName}。");
+                        continue;
+                    }
+
+                    if (abilityTracker.GetAbility(abilityDef, includeTemporary: true) == null)
+                    {
+                        abilityTracker.GainAbility(abilityDef);
+                    }
+                }
+                catch (Exception ex)
                 {
                     Log.Error(
-                        "[MAP-机械族机械师] 第三方兼容（MechFusion 科研能力补发）："
-                        + $"机械族机械师 {pawn.LabelShortCap} 缺少 Pawn_AbilityTracker，"
-                        + $"无法补发能力 {abilityDef.defName}。");
-                    continue;
+                        "[MAP-机械族机械师] MechFusion 科研能力补发失败，继续处理其他机械师："
+                        + $"pawn={pawn?.ThingID}，ability={abilityDef.defName}。\n{ex}");
                 }
-
-                if (abilityTracker.GetAbility(
-                        abilityDef,
-                        includeTemporary: true) != null)
-                {
-                    continue;
-                }
-
-                abilityTracker.GainAbility(abilityDef);
             }
         }
     }
