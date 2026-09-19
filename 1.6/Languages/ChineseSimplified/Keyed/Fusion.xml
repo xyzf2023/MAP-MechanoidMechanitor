@@ -10,6 +10,7 @@
   <MAP_MechanoidMechanitor.Fusion.Failure.SourceFormInvalid>机械族当前形态无法执行合体。</MAP_MechanoidMechanitor.Fusion.Failure.SourceFormInvalid>
   <MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>合体目标当前不可用。</MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>
   <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>合体目标必须是人类。</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetAgeInvalid>合体目标必须是儿童或成年人，婴儿无法合体。</MAP_MechanoidMechanitor.Fusion.Failure.TargetAgeInvalid>
   <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>目标人类必须是该机械族当前合法的监管者。</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>
   <MAP_MechanoidMechanitor.Fusion.Failure.NotSameMap>双方必须位于同一地图。</MAP_MechanoidMechanitor.Fusion.Failure.NotSameMap>
   <MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>双方之一已经处于合体事务中。</MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>

@@ -130,6 +130,15 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            // 与实际穿戴共用外甲的成长阶段限制，避免接近完成后才因年龄回滚。
+            if (!shellDef.apparel.developmentalStageFilter.Has(wearer.DevelopmentalStage))
+            {
+                failureReason =
+                    "MAP_MechanoidMechanitor.Fusion.Failure.TargetAgeInvalid"
+                        .Translate();
+                return false;
+            }
+
             if (!ApparelUtility.HasPartsToWear(wearer, shellDef))
             {
                 failureReason =
