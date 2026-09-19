@@ -2650,7 +2650,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (target?.questTags != null && !string.IsNullOrEmpty(targetQuestTag))
             {
                 List<string> remainingTags = new List<string>(target.questTags);
-                if (remainingTags.Remove(targetQuestTag))
+                if (remainingTags.Remove(targetQuestTag!))
                 {
                     target.questTags = remainingTags;
                 }
