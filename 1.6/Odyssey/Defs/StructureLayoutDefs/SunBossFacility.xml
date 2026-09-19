@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.SunBossLayoutDef>
+    <defName>MAP_SunBossFacility</defName>
+    <workerClass>MAP_MechanoidMechanitor.LayoutWorker_SunBossFacility</workerClass>
+    <arenaInteriorSize>51</arenaInteriorSize>
+    <corridorWidth>5</corridorWidth>
+    <centerOffset>4</centerOffset>
+    <outerRoomSpan>9~12</outerRoomSpan>
+    <outerRoomMergeCount>1~3</outerRoomMergeCount>
+    <lootRoom>MechLootRoom</lootRoom>
+    <fallbackLootCrate>AncientSealedCrate</fallbackLootCrate>
+    <arenaRoom>MAP_SunBossArena</arenaRoom>
+    <passageRoom>MAP_SunBossPassage</passageRoom>
+    <coreBuilding>MAP_Building_SunBOSS</coreBuilding>
+    <stabilizerBuilding>MAP_Building_ReactorStabilizer</stabilizerBuilding>
+    <arenaWallCount>10~14</arenaWallCount>
+    <arenaWallLength>3~5</arenaWallLength>
+
+    <wallDef>OrbitalAncientFortifiedWall</wallDef>
+    <!-- 沿用机械巢的钢门基础；外门、大厅入口及少量内部门替换为防爆门。 -->
+    <doorDef>Door</doorDef>
+    <doorStuffDef>Steel</doorStuffDef>
+    <exteriorDoorDef>AncientBlastDoor</exteriorDoorDef>
+    <exteriorDoorStuffDef IsNull="True" />
+    <ensureOneDoorUnlocked>false</ensureOneDoorUnlocked>
+    <wallLampDef>AncientEmergencyLight_Green</wallLampDef>
+    <terrainDef>MechanoidPlatform</terrainDef>
+    <defaultAffordanceTerrainDef>MechanoidPlatform</defaultAffordanceTerrainDef>
+    <clearDoorFaction>true</clearDoorFaction>
+    <canConnectRoomsExternally>false</canConnectRoomsExternally>
+    <canDisconnectRooms>false</canDisconnectRooms>
+    <adjacentRoomMergeChance>0</adjacentRoomMergeChance>
+    <borderDoorRemoveChance>0</borderDoorRemoveChance>
+    <shouldDamage>false</shouldDamage>
+    <clearRoomsEntirely>false</clearRoomsEntirely>
+    <canHaveMultipleLayoutsInRoom>false</canHaveMultipleLayoutsInRoom>
+    <!-- 复用 Odyssey 房间内容，排除庭院和会改变整体结构的狭廊房间。 -->
+    <roomDefs>
+      <MechChargingRoom>
+        <countRange>2~4</countRange>
+      </MechChargingRoom>
+      <!-- 原版轨道机械设施的战利品房，固定至少一间。 -->
+      <MechLootRoom>
+        <countRange>1~2</countRange>
+      </MechLootRoom>
+      <MechGravlitePanelRoom>
+        <countRange>1</countRange>
+      </MechGravlitePanelRoom>
+      <MechStorageRoom>1.5</MechStorageRoom>
+      <MechGestationRoom>1</MechGestationRoom>
+      <MechProcessorRoom>1</MechProcessorRoom>
+      <MechGloomlightRoom>0.4</MechGloomlightRoom>
+    </roomDefs>
+  </MAP_MechanoidMechanitor.SunBossLayoutDef>
+</Defs>

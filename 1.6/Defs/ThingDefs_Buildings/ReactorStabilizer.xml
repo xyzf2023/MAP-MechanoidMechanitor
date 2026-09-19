@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="BuildingBase">
+    <defName>MAP_Building_ReactorStabilizer</defName>
+    <label>反应堆稳定器</label>
+    <description>TODO</description>
+    <thingClass>Building</thingClass>
+    <tickerType>Never</tickerType>
+    <size>(3,3)</size>
+    <rotatable>false</rotatable>
+    <passability>Impassable</passability>
+    <fillPercent>1</fillPercent>
+    <useHitPoints>false</useHitPoints>
+    <!-- 不通过耐久值摧毁，后续由指定技能直接调用 Destroy。 -->
+    <destroyable>true</destroyable>
+    <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
+    <graphicData>
+      <texPath>Buildings/SunBOSS/ReactorStabilizer</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(3,3)</drawSize>
+    </graphicData>
+    <statBases>
+      <Flammability>0</Flammability>
+    </statBases>
+    <building>
+      <neverBuildable>true</neverBuildable>
+      <deconstructible>false</deconstructible>
+      <claimable>false</claimable>
+      <repairable>false</repairable>
+      <canBeDamagedByAttacks>false</canBeDamagedByAttacks>
+      <allowAutoroof>false</allowAutoroof>
+    </building>
+  </ThingDef>
+</Defs>

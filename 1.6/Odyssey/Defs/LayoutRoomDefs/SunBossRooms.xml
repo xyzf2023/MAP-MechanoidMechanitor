@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <LayoutRoomDef>
+    <defName>MAP_SunBossArena</defName>
+    <dontPlaceRandomly>true</dontPlaceRandomly>
+    <requiresSingleRectRoom>true</requiresSingleRectRoom>
+    <noRoof>true</noRoof>
+    <dontDestroyWallsDoors>true</dontDestroyWallsDoors>
+    <isValidPlayerSpawnRoom>false</isValidPlayerSpawnRoom>
+    <spawnJunk>false</spawnJunk>
+    <floorTypes>
+      <li>MechanoidPlatform</li>
+    </floorTypes>
+  </LayoutRoomDef>
+
+  <LayoutRoomDef>
+    <defName>MAP_SunBossPassage</defName>
+    <dontPlaceRandomly>true</dontPlaceRandomly>
+    <dontDestroyWallsDoors>true</dontDestroyWallsDoors>
+    <isValidPlayerSpawnRoom>false</isValidPlayerSpawnRoom>
+    <spawnJunk>false</spawnJunk>
+    <roofDef>RoofConstructed</roofDef>
+    <floorTypes>
+      <li>AncientTile</li>
+    </floorTypes>
+  </LayoutRoomDef>
+</Defs>

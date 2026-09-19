@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- 使用专用生成链，避免随机遗迹、间歇泉等覆盖核心设施。 -->
+  <MapGeneratorDef>
+    <defName>MAP_SunBossFacility</defName>
+    <genSteps>
+      <li>ElevationFertility</li>
+      <li>RocksFromGrid_NoMinerals</li>
+      <li>Terrain</li>
+      <li>MAP_SunBossFacility</li>
+      <li>FindPlayerStartSpot</li>
+      <li>Plants</li>
+      <li>Snow</li>
+      <li>MAP_SunBossFacility_Fog</li>
+    </genSteps>
+  </MapGeneratorDef>
+
+  <GenStepDef>
+    <defName>MAP_SunBossFacility</defName>
+    <order>450</order>
+    <genStep Class="MAP_MechanoidMechanitor.GenStep_SunBossFacility">
+      <layout>MAP_SunBossFacility</layout>
+      <facilitySize>112~128</facilitySize>
+      <defaultThreatPoints>1800</defaultThreatPoints>
+    </genStep>
+  </GenStepDef>
+
+  <GenStepDef>
+    <defName>MAP_SunBossFacility_Fog</defName>
+    <order>1500</order>
+    <genStep Class="MAP_MechanoidMechanitor.GenStep_SunBossFacilityFog" />
+  </GenStepDef>
+</Defs>

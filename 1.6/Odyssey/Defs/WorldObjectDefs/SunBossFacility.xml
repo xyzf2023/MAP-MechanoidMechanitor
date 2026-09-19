@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <WorldObjectDef ParentName="Site">
+    <defName>MAP_SunBossFacility</defName>
+    <label>机械族反应堆设施</label>
+    <mapGenerator>MAP_SunBossFacility</mapGenerator>
+  </WorldObjectDef>
+</Defs>

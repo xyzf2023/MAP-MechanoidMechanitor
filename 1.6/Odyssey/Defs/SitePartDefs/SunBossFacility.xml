@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <SitePartDef>
+    <defName>MAP_SunBossFacility</defName>
+    <label>机械族反应堆设施</label>
+    <description>一座相互连通的机械族设施。建筑群深处有一片露天的核心反应堆区域，周围分布着机械设备与休眠机械族。</description>
+    <siteTexture>World/WorldObjects/Sites/GravcoreLocation</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Gravcore</expandingIconTexture>
+    <wantsThreatPoints>true</wantsThreatPoints>
+    <minThreatPoints>1000</minThreatPoints>
+    <minMapSize>(200, 0, 200)</minMapSize>
+    <disallowsAutomaticDetectionTimerStart>true</disallowsAutomaticDetectionTimerStart>
+    <gravShipsCanLandOn>true</gravShipsCanLandOn>
+    <mainPartAllThreatsLabel>机械族设施</mainPartAllThreatsLabel>
+  </SitePartDef>
+</Defs>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- 据点专用场景建筑，不与玩家方太阳建筑形态共用。 -->
+  <ThingDef ParentName="BuildingBase">
+    <defName>MAP_Building_SunBOSS</defName>
+    <label>核心反应堆？</label>
+    <description>这个建筑看起来是此设施的能源来源......但总感觉哪里不对劲。小心行事。</description>
+    <thingClass>Building</thingClass>
+    <tickerType>Never</tickerType>
+    <size>(3,3)</size>
+    <rotatable>false</rotatable>
+    <passability>Impassable</passability>
+    <fillPercent>1</fillPercent>
+    <useHitPoints>false</useHitPoints>
+    <!-- 保留后续激活流程直接调用 Destroy 的能力。 -->
+    <destroyable>true</destroyable>
+    <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
+    <graphicData>
+      <texPath>Buildings/SunBOSS/SunBOSS</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(3,3)</drawSize>
+    </graphicData>
+    <statBases>
+      <Flammability>0</Flammability>
+    </statBases>
+    <building>
+      <neverBuildable>true</neverBuildable>
+      <deconstructible>false</deconstructible>
+      <claimable>false</claimable>
+      <repairable>false</repairable>
+      <canBeDamagedByAttacks>false</canBeDamagedByAttacks>
+      <allowAutoroof>false</allowAutoroof>
+    </building>
+  </ThingDef>
+</Defs>
