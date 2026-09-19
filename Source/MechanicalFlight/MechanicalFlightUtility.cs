@@ -339,6 +339,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             FinalizeRuntimeState(pawn, record);
+            RevealLandingFog(pawn);
         }
 
         /// <summary>
@@ -689,11 +690,42 @@ namespace MAP_MechanoidMechanitor
                 pawn.CurJob.flying = false;
             }
             FinalizeRuntimeState(pawn, record);
+            RevealLandingFog(pawn);
             if (pendingShutdown && !pawn.Dead && pawn.Spawned)
             {
                 pawn.needs?.energy?.NeedInterval();
             }
             MechanicalFlightMapExitUtility.ResumeAfterLanding(pawn, pendingExitMap);
+        }
+
+        /// <summary>实际落地后，按原版迷雾阻挡规则揭示玩家 Pawn 所在的连通空间。</summary>
+        internal static void RevealLandingFog(Pawn pawn)
+        {
+            Map? map = pawn.Map;
+            if (pawn.Dead || !pawn.Spawned || map == null
+                || pawn.Faction != Faction.OfPlayer || !pawn.Position.InBounds(map))
+            {
+                return;
+            }
+
+            // 飞行会提前揭示局部格子；原版 FloodUnfog 不穿过已揭示格，
+            // 因此先收集整个连通空间内的迷雾种子，不能只从落点或相邻格开始。
+            List<IntVec3> foggedCells = new();
+            map.floodFiller.FloodFill(pawn.Position,
+                cell => cell.GetEdifice(map)?.def.MakeFog != true,
+                cell =>
+                {
+                    if (map.fogGrid.IsFogged(cell))
+                        foggedCells.Add(cell);
+                });
+
+            // 原版揭雾也使用 map.floodFiller，必须等上面的遍历结束后再调用。
+            // 每片迷雾只揭示一次，并保留原版物体揭示和沉睡单位唤醒通知。
+            for (int i = 0; i < foggedCells.Count; i++)
+            {
+                if (map.fogGrid.IsFogged(foggedCells[i]))
+                    FloodFillerFog.FloodUnfog(foggedCells[i], map);
+            }
         }
 
         internal static void CleanupUnavailableRecord(

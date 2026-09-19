@@ -524,6 +524,8 @@ namespace MAP_MechanoidMechanitor
             }
             MechanicalFlightUtility.FinalizeRuntimeState(pawn, record);
 
+            MechanicalFlightUtility.RevealLandingFog(pawn);
+
             // 状态先恢复为地面，再让原版完整处理自我关机、休眠 Hediff 与休眠任务。
             if (resumeEnergy)
                 pawn.needs?.energy?.NeedInterval();
@@ -718,6 +720,7 @@ namespace MAP_MechanoidMechanitor
             try
             {
                 MechanicalFlightUtility.FinalizeRuntimeState(pawn, record);
+                MechanicalFlightUtility.RevealLandingFog(pawn);
             }
             catch (Exception exception)
             {
