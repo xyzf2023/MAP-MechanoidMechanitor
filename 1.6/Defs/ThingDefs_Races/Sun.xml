@@ -56,26 +56,25 @@
       </li>
     </tools>
     <comps>
-      <li Class="CompProperties_TargetingBeam"></li>
-      <li Class="CompProperties_TurretGun">
-        <turretDef>Gun_ChargeBlasterTurret</turretDef>
-        <angleOffset>-90</angleOffset>
-        <renderNodeProperties>
-          <li>
-            <nodeClass>PawnRenderNode_TurretGun</nodeClass>
-            <workerClass>PawnRenderNodeWorker_TurretGun</workerClass>
-            <parentTagDef>Body</parentTagDef>
-            <overrideMeshSize>(1, 1)</overrideMeshSize>
-            <baseLayer>20</baseLayer>
-            <pawnType>Any</pawnType>
-            <drawData>
-              <dataWest>
-                <rotationOffset>180</rotationOffset>
-              </dataWest>
-            </drawData>
-          </li>
-        </renderNodeProperties>
+      <!-- 湮灭炮 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AnnihilationCannon">
+        <warmupTicks>600</warmupTicks>
+        <innerRadius>4.9</innerRadius>
+        <outerRadius>9.8</outerRadius>
+        <skipEffectRadius>15</skipEffectRadius>
+        <explosionDamage>1000</explosionDamage>
+        <armorPenetration>15</armorPenetration>
+        <!-- 最大距离 -->
+        <range>37.8</range>
+        <minRange>5.9</minRange>
+        <projectileSpeed>75</projectileSpeed>
+        <phaseDelayTicks>3</phaseDelayTicks>
+        <cooldownTicks>0</cooldownTicks>
+        <effectExpandTicks>15</effectExpandTicks>
+        <effectHoldTicks>60</effectHoldTicks>
+        <effectContractTicks>20</effectContractTicks>
       </li>
+      <li Class="CompProperties_TargetingBeam"></li>
     </comps>
     <statBases>
       <BandwidthCost>5</BandwidthCost>
@@ -94,6 +93,7 @@
     <combatPower>500</combatPower>
     <maxPerGroup>3</maxPerGroup>
     <isBoss>true</isBoss>
+    <defaultFactionDef>PlayerColony</defaultFactionDef>
     <allowInMechClusters>false</allowInMechClusters>
     <lifeStages>
       <li>
@@ -113,12 +113,6 @@
         </bodyGraphicData>
       </li>
     </lifeStages>
-    <weaponTags>
-      <li>HellsphereCannonGun</li>
-    </weaponTags>
-    <abilities>
-      <li>FireBurst</li>
-    </abilities>
   </PawnKindDef>
 
 </Defs>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>MAP_AnnihilationCannon</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_AnnihilationCannon</driverClass>
+    <reportString>正在为湮灭炮蓄力。</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+    <suspendable>false</suspendable>
+    <sleepCanInterrupt>false</sleepCanInterrupt>
+    <neverFleeFromEnemies>true</neverFleeFromEnemies>
+    <neverShowWeapon>true</neverShowWeapon>
+    <ifFlyingKeepFlying>true</ifFlyingKeepFlying>
+  </JobDef>
+</Defs>

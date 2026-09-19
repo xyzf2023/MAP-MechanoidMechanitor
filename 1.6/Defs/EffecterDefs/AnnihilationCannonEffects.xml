@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- 对应业火炮的 Aim：停止维护后淡出 0.3 秒。 -->
+  <ThingDef ParentName="MoteBase">
+    <defName>Mote_MAP_AnnihilationAim</defName>
+    <!-- 自定义 DrawAt 不跳过 Def 图形校验/预加载，仍须补齐 MoteBase 的贴图路径。 -->
+    <graphicData>
+      <texPath>Things/Mote/HellsphereCannon_Aim</texPath>
+    </graphicData>
+    <thingClass>MAP_MechanoidMechanitor.Mote_AnnihilationWarmup</thingClass>
+    <altitudeLayer>MoteOverhead</altitudeLayer>
+    <drawOffscreen>true</drawOffscreen>
+    <mote>
+      <fadeInTime>0.15</fadeInTime>
+      <fadeOutTime>0.3</fadeOutTime>
+      <solidTime>999999</solidTime>
+      <needsMaintenance>true</needsMaintenance>
+      <fadeOutUnmaintained>true</fadeOutUnmaintained>
+    </mote>
+  </ThingDef>
+  <!-- 对应业火炮的 Charge/Target：虽然有 fadeOutTime，未启用维护中断淡出。 -->
+  <ThingDef ParentName="MoteBase">
+    <defName>Mote_MAP_AnnihilationCharge</defName>
+    <graphicData>
+      <texPath>Things/Mote/HellsphereCannon_ChargeGlow</texPath>
+    </graphicData>
+    <thingClass>MAP_MechanoidMechanitor.Mote_AnnihilationWarmup</thingClass>
+    <altitudeLayer>MoteOverhead</altitudeLayer>
+    <drawOffscreen>true</drawOffscreen>
+    <mote>
+      <fadeInTime>0.15</fadeInTime>
+      <fadeOutTime>0.3</fadeOutTime>
+      <solidTime>999999</solidTime>
+      <needsMaintenance>true</needsMaintenance>
+      <fadeOutUnmaintained>false</fadeOutUnmaintained>
+    </mote>
+  </ThingDef>
+  <ThingDef ParentName="MoteBase">
+    <defName>Mote_MAP_AnnihilationTarget</defName>
+    <graphicData>
+      <texPath>Things/Mote/MoteHellfireCannon_Target</texPath>
+    </graphicData>
+    <thingClass>MAP_MechanoidMechanitor.Mote_AnnihilationWarmup</thingClass>
+    <altitudeLayer>MoteOverhead</altitudeLayer>
+    <drawOffscreen>true</drawOffscreen>
+    <mote>
+      <fadeInTime>0.5</fadeInTime>
+      <fadeOutTime>0.3</fadeOutTime>
+      <solidTime>999999</solidTime>
+      <needsMaintenance>true</needsMaintenance>
+      <fadeOutUnmaintained>false</fadeOutUnmaintained>
+    </mote>
+  </ThingDef>
+</Defs>
