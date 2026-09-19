@@ -88,8 +88,10 @@ namespace MAP_MechanoidMechanitor
         {
             Corpse? corpse = TargetCorpse;
             CompAbilityEffect_MechRecode? recodeComp = GetRecodeComp();
+            Faction? player = Faction.OfPlayerSilentFail;
 
-            if (corpse == null
+            if (player == null
+                || corpse == null
                 || recodeComp == null
                 || !corpse.Spawned
                 || corpse.Map != pawn.Map
@@ -109,8 +111,8 @@ namespace MAP_MechanoidMechanitor
             int cooldownTicks = Mathf.RoundToInt(
                 bandwidthCost * recodeComp.Props.cooldownTicksPerBandwidth);
 
-            innerPawn.SetFactionDirect(Faction.OfPlayer);
-            innerPawn.GenerateNecessaryName();
+            // 尸体内 Pawn 也通过原版入口完成归属变更、任务信号及关系通知；此处不复活。
+            innerPawn.SetFaction(player);
             job.ability?.StartCooldown(cooldownTicks);
 
             Messages.Message(

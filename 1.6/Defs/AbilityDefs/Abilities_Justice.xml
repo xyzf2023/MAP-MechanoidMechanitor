@@ -3,7 +3,7 @@
   <AbilityDef>
     <defName>MAP_Ability_MechRecode</defName>
     <label>机体再编码</label>
-    <description>尝试修改敌方机械体尸体的敌我识别系统，使该机械体尸体的阵营变成我方。仅可选择敌方机械体尸体作为目标。</description>
+    <description>尝试修改非玩家阵营机械体尸体的敌我识别系统，将该尸体的归属改为我方。此能力只改变归属，不会修复或重新启动机械体。</description>
     <iconPath>UI/Abilities/MM_MechRecode</iconPath>
     <jobDef>MAP_Job_MechRecode</jobDef>
     <hasExternallyHandledCooldown>true</hasExternallyHandledCooldown>

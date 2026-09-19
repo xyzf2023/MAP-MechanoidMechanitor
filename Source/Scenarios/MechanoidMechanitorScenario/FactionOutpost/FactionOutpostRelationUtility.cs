@@ -30,18 +30,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (owner.HostileTo(player))
-            {
-                return true;
-            }
-
             // 只有本 MOD 的“永久普通派系关系”才需要额外拦截；普通游戏中的盟友/中立
-            // 仍允许沿用原版“确认后攻击并转敌”的行为。
-            if (GameComponent_MechanoidMechanitorStoryState.TryGetLockedOrdinaryFactionRelation(
+            // 仍允许沿用原版“确认后攻击并转敌”的行为。读取已配置选项，避免初始关系
+            // 尚未施加或实际关系暂时偏离配置时，先被当前敌对关系短路放行。
+            if (GameComponent_MechanoidMechanitorStoryState.TryGetEffectiveOrdinaryFactionRelationOption(
                     player,
                     owner,
-                    out _,
-                    out FactionRelationKind lockedKind)
+                    out MechanoidMechanitorFactionRelationOption option)
+                && MechanoidMechanitorOrdinaryFactionRelationPolicy.TryGetLockedRelationTarget(
+                    option, out _, out FactionRelationKind lockedKind)
                 && lockedKind != FactionRelationKind.Hostile)
             {
                 return false;

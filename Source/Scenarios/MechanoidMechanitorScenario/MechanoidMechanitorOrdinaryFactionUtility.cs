@@ -31,6 +31,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return IsOrdinaryFaction(faction, currentFactions, mechHive);
         }
 
+        /// <summary>派遣与新建交互记录使用的资格；停用不改变派系身份或抹除历史关系配置。</summary>
+        public static bool IsActiveOrdinaryFaction(Faction? faction)
+        {
+            return faction != null
+                && !faction.defeated
+                && !faction.deactivated
+                && IsOrdinaryFaction(faction);
+        }
+
         public static List<Faction> GetOrdinaryFactionsSorted()
         {
             List<Faction> ordinaryFactions = new List<Faction>();
@@ -113,7 +122,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<Faction> currentFactions,
             Faction? mechHive)
         {
-            if (faction == null)
+            if (faction?.def == null)
             {
                 return false;
             }

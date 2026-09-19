@@ -1187,7 +1187,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             for (int i = 0; i < ordinaryFactions.Count; i++)
             {
                 Faction faction = ordinaryFactions[i];
-                if (GetRecord(faction) == null && IsEligibleFaction(faction))
+                // 已有记录按身份保留，避免暂时停用后丢失信任/成员历史；只为活跃派系建新记录。
+                if (GetRecord(faction) == null
+                    && MechanoidMechanitorOrdinaryFactionUtility.IsActiveOrdinaryFaction(faction))
                 {
                     GetInitialState(
                         faction,

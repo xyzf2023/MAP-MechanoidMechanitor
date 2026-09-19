@@ -56,12 +56,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static bool MeetsParticipantArrivalRules(Faction faction, Map map, bool desperate = false)
         {
-            if (faction == null
-                || faction.IsPlayer
-                || faction.defeated
-                || faction.temporary
-                || faction.Hidden
-                || faction.HostileTo(Faction.OfPlayer))
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null || map == null
+                || !MechanoidMechanitorOrdinaryFactionUtility.IsActiveOrdinaryFaction(faction)
+                || faction.HostileTo(player))
             {
                 return false;
             }

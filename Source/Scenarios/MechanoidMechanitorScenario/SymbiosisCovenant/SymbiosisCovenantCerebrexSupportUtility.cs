@@ -85,7 +85,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             foreach (Faction faction in GetCovenantMemberFactions(comp))
             {
-                if (IsFactionEligible(faction, map, Faction.OfMechanoids, comp))
+                if (IsFactionEligible(faction, map, part.site?.Faction, comp))
                 {
                     return true;
                 }
@@ -105,7 +105,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             foreach (Faction faction in GetCovenantMemberFactions(comp))
             {
-                if (IsFactionEligible(faction, map, Faction.OfMechanoids, comp))
+                if (IsFactionEligible(faction, map, part.site?.Faction, comp))
                 {
                     result.Add(faction);
                 }
@@ -117,25 +117,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static bool IsFactionEligible(
             Faction? faction,
             Map map,
-            Faction targetFaction,
+            Faction? targetFaction,
             GameComponent_SymbiosisCovenantState comp)
         {
-            if (faction == null || comp == null)
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (faction == null || comp == null || player == null || targetFaction == null
+                || !MechanoidMechanitorOrdinaryFactionUtility.IsActiveOrdinaryFaction(faction))
             {
                 return false;
             }
 
-            if (faction == Faction.OfPlayer)
-            {
-                return false;
-            }
-
-            if (faction == Faction.OfMechanoids)
-            {
-                return false;
-            }
-
-            if (targetFaction != null && faction == targetFaction)
+            if (faction == targetFaction)
             {
                 return false;
             }
@@ -145,32 +137,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (faction.defeated)
+            if (faction.HostileTo(player))
             {
                 return false;
             }
 
-            if (faction.temporary)
+            if (!faction.HostileTo(targetFaction))
             {
                 return false;
             }
 
-            if (faction.def == null)
-            {
-                return false;
-            }
-
-            if (faction.HostileTo(Faction.OfPlayer))
-            {
-                return false;
-            }
-
-            if (!faction.HostileTo(Faction.OfMechanoids))
-            {
-                return false;
-            }
-
-            if (!faction.def.pawnGroupMakers.Any(m => m.kindDef == PawnGroupKindDefOf.Combat))
+            if (faction.def.pawnGroupMakers == null
+                || !faction.def.pawnGroupMakers.Any(m => m.kindDef == PawnGroupKindDefOf.Combat))
             {
                 return false;
             }

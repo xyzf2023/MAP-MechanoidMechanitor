@@ -50,7 +50,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         public static PurgeDirectiveTargetType ClassifyTargetType(WorldObject? obj)
         {
-            if (obj == null) return PurgeDirectiveTargetType.Invalid;
+            if (obj == null || obj is MAPMechHiveNode) return PurgeDirectiveTargetType.Invalid;
 
             if (obj is Settlement)
             {
@@ -68,18 +68,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return PurgeDirectiveTargetType.Invalid;
                 }
 
-                if (main.tags != null && main.tags.Contains("WorkSite"))
+                if (main.Worker is SitePartWorker_WorkSite
+                    || (main.tags != null && main.tags.Contains("WorkSite")))
                 {
                     return PurgeDirectiveTargetType.WorkSite;
                 }
 
-                if (main.tags != null && main.tags.Contains("Outpost"))
-                {
-                    return PurgeDirectiveTargetType.Outpost;
-                }
-
-                // 兜底：以 defName 中是否含 Outpost 识别普通派系前哨（不读取盟约/援军状态）。
-                if (main.defName.IndexOf("Outpost", StringComparison.OrdinalIgnoreCase) >= 0)
+                if (obj is MAPFactionOutpost
+                    || main.Worker is SitePartWorker_Outpost
+                    || main.Worker is SitePartWorker_FactionOutpost
+                    || (main.tags != null && main.tags.Contains("Outpost")))
                 {
                     return PurgeDirectiveTargetType.Outpost;
                 }
@@ -93,12 +91,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static bool IsMechHiveNodeSitePart(SitePartDef def)
         {
             if (def == null) return false;
-            if (def.defName.IndexOf("MechHive", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return true;
-            }
-
-            if (def.defName.IndexOf("MechCluster", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (def.Worker is SitePartWorker_MechHiveNode
+                || def.Worker is SitePartWorker_MechCluster)
             {
                 return true;
             }
@@ -119,12 +113,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (faction.def == null) return true;
             if (faction.Hidden || faction.def.hidden) return true;
             if (faction.temporary || faction.deactivated || faction.defeated) return true;
+            if (Find.FactionManager?.AllFactionsListForReading.Contains(faction) != true) return true;
             if (faction.def == FactionDefOf.Mechanoid) return true;
 
             // 兼容第三方机械巢派系 Def：以当前实际机械巢实例为准，不只比较原版 FactionDef。
             Faction? mechHive = MechanoidMechanitorOrdinaryFactionUtility.TryGetMechHive();
             if (mechHive != null && faction == mechHive) return true;
             return false;
+        }
+
+        /// <summary>运行中的任务也复核实际归属；不包含地图生成、历史去重或任务占用限制。</summary>
+        internal static bool IsHostileTargetFaction(Faction? faction)
+        {
+            Faction? player = Faction.OfPlayerSilentFail;
+            return player != null
+                && !IsExcludedFaction(faction)
+                && faction!.RelationWith(player, allowNull: true)?.kind == FactionRelationKind.Hostile;
         }
 
         /// <summary>目标是否仍可作为合法肃清目标（含派系敌对、登记、未生成地图、未被占用/已用等）。</summary>
@@ -140,8 +144,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (type == PurgeDirectiveTargetType.Invalid) return false;
 
             Faction? faction = obj.Faction;
-            if (IsExcludedFaction(faction)) return false;
-            if (!faction!.HostileTo(Faction.OfPlayer)) return false; // 中立/友好/盟友排除
+            if (!IsHostileTargetFaction(faction)) return false;
 
             string stableId = TryGetStableId(obj)!;
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = PurgeDirectiveRatingUtility.Runtime;

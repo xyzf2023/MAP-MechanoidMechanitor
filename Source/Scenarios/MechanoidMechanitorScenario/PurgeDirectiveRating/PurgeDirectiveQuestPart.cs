@@ -141,8 +141,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            // 目标失去敌对（转中立/友好/被消灭等）：无处罚失效，不是成功。
-            if (targetFaction != null && !targetFaction.HostileTo(Faction.OfPlayer))
+            // 任务约定的目标一旦换主或不再具备敌对资格，无处罚失效；不把新所有者
+            // 自动接入旧任务，也不因旧派系快照仍敌对而继续计时。
+            if (!HasOriginalHostileOwner()
+                || !PurgeDirectiveQuestTargetUtility.IsHostileTargetFaction(targetWorldObject?.Faction))
             {
                 EndWithoutPenalty();
                 return;
@@ -168,11 +170,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (stage == Stage.OperationActive
                 && obj != null
                 && obj == targetWorldObject
+                && HasOriginalHostileOwner()
                 && PurgeDirectiveRatingUtility.IsRatingSystemActive())
             {
                 completionConfirmed = true;
                 Success();
             }
+        }
+
+        private bool HasOriginalHostileOwner()
+        {
+            Faction? player = Faction.OfPlayerSilentFail;
+            // 完成通知可能在最后一座据点销毁、派系标记 defeated 后才到达；这里不以
+            // Spawned/defeated 拒绝真实完成，只核对原归属与仍存在的敌对关系记录。
+            return player != null
+                && targetFaction != null
+                && targetWorldObject?.Faction == targetFaction
+                && targetFaction.RelationWith(player, allowNull: true)?.kind == FactionRelationKind.Hostile;
         }
 
         private void Success()

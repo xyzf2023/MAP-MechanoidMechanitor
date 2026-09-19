@@ -84,6 +84,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
     }
 
+    [HarmonyPatch(typeof(FactionManager), "Remove")]
+    public static class MechanoidMechanitorOrdinaryFactionRelation_FactionManagerRemove_Patch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(FactionManager __instance, Faction faction)
+        {
+            // 原版只允许删除临时派系；失败时不刷新，成功后仅重建派生缓存，不重施关系。
+            if (faction != null && !__instance.AllFactionsListForReading.Contains(faction))
+            {
+                Current.Game?.GetComponent<GameComponent_MechanoidMechanitorStoryState>()
+                    ?.RebuildRuntimeCaches();
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(FactionManager), nameof(FactionManager.Add))]
     public static class MechanoidMechanitorOrdinaryFactionRelation_FactionManagerAdd_Patch
     {
