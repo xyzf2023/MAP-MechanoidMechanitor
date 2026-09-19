@@ -31,7 +31,8 @@ namespace MAP_MechanoidMechanitor
         private static readonly Dictionary<int, TiltState> TiltStates = new();
         private static readonly Dictionary<Pawn, GlowState> GlowStates = new();
         private static readonly Dictionary<int, int> LastGroundWashTick = new();
-        private static readonly Dictionary<int, IntVec3> LastRevealedFogCell = new();
+        private static readonly Dictionary<int, (Map Map, IntVec3 Ground, IntVec3 Flight)>
+            LastRevealedFogCells = new();
         internal const float VanillaFlightDrawOffset = 0.6f;
 
         public static Vector3 HoverVisualOffset(
@@ -190,7 +191,7 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightStraightPathPatch.ClearMotion(pawn);
             TiltStates.Remove(pawn.thingIDNumber);
             LastGroundWashTick.Remove(pawn.thingIDNumber);
-            LastRevealedFogCell.Remove(pawn.thingIDNumber);
+            LastRevealedFogCells.Remove(pawn.thingIDNumber);
         }
 
         internal static void ClearAllRuntimeState()
@@ -200,7 +201,7 @@ namespace MAP_MechanoidMechanitor
             TiltStates.Clear();
             GlowStates.Clear();
             LastGroundWashTick.Clear();
-            LastRevealedFogCell.Clear();
+            LastRevealedFogCells.Clear();
             MechanicalFlightVisualSmoothing.ClearAllRuntimeState();
             MechanicalFlightCruisePresentation.ClearAllRuntimeState();
         }
@@ -321,16 +322,33 @@ namespace MAP_MechanoidMechanitor
 
         private static void TryRevealFlightFog(Pawn pawn)
         {
-            int key = pawn.thingIDNumber;
-            IntVec3 center = pawn.Position;
-            if (LastRevealedFogCell.TryGetValue(key, out IntVec3 last)
-                && last == center)
+            if (!pawn.Spawned || pawn.Map == null)
             {
                 return;
             }
 
-            LastRevealedFogCell[key] = center;
-            RevealFlightFogArea(center, pawn.Map);
+            int key = pawn.thingIDNumber;
+            Map map = pawn.Map;
+            IntVec3 ground = pawn.Position;
+            IntVec3 flight = IntVec3.FromVector3(pawn.DrawPos);
+            bool hasLast = LastRevealedFogCells.TryGetValue(key, out var last)
+                && last.Map == map;
+            bool groundChanged = !hasLast || last.Ground != ground;
+            bool flightChanged = !hasLast || last.Flight != flight;
+            if (!groundChanged && !flightChanged)
+            {
+                return;
+            }
+
+            if (groundChanged)
+            {
+                RevealFlightFogArea(ground, map);
+            }
+            if (flightChanged && (!groundChanged || flight != ground))
+            {
+                RevealFlightFogArea(flight, map);
+            }
+            LastRevealedFogCells[key] = (map, ground, flight);
         }
 
         private static void RevealFlightFogArea(IntVec3 center, Map map)
@@ -437,7 +455,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 鼠标选取沿用原版飞行 DrawPos：保留0.6格偏移，
+            // 浮动菜单等旧选取交互沿用原版飞行 DrawPos：保留0.6格偏移，
             // 但不加入本系统额外的悬浮显示高度。
             if (MechanicalFlightGroundAnchorContext.LegacySelectionActive)
             {
@@ -471,11 +489,17 @@ namespace MAP_MechanoidMechanitor
         })]
     internal static class MechanicalFlightMouseAnchorPatch
     {
-        private const float ExtendedHorizontalRadius = 0.55f;
-        private const float ExtendedVerticalRadius = 1.35f;
+        private const float SelectionHalfSize = 0.5f;
 
-        public static void Prefix() =>
-            MechanicalFlightGroundAnchorContext.BeginLegacySelection();
+        public static void Prefix(float pawnWideClickRadius, out bool __state)
+        {
+            // 左键选取读取完整空中坐标；其他交互继续沿用旧选取上下文。
+            __state = pawnWideClickRadius < 0.999f;
+            if (__state)
+            {
+                MechanicalFlightGroundAnchorContext.BeginLegacySelection();
+            }
+        }
 
         public static void Postfix(
             Vector3 clickPos,
@@ -503,20 +527,22 @@ namespace MAP_MechanoidMechanitor
                     || GravityDisorderPresentation.ShouldDraw(pawn)
                     || !MechanicalFlightUtility.HasHoverVisual(pawn, record!)
                     || pawn.IsHiddenFromPlayer()
-                    || __result.Contains(pawn)
                     || !clickParams.CanTarget(pawn, source))
                 {
                     continue;
                 }
 
-                // 当前上下文中的 DrawPos 是修改前的原版飞行选中点：
-                // 保留0.6格原版偏移，但排除额外2.5格悬浮显示高度。
-                Vector3 selectionCenter = pawn.DrawPos;
-                float normalizedX =
-                    (clickPos.x - selectionCenter.x) / ExtendedHorizontalRadius;
-                float normalizedZ =
-                    (clickPos.z - selectionCenter.z) / ExtendedVerticalRadius;
-                if (normalizedX * normalizedX + normalizedZ * normalizedZ <= 1f)
+                // 一个1×1格正方形沿实际位置到完整飞行绘制位置平移的扫掠区域。
+                // 用线段与点击点周围正方形相交判定，斜向偏移也不会扩大成包围矩形。
+                bool contains = !MechanicalFlightVisualSmoothing.IsFusionHidden(pawn)
+                    && IsInSelectionTrack(clickPos, pawn.Position.ToVector3Shifted(),
+                        pawn.DrawPos);
+                if (!contains)
+                {
+                    // 同步收窄原版宽半径已加入的候选，保证实际点击范围与轨道一致。
+                    __result.Remove(pawn);
+                }
+                else if (!__result.Contains(pawn))
                 {
                     // 仅追加候选，不替换或强制置顶，保留原版连续点击轮换逻辑。
                     __result.Add(pawn);
@@ -524,9 +550,37 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        public static Exception Finalizer(Exception __exception)
+        private static bool IsInSelectionTrack(Vector3 click, Vector3 ground, Vector3 flight)
         {
-            MechanicalFlightGroundAnchorContext.EndLegacySelection();
+            float enter = 0f;
+            float exit = 1f;
+            return ClipSelectionAxis(ground.x - click.x, flight.x - ground.x,
+                    ref enter, ref exit)
+                && ClipSelectionAxis(ground.z - click.z, flight.z - ground.z,
+                    ref enter, ref exit);
+        }
+
+        private static bool ClipSelectionAxis(float origin, float delta,
+            ref float enter, ref float exit)
+        {
+            if (Mathf.Abs(delta) <= 0.000001f)
+            {
+                return Mathf.Abs(origin) <= SelectionHalfSize;
+            }
+
+            float first = (-SelectionHalfSize - origin) / delta;
+            float second = (SelectionHalfSize - origin) / delta;
+            enter = Mathf.Max(enter, Mathf.Min(first, second));
+            exit = Mathf.Min(exit, Mathf.Max(first, second));
+            return enter <= exit;
+        }
+
+        public static Exception Finalizer(Exception __exception, bool __state)
+        {
+            if (__state)
+            {
+                MechanicalFlightGroundAnchorContext.EndLegacySelection();
+            }
             return __exception;
         }
     }
