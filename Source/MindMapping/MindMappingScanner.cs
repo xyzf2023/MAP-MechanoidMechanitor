@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using HarmonyLib;
 using RimWorld;
@@ -54,7 +55,8 @@ namespace MAP_MechanoidMechanitor
                 activateSound = SoundDefOf.Tick_Tiny
             };
 
-            if (IsInitialized(scanner) || scanner.Occupant != null)
+            if (IsInitialized(scanner) || scanner.Occupant != null
+                || scanner.TryGetInnerInteractableThingOwner()?.Any == true)
             {
                 command.Disable("MAP_MindMapping.Scanner.ToggleDisabled".Translate());
             }
@@ -69,15 +71,21 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (mindMappingMode == value)
+            {
+                return true;
+            }
+
             ThingOwner? owner = scanner.TryGetInnerInteractableThingOwner();
             if (IsInitialized(scanner) || owner?.Any == true)
             {
-                owner?.ClearAndDestroyContents();
-                InitScannerField.SetValue(scanner, false);
-                FabricationTicksField.SetValue(scanner, 0);
-                SelectedPawnField.SetValue(scanner, null);
+                // 与按钮门控一致：先通过原版取消流程退还配料，不能在模式切换中销毁内容。
+                return false;
             }
 
+            // 空闲扫描仪也可能保留尚未入舱的人选，切换配方后必须取消旧选择。
+            FabricationTicksField.SetValue(scanner, 0);
+            SelectedPawnField.SetValue(scanner, null);
             mindMappingMode = value;
             return true;
         }
@@ -274,84 +282,89 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPatch(typeof(Building_SubcoreScanner), "Tick")]
     internal static class MindMappingScanner_Completion_Patch
     {
-        private static readonly FieldInfo FabricationTicksField = AccessTools.Field(
-            typeof(Building_SubcoreScanner),
-            "fabricationTicksLeft");
-
-        internal sealed class CompletionState
+        [HarmonyTranspiler]
+        private static IEnumerable<CodeInstruction> Transpiler(
+            IEnumerable<CodeInstruction> instructions, ILGenerator generator)
         {
-            public MindMappingData? Data;
-            public Dictionary<string, int> ExistingOutputCounts = new Dictionary<string, int>();
+            List<CodeInstruction> codes = instructions.ToList();
+            MethodInfo eject = AccessTools.Method(typeof(Building_SubcoreScanner),
+                nameof(Building_SubcoreScanner.EjectContents));
+            MethodInfo make = AccessTools.Method(typeof(ThingMaker), nameof(ThingMaker.MakeThing),
+                new[] { typeof(ThingDef), typeof(ThingDef) });
+            MethodInfo capture = AccessTools.Method(typeof(MindMappingScanner_Completion_Patch),
+                nameof(CaptureBeforeEjection));
+            MethodInfo makeOutput = AccessTools.Method(typeof(MindMappingScanner_Completion_Patch),
+                nameof(MakeOutput));
+            if (eject == null || make == null || capture == null || makeOutput == null)
+            {
+                Log.Error("[MAP-机械族机械师] 心智映射完成补丁缺少目标方法，保持原版流程。");
+                return codes;
+            }
+
+            List<int> ejects = new List<int>();
+            List<int> outputs = new List<int>();
+            for (int i = 0; i < codes.Count; i++)
+            {
+                if (codes[i].Calls(eject)) ejects.Add(i);
+                if (codes[i].Calls(make)) outputs.Add(i);
+            }
+            if (ejects.Count != 1 || outputs.Count != 1 || ejects[0] >= outputs[0]
+                || codes.Skip(ejects[0]).Take(outputs[0] - ejects[0] + 1)
+                    .Any(code => code.blocks.Count != 0
+                        || code.opcode.FlowControl == FlowControl.Branch
+                        || code.opcode.FlowControl == FlowControl.Cond_Branch)
+                || codes.Skip(ejects[0] + 1).Take(outputs[0] - ejects[0])
+                    .Any(code => code.labels.Count != 0))
+            {
+                Log.Error("[MAP-机械族机械师] 心智映射完成分支匹配失败，保持原版流程。");
+                return codes;
+            }
+
+            // 局部变量仅属于本次 Tick；在原版确实完成扫描、毁脑之前捕获一次。
+            LocalBuilder data = generator.DeclareLocal(typeof(MindMappingData));
+            List<CodeInstruction> result = new List<CodeInstruction>();
+            for (int i = 0; i < codes.Count; i++)
+            {
+                CodeInstruction code = new CodeInstruction(codes[i]);
+                if (i == ejects[0])
+                {
+                    CodeInstruction duplicate = new CodeInstruction(OpCodes.Dup);
+                    duplicate.labels.AddRange(code.labels);
+                    code.labels.Clear();
+                    result.Add(duplicate);
+                    result.Add(new CodeInstruction(OpCodes.Call, capture));
+                    result.Add(new CodeInstruction(OpCodes.Stloc, data));
+                }
+                if (i == outputs[0])
+                {
+                    result.Add(new CodeInstruction(OpCodes.Ldloc, data));
+                    code.opcode = OpCodes.Call;
+                    code.operand = makeOutput;
+                }
+                result.Add(code);
+            }
+            return result;
         }
 
-        [HarmonyPrefix]
-        private static void Prefix(
-            Building_SubcoreScanner __instance,
-            out CompletionState? __state)
+        private static MindMappingData? CaptureBeforeEjection(Building_SubcoreScanner scanner)
         {
-            __state = null;
-            if (!MindMappingScannerUtility.IsMappingMode(__instance)
-                || __instance.State != SubcoreScannerState.Occupied
-                || (int)(FabricationTicksField.GetValue(__instance) ?? 0) > 1
-                || __instance.Occupant == null
-                || __instance.Map == null)
-            {
-                return;
-            }
-
-            CompletionState state = new CompletionState
-            {
-                Data = MindMappingData.Capture(__instance.Occupant)
-            };
-            List<Thing> existing = __instance.Map.listerThings.ThingsOfDef(
-                __instance.def.building.subcoreScannerOutputDef);
-            for (int i = 0; i < existing.Count; i++)
-            {
-                state.ExistingOutputCounts[existing[i].ThingID] = existing[i].stackCount;
-            }
-
-            __state = state;
+            return MindMappingScannerUtility.IsMappingMode(scanner) && scanner.Occupant != null
+                ? MindMappingData.Capture(scanner.Occupant)
+                : null;
         }
 
-        [HarmonyPostfix]
-        private static void Postfix(
-            Building_SubcoreScanner __instance,
-            CompletionState? __state)
+        private static Thing MakeOutput(ThingDef def, ThingDef stuff, MindMappingData? data)
         {
-            if (__state?.Data == null || __instance.Map == null)
+            if (data == null)
             {
-                return;
+                return ThingMaker.MakeThing(def, stuff);
             }
 
-            IntVec3 outputCell = __instance.InteractionCell;
-            List<Thing> outputs = __instance.Map.listerThings.ThingsOfDef(
-                __instance.def.building.subcoreScannerOutputDef);
-            Thing? vanillaOutput = outputs.FirstOrDefault(thing =>
-            {
-                __state.ExistingOutputCounts.TryGetValue(thing.ThingID, out int previousCount);
-                return thing.stackCount > previousCount;
-            });
-            if (vanillaOutput != null)
-            {
-                outputCell = vanillaOutput.Position;
-                if (vanillaOutput.stackCount > 1)
-                {
-                    vanillaOutput.SplitOff(1).Destroy(DestroyMode.Vanish);
-                }
-                else
-                {
-                    vanillaOutput.Destroy(DestroyMode.Vanish);
-                }
-            }
-            else
-            {
-                Log.Error("[MAP-机械族机械师] 心智映射扫描完成后未找到原版产物，改为直接生成映射核心。");
-            }
-
-            Thing mappedCore = ThingMaker.MakeThing(
+            Thing core = ThingMaker.MakeThing(
                 MAPMechanitor_ThingDefOf.MAP_MindMappingAutonomousDirectiveCore);
-            mappedCore.TryGetComp<CompMindMappingAutonomousDirectiveCore>()?.Store(__state.Data);
-            GenPlace.TryPlaceThing(mappedCore, outputCell, __instance.Map, ThingPlaceMode.Near);
+            core.TryGetComp<CompMindMappingAutonomousDirectiveCore>()?.Store(data);
+            // 放置、消息、音效、扫描仪复位继续由原版完成分支执行。
+            return core;
         }
     }
 }

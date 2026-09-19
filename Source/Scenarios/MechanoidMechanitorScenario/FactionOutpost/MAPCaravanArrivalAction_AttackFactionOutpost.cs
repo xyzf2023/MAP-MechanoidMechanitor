@@ -87,17 +87,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (newMap)
-            {
-                Find.TickManager.Notify_GeneratedPotentiallyHostileMap();
-            }
-
-            Find.LetterStack.ReceiveLetter(
-                "LetterLabelCaravanEnteredEnemyBase".Translate(),
-                "LetterCaravanEnteredEnemyBase".Translate(
+            TaggedString letterLabel = "LetterLabelCaravanEnteredEnemyBase".Translate();
+            TaggedString letterText = "LetterCaravanEnteredEnemyBase".Translate(
                     caravan.Label,
                     outpost.Label.ApplyTag(TagType.Settlement, outpost.Faction?.GetUniqueLoadID() ?? ""))
-                    .CapitalizeFirst(),
+                    .CapitalizeFirst();
+            AttackArrivalNotificationUtility.PrepareLetter(
+                map, newMap, false, ref letterLabel, ref letterText);
+            Find.LetterStack.ReceiveLetter(
+                letterLabel,
+                letterText,
                 LetterDefOf.NeutralEvent,
                 caravan.PawnsListForReading,
                 outpost.Faction);
@@ -108,6 +107,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 CaravanEnterMode.Edge,
                 CaravanDropInventoryMode.DoNotDrop,
                 draftColonists: true);
+            AttackArrivalNotificationUtility.NotifyEntered();
         }
 
         private static void RejectArrival(Caravan caravan, string? failMessage)

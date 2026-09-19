@@ -21,7 +21,7 @@
   <MAP_MindMapping.Details.NotRecorded>未记录</MAP_MindMapping.Details.NotRecorded>
 
   <MAP_MindMapping.Scanner.Toggle>心智映射扫描</MAP_MindMapping.Scanner.Toggle>
-  <MAP_MindMapping.Scanner.ToggleDesc>TODO</MAP_MindMapping.Scanner.ToggleDesc>
+  <MAP_MindMapping.Scanner.ToggleDesc>将裂解扫描仪切换为心智映射模式：消耗一个空白自律指令核心，扫描完成后生成保存受扫描者心智数据的核心。扫描仍会破坏受扫描者的大脑。\n\n只能在未启动且内部为空时切换模式；已经开始准备或装入配料时，请先取消装载并取回配料。切换会取消尚未入舱的人选。</MAP_MindMapping.Scanner.ToggleDesc>
   <MAP_MindMapping.Scanner.ToggleDisabled>裂解扫描仪已经开始准备、填充或扫描，当前不能切换模式。</MAP_MindMapping.Scanner.ToggleDisabled>
   <MAP_MindMapping.Scanner.RequiresCore>需要一个空白的{0}。</MAP_MindMapping.Scanner.RequiresCore>
 

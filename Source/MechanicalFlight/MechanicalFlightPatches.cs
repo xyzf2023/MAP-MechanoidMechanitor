@@ -7,6 +7,17 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
+    [HarmonyPatch(typeof(Pawn), nameof(Pawn.DeSpawn))]
+    internal static class MechanicalFlightDespawnMotionPatch
+    {
+        public static void Postfix(Pawn __instance)
+        {
+            // 注册表下一 tick 会校准飞行阶段；运动坐标必须在离图时立即失效，
+            // 避免同 tick 重新生成到另一张地图后沿用旧位置。
+            MechanicalFlightStraightPathPatch.ClearMotion(__instance);
+        }
+    }
+
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.GetGizmos))]
     internal static class MechanicalFlightGizmoPatch
     {
@@ -457,7 +468,16 @@ namespace MAP_MechanoidMechanitor
             pather.StopDead();
             DestinationField(pather) = destination;
             PathEndModeField(pather) = pathEndMode;
+            pather.cachedReturningToCell = GuestUtility.PrisonerCanReturnToCell(pawn);
             pather.lastPathedTargetPosition = destinationCell;
+            // 与原版 StartPath 一致：只让已经不再匹配当前任务/目标的目的地预约过期。
+            var reservation = pawn.Map.pawnDestinationReservationManager.MostRecentReservationFor(pawn);
+            if (reservation != null
+                && ((destination.HasThing && reservation.target != destination.Cell)
+                    || (reservation.job != pawn.CurJob && reservation.target != destination.Cell)))
+            {
+                pawn.Map.pawnDestinationReservationManager.ObsoleteAllClaimedBy(pawn);
+            }
             if (pawn.Position == destinationCell)
             {
                 NotifyArrived(pather, pawn);

@@ -126,15 +126,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (newMap)
-            {
-                Find.TickManager.Notify_GeneratedPotentiallyHostileMap();
-            }
-
+            TaggedString letterLabel = "LetterLabelCaravanEnteredEnemyBase".Translate();
+            TaggedString letterText = "LetterShuttleLandedInEnemyBase".Translate(node.Label).CapitalizeFirst();
+            AttackArrivalNotificationUtility.PrepareLetter(
+                map, newMap, true, ref letterLabel, ref letterText);
             LookTargets lookTargets = new LookTargets(landingCell, map);
             Find.LetterStack.ReceiveLetter(
-                "LetterLabelCaravanEnteredEnemyBase".Translate(),
-                "LetterShuttleLandedInEnemyBase".Translate(node.Label).CapitalizeFirst(),
+                letterLabel,
+                letterText,
                 LetterDefOf.NeutralEvent,
                 lookTargets,
                 node.Faction);
@@ -148,6 +147,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     cell = landingCell
                 };
             originalAction.Arrived(transporters, tile);
+            AttackArrivalNotificationUtility.NotifyEntered();
         }
 
         public override void ExposeData()

@@ -73,19 +73,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (newMap)
-            {
-                Find.TickManager.Notify_GeneratedPotentiallyHostileMap();
-            }
-
+            TaggedString letterLabel = "LetterLabelCaravanEnteredEnemyBase".Translate();
+            TaggedString letterText = "LetterTransportPodsLandedInEnemyBase".Translate(outpost.Label).CapitalizeFirst();
+            AttackArrivalNotificationUtility.PrepareLetter(
+                map, newMap, true, ref letterLabel, ref letterText);
             Find.LetterStack.ReceiveLetter(
-                "LetterLabelCaravanEnteredEnemyBase".Translate(),
-                "LetterTransportPodsLandedInEnemyBase".Translate(outpost.Label).CapitalizeFirst(),
+                letterLabel,
+                letterText,
                 LetterDefOf.NeutralEvent,
                 lookTarget,
                 outpost.Faction);
 
             arrivalMode.Worker.TravellingTransportersArrived(transporters, map);
+            AttackArrivalNotificationUtility.NotifyEntered();
         }
 
         private static void RejectAndFormCaravan(

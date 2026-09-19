@@ -126,14 +126,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (newMap)
-            {
-                Find.TickManager.Notify_GeneratedPotentiallyHostileMap();
-            }
-
+            TaggedString letterLabel = "LetterLabelCaravanEnteredMap".Translate(node);
+            TaggedString letterText = "LetterCaravanEnteredMap".Translate(caravan.Label, node).CapitalizeFirst();
+            AttackArrivalNotificationUtility.PrepareLetter(
+                map, newMap, false, ref letterLabel, ref letterText);
             Find.LetterStack.ReceiveLetter(
-                "LetterLabelCaravanEnteredMap".Translate(node),
-                "LetterCaravanEnteredMap".Translate(caravan.Label, node).CapitalizeFirst(),
+                letterLabel,
+                letterText,
                 LetterDefOf.NeutralEvent,
                 new LookTargets(caravan.PawnsListForReading));
 
@@ -143,6 +142,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 CaravanEnterMode.Edge,
                 CaravanDropInventoryMode.DoNotDrop,
                 draftColonists: true);
+            AttackArrivalNotificationUtility.NotifyEntered();
         }
 
         public override void ExposeData()
