@@ -39,6 +39,9 @@ namespace MAP_MechanoidMechanitor
         private int relocationFrame = -1;
         private MechFusionTransitionVisual? transitionVisual;
         private bool playCompletionEffect;
+        private Pawn? waitingWearer;
+        private Job? wearerWaitJob;
+        private int wearerWaitJobId = -1;
 
         internal bool IsTransitionSourceHidden => transitionVisual?.IsVisible == true;
 
@@ -52,7 +55,7 @@ namespace MAP_MechanoidMechanitor
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
         {
-            // 只借道目标人类身边，不预留人类本身，避免打断目标当前的工作。
+            // 接近时不预留人类；战车展开过渡开始后才临时要求人类等待。
             return true;
         }
 
@@ -561,6 +564,29 @@ namespace MAP_MechanoidMechanitor
 
                 pawn.pather?.StopDead();
                 MechFusionVisualUtility.FaceEachOther(pawn, wearer);
+                if (MechFusionVisualUtility.GetTransitionMoteDef(pawn) != null
+                    && !MechanicalFlightUtility.IsAirborne(pawn))
+                {
+                    // 多留一个 tick，避免目标先于源机械体结算等待到期而提前走动。
+                    // ForceWait 会暂停原 Job；可暂停的工作由原版队列在结束后恢复。
+                    PawnUtility.ForceWait(wearer!, MechFusionTransitionVisual.DurationTicks + 1,
+                        maintainPosture: true, maintainSleep: true);
+                    Job? startedWait = wearer!.CurJob;
+                    if (startedWait == null || startedWait.startTick != CurrentTick
+                        || startedWait.expiryInterval != MechFusionTransitionVisual.DurationTicks + 1)
+                    {
+                        // 等待未实际开始（例如被其他系统替换），不接管或清理其当前任务。
+                        FailJob(null);
+                        return;
+                    }
+
+                    waitingWearer = wearer;
+                    wearerWaitJob = startedWait;
+                    wearerWaitJobId = startedWait.loadID;
+                    wearer.pather?.StopDead();
+                    wearer.Drawer?.tweener?.ResetTweenedPosToRoot();
+                }
+
                 transitionVisual = MechFusionVisualUtility.BeginExpandedTransition(
                     pawn, pawn, job, visualTarget: wearer);
                 playCompletionEffect = transitionVisual != null;
@@ -602,6 +628,14 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
+                if (!IsWearerStillWaiting())
+                {
+                    // 人类收到新指令或等待被中断时取消合体，不覆盖其新 Job。
+                    FailJob(null);
+                    return;
+                }
+
+                waitingWearer?.pather?.StopDead();
                 if (!ValidatePair(out string? failureReason))
                 {
                     FailJob(failureReason);
@@ -610,7 +644,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (!IsAdjacentToWearer(Wearer!))
                 {
-                    // 人类不被预留/冻结；离开相邻范围后先恢复可见，再重新接近。
+                    // 被外力挪出相邻范围时先清理等待与虚影，再重新接近。
                     EndTransitionVisual();
                     JumpTo(approachToil);
                     return;
@@ -631,7 +665,34 @@ namespace MAP_MechanoidMechanitor
             MechFusionTransitionVisual? previous = transitionVisual;
             transitionVisual = null;
             playCompletionEffect = false;
-            previous?.End();
+            try
+            {
+                previous?.End();
+            }
+            finally
+            {
+                EndWearerWait();
+            }
+        }
+
+        private bool IsWearerStillWaiting()
+        {
+            return waitingWearer != null && wearerWaitJob != null
+                && ReferenceEquals(waitingWearer.CurJob, wearerWaitJob)
+                && wearerWaitJob.loadID == wearerWaitJobId;
+        }
+
+        private void EndWearerWait()
+        {
+            Pawn? previousWearer = waitingWearer;
+            bool endOwnedWait = IsWearerStillWaiting();
+            waitingWearer = null;
+            wearerWaitJob = null;
+            wearerWaitJobId = -1;
+            if (endOwnedWait)
+            {
+                previousWearer!.jobs.EndCurrentJob(JobCondition.InterruptForced);
+            }
         }
 
         private Toil MakeCompleteFusionToil()
@@ -648,6 +709,12 @@ namespace MAP_MechanoidMechanitor
                 if (playCompletionEffect && MechanicalFlightUtility.IsAirborne(pawn))
                 {
                     FailJob("MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable".Translate());
+                    return;
+                }
+
+                if (waitingWearer != null && !IsWearerStillWaiting())
+                {
+                    FailJob(null);
                     return;
                 }
 

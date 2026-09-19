@@ -61,6 +61,7 @@ namespace MAP_MechanoidMechanitor
             };
             wait.tickAction = delegate
             {
+                pawn.pather?.StopDead();
                 pawn.Rotation = Rot4.South;
                 if (visual != null && !visual.IsVisible)
                 {
