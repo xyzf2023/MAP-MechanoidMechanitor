@@ -17,7 +17,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     ///                                          →（目标失去敌对 / 接管主脑 / 失效）→ 无处罚结束
     ///  OfferPending →（玩家拒绝 / 抉择期过期）→ 无处罚结束
     ///
-    /// 成功结算顺序：确保基础200点(按稳定ID去重) → 发放任务额外奖励(按目标类型) → 标记状态 → 信 → 结束。
+    /// 成功结算顺序：确保基础200点(按稳定ID去重) → 发放任务额外奖励(按目标类型) → 登记待结束结果 → 信 → 结束。
     /// 完成信号幂等：无论守军清除通知 / Tick 重试多少次，奖励与 Success 都只结算一次。
     /// </summary>
     public class PurgeDirectiveQuestPart : QuestPartActivable
@@ -51,12 +51,41 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool penaltyHandled;
         private bool cooldownHandled;
         private bool completionConfirmed;
+        private bool endPending;
+        private QuestEndOutcome pendingEndOutcome = QuestEndOutcome.Unknown;
+        private bool completionLetterHandled;
+        private bool ending;
 
         public bool IsOperationActive => stage == Stage.OperationActive;
 
         public bool IsOfferPending => stage == Stage.OfferPending;
 
         public bool IsEnded => stage == Stage.Ended;
+
+        /// <summary>在正常运行期恢复旧存档未启用的任务，不重置接受时间或行动期限。</summary>
+        internal void EnsureTicking()
+        {
+            if (quest == null || quest.Historical
+                || (quest.State != QuestState.Ongoing && !endPending && stage != Stage.Ended))
+            {
+                return;
+            }
+
+            // 旧版本可能已写入 Ended，却在发信或 End 前抛错；保留唯一性并补完结束。
+            if (stage == Stage.Ended && !endPending)
+            {
+                endPending = true;
+                pendingEndOutcome = completionConfirmed && baseRewardHandled && extraRewardHandled
+                    ? QuestEndOutcome.Success
+                    : penaltyHandled ? QuestEndOutcome.Fail : QuestEndOutcome.Unknown;
+                completionLetterHandled = true;
+            }
+
+            if (State == QuestPartState.NeverEnabled && (IsOperationActive || endPending))
+            {
+                Enable(default(SignalArgs));
+            }
+        }
 
         public int OfferRemainTicks()
         {
@@ -87,6 +116,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public override void QuestPartTick()
         {
             base.QuestPartTick();
+            if (endPending)
+            {
+                TryFinishEnding();
+                return;
+            }
+
             if (stage != Stage.OperationActive)
             {
                 return;
@@ -142,7 +177,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private void Success()
         {
-            if (stage == Stage.Ended || !completionConfirmed)
+            if (stage == Stage.Ended || endPending || !completionConfirmed)
             {
                 return;
             }
@@ -195,22 +230,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            stage = Stage.Ended;
-            PurgeDirectiveRatingLetterUtility.SendQuestCompleteLetter(
-                targetWorldObject,
-                targetType,
-                baseReward + PurgeDirectiveRatingUtility.GetQuestExtraReward(targetType));
             EndQuest(QuestEndOutcome.Success);
         }
 
         private void Fail()
         {
-            if (stage == Stage.Ended)
+            if (stage == Stage.Ended || endPending)
             {
                 return;
             }
 
-            stage = Stage.Ended;
             if (!penaltyHandled)
             {
                 // 任务失败/放弃/超时：按目标类型扣评级（不扣肃清额度）。
@@ -223,29 +252,76 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public void EndWithoutPenalty()
         {
-            if (stage == Stage.Ended)
+            if (stage == Stage.Ended || endPending)
             {
                 return;
             }
 
-            stage = Stage.Ended;
             EndQuest(QuestEndOutcome.Unknown);
         }
 
         private void EndQuest(QuestEndOutcome outcome)
         {
-            if (!cooldownHandled)
+            endPending = true;
+            pendingEndOutcome = outcome;
+            TryFinishEnding();
+        }
+
+        private void TryFinishEnding()
+        {
+            if (!endPending || ending)
             {
-                PurgeDirectiveQuestScheduler.NotifyQuestEnded();
-                cooldownHandled = true;
+                return;
             }
 
-            quest?.End(outcome);
+            ending = true;
+            try
+            {
+                if (!cooldownHandled)
+                {
+                    PurgeDirectiveQuestScheduler.NotifyQuestEnded();
+                    cooldownHandled = true;
+                }
+
+                if (pendingEndOutcome == QuestEndOutcome.Success && !completionLetterHandled)
+                {
+                    // 通知失败不能阻塞已提交的奖励与任务结束，也不能在重试时重复发送。
+                    completionLetterHandled = true;
+                    try
+                    {
+                        PurgeDirectiveRatingLetterUtility.SendQuestCompleteLetter(
+                            targetWorldObject,
+                            targetType,
+                            (PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig?.questBaseRewardPoints ?? 200)
+                                + PurgeDirectiveRatingUtility.GetQuestExtraReward(targetType));
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("[MAP-机械族机械师] 肃清任务完成通知失败，继续结束任务：" + ex);
+                    }
+                }
+
+                if (quest != null && !quest.Historical)
+                {
+                    quest.End(pendingEndOutcome);
+                }
+
+                if (quest == null || quest.Historical)
+                {
+                    stage = Stage.Ended;
+                    endPending = false;
+                }
+            }
+            finally
+            {
+                ending = false;
+            }
         }
 
         public override void Notify_PreCleanup()
         {
             if (stage == Stage.OperationActive
+                && !endPending
                 && !completionConfirmed
                 && !GameComponent_CerebrexTakeoverState.IsActive
                 && !penaltyHandled)
@@ -255,14 +331,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 penaltyHandled = true;
             }
 
-            if (stage != Stage.Ended)
+            stage = Stage.Ended;
+            if (!cooldownHandled)
             {
-                stage = Stage.Ended;
-                if (!cooldownHandled)
-                {
-                    PurgeDirectiveQuestScheduler.NotifyQuestEnded();
-                    cooldownHandled = true;
-                }
+                PurgeDirectiveQuestScheduler.NotifyQuestEnded();
+                cooldownHandled = true;
             }
 
             base.Notify_PreCleanup();
@@ -327,6 +400,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref penaltyHandled, "pdqPenaltyHandled");
             Scribe_Values.Look(ref cooldownHandled, "pdqCooldownHandled");
             Scribe_Values.Look(ref completionConfirmed, "pdqCompletionConfirmed");
+            Scribe_Values.Look(ref endPending, "pdqEndPending", false);
+            Scribe_Values.Look(ref pendingEndOutcome, "pdqPendingEndOutcome", QuestEndOutcome.Unknown);
+            Scribe_Values.Look(ref completionLetterHandled, "pdqCompletionLetterHandled", false);
         }
     }
 }

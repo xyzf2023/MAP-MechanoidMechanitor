@@ -729,10 +729,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         public void ContinueAfterQuestHistorical(Map map, int now)
         {
-            if (stage != CerebrexSupportStage.CoreDefencesLowered
-                && stage != CerebrexSupportStage.ThreatClearStabilizing
-                && stage != CerebrexSupportStage.EvacuationPreparing
-                && stage != CerebrexSupportStage.EvacuationLoading)
+            if (!NeedsPostQuestContinuation)
             {
                 return;
             }
@@ -770,6 +767,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 SymbiosisCovenantCerebrexSupportUtility.TickEvacuation(this, map, now);
             }
         }
+
+        internal bool NeedsPostQuestContinuation =>
+            stage == CerebrexSupportStage.CoreDefencesLowered
+            || stage == CerebrexSupportStage.ThreatClearStabilizing
+            || stage == CerebrexSupportStage.EvacuationPreparing
+            || stage == CerebrexSupportStage.EvacuationLoading;
 
         public void MarkInvalid(string reason)
         {

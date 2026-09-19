@@ -112,7 +112,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             QuestPart_SymbiosisCovenantJointOperation part =
                 new QuestPart_SymbiosisCovenantJointOperation
                 {
-                    // 接取任务时由 InitiateSignal 启用本状态机，之后才开始自检与部署援军。
+                    // 邀请加入列表时已启用计时；接取信号保持兼容，正式部署仍由 stage 门控。
                     inSignalEnable = QuestGen.slate.Get<string>("inSignal"),
                     actionId = actionId,
                     targetQuestTag = targetQuestTag,

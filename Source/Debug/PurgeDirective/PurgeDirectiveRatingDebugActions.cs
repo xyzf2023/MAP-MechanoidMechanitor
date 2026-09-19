@@ -26,6 +26,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             part.NotifyTargetDefeated(part.targetWorldObject);
+            if (part.quest?.State != QuestState.EndedSuccess)
+            {
+                message = "未能完成当前肃清任务：目标可能已失效，或奖励结算仍待重试。";
+                return false;
+            }
+
             message = "已通过正式结算入口强制完成当前肃清任务。";
             return true;
         }

@@ -156,9 +156,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (obj == null) return false;
 
-            // 原版及第三方任务通常会把占用标记写入世界对象 questTags。
-            // 保守排除任何已有标记的目标，避免把同一地点分配给两条任务线。
-            if (obj.questTags != null && obj.questTags.Count > 0) return true;
+            // 保守保留原版/第三方标签，只忽略旧版本遗留的、已结束的本 MOD 联合行动标签。
+            if (obj.questTags != null)
+            {
+                foreach (string tag in obj.questTags)
+                {
+                    if (!IsInactiveJointOperationTag(tag)) return true;
+                }
+            }
 
             string? stableId = TryGetStableId(obj);
             if (stableId == null) return false;
@@ -176,6 +181,23 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             return false;
+        }
+
+        private static bool IsInactiveJointOperationTag(string? tag)
+        {
+            const string suffix = ".MAP_SymbiosisCovenantJointOp_Target";
+            if (tag == null || !tag.StartsWith("Quest", StringComparison.Ordinal)
+                || !tag.EndsWith(suffix, StringComparison.Ordinal)
+                || tag.Length <= "Quest".Length + suffix.Length
+                || !int.TryParse(
+                    tag.Substring("Quest".Length, tag.Length - "Quest".Length - suffix.Length),
+                    out int questId))
+            {
+                return false;
+            }
+
+            Quest? owner = Find.QuestManager.QuestsListForReading.Find(q => q.id == questId);
+            return owner == null || owner.Historical;
         }
 
         /// <summary>

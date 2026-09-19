@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
@@ -243,17 +244,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         private static void NotifyRatingChanged(int before, int after)
         {
-            if (GameComponent_CerebrexTakeoverState.IsActive) return;
-            int oldLevel = Config.GetRatingLevel(before);
-            int newLevel = Config.GetRatingLevel(after);
-            if (oldLevel == newLevel) return;
-            if (newLevel > oldLevel)
+            try
             {
-                PurgeDirectiveRatingLetterUtility.SendUpgradeLetter(oldLevel, newLevel, after);
+                if (GameComponent_CerebrexTakeoverState.IsActive) return;
+                int oldLevel = Config.GetRatingLevel(before);
+                int newLevel = Config.GetRatingLevel(after);
+                if (oldLevel == newLevel) return;
+                if (newLevel > oldLevel)
+                {
+                    PurgeDirectiveRatingLetterUtility.SendUpgradeLetter(oldLevel, newLevel, after);
+                }
+                else
+                {
+                    PurgeDirectiveRatingLetterUtility.SendDowngradeLetter(newLevel, oldLevel, after);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                PurgeDirectiveRatingLetterUtility.SendDowngradeLetter(newLevel, oldLevel, after);
+                // 评级已经提交；通知失败不能中断额度写入或使调用方重试同一奖励/处罚。
+                Log.Error("[MAP-机械族机械师] 评级变化通知失败，保留已提交的评级结算：" + ex);
             }
         }
 

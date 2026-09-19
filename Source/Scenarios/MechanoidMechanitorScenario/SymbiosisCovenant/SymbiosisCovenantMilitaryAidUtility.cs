@@ -170,7 +170,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             IncidentParms aidParms = BuildAidParms(map, responder, supportPoints, aidTag);
             bool executed = IncidentDefOf.RaidFriendly.Worker.TryExecute(aidParms);
             List<Lord> taggedLords = FindTaggedAidLords(map, aidTag, responder);
-            if (!executed || taggedLords.Count == 0)
+            if (!executed && taggedLords.Count == 0)
             {
                 failureReason = "MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.DeploymentImpossible".Translate(responder.NameColored);
                 return false;
@@ -183,6 +183,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 aidTag,
                 letter.triggerRaidPoints,
                 supportPoints);
+            if (taggedLords.Count == 0)
+            {
+                Log.Warning("[MAP-机械族机械师] 共同防卫事件已执行，但尚未找到带标记的援军 Lord；保留本次身份与接受冷却。");
+            }
             return true;
         }
 
@@ -251,7 +255,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return true;
             }
 
-            ClearActiveAidState(state);
+            // 抵达/第三方生成可能延后建立 Lord；接受冷却内保留身份供后续精确匹配。
+            if (state.cooldownEndTick <= (Find.TickManager?.TicksGame ?? 0))
+            {
+                ClearActiveAidState(state);
+            }
             return false;
         }
 
@@ -736,8 +744,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 // M1：活动援军身份以唯一 activeAidTag 为准。
                 if (!string.IsNullOrEmpty(state.activeAidTag))
                 {
-                    if (state.map == null
-                        || FindTaggedAidLords(state.map, state.activeAidTag, state.activeAidFaction).Count == 0)
+                    if (state.cooldownEndTick <= now
+                        && FindTaggedAidLords(state.map, state.activeAidTag, state.activeAidFaction).Count == 0)
                     {
                         ClearActiveAidState(state);
                     }

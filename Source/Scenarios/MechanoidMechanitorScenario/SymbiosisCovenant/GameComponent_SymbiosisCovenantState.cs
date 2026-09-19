@@ -523,7 +523,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 原版主脑任务结束后（Historical），其内部仍持有本支援 QuestPart（约 31 天内不清空），
+        /// 原版主脑任务结束后（Historical），生命周期补丁保留尚需撤离的支援 QuestPart，
         /// 这里续跑撤离逻辑，避免援军在主脑任务结束后卡死。
         /// 仅处理已 Historical 的 quest；Ongoing 时由 QuestPart.QuestPartTick 驱动，不重复。
         /// </summary>

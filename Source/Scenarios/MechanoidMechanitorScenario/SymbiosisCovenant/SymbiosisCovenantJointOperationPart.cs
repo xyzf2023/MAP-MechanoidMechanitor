@@ -13,7 +13,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// 联合军事行动的唯一权威状态机。随 Quest 存档，所有行动状态
     /// （目标、参与派系、阶段、倒计时、援军生成状态）只存在于此，
     /// 不写入 GameComponent，避免 Quest 与 GameComponent 两套状态漂移。
-    /// 继承 QuestPartActivable：接取任务（InitiateSignal）时启用，之后每 tick 自检，
+    /// 继承 QuestPartActivable：邀请加入任务列表时启用计时，接受后才进入正式行动，
     /// 并通过 ProcessQuestSignal 处理目标地图的 MapGenerated / NoActiveThreats / AllEnemiesDefeated 信号。
     /// </summary>
     public class QuestPart_SymbiosisCovenantJointOperation : QuestPartActivable
@@ -123,6 +123,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private bool offerPendingTargetThreatObserved;
         // 仅用于诊断：记录最近一次排定验证的原因。
         private string? offerPendingClearVerificationReason;
+        // 接受瞬间已有的清除验证继续完成，不能因切换阶段丢掉接取前的清场证据。
+        private bool acceptedWithPendingClearVerification;
         // 纯运行期节流：读档后保持 -1，使下一 tick 立即观察一次；不影响结算结果，无需存档。
         private int nextOfferPendingTargetObservationTick = -1;
 
@@ -143,6 +145,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             stage == SymbiosisCovenantJointOperationStage.OperationActive
             || stage == SymbiosisCovenantJointOperationStage.TargetMapEntered
             || stage == SymbiosisCovenantJointOperationStage.ReinforcementsDeployed;
+
+        public override void PostQuestAdded()
+        {
+            base.PostQuestAdded();
+            EnsureTicking();
+        }
+
+        /// <summary>同时覆盖新邀请和旧存档，仅恢复计时，不更改行动阶段或部署援军。</summary>
+        internal void EnsureTicking()
+        {
+            if (quest != null && !quest.Historical && IsActive
+                && State == QuestPartState.NeverEnabled)
+            {
+                Enable(default(SignalArgs));
+            }
+        }
 
         public override IEnumerable<GlobalTargetInfo> QuestLookTargets
         {
@@ -201,6 +219,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (stage == SymbiosisCovenantJointOperationStage.OfferPending)
             {
+                acceptedWithPendingClearVerification = offerPendingClearVerificationDueTick >= 0;
                 stage = SymbiosisCovenantJointOperationStage.OperationActive;
                 SymbiosisCovenantJointOperationDef? def = ResolveDef();
                 operationExpireTick = (tickManager?.TicksGame ?? 0)
@@ -312,6 +331,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             int now = Find.TickManager.TicksGame;
+
+            if (acceptedWithPendingClearVerification)
+            {
+                if (now < offerPendingClearVerificationDueTick)
+                {
+                    return;
+                }
+
+                TryRunOfferPendingClearVerification(now);
+                acceptedWithPendingClearVerification = false;
+                if (!IsActive)
+                {
+                    return;
+                }
+            }
 
             // OfferPending（尚未接取）期间：观察目标地图与真实威胁，并运行延迟验证，
             // 以便在玩家已彻底清除目标时（不生成援军）成功结算。这条分支独立于正式行动逻辑，
@@ -653,12 +687,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 延迟到期后用原版活动威胁标准复查普通 Site，确认目标被真实清除后才成功。
-        /// 只在 stage == OfferPending 时执行；未到期或尚未排定直接返回。
+        /// 处理待接受阶段及接受瞬间继承的清除验证；未到期或尚未排定直接返回。
         /// 验证失败后清除本次 dueTick，等待下一次真实信号，不做每 tick 重复昂贵检查。
         /// </summary>
         private void TryRunOfferPendingClearVerification(int now)
         {
-            if (stage != SymbiosisCovenantJointOperationStage.OfferPending)
+            if (stage != SymbiosisCovenantJointOperationStage.OfferPending
+                && !acceptedWithPendingClearVerification)
             {
                 return;
             }
@@ -2469,7 +2504,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (stage == SymbiosisCovenantJointOperationStage.OfferPending)
+            if (stage == SymbiosisCovenantJointOperationStage.OfferPending
+                || acceptedWithPendingClearVerification)
             {
                 BeginSuccess(reason: reason, completionBeforeAcceptance: true);
                 return true;
@@ -2605,6 +2641,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
+        public override void Cleanup()
+        {
+            base.Cleanup();
+            // 仅释放本任务自己写入的精确标签。原版可能正在遍历旧列表派发信号，
+            // 因此替换副本，不能就地 Remove 导致后续原版/第三方任务漏收本次信号。
+            WorldObject? target = targetWorldObject;
+            if (target?.questTags != null && !string.IsNullOrEmpty(targetQuestTag))
+            {
+                List<string> remainingTags = new List<string>(target.questTags);
+                if (remainingTags.Remove(targetQuestTag))
+                {
+                    target.questTags = remainingTags;
+                }
+            }
+        }
+
         private void ApplySuccessOutcome()
         {
             successApplied = true;
@@ -2710,6 +2762,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref offerPendingClearVerificationDueTick, "offerPendingClearVerificationDueTick", -1);
             Scribe_Values.Look(ref offerPendingTargetThreatObserved, "offerPendingTargetThreatObserved", false);
             Scribe_Values.Look(ref offerPendingClearVerificationReason, "offerPendingClearVerificationReason");
+            Scribe_Values.Look(ref acceptedWithPendingClearVerification, "acceptedWithPendingClearVerification", false);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -2730,6 +2783,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 // 兼容旧存档：确保本 Part 在 OfferPending 阶段也能监听目标完成信号。
                 signalListenMode = QuestPart.SignalListenMode.OngoingOrNotYetAccepted;
+                if (IsOperationAccepted && !reinforcementsGenerated
+                    && offerPendingClearVerificationDueTick >= 0)
+                {
+                    acceptedWithPendingClearVerification = true;
+                }
 
                 // 旧存档兼容：更新前接取的行动没有快照。更新前只有 L4 及以上才可能接到
                 // 联合行动，其历史承诺就是旧版固定 50%，必须显式补成 0.50，

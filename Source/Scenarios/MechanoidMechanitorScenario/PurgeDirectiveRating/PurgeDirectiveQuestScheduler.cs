@@ -230,8 +230,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 foreach (QuestPart part in quest.PartsListForReading)
                 {
-                    if (part is PurgeDirectiveQuestPart purgePart
-                        && (purgePart.IsOfferPending || purgePart.IsOperationActive))
+                    if (part is PurgeDirectiveQuestPart)
                     {
                         return true;
                     }
@@ -310,6 +309,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 quest.name = "MAP_PurgeDirectiveRating.Quest.Title".Translate(target.LabelCap);
+                QuestUtility.SendLetterQuestAvailable(quest);
             }
         }
     }

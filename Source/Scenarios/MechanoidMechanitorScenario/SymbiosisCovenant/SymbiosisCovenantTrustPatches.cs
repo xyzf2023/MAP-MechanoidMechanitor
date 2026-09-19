@@ -239,6 +239,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             __state = default;
             if (!GameComponent_SymbiosisCovenantState.IsActive
                 || outcome != QuestEndOutcome.Success
+                || __instance.Historical
                 || !__instance.EverAccepted)
             {
                 return;
@@ -270,6 +271,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [HarmonyPostfix]
         public static void Postfix(Quest __instance, QuestRewardState __state)
         {
+            // 只有本次调用真正把任务结束为成功才结算，兼容其他补丁跳过原方法的情况。
+            if (__instance.State != QuestState.EndedSuccess)
+            {
+                return;
+            }
+
             switch (__state.Kind)
             {
                 case QuestRewardKind.Normal:

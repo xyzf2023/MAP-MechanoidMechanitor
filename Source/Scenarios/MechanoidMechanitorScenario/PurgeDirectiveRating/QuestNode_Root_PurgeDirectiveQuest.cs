@@ -29,6 +29,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             PurgeDirectiveQuestPart part = new PurgeDirectiveQuestPart
             {
+                inSignalEnable = QuestGen.quest.InitiateSignal,
                 targetWorldObject = target,
                 targetFaction = targetFaction,
                 proposerFaction = proposerFaction,
