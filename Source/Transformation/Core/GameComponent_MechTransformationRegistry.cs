@@ -371,8 +371,19 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 record.EnsureInitialized();
-                if (recordByPawn.ContainsKey(pawn))
+                if (recordByPawn.TryGetValue(pawn, out MechTransformationRecord? indexed))
                 {
+                    // 只删除全部持久字段相同的副本；不同身份/载体可能仍拥有恢复凭据，
+                    // 无法仅凭列表顺序判断哪份权威，不擅自断开链接或删除其数据。
+                    if (record.TransformationId == indexed.TransformationId
+                        && record.CurrentForm == indexed.CurrentForm
+                        && ReferenceEquals(record.ExternalCarrier, indexed.ExternalCarrier)
+                        && record.TransitionInProgress == indexed.TransitionInProgress
+                        && record.PendingForm == indexed.PendingForm)
+                    {
+                        records.RemoveAt(i);
+                        continue;
+                    }
                     Log.Error(
                         "[MAP-机械族机械师] 发现同一 Pawn 的重复形态记录，" +
                         $"pawn={pawn.LabelShort}（{pawn.ThingID}）。已保留当前索引中的记录，重复项未自动删除。");
@@ -399,8 +410,13 @@ namespace MAP_MechanoidMechanitor
 
                 recordByPawn[pawn] = record;
                 recordById[record.TransformationId] = record;
+            }
 
-                if (validate)
+            // 先比较原始持久字段并完成索引，再取消过渡锁/清除已毁载体。
+            // 否则先校验的记录会与尚未校验的相同副本呈现不同状态。
+            if (validate)
+            {
+                foreach (MechTransformationRecord record in recordByPawn.Values)
                 {
                     ValidateLoadedRecord(record);
                 }

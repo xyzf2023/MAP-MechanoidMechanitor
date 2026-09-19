@@ -320,8 +320,14 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            data.ApplyTo(pawn);
-            return TrySetMappedPersonality(pawn, true);
+            if (!TryApplyMappedPersonality(pawn, data))
+            {
+                return false;
+            }
+
+            // 后续 Destroy 的通知即使异常，也不能让已应用的数据再次用于另一个 Pawn。
+            core.Clear();
+            return true;
         }
 
         public static bool TryImport(
@@ -329,19 +335,27 @@ namespace MAP_MechanoidMechanitor
             CompMindMappingAutonomousDirectiveCore core)
         {
             MindMappingData? data = core.Data;
-            if (data == null
-                || !GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _))
-            {
-                return false;
-            }
-
-            data.ApplyTo(pawn);
-            if (!TrySetMappedPersonality(pawn, true))
+            if (data == null || !TryApplyMappedPersonality(pawn, data))
             {
                 return false;
             }
 
             core.Clear();
+            return true;
+        }
+
+        private static bool TryApplyMappedPersonality(Pawn pawn, MindMappingData data)
+        {
+            // 先取得本次提交的权威记录，应用成功后不再做一次可能失败的记录查询。
+            if (!GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
+                    pawn, out MechanoidMechanitorRecord? record)
+                || record == null || record.HasMappedPersonality
+                || !data.TryApplyTo(pawn))
+            {
+                return false;
+            }
+
+            record.HasMappedPersonality = true;
             return true;
         }
 

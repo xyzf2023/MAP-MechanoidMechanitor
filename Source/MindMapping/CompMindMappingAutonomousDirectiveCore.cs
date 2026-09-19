@@ -56,8 +56,29 @@ namespace MAP_MechanoidMechanitor
             yield return new Command_Action
             {
                 defaultLabel = "DEV：清空数据",
-                action = Clear
+                action = DevConfirmClear
             };
+        }
+
+        private void DevConfirmClear()
+        {
+            MindMappingData? expectedData = data;
+            if (!DebugSettings.ShowDevGizmos || expectedData == null)
+            {
+                return;
+            }
+
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                "确定清空这个核心保存的人格数据？此操作无法撤销。",
+                confirmedAct: () =>
+                {
+                    if (DebugSettings.ShowDevGizmos && !parent.Destroyed
+                        && ReferenceEquals(data, expectedData))
+                    {
+                        Clear();
+                    }
+                },
+                destructive: true));
         }
 
         private void DevGenerateRandomData()

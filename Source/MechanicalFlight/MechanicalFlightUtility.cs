@@ -464,6 +464,12 @@ namespace MAP_MechanoidMechanitor
             {
                 MechanicalFlightRoofUtility.BreakThinRoofArea(pawn, profile);
             }
+            BeginLanding(pawn, record);
+            return true;
+        }
+
+        private static void BeginLanding(Pawn pawn, MechanicalFlightAuthorizationRecord record)
+        {
             bool interruptMovingFlightJob = pawn.CurJob?.flying == true
                 && pawn.pather?.MovingNow == true;
             pawn.pather?.StopDead();
@@ -485,7 +491,6 @@ namespace MAP_MechanoidMechanitor
                 // 避免降落后任务永远等待一条已经清除的路径。
                 pawn.jobs.EndCurrentJob(JobCondition.InterruptForced);
             }
-            return true;
         }
 
         /// <summary>
@@ -578,19 +583,19 @@ namespace MAP_MechanoidMechanitor
 
             if (!pawn.Drafted)
             {
-                pawn.pather?.StopDead();
                 if (!TryBeginLanding(pawn))
                 {
                     // 当前位置不能安全降落：保留飞行与记录，恢复征召让玩家继续操控。
                     NotifyGroundLandingBlocked(pawn, record);
                     if (pawn.drafter != null && !pawn.Drafted)
                     {
+                        pawn.pather?.StopDead();
                         pawn.drafter.Drafted = true;
                         return;
                     }
-                    // 无征召控制器的机械体（非玩家/异常授权）沿用清理路径，避免无限悬停。
-                    // 不强制降落，交由原版飞行状态机自行处理。
-                    ClearRuntimeState(record, forceLand: false);
+                    // 无征召控制器时显式结束原版飞行，并保留 Landing 记录直到原版落地。
+                    // ForceLand 只开始降落倒计时，不能提前把 MOD 状态清成 Grounded。
+                    BeginLanding(pawn, record);
                 }
                 return;
             }

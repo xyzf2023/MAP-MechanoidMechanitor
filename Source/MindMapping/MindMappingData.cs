@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
@@ -269,11 +270,59 @@ namespace MAP_MechanoidMechanitor
             return data;
         }
 
+        // 保留既有公开签名；Job 使用带结果的入口，仅在成功时提交标志并消费核心。
         public void ApplyTo(Pawn pawn)
+        {
+            if (!TryApplyTo(pawn))
+            {
+                throw new InvalidOperationException("心智人格写入失败，核心数据未消费。");
+            }
+        }
+
+        public bool TryApplyTo(Pawn pawn)
         {
             MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
             EnsurePersonalityTrackers(pawn);
 
+            // 升格身份已由公共入口建立；这里只回滚本次人格写入，不撤销监管关系或身份。
+            // 核心快照的导入规则会保留较高技能、过滤受抑制特性，不能拿 Capture/ApplyTo 回滚。
+            Action rollback = CapturePersonalityRollback(pawn);
+            try
+            {
+                ApplyPersonality(pawn);
+            }
+            catch (Exception exception)
+            {
+                Log.Error("[MAP-机械族机械师] 心智人格写入失败，核心数据保持不变：" + exception);
+                try
+                {
+                    rollback();
+                }
+                catch (Exception rollbackException)
+                {
+                    // 第三方特性通知同样可能在回滚时抛异常，不消费唯一的原始核心数据。
+                    Log.Error("[MAP-机械族机械师] 心智人格回滚未能完整完成：" + rollbackException);
+                }
+                return false;
+            }
+
+            // 文化是可选导入项，失败不撤销已完成的人格写入，也不留下可重复消费的核心。
+            try
+            {
+                ImportSavedIdeology(pawn);
+            }
+            catch (Exception exception)
+            {
+                Log.Error("[MAP-机械族机械师] 心智文化导入通知失败，已保留人格导入结果：" + exception);
+            }
+
+            // 公共管理器捕获科研同步异常并排队重试，不把失败传播给人格提交。
+            GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorInitialized(pawn);
+            return true;
+        }
+
+        private void ApplyPersonality(Pawn pawn)
+        {
             pawn.Name = BuildName();
             if (pawn.ageTracker != null)
             {
@@ -310,17 +359,66 @@ namespace MAP_MechanoidMechanitor
                         orbitalNetworkUnlocked);
             }
 
-            ImportSavedIdeology(pawn);
-
             NotifyPersonalityChanged(pawn);
+        }
 
-            // 姓名、年龄、背景、特性、技能等级/兴趣、文化均已写入后，复用现有“单 Pawn
-            // 科研状态统一同步入口”重新同步该机械族机械师。升格路线与已有机械师导入路线
-            // 共同经过本方法，因此只需在此接入一次，避免在两个 Job 路径复制轨道数据处理逻辑。
-            // 环境安全时立即执行 SyncPawnResearchState；不安全时进入现有待处理队列；同步异常
-            // 由管理器记录并入队重试，不会把失败传播给本次导入事务，也不会导致升格被回滚。
-            // 轨道数据网络未研究时该同步不会修改任何技能等级与兴趣。
-            GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorInitialized(pawn);
+        private static Action CapturePersonalityRollback(Pawn pawn)
+        {
+            Name? name = pawn.Name;
+            long age = pawn.ageTracker?.AgeChronologicalTicks ?? 0L;
+            BackstoryDef? childhoodBefore = pawn.story!.Childhood;
+            BackstoryDef? adulthoodBefore = pawn.story.Adulthood;
+            List<Trait> traitsBefore = pawn.story.traits.allTraits
+                .FindAll(trait => trait.sourceGene == null);
+            List<SkillRecord> skillsBefore = new List<SkillRecord>(pawn.skills!.skills);
+            List<Action> restoreSkills = new List<Action>();
+            foreach (SkillRecord skill in skillsBefore)
+            {
+                int level = skill.levelInt;
+                Passion passion = skill.passion;
+                float xp = skill.xpSinceLastLevel;
+                float dailyXp = skill.xpSinceMidnight;
+                restoreSkills.Add(() =>
+                {
+                    skill.levelInt = level;
+                    skill.passion = passion;
+                    skill.xpSinceLastLevel = xp;
+                    skill.xpSinceMidnight = dailyXp;
+                });
+            }
+
+            return () =>
+            {
+                pawn.Name = name;
+                if (pawn.ageTracker != null)
+                {
+                    pawn.ageTracker.AgeChronologicalTicks = age;
+                }
+                SetBackstories(pawn, childhoodBefore, adulthoodBefore);
+                pawn.skills!.skills.Clear();
+                pawn.skills.skills.AddRange(skillsBefore);
+                foreach (Action restoreSkill in restoreSkills)
+                {
+                    restoreSkill();
+                }
+
+                // 保留原 Trait 实例（包括受抑制项），通过原版 API 恢复能力、需求与缓存通知。
+                TraitSet traitSet = pawn.story!.traits;
+                for (int i = traitSet.allTraits.Count - 1; i >= 0; i--)
+                {
+                    Trait trait = traitSet.allTraits[i];
+                    if (trait.sourceGene == null)
+                    {
+                        traitSet.RemoveTrait(trait);
+                    }
+                }
+                foreach (Trait trait in traitsBefore)
+                {
+                    traitSet.GainTrait(trait, suppressConflicts: true);
+                }
+                traitSet.RecalculateSuppression();
+                NotifyPersonalityChanged(pawn);
+            };
         }
 
         /// <summary>
