@@ -18,6 +18,8 @@
     <defName>MAP_Mech_Magician</defName>
     <label>「魔术师」</label>
     <race>MAP_Mech_Magician</race>
+    <allowInMechClusters>false</allowInMechClusters>
+    <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
     <lifeStages Inherit="False">
       <li MayRequire="Ludeon.RimWorld.Biotech">
         <bodyGraphicData>

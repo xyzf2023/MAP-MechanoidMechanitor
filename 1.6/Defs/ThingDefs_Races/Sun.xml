@@ -106,6 +106,7 @@
     <isBoss>true</isBoss>
     <defaultFactionDef>PlayerColony</defaultFactionDef>
     <allowInMechClusters>false</allowInMechClusters>
+    <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
     <lifeStages>
       <li>
         <bodyGraphicData>

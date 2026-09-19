@@ -158,6 +158,8 @@
     <defaultFactionDef>PlayerColony</defaultFactionDef>
     <destroyGearOnDrop>false</destroyGearOnDrop>
     <combatPower>625</combatPower>
+    <allowInMechClusters>false</allowInMechClusters>
+    <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
     <fixedChildBackstories>
       <li>MAP_Justice_Childhood</li>
     </fixedChildBackstories>
