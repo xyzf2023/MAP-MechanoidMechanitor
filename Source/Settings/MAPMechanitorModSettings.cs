@@ -22,20 +22,20 @@ namespace MAP_MechanoidMechanitor
         public bool enableMoonImplants = true;
 
         /// <summary>
-        /// 默认关闭。开启后，不含机械族机械师剧本词条的普通剧本也会在新游戏流程中
-        /// 显示机械族机械师剧情风格页面。该设置只控制新游戏页面入口，不控制已建立存档的运行状态。
+        /// 仅保留旧字段及序列化 key 的兼容占位，不再控制任何页面或运行状态。
+        /// 普通剧本始终使用独立默认剧情模板；专用剧本才显示剧情风格页面。
         /// </summary>
         public bool enableStoryStylesForGeneralScenarios = false;
 
         /// <summary>
-        /// 普通剧本未启用剧情风格选择页时，新游戏静默配置使用的普通派系前哨生成频率。
+        /// 普通剧本新游戏静默配置使用的普通派系前哨生成频率。
         /// 初始值按当前 Classic 预设设为 Low；保存后与 Classic 完全解耦。
         /// </summary>
         public MechanoidMechanitorFactionOutpostFrequency generalScenarioFactionOutpostFrequency =
             DefaultGeneralScenarioFactionOutpostFrequency;
 
         /// <summary>
-        /// 普通剧本未启用剧情风格选择页时，新游戏静默配置使用的机械巢节点生成频率。
+        /// 普通剧本新游戏静默配置使用的机械巢节点生成频率。
         /// 初始值按当前 Classic 预设设为 Low；保存后与 Classic 完全解耦。
         /// </summary>
         public MechanoidMechanitorMechHiveNodeFrequency generalScenarioMechHiveNodeFrequency =
@@ -100,7 +100,7 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 默认关闭。开启后输出正义 BOSS 召唤、空投与落地处理的详细诊断日志。
-        /// 此设置实时生效，不纳入单场 BOSS 战难度快照。
+        /// 此设置实时生效，不纳入当前部署或波次的动作参数。
         /// </summary>
         public bool enableJusticeBossDiagnosticLogging = false;
 
@@ -192,7 +192,7 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         /// 默认开启。开启后，「正义」会为其召唤的守卫和波次机械族添加机动作战。
         /// 关闭后，正义 BOSS 不会主动添加该状态，但不会移除单位通过其他机制已经获得的机动作战。
-        /// 该参数会在每场正义 BOSS 战开始时锁定到本场难度快照。
+        /// 该参数在设施部署或新波次开始时读取；同一动作的空投重试和落地处理沿用该次值。
         /// </summary>
         public bool justiceBossApplyMobileCombatToSummons =
             JusticeBossDifficultyValues.DefaultApplyMobileCombatToSummons;
@@ -201,7 +201,8 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 默认开启。机械主脑额外 BOSS 技能总开关。关闭后，主脑不会自动发动召唤、EMP、
-        /// 带宽干扰等额外技能（已在进行中的整轮技能仍会自然结束）。战斗中修改仅影响下一场战斗。
+        /// 带宽干扰等额外技能。战斗中关闭会暂停后续技能启动及未成功生成单位的召唤重试；
+        /// 已开始的 EMP、带宽干扰及已发出的空投继续按原参数处理。
         /// </summary>
         public bool cerebrexBossEnableExtraSkills =
             CerebrexBossDifficultyValues.DefaultEnableExtraSkills;
@@ -220,7 +221,7 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 默认开启。开启后，主脑召唤的机械族会施加机动作战 Hediff。
-        /// 此设置实时影响每场战斗开始时锁定的快照，不纳入单场战斗中途变更。
+        /// 此设置在新召唤批次开始时读取；同一批次的失败重试及落地处理沿用该次值。
         /// </summary>
         public bool cerebrexBossApplyMobileCombatToSummons =
             CerebrexBossDifficultyValues.DefaultApplyMobileCombatToSummons;
@@ -449,6 +450,25 @@ namespace MAP_MechanoidMechanitor
             cerebrexBossEmpRadius =
                 CerebrexBossDifficultyValues.ClampEmpRadius(
                     cerebrexBossEmpRadius);
+        }
+
+        /// <summary>
+        /// 战略节点全局参数共用归一化入口，保证加载与设置写回采用相同的范围及步进。
+        /// 只校正全局设置，不改动已有前哨的守军快照。
+        /// </summary>
+        public void NormalizeStrategicNodeSettings()
+        {
+            factionOutpostRaidChancePercent =
+                Mathf.Clamp(factionOutpostRaidChancePercent, 0, 100);
+            factionOutpostSupportChancePercent =
+                Mathf.Clamp(factionOutpostSupportChancePercent, 0, 100);
+            factionOutpostGarrisonThreatScalePercent =
+                FactionOutpostThreatPointsUtility.ClampScalePercent(
+                    factionOutpostGarrisonThreatScalePercent);
+            mechHiveNodeRaidChancePercent =
+                Mathf.Clamp(mechHiveNodeRaidChancePercent, 0, 100);
+            mechHiveNodeSupportChancePercent =
+                Mathf.Clamp(mechHiveNodeSupportChancePercent, 0, 100);
         }
 
         public override void ExposeData()
@@ -740,17 +760,7 @@ namespace MAP_MechanoidMechanitor
                 NormalizeJusticeBossSettings();
                 NormalizeCerebrexBossSettings();
 
-                factionOutpostRaidChancePercent =
-                    Mathf.Clamp(factionOutpostRaidChancePercent, 0, 100);
-                factionOutpostSupportChancePercent =
-                    Mathf.Clamp(factionOutpostSupportChancePercent, 0, 100);
-                factionOutpostGarrisonThreatScalePercent =
-                    FactionOutpostThreatPointsUtility.ClampScalePercent(
-                        factionOutpostGarrisonThreatScalePercent);
-                mechHiveNodeRaidChancePercent =
-                    Mathf.Clamp(mechHiveNodeRaidChancePercent, 0, 100);
-                mechHiveNodeSupportChancePercent =
-                    Mathf.Clamp(mechHiveNodeSupportChancePercent, 0, 100);
+                NormalizeStrategicNodeSettings();
 
                 mechanoidMechanitorIdleRecreationChancePercent =
                     Mathf.Clamp(

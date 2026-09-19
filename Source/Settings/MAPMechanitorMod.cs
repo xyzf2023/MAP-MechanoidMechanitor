@@ -188,9 +188,9 @@ namespace MAP_MechanoidMechanitor
         private void DrawInterfaceSettings(Listing_Standard listing)
         {
             listing.CheckboxLabeled(
-                "将机械族机械师显示在工作标签页",
+                "MAP_MechanoidMechanitor.Settings.WorkTab.Label".Translate(),
                 ref Settings!.addMechanoidMechanitorsToWorkTab,
-                "启用后，符合条件的机械族机械师会被追加显示到原版“工作”标签页中，方便调整工作优先级。若与修改工作标签页或工作优先级界面的 MOD 冲突，请关闭此项。");
+                "MAP_MechanoidMechanitor.Settings.WorkTab.Description".Translate());
 
             listing.CheckboxLabeled(
                 "MAP_MechanoidPrioritizedWorkOrders_Label".Translate(),
@@ -774,7 +774,8 @@ namespace MAP_MechanoidMechanitor
                     listing,
                     "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Label",
                     "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Description",
-                    settings.factionOutpostGarrisonThreatScalePercent,
+                    FactionOutpostThreatPointsUtility.ClampScalePercent(
+                        settings.factionOutpostGarrisonThreatScalePercent),
                     FactionOutpostThreatPointsUtility.MinScalePercent,
                     FactionOutpostThreatPointsUtility.MaxScalePercent,
                     FactionOutpostThreatPointsUtility.ScaleStepPercent);
@@ -1024,6 +1025,7 @@ namespace MAP_MechanoidMechanitor
             Settings?.NormalizeJusticeBossSettings();
             Settings?.NormalizeCerebrexBossSettings();
             Settings?.NormalizeSymbiosisCovenantSettings();
+            Settings?.NormalizeStrategicNodeSettings();
             base.WriteSettings();
         }
 

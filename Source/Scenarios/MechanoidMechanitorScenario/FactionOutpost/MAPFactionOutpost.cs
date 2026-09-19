@@ -25,8 +25,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // 旧存档回退值：仅用于无可读快照的旧前哨。
         // 新前哨的守军预算由 FactionOutpostThreatPointsUtility 按财富与设置计算并保存为快照，
         // 之后不再使用固定值。
-        public const int LegacyBuildingGarrisonThreatPoints = 2000;
-        public const int LegacyCompletedGarrisonThreatPoints = 10000;
+        public const int LegacyBuildingGarrisonThreatPoints =
+            FactionOutpostThreatPointsUtility.LegacyBuildingGarrisonThreatPoints;
+        public const int LegacyCompletedGarrisonThreatPoints =
+            FactionOutpostThreatPointsUtility.LegacyCompletedGarrisonThreatPoints;
 
         private const int ThreatClearCheckIntervalTicks = 250;
 

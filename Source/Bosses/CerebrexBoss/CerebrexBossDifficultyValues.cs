@@ -6,7 +6,7 @@ namespace MAP_MechanoidMechanitor
     /// 主脑（CerebrexCore）作为敌对 BOSS 时使用的额外战斗技能参数集中定义。
     /// 所有默认值、上下限、步进与 Clamp / Normalize 方法都集中在此，
     /// 不在 UI 或控制器中散落范围常量。
-    /// 旧存档（没有本场快照）迁移时使用此处默认值，等同于旧版单目标行为：
+    /// 旧存档缺少当前动作参数时使用此处兼容默认值，等同于旧版单目标行为：
     /// 单目标、30 秒持续、50～75 秒冷却。
     /// </summary>
     public static class CerebrexBossDifficultyValues

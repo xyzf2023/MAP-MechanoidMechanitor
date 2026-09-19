@@ -615,7 +615,7 @@ namespace MAP_MechanoidMechanitor
                         JusticeBossTraceWriteMode.Critical);
                 }
 
-                // 机动作战是否添加由本场正义战斗快照决定；关闭时只不主动添加，
+                // 机动作战是否添加由本次部署或波次锁定的参数决定；关闭时只不主动添加，
                 // 不移除该 Pawn 通过其他来源已经获得的机动作战。
                 if (applyMobileCombat)
                 {

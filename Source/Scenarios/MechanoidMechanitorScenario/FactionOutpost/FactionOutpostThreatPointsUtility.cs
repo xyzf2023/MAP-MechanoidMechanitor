@@ -94,12 +94,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 将设置倍率钳制到合法范围 [MinScalePercent, MaxScalePercent]，并向下对齐到 ScaleStepPercent 步长。
-        /// 非法（NaN / Infinity / 负数 / 0）一律回退到 DefaultScalePercent。
+        /// 将正数倍率钳制到合法范围 [MinScalePercent, MaxScalePercent]，并对齐到最近的 ScaleStepPercent 步进。
+        /// 非正值沿用旧版回退到 DefaultScalePercent 的规则；低于下限的正值钳制到下限。
         /// </summary>
         public static int ClampScalePercent(int value)
         {
-            if (value < MinScalePercent)
+            if (value <= 0)
             {
                 return DefaultScalePercent;
             }

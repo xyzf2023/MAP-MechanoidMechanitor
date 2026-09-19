@@ -19,7 +19,7 @@
 
   <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Routes.Subsection>剧情路线</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Routes.Subsection>
   <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Label>肃清指令</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Label>
-  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Description>决定普通新存档是否启用肃清指令路线。肃清指令与共生盟约互斥。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Description>决定普通新存档是否启用肃清指令路线。普通剧本不会启动“清除血肉殖民者”的警告与惩罚链。肃清指令与共生盟约互斥。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Description>
   <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.DisabledReason>只有将机械巢关系设为“盟友”后才能启用肃清指令。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.DisabledReason>
   <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Label>共生盟约</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Label>
   <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Description>决定普通新存档是否启用共生盟约路线。共生盟约与肃清指令互斥。</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Description>

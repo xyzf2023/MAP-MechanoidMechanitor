@@ -14,7 +14,7 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 由主脑组件召唤一批机械族。每只机械族单独空投（以保留按 PawnKind 的失败重试粒度）。
-        /// 成功装入空投舱的 Pawn 会立即加入 existingList（计入主脑本场战斗快照决定的最大同时存活上限，含在途单位），
+        /// 成功装入空投舱的 Pawn 会立即加入 existingList（计入当前召唤批次锁定的最大同时存活上限，含在途单位），
         /// 并登记到空投追踪组件；失败的 PawnKind 通过 controller.RegisterPendingSummonKind 记录以便重试。
         /// 本批次优先围绕第一只成功落点集中空投（clusterCenter），附近无合法落点时才逐步扩大到主脑中心与地图边缘。
         /// 彻底失败（无任何合法落点）的 Pawn 会被安全销毁，不遗留 WorldPawn 或 ThingHolder 引用。

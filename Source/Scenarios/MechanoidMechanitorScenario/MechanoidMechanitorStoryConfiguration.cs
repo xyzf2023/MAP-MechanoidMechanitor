@@ -43,9 +43,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorStoryConfiguration configuration =
                 new MechanoidMechanitorStoryConfiguration();
 
-            // 普通剧本开放剧情风格后，文化适配默认保持完全关闭；真正的机械族机械师
-            // 专用剧本默认使用 Full。仅在新游戏存在明确 Scenario 时分流，
-            // 避免其他非开局调用在缺少 Scenario 上下文时改变历史默认行为。
+            // 剧情风格页草稿和无预设 Def 的后备配置：专用剧本默认 Full，
+            // 明确处于普通剧本上下文时保留 Disabled 的历史后备行为。
+            // 普通新游戏实际走 CreateForNewGame，使用独立模板的文化适配设置（默认 Full）。
             if (Find.Scenario != null
                 && !MechanoidMechanitorScenarioUtility.ScenarioContainsMarker(Find.Scenario))
             {
@@ -279,6 +279,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidMechanitorMechHiveNodeFrequency.Off);
             Scribe_Values.Look(ref purgeDirectiveEnabled, "purgeDirectiveEnabled", false);
             Scribe_Values.Look(ref symbiosisCovenantEnabled, "symbiosisCovenantEnabled", false);
+            // Basic 是存档格式的兼容默认，并非新游戏默认。
+            // 原版会省略等于默认值的字段；旧档缺 key 也可能表示玩家明确选择了 Basic，
+            // 不能根据当前剧本或模板将缺失值改成 Full / Disabled。
             Scribe_Values.Look(
                 ref ideologyAdaptationLevel,
                 "ideologyAdaptationLevel",

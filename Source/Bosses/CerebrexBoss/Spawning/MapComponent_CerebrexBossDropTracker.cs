@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 空投舱落地后的处理记录：仅记录正在空投舱中的 Pawn，并在其实际生成到地图后
     /// 确保派系、按待落地记录决定是否补充机动作战、加入对应主脑的进攻 Lord 并强制终止等待 Job。
-    /// 机动作战是否补充由记录中的 applyMobileCombat 决定（来自本场战斗快照），
+    /// 机动作战是否补充由记录中的 applyMobileCombat 决定（来自当前召唤批次锁定的参数），
     /// 关闭开关时不再补加，但不会移除 Pawn 通过其他来源已经获得的机动作战。
     /// 该组件不保存任何主脑技能冷却、带宽干扰、EMP 或自动战斗状态。
     /// </summary>
@@ -25,7 +25,7 @@ namespace MAP_MechanoidMechanitor
 
         // 落地追踪器按待落地记录决定是否补充机动作战。
         // 默认 true：保证旧存档中已存在的待落地空投继续旧版行为（由主脑 BOSS 添加）。
-        // 实际值由主脑控制器在本场战斗快照中捕获后写入；关闭开关的记录不再补加。
+        // 实际值由主脑控制器在召唤批次开始时捕获后写入；关闭开关的记录不再补加。
         public bool applyMobileCombat = true;
 
         public CerebrexPendingDropRecord()
