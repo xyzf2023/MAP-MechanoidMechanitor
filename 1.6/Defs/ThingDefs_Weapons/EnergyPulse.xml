@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="EtherealThingBase">
+    <defName>MAP_EnergyPulseWave</defName>
+    <label>能量脉冲</label>
+    <thingClass>MAP_MechanoidMechanitor.EnergyPulseWave</thingClass>
+    <category>Ethereal</category>
+    <tickerType>Normal</tickerType>
+    <drawerType>None</drawerType>
+    <altitudeLayer>MoteOverhead</altitudeLayer>
+    <useHitPoints>false</useHitPoints>
+  </ThingDef>
+</Defs>
