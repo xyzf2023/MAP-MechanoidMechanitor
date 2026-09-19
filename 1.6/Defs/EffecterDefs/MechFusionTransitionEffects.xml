@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- 仅为展开姿态的临时虚影，不生成建筑或改变真实形态。总时长 48 tick。 -->
+  <ThingDef ParentName="MoteBase">
+    <defName>MAP_Mote_ChariotTransition</defName>
+    <graphicData>
+      <texPath>Mech/Chariot/ChariotBuilding_south</texPath>
+      <graphicClass>Graphic_Mote</graphicClass>
+      <shaderType>TransparentPostLight</shaderType>
+      <drawSize>(2,2)</drawSize>
+    </graphicData>
+    <altitudeLayer>BuildingOnTop</altitudeLayer>
+    <drawOffscreen>true</drawOffscreen>
+    <mote>
+      <fadeInTime>0.08</fadeInTime>
+      <solidTime>0.58</solidTime>
+      <fadeOutTime>0.14</fadeOutTime>
+    </mote>
+  </ThingDef>
+</Defs>

@@ -4,6 +4,9 @@ namespace MAP_MechanoidMechanitor
 {
     public sealed class CompProperties_MechFusionInnate : CompProperties
     {
+        // 可选的展开过渡；仅战车配置，其他机械族保留原有折跃与时序。
+        public ThingDef? transitionMoteDef;
+
         public CompProperties_MechFusionInnate()
         {
             compClass = typeof(CompMechFusionInnate);

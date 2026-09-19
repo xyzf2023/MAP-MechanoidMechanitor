@@ -19,6 +19,7 @@ namespace MAP_MechanoidMechanitor
         public static JobDef MAP_MechanoidMechanitorSelfRepair = null!;
         public static JobDef MAP_MechanicalFlightEmergencyLanding = null!;
         public static JobDef MAP_MechFusionApproach = null!;
+        public static JobDef MAP_MechFusionReleaseTransition = null!;
         public static JobDef MAP_ChariotConvertToBuilding = null!;
         public static JobDef MAP_ChariotTrackingLaser = null!;
         public static JobDef MAP_ChariotSweepLaser = null!;

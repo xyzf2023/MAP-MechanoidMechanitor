@@ -8,6 +8,28 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
+    /// 展开合体期间，人类地图贴图固定南向。覆盖预绘制参数，兼顾近景与远景缓存，
+    /// 不改人类真实 Rotation，不干扰其工作、移动或头像朝向。
+    /// </summary>
+    [HarmonyPatch(typeof(PawnRenderer), "GetDrawParms")]
+    internal static class MechFusionTransitionFacingPatch
+    {
+        [HarmonyPriority(Priority.Last)]
+        public static void Prefix(Pawn ___pawn, PawnRenderFlags flags, ref Rot4 bodyFacing)
+        {
+            if (!flags.FlagSet(PawnRenderFlags.Portrait)
+                && !flags.FlagSet(PawnRenderFlags.Statue)
+                // 地图参数已选择南向缓存；生成图集时保留各方向，避免污染其他朝向。
+                && !flags.FlagSet(PawnRenderFlags.Cache)
+                && !MechFusionRenderUtility.IsRenderingSource
+                && MechFusionTransitionVisual.ShouldDrawMergeTargetSouth(___pawn))
+            {
+                bodyFacing = Rot4.South;
+            }
+        }
+    }
+
+    /// <summary>
     /// 合体渲染替换。只对存在有效活动合体记录的人类启用；
     /// 人类身体、头部、外观与普通服装不再绘制，改为在人类位置绘制源机械族，
     /// 之后只单独补绘人类主武器一次。
@@ -25,6 +47,17 @@ namespace MAP_MechanoidMechanitor
             bool neverAimWeapon)
         {
             Pawn wearer = PawnField(__instance);
+            if (MechFusionVisualUtility.IsMergeSourceHidden(wearer))
+            {
+                return false;
+            }
+
+            if (MechFusionVisualUtility.IsReleasing(wearer))
+            {
+                // 只改变地图表现；会话仍然 Active，肖像继续显示正式合体外观。
+                return true;
+            }
+
             if (!MechFusionRenderUtility.TryGetFusionSource(wearer, out _))
             {
                 return true;
@@ -166,8 +199,10 @@ namespace MAP_MechanoidMechanitor
 
         public static bool Prefix(PawnRenderer __instance)
         {
-            return !MechFusionRenderUtility.IsActiveFusionWearer(
-                PawnField(__instance));
+            Pawn pawn = PawnField(__instance);
+            return !MechFusionVisualUtility.IsMergeSourceHidden(pawn)
+                && (MechFusionVisualUtility.IsReleasing(pawn)
+                    || !MechFusionRenderUtility.IsActiveFusionWearer(pawn));
         }
     }
 
@@ -179,7 +214,52 @@ namespace MAP_MechanoidMechanitor
         public static bool Prefix(Thing thing)
         {
             return thing is not Pawn pawn
-                || !MechFusionRenderUtility.TryDrawSourceSilhouette(pawn);
+                || (!MechFusionVisualUtility.IsMergeSourceHidden(pawn)
+                    && (MechFusionVisualUtility.IsReleasing(pawn)
+                        || !MechFusionRenderUtility.TryDrawSourceSilhouette(pawn)));
+        }
+    }
+
+    // 必须早于 DynamicDrawManager 读取轮廓图形；仅跳过最终轮廓绘制还可能访问空图形。
+    [HarmonyPatch(typeof(SilhouetteUtility), nameof(SilhouetteUtility.ShouldDrawSilhouette))]
+    internal static class MechFusionTransitionSilhouetteVisibilityPatch
+    {
+        public static bool Prefix(Thing thing, ref bool __result)
+        {
+            if (thing is not Pawn pawn || !MechFusionVisualUtility.IsMergeSourceHidden(pawn))
+            {
+                return true;
+            }
+
+            __result = false;
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(PawnRenderer), "DrawShadowInternal")]
+    internal static class MechFusionTransitionShadowPatch
+    {
+        public static bool Prefix(Pawn ___pawn)
+        {
+            return !MechFusionVisualUtility.IsMergeSourceHidden(___pawn);
+        }
+    }
+
+    [HarmonyPatch(typeof(ApparelGraphicRecordGetter),
+        nameof(ApparelGraphicRecordGetter.TryGetGraphicApparel))]
+    internal static class MechFusionTransitionApparelPatch
+    {
+        public static bool Prefix(Apparel apparel, ref ApparelGraphicRecord rec, ref bool __result)
+        {
+            if (apparel?.TryGetComp<CompMechFusionShell>() == null
+                || !MechFusionVisualUtility.IsReleasing(apparel.Wearer))
+            {
+                return true;
+            }
+
+            rec = default;
+            __result = false;
+            return false;
         }
     }
 
@@ -205,7 +285,9 @@ namespace MAP_MechanoidMechanitor
             Color? overrideHairColor,
             bool stylingStation)
         {
-            if (MechFusionRenderUtility.IsRenderingSource
+            // 此入口也用于远景地图图集；展开时只放行地图缓存，头像仍替换为机械体。
+            if ((!portrait && MechFusionVisualUtility.IsReleasing(pawn))
+                || MechFusionRenderUtility.IsRenderingSource
                 || !MechFusionRenderUtility.TryGetFusionSource(
                     pawn,
                     out Pawn? source)

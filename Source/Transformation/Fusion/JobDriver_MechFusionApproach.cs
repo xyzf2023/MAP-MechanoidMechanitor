@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor
     /// 合体接近 Job。始终由源机械族执行，targetA 为待合体的人类。
     /// 流程：完整校验 → 规划普通路径 A → 必要时合体快速飞行转移
     /// （沿地图 +Z 飞出北边界 → 隐藏并地图内重定位 → 下一帧从目标列北边界外
-    /// 垂直降落）→ 地面走到人类相邻格 → 折跃视觉 → 短暂延迟 →
+    /// 垂直降落）→ 地面走到人类相邻格 → 展开或折跃视觉 → 对应延迟 →
     /// 现有 TryStartFusion 正式合体。规划结果只存在于运行期，读档后重新规划。
     /// </summary>
     public sealed class JobDriver_MechFusionApproach : JobDriver
@@ -37,6 +37,10 @@ namespace MAP_MechanoidMechanitor
         private int flightLegsUsed;
         private int phaseDeadlineTick;
         private int relocationFrame = -1;
+        private MechFusionTransitionVisual? transitionVisual;
+        private bool playCompletionEffect;
+
+        internal bool IsTransitionSourceHidden => transitionVisual?.IsVisible == true;
 
         // 读档后不恢复飞行视觉与旧规划：首个 Tick 安全回到重规划入口。
         // 只存在于运行期，不写入存档。
@@ -71,6 +75,7 @@ namespace MAP_MechanoidMechanitor
             this.FailOn(() => pawn.InMentalState);
             this.AddFinishAction(delegate
             {
+                EndTransitionVisual();
                 if (MechanicalFlightUtility.IsFusionRelocating(pawn))
                 {
                     // 玩家覆盖、强制中断等异常出口：必须回到合法地面态。
@@ -82,9 +87,7 @@ namespace MAP_MechanoidMechanitor
             approachToil = MakeApproachToil();
             fusionFlightToil = MakeFusionFlightToil();
             transitionToil = MakeTransitionToil();
-            Toil delayToil = Toils_General.Wait(
-                TransitionDelayTicks,
-                TargetIndex.A);
+            Toil delayToil = MakeTransitionDelayToil();
             Toil completeToil = MakeCompleteFusionToil();
 
             yield return validateToil;
@@ -489,6 +492,7 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         private void RestartPlanning()
         {
+            EndTransitionVisual();
             if (MechanicalFlightUtility.IsFusionRelocating(pawn))
             {
                 MechanicalFlightUtility.CancelFusionRelocation(pawn);
@@ -527,6 +531,12 @@ namespace MAP_MechanoidMechanitor
             Toil toil = ToilMaker.MakeToil("MechFusionApproach.Transition");
             toil.initAction = delegate
             {
+                if (TryHandleLoadRecovery())
+                {
+                    return;
+                }
+
+                EndTransitionVisual();
                 if (!ValidatePair(out string? failureReason))
                 {
                     FailJob(failureReason);
@@ -550,10 +560,78 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 pawn.pather?.StopDead();
-                MechFusionVisualUtility.PlayFusionTransition(pawn, wearer);
+                MechFusionVisualUtility.FaceEachOther(pawn, wearer);
+                transitionVisual = MechFusionVisualUtility.BeginExpandedTransition(
+                    pawn, pawn, job, visualTarget: wearer);
+                playCompletionEffect = transitionVisual != null;
+                if (!playCompletionEffect)
+                {
+                    MechFusionVisualUtility.PlayFusionTransition(pawn, wearer);
+                }
             };
             toil.defaultCompleteMode = ToilCompleteMode.Instant;
             return toil;
+        }
+
+        private Toil MakeTransitionDelayToil()
+        {
+            // 保持原有六个 Toil 的索引，兼容正在接近/等待中的旧存档。
+            Toil toil = Toils_General.Wait(TransitionDelayTicks, TargetIndex.A);
+            toil.initAction = delegate
+            {
+                pawn.pather?.StopDead();
+                ticksLeftThisToil = playCompletionEffect
+                    ? MechFusionTransitionVisual.DurationTicks : TransitionDelayTicks;
+            };
+            toil.tickAction = delegate
+            {
+                if (TryHandleLoadRecovery())
+                {
+                    return;
+                }
+
+                if (!playCompletionEffect)
+                {
+                    return;
+                }
+
+                if (MechanicalFlightUtility.IsAirborne(pawn))
+                {
+                    // 展开后又收到起飞指令时取消本次合体，不让静态机壳遮住飞行实体。
+                    FailJob("MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable".Translate());
+                    return;
+                }
+
+                if (!ValidatePair(out string? failureReason))
+                {
+                    FailJob(failureReason);
+                    return;
+                }
+
+                if (!IsAdjacentToWearer(Wearer!))
+                {
+                    // 人类不被预留/冻结；离开相邻范围后先恢复可见，再重新接近。
+                    EndTransitionVisual();
+                    JumpTo(approachToil);
+                    return;
+                }
+
+                if (transitionVisual != null && !transitionVisual.IsVisible)
+                {
+                    // Mote 提前消失时恢复实体，完成时仍只播放一次折跃。
+                    transitionVisual.End();
+                    transitionVisual = null;
+                }
+            };
+            return toil;
+        }
+
+        private void EndTransitionVisual()
+        {
+            MechFusionTransitionVisual? previous = transitionVisual;
+            transitionVisual = null;
+            playCompletionEffect = false;
+            previous?.End();
         }
 
         private Toil MakeCompleteFusionToil()
@@ -561,6 +639,18 @@ namespace MAP_MechanoidMechanitor
             Toil toil = ToilMaker.MakeToil("MechFusionApproach.Complete");
             toil.initAction = delegate
             {
+                if (TryHandleLoadRecovery())
+                {
+                    return;
+                }
+
+                // Delay 到期会直接进入本 Toil，不再执行最后一次等待 tickAction。
+                if (playCompletionEffect && MechanicalFlightUtility.IsAirborne(pawn))
+                {
+                    FailJob("MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable".Translate());
+                    return;
+                }
+
                 if (!ValidatePair(out string? failureReason))
                 {
                     FailJob(failureReason);
@@ -580,10 +670,15 @@ namespace MAP_MechanoidMechanitor
                 {
                     // 折跃效果到正式合体之间目标又移动：不允许远距离直接合体，
                     // 回到地面接近重新靠近；再次相邻后允许重新播放折跃效果。
+                    EndTransitionVisual();
                     JumpTo(approachToil);
                     return;
                 }
 
+                bool playCompletedTransition = playCompletionEffect;
+                Map sourceMap = pawn.Map;
+                IntVec3 sourcePosition = pawn.Position;
+                EndTransitionVisual();
                 if (!MechFusionStartService.TryStartFusion(
                         pawn,
                         wearer,
@@ -594,6 +689,12 @@ namespace MAP_MechanoidMechanitor
                             ?? "MAP_MechanoidMechanitor.Fusion.Failure.Unexpected"
                                 .Translate());
                     return;
+                }
+
+                if (playCompletedTransition)
+                {
+                    MechFusionVisualUtility.PlayCompletedFusionTransition(
+                        sourceMap, sourcePosition, wearer);
                 }
 
                 EndJobWith(JobCondition.Succeeded);

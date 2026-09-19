@@ -51,6 +51,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             session.SetState(MechFusionSessionState.Ending);
+            // 强制解除立即撤销手动展开视觉，不等待 Job，也不改变原有退出时序。
+            MechFusionVisualUtility.CancelReleaseTransition(session);
             session.TeardownDeferred = false;
             return ExecuteTeardown(session);
         }

@@ -10,4 +10,14 @@
     <neverFleeFromEnemies>true</neverFleeFromEnemies>
     <neverShowWeapon>true</neverShowWeapon>
   </JobDef>
+  <JobDef>
+    <defName>MAP_MechFusionReleaseTransition</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_MechFusionReleaseTransition</driverClass>
+    <reportString>正在解除合体。</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+    <neverFleeFromEnemies>true</neverFleeFromEnemies>
+    <neverShowWeapon>true</neverShowWeapon>
+  </JobDef>
 </Defs>

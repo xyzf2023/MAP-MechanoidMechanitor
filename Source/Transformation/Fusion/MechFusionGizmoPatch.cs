@@ -70,14 +70,12 @@ namespace MAP_MechanoidMechanitor
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_Disengage"),
                 action = delegate
                 {
-                    MechFusionTeardownService.TryTeardown(
-                        session,
-                        MechFusionExitReason.Manual,
-                        force: false);
+                    MechFusionVisualUtility.RequestManualTeardown(session);
                 }
             };
 
-            if (session.IsEnding)
+            if (session.IsEnding
+                || wearer.CurJobDef == MAPMechanitor_JobDefOf.MAP_MechFusionReleaseTransition)
             {
                 command.Disable(
                     "MAP_MechanoidMechanitor.Fusion.Release.InProgress"

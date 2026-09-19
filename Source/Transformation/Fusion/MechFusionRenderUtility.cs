@@ -100,6 +100,18 @@ namespace MAP_MechanoidMechanitor
             return TryGetFusionSource(pawn, out _);
         }
 
+        internal static void RefreshTransitionGraphics(Pawn pawn)
+        {
+            SilhouetteFrames.Remove(pawn);
+            PawnRenderer? renderer = pawn.Drawer?.renderer;
+            if (renderer != null)
+            {
+                // 隐藏期间 RenderPawnAt 未消费的预绘制数据不能带到恢复显示的一帧。
+                ClearPreRenderResults(renderer);
+                renderer.SetAllGraphicsDirty();
+            }
+        }
+
         /// <summary>
         /// 当前是否正在把该 Pawn 作为“合体外观的源机械族”绘制。
         /// </summary>

@@ -134,7 +134,9 @@
       </li>
 
       <!-- 战车天生拥有合体资格 -->
-      <li Class="MAP_MechanoidMechanitor.CompProperties_MechFusionInnate" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechFusionInnate">
+        <transitionMoteDef>MAP_Mote_ChariotTransition</transitionMoteDef>
+      </li>
     </comps>
   </ThingDef>
 
