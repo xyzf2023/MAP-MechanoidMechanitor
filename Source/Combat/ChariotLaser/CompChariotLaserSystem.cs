@@ -9,7 +9,6 @@ namespace MAP_MechanoidMechanitor
     public sealed class CompProperties_ChariotLaserSystem : CompProperties
     {
         public float range = 29.9f;
-        public float minRange = 2.9f;
         public float sweepMaxSpan = 10f;
         public float effectRadius = 1.5f;
 
@@ -494,8 +493,7 @@ namespace MAP_MechanoidMechanitor
         {
             float distanceSquared =
                 (cell - actor.Position).LengthHorizontalSquared;
-            return distanceSquared >= props.minRange * props.minRange
-                && distanceSquared <= props.range * props.range;
+            return distanceSquared <= props.range * props.range;
         }
 
         private static void DrawTargetHighlight(LocalTargetInfo target)
@@ -513,7 +511,6 @@ namespace MAP_MechanoidMechanitor
             if (actor.Spawned)
             {
                 GenDraw.DrawRadiusRing(actor.Position, props.range);
-                GenDraw.DrawRadiusRing(actor.Position, props.minRange);
             }
         }
 

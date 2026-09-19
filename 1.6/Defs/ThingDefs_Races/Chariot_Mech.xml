@@ -101,7 +101,6 @@
       <!-- 两种激光共用源战车上的组件与冷却；合体形态也读取此组件。 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_ChariotLaserSystem">
         <range>29.9</range>
-        <minRange>2.9</minRange>
         <sweepMaxSpan>10</sweepMaxSpan>
         <effectRadius>1.5</effectRadius>
         <warmupTicks>60</warmupTicks>

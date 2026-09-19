@@ -6,6 +6,30 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
+    /// 穿戴合体外甲时禁止附着火焰；直接检查穿戴状态，避免依赖会话初始化顺序。
+    /// </summary>
+    [HarmonyPatch(typeof(FireUtility), nameof(FireUtility.CanEverAttachFire))]
+    internal static class MechFusionPreventFirePatch
+    {
+        public static void Postfix(Thing t, ref bool __result)
+        {
+            if (!__result || t is not Pawn pawn || pawn.apparel == null)
+            {
+                return;
+            }
+
+            foreach (Apparel apparel in pawn.apparel.WornApparel)
+            {
+                if (apparel.TryGetComp<CompMechFusionShell>() != null)
+                {
+                    __result = false;
+                    return;
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// 结构稳定值伤害路由。顶层 TakeDamage 使用 Prefix/Postfix/Finalizer
     /// 维护深度安全的伤害上下文，异常路径也保证清理且不吞异常。
     /// 真正吸收伤害挂在 DamageWorker_AddInjury 的最终伤口写入点：

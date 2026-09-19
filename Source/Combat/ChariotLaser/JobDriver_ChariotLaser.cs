@@ -252,7 +252,8 @@ namespace MAP_MechanoidMechanitor
             float armorPenetration,
             float ignitionChance)
         {
-            if (damageDef == null || thing.Destroyed || amount <= 0f)
+            // 两种激光共用此入口；发射者不承受自身激光伤害或附带点燃。
+            if (thing == pawn || damageDef == null || thing.Destroyed || amount <= 0f)
             {
                 return;
             }
