@@ -17,6 +17,7 @@ namespace MAP_MechanoidMechanitor
         private Vector3 impactPosition;
         private MoteDualAttached? outerBeam;
         private MoteDualAttached? coreBeam;
+        private Mote? areaIndicator;
         private Sustainer? beamSound;
         private readonly List<Pawn> damageTargets = new List<Pawn>();
         private CompHighEnergyLaserBeam? Laser => pawn.GetComp<CompHighEnergyLaserBeam>();
@@ -43,7 +44,11 @@ namespace MAP_MechanoidMechanitor
                     initialized = true;
                 }
                 if (!CanContinue() || Laser?.HasEmitter(pawn) != true)
+                {
                     EndJobWith(JobCondition.InterruptForced);
+                    return;
+                }
+                MaintainAreaIndicator();
             };
             charge.tickAction = () =>
             {
@@ -53,6 +58,7 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
                 pawn.rotationTracker?.Face(impactPosition);
+                MaintainAreaIndicator();
                 if (++chargeTicks >= CompHighEnergyLaserBeam.WarmupTicks) ReadyForNextToil();
             };
             charge.WithProgressBar(TargetIndex.None, () => Mathf.Clamp01((float)chargeTicks / CompHighEnergyLaserBeam.WarmupTicks));
@@ -93,12 +99,13 @@ namespace MAP_MechanoidMechanitor
 
         private void TickFiring()
         {
-            if (!CanContinue())
+            CompProperties_HighEnergyLaserBeam? props = Laser?.Props;
+            if (props == null || !CanContinue())
             {
                 EndJobWith(JobCondition.InterruptForced);
                 return;
             }
-            if (firingTicks >= CompHighEnergyLaserBeam.DurationTicks)
+            if (firingTicks >= props.durationTicks)
             {
                 EndJobWith(JobCondition.Succeeded);
                 return;
@@ -113,7 +120,7 @@ namespace MAP_MechanoidMechanitor
             // 第一帧保留选中时记录的格子，此后才移动，且始终保存浮点落点。
             if (TracksPawn && firingTicks > 1)
                 impactPosition = Vector3.MoveTowards(impactPosition,
-                    ((Pawn)job.targetA.Thing).DrawPos.Yto0(), CompHighEnergyLaserBeam.TrackingSpeedPerTick);
+                    ((Pawn)job.targetA.Thing).DrawPos.Yto0(), props.trackingSpeed / 60f);
             pawn.rotationTracker?.Face(impactPosition);
             MaintainVisuals();
             if (firingTicks % CompHighEnergyLaserBeam.DamageInterval == 0) ApplyDamagePulse();
@@ -121,7 +128,7 @@ namespace MAP_MechanoidMechanitor
             // TakeDamage 可能杀死施法者并同步结束 Job，不能再结束其后续 Job。
             if (pawn.jobs?.curDriver != this) return;
             if (!CanContinue()) EndJobWith(JobCondition.InterruptForced);
-            else if (firingTicks >= CompHighEnergyLaserBeam.DurationTicks) EndJobWith(JobCondition.Succeeded);
+            else if (firingTicks >= props.durationTicks) EndJobWith(JobCondition.Succeeded);
         }
 
         private void ApplyDamagePulse()
@@ -130,10 +137,13 @@ namespace MAP_MechanoidMechanitor
             CompHighEnergyLaserBeam? laser = Laser;
             if (map == null || laser == null) return;
             damageTargets.Clear();
+            float halfSide = CompHighEnergyLaserBeam.AreaSideLength * 0.5f;
             foreach (Pawn victim in map.mapPawns.AllPawnsSpawned)
             {
+                Vector3 offset = victim.DrawPos.Yto0() - impactPosition;
+                // 与范围贴图共用浮点中心，正方形沿地图坐标轴对齐，不随射线旋转。
                 if (!victim.Dead && !victim.Destroyed
-                    && (victim.DrawPos.Yto0() - impactPosition).sqrMagnitude <= CompHighEnergyLaserBeam.Radius * CompHighEnergyLaserBeam.Radius)
+                    && Mathf.Abs(offset.x) <= halfSide && Mathf.Abs(offset.z) <= halfSide)
                     damageTargets.Add(victim);
             }
             // 先取快照，防止死亡/离图回调修改地图 Pawn 列表；包括友方和施法者。
@@ -151,6 +161,7 @@ namespace MAP_MechanoidMechanitor
         private void MaintainVisuals()
         {
             if (!pawn.Spawned || pawn.Map != castMap) return;
+            MaintainAreaIndicator();
             TargetInfo target = new TargetInfo(impactPosition.ToIntVec3(), castMap);
             Vector3 offset = impactPosition - target.Cell.ToVector3Shifted();
             Vector3 direction = (impactPosition - pawn.DrawPos).Yto0().normalized;
@@ -171,8 +182,30 @@ namespace MAP_MechanoidMechanitor
             mote?.Maintain();
         }
 
+        private void MaintainAreaIndicator()
+        {
+            if (!pawn.Spawned || castMap == null || pawn.Map != castMap) return;
+            IntVec3 cell = impactPosition.ToIntVec3();
+            if (!cell.InBounds(castMap)) return;
+            if (areaIndicator == null || areaIndicator.Destroyed)
+            {
+                areaIndicator = (Mote)ThingMaker.MakeThing(HighEnergyLaserBeamDefOf.Mote_MAP_HighEnergyLaserBeamArea);
+                areaIndicator.exactPosition = impactPosition;
+                areaIndicator.Scale = CompHighEnergyLaserBeam.AreaSideLength;
+                GenSpawn.Spawn(areaIndicator, cell, castMap);
+            }
+            areaIndicator.Position = cell;
+            areaIndicator.exactPosition = impactPosition;
+            // 蓄力每 15 tick 明暗切换；使用已存档进度，暂停/读档不重置节奏。
+            float alpha = firingStarted || chargeTicks % 30 < 15 ? 1f : 0f;
+            areaIndicator.instanceColor = new Color(1f, 1f, 1f, alpha);
+            areaIndicator.Maintain();
+        }
+
         private void FinishVisuals()
         {
+            if (areaIndicator != null && !areaIndicator.Destroyed) areaIndicator.Destroy();
+            areaIndicator = null;
             beamSound?.End();
             beamSound = null;
             // 与战车一致，停止维护后由 Mote 自行淡出；视觉不负责伤害。

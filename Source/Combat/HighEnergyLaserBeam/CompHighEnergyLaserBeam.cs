@@ -11,6 +11,8 @@ namespace MAP_MechanoidMechanitor
         public float range = 20f;
         public int cooldownTicks;
         public float damageAmount = 50f;
+        public int durationTicks = 300;
+        public float trackingSpeed = 0.8f; // 格/秒，运行时换算为每 tick 位移。
 
         public CompProperties_HighEnergyLaserBeam() => compClass = typeof(CompHighEnergyLaserBeam);
 
@@ -20,6 +22,9 @@ namespace MAP_MechanoidMechanitor
             if (!(range > 0f) || float.IsInfinity(range))
                 yield return "高能激光束射程必须为有限正数。";
             if (cooldownTicks < 0) yield return "高能激光束冷却不得为负。";
+            if (durationTicks < 1) yield return "高能激光束持续时间必须为正。";
+            if (!(trackingSpeed >= 0f) || float.IsInfinity(trackingSpeed))
+                yield return "高能激光束追踪速度必须为有限非负数。";
             if (!(damageAmount > 0f) || float.IsInfinity(damageAmount))
                 yield return "高能激光束伤害必须为有限正数。";
         }
@@ -28,11 +33,9 @@ namespace MAP_MechanoidMechanitor
     public sealed class CompHighEnergyLaserBeam : ThingComp
     {
         internal const int WarmupTicks = 180;
-        internal const int DurationTicks = 300;
         internal const int DamageInterval = 20;
         internal const int EmitterCheckInterval = 60;
-        internal const float Radius = 2f;
-        internal const float TrackingSpeedPerTick = 0.8f / 60f;
+        internal const float AreaSideLength = 3f;
         private int readyTick;
 
         public CompProperties_HighEnergyLaserBeam Props => (CompProperties_HighEnergyLaserBeam)props;
@@ -127,7 +130,14 @@ namespace MAP_MechanoidMechanitor
                 if (ValidInitialTarget(actor, target))
                 {
                     GenDraw.DrawTargetHighlight(target);
-                    GenDraw.DrawRadiusRing(target.Cell, Radius);
+                    List<IntVec3> cells = new List<IntVec3>(9);
+                    for (int x = -1; x <= 1; x++)
+                        for (int z = -1; z <= 1; z++)
+                        {
+                            IntVec3 cell = target.Cell + new IntVec3(x, 0, z);
+                            if (cell.InBounds(actor.Map)) cells.Add(cell);
+                        }
+                    GenDraw.DrawFieldEdges(cells);
                 }
             }, target => actor.Map == Find.CurrentMap && ValidInitialTarget(actor, target), actor);
         }
@@ -147,6 +157,7 @@ namespace MAP_MechanoidMechanitor
         public static DamageDef MAP_HighEnergyLaserBeamHeat = null!;
         public static ThingDef Mote_MAP_HighEnergyLaserBeamOuter = null!;
         public static ThingDef Mote_MAP_HighEnergyLaserBeamCore = null!;
+        public static ThingDef Mote_MAP_HighEnergyLaserBeamArea = null!;
         static HighEnergyLaserBeamDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(HighEnergyLaserBeamDefOf));
     }
 }
