@@ -3,5 +3,6 @@
   <MAP_Annihilation.Label>湮灭炮</MAP_Annihilation.Label>
   <MAP_Annihilation.Description>向目标地点发射湮灭炮弹。将小范围内目标&lt;b&gt;&lt;color=#FF0000FF&gt;彻底抹除&lt;/color&gt;&lt;/b&gt;，并对较大范围内敌人造成爆炸伤害。</MAP_Annihilation.Description>
   <MAP_Annihilation.Unavailable>当前不可用。</MAP_Annihilation.Unavailable>
+  <MAP_Annihilation.EmitterMissing>湮灭炮发射器已损坏</MAP_Annihilation.EmitterMissing>
   <MAP_Annihilation.Cooldown>冷却： {0} 秒。</MAP_Annihilation.Cooldown>
 </LanguageData>

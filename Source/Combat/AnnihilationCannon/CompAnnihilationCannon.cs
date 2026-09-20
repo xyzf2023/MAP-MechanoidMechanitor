@@ -56,10 +56,19 @@ namespace MAP_MechanoidMechanitor
         private int readyTick;
         public CompProperties_AnnihilationCannon Props => (CompProperties_AnnihilationCannon)props;
 
+        private bool HasEmitter(Pawn actor)
+        {
+            if (actor.health?.hediffSet == null) return false;
+            foreach (BodyPartRecord part in actor.health.hediffSet.GetNotMissingParts())
+                if (part.def == AnnihilationCannonDefOf.MAP_SunAnnihilationCannon) return true;
+            return false;
+        }
+
         internal bool CanOperate(Pawn actor) => actor.Spawned && actor.Map != null
             && actor.jobs != null && !actor.Dead && !actor.Downed && !actor.InMentalState && actor.Drafted
             && actor.Faction == Faction.OfPlayer && actor.stances?.stunner?.Stunned != true
-            && actor.CurJobDef != MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding;
+            && actor.CurJobDef != MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding
+            && HasEmitter(actor);
 
         internal bool ValidTarget(Pawn actor, IntVec3 cell)
         {
@@ -97,7 +106,8 @@ namespace MAP_MechanoidMechanitor
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_AnnihilationCannon"),
                 action = () => BeginTargeting(actor)
             };
-            if (!CanOperate(actor)) command.Disable("MAP_Annihilation.Unavailable".Translate());
+            if (!HasEmitter(actor)) command.Disable("MAP_Annihilation.EmitterMissing".Translate());
+            else if (!CanOperate(actor)) command.Disable("MAP_Annihilation.Unavailable".Translate());
             else if (Find.TickManager.TicksGame < readyTick)
                 command.Disable("MAP_Annihilation.Cooldown".Translate(
                     ((readyTick - Find.TickManager.TicksGame) / 60f).ToString("0.0")));
@@ -133,6 +143,7 @@ namespace MAP_MechanoidMechanitor
     public static class AnnihilationCannonDefOf
     {
         public static JobDef MAP_AnnihilationCannon = null!;
+        public static BodyPartDef MAP_SunAnnihilationCannon = null!;
         public static ThingDef MAP_AnnihilationShot = null!;
         public static ThingDef MAP_AnnihilationImpact = null!;
         public static ThingDef MAP_AnnihilationExplosion = null!;
