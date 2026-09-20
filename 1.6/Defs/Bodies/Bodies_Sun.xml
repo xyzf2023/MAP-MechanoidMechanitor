@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <BodyDef>
+    <defName>MAP_Body_Sun</defName>
+    <label>「太阳」身体</label>
+
+    <!-- 所有直属子部件的覆盖率合计 68%，核心机体本体占剩余 32%。 -->
+    <corePart>
+      <def>MAP_SunFrame</def>
+      <height>Middle</height>
+      <depth>Outside</depth>
+      <groups>
+        <li>Torso</li>
+      </groups>
+
+      <parts>
+
+        <li>
+          <def>MAP_SunHeavyArmor</def>
+          <coverage>0.20</coverage>
+          <height>Middle</height>
+          <depth>Outside</depth>
+        </li>
+
+        <li>
+          <def>MAP_SunCentralLaserEmitter</def>
+          <coverage>0.02</coverage>
+          <height>Top</height>
+          <depth>Outside</depth>
+        </li>
+
+        <li>
+          <def>MAP_SunAnnihilationCannon</def>
+          <coverage>0.03</coverage>
+          <height>Top</height>
+          <depth>Outside</depth>
+        </li>
+
+        <!-- 子部件覆盖率合计 56%，主传感阵列本体占剩余 44%。 -->
+        <li>
+          <def>MAP_SunMainSensorArray</def>
+          <coverage>0.035</coverage>
+          <height>Top</height>
+          <depth>Outside</depth>
+          <groups>
+            <li>HeadAttackTool</li>
+          </groups>
+
+          <parts>
+            <li>
+              <def>MAP_SunSightSensor</def>
+              <coverage>0.36</coverage>
+              <depth>Outside</depth>
+            </li>
+            <li>
+              <def>MAP_SunHearingSensor</def>
+              <coverage>0.12</coverage>
+              <depth>Outside</depth>
+            </li>
+            <li>
+              <def>MAP_SunChemicalAnalyzer</def>
+              <coverage>0.08</coverage>
+              <depth>Outside</depth>
+            </li>
+          </parts>
+        </li>
+
+        <!-- 子部件覆盖率合计 82%，散热系统本体占剩余 18%。 -->
+        <li>
+          <def>MAP_SunCoolingSystem</def>
+          <coverage>0.12</coverage>
+          <height>Middle</height>
+          <depth>Outside</depth>
+
+          <parts>
+            <li>
+              <def>MAP_SunHeatDissipationArray</def>
+              <customLabel>左散热阵列</customLabel>
+              <coverage>0.25</coverage>
+              <depth>Outside</depth>
+            </li>
+            <li>
+              <def>MAP_SunHeatDissipationArray</def>
+              <customLabel>右散热阵列</customLabel>
+              <coverage>0.25</coverage>
+              <depth>Outside</depth>
+            </li>
+            <li>
+              <def>MAP_SunCoolingPump</def>
+              <customLabel>主冷却泵</customLabel>
+              <coverage>0.10</coverage>
+              <depth>Inside</depth>
+            </li>
+            <li>
+              <def>MAP_SunCoolingPump</def>
+              <customLabel>副冷却泵</customLabel>
+              <coverage>0.10</coverage>
+              <depth>Inside</depth>
+            </li>
+            <li>
+              <def>MAP_SunHeatExchangeCore</def>
+              <coverage>0.12</coverage>
+              <depth>Inside</depth>
+            </li>
+          </parts>
+        </li>
+
+        <li>
+          <def>MAP_SunCoreProcessor</def>
+          <coverage>0.03</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+        <li>
+          <def>MAP_SunCoreProcessor</def>
+          <coverage>0.03</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+        <li>
+          <def>MAP_SunReactor</def>
+          <coverage>0.05</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+        <li>
+          <def>MAP_SunReactor</def>
+          <coverage>0.05</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+        <li>
+          <def>MAP_SunReactor</def>
+          <coverage>0.05</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+        <li>
+          <def>MAP_SunFluidFilter</def>
+          <coverage>0.02</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+        <li>
+          <def>MAP_SunFluidFilter</def>
+          <coverage>0.02</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+        <li>
+          <def>MAP_SunAntiparticleStabilizer</def>
+          <coverage>0.025</coverage>
+          <height>Middle</height>
+          <depth>Inside</depth>
+        </li>
+
+      </parts>
+    </corePart>
+  </BodyDef>
+
+</Defs>

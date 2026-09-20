@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- 「太阳」专属机械部件通用属性 -->
+  <BodyPartDef Name="MAP_SunMechanicalPartBase" Abstract="True">
+    <permanentInjuryChanceFactor>0</permanentInjuryChanceFactor>
+    <skinCovered>false</skinCovered>
+    <solid>true</solid>
+    <alive>false</alive>
+    <bleedRate>0</bleedRate>
+  </BodyPartDef>
+
+  <!-- 核心机体；保留炼狱魔王机体所需的移动与操作能力来源。 -->
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunFrame</defName>
+    <label>太阳机体</label>
+    <hitPoints>110</hitPoints>
+    <tags>
+      <li>MovingLimbCore</li>
+      <li>ManipulationLimbCore</li>
+    </tags>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunHeavyArmor</defName>
+    <label>厚重装甲</label>
+    <hitPoints>150</hitPoints>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunCentralLaserEmitter</defName>
+    <label>中央激光发射器</label>
+    <hitPoints>70</hitPoints>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunAnnihilationCannon</defName>
+    <label>湮灭炮</label>
+    <hitPoints>90</hitPoints>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunMainSensorArray</defName>
+    <label>主传感阵列</label>
+    <hitPoints>80</hitPoints>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunCoolingSystem</defName>
+    <label>散热系统</label>
+    <hitPoints>90</hitPoints>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunHeatDissipationArray</defName>
+    <label>散热阵列</label>
+    <hitPoints>60</hitPoints>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunCoolingPump</defName>
+    <label>冷却泵</label>
+    <hitPoints>50</hitPoints>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunHeatExchangeCore</defName>
+    <label>热交换核心</label>
+    <hitPoints>70</hitPoints>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunAntiparticleStabilizer</defName>
+    <label>反粒子稳定器</label>
+    <hitPoints>80</hitPoints>
+  </BodyPartDef>
+
+  <!-- 太阳专属传感器：保留原版机械传感器的能力来源标签。 -->
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunSightSensor</defName>
+    <label>视觉传感器</label>
+    <hitPoints>35</hitPoints>
+    <socketed>true</socketed>
+    <tags>
+      <li>SightSource</li>
+    </tags>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunHearingSensor</defName>
+    <label>听觉传感器</label>
+    <hitPoints>25</hitPoints>
+    <tags>
+      <li>HearingSource</li>
+    </tags>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunChemicalAnalyzer</defName>
+    <label>化学分析器</label>
+    <hitPoints>25</hitPoints>
+  </BodyPartDef>
+
+  <!-- 太阳专属内部功能部件，避免使用原版部件血量。 -->
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunCoreProcessor</defName>
+    <label>核心处理阵列</label>
+    <hitPoints>40</hitPoints>
+    <tags>
+      <li>ConsciousnessSource</li>
+    </tags>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunReactor</defName>
+    <label>反应堆</label>
+    <hitPoints>60</hitPoints>
+    <tags>
+      <li>BloodPumpingSource</li>
+    </tags>
+  </BodyPartDef>
+
+  <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
+    <defName>MAP_SunFluidFilter</defName>
+    <label>液体过滤器</label>
+    <hitPoints>40</hitPoints>
+    <tags>
+      <li>BloodFiltrationSource</li>
+    </tags>
+  </BodyPartDef>
+
+</Defs>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <ThingDef Name="MAP_SunBase" ParentName="SuperHeavyMechanoid" Abstract="True">
+    <race>
+      <body>MAP_Body_Sun</body>
+      <baseBodySize>8</baseBodySize>
+      <lifeStageAges>
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>0</minAge>
+          <soundWounded>Pawn_Mech_Diabolus_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Diabolus_Death</soundDeath>
+          <soundCall>Pawn_Mech_Diabolus_Call</soundCall>
+        </li>
+        <li>
+          <def>MechanoidFullyFormed</def>
+          <minAge>100</minAge>
+          <soundWounded>Pawn_Mech_Diabolus_Wounded</soundWounded>
+          <soundDeath>Pawn_Mech_Diabolus_Death</soundDeath>
+          <soundCall>Pawn_Mech_Diabolus_Call</soundCall>
+        </li>
+      </lifeStageAges>
+      <detritusLeavings Inherit="False" />
+    </race>
+
+    <tools>
+      <li>
+        <label>head</label>
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+        <power>18</power>
+        <cooldownTime>2.6</cooldownTime>
+        <linkedBodyPartsGroup>HeadAttackTool</linkedBodyPartsGroup>
+        <ensureLinkedBodyPartsGroupAlwaysUsable>true</ensureLinkedBodyPartsGroupAlwaysUsable>
+      </li>
+    </tools>
+
+    <statBases>
+      <EMPResistance>0.6</EMPResistance>
+      <MoveSpeed>2</MoveSpeed>
+    </statBases>
+  </ThingDef>
+
+  <PawnKindDef Name="MAP_SunKindBase"
+               ParentName="HeavyMechanoidKind"
+               Abstract="True">
+    <combatPower>500</combatPower>
+    <allowInMechClusters>false</allowInMechClusters>
+    <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
+    <lifeStages>
+      <li>
+        <bodyGraphicData>
+          <texPath>Mech/Sun/Sun</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>3</drawSize>
+        </bodyGraphicData>
+      </li>
+      <li>
+        <bodyGraphicData>
+          <texPath>Mech/Sun/Sun</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>3</drawSize>
+        </bodyGraphicData>
+      </li>
+    </lifeStages>
+  </PawnKindDef>
+
+</Defs>

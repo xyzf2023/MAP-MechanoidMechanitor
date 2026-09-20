@@ -2,17 +2,17 @@
 <Defs>
 
   <ThingDef ParentName="MAP_SunBase">
-    <defName>MAP_Mech_Sun</defName>
+    <defName>MAP_Mech_SunBOSS</defName>
     <label>「太阳」</label>
     <description>TODO</description>
     <race>
-      <baseHealthScale>3</baseHealthScale>
+      <baseHealthScale>8</baseHealthScale>
     </race>
     <statBases>
-      <BandwidthCost>5</BandwidthCost>
+      <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">9999</BandwidthCost>
     </statBases>
     <comps>
-      <!-- 玩家太阳：能量脉冲数值 -->
+      <!-- 太阳BOSS：能量脉冲数值；与玩家太阳独立配置。 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_EnergyPulse">
         <warmupTicks>180</warmupTicks>
         <radius>10</radius>
@@ -23,7 +23,7 @@
         <effectReferenceRadius>30.9</effectReferenceRadius>
         <iconPath>UI/Commands/MM_EnergyPulse</iconPath>
       </li>
-      <!-- 玩家太阳：湮灭炮数值 -->
+      <!-- 太阳BOSS：湮灭炮数值；与玩家太阳独立配置。 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_AnnihilationCannon">
         <warmupTicks>600</warmupTicks>
         <innerRadius>4.9</innerRadius>
@@ -44,11 +44,12 @@
   </ThingDef>
 
   <PawnKindDef ParentName="MAP_SunKindBase">
-    <defName>MAP_Mech_Sun</defName>
+    <defName>MAP_Mech_SunBOSS</defName>
     <label>「太阳」</label>
-    <race>MAP_Mech_Sun</race>
+    <race>MAP_Mech_SunBOSS</race>
+    <defaultFactionDef>Mechanoid</defaultFactionDef>
+    <destroyGearOnDrop>true</destroyGearOnDrop>
     <isBoss>true</isBoss>
-    <defaultFactionDef>PlayerColony</defaultFactionDef>
   </PawnKindDef>
 
 </Defs>
