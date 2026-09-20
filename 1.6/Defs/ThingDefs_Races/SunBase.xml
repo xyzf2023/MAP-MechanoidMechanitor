@@ -63,8 +63,11 @@
     </tools>
 
     <statBases>
-      <EMPResistance>0.6</EMPResistance>
-      <MoveSpeed>2</MoveSpeed>
+      <EMPResistance>1.75</EMPResistance>
+      <MoveSpeed>1.0</MoveSpeed>
+      <ArmorRating_Blunt>2.0</ArmorRating_Blunt>
+      <ArmorRating_Sharp>2.0</ArmorRating_Sharp>
+      <ArmorRating_Heat>2.0</ArmorRating_Heat>
     </statBases>
   </ThingDef>
 
