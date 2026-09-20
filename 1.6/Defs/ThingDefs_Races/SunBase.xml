@@ -32,16 +32,31 @@
       </li>
     </comps>
 
-    <tools>
+    <tools Inherit="False">
       <li>
-        <label>head</label>
+        <label>装甲冲撞</label>
+        <labelNoLocation>装甲冲撞</labelNoLocation>
         <capacities>
           <li>Blunt</li>
         </capacities>
-        <power>18</power>
-        <cooldownTime>2.6</cooldownTime>
-        <linkedBodyPartsGroup>HeadAttackTool</linkedBodyPartsGroup>
-        <ensureLinkedBodyPartsGroupAlwaysUsable>true</ensureLinkedBodyPartsGroupAlwaysUsable>
+        <power>42</power>
+        <armorPenetration>0.46</armorPenetration>
+        <cooldownTime>3.0</cooldownTime>
+        <chanceFactor>0.70</chanceFactor>
+        <linkedBodyPartsGroup>MAP_SunArmorAttackTool</linkedBodyPartsGroup>
+      </li>
+
+      <li>
+        <label>机体碾压</label>
+        <labelNoLocation>机体碾压</labelNoLocation>
+        <capacities>
+          <li>Blunt</li>
+        </capacities>
+        <power>28</power>
+        <armorPenetration>0.32</armorPenetration>
+        <cooldownTime>2.0</cooldownTime>
+        <chanceFactor>0.30</chanceFactor>
+        <linkedBodyPartsGroup>MAP_SunFrameAttackTool</linkedBodyPartsGroup>
       </li>
     </tools>
 

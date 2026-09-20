@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <BodyPartGroupDef>
+    <defName>MAP_SunArmorAttackTool</defName>
+    <label>太阳装甲攻击部位</label>
+    <labelShort>厚重装甲</labelShort>
+  </BodyPartGroupDef>
+
+  <BodyPartGroupDef>
+    <defName>MAP_SunFrameAttackTool</defName>
+    <label>太阳机体攻击部位</label>
+    <labelShort>太阳机体</labelShort>
+  </BodyPartGroupDef>
+
+</Defs>

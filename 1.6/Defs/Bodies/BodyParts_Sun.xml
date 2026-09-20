@@ -80,6 +80,7 @@
     <defName>MAP_SunSightSensor</defName>
     <label>视觉传感器</label>
     <hitPoints>35</hitPoints>
+    <frostbiteVulnerability>2</frostbiteVulnerability>
     <socketed>true</socketed>
     <tags>
       <li>SightSource</li>
@@ -90,6 +91,7 @@
     <defName>MAP_SunHearingSensor</defName>
     <label>听觉传感器</label>
     <hitPoints>25</hitPoints>
+    <frostbiteVulnerability>2</frostbiteVulnerability>
     <tags>
       <li>HearingSource</li>
     </tags>
@@ -99,6 +101,7 @@
     <defName>MAP_SunChemicalAnalyzer</defName>
     <label>化学分析器</label>
     <hitPoints>25</hitPoints>
+    <frostbiteVulnerability>2</frostbiteVulnerability>
   </BodyPartDef>
 
   <!-- 太阳专属内部功能部件，避免使用原版部件血量。 -->
