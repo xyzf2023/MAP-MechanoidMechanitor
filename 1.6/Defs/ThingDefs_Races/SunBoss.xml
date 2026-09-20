@@ -12,6 +12,8 @@
       <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">9999</BandwidthCost>
     </statBases>
     <comps>
+      <!-- 太阳BOSS专属：3.5格内每20 tick结算近身热伤害与中暑。 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_SunBossHeatAura" />
       <!-- 太阳BOSS：能量脉冲数值；与玩家太阳独立配置。 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_EnergyPulse">
         <warmupTicks>180</warmupTicks>

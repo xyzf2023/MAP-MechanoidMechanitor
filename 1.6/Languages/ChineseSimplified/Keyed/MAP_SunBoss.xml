@@ -4,4 +4,6 @@
   <MAP_SunBoss_ReactorFoundText>我们找到了这座设施的核心反应堆。\n\n仪器显示，其中有着非同寻常的能量反应。如果能够研究其中技术，我们或许能获取极具价值的科技成果。\n\n不过……这个反应堆看起来有些不太对劲。\n\n小心行事。</MAP_SunBoss_ReactorFoundText>
   <MAP_SunBoss_ReactorAwakeningLabel>反应堆异常</MAP_SunBoss_ReactorAwakeningLabel>
   <MAP_SunBoss_ReactorAwakeningText>这根本不是什么传统意义上的反应堆——它是一台沉睡中的机械体！\n\n它正在苏醒，并开始转换为机械体形态。做好迎战准备！</MAP_SunBoss_ReactorAwakeningText>
+  <MAP_SunBoss_HeatWarningLabel>{PAWN}正在被高温灼烧！</MAP_SunBoss_HeatWarningLabel>
+  <MAP_SunBoss_HeatWarningText>这台机械体正在向四周释放骇人的高温，{PAWN}正遭受严重灼烧！\n\n立刻远离它！</MAP_SunBoss_HeatWarningText>
 </LanguageData>
