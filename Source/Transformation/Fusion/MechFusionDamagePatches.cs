@@ -13,18 +13,9 @@ namespace MAP_MechanoidMechanitor
     {
         public static void Postfix(Thing t, ref bool __result)
         {
-            if (!__result || t is not Pawn pawn || pawn.apparel == null)
+            if (__result && t is Pawn pawn && CompMechFusionShell.IsWornBy(pawn))
             {
-                return;
-            }
-
-            foreach (Apparel apparel in pawn.apparel.WornApparel)
-            {
-                if (apparel.TryGetComp<CompMechFusionShell>() != null)
-                {
-                    __result = false;
-                    return;
-                }
+                __result = false;
             }
         }
     }

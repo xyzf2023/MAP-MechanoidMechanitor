@@ -23,6 +23,24 @@ namespace MAP_MechanoidMechanitor
 
         public string? SessionId => sessionId;
 
+        internal static bool IsWornBy(Pawn? pawn)
+        {
+            if (pawn?.apparel == null)
+            {
+                return false;
+            }
+
+            foreach (Apparel apparel in pawn.apparel.WornApparel)
+            {
+                if (apparel.TryGetComp<CompMechFusionShell>() != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// 仅当会话ID有效、会话处于 Active 且本服装确实是该会话的载体时返回会话。
         /// 活动耐久豁免与实例属性读取都必须经过这里，损坏链接不得被保护。

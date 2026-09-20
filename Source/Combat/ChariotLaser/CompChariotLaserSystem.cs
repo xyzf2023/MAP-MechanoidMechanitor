@@ -163,6 +163,9 @@ namespace MAP_MechanoidMechanitor
     [StaticConstructorOnStartup]
     internal static class ChariotLaserCommandUtility
     {
+        private static readonly List<IntVec3> TrackingShootSources = new();
+        private static readonly List<IntVec3> TrackingShootDestinations = new();
+
         private static readonly Texture2D TrackingLaserIcon =
             ContentFinder<Texture2D>.Get(
                 "UI/Commands/MM_LaserFocus",
@@ -424,7 +427,8 @@ namespace MAP_MechanoidMechanitor
             LocalTargetInfo target)
         {
             Thing? thing = target.Thing;
-            if (thing == null || thing == actor || !thing.Spawned
+            if (!actor.Spawned || actor.Map == null
+                || thing == null || thing == actor || !thing.Spawned
                 || thing.Map != actor.Map)
             {
                 return false;
@@ -456,10 +460,49 @@ namespace MAP_MechanoidMechanitor
 
             return !thing.Fogged()
                 && IsWithinWeaponRange(actor, props, thing.Position)
-                && GenSight.LineOfSight(
-                    actor.Position,
-                    thing.Position,
-                    actor.Map);
+                && HasTrackingShootLine(actor, thing);
+        }
+
+        // 与原版 Verb 的射线检查一致，分别考虑射手和目标的探身格。
+        // 射程仍由激光自身配置决定，不依赖当前装备武器的射程或冷却。
+        private static bool HasTrackingShootLine(Pawn actor, Thing target)
+        {
+            if (CanHitTrackingTargetFrom(actor.Position, target, actor.Map))
+            {
+                return true;
+            }
+
+            ShootLeanUtility.LeanShootingSourcesFromTo(
+                actor.Position,
+                target.OccupiedRect().ClosestCellTo(actor.Position),
+                actor.Map,
+                TrackingShootSources);
+            for (int i = 0; i < TrackingShootSources.Count; i++)
+            {
+                if (CanHitTrackingTargetFrom(TrackingShootSources[i], target, actor.Map))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool CanHitTrackingTargetFrom(IntVec3 source, Thing target, Map map)
+        {
+            ShootLeanUtility.CalcShootableCellsOf(TrackingShootDestinations, target, source);
+            for (int i = 0; i < TrackingShootDestinations.Count; i++)
+            {
+                IntVec3 destination = TrackingShootDestinations[i];
+                if (target.def.Fillage == FillCategory.Full
+                    ? GenSight.LineOfSightToEdges(source, destination, map, skipFirstCell: true)
+                    : GenSight.LineOfSight(source, destination, map, skipFirstCell: true))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         internal static bool IsValidSweepStart(
