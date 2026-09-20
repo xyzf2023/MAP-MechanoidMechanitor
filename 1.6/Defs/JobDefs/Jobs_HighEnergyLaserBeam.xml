@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>MAP_HighEnergyLaserBeam</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_HighEnergyLaserBeam</driverClass>
+    <reportString>正在发射高能激光束。</reportString>
+    <playerInterruptible>true</playerInterruptible>
+    <casualInterruptible>false</casualInterruptible>
+    <checkOverrideOnDamage>Never</checkOverrideOnDamage>
+    <suspendable>false</suspendable>
+    <sleepCanInterrupt>false</sleepCanInterrupt>
+    <neverFleeFromEnemies>true</neverFleeFromEnemies>
+    <neverShowWeapon>true</neverShowWeapon>
+    <ifFlyingKeepFlying>true</ifFlyingKeepFlying>
+  </JobDef>
+</Defs>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_HighEnergyLaserBeam.Label>高能激光束</MAP_HighEnergyLaserBeam.Label>
+  <MAP_HighEnergyLaserBeam.Description>TODO</MAP_HighEnergyLaserBeam.Description>
+  <MAP_HighEnergyLaserBeam.Disabled.EmitterMissing>激光发射器损坏</MAP_HighEnergyLaserBeam.Disabled.EmitterMissing>
+  <MAP_HighEnergyLaserBeam.Disabled.NotDrafted>未征召</MAP_HighEnergyLaserBeam.Disabled.NotDrafted>
+  <MAP_HighEnergyLaserBeam.Disabled.Unavailable>当前无法发射高能激光束。</MAP_HighEnergyLaserBeam.Disabled.Unavailable>
+  <MAP_HighEnergyLaserBeam.Disabled.Busy>正在蓄力或发射高能激光束。</MAP_HighEnergyLaserBeam.Disabled.Busy>
+  <MAP_HighEnergyLaserBeam.Disabled.Cooldown>冷却剩余 {0} 秒。</MAP_HighEnergyLaserBeam.Disabled.Cooldown>
+</LanguageData>

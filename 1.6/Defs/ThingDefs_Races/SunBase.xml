@@ -24,6 +24,14 @@
       <detritusLeavings Inherit="False" />
     </race>
 
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_HighEnergyLaserBeam">
+        <range>20</range>
+        <cooldownTicks>0</cooldownTicks>
+        <damageAmount>50</damageAmount>
+      </li>
+    </comps>
+
     <tools>
       <li>
         <label>head</label>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <DamageDef ParentName="Beam">
+    <defName>MAP_HighEnergyLaserBeamHeat</defName>
+    <label>高能激光束热伤害</label>
+    <defaultDamage>50</defaultDamage>
+    <defaultArmorPenetration>0</defaultArmorPenetration>
+  </DamageDef>
+</Defs>
