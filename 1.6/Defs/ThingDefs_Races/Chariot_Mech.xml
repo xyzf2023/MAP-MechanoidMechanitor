@@ -92,8 +92,8 @@
     </race>
 
     <comps>
-      <!-- 战车专用建筑转换：组件同时提供资格、目标建筑与转换按钮。 -->
-      <li Class="MAP_MechanoidMechanitor.CompProperties_ChariotBuildingConversion">
+      <!-- 通用建筑转换：组件同时提供资格、目标建筑与转换按钮。 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingConversion">
         <buildingFormDef>MAP_Building_Chariot</buildingFormDef>
         <placementSearchRadius>8</placementSearchRadius>
       </li>

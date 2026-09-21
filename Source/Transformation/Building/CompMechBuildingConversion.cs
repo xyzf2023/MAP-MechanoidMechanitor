@@ -6,30 +6,30 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
-    public sealed class CompProperties_ChariotBuildingConversion : CompProperties
+    public sealed class CompProperties_MechBuildingConversion : CompProperties
     {
         public ThingDef? buildingFormDef;
         public ThingDef? buildingStuff;
         public int placementSearchRadius = 8;
 
-        public CompProperties_ChariotBuildingConversion()
+        public CompProperties_MechBuildingConversion()
         {
-            compClass = typeof(CompChariotBuildingConversion);
+            compClass = typeof(CompMechBuildingConversion);
         }
     }
 
     /// <summary>
-    /// 战车专用建筑转换组件。组件本身是资格与建筑配置的唯一事实来源，
+    /// 通用机械体建筑转换组件。组件本身是资格与建筑配置的唯一事实来源，
     /// 并直接提供转换按钮，不经过科研能力同步器或 Pawn_AbilityTracker。
     /// </summary>
     [StaticConstructorOnStartup]
-    public sealed class CompChariotBuildingConversion : ThingComp
+    public sealed class CompMechBuildingConversion : ThingComp
     {
         private static readonly Texture2D ConvertIcon =
             ContentFinder<Texture2D>.Get("UI/Commands/MM_BuildingConversion");
 
-        public CompProperties_ChariotBuildingConversion Props =>
-            (CompProperties_ChariotBuildingConversion)props;
+        public CompProperties_MechBuildingConversion Props =>
+            (CompProperties_MechBuildingConversion)props;
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
@@ -41,7 +41,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (pawn.CurJobDef
-                == MAPMechanitor_JobDefOf.MAP_ChariotConvertToBuilding)
+                == MAPMechanitor_JobDefOf.MAP_MechConvertToBuilding)
             {
                 yield break;
             }
@@ -56,7 +56,7 @@ namespace MAP_MechanoidMechanitor
                 action = delegate
                 {
                     Job job = JobMaker.MakeJob(
-                        MAPMechanitor_JobDefOf.MAP_ChariotConvertToBuilding,
+                        MAPMechanitor_JobDefOf.MAP_MechConvertToBuilding,
                         pawn);
                     if (pawn.jobs == null
                         || !pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))

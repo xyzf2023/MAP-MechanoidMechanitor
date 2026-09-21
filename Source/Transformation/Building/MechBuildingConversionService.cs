@@ -74,7 +74,7 @@ namespace MAP_MechanoidMechanitor
 
             if (!MechBuildingConversionProfileUtility.TryGetProfile(
                     pawn,
-                    out CompProperties_ChariotBuildingConversion? profile)
+                    out CompProperties_MechBuildingConversion? profile)
                 || profile == null)
             {
                 failureReason =
@@ -179,7 +179,7 @@ namespace MAP_MechanoidMechanitor
 
             if (!MechBuildingConversionProfileUtility.TryGetProfile(
                     pawn,
-                    out CompProperties_ChariotBuildingConversion? profile)
+                    out CompProperties_MechBuildingConversion? profile)
                 || profile == null)
             {
                 return false;
@@ -193,18 +193,13 @@ namespace MAP_MechanoidMechanitor
                 ? originalRotation
                 : buildingDef.defaultPlacingRot;
             int searchRadius = Math.Max(0, profile.placementSearchRadius);
-            IntVec3 spawnCell = CellFinder.FindNoWipeSpawnLocNear(
+            IntVec3 spawnCell = FindBuildingPlacementNear(
+                pawn,
                 originalPosition,
                 map,
                 buildingDef,
                 buildingRotation,
-                searchRadius,
-                cell => CanPlaceWithoutWiping(
-                    pawn,
-                    buildingDef,
-                    map,
-                    cell,
-                    buildingRotation));
+                searchRadius);
 
             if (!spawnCell.IsValid)
             {
@@ -262,7 +257,7 @@ namespace MAP_MechanoidMechanitor
 
                 // DeSpawn / PassToWorld / Hediff 回调可能在原落点生成其他 Thing。
                 // 必须在不可逆的 WipeMode.Vanish 前复检，而非只依赖转换前的搜索。
-                if (!CanPlaceWithoutWiping(pawn, buildingDef, map, spawnCell, buildingRotation))
+                if (!CanPlaceBuildingForm(pawn, buildingDef, map, spawnCell, buildingRotation))
                 {
                     RollBackConversion(pawn, building, map, originalPosition,
                         originalRotation, pawnStored, buildingSpawned);
@@ -272,6 +267,8 @@ namespace MAP_MechanoidMechanitor
                     return false;
                 }
 
+                // 原版生成会清除占地内电线，并由建筑自身的传电组件接管该区域。
+                // 电线不保存快照；收起建筑或恢复机械体时也不重建。
                 GenSpawn.Spawn(
                     building,
                     spawnCell,
@@ -464,12 +461,13 @@ namespace MAP_MechanoidMechanitor
             if (entry.HasDurabilitySnapshot)
             {
                 SettleBuildingDurability(sourcePawn, entry.CarrierId,
-                    entry.InitialHealthFraction, entry.CurrentHealthFraction);
+                    entry.InitialHealthFraction, entry.CurrentHealthFraction,
+                    entry.InitialRepairableDamage);
             }
             else
             {
                 Log.Warning(
-                    "[MAP-机械族机械师] 建筑形态缺少初始耐久基线，本次紧急恢复不追加部位伤势：" +
+                    "[MAP-机械族机械师] 建筑形态缺少初始耐久基线，本次紧急恢复跳过损伤与维修结算：" +
                     $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），carrier={entry.CarrierId}。");
             }
 
@@ -502,7 +500,8 @@ namespace MAP_MechanoidMechanitor
                 1,
                 maximum);
             buildingComp.CaptureInitialHealthFraction(
-                (float)building.HitPoints / maximum);
+                (float)building.HitPoints / maximum,
+                MechPartDurabilityUtility.GetRepairableStructuralDamage(pawn));
         }
 
         private static void SettleBuildingDurability(
@@ -522,25 +521,45 @@ namespace MAP_MechanoidMechanitor
                 // 追溯成 Pawn 伤势，因此安全地跳过一次结算。
                 Log.Warning(
                     "[MAP-机械族机械师] 建筑形态缺少初始耐久基线，" +
-                    "本次恢复不追加部位伤势：" +
+                    "本次恢复跳过损伤与维修结算：" +
                     $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），" +
                     $"carrier={carrier.ThingID}。");
                 return;
             }
 
-            SettleBuildingDurability(sourcePawn, carrier.thingIDNumber, initialFraction, currentFraction);
+            SettleBuildingDurability(sourcePawn, carrier.thingIDNumber,
+                initialFraction, currentFraction, buildingComp.InitialRepairableDamage);
         }
 
         private static void SettleBuildingDurability(
-            Pawn sourcePawn, int carrierId, float initialFraction, float currentFraction)
+            Pawn sourcePawn, int carrierId, float initialFraction, float currentFraction,
+            float initialRepairableDamage)
         {
-            float cappedCurrent = Mathf.Min(currentFraction, initialFraction);
-            float settlementRatio = initialFraction > FractionEpsilon
-                ? Mathf.Clamp01(cappedCurrent / initialFraction)
-                : 0f;
-
+            // 两条调用路径都已提交 Pawn 形态并清除载体链接；恢复请求重试不会再次进入结算。
             try
             {
+                if (currentFraction > initialFraction)
+                {
+                    // 以修复掉的初始缺损占比计算额度，而非把当前结构整体放大。
+                    // 例如 60% -> 80% 修复初始损伤的 50%；修满则修复全部初始损伤。
+                    float repairFraction = Mathf.Clamp01(
+                        (currentFraction - initialFraction) / (1f - initialFraction));
+                    float repairableDamage = initialRepairableDamage >= 0f
+                        ? initialRepairableDamage
+                        : MechPartDurabilityUtility.GetRepairableStructuralDamage(sourcePawn);
+                    MechPartDurabilityUtility.RepairCurrentPartDurability(
+                        sourcePawn, repairableDamage * repairFraction);
+                    return;
+                }
+
+                if (currentFraction == initialFraction && currentFraction > 0f)
+                {
+                    return;
+                }
+
+                float settlementRatio = initialFraction > FractionEpsilon
+                    ? Mathf.Clamp01(currentFraction / initialFraction)
+                    : 0f;
                 int settlementSeed =
                     MechPartDurabilityUtility.CreateSettlementSeed(
                         sourcePawn,
@@ -724,7 +743,36 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool CanPlaceWithoutWiping(
+        private static IntVec3 FindBuildingPlacementNear(
+            Pawn sourcePawn,
+            IntVec3 origin,
+            Map map,
+            ThingDef buildingDef,
+            Rot4 rotation,
+            int searchRadius)
+        {
+            // 原版无覆盖搜索会把源 Pawn 自身也视为不可通行建筑的障碍。
+            // 使用原版按距离排序的偏移（首项为原地），复用允许源 Pawn 和可替换电线的占地检查。
+            int count = GenRadial.NumCellsInRadius(Math.Max(0, searchRadius));
+            for (int i = 0; i < count; i++)
+            {
+                IntVec3 candidate = origin + GenRadial.RadialPattern[i];
+                if (!candidate.InBounds(map)
+                    || (candidate != origin
+                        && !GenSight.LineOfSight(origin, candidate, map, skipFirstCell: true))
+                    || !CanPlaceBuildingForm(sourcePawn, buildingDef, map, candidate, rotation))
+                {
+                    continue;
+                }
+
+                return candidate;
+            }
+
+            // 没有安全位置时明确失败，不回退到未经检查的原位置。
+            return IntVec3.Invalid;
+        }
+
+        private static bool CanPlaceBuildingForm(
             Pawn sourcePawn,
             ThingDef buildingDef,
             Map map,
@@ -751,6 +799,15 @@ namespace MAP_MechanoidMechanitor
                         continue;
                     }
 
+                    // 仅传电建筑可以按原版规则接管已建成电线（含隐藏电线）。
+                    // 不扩大到其他电力设备、蓝图或施工框架。
+                    if (buildingDef.EverTransmitsPower
+                        && existing is Building
+                        && existing.def.building?.isPowerConduit == true)
+                    {
+                        continue;
+                    }
+
                     if (existing is Pawn
                         || GenSpawn.SpawningWipes(buildingDef, existing.def))
                     {
@@ -759,7 +816,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            return true;
+            return GenConstruct.CanBuildOnTerrain(buildingDef, root, map, rotation);
         }
 
         private static void RollBackConversion(

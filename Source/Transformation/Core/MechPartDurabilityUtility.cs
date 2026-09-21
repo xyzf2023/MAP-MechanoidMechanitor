@@ -10,8 +10,9 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 机械体部位耐久的通用换算入口。合体与建筑形态都把形态期间的
     /// 剩余耐久比例交给这里，由这里统一换算为受控的局部部位伤势。
+    /// 建筑维修使用 Repair 分文件中的独立治疗入口，不改变合体损伤算法。
     /// </summary>
-    internal static class MechPartDurabilityUtility
+    internal static partial class MechPartDurabilityUtility
     {
         private const float DamagePacketFraction = 0.1f;
         private const float MinimumWeight = 0.0001f;

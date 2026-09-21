@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
   <JobDef>
+    <!-- defName 是旧存档使用的稳定标识，通用源码字段通过 DefAlias 绑定。 -->
     <defName>MAP_ChariotConvertToBuilding</defName>
     <label>转换为建筑形态</label>
-    <driverClass>MAP_MechanoidMechanitor.JobDriver_ChariotConvertToBuilding</driverClass>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_MechConvertToBuilding</driverClass>
     <reportString>正在转换为建筑形态。</reportString>
     <casualInterruptible>true</casualInterruptible>
     <playerInterruptible>true</playerInterruptible>

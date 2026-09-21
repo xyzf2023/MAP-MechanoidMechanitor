@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- 玩家太阳的建筑形态；与据点核心 MAP_Building_SunBOSS 独立。 -->
+  <ThingDef ParentName="BuildingBase">
+    <defName>MAP_Building_Sun</defName>
+    <label>「太阳」（展开）</label>
+    <description>太阳展开并固定自身后的能源核心。无需燃料即可持续输出800000 W电力，同时向周围环境释放大量热量。环境温度达到1000℃时停止产热，发电不受影响。电源开关同时控制发电与产热。\n\n展开时会替换占地内的电线，由太阳自身传输电力；恢复机械体后，这些地块上的电线不会恢复。\n\n建筑维修会在恢复机械体时用于修复结构伤势，并在修复额度足够时重建缺失部件。</description>
+    <thingClass>Verse.Building</thingClass>
+    <category>Building</category>
+    <tickerType>Normal</tickerType>
+    <altitudeLayer>Building</altitudeLayer>
+    <size>(3,3)</size>
+    <rotatable>false</rotatable>
+    <selectable>true</selectable>
+    <useHitPoints>true</useHitPoints>
+    <passability>Impassable</passability>
+    <!-- 保留空气交换区域，供原版产热组件从 3x3 中心格向房间传热。 -->
+    <fillPercent>0.8</fillPercent>
+    <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
+    <graphicData>
+      <texPath>Mech/Sun/Sun_Building</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(3,3)</drawSize>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>5000</MaxHitPoints>
+      <Flammability>0</Flammability>
+    </statBases>
+    <building>
+      <neverBuildable>true</neverBuildable>
+      <deconstructible>false</deconstructible>
+      <claimable>false</claimable>
+      <repairable>true</repairable>
+      <allowAutoroof>false</allowAutoroof>
+    </building>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechFormCarrier" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingForm" />
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerPlant</compClass>
+        <basePowerConsumption>-800000</basePowerConsumption>
+        <transmitsPower>true</transmitsPower>
+        <shortCircuitInRain>false</shortCircuitInRain>
+      </li>
+      <li Class="CompProperties_Flickable" />
+      <li Class="CompProperties_HeatPusher">
+        <compClass>CompHeatPusherPowered</compClass>
+        <heatPerSecond>1000</heatPerSecond>
+        <heatPushMaxTemperature>1000</heatPushMaxTemperature>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>

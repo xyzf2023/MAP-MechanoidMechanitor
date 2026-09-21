@@ -20,7 +20,9 @@ namespace MAP_MechanoidMechanitor
         public static JobDef MAP_MechanicalFlightEmergencyLanding = null!;
         public static JobDef MAP_MechFusionApproach = null!;
         public static JobDef MAP_MechFusionReleaseTransition = null!;
-        public static JobDef MAP_ChariotConvertToBuilding = null!;
+        // 源码使用通用名称；保留旧 JobDef 标识以兼容存档中的当前任务与任务队列。
+        [DefAlias("MAP_ChariotConvertToBuilding")]
+        public static JobDef MAP_MechConvertToBuilding = null!;
         public static JobDef MAP_ChariotTrackingLaser = null!;
         public static JobDef MAP_ChariotSweepLaser = null!;
 

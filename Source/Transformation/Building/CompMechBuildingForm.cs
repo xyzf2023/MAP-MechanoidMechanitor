@@ -16,7 +16,7 @@ namespace MAP_MechanoidMechanitor
 
     /// <summary>
     /// 建筑形态专用交互层。身份引用仍由通用 CompMechFormCarrier 保存。
-    /// 同时保存进入建筑形态时的实际耐久比例，供恢复机械体时只结算建筑阶段新增损伤。
+    /// 同时保存初始耐久与可修复损伤额度，供恢复机械体时结算建筑阶段损伤和维修。
     /// </summary>
     public sealed class CompMechBuildingForm : ThingComp
     {
@@ -30,6 +30,8 @@ namespace MAP_MechanoidMechanitor
         private Effecter? progressBarEffecter;
         private bool hasInitialHealthFraction;
         private float initialHealthFraction = 1f;
+        // -1 表示旧存档没有修复额度快照；有耐久基线时按恢复时的可修复损伤兼容。
+        private float initialRepairableDamage = -1f;
         private bool hasDestructionHealthSnapshot;
         private float destructionHealthFraction = 1f;
 
@@ -41,10 +43,13 @@ namespace MAP_MechanoidMechanitor
 
         internal MechBuildingSourceState SourceState => sourceState;
 
-        internal void CaptureInitialHealthFraction(float fraction)
+        internal float InitialRepairableDamage => initialRepairableDamage;
+
+        internal void CaptureInitialHealthFraction(float fraction, float repairableDamage)
         {
             initialHealthFraction = Mathf.Clamp01(fraction);
             hasInitialHealthFraction = true;
+            initialRepairableDamage = Mathf.Max(0f, repairableDamage);
         }
 
         internal bool TryGetDurabilityFractions(
@@ -89,6 +94,10 @@ namespace MAP_MechanoidMechanitor
                 ref initialHealthFraction,
                 "initialHealthFraction",
                 defaultValue: 1f);
+            Scribe_Values.Look(
+                ref initialRepairableDamage,
+                "initialRepairableDamage",
+                defaultValue: -1f);
             Scribe_Values.Look(
                 ref hasDestructionHealthSnapshot,
                 "hasDestructionHealthSnapshot",
@@ -218,6 +227,19 @@ namespace MAP_MechanoidMechanitor
             }
 
             yield return command;
+        }
+
+        public override void PostDrawExtraSelectionOverlays()
+        {
+            base.PostDrawExtraSelectionOverlays();
+            if (parent.Spawned
+                && parent.Map == Find.CurrentMap
+                && parent.Faction == Faction.OfPlayer
+                && parent.GetComp<CompPower>() != null)
+            {
+                // 复用原版电网叠加层；电源关闭时仍允许查看线路。
+                OverlayDrawHandler.DrawPowerGridOverlayThisFrame();
+            }
         }
 
         public override string CompInspectStringExtra()

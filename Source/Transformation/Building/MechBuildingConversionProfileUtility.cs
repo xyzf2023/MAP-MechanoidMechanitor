@@ -4,14 +4,14 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 战车建筑形态配置的唯一查询入口。
-    /// 只有 Pawn ThingDef 上的 CompChariotBuildingConversion 可以提供配置与资格。
+    /// 机械体建筑形态配置的唯一查询入口。
+    /// 只有 Pawn ThingDef 上的 CompMechBuildingConversion 可以提供配置与资格。
     /// </summary>
     public static class MechBuildingConversionProfileUtility
     {
         public static bool TryGetProfile(
             Pawn? pawn,
-            out CompProperties_ChariotBuildingConversion? profile)
+            out CompProperties_MechBuildingConversion? profile)
         {
             profile = null;
             if (pawn == null || pawn.Destroyed || pawn.Discarded)
@@ -19,8 +19,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            CompChariotBuildingConversion? comp =
-                pawn.GetComp<CompChariotBuildingConversion>();
+            CompMechBuildingConversion? comp =
+                pawn.GetComp<CompMechBuildingConversion>();
             profile = comp?.Props;
             return profile?.buildingFormDef != null;
         }

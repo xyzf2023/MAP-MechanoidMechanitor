@@ -119,7 +119,8 @@ namespace MAP_MechanoidMechanitor
                 Rotation = rotation,
                 HasDurabilitySnapshot = hasDurability,
                 InitialHealthFraction = initialFraction,
-                CurrentHealthFraction = currentFraction
+                CurrentHealthFraction = currentFraction,
+                InitialRepairableDamage = buildingState.InitialRepairableDamage
             });
         }
 

@@ -17,6 +17,7 @@ namespace MAP_MechanoidMechanitor
         public bool HasDurabilitySnapshot;
         public float InitialHealthFraction;
         public float CurrentHealthFraction;
+        public float InitialRepairableDamage = -1f;
 
         // 重试节流属于运行态，读档后允许立即重试。
         internal int NextAttemptTick;
@@ -33,6 +34,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref HasDurabilitySnapshot, "hasDurabilitySnapshot");
             Scribe_Values.Look(ref InitialHealthFraction, "initialHealthFraction");
             Scribe_Values.Look(ref CurrentHealthFraction, "currentHealthFraction");
+            Scribe_Values.Look(ref InitialRepairableDamage, "initialRepairableDamage", -1f);
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 SourceState ??= new MechBuildingSourceState();
