@@ -63,8 +63,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 无需外部监管者的 MAP 节点（如正义）不应获得外部监管者。
-            if (MAPMechanitorNodeUtility.HasNode(subject)
-                && !MAPMechanitorNodeUtility.RequiresExternalOverseer(subject))
+            if (AutonomousMechUtility.IsAutonomousMech(subject))
             {
                 return false;
             }
@@ -230,8 +229,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 无需外部监管者的 MAP 节点（如正义）不应获得外部监管者。
-            if (MAPMechanitorNodeUtility.HasNode(subject)
-                && !MAPMechanitorNodeUtility.RequiresExternalOverseer(subject))
+            if (AutonomousMechUtility.IsAutonomousMech(subject))
             {
                 failureReason =
                     $"subject 不需要外部监管者：" +

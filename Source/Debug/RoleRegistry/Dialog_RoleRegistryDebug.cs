@@ -8,8 +8,8 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 开发者模式角色注册表管理窗口：查看/删除机械族机械师、仿生伴侣、飞行授权
-    /// 与合体资格记录。
+    /// 开发者模式角色注册表管理窗口：查看/删除机械族机械师、仿生伴侣、飞行授权、
+    /// 合体资格与独立自律授权记录。
     /// </summary>
     public sealed class Dialog_RoleRegistryDebug : Window
     {
@@ -18,7 +18,8 @@ namespace MAP_MechanoidMechanitor
             MechanoidMechanitor,
             SyntheticCompanion,
             MechanicalFlight,
-            MechFusion
+            MechFusion,
+            AutonomousMech
         }
 
         private const float TitleHeight = 32f;
@@ -38,6 +39,8 @@ namespace MAP_MechanoidMechanitor
             new List<MechanicalFlightAuthorizationRecord>();
         private readonly List<MechFusionEligibilityRecord> fusionRows =
             new List<MechFusionEligibilityRecord>();
+        private readonly List<AutonomousMechAuthorizationRecord> autonomyRows =
+            new List<AutonomousMechAuthorizationRecord>();
 
         public override Vector2 InitialSize => new Vector2(720f, 560f);
 
@@ -110,6 +113,10 @@ namespace MAP_MechanoidMechanitor
                 {
                     DrawFlightTab(listRect);
                 }
+                else if (currentTab == Tab.AutonomousMech)
+                {
+                    DrawAutonomyTab(listRect);
+                }
                 else
                 {
                     DrawMechFusionTab(listRect);
@@ -162,6 +169,14 @@ namespace MAP_MechanoidMechanitor
                     scrollPosition = Vector2.zero;
                 },
                 () => currentTab == Tab.MechFusion));
+            tabs.Add(new TabRecord(
+                "自律授权 (0)",
+                () =>
+                {
+                    currentTab = Tab.AutonomousMech;
+                    scrollPosition = Vector2.zero;
+                },
+                () => currentTab == Tab.AutonomousMech));
         }
 
         private void UpdateTabLabels()
@@ -171,6 +186,7 @@ namespace MAP_MechanoidMechanitor
             tabs[1].label = "仿生伴侣 (" + companionRows.Count + ")";
             tabs[2].label = "飞行授权 (" + flightRows.Count + ")";
             tabs[3].label = "合体资格 (" + fusionRows.Count + ")";
+            tabs[4].label = "自律授权 (" + autonomyRows.Count + ")";
         }
 
         private void RefreshSnapshots()
@@ -179,6 +195,7 @@ namespace MAP_MechanoidMechanitor
             companionRows.Clear();
             flightRows.Clear();
             fusionRows.Clear();
+            autonomyRows.Clear();
 
             IReadOnlyList<MechanoidMechanitorRegistrySnapshotEntry> mechanitorSnapshot =
                 GameComponent_MechanoidMechanitorRegistry.GetPersistentRecordSnapshot();
@@ -215,7 +232,80 @@ namespace MAP_MechanoidMechanitor
             }
 
             fusionRows.Sort(CompareFusionRecords);
+            autonomyRows.AddRange(GameComponent_AutonomousMechRegistry.GetAuthorizationRecordSnapshot());
+            autonomyRows.Sort((a, b) => (a.Pawn?.thingIDNumber ?? int.MaxValue)
+                .CompareTo(b.Pawn?.thingIDNumber ?? int.MaxValue));
             UpdateTabLabels();
+        }
+
+        private void DrawAutonomyTab(Rect listRect)
+        {
+            if (autonomyRows.Count == 0)
+            {
+                DrawCenteredMessage(listRect, "当前没有自律授权记录。可通过开发者的添加目标到角色注册表入口授予。");
+                return;
+            }
+
+            Rect viewRect = new Rect(0f, 0f, listRect.width - 16f,
+                autonomyRows.Count * (RowHeight + 4f));
+            Widgets.BeginScrollView(listRect, ref scrollPosition, viewRect);
+            for (int i = 0; i < autonomyRows.Count; i++)
+            {
+                AutonomousMechAuthorizationRecord record = autonomyRows[i];
+                Pawn? pawn = record.Pawn;
+                if (pawn == null) continue;
+                Rect row = new Rect(0f, i * (RowHeight + 4f), viewRect.width, RowHeight);
+                Widgets.DrawHighlightIfMouseover(row);
+                float textWidth = row.width - DeleteButtonWidth - 16f;
+                Text.Anchor = TextAnchor.UpperLeft;
+                Widgets.Label(new Rect(4f, row.y + 4f, textWidth, Text.LineHeight),
+                    pawn.LabelShortCap + "  |  " + pawn.ThingID + "  |  " + DescribePawnStatus(pawn));
+                string sources = DescribeAutonomySources(record.Sources);
+                string details = "来源：" + sources + "  |  充电："
+                    + record.RechargeThresholds.min.ToStringPercent() + "～"
+                    + record.RechargeThresholds.max.ToStringPercent();
+                GUI.color = new Color(0.75f, 0.75f, 0.75f);
+                Widgets.Label(new Rect(4f, row.y + 4f + Text.LineHeight, textWidth, Text.LineHeight), details);
+                GUI.color = Color.white;
+                TooltipHandler.TipRegion(row, "阵营：" + DescribeFaction(pawn) + "\n" + details
+                    + "\n撤销只移除独立授权；身份、先天组件或节点来源仍存在时，自律资格继续保留。");
+                Rect button = new Rect(row.xMax - DeleteButtonWidth,
+                    row.y + (RowHeight - 30f) / 2f, DeleteButtonWidth, 30f);
+                if (record.HasIndependentAuthorization)
+                {
+                    if (Widgets.ButtonText(button, "撤销")) ConfirmRevokeAutonomy(pawn);
+                }
+                else Widgets.Label(button, "来源保留");
+            }
+            Widgets.EndScrollView();
+        }
+
+        private static string DescribeAutonomySources(AutonomousMechAuthorizationSource sources)
+        {
+            var labels = new List<string>();
+            if ((sources & AutonomousMechAuthorizationSource.Independent) != 0) labels.Add("独立授权");
+            if ((sources & AutonomousMechAuthorizationSource.MechanitorIdentity) != 0) labels.Add("机械师身份");
+            if ((sources & AutonomousMechAuthorizationSource.LegacyNode) != 0) labels.Add("节点配置");
+            if ((sources & AutonomousMechAuthorizationSource.InnateComp) != 0) labels.Add("先天组件");
+            return string.Join("、", labels);
+        }
+
+        private void ConfirmRevokeAutonomy(Pawn pawn)
+        {
+            Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                "确认撤销 " + pawn.LabelShortCap + " 的独立自律授权？\n"
+                + "若没有其他来源，将恢复普通机械体规则，不会自动指定监管者。",
+                () =>
+                {
+                    bool changed = GameComponent_AutonomousMechRegistry.TryRevokeAuthorization(pawn);
+                    bool remains = GameComponent_AutonomousMechRegistry.HasAuthorizationRecord(pawn);
+                    Messages.Message(changed
+                            ? (remains ? "已撤销独立授权；其他来源仍提供自律资格。" : "已撤销自律资格，恢复普通机械体规则。")
+                            : "目标没有可撤销的独立授权。",
+                        changed ? MessageTypeDefOf.TaskCompletion : MessageTypeDefOf.RejectInput,
+                        historical: false);
+                    RefreshSnapshots();
+                }, destructive: true));
         }
 
         private static int CompareMechanitorEntries(

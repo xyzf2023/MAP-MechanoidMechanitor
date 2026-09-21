@@ -8,21 +8,27 @@ namespace MAP_MechanoidMechanitor
     {
         public static bool IsOverseerlessNodeSubject(Pawn? pawn)
         {
-            return pawn != null
-                && ModsConfig.BiotechActive
-                && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn)
-                && !MAPMechanitorNodeUtility.RequiresExternalOverseer(pawn);
+            // 兼容旧节点专用调用方，不能因普通机械体自律而授予节点界面/身份。
+            return AutonomousMechUtility.IsAutonomousMech(pawn)
+                && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn);
         }
 
         public static bool ShouldClearOwnExternalOverseer(Pawn? pawn)
         {
-            return IsOverseerlessNodeSubject(pawn);
+            return AutonomousMechUtility.IsAutonomousMech(pawn);
         }
 
         public static void ClearExternalOverseerIfNode(Pawn pawn)
         {
             if (!ShouldClearOwnExternalOverseer(pawn))
             {
+                return;
+            }
+
+            if (Scribe.mode != LoadSaveMode.Inactive
+                || MechanoidMechanitorPostLoadSafetyCoordinator.ShouldDeferPositiveRestore)
+            {
+                GameComponent_AutonomousMechRegistry.NotifyPawnLifecycle(pawn);
                 return;
             }
 
@@ -75,6 +81,9 @@ namespace MAP_MechanoidMechanitor
             externalOverseer.relations.TryRemoveDirectRelation(
                 PawnRelationDefOf.Overseer,
                 node);
+            // 即使外部监管者已失去机械师资格，仍清除其残留控制组归属。
+            if (externalOverseer.mechanitor?.GetControlGroup(node) != null)
+                externalOverseer.mechanitor.UnassignPawnFromAnyControlGroup(node);
             externalOverseer.mechanitor?.Notify_BandwidthChanged();
             node.mechanitor?.Notify_BandwidthChanged();
         }

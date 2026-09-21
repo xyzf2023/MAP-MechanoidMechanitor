@@ -24,7 +24,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 本体三模式 → 原版思维树：自律指令→Work，充电→Recharge，休眠→SelfShutdown
+            // 自律行为/本体模式 → 原版思维树：自律指令→Work，充电→Recharge，休眠→SelfShutdown
             MechWorkModeDef vanillaMode =
                 MechanoidMechanitorSelfWorkModeUtility.GetMappedVanillaWorkMode(currentMode);
             __result = __instance.workMode == vanillaMode;

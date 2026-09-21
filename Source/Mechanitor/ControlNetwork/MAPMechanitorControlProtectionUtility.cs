@@ -18,6 +18,11 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
+            if (AutonomousMechUtility.IsAutonomousMech(target))
+            {
+                return true;
+            }
+
             if (!MAPMechanitorNodeUtility.HasNode(target))
             {
                 return false;

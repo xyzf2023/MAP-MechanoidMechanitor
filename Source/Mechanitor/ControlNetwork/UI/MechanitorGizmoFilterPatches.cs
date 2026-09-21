@@ -12,7 +12,7 @@ namespace MAP_MechanoidMechanitor
     // 正义是无外部监管者的 MAP mechanitor node（requiresExternalOverseer=false）。
     // 经 GetOverseer() 查询过滤后，正义对外没有 overseer，该按钮无实际用途。
     //
-    // 本补丁仅在 HasNode && !RequiresExternalOverseer 时过滤该 UI 按钮。
+    // 本补丁仅在具有独立自律资格时过滤该 UI 按钮。
     // 不修改 overseer relation、控制组、带宽、ThinkTree、self work mode。
     // 隐者、普通机械体、正义监管的机械体、控制组/远程护盾/Dev Gizmo 均不受影响。
     [HarmonyPatch(typeof(MechanitorUtility), nameof(MechanitorUtility.GetMechGizmos))]
@@ -23,8 +23,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (mech == null
                 || !ModsConfig.BiotechActive
-                || !MAPMechanitorNodeUtility.HasNode(mech)
-                || MAPMechanitorNodeUtility.RequiresExternalOverseer(mech))
+                || !AutonomousMechUtility.IsAutonomousMech(mech))
             {
                 foreach (Gizmo gizmo in __result)
                 {

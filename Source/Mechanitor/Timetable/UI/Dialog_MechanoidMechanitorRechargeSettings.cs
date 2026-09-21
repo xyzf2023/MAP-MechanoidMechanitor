@@ -14,7 +14,7 @@ namespace MAP_MechanoidMechanitor
     /// 构造一个仅用于本窗口的临时 <see cref="MechanitorControlGroup"/> proxy，
     /// 其 mechRechargeThresholds 初始值来自当前 Pawn 的个人阈值。
     /// 原版窗口只会在点击 OK 时写入 proxy.mechRechargeThresholds，
-    /// 我们据此把结果同步到 MechanoidMechanitorRecord。
+    /// 我们据此把结果同步到独立自律记录，普通机械体无需拥有机械师 Tracker。
     ///
     /// proxy 绝不加入 tracker.controlGroups、不 Assign 任何机械体、不参与带宽 / WorkMode / 存档，
     /// 窗口关闭后可自然被 GC。

@@ -51,6 +51,20 @@ namespace MAP_MechanoidMechanitor
             return comp != null;
         }
 
+        public override void PostPostMake()
+        {
+            base.PostPostMake();
+            if (parent is Pawn pawn)
+                GameComponent_AutonomousMechRegistry.SynchronizeAutomaticSources(pawn);
+        }
+
+        public override void PostExposeData()
+        {
+            base.PostExposeData();
+            if (Scribe.mode == LoadSaveMode.PostLoadInit && parent is Pawn pawn)
+                GameComponent_AutonomousMechRegistry.SynchronizeAutomaticSources(pawn);
+        }
+
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
@@ -59,6 +73,8 @@ namespace MAP_MechanoidMechanitor
             {
                 return;
             }
+
+            GameComponent_AutonomousMechRegistry.SynchronizeAutomaticSources(pawn);
 
             CompProperties_MAPMechanitorNode? nodeProps = NodeProps;
             if (nodeProps == null)

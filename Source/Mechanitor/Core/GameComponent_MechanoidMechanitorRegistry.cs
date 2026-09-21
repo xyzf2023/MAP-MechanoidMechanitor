@@ -150,6 +150,29 @@ namespace MAP_MechanoidMechanitor
             return registry.FindRecordForPawn(pawn) != null;
         }
 
+        // 仅供独立能力迁移读取旧数据，包含可复活尸体；不用于玩家控制判定。
+        internal static bool TryGetPersistentRecord(Pawn pawn, out MechanoidMechanitorRecord? record)
+        {
+            record = null;
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (pawn.Discarded || registry == null)
+                return false;
+            if (registry.recordByPawn.TryGetValue(pawn, out record))
+                return true;
+            if (registry.mechanitorRecords != null)
+            {
+                foreach (MechanoidMechanitorRecord candidate in registry.mechanitorRecords)
+                {
+                    if (candidate != null && ReferenceEquals(candidate.Pawn, pawn))
+                    {
+                        record = candidate;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// 持久化记录快照：供调试窗口读取真实存档记录，而非活跃缓存。
         /// 包含死亡、尸体中、远行队、未生成与暂时离图；排除空记录与 Discarded。
@@ -166,6 +189,8 @@ namespace MAP_MechanoidMechanitor
             List<MechanoidMechanitorRegistrySnapshotEntry> snapshot =
                 new List<MechanoidMechanitorRegistrySnapshotEntry>();
             List<MechanoidMechanitorRecord> records = registry.mechanitorRecords;
+            if (records == null)
+                return snapshot;
             for (int i = 0; i < records.Count; i++)
             {
                 MechanoidMechanitorRecord? record = records[i];

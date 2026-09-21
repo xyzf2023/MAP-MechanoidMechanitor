@@ -23,6 +23,7 @@ namespace MAP_MechanoidMechanitor
         // 每个机械族机械师自己的充电阈值（0~1 比例）。
         // 默认值必须直接来自原版 MechanitorControlGroup.DefaultMechRechargeThresholds，
         // 不复制另一份“权威默认值”。旧存档没有该字段时由 Scribe 默认值自动补齐。
+        // 旧档导入字段。运行时权威值已迁至 AutonomousMechAuthorizationRecord，勿再写入。
         public FloatRange RechargeThresholds =
             MechanitorControlGroup.DefaultMechRechargeThresholds;
 

@@ -464,6 +464,7 @@ namespace MAP_MechanoidMechanitor
                     PendingDynamicConsciousnessRefresh.Remove(pawn);
                 }
 
+                GameComponent_AutonomousMechRegistry.ApplyDeferredRuntimeRefreshes();
                 return PendingDynamicConsciousnessRefresh.Count == 0;
             }
             catch (Exception ex)

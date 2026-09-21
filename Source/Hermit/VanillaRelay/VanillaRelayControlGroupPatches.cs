@@ -17,7 +17,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (ModsConfig.BiotechActive
-                && MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(pawn))
+                && AutonomousMechUtility.IsAutonomousMech(pawn))
             {
                 return false;
             }

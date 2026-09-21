@@ -15,6 +15,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            if (capability == MechanoidMechanitorCapability.AutonomousMech)
+            {
+                return GameComponent_AutonomousMechRegistry.IsAuthorized(pawn);
+            }
+
             // 移动热路径只检查组件和机动作战标记，不聚合其他能力。
             if (capability == MechanoidMechanitorCapability.MovementCostImmunity)
             {
@@ -99,6 +104,10 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechanoidMechanitorCapability capabilities = MechanoidMechanitorCapability.None;
+            if (GameComponent_AutonomousMechRegistry.IsAuthorized(pawn))
+            {
+                capabilities |= MechanoidMechanitorCapability.AutonomousMech;
+            }
             if (HasMovementCostImmunityCapability(pawn))
             {
                 capabilities |= MechanoidMechanitorCapability.MovementCostImmunity;

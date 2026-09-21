@@ -9,8 +9,7 @@ namespace MAP_MechanoidMechanitor
 {
     /// <summary>
     /// CompOverseerSubject.State 的安全接管。
-    /// 普通机械体仅经过一次按 ThingDef 缓存的节点配置查询；
-    /// 只有 MAP 原版控制节点才跳过原版 getter。
+    /// 自律授权直接视为受控，其余 MAP 节点保留监管关系方向修正；普通机械体走原版。
     /// </summary>
     [HarmonyPatch(typeof(CompOverseerSubject), nameof(CompOverseerSubject.State), MethodType.Getter)]
     public static class MAPOverseerlessNodeSubjectPatches_State
@@ -22,14 +21,14 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn? subject = __instance?.Parent;
             if (subject == null
-                || !MAPMechanitorNodeUtility.TryGetVanillaControlNodeProfile(
+                || !AutonomousMechUtility.TryGetSubjectProfile(
                     subject,
                     out bool requiresExternalOverseer))
             {
                 return true;
             }
 
-            // 无需外部监管者的节点，例如正义或后天机械族机械师，始终视为受控。
+            // 独立自律资格不要求具有机械师身份或 mechanitor Tracker。
             if (!requiresExternalOverseer)
             {
                 __result = OverseerSubjectState.Overseen;
@@ -79,7 +78,7 @@ namespace MAP_MechanoidMechanitor
 
 			Pawn? subject = __instance.Parent;
             if (subject == null
-                || !MAPMechanitorNodeUtility.TryGetVanillaControlNodeProfile(
+                || !AutonomousMechUtility.TryGetSubjectProfile(
                     subject,
                     out bool requiresExternalOverseer))
             {
@@ -138,7 +137,7 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn? subject = __instance?.Parent;
             if (subject == null
-                || !MAPMechanitorNodeUtility.TryGetVanillaControlNodeProfile(
+                || !AutonomousMechUtility.TryGetSubjectProfile(
                     subject,
                     out bool requiresExternalOverseer))
             {
@@ -180,7 +179,7 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn? subject = __instance?.Parent;
             if (subject == null
-                || !MAPMechanitorNodeUtility.TryGetVanillaControlNodeProfile(
+                || !AutonomousMechUtility.TryGetSubjectProfile(
                     subject,
                     out bool requiresExternalOverseer))
             {

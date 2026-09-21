@@ -1,0 +1,364 @@
+using System;
+using System.Collections.Generic;
+using RimWorld;
+using UnityEngine;
+using Verse;
+
+namespace MAP_MechanoidMechanitor
+{
+    /// <summary>自律授权的唯一事实来源。查询无副作用，身份同步与运行修复分别进行。</summary>
+    public sealed class GameComponent_AutonomousMechRegistry : GameComponent
+    {
+        private List<AutonomousMechAuthorizationRecord> records = new List<AutonomousMechAuthorizationRecord>();
+        private readonly Dictionary<Pawn, AutonomousMechAuthorizationRecord> byPawn =
+            new Dictionary<Pawn, AutonomousMechAuthorizationRecord>();
+        private readonly Dictionary<Pawn, bool> pendingRefresh = new Dictionary<Pawn, bool>();
+        // 旧档中节点 Comp 可能先于身份注册表恢复；仅对本次新建记录延后导入旧阈值。
+        private readonly HashSet<AutonomousMechAuthorizationRecord> pendingLegacyRechargeImport =
+            new HashSet<AutonomousMechAuthorizationRecord>();
+        private bool refreshing;
+
+        private static GameComponent_AutonomousMechRegistry? CurrentRegistry =>
+            CurrentGameComponentCache<GameComponent_AutonomousMechRegistry>.Get();
+
+        public GameComponent_AutonomousMechRegistry(Game game) { }
+
+        public static bool IsAuthorized(Pawn? pawn) =>
+            ModsConfig.BiotechActive && pawn != null && !pawn.Destroyed && !pawn.Discarded
+            && pawn.RaceProps?.IsMechanoid == true && pawn.OverseerSubject != null
+            && TryGetRecord(pawn, out AutonomousMechAuthorizationRecord? record)
+            && record!.Sources != AutonomousMechAuthorizationSource.None;
+
+        /// <summary>持久记录查询，包含死亡、尸体和离图 Pawn，不代表当前可被玩家控制。</summary>
+        public static bool TryGetRecord(Pawn? pawn, out AutonomousMechAuthorizationRecord? record)
+        {
+            record = null;
+            GameComponent_AutonomousMechRegistry? registry = CurrentRegistry;
+            if (pawn == null || pawn.Discarded || registry == null)
+                return false;
+            if (registry.byPawn.TryGetValue(pawn, out record))
+                return true;
+            // PostLoadInit 次序不保证索引已恢复；只读回退，不在状态 getter 中写入。
+            if (Scribe.mode != LoadSaveMode.Inactive
+                || MechanoidMechanitorPostLoadSafetyCoordinator.LoadInProgress)
+                record = registry.FindPersistentRecord(pawn);
+            return record != null;
+        }
+
+        public static bool HasAuthorizationRecord(Pawn? pawn) => TryGetRecord(pawn, out _);
+
+        public static IReadOnlyList<AutonomousMechAuthorizationRecord> GetAuthorizationRecordSnapshot()
+        {
+            var result = new List<AutonomousMechAuthorizationRecord>();
+            if (CurrentRegistry?.records != null)
+            {
+                foreach (AutonomousMechAuthorizationRecord record in CurrentRegistry.records)
+                {
+                    if (record?.Pawn != null && !record.Pawn.Discarded)
+                        result.Add(record);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>仅增加独立来源；重复授权返回 false，且不重复执行运行修复。</summary>
+        public static bool TryAuthorize(Pawn? pawn)
+        {
+            if (!AutonomousMechUtility.CanReceiveAuthorization(pawn) || CurrentRegistry == null)
+                return false;
+            CurrentRegistry.SynchronizePawn(pawn!);
+            AutonomousMechAuthorizationRecord record = CurrentRegistry.GetOrCreate(pawn!);
+            if (record.HasIndependentAuthorization)
+                return false;
+            bool wasAuthorized = record.Sources != AutonomousMechAuthorizationSource.None;
+            record.SetSources(record.Sources | AutonomousMechAuthorizationSource.Independent);
+            CurrentRegistry.NotifyChanged(pawn!, !wasAuthorized);
+            CurrentRegistry.FlushPendingRefreshes();
+            return true;
+        }
+
+        /// <summary>只撤销独立来源；身份、先天组件和静态节点提供的资格不受影响。</summary>
+        public static bool TryRevokeAuthorization(Pawn? pawn)
+        {
+            if (pawn == null || CurrentRegistry == null)
+                return false;
+            CurrentRegistry.SynchronizePawn(pawn);
+            if (!TryGetRecord(pawn, out AutonomousMechAuthorizationRecord? record)
+                || !record!.HasIndependentAuthorization)
+                return false;
+            record.SetSources(record.Sources & ~AutonomousMechAuthorizationSource.Independent);
+            bool lostAuthorization = record.Sources == AutonomousMechAuthorizationSource.None;
+            if (lostAuthorization)
+                CurrentRegistry.Remove(record);
+            CurrentRegistry.NotifyChanged(pawn, lostAuthorization);
+            CurrentRegistry.FlushPendingRefreshes();
+            return true;
+        }
+
+        public static bool TrySetRechargeThresholds(Pawn? pawn, FloatRange thresholds)
+        {
+            if (pawn == null || pawn.Destroyed
+                || !TryGetRecord(pawn, out AutonomousMechAuthorizationRecord? record))
+                return false;
+            record!.SetRechargeThresholds(thresholds);
+            return true;
+        }
+
+        public static bool TrySetSelfShutdown(Pawn? pawn, bool selfShutdown)
+        {
+            if (!AutonomousMechUtility.CanReceiveAuthorization(pawn)
+                || !AutonomousMechUtility.IsPlayerAutonomousMech(pawn)
+                || MechanoidMechanitorSelfWorkModeUtility.HasSelfWorkMode(pawn)
+                || !TryGetRecord(pawn, out AutonomousMechAuthorizationRecord? record)
+                || record!.SelfShutdown == selfShutdown)
+                return false;
+            record.SetSelfShutdown(selfShutdown);
+            MechanoidMechanitorSelfWorkModeUtility.SyncSelfWorkModeEffects(pawn);
+            MechanoidMechanitorSelfWorkModeUtility.NotifyModeChanged(pawn!, selfShutdown
+                ? MechWorkModeDefOf.SelfShutdown
+                : MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(null));
+            return true;
+        }
+
+        internal static void SynchronizeAutomaticSources(Pawn? pawn)
+        {
+            if (pawn != null && !pawn.Discarded)
+                CurrentRegistry?.SynchronizePawn(pawn);
+        }
+
+        /// <summary>机械师注册表结构改变时同步，包含被删除身份的旧授权记录。</summary>
+        internal static void SynchronizeMechanitorSources()
+        {
+            GameComponent_AutonomousMechRegistry? registry = CurrentRegistry;
+            if (registry == null)
+                return;
+            var candidates = new HashSet<Pawn>();
+            foreach (var entry in GameComponent_MechanoidMechanitorRegistry.GetPersistentRecordSnapshot())
+                candidates.Add(entry.Pawn);
+            if (registry.records != null)
+                foreach (var record in registry.records)
+                    if (record?.Pawn != null) candidates.Add(record.Pawn);
+            foreach (Pawn pawn in candidates)
+                registry.SynchronizePawn(pawn);
+        }
+
+        internal static void NotifyPawnLifecycle(Pawn pawn)
+        {
+            SynchronizeAutomaticSources(pawn);
+            if (HasAuthorizationRecord(pawn))
+                CurrentRegistry?.QueueRefresh(pawn, false);
+        }
+
+        private void SynchronizePawn(Pawn pawn)
+        {
+            if (pawn.Discarded)
+                return;
+            AutonomousMechAuthorizationRecord? record = FindPersistentRecord(pawn);
+            if (record != null && pendingLegacyRechargeImport.Contains(record)
+                && GameComponent_MechanoidMechanitorRegistry.TryGetPersistentRecord(pawn,
+                    out MechanoidMechanitorRecord? legacy))
+            {
+                record.SetRechargeThresholds(legacy!.RechargeThresholds);
+                pendingLegacyRechargeImport.Remove(record);
+            }
+            AutonomousMechAuthorizationSource sources =
+                (record?.Sources ?? AutonomousMechAuthorizationSource.None)
+                & AutonomousMechAuthorizationSource.Independent;
+            // 其他 GameComponent 尚未完成恢复时，只补来源，不据暂时缺失的身份删记录。
+            if (Scribe.mode != LoadSaveMode.Inactive
+                || MechanoidMechanitorPostLoadSafetyCoordinator.ShouldDeferPositiveRestore)
+                sources |= record?.Sources ?? AutonomousMechAuthorizationSource.None;
+            if (pawn.RaceProps?.IsMechanoid == true && pawn.OverseerSubject != null)
+            {
+                if (pawn.GetComp<CompAutonomousMech>() != null)
+                    sources |= AutonomousMechAuthorizationSource.InnateComp;
+                if (GameComponent_MechanoidMechanitorRegistry.TryGetPersistentRecord(pawn, out _))
+                    sources |= AutonomousMechAuthorizationSource.MechanitorIdentity;
+                CompProperties_MAPMechanitorNode? props = pawn.GetComp<CompMAPMechanitorNode>()?.NodeProps;
+                if (props?.controlBackend == MAPMechanitorControlBackend.Vanilla
+                    && !props.requiresExternalOverseer)
+                    sources |= AutonomousMechAuthorizationSource.LegacyNode;
+            }
+            AutonomousMechAuthorizationSource previous = record?.Sources ?? AutonomousMechAuthorizationSource.None;
+            if (previous == sources)
+            {
+                if (record != null && sources == AutonomousMechAuthorizationSource.None)
+                    Remove(record);
+                return;
+            }
+            if (sources == AutonomousMechAuthorizationSource.None)
+            {
+                if (record != null) Remove(record);
+            }
+            else
+            {
+                (record ?? GetOrCreate(pawn)).SetSources(sources);
+            }
+            NotifyChanged(pawn, previous == AutonomousMechAuthorizationSource.None
+                || sources == AutonomousMechAuthorizationSource.None);
+        }
+
+        private AutonomousMechAuthorizationRecord GetOrCreate(Pawn pawn)
+        {
+            records ??= new List<AutonomousMechAuthorizationRecord>();
+            AutonomousMechAuthorizationRecord? existing = FindPersistentRecord(pawn);
+            if (existing != null)
+            {
+                byPawn[pawn] = existing;
+                return existing;
+            }
+            FloatRange thresholds = MechanitorControlGroup.DefaultMechRechargeThresholds;
+            // 只在首次创建时导入旧字段；不能覆盖独立授权后调整的个人设置。
+            bool hasLegacy = GameComponent_MechanoidMechanitorRegistry.TryGetPersistentRecord(pawn,
+                out MechanoidMechanitorRecord? legacy);
+            if (hasLegacy)
+                thresholds = legacy!.RechargeThresholds;
+            var record = new AutonomousMechAuthorizationRecord(pawn, thresholds);
+            if (!hasLegacy && (Scribe.mode != LoadSaveMode.Inactive
+                || MechanoidMechanitorPostLoadSafetyCoordinator.LoadInProgress))
+                pendingLegacyRechargeImport.Add(record);
+            records.Add(record);
+            byPawn[pawn] = record;
+            return record;
+        }
+
+        private AutonomousMechAuthorizationRecord? FindPersistentRecord(Pawn pawn)
+        {
+            if (byPawn.TryGetValue(pawn, out AutonomousMechAuthorizationRecord? record))
+                return record;
+            if (records != null)
+                foreach (AutonomousMechAuthorizationRecord candidate in records)
+                    if (candidate != null && ReferenceEquals(candidate.Pawn, pawn)) return candidate;
+            return null;
+        }
+
+        private void Remove(AutonomousMechAuthorizationRecord record)
+        {
+            records.Remove(record);
+            pendingLegacyRechargeImport.Remove(record);
+            if (record.Pawn != null) byPawn.Remove(record.Pawn);
+        }
+
+        private void NotifyChanged(Pawn pawn, bool eligibilityChanged)
+        {
+            MAPMechanitorNodeUtility.InvalidateVanillaControlNodeProfileCache();
+            if (eligibilityChanged)
+                QueueRefresh(pawn, !MechanoidMechanitorPostLoadSafetyCoordinator.LoadInProgress
+                    && Scribe.mode == LoadSaveMode.Inactive);
+        }
+
+        private void QueueRefresh(Pawn pawn, bool reevaluateJobs)
+        {
+            pendingRefresh.TryGetValue(pawn, out bool previous);
+            pendingRefresh[pawn] = previous || reevaluateJobs;
+        }
+
+        /// <summary>由安全读档协调器调用。只处理事件积累的 Pawn，不扫描全体机械体。</summary>
+        internal static void ApplyDeferredRuntimeRefreshes()
+        {
+            SynchronizeMechanitorSources();
+            CurrentRegistry?.pendingLegacyRechargeImport.Clear();
+            CurrentRegistry?.FlushPendingRefreshes(allowLoadCoordinator: true);
+        }
+
+        private void FlushPendingRefreshes(bool allowLoadCoordinator = false)
+        {
+            if (refreshing || pendingRefresh.Count == 0 || Scribe.mode != LoadSaveMode.Inactive
+                || (!allowLoadCoordinator && MechanoidMechanitorPostLoadSafetyCoordinator.LoadInProgress)
+                || LongEventHandler.AnyEventNowOrWaiting || Current.ProgramState != ProgramState.Playing)
+                return;
+            refreshing = true;
+            try
+            {
+                var pending = new List<KeyValuePair<Pawn, bool>>(pendingRefresh);
+                foreach (var entry in pending)
+                {
+                    pendingRefresh.Remove(entry.Key);
+                    try
+                    {
+                        AutonomousMechUtility.RefreshRuntime(entry.Key, entry.Value && !allowLoadCoordinator);
+                    }
+                    catch
+                    {
+                        // 交给读档协调器或游戏的异常处理；失败项目不能被静默丢弃。
+                        QueueRefresh(entry.Key, entry.Value);
+                        throw;
+                    }
+                }
+            }
+            finally { refreshing = false; }
+        }
+
+        public override void GameComponentUpdate()
+        {
+            base.GameComponentUpdate();
+            FlushPendingRefreshes();
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            if (Scribe.mode == LoadSaveMode.Saving)
+                RebuildIndex();
+            Scribe_Collections.Look(ref records, "autonomousMechAuthorizationRecords", LookMode.Deep);
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                RebuildIndex();
+                SynchronizeMechanitorSources();
+                foreach (var record in records)
+                    if (record.Pawn != null) QueueRefresh(record.Pawn, false);
+            }
+        }
+
+        public override void StartedNewGame()
+        {
+            base.StartedNewGame();
+            ReconcileGame();
+        }
+
+        public override void LoadedGame()
+        {
+            base.LoadedGame();
+            ReconcileGame();
+        }
+
+        private void ReconcileGame()
+        {
+            RebuildIndex();
+            SynchronizeMechanitorSources();
+            // 兼容没有机械师身份的旧节点；只在开局/读档扫描，离图已有记录由注册表保留。
+            if (Find.WorldPawns != null)
+                foreach (Pawn pawn in Find.WorldPawns.AllPawnsAliveOrDead)
+                    SynchronizePawn(pawn);
+            foreach (Map map in Find.Maps)
+                foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
+                    SynchronizePawn(pawn);
+            foreach (var record in records)
+                if (record.Pawn != null) QueueRefresh(record.Pawn, false);
+        }
+
+        private void RebuildIndex()
+        {
+            records ??= new List<AutonomousMechAuthorizationRecord>();
+            byPawn.Clear();
+            for (int i = 0; i < records.Count; i++)
+            {
+                AutonomousMechAuthorizationRecord? record = records[i];
+                Pawn? pawn = record?.Pawn;
+                if (pawn == null || pawn.Discarded)
+                {
+                    records.RemoveAt(i--);
+                    continue;
+                }
+                if (byPawn.TryGetValue(pawn, out AutonomousMechAuthorizationRecord? first))
+                {
+                    first.SetSources(first.Sources | record!.Sources);
+                    records.RemoveAt(i--);
+                }
+                else byPawn.Add(pawn, record!);
+            }
+            MAPMechanitorNodeUtility.InvalidateVanillaControlNodeProfileCache();
+            pendingLegacyRechargeImport.RemoveWhere(record => !records.Contains(record));
+        }
+    }
+}

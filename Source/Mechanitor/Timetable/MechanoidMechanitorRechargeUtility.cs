@@ -5,7 +5,8 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 机械族机械师个人充电阈值的唯一读取 / 写入 / 合法化入口。
+    /// 自律机械体个人充电阈值的唯一读取 / 写入 / 合法化入口。
+    /// 保留原类名兼容机械师作息和 UI 调用；权威数据位于独立自律注册表。
     /// 所有个人阈值读取必须集中走这里，禁止在 Sleep JobGiver / Harmony Patch / UI 等位置
     /// 各自直接访问 Record 字段并重复计算；所有写入必须走 TrySetRechargeThresholds。
     /// 查不到 Record 时回退原版 DefaultMechRechargeThresholds，不抛异常。
@@ -19,9 +20,9 @@ namespace MAP_MechanoidMechanitor
         {
             thresholds = MechanitorControlGroup.DefaultMechRechargeThresholds;
 
-            if (!GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
+            if (!GameComponent_AutonomousMechRegistry.TryGetRecord(
                     pawn,
-                    out MechanoidMechanitorRecord? record)
+                    out AutonomousMechAuthorizationRecord? record)
                 || record == null)
             {
                 return false;
@@ -44,16 +45,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
-                    pawn,
-                    out MechanoidMechanitorRecord? record)
-                || record == null)
-            {
-                return false;
-            }
-
-            record.RechargeThresholds = SanitizeRechargeThresholds(thresholds);
-            return true;
+            return GameComponent_AutonomousMechRegistry.TrySetRechargeThresholds(pawn, thresholds);
         }
 
         /// <summary>

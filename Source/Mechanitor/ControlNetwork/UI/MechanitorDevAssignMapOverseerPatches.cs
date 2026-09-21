@@ -114,8 +114,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                if (MAPMechanitorNodeUtility.HasNode(target)
-                    && !MAPMechanitorNodeUtility.RequiresExternalOverseer(target))
+                if (AutonomousMechUtility.IsAutonomousMech(target))
                 {
                     continue;
                 }

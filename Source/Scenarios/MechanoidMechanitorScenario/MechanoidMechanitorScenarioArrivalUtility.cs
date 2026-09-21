@@ -91,7 +91,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            return !MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(mech);
+            return !AutonomousMechUtility.IsAutonomousMech(mech);
         }
 
         public static void AssignStartingMechsToMechanitor(

@@ -151,7 +151,9 @@ namespace MAP_MechanoidMechanitor
             // 但动态 Tracker 尚未补齐；此时仍必须拦截原版 State，避免错误方向查询。
             if (MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(pawn))
             {
-                return VanillaControlNodeProfile.Overseerless;
+                return AutonomousMechUtility.IsAutonomousMech(pawn)
+                    ? VanillaControlNodeProfile.Overseerless
+                    : VanillaControlNodeProfile.RequiresExternalOverseer;
             }
 
             CompProperties_MAPMechanitorNode? nodeProps = GetCachedNodeProps(pawn.def);
@@ -161,9 +163,9 @@ namespace MAP_MechanoidMechanitor
                 return VanillaControlNodeProfile.NotNode;
             }
 
-            return nodeProps.requiresExternalOverseer
-                ? VanillaControlNodeProfile.RequiresExternalOverseer
-                : VanillaControlNodeProfile.Overseerless;
+            return AutonomousMechUtility.IsAutonomousMech(pawn)
+                ? VanillaControlNodeProfile.Overseerless
+                : VanillaControlNodeProfile.RequiresExternalOverseer;
         }
 
         private static bool ApplyVanillaControlNodeProfile(

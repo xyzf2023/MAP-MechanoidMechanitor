@@ -33,7 +33,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(mech))
+            if (AutonomousMechUtility.IsPlayerAutonomousMech(mech))
             {
                 __result = true;
                 return false;

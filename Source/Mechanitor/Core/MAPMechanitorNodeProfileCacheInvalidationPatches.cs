@@ -13,6 +13,7 @@ namespace MAP_MechanoidMechanitor
         private static void Postfix()
         {
             MAPMechanitorNodeUtility.InvalidateVanillaControlNodeProfileCache();
+            GameComponent_AutonomousMechRegistry.SynchronizeMechanitorSources();
         }
     }
 }

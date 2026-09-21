@@ -22,7 +22,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(pawn))
+            if (!AutonomousMechUtility.IsPlayerAutonomousMech(pawn))
             {
                 return;
             }
@@ -86,7 +86,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (!MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(mech))
+            if (!AutonomousMechUtility.IsPlayerAutonomousMech(mech))
             {
                 return true;
             }

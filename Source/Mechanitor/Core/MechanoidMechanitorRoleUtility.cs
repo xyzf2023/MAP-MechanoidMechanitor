@@ -232,7 +232,7 @@ namespace MAP_MechanoidMechanitor
 
         public static bool RequiresExternalOverseer(Pawn? pawn)
         {
-            if (IsMechanoidMechanitor(pawn))
+            if (AutonomousMechUtility.IsAutonomousMech(pawn))
             {
                 return false;
             }

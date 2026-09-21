@@ -36,9 +36,7 @@ namespace MAP_MechanoidMechanitor
         private static Texture2D? Icon => cachedIcon;
 
         /// <summary>
-        /// 按钮显示条件。身份判断以注册表权威身份为准，
-        /// 不使用 RaceProps.Humanlike / IsColonist / IsColonyMech 作为最终条件，
-        /// 也不依赖是否拥有遇敌反应按钮。
+        /// 按钮显示条件来自独立自律资格与能源需求，不要求机械师身份或遇敌反应按钮。
         /// </summary>
         internal static bool ShouldShowRechargeButton(Pawn? pawn)
         {
@@ -48,7 +46,7 @@ namespace MAP_MechanoidMechanitor
                 && !pawn.health.Dead
                 && pawn.Faction != null
                 && pawn.Faction.IsPlayerSafe()
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
+                && AutonomousMechUtility.UsesPersonalRechargeSettings(pawn);
         }
 
         /// <summary>

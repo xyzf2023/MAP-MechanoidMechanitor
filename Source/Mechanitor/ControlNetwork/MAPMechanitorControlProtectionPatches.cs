@@ -18,7 +18,9 @@ namespace MAP_MechanoidMechanitor
 
             if (MAPMechanitorControlProtectionUtility.IsProtectedMechanitorTarget(mech, pawn))
             {
-                __result = "Target is a MAP mechanitor node.";
+                __result = AutonomousMechUtility.IsAutonomousMech(mech)
+                    ? "目标具有独立自律资格，无需监管者。"
+                    : "Target is a MAP mechanitor node.";
             }
         }
     }

@@ -8,7 +8,7 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    // UI 修复：后天机械师战争女皇等 CompMechCarrier 持有者在无外部监管者时仍应显示
+    // UI 修复：自律战争女皇等 CompMechCarrier 持有者在无外部监管者时仍应显示
     // 原版 Carrier 资源 Gizmo 与「释放战争死卫」按钮。
     //
     // 原版 CompMechCarrier.CompGetGizmosExtra 在 GetOverseer() == null 时提前 yield break。
@@ -118,7 +118,7 @@ namespace MAP_MechanoidMechanitor
                 return overseer;
             }
 
-            if (MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(pawn))
+            if (AutonomousMechUtility.IsPlayerAutonomousMech(pawn))
             {
                 return pawn;
             }

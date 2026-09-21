@@ -36,7 +36,8 @@ namespace MAP_MechanoidMechanitor
             if (Current.Game.GetComponent<GameComponent_MechanoidMechanitorRegistry>() == null
                 || Current.Game.GetComponent<GameComponent_SyntheticCompanionRegistry>() == null
                 || Current.Game.GetComponent<GameComponent_MechanicalFlightRegistry>() == null
-                || Current.Game.GetComponent<GameComponent_MechFusionRegistry>() == null)
+                || Current.Game.GetComponent<GameComponent_MechFusionRegistry>() == null
+                || Current.Game.GetComponent<GameComponent_AutonomousMechRegistry>() == null)
             {
                 Messages.Message(
                     "无法打开角色注册表：注册表组件不可用。",
@@ -76,6 +77,28 @@ namespace MAP_MechanoidMechanitor
 
             if (clickedPawn.RaceProps?.IsMechanoid == true)
             {
+                bool hasIndependentAutonomy =
+                    GameComponent_AutonomousMechRegistry.TryGetRecord(clickedPawn,
+                        out AutonomousMechAuthorizationRecord? autonomy)
+                    && autonomy!.HasIndependentAuthorization;
+                if (hasIndependentAutonomy)
+                {
+                    options.Add(new FloatMenuOption("授予独立自律资格（已经授权）", null));
+                }
+                else
+                {
+                    Pawn autonomyPawn = clickedPawn;
+                    options.Add(new FloatMenuOption("授予独立自律资格", () =>
+                    {
+                        bool granted = GameComponent_AutonomousMechRegistry.TryAuthorize(autonomyPawn);
+                        Messages.Message(granted
+                                ? "已授予独立自律资格：" + autonomyPawn.LabelShortCap + "。"
+                                : "无法授予：需要已初始化、存活且具有监管状态组件的机械体。",
+                            granted ? MessageTypeDefOf.TaskCompletion : MessageTypeDefOf.RejectInput,
+                            historical: false);
+                    }));
+                }
+
                 bool hasMechanitorRecord =
                     GameComponent_MechanoidMechanitorRegistry.HasPersistentRecord(clickedPawn);
                 if (hasMechanitorRecord)

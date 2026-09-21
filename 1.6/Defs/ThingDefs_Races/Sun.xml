@@ -12,6 +12,7 @@
       <BandwidthCost>5</BandwidthCost>
     </statBases>
     <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AutonomousMech" />
       <!-- 玩家太阳：能量脉冲数值 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_EnergyPulse">
         <warmupTicks>180</warmupTicks>

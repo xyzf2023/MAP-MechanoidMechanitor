@@ -83,11 +83,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             Pawn? overseer = originalOverseer;
+            GameComponent_AutonomousMechRegistry.NotifyPawnLifecycle(source);
             if (source.Dead
                 || overseer == null
                 || overseer.Dead
                 || overseer.Destroyed
                 || overseer.Discarded
+                || AutonomousMechUtility.IsAutonomousMech(source)
                 || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(source))
             {
                 return true;

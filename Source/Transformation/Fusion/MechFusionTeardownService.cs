@@ -701,11 +701,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             Pawn? originalOverseer = session.OriginalOverseer;
+            GameComponent_AutonomousMechRegistry.NotifyPawnLifecycle(source);
             if (source.Dead
                 || originalOverseer == null
                 || originalOverseer.Destroyed
                 || originalOverseer.Discarded
                 || originalOverseer.Dead
+                || AutonomousMechUtility.IsAutonomousMech(source)
                 || MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(source))
             {
                 return;

@@ -68,9 +68,8 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 是否应对该机械族机械师应用本 MOD 的个人充电阈值。
-        /// 仅当“无原版控制组 + 可自律”时成立——即本 MOD 自己管理充电阈值记录的机械师。
-        /// 原版控制组下的机械师仍由原版机制处理，避免覆盖玩家在原版 UI 上的自定义阈值。
+        /// 是否应用独立自律记录的个人充电阈值。不要求本体工作模式资格，
+        /// 因此普通自律机械体也适用；本体模式与作息的优先级由原有消费端保留。
         /// </summary>
         public static bool ShouldApplySelfRechargeThresholds(Pawn? pawn)
         {
@@ -89,7 +88,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!HasSelfWorkMode(pawn))
+            if (!AutonomousMechUtility.UsesPersonalRechargeSettings(pawn))
             {
                 return false;
             }
@@ -210,6 +209,16 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
+            // 独立自律仅复用行为模式显示与 AI，不授予 SelfWorkMode 科研增益资格。
+            if (AutonomousMechUtility.IsPlayerAutonomousMech(pawn)
+                && GameComponent_AutonomousMechRegistry.TryGetRecord(pawn,
+                    out AutonomousMechAuthorizationRecord? autonomousRecord))
+            {
+                mode = autonomousRecord!.SelfShutdown
+                    ? MechWorkModeDefOf.SelfShutdown : GetAutonomousDirectiveDef();
+                return true;
+            }
+
             return false;
         }
 
@@ -234,6 +243,7 @@ namespace MAP_MechanoidMechanitor
                     out MechanoidMechanitorRecord? record)
                 || record == null)
             {
+                GameComponent_AutonomousMechRegistry.TrySetSelfShutdown(pawn, IsSelfShutdownMode(mode));
                 return;
             }
 
@@ -259,12 +269,15 @@ namespace MAP_MechanoidMechanitor
                 autonomous.uiIcon,
                 Color.white));
 
-            MechWorkModeDef recharge = MechWorkModeDefOf.Recharge;
-            options.Add(new FloatMenuOption(
-                recharge.LabelCap,
-                () => SetSelfWorkMode(pawn, recharge),
-                recharge.uiIcon,
-                Color.white));
+            if (HasSelfWorkMode(pawn))
+            {
+                MechWorkModeDef recharge = MechWorkModeDefOf.Recharge;
+                options.Add(new FloatMenuOption(
+                    recharge.LabelCap,
+                    () => SetSelfWorkMode(pawn, recharge),
+                    recharge.uiIcon,
+                    Color.white));
+            }
 
             MechWorkModeDef selfShutdown = MechWorkModeDefOf.SelfShutdown;
             options.Add(new FloatMenuOption(

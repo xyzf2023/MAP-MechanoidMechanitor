@@ -24,7 +24,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(product))
+            GameComponent_AutonomousMechRegistry.SynchronizeAutomaticSources(product);
+            if (!AutonomousMechUtility.IsAutonomousMech(product))
             {
                 return;
             }
@@ -49,8 +50,12 @@ namespace MAP_MechanoidMechanitor
 
             // CompNativeMechanoidMechanitor.PostPostMake 已登记先天身份；
             // EnsureRoleState 仅对已是机械族机械师的产物幂等补齐状态。
-            MechanoidMechanitorRoleUtility.EnsureRoleState(product);
-            MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(product);
+            if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(product))
+            {
+                MechanoidMechanitorRoleUtility.EnsureRoleState(product);
+                MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(product);
+            }
+            GameComponent_AutonomousMechRegistry.NotifyPawnLifecycle(product);
         }
     }
 }

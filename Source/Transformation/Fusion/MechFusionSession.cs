@@ -362,6 +362,7 @@ namespace MAP_MechanoidMechanitor
             if (originalOverseer == null
                 && sourcePawn != null
                 && wearerPawn != null
+                && !AutonomousMechUtility.IsAutonomousMech(sourcePawn)
                 && !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(
                     sourcePawn))
             {

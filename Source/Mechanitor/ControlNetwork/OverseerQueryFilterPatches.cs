@@ -16,7 +16,7 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPrefix]
         public static bool Prefix(Pawn pawn, ref Pawn? __result)
         {
-            if (!MAPMechanitorNodeUtility.TryGetVanillaControlNodeProfile(
+            if (!AutonomousMechUtility.TryGetSubjectProfile(
                     pawn,
                     out bool requiresExternalOverseer))
             {
@@ -40,7 +40,7 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPrefix]
         public static bool Prefix(Pawn pawn, ref Pawn? __result)
         {
-            if (!MAPMechanitorNodeUtility.TryGetVanillaControlNodeProfile(
+            if (!AutonomousMechUtility.TryGetSubjectProfile(
                     pawn,
                     out bool requiresExternalOverseer))
             {
@@ -67,7 +67,7 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             ref bool __result)
         {
-            if (!MAPMechanitorNodeUtility.TryGetVanillaControlNodeProfile(
+            if (!AutonomousMechUtility.TryGetSubjectProfile(
                     pawn,
                     out bool requiresExternalOverseer))
             {
@@ -101,7 +101,7 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPrefix]
         public static bool Prefix(Pawn pawn, ref GlobalTargetInfo __result)
         {
-            if (!MAPMechanitorNodeUtility.TryGetVanillaControlNodeProfile(
+            if (!AutonomousMechUtility.TryGetSubjectProfile(
                     pawn,
                     out bool requiresExternalOverseer))
             {

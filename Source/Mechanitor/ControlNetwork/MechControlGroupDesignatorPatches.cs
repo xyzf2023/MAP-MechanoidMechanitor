@@ -13,7 +13,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (t is Pawn pawn
                 && ModsConfig.BiotechActive
-                && MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(pawn))
+                && AutonomousMechUtility.IsAutonomousMech(pawn))
             {
                 __result = false;
                 return false;

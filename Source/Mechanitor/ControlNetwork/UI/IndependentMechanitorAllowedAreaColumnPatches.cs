@@ -5,13 +5,11 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    // 机械师/机械体管理表格「活动区限制」列：无外部监管者的独立机械师节点
-    // 活动区显示与设置入口。
+    // 机械师/机械体管理表格「活动区限制」列：自律机械体与独立机械师节点共用入口。
     //
     // 原版 PawnColumnWorker_AllowedArea.DoCell 要求机械体必须有 overseer；
-    // 独立机械师节点无外部 overseer，原版该列为空。本 Prefix 仅对
-    // requiresExternalOverseer=false 的 MAP mechanitor node 绘制原版活动区 UI，
-    // 其余 pawn 走原版逻辑。
+    // 自律机械体无外部 overseer，原版该列为空。本 Prefix 为其绘制原版活动区 UI，
+    // 同时保留既有独立节点入口；存储与 AI 限制继续使用原版 playerSettings。
     [HarmonyPatch(typeof(PawnColumnWorker_AllowedArea), nameof(PawnColumnWorker_AllowedArea.DoCell))]
     public static class Patch_PawnColumnWorker_AllowedArea_IndependentMechanitorNode
     {
@@ -23,23 +21,25 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            DrawAllowedAreaCellForMapNode(rect, pawn);
+            DrawAllowedAreaCell(rect, pawn);
             return false;
         }
 
         private static bool ShouldHandle(Pawn? pawn)
         {
             return pawn != null
+                && pawn.playerSettings != null
                 && ModsConfig.BiotechActive
                 && pawn.Faction != null
                 && pawn.Faction.IsPlayerSafe()
                 && pawn.RaceProps.IsMechanoid
-                && MAPMechanitorNodeUtility.HasNode(pawn)
-                && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn)
-                && !MAPMechanitorNodeUtility.RequiresExternalOverseer(pawn);
+                && (AutonomousMechUtility.IsPlayerAutonomousMech(pawn)
+                    || (MAPMechanitorNodeUtility.HasNode(pawn)
+                        && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn)
+                        && !MAPMechanitorNodeUtility.RequiresExternalOverseer(pawn)));
         }
 
-        private static void DrawAllowedAreaCellForMapNode(Rect rect, Pawn pawn)
+        private static void DrawAllowedAreaCell(Rect rect, Pawn pawn)
         {
             if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
             {

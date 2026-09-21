@@ -50,6 +50,9 @@ namespace MAP_MechanoidMechanitor
         Fusion = 1 << 23,
 
         // 真实 Comp 或机动作战提供的地形、可通行物体与雪沙减速豁免。
-        MovementCostImmunity = 1 << 24
+        MovementCostImmunity = 1 << 24,
+
+        // 自身无需外部监管者；不代表机械师、节点或类殖民者身份。
+        AutonomousMech = 1 << 25
     }
 }
