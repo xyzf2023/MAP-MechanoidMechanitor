@@ -479,8 +479,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
             IEnumerable<IThingHolder> pods,
             Action<PlanetTile, TransportersArrivalAction> launchAction)
         {
-            // 不开放通用 Shuttle 进入，避免绕过永久关系限制与最终转敌复查。
-            yield break;
+            // 原版不会在 Site 地块自动提供组建远行队；空菜单会误报内容将失踪。
+            // 显式提供原版远行队抵达动作，后续交互仍走前哨现有的关系与进入检查。
+            // 不调用 Site.base，避免通用 VisitSite 绕过这些限制。
+            if (!Spawned || pods == null
+                || !TransportersArrivalAction_FormCaravan.CanFormCaravanAt(pods, Tile))
+            {
+                yield break;
+            }
+
+            foreach (FloatMenuOption option in TransportersArrivalActionUtility.GetFloatMenuOptions(
+                () => TransportersArrivalAction_FormCaravan.CanFormCaravanAt(pods, Tile),
+                () => new TransportersArrivalAction_FormCaravan("MessageShuttleArrived"),
+                "FormCaravanHere".Translate(),
+                launchAction,
+                Tile))
+            {
+                yield return option;
+            }
         }
 
         public override bool ShouldRemoveMapNow(out bool alsoRemoveWorldObject)
