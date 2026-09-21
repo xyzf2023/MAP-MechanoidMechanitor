@@ -46,6 +46,9 @@ namespace MAP_MechanoidMechanitor
                 chargeDuration = Cannon!.WarmupTicksFor(pawn);
                 chargePosition = pawn.Position;
                 chargeMap = pawn.Map;
+                if (pawn.GetComp<CompSunBossState>() != null)
+                    CurrentGameComponentCache<GameComponent_SunBossNotifications>.Get()
+                        ?.NotifyCannonCharging(pawn);
                 MaintainVisuals();
             };
             charge.tickAction = () =>

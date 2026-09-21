@@ -56,7 +56,7 @@ namespace MAP_MechanoidMechanitor
         private int readyTick;
         public CompProperties_AnnihilationCannon Props => (CompProperties_AnnihilationCannon)props;
 
-        private bool HasEmitter(Pawn actor)
+        internal static bool HasEmitter(Pawn actor)
         {
             if (actor.health?.hediffSet == null) return false;
             foreach (BodyPartRecord part in actor.health.hediffSet.GetNotMissingParts())
@@ -65,22 +65,35 @@ namespace MAP_MechanoidMechanitor
         }
 
         internal bool CanOperate(Pawn actor) => actor.Spawned && actor.Map != null
-            && actor.jobs != null && !actor.Dead && !actor.Downed && !actor.InMentalState && actor.Drafted
-            && actor.Faction == Faction.OfPlayer && actor.stances?.stunner?.Stunned != true
+            && actor.jobs != null && !actor.Dead && !actor.Downed && !actor.InMentalState
+            && (actor.Faction == Faction.OfPlayer ? actor.Drafted : actor.GetComp<CompSunBossState>() != null)
+            && actor.stances?.stunner?.Stunned != true
             && actor.CurJobDef != MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding
             && HasEmitter(actor);
 
         internal bool ValidTarget(Pawn actor, IntVec3 cell)
         {
             if (!actor.Spawned || actor.Map == null || !cell.IsValid
-                || !cell.InBounds(actor.Map) || cell.Fogged(actor.Map)) return false;
+                || !cell.InBounds(actor.Map)
+                || (cell.Fogged(actor.Map) && actor.GetComp<CompSunBossState>() == null)) return false;
             float distance = (cell - actor.Position).LengthHorizontalSquared;
             return distance <= Props.range * Props.range
                 && distance >= Props.minRange * Props.minRange
                 && GenSight.LineOfSight(actor.Position, cell, actor.Map);
         }
 
-        internal void NotifyLaunched() => readyTick = Find.TickManager.TicksGame + Props.cooldownTicks;
+        internal void NotifyLaunched() => readyTick = Find.TickManager.TicksGame
+            + (parent.GetComp<CompSunBossState>()?.Stage.CannonCooldown ?? Props.cooldownTicks);
+
+        /// <summary>玩家与 BOSS 共用创建入口；只在真正发射时提交冷却。</summary>
+        public Job? TryMakeCastJob(IntVec3 cell)
+        {
+            if (!(parent is Pawn actor) || !CanOperate(actor) || Find.TickManager.TicksGame < readyTick
+                || !ValidTarget(actor, cell)) return null;
+            Job job = JobMaker.MakeJob(AnnihilationCannonDefOf.MAP_AnnihilationCannon, cell);
+            job.playerForced = actor.Faction == Faction.OfPlayer;
+            return job;
+        }
 
         internal int WarmupTicksFor(Pawn actor)
         {
@@ -118,11 +131,8 @@ namespace MAP_MechanoidMechanitor
         {
             Find.Targeter.BeginTargeting(TargetingParameters.ForCell(), target =>
             {
-                if (!CanOperate(actor) || Find.TickManager.TicksGame < readyTick
-                    || !ValidTarget(actor, target.Cell)) return;
-                Job job = JobMaker.MakeJob(AnnihilationCannonDefOf.MAP_AnnihilationCannon, target.Cell);
-                job.playerForced = true;
-                actor.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                Job? job = TryMakeCastJob(target.Cell);
+                if (job != null) actor.jobs.TryTakeOrderedJob(job, JobTag.Misc);
             }, target =>
             {
                 if (!actor.Spawned || actor.Map == null || actor.Map != Find.CurrentMap) return;

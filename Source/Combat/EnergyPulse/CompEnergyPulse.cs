@@ -50,7 +50,12 @@ namespace MAP_MechanoidMechanitor
             && actor.stances?.stunner?.Stunned != true
             && actor.CurJobDef != MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding;
 
-        internal void NotifyReleased() => readyTick = Find.TickManager.TicksGame + Props.cooldownTicks;
+        internal void NotifyReleased()
+        {
+            CompSunBossState? state = parent.GetComp<CompSunBossState>();
+            readyTick = Find.TickManager.TicksGame + (state?.Stage.PulseCooldown ?? Props.cooldownTicks);
+            state?.NotifyPulseReleased();
+        }
 
         /// <summary>玩家按钮和非玩家控制器共用的施放入口；不在这里决定 AI 的施放时机。</summary>
         public Job? TryMakeCastJob()

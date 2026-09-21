@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>MAP_SunBossRally</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_SunBossRally</driverClass>
+    <reportString>正在前往大厅边缘。</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+</Defs>

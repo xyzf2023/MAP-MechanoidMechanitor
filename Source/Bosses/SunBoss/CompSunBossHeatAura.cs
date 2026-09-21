@@ -29,13 +29,14 @@ namespace MAP_MechanoidMechanitor
                 return;
 
             Map map = boss.Map;
+            float activeRadius = boss.GetComp<CompSunBossState>()?.Stage.HeatRadius ?? Radius;
             IntVec3 center = boss.Position;
             targets.Clear();
             // 先取快照，避免伤害致死或离图回调修改地图 Pawn 列表。
             foreach (Pawn target in map.mapPawns.AllPawnsSpawned)
             {
                 if (target != boss && !target.Dead && !target.Destroyed
-                    && target.Position.DistanceToSquared(center) <= Radius * Radius)
+                    && target.Position.DistanceToSquared(center) <= activeRadius * activeRadius)
                     targets.Add(target);
             }
 
@@ -49,10 +50,11 @@ namespace MAP_MechanoidMechanitor
                     continue;
 
                 float distance = Mathf.Sqrt(target.Position.DistanceToSquared(center));
-                if (distance > Radius) continue;
+                if (distance > activeRadius) continue;
 
                 // (2.5, 3.5] / (1.5, 2.5] / (0.5, 1.5] / [0, 0.5]
                 // 边界每向内满一格即提升一档，因此 2.5、1.5、0.5 属于内档。
+                // 分档始终以原始 3.5 格计算，扩大的外圈仅为最低档。
                 int depth = Mathf.Clamp(Mathf.FloorToInt(Radius - distance), 0, 3);
                 var damage = new DamageInfo(DamageDefOf.Burn, BaseDamage * (1 << depth),
                     instigator: boss);

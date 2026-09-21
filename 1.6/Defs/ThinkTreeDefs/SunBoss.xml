@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThinkTreeDef>
+    <defName>MAP_SunBossCombat</defName>
+    <thinkRoot Class="MAP_MechanoidMechanitor.JobGiver_SunBossCombat" />
+  </ThinkTreeDef>
+  <ThinkTreeDef>
+    <defName>MAP_SunBossConstant</defName>
+    <!-- 不让通用机械族的常驻战斗树抢占专属技能；眩晕和健康状态仍由原版更新。 -->
+    <thinkRoot Class="ThinkNode_Priority" />
+  </ThinkTreeDef>
+</Defs>

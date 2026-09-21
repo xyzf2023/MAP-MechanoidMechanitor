@@ -74,7 +74,7 @@ namespace MAP_MechanoidMechanitor
                 || victim.Destroyed || !victim.Spawned || victim.Map != actor.Map)) return false;
             IntVec3 cell = target.Cell;
             // 射程只约束初始选取；不要求视线、可达性或敌对关系。
-            return cell.InBounds(actor.Map) && !cell.Fogged(actor.Map)
+            return cell.InBounds(actor.Map) && (!cell.Fogged(actor.Map) || actor.GetComp<CompSunBossState>() != null)
                 && (cell - actor.Position).LengthHorizontalSquared <= Props.range * Props.range;
         }
 

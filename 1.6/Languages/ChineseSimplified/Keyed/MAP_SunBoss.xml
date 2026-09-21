@@ -1,9 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_SunBoss_ReactorFoundLabel>核心反应堆</MAP_SunBoss_ReactorFoundLabel>
-  <MAP_SunBoss_ReactorFoundText>我们找到了这座设施的核心反应堆。\n\n仪器显示，其中有着非同寻常的能量反应。如果能够研究其中技术，我们或许能获取极具价值的科技成果。\n\n不过……这个反应堆看起来有些不太对劲。\n\n小心行事。</MAP_SunBoss_ReactorFoundText>
+  <MAP_SunBoss_ReactorFoundText>我们找到了这座设施的核心反应堆。\n\n仪器显示，其中有着非同寻常的能量反应。如果能够研究其中技术，我们或许能获取极具价值的科技成果。\n\n不过……这个反应堆看起来有些不太对劲。小心行事。\n\n你的直觉告诉你，最好先清理完这座设施的所有机械族再进行下一步行动。</MAP_SunBoss_ReactorFoundText>
   <MAP_SunBoss_ReactorAwakeningLabel>反应堆异常</MAP_SunBoss_ReactorAwakeningLabel>
   <MAP_SunBoss_ReactorAwakeningText>这根本不是什么传统意义上的反应堆——它是一台沉睡中的机械体！\n\n它正在苏醒，并开始转换为机械体形态。做好迎战准备！</MAP_SunBoss_ReactorAwakeningText>
   <MAP_SunBoss_HeatWarningLabel>{PAWN}正在被高温灼烧！</MAP_SunBoss_HeatWarningLabel>
   <MAP_SunBoss_HeatWarningText>这台机械体正在向四周释放骇人的高温，{PAWN}正遭受严重灼烧！\n\n立刻远离它！</MAP_SunBoss_HeatWarningText>
+  <MAP_SunBoss_ShieldWarningLabel>攻击无效</MAP_SunBoss_ShieldWarningLabel>
+  <MAP_SunBoss_ShieldWarningText>对「太阳」发起的攻击被一层强大的能量护盾完全吸收。\n\n看起来，环绕在它四周的六台稳定器正在持续为护盾供能。想要真正伤到它，我们得先从这些稳定器下手。</MAP_SunBoss_ShieldWarningText>
+  <MAP_SunBoss_CannonWarningLabel>毁灭性能量反应</MAP_SunBoss_CannonWarningLabel>
+  <MAP_SunBoss_CannonWarningText>侦测到「太阳」正在汇聚异常庞大的能量。仅从不断攀升的能量读数来看，一旦被命中，恐怕后果&lt;b&gt;&lt;color=#FF0000FF&gt;难以承受&lt;/color&gt;&lt;/b&gt;。\n\n不过……如果这股力量真的如此强大，或许也足以摧毁那些看似坚不可摧的稳定器。</MAP_SunBoss_CannonWarningText>
+  <MAP_SunBoss_FullSteadyState>完全稳态</MAP_SunBoss_FullSteadyState>
+  <MAP_SunBoss_SteadyStateDisturbed>稳态受扰</MAP_SunBoss_SteadyStateDisturbed>
+  <MAP_SunBoss_LoadFluctuation>负载波动</MAP_SunBoss_LoadFluctuation>
+  <MAP_SunBoss_FeedbackDetuning>反馈失谐</MAP_SunBoss_FeedbackDetuning>
+  <MAP_SunBoss_SteadyStateCritical>稳态临界</MAP_SunBoss_SteadyStateCritical>
+  <MAP_SunBoss_CoreInstability>核心失稳</MAP_SunBoss_CoreInstability>
+  <MAP_SunBoss_StructuralCollapse>结构崩解</MAP_SunBoss_StructuralCollapse>
+  <MAP_SunBoss_HeatExpanded>「太阳」的热场正在扩大！当前危险半径：{0} 格。</MAP_SunBoss_HeatExpanded>
+  <MAP_SunBoss_StatusHeading>{0}　{1}　稳定器：{2}/6</MAP_SunBoss_StatusHeading>
+  <MAP_SunBoss_StructureValue>结构完整度：{0} / {1}</MAP_SunBoss_StructureValue>
+  <MAP_SunBoss_StructureCollapsing>结构即将崩溃</MAP_SunBoss_StructureCollapsing>
+  <MAP_SunBoss_StageDamage>承伤系数：{0}%。</MAP_SunBoss_StageDamage>
+  <MAP_SunBoss_StageCannonEnabled>湮灭炮：已启用。</MAP_SunBoss_StageCannonEnabled>
+  <MAP_SunBoss_StageCannonHighPower>湮灭炮：高功率。</MAP_SunBoss_StageCannonHighPower>
+  <MAP_SunBoss_StageCannonOverloaded>湮灭炮：过载。</MAP_SunBoss_StageCannonOverloaded>
+  <MAP_SunBoss_StageCannonDestroyed>湮灭炮：已损毁。</MAP_SunBoss_StageCannonDestroyed>
+  <MAP_SunBoss_StageHeatField>高温热场：{0} 格。</MAP_SunBoss_StageHeatField>
 </LanguageData>

@@ -3,16 +3,24 @@
 
   <ThingDef ParentName="MAP_SunBase">
     <defName>MAP_Mech_SunBOSS</defName>
-    <label>「太阳」</label>
-    <description>TODO</description>
+    <label>「太阳」- 能源核心</label>
+    <description>由外围反应堆稳定器维持的巨型机械体。完整的稳定网络使其免受外部伤害；诱导湮灭炮摧毁稳定器后，可以继续削弱稳定网络，或用火力消耗其结构完整度。结构耗尽将解除致命核心保护，但实际死亡仍由真实伤势决定。散热系统彻底损毁或稳定网络失稳后，它会持续从内部烧毁。</description>
     <race>
       <baseHealthScale>8</baseHealthScale>
+      <thinkTreeMain>MAP_SunBossCombat</thinkTreeMain>
+      <thinkTreeConstant>MAP_SunBossConstant</thinkTreeConstant>
     </race>
     <statBases>
       <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">9999</BandwidthCost>
     </statBases>
     <comps>
-      <!-- 太阳BOSS专属：3.5格内每20 tick结算近身热伤害与中暑。 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_SunBossState">
+        <maxStructure>8000</maxStructure>
+        <coolingFailureDamagePerSecond>6</coolingFailureDamagePerSecond>
+        <unstableDamagePerSecond>48</unstableDamagePerSecond>
+        <criticalDamagePerSecond>240</criticalDamagePerSecond>
+      </li>
+      <!-- 太阳BOSS专属：每20 tick结算热场，失稳后仅扩展最低伤害档。 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_SunBossHeatAura" />
       <!-- 太阳BOSS：能量脉冲数值；与玩家太阳独立配置。 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_EnergyPulse">

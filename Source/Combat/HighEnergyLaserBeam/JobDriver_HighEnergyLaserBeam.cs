@@ -88,6 +88,8 @@ namespace MAP_MechanoidMechanitor
         private bool CanContinue()
         {
             if (Laser?.CanOperate(pawn) != true) return false;
+            // 玩家仍保留原有的部件检查周期；BOSS 部件真正损毁后当 tick 停止技能。
+            if (pawn.GetComp<CompSunBossState>() != null && Laser.HasEmitter(pawn) != true) return false;
             if (initialized && (pawn.Map != castMap || pawn.Position != job.targetC.Cell
                 || pawn.pather?.Moving == true || pawn.stances?.FullBodyBusy == true)) return false;
             if (!job.targetB.Cell.IsValid || !job.targetB.Cell.InBounds(pawn.Map)) return false;

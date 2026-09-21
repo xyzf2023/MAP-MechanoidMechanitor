@@ -968,6 +968,10 @@ namespace MAP_MechanoidMechanitor
                     ? null
                     : "MAP_MechanicalFlight_InvalidLanding".Translate();
             }
+            if (MapComponent_SunBossArena.SuppressesMechanicalFlight(pawn))
+            {
+                return "MAP_MechanicalFlight_SunBossEnergyField".Translate();
+            }
             if (requireEnergy && MechanicalFlightEnergyUtility.TryGetEnergyFraction(pawn, out float energy)
                 && energy < record.Profile.minimumTakeoffEnergy)
             {

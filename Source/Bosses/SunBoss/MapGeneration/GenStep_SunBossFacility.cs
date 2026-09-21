@@ -233,6 +233,11 @@ namespace MAP_MechanoidMechanitor
                 record.Stabilizers.Add(SpawnSceneBuilding(map, arena, layout.stabilizerBuilding, position, reserved));
             }
 
+            CompProperties_AnnihilationCannon cannon = DefDatabase<ThingDef>.GetNamed("MAP_Mech_SunBOSS")
+                .GetCompProperties<CompProperties_AnnihilationCannon>();
+            if (cannon == null || !AllStabilizersHaveLure(map, arena, record, cannon))
+                throw new InvalidOperationException("[MAP] 太阳设施存在无法诱导湮灭炮摧毁的稳定器。");
+
             // 大厅内门口、中轴和周边留空；短墙彼此间隔，避免生成封闭小房间。
             int requested = layout.arenaWallCount.RandomInRange;
             int placed = 0;
@@ -255,7 +260,7 @@ namespace MAP_MechanoidMechanitor
                     GenSpawn.Spawn(thing, cell, map);
                     spawnedWalls.Add(thing);
                 }
-                if (!AllOpenCellsConnected(map, arena))
+                if (!AllOpenCellsConnected(map, arena) || !AllStabilizersHaveLure(map, arena, record, cannon))
                 {
                     foreach (Thing thing in spawnedWalls) thing.Destroy(DestroyMode.Vanish);
                     continue;
@@ -269,6 +274,39 @@ namespace MAP_MechanoidMechanitor
                 map.roofGrid.SetRoof(cell, null);
                 map.areaManager.NoRoof[cell] = true;
             }
+        }
+
+        private static bool AllStabilizersHaveLure(Map map, CellRect arena, MapComponent_SunBossArena record,
+            CompProperties_AnnihilationCannon cannon)
+        {
+            if (record.Core == null) return false;
+            // 激活后太阳可从核心位置走到这些相邻空格；生成时核心建筑尚未移除。
+            List<IntVec3> firingCells = record.Core.OccupiedRect().ExpandedBy(1).EdgeCells
+                .Where(c => arena.Contains(c) && c.Standable(map)).ToList();
+            if (firingCells.Count == 0) return false;
+            HashSet<IntVec3> reachable = Flood(map, arena, firingCells[0]);
+            foreach (Building stabilizer in record.Stabilizers)
+            {
+                CellRect occupied = stabilizer.OccupiedRect();
+                bool found = false;
+                IEnumerable<IntVec3> candidates = occupied.ExpandedBy((int)Math.Ceiling(cannon.innerRadius)).Cells
+                    .Where(c => arena.Contains(c) && c.Standable(map) && reachable.Contains(c))
+                    .OrderBy(c => c.DistanceToSquared(record.Core.Position));
+                foreach (IntVec3 lure in candidates)
+                {
+                    if (!occupied.Cells.Any(c => c.DistanceToSquared(lure) <= cannon.innerRadius * cannon.innerRadius)) continue;
+                    if (!firingCells.Any(c => reachable.Contains(c)
+                        && c.DistanceToSquared(lure) >= cannon.minRange * cannon.minRange
+                        && c.DistanceToSquared(lure) <= cannon.range * cannon.range
+                        && GenSight.LineOfSight(c, lure, map))) continue;
+                    // 与湮灭炮使用同一内圈算法，墙体遮挡和建筑任一占地格命中规则一致。
+                    if (!DamageDefOf.Bomb.Worker.ExplosionCellsToHit(lure, map, cannon.innerRadius).Any(occupied.Contains)) continue;
+                    found = true;
+                    break;
+                }
+                if (!found) return false;
+            }
+            return true;
         }
 
         private static Building SpawnSceneBuilding(Map map, CellRect arena, ThingDef def, IntVec3 cell, List<CellRect> reserved)

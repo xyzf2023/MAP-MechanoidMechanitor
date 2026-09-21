@@ -137,7 +137,8 @@ namespace MAP_MechanoidMechanitor
             explosion.doSoundEffects = false;
             explosion.damageFalloff = false;
             explosion.chanceToStartFire = 0f;
-            explosion.StartExplosion(null, null);
+            explosion.StartExplosion(null, launcher?.GetComp<CompSunBossState>() != null
+                ? new List<Thing> { launcher } : null);
             DefDatabase<SoundDef>.GetNamedSilentFail("Psycast_Skip_Entry")
                 ?.PlayOneShot(new TargetInfo(Position, Map));
         }
@@ -152,7 +153,8 @@ namespace MAP_MechanoidMechanitor
             {
                 List<Pawn> targets = ThingsInInnerCells(includeContents: true).OfType<Pawn>()
                     .Concat(releasedPawns).Where(p => p != null && !p.Dead && !p.Destroyed
-                        && p.MapHeld == Map && !attempted.Contains(p)).Distinct().ToList();
+                        && p.MapHeld == Map && !attempted.Contains(p)
+                        && !(p == launcher && p.GetComp<CompSunBossState>() != null)).Distinct().ToList();
                 if (targets.Count == 0) break;
                 foreach (Pawn pawn in targets)
                 {
@@ -174,6 +176,7 @@ namespace MAP_MechanoidMechanitor
 
         internal bool WatchesDeath(Pawn pawn)
         {
+            if (pawn == launcher && pawn.GetComp<CompSunBossState>() != null) return false;
             if (!Spawned || phase < 1 || finalCleanupDone || pawn.MapHeld != Map) return false;
             return releasedPawns.Contains(pawn) || innerCells.Contains(pawn.PositionHeld);
         }
