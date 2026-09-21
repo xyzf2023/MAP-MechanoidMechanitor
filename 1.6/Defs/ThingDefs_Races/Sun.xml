@@ -9,6 +9,7 @@
       <baseHealthScale>3</baseHealthScale>
     </race>
     <statBases>
+      <MoveSpeed>3.0</MoveSpeed>
       <BandwidthCost>5</BandwidthCost>
     </statBases>
     <comps>
@@ -18,15 +19,15 @@
         <warmupTicks>180</warmupTicks>
         <radius>10</radius>
         <stunTicks>300</stunTicks>
-        <propagationSpeed>0.5</propagationSpeed>
-        <cooldownTicks>0</cooldownTicks>
+        <propagationSpeed>2.5</propagationSpeed>
+        <cooldownTicks>300</cooldownTicks>
         <releaseEffecter>BlastMechBandShockwave</releaseEffecter>
         <effectReferenceRadius>30.9</effectReferenceRadius>
         <iconPath>UI/Commands/MM_EnergyPulse</iconPath>
       </li>
       <!-- 玩家太阳：湮灭炮数值 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_AnnihilationCannon">
-        <warmupTicks>600</warmupTicks>
+        <warmupTicks>300</warmupTicks>
         <innerRadius>4.9</innerRadius>
         <outerRadius>9.8</outerRadius>
         <skipEffectRadius>15</skipEffectRadius>
@@ -36,7 +37,7 @@
         <minRange>5.9</minRange>
         <projectileSpeed>75</projectileSpeed>
         <phaseDelayTicks>3</phaseDelayTicks>
-        <cooldownTicks>0</cooldownTicks>
+        <cooldownTicks>2500</cooldownTicks>
         <effectExpandTicks>15</effectExpandTicks>
         <effectHoldTicks>60</effectHoldTicks>
         <effectContractTicks>20</effectContractTicks>
