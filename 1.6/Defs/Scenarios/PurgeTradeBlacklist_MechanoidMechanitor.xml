@@ -34,6 +34,7 @@
       <li>MAP_Mech_JusticeBOSS</li>
       <li>MAP_Mech_Magician</li>
       <li>MAP_Mech_Sun</li>
+      <li>MAP_Mech_SunBOSS</li>
       <li MayRequire="fxz.glitterworlddestroyer.mk5">Mech_BlackScyther</li>
       <li MayRequire="fxz.glitterworlddestroyer.mk5">Mech_BlackLancer</li>
       <li MayRequire="fxz.glitterworlddestroyer.mk5">Mech_BlackTesseron</li>
