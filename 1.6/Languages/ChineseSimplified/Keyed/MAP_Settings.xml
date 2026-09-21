@@ -76,11 +76,11 @@
   <!-- 模块：正义能力 -->
   <MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>正义能力</MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>
   <MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label>限制机体骇入 BOSS 目标</MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label>
-  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>默认开启。开启后，机体骇入无法以除炼狱魔王、战争女皇之外的机械族 BOSS 为目标。关闭后恢复原有目标规则。「正义」-重装指挥单元始终无法被机体骇入。</MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>默认开启。开启后，机体骇入无法以除炼狱魔王、战争女皇之外的机械族 BOSS 为目标。关闭后恢复原有目标规则。「正义」- 重装指挥单元始终无法被机体骇入。</MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>
 
   <!-- 模块：正义 BOSS 难度 -->
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>正义 BOSS 战难度</MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>
-  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」-重装指挥单元的BOSS战难度。设施部署和新波次开始时读取当前设置，已开始的空投及重试沿用该次参数。总波数实时生效，但不会打断未完成波次，也不会撤销已经确定的撤退。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>调整「正义」- 重装指挥单元的BOSS战难度。设施部署和新波次开始时读取当前设置，已开始的空投及重试沿用该次参数。总波数实时生效，但不会打断未完成波次，也不会撤销已经确定的撤退。</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>启用正义 BOSS 详细诊断日志</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>开发者功能，开启后「正义」BOSS战将生成详细的日志。</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>召唤高角护盾</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>

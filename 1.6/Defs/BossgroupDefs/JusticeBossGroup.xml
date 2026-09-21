@@ -9,7 +9,7 @@
 
   <BossgroupDef>
     <defName>MAP_JusticeBossGroup</defName>
-    <label>「正义」-重装指挥单元</label>
+    <label>「正义」- 重装指挥单元</label>
     <boss>MAP_JusticeBoss</boss>
     <workerClass>MAP_MechanoidMechanitor.BossgroupWorker_Justice</workerClass>
     <repeatWaveStartIndex>0</repeatWaveStartIndex>

@@ -3,7 +3,7 @@
 
   <ThingDef ParentName="MAP_JusticeBase">
     <defName>MAP_Mech_JusticeBOSS</defName>
-    <label>「正义」-重装指挥单元</label>
+    <label>「正义」- 重装指挥单元</label>
     <description>隶属于机械巢的重甲指挥单元。「正义」以自身作为战区控制节点，在目标区域快速部署自动火力设施，并持续向前线调拨作战机械体。其自我意识被限制在可控范围内，行动协议以建立机械据点、消耗敌方防御并保存指挥核心为优先目标。</description>
     <statBases>
       <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">9999</BandwidthCost>
@@ -21,7 +21,7 @@
 
   <PawnKindDef ParentName="MAP_JusticeKindBase">
     <defName>MAP_Mech_JusticeBOSS</defName>
-    <label>「正义」-重装指挥单元</label>
+    <label>「正义」- 重装指挥单元</label>
     <race>MAP_Mech_JusticeBOSS</race>
     <defaultFactionDef>Mechanoid</defaultFactionDef>
     <destroyGearOnDrop>true</destroyGearOnDrop>

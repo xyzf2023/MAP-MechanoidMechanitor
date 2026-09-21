@@ -48,7 +48,7 @@
     <comps>
       <li Class="CompProperties_Usable">
         <useJob>TriggerObject</useJob>
-        <useLabel>召唤「正义」-重装指挥单元威胁</useLabel>
+        <useLabel>召唤「正义」- 重装指挥单元</useLabel>
         <useDuration>900</useDuration>
         <floatMenuFactionIcon>Mechanoid</floatMenuFactionIcon>
       </li>

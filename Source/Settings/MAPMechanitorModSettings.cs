@@ -313,7 +313,7 @@ namespace MAP_MechanoidMechanitor
         /// 默认开启。开启后，机体骇入禁止以除炼狱魔王(Mech_Diabolus)、战争女皇(Mech_Warqueen)
         /// 之外的机械族 BOSS 为目标。关闭后，恢复原有骇入目标规则，不再因通用 isBoss 规则
         /// 拦截其他 BOSS。
-        /// 注意：「正义」-重装指挥单元(MAP_Mech_JusticeBOSS)始终受现有永久限制，不受此开关影响。
+        /// 注意：「正义」- 重装指挥单元(MAP_Mech_JusticeBOSS)始终受现有永久限制，不受此开关影响。
         /// </summary>
         public bool restrictMechHackBossTargets = true;
 

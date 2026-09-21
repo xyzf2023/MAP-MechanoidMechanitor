@@ -106,7 +106,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 仅代表“是否被新增的 BOSS 限制拦截”，与「正义」-重装指挥单元的永久禁止规则相互独立。
+        /// 仅代表“是否被新增的 BOSS 限制拦截”，与「正义」- 重装指挥单元的永久禁止规则相互独立。
         /// 「正义」BOSS 由 JusticePawnUtility.IsBossJustice 永久拦截，不受此设置影响。
         /// </summary>
         private bool IsBossBlockedByHackRestriction(Pawn targetPawn)
