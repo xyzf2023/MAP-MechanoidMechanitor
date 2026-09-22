@@ -426,7 +426,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             currentEnergy = Math.Max(0f, currentEnergy
-                - amount * MechFusionVoidEngineUtility.ConsumptionFactor(this));
+                - amount * MechFusionVoidEngineUtility.ConsumptionFactor(this)
+                    * SunEnergyAuraUtility.ConsumptionFactor(WearerPawn));
         }
 
         internal void SetStability(float current, float max)

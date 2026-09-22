@@ -13,6 +13,7 @@
       <BandwidthCost>5</BandwidthCost>
     </statBases>
     <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_SunEnergyAura" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_AutonomousMech" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingConversion">
         <buildingFormDef>MAP_Building_Sun</buildingFormDef>

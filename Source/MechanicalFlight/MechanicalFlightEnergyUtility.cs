@@ -35,7 +35,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             energy.CurLevelPercentage = Mathf.Max(0f,
-                energy.CurLevelPercentage - Mathf.Max(0f, fraction));
+                energy.CurLevelPercentage - Mathf.Max(0f, fraction)
+                    * SunEnergyAuraUtility.ConsumptionFactor(pawn));
             return true;
         }
 
@@ -135,6 +136,7 @@ namespace MAP_MechanoidMechanitor
         public static float GetFinalConsumptionFraction(Pawn? pawn, float fraction)
         {
             return Mathf.Max(0f, fraction)
+                * SunEnergyAuraUtility.ConsumptionFactor(pawn)
                 * (MechFusionEnergyUtility.TryGetActiveSessionForWearer(pawn, out MechFusionSession? session)
                     && session != null ? MechFusionVoidEngineUtility.ConsumptionFactor(session) : 1f);
         }

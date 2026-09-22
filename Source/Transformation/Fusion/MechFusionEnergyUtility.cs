@@ -156,6 +156,8 @@ namespace MAP_MechanoidMechanitor
 
         internal static float GetMechEnergyUsageFactor(MechFusionSession session)
         {
+            // 日冕跟随实际穿戴者所在地图，不能读取合体前留在源 Pawn 上的效果。
+            if (SunEnergyAuraUtility.Level(session?.WearerPawn) != 0) return 0f;
             Pawn? source = session?.SourcePawn;
             StatDef? stat =
                 DefDatabase<StatDef>.GetNamedSilentFail("MechEnergyUsageFactor");
@@ -179,7 +181,8 @@ namespace MAP_MechanoidMechanitor
             return GroundFractionPerDay
                 * 100f
                 * GetMechEnergyUsageFactor(session)
-                * MechFusionVoidEngineUtility.ConsumptionFactor(session);
+                * MechFusionVoidEngineUtility.ConsumptionFactor(session)
+                * SunEnergyAuraUtility.ConsumptionFactor(session.WearerPawn);
         }
     }
 
