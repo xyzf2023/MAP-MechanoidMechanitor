@@ -2,7 +2,8 @@ using System;
 
 namespace MAP_MechanoidMechanitor
 {
-    public enum MechanoidMechanitorCapability
+    [Flags]
+    public enum MechanoidMechanitorCapability : long
     {
         None = 0,
 
@@ -42,7 +43,7 @@ namespace MAP_MechanoidMechanitor
         // 通用机械飞行资格仅来自独立飞行授权注册表；不改变既有能力位。
         Flight = 1 << 21,
 
-        // 原版机控中枢或合体期间“机控同调”提供的机械师控制系统接入。
+        // 节点、后天身份、原版机控中枢或机控同调提供的监管系统接入（包括接管）。
         MechanitorControl = 1 << 22,
 
         // 合体只能是先天能力，唯一事实来源是 CompMechFusionInnate 标记与合体资格注册表。
@@ -53,6 +54,18 @@ namespace MAP_MechanoidMechanitor
         MovementCostImmunity = 1 << 24,
 
         // 自身无需外部监管者；不代表机械师、节点或类殖民者身份。
-        AutonomousMech = 1 << 25
+        AutonomousMech = 1 << 25,
+
+        // 作用于接受指令的机械体；跨地图资格还要求距离豁免。
+        CommandRangeBypass = 1L << 26,
+        CrossMapCommand = 1L << 27,
+
+        SelfRepair = 1L << 28,
+        Recreation = 1L << 29,
+        IndividualSkills = 1L << 30,
+        CharacterTab = 1L << 31,
+        GeneralMechWork = 1L << 32,
+        ManagedSchedule = 1L << 33,
+        Inspiration = 1L << 34
     }
 }

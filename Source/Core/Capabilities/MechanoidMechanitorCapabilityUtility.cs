@@ -43,6 +43,25 @@ namespace MAP_MechanoidMechanitor
                 return HasMechanitorControlCapability(pawn);
             }
 
+            if (capability == MechanoidMechanitorCapability.IndividualSkills)
+            {
+                return HasIndividualSkills(pawn);
+            }
+
+            if (capability == MechanoidMechanitorCapability.CharacterTab)
+            {
+                return HasCharacterTab(pawn);
+            }
+
+            if (capability == MechanoidMechanitorCapability.SelfRepair
+                || capability == MechanoidMechanitorCapability.Recreation
+                || capability == MechanoidMechanitorCapability.GeneralMechWork
+                || capability == MechanoidMechanitorCapability.ManagedSchedule
+                || capability == MechanoidMechanitorCapability.Inspiration)
+            {
+                return GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _);
+            }
+
             // 合体资格只能是先天能力，唯一事实来源是合体资格注册表。
             if (capability == MechanoidMechanitorCapability.Fusion)
             {
@@ -126,11 +145,24 @@ namespace MAP_MechanoidMechanitor
 
         private static bool HasMechanitorControlCapability(Pawn pawn)
         {
-            return pawn.health?.hediffSet?.HasHediff(
+            // 直接读来源，不调用 IsMechanitor/IsMechanitorNodeController，避免递归及初始化副作用。
+            return (pawn.RaceProps?.IsMechanoid == true
+                    && (GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(pawn, out _)
+                        || pawn.GetComp<CompMAPMechanitorNode>()?.NodeProps?.controlBackend
+                            == MAPMechanitorControlBackend.Vanilla))
+                || pawn.health?.hediffSet?.HasHediff(
                        HediffDefOf.MechlinkImplant) == true
                 || MechFusionMechanitorSynchronizationService
                     .HasTemporaryMechanitorAccess(pawn);
         }
+
+        private static bool HasIndividualSkills(Pawn pawn) =>
+            GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
+            || pawn.GetComp<CompCommanderSkills>() != null;
+
+        private static bool HasCharacterTab(Pawn pawn) =>
+            GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
+            || pawn.GetComp<CompColonistLikeMechProfile>() != null;
 
         private static void AddCapabilitiesFromMechanitorControl(
             Pawn pawn,
@@ -193,6 +225,11 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             ref MechanoidMechanitorCapability capabilities)
         {
+            if (HasIndividualSkills(pawn))
+                capabilities |= MechanoidMechanitorCapability.IndividualSkills;
+            if (HasCharacterTab(pawn))
+                capabilities |= MechanoidMechanitorCapability.CharacterTab;
+
             if (CompMAPMechanitorTravelNode.TryGetTravelNodeComp(
                     pawn,
                     out CompMAPMechanitorTravelNode? travelComp)
@@ -291,7 +328,14 @@ namespace MAP_MechanoidMechanitor
                 | MechanoidMechanitorCapability.Royalty
                 | MechanoidMechanitorCapability.ColonistLikeTimetable
                 | MechanoidMechanitorCapability.ClassroomTeaching
-                | MechanoidMechanitorCapability.Psycasting;
+                | MechanoidMechanitorCapability.Psycasting
+                | MechanoidMechanitorCapability.SelfRepair
+                | MechanoidMechanitorCapability.Recreation
+                | MechanoidMechanitorCapability.IndividualSkills
+                | MechanoidMechanitorCapability.CharacterTab
+                | MechanoidMechanitorCapability.GeneralMechWork
+                | MechanoidMechanitorCapability.ManagedSchedule
+                | MechanoidMechanitorCapability.Inspiration;
 
             capabilities |= GetIdeologyCapabilities(pawn);
 

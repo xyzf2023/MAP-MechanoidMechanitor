@@ -26,8 +26,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn)
-                && !MechanoidMechanitorCapabilityUtility.HasCapability(
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
                     pawn,
                     MechanoidMechanitorCapability.MechanitorControl))
             {
@@ -59,8 +58,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn)
-                && !MechanoidMechanitorCapabilityUtility.HasCapability(
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
                     pawn,
                     MechanoidMechanitorCapability.MechanitorControl))
             {
