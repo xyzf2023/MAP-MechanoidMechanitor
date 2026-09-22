@@ -23,19 +23,18 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        internal static void StartBlackout(Map map, int durationTicks)
+        internal static void StartBlackout(ThingWithComps source, int durationTicks)
         {
             try
             {
-                GameConditionDef def = AnnihilationCannonDefOf.MAP_AnnihilationBlackout;
-                GameCondition? active = map.gameConditionManager.GetActiveCondition(def);
-                if (active != null && !active.Expired)
-                {
-                    active.TicksLeft = Mathf.Max(active.TicksLeft, durationTicks);
-                    return;
-                }
-                map.gameConditionManager.RegisterCondition(
-                    GameConditionMaker.MakeCondition(def, durationTicks));
+                CompAffectsSky sky = source.GetComp<CompAffectsSky>();
+                if (sky == null)
+                    throw new InvalidOperationException("湮灭炮命中对象缺少天空效果组件。");
+
+                // 动画最短为两 tick；短动画对半分配过渡，避免零时长与超出动画生命周期。
+                int duration = Mathf.Max(2, durationTicks);
+                int transition = Mathf.Min(8, duration / 2);
+                sky.StartFadeInHoldFadeOut(transition, duration - transition * 2, transition);
             }
             catch (Exception ex)
             {
@@ -44,9 +43,16 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    /// <summary>随命中动画短暂压暗地图，前后过渡均包含在总时长内。</summary>
-    public sealed class GameCondition_AnnihilationBlackout : GameCondition_NoSunlight
+    /// <summary>实际命中与预览共用原版天空组件，保留原有无阳光效果的颜色与强度。</summary>
+    public sealed class CompProperties_AnnihilationSky : CompProperties_AffectsSky
     {
-        public override int TransitionTicks => 8;
+        public CompProperties_AnnihilationSky()
+        {
+            glow = 0f;
+            skyColors = GameCondition_NoSunlight.EclipseSkyColors;
+            lightsourceShineSize = 1f;
+            lightsourceShineIntensity = 0f;
+            lerpDarken = true;
+        }
     }
 }

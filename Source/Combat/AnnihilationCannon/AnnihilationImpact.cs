@@ -9,7 +9,7 @@ using Verse.Sound;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>保存落点事务：非 Pawn 消失、爆炸、Kill、残留清理分别只提交一次。</summary>
-    public sealed class AnnihilationImpact : Thing
+    public sealed class AnnihilationImpact : ThingWithComps
     {
         private Pawn? launcher;
         private AnnihilationSettings settings = null!;
@@ -145,7 +145,7 @@ namespace MAP_MechanoidMechanitor
             explosion.chanceToStartFire = 0f;
             explosion.StartExplosion(null, launcher?.GetComp<CompSunBossState>() != null
                 ? new List<Thing> { launcher } : null);
-            AnnihilationHitEffect.StartBlackout(Map, settings.VisualDurationTicks);
+            AnnihilationHitEffect.StartBlackout(this, settings.VisualDurationTicks);
             DefDatabase<SoundDef>.GetNamedSilentFail("Psycast_Skip_Entry")
                 ?.PlayOneShot(new TargetInfo(Position, Map));
         }
@@ -242,6 +242,7 @@ namespace MAP_MechanoidMechanitor
 
         protected override void Tick()
         {
+            base.Tick();
             if (settings == null) { Destroy(); return; }
             if (phase == 0) Begin();
             int now = Find.TickManager.TicksGame;

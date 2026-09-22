@@ -23,6 +23,9 @@
     <defName>MAP_AnnihilationImpact</defName>
     <label>湮灭场</label>
     <thingClass>MAP_MechanoidMechanitor.AnnihilationImpact</thingClass>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AnnihilationSky" />
+    </comps>
     <category>Ethereal</category>
     <tickerType>Normal</tickerType>
     <drawerType>RealtimeOnly</drawerType>

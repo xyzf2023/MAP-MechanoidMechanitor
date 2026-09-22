@@ -5,7 +5,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>仅预览动画与压暗，不创建爆炸、破坏地形或生成永久弹坑。</summary>
-    public sealed class AnnihilationHitPreview : Thing
+    public sealed class AnnihilationHitPreview : ThingWithComps
     {
         private int startedTick = -1;
         private AnnihilationSettings settings = null!;
@@ -18,13 +18,14 @@ namespace MAP_MechanoidMechanitor
             base.SpawnSetup(map, respawningAfterLoad);
             settings ??= AnnihilationHitDebugActions.CreatePreviewSettings();
             if (startedTick < 0) startedTick = Find.TickManager.TicksGame;
-            // 地图条件自行存档；读档不重新启动或延长压暗。
+            // 天空组件随对象保存动画进度；读档不重新启动或延长压暗。
             if (!respawningAfterLoad)
-                AnnihilationHitEffect.StartBlackout(map, settings.VisualDurationTicks);
+                AnnihilationHitEffect.StartBlackout(this, settings.VisualDurationTicks);
         }
 
         protected override void Tick()
         {
+            base.Tick();
             if (settings == null || Find.TickManager.TicksGame - startedTick >= settings.VisualDurationTicks)
                 Destroy(DestroyMode.Vanish);
         }

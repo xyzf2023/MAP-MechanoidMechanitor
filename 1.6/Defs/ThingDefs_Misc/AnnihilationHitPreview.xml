@@ -4,6 +4,9 @@
     <defName>MAP_AnnihilationHitPreview</defName>
     <label>湮灭炮命中预览</label>
     <thingClass>MAP_MechanoidMechanitor.AnnihilationHitPreview</thingClass>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AnnihilationSky" />
+    </comps>
     <category>Ethereal</category>
     <tickerType>Normal</tickerType>
     <drawerType>RealtimeOnly</drawerType>
