@@ -18,7 +18,10 @@ namespace MAP_MechanoidMechanitor
         private int visualStartTick = -1;
         private bool explosionEnded;
         private bool finalCleanupDone;
+        private bool aftermathCreated;
+        private bool visualFailed;
         private List<IntVec3> innerCells = new List<IntVec3>();
+        private List<IntVec3> outerCells = new List<IntVec3>();
         private List<Pawn> releasedPawns = new List<Pawn>();
         private List<AnnihilationResidue> residues = new List<AnnihilationResidue>();
 
@@ -122,6 +125,9 @@ namespace MAP_MechanoidMechanitor
             // 第一阶段移除了墙；爆炸和后续 Pawn 判定使用此时的地图。
             RefreshInnerCells();
             visualStartTick = Find.TickManager.TicksGame;
+            // 立即复制爆炸前的遮挡快照；不使用被爆炸改变后的地图补算余波范围。
+            outerCells = DamageDefOf.Bomb.Worker
+                .ExplosionCellsToHit(Position, Map, settings.outerRadius).ToList();
             AnnihilationExplosion explosion = (AnnihilationExplosion)ThingMaker.MakeThing(
                 AnnihilationCannonDefOf.MAP_AnnihilationExplosion);
             explosion.owner = this;
@@ -139,6 +145,7 @@ namespace MAP_MechanoidMechanitor
             explosion.chanceToStartFire = 0f;
             explosion.StartExplosion(null, launcher?.GetComp<CompSunBossState>() != null
                 ? new List<Thing> { launcher } : null);
+            AnnihilationHitEffect.StartBlackout(Map, settings.VisualDurationTicks);
             DefDatabase<SoundDef>.GetNamedSilentFail("Psycast_Skip_Entry")
                 ?.PlayOneShot(new TargetInfo(Position, Map));
         }
@@ -216,6 +223,22 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        private void CreateAftermath()
+        {
+            if (aftermathCreated || !Spawned) return;
+            // 回调抛错也不重试已提交的地形破坏，不重复生成弹坑。
+            aftermathCreated = true;
+            try
+            {
+                AnnihilationAftermathUtility.Create(Map, Position, settings.outerRadius,
+                    thingIDNumber, outerCells);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("[MAP] 湮灭炮余波生成失败：" + ex);
+            }
+        }
+
         internal void NotifyExplosionEnded() => explosionEnded = true;
 
         protected override void Tick()
@@ -236,10 +259,11 @@ namespace MAP_MechanoidMechanitor
             {
                 // 爆炸晚于 T+9 到达的格子仍可能产生残留，仅在完成时补清一次。
                 CleanupResidues();
+                CreateAftermath();
                 finalCleanupDone = true;
             }
             if (finalCleanupDone && visualStartTick >= 0
-                && now - visualStartTick >= settings.expandTicks + settings.holdTicks + settings.contractTicks)
+                && now - visualStartTick >= settings.VisualDurationTicks)
                 Destroy(DestroyMode.Vanish);
         }
 
@@ -247,13 +271,8 @@ namespace MAP_MechanoidMechanitor
         {
             if (visualStartTick < 0 || settings == null) return;
             int age = Find.TickManager.TicksGame - visualStartTick;
-            float scale;
-            if (age < settings.expandTicks) scale = Mathf.SmoothStep(0f, 1f, (float)age / settings.expandTicks);
-            else if (age < settings.expandTicks + settings.holdTicks) scale = 1f;
-            else scale = Mathf.SmoothStep(1f, 0f,
-                (float)(age - settings.expandTicks - settings.holdTicks) / settings.contractTicks);
-            if (scale > 0.001f)
-                AnnihilationCannonVisuals.DrawSkip(Position.ToVector3Shifted(), settings.effectRadius * scale, age / 60f);
+            AnnihilationHitEffect.Draw(Position.ToVector3Shifted(), thingIDNumber,
+                settings, age, ref visualFailed);
         }
 
         public override void ExposeData()
@@ -266,12 +285,17 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref visualStartTick, "visualStartTick", -1);
             Scribe_Values.Look(ref explosionEnded, "explosionEnded");
             Scribe_Values.Look(ref finalCleanupDone, "finalCleanupDone");
+            Scribe_Values.Look(ref aftermathCreated, "aftermathCreated");
             Scribe_Collections.Look(ref innerCells, "innerCells", LookMode.Value);
+            Scribe_Collections.Look(ref outerCells, "outerCells", LookMode.Value);
             Scribe_Collections.Look(ref releasedPawns, "releasedPawns", LookMode.Reference);
             Scribe_Collections.Look(ref residues, "residues", LookMode.Deep);
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 innerCells ??= new List<IntVec3>();
+                // 旧档已开始爆炸时缺少快照：仅留弹坑，不根据当前地形扩大破坏范围。
+                // 尚未开始爆炸的旧攻击会在 StartOuterExplosion 中建立正常快照。
+                outerCells ??= new List<IntVec3>();
                 releasedPawns ??= new List<Pawn>();
                 releasedPawns.RemoveAll(p => p == null);
                 residues ??= new List<AnnihilationResidue>();

@@ -16,6 +16,22 @@ namespace MAP_MechanoidMechanitor
         public int holdTicks;
         public int contractTicks;
 
+        // 计时不依赖图形资源，材质初始化失败也不能阻止落点完成结算和销毁。
+        public int VisualDurationTicks => Mathf.Max(1, expandTicks)
+            + Mathf.Max(0, holdTicks) + Mathf.Max(1, contractTicks);
+
+        internal float VisualProgress(float ageTicks)
+        {
+            int expand = Mathf.Max(1, expandTicks);
+            int hold = Mathf.Max(0, holdTicks);
+            int contract = Mathf.Max(1, contractTicks);
+            if (ageTicks < expand)
+                return 0.13f * Mathf.Clamp01(ageTicks / expand);
+            if (hold > 0 && ageTicks < expand + hold)
+                return Mathf.Lerp(0.13f, 0.62f, (ageTicks - expand) / hold);
+            return Mathf.Lerp(0.62f, 1f, Mathf.Clamp01((ageTicks - expand - hold) / contract));
+        }
+
         public AnnihilationSettings() { }
         public AnnihilationSettings(CompProperties_AnnihilationCannon props)
         {

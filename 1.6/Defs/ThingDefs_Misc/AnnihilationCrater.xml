@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="EtherealThingBase">
+    <defName>MAP_AnnihilationCrater</defName>
+    <label>湮灭弹坑</label>
+    <thingClass>MAP_MechanoidMechanitor.AnnihilationCrater</thingClass>
+    <category>Ethereal</category>
+    <tickerType>Never</tickerType>
+    <drawerType>RealtimeOnly</drawerType>
+    <altitudeLayer>Filth</altitudeLayer>
+    <useHitPoints>false</useHitPoints>
+    <drawOffscreen>true</drawOffscreen>
+    <saveCompressible>false</saveCompressible>
+    <selectable>false</selectable>
+  </ThingDef>
+</Defs>

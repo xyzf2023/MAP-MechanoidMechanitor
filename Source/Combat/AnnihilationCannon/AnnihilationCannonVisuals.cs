@@ -6,7 +6,7 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 独立视觉资源：蓄力复用业火炮纹理的灰度遮罩，落点复用原版折跃 Shader。
+    /// 独立视觉资源：蓄力与瞄准复用业火炮纹理的灰度遮罩。
     /// 不修改原版缓存材质，不创建有伤害/碰撞的 Projectile，也不向磁盘写贴图。
     /// </summary>
     [StaticConstructorOnStartup]
@@ -16,8 +16,6 @@ namespace MAP_MechanoidMechanitor
         private static readonly Material Aim = MonochromeMask("Things/Mote/HellsphereCannon_Aim");
         private static readonly Material Target = MonochromeMask("Things/Mote/MoteHellfireCannon_Target");
         private static readonly Material ContractionRing = CreateRingMaterial();
-        private static readonly Material? SkipInner = SkipMaterial("PsycastSkipInnerExit");
-        private static readonly Material? SkipRing = SkipMaterial("PsycastSkipOuterRingExit");
         private static readonly MaterialPropertyBlock Properties = new MaterialPropertyBlock();
 
         private static Material CreateRingMaterial()
@@ -84,19 +82,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static Material? SkipMaterial(string defName)
-        {
-            FleckDef? fleck = DefDatabase<FleckDef>.GetNamedSilentFail(defName);
-            if (fleck?.graphicData == null) return null;
-            Material material = new Material(fleck.graphicData.Graphic.MatSingle);
-            // 自身控制几何扩张/收缩，Shader 保持折跃内部动画，避免原版半秒寿命提前熄灭。
-            material.SetFloat("_inTime", 0.001f);
-            material.SetFloat("_solidTime", 100000f);
-            material.SetFloat("_outTime", 1f);
-            material.SetFloat("_AgeOffset", 0f);
-            return material;
-        }
-
         private static void Draw(Material material, Vector3 center, Vector3 size,
             float angle, Color color, float age = 0f)
         {
@@ -158,19 +143,6 @@ namespace MAP_MechanoidMechanitor
                     Draw(ContractionRing, destination, new Vector3(diameter, 1f, diameter), 0f, ringColor);
                 }
             }
-        }
-
-        internal static void DrawSkip(Vector3 center, float radius, float age)
-        {
-            if (Find.UIRoot?.HideMotes == true) return;
-            float diameter = radius * 2f;
-            center.y = AltitudeLayer.MoteOverheadLow.AltitudeFor();
-            if (SkipRing != null)
-                Draw(SkipRing, center, new Vector3(diameter, 1f, diameter), 0f, Color.white, age + 0.01f);
-            center.y = AltitudeLayer.MoteOverhead.AltitudeFor();
-            if (SkipInner != null)
-                Draw(SkipInner, center, new Vector3(diameter * 0.85f, 1f, diameter * 0.85f),
-                    0f, Color.white, age + 0.01f);
         }
     }
 }
