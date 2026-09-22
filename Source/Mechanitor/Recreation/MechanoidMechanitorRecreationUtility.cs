@@ -162,7 +162,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.Recreation))
             {
                 return false;
             }
@@ -227,7 +227,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.Recreation))
             {
                 return;
             }
@@ -262,8 +262,8 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return MechanoidMechanitorRoleUtility
-                .IsMechanoidMechanitor(pawn);
+            return MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn, MechanoidMechanitorCapability.Recreation);
         }
 
         /// <summary>

@@ -237,7 +237,7 @@ namespace MAP_MechanoidMechanitor
             // 原版候选不是机械族机械师时，原版正结果可直接复用。
             if (originalResult
                 && originalPawn != null
-                && !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(originalPawn))
+                && !MechanoidMechanitorCapabilityUtility.HasCapability(originalPawn, MechanoidMechanitorCapability.IndividualSkills))
             {
                 return;
             }
@@ -279,8 +279,13 @@ namespace MAP_MechanoidMechanitor
             WorkTypeDef workType,
             int skillRequired)
         {
-            if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(candidate))
+            if (MechanoidMechanitorCapabilityUtility.HasCapability(candidate, MechanoidMechanitorCapability.IndividualSkills))
             {
+                if (!MechanoidMechanitorCapabilityUtility.HasCapability(candidate, MechanoidMechanitorCapability.GeneralMechWork)
+                    && (!candidate.IsColonyMechPlayerControlled
+                        || candidate.RaceProps.mechEnabledWorkTypes?.Contains(workType) != true))
+                    return false;
+
                 // 机械族机械师的可用工作类型可能来自升格后的动态授权，
                 // 不能再以升格前种族的 mechEnabledWorkTypes 提前排除。
                 if (candidate.WorkTypeIsDisabled(workType))
@@ -364,7 +369,7 @@ namespace MAP_MechanoidMechanitor
                         break;
                     }
 
-                    if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(candidate))
+                    if (MechanoidMechanitorCapabilityUtility.HasCapability(candidate, MechanoidMechanitorCapability.GeneralMechWork))
                     {
                         if (MechanoidMechanitorWorkAlertUtility
                                 .IsAvailableMechanitorForWork(

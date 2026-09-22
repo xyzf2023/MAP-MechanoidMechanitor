@@ -64,7 +64,7 @@ namespace MAP_MechanoidMechanitor
         {
             HashSet<WorkTypeDef> allowed = new HashSet<WorkTypeDef>();
 
-            if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.GeneralMechWork))
             {
                 List<WorkTypeDef> roleWorkTypes =
                     MechanoidMechanitorRoleUtility.GetRoleWorkTypes();

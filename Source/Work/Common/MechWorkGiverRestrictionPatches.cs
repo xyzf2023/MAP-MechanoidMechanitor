@@ -33,48 +33,8 @@ namespace MAP_MechanoidMechanitor
 
         private static bool CanBeDoneByMechsOrAuthorized(bool canBeDoneByMechs, Pawn pawn, WorkGiver workGiver)
         {
-            WorkTypeDef? workType = workGiver?.def?.workType;
-            if (workType == WardenWorkUtility.WardenWorkType)
-            {
-                return canBeDoneByMechs || WardenWorkUtility.IsAuthorized(pawn);
-            }
-
-            if (workType == AnimalHandlingWorkUtility.HandlingWorkType)
-            {
-                if (AnimalHandlingWorkUtility.IsAuthorized(pawn))
-                {
-                    return true;
-                }
-
-                return canBeDoneByMechs
-                    || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
-            }
-
-            if (workType == MechanicalChildcareUtility.ChildcareWorkType)
-            {
-                // 已授权保育：仅走白名单，不得被 canBeDoneByMechs 绕过；授权只查一次。
-                if (MechanicalChildcareUtility.IsAuthorized(pawn))
-                {
-                    return MechanicalChildcareUtility.IsAllowedWorkGiver(workGiver?.def);
-                }
-
-                return canBeDoneByMechs
-                    || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
-            }
-
-            // 其他工作：原版已允许机械族时立即放行，避免额外身份/组件查询。
-            if (canBeDoneByMechs)
-            {
-                return true;
-            }
-
-            if (pawn == null || pawn.RaceProps?.IsMechanoid != true)
-            {
-                return false;
-            }
-
-            return MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
-                || CompMechRestrictedWorkGiverUser.Allows(pawn, workGiver);
+            return MechanoidMechanitorCapabilityUtility.AllowsWorkGiver(
+                pawn, workGiver?.def, canBeDoneByMechs);
         }
 
         [HarmonyTranspiler]

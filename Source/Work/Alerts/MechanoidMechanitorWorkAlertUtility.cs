@@ -57,7 +57,7 @@ namespace MAP_MechanoidMechanitor
                 || pawn.Faction != Faction.OfPlayer
                 || (pawn.Spawned && pawn.Map != map)
                 || (!pawn.Spawned && !pawn.BrieflyDespawned())
-                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+                || !MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.GeneralMechWork))
             {
                 return false;
             }

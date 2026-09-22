@@ -7,6 +7,36 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MechWorkTypeAuthorizationUtility
     {
+        internal static bool AllowsWorkGiver(Pawn? pawn, WorkGiverDef? workGiver, bool vanillaAllowed)
+        {
+            if (pawn == null || workGiver == null)
+                return vanillaAllowed;
+            WorkTypeDef? workType = workGiver.workType;
+            if (workType == null)
+                return vanillaAllowed;
+            if (workType == WardenWorkUtility.WardenWorkType)
+                return vanillaAllowed || WardenWorkUtility.IsAuthorized(pawn);
+            if (workType == MechanicalChildcareUtility.ChildcareWorkType
+                && MechanicalChildcareUtility.IsAuthorized(pawn))
+                return MechanicalChildcareUtility.IsAllowedWorkGiver(workGiver);
+            if (workType == AnimalHandlingWorkUtility.HandlingWorkType
+                && AnimalHandlingWorkUtility.IsAuthorized(pawn))
+                return true;
+            if (vanillaAllowed)
+                return true;
+            if (pawn.RaceProps?.IsMechanoid != true)
+                return false;
+
+            bool restricted = pawn.GetComp<CompMechRestrictedWorkGiverUser>()?
+                .Props.allowedWorkTypes?.Contains(workType) == true;
+            if (workType == AnimalHandlingWorkUtility.HandlingWorkType
+                || workType == MechanicalChildcareUtility.ChildcareWorkType)
+                return restricted;
+
+            return restricted || MechanoidMechanitorCapabilityUtility.HasCapability(
+                pawn, MechanoidMechanitorCapability.GeneralMechWork);
+        }
+
         public static bool IsDisabledOutsideMechRaceProfile(
             Pawn pawn,
             WorkTypeDef workType,

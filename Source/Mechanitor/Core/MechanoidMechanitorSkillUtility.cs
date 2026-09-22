@@ -13,7 +13,7 @@ namespace MAP_MechanoidMechanitor
             level = 0;
             if (pawn == null
                 || skill == null
-                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+                || !MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.IndividualSkills))
             {
                 return false;
             }
@@ -54,7 +54,7 @@ namespace MAP_MechanoidMechanitor
             if (pawn == null
                 || workType?.relevantSkills == null
                 || workType.relevantSkills.Count == 0
-                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+                || !MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.IndividualSkills))
             {
                 return false;
             }

@@ -32,8 +32,8 @@ namespace MAP_MechanoidMechanitor
         {
             return pawn != null
                 && pawn.Faction == Faction.OfPlayer
-                && (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
-                    || pawn.GetComp<CompColonistLikeMechProfile>() != null);
+                && MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn, MechanoidMechanitorCapability.CharacterTab);
         }
 
         public static bool HasCharacterTabData(Pawn? pawn)

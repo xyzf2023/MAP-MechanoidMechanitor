@@ -33,7 +33,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.ManagedSchedule))
             {
                 return false;
             }

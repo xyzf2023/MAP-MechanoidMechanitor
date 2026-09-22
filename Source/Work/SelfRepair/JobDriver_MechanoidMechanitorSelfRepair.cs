@@ -47,7 +47,7 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.SelfRepair))
             {
                 yield break;
             }
@@ -61,7 +61,7 @@ namespace MAP_MechanoidMechanitor
                 pawn == null
                 || pawn.Dead
                 || pawn.Destroyed
-                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
+                || !MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.SelfRepair)
                 || job.targetA.Pawn != pawn);
 
             Toil wait = Toils_General.Wait(int.MaxValue);

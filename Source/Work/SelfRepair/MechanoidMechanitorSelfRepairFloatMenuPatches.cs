@@ -34,7 +34,7 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(selectedPawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(selectedPawn, MechanoidMechanitorCapability.SelfRepair))
             {
                 return true;
             }

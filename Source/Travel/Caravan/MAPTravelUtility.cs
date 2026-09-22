@@ -52,7 +52,7 @@ namespace MAP_MechanoidMechanitor
                 && !pawn.Dead
                 && !pawn.Destroyed
                 && pawn.Spawned
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
+                && MAPMechanitorTravelUtility.CanLeadCaravan(pawn);
         }
 
         public static bool IsColonistOrEligibleMechanoidMechanitor(Pawn? pawn)

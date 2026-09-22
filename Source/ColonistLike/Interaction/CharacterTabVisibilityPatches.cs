@@ -9,8 +9,6 @@ namespace MAP_MechanoidMechanitor
     [HarmonyPriority(Priority.Last)]
     public static class Patch_ITab_Pawn_Character_IsVisible_CommanderFaction
     {
-        private const string HermitDefName = "MAP_Mech_Hermit";
-
         [HarmonyPostfix]
         public static void Postfix(ref bool __result)
         {
@@ -34,10 +32,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            bool isMechanitorRole =
-                MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
-            bool isHermit = pawn.def?.defName == HermitDefName;
-            if (isMechanitorRole || isHermit)
+            if (MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.CharacterTab)
+                || MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.IndividualSkills))
             {
                 __result = false;
             }

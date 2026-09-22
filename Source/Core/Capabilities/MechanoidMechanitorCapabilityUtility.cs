@@ -6,6 +6,10 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MechanoidMechanitorCapabilityUtility
     {
+        /// <summary>带工作类型参数的能力查询；保留监管、驯兽、保育的独立授权和白名单。</summary>
+        public static bool AllowsWorkGiver(Pawn? pawn, WorkGiverDef? workGiver, bool vanillaAllowed = false) =>
+            MechWorkTypeAuthorizationUtility.AllowsWorkGiver(pawn, workGiver, vanillaAllowed);
+
         public static bool HasCapability(
             Pawn? pawn,
             MechanoidMechanitorCapability capability)

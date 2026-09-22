@@ -109,7 +109,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.Inspiration))
             {
                 return false;
             }
@@ -281,7 +281,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.Inspiration))
             {
                 return false;
             }

@@ -56,7 +56,7 @@ namespace MAP_MechanoidMechanitor
                 yield break;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.SelfRepair))
             {
                 yield break;
             }
