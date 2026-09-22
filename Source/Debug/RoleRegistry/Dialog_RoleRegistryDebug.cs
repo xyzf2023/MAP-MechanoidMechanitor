@@ -275,13 +275,14 @@ namespace MAP_MechanoidMechanitor
                 {
                     if (Widgets.ButtonText(button, "撤销")) ConfirmRevokeAutonomy(pawn);
                 }
-                else Widgets.Label(button, "来源保留");
+                else Widgets.Label(button, record.Sources == AutonomousMechAuthorizationSource.None ? "未启用" : "来源保留");
             }
             Widgets.EndScrollView();
         }
 
         private static string DescribeAutonomySources(AutonomousMechAuthorizationSource sources)
         {
+            if (sources == AutonomousMechAuthorizationSource.None) return "无（仅保留个人设置）";
             var labels = new List<string>();
             if ((sources & AutonomousMechAuthorizationSource.Independent) != 0) labels.Add("独立授权");
             if ((sources & AutonomousMechAuthorizationSource.MechanitorIdentity) != 0) labels.Add("机械师身份");
@@ -298,7 +299,8 @@ namespace MAP_MechanoidMechanitor
                 () =>
                 {
                     bool changed = GameComponent_AutonomousMechRegistry.TryRevokeAuthorization(pawn);
-                    bool remains = GameComponent_AutonomousMechRegistry.HasAuthorizationRecord(pawn);
+                    bool remains = GameComponent_AutonomousMechRegistry.TryGetRecord(pawn, out var record)
+                        && record!.Sources != AutonomousMechAuthorizationSource.None;
                     Messages.Message(changed
                             ? (remains ? "已撤销独立授权；其他来源仍提供自律资格。" : "已撤销自律资格，恢复普通机械体规则。")
                             : "目标没有可撤销的独立授权。",

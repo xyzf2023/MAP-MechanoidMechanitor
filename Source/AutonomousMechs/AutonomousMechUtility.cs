@@ -46,16 +46,12 @@ namespace MAP_MechanoidMechanitor
             bool authorized = IsAutonomousMech(pawn);
             if (authorized)
             {
-                bool hadExternalOverseer =
-                    MAPOverseerRelationDirectionUtility.FindActualOverseer(pawn) != null;
                 MAPOverseerlessNodeUtility.ClearExternalOverseerIfNode(pawn);
-                if (hadExternalOverseer && !MechanitorUtility.IsMechanitor(pawn))
-                {
-                    // 原版 Unassign 不会撤掉本 MOD 控制组模式加成。
-                    // 复用统一同步入口；读档时由其既有安全补丁延后处理。
-                    MechanoidMechanitorWorkModeUtility.ApplyWorkModeHediff(pawn, MechWorkModeDefOf.Work);
-                }
             }
+
+            // 在重建组件和重新评估工作之前撤掉旧来源，避免以残留加成选择工作。
+            if (!GameComponent_AutonomousMechRegistry.RefreshPendingOverseerEffects(pawn, reevaluateJobs))
+                return;
 
             if (pawn.Faction != Faction.OfPlayer)
             {

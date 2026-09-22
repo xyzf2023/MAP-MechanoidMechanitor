@@ -41,6 +41,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            // 先保存旧提供者，再解除关系；其他身份/意识迁移入口也走同一事件。
+            GameComponent_AutonomousMechRegistry.QueueOverseerEffectRefresh(pawn, externalOverseers);
             for (int i = 0; i < externalOverseers.Count; i++)
             {
                 ClearOneExternalOverseerDirection(pawn, externalOverseers[i]);

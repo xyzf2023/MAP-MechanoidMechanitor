@@ -13,10 +13,13 @@ namespace MAP_MechanoidMechanitor
         private readonly Dictionary<Pawn, AutonomousMechAuthorizationRecord> byPawn =
             new Dictionary<Pawn, AutonomousMechAuthorizationRecord>();
         private readonly Dictionary<Pawn, bool> pendingRefresh = new Dictionary<Pawn, bool>();
+        private readonly Dictionary<Pawn, HashSet<Pawn>> pendingOverseerEffectRefresh =
+            new Dictionary<Pawn, HashSet<Pawn>>();
         // 旧档中节点 Comp 可能先于身份注册表恢复；仅对本次新建记录延后导入旧阈值。
         private readonly HashSet<AutonomousMechAuthorizationRecord> pendingLegacyRechargeImport =
             new HashSet<AutonomousMechAuthorizationRecord>();
         private bool refreshing;
+        private bool pendingSettingsRefresh;
 
         private static GameComponent_AutonomousMechRegistry? CurrentRegistry =>
             CurrentGameComponentCache<GameComponent_AutonomousMechRegistry>.Get();
@@ -88,7 +91,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             record.SetSources(record.Sources & ~AutonomousMechAuthorizationSource.Independent);
             bool lostAuthorization = record.Sources == AutonomousMechAuthorizationSource.None;
-            if (lostAuthorization)
+            if (lostAuthorization && pawn.GetComp<CompAutonomousMech>()?.IsSettingsControlled != true)
                 CurrentRegistry.Remove(record);
             CurrentRegistry.NotifyChanged(pawn, lostAuthorization);
             CurrentRegistry.FlushPendingRefreshes();
@@ -126,6 +129,13 @@ namespace MAP_MechanoidMechanitor
                 CurrentRegistry?.SynchronizePawn(pawn);
         }
 
+        /// <summary>设置事件只排队；下一次安全 Update 统一同步已有个体，暂停游戏时也生效。</summary>
+        internal static void NotifySettingsChanged()
+        {
+            if (CurrentRegistry != null)
+                CurrentRegistry.pendingSettingsRefresh = true;
+        }
+
         /// <summary>机械师注册表结构改变时同步，包含被删除身份的旧授权记录。</summary>
         internal static void SynchronizeMechanitorSources()
         {
@@ -154,6 +164,12 @@ namespace MAP_MechanoidMechanitor
             if (pawn.Discarded)
                 return;
             AutonomousMechAuthorizationRecord? record = FindPersistentRecord(pawn);
+            CompAutonomousMech? innateComp = pawn.GetComp<CompAutonomousMech>();
+            bool retainSettings = innateComp?.IsSettingsControlled == true
+                && pawn.RaceProps?.IsMechanoid == true && pawn.OverseerSubject != null;
+            // 关闭先天来源时保留个人阈值/模式及离图引用；空来源记录不代表自律资格。
+            if (record == null && retainSettings)
+                record = GetOrCreate(pawn);
             if (record != null && pendingLegacyRechargeImport.Contains(record)
                 && GameComponent_MechanoidMechanitorRegistry.TryGetPersistentRecord(pawn,
                     out MechanoidMechanitorRecord? legacy))
@@ -170,7 +186,7 @@ namespace MAP_MechanoidMechanitor
                 sources |= record?.Sources ?? AutonomousMechAuthorizationSource.None;
             if (pawn.RaceProps?.IsMechanoid == true && pawn.OverseerSubject != null)
             {
-                if (pawn.GetComp<CompAutonomousMech>() != null)
+                if (innateComp?.ProvidesAuthorization == true)
                     sources |= AutonomousMechAuthorizationSource.InnateComp;
                 if (GameComponent_MechanoidMechanitorRegistry.TryGetPersistentRecord(pawn, out _))
                     sources |= AutonomousMechAuthorizationSource.MechanitorIdentity;
@@ -182,11 +198,11 @@ namespace MAP_MechanoidMechanitor
             AutonomousMechAuthorizationSource previous = record?.Sources ?? AutonomousMechAuthorizationSource.None;
             if (previous == sources)
             {
-                if (record != null && sources == AutonomousMechAuthorizationSource.None)
+                if (record != null && sources == AutonomousMechAuthorizationSource.None && !retainSettings)
                     Remove(record);
                 return;
             }
-            if (sources == AutonomousMechAuthorizationSource.None)
+            if (sources == AutonomousMechAuthorizationSource.None && !retainSettings)
             {
                 if (record != null) Remove(record);
             }
@@ -253,6 +269,35 @@ namespace MAP_MechanoidMechanitor
             pendingRefresh[pawn] = previous || reevaluateJobs;
         }
 
+        internal static void QueueOverseerEffectRefresh(Pawn pawn, IEnumerable<Pawn> formerOverseers)
+        {
+            GameComponent_AutonomousMechRegistry? registry = CurrentRegistry;
+            if (registry == null) return;
+            if (!registry.pendingOverseerEffectRefresh.TryGetValue(pawn, out HashSet<Pawn>? providers))
+            {
+                providers = new HashSet<Pawn>();
+                registry.pendingOverseerEffectRefresh.Add(pawn, providers);
+            }
+            providers.UnionWith(formerOverseers);
+            registry.QueueRefresh(pawn, false);
+        }
+
+        internal static bool RefreshPendingOverseerEffects(Pawn pawn, bool reevaluateJobs)
+        {
+            GameComponent_AutonomousMechRegistry? registry = CurrentRegistry;
+            if (registry == null
+                || !registry.pendingOverseerEffectRefresh.TryGetValue(pawn, out HashSet<Pawn>? formerOverseers))
+                return true;
+            // 成功后再移除：关系已解除后发生异常，重试仍能找到旧增益提供者。
+            if (AutonomousMechEffectUtility.RefreshAfterOverseerChange(pawn, formerOverseers))
+            {
+                registry.pendingOverseerEffectRefresh.Remove(pawn);
+                return true;
+            }
+            registry.QueueRefresh(pawn, reevaluateJobs);
+            return false;
+        }
+
         /// <summary>由安全读档协调器调用。只处理事件积累的 Pawn，不扫描全体机械体。</summary>
         internal static void ApplyDeferredRuntimeRefreshes()
         {
@@ -277,6 +322,9 @@ namespace MAP_MechanoidMechanitor
                     try
                     {
                         AutonomousMechUtility.RefreshRuntime(entry.Key, entry.Value && !allowLoadCoordinator);
+                        // 不再具备运行条件的个体可能提前返回；清退死亡/销毁目标的待处理事件。
+                        if (!CanRefreshLivingPawn(entry.Key))
+                            RefreshPendingOverseerEffects(entry.Key, entry.Value && !allowLoadCoordinator);
                     }
                     catch
                     {
@@ -289,9 +337,19 @@ namespace MAP_MechanoidMechanitor
             finally { refreshing = false; }
         }
 
+        private static bool CanRefreshLivingPawn(Pawn pawn) =>
+            !pawn.Dead && !pawn.Destroyed && !pawn.Discarded;
+
         public override void GameComponentUpdate()
         {
             base.GameComponentUpdate();
+            if (pendingSettingsRefresh && Scribe.mode == LoadSaveMode.Inactive
+                && !MechanoidMechanitorPostLoadSafetyCoordinator.LoadInProgress
+                && !LongEventHandler.AnyEventNowOrWaiting && Current.ProgramState == ProgramState.Playing)
+            {
+                SynchronizeKnownPawns(innateOnly: true);
+                pendingSettingsRefresh = false;
+            }
             FlushPendingRefreshes();
         }
 
@@ -326,15 +384,20 @@ namespace MAP_MechanoidMechanitor
         {
             RebuildIndex();
             SynchronizeMechanitorSources();
-            // 兼容没有机械师身份的旧节点；只在开局/读档扫描，离图已有记录由注册表保留。
-            if (Find.WorldPawns != null)
-                foreach (Pawn pawn in Find.WorldPawns.AllPawnsAliveOrDead)
-                    SynchronizePawn(pawn);
-            foreach (Map map in Find.Maps)
-                foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
-                    SynchronizePawn(pawn);
+            SynchronizeKnownPawns();
             foreach (var record in records)
                 if (record.Pawn != null) QueueRefresh(record.Pawn, false);
+        }
+
+        private void SynchronizeKnownPawns(bool innateOnly = false)
+        {
+            // 仅开局、读档、设置变更时扫描；包括容器、远行队与持久记录中的离图机体。
+            var candidates = new HashSet<Pawn>(PawnsFinder.All_AliveOrDead);
+            foreach (AutonomousMechAuthorizationRecord record in records)
+                if (record.Pawn != null) candidates.Add(record.Pawn);
+            foreach (Pawn pawn in candidates)
+                if (!innateOnly || pawn.GetComp<CompAutonomousMech>() != null)
+                    SynchronizePawn(pawn);
         }
 
         private void RebuildIndex()

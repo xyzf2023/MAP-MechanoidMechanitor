@@ -15,6 +15,9 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool enableMechanoidPrioritizedWorkOrders = false;
 
+        public bool enableSunAutonomy = true;
+        public bool enableHermitAutonomy = true;
+
         public bool enablePortraitDisplayForAllSaves = false;
         public bool enableMechanoidMechanitorBrainImplants = false;
 
@@ -474,6 +477,8 @@ namespace MAP_MechanoidMechanitor
         public override void ExposeData()
         {
             base.ExposeData();
+            Scribe_Values.Look(ref enableSunAutonomy, "enableSunAutonomy", true);
+            Scribe_Values.Look(ref enableHermitAutonomy, "enableHermitAutonomy", true);
             Scribe_Deep.Look(ref overmindEconomy, "overmindEconomy");
             if (overmindEconomy == null) overmindEconomy = new OvermindEconomySettings();
             Scribe_Values.Look(

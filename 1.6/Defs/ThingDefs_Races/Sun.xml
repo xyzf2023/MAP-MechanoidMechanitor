@@ -14,7 +14,9 @@
     </statBases>
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_SunEnergyAura" />
-      <li Class="MAP_MechanoidMechanitor.CompProperties_AutonomousMech" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AutonomousMech">
+        <setting>Sun</setting>
+      </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingConversion">
         <buildingFormDef>MAP_Building_Sun</buildingFormDef>
       </li>

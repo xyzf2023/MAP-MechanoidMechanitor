@@ -101,6 +101,7 @@ namespace MAP_MechanoidMechanitor
                     DrawInterfaceSettings(listing);
                     break;
                 case SettingsPage.Mech:
+                    DrawSettingsGroup(listing, "MAP_Settings.Group.Autonomy", DrawAutonomySettings);
                     DrawSettingsGroup(listing, "MAP_Settings.Group.Implants", DrawImplantSettings);
                     DrawSettingsGroup(listing, "MAP_Settings.Group.Cores", DrawCoreSettings);
                     DrawSettingsGroup(listing, "MAP_Settings.Group.SkillsAndOffspring", DrawSkillsAndOffspringSettings);
@@ -220,6 +221,23 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label".Translate(),
                 ref Settings.enablePurgeDirectiveUiLoadingScreen,
                 "MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description".Translate());
+        }
+
+        private static void DrawAutonomySettings(Listing_Standard listing)
+        {
+            if (Settings == null) return;
+            bool previousSun = Settings.enableSunAutonomy;
+            bool previousHermit = Settings.enableHermitAutonomy;
+            listing.CheckboxLabeled(
+                "MAP_Settings.Autonomy.Sun.Label".Translate(),
+                ref Settings.enableSunAutonomy,
+                "MAP_Settings.Autonomy.Sun.Description".Translate());
+            listing.CheckboxLabeled(
+                "MAP_Settings.Autonomy.Hermit.Label".Translate(),
+                ref Settings.enableHermitAutonomy,
+                "MAP_Settings.Autonomy.Hermit.Description".Translate());
+            if (previousSun != Settings.enableSunAutonomy || previousHermit != Settings.enableHermitAutonomy)
+                GameComponent_AutonomousMechRegistry.NotifySettingsChanged();
         }
 
         private void DrawImplantSettings(Listing_Standard listing)

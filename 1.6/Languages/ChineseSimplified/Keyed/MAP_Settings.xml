@@ -2,6 +2,11 @@
 <LanguageData>
 
   <!-- 设置页导航与分组 -->
+  <MAP_Settings.Group.Autonomy>自律机械体</MAP_Settings.Group.Autonomy>
+  <MAP_Settings.Autonomy.Sun.Label>启用太阳自律</MAP_Settings.Autonomy.Sun.Label>
+  <MAP_Settings.Autonomy.Sun.Description>开启后，太阳将成为不需要监管者的自律机械体。关闭时则仍使用原版机械族监管逻辑。开关后即刻生效。</MAP_Settings.Autonomy.Sun.Description>
+  <MAP_Settings.Autonomy.Hermit.Label>启用隐者自律</MAP_Settings.Autonomy.Hermit.Label>
+  <MAP_Settings.Autonomy.Hermit.Description>开启后，隐者将成为不需要监管者的自律机械体。关闭时则仍使用原版机械族监管逻辑。此设置不会影响隐者的带宽功能。开关后即刻生效。</MAP_Settings.Autonomy.Hermit.Description>
   <MAP_Settings.Page.Interface>操作与界面</MAP_Settings.Page.Interface>
   <MAP_Settings.Page.Mech>机体功能</MAP_Settings.Page.Mech>
   <MAP_Settings.Page.Start>开局配置</MAP_Settings.Page.Start>

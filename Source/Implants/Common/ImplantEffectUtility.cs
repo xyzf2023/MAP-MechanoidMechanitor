@@ -6,6 +6,22 @@ namespace MAP_MechanoidMechanitor
 {
     public static class ImplantEffectUtility
     {
+        internal static void RefreshDistributedEffects(Pawn? provider)
+        {
+            if (provider?.health?.hediffSet?.hediffs == null) return;
+            // 增删效果可能修改同一个 Pawn 的健康状态，先取组件快照。
+            var effects = new List<HediffComp_DistributedImplantEffect>();
+            foreach (Hediff hediff in provider.health.hediffSet.hediffs)
+            {
+                if (hediff is not HediffWithComps withComps || withComps.comps == null) continue;
+                foreach (HediffComp comp in withComps.comps)
+                    if (comp is HediffComp_DistributedImplantEffect effect) effects.Add(effect);
+            }
+            foreach (HediffComp_DistributedImplantEffect effect in effects)
+                if (provider.health.hediffSet.hediffs.Contains(effect.parent))
+                    effect.RefreshAfterControlChange();
+        }
+
         public static HashSet<Pawn> CollectControlledMechsAndSelf(
             Pawn? provider,
             bool includeMechanoidMechanitorSelf)

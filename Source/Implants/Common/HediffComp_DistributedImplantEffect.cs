@@ -65,6 +65,9 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        // 供安全生命周期事件主动同步，周期检查继续作为兜底。
+        internal void RefreshAfterControlChange() => SyncEffects();
+
         private void SyncEffects()
         {
             Pawn provider = Pawn;
