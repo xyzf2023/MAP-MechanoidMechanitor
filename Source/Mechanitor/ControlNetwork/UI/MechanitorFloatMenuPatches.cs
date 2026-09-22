@@ -30,7 +30,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
+            if (!pawn.RaceProps.IsMechanoid
+                || !MAPMechanitorControlUtility.CanUseControlSystem(pawn))
             {
                 return;
             }

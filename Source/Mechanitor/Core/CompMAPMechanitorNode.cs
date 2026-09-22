@@ -1,5 +1,4 @@
 using RimWorld;
-using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -55,14 +54,14 @@ namespace MAP_MechanoidMechanitor
         {
             base.PostPostMake();
             if (parent is Pawn pawn)
-                GameComponent_AutonomousMechRegistry.SynchronizeAutomaticSources(pawn);
+                MAPMechanitorNodeLifecycleUtility.NotifyLifecycle(pawn);
         }
 
         public override void PostExposeData()
         {
             base.PostExposeData();
             if (Scribe.mode == LoadSaveMode.PostLoadInit && parent is Pawn pawn)
-                GameComponent_AutonomousMechRegistry.SynchronizeAutomaticSources(pawn);
+                MAPMechanitorNodeLifecycleUtility.NotifyLifecycle(pawn);
         }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
@@ -74,31 +73,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            GameComponent_AutonomousMechRegistry.SynchronizeAutomaticSources(pawn);
-
-            CompProperties_MAPMechanitorNode? nodeProps = NodeProps;
-            if (nodeProps == null)
-            {
-                return;
-            }
-
-            if (nodeProps.controlBackend == MAPMechanitorControlBackend.Vanilla)
-            {
-                MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
-
-                if (!nodeProps.requiresExternalOverseer)
-                {
-                    MAPOverseerlessNodeUtility.ClearExternalOverseerIfNode(pawn);
-                }
-
-                GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
-                return;
-            }
-
-            if (pawn.mechanitor != null)
-            {
-                NotifyBandwidthChanged();
-            }
+            MAPMechanitorNodeLifecycleUtility.NotifyLifecycle(pawn);
         }
 
         private int GetAuthoritativeChipBandwidthBonus()
@@ -115,12 +90,5 @@ namespace MAP_MechanoidMechanitor
             return 0;
         }
 
-        private void NotifyBandwidthChanged()
-        {
-            if (parent is Pawn pawn && pawn.mechanitor != null)
-            {
-                pawn.mechanitor.Notify_BandwidthChanged();
-            }
-        }
     }
 }

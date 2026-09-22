@@ -11,12 +11,11 @@ namespace MAP_MechanoidMechanitor
         [HarmonyPrefix]
         public static bool Prefix(Pawn pawn, Pawn mech, ref AcceptanceReport __result)
         {
-            if (pawn != null
-                && mech != null
-                && pawn == mech
-                && MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
+            if (pawn != null && mech != null
+                && MAPMechanitorControlUtility.CanUseControlSystem(pawn)
+                && MAPMechanitorControlUtility.WouldCreateControlCycle(pawn, mech))
             {
-                __result = false;
+                __result = "不能建立循环监管关系。";
                 return false;
             }
 

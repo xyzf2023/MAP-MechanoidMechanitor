@@ -39,6 +39,7 @@ namespace MAP_MechanoidMechanitor
 
             mechanitor.controlGroups ??= new List<MechanitorControlGroup>();
             mechanitor.Notify_PawnSpawned(true);
+            MAPMechanitorNodeLifecycleUtility.RepairMissingControlGroups(pawn);
             GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorInitialized(pawn);
         }
     }

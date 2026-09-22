@@ -17,7 +17,8 @@ namespace MAP_MechanoidMechanitor
 
         public static void EnsureBasicTrackers(Pawn pawn)
         {
-            if (pawn == null || !ModsConfig.BiotechActive)
+            if (pawn == null || pawn.Destroyed || pawn.health == null
+                || pawn.Dead || !ModsConfig.BiotechActive)
             {
                 return;
             }
@@ -37,12 +38,49 @@ namespace MAP_MechanoidMechanitor
                 pawn.mechanitor = new Pawn_MechanitorTracker(pawn);
             }
 
-            if (pawn.mechanitor.controlGroups == null)
+            EnsureMechanitorTrackerCollections(pawn.mechanitor);
+        }
+
+        internal static void NotifyLifecycle(Pawn pawn)
+        {
+            GameComponent_AutonomousMechRegistry.SynchronizeAutomaticSources(pawn);
+            if (!MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
+                return;
+            if (Scribe.mode == LoadSaveMode.Inactive)
+                EnsureBasicTrackers(pawn);
+            GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
+        }
+
+        /// <summary>仅补明确的下属关系，不移动已有组、不猜测两个节点之间缺失的方向。</summary>
+        internal static void RepairMissingControlGroups(Pawn pawn)
+        {
+            if (Scribe.mode != LoadSaveMode.Inactive
+                || MechanoidMechanitorPostLoadSafetyCoordinator.ShouldDeferPositiveRestore)
             {
-                pawn.mechanitor.controlGroups = new List<MechanitorControlGroup>();
+                GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
+                return;
             }
 
-            EnsureMechanitorTrackerCollections(pawn.mechanitor);
+            Pawn_MechanitorTracker? tracker = pawn.mechanitor;
+            if (tracker == null || pawn.relations == null)
+                return;
+
+            List<DirectPawnRelation> snapshot = new List<DirectPawnRelation>(pawn.relations.DirectRelations);
+            foreach (DirectPawnRelation relation in snapshot)
+            {
+                Pawn subject = relation.otherPawn;
+                if (relation.def != PawnRelationDefOf.Overseer || subject == null
+                    || subject.Dead || subject.Destroyed || subject.Discarded
+                    || subject.Faction != pawn.Faction || !subject.RaceProps.IsMechanoid
+                    || AutonomousMechUtility.IsAutonomousMech(subject)
+                    || tracker.GetControlGroup(subject) != null
+                    || MAPMechanitorNodeUtility.HasNode(subject)
+                    || MechanoidMechanitorCapabilityUtility.HasCapability(subject, MechanoidMechanitorCapability.MechanitorControl)
+                    || MAPOverseerRelationDirectionUtility.FindActualOverseer(subject) != null)
+                    continue;
+
+                tracker.AssignPawnControlGroup(subject);
+            }
         }
 
         /// <summary>

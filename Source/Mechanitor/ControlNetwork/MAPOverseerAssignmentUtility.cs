@@ -79,13 +79,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 循环监管预检查：在任何状态写入前拒绝直接双向控制（A 控制 B 时拒绝 B 控制 A）。
+            // 与普通控制任务共享循环监管检查，覆盖多级祖先关系。
             Pawn_MechanitorTracker? subjectTracker = subject.mechanitor;
             bool subjectControlsOverseer =
                 subjectTracker?.GetControlGroup(overseer) != null
-                || MAPOverseerRelationDirectionUtility.IsActualOverseerOf(
-                    subject,
-                    overseer);
+                || MAPMechanitorControlUtility.WouldCreateControlCycle(overseer, subject);
             if (subjectControlsOverseer)
             {
                 Log.Error(
@@ -268,9 +266,9 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 循环监管预检查（直接双向）：subject 不能反过来控制 overseer。
+            // 回滚入口也不能恢复形成循环的关系。
             if (subject.mechanitor?.GetControlGroup(overseer) != null
-                || MAPOverseerRelationDirectionUtility.IsActualOverseerOf(subject, overseer))
+                || MAPMechanitorControlUtility.WouldCreateControlCycle(overseer, subject))
             {
                 failureReason =
                     $"拒绝建立循环监管关系：" +

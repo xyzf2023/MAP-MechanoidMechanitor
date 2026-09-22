@@ -106,16 +106,6 @@ namespace MAP_MechanoidMechanitor
             return UsesVanillaControlPath(pawn);
         }
 
-        public static bool IsVanillaRelayMechanitorNode(Pawn? pawn)
-        {
-            if (!PassesMechanitorNodeControllerBasics(pawn))
-            {
-                return false;
-            }
-
-            return UsesVanillaControlPath(pawn) && RequiresExternalOverseer(pawn);
-        }
-
         public static bool RequiresExternalOverseer(Pawn? pawn)
         {
             return MechanoidMechanitorRoleUtility.RequiresExternalOverseer(pawn);

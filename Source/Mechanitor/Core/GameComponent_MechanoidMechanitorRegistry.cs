@@ -1118,6 +1118,10 @@ namespace MAP_MechanoidMechanitor
 
         private void ProcessPendingMechanitorInitializations()
         {
+            if (Scribe.mode != LoadSaveMode.Inactive
+                || MechanoidMechanitorPostLoadSafetyCoordinator.LoadInProgress)
+                return;
+
             if (pendingMechanitorInitializations.Count == 0)
             {
                 return;
@@ -1157,6 +1161,8 @@ namespace MAP_MechanoidMechanitor
 
                 if (!pawn.Spawned || pawn.Map == null)
                 {
+                    MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
+                    MAPMechanitorNodeLifecycleUtility.RepairMissingControlGroups(pawn);
                     // 入队后离图：科研同步不依赖地图，交给其自身的安全检查与重试队列。
                     // 地图生成收尾仍由下一次 PostSpawnSetup 重新入队执行。
                     GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorInitialized(pawn);
