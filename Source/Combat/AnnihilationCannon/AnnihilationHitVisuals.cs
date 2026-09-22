@@ -13,13 +13,19 @@ namespace MAP_MechanoidMechanitor
         private static readonly Material Glow = MakeMaterial(ShaderDatabase.MoteGlow);
         private static readonly Material FlowGlow = MakeFlowMaterial();
         private static readonly Material SoftRingGlow = MakeSoftRingMaterial();
+        private static readonly Material HorizonHaloGlow = MakeHorizonHaloMaterial();
         private static readonly MaterialPropertyBlock Properties = new MaterialPropertyBlock();
         private static readonly Mesh Disc = MakeDisc(48);
-        private static readonly Mesh HorizonDisc = MakeWobblyDisc(64, 0.4f);
+        private static readonly Mesh HorizonDisc = MakeDisc(128);
         private static readonly Mesh Ring = MakeRing(64, 0.79f);
         private static readonly Mesh ThinRing = MakeRing(64, 0.91f);
-        private static readonly Mesh HorizonRingA = MakeWobblyRing(64, 0.82f, 0.4f);
-        private static readonly Mesh HorizonRingB = MakeWobblyRing(64, 0.9f, 2.1f);
+        // 外径乘以内径比例恰好为 1，使每层光晕内沿始终贴住黑色圆盘。
+        private const float HorizonHaloScale = 1.55f;
+        private const float HorizonRimScale = 1.065f;
+        private static readonly Mesh HorizonHalo = MakeRing(128, 1f / HorizonHaloScale);
+        private static readonly Mesh HorizonRim = MakeRing(128, 1f / HorizonRimScale);
+        private static readonly Mesh HorizonHighlight = MakeArc(-26f, 26f, 32, 0.95f);
+        private static readonly Mesh HorizonFilament = MakeArc(-14f, 14f, 20, 0.984f);
         private static readonly Mesh LongArc = MakeArc(-154f, 34f, 36, 0.77f);
         private static readonly Mesh ShortArc = MakeArc(18f, 142f, 28, 0.74f);
         private static readonly Mesh FlowArc = MakeArc(-13f, 13f, 8, 0.84f);
@@ -81,6 +87,33 @@ namespace MAP_MechanoidMechanitor
             return new Material(ShaderDatabase.MoteGlow) { mainTexture = texture };
         }
 
+        private static Material MakeHorizonHaloMaterial()
+        {
+            // 环网格 U=0 为内沿：金光贴边最亮，向外连续衰减至透明。
+            // 两端取精确端点，避免渐变贴图边缘留下额外的硬圈。
+            const int width = 128;
+            const int height = 2;
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+            {
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear,
+                name = "MAP_AnnihilationHit_HorizonHalo"
+            };
+            var pixels = new Color[width * height];
+            for (int x = 0; x < width; x++)
+            {
+                float outward = (float)x / (width - 1);
+                float opacity = Mathf.Exp(-outward * 4.8f) * (1f - Smooth(outward));
+                Color color = Color.Lerp(new Color(1f, 0.89f, 0.57f),
+                    new Color(1f, 0.49f, 0.16f), Mathf.Sqrt(outward));
+                color.a = opacity;
+                for (int y = 0; y < height; y++) pixels[y * width + x] = color;
+            }
+            texture.SetPixels(pixels);
+            texture.Apply(false, true);
+            return new Material(ShaderDatabase.MoteGlow) { mainTexture = texture };
+        }
+
         private static Mesh MakeDisc(int segments)
         {
             var vertices = new Vector3[segments + 1];
@@ -100,60 +133,6 @@ namespace MAP_MechanoidMechanitor
                 triangles[i * 3 + 2] = i + 1;
             }
             return FinishMesh(vertices, uv, triangles, "MAP_AnnihilationHit_Disc");
-        }
-
-        private static float WobblyRadius(float angle, float phase) => 0.5f * (1f
-            + Mathf.Sin(angle * 5f + phase) * 0.036f
-            + Mathf.Sin(angle * 11f - phase * 0.7f) * 0.018f
-            + Mathf.Sin(angle * 17f + phase * 1.3f) * 0.009f);
-
-        private static Mesh MakeWobblyDisc(int segments, float phase)
-        {
-            var vertices = new Vector3[segments + 1];
-            var uv = new Vector2[vertices.Length];
-            var triangles = new int[segments * 3];
-            vertices[0] = Vector3.zero;
-            uv[0] = new Vector2(0.5f, 0.5f);
-            for (int i = 0; i < segments; i++)
-            {
-                float angle = i * Mathf.PI * 2f / segments;
-                float radius = WobblyRadius(angle, phase);
-                vertices[i + 1] = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
-                uv[i + 1] = new Vector2(Mathf.Cos(angle) * radius + 0.5f,
-                    Mathf.Sin(angle) * radius + 0.5f);
-                int next = (i + 1) % segments;
-                triangles[i * 3] = 0;
-                triangles[i * 3 + 1] = next + 1;
-                triangles[i * 3 + 2] = i + 1;
-            }
-            return FinishMesh(vertices, uv, triangles, "MAP_AnnihilationHit_WobblyDisc");
-        }
-
-        private static Mesh MakeWobblyRing(int segments, float innerRadius, float phase)
-        {
-            var vertices = new Vector3[(segments + 1) * 2];
-            var uv = new Vector2[vertices.Length];
-            var triangles = new int[segments * 6];
-            for (int i = 0; i <= segments; i++)
-            {
-                float angle = i * Mathf.PI * 2f / segments;
-                float radius = WobblyRadius(angle, phase);
-                Vector3 direction = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
-                vertices[i * 2] = direction * radius;
-                vertices[i * 2 + 1] = direction * (radius * innerRadius);
-                uv[i * 2] = new Vector2(1f, (float)i / segments);
-                uv[i * 2 + 1] = new Vector2(0f, (float)i / segments);
-                if (i == segments) continue;
-                int v = i * 2;
-                int t = i * 6;
-                triangles[t] = v;
-                triangles[t + 1] = v + 1;
-                triangles[t + 2] = v + 2;
-                triangles[t + 3] = v + 1;
-                triangles[t + 4] = v + 3;
-                triangles[t + 5] = v + 2;
-            }
-            return FinishMesh(vertices, uv, triangles, "MAP_AnnihilationHit_WobblyRing");
         }
 
         private static Mesh MakeRing(int segments, float innerRadius)
@@ -251,6 +230,49 @@ namespace MAP_MechanoidMechanitor
             return result - Mathf.Floor(result);
         }
 
+        private static void DrawHorizon(Vector3 origin, float diameter, float alpha, float ageTicks,
+            int seed, float distortion)
+        {
+            if (diameter <= 0.001f || alpha <= 0.001f) return;
+            // 黑盘、亮边和外晕共用轻微的椭圆形变，保持贴边；中心不作随机跳动。
+            float stretch = 1f + distortion * 0.018f;
+            float width = diameter * stretch;
+            float depth = diameter * 0.97f / stretch;
+            Vector3 discSize = new Vector3(width, 1f, depth);
+            DrawMesh(HorizonDisc, Transparent, origin, discSize, 0f,
+                new Color(0.001f, 0.001f, 0.002f, alpha), 0.0452f);
+
+            float glowPulse = 0.97f + 0.03f * Mathf.Sin(ageTicks * 0.025f + Hash(seed + 31) * Mathf.PI * 2f);
+            DrawMesh(HorizonHalo, HorizonHaloGlow, origin,
+                new Vector3(width * HorizonHaloScale, 1f, depth * HorizonHaloScale),
+                0f, new Color(1f, 1f, 1f, alpha * glowPulse * 0.8f), 0.0454f);
+            DrawMesh(HorizonRim, SoftRingGlow, origin,
+                new Vector3(width * HorizonRimScale, 1f, depth * HorizonRimScale),
+                0f, new Color(1f, 0.95f, 0.76f, alpha * glowPulse), 0.0456f);
+
+            // 局部亮弧缓慢移动，形成一侧更亮的金白边缘；内沿保持在黑盘外。
+            // 弧带自身接近圆形，旋转后也不会像原来的扁平吸积流穿过黑色中心。
+            float highlightAngle = Hash(seed + 71) * 360f + ageTicks * 0.35f;
+            DrawMesh(HorizonHighlight, FlowGlow, origin,
+                new Vector3(diameter * 1.11f, 1f, diameter * 1.11f),
+                highlightAngle, new Color(1f, 0.98f, 0.85f, alpha * 0.92f), 0.0458f);
+            DrawMesh(HorizonHighlight, FlowGlow, origin,
+                new Vector3(diameter * 1.09f, 1f, diameter * 1.09f),
+                highlightAngle + 165f, new Color(1f, 0.83f, 0.44f, alpha * 0.5f), 0.0459f);
+
+            // 少量不同轨道的细丝环绕外沿；时间和实体种子使暂停、读档后的相位稳定。
+            for (int i = 0; i < 6; i++)
+            {
+                float orbit = 1.12f + (i % 3) * 0.065f;
+                float angle = ageTicks * (0.65f + i * 0.06f) + Hash(seed + i * 23) * 360f;
+                float pulse = 0.85f + 0.15f * Mathf.Sin(ageTicks * 0.035f + i * 1.7f);
+                DrawMesh(HorizonFilament, FlowGlow, origin,
+                    new Vector3(diameter * orbit, 1f, diameter * orbit),
+                    angle, new Color(1f, 0.9f, 0.64f, alpha * pulse * 0.6f),
+                    0.046f + i * 0.00002f);
+            }
+        }
+
         internal static void Draw(Vector3 origin, int seed, AnnihilationSettings settings, float ageTicks)
         {
             if (Find.UIRoot?.HideMotes == true || ageTicks >= settings.VisualDurationTicks) return;
@@ -260,30 +282,30 @@ namespace MAP_MechanoidMechanitor
             float strength = Mathf.Clamp01(Mathf.Log10(1f + Mathf.Max(0f, energy)) / 2.8f);
             float open = Smooth(t / 0.13f);
             float fade = 1f - Smooth((t - 0.62f) / 0.38f);
-            float punch = Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / 0.24f));
             float alpha = open * fade;
             float collapse = Smooth((t - 0.72f) / 0.28f);
             float collapseFlash = Mathf.Sin(Mathf.PI * Mathf.Clamp01((t - 0.76f) / 0.24f));
-            // 展开阶段保持明显的不稳定性：尺寸呼吸、椭圆形变和中心抖动使用不同频率，
-            // 避免整个效果像一张贴图匀速放大。稳定后迅速收敛，只留下很轻的流动。
-            float instability = open * (1f - Smooth((t - 0.05f) / 0.42f));
-            float sizeTremor = 1f + instability * (Mathf.Sin(ageTicks * 1.73f + seed) * 0.075f
-                + Mathf.Sin(ageTicks * 0.61f + seed * 0.37f) * 0.045f);
-            float uncollapsedSize = (1.45f + strength * 1.65f) * open * (1f + punch * 0.16f)
-                * sizeTremor * Mathf.Max(0.1f, scaleMultiplier);
-            float baseSize = uncollapsedSize * Mathf.Lerp(1f, 0.075f, collapse);
-            float phase = ageTicks * 3.7f + seed * 17f
-                + collapse * collapse * 150f;
-            float offsetAngle = Hash(seed + 3) * Mathf.PI * 2f;
-            origin += new Vector3(Mathf.Cos(offsetAngle), 0f, Mathf.Sin(offsetAngle)) * 0.13f;
-            float shake = (0.035f + strength * 0.055f) * instability;
-            origin += new Vector3(
-                Mathf.Sin(ageTicks * 2.41f + seed * 0.71f) + Mathf.Sin(ageTicks * 0.93f + seed) * 0.45f,
-                0f,
-                Mathf.Cos(ageTicks * 2.17f + seed * 0.53f) + Mathf.Sin(ageTicks * 1.19f + seed) * 0.4f) * shake;
-            float axisWobble = instability * Mathf.Sin(ageTicks * 1.31f + seed * 0.23f) * 0.11f;
-            float angularJolt = instability * (Mathf.Sin(ageTicks * 1.87f + seed) * 4.5f
-                + Mathf.Sin(ageTicks * 0.47f + seed * 0.4f) * 2.5f);
+            // 低频正弦叠加提供连续的不规则感；开场和收缩时柔和进出，不每帧随机。
+            float motionEnvelope = open * (1f - collapse);
+            float motionSeed = Hash(seed + 43) * Mathf.PI * 2f;
+            float slowWave = Mathf.Sin(ageTicks * 0.055f + motionSeed);
+            float secondaryWave = Mathf.Sin(ageTicks * 0.087f + motionSeed * 0.73f + 1.2f);
+            float distortion = (slowWave * 0.7f + secondaryWave * 0.3f) * motionEnvelope;
+            // 整体震动：每轴最多 0.05 格，不随特效尺寸放大；全部视觉层共用偏移。
+            // 连续波形避免逐帧随机跳变，按游戏 tick 和固定种子保证暂停、读档后的相位稳定。
+            float jitterAmplitude = 0.05f * motionEnvelope;
+            float jitterX = Mathf.Sin(ageTicks * 0.31f + motionSeed) * 0.7f
+                + Mathf.Sin(ageTicks * 0.53f + motionSeed * 0.81f) * 0.3f;
+            float jitterZ = Mathf.Sin(ageTicks * 0.37f + motionSeed + 1.7f) * 0.7f
+                + Mathf.Sin(ageTicks * 0.59f + motionSeed * 0.67f + 0.6f) * 0.3f;
+            origin += new Vector3(jitterX, 0f, jitterZ) * jitterAmplitude;
+            // 最多 0.8% 的慢速呼吸，独立于位置震动，不额外加入高频尺寸变化。
+            float breath = 1f + slowWave * motionEnvelope * 0.008f;
+            float uncollapsedSize = (1.45f + strength * 1.65f) * open
+                * Mathf.Max(0.1f, scaleMultiplier);
+            float baseSize = uncollapsedSize * Mathf.Lerp(1f, 0.075f, collapse) * breath;
+            // 只保留匀速环流，不在坍缩末尾突然加速；种子限制到一圈内避免大角度精度损失。
+            float phase = ageTicks * 1.6f + Hash(seed + 17) * 360f;
 
             Color warm = new Color(0.82f, 0.57f, 0.39f, alpha * 0.78f);
             Color pale = new Color(1f, 0.93f, 0.78f, alpha * 0.95f);
@@ -313,16 +335,19 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 上下两股不同转速的吸积流围绕事件视界回卷。
-            float flowSize = baseSize * (1f + Mathf.Sin(ageTicks * 0.12f) * 0.025f);
+            float flowSize = baseSize;
+            float flowStretch = 1f + distortion * 0.03f;
+            float flowTurn = secondaryWave * motionEnvelope * 1.2f;
             Color softWarm = warm;
             softWarm.a *= 0.72f;
-            DrawMesh(LongArc, FlowGlow, origin, new Vector3(flowSize * 1.65f, 1f, flowSize * 0.58f),
-                phase * 0.31f + angularJolt, softWarm, 0.032f);
+            DrawMesh(LongArc, FlowGlow, origin,
+                new Vector3(flowSize * 1.65f * flowStretch, 1f, flowSize * 0.58f / flowStretch),
+                phase * 0.31f + flowTurn, softWarm, 0.032f);
             Color backHighlight = pale;
             backHighlight.a *= 0.72f;
             DrawMesh(ShortArc, FlowGlow, origin,
-                new Vector3(flowSize * (1.52f + axisWobble), 1f, flowSize * (0.52f - axisWobble * 0.35f)),
-                -phase * 0.24f + 182f - angularJolt * 0.7f, backHighlight, 0.034f);
+                new Vector3(flowSize * 1.52f / flowStretch, 1f, flowSize * 0.52f * flowStretch),
+                -phase * 0.24f + 182f - flowTurn, backHighlight, 0.034f);
 
             // 多组短高光沿同一轨道以不同速度滑行；亮度也沿时间错峰呼吸。
             // 这些是独立小弧，不会再出现整条光环像硬质圆盘同步转动的感觉。
@@ -330,52 +355,28 @@ namespace MAP_MechanoidMechanitor
             {
                 float lane = i % 3;
                 float travel = phase * (0.72f + lane * 0.16f) + i * 137.5f;
-                float pulse = 0.42f + 0.58f * Mathf.Sin((ageTicks * 0.075f + i * 0.39f) * Mathf.PI);
-                pulse = Mathf.Clamp01(pulse);
+                float pulse = 0.85f + 0.15f * Mathf.Sin(ageTicks * 0.035f + i * 1.23f);
                 Color streamColor = i % 3 == 0 ? white : i % 2 == 0 ? pale : warm;
-                streamColor.a *= 0.28f + pulse * 0.64f;
+                streamColor.a *= pulse * 0.72f;
                 float laneScale = 1f + (lane - 1f) * 0.075f;
                 DrawMesh(i % 3 == 0 ? FlowNeedle : FlowArc, FlowGlow, origin,
-                    new Vector3(flowSize * 1.62f * laneScale, 1f,
-                        flowSize * 0.56f * (2f - laneScale)),
-                    travel + angularJolt * (i % 2 == 0 ? 1f : -0.6f), streamColor,
+                    new Vector3(flowSize * 1.62f * laneScale * flowStretch, 1f,
+                        flowSize * 0.56f * (2f - laneScale) / flowStretch),
+                    travel + flowTurn * 0.5f, streamColor,
                     0.035f + i * 0.0002f);
             }
 
-            float horizon = baseSize * 0.58f;
-            float edgeActivity = 0.24f + instability * 0.76f;
-            float steppedNoise = Mathf.Round((Mathf.Sin(ageTicks * 2.07f + seed * 0.19f)
-                + Mathf.Sin(ageTicks * 0.83f + seed) * 0.55f) * 2f) * 0.5f;
-            float edgePulse = 1f + steppedNoise * (0.014f + edgeActivity * 0.026f);
-            Vector3 edgeOrigin = origin + new Vector3(
-                Mathf.Sin(ageTicks * 2.63f + seed) * 0.022f,
-                0f,
-                Mathf.Cos(ageTicks * 2.29f + seed * 0.61f) * 0.022f) * edgeActivity;
-            DrawMesh(HorizonDisc, Transparent, edgeOrigin,
-                new Vector3(horizon * (1f + axisWobble) * edgePulse, 1f,
-                    horizon * (0.91f - axisWobble) / edgePulse),
-                phase * 0.08f + angularJolt + steppedNoise * 1.8f,
-                new Color(0.005f, 0.008f, 0.014f, alpha * 0.92f), 0.038f);
-            Color edge = warm;
-            edge.a = alpha * (0.46f + edgeActivity * 0.22f);
-            DrawMesh(HorizonRingA, SoftRingGlow, edgeOrigin,
-                new Vector3(horizon * (1.12f + axisWobble) * edgePulse, 1f,
-                    horizon * (1.02f - axisWobble) / edgePulse),
-                phase * 0.16f + angularJolt + steppedNoise * 2.4f, edge, 0.04f);
-            Color edgeSpark = pale;
-            edgeSpark.a = alpha * (0.25f + Mathf.Abs(steppedNoise) * 0.16f);
-            DrawMesh(HorizonRingB, FlowGlow, edgeOrigin,
-                new Vector3(horizon * (1.08f - axisWobble * 0.5f) / edgePulse, 1f,
-                    horizon * (0.98f + axisWobble * 0.4f) * edgePulse),
-                -phase * 0.21f - angularJolt * 0.55f, edgeSpark, 0.041f);
-
-            DrawMesh(LongArc, FlowGlow, origin, new Vector3(flowSize * 1.72f, 1f, flowSize * 0.62f),
-                phase * 0.31f + 180f + angularJolt, pale, 0.043f);
+            DrawMesh(LongArc, FlowGlow, origin,
+                new Vector3(flowSize * 1.72f * flowStretch, 1f, flowSize * 0.62f / flowStretch),
+                phase * 0.31f + 180f + flowTurn, pale, 0.043f);
             Color filament = white;
             filament.a *= 0.7f;
             DrawMesh(ShortArc, FlowGlow, origin,
-                new Vector3(flowSize * (1.6f - axisWobble), 1f, flowSize * (0.48f + axisWobble * 0.3f)),
-                -phase * 0.43f - angularJolt * 0.8f, filament, 0.045f);
+                new Vector3(flowSize * 1.6f / flowStretch, 1f, flowSize * 0.48f * flowStretch),
+                -phase * 0.43f - flowTurn, filament, 0.045f);
+
+            // 圆盘与贴边光环盖在吸积流前方，保持参考样式中完整、干净的黑色中心。
+            DrawHorizon(origin, baseSize * 0.58f, alpha, ageTicks, seed, distortion);
 
             // 结尾不直接淡没：外圈向事件视界急速收拢，最后压成一个短促亮点。
             if (collapseFlash > 0.001f)
@@ -405,7 +406,7 @@ namespace MAP_MechanoidMechanitor
                 Color shardColor = i % 3 == 0 ? white : warm;
                 shardColor.a *= debrisLife * (0.38f + Hash(seed + i) * 0.48f);
                 DrawMesh(Shard, Glow, position, new Vector3(length, 1f, 0.035f + strength * 0.025f),
-                    90f - angle, shardColor, 0.048f + i * 0.0001f);
+                    90f - angle, shardColor, 0.037f + i * 0.00001f);
             }
         }
     }
