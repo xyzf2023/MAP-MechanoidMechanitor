@@ -19,18 +19,5 @@ namespace MAP_MechanoidMechanitor
         public CompProperties_MechRestrictedWorkGiverUser Props =>
             (CompProperties_MechRestrictedWorkGiverUser)props;
 
-        public static bool Allows(Pawn? pawn, WorkGiver? workGiver)
-        {
-            WorkTypeDef? workType = workGiver?.def?.workType;
-            if (pawn == null || workType == null)
-            {
-                return false;
-            }
-
-            CompMechRestrictedWorkGiverUser? comp =
-                pawn.GetComp<CompMechRestrictedWorkGiverUser>();
-
-            return comp?.Props.allowedWorkTypes?.Contains(workType) == true;
-        }
     }
 }

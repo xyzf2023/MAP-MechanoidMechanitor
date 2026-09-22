@@ -53,8 +53,8 @@ namespace MAP_MechanoidMechanitor
                     if (!acquiredMechanitorChecked)
                     {
                         isAcquiredMechanitor =
-                            MechanoidMechanitorRoleUtility.IsAcquiredMechanoidMechanitor(
-                                __instance);
+                            MechanoidMechanitorCapabilityUtility.HasCapability(
+                                __instance, MechanoidMechanitorCapability.DynamicWorkTypes);
                         acquiredMechanitorChecked = true;
                     }
 

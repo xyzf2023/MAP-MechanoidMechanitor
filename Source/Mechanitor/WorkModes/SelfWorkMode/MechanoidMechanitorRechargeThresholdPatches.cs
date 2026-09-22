@@ -99,8 +99,9 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            // 2. 是机械族机械师。
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+            // 2. 具备托管作息行为能力。
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn, MechanoidMechanitorCapability.ManagedSchedule))
             {
                 return;
             }

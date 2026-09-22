@@ -3,7 +3,7 @@
   <ThingDef ParentName="BaseMechanoid">
     <defName>MAP_Mech_Hermit</defName>
     <label>「隐者」</label>
-    <description>「隐者」是一种装备了大功率信号中继装置的机械体，搭载了带宽信息处理模块，拥有独立带宽。该机械体可以精确接收机械师的指挥信号，进而脱离机械师范围行动，并能独立带领远征队。同时，「隐者」也具有进行简单科研工作的能力。\n\n注意：「隐者」控制的机械体只能在其控制范围内被征召。</description>
+    <description>「隐者」是一种装备了大功率信号中继装置的机械体，搭载了带宽信息处理模块，拥有独立带宽。受控时，即使与监管者不在同一地图，也可接收指令并在自身所在地图行动。它能独立带领远征队，并具有进行简单科研工作的能力。\n\n获得或失去自律资格不会改变「隐者」监管下属的能力。它自身的远程指挥接收能力不会自动赋予下属；下属仍按各自的指挥范围能力接受指令。</description>
     <statBases>
       <MarketValue>800</MarketValue>
       <MoveSpeed>2.0</MoveSpeed>

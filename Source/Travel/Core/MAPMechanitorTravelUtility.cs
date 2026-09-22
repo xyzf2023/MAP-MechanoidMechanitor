@@ -5,26 +5,6 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MAPMechanitorTravelUtility
     {
-        public static bool TryGetTravelProps(Pawn? pawn, out CompProperties_MAPMechanitorTravelNode? props)
-        {
-            props = null;
-            if (pawn == null || !ModsConfig.BiotechActive)
-            {
-                return false;
-            }
-
-            if (!CompMAPMechanitorTravelNode.TryGetTravelNodeComp(
-                    pawn,
-                    out CompMAPMechanitorTravelNode? comp)
-                || comp?.TravelProps == null)
-            {
-                return false;
-            }
-
-            props = comp.TravelProps;
-            return true;
-        }
-
         public static bool CanLeadCaravan(Pawn? pawn)
         {
             if (!PassesTravelSafetyChecks(pawn))

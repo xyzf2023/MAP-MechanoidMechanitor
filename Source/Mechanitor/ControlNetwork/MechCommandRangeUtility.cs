@@ -35,13 +35,15 @@ namespace MAP_MechanoidMechanitor
                 return MechanoidMechanitorCapability.None;
 
             CompMechCommandRange? comp = pawn.GetComp<CompMechCommandRange>();
+            MechanoidMechanitorCapability result = MechanoidMechanitorCapability.None;
             if (comp != null)
-                return MechanoidMechanitorCapability.CommandRangeBypass
+                result |= MechanoidMechanitorCapability.CommandRangeBypass
                     | (comp.Props.allowCrossMapCommand ? MechanoidMechanitorCapability.CrossMapCommand : 0);
 
             // 兼容尚未迁移的第三方 XML。内置 Def 已改为独立范围组件。
-            return pawn.GetComp<CompMAPMechanitorNode>()?.NodeProps?.ignoreExternalOverseerCommandRange == true
-                ? Unlimited : MechanoidMechanitorCapability.None;
+            if (pawn.GetComp<CompMAPMechanitorNode>()?.NodeProps?.ignoreExternalOverseerCommandRange == true)
+                result |= Unlimited;
+            return result;
         }
 
         public static bool TryEvaluate(Pawn? mech, LocalTargetInfo target, out bool inRange)

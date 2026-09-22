@@ -20,7 +20,8 @@ namespace MAP_MechanoidMechanitor
         public static bool NeedsAutomaticCharge(Pawn pawn)
         {
             if (pawn.needs?.energy is not Need_MechEnergy energy) return false;
-            if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
+            if (MechanoidMechanitorCapabilityUtility.HasCapability(
+                    pawn, MechanoidMechanitorCapability.ManagedSchedule)
                 && MechanoidMechanitorTimetableUtility.GetCurrentIntent(pawn) == MechanoidMechanitorScheduleIntent.Recharge)
                 return energy.CurLevel < MechanoidMechanitorRechargeUtility.GetStopRechargeEnergy(pawn);
             return energy.CurLevel + 0.1f < JobGiver_GetEnergy.GetMinAutorechargeThreshold(pawn);

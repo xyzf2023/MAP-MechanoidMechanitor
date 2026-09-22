@@ -18,21 +18,5 @@ namespace MAP_MechanoidMechanitor
     {
         public CompProperties_MAPMechanitorTravelNode? TravelProps => props as CompProperties_MAPMechanitorTravelNode;
 
-        public static bool PawnHasTravelNode(Pawn? pawn)
-        {
-            return TryGetTravelNodeComp(pawn, out _);
-        }
-
-        public static bool TryGetTravelNodeComp(Pawn? pawn, out CompMAPMechanitorTravelNode? comp)
-        {
-            comp = null;
-            if (pawn == null)
-            {
-                return false;
-            }
-
-            comp = pawn.GetComp<CompMAPMechanitorTravelNode>();
-            return comp != null;
-        }
     }
 }

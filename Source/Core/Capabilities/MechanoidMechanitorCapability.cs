@@ -72,6 +72,8 @@ namespace MAP_MechanoidMechanitor
         EnhancedControlModes = 1L << 37,
         ImplantSelfEffects = 1L << 38,
         BandwidthUpgrade = 1L << 39,
-        ResearchAbilityRecipient = 1L << 40
+        ResearchAbilityRecipient = 1L << 40,
+        DynamicWorkTypes = 1L << 41,
+        SelfWorkSpeedFeedback = 1L << 42
     }
 }

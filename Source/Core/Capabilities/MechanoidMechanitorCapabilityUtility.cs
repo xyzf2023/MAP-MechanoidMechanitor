@@ -1,3 +1,4 @@
+using System;
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
@@ -6,6 +7,9 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MechanoidMechanitorCapabilityUtility
     {
+        private static readonly MechanoidMechanitorCapability[] DefinedCapabilities =
+            (MechanoidMechanitorCapability[])Enum.GetValues(typeof(MechanoidMechanitorCapability));
+
         /// <summary>带工作类型参数的能力查询；保留监管、驯兽、保育的独立授权和白名单。</summary>
         public static bool AllowsWorkGiver(Pawn? pawn, WorkGiverDef? workGiver, bool vanillaAllowed = false) =>
             MechWorkTypeAuthorizationUtility.AllowsWorkGiver(pawn, workGiver, vanillaAllowed);
@@ -19,6 +23,42 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            long requested = (long)capability;
+            if ((requested & (requested - 1)) == 0)
+                return HasSingleCapability(pawn, capability);
+
+            foreach (MechanoidMechanitorCapability candidate in DefinedCapabilities)
+            {
+                long bit = (long)candidate;
+                if (bit == 0 || (bit & (bit - 1)) != 0 || (requested & bit) == 0)
+                    continue;
+                if (!HasSingleCapability(pawn, candidate))
+                    return false;
+                requested &= ~bit;
+            }
+
+            return requested == 0;
+        }
+
+        /// <summary>完整清单复用单项来源，查询不初始化 Tracker、不修改授权。</summary>
+        public static MechanoidMechanitorCapability GetCapabilities(Pawn? pawn)
+        {
+            MechanoidMechanitorCapability result = MechanoidMechanitorCapability.None;
+            if (pawn == null)
+                return result;
+
+            foreach (MechanoidMechanitorCapability candidate in DefinedCapabilities)
+            {
+                long bit = (long)candidate;
+                if (bit != 0 && (bit & (bit - 1)) == 0 && HasSingleCapability(pawn, candidate))
+                    result |= candidate;
+            }
+
+            return result;
+        }
+
+        private static bool HasSingleCapability(Pawn pawn, MechanoidMechanitorCapability capability)
+        {
             if (capability == MechanoidMechanitorCapability.AutonomousMech)
             {
                 return GameComponent_AutonomousMechRegistry.IsAuthorized(pawn);
@@ -71,6 +111,7 @@ namespace MAP_MechanoidMechanitor
                 || capability == MechanoidMechanitorCapability.SelfDataProcessing
                 || capability == MechanoidMechanitorCapability.EnhancedControlModes
                 || capability == MechanoidMechanitorCapability.ImplantSelfEffects
+                || capability == MechanoidMechanitorCapability.SelfWorkSpeedFeedback
                 || capability == MechanoidMechanitorCapability.ImplantInstallation
                 || capability == MechanoidMechanitorCapability.Royalty
                 || capability == MechanoidMechanitorCapability.Psycasting)
@@ -88,6 +129,8 @@ namespace MAP_MechanoidMechanitor
             // 常用单项只读其来源，不为一次持械/工作查询解析指挥关系、合体或全部能力。
             switch (capability)
             {
+                case MechanoidMechanitorCapability.DynamicWorkTypes:
+                    return IsAcquiredSource(pawn);
                 case MechanoidMechanitorCapability.HumanWeapons:
                     return IsAcquiredSource(pawn) || pawn.GetComp<CompHumanWeaponUser>() != null;
                 case MechanoidMechanitorCapability.ColonistLikeFloatMenu:
@@ -146,7 +189,7 @@ namespace MAP_MechanoidMechanitor
                 return HasColonistLikeTimetableCapability(pawn);
             }
 
-            return (GetCapabilities(pawn) & capability) == capability;
+            return false;
         }
 
         /// <summary>
@@ -174,47 +217,12 @@ namespace MAP_MechanoidMechanitor
                 || MechanoidMechanitorWorkModeUtility.HasMobileCombatFlag(pawn);
         }
 
-        public static MechanoidMechanitorCapability GetCapabilities(Pawn? pawn)
-        {
-            if (pawn == null)
-            {
-                return MechanoidMechanitorCapability.None;
-            }
-
-            MechanoidMechanitorCapability capabilities = MechanoidMechanitorCapability.None;
-            capabilities |= MechCommandRangeUtility.ResolveCapabilities(pawn);
-            if (GameComponent_AutonomousMechRegistry.IsAuthorized(pawn))
-            {
-                capabilities |= MechanoidMechanitorCapability.AutonomousMech;
-            }
-            if (HasMovementCostImmunityCapability(pawn))
-            {
-                capabilities |= MechanoidMechanitorCapability.MovementCostImmunity;
-            }
-
-            AddCapabilitiesFromRealComponents(pawn, ref capabilities);
-            AddCapabilitiesFromMechanitorIdentity(pawn, ref capabilities);
-            AddCapabilitiesFromScenarioState(pawn, ref capabilities);
-            AddCapabilitiesFromSyntheticCompanionAuthorization(pawn, ref capabilities);
-            AddCapabilitiesFromDataProcessingAllocation(pawn, ref capabilities);
-            AddCapabilitiesFromMechanicalFlightAuthorization(pawn, ref capabilities);
-            AddCapabilitiesFromMechanitorControl(pawn, ref capabilities);
-            AddCapabilitiesFromFusionEligibility(pawn, ref capabilities);
-            if (HasDataProcessing(pawn))
-                capabilities |= MechanoidMechanitorCapability.DataProcessing;
-            if (HasBandwidthUpgrade(pawn))
-                capabilities |= MechanoidMechanitorCapability.BandwidthUpgrade;
-            if (ManagedAbilityEligibilityUtility.IsResearchConsciousnessRecipient(pawn))
-                capabilities |= MechanoidMechanitorCapability.ResearchAbilityRecipient;
-            return capabilities;
-        }
-
         private static bool IsAcquiredSource(Pawn pawn) =>
             GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(pawn, out _);
 
         private static bool HasDataProcessing(Pawn pawn) =>
             GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
-            || (pawn.RaceProps.Humanlike && !pawn.RaceProps.IsMechanoid
+            || (pawn.RaceProps?.Humanlike == true && !pawn.RaceProps.IsMechanoid
                 && pawn.health?.hediffSet?.HasHediff(MAPMechanitor_HediffDefOf.MAP_ParallelThoughtInterface) == true);
 
         private static bool HasBandwidthUpgrade(Pawn pawn) =>
@@ -243,39 +251,6 @@ namespace MAP_MechanoidMechanitor
             GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
             || pawn.GetComp<CompColonistLikeMechProfile>() != null;
 
-        private static void AddCapabilitiesFromMechanitorControl(
-            Pawn pawn,
-            ref MechanoidMechanitorCapability capabilities)
-        {
-            if (HasMechanitorControlCapability(pawn))
-            {
-                capabilities |= MechanoidMechanitorCapability.MechanitorControl;
-            }
-        }
-
-        /// <summary>
-        /// 合体资格只从先天资格注册表加入一次；其他能力位保持原有来源。
-        /// </summary>
-        private static void AddCapabilitiesFromFusionEligibility(
-            Pawn pawn,
-            ref MechanoidMechanitorCapability capabilities)
-        {
-            if (MechFusionEligibilityUtility.HasFusionEligibility(pawn))
-            {
-                capabilities |= MechanoidMechanitorCapability.Fusion;
-            }
-        }
-
-        private static void AddCapabilitiesFromMechanicalFlightAuthorization(
-            Pawn pawn,
-            ref MechanoidMechanitorCapability capabilities)
-        {
-            if (GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn))
-            {
-                capabilities |= MechanoidMechanitorCapability.Flight;
-            }
-        }
-
         /// <summary>
         /// 专属剧本中当前机械意识宿主的全局自由殖民者替代资格。
         /// 仅由场景状态与注册表身份动态决定，不来自 ThingDef Comp。
@@ -288,155 +263,6 @@ namespace MAP_MechanoidMechanitor
                 && GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
                     pawn,
                     out _);
-        }
-
-        private static void AddCapabilitiesFromScenarioState(
-            Pawn pawn,
-            ref MechanoidMechanitorCapability capabilities)
-        {
-            if (IsScenarioFreeColonistEquivalent(pawn))
-            {
-                capabilities |= MechanoidMechanitorCapability.FreeColonistEquivalent;
-            }
-        }
-
-        private static void AddCapabilitiesFromRealComponents(
-            Pawn pawn,
-            ref MechanoidMechanitorCapability capabilities)
-        {
-            if (HasIndividualSkills(pawn))
-                capabilities |= MechanoidMechanitorCapability.IndividualSkills;
-            if (HasCharacterTab(pawn))
-                capabilities |= MechanoidMechanitorCapability.CharacterTab;
-
-            if (CompMAPMechanitorTravelNode.TryGetTravelNodeComp(
-                    pawn,
-                    out CompMAPMechanitorTravelNode? travelComp)
-                && travelComp?.TravelProps != null)
-            {
-                CompProperties_MAPMechanitorTravelNode props = travelComp.TravelProps;
-                if (props.canLeadCaravan)
-                {
-                    capabilities |= MechanoidMechanitorCapability.TravelLeadCaravan;
-                }
-
-                if (props.canCollectCaravanItems)
-                {
-                    capabilities |= MechanoidMechanitorCapability.TravelCollectItems;
-                }
-
-                if (props.refreshTrackersOnTransporterArrival)
-                {
-                    capabilities |= MechanoidMechanitorCapability.TravelRefreshTrackers;
-                }
-            }
-
-            CompColonistLikeFloatMenuUser? floatMenuComp =
-                pawn.GetComp<CompColonistLikeFloatMenuUser>();
-            if (floatMenuComp != null && floatMenuComp.Props.allowColonistLikeFloatMenu)
-            {
-                capabilities |= MechanoidMechanitorCapability.ColonistLikeFloatMenu;
-            }
-
-            if (pawn.GetComp<CompHumanWeaponUser>() != null)
-            {
-                capabilities |= MechanoidMechanitorCapability.HumanWeapons;
-            }
-
-            CompGravshipPilotUser? gravshipComp = pawn.GetComp<CompGravshipPilotUser>();
-            if (gravshipComp != null && gravshipComp.Props.allowGravshipPilotConsole)
-            {
-                capabilities |= MechanoidMechanitorCapability.GravshipPilot;
-            }
-
-            CompWorkTabVisibleUser? workTabComp = pawn.GetComp<CompWorkTabVisibleUser>();
-            if (workTabComp != null && workTabComp.Props.showInWorkTab)
-            {
-                capabilities |= MechanoidMechanitorCapability.WorkTab;
-            }
-
-            CompPsychicRitualParticipantUser? psychicComp =
-                pawn.GetComp<CompPsychicRitualParticipantUser>();
-            if (psychicComp != null && psychicComp.Props.allowPsychicRituals)
-            {
-                capabilities |= MechanoidMechanitorCapability.PsychicRituals;
-            }
-
-            if (CompMechanoidMechanitorSelfWorkModeUser.GetFor(pawn) != null)
-            {
-                capabilities |= MechanoidMechanitorCapability.SelfWorkMode;
-            }
-
-            if (pawn.GetComp<CompColonistLikeSocialTabUser>() != null)
-            {
-                capabilities |= MechanoidMechanitorCapability.ColonistLikeSocialTab;
-            }
-
-            // 非机械师机械族（如恋人）通过真实 ThingComp 声明 timetable 数据层能力。
-            // 业务代码完全不需要知道其 PawnDef；能力提升只查询，不产生副作用。
-            if (pawn.GetComp<CompColonistLikeTimetableUser>() != null)
-            {
-                capabilities |= MechanoidMechanitorCapability.ColonistLikeTimetable;
-            }
-
-            // 非机械师机械族通过真实 ThingComp 声明课堂教师候选能力。
-            // 具体是否允许 Skill / Daycare 仍由 ProgressionEducation 课程白名单负责。
-            if (pawn.GetComp<CompClassroomTeachingUser>() != null)
-            {
-                capabilities |= MechanoidMechanitorCapability.ClassroomTeaching;
-            }
-        }
-
-        private static void AddCapabilitiesFromMechanitorIdentity(
-            Pawn pawn,
-            ref MechanoidMechanitorCapability capabilities)
-        {
-            if (!GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(
-                    pawn,
-                    out _))
-            {
-                return;
-            }
-
-            // 所有正式机械族机械师（Native + Acquired）天然获得 timetable 数据层与课堂教师候选能力。
-            // 这一分支在“是否为后天机械师”的二次判断之前执行，确保非后天机械师同样获得这些能力。
-            // Psycasting 是能力层自身的正式能力来源，不再由外部 Harmony 补丁注入。
-            capabilities |= MechanoidMechanitorCapability.ImplantInstallation
-                | MechanoidMechanitorCapability.ShuttlePilot
-                | MechanoidMechanitorCapability.ColonistLikeSocialTab
-                | MechanoidMechanitorCapability.Royalty
-                | MechanoidMechanitorCapability.ColonistLikeTimetable
-                | MechanoidMechanitorCapability.ClassroomTeaching
-                | MechanoidMechanitorCapability.Psycasting
-                | MechanoidMechanitorCapability.SelfRepair
-                | MechanoidMechanitorCapability.Recreation
-                | MechanoidMechanitorCapability.IndividualSkills
-                | MechanoidMechanitorCapability.CharacterTab
-                | MechanoidMechanitorCapability.GeneralMechWork
-                | MechanoidMechanitorCapability.ManagedSchedule
-                | MechanoidMechanitorCapability.Inspiration
-                | MechanoidMechanitorCapability.SelfDataProcessing
-                | MechanoidMechanitorCapability.EnhancedControlModes
-                | MechanoidMechanitorCapability.ImplantSelfEffects;
-
-            capabilities |= GetIdeologyCapabilities(pawn);
-
-            if (!GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
-                    pawn,
-                    out _))
-            {
-                return;
-            }
-
-            capabilities |= MechanoidMechanitorCapability.HumanWeapons
-                | MechanoidMechanitorCapability.ColonistLikeFloatMenu
-                | MechanoidMechanitorCapability.GravshipPilot
-                | MechanoidMechanitorCapability.WorkTab
-                | MechanoidMechanitorCapability.PsychicRituals
-                | MechanoidMechanitorCapability.SelfWorkMode
-                | MechanoidMechanitorCapability.TravelLeadCaravan
-                | MechanoidMechanitorCapability.TravelCollectItems
-                | MechanoidMechanitorCapability.TravelRefreshTrackers;
         }
 
         /// <summary>
@@ -468,38 +294,5 @@ namespace MAP_MechanoidMechanitor
                 : MechanoidMechanitorCapability.None;
         }
 
-        /// <summary>
-        /// 动态仿生伴侣授权来源。仅查询注册表，不回调状态工具，避免与 TryGetState 递归。
-        /// </summary>
-        private static void AddCapabilitiesFromSyntheticCompanionAuthorization(
-            Pawn pawn,
-            ref MechanoidMechanitorCapability capabilities)
-        {
-            if (!GameComponent_SyntheticCompanionRegistry.IsAuthorized(pawn))
-            {
-                return;
-            }
-
-            capabilities |= MechanoidMechanitorCapability.ColonistLikeSocialTab
-                | MechanoidMechanitorCapability.SyntheticSpouseInteraction
-                | MechanoidMechanitorCapability.SyntheticPregnancy;
-        }
-
-        private static void AddCapabilitiesFromDataProcessingAllocation(
-            Pawn pawn,
-            ref MechanoidMechanitorCapability capabilities)
-        {
-            if (DataProcessingAllocationUtility.HasVirtualTravelNode(pawn))
-            {
-                capabilities |= MechanoidMechanitorCapability.TravelLeadCaravan
-                    | MechanoidMechanitorCapability.TravelCollectItems
-                    | MechanoidMechanitorCapability.TravelRefreshTrackers;
-            }
-
-            if (DataProcessingAllocationUtility.HasShuttlePilotAllocation(pawn))
-            {
-                capabilities |= MechanoidMechanitorCapability.ShuttlePilot;
-            }
-        }
     }
 }
