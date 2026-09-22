@@ -230,8 +230,7 @@ namespace MAP_MechanoidMechanitor
             aftermathCreated = true;
             try
             {
-                AnnihilationAftermathUtility.Create(Map, Position, settings.outerRadius,
-                    thingIDNumber, outerCells);
+                AnnihilationAftermathUtility.Create(Map, Position, outerCells);
             }
             catch (Exception ex)
             {

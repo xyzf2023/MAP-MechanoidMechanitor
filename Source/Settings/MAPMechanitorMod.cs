@@ -269,6 +269,11 @@ namespace MAP_MechanoidMechanitor
             DrawProductivityCoreWorkSpeedSetting(listing);
 
             listing.CheckboxLabeled(
+                "MAP_Settings.AnnihilationCannonCrater.Label".Translate(),
+                ref Settings!.enableAnnihilationCannonCrater,
+                "MAP_Settings.AnnihilationCannonCrater.Description".Translate());
+
+            listing.CheckboxLabeled(
                 "允许满级心灵中枢自动清除精神状态",
                 ref Settings!.enableMaxLevelPsychicCoreMentalStateRecovery,
                 "开启后，每10秒将尝试清除安装了满级心灵中枢的角色的精神状态。");

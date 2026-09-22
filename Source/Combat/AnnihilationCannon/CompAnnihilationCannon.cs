@@ -157,7 +157,7 @@ namespace MAP_MechanoidMechanitor
         public static ThingDef MAP_AnnihilationShot = null!;
         public static ThingDef MAP_AnnihilationImpact = null!;
         public static ThingDef MAP_AnnihilationExplosion = null!;
-        public static ThingDef MAP_AnnihilationCrater = null!;
+        public static ThingDef MAP_AnnihilationImpactCrater = null!;
         public static ThingDef MAP_AnnihilationHitPreview = null!;
         public static GameConditionDef MAP_AnnihilationBlackout = null!;
         public static ThingDef Mote_MAP_AnnihilationAim = null!;

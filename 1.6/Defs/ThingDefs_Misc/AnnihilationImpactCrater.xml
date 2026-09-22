@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="CraterBase">
+    <defName>MAP_AnnihilationImpactCrater</defName>
+    <label>湮灭弹坑</label>
+    <description>湮灭炮在地面留下的巨大撞击坑。</description>
+    <thingClass>MAP_MechanoidMechanitor.AnnihilationImpactCrater</thingClass>
+    <!-- 对应当前玩家太阳和 BOSS 的内圈半径 4.9；改半径时同步调整尺寸与填坑工作量。 -->
+    <size>(10, 10)</size>
+    <drawerType>MapMeshOnly</drawerType>
+    <graphicData>
+      <texPath>Things/Building/Crater/5x5</texPath>
+      <drawSize>(9.8, 9.8)</drawSize>
+    </graphicData>
+    <building>
+      <uninstallWork>25000</uninstallWork>
+    </building>
+  </ThingDef>
+</Defs>

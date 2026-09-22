@@ -18,6 +18,9 @@ namespace MAP_MechanoidMechanitor
         public bool enableSunAutonomy = true;
         public bool enableHermitAutonomy = true;
 
+        /// <summary>默认开启；控制双方太阳湮灭炮生成深坑，不影响外圈地板和地基破坏。</summary>
+        public bool enableAnnihilationCannonCrater = true;
+
         public bool enablePortraitDisplayForAllSaves = false;
         public bool enableMechanoidMechanitorBrainImplants = false;
 
@@ -479,6 +482,7 @@ namespace MAP_MechanoidMechanitor
             base.ExposeData();
             Scribe_Values.Look(ref enableSunAutonomy, "enableSunAutonomy", true);
             Scribe_Values.Look(ref enableHermitAutonomy, "enableHermitAutonomy", true);
+            Scribe_Values.Look(ref enableAnnihilationCannonCrater, "enableAnnihilationCannonCrater", true);
             Scribe_Deep.Look(ref overmindEconomy, "overmindEconomy");
             if (overmindEconomy == null) overmindEconomy = new OvermindEconomySettings();
             Scribe_Values.Look(
