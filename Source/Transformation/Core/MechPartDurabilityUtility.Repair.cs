@@ -67,9 +67,10 @@ namespace MAP_MechanoidMechanitor
                     $"pawn={source.LabelShort}（{source.ThingID}）。");
             }
 
-            HediffSet? hediffSet = source.health?.hediffSet;
+            Pawn_HealthTracker? health = source.health;
+            HediffSet? hediffSet = health?.hediffSet;
             List<BodyPartRecord>? parts = source.RaceProps?.body?.AllParts;
-            if (hediffSet == null || parts == null)
+            if (health == null || hediffSet == null || parts == null)
             {
                 return;
             }
@@ -108,7 +109,7 @@ namespace MAP_MechanoidMechanitor
                         // 不等待下一个健康 tick，避免同一 tick 再次转换时带走零严重度伤势。
                         if (injury.Severity <= 0f && hediffSet.hediffs.Contains(injury))
                         {
-                            source.health.RemoveHediff(injury);
+                            health.RemoveHediff(injury);
                         }
 
                         float after = hediffSet.hediffs.Contains(injury)
@@ -147,7 +148,7 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                RestoreMissingStructure(source, hediffSet, missingParts);
+                RestoreMissingStructure(source, health, hediffSet, missingParts);
                 remaining = Math.Max(0, remaining - cost);
             }
         }
@@ -166,7 +167,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         private static void RestoreMissingStructure(
-            Pawn source, HediffSet hediffSet, List<BodyPartRecord> missingParts)
+            Pawn source, Pawn_HealthTracker health, HediffSet hediffSet, List<BodyPartRecord> missingParts)
         {
             // RestorePart 会清除子树中的其他 Hediff，不能用于需要保留植入物的建筑维修。
             // 只移除已付费部位的伤势与缺失标记；疾病、植入物和其他状态保留原实例。
@@ -177,7 +178,7 @@ namespace MAP_MechanoidMechanitor
                 if (hediff is Hediff_Injury && hediff.Part != null
                     && missingParts.Contains(hediff.Part) && hediffSet.hediffs.Contains(hediff))
                 {
-                    source.health.RemoveHediff(hediff);
+                    health.RemoveHediff(hediff);
                 }
             }
 
@@ -190,7 +191,7 @@ namespace MAP_MechanoidMechanitor
                     if (hediff is Hediff_MissingPart && hediff.Part == missingParts[i]
                         && hediffSet.hediffs.Contains(hediff))
                     {
-                        source.health.RemoveHediff(hediff);
+                        health.RemoveHediff(hediff);
                     }
                 }
             }
