@@ -176,7 +176,7 @@ namespace MAP_MechanoidMechanitor
                     sources |= AutonomousMechAuthorizationSource.MechanitorIdentity;
                 CompProperties_MAPMechanitorNode? props = pawn.GetComp<CompMAPMechanitorNode>()?.NodeProps;
                 if (props?.controlBackend == MAPMechanitorControlBackend.Vanilla
-                    && !props.requiresExternalOverseer)
+                    && props.requiresExternalOverseer == false)
                     sources |= AutonomousMechAuthorizationSource.LegacyNode;
             }
             AutonomousMechAuthorizationSource previous = record?.Sources ?? AutonomousMechAuthorizationSource.None;

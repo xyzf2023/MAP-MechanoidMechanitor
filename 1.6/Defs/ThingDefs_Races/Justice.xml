@@ -26,7 +26,6 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_NativeMechanoidMechanitor" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
         <controlBackend>Vanilla</controlBackend>
-        <requiresExternalOverseer>false</requiresExternalOverseer>
         <extraMechBandwidth>20</extraMechBandwidth>
         <extraMechControlGroups>5</extraMechControlGroups>
         <allowBossChipBandwidthUpgrade>true</allowBossChipBandwidthUpgrade>

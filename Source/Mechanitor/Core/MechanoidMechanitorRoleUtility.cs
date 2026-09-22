@@ -237,10 +237,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return CompMAPMechanitorNode.TryGetNodeComp(
-                    pawn,
-                    out CompMAPMechanitorNode? comp)
-                && comp?.NodeProps?.requiresExternalOverseer == true;
+            return MAPMechanitorNodeUtility.HasNode(pawn);
         }
 
         public static int GetExtraMechBandwidth(Pawn? pawn)

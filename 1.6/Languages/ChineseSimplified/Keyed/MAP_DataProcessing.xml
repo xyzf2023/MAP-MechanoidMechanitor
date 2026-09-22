@@ -9,7 +9,7 @@
   <MAP_MechanoidMechanitor.DataProcessing.EffectNone>无</MAP_MechanoidMechanitor.DataProcessing.EffectNone>
   <MAP_MechanoidMechanitor.DataProcessing.EffectWorkSpeed>工作速度 +{0}</MAP_MechanoidMechanitor.DataProcessing.EffectWorkSpeed>
   <MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange>可脱离指挥范围行动</MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange>
-  <MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>该机械体可以脱离当前机械族机械师的命令距离范围行动。</MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>该机械体可以脱离当前机械族机械师的指挥距离，并在与监管者不同的地图接受当地指令。仍需满足监管与带宽条件。</MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>
   <MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead>可带领远行队</MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead>
   <MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>该机械体获得完整的远行队带队能力。</MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>
   <MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed>移动速度 +{0}</MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed>

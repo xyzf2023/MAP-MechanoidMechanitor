@@ -34,10 +34,11 @@
     <comps>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MAPMechanitorNode">
         <controlBackend>Vanilla</controlBackend>
-        <requiresExternalOverseer>true</requiresExternalOverseer>
-        <ignoreExternalOverseerCommandRange>true</ignoreExternalOverseerCommandRange>
         <extraMechBandwidth>8</extraMechBandwidth>
         <extraMechControlGroups>1</extraMechControlGroups>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechCommandRange">
+        <allowCrossMapCommand>true</allowCrossMapCommand>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_CommanderSkills">
         <bodyType>Male</bodyType>

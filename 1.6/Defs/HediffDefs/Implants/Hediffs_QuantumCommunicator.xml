@@ -5,7 +5,7 @@
     <label>量子通讯器</label>
     <labelNoun>量子通讯器</labelNoun>
     <description>利用量子效应实现超距通信的超凡通讯装置，植入后控制机械族不再受距离限制。</description>
-    <descriptionShort>该机械师控制其监管的机械族不再受距离限制。</descriptionShort>
+    <descriptionShort>该机械师的下属不再受指挥距离限制，可在不同地图接受当地指令；仍需满足监管与带宽条件。</descriptionShort>
     <descriptionHyperlinks>
       <ThingDef>MAP_QuantumCommunicator</ThingDef>
     </descriptionHyperlinks>

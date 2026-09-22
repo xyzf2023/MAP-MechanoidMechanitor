@@ -20,6 +20,12 @@ namespace MAP_MechanoidMechanitor
                 return GameComponent_AutonomousMechRegistry.IsAuthorized(pawn);
             }
 
+            if (capability == MechanoidMechanitorCapability.CommandRangeBypass
+                || capability == MechanoidMechanitorCapability.CrossMapCommand)
+            {
+                return (MechCommandRangeUtility.ResolveCapabilities(pawn) & capability) == capability;
+            }
+
             // 移动热路径只检查组件和机动作战标记，不聚合其他能力。
             if (capability == MechanoidMechanitorCapability.MovementCostImmunity)
             {
@@ -123,6 +129,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             MechanoidMechanitorCapability capabilities = MechanoidMechanitorCapability.None;
+            capabilities |= MechCommandRangeUtility.ResolveCapabilities(pawn);
             if (GameComponent_AutonomousMechRegistry.IsAuthorized(pawn))
             {
                 capabilities |= MechanoidMechanitorCapability.AutonomousMech;

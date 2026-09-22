@@ -6,9 +6,10 @@ namespace MAP_MechanoidMechanitor
     public class CompProperties_MAPMechanitorNode : CompProperties
     {
         public MAPMechanitorControlBackend controlBackend = MAPMechanitorControlBackend.None;
-        // Whether this node itself needs an external overseer; does not affect its ability to control other mechs.
-        public bool requiresExternalOverseer = false;
-        // Whether this externally overseen node ignores its overseer's command radius while it is actually controlled.
+        // 旧 Def 的自律来源兼容字段。新 Def 使用 CompAutonomousMech / 正式身份声明自律。
+        // null 不提供自律：拥有监管能力不隐含自身免监管。
+        public bool? requiresExternalOverseer;
+        // 旧 Def 兼容字段；新 Def 使用 CompMechCommandRange。
         public bool ignoreExternalOverseerCommandRange = false;
         public int extraMechBandwidth = 0;
         public int extraMechControlGroups = 0;
