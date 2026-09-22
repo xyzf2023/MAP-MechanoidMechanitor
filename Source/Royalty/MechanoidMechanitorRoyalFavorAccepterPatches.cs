@@ -56,8 +56,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             Pawn candidate = pawn!;
-            MechanoidMechanitorRoyaltyUtility
-                .EnsureRoyaltyInfrastructure(candidate);
+            if (candidate.royalty == null)
+                return false;
 
             // 保留 QuestUtility.CanPawnAcceptQuest 除 IsFreeColonist 外的原版门槛。
             if (candidate.Destroyed
@@ -106,9 +106,8 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                MechanoidMechanitorRoyaltyUtility
-                    .EnsureRoyaltyInfrastructure(pawn);
-                result.Add(pawn);
+                if (pawn.royalty != null)
+                    result.Add(pawn);
             }
 
             return result;

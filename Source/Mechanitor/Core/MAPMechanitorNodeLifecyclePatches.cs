@@ -8,7 +8,11 @@ namespace MAP_MechanoidMechanitor
     internal static class MAPMechanitorNodeDynamicComponentsPatch
     {
         [HarmonyPostfix]
-        private static void Postfix(Pawn pawn) => MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
+        private static void Postfix(Pawn pawn)
+        {
+            MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
+            MechanoidMechanitorCapabilityLifecycleUtility.EnsureInfrastructure(pawn);
+        }
     }
 
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.SetFaction))]

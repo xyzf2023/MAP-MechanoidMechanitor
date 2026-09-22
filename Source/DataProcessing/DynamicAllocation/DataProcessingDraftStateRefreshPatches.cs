@@ -241,7 +241,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (target.mechanitor != null
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(target)
+                && MechanoidMechanitorCapabilityUtility.HasCapability(target, MechanoidMechanitorCapability.SelfDataProcessing)
                 && registry.IsValidAllocationPairForList(target, target))
             {
                 return target;

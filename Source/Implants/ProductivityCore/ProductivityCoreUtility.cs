@@ -36,7 +36,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             int level = 0;
-            if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(worker))
+            if (MechanoidMechanitorCapabilityUtility.HasCapability(worker, MechanoidMechanitorCapability.ImplantSelfEffects))
             {
                 level += GetLevel(worker);
             }

@@ -41,13 +41,12 @@ namespace MAP_MechanoidMechanitor
         {
             if (!ModsConfig.BiotechActive
                 || pawn == null
-                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
+                || !MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.BandwidthUpgrade))
             {
                 return false;
             }
 
-            return MechanoidMechanitorRoleUtility.AllowsBossChipBandwidthUpgrade(pawn)
-                && MechanoidMechanitorRoleUtility.GetMaxIntrinsicBandwidth(pawn) > 0;
+            return true;
         }
 
         public static int GetRemainingIntrinsicBandwidth(Pawn? pawn)

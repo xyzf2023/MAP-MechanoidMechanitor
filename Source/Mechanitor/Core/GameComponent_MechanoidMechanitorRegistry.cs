@@ -1153,11 +1153,14 @@ namespace MAP_MechanoidMechanitor
 
                 if (pawn.health.Dead
                     || pawn.Faction == null
-                    || !pawn.Faction.IsPlayerSafe()
-                    || !MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
+                    || !pawn.Faction.IsPlayerSafe())
                 {
                     continue;
                 }
+
+                MechanoidMechanitorCapabilityLifecycleUtility.EnsureInfrastructure(pawn);
+                if (!MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
+                    continue;
 
                 if (!pawn.Spawned || pawn.Map == null)
                 {

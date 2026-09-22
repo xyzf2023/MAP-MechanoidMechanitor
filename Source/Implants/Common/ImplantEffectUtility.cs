@@ -73,7 +73,7 @@ namespace MAP_MechanoidMechanitor
 
             if (includeMechanoidMechanitorSelf
                 && IsValidMechRecipient(provider)
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(provider))
+                && MechanoidMechanitorCapabilityUtility.HasCapability(provider, MechanoidMechanitorCapability.ImplantSelfEffects))
             {
                 destination.Add(provider);
             }

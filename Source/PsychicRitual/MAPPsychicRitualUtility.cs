@@ -12,8 +12,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
-                || !MechanoidMechanitorRoleUtility.AllowsPsychicRituals(pawn))
+            if (!MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.PsychicRituals))
             {
                 return false;
             }

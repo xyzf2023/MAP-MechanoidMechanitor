@@ -275,7 +275,7 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn? mechanitor = controlGroup?.Tracker?.Pawn;
             return mechanitor != null
-                && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(mechanitor);
+                && MechanoidMechanitorCapabilityUtility.HasCapability(mechanitor, MechanoidMechanitorCapability.EnhancedControlModes);
         }
 
         public static bool IsMechanoidMechanitorWorkMode(MechWorkModeDef workMode)

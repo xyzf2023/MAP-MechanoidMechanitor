@@ -19,6 +19,20 @@ namespace MAP_MechanoidMechanitor
         public CompProperties_WorkTabVisibleUser Props =>
             (CompProperties_WorkTabVisibleUser)props;
 
+        public override void PostSpawnSetup(bool respawningAfterLoad)
+        {
+            base.PostSpawnSetup(respawningAfterLoad);
+            if (parent is Pawn pawn)
+                MechanoidMechanitorCapabilityLifecycleUtility.EnsureInfrastructure(pawn);
+        }
+
+        public override void PostExposeData()
+        {
+            base.PostExposeData();
+            if (Scribe.mode == LoadSaveMode.PostLoadInit && parent is Pawn pawn)
+                GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
+        }
+
         public static bool PawnCanShowInWorkTab(Pawn? pawn)
         {
             if (pawn == null || pawn.Dead)
@@ -41,10 +55,12 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>
         /// 仅为已确认可显示于工作面板的 Pawn 补齐 guest/workSettings。
-        /// 调用方须先通过 <see cref="PawnCanShowInWorkTab"/>；本方法不再重复资格查询。
+        /// 仅生命周期调用；工作面板读取不得调用此方法。
         /// </summary>
         public static void EnsureWorkSettingsForWorkTab(Pawn pawn)
         {
+            if (pawn.kindDef == null || !PawnCanShowInWorkTab(pawn))
+                return;
             if (pawn.guest == null)
             {
                 pawn.guest = new Pawn_GuestTracker(pawn);

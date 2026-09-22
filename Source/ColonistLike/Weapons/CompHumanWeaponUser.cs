@@ -36,15 +36,16 @@ namespace MAP_MechanoidMechanitor
 
         private void EnsureTrackersIfNeeded()
         {
-            if (parent is not Pawn pawn || !Props.ensureEquipmentTracker)
-            {
-                return;
-            }
+            if (parent is Pawn pawn)
+                MechanoidMechanitorCapabilityLifecycleUtility.EnsureInfrastructure(pawn);
+        }
 
-            if (pawn.equipment == null)
-            {
-                pawn.equipment = new Pawn_EquipmentTracker(pawn);
-            }
+        internal static void EnsureEquipmentInfrastructure(Pawn pawn)
+        {
+            if (MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.HumanWeapons)
+                && (GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(pawn, out _)
+                    || pawn.GetComp<CompHumanWeaponUser>()?.Props.ensureEquipmentTracker == true))
+                pawn.equipment ??= new Pawn_EquipmentTracker(pawn);
         }
 
         public static bool PawnCanUseHumanWeapons(Pawn? pawn)
@@ -66,17 +67,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(
-                    pawn,
-                    out _))
-            {
-                pawn.equipment ??= new Pawn_EquipmentTracker(pawn);
-                return true;
-            }
-
-            CompHumanWeaponUser? comp = pawn.GetComp<CompHumanWeaponUser>();
-            return comp != null
-                && (pawn.equipment != null || comp.Props.ensureEquipmentTracker);
+            return pawn.equipment != null;
         }
 
         public static bool PawnAllowsEquipFloatMenu(Pawn? pawn)

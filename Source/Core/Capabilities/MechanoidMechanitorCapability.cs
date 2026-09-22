@@ -66,6 +66,12 @@ namespace MAP_MechanoidMechanitor
         CharacterTab = 1L << 31,
         GeneralMechWork = 1L << 32,
         ManagedSchedule = 1L << 33,
-        Inspiration = 1L << 34
+        Inspiration = 1L << 34,
+        DataProcessing = 1L << 35,
+        SelfDataProcessing = 1L << 36,
+        EnhancedControlModes = 1L << 37,
+        ImplantSelfEffects = 1L << 38,
+        BandwidthUpgrade = 1L << 39,
+        ResearchAbilityRecipient = 1L << 40
     }
 }

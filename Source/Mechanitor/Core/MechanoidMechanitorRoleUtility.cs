@@ -45,6 +45,14 @@ namespace MAP_MechanoidMechanitor
             return pawn?.GetComp<CompNativeMechanoidMechanitor>() != null;
         }
 
+        internal static void RegisterNativeSource(Pawn pawn)
+        {
+            if (!GameComponent_MechanoidMechanitorRegistry.EnsureNativeMechanitorRecord(pawn))
+                return;
+            MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
+            GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
+        }
+
         public static bool HasAcquiredMechanitorHediff(Pawn? pawn)
         {
             HediffDef? def = GetAcquiredIdentityDef();

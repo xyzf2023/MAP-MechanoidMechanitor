@@ -34,7 +34,7 @@ namespace MAP_MechanoidMechanitor
             {
                 case ManagedAbilityGrantPolicy.ResearchConsciousness:
                     return descriptor.IsResearchRequirementSatisfied()
-                        && IsResearchConsciousnessRecipient(pawn);
+                        && MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.ResearchAbilityRecipient);
 
                 case ManagedAbilityGrantPolicy.Capability:
                     return hasCapability;
@@ -48,7 +48,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool IsResearchConsciousnessRecipient(Pawn? pawn)
+        internal static bool IsResearchConsciousnessRecipient(Pawn? pawn)
         {
             if (pawn == null)
             {

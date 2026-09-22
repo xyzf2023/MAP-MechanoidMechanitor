@@ -39,7 +39,8 @@ namespace MAP_MechanoidMechanitor
                     continue;
                 }
 
-                CompWorkTabVisibleUser.EnsureWorkSettingsForWorkTab(pawn);
+                if (pawn.guest == null || pawn.workSettings?.Initialized != true)
+                    continue;
 
                 if (existing.Add(pawn))
                 {

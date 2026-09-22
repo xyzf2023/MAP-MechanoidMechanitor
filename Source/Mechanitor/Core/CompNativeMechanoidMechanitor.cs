@@ -40,12 +40,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!GameComponent_MechanoidMechanitorRegistry.EnsureNativeMechanitorRecord(pawn))
-            {
-                return;
-            }
-
-            MechanoidMechanitorWorkAuthorizationUtility.GrantAndEnsureInfrastructure(pawn);
+            MechanoidMechanitorRoleUtility.RegisterNativeSource(pawn);
         }
     }
 }

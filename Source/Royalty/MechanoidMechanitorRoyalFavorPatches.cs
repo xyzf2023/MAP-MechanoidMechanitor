@@ -212,8 +212,8 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            MechanoidMechanitorRoyaltyUtility
-                .EnsureRoyaltyInfrastructure(pawn);
+            if (pawn!.royalty == null)
+                return;
 
             if (!destination.Contains(pawn!))
             {

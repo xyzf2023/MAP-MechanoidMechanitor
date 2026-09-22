@@ -67,9 +67,58 @@ namespace MAP_MechanoidMechanitor
                 || capability == MechanoidMechanitorCapability.Recreation
                 || capability == MechanoidMechanitorCapability.GeneralMechWork
                 || capability == MechanoidMechanitorCapability.ManagedSchedule
-                || capability == MechanoidMechanitorCapability.Inspiration)
+                || capability == MechanoidMechanitorCapability.Inspiration
+                || capability == MechanoidMechanitorCapability.SelfDataProcessing
+                || capability == MechanoidMechanitorCapability.EnhancedControlModes
+                || capability == MechanoidMechanitorCapability.ImplantSelfEffects
+                || capability == MechanoidMechanitorCapability.ImplantInstallation
+                || capability == MechanoidMechanitorCapability.Royalty
+                || capability == MechanoidMechanitorCapability.Psycasting)
             {
                 return GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _);
+            }
+
+            if (capability == MechanoidMechanitorCapability.DataProcessing)
+                return HasDataProcessing(pawn);
+            if (capability == MechanoidMechanitorCapability.BandwidthUpgrade)
+                return HasBandwidthUpgrade(pawn);
+            if (capability == MechanoidMechanitorCapability.ResearchAbilityRecipient)
+                return ManagedAbilityEligibilityUtility.IsResearchConsciousnessRecipient(pawn);
+
+            // 常用单项只读其来源，不为一次持械/工作查询解析指挥关系、合体或全部能力。
+            switch (capability)
+            {
+                case MechanoidMechanitorCapability.HumanWeapons:
+                    return IsAcquiredSource(pawn) || pawn.GetComp<CompHumanWeaponUser>() != null;
+                case MechanoidMechanitorCapability.ColonistLikeFloatMenu:
+                    return IsAcquiredSource(pawn) || pawn.GetComp<CompColonistLikeFloatMenuUser>()?.Props.allowColonistLikeFloatMenu == true;
+                case MechanoidMechanitorCapability.GravshipPilot:
+                    return IsAcquiredSource(pawn) || pawn.GetComp<CompGravshipPilotUser>()?.Props.allowGravshipPilotConsole == true;
+                case MechanoidMechanitorCapability.WorkTab:
+                    return IsAcquiredSource(pawn) || pawn.GetComp<CompWorkTabVisibleUser>()?.Props.showInWorkTab == true;
+                case MechanoidMechanitorCapability.PsychicRituals:
+                    return IsAcquiredSource(pawn) || pawn.GetComp<CompPsychicRitualParticipantUser>()?.Props.allowPsychicRituals == true;
+                case MechanoidMechanitorCapability.SelfWorkMode:
+                    return IsAcquiredSource(pawn) || CompMechanoidMechanitorSelfWorkModeUser.GetFor(pawn) != null;
+                case MechanoidMechanitorCapability.ShuttlePilot:
+                    return GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
+                        || DataProcessingAllocationUtility.HasShuttlePilotAllocation(pawn);
+                case MechanoidMechanitorCapability.ColonistLikeSocialTab:
+                    return GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
+                        || pawn.GetComp<CompColonistLikeSocialTabUser>() != null
+                        || GameComponent_SyntheticCompanionRegistry.IsAuthorized(pawn);
+                case MechanoidMechanitorCapability.ClassroomTeaching:
+                    return GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
+                        || pawn.GetComp<CompClassroomTeachingUser>() != null;
+                case MechanoidMechanitorCapability.TravelLeadCaravan:
+                    return IsAcquiredSource(pawn) || pawn.GetComp<CompMAPMechanitorTravelNode>()?.TravelProps?.canLeadCaravan == true
+                        || DataProcessingAllocationUtility.HasVirtualTravelNode(pawn);
+                case MechanoidMechanitorCapability.TravelCollectItems:
+                    return IsAcquiredSource(pawn) || pawn.GetComp<CompMAPMechanitorTravelNode>()?.TravelProps?.canCollectCaravanItems == true
+                        || DataProcessingAllocationUtility.HasVirtualTravelNode(pawn);
+                case MechanoidMechanitorCapability.TravelRefreshTrackers:
+                    return IsAcquiredSource(pawn) || pawn.GetComp<CompMAPMechanitorTravelNode>()?.TravelProps?.refreshTrackersOnTransporterArrival == true
+                        || DataProcessingAllocationUtility.HasVirtualTravelNode(pawn);
             }
 
             // 合体资格只能是先天能力，唯一事实来源是合体资格注册表。
@@ -151,8 +200,27 @@ namespace MAP_MechanoidMechanitor
             AddCapabilitiesFromMechanicalFlightAuthorization(pawn, ref capabilities);
             AddCapabilitiesFromMechanitorControl(pawn, ref capabilities);
             AddCapabilitiesFromFusionEligibility(pawn, ref capabilities);
+            if (HasDataProcessing(pawn))
+                capabilities |= MechanoidMechanitorCapability.DataProcessing;
+            if (HasBandwidthUpgrade(pawn))
+                capabilities |= MechanoidMechanitorCapability.BandwidthUpgrade;
+            if (ManagedAbilityEligibilityUtility.IsResearchConsciousnessRecipient(pawn))
+                capabilities |= MechanoidMechanitorCapability.ResearchAbilityRecipient;
             return capabilities;
         }
+
+        private static bool IsAcquiredSource(Pawn pawn) =>
+            GameComponent_MechanoidMechanitorRegistry.TryGetAcquiredMechanitorRecord(pawn, out _);
+
+        private static bool HasDataProcessing(Pawn pawn) =>
+            GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
+            || (pawn.RaceProps.Humanlike && !pawn.RaceProps.IsMechanoid
+                && pawn.health?.hediffSet?.HasHediff(MAPMechanitor_HediffDefOf.MAP_ParallelThoughtInterface) == true);
+
+        private static bool HasBandwidthUpgrade(Pawn pawn) =>
+            GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
+            && MechanoidMechanitorRoleUtility.AllowsBossChipBandwidthUpgrade(pawn)
+            && MechanoidMechanitorRoleUtility.GetMaxIntrinsicBandwidth(pawn) > 0;
 
         private static bool HasMechanitorControlCapability(Pawn pawn)
         {
@@ -346,7 +414,10 @@ namespace MAP_MechanoidMechanitor
                 | MechanoidMechanitorCapability.CharacterTab
                 | MechanoidMechanitorCapability.GeneralMechWork
                 | MechanoidMechanitorCapability.ManagedSchedule
-                | MechanoidMechanitorCapability.Inspiration;
+                | MechanoidMechanitorCapability.Inspiration
+                | MechanoidMechanitorCapability.SelfDataProcessing
+                | MechanoidMechanitorCapability.EnhancedControlModes
+                | MechanoidMechanitorCapability.ImplantSelfEffects;
 
             capabilities |= GetIdeologyCapabilities(pawn);
 

@@ -18,7 +18,7 @@ namespace MAP_MechanoidMechanitor
                    && !pawn.Dead
                    && !pawn.Destroyed
                    && pawn.mechanitor != null
-                   && MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn)
+                   && MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.SelfDataProcessing)
                    && pawn.Faction != null
                    && pawn.Faction.IsPlayerSafe();
         }
@@ -38,8 +38,7 @@ namespace MAP_MechanoidMechanitor
                    && pawn.mechanitor != null
                    && pawn.Faction != null
                    && pawn.Faction.IsPlayerSafe()
-                   && pawn.health.hediffSet.HasHediff(
-                       MAPMechanitor_HediffDefOf.MAP_ParallelThoughtInterface);
+                   && MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.DataProcessing);
         }
 
         /// <summary>
