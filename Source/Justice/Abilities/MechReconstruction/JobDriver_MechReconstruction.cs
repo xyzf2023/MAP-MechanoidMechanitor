@@ -162,7 +162,19 @@ namespace MAP_MechanoidMechanitor
                 innerPawn.needs.energy.CurLevel = innerPawn.needs.energy.MaxLevel * 0.5f;
             }
 
-            innerPawn.health.RemoveAllHediffs();
+            // 缺失部位已由原版复活流程恢复；这里只清除剩余可治愈伤势。
+            // 身份、植入体、机械意识和工作模式等功能 Hediff 必须保留。
+            // 移除伤势会触发健康回调，使用快照并复查条目，避免列表变动。
+            List<Hediff> hediffs = new List<Hediff>(innerPawn.health.hediffSet.hediffs);
+            foreach (Hediff hediff in hediffs)
+            {
+                if (hediff is Hediff_Injury
+                    && hediff.def.everCurableByItem
+                    && innerPawn.health.hediffSet.hediffs.Contains(hediff))
+                {
+                    innerPawn.health.RemoveHediff(hediff);
+                }
+            }
 
             if (innerPawn.RaceProps.IsMechanoid && MechRepairUtility.IsMissingWeapon(innerPawn))
             {
