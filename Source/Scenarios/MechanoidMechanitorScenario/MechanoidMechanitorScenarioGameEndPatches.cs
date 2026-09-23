@@ -20,7 +20,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
 
                 // 全部损毁：交还原版判断是否还有人类殖民者可以继续游戏，
-                // 备用机体信件已在上方确保唯一；原版游戏结束信件由 GameEndTick 拦截清理。
+                // 备用机体信件已在上方开始延迟等待；原版游戏结束信件由 GameEndTick 拦截清理。
                 return true;
             }
 

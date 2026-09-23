@@ -9,9 +9,10 @@ namespace MAP_MechanoidMechanitor
     /// <summary>
     /// 轨道数据网络的持久化状态。
     ///
-    /// 只保存两类数据：
+    /// 保存三类数据：
     /// 1. 轨道设施中已备份的各技能历史最高基础等级（只增不减）；
     /// 2. 上一次成功投放备用机体的游戏 tick（-1 表示从未投放）。
+    /// 3. 备用机体信件的最早发送 tick（-1 表示尚未开始等待）。
     ///
     /// 剩余冷却时间不单独保存，始终由“上次投放 tick + 冷却长度 - 当前 tick”实时计算，
     /// 读档后不会重置。
@@ -26,6 +27,7 @@ namespace MAP_MechanoidMechanitor
 
         /// <summary>低频安全检查间隔：仅用于补漏，不代替事件驱动。</summary>
         private const int BackupLetterSafetyCheckIntervalTicks = 250;
+        private const int BackupLetterDelayTicks = 600;
 
         private const int MinBackupLevel = 0;
         private const int MaxBackupLevel = 20;
@@ -34,6 +36,7 @@ namespace MAP_MechanoidMechanitor
             new Dictionary<SkillDef, int>();
 
         private int lastBackupDeploymentTick = -1;
+        private int backupLetterReadyTick = -1;
         private int nextBackupLetterSafetyCheckTick;
 
         public GameComponent_OrbitalDataNetworkState(Game game)
@@ -64,6 +67,21 @@ namespace MAP_MechanoidMechanitor
 
         public int LastBackupDeploymentTick => lastBackupDeploymentTick;
 
+        public bool IsBackupLetterReady(int now)
+        {
+            if (backupLetterReadyTick < 0)
+            {
+                backupLetterReadyTick = now + BackupLetterDelayTicks;
+            }
+
+            return now >= backupLetterReadyTick;
+        }
+
+        public void CancelBackupLetterDelay()
+        {
+            backupLetterReadyTick = -1;
+        }
+
         /// <summary>记录一次成功投放。只有空投仓真正生成成功后才应调用。</summary>
         public static bool TryRecordDeployment(int tick)
         {
@@ -85,6 +103,7 @@ namespace MAP_MechanoidMechanitor
             backedUpSkillLevels ??= new Dictionary<SkillDef, int>();
             backedUpSkillLevels.Clear();
             lastBackupDeploymentTick = -1;
+            backupLetterReadyTick = -1;
             nextBackupLetterSafetyCheckTick = 0;
         }
 
@@ -109,6 +128,12 @@ namespace MAP_MechanoidMechanitor
             }
 
             int now = tickManager.TicksGame;
+            if (backupLetterReadyTick >= 0
+                && now == backupLetterReadyTick)
+            {
+                nextBackupLetterSafetyCheckTick = now;
+            }
+
             if (now < nextBackupLetterSafetyCheckTick)
             {
                 return;
@@ -143,6 +168,10 @@ namespace MAP_MechanoidMechanitor
                 ref lastBackupDeploymentTick,
                 "lastBackupDeploymentTick",
                 -1);
+            Scribe_Values.Look(
+                ref backupLetterReadyTick,
+                "backupLetterReadyTick",
+                -1);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
@@ -150,6 +179,11 @@ namespace MAP_MechanoidMechanitor
                 if (lastBackupDeploymentTick < -1)
                 {
                     lastBackupDeploymentTick = -1;
+                }
+
+                if (backupLetterReadyTick < -1)
+                {
+                    backupLetterReadyTick = -1;
                 }
 
                 nextBackupLetterSafetyCheckTick = 0;

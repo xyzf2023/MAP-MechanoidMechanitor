@@ -5,8 +5,8 @@ using Verse;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 机械族机械师死亡时立即驱动一次备用机体信件检查，
-    /// 使“最后一名机械族机械师阵亡”不必等待低频补漏检查。
+    /// 机械族机械师死亡时立即记录备用机体信件的延迟起点，
+    /// 使“最后一名机械族机械师阵亡”的 600 tick 等待不依赖低频补漏检查。
     /// 只做注册表查询与信件状态刷新，不扫描全局 Pawn。
     /// </summary>
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.Kill))]

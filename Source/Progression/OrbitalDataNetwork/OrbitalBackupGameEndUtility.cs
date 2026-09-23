@@ -13,7 +13,7 @@ namespace MAP_MechanoidMechanitor
     /// 1. 非机械族机械师剧本：完全交还原版。
     /// 2. 机械族机械师剧本但未研究轨道数据网络：保持原逻辑（唯一载体存活即阻止结束）。
     /// 3. 机械族机械师剧本且已研究：以注册表判定是否还有存活机械族机械师，
-    ///    全部损毁后使用自定义备用机体信件替代原版游戏结束信件。
+    ///    全部损毁 600 tick 后使用自定义备用机体信件替代原版游戏结束信件。
     /// </summary>
     public static class OrbitalBackupGameEndUtility
     {
@@ -54,7 +54,7 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         /// 拦截 GameEnder.CheckOrUpdateGameOver。
         /// 仍有存活机械师时直接取消错误的游戏结束状态；
-        /// 全部损毁时清理原版信件、确保自定义信件，并把“是否结束”的判断交还原版，
+        /// 全部损毁时清理原版信件、开始自定义信件的延迟等待，并把“是否结束”的判断交还原版，
         /// 以便还有人类殖民者存活时不会被强行标记为结束。
         /// </summary>
         public static void HandleCheckOrUpdateGameOver(GameEnder gameEnder)
@@ -63,6 +63,7 @@ namespace MAP_MechanoidMechanitor
 
             if (AnyLivingRegisteredMechanitor())
             {
+                GameComponent_OrbitalDataNetworkState.CurrentState?.CancelBackupLetterDelay();
                 RemoveBackupLetter();
                 gameEnder.gameEnding = false;
                 return;
@@ -81,6 +82,7 @@ namespace MAP_MechanoidMechanitor
 
             if (AnyLivingRegisteredMechanitor())
             {
+                GameComponent_OrbitalDataNetworkState.CurrentState?.CancelBackupLetterDelay();
                 RemoveBackupLetter();
                 gameEnder.gameEnding = false;
                 return;
@@ -106,6 +108,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (AnyLivingRegisteredMechanitor())
                 {
+                    GameComponent_OrbitalDataNetworkState.CurrentState?.CancelBackupLetterDelay();
                     RemoveBackupLetter();
                     GameEnder? gameEnder = Find.GameEnder;
                     if (gameEnder != null)
@@ -142,6 +145,16 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (HasBackupLetter())
+            {
+                return;
+            }
+
+            TickManager? tickManager = Find.TickManager;
+            GameComponent_OrbitalDataNetworkState? state =
+                GameComponent_OrbitalDataNetworkState.CurrentState;
+            if (tickManager == null
+                || state == null
+                || !state.IsBackupLetterReady(tickManager.TicksGame))
             {
                 return;
             }
