@@ -52,7 +52,7 @@ namespace MAP_MechanoidMechanitor
                 && innerPawn.Dead
                 && innerPawn.RaceProps.IsMechanoid
                 && innerPawn.Faction != Faction.OfPlayer
-                && !JusticePawnUtility.IsBossJustice(innerPawn);
+                && !MechAbilityTargetUtility.IsProtectedBoss(innerPawn);
         }
 
         public override void Apply(LocalTargetInfo target, LocalTargetInfo dest)

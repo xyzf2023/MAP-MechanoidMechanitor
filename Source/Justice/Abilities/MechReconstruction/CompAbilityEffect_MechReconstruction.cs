@@ -58,6 +58,7 @@ namespace MAP_MechanoidMechanitor
                 && innerPawn != null
                 && innerPawn.Dead
                 && innerPawn.RaceProps.IsMechanoid
+                && !MechAbilityTargetUtility.IsProtectedBoss(innerPawn)
                 && caster != null
                 && caster.Faction != null
                 && innerPawn.Faction == caster.Faction;

@@ -75,8 +75,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 仅包含“新增 BOSS 限制出现之前”的全部实际骇入条件。
-        /// 不含 IsBossBlockedByHackRestriction；包含 JusticePawnUtility.IsBossJustice 旧有永久规则。
+        /// 包含基础骇入条件与专属 BOSS 永久保护，不含可配置的通用 BOSS 限制。
         /// </summary>
         private bool CanHackUnderOriginalRules(Pawn? targetPawn, Pawn? caster)
         {
@@ -91,7 +90,7 @@ namespace MAP_MechanoidMechanitor
                 && targetPawn.RaceProps.IsMechanoid
                 && targetPawn.Faction != Faction.OfPlayer
                 && targetPawn.OverseerSubject != null
-                && !JusticePawnUtility.IsBossJustice(targetPawn);
+                && !MechAbilityTargetUtility.IsProtectedBoss(targetPawn);
         }
 
         public bool CanHack(Pawn? targetPawn, Pawn? caster)
@@ -106,8 +105,8 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 仅代表“是否被新增的 BOSS 限制拦截”，与「正义」- 重装指挥单元的永久禁止规则相互独立。
-        /// 「正义」BOSS 由 JusticePawnUtility.IsBossJustice 永久拦截，不受此设置影响。
+        /// 仅代表是否被通用 BOSS 限制拦截，与正义及太阳 BOSS 的永久禁止规则相互独立。
+        /// 专属 BOSS 由 MechAbilityTargetUtility.IsProtectedBoss 永久拦截，不受此设置影响。
         /// </summary>
         private bool IsBossBlockedByHackRestriction(Pawn targetPawn)
         {
