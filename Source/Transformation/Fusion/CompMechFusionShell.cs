@@ -32,7 +32,9 @@ namespace MAP_MechanoidMechanitor
 
             foreach (Apparel apparel in pawn.apparel.WornApparel)
             {
-                if (apparel.TryGetComp<CompMechFusionShell>() != null)
+                MechFusionSession? session = apparel
+                    .TryGetComp<CompMechFusionShell>()?.GetBoundSession();
+                if (session != null && ReferenceEquals(session.WearerPawn, pawn))
                 {
                     return true;
                 }
@@ -47,6 +49,12 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         internal MechFusionSession? GetActiveSession()
         {
+            MechFusionSession? session = GetBoundSession();
+            return session != null && session.IsActive ? session : null;
+        }
+
+        private MechFusionSession? GetBoundSession()
+        {
             if (string.IsNullOrEmpty(sessionId))
             {
                 return null;
@@ -56,7 +64,6 @@ namespace MAP_MechanoidMechanitor
                     sessionId,
                     out MechFusionSession? session)
                 || session == null
-                || !session.IsActive
                 || !ReferenceEquals(session.FusionApparel, parent))
             {
                 return null;
@@ -131,7 +138,10 @@ namespace MAP_MechanoidMechanitor
         public override void Notify_Equipped(Pawn pawn)
         {
             base.Notify_Equipped(pawn);
-            pawn.GetAttachment(ThingDefOf.Fire)?.Destroy();
+            if (ReferenceEquals(GetBoundSession()?.WearerPawn, pawn))
+            {
+                pawn.GetAttachment(ThingDefOf.Fire)?.Destroy();
+            }
         }
 
         public override void Notify_Unequipped(Pawn pawn)

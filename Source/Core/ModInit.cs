@@ -16,6 +16,7 @@ namespace MAP_MechanoidMechanitor
         {
             Harmony harmony = new Harmony(HarmonyId);
             harmony.PatchAll();
+            MechFusionGenerationPatch.RemoveFromInitialCache();
             ThirdPartyCompatibilityBootstrap.ApplyAll(harmony);
             PawnNameValidationUtility.ExtendPawnNameRegex();
             MechanoidMechanitorBrainImplantFeatureState.InitializeFromSettings();

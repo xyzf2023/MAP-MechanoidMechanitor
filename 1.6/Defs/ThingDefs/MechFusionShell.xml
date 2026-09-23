@@ -15,6 +15,10 @@
     <selectable>true</selectable>
     <rotatable>false</rotatable>
     <useHitPoints>true</useHitPoints>
+    <!-- 合体事务直接创建本物品；普通服装和交易生成不应产出独立外甲。 -->
+    <tradeability>None</tradeability>
+    <generateCommonality>0</generateCommonality>
+    <generateAllowChance>0</generateAllowChance>
     <drawerType>MapMeshOnly</drawerType>
     <tickerType>Never</tickerType>
     <graphicData>
@@ -22,6 +26,10 @@
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
     <apparel>
+      <canBeGeneratedToSatisfyWarmth>false</canBeGeneratedToSatisfyWarmth>
+      <canBeGeneratedToSatisfyVacuumResistance>false</canBeGeneratedToSatisfyVacuumResistance>
+      <canBeGeneratedToSatisfyToxicEnvironmentResistance>false</canBeGeneratedToSatisfyToxicEnvironmentResistance>
+      <canBeDesiredForIdeo>false</canBeDesiredForIdeo>
       <developmentalStageFilter>Child, Adult</developmentalStageFilter>
       <bodyPartGroups>
         <li>Torso</li>
@@ -47,6 +55,7 @@
     </apparel>
     <statBases>
       <MaxHitPoints>400</MaxHitPoints>
+      <MarketValue>0</MarketValue>
       <Mass>0</Mass>
       <Flammability>0</Flammability>
       <DeteriorationRate>0</DeteriorationRate>
