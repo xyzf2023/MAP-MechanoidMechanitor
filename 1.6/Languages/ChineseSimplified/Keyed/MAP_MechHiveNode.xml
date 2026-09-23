@@ -38,10 +38,9 @@
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>无法将机械巢转为敌对，进攻已取消。</MAP_MechanoidMechanitor.MechHiveNode.Attack.TurnHostileFailed>
   <MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed>机械巢节点防御设施初始化失败，本次进入已取消。</MAP_MechanoidMechanitor.MechHiveNode.Attack.MapInitFailed>
 
-  <!-- 模块：开发者指令 -->
-  <MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled>当前未允许机械巢节点自然生成。</MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled>
-
   <!-- 模块：新机械巢命名 -->
+  <MAP_MechanoidMechanitor.MechHiveNode.NewHive.FactionName>{0}节点</MAP_MechanoidMechanitor.MechHiveNode.NewHive.FactionName>
+  <MAP_MechanoidMechanitor.MechHiveNode.NewHive.SettlementName>节点-{0}</MAP_MechanoidMechanitor.MechHiveNode.NewHive.SettlementName>
   <MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Alpha>阿尔法</MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Alpha>
   <MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Beta>贝塔</MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Beta>
   <MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Gamma>伽马</MAP_MechanoidMechanitor.MechHiveNode.NewHive.Greek.Gamma>

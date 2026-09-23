@@ -210,7 +210,7 @@
   <RecipeDef MayRequire="Ludeon.RimWorld.Biotech">
     <defName>MAP_Make_MindMappingAutonomousDirectiveCore</defName>
     <label>制作自律指令核心（空白）</label>
-    <description>TODO</description>
+    <description>制作一个没有预先模拟心智数据的空白自律指令核心。</description>
     <jobString>正在制作自律指令核心（空白）。</jobString>
     <researchPrerequisite>MAP_MindMapping</researchPrerequisite>
     <workAmount>8000</workAmount>

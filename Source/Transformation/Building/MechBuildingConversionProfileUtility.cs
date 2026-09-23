@@ -32,24 +32,21 @@ namespace MAP_MechanoidMechanitor
             failureReason = null;
             if (buildingDef == null)
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.MissingProfile".Translate();
+                failureReason = "未配置建筑形态 Def。";
                 return false;
             }
 
             if (buildingDef.category != ThingCategory.Building
                 || !buildingDef.useHitPoints)
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.InvalidDef".Translate();
+                failureReason = "建筑形态 Def 不是可受伤的建筑。";
                 return false;
             }
 
             if (!HasComp(buildingDef, typeof(CompMechFormCarrier))
                 || !HasComp(buildingDef, typeof(CompMechBuildingForm)))
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.MissingCarrierComp".Translate();
+                failureReason = "建筑形态 Def 缺少形态载体或建筑形态组件。";
                 return false;
             }
 

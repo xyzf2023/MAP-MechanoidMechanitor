@@ -16,6 +16,7 @@
   <MAP_MechanoidMechanitor.Justice.Ability.MechHack.NonHostileConfirm>目标机械体属于非敌对阵营，继续骇入会被视作敌对行为。\n\n确定要这么做？</MAP_MechanoidMechanitor.Justice.Ability.MechHack.NonHostileConfirm>
   <MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportWithTarget>正在骇入{0}。</MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportWithTarget>
   <MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportDefault>正在执行机体骇入。</MAP_MechanoidMechanitor.Justice.Ability.MechHack.ReportDefault>
+  <MAP_MechanoidMechanitor.Justice.Ability.MechHack.RelationReason>骇入机械体</MAP_MechanoidMechanitor.Justice.Ability.MechHack.RelationReason>
 
   <!-- 模块：能力与特性解锁 -->
   <MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.Title>能力：{0}</MAP_MechanoidMechanitor.Justice.Unlock.Ability.Letter.Title>

@@ -65,17 +65,22 @@ namespace MAP_MechanoidMechanitor
         }
 
         public static string UseOneLabel(string chipLabel, int bandwidthPerChip) =>
-            $"提升带宽：使用一个{chipLabel}（带宽+{bandwidthPerChip}）";
+            "MAP_MechanoidMechanitor.BandwidthUpgrade.UseOne".Translate(
+                chipLabel, bandwidthPerChip);
 
         public static string UseAllLabel(string chipLabel, int theoreticalTotal) =>
-            $"提升带宽：使用全部{chipLabel} （带宽+{theoreticalTotal}）";
+            "MAP_MechanoidMechanitor.BandwidthUpgrade.UseAll".Translate(
+                chipLabel, theoreticalTotal);
 
-        public static string AtCapLabel() => "当前带宽已达上限。";
+        public static string AtCapLabel() =>
+            "MAP_MechanoidMechanitor.BandwidthUpgrade.AtCap".Translate();
 
         public static string WasteConfirmText(string pawnLabel, int maxIntrinsic) =>
-            $"{pawnLabel}的带宽上限为{maxIntrinsic}。使用全部芯片会导致浪费。\n\n仍要继续吗？";
+            "MAP_MechanoidMechanitor.BandwidthUpgrade.WasteConfirm".Translate(
+                pawnLabel, maxIntrinsic);
 
         public static string SuccessMessage(string pawnLabel, int actualAdded) =>
-            $"{pawnLabel}的带宽上限成功提升{actualAdded}点。";
+            "MAP_MechanoidMechanitor.BandwidthUpgrade.Success".Translate(
+                pawnLabel, actualAdded);
     }
 }

@@ -9,7 +9,7 @@
   <MAP_SunBoss_ShieldWarningLabel>攻击无效</MAP_SunBoss_ShieldWarningLabel>
   <MAP_SunBoss_ShieldWarningText>对「太阳」发起的攻击被一层强大的能量护盾完全吸收。\n\n看起来，环绕在它四周的六台稳定器正在持续为护盾供能。想要真正伤到它，我们得先从这些稳定器下手。</MAP_SunBoss_ShieldWarningText>
   <MAP_SunBoss_CannonWarningLabel>毁灭性能量反应</MAP_SunBoss_CannonWarningLabel>
-  <MAP_SunBoss_CannonWarningText>侦测到「太阳」正在汇聚异常庞大的能量。仅从不断攀升的能量读数来看，一旦被命中，恐怕后果&lt;b&gt;&lt;color=#FF0000FF&gt;难以承受&lt;/color&gt;&lt;/b&gt;。\n\n不过……如果这股力量真的如此强大，或许也足以摧毁那些看似坚不可摧的稳定器。</MAP_SunBoss_CannonWarningText>
+  <MAP_SunBoss_CannonWarningText>侦测到「太阳」正在汇聚异常庞大的能量。仅从不断攀升的能量读数来看，一旦被命中，恐怕后果&lt;b&gt;&lt;color=#FF0000FF&gt;难以承受&lt;/color&gt;&lt;/b&gt;。\n\n不过……如果这股力量真的如此强大，或许可以用来摧毁那些看似坚不可摧的稳定器。</MAP_SunBoss_CannonWarningText>
   <MAP_SunBoss_FullSteadyState>完全稳态</MAP_SunBoss_FullSteadyState>
   <MAP_SunBoss_SteadyStateDisturbed>稳态受扰</MAP_SunBoss_SteadyStateDisturbed>
   <MAP_SunBoss_LoadFluctuation>负载波动</MAP_SunBoss_LoadFluctuation>

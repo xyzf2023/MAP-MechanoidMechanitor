@@ -3,7 +3,7 @@
   <ThingDef ParentName="BuildingBase">
     <defName>MAP_Building_ReactorStabilizer</defName>
     <label>反应堆稳定器</label>
-    <description>维持「太阳」稳定运行的反应堆稳定器。常规攻击无法损伤它，只有湮灭炮的内圈抹除能够将其摧毁。稳定器减少后，「太阳」的外部承伤增加，部分武器保护逐步解除；仅剩一台或全部被摧毁时，它将失稳，扩大热场并持续从内部烧毁。</description>
+    <description>TODO</description>
     <thingClass>Building</thingClass>
     <tickerType>Never</tickerType>
     <size>(3,3)</size>
@@ -11,6 +11,7 @@
     <passability>Impassable</passability>
     <fillPercent>1</fillPercent>
     <useHitPoints>false</useHitPoints>
+    <noRightClickDraftAttack>true</noRightClickDraftAttack>
     <!-- 不通过耐久值摧毁，由湮灭炮内圈直接调用 Destroy；破障寻路视为不可摧毁。 -->
     <destroyable>true</destroyable>
     <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>

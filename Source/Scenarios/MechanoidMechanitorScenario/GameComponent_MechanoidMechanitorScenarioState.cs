@@ -10,6 +10,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public sealed class GameComponent_MechanoidMechanitorScenarioState : GameComponent
     {
         private const int EnergyManagementLetterDelayTicks = 2500;
+        private const int BandwidthAcquisitionLetterCheckIntervalTicks = 60000;
+        private const int BandwidthAcquisitionLetterThreshold = 12;
 
         private bool mechanoidMechanitorScenarioEnabled;
 
@@ -19,6 +21,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // 默认视为已处理，确保本功能加入前创建的旧存档不会在读档后补发开局提示。
         private bool energyManagementLetterResolved = true;
         private int energyManagementLetterTriggerTick = -1;
+        private bool bandwidthAcquisitionLetterSent;
 
         private bool factionNamingScenarioChecked;
         private bool factionNamingRoutineEnabled;
@@ -166,6 +169,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "energyManagementLetterTriggerTick",
                 -1);
             Scribe_Values.Look(
+                ref bandwidthAcquisitionLetterSent,
+                "bandwidthAcquisitionLetterSent",
+                false);
+            Scribe_Values.Look(
                 ref factionNamingScenarioChecked,
                 "factionNamingScenarioChecked",
                 false);
@@ -217,6 +224,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.StartedNewGame();
             SyncFromScenarioMarker();
+            bandwidthAcquisitionLetterSent = false;
 
             if (mechanoidMechanitorScenarioEnabled && Find.TickManager != null)
             {
@@ -248,6 +256,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             base.GameComponentTick();
 
             TryResolveEnergyManagementLetter();
+            TrySendBandwidthAcquisitionLetter();
 
             if (factionNamingRoutineFinished
                 || Current.Game == null
@@ -420,6 +429,45 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Label".Translate(),
                 "MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Text".Translate(),
                 LetterDefOf.NeutralEvent);
+        }
+
+        private void TrySendBandwidthAcquisitionLetter()
+        {
+            if (bandwidthAcquisitionLetterSent
+                || !mechanoidMechanitorScenarioEnabled
+                || Find.TickManager == null
+                || Find.TickManager.TicksGame <= 0
+                || Find.TickManager.TicksGame % BandwidthAcquisitionLetterCheckIntervalTicks != 0
+                || Find.LetterStack == null)
+            {
+                return;
+            }
+
+            Faction? playerFaction = Faction.OfPlayerSilentFail;
+            if (playerFaction == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<Pawn> mechanitors =
+                GameComponent_MechanoidMechanitorRegistry.CurrentRegisteredMechanitors;
+            for (int i = 0; i < mechanitors.Count; i++)
+            {
+                Pawn pawn = mechanitors[i];
+                if (pawn.Faction != playerFaction
+                    || pawn.mechanitor is not Pawn_MechanitorTracker tracker
+                    || tracker.UsedBandwidth < BandwidthAcquisitionLetterThreshold)
+                {
+                    continue;
+                }
+
+                Find.LetterStack.ReceiveLetter(
+                    "MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Label".Translate(),
+                    "MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Text".Translate(),
+                    LetterDefOf.NeutralEvent);
+                bandwidthAcquisitionLetterSent = true;
+                return;
+            }
         }
 
         private void FinishFactionNamingRoutine()

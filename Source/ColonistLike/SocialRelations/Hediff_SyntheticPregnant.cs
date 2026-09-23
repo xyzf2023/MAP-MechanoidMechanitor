@@ -127,7 +127,7 @@ namespace MAP_MechanoidMechanitor
 
             Command_Action command = new Command_Action
             {
-                defaultLabel = "开始分娩",
+                defaultLabel = "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Label".Translate(),
                 defaultDesc =
                     "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Description"
                         .Translate(pawn.LabelShortCap),
@@ -148,47 +148,47 @@ namespace MAP_MechanoidMechanitor
         {
             if (pawn == null)
             {
-                return "授权机械体无效。";
+                return "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InvalidPawn".Translate();
             }
 
             if (!pawn.Spawned)
             {
-                return "授权机械体当前不在地图上。";
+                return "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NotSpawned".Translate();
             }
 
             if (pawn.Dead)
             {
-                return "授权机械体已死亡。";
+                return "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Dead".Translate();
             }
 
             if (pawn.Downed)
             {
-                return "授权机械体已倒地。";
+                return "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Downed".Translate();
             }
 
             if (pawn.Drafted)
             {
-                return "授权机械体已被征召。";
+                return "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Drafted".Translate();
             }
 
             if (pawn.InMentalState)
             {
-                return "授权机械体正处于精神状态。";
+                return "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.MentalState".Translate();
             }
 
             if (pawn.IsBurning())
             {
-                return "授权机械体正在燃烧。";
+                return "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Burning".Translate();
             }
 
             if (pawn.jobs == null)
             {
-                return "授权机械体无法执行工作。";
+                return "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NoJobs".Translate();
             }
 
             if (pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_SyntheticGiveBirth)
             {
-                return "授权机械体正在分娩。";
+                return "MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InProgress".Translate();
             }
 
             return null;

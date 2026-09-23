@@ -1,76 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
 
-  <!-- ===== 肃清节点评级：等级名称 ===== -->
-  <MAP_PurgeDirectiveRating.LevelName1>一级评级</MAP_PurgeDirectiveRating.LevelName1>
-  <MAP_PurgeDirectiveRating.LevelName2>二级评级</MAP_PurgeDirectiveRating.LevelName2>
-  <MAP_PurgeDirectiveRating.LevelName3>三级评级</MAP_PurgeDirectiveRating.LevelName3>
-  <MAP_PurgeDirectiveRating.LevelName4>四级评级</MAP_PurgeDirectiveRating.LevelName4>
-  <MAP_PurgeDirectiveRating.LevelName5>五级评级</MAP_PurgeDirectiveRating.LevelName5>
+  <!-- ===== 肃清评级：等级名称 ===== -->
+  <MAP_PurgeDirectiveRating.LevelName1>序列五</MAP_PurgeDirectiveRating.LevelName1>
+  <MAP_PurgeDirectiveRating.LevelName2>序列四</MAP_PurgeDirectiveRating.LevelName2>
+  <MAP_PurgeDirectiveRating.LevelName3>序列三</MAP_PurgeDirectiveRating.LevelName3>
+  <MAP_PurgeDirectiveRating.LevelName4>序列二</MAP_PurgeDirectiveRating.LevelName4>
+  <MAP_PurgeDirectiveRating.LevelName5>序列一</MAP_PurgeDirectiveRating.LevelName5>
 
-  <MAP_PurgeDirectiveRating.Takeover.Name>控制权限：完全接管</MAP_PurgeDirectiveRating.Takeover.Name>
-  <MAP_PurgeDirectiveRating.Takeover.HomeHint>主脑控制权已接管，全部调拨权限已开放。</MAP_PurgeDirectiveRating.Takeover.HomeHint>
-
-  <!-- ===== 肃清节点评级：顶部信息区 ===== -->
+  <!-- ===== 肃清评级：顶部信息区 ===== -->
   <MAP_PurgeDirectiveRating.TopBar.Maxed>节点评级：{0}（满级）· 评级值 {1}/{2}</MAP_PurgeDirectiveRating.TopBar.Maxed>
   <MAP_PurgeDirectiveRating.TopBar.Level>节点评级：{0} · {1}/{2}</MAP_PurgeDirectiveRating.TopBar.Level>
 
-  <!-- ===== 肃清节点评级：订单页脚 ===== -->
+  <!-- ===== 肃清评级：订单页脚 ===== -->
   <MAP_PurgeDirectiveRating.Order.TotalWithDiscount>总价 {0}（已折扣 -{1}）</MAP_PurgeDirectiveRating.Order.TotalWithDiscount>
 
-  <!-- ===== 肃清节点评级：通用要求 ===== -->
-  <MAP_PurgeDirectiveRating.RequiredLevel>需 {0} 级评级</MAP_PurgeDirectiveRating.RequiredLevel>
-  <MAP_PurgeDirectiveRating.ClusterEnvironmentLocked>环境影响器需 {0} 级评级解锁</MAP_PurgeDirectiveRating.ClusterEnvironmentLocked>
+  <!-- ===== 肃清评级：通用要求 ===== -->
+  <MAP_PurgeDirectiveRating.RequiredLevel>需要评级：{0}</MAP_PurgeDirectiveRating.RequiredLevel>
+  <MAP_PurgeDirectiveRating.ClusterEnvironmentLocked>环境影响器需要评级：{0}</MAP_PurgeDirectiveRating.ClusterEnvironmentLocked>
 
-  <!-- ===== 肃清节点评级：主页概览 ===== -->
-  <MAP_PurgeDirectiveRating.Home.Overview.Maxed>节点评级：{0}（满级）· 评级值 {1}</MAP_PurgeDirectiveRating.Home.Overview.Maxed>
-  <MAP_PurgeDirectiveRating.Home.Overview.Level>节点评级：{0} · {1}/{2}</MAP_PurgeDirectiveRating.Home.Overview.Level>
-  <MAP_PurgeDirectiveRating.Home.Overview.Hint>当前机械族与物资调拨折扣：{0}%</MAP_PurgeDirectiveRating.Home.Overview.Hint>
-  <MAP_PurgeDirectiveRating.Home.Overview.QuestIdle>当前任务：{0}</MAP_PurgeDirectiveRating.Home.Overview.QuestIdle>
-  <MAP_PurgeDirectiveRating.Home.Overview.QuestActive>当前任务：{0} · {1} · 剩余 {2}</MAP_PurgeDirectiveRating.Home.Overview.QuestActive>
-
-  <!-- ===== 肃清节点评级：主页卡片补充信息 ===== -->
-  <MAP_PurgeDirectiveRating.Home.Card.Communication.Maxed>节点评级：{0} · {1}（满级）</MAP_PurgeDirectiveRating.Home.Card.Communication.Maxed>
-  <MAP_PurgeDirectiveRating.Home.Card.Communication.Level>节点评级：{0} · {1}/{2}</MAP_PurgeDirectiveRating.Home.Card.Communication.Level>
-  <MAP_PurgeDirectiveRating.Home.Card.Mechs>机械族：{0}</MAP_PurgeDirectiveRating.Home.Card.Mechs>
-  <MAP_PurgeDirectiveRating.Home.Card.Goods>物资：{0} · 折扣 {1}%</MAP_PurgeDirectiveRating.Home.Card.Goods>
-  <MAP_PurgeDirectiveRating.Home.Card.SpecialProtocols>特殊协议：{0} · 部队支援 {1} · 机械集群 {2}</MAP_PurgeDirectiveRating.Home.Card.SpecialProtocols>
-
-  <!-- ===== 肃清节点评级：任务状态 ===== -->
+  <!-- ===== 肃清评级：任务状态 ===== -->
   <MAP_PurgeDirectiveRating.Quest.None>正在检索指令</MAP_PurgeDirectiveRating.Quest.None>
   <MAP_PurgeDirectiveRating.Quest.OfferPending>待接取</MAP_PurgeDirectiveRating.Quest.OfferPending>
   <MAP_PurgeDirectiveRating.Quest.OperationActive>进行中</MAP_PurgeDirectiveRating.Quest.OperationActive>
 
-  <!-- ===== 肃清节点评级：状态词 ===== -->
-  <MAP_PurgeDirectiveRating.Word.Available>已开放</MAP_PurgeDirectiveRating.Word.Available>
-  <MAP_PurgeDirectiveRating.Word.Locked>未解锁</MAP_PurgeDirectiveRating.Word.Locked>
-  <MAP_PurgeDirectiveRating.Word.None>无</MAP_PurgeDirectiveRating.Word.None>
-  <MAP_PurgeDirectiveRating.Word.All>全部</MAP_PurgeDirectiveRating.Word.All>
-
-  <!-- ===== 肃清节点评级：重量级标签 ===== -->
-  <MAP_PurgeDirectiveRating.Weight.Light>轻量</MAP_PurgeDirectiveRating.Weight.Light>
-  <MAP_PurgeDirectiveRating.Weight.LightMedium>轻量/中量</MAP_PurgeDirectiveRating.Weight.LightMedium>
-  <MAP_PurgeDirectiveRating.Weight.LightMediumHeavy>轻量/中量/重量</MAP_PurgeDirectiveRating.Weight.LightMediumHeavy>
-  <MAP_PurgeDirectiveRating.Weight.LightMediumHeavyUltra>轻量/中量/重量/超重</MAP_PurgeDirectiveRating.Weight.LightMediumHeavyUltra>
-
-  <!-- ===== 肃清节点评级：物资目录分级 ===== -->
-  <MAP_PurgeDirectiveRating.Goods.Tier1>基础物资</MAP_PurgeDirectiveRating.Goods.Tier1>
-  <MAP_PurgeDirectiveRating.Goods.Tier2>标准军需</MAP_PurgeDirectiveRating.Goods.Tier2>
-  <MAP_PurgeDirectiveRating.Goods.Tier3>全部合法物资</MAP_PurgeDirectiveRating.Goods.Tier3>
-
-  <!-- ===== 肃清节点评级：机械族/物资行 ===== -->
+  <!-- ===== 肃清评级：机械族/物资行 ===== -->
   <MAP_PurgeDirectiveRating.Mechs.RatingNotMet>节点评级未满足</MAP_PurgeDirectiveRating.Mechs.RatingNotMet>
   <MAP_PurgeDirectiveRating.MechRow.PriceDiscounted>单价 {0}（原价 {1}）</MAP_PurgeDirectiveRating.MechRow.PriceDiscounted>
   <MAP_PurgeDirectiveRating.MechRow.Price>单价 {0}</MAP_PurgeDirectiveRating.MechRow.Price>
-  <MAP_PurgeDirectiveRating.LockedForLevel>需 {0} 级评级</MAP_PurgeDirectiveRating.LockedForLevel>
-  <MAP_PurgeDirectiveRating.RequiresLevel>需 {0} 级评级</MAP_PurgeDirectiveRating.RequiresLevel>
+  <MAP_PurgeDirectiveRating.LockedForLevel>需要评级：{0}</MAP_PurgeDirectiveRating.LockedForLevel>
+  <MAP_PurgeDirectiveRating.RequiresLevel>需要评级：{0}</MAP_PurgeDirectiveRating.RequiresLevel>
   <MAP_PurgeDirectiveRating.Reason.Invalid>无效物品</MAP_PurgeDirectiveRating.Reason.Invalid>
   <MAP_PurgeDirectiveRating.Reason.Blacklist>黑名单限制，无法请求</MAP_PurgeDirectiveRating.Reason.Blacklist>
-  <MAP_PurgeDirectiveRating.Reason.Building>可搬运建筑：统一归入三级完整目录</MAP_PurgeDirectiveRating.Reason.Building>
-  <MAP_PurgeDirectiveRating.Reason.XmlOverride>XML覆盖：{0}级目录</MAP_PurgeDirectiveRating.Reason.XmlOverride>
-  <MAP_PurgeDirectiveRating.Reason.AutoClassify>自动分类：{0}级目录</MAP_PurgeDirectiveRating.Reason.AutoClassify>
+  <MAP_PurgeDirectiveRating.Reason.Building>需要评级：{0}</MAP_PurgeDirectiveRating.Reason.Building>
+  <MAP_PurgeDirectiveRating.Reason.XmlOverride>需要评级：{0}</MAP_PurgeDirectiveRating.Reason.XmlOverride>
+  <MAP_PurgeDirectiveRating.Reason.AutoClassify>需要评级：{0}</MAP_PurgeDirectiveRating.Reason.AutoClassify>
 
-  <!-- ===== 肃清节点评级：权限摘要（升级/降级信、顶部栏、主页） ===== -->
+  <!-- ===== 肃清评级：权限摘要（升级/降级信、顶部栏、主页） ===== -->
   <MAP_PurgeDirectiveRating.Perm.MechLight>轻型机械族</MAP_PurgeDirectiveRating.Perm.MechLight>
   <MAP_PurgeDirectiveRating.Perm.MechMedium>中型机械族</MAP_PurgeDirectiveRating.Perm.MechMedium>
   <MAP_PurgeDirectiveRating.Perm.MechHeavy>重型机械族</MAP_PurgeDirectiveRating.Perm.MechHeavy>
@@ -79,37 +45,37 @@
   <MAP_PurgeDirectiveRating.Perm.GoodsStandard>标准军需</MAP_PurgeDirectiveRating.Perm.GoodsStandard>
   <MAP_PurgeDirectiveRating.Perm.GoodsFull>全部合法物资</MAP_PurgeDirectiveRating.Perm.GoodsFull>
   <MAP_PurgeDirectiveRating.Perm.ForceSupport>部队支援</MAP_PurgeDirectiveRating.Perm.ForceSupport>
-  <MAP_PurgeDirectiveRating.Perm.ForceUnlimited>部队支援无硬上限</MAP_PurgeDirectiveRating.Perm.ForceUnlimited>
+  <MAP_PurgeDirectiveRating.Perm.ForceUnlimited>部队支援无上限</MAP_PurgeDirectiveRating.Perm.ForceUnlimited>
   <MAP_PurgeDirectiveRating.Perm.Cluster>机械集群</MAP_PurgeDirectiveRating.Perm.Cluster>
   <MAP_PurgeDirectiveRating.Perm.Environment>环境影响器</MAP_PurgeDirectiveRating.Perm.Environment>
   <MAP_PurgeDirectiveRating.Perm.Discount>折扣 {0}%</MAP_PurgeDirectiveRating.Perm.Discount>
   <MAP_PurgeDirectiveRating.Perm.None>无新增权限</MAP_PurgeDirectiveRating.Perm.None>
 
-  <!-- ===== 肃清节点评级：通讯查询 ===== -->
+  <!-- ===== 肃清评级：通讯查询 ===== -->
   <MAP_PurgeDirectiveRating.Communication.Query.NodeRating>查询节点评级</MAP_PurgeDirectiveRating.Communication.Query.NodeRating>
   <MAP_PurgeDirectiveRating.Communication.Query.ControlPermission>查询控制权限</MAP_PurgeDirectiveRating.Communication.Query.ControlPermission>
-  <MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>主脑控制权限已完全接管。节点评级不再适用；机械族与全部合法物资调拨、部队支援、机械集群及环境影响器权限均已开放，机械族与物资调拨享受 20% 折扣。</MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>
-  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled>节点评级系统当前不可用（主脑通讯链路未建立，或主脑已被接管）。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled>
-  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>节点评级：{0}（满级）。评级值 {1}。当前肃清额度折扣 {2}%。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>
-  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level>节点评级：{0}。评级值 {1}，距下一等级 {2}。当前肃清额度折扣 {3}%。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level>
+  <MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>已获取全部主脑指挥权限。</MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>
+  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled>节点评级系统不可用（主脑通讯链路未建立或主脑已被接管）。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled>
+  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>节点评级：{0}（满级）。评级值 {1}。当前额度消耗减免 {2}%。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>
+  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level>节点评级：{0}。评级值 {1}，距下一等级 {2}。当前额度消耗减免{3}%。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level>
   <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Opened>当前已开放权限：{0}</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Opened>
   <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.NextNew>下一评级主要新增：{0}</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.NextNew>
 
-  <!-- ===== 肃清节点评级：交付错误 ===== -->
+  <!-- ===== 肃清评级：交付错误 ===== -->
   <MAP_PurgeDirectiveRating.Delivery.ErrorRatingLocked>存在未解锁评级的机械族或物资，无法交付。</MAP_PurgeDirectiveRating.Delivery.ErrorRatingLocked>
 
-  <!-- ===== 肃清节点评级：任务 ===== -->
+  <!-- ===== 肃清评级：任务 ===== -->
   <MAP_PurgeDirectiveRating.Quest.Title>肃清指令：摧毁 {0}</MAP_PurgeDirectiveRating.Quest.Title>
 
-  <!-- ===== 肃清节点评级：升级/降级信件 ===== -->
-  <MAP_PurgeDirectiveRating.Letter.Upgrade.Title>肃清节点评级提升</MAP_PurgeDirectiveRating.Letter.Upgrade.Title>
-  <MAP_PurgeDirectiveRating.Letter.Upgrade.Text>您的肃清节点评级已提升：{0} → {1}。当前评级值 {2}。新增权限：{3}。</MAP_PurgeDirectiveRating.Letter.Upgrade.Text>
-  <MAP_PurgeDirectiveRating.Letter.Downgrade.Title>肃清节点评级下降</MAP_PurgeDirectiveRating.Letter.Downgrade.Title>
-  <MAP_PurgeDirectiveRating.Letter.Downgrade.Text>您的肃清节点评级已下降：{0} → {1}。当前评级值 {2}。暂时失去权限：{3}。已交付的单位与物资不受影响。</MAP_PurgeDirectiveRating.Letter.Downgrade.Text>
+  <!-- ===== 肃清评级：升级/降级信件 ===== -->
+  <MAP_PurgeDirectiveRating.Letter.Upgrade.Title>肃清评级提升</MAP_PurgeDirectiveRating.Letter.Upgrade.Title>
+  <MAP_PurgeDirectiveRating.Letter.Upgrade.Text>您的肃清评级已提升：{0} → {1}。当前评级值 {2}。新增权限：{3}。</MAP_PurgeDirectiveRating.Letter.Upgrade.Text>
+  <MAP_PurgeDirectiveRating.Letter.Downgrade.Title>肃清评级下降</MAP_PurgeDirectiveRating.Letter.Downgrade.Title>
+  <MAP_PurgeDirectiveRating.Letter.Downgrade.Text>肃清评级已下降：{0} → {1}。当前评级值 {2}。暂时失去权限：{3}。已交付的单位与物资不受影响。</MAP_PurgeDirectiveRating.Letter.Downgrade.Text>
 
-  <!-- ===== 肃清节点评级：任务完成信件 ===== -->
-  <MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>肃清指令节点：目标肃清</MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>
-  <MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>你已肃清 {0}（当前{1}）。本任务累计实际发放肃清额度 +{2}；攻克目标时已经另行发放的基础奖励不重复计入。</MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>
-  <MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>你已肃清 {0}（当前{1}）。奖励已结算。此旧任务未保存实际到账金额，已有基础奖励不会重复发放。</MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>
+  <!-- ===== 肃清评级：任务完成信件 ===== -->
+  <MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>肃清节点：目标肃清</MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>
+  <MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>你已肃清 {0}（当前{1}）。肃清额度：{2}已发放。</MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>
+  <MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>你已肃清 {0}（当前{1}）。</MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>
 
 </LanguageData>

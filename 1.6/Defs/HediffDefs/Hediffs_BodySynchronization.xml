@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-  <!--
-    合体状态的可见标记与属性快照载体。这里不写入任何具体机械族的属性，
-    实例差异只保存在权威合体记录中，由窄范围 Stat 补丁按实例应用。
-  -->
+  <!--机体同调  -->
   <HediffDef>
     <defName>MAP_BodySynchronization</defName>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_BodySynchronization</hediffClass>
@@ -15,15 +12,13 @@
       </li>
     </comps>
     <label>机体同调</label>
-    <description>TODO</description>
+    <description>穿戴者与机械体的控制系统建立了深度同步，使其能够直接调用机体的动力、结构与功能模块。\n合体期间，机械体的机体性能将同步映射至穿戴者。</description>
+    <descriptionShort>该殖民者与机械体的控制系统建立了深度同步。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <scenarioCanAdd>false</scenarioCanAdd>
   </HediffDef>
-  <!--
-    仅在合体源为机械族机械师时添加。实例带宽、控制组和控制权快照
-    由 MechFusionSession 保存，本 Def 不承载固定数值。
-  -->
+  <!-- 机控同调 -->
   <HediffDef>
     <defName>MAP_MechControlSynchronization</defName>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_MechControlSynchronization</hediffClass>
@@ -35,15 +30,13 @@
       </li>
     </comps>
     <label>机控同调</label>
-    <description>TODO</description>
+    <description>穿戴者与机械族的机控系统建立了临时同步，其监管权限及控制网络随合体一并转移。\n合体期间，穿戴者能够继承机械体的机控能力，并继续监管原本受其控制的机械族。</description>
+    <descriptionShort>该殖民者与机械族的机控系统建立了临时同步。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <scenarioCanAdd>false</scenarioCanAdd>
   </HediffDef>
-  <!--
-    仅在合体源拥有心灵中枢时添加。Severity 直接保存合体瞬间映射的
-    心灵中枢等级；Def 层属性与目标自身心灵中枢正常叠加。
-  -->
+  <!-- 灵能同调 -->
   <HediffDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
     <defName>MAP_PsychicSynchronization</defName>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_PsychicSynchronization</hediffClass>
@@ -55,7 +48,8 @@
       </li>
     </comps>
     <label>灵能同调</label>
-    <description>TODO</description>
+    <description>穿戴者的灵能通路与机械体的心灵中枢建立了同步。\n合体期间，机械体搭载的心灵中枢能够直接作用于穿戴者。</description>
+    <descriptionShort>该殖民者的灵能通路与机械体的心灵中枢建立了同步。</descriptionShort>
     <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
     <isBad>false</isBad>
     <priceImpact>false</priceImpact>
@@ -119,10 +113,7 @@
       </li>
     </stages>
   </HediffDef>
-  <!--
-    合体期间的内部维持标记：让原版 WorldPawns 不 mothball 源机械族，
-    保证 Hediff 与限时 Comp 继续按原版节奏推进。不承载任何实例数据。
-  -->
+  <!--合体期间的内部维持标记，用于继续推进后台机械族的健康状态计时-->
   <HediffDef>
     <defName>MAP_FusionDormantGuard</defName>
     <hediffClass>HediffWithComps</hediffClass>

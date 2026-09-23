@@ -35,12 +35,16 @@
 
   <!-- 模块：通讯加载流程 -->
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission>接入权限：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission.Full>完全</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission.Full>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.LinkStatus>链路状态：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.LinkStatus>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.RemoteCoreNode>远程主脑节点</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.RemoteCoreNode>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.NodeCode>{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.NodeCode>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Link>建立通讯链路</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Link>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Verify>验证肃清协议权限</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Verify>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.VerifyControl>校验控制权限</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.VerifyControl>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.VerifyingSource>正在校验通讯来源身份……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.VerifyingSource>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.SyncCredits>同步肃清额度</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.SyncCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.CalculateResources>计算可用资源</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.CalculateResources>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.JoinNode>接入远程节点</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.JoinNode>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Status.JoiningNode>正在接入远程节点……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Status.JoiningNode>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Complete>完成</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Complete>
@@ -121,6 +125,7 @@
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Connecting>正在接入机械巢通讯网络……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Connecting>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Verifying>正在验证执行单元身份……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Verifying>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SyncingCredits>正在同步肃清额度……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SyncingCredits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CalculatingResources>正在计算可用资源……</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CalculatingResources>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Connected>连接完成。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Connected>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.WaitingInput>等待输入</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.WaitingInput>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Validating>正在校验调拨内容</MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Validating>

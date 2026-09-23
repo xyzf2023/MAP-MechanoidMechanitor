@@ -12,6 +12,7 @@ namespace MAP_MechanoidMechanitor
     public class JobDriver_MechConvertToBuilding : JobDriver
     {
         public const int ConversionDurationTicks = 180;
+        private bool failureReported;
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
         {
@@ -20,8 +21,21 @@ namespace MAP_MechanoidMechanitor
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            AddFailCondition(
-                () => !MechBuildingConversionService.CanConvert(pawn, out _));
+            AddFailCondition(() =>
+            {
+                if (MechBuildingConversionService.CanConvert(pawn, out string? failureReason))
+                {
+                    return false;
+                }
+
+                if (!failureReported)
+                {
+                    failureReported = true;
+                    MechBuildingConversionService.Reject(pawn, failureReason, sendFailureMessage: true);
+                }
+
+                return true;
+            });
 
             yield return Toils_General.StopDead();
 
@@ -40,13 +54,8 @@ namespace MAP_MechanoidMechanitor
                         return;
                     }
 
-                    Messages.Message(
-                        failureReason
-                            ?? "MAP_MechanoidMechanitor.Transformation.Building.Unavailable"
-                                .Translate(),
-                        pawn,
-                        MessageTypeDefOf.RejectInput,
-                        historical: false);
+                    MechBuildingConversionService.Reject(
+                        pawn, failureReason, sendFailureMessage: true);
                 });
         }
     }

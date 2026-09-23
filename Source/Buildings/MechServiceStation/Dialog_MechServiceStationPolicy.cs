@@ -36,9 +36,9 @@ namespace MAP_MechanoidMechanitor
             try
             {
                 Text.Font = GameFont.Medium;
-                Widgets.Label(new Rect(0f, 0f, inRect.width - 30f, 35f), "机体整备台策略");
+                Widgets.Label(new Rect(0f, 0f, inRect.width - 30f, 35f), "MAP_MechServiceStation.Policy.Title".Translate());
                 Text.Font = GameFont.Small;
-                Widgets.Label(new Rect(0f, 43f, inRect.width, 28f), "选择使用模式，修改立即生效。");
+                Widgets.Label(new Rect(0f, 43f, inRect.width, 28f), "MAP_MechServiceStation.Policy.Hint".Translate());
                 float y = 80f;
                 foreach (MechServiceStationMode mode in Modes)
                 {
@@ -50,7 +50,7 @@ namespace MAP_MechanoidMechanitor
                 // 保留旧存档的指定优先模式，不改变枚举值或强制迁移既有策略。
                 if (station.Mode == MechServiceStationMode.AssignedPriority)
                 {
-                    Widgets.Label(new Rect(0f, y, inRect.width, 28f), "当前沿用旧策略：指定机械族优先");
+                    Widgets.Label(new Rect(0f, y, inRect.width, 28f), "MAP_MechServiceStation.Policy.LegacyAssignedPriority".Translate());
                     y += 34f;
                 }
                 y += 10f;
@@ -58,30 +58,31 @@ namespace MAP_MechanoidMechanitor
                     || station.Mode == MechServiceStationMode.AssignedPriority)
                 {
                     if (Widgets.ButtonText(new Rect(0f, y, inRect.width, 32f),
-                        "指定机械族：" + (station.AssignedPawn?.LabelShortCap.ToString() ?? "未指定")))
+                        "MAP_MechServiceStation.Policy.AssignedPawn".Translate(
+                            station.AssignedPawn?.LabelShortCap.ToString() ?? "MAP_MechServiceStation.Policy.Unassigned".Translate().ToString())))
                         station.OpenAssignmentMenu();
                     y += 40f;
                 }
                 if (MechServicePolicyUtility.SupportsMechanitorPriority(station.Mode))
                 {
                     bool priority = station.MechanitorPriority;
-                    Widgets.CheckboxLabeled(new Rect(0f, y, inRect.width, 30f), "机械族机械师优先", ref priority);
+                    Widgets.CheckboxLabeled(new Rect(0f, y, inRect.width, 30f), "MAP_MechServiceStation.Policy.MechanitorPriority".Translate(), ref priority);
                     station.SetMechanitorPriority(priority);
                     y += 36f;
-                    Widgets.Label(new Rect(0f, y, inRect.width, 55f), "有对应整备需求的机械族机械师可优先使用，并抢占普通自动使用者；手动命令优先。");
+                    Widgets.Label(new Rect(0f, y, inRect.width, 55f), "MAP_MechServiceStation.Policy.MechanitorPriorityHint".Translate());
                     y += 63f;
                 }
                 bool standby = station.StandbyAfterService;
                 Rect standbyRect = new Rect(0f, y, inRect.width, 30f);
-                Widgets.CheckboxLabeled(standbyRect, "完成后待命", ref standby);
-                TooltipHandler.TipRegion(standbyRect, "开启后，使用该整备台的机械族将在整备完成后待命。");
+                Widgets.CheckboxLabeled(standbyRect, "MAP_MechServiceStation.Policy.StandbyAfterService".Translate(), ref standby);
+                TooltipHandler.TipRegion(standbyRect, "MAP_MechServiceStation.Policy.StandbyAfterServiceHint".Translate());
                 station.SetStandbyAfterService(standby);
                 y += 36f;
                 bool repair = station.RepairEnabled;
                 bool charge = station.ChargingEnabled;
-                Widgets.CheckboxLabeled(new Rect(0f, y, inRect.width, 30f), "启用修复功能", ref repair);
+                Widgets.CheckboxLabeled(new Rect(0f, y, inRect.width, 30f), "MAP_MechServiceStation.Policy.EnableRepair".Translate(), ref repair);
                 y += 36f;
-                Widgets.CheckboxLabeled(new Rect(0f, y, inRect.width, 30f), "启用充电功能", ref charge);
+                Widgets.CheckboxLabeled(new Rect(0f, y, inRect.width, 30f), "MAP_MechServiceStation.Policy.EnableCharging".Translate(), ref charge);
                 station.SetServiceFunctions(repair, charge);
             }
             finally { Text.Font = oldFont; }

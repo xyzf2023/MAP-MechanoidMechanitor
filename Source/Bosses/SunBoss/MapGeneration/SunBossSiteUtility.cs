@@ -11,9 +11,28 @@ namespace MAP_MechanoidMechanitor
         // 后续任务可以复用此入口；当前不加入自然事件、任务或 BOSS 战斗行为。
         public static Site? CreateSite(PlanetTile tile, float threatPoints = 1800f)
         {
-            if (!ModsConfig.OdysseyActive || !tile.Valid || tile.Layer.Def.isSpace ||
-                Find.World.Impassable(tile) || Find.WorldGrid[tile].WaterCovered ||
-                Find.WorldObjects.AnyMapParentAt(tile) || Faction.OfMechanoids == null)
+            return CreateSite(tile, out _, threatPoints);
+        }
+
+        private static Site? CreateSite(PlanetTile tile, out string failureReason, float threatPoints = 1800f)
+        {
+            failureReason = string.Empty;
+            if (!ModsConfig.OdysseyActive)
+                failureReason = "需要启用奥德赛。";
+            else if (!tile.Valid)
+                failureReason = "未点击有效的世界地块。";
+            else if (tile.Layer.Def.isSpace)
+                failureReason = "目标位于太空层，需要选择陆地地块。";
+            else if (Find.World.Impassable(tile))
+                failureReason = "目标地块不可通行。";
+            else if (Find.WorldGrid[tile].WaterCovered)
+                failureReason = "目标地块被水覆盖，需要选择陆地地块。";
+            else if (Find.WorldObjects.AnyMapParentAt(tile))
+                failureReason = "目标地块已有据点或其他承载地图的世界对象。";
+            else if (Faction.OfMechanoids == null)
+                failureReason = "当前世界不存在机械族派系。";
+
+            if (!string.IsNullOrEmpty(failureReason))
                 return null;
 
             SitePartDef part = DefDatabase<SitePartDef>.GetNamed("MAP_SunBossFacility");
@@ -24,23 +43,19 @@ namespace MAP_MechanoidMechanitor
             return site;
         }
 
-        [DebugAction("MAP-机械族机械师", "太阳据点：在选中世界地块创建", false, false, false, false, false, 0, false,
-            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.Playing)]
-        private static void CreateAtSelectedTile()
+        [DebugAction("MAP-机械族机械师", "太阳据点：在指定地块创建", false, false, false, false, false, 0, false,
+            actionType = DebugActionType.ToolWorld, allowedGameStates = AllowedGameStates.PlayingOnWorld)]
+        private static void CreateAtClickedTile()
         {
-            if (!ModsConfig.OdysseyActive)
-            {
-                Messages.Message("太阳据点需要启用奥德赛。", MessageTypeDefOf.RejectInput, historical: false);
-                return;
-            }
-            Site? site = CreateSite(Find.WorldSelector.SelectedTile);
+            PlanetTile tile = GenWorld.MouseTile();
+            Site? site = CreateSite(tile, out string failureReason);
             if (site == null)
             {
-                Messages.Message("请在世界地图选择可通行、无其他据点的陆地地块。", MessageTypeDefOf.RejectInput, historical: false);
+                Log.Warning($"[MAP SunBoss] 太阳据点创建失败，地块={tile}：{failureReason}");
                 return;
             }
             Find.WorldSelector.Select(site);
-            Messages.Message("已创建太阳据点。进入地点后生成设施地图。", MessageTypeDefOf.TaskCompletion, historical: false);
+            Log.Message($"[MAP SunBoss] 已创建太阳据点，地块={tile}。进入地点后生成设施地图。");
         }
     }
 }

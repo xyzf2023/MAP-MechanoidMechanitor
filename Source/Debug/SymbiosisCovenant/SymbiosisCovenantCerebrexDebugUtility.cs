@@ -31,8 +31,7 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class SymbiosisCovenantCerebrexDebugUtility
     {
-        private const string DevTrustReason =
-            "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev";
+        private const string DevTrustReason = "DEV 信任测试";
 
         private const string MapGenKey = "GeneratingMapForNewEncounter";
 

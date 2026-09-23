@@ -1117,7 +1117,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public string GetCachedDynamicStateLabelForUI(Pawn? target)
         {
-            if (DataProcessingOverseerResolver.IsFrozenSelf(target, target)) return "合体中：自身分配已冻结";
+            if (DataProcessingOverseerResolver.IsFrozenSelf(target, target))
+                return "MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelf".Translate();
 
             DataProcessingDynamicState state = GetCachedDynamicStateForTarget(target);
             return ("MAP_MechanoidMechanitor.DataProcessing.DynamicState" + state).Translate();

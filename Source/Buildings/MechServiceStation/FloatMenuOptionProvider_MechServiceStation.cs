@@ -20,7 +20,7 @@ namespace MAP_MechanoidMechanitor
             if (MechServicePolicyUtility.IsServiceJob(pawn)
                 && pawn.CurJob.targetA.Thing == clickedThing && pawn.CurJob.playerForced)
             {
-                yield return new FloatMenuOption("取消整备", () =>
+                yield return new FloatMenuOption("MAP_MechServiceStation.FloatMenu.CancelService".Translate(), () =>
                 {
                     if (MechServicePolicyUtility.IsServiceJob(pawn)
                         && pawn.CurJob.targetA.Thing == clickedThing)
@@ -28,18 +28,20 @@ namespace MAP_MechanoidMechanitor
                 });
                 yield break;
             }
-            string? reason = !station.Enabled ? "整备台未启用"
+            string? reason = !station.Enabled ? "MAP_MechServiceStation.FloatMenu.Disabled".Translate()
                 : !MechServicePolicyUtility.IsAllowed(station, pawn)
-                ? station.Mode == MechServiceStationMode.AssignedOnly ? "仅限指定机械族" : "仅限机械族机械师"
-                : !station.Powered ? "未通电"
-                : !MechServicePolicyUtility.HasEntryNeed(station, pawn, true) ? "无需整备"
-                : !station.CanReach(pawn, true) ? "无法到达" : null;
+                ? station.Mode == MechServiceStationMode.AssignedOnly
+                    ? "MAP_MechServiceStation.FloatMenu.AssignedOnly".Translate()
+                    : "MAP_MechServiceStation.FloatMenu.MechanitorOnly".Translate()
+                : !station.Powered ? "MAP_MechServiceStation.FloatMenu.Unpowered".Translate()
+                : !MechServicePolicyUtility.HasEntryNeed(station, pawn, true) ? "MAP_MechServiceStation.FloatMenu.NoNeed".Translate()
+                : !station.CanReach(pawn, true) ? "MAP_MechServiceStation.FloatMenu.Unreachable".Translate() : null;
             if (reason != null)
             {
-                yield return new FloatMenuOption("优先使用整备台：" + reason, null);
+                yield return new FloatMenuOption("MAP_MechServiceStation.FloatMenu.PrioritizeUnavailable".Translate(reason), null);
                 yield break;
             }
-            yield return new FloatMenuOption("优先使用整备台", () =>
+            yield return new FloatMenuOption("MAP_MechServiceStation.FloatMenu.Prioritize".Translate(), () =>
             {
                 // 点击时再次校验，菜单打开期间可能修改模式或指定对象。
                 if (!MechServicePolicyUtility.IsAllowed(station, pawn)

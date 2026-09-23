@@ -3,13 +3,13 @@
 
   <!-- 模块：配偶与婚姻关系 -->
   <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button>指定配偶……</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button>
-  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>选择一名殖民者成为当前授权机械体的配偶。更换配偶时会与旧配偶离婚。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>
+  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>选择一名殖民者成为当前机械体的配偶。更换配偶时会与旧配偶离婚。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>
   <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseNoCandidate>当前没有可指定为配偶的殖民者。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseNoCandidate>
   <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>无法指定该殖民者为配偶。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>
   <MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Label>结婚</MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Label>
   <MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Text>{COMPANION_labelShort}与{TARGET_labelShort}已经结婚。{COMPANION_labelShort}已成为{TARGET_labelShort}的配偶。</MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Text>
   <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>与配偶爱爱</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>
-  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>开启后，授权机械体将尝试在配偶允许时与配偶爱爱。\n注意：生育功能需在“社交”中手动开启。</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>
+  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>开启后，当前机械体将尝试在配偶允许时与配偶爱爱。\n注意：生育效果需在“社交”中手动开启。</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>
 
   <!-- 模块：仿生怀孕与分娩 -->
   <MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>仿生生育方式</MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>
@@ -19,6 +19,16 @@
   <MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Text>{0}正在使用仿生子宫孕育新生命！由{0}孕育的胚胎能更快成熟，并在出生后拥有更强的身体素质。</MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Text>
   <MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Label>{0}可以进行分娩</MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Label>
   <MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Text>{0}孕育的婴儿已发育完成，可随时选中{0}为其下达分娩指令。\n\n在分娩完成前，婴儿的生理活动将暂时处于冻结状态。</MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Text>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Label>开始分娩</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Label>
   <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Description>命令{0}在原地执行分娩流程。请确保环境安全后再下达此命令。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Description>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InvalidPawn>机械体无效。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InvalidPawn>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NotSpawned>机械体当前不在地图上。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NotSpawned>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Dead>机械体已死亡。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Dead>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Downed>机械体已倒地。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Downed>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Drafted>机械体已被征召。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Drafted>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.MentalState>机械体正处于精神状态。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.MentalState>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Burning>机械体正在燃烧。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Burning>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NoJobs>机械体无法执行工作。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NoJobs>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InProgress>机械体正在分娩。</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InProgress>
 
 </LanguageData>

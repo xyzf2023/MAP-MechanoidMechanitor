@@ -139,16 +139,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (MechanoidOvermindCatalogService.TryFindThingCatalogEntry(def, out MechanoidOvermindThingCatalogEntry entry)
                 && entry.Category == MechanoidOvermindThingCategory.Building)
             {
-                return "MAP_PurgeDirectiveRating.Reason.Building".Translate();
+                return "MAP_PurgeDirectiveRating.Reason.Building".Translate(
+                    PurgeDirectiveRatingDisplay.RatingName(RequiredLevelForThing(def)));
             }
 
             int overrideLevel = PurgeDirectiveGoodsRatingOverrideUtility.GetOverrideLevel(def);
             if (overrideLevel > 0)
             {
-                return "MAP_PurgeDirectiveRating.Reason.XmlOverride".Translate(overrideLevel);
+                return "MAP_PurgeDirectiveRating.Reason.XmlOverride".Translate(
+                    PurgeDirectiveRatingDisplay.RatingName(overrideLevel));
             }
 
-            return "MAP_PurgeDirectiveRating.Reason.AutoClassify".Translate(RequiredLevelForThing(def));
+            return "MAP_PurgeDirectiveRating.Reason.AutoClassify".Translate(
+                PurgeDirectiveRatingDisplay.RatingName(RequiredLevelForThing(def)));
         }
 
         // ===== 特殊协议权限 =====

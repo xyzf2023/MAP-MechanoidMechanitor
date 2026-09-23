@@ -44,7 +44,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (takeover)
             {
-                s.RatingNameText = "MAP_PurgeDirectiveRating.Takeover.Name".Translate();
+                s.RatingNameText = "控制权限：完全接管";
                 s.MaxMechWeightLevel = 4;
                 s.GoodsCatalogLevel = 3;
                 s.Discount = PurgeDirectiveRatingUtility.GetDiscountRate();
@@ -145,7 +145,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return max;
         }
 
-        /// <summary>等级名称（来自简体中文翻译键）：一级评级 ~ 五级评级。</summary>
+        /// <summary>等级 1～5 的显示名称，由翻译键映射为序列五～序列一。</summary>
         public static string RatingName(int level)
         {
             switch (level)

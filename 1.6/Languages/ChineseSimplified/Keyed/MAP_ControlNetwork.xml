@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.ControlNetwork.CircularOverseer>不能建立循环监管关系。</MAP_MechanoidMechanitor.ControlNetwork.CircularOverseer>
+  <MAP_MechanoidMechanitor.ControlNetwork.AutonomousNoOverseer>目标是自律机械族，无需监管者。</MAP_MechanoidMechanitor.ControlNetwork.AutonomousNoOverseer>
+</LanguageData>

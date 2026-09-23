@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechServiceStation.Mode.AssignedOnly>指定机械族专用</MAP_MechServiceStation.Mode.AssignedOnly>
+  <MAP_MechServiceStation.Mode.MechanitorOnly>机械族机械师专用</MAP_MechServiceStation.Mode.MechanitorOnly>
+  <MAP_MechServiceStation.Mode.AssignedPriority>指定机械族优先</MAP_MechServiceStation.Mode.AssignedPriority>
+  <MAP_MechServiceStation.Mode.ChargeFirst>优先充电</MAP_MechServiceStation.Mode.ChargeFirst>
+  <MAP_MechServiceStation.Mode.RepairFirst>优先维修</MAP_MechServiceStation.Mode.RepairFirst>
+  <MAP_MechServiceStation.Mode.AsNeeded>按需使用</MAP_MechServiceStation.Mode.AsNeeded>
+  <MAP_MechServiceStation.Policy.Title>机体整备台策略</MAP_MechServiceStation.Policy.Title>
+  <MAP_MechServiceStation.Policy.Hint>选择使用模式，修改立即生效。</MAP_MechServiceStation.Policy.Hint>
+  <MAP_MechServiceStation.Policy.LegacyAssignedPriority>当前沿用旧策略：指定机械族优先</MAP_MechServiceStation.Policy.LegacyAssignedPriority>
+  <MAP_MechServiceStation.Policy.AssignedPawn>指定机械族：{0}</MAP_MechServiceStation.Policy.AssignedPawn>
+  <MAP_MechServiceStation.Policy.Unassigned>未指定</MAP_MechServiceStation.Policy.Unassigned>
+  <MAP_MechServiceStation.Policy.MechanitorPriority>机械族机械师优先</MAP_MechServiceStation.Policy.MechanitorPriority>
+  <MAP_MechServiceStation.Policy.MechanitorPriorityHint>开启后，有整备需求的机械族机械师可优先使用，即使整备台已被占用。</MAP_MechServiceStation.Policy.MechanitorPriorityHint>
+  <MAP_MechServiceStation.Policy.StandbyAfterService>完成后待命</MAP_MechServiceStation.Policy.StandbyAfterService>
+  <MAP_MechServiceStation.Policy.StandbyAfterServiceHint>开启后，使用该整备台的机械族将在整备完成后待命。</MAP_MechServiceStation.Policy.StandbyAfterServiceHint>
+  <MAP_MechServiceStation.Policy.EnableRepair>启用修复功能</MAP_MechServiceStation.Policy.EnableRepair>
+  <MAP_MechServiceStation.Policy.EnableCharging>启用充电功能</MAP_MechServiceStation.Policy.EnableCharging>
+  <MAP_MechServiceStation.Policy.ClearAssignment>清除指定</MAP_MechServiceStation.Policy.ClearAssignment>
+  <MAP_MechServiceStation.Policy.CommandLabel>整备策略</MAP_MechServiceStation.Policy.CommandLabel>
+  <MAP_MechServiceStation.Policy.CommandDescription>调整此整备台的使用策略。\n当前：{0}</MAP_MechServiceStation.Policy.CommandDescription>
+  <MAP_MechServiceStation.Inspect.StandbyOccupied>机械族待命中...</MAP_MechServiceStation.Inspect.StandbyOccupied>
+  <MAP_MechServiceStation.Inspect.Unpowered>因断电而暂停</MAP_MechServiceStation.Inspect.Unpowered>
+  <MAP_MechServiceStation.Inspect.RepairingAndCharging>正在维修并充电</MAP_MechServiceStation.Inspect.RepairingAndCharging>
+  <MAP_MechServiceStation.Inspect.Charging>正在充电</MAP_MechServiceStation.Inspect.Charging>
+  <MAP_MechServiceStation.Inspect.Repairing>正在维修</MAP_MechServiceStation.Inspect.Repairing>
+  <MAP_MechServiceStation.Inspect.Standby>待命中...</MAP_MechServiceStation.Inspect.Standby>
+  <MAP_MechServiceStation.Inspect.Policy>整备策略：{0}</MAP_MechServiceStation.Inspect.Policy>
+  <MAP_MechServiceStation.Inspect.AssignedPawn>指定机械族：{0}</MAP_MechServiceStation.Inspect.AssignedPawn>
+  <MAP_MechServiceStation.Inspect.User>使用者：{0}</MAP_MechServiceStation.Inspect.User>
+  <MAP_MechServiceStation.Inspect.StandbyPawn>待命机械族：{0}</MAP_MechServiceStation.Inspect.StandbyPawn>
+  <MAP_MechServiceStation.Inspect.QueueCount>等候：{0}</MAP_MechServiceStation.Inspect.QueueCount>
+  <MAP_MechServiceStation.FloatMenu.HaulToStation>搬运至机体整备台：{0}</MAP_MechServiceStation.FloatMenu.HaulToStation>
+  <MAP_MechServiceStation.FloatMenu.CancelService>取消整备</MAP_MechServiceStation.FloatMenu.CancelService>
+  <MAP_MechServiceStation.FloatMenu.Disabled>整备台未启用</MAP_MechServiceStation.FloatMenu.Disabled>
+  <MAP_MechServiceStation.FloatMenu.AssignedOnly>仅限指定机械族</MAP_MechServiceStation.FloatMenu.AssignedOnly>
+  <MAP_MechServiceStation.FloatMenu.MechanitorOnly>仅限机械族机械师</MAP_MechServiceStation.FloatMenu.MechanitorOnly>
+  <MAP_MechServiceStation.FloatMenu.Unpowered>未通电</MAP_MechServiceStation.FloatMenu.Unpowered>
+  <MAP_MechServiceStation.FloatMenu.NoNeed>无需整备</MAP_MechServiceStation.FloatMenu.NoNeed>
+  <MAP_MechServiceStation.FloatMenu.Unreachable>无法到达</MAP_MechServiceStation.FloatMenu.Unreachable>
+  <MAP_MechServiceStation.FloatMenu.PrioritizeUnavailable>优先使用整备台：{0}</MAP_MechServiceStation.FloatMenu.PrioritizeUnavailable>
+  <MAP_MechServiceStation.FloatMenu.Prioritize>执行整备</MAP_MechServiceStation.FloatMenu.Prioritize>
+</LanguageData>

@@ -37,17 +37,33 @@ namespace MAP_MechanoidMechanitor
         public static bool CanConvert(Pawn? pawn, out string? failureReason)
         {
             failureReason = null;
-            if (pawn == null
-                || pawn.Destroyed
-                || pawn.Discarded
-                || pawn.Dead
-                || pawn.Faction == null
-                || !pawn.Faction.IsPlayerSafe()
-                || !pawn.Spawned
-                || pawn.Map == null)
+            if (pawn == null)
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.PawnUnavailable".Translate();
+                failureReason = "源 Pawn 为空。";
+                return false;
+            }
+
+            if (pawn.Destroyed || pawn.Discarded)
+            {
+                failureReason = "源 Pawn 已销毁或丢弃。";
+                return false;
+            }
+
+            if (pawn.Dead)
+            {
+                failureReason = "源 Pawn 已死亡。";
+                return false;
+            }
+
+            if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
+            {
+                failureReason = "源 Pawn 不属于玩家派系。";
+                return false;
+            }
+
+            if (!pawn.Spawned || pawn.Map == null)
+            {
+                failureReason = "源 Pawn 未生成在有效地图上。";
                 return false;
             }
 
@@ -67,8 +83,7 @@ namespace MAP_MechanoidMechanitor
 
             if (!MechTransformationUtility.IsInPawnForm(pawn))
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.NotPawnForm".Translate();
+                failureReason = "机械体当前不是 Pawn 形态。";
                 return false;
             }
 
@@ -77,8 +92,7 @@ namespace MAP_MechanoidMechanitor
                     out CompProperties_MechBuildingConversion? profile)
                 || profile == null)
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.MissingProfile".Translate();
+                failureReason = "机械体缺少建筑形态配置。";
                 return false;
             }
 
@@ -94,8 +108,7 @@ namespace MAP_MechanoidMechanitor
                 && (profile.buildingStuff == null
                     || !profile.buildingStuff.IsStuff))
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.InvalidStuff".Translate();
+                failureReason = "建筑形态需要材料，但未配置有效材料。";
                 return false;
             }
 
@@ -112,8 +125,7 @@ namespace MAP_MechanoidMechanitor
                 || carrier.Discarded
                 || (!allowDestroyedCarrier && carrier.Destroyed))
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.CarrierUnavailable".Translate();
+                failureReason = "建筑载体为空、已丢弃或已销毁。";
                 return false;
             }
 
@@ -127,8 +139,7 @@ namespace MAP_MechanoidMechanitor
                 || sourcePawn == null
                 || sourcePawn.Destroyed)
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.BrokenLink".Translate();
+                failureReason = "建筑载体未提交有效的源 Pawn 身份链接。";
                 return false;
             }
 
@@ -139,8 +150,7 @@ namespace MAP_MechanoidMechanitor
                 || record.CurrentForm != MechTransformationForm.Building
                 || !ReferenceEquals(record.ExternalCarrier, carrier))
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.BrokenLink".Translate();
+                failureReason = "源 Pawn 的形态记录与建筑载体不一致。";
                 return false;
             }
 
@@ -154,15 +164,13 @@ namespace MAP_MechanoidMechanitor
             if (!allowDestroyedCarrier
                 && (!carrier.Spawned || carrier.Map == null))
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.CarrierUnavailable".Translate();
+                failureReason = "建筑载体未生成在有效地图上。";
                 return false;
             }
 
             if (sourcePawn.Dead)
             {
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.SourceDead".Translate();
+                failureReason = "源 Pawn 已死亡，不能主动恢复建筑形态。";
                 return false;
             }
 
@@ -182,6 +190,7 @@ namespace MAP_MechanoidMechanitor
                     out CompProperties_MechBuildingConversion? profile)
                 || profile == null)
             {
+                Reject(pawn, "转换前重新读取建筑形态配置失败。", sendFailureMessage);
                 return false;
             }
 
@@ -225,10 +234,7 @@ namespace MAP_MechanoidMechanitor
                     building.TryGetComp<CompMechBuildingForm>();
                 if (carrierComp == null || buildingComp == null)
                 {
-                    Reject(
-                        pawn,
-                        "MAP_MechanoidMechanitor.Transformation.Building.MissingCarrierComp"
-                            .Translate(),
+                    Reject(pawn, "生成的建筑缺少形态载体或建筑形态组件。",
                         sendFailureMessage);
                     return false;
                 }
@@ -324,11 +330,8 @@ namespace MAP_MechanoidMechanitor
                 Log.Error(
                     "[MAP-机械族机械师] 建筑转换异常，已尝试恢复原始 Pawn：" +
                     $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
-                Reject(
-                    pawn,
-                    "MAP_MechanoidMechanitor.Transformation.Building.UnexpectedFailure"
-                        .Translate(),
-                    sendFailureMessage);
+                Reject(pawn, "建筑转换抛出异常，已尝试回滚源 Pawn。",
+                    sendFailureMessage, reasonAlreadyLogged: true);
                 return false;
             }
         }
@@ -348,6 +351,11 @@ namespace MAP_MechanoidMechanitor
                 carrier.TryGetComp<CompMechFormCarrier>()!;
             CompMechBuildingForm buildingComp =
                 carrier.TryGetComp<CompMechBuildingForm>()!;
+            if (buildingComp == null)
+            {
+                Reject(carrier, "建筑载体缺少建筑形态组件。", sendFailureMessage);
+                return false;
+            }
             Pawn sourcePawn =
                 carrierComp.SourcePawn ?? buildingComp.StoredSourcePawn!;
             buildingComp.EnsureSourceStateForRecovery(sourcePawn);
@@ -413,11 +421,11 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            // 上次已经提交恢复但通知抛异常时，只移除请求，不再次生成或结算伤势。
+            // 已提交恢复时不再次生成；若死亡处理被拦截或抛异常，继续完成死亡。
             if (record.CurrentForm == MechTransformationForm.Pawn
                 && record.ExternalCarrier == null)
             {
-                return true;
+                return TryKillDestroyedBuildingSource(sourcePawn);
             }
 
             Thing? carrier = record.ExternalCarrier;
@@ -458,20 +466,22 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (entry.HasDurabilitySnapshot)
+            // 载体销毁按 0% 剩余耐久结算部位伤势，不依赖旧存档的耐久快照。
+            // 此时已恢复到地图并提交 Pawn 形态，可以安全承载伤势引发的死亡。
+            // 只在首次恢复成功后结算；已提交恢复的重试分支仅补完 Kill，避免重复施伤。
+            SettleBuildingDurability(
+                sourcePawn,
+                entry.CarrierId,
+                initialFraction: 1f,
+                currentFraction: 0f,
+                initialRepairableDamage: 0f);
+
+            // 结算异常或未能触发死亡时，仍执行直接死亡兜底。
+            if (!TryKillDestroyedBuildingSource(sourcePawn))
             {
-                SettleBuildingDurability(sourcePawn, entry.CarrierId,
-                    entry.InitialHealthFraction, entry.CurrentHealthFraction,
-                    entry.InitialRepairableDamage);
-            }
-            else
-            {
-                Log.Warning(
-                    "[MAP-机械族机械师] 建筑形态缺少初始耐久基线，本次紧急恢复跳过损伤与维修结算：" +
-                    $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}），carrier={entry.CarrierId}。");
+                return false;
             }
 
-            MechFusionSourceUtility.RemoveDormantGuard(sourcePawn);
             restoredThing = ResolveRestoredThing(sourcePawn, restoredThing);
             if (restoredThing != null && restoredThing.Spawned)
             {
@@ -485,6 +495,17 @@ namespace MAP_MechanoidMechanitor
                 MessageTypeDefOf.NegativeEvent,
                 historical: false);
             return true;
+        }
+
+        private static bool TryKillDestroyedBuildingSource(Pawn sourcePawn)
+        {
+            MechFusionSourceUtility.RemoveDormantGuard(sourcePawn);
+            if (!sourcePawn.Dead && !sourcePawn.Destroyed)
+            {
+                sourcePawn.Kill(null);
+            }
+
+            return sourcePawn.Dead;
         }
 
         private static void InitializeBuildingDurability(
@@ -535,7 +556,7 @@ namespace MAP_MechanoidMechanitor
             Pawn sourcePawn, int carrierId, float initialFraction, float currentFraction,
             float initialRepairableDamage)
         {
-            // 两条调用路径都已提交 Pawn 形态并清除载体链接；恢复请求重试不会再次进入结算。
+            // 主动还原与销毁恢复均已提交 Pawn 形态并清除载体链接；重试不重复结算。
             try
             {
                 if (currentFraction > initialFraction)
@@ -610,7 +631,7 @@ namespace MAP_MechanoidMechanitor
             if (map == null || map.Disposed || map.Parent == null
                 || Current.Game == null || !Find.Maps.Contains(map))
             {
-                failureReason = "原地图已移除，无法在该地图恢复机械体。";
+                failureReason = "原地图已移除，无法在该地图恢复源 Pawn。";
                 return false;
             }
 
@@ -705,8 +726,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (!buildingState.TryWriteBackEnergy(sourcePawn))
                 {
-                    failureReason =
-                        "恢复机械族能源需求失败，已回滚本次建筑形态恢复。";
+                    failureReason = "恢复源 Pawn 能源需求失败，已回滚本次恢复。";
                     RollBackRestore(sourcePawn, restoredThing, removedFromWorld);
                     GameComponent_MechTransformationRegistry
                         .TryCancelTransition(sourcePawn);
@@ -733,9 +753,7 @@ namespace MAP_MechanoidMechanitor
                 RollBackRestore(sourcePawn, restoredThing, removedFromWorld);
                 GameComponent_MechTransformationRegistry.TryCancelTransition(sourcePawn);
                 restoredThing = null;
-                failureReason =
-                    "MAP_MechanoidMechanitor.Transformation.Building.UnexpectedFailure"
-                        .Translate();
+                failureReason = "恢复源 Pawn 时抛出异常，已尝试回滚。";
                 Log.Error(
                     "[MAP-机械族机械师] 恢复建筑形态中的原始 Pawn 时发生异常：" +
                     $"pawn={sourcePawn.LabelShort}（{sourcePawn.ThingID}）：{ex}");
@@ -891,19 +909,42 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static void Reject(
+        internal static string PlayerFailureReason(string? failureReason)
+        {
+            if (failureReason != null
+                && (failureReason == "MAP_MechanoidMechanitor.Transformation.Building.PawnDowned".Translate()
+                    || failureReason == "MAP_MechanoidMechanitor.Transformation.InProgress".Translate()
+                    || failureReason == "MAP_MechanoidMechanitor.Transformation.Building.NoPlacement".Translate()
+                    || failureReason == "MAP_MechanoidMechanitor.Transformation.Building.NoRestorePlacement".Translate()))
+            {
+                return failureReason;
+            }
+
+            return "MAP_MechanoidMechanitor.Transformation.Building.GenericFailure".Translate();
+        }
+
+        internal static void Reject(
             Thing? target,
             string? failureReason,
-            bool sendFailureMessage)
+            bool sendFailureMessage,
+            bool reasonAlreadyLogged = false)
         {
             if (!sendFailureMessage)
             {
                 return;
             }
 
+            string playerReason = PlayerFailureReason(failureReason);
+            if (!reasonAlreadyLogged
+                && playerReason != failureReason)
+            {
+                Log.Warning(
+                    "[MAP-机械族机械师] 建筑形态变换失败：" +
+                    $"target={target?.ThingID ?? "null"}，reason={failureReason ?? "未知"}。");
+            }
+
             Messages.Message(
-                failureReason
-                    ?? "MAP_MechanoidMechanitor.Transformation.Building.Unavailable".Translate(),
+                playerReason,
                 target,
                 MessageTypeDefOf.RejectInput,
                 historical: false);

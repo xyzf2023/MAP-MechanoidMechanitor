@@ -21,6 +21,7 @@ namespace MAP_MechanoidMechanitor
         private Sustainer? beamSound;
         private readonly List<Pawn> damageTargets = new List<Pawn>();
         private CompHighEnergyLaserBeam? Laser => pawn.GetComp<CompHighEnergyLaserBeam>();
+        internal bool IsFiring => firingStarted;
         // 不从可能在读档后失效的 Thing 引用推断模式，防止追踪模式退化为地块模式。
         private bool TracksPawn => job.count == 1;
 

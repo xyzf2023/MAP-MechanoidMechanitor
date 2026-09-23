@@ -5,4 +5,7 @@
   <MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Label>机体能源管理</MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Label>
   <MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Text>身为机械族，你不需要像有机体那样每日进食与休息，但仍需要定期充电以维持机体运转。\n\n请尽早建设发电设施与充电站，确保拥有稳定的能源供应，避免因电量耗尽而被迫进入休眠。\n\n如果你希望机械族机械师像有机体一样按照固定作息定时充电，可以在“管制”菜单中安排休息时间。进入休息时段后，机械族机械师会优先尝试进行充电。</MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Text>
 
+  <MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Label>关于带宽获取</MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Label>
+  <MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Text>虽然通常情况下机械族机械师无法通过穿戴装备获取带宽，但其他适用于人类机械师的方式仍然适用，例如提供带宽的建筑或机械师植入体。\n同时，机械族机械师也可以通过使用机械族指挥官芯片的方式提升带宽。</MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Text>
+
 </LanguageData>

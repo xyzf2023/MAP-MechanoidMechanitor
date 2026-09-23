@@ -457,7 +457,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(rect.xMax - rightW, rect.y, rightW, 20f),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission".Translate(
-                    GetNodePermissionLabel()),
+                    GetAccessPermissionLabel()),
                 GameFont.Tiny,
                 TextAnchor.MiddleRight,
                 MechanoidOvermindUiStyle.TextSecondary);
@@ -734,9 +734,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case 0:
                     return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Connecting";
                 case 1:
-                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Verifying";
+                    return GameComponent_CerebrexTakeoverState.IsActive
+                        ? "MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.VerifyingSource"
+                        : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.Verifying";
                 case 2:
-                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SyncingCredits";
+                    return GameComponent_CerebrexTakeoverState.IsActive
+                        ? "MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.CalculatingResources"
+                        : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Status.SyncingCredits";
                 default:
                     return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Status.JoiningNode";
             }
@@ -750,10 +754,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Link"
                         .Translate();
                 case 1:
-                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Verify"
+                    return (GameComponent_CerebrexTakeoverState.IsActive
+                        ? "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.VerifyControl"
+                        : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.Verify")
                         .Translate();
                 case 2:
-                    return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.SyncCredits"
+                    return (GameComponent_CerebrexTakeoverState.IsActive
+                        ? "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.CalculateResources"
+                        : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.SyncCredits")
                         .Translate();
                 default:
                     return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.Stage.JoinNode"
@@ -1114,7 +1122,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             bool ratingActive = PurgeDirectiveRatingUtility.IsRatingSystemActive();
             float connectionY = ratingActive ? 38f : 20f;
-            float permissionY = ratingActive ? 56f : 38f;
 
             if (ratingActive)
             {
@@ -1141,13 +1148,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(rightX, inner.y + connectionY, rightWidth, 18f),
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.ConnectionStable".Translate(),
-                GameFont.Tiny,
-                TextAnchor.MiddleRight,
-                MechanoidOvermindUiStyle.TextSecondary);
-            MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(rightX, inner.y + permissionY, rightWidth, 18f),
-                "MAP_MechanoidMechanitor.PurgeDirective.Communication.NodePermission".Translate(
-                    GetNodePermissionLabel()),
                 GameFont.Tiny,
                 TextAnchor.MiddleRight,
                 MechanoidOvermindUiStyle.TextSecondary);
@@ -2934,10 +2934,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static string GetNodePermissionLabel()
+        private static string GetAccessPermissionLabel()
         {
-            return "MAP_MechanoidMechanitor.PurgeDirective.Communication.NodePermission.EdgeExecUnit"
-                .Translate();
+            if (GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission.Full"
+                    .Translate();
+            }
+
+            return PurgeDirectiveRatingDisplay.RatingName(PurgeDirectiveRatingUtility.CurrentRatingLevel);
         }
     }
 }

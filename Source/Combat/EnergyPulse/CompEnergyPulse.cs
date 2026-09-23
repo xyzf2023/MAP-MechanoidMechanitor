@@ -72,9 +72,10 @@ namespace MAP_MechanoidMechanitor
             if (!(parent is Pawn actor) || actor.Faction != Faction.OfPlayer || !actor.Drafted) yield break;
             Command_Action command = new Command_Action
             {
-                defaultLabel = "能量脉冲",
-                defaultDesc = $"蓄力 {Props.warmupTicks / 60f:0.##} 秒，释放半径 {Props.radius:0.##} 格的能量冲击波，"
-                    + $"使接触的所有非自身派系机械族眩晕 {Props.stunTicks / 60f:0.##} 秒。无视 EMP 抗性与适应，不影响自身与同派系机械族。",
+                defaultLabel = "MAP_EnergyPulse.Label".Translate(),
+                defaultDesc = "MAP_EnergyPulse.Description".Translate(
+                    (Props.warmupTicks / 60f).ToString("0.##"), Props.radius.ToString("0.##"),
+                    (Props.stunTicks / 60f).ToString("0.##")).Resolve(),
                 icon = ContentFinder<Texture2D>.Get(Props.iconPath),
                 action = () =>
                 {
@@ -82,10 +83,11 @@ namespace MAP_MechanoidMechanitor
                     if (job != null) actor.jobs.TryTakeOrderedJob(job, JobTag.Misc);
                 }
             };
-            if (!CanOperate(actor)) command.Disable("当前无法施放能量脉冲。");
-            else if (IsCharging) command.Disable("能量脉冲正在蓄力。");
+            if (!CanOperate(actor)) command.Disable("MAP_EnergyPulse.Disabled.Unavailable".Translate());
+            else if (IsCharging) command.Disable("MAP_EnergyPulse.Disabled.Charging".Translate());
             else if (Find.TickManager.TicksGame < readyTick)
-                command.Disable($"冷却剩余 {(readyTick - Find.TickManager.TicksGame) / 60f:0.0} 秒。");
+                command.Disable("MAP_EnergyPulse.Disabled.Cooldown".Translate(
+                    ((readyTick - Find.TickManager.TicksGame) / 60f).ToString("0.0")));
             yield return command;
         }
 

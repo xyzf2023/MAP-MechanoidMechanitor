@@ -3,8 +3,8 @@
   <!-- 玩家太阳的建筑形态；与据点核心 MAP_Building_SunBOSS 独立。 -->
   <ThingDef ParentName="BuildingBase">
     <defName>MAP_Building_Sun</defName>
-    <label>「太阳」（展开）</label>
-    <description>太阳展开并固定自身后的能源核心。无需燃料即可持续输出800000 W电力，同时向周围环境释放大量热量。环境温度达到1000℃时停止产热，发电不受影响。电源开关同时控制发电与产热。\n\n展开时会替换占地内的电线，由太阳自身传输电力；恢复机械体后，这些地块上的电线不会恢复。\n\n建筑维修会在恢复机械体时用于修复结构伤势，并在修复额度足够时重建缺失部件。</description>
+    <label>「太阳」（反应堆）</label>
+    <description>TODO</description>
     <thingClass>Verse.Building</thingClass>
     <category>Building</category>
     <tickerType>Normal</tickerType>

@@ -74,8 +74,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!frequency.IsEnabled())
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.MechHiveNode.Dev.NaturalGenerationDisabled"
-                        .Translate(),
+                    "当前未允许机械巢节点自然生成。",
                     MessageTypeDefOf.RejectInput,
                     historical: false);
             }

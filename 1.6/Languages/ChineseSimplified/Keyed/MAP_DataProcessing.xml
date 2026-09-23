@@ -195,4 +195,10 @@
   <!-- 模块：分配面板：功能权限需求提示 -->
   <MAP_MechanoidMechanitor.DataProcessing.PermissionLocked>{0}（需要 {1}）</MAP_MechanoidMechanitor.DataProcessing.PermissionLocked>
 
+  <!-- 模块：合体期间的数据处理分配 -->
+  <MAP_MechanoidMechanitor.DataProcessing.FusionGizmoLabel>数据处理分配</MAP_MechanoidMechanitor.DataProcessing.FusionGizmoLabel>
+  <MAP_MechanoidMechanitor.DataProcessing.FusionGizmoDescription>通过当前合体载体管理{0}的数据处理分配。\n分配记录、意识预算和数据流分发代价仍属于源机械族。\n自身分配在本次合体期间冻结，解除合体后才能修改。</MAP_MechanoidMechanitor.DataProcessing.FusionGizmoDescription>
+  <MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelf>合体中：自身分配已冻结</MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelf>
+  <MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelfDetails>本次合体沿用开始时的自身档位和特化，其净成本仍占用源机械族预算。解除合体后恢复编辑与动态调整；其他机械体仍可正常管理。</MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelfDetails>
+
 </LanguageData>

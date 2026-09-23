@@ -2,7 +2,7 @@
 <Defs>
   <HediffDef Name="MAP_SunEnergyBase" Abstract="True">
     <hediffClass>MAP_MechanoidMechanitor.Hediff_SunEnergy</hediffClass>
-    <description>TODO</description>
+    <defaultLabelColor>(1.0, 0.5, 0.0)</defaultLabelColor>
     <isBad>false</isBad>
     <initialSeverity>1</initialSeverity>
     <maxSeverity>2</maxSeverity>
@@ -25,9 +25,11 @@
   <HediffDef ParentName="MAP_SunEnergyBase">
     <defName>MAP_SunEnergy</defName>
     <label>「太阳」</label>
+    <description>TODO</description>
   </HediffDef>
   <HediffDef ParentName="MAP_SunEnergyBase">
     <defName>MAP_SunCorona</defName>
     <label>「日冕」</label>
+    <description>TODO</description>
   </HediffDef>
 </Defs>

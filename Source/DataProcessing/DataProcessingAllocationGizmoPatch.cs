@@ -62,10 +62,9 @@ namespace MAP_MechanoidMechanitor
             {
                 Pawn source = session.SourcePawn!;
                 Command_Action command = DataProcessingAllocationGizmoUtility.MakeCommand(source);
-                command.defaultLabel = "数据处理分配（合体）";
-                command.defaultDesc = $"通过当前合体载体管理{source.LabelShortCap}的数据处理分配。"
-                    + "\n分配记录、意识预算和数据流分发代价仍属于源机械族。"
-                    + "\n自身分配在本次合体期间冻结，解除合体后才能修改。";
+                command.defaultLabel = "MAP_MechanoidMechanitor.DataProcessing.FusionGizmoLabel".Translate();
+                command.defaultDesc = "MAP_MechanoidMechanitor.DataProcessing.FusionGizmoDescription"
+                    .Translate(source.LabelShortCap);
                 yield return command;
             }
         }

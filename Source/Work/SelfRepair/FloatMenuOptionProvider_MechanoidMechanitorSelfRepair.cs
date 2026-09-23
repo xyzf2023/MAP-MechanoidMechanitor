@@ -73,7 +73,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             yield return new FloatMenuOption(
-                "进行自我修复",
+                "MAP_MechanoidMechanitor.Core.SelfRepair.FloatMenu".Translate(),
                 () =>
                 {
                     Job job = JobMaker.MakeJob(

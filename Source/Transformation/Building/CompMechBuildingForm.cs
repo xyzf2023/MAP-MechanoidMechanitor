@@ -165,9 +165,14 @@ namespace MAP_MechanoidMechanitor
             if (!MechBuildingConversionService.CanRestore(
                     parent,
                     allowDestroyedCarrier: false,
-                    out _))
+                    out string? failureReason))
             {
                 CancelRestoreWarmup();
+                if (parent.Spawned && !parent.Destroyed)
+                {
+                    MechBuildingConversionService.Reject(
+                        parent, failureReason, sendFailureMessage: true);
+                }
                 return;
             }
 
@@ -221,9 +226,7 @@ namespace MAP_MechanoidMechanitor
                     out string? disabledReason))
             {
                 command.Disable(
-                    disabledReason
-                        ?? "MAP_MechanoidMechanitor.Transformation.Building.RestoreFailed"
-                            .Translate());
+                    MechBuildingConversionService.PlayerFailureReason(disabledReason));
             }
 
             yield return command;
@@ -308,13 +311,8 @@ namespace MAP_MechanoidMechanitor
                     allowDestroyedCarrier: false,
                     out string? failureReason))
             {
-                Messages.Message(
-                    failureReason
-                        ?? "MAP_MechanoidMechanitor.Transformation.Building.RestoreFailed"
-                            .Translate(),
-                    parent,
-                    MessageTypeDefOf.RejectInput,
-                    historical: false);
+                MechBuildingConversionService.Reject(
+                    parent, failureReason, sendFailureMessage: true);
                 return;
             }
 
@@ -335,13 +333,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             CancelRestoreWarmup();
-            Messages.Message(
-                failureReason
-                    ?? "MAP_MechanoidMechanitor.Transformation.Building.RestoreFailed"
-                        .Translate(),
-                parent,
-                MessageTypeDefOf.RejectInput,
-                historical: false);
+            MechBuildingConversionService.Reject(
+                parent, failureReason, sendFailureMessage: true);
         }
 
         private void CancelRestoreWarmup()

@@ -50,7 +50,7 @@ namespace MAP_MechanoidMechanitor
             MapComponent_MechServiceStations registry = carrier.Map.GetComponent<MapComponent_MechServiceStations>();
             if (registry.FindDeliveryStation(carrier, clickedPawn) == null) return null;
             return FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption(
-                "搬运至机体整备台：" + clickedPawn.LabelShortCap, () =>
+                "MAP_MechServiceStation.FloatMenu.HaulToStation".Translate(clickedPawn.LabelShortCap), () =>
                 {
                     // 菜单打开后，目标、预约及策略均可能变化；点击时重新选择可用台。
                     CompMechServiceStation? station = registry.FindDeliveryStation(carrier, clickedPawn);

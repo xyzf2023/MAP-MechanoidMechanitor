@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-  <MAP_GravityDisorder_Blocked>重力紊乱，无法行动。</MAP_GravityDisorder_Blocked>
+  <MAP_GravityDisorder_Blocked>该单位因重力紊乱而无法行动。</MAP_GravityDisorder_Blocked>
 </LanguageData>

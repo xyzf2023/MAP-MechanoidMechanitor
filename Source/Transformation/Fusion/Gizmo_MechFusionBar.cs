@@ -61,13 +61,10 @@ namespace MAP_MechanoidMechanitor
                     ? "MAP_MechanoidMechanitor.Fusion.Energy.Label"
                     : "MAP_MechanoidMechanitor.Fusion.Stability.Label")
                 .Translate();
-            string tooltip = isEnergy
-                ? "MAP_MechanoidMechanitor.Fusion.Energy.Tooltip".Translate(
-                    current,
-                    max,
-                    MechFusionEnergyUtility.GetGroundConsumptionPercentPerDay(
-                        session))
-                : BuildStabilityTooltip(session);
+            string tooltip = (isEnergy
+                    ? "MAP_MechanoidMechanitor.Fusion.Energy.Tooltip"
+                    : "MAP_MechanoidMechanitor.Fusion.Stability.Tooltip")
+                .Translate();
 
             Rect rect = new Rect(
                 topLeft.x,
@@ -96,22 +93,6 @@ namespace MAP_MechanoidMechanitor
             Text.Anchor = TextAnchor.UpperLeft;
             Text.Font = GameFont.Small;
             return new GizmoResult(GizmoState.Clear);
-        }
-
-        private static string BuildStabilityTooltip(MechFusionSession session)
-        {
-            float fraction = session.MaxStability > 0f
-                ? Mathf.Clamp01(session.CurrentStability / session.MaxStability)
-                : 0f;
-            int injuryChance = fraction <= 0.5f
-                ? Mathf.Clamp(
-                    Mathf.RoundToInt((1f - fraction) * 100f),
-                    0,
-                    100)
-                : 0;
-            return "MAP_MechanoidMechanitor.Fusion.Stability.Tooltip".Translate(
-                fraction.ToStringPercent(),
-                injuryChance);
         }
     }
 }

@@ -16,9 +16,9 @@
 
   <!-- 并行思维阵列：Gizmo -->
   <MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget>选择增幅目标</MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget>
-  <MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>选择一名机械族机械师或安装了并行思维接口的人类机械师，建立持续同步连接。更换目标立即生效，无需调谐。</MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>选择一名机械族机械师或安装了并行思维接口的人类机械师，建立持续同步连接以提供数据处理/意识加成。</MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget>解除增幅目标</MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget>
-  <MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>解除当前建立的同步连接，阵列回到待机状态。</MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>解除当前建立的同步连接。</MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost>提高增幅</MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>当前{0}，下次提升运算能力将额外增加{1}耗电。&#10;&#10;按住Shift一次性增加100%处理效果。&#10;按住Ctrl一次性增加1000%处理效果。</MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>
   <MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost>降低增幅</MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost>

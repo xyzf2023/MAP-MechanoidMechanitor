@@ -90,33 +90,33 @@ namespace MAP_MechanoidMechanitor
                 || pawn.Discarded
                 || pawn.Dead)
             {
-                failureReason = "原始机械体不可用。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.SourceUnavailable".Translate();
                 return false;
             }
 
             record = GetOrCreateRecord(pawn);
             if (record == null)
             {
-                failureReason = "形态记录管理器不可用。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.RegistryUnavailable".Translate();
                 return false;
             }
 
             if (record.TransitionInProgress)
             {
-                failureReason = "机械体正在进行另一项形态转换。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.OtherTransition".Translate();
                 return false;
             }
 
             if (record.CurrentForm == targetForm)
             {
-                failureReason = "机械体已经处于目标形态。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.AlreadyTargetForm".Translate();
                 return false;
             }
 
             if (record.CurrentForm != MechTransformationForm.Pawn
                 && targetForm != MechTransformationForm.Pawn)
             {
-                failureReason = "必须先恢复为机械体形态，才能切换到另一种外部形态。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.MustRestoreBeforeSwitch".Translate();
                 return false;
             }
 
@@ -125,20 +125,20 @@ namespace MAP_MechanoidMechanitor
                 && carrier != null
                 && !carrier.Destroyed)
             {
-                failureReason = "机械体仍链接到一个外部形态载体。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.ExistingCarrierLink".Translate();
                 return false;
             }
 
             if (record.CurrentForm != MechTransformationForm.Pawn
                 && (carrier == null || carrier.Destroyed))
             {
-                failureReason = "当前形态缺少有效的外部载体。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.CurrentCarrierMissing".Translate();
                 return false;
             }
 
             if (!record.BeginTransition(targetForm))
             {
-                failureReason = "无法锁定本次形态转换。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.TransitionLockFailed".Translate();
                 return false;
             }
 
@@ -159,38 +159,38 @@ namespace MAP_MechanoidMechanitor
             failureReason = null;
             if (pawn == null || pawn.Destroyed || pawn.Discarded)
             {
-                failureReason = "原始机械体不可用。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.SourceUnavailable".Translate();
                 return false;
             }
 
             if (!TryGetRecord(pawn, out record) || record == null)
             {
-                failureReason = "不存在可恢复的形态记录。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.RecordMissing".Translate();
                 return false;
             }
 
             if (record.TransitionInProgress)
             {
-                failureReason = "机械体正在进行另一项形态转换。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.OtherTransition".Translate();
                 return false;
             }
 
             if (record.CurrentForm == MechTransformationForm.Pawn)
             {
-                failureReason = "机械体已经处于 Pawn 形态。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.AlreadyPawnForm".Translate();
                 return false;
             }
 
             if (expectedCarrier != null
                 && !ReferenceEquals(record.ExternalCarrier, expectedCarrier))
             {
-                failureReason = "待恢复载体与形态记录不一致。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.RecoveryCarrierMismatch".Translate();
                 return false;
             }
 
             if (!record.BeginTransition(MechTransformationForm.Pawn))
             {
-                failureReason = "无法锁定本次紧急恢复。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.RecoveryLockFailed".Translate();
                 return false;
             }
 
@@ -207,7 +207,7 @@ namespace MAP_MechanoidMechanitor
                 || record == null
                 || !record.TransitionInProgress)
             {
-                failureReason = "不存在等待提交的形态转换。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.NoPendingTransition".Translate();
                 return false;
             }
 
@@ -216,7 +216,7 @@ namespace MAP_MechanoidMechanitor
             {
                 if (targetCarrier != null)
                 {
-                    failureReason = "恢复机械体形态时不应指定新的外部载体。";
+                    failureReason = "MAP_MechanoidMechanitor.Transformation.RestoreCannotAssignCarrier".Translate();
                     return false;
                 }
 
@@ -228,7 +228,7 @@ namespace MAP_MechanoidMechanitor
 
             if (targetCarrier == null || targetCarrier.Destroyed)
             {
-                failureReason = "目标形态载体不可用。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.TargetCarrierUnavailable".Translate();
                 return false;
             }
 
@@ -236,7 +236,7 @@ namespace MAP_MechanoidMechanitor
                 targetCarrier.TryGetComp<CompMechFormCarrier>();
             if (carrierComp == null)
             {
-                failureReason = "目标载体缺少通用形态链接组件。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.TargetCarrierMissingComp".Translate();
                 return false;
             }
 

@@ -6,6 +6,7 @@
 
   <!-- 模块：剧情组件 -->
   <MAP_MechanoidMechanitor.Scenario.MechanitorEditor.Tooltip>选择一个任意机械族以作为开局的机械族机械师。</MAP_MechanoidMechanitor.Scenario.MechanitorEditor.Tooltip>
+  <MAP_MechanoidMechanitor.Scenario.MechanitorSummaryEntry>机械族机械师：{0}</MAP_MechanoidMechanitor.Scenario.MechanitorSummaryEntry>
   <MAP_MechanoidMechanitor.Story.Option.Enabled>开启</MAP_MechanoidMechanitor.Story.Option.Enabled>
   <MAP_MechanoidMechanitor.Story.Option.Disabled>关闭</MAP_MechanoidMechanitor.Story.Option.Disabled>
   <MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>当前世界中没有可配置的普通派系。</MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>

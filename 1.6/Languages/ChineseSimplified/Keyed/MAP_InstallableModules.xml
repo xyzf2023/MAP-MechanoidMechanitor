@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.InstallableModule.Install>安装{0}</MAP_MechanoidMechanitor.InstallableModule.Install>
+  <MAP_MechanoidMechanitor.InstallableModule.Rejected>{0}无法安装{1}。</MAP_MechanoidMechanitor.InstallableModule.Rejected>
+  <MAP_MechanoidMechanitor.InstallableModule.AlreadyMechanitorSuffix>：已经是机械族机械师</MAP_MechanoidMechanitor.InstallableModule.AlreadyMechanitorSuffix>
+  <MAP_MechanoidMechanitor.InstallableModule.AlreadyCompanionSuffix>：已经拥有仿生伴侣功能</MAP_MechanoidMechanitor.InstallableModule.AlreadyCompanionSuffix>
+  <MAP_MechanoidMechanitor.InstallableModule.AlreadyFlightSuffix>：已经拥有飞行能力</MAP_MechanoidMechanitor.InstallableModule.AlreadyFlightSuffix>
+  <MAP_MechanoidMechanitor.InstallableModule.AutonomousDirectiveCore.Success>{0}已成为机械族机械师。</MAP_MechanoidMechanitor.InstallableModule.AutonomousDirectiveCore.Success>
+  <MAP_MechanoidMechanitor.InstallableModule.BionicCompanion.Success>{0}已安装仿生伴侣模块。</MAP_MechanoidMechanitor.InstallableModule.BionicCompanion.Success>
+  <MAP_MechanoidMechanitor.InstallableModule.ReactionlessThruster.Success>{0}已安装无工质推进器，获得自主飞行能力。</MAP_MechanoidMechanitor.InstallableModule.ReactionlessThruster.Success>
+</LanguageData>

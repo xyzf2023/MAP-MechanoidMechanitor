@@ -53,7 +53,7 @@ namespace MAP_MechanoidMechanitor
                 JusticeBossDiagnosticsRuntime.Refresh);
         }
 
-        public override string SettingsCategory() => "[MAP]机械族机械师";
+        public override string SettingsCategory() => "MAP_Settings.Category".Translate();
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
@@ -274,9 +274,9 @@ namespace MAP_MechanoidMechanitor
                 "MAP_Settings.AnnihilationCannonCrater.Description".Translate());
 
             listing.CheckboxLabeled(
-                "允许满级心灵中枢自动清除精神状态",
+                "MAP_Settings.PsychicCoreMentalStateRecovery.Label".Translate(),
                 ref Settings!.enableMaxLevelPsychicCoreMentalStateRecovery,
-                "开启后，每10秒将尝试清除安装了满级心灵中枢的角色的精神状态。");
+                "MAP_Settings.PsychicCoreMentalStateRecovery.Description".Translate());
         }
 
         private void DrawSkillsAndOffspringSettings(Listing_Standard listing)

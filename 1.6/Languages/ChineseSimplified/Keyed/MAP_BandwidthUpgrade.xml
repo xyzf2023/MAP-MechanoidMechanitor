@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.UseOne>提升带宽：使用一个{0}（带宽+{1}）</MAP_MechanoidMechanitor.BandwidthUpgrade.UseOne>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.UseAll>提升带宽：使用全部{0} （带宽+{1}）</MAP_MechanoidMechanitor.BandwidthUpgrade.UseAll>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.AtCap>当前带宽已达上限。</MAP_MechanoidMechanitor.BandwidthUpgrade.AtCap>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.WasteConfirm>{0}的带宽上限为{1}。使用全部芯片会导致浪费。\n\n仍要继续吗？</MAP_MechanoidMechanitor.BandwidthUpgrade.WasteConfirm>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.Success>{0}的带宽上限成功提升{1}点。</MAP_MechanoidMechanitor.BandwidthUpgrade.Success>
+</LanguageData>

@@ -3,6 +3,7 @@
 
   <!-- 模块：账单与工作提示 -->
   <MAP_MechanoidMechanitor.Core.Bill.Reason.MissingSkillsTracker>缺少技能追踪器</MAP_MechanoidMechanitor.Core.Bill.Reason.MissingSkillsTracker>
+  <MAP_MechanoidMechanitor.Core.SelfRepair.FloatMenu>进行自我修复</MAP_MechanoidMechanitor.Core.SelfRepair.FloatMenu>
 
   <!-- 模块：奥德赛旅行兼容 -->
   <MAP_MechanoidMechanitor.Core.Gravship.NoGravshipLaunchRitual>无法找到逆重飞船发射仪式。</MAP_MechanoidMechanitor.Core.Gravship.NoGravshipLaunchRitual>

@@ -58,15 +58,19 @@ namespace MAP_MechanoidMechanitor
                     Job job = JobMaker.MakeJob(
                         MAPMechanitor_JobDefOf.MAP_MechConvertToBuilding,
                         pawn);
-                    if (pawn.jobs == null
-                        || !pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+                    if (pawn.jobs == null)
                     {
-                        Messages.Message(
-                            "MAP_MechanoidMechanitor.Transformation.Building.Unavailable"
-                                .Translate(),
+                        MechBuildingConversionService.Reject(
                             pawn,
-                            MessageTypeDefOf.RejectInput,
-                            historical: false);
+                            "Pawn.jobs 为空，无法接管建筑转换工作",
+                            sendFailureMessage: true);
+                    }
+                    else if (!pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+                    {
+                        MechBuildingConversionService.Reject(
+                            pawn,
+                            "TryTakeOrderedJob 返回 false，建筑转换工作未开始",
+                            sendFailureMessage: true);
                     }
                 }
             };
@@ -76,9 +80,7 @@ namespace MAP_MechanoidMechanitor
                     out string? disabledReason))
             {
                 command.Disable(
-                    disabledReason
-                        ?? "MAP_MechanoidMechanitor.Transformation.Building.Unavailable"
-                            .Translate());
+                    MechBuildingConversionService.PlayerFailureReason(disabledReason));
             }
 
             yield return command;

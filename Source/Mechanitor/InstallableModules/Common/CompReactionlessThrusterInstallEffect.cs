@@ -21,7 +21,8 @@ namespace MAP_MechanoidMechanitor
         public override bool ShouldShowOption(Pawn pawn, out string? disabledReason)
         {
             disabledReason = GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn)
-                ? "：已经拥有飞行能力"
+                ? "MAP_MechanoidMechanitor.InstallableModule.AlreadyFlightSuffix"
+                    .Translate().ToString()
                 : null;
             return true;
         }
@@ -42,9 +43,11 @@ namespace MAP_MechanoidMechanitor
         }
 
         public override string GetRejectMessage(Pawn pawn)
-            => $"{pawn.LabelShort}无法安装{parent.LabelNoCount}。";
+            => "MAP_MechanoidMechanitor.InstallableModule.Rejected".Translate(
+                pawn.LabelShort, parent.LabelNoCount);
 
         public override string GetSuccessMessage(Pawn pawn)
-            => $"{pawn.LabelShort}已安装无工质推进器，获得自主飞行能力。";
+            => "MAP_MechanoidMechanitor.InstallableModule.ReactionlessThruster.Success"
+                .Translate(pawn.LabelShort);
     }
 }

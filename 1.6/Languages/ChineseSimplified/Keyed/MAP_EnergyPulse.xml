@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_EnergyPulse.Label>能量脉冲</MAP_EnergyPulse.Label>
+  <MAP_EnergyPulse.Description>蓄力 {0} 秒，释放半径 {1} 格的能量冲击波，使所有非我方机械族眩晕 {2} 秒。</MAP_EnergyPulse.Description>
+  <MAP_EnergyPulse.Disabled.Unavailable>当前无法施放能量脉冲。</MAP_EnergyPulse.Disabled.Unavailable>
+  <MAP_EnergyPulse.Disabled.Charging>能量脉冲正在蓄力。</MAP_EnergyPulse.Disabled.Charging>
+  <MAP_EnergyPulse.Disabled.Cooldown>冷却剩余 {0} 秒。</MAP_EnergyPulse.Disabled.Cooldown>
+</LanguageData>

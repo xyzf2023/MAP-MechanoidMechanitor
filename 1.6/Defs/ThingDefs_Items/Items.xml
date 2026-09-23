@@ -67,7 +67,7 @@
   <ThingDef ParentName="MAP_MechanoidMechanitorInstallableModuleBase" MayRequire="Ludeon.RimWorld.Biotech">
     <defName>MAP_MindMappingAutonomousDirectiveCore</defName>
     <label>自律指令核心（空白）</label>
-    <description>TODO</description>
+    <description>以超凡技术赋予机械体自我意识的核心装置。其处理器能够支撑完整而稳定的机械心智，让机械体不再依赖外部监管，自主感知、思考并作出决定，成为拥有独立意志的个体。\n\n安装后，机械体将成为机械族机械师，获得监管与指挥其他机械族的能力。它基本可以视为一名独立的殖民地成员，参与生产、科研、战斗与远行，承担普通殖民者能够完成的大多数工作与活动。\n\n这个自律指令核心在制造时没有模拟意识数据，可以作为心智映射扫描的载体，录入完整的人类心智。使用该自律指令核心升格的机械体将继承扫描者的人格数据。同时，已有心智数据的机械族机械师也可以将自身数据导入或复制到空白状态的自律指令核心中。\n\n选中机械族，右键点击此物品即可下达安装命令。</description>
     <graphicData>
       <texPath>Things/AutonomousDirectiveCore</texPath>
       <graphicClass>Graphic_Single</graphicClass>

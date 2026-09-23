@@ -611,7 +611,7 @@ namespace MAP_MechanoidMechanitor
             Text.Font = GameFont.Small; Text.Anchor = TextAnchor.UpperLeft; Text.WordWrap = false; GUI.color = TextMain;
             Widgets.Label(new Rect(textX, rect.y + 5f, textWidth, 24f), target.LabelShortCap);
             Text.Font = GameFont.Small; GUI.color = TextSecondary;
-            string state = snapshot.frozenSelf ? "合体中：自身分配已冻结" : self ? L("Self") : snapshot.evaluationPending ? L("Pending")
+            string state = snapshot.frozenSelf ? "MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelf".Translate() : self ? L("Self") : snapshot.evaluationPending ? L("Pending")
                 : snapshot.dynamicManaged ? registry.GetCachedDynamicStateLabelForUI(target) : L("Fixed");
             Widgets.Label(new Rect(textX, rect.y + 29f, rect.xMax - textX - 6f, 24f),
                 state + " · " + DataProcessingAllocationUtility.GetSpecializationLabel(snapshot.specialization));

@@ -12,7 +12,6 @@
     <passability>Impassable</passability>
     <fillPercent>1</fillPercent>
     <useHitPoints>false</useHitPoints>
-    <!-- 保留后续激活流程直接调用 Destroy 的能力。 -->
     <destroyable>true</destroyable>
     <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
     <graphicData>

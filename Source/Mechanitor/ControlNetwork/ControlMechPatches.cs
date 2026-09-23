@@ -15,7 +15,7 @@ namespace MAP_MechanoidMechanitor
                 && MAPMechanitorControlUtility.CanUseControlSystem(pawn)
                 && MAPMechanitorControlUtility.WouldCreateControlCycle(pawn, mech))
             {
-                __result = "不能建立循环监管关系。";
+                __result = "MAP_MechanoidMechanitor.ControlNetwork.CircularOverseer".Translate();
                 return false;
             }
 

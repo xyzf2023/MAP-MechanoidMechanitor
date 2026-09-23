@@ -377,7 +377,7 @@ namespace MAP_MechanoidMechanitor
         {
             if (!parent.Spawned) return;
             var options = new List<FloatMenuOption>
-            { new FloatMenuOption("清除指定", () => { assignedPawn = null; ChangePolicy(); }) };
+            { new FloatMenuOption("MAP_MechServiceStation.Policy.ClearAssignment".Translate(), () => { assignedPawn = null; ChangePolicy(); }) };
             foreach (Pawn candidate in parent.Map.mapPawns.AllPawnsSpawned)
             {
                 if (candidate.Dead || candidate.Faction != Faction.OfPlayer || !candidate.RaceProps.IsMechanoid) continue;
@@ -393,8 +393,8 @@ namespace MAP_MechanoidMechanitor
             if (parent.Faction != Faction.OfPlayer) yield break;
             yield return new Command_Action
             {
-                defaultLabel = "整备策略",
-                defaultDesc = "设置使用模式、指定机械族、机械族机械师优先、整备功能和完成后待命。\n当前：" + MechServicePolicyUtility.Label(mode),
+                defaultLabel = "MAP_MechServiceStation.Policy.CommandLabel".Translate(),
+                defaultDesc = "MAP_MechServiceStation.Policy.CommandDescription".Translate(MechServicePolicyUtility.Label(mode)),
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_MaintenancePolicy"),
                 action = () => Find.WindowStack.Add(new Dialog_MechServiceStationPolicy(this))
             };
@@ -404,16 +404,18 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn? waiting = StandbyPawn;
             GetRequestedWork(out bool charging, out bool repairing);
-            string state = waiting != null && owner == null ? "占用：机械族待命中..."
-                : !Powered && owner != null ? "断电暂停"
-                : charging && repairing ? "正在维修并充电"
-                : charging ? "正在充电" : repairing ? "正在维修" : "待命中...";
-            return state + "\n整备策略：" + MechServicePolicyUtility.Label(mode)
+            string state = waiting != null && owner == null ? "MAP_MechServiceStation.Inspect.StandbyOccupied".Translate()
+                : !Powered && owner != null ? "MAP_MechServiceStation.Inspect.Unpowered".Translate()
+                : charging && repairing ? "MAP_MechServiceStation.Inspect.RepairingAndCharging".Translate()
+                : charging ? "MAP_MechServiceStation.Inspect.Charging".Translate()
+                : repairing ? "MAP_MechServiceStation.Inspect.Repairing".Translate()
+                : "MAP_MechServiceStation.Inspect.Standby".Translate();
+            return state + "\n" + "MAP_MechServiceStation.Inspect.Policy".Translate(MechServicePolicyUtility.Label(mode)).ToString()
                 + (assignedPawn == null || (mode != MechServiceStationMode.AssignedOnly && mode != MechServiceStationMode.AssignedPriority)
-                    ? "" : "\n指定机械族：" + assignedPawn.LabelShortCap)
-                + (owner == null ? "" : "\n使用者：" + owner.LabelShortCap)
-                + (waiting == null ? "" : "\n待命机械族：" + waiting.LabelShortCap)
-                + (manualQueue.Count == 0 ? "" : "\n等候：" + manualQueue.Count);
+                    ? "" : "\n" + "MAP_MechServiceStation.Inspect.AssignedPawn".Translate(assignedPawn.LabelShortCap).ToString())
+                + (owner == null ? "" : "\n" + "MAP_MechServiceStation.Inspect.User".Translate(owner.LabelShortCap).ToString())
+                + (waiting == null ? "" : "\n" + "MAP_MechServiceStation.Inspect.StandbyPawn".Translate(waiting.LabelShortCap).ToString())
+                + (manualQueue.Count == 0 ? "" : "\n" + "MAP_MechServiceStation.Inspect.QueueCount".Translate(manualQueue.Count).ToString());
         }
     }
 }

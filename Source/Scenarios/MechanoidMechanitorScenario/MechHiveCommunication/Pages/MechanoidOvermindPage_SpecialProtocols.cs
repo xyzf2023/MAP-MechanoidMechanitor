@@ -160,7 +160,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         .Translate();
                 if (!clusterRatingAvailable)
                 {
-                    clusterMeta += "  " + "MAP_PurgeDirectiveRating.RequiredLevel".Translate(1);
+                    clusterMeta += "  " + "MAP_PurgeDirectiveRating.RequiredLevel"
+                        .Translate(PurgeDirectiveRatingDisplay.RatingName(1));
                 }
 
                 if (clusterAvailable) DrawProtocolCard(
@@ -178,7 +179,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         .Translate();
                 if (!forceSupportRatingAvailable)
                 {
-                    forceSupportMeta += "  " + "MAP_PurgeDirectiveRating.RequiredLevel".Translate(1);
+                    forceSupportMeta += "  " + "MAP_PurgeDirectiveRating.RequiredLevel"
+                        .Translate(PurgeDirectiveRatingDisplay.RatingName(1));
                 }
 
                 if (forceSupportAvailable) DrawProtocolCard(
@@ -565,8 +567,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 options.Add(
                     new FloatMenuOption(
                         "MAP_PurgeDirectiveRating.ClusterEnvironmentLocked".Translate(
-                            PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig
-                                .mechClusterEnvironmentMinLevel),
+                            PurgeDirectiveRatingDisplay.RatingName(
+                                PurgeDirectiveRatingConfigDefOf.MAP_PurgeDirectiveRatingConfig
+                                    .mechClusterEnvironmentMinLevel)),
                         () => { }));
                 Find.WindowStack.Add(new FloatMenu(options));
                 return;

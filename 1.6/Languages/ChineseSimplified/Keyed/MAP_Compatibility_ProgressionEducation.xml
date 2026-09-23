@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_ProgressionEducation.ReasonStudentRole>该机械族仅能作为课堂教师，不能作为学生。</MAP_ProgressionEducation.ReasonStudentRole>
+  <MAP_ProgressionEducation.ReasonMissingTeachingInfrastructure>缺少课堂教学所需的设施。</MAP_ProgressionEducation.ReasonMissingTeachingInfrastructure>
+  <MAP_ProgressionEducation.ReasonUnsupportedClassType>该机械族仅支持普通技能课程和托儿课程教学。</MAP_ProgressionEducation.ReasonUnsupportedClassType>
+  <MAP_ProgressionEducation.ReasonCompatibilityReflectionFailure>该机械族课堂兼容层读取课程信息失败，暂时无法担任该角色。</MAP_ProgressionEducation.ReasonCompatibilityReflectionFailure>
+</LanguageData>

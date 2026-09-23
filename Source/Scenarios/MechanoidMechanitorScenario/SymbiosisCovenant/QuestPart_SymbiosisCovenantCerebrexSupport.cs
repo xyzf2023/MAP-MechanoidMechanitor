@@ -346,10 +346,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private void SendArrivalLetter(SymbiosisCovenantCerebrexSupportWaveRecord record)
         {
             Pawn? lookTarget = record.pawns.FirstOrDefault(p => p != null && !p.Dead);
-            string title = "MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle".Translate(record.waveIndex + 1);
-            string text = "MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody".Translate(
-                record.waveIndex + 1,
-                record.initialPawnCount);
+            string title = "MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle".Translate();
+            string text = "MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody".Translate();
             Find.LetterStack.ReceiveLetter(title, text, LetterDefOf.PositiveEvent, lookTarget);
         }
 

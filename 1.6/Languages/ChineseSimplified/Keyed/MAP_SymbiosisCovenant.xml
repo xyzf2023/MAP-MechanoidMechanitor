@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
 
-  <!-- 模块：路线限制 -->
-  <MAP_MechanoidMechanitor.Symbiosis.Scenario.DisabledReason>存在永久普通派系关系时不可用。</MAP_MechanoidMechanitor.Symbiosis.Scenario.DisabledReason>
-
   <!-- 模块：通讯入口与主窗口 -->
   <MAP_MechanoidMechanitor.Symbiosis.Access>接入共生盟约</MAP_MechanoidMechanitor.Symbiosis.Access>
   <MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>公开脱离声明</MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>
@@ -51,17 +48,16 @@
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>摧毁机械巢节点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>清除共同敌人据点</MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.CerebrexVictory>击败机械主脑</MAP_MechanoidMechanitor.Symbiosis.TrustReason.CerebrexVictory>
-  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev>DEV 信任测试</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev>
   <MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock>声明前锁定收紧</MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock>
 
   <!-- 模块：秘密接触 -->
   <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node1>对方已接入加密通讯链路。他们正在等待我们说明联络目的。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node1>
   <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Explain>说明我们的立场</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Explain>
   <MAP_MechanoidMechanitor.Symbiosis.SecretContact.End>结束秘密接触</MAP_MechanoidMechanitor.Symbiosis.SecretContact.End>
-  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2>我们已公开脱离机械主脑的控制，并准备与失控机械族抗争。我们希望与有机派系建立长期的合作关系。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2>我们已公开脱离机械主脑的控制，并准备与机械巢抗争。我们希望与有机派系建立长期的合作关系。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2>
   <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Propose>提议成立共生盟约</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Propose>
   <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Decline>暂不提出邀请</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Decline>
-  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3>一旦正式发出邀请，对方将对我们的行为、当前关系和合作价值进行评估。审议通常需要一至三日。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3>正式发出邀请后，对方将对我们的行为、当前关系和合作价值进行评估。审议通常需要一至三日。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3>
   <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Issue>正式发出邀请</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Issue>
   <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Back>返回</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Back>
   <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Unavailable>当前不满足秘密接触条件。</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Unavailable>
@@ -71,7 +67,7 @@
 
   <!-- 模块：信件与机械巢报复 -->
   <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label>机械主脑侦测到叛离联盟</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label>
-  <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>机械主脑已侦测到本地节点向全球广播的脱离声明。我们已被重新分类为敌对异常单元，机械巢将不再接受任何关系修复请求。</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>机械主脑已侦测到我们向全球广播的脱离声明。我们已被机械巢归类为敌对异常单元。现在，机械巢随时可能袭击我们。</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>
 
   <!-- 模块：盟约加入与退出 -->
   <MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Label>{0}同意加入共生盟约</MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Label>
@@ -94,13 +90,13 @@
   <MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailInvalid>无法接受援军：任务或地图已无效。</MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailInvalid>
   <MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailCovenant>无法接受援军：共生盟约当前不可用。</MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailCovenant>
   <MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailNoAlly>无法接受援军：当前没有可参战的盟友。</MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailNoAlly>
-  <MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle>第 {0} 波盟约援军抵达</MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle>
-  <MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody>第 {0} 波盟约援军已经抵达机械主巢平台，共 {1} 名战斗人员加入进攻。</MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody>
+  <MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle>盟军已抵达</MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle>
+  <MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody>共生盟约的援军已抵达战场，我们将携手终结这古老的威胁。</MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody>
   <MAP_SymbiosisCovenant_CerebrexSupport_EvacTitle>盟约援军开始撤离</MAP_SymbiosisCovenant_CerebrexSupport_EvacTitle>
   <MAP_SymbiosisCovenant_CerebrexSupport_EvacBody>机械主巢防御已解除，盟约援军正在撤离平台。</MAP_SymbiosisCovenant_CerebrexSupport_EvacBody>
   <MAP_SymbiosisCovenant_CerebrexSupport_EvacDone>盟约援军已安全撤离机械主巢平台。</MAP_SymbiosisCovenant_CerebrexSupport_EvacDone>
 
   <!-- 模块：交易价格改善 -->
-  <MAP_MechanoidMechanitor.Symbiosis.TradePriceImprovement>共生盟约交易价格改善：+{0}</MAP_MechanoidMechanitor.Symbiosis.TradePriceImprovement>
+  <MAP_MechanoidMechanitor.Symbiosis.TradePriceImprovement>盟约交易价格改善：+{0}</MAP_MechanoidMechanitor.Symbiosis.TradePriceImprovement>
 
 </LanguageData>

@@ -2,9 +2,10 @@
 <Defs>
   <HediffDef>
     <defName>MAP_SunBossStage</defName>
-    <label>「太阳」</label>
-    <description>「太阳」的反应堆状态随大厅内剩余稳定器数量变化。此状态标识当前阶段，具体效果由反应堆控制系统统一结算。</description>
+    <label>「太阳」- 能源核心</label>
+    <description>TODO</description>
     <hediffClass>HediffWithComps</hediffClass>
+    <defaultLabelColor>(1.0, 0.5, 0.0)</defaultLabelColor>
     <isBad>false</isBad>
     <initialSeverity>7</initialSeverity>
     <maxSeverity>7</maxSeverity>

@@ -124,19 +124,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Command_Action completeConstruction = new Command_Action
             {
                 defaultLabel =
-                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.Label"
-                        .Translate(),
+                    "DEV：立即完成建设",
                 defaultDesc =
-                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.Desc"
-                        .Translate(),
+                    "立即将这个建设中的派系前哨切换为建设完成状态。仅用于开发者测试。",
                 action = DevForceCompleteConstruction
             };
 
             if (base.HasMap)
             {
                 completeConstruction.Disable(
-                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.CompleteConstruction.MapLoaded"
-                        .Translate());
+                    "前哨地图已加载，无法安全切换建设阶段。请先离开该地图。");
             }
 
             yield return completeConstruction;

@@ -19,7 +19,8 @@ namespace MAP_MechanoidMechanitor
     public class CompAutonomousDirectiveCoreInstallEffect
         : CompMechanoidModuleInstallEffect
     {
-        private const string AlreadyMechanitorSuffix = "：已经是机械族机械师";
+        private const string AlreadyMechanitorSuffixKey =
+            "MAP_MechanoidMechanitor.InstallableModule.AlreadyMechanitorSuffix";
 
         public override bool ShouldShowOption(Pawn pawn, out string? disabledReason)
         {
@@ -27,7 +28,7 @@ namespace MAP_MechanoidMechanitor
 
             if (MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn))
             {
-                disabledReason = AlreadyMechanitorSuffix;
+                disabledReason = AlreadyMechanitorSuffixKey.Translate();
                 return true;
             }
 
@@ -75,9 +76,11 @@ namespace MAP_MechanoidMechanitor
         }
 
         public override string GetRejectMessage(Pawn pawn)
-            => $"{pawn.LabelShort}无法安装{parent.LabelNoCount}。";
+            => "MAP_MechanoidMechanitor.InstallableModule.Rejected".Translate(
+                pawn.LabelShort, parent.LabelNoCount);
 
         public override string GetSuccessMessage(Pawn pawn)
-            => $"{pawn.LabelShort}已成为机械族机械师。";
+            => "MAP_MechanoidMechanitor.InstallableModule.AutonomousDirectiveCore.Success"
+                .Translate(pawn.LabelShort);
     }
 }

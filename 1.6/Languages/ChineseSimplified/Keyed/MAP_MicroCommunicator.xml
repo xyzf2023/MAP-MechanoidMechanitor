@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-
   <MAP_MicroCommunicator_CommandLabel>通讯</MAP_MicroCommunicator_CommandLabel>
-
   <MAP_MicroCommunicator_CommandDesc>使用微型通讯器进行通讯。</MAP_MicroCommunicator_CommandDesc>
-
   <MAP_MicroCommunicator_SolarFlareDisabled>太阳耀斑阻碍了通讯。</MAP_MicroCommunicator_SolarFlareDisabled>
-
   <MAP_MicroCommunicator_NoTargets>没有可通讯目标</MAP_MicroCommunicator_NoTargets>
-
   <MAP_MicroCommunicator_Disabled>微型通讯器暂不可用。</MAP_MicroCommunicator_Disabled>
-
 </LanguageData>

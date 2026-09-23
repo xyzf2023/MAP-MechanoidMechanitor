@@ -300,7 +300,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             HistoryEventDef? historyEvent = MechHackHistoryEvent;
-            string reason = historyEvent?.label ?? "骇入机械体";
+            string reason = historyEvent?.label ?? "MAP_MechanoidMechanitor.Justice.Ability.MechHack.RelationReason".Translate();
 
             if (hackedFaction.HasGoodwill)
             {

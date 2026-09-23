@@ -28,17 +28,17 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
         // 禁止散装字符串；所有由本兼容层覆盖为 Reject 的路径都必须提供非空 Reason，
         // 否则 Progression: Education 的 CanParticipate 可能因 Reason 为空而误判 Pawn 整体可参与。
         private const string ReasonStudentRole =
-            "该机械族仅被允许作为课堂教师，不能作为学生。";
+            "MAP_ProgressionEducation.ReasonStudentRole";
         private const string ReasonMissingTeachingInfrastructure =
-            "该机械族缺少课堂教学所需的作息基础设施。";
+            "MAP_ProgressionEducation.ReasonMissingTeachingInfrastructure";
         private const string ReasonUnsupportedClassType =
-            "该机械族当前仅支持普通技能课程和托儿课程教学。";
+            "MAP_ProgressionEducation.ReasonUnsupportedClassType";
         private const string ReasonCompatibilityReflectionFailure =
-            "该机械族课堂兼容层读取课程信息失败，暂时无法担任该角色。";
+            "MAP_ProgressionEducation.ReasonCompatibilityReflectionFailure";
 
         private static AcceptanceReport RejectWithReason(string reason)
         {
-            return new AcceptanceReport(reason);
+            return new AcceptanceReport(reason.Translate());
         }
 
         private static MethodInfo? addPawnMethod;

@@ -34,8 +34,7 @@ namespace MAP_MechanoidMechanitor
         public static IReadOnlyList<float> RaidPointOptions
             => TestRaidPoints;
 
-        private const string DevTrustReason =
-            "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev";
+        private const string DevTrustReason = "DEV 信任测试";
 
         // ===== 统一获取共生盟约 State =====
 
@@ -579,7 +578,7 @@ namespace MAP_MechanoidMechanitor
 
             if (record.Trust < 25)
             {
-                if (!state.DevSetTrust(participant, 25, DevTrustReason.Translate()))
+                if (!state.DevSetTrust(participant, 25, DevTrustReason))
                 {
                     message = "无法设置参与派系信任度：" + participant.Name;
                     return false;
@@ -764,7 +763,7 @@ namespace MAP_MechanoidMechanitor
             state.DevSetTrust(
                 faction,
                 value,
-                DevTrustReason.Translate());
+                DevTrustReason);
 
             message =
                 "已将 "
@@ -810,7 +809,7 @@ namespace MAP_MechanoidMechanitor
             bool changed = state.DevAdjustTrust(
                 faction,
                 amount,
-                DevTrustReason.Translate());
+                DevTrustReason);
 
             int after = state.GetRecord(faction)!.Trust;
 

@@ -70,7 +70,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!CurrentFrequency().IsEnabled())
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.GenerationDisabled".Translate(),
+                    "派系前哨生成当前已关闭。",
                     MessageTypeDefOf.RejectInput,
                     historical: false);
             }
@@ -96,7 +96,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (!CurrentFrequency().IsEnabled())
             {
                 Messages.Message(
-                    "MAP_MechanoidMechanitor.FactionOutpost.Dev.GenerationDisabled".Translate(),
+                    "派系前哨生成当前已关闭。",
                     MessageTypeDefOf.RejectInput,
                     historical: false);
             }

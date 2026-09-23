@@ -7,7 +7,6 @@
   <MAP_MechanicalFlight_AerialMove>空中移动</MAP_MechanicalFlight_AerialMove>
   <MAP_MechanicalFlight_Unavailable>当前无法启动飞行。</MAP_MechanicalFlight_Unavailable>
   <MAP_MechanicalFlight_Landing>正在降落。</MAP_MechanicalFlight_Landing>
-  <MAP_MechanicalFlight_NoEnergyNeed>该机械体没有可用的能量来源。</MAP_MechanicalFlight_NoEnergyNeed>
   <MAP_MechanicalFlight_LowEnergy>能量低于{0}，无法启动飞行。</MAP_MechanicalFlight_LowEnergy>
   <MAP_MechanicalFlight_ThickRoofTakeoff>厚岩顶下无法起飞。</MAP_MechanicalFlight_ThickRoofTakeoff>
   <MAP_MechanicalFlight_ThickRoofLanding>厚岩顶下无法降落。</MAP_MechanicalFlight_ThickRoofLanding>

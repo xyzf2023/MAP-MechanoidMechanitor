@@ -107,7 +107,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             string selectedLabel = mechKind != null
                 ? mechKind.LabelCap
                 : GetDefaultMechKind()?.LabelCap ?? DefaultMechKindDefName;
-            yield return "机械族机械师：" + selectedLabel;
+            yield return "MAP_MechanoidMechanitor.Scenario.MechanitorSummaryEntry".Translate(selectedLabel);
         }
 
         public override IEnumerable<Thing> PlayerStartingThings()

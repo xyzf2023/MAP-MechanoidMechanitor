@@ -1810,7 +1810,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static string DevReason()
         {
-            return "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev".Translate();
+            return "DEV 信任测试";
         }
 
         private static string BuildStateText(

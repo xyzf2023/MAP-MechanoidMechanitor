@@ -39,7 +39,7 @@ namespace MAP_MechanoidMechanitor
                 || string.IsNullOrEmpty(identity)
                 || form == MechTransformationForm.Pawn)
             {
-                failureReason = "载体绑定参数无效。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.BindInvalid".Translate();
                 return false;
             }
 
@@ -48,7 +48,7 @@ namespace MAP_MechanoidMechanitor
                     || transformationId != identity
                     || carrierForm != form))
             {
-                failureReason = "载体已经绑定到其他机械体或形态。";
+                failureReason = "MAP_MechanoidMechanitor.Transformation.BindConflict".Translate();
                 return false;
             }
 

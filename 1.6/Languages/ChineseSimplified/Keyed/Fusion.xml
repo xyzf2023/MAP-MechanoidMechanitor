@@ -1,31 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-  <MAP_MechanoidMechanitor.Fusion.Gizmo.Label>合体</MAP_MechanoidMechanitor.Fusion.Gizmo.Label>
-  <MAP_MechanoidMechanitor.Fusion.Gizmo.Description>与该机械族当前合法的人类监管者合体，机械族被收纳进合体外甲。</MAP_MechanoidMechanitor.Fusion.Gizmo.Description>
-  <MAP_MechanoidMechanitor.Fusion.NoTarget>没有可作为合体目标的合法人类监管者。</MAP_MechanoidMechanitor.Fusion.NoTarget>
+  <MAP_MechanoidMechanitor.Fusion.Gizmo.Label>执行合体</MAP_MechanoidMechanitor.Fusion.Gizmo.Label>
   <MAP_MechanoidMechanitor.Fusion.Started>{0} 与 {1} 完成合体。</MAP_MechanoidMechanitor.Fusion.Started>
   <MAP_MechanoidMechanitor.Fusion.Ended>{0} 与 {1} 的合体已解除。</MAP_MechanoidMechanitor.Fusion.Ended>
-  <MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable>执行合体的机械族当前不可用。</MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable>
-  <MAP_MechanoidMechanitor.Fusion.Failure.NoEligibility>该机械族没有先天合体资格。</MAP_MechanoidMechanitor.Fusion.Failure.NoEligibility>
+  <MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable>执行合体的机械族不可用。</MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable>
+  <MAP_MechanoidMechanitor.Fusion.Failure.NoEligibility>该机械族没有原生合体资格。</MAP_MechanoidMechanitor.Fusion.Failure.NoEligibility>
   <MAP_MechanoidMechanitor.Fusion.Failure.SourceFormInvalid>机械族当前形态无法执行合体。</MAP_MechanoidMechanitor.Fusion.Failure.SourceFormInvalid>
-  <MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>合体目标当前不可用。</MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>
-  <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>合体目标必须是人类。</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>
-  <MAP_MechanoidMechanitor.Fusion.Failure.TargetAgeInvalid>合体目标必须是儿童或成年人，婴儿无法合体。</MAP_MechanoidMechanitor.Fusion.Failure.TargetAgeInvalid>
-  <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>目标人类必须是该机械族当前合法的监管者。</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>目标当前不可用。</MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>目标必须是人类。</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetAgeInvalid>目标不能是婴儿。</MAP_MechanoidMechanitor.Fusion.Failure.TargetAgeInvalid>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>目标必须是监管者。</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>
   <MAP_MechanoidMechanitor.Fusion.Failure.NotSameMap>双方必须位于同一地图。</MAP_MechanoidMechanitor.Fusion.Failure.NotSameMap>
-  <MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>双方之一已经处于合体事务中。</MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>
-  <MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>目标人类无法穿戴合体外甲。</MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>
+  <MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>目标已与机械族合体。</MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>
+  <MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>目标无法穿戴合体外甲。</MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>
   <MAP_MechanoidMechanitor.Fusion.Failure.ShellMissing>未找到固定的合体外甲定义。</MAP_MechanoidMechanitor.Fusion.Failure.ShellMissing>
   <MAP_MechanoidMechanitor.Fusion.Failure.Unexpected>合体过程发生异常，已尝试回滚。</MAP_MechanoidMechanitor.Fusion.Failure.Unexpected>
-  <MAP_MechanoidMechanitor.Fusion.Approach.OrderFailed>无法下达合体接近指令，请稍后重试。</MAP_MechanoidMechanitor.Fusion.Approach.OrderFailed>
-  <MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>机械族无法走到目标人类身边，合体已取消。</MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>
+  <MAP_MechanoidMechanitor.Fusion.Approach.OrderFailed>无法下达接近指令，请稍后重试。</MAP_MechanoidMechanitor.Fusion.Approach.OrderFailed>
+  <MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>机械族无法接近目标，合体已取消。</MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>
   <MAP_MechanoidMechanitor.Fusion.Approach.LandingInvalid>合体飞行落点已失效，正在重新规划。</MAP_MechanoidMechanitor.Fusion.Approach.LandingInvalid>
   <MAP_MechanoidMechanitor.Fusion.Energy.Label>机械能量</MAP_MechanoidMechanitor.Fusion.Energy.Label>
-  <MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>合体机械能量：{0:0.#} / {1:0.#}\n基础消耗：{2:0.#}%/游戏日（飞行期间仍结算）\n额外飞行消耗按当前飞行配置结算；标准基础费用为起飞0.5%最大能量、之后每60 Tick再消耗0.5%，并应用重量级、先天飞行倍率及群体飞行乘员修正。合体减耗效果继续作用于最终费用。</MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>
+  <MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>当前机械族的剩余能量。\n能量归零时，合体状态将解除。</MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>
   <MAP_MechanoidMechanitor.Fusion.Stability.Label>结构稳定值</MAP_MechanoidMechanitor.Fusion.Stability.Label>
-  <MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>结构稳定值：{0}\n稳定值低于或等于 50% 时，每次受击有 {1}% 概率使人类同步承受该次伤害。</MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>
+  <MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>当前机械族的结构稳定值。\n当结构稳定值大于50%时，所有伤害将由机械结构吸收。\n稳定值归零会导致合体解除和机体损毁。</MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>
   <MAP_MechanoidMechanitor.Fusion.Release.Label>解除合体</MAP_MechanoidMechanitor.Fusion.Release.Label>
   <MAP_MechanoidMechanitor.Fusion.Release.Description>解除本次合体并恢复真实源机械族；飞行中必须先着陆。</MAP_MechanoidMechanitor.Fusion.Release.Description>
-  <MAP_MechanoidMechanitor.Fusion.Release.Flying>飞行中无法手动解除合体，请先着陆。</MAP_MechanoidMechanitor.Fusion.Release.Flying>
+  <MAP_MechanoidMechanitor.Fusion.Release.Flying>飞行中无法解除合体，请先着陆。</MAP_MechanoidMechanitor.Fusion.Release.Flying>
   <MAP_MechanoidMechanitor.Fusion.Release.InProgress>正在执行其他合体退出事务。</MAP_MechanoidMechanitor.Fusion.Release.InProgress>
 </LanguageData>

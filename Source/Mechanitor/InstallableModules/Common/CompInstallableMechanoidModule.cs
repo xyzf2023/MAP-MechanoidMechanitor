@@ -63,7 +63,8 @@ namespace MAP_MechanoidMechanitor
         /// <summary>
         /// 通用右键安装标签，由物品 label 生成：安装{label}。
         /// </summary>
-        public string InstallOptionLabel => "安装" + parent.LabelNoCount;
+        public string InstallOptionLabel =>
+            "MAP_MechanoidMechanitor.InstallableModule.Install".Translate(parent.LabelNoCount);
 
         /// <summary>
         /// 通用机械族使用者条件：仅玩家安全的机械族可以使用。

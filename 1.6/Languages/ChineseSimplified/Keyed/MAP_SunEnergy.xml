@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
-  <MAP_SunEnergy_Restore>每60 tick回复机械能上限的{0}%。</MAP_SunEnergy_Restore>
-  <MAP_SunEnergy_Consumption>本MOD技能及飞行能耗倍率：{0}%（包含合体能源消耗）。</MAP_SunEnergy_Consumption>
+  <MAP_SunEnergy_Restore>机械能恢复：{0}%/秒</MAP_SunEnergy_Restore>
+  <MAP_SunEnergy_Consumption>技能能量消耗倍率：{0}%</MAP_SunEnergy_Consumption>
 </LanguageData>

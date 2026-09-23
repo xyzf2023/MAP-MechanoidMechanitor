@@ -1,59 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
+
+  <!-- 模块：基础设置 -->
   <MAP_OvermindEconomy.Settings.Title>肃清指令：动态物资调拨</MAP_OvermindEconomy.Settings.Title>
   <MAP_OvermindEconomy.Settings.Enabled>启用动态物资调拨</MAP_OvermindEconomy.Settings.Enabled>
-  <MAP_OvermindEconomy.Settings.Enabled.Desc>开启后，“联络主脑”的物资调拨会根据全局节点建设需求、近期购买量和非需求物资交付调整价格，同时限制每种物资的可购数量并逐日补货。接管主脑后仍然生效。关闭后恢复原调拨规则，但保留已有记录；已有库存和价格影响仍随游戏时间恢复。</MAP_OvermindEconomy.Settings.Enabled.Desc>
-  <MAP_OvermindEconomy.Settings.Reset>恢复动态物资调拨默认设置</MAP_OvermindEconomy.Settings.Reset>
+  <MAP_OvermindEconomy.Settings.Enabled.Desc>开启后，“联络主脑”的物资调拨会动态调整价格，同时限制每种物资在一段时间内的可购数量。</MAP_OvermindEconomy.Settings.Enabled.Desc>
+  <MAP_OvermindEconomy.Settings.Reset>恢复动态价格默认设置</MAP_OvermindEconomy.Settings.Reset>
+
+  <!-- 模块：供应补充与价格恢复时间 -->
   <MAP_OvermindEconomy.Settings.Section.Time>供应补充与价格恢复时间（游戏日）</MAP_OvermindEconomy.Settings.Section.Time>
+  <MAP_OvermindEconomy.Settings.RefillDays>每种物资供应额度补满时间</MAP_OvermindEconomy.Settings.RefillDays>
+  <MAP_OvermindEconomy.Settings.RefillDays.Desc>每种物资的供应额度从耗尽到补满所需的游戏天数。</MAP_OvermindEconomy.Settings.RefillDays.Desc>
+  <MAP_OvermindEconomy.Settings.PressureDays>近期采购压力减半时间</MAP_OvermindEconomy.Settings.PressureDays>
+  <MAP_OvermindEconomy.Settings.PressureDays.Desc>停止购买后，累计采购压力每经过设定天数减半。</MAP_OvermindEconomy.Settings.PressureDays.Desc>
+  <MAP_OvermindEconomy.Settings.DemandDays>节点需求减少后的加价消退时间</MAP_OvermindEconomy.Settings.DemandDays>
+  <MAP_OvermindEconomy.Settings.DemandDays.Desc>节点需求减少后，加价在设定天数内逐渐消退。</MAP_OvermindEconomy.Settings.DemandDays.Desc>
+  <MAP_OvermindEconomy.Settings.BenefitDays>非需求物资交付优惠持续时间</MAP_OvermindEconomy.Settings.BenefitDays>
+  <MAP_OvermindEconomy.Settings.BenefitDays.Desc>非需求物资交付优惠在设定天数内逐渐消退。</MAP_OvermindEconomy.Settings.BenefitDays.Desc>
+
+  <!-- 模块：基础价格与供应上限 -->
   <MAP_OvermindEconomy.Settings.Section.Supply>各类物资的基础价格与供应上限</MAP_OvermindEconomy.Settings.Section.Supply>
+  <MAP_OvermindEconomy.Settings.MaterialPrice>常用工业材料基础售价倍率</MAP_OvermindEconomy.Settings.MaterialPrice>
+  <MAP_OvermindEconomy.Settings.MaterialPrice.Desc>钢铁、塑钢及零部件等材料的基础售价倍率。。</MAP_OvermindEconomy.Settings.MaterialPrice.Desc>
+  <MAP_OvermindEconomy.Settings.OrdinaryPrice>普通装备及其他物资基础售价倍率</MAP_OvermindEconomy.Settings.OrdinaryPrice>
+  <MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>普通武器等物资的基础售价倍率。</MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>
+  <MAP_OvermindEconomy.Settings.ScarcePrice>食物、药品及服装基础售价倍率</MAP_OvermindEconomy.Settings.ScarcePrice>
+  <MAP_OvermindEconomy.Settings.ScarcePrice.Desc>可售食物、医疗药品和服装的基础售价倍率。默认×3指原基础费用的3倍。</MAP_OvermindEconomy.Settings.ScarcePrice.Desc>
+  <MAP_OvermindEconomy.Settings.MaterialSupply>常用工业材料供应上限倍率</MAP_OvermindEconomy.Settings.MaterialSupply>
+  <MAP_OvermindEconomy.Settings.MaterialSupply.Desc>每种工业材料的供应额度上限。</MAP_OvermindEconomy.Settings.MaterialSupply.Desc>
+  <MAP_OvermindEconomy.Settings.OrdinarySupply>普通装备及其他物资供应上限倍率</MAP_OvermindEconomy.Settings.OrdinarySupply>
+  <MAP_OvermindEconomy.Settings.OrdinarySupply.Desc>每种普通物资的供应额度上限。</MAP_OvermindEconomy.Settings.OrdinarySupply.Desc>
+  <MAP_OvermindEconomy.Settings.ScarceSupply>食物、药品及服装供应上限倍率</MAP_OvermindEconomy.Settings.ScarceSupply>
+  <MAP_OvermindEconomy.Settings.ScarceSupply.Desc>每种可售食物、医疗药品和服装的供应额度上限。</MAP_OvermindEconomy.Settings.ScarceSupply.Desc>
+
+  <!-- 模块：节点建设需求加价 -->
   <MAP_OvermindEconomy.Settings.Section.Construction>全局节点建设需求造成的加价</MAP_OvermindEconomy.Settings.Section.Construction>
+  <MAP_OvermindEconomy.Settings.Protection>建设期间最低成交价／交付回报倍率</MAP_OvermindEconomy.Settings.Protection>
+  <MAP_OvermindEconomy.Settings.Protection.Desc>存在节点建设需求时，最低成交价按交付回报计算。</MAP_OvermindEconomy.Settings.Protection.Desc>
+  <MAP_OvermindEconomy.Settings.DemandStrength>全局建设需求额外加价强度</MAP_OvermindEconomy.Settings.DemandStrength>
+  <MAP_OvermindEconomy.Settings.DemandStrength.Desc>全局需求每相当于该物资一份供应上限时，额外加收的比例。</MAP_OvermindEconomy.Settings.DemandStrength.Desc>
+  <MAP_OvermindEconomy.Settings.DemandCap>全局建设需求额外加价上限</MAP_OvermindEconomy.Settings.DemandCap>
+  <MAP_OvermindEconomy.Settings.DemandCap.Desc>节点需求额外加价的上限，不影响采购涨价和最低成交价。</MAP_OvermindEconomy.Settings.DemandCap.Desc>
+
+  <!-- 模块：近期采购涨价 -->
   <MAP_OvermindEconomy.Settings.Section.Purchase>玩家近期大量购买造成的涨价</MAP_OvermindEconomy.Settings.Section.Purchase>
+  <MAP_OvermindEconomy.Settings.PressureStrength>累计购买导致的涨价强度</MAP_OvermindEconomy.Settings.PressureStrength>
+  <MAP_OvermindEconomy.Settings.PressureStrength.Desc>累计购买价值每相当于一份供应上限，后续售价增加的比例。</MAP_OvermindEconomy.Settings.PressureStrength.Desc>
+  <MAP_OvermindEconomy.Settings.PressureCap>近期采购最多额外加价</MAP_OvermindEconomy.Settings.PressureCap>
+  <MAP_OvermindEconomy.Settings.PressureCap.Desc>近期采购的额外加价上限倍率。</MAP_OvermindEconomy.Settings.PressureCap.Desc>
+
+  <!-- 模块：非需求物资交付优惠 -->
   <MAP_OvermindEconomy.Settings.Section.Delivery>向节点交付非需求物资获得的优惠</MAP_OvermindEconomy.Settings.Section.Delivery>
+  <MAP_OvermindEconomy.Settings.BenefitStrength>非需求物资交付降价强度</MAP_OvermindEconomy.Settings.BenefitStrength>
+  <MAP_OvermindEconomy.Settings.BenefitStrength.Desc>按交付价值与供应上限的比例降低基础售价。</MAP_OvermindEconomy.Settings.BenefitStrength.Desc>
+  <MAP_OvermindEconomy.Settings.BenefitCap>非需求物资累计降价上限</MAP_OvermindEconomy.Settings.BenefitCap>
+  <MAP_OvermindEconomy.Settings.BenefitCap.Desc>非需求物资交付优惠的累计上限倍率。</MAP_OvermindEconomy.Settings.BenefitCap.Desc>
+
+  <!-- 模块：物资请求与价格显示 -->
   <MAP_OvermindEconomy.Days>{0} 天</MAP_OvermindEconomy.Days>
-  <MAP_OvermindEconomy.InsufficientSupply>物资供应不足或投送量过大，请减少订单数量。</MAP_OvermindEconomy.InsufficientSupply>
   <MAP_OvermindEconomy.NextPrice>价格：{0}</MAP_OvermindEconomy.NextPrice>
   <MAP_OvermindEconomy.Stock>可请求数量：{0}　每日补充：{1}　补满还需：{2} 天</MAP_OvermindEconomy.Stock>
   <MAP_OvermindEconomy.StockCompact>可请求数量：{0}</MAP_OvermindEconomy.StockCompact>
   <MAP_OvermindEconomy.Fluctuation>当前价格波动：{0}%</MAP_OvermindEconomy.Fluctuation>
   <MAP_OvermindEconomy.Factors>基础 ×{0}　采购 +{1}%　交付 -{2}%　建设：{3}</MAP_OvermindEconomy.Factors>
+
+  <!-- 模块：节点需求状态 -->
   <MAP_OvermindEconomy.Demand.Active>需求中</MAP_OvermindEconomy.Demand.Active>
   <MAP_OvermindEconomy.Demand.Fading>溢价消退中</MAP_OvermindEconomy.Demand.Fading>
   <MAP_OvermindEconomy.Demand.Global>全局价格保护</MAP_OvermindEconomy.Demand.Global>
   <MAP_OvermindEconomy.Demand.None>无</MAP_OvermindEconomy.Demand.None>
-  <MAP_OvermindEconomy.DetailsTip>同种物资共享供应额度与采购压力。整笔订单按购买前的当前价格计费，购买完成后再增加采购压力。显示单价已计入评级折扣，最终取整以订单合计为准。</MAP_OvermindEconomy.DetailsTip>
-  <MAP_OvermindEconomy.PriceTip>显示单件价格，已计入评级折扣。整笔订单按当前价格计费，成交后更新价格波动。价格波动相对原基础费用计算，评级折扣单独应用。</MAP_OvermindEconomy.PriceTip>
-  <MAP_OvermindEconomy.Settings.RefillDays>每种物资供应额度补满时间</MAP_OvermindEconomy.Settings.RefillDays>
-  <MAP_OvermindEconomy.Settings.RefillDays.Desc>控制停止购买后，每种物资的供应额度从完全耗尽恢复至上限所需的游戏天数。数值越小，补货越快；补货连续进行，不必等到次日。例如上限为10000价值、设为5天时，每天恢复2000价值的可购额度。这是供货限制，不会增加玩家的肃清额度。</MAP_OvermindEconomy.Settings.RefillDays.Desc>
-  <MAP_OvermindEconomy.Settings.PressureDays>近期采购压力减半时间</MAP_OvermindEconomy.Settings.PressureDays>
-  <MAP_OvermindEconomy.Settings.PressureDays.Desc>控制近期采购记录的衰减速度。停止购买后，每经过设定的游戏天数，累计采购压力减半；数值越大，连续采购造成的高价维持越久。例如设为2天时，2天后剩余一半、4天后剩余四分之一。若涨价已达到上限，压力下降初期的价格可能暂时不变。</MAP_OvermindEconomy.Settings.PressureDays.Desc>
-  <MAP_OvermindEconomy.Settings.DemandDays>节点需求减少后的加价消退时间</MAP_OvermindEconomy.Settings.DemandDays>
-  <MAP_OvermindEconomy.Settings.DemandDays.Desc>节点需求因交付、自然减少或结束而下降时，对应加价不会立即消失，而是在设定的游戏天数内逐渐消退。数值越大，建设后的高价维持越久。仍有其他节点需要该物资时，其需求加价继续生效；全局普通交付价格保护结束后也使用此时间消退。</MAP_OvermindEconomy.Settings.DemandDays.Desc>
-  <MAP_OvermindEconomy.Settings.BenefitDays>非需求物资交付优惠持续时间</MAP_OvermindEconomy.Settings.BenefitDays>
-  <MAP_OvermindEconomy.Settings.BenefitDays.Desc>控制向节点交付非需求物资后，获得的降价优惠在多少个游戏日内逐渐减至零。数值越大，优惠保留越久。每次交付产生的优惠分别计时，新交付不会延长之前优惠的期限。</MAP_OvermindEconomy.Settings.BenefitDays.Desc>
-  <MAP_OvermindEconomy.Settings.MaterialPrice>常用工业材料基础售价倍率</MAP_OvermindEconomy.Settings.MaterialPrice>
-  <MAP_OvermindEconomy.Settings.MaterialPrice.Desc>调整钢铁、塑钢及零部件等材料在物资调拨中的基础售价。×1沿用原基础费用，即市场价值的20%；×2表示基础费用翻倍。此后仍会计算建设加价、采购涨价、交付优惠和评级折扣；建设期间的最低成交价仍然有效。</MAP_OvermindEconomy.Settings.MaterialPrice.Desc>
-  <MAP_OvermindEconomy.Settings.OrdinaryPrice>普通装备及其他物资基础售价倍率</MAP_OvermindEconomy.Settings.OrdinaryPrice>
-  <MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>调整不属于工业材料或稀缺档位的商品，例如普通武器的基础售价。服装和医疗药品归入稀缺档位，建筑不参与交易。×1沿用原基础费用，即市场价值的20%；数值越大，购买越贵。此后仍会计算各项动态价格变化和评级折扣，不会改变这些物品的供应额度。</MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>
-  <MAP_OvermindEconomy.Settings.ScarcePrice>食物、药品及服装基础售价倍率</MAP_OvermindEconomy.Settings.ScarcePrice>
-  <MAP_OvermindEconomy.Settings.ScarcePrice.Desc>调整可售食物、医疗药品和服装等稀缺档位商品的基础售价，不要求存在建设需求。默认×3表示按原基础费用的3倍起价，而非市场价值的3倍。交付优惠可以降低这部分基础价格，采购压力仍会使其上涨；供应量由稀缺物资供应上限倍率单独控制。被排除的生食及药物与成瘾品不会因此重新进入售卖目录。</MAP_OvermindEconomy.Settings.ScarcePrice.Desc>
-  <MAP_OvermindEconomy.Settings.MaterialSupply>常用工业材料供应上限倍率</MAP_OvermindEconomy.Settings.MaterialSupply>
-  <MAP_OvermindEconomy.Settings.MaterialSupply.Desc>调整每一种工业材料可积累的供应额度，通常以10000市场价值为基数。×2表示上限提高到20000价值，每日补充量也翻倍，补满所需天数不变。同种物资的材质和品质共享额度；此额度不等于玩家的肃清额度。提高上限也会提高触发同等采购涨价、需求加价或交付优惠所需的物资价值。</MAP_OvermindEconomy.Settings.MaterialSupply.Desc>
-  <MAP_OvermindEconomy.Settings.OrdinarySupply>普通装备及其他物资供应上限倍率</MAP_OvermindEconomy.Settings.OrdinarySupply>
-  <MAP_OvermindEconomy.Settings.OrdinarySupply.Desc>调整每一种普通商品可积累的供应额度，通常以3000市场价值为基数。×2表示上限与每日补充量翻倍，补满所需天数不变。同种物资的材质和品质共享额度；高价商品的基数可能更高，以容纳默认规格的一件商品。上限越大，触发同等涨价或交付优惠所需的物资价值也越高。</MAP_OvermindEconomy.Settings.OrdinarySupply.Desc>
-  <MAP_OvermindEconomy.Settings.ScarceSupply>食物、药品及服装供应上限倍率</MAP_OvermindEconomy.Settings.ScarceSupply>
-  <MAP_OvermindEconomy.Settings.ScarceSupply.Desc>调整每一种可售食物、医疗药品和服装等稀缺商品可积累的供应额度，通常以1000市场价值为基数。数值越小，可积累的物资越少，每日补货也越少；补满所需天数保持不变。此项不直接改变基础售价，但会改变达到同等采购涨价或交付优惠所需的物资价值。</MAP_OvermindEconomy.Settings.ScarceSupply.Desc>
-  <MAP_OvermindEconomy.Settings.Protection>建设期间最低成交价／交付回报倍率</MAP_OvermindEconomy.Settings.Protection>
-  <MAP_OvermindEconomy.Settings.Protection.Desc>全局存在有效建设需求时，以物资交付可获得的肃清额度为基准，设置购买时的最低成交价。默认×1.05表示交付能获得100额度的物资，购买至少支付105额度；需求物资和普通物资分别按各自的交付回报计算。评级折扣和交付优惠不能突破此下限，数值越大，现买现交越不划算。</MAP_OvermindEconomy.Settings.Protection.Desc>
-  <MAP_OvermindEconomy.Settings.DemandStrength>全局建设需求额外加价强度</MAP_OvermindEconomy.Settings.DemandStrength>
-  <MAP_OvermindEconomy.Settings.DemandStrength.Desc>控制全世界节点需要同一种物资时，需求规模带来的额外加价。以该物资的供应额度上限衡量需求规模：例如上限为10000价值、总需求也是10000价值，设为25%时，额外加收需求交付保护基准价的25%。需求越多，加价越高，但受加价上限限制；设为0仍保留最低成交价保护。</MAP_OvermindEconomy.Settings.DemandStrength.Desc>
-  <MAP_OvermindEconomy.Settings.DemandCap>全局建设需求额外加价上限</MAP_OvermindEconomy.Settings.DemandCap>
-  <MAP_OvermindEconomy.Settings.DemandCap.Desc>限制上一项“全局建设需求额外加价强度”最多能累积多少加价。设为100%时，需求规模造成的附加费用最多等于一份需求交付保护基准价。此项不会限制采购涨价，也不会取消建设期间的最低成交价；设为0可关闭需求规模带来的额外加价。</MAP_OvermindEconomy.Settings.DemandCap.Desc>
-  <MAP_OvermindEconomy.Settings.PressureStrength>累计购买导致的涨价强度</MAP_OvermindEconomy.Settings.PressureStrength>
-  <MAP_OvermindEconomy.Settings.PressureStrength.Desc>控制购买同一种物资后，后续售价上涨的速度。不计时间衰减时，累计购买价值达到该物资一份供应额度上限，便增加此比例的采购涨价。例如设为100%，买走一份满额供应后，后续采购价格因素达到×2。整笔订单使用购买前的当前价格，成交后才更新涨价；设为0可关闭采购涨价。</MAP_OvermindEconomy.Settings.PressureStrength.Desc>
-  <MAP_OvermindEconomy.Settings.PressureCap>近期采购最多额外加价</MAP_OvermindEconomy.Settings.PressureCap>
-  <MAP_OvermindEconomy.Settings.PressureCap.Desc>限制近期大量购买最多能使价格额外上涨多少。默认200%表示采购价格因素最高为×3，即原有价格再增加200%，不是总价变为200%。此上限只约束采购因素，建设加价和稀缺物资的基础倍率仍然有效；设为0可关闭采购涨价。</MAP_OvermindEconomy.Settings.PressureCap.Desc>
-  <MAP_OvermindEconomy.Settings.BenefitStrength>非需求物资交付降价强度</MAP_OvermindEconomy.Settings.BenefitStrength>
-  <MAP_OvermindEconomy.Settings.BenefitStrength.Desc>控制向节点交付非需求物资时，为该物资获得多少基础售价优惠。例如供应上限为10000价值、设为20%时，交付价值10000的该物资可增加20%优惠，受优惠上限限制。仅限物资调拨允许出售、且交付前全局没有节点需求的物资；需求物资的超额部分也不计入。交付不会恢复供应额度。</MAP_OvermindEconomy.Settings.BenefitStrength.Desc>
-  <MAP_OvermindEconomy.Settings.BenefitCap>非需求物资累计降价上限</MAP_OvermindEconomy.Settings.BenefitCap>
-  <MAP_OvermindEconomy.Settings.BenefitCap.Desc>限制多次交付非需求物资后，尚未消退的优惠最多能降低多少基础售价。默认20%表示基础价格最低降至优惠前的80%；例如稀缺物资基础倍率为×3时，这部分最低降至×2.4。建设期间的最低成交价仍然有效；设为0可关闭交付优惠。</MAP_OvermindEconomy.Settings.BenefitCap.Desc>
+
+  <!-- 模块：交易限制与说明 -->
+  <MAP_OvermindEconomy.InsufficientSupply>物资供应不足，请减少订单数量。</MAP_OvermindEconomy.InsufficientSupply>
+  <MAP_OvermindEconomy.DetailsTip>同种物资共享供应额度与采购压力。</MAP_OvermindEconomy.DetailsTip>
+  <MAP_OvermindEconomy.PriceTip>显示单价已计入评级折扣。</MAP_OvermindEconomy.PriceTip>
+
 </LanguageData>

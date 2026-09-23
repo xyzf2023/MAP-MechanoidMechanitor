@@ -4,7 +4,7 @@
   <ThingDef ParentName="BuildingBase">
     <defName>MAP_Building_JusticeDormant</defName>
     <label>「正义」（未启动）</label>
-    <description>一台尚未开机的「正义」。</description>
+    <description>一台尚未开机的「正义」，可作为紧急意识转移的载体。</description>
     <thingClass>Building</thingClass>
     <tickerType>Normal</tickerType>
     <size>(1,1)</size>

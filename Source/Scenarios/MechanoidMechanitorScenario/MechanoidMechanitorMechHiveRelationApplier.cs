@@ -16,7 +16,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             FactionRelationKind relationKind,
             bool hostileOnHarmByPlayer,
             MechanoidMechanitorFactionRelationNotificationMode notificationMode =
-                MechanoidMechanitorFactionRelationNotificationMode.Immediate)
+                MechanoidMechanitorFactionRelationNotificationMode.Immediate,
+            bool allowUnconfiguredMechHive = false)
         {
             if (applying)
             {
@@ -43,7 +44,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             GameComponent_MechanoidMechanitorStoryState? storyState =
                 Current.Game.GetComponent<GameComponent_MechanoidMechanitorStoryState>();
-            if (storyState == null || !storyState.IsCurrentMechHive(mechHive))
+            if (storyState == null
+                || (!storyState.IsCurrentMechHive(mechHive)
+                    && !(allowUnconfiguredMechHive && mechHive == Faction.OfMechanoids)))
             {
                 return false;
             }

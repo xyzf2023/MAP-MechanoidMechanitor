@@ -60,7 +60,6 @@ namespace MAP_MechanoidMechanitor
             if (!HasEmitter(actor)) return "MAP_HighEnergyLaserBeam.Disabled.EmitterMissing".Translate();
             if (actor.Faction == Faction.OfPlayer && !actor.Drafted) return "MAP_HighEnergyLaserBeam.Disabled.NotDrafted".Translate();
             if (!CanOperate(actor)) return "MAP_HighEnergyLaserBeam.Disabled.Unavailable".Translate();
-            if (actor.CurJobDef == HighEnergyLaserBeamDefOf.MAP_HighEnergyLaserBeam) return "MAP_HighEnergyLaserBeam.Disabled.Busy".Translate();
             if (Find.TickManager.TicksGame < readyTick)
                 return "MAP_HighEnergyLaserBeam.Disabled.Cooldown".Translate(
                     ((readyTick - Find.TickManager.TicksGame) / 60f).ToString("0.0"));
@@ -81,7 +80,7 @@ namespace MAP_MechanoidMechanitor
         /// <summary>供玩家命令及后续 BOSS 控制器调用，不在这里决定 AI 施放时机。</summary>
         public Job? TryMakeCastJob(LocalTargetInfo target)
         {
-            if (!(parent is Pawn actor) || DisabledReason(actor) != null
+            if (!(parent is Pawn actor) || IsFiring(actor) || DisabledReason(actor) != null
                 || !ValidInitialTarget(actor, target)) return null;
             // A 保留 Pawn/地块目标，B 独立保存确认目标瞬间的所在格，C 锁定施法者位置。
             Job job = JobMaker.MakeJob(HighEnergyLaserBeamDefOf.MAP_HighEnergyLaserBeam, target, target.Cell, actor.Position);
@@ -92,19 +91,32 @@ namespace MAP_MechanoidMechanitor
 
         internal void NotifyFiringStarted() => readyTick = Find.TickManager.TicksGame + Props.cooldownTicks;
 
+        private static bool IsFiring(Pawn actor) => actor.jobs?.curDriver is JobDriver_HighEnergyLaserBeam driver
+            && driver.IsFiring;
+
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
             if (!(parent is Pawn actor) || actor.Faction != Faction.OfPlayer) yield break;
+            bool firing = IsFiring(actor);
             Command_Action command = new Command_Action
             {
-                defaultLabel = "MAP_HighEnergyLaserBeam.Label".Translate(),
-                defaultDesc = "MAP_HighEnergyLaserBeam.Description".Translate().Resolve(),
+                defaultLabel = (firing ? "MAP_HighEnergyLaserBeam.Stop.Label" : "MAP_HighEnergyLaserBeam.Label").Translate(),
+                defaultDesc = (firing ? "MAP_HighEnergyLaserBeam.Stop.Description" : "MAP_HighEnergyLaserBeam.Description")
+                    .Translate().Resolve(),
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_HighEnergyLaserBeam"),
-                action = () => BeginTargeting(actor)
+                action = firing ? () => StopFiring(actor) : () => BeginTargeting(actor)
             };
-            string? reason = DisabledReason(actor);
-            if (reason != null) command.Disable(reason);
+            if (!firing)
+            {
+                string? reason = DisabledReason(actor);
+                if (reason != null) command.Disable(reason);
+            }
             yield return command;
+        }
+
+        private static void StopFiring(Pawn actor)
+        {
+            if (IsFiring(actor)) actor.jobs?.EndCurrentJob(JobCondition.InterruptForced);
         }
 
         private void BeginTargeting(Pawn actor)

@@ -122,12 +122,12 @@ namespace MAP_MechanoidMechanitor
         {
             switch (mode)
             {
-                case MechServiceStationMode.AssignedOnly: return "指定机械族专用";
-                case MechServiceStationMode.MechanitorOnly: return "机械族机械师专用";
-                case MechServiceStationMode.AssignedPriority: return "指定机械族优先";
-                case MechServiceStationMode.ChargeFirst: return "优先充电";
-                case MechServiceStationMode.RepairFirst: return "优先维修";
-                default: return "按需使用";
+                case MechServiceStationMode.AssignedOnly: return "MAP_MechServiceStation.Mode.AssignedOnly".Translate();
+                case MechServiceStationMode.MechanitorOnly: return "MAP_MechServiceStation.Mode.MechanitorOnly".Translate();
+                case MechServiceStationMode.AssignedPriority: return "MAP_MechServiceStation.Mode.AssignedPriority".Translate();
+                case MechServiceStationMode.ChargeFirst: return "MAP_MechServiceStation.Mode.ChargeFirst".Translate();
+                case MechServiceStationMode.RepairFirst: return "MAP_MechServiceStation.Mode.RepairFirst".Translate();
+                default: return "MAP_MechServiceStation.Mode.AsNeeded".Translate();
             }
         }
     }

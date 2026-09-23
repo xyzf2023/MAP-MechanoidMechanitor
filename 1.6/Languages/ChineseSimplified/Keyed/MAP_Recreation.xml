@@ -3,16 +3,16 @@
 
   <!-- 模块：机械族机械师娱乐与灵感 -->
   <MAP_MechanoidMechanitor.Settings.Recreation.Section>机械族机械师娱乐与灵感</MAP_MechanoidMechanitor.Settings.Recreation.Section>
-  <MAP_MechanoidMechanitor.Settings.Recreation.Description>允许机械族机械师在没有其他工作时进行部分原版娱乐活动，并有概率在完整完成娱乐后获得适用的原版灵感。</MAP_MechanoidMechanitor.Settings.Recreation.Description>
+  <MAP_MechanoidMechanitor.Settings.Recreation.Description>机械族机械师可以在空闲时进行部分原版娱乐活动，并有概率获得灵感。</MAP_MechanoidMechanitor.Settings.Recreation.Description>
 
   <MAP_MechanoidMechanitor.Settings.Recreation.Enable.Label>允许机械族机械师进行娱乐并获得灵感</MAP_MechanoidMechanitor.Settings.Recreation.Enable.Label>
-  <MAP_MechanoidMechanitor.Settings.Recreation.Enable.Description>开启后，机械族机械师在空闲时有概率选择经过兼容的原版娱乐活动。完整完成娱乐后，还有概率获得当前满足条件的原版灵感。该功能不会为机械族机械师添加原版娱乐需求。</MAP_MechanoidMechanitor.Settings.Recreation.Enable.Description>
+  <MAP_MechanoidMechanitor.Settings.Recreation.Enable.Description>开启后，机械族机械师在空闲时有概率进行娱乐活动。</MAP_MechanoidMechanitor.Settings.Recreation.Enable.Description>
 
   <MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Label>空闲时尝试娱乐概率：{0}%</MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Label>
-  <MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Description>机械族机械师每次进入空闲行为选择时尝试进行娱乐的概率。判定失败或没有合法娱乐活动时，会继续执行原版机械族空闲行为。</MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Description>
+  <MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Description>机械族机械师每次进入空闲时尝试进行娱乐的概率。</MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Description>
 
   <MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Label>完成娱乐后获得灵感概率：{0}%</MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Label>
-  <MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Description>机械族机械师完整完成一次由本系统分配的娱乐活动后，尝试获得一个当前满足资格的原版灵感的概率。娱乐被中断或失败时不会触发。</MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Description>
+  <MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Description>机械族机械师完成一次娱乐后获得灵感的概率。</MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Description>
 
   <MAP_MechanoidMechanitor.Recreation.InspirationReason>在完成一次娱乐活动后，新的灵感随之产生。</MAP_MechanoidMechanitor.Recreation.InspirationReason>
 

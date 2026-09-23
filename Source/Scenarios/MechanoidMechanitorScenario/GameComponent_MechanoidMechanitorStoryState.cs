@@ -32,6 +32,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool initialMechHiveRelationApplied;
 
+        private bool cerebrexFacilityTrespassed;
+
         private bool hasLockedOrdinaryFactionRelations;
 
         private bool hasLockedMechHiveRelation;
@@ -80,6 +82,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             initialOrdinaryFactionRelationsApplied;
 
         public bool InitialMechHiveRelationApplied => initialMechHiveRelationApplied;
+
+        public bool CerebrexFacilityTrespassed => cerebrexFacilityTrespassed;
+
+        public void MarkCerebrexFacilityTrespassed()
+        {
+            if (cerebrexFacilityTrespassed)
+            {
+                return;
+            }
+
+            cerebrexFacilityTrespassed = true;
+            RebuildRuntimeCaches();
+        }
 
         public bool InitialInsectRelationApplied => initialInsectRelationApplied;
 
@@ -1071,6 +1086,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "initialMechHiveRelationApplied",
                 false);
             Scribe_Values.Look(
+                ref cerebrexFacilityTrespassed,
+                "cerebrexFacilityTrespassed",
+                false);
+            Scribe_Values.Look(
                 ref initialInsectRelationApplied,
                 "initialInsectRelationApplied",
                 false);
@@ -1346,7 +1365,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (PurgeDirectiveFinalPenaltyTriggered)
+            if (CerebrexFacilityTrespassed || PurgeDirectiveFinalPenaltyTriggered)
             {
                 return true;
             }

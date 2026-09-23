@@ -71,7 +71,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (storyState.PurgeDirectiveFinalPenaltyTriggered)
+            if (storyState.CerebrexFacilityTrespassed
+                || storyState.PurgeDirectiveFinalPenaltyTriggered)
             {
                 relationKind = FactionRelationKind.Hostile;
                 hostileOnHarmByPlayer = false;
@@ -105,7 +106,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            if (storyState.PurgeDirectiveFinalPenaltyTriggered)
+            if (storyState.CerebrexFacilityTrespassed
+                || storyState.PurgeDirectiveFinalPenaltyTriggered)
             {
                 relationKind = FactionRelationKind.Hostile;
                 hostileOnHarmByPlayer = false;

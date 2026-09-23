@@ -7,7 +7,6 @@
   <MAP_MechanicalFlight_AerialMove>Aerial move</MAP_MechanicalFlight_AerialMove>
   <MAP_MechanicalFlight_Unavailable>Flight is currently unavailable.</MAP_MechanicalFlight_Unavailable>
   <MAP_MechanicalFlight_Landing>Landing is in progress.</MAP_MechanicalFlight_Landing>
-  <MAP_MechanicalFlight_NoEnergyNeed>This mechanoid has no usable energy source.</MAP_MechanicalFlight_NoEnergyNeed>
   <MAP_MechanicalFlight_LowEnergy>Energy is below {0}; flight cannot begin.</MAP_MechanicalFlight_LowEnergy>
   <MAP_MechanicalFlight_ThickRoofTakeoff>Cannot take off beneath an overhead mountain.</MAP_MechanicalFlight_ThickRoofTakeoff>
   <MAP_MechanicalFlight_ThickRoofLanding>Cannot land beneath an overhead mountain.</MAP_MechanicalFlight_ThickRoofLanding>

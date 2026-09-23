@@ -46,11 +46,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Command_Action completeConstruction = new Command_Action
             {
                 defaultLabel =
-                    "MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.Label"
-                        .Translate(),
+                    "DEV：立即完成建设",
                 defaultDesc =
-                    "MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.Desc"
-                        .Translate(),
+                    "立即将这个建设中的机械巢节点切换为建设完成状态。仅用于开发者测试。",
                 action = () => DevForceCompleteConstruction(node)
             };
 
@@ -58,8 +56,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (node.HasMap)
             {
                 completeConstruction.Disable(
-                    "MAP_MechanoidMechanitor.MechHiveNode.Dev.CompleteConstruction.MapLoaded"
-                        .Translate());
+                    "节点地图已加载，无法安全切换建设阶段。请先离开该地图。");
             }
 
             yield return completeConstruction;

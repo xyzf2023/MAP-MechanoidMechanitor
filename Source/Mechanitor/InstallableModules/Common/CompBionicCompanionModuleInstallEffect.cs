@@ -19,7 +19,8 @@ namespace MAP_MechanoidMechanitor
     public class CompBionicCompanionModuleInstallEffect
         : CompMechanoidModuleInstallEffect
     {
-        private const string AlreadyHasStateSuffix = "：已经拥有仿生伴侣功能";
+        private const string AlreadyHasStateSuffixKey =
+            "MAP_MechanoidMechanitor.InstallableModule.AlreadyCompanionSuffix";
 
         public override bool ShouldShowOption(Pawn pawn, out string? disabledReason)
         {
@@ -27,7 +28,7 @@ namespace MAP_MechanoidMechanitor
 
             if (SyntheticCompanionStateUtility.HasState(pawn))
             {
-                disabledReason = AlreadyHasStateSuffix;
+                disabledReason = AlreadyHasStateSuffixKey.Translate();
                 return true;
             }
 
@@ -56,9 +57,11 @@ namespace MAP_MechanoidMechanitor
         }
 
         public override string GetRejectMessage(Pawn pawn)
-            => $"{pawn.LabelShort}无法安装{parent.LabelNoCount}。";
+            => "MAP_MechanoidMechanitor.InstallableModule.Rejected".Translate(
+                pawn.LabelShort, parent.LabelNoCount);
 
         public override string GetSuccessMessage(Pawn pawn)
-            => $"{pawn.LabelShort}已安装仿生伴侣模块。";
+            => "MAP_MechanoidMechanitor.InstallableModule.BionicCompanion.Success"
+                .Translate(pawn.LabelShort);
     }
 }

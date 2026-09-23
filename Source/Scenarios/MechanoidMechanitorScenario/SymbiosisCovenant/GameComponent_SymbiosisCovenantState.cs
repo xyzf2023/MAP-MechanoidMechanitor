@@ -1071,7 +1071,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             LeaveCovenant(
                 record,
-                "MAP_MechanoidMechanitor.Symbiosis.TrustReason.Dev".Translate());
+                "DEV 信任测试");
             return true;
         }
 
