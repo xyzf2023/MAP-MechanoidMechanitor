@@ -18,6 +18,8 @@ namespace MAP_MechanoidMechanitor
     {
         private const float Radius = 3.5f;
         private const int IntervalTicks = 20;
+        private const int HeatGlowIntervalTicks = 60;
+        private const float HeatGlowSizeFactor = 0.4f;
         private const float BaseDamage = 10f;
         private const float BaseHeatstrokeSeverity = 0.01f;
         private readonly List<Pawn> targets = new List<Pawn>();
@@ -25,11 +27,18 @@ namespace MAP_MechanoidMechanitor
         public override void CompTick()
         {
             if (!(parent is Pawn boss) || !boss.Spawned || boss.Destroyed
-                || boss.Dead || boss.Suspended || !boss.IsHashIntervalTick(IntervalTicks))
+                || boss.Dead || boss.Suspended)
                 return;
 
             Map map = boss.Map;
             float activeRadius = boss.GetComp<CompSunBossState>()?.Stage.HeatRadius ?? Radius;
+            // 原版光晕持续 7.4 秒，每秒补充一个，叠加成持续高温提示。
+            // ThrowHeatGlow 会将 size 再乘以 4～6；这里只取半径的一部分。
+            if (boss.IsHashIntervalTick(HeatGlowIntervalTicks) && !boss.Position.Fogged(map))
+                FleckMaker.ThrowHeatGlow(boss.Position, map, activeRadius * HeatGlowSizeFactor);
+
+            if (!boss.IsHashIntervalTick(IntervalTicks)) return;
+
             IntVec3 center = boss.Position;
             targets.Clear();
             // 先取快照，避免伤害致死或离图回调修改地图 Pawn 列表。
