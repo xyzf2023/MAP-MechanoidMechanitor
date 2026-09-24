@@ -19,7 +19,12 @@
     </killedLeavings>
     <killedLeavingsChance>1</killedLeavingsChance>
     <comps>
-
+      <!-- 产热组件 -->
+      <li Class="CompProperties_HeatPusher">
+        <compClass>MAP_MechanoidMechanitor.CompPawnHeatPusher</compClass>
+        <heatPerSecond>1000</heatPerSecond>
+        <heatPushMaxTemperature>300</heatPushMaxTemperature>
+      </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_SunBossState">
         <maxStructure>8000</maxStructure>
         <coolingFailureDamagePerSecond>6</coolingFailureDamagePerSecond>

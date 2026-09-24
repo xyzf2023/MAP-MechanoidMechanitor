@@ -13,6 +13,12 @@
       <BandwidthCost>5</BandwidthCost>
     </statBases>
     <comps>
+      <!-- 产热组件 -->
+      <li Class="CompProperties_HeatPusher">
+        <compClass>MAP_MechanoidMechanitor.CompPawnHeatPusher</compClass>
+        <heatPerSecond>100</heatPerSecond>
+        <heatPushMaxTemperature>50</heatPushMaxTemperature>
+      </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_SunEnergyAura" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_AutonomousMech">
         <setting>Sun</setting>
