@@ -27,6 +27,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
             srWeaponDef = resolvedSrWeaponDef;
             fyWeaponDef = resolvedFyWeaponDef;
             switchSoundDef = resolvedSwitchSoundDef;
+            MechWeaponUtility.RegisterBuiltInWeapon(resolvedSrWeaponDef);
+            MechWeaponUtility.RegisterBuiltInWeapon(resolvedFyWeaponDef);
         }
 
         internal static void Postfix(
@@ -65,6 +67,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
             command.Disabled =
                 !CanUseWeaponToggleNow(pawn)
                 || IsForeignPrimaryWeapon(primary);
+            if (MechWeaponUtility.IsManaged(pawn) && MechWeaponUtility.Missing(pawn))
+                command.Disable("MAP_MechWeapon.Missing".Translate());
 
             // 原 GD5 action 会再次要求 GetOverseer()!=null，且会把任何非 SR 主武器
             // 直接 Remove。无监管者机械族机械师必须改走安全状态机。
@@ -125,6 +129,16 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
             else
             {
                 // 执行层再次保护普通武器，避免其他 MOD 或状态变化绕过 Gizmo Disabled。
+                return;
+            }
+
+            if (MechWeaponUtility.IsManaged(pawn))
+            {
+                GameComponent_MechWeaponRegistry.Ensure(pawn);
+                if (!MechWeaponUtility.CanOperate(pawn) || MechWeaponUtility.Missing(pawn)) return;
+                if (MechWeaponUtility.EquipBuiltIn(pawn, variant: targetDef)
+                    && switchSoundDef != null && pawn.MapHeld != null)
+                    switchSoundDef.PlayOneShot(new TargetInfo(pawn.PositionHeld, pawn.MapHeld, false));
                 return;
             }
 

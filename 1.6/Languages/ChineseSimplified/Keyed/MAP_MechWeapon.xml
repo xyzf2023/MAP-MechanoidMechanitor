@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechWeapon.Switch>切换为{0}</MAP_MechWeapon.Switch>
+  <MAP_MechWeapon.SwitchDesc>切换机械体的专用武器与货物栏中的普通武器。切回专用武器时，当前普通武器会存入货物栏。</MAP_MechWeapon.SwitchDesc>
+  <MAP_MechWeapon.Missing>武器部件缺失</MAP_MechWeapon.Missing>
+  <MAP_MechWeapon.Unavailable>当前无法切换武器，或专用武器正在转移。</MAP_MechWeapon.Unavailable>
+  <MAP_MechWeapon.BuiltInLocked>无法丢弃：机械体专用武器</MAP_MechWeapon.BuiltInLocked>
+</LanguageData>

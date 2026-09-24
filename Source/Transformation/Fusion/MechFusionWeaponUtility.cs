@@ -14,6 +14,7 @@ namespace MAP_MechanoidMechanitor
             Pawn source,
             Pawn wearer)
         {
+            using IDisposable weaponChange = MechWeaponUtility.ControlledChange(source);
             ThingWithComps? sourceWeapon = source.equipment?.Primary;
             if (sourceWeapon == null)
             {
@@ -55,6 +56,7 @@ namespace MAP_MechanoidMechanitor
             Pawn source,
             Pawn? wearer)
         {
+            using IDisposable weaponChange = MechWeaponUtility.ControlledChange(source);
             ThingWithComps? sourceWeapon = session.SourceWeapon;
             if (sourceWeapon != null
                 && !sourceWeapon.Destroyed
@@ -86,6 +88,7 @@ namespace MAP_MechanoidMechanitor
             Pawn source,
             Pawn wearer)
         {
+            using IDisposable weaponChange = MechWeaponUtility.ControlledChange(source);
             ThingWithComps? sourceWeapon = session.SourceWeapon;
             if (sourceWeapon != null
                 && !sourceWeapon.Destroyed
@@ -175,6 +178,12 @@ namespace MAP_MechanoidMechanitor
 
         private static void PlaceNearPawn(Thing thing, Pawn pawn)
         {
+            // GenPlace 不执行 destroyOnDrop，专武不能经合体失败回退流入地图。
+            if (MechWeaponUtility.IsBuiltIn(thing.def))
+            {
+                thing.Destroy();
+                return;
+            }
             try
             {
                 if (pawn.Spawned
