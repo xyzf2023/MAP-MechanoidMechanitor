@@ -8,8 +8,6 @@
       <MarketValue>800</MarketValue>
       <MoveSpeed>2.0</MoveSpeed>
       <WorkSpeedGlobal>1</WorkSpeedGlobal>
-      <EnergyShieldRechargeRate>0.25</EnergyShieldRechargeRate>
-      <EnergyShieldEnergyMax>1.5</EnergyShieldEnergyMax>
       <MechEnergyLossPerHP>0.25</MechEnergyLossPerHP>
       <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">5</BandwidthCost>
       <ControlTakingTime>15</ControlTakingTime>
