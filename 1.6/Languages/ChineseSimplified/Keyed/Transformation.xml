@@ -25,10 +25,10 @@
   <MAP_MechanoidMechanitor.Transformation.Building.Restore.Description>命令此单位转换为机械族形态。</MAP_MechanoidMechanitor.Transformation.Building.Restore.Description>
   <MAP_MechanoidMechanitor.Transformation.Building.StoredPawn>原始机械体：{0}</MAP_MechanoidMechanitor.Transformation.Building.StoredPawn>
   <MAP_MechanoidMechanitor.Transformation.Building.PawnDowned>机械体已倒地，无法转换。</MAP_MechanoidMechanitor.Transformation.Building.PawnDowned>
-  <MAP_MechanoidMechanitor.Transformation.Building.NoPlacement>附近没有建筑形态的安全位置。</MAP_MechanoidMechanitor.Transformation.Building.NoPlacement>
-  <MAP_MechanoidMechanitor.Transformation.Building.NoRestorePlacement>附近没有机械体恢复位置。</MAP_MechanoidMechanitor.Transformation.Building.NoRestorePlacement>
+  <MAP_MechanoidMechanitor.Transformation.Building.NoPlacement>附近没有合法的放置位置。</MAP_MechanoidMechanitor.Transformation.Building.NoPlacement>
+  <MAP_MechanoidMechanitor.Transformation.Building.NoRestorePlacement>附近没有合法的恢复位置。</MAP_MechanoidMechanitor.Transformation.Building.NoRestorePlacement>
   <MAP_MechanoidMechanitor.Transformation.Building.GenericFailure>错误：形态变换失败。</MAP_MechanoidMechanitor.Transformation.Building.GenericFailure>
   <MAP_MechanoidMechanitor.Transformation.Building.Converted>{0} 已转换为建筑形态。</MAP_MechanoidMechanitor.Transformation.Building.Converted>
   <MAP_MechanoidMechanitor.Transformation.Building.Restored>{0} 已恢复为机械体形态。</MAP_MechanoidMechanitor.Transformation.Building.Restored>
-  <MAP_MechanoidMechanitor.Transformation.Building.EmergencyRestored>{0} 的建筑形态已损毁，原机械体已死亡。</MAP_MechanoidMechanitor.Transformation.Building.EmergencyRestored>
+  <MAP_MechanoidMechanitor.Transformation.Building.EmergencyRestored>{0} 已损毁，机械体已死亡。</MAP_MechanoidMechanitor.Transformation.Building.EmergencyRestored>
 </LanguageData>
