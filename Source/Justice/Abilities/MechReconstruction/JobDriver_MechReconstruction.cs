@@ -162,18 +162,31 @@ namespace MAP_MechanoidMechanitor
                 innerPawn.needs.energy.CurLevel = innerPawn.needs.energy.MaxLevel * 0.5f;
             }
 
-            // 缺失部位已由原版复活流程恢复；这里只清除剩余可治愈伤势。
-            // 身份、植入体、机械意识和工作模式等功能 Hediff 必须保留。
-            // 移除伤势会触发健康回调，使用快照并复查条目，避免列表变动。
-            List<Hediff> hediffs = new List<Hediff>(innerPawn.health.hediffSet.hediffs);
-            foreach (Hediff hediff in hediffs)
+            bool protectedTarget = MechResurrectionHealthUtility.AppliesTo(innerPawn);
+            if (protectedTarget)
             {
-                if (hediff is Hediff_Injury
-                    && hediff.def.everCurableByItem
-                    && innerPawn.health.hediffSet.hediffs.Contains(hediff))
+                // 与培育复活共用规则，保留真实改造及义体所需的身体结构。
+                MechResurrectionHealthUtility.RemoveUnprotectedHediffs(innerPawn);
+            }
+            else
+            {
+                // 范围外目标保持原有行为：仅额外清除可治愈伤势。
+                List<Hediff> hediffs = new List<Hediff>(innerPawn.health.hediffSet.hediffs);
+                foreach (Hediff hediff in hediffs)
                 {
-                    innerPawn.health.RemoveHediff(hediff);
+                    if (hediff is Hediff_Injury
+                        && hediff.def.everCurableByItem
+                        && innerPawn.health.hediffSet.hediffs.Contains(hediff))
+                    {
+                        innerPawn.health.RemoveHediff(hediff);
+                    }
                 }
+            }
+
+            if (protectedTarget && (innerPawn.Dead || !innerPawn.Spawned))
+            {
+                RejectAndEnd();
+                return;
             }
 
             if (innerPawn.RaceProps.IsMechanoid && MechRepairUtility.IsMissingWeapon(innerPawn))
@@ -194,6 +207,7 @@ namespace MAP_MechanoidMechanitor
             innerPawn.stances.stagger.StaggerFor(60, 0.17f);
             innerPawn.GenerateNecessaryName();
             AssignToJustice(innerPawn);
+            MechResurrectionHealthUtility.SynchronizeAfterResurrection(innerPawn);
 
             Ability? ability = job.ability;
             if (ability != null)

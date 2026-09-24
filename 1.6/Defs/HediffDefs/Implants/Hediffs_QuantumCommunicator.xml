@@ -2,6 +2,9 @@
 <Defs>
   <HediffDef ParentName="ImplantHediffBase" MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_QuantumCommunicator</defName>
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.HediffDefExtension_MechResurrectionProtection" />
+    </modExtensions>
     <label>量子通讯器</label>
     <labelNoun>量子通讯器</labelNoun>
     <description>利用量子效应实现超距通信的超凡通讯装置，植入后控制机械族不再受距离限制。</description>

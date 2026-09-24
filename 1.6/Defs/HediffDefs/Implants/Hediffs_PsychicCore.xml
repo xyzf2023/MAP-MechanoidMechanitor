@@ -2,6 +2,9 @@
 <Defs>
   <HediffDef MayRequire="ludeon.rimworld.biotech,ludeon.rimworld.royalty">
     <defName>MAP_PsychicCore</defName>
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.HediffDefExtension_MechResurrectionProtection" />
+    </modExtensions>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_PsychicCore</hediffClass>
     <comps>
       <li Class="MAP_MechanoidMechanitor.HediffCompProperties_ExtraEffectDescription">

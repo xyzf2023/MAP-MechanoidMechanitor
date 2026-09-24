@@ -2,6 +2,9 @@
 <Defs>
   <HediffDef MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_ProductivityCore</defName>
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.HediffDefExtension_MechResurrectionProtection" />
+    </modExtensions>
     <hediffClass>Hediff_Level</hediffClass>
     <descriptionHyperlinks>
       <ThingDef>MAP_EfficiencyCoreQuantumComputingArray</ThingDef>

@@ -2,6 +2,9 @@
 <Defs>
   <HediffDef MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_ProxySubchain</defName>
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.HediffDefExtension_MechResurrectionProtection" />
+    </modExtensions>
     <hediffClass>HediffWithComps</hediffClass>
     <descriptionHyperlinks>
       <ThingDef>MAP_ProxySubchain</ThingDef>

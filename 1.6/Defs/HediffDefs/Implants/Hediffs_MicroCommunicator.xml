@@ -3,6 +3,9 @@
 
   <HediffDef MayRequire="ludeon.rimworld.biotech">
     <defName>MAP_MicroCommunicator</defName>
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.HediffDefExtension_MechResurrectionProtection" />
+    </modExtensions>
     <hediffClass>HediffWithComps</hediffClass>
 
     <label>微型通讯器</label>

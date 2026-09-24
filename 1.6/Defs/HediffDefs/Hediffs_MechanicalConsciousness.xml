@@ -2,6 +2,9 @@
 <Defs>
   <HediffDef>
     <defName>MAP_MechanicalConsciousness</defName>
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.HediffDefExtension_MechResurrectionProtection" />
+    </modExtensions>
     <label>机械意识</label>
     <description>该机体承载着当前机械巢的自主机械意识。</description>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_MechanicalConsciousness</hediffClass>
