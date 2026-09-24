@@ -3,7 +3,6 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.AI;
-using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -50,18 +49,8 @@ namespace MAP_MechanoidMechanitor
             {
                 if (released || !CanContinueCharge()) return;
                 released = true;
-                EnergyPulseWave wave = (EnergyPulseWave)ThingMaker.MakeThing(EnergyPulseDefOf.MAP_EnergyPulseWave);
-                wave.Initialize(pawn, Pulse!.Props);
-                GenSpawn.Spawn(wave, pawn.Position, pawn.Map);
+                Pulse!.ReleaseAt(pawn.Map, pawn.Position);
                 Pulse.NotifyReleased();
-                // 与主脑一致，直接使用毒蜂死亡冲击波的原版特效；只在实际释放时触发。
-                EffecterDef? effecterDef = Pulse.Props.releaseEffecter
-                    ?? DefDatabase<EffecterDef>.GetNamedSilentFail("BlastMechBandShockwave");
-                Effecter? effecter = effecterDef?.Spawn(pawn.Position, pawn.Map,
-                    Pulse.Props.radius / Pulse.Props.effectReferenceRadius);
-                effecter?.Cleanup();
-                DefDatabase<SoundDef>.GetNamedSilentFail("Explosion_MechBandShockwave")
-                    ?.PlayOneShot(new TargetInfo(pawn));
             };
             yield return release;
         }

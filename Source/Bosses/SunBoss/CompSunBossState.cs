@@ -60,6 +60,7 @@ namespace MAP_MechanoidMechanitor
         private const int OpeningCannonDelayTicks = 10 * 60;
         private bool initialized;
         private bool deathLetterSent;
+        private bool deathEffectsReleased;
         private bool openingPulsePending = true;
         private int openingCannonReadyTick;
         internal bool OpeningPulsePending => openingPulsePending;
@@ -178,7 +179,26 @@ namespace MAP_MechanoidMechanitor
         public override void Notify_Killed(Map prevMap, DamageInfo? dinfo = null)
         {
             base.Notify_Killed(prevMap, dinfo);
-            if (!Boss.Dead || deathLetterSent) return;
+            if (!Boss.Dead) return;
+            if (!deathEffectsReleased)
+            {
+                // 先标记防重；离图死亡不补播，复活再击杀也不重复释放。
+                deathEffectsReleased = true;
+                CompEnergyPulse? pulse = Boss.GetComp<CompEnergyPulse>();
+                // 死亡通知到达时 Pawn 已离图，优先使用尸体持有位置。
+                IntVec3 position = Boss.PositionHeld;
+                if (!position.IsValid) position = Boss.Position;
+                if (prevMap != null && position.InBounds(prevMap) && pulse != null)
+                {
+                    // 沿用原版 DamageWorker 爆炸中心扬尘的数量、分布和尺寸比例。
+                    for (int i = 0; i < 4; i++)
+                        FleckMaker.ThrowSmoke(position.ToVector3Shifted()
+                            + Gen.RandomHorizontalVector(pulse.Props.radius * 0.7f),
+                            prevMap, pulse.Props.radius * 0.6f);
+                    pulse.ReleaseAt(prevMap, position);
+                }
+            }
+            if (deathLetterSent) return;
             GameComponent_SunBossNotifications? notifications =
                 CurrentGameComponentCache<GameComponent_SunBossNotifications>.Get();
             if (notifications == null) return;
@@ -192,6 +212,8 @@ namespace MAP_MechanoidMechanitor
             base.PostExposeData();
             Scribe_Values.Look(ref initialized, "sunStructureInitialized");
             Scribe_Values.Look(ref deathLetterSent, "sunDeathLetterSent");
+            // 旧档中已发送陨落信件的实例视为已处理，避免复活后补播。
+            Scribe_Values.Look(ref deathEffectsReleased, "sunDeathEffectsReleased", deathLetterSent);
             // 旧存档中的既有 BOSS 不补播开场；新生成的实例默认等待第一次实际释放。
             Scribe_Values.Look(ref openingPulsePending, "sunOpeningPulsePending", false);
             // 旧存档缺少该字段时不额外插入开场等待。

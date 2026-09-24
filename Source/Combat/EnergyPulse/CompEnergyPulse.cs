@@ -3,6 +3,7 @@ using RimWorld;
 using UnityEngine;
 using Verse;
 using Verse.AI;
+using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
@@ -55,6 +56,21 @@ namespace MAP_MechanoidMechanitor
             CompSunBossState? state = parent.GetComp<CompSunBossState>();
             readyTick = Find.TickManager.TicksGame + (state?.Stage.PulseCooldown ?? Props.cooldownTicks);
             state?.NotifyPulseReleased();
+        }
+
+        /// <summary>生成独立脉冲与声光效果；显式接收地图和位置，允许死亡后释放。</summary>
+        internal void ReleaseAt(Map map, IntVec3 position)
+        {
+            if (!(parent is Pawn actor) || map == null || !position.InBounds(map)) return;
+            EnergyPulseWave wave = (EnergyPulseWave)ThingMaker.MakeThing(EnergyPulseDefOf.MAP_EnergyPulseWave);
+            wave.Initialize(actor, Props);
+            GenSpawn.Spawn(wave, position, map);
+            EffecterDef? effecterDef = Props.releaseEffecter
+                ?? DefDatabase<EffecterDef>.GetNamedSilentFail("BlastMechBandShockwave");
+            Effecter? effecter = effecterDef?.Spawn(position, map, Props.radius / Props.effectReferenceRadius);
+            effecter?.Cleanup();
+            DefDatabase<SoundDef>.GetNamedSilentFail("Explosion_MechBandShockwave")
+                ?.PlayOneShot(new TargetInfo(position, map));
         }
 
         /// <summary>玩家按钮和非玩家控制器共用的施放入口；不在这里决定 AI 的施放时机。</summary>
