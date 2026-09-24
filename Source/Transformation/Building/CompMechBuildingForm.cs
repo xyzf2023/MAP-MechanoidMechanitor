@@ -8,6 +8,9 @@ namespace MAP_MechanoidMechanitor
 {
     public sealed class CompProperties_MechBuildingForm : CompProperties
     {
+        // 只有允许直接建造的形态配置此项；转换而来的建筑沿用原始 Pawn。
+        public PawnKindDef? constructedPawnKind;
+
         public CompProperties_MechBuildingForm()
         {
             compClass = typeof(CompMechBuildingForm);
@@ -135,6 +138,15 @@ namespace MAP_MechanoidMechanitor
 
             CompMechFormCarrier? carrier =
                 parent.TryGetComp<CompMechFormCarrier>();
+            PawnKindDef? constructedKind =
+                ((CompProperties_MechBuildingForm)props).constructedPawnKind;
+            if (!respawningAfterLoad && constructedKind != null
+                && carrier?.Committed == false && StoredSourcePawn == null
+                && parent.Faction == Faction.OfPlayer)
+            {
+                MechBuildingConversionService.TryInitializeConstructedBuilding(
+                    parent, constructedKind);
+            }
             Pawn? source = carrier?.SourcePawn ?? StoredSourcePawn;
             if (carrier?.Committed == true
                 && carrier.CarrierForm == MechTransformationForm.Building

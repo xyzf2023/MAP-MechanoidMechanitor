@@ -14,6 +14,10 @@
       <MoveSpeed>1.0</MoveSpeed>
       <BandwidthCost MayRequire="Ludeon.RimWorld.Biotech">9999</BandwidthCost>
     </statBases>
+    <killedLeavings Inherit="False">
+      <MAP_AntimatterContainmentDevice>1</MAP_AntimatterContainmentDevice>
+    </killedLeavings>
+    <killedLeavingsChance>1</killedLeavingsChance>
     <comps>
 
       <li Class="MAP_MechanoidMechanitor.CompProperties_SunBossState">

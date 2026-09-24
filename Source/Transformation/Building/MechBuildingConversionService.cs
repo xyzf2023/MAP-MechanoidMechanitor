@@ -15,6 +15,75 @@ namespace MAP_MechanoidMechanitor
         private const int RestoreSearchRadius = 8;
         private const float FractionEpsilon = 0.0001f;
 
+        /// <summary>
+        /// 直接建造的建筑取得一个全新源 Pawn，然后接入既有形态注册表与恢复流程。
+        /// 转换生成的建筑在 Spawn 前已有源快照，绝不在此另造 Pawn。
+        /// </summary>
+        internal static bool TryInitializeConstructedBuilding(Thing building, PawnKindDef kind)
+        {
+            CompMechFormCarrier? carrier = building.TryGetComp<CompMechFormCarrier>();
+            CompMechBuildingForm? form = building.TryGetComp<CompMechBuildingForm>();
+            if (!building.Spawned || building.Faction != Faction.OfPlayer || carrier == null || form == null)
+                return false;
+            if (carrier.Committed || form.StoredSourcePawn != null) return false;
+
+            // 配置必须双向对应，防止把无关 Pawn 绑定到此建筑。
+            CompProperties_MechBuildingConversion? profile =
+                kind.race.GetCompProperties<CompProperties_MechBuildingConversion>();
+            if (profile?.buildingFormDef != building.def)
+            {
+                Log.Error("[MAP-机械族机械师] 建造形态初始化失败：PawnKind 与建筑配置不匹配：" + building.def.defName);
+                return false;
+            }
+
+            Pawn? source = null;
+            bool committed = false;
+            try
+            {
+                source = PawnGenerator.GeneratePawn(new PawnGenerationRequest(
+                    kind, building.Faction, forceGenerateNewPawn: true,
+                    allowDead: false, allowDowned: false, canGeneratePawnRelations: false));
+                GameComponent_AutonomousMechRegistry.NotifyPawnLifecycle(source);
+
+                if (!GameComponent_MechTransformationRegistry.TryBeginTransition(
+                        source, MechTransformationForm.Building, out _, out string? reason))
+                    throw new InvalidOperationException(reason);
+
+                Find.WorldPawns.PassToWorld(source, PawnDiscardDecideMode.KeepForever);
+                MechFusionSourceUtility.ApplyDormantGuard(source);
+                if (!GameComponent_MechTransformationRegistry.TryCommitTransition(source, building, out reason))
+                    throw new InvalidOperationException(reason);
+                committed = true;
+                SunEnergyAuraUtility.InitializeConstructedSourceHealth(source);
+                // 健康状态和离图回调完成后再设为满能量，随后捕获权威快照。
+                // 仅直接建造生成新 Pawn 时执行，既有机械体往返变形不会补满。
+                Pawn_NeedsTracker needs = source.needs ??= new Pawn_NeedsTracker(source);
+                needs.AddOrRemoveNeedsAsAppropriate();
+                NeedDef? energyDef = DefDatabase<NeedDef>.GetNamedSilentFail("MechEnergy");
+                Need_MechEnergy? energy = energyDef != null
+                    ? needs.TryGetNeed(energyDef) as Need_MechEnergy
+                    : null;
+                if (energy != null) energy.CurLevelPercentage = 1f;
+                form.CaptureSourceState(source);
+                // 不写回建筑生命值；施工后的真实损伤在恢复 Pawn 时按原有逻辑结算。
+                form.CaptureInitialHealthFraction(1f, MechPartDurabilityUtility.GetRepairableStructuralDamage(source));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // 提交成功后的源 Pawn 必须保留，不能销毁已由建筑持有的身份。
+                if (source != null && !committed)
+                {
+                    GameComponent_MechTransformationRegistry.TryCancelTransition(source);
+                    MechFusionSourceUtility.RemoveDormantGuard(source);
+                    if (Find.WorldPawns.Contains(source)) Find.WorldPawns.RemovePawn(source);
+                    source.Destroy(DestroyMode.Vanish);
+                }
+                Log.Error("[MAP-机械族机械师] 直接建造的建筑形态初始化失败：" + building.ThingID + "\n" + ex);
+                return false;
+            }
+        }
+
         internal static bool IsActiveBuildingSource(Pawn? pawn)
         {
             if (pawn == null

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>MAP_AnalyzeAntimatterContainmentDevice</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_AntimatterAnalysis</driverClass>
+    <reportString>正在分析反物质约束器。</reportString>
+    <casualInterruptible>true</casualInterruptible>
+  </JobDef>
+  <WorkGiverDef>
+    <defName>MAP_ContinueAntimatterAnalysis</defName>
+    <label>分析反物质约束器</label>
+    <giverClass>MAP_MechanoidMechanitor.WorkGiver_AntimatterAnalysis</giverClass>
+    <workType>Research</workType>
+    <priorityInType>110</priorityInType>
+    <verb>分析</verb>
+    <gerund>分析反物质约束器</gerund>
+    <directOrderable>false</directOrderable>
+    <canBeDoneByMechs>true</canBeDoneByMechs>
+  </WorkGiverDef>
+</Defs>

@@ -59,6 +59,7 @@ namespace MAP_MechanoidMechanitor
         internal const int BurnInterval = 20;
         private const int OpeningCannonDelayTicks = 10 * 60;
         private bool initialized;
+        private bool deathLetterSent;
         private bool openingPulsePending = true;
         private int openingCannonReadyTick;
         internal bool OpeningPulsePending => openingPulsePending;
@@ -174,10 +175,23 @@ namespace MAP_MechanoidMechanitor
                 SunBossDamageContext.ApplyInternalBurn(this, perSecond * BurnInterval / 60f, part);
         }
 
+        public override void Notify_Killed(Map prevMap, DamageInfo? dinfo = null)
+        {
+            base.Notify_Killed(prevMap, dinfo);
+            if (!Boss.Dead || deathLetterSent) return;
+            GameComponent_SunBossNotifications? notifications =
+                CurrentGameComponentCache<GameComponent_SunBossNotifications>.Get();
+            if (notifications == null) return;
+            // 每个 BOSS 实例只发送一次，复活再击杀和读档均不重复发信。
+            deathLetterSent = true;
+            notifications.NotifyDefeated(Boss);
+        }
+
         public override void PostExposeData()
         {
             base.PostExposeData();
             Scribe_Values.Look(ref initialized, "sunStructureInitialized");
+            Scribe_Values.Look(ref deathLetterSent, "sunDeathLetterSent");
             // 旧存档中的既有 BOSS 不补播开场；新生成的实例默认等待第一次实际释放。
             Scribe_Values.Look(ref openingPulsePending, "sunOpeningPulsePending", false);
             // 旧存档缺少该字段时不额外插入开场等待。

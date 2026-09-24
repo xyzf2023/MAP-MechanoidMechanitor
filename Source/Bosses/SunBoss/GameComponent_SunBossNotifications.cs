@@ -3,7 +3,7 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    /// <summary>存档级太阳 BOSS 通知记录，多地图和多个 BOSS 共用一次性标记。</summary>
+    /// <summary>太阳 BOSS 通知入口；战斗预警共用存档级标记，陨落信件由各 BOSS 实例防重。</summary>
     public sealed class GameComponent_SunBossNotifications : GameComponent
     {
         private bool heatWarningSent;
@@ -47,6 +47,14 @@ namespace MAP_MechanoidMechanitor
                 "MAP_SunBoss_CannonWarningLabel".Translate(),
                 "MAP_SunBoss_CannonWarningText".Translate(),
                 LetterDefOf.ThreatBig, boss);
+        }
+
+        internal void NotifyDefeated(Pawn boss)
+        {
+            Find.LetterStack.ReceiveLetter(
+                "MAP_SunBoss_DefeatedLabel".Translate(),
+                "MAP_SunBoss_DefeatedText".Translate(),
+                LetterDefOf.PositiveEvent, boss);
         }
 
         public override void ExposeData()

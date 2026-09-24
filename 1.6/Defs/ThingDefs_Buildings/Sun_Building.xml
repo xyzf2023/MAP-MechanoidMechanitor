@@ -16,6 +16,8 @@
     <passability>Impassable</passability>
     <!-- 保留空气交换区域，供原版产热组件从 3x3 中心格向房间传热。 -->
     <fillPercent>0.8</fillPercent>
+    <!-- 允许视线和射击越过；保留非全遮挡以保证中心格产热。 -->
+    <disableImpassableShotOverConfigError>true</disableImpassableShotOverConfigError>
     <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
     <graphicData>
       <texPath>Mech/Sun/Sun_Building</texPath>
@@ -23,11 +25,29 @@
       <drawSize>(3,3)</drawSize>
     </graphicData>
     <statBases>
-      <MaxHitPoints>5000</MaxHitPoints>
+      <MaxHitPoints>10000</MaxHitPoints>
+      <WorkToBuild>60000</WorkToBuild>
       <Flammability>0</Flammability>
     </statBases>
+    <designationCategory>Biotech</designationCategory>
+    <costList>
+      <MAP_AntimatterContainmentDevice>1</MAP_AntimatterContainmentDevice>
+      <SubcoreHigh>1</SubcoreHigh>
+      <Plasteel>600</Plasteel>
+      <Steel>1500</Steel>
+      <Uranium>300</Uranium>
+      <ComponentSpacer>25</ComponentSpacer>
+      <ComponentIndustrial>30</ComponentIndustrial>
+      <Gold>50</Gold>
+    </costList>
+    <researchPrerequisites>
+      <li>MAP_AntiparticleApplications</li>
+    </researchPrerequisites>
+    <constructionSkillPrerequisite>12</constructionSkillPrerequisite>
     <building>
-      <neverBuildable>true</neverBuildable>
+      <buildingTags>
+        <li>Biotech</li>
+      </buildingTags>
       <deconstructible>false</deconstructible>
       <claimable>false</claimable>
       <repairable>true</repairable>
@@ -38,7 +58,9 @@
         <buildingForm>true</buildingForm>
       </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechFormCarrier" />
-      <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingForm" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingForm">
+        <constructedPawnKind>MAP_Mech_Sun</constructedPawnKind>
+      </li>
       <li Class="CompProperties_Power">
         <compClass>CompPowerPlant</compClass>
         <basePowerConsumption>-800000</basePowerConsumption>

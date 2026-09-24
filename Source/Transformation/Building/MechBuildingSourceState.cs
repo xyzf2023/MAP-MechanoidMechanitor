@@ -1,3 +1,5 @@
+using System;
+using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -10,6 +12,11 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public sealed class MechBuildingSourceState : IExposable
     {
+        // 使用原版当前需求判定（包括已安装的补丁），不复制其资格规则。
+        private static readonly Func<Pawn_NeedsTracker, NeedDef, bool> ShouldHaveNeed =
+            AccessTools.MethodDelegate<Func<Pawn_NeedsTracker, NeedDef, bool>>(
+                AccessTools.Method(typeof(Pawn_NeedsTracker), "ShouldHaveNeed"));
+
         private Pawn? storedSourcePawn;
         private Faction? originalSourceFaction;
         private Pawn? originalOverseer;
@@ -109,21 +116,27 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            Pawn_NeedsTracker? needs = source.needs;
-            if (needs == null)
-            {
-                return false;
-            }
+            // 恢复入口已确认源 Pawn 存活；缺少 Tracker 时用原版初始化规则补齐。
+            Pawn_NeedsTracker needs = source.needs ??= new Pawn_NeedsTracker(source);
 
-            Need_MechEnergy? energy = needs.energy;
+            NeedDef? energyDef = DefDatabase<NeedDef>.GetNamedSilentFail("MechEnergy");
+            // 无能源需求的配置不需要写回电量。旧存档也可能保存了此前用
+            // maxMechEnergy 兜底生成的快照，不能仅凭 energyCaptured 阻止恢复。
+            if (energyDef == null || !ShouldHaveNeed(needs, energyDef))
+                return true;
+
+            Need_MechEnergy? energy = needs.TryGetNeed(energyDef) as Need_MechEnergy;
             if (energy == null)
             {
                 needs.AddOrRemoveNeedsAsAppropriate();
-                energy = needs.energy;
+                energy = needs.TryGetNeed(energyDef) as Need_MechEnergy;
             }
 
             if (energy == null)
             {
+                Log.Warning("[MAP-机械族机械师] 建筑形态能源写回：原版判定需要能源，但整理需求后仍缺失。"
+                    + $"pawn={source.ThingID}，faction={source.Faction?.def.defName}，"
+                    + $"overseerSubject={source.OverseerSubject != null}。");
                 return false;
             }
 
@@ -133,7 +146,10 @@ namespace MAP_MechanoidMechanitor
 
         private void CaptureEnergy(Pawn source)
         {
-            Need_MechEnergy? energy = source.needs?.energy;
+            NeedDef? energyDef = DefDatabase<NeedDef>.GetNamedSilentFail("MechEnergy");
+            Need_MechEnergy? energy = energyDef != null
+                ? source.needs?.TryGetNeed(energyDef) as Need_MechEnergy
+                : null;
             float fallbackMax = source.RaceProps?.maxMechEnergy ?? 100f;
             storedMaxEnergy = energy?.MaxLevel ?? fallbackMax;
             storedEnergy = energy?.CurLevel ?? storedMaxEnergy;

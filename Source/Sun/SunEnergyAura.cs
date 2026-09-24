@@ -22,6 +22,8 @@ namespace MAP_MechanoidMechanitor
         {
             base.PostSpawnSetup(respawningAfterLoad);
             parent.Map.GetComponent<MapComponent_SunEnergyAura>().Register(this);
+            // 入图时立即补齐自身状态；建筑内的源 Pawn 离图时该状态会自然失效。
+            if (parent is Pawn pawn) SunEnergyAuraUtility.SyncHealth(pawn);
         }
 
         public override void PostDeSpawn(Map map, DestroyMode mode = DestroyMode.Vanish)
@@ -126,6 +128,16 @@ namespace MAP_MechanoidMechanitor
 
         internal static float RestoreFraction(int level) =>
             level == 3 ? 0.01f : level == 2 ? 0.0025f : level == 1 ? 0.0005f : 0f;
+
+        internal static void InitializeConstructedSourceHealth(Pawn pawn)
+        {
+            CompSunEnergyAura? own = pawn.GetComp<CompSunEnergyAura>();
+            if (own == null || own.BuildingForm || pawn.Dead
+                || pawn.Faction != Faction.OfPlayer || pawn.health == null) return;
+            // 新建源 Pawn 尚未入图，不能使用要求 Spawned 的 Level 查询。
+            // 此处只初始化专属标记，实际效果仍由现有在图条件控制。
+            Sync(pawn, SunEnergyAuraDefOf.MAP_SunEnergy, 1);
+        }
 
         internal static void SyncHealth(Pawn pawn)
         {

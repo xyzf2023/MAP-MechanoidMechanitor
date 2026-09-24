@@ -90,16 +90,16 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         internal static void SynchronizeAfterResurrection(Pawn? pawn)
         {
-            if (!AppliesTo(pawn) || !CanSynchronize(pawn)) return;
+            if (pawn == null || !AppliesTo(pawn) || !CanSynchronize(pawn)) return;
             try
             {
-                MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn!);
-                MechanoidMechanitorCapabilityLifecycleUtility.EnsureInfrastructure(pawn!);
+                MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
+                MechanoidMechanitorCapabilityLifecycleUtility.EnsureInfrastructure(pawn);
                 if (GameComponent_MechanoidMechanitorRegistry.HasPersistentRecord(pawn))
                     GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
 
                 MechanoidMechanitorSelfWorkModeUtility.SyncSelfWorkModeEffects(pawn);
-                MechanitorControlGroup? group = pawn!.GetMechControlGroup();
+                MechanitorControlGroup? group = pawn.GetMechControlGroup();
                 if (group != null)
                     MechanoidMechanitorWorkModeUtility.ApplyWorkModeHediff(pawn, group.WorkMode);
                 if (pawn.mechanitor?.controlGroups != null)

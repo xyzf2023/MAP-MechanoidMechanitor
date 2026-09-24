@@ -338,4 +338,15 @@
   </ResearchProjectDef>
 
 
+  <ResearchProjectDef>
+    <defName>MAP_AntiparticleApplications</defName>
+    <label>反粒子应用研究</label>
+    <description>TODO</description>
+    <baseCost>12000</baseCost>
+    <techLevel>Archotech</techLevel>
+    <tab>MAP_MechanoidMechanitorResearch</tab>
+    <researchViewX>5.50</researchViewX>
+    <researchViewY>0.00</researchViewY>
+  </ResearchProjectDef>
+
 </Defs>
