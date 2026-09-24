@@ -68,10 +68,11 @@
         <shortCircuitInRain>false</shortCircuitInRain>
       </li>
       <li Class="CompProperties_Flickable" />
+      <!-- 产热组件 -->
       <li Class="CompProperties_HeatPusher">
         <compClass>CompHeatPusherPowered</compClass>
-        <heatPerSecond>1000</heatPerSecond>
-        <heatPushMaxTemperature>1000</heatPushMaxTemperature>
+        <heatPerSecond>200</heatPerSecond>
+        <heatPushMaxTemperature>300</heatPushMaxTemperature>
       </li>
     </comps>
   </ThingDef>
