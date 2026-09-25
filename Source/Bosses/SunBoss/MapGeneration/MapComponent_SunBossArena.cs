@@ -5,7 +5,7 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    // 场景记录、激活与周期援军调度；BOSS 的战斗 AI 不在这里处理。
+    // 场景记录、激活与援军数量调度；BOSS 的战斗 AI 不在这里处理。
     public sealed class MapComponent_SunBossArena : MapComponent
     {
         public bool Generated;
@@ -21,6 +21,7 @@ namespace MAP_MechanoidMechanitor
         public const int ActivationDurationTicks = 180;
         private const int RallyDelayTicks = 300;
         private const int RallyIntervalTicks = 1250;
+        private const int RallyCheckIntervalTicks = 30;
         private const float ActivationRadius = 15f;
         private bool discoveryLetterSent;
         private bool activated;
@@ -29,6 +30,14 @@ namespace MAP_MechanoidMechanitor
         private int nextRallyBatchTick = -1;
         private bool rallyBatchSchedulingInitialized;
         private List<Pawn> pendingRallyMechs = new List<Pawn>();
+        private List<Pawn> summonedMechs = new List<Pawn>();
+        private bool summonedMechsInitialized;
+        private bool noRallyCandidates;
+        private int ActiveSummonedMechCount => summonedMechs.Count(p => p != null && !p.Destroyed
+            && !p.Dead && p.Spawned && p.Map == map && !p.Downed
+            && p.Faction == Faction.OfMechanoids && p.HostileTo(Faction.OfPlayer));
+        internal bool NoRallyCandidates => noRallyCandidates
+            && ActiveSummonedMechCount < SunBossActivationUtility.BatchSize;
         private Effecter? activationProgress;
 
         public MapComponent_SunBossArena(Map map) : base(map) { }
@@ -50,6 +59,7 @@ namespace MAP_MechanoidMechanitor
                 if (bossDefeated)
                 {
                     pendingRallyMechs.Clear();
+                    summonedMechs.Clear();
                     rallyAtTick = -1;
                     nextRallyBatchTick = -1;
                     return;
@@ -113,6 +123,7 @@ namespace MAP_MechanoidMechanitor
                 throw;
             }
             activated = true;
+            summonedMechsInitialized = true;
             bossPawn = boss;
             core.Destroy(DestroyMode.Vanish);
             Core = null;
@@ -124,8 +135,24 @@ namespace MAP_MechanoidMechanitor
         private void PrepareRallyBatch(int now)
         {
             rallyBatchSchedulingInitialized = true;
-            nextRallyBatchTick = now + RallyIntervalTicks;
-            pendingRallyMechs = SunBossActivationUtility.PrepareRallyBatch(map, ArenaBounds);
+            nextRallyBatchTick = now + RallyCheckIntervalTicks;
+            // 保留倒地、离图者的引用以防重新选中；只统计本图仍可参战的援军。
+            summonedMechs.RemoveAll(p => p == null || p.Destroyed || p.Dead);
+            if (rallyAtTick >= 0 || bossPawn?.GetComp<CompSunBossState>()?.RallyPulsePending == true
+                || ActiveSummonedMechCount >= SunBossActivationUtility.BatchSize)
+            {
+                noRallyCandidates = false;
+                return;
+            }
+            pendingRallyMechs = SunBossActivationUtility.PrepareRallyBatch(map, ArenaBounds, summonedMechs);
+            noRallyCandidates = pendingRallyMechs.Count == 0;
+            if (noRallyCandidates)
+                nextRallyBatchTick = now + RallyIntervalTicks;
+            else
+            {
+                summonedMechs.AddRange(pendingRallyMechs);
+                bossPawn?.GetComp<CompSunBossState>()?.RequestRallyPulse();
+            }
             rallyAtTick = pendingRallyMechs.Count > 0 ? now + RallyDelayTicks : -1;
         }
 
@@ -178,6 +205,16 @@ namespace MAP_MechanoidMechanitor
                 .OfType<Building>().Where(b => ArenaBounds.Contains(b.Position)).ToList();
             if (bossPawn == null)
                 bossPawn = map.mapPawns.AllPawnsSpawned.FirstOrDefault(p => !p.Dead && p.GetComp<CompSunBossState>() != null);
+            if (activated && !summonedMechsInitialized)
+            {
+                // 旧档没有历史召唤名单：将大厅内和正在集结的敌方机械体纳入限流。
+                summonedMechs = map.mapPawns.AllPawnsSpawned.Where(p => p != bossPawn
+                    && !p.Dead && p.RaceProps.IsMechanoid && p.Faction == Faction.OfMechanoids
+                    && (ArenaBounds.Contains(p.Position) || p.CurJobDef?.defName == "MAP_SunBossRally"))
+                    .Concat(pendingRallyMechs.Take(SunBossActivationUtility.BatchSize)).Distinct().ToList();
+                pendingRallyMechs = pendingRallyMechs.Take(SunBossActivationUtility.BatchSize).ToList();
+                summonedMechsInitialized = true;
+            }
             if (activated && !rallyBatchSchedulingInitialized)
             {
                 // 旧档没有批次名单，废弃原有全场集结时间，等待完整周期后接入新调度。
@@ -209,10 +246,14 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref nextRallyBatchTick, "sunNextRallyBatchTick", -1);
             Scribe_Values.Look(ref rallyBatchSchedulingInitialized, "sunRallyBatchSchedulingInitialized");
             Scribe_Collections.Look(ref pendingRallyMechs, "sunPendingRallyMechs", LookMode.Reference);
+            Scribe_Collections.Look(ref summonedMechs, "sunSummonedMechs", LookMode.Reference);
+            Scribe_Values.Look(ref summonedMechsInitialized, "sunSummonedMechsInitialized");
+            Scribe_Values.Look(ref noRallyCandidates, "sunNoRallyCandidates");
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 if (Stabilizers == null) Stabilizers = new List<Building>();
                 if (pendingRallyMechs == null) pendingRallyMechs = new List<Pawn>();
+                if (summonedMechs == null) summonedMechs = new List<Pawn>();
                 pendingRallyMechs.RemoveAll(p => p == null);
             }
         }

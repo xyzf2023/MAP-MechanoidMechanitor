@@ -77,7 +77,8 @@ namespace MAP_MechanoidMechanitor
         public Job? TryMakeCastJob()
         {
             if (!(parent is Pawn actor) || !CanOperate(actor) || IsCharging
-                || Find.TickManager.TicksGame < readyTick) return null;
+                || (parent.GetComp<CompSunBossState>()?.RallyPulsePending != true
+                    && Find.TickManager.TicksGame < readyTick)) return null;
             Job job = JobMaker.MakeJob(EnergyPulseDefOf.MAP_EnergyPulse, actor);
             job.playerForced = actor.Faction == Faction.OfPlayer;
             return job;

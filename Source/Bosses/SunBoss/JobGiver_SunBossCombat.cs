@@ -22,7 +22,7 @@ namespace MAP_MechanoidMechanitor
                 return Wait();
 
             CompEnergyPulse? pulse = pawn.GetComp<CompEnergyPulse>();
-            if (state.OpeningPulsePending && pulse != null)
+            if ((state.OpeningPulsePending || state.RallyPulsePending) && pulse != null)
                 return pulse.TryMakeCastJob() ?? Wait();
             int openingDelay = state.OpeningCannonDelayRemaining;
             if (openingDelay > 0) return Wait(openingDelay < ReconsiderTicks ? openingDelay : ReconsiderTicks);
@@ -36,9 +36,8 @@ namespace MAP_MechanoidMechanitor
                     if (cast != null) return cast;
                 }
 
-            if (pulse != null && targets.OfType<Pawn>().Any(p => p.RaceProps.IsMechanoid
-                && p.stances?.stunner != null && p.Position.DistanceToSquared(pawn.Position) <= pulse.Props.radius * pulse.Props.radius
-                && GenSight.LineOfSight(pawn.Position, p.Position, pawn.Map, skipFirstCell: true)))
+            // 只有召唤尝试确认无候选时，才回退到阶段冷却驱动的脉冲。
+            if (pulse != null && pawn.Map.GetComponent<MapComponent_SunBossArena>().NoRallyCandidates)
             {
                 Job? cast = pulse.TryMakeCastJob();
                 if (cast != null) return cast;

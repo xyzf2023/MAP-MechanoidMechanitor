@@ -64,6 +64,9 @@ namespace MAP_MechanoidMechanitor
         private bool openingPulsePending = true;
         private int openingCannonReadyTick;
         internal bool OpeningPulsePending => openingPulsePending;
+        private bool rallyPulsePending;
+        internal bool RallyPulsePending => rallyPulsePending;
+        internal void RequestRallyPulse() => rallyPulsePending = true;
         internal int OpeningCannonDelayRemaining =>
             Mathf.Max(0, openingCannonReadyTick - Find.TickManager.TicksGame);
         internal void NotifyPulseReleased()
@@ -71,6 +74,7 @@ namespace MAP_MechanoidMechanitor
             if (openingPulsePending)
                 openingCannonReadyTick = Find.TickManager.TicksGame + OpeningCannonDelayTicks;
             openingPulsePending = false;
+            rallyPulsePending = false;
         }
         private float structure;
         private bool coolingFailed;
@@ -228,6 +232,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref deathEffectsReleased, "sunDeathEffectsReleased", deathLetterSent);
             // 旧存档中的既有 BOSS 不补播开场；新生成的实例默认等待第一次实际释放。
             Scribe_Values.Look(ref openingPulsePending, "sunOpeningPulsePending", false);
+            Scribe_Values.Look(ref rallyPulsePending, "sunRallyPulsePending");
             // 旧存档缺少该字段时不额外插入开场等待。
             Scribe_Values.Look(ref openingCannonReadyTick, "sunOpeningCannonReadyTick");
             Scribe_Values.Look(ref structure, "sunStructure");

@@ -12,7 +12,7 @@ namespace MAP_MechanoidMechanitor
 {
     internal static class SunBossActivationUtility
     {
-        private const int BatchSize = 8;
+        internal const int BatchSize = 4;
         private static JobDef RallyJob => DefDatabase<JobDef>.GetNamed("MAP_SunBossRally");
         // 原版没有公开释放入口，复用 Trigger，保留出仓、空仓外观、眩晕与 Lord 分配。
         private static readonly MethodInfo TriggerGestator =
@@ -29,11 +29,11 @@ namespace MAP_MechanoidMechanitor
             map.reachability.ClearCache();
         }
 
-        public static List<Pawn> PrepareRallyBatch(Map map, CellRect arena)
+        public static List<Pawn> PrepareRallyBatch(Map map, CellRect arena, List<Pawn> summoned)
         {
             List<Pawn> selected = new List<Pawn>(BatchSize);
             // 唤醒会同步改变整个 Lord 的状态；每次操作后重新检查现役候选。
-            List<Pawn> mechs = map.mapPawns.AllPawnsSpawned.ToList();
+            List<Pawn> mechs = map.mapPawns.AllPawnsSpawned.Where(p => !summoned.Contains(p)).ToList();
             HashSet<Pawn> attemptedWakeups = new HashSet<Pawn>();
             while (selected.Count < BatchSize)
             {
