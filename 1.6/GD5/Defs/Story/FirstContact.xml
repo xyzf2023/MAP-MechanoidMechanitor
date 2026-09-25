@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- 替代原 0～200 阶段；点击最终挂断才提交进度。 -->
+  <MAP_MechanoidMechanitor.GD5.GD5DialogueDef>
+    <defName>MAP_GD5_FirstContact</defName>
+    <entryNode>Greeting</entryNode>
+    <titleKey>MAP_GD5.FirstContact.Title</titleKey>
+    <nodes>
+      <li>
+        <id>Greeting</id><textKey>MAP_GD5.FirstContact.Greeting</textKey>
+        <options><li><textKey>MAP_GD5.FirstContact.What</textKey><next>Corpse</next></li></options>
+      </li>
+      <li>
+        <id>Corpse</id><textKey>MAP_GD5.FirstContact.Corpse</textKey>
+        <options><li><textKey>MAP_GD5.FirstContact.WeAreMechs</textKey><next>Silence</next></li></options>
+      </li>
+      <li>
+        <id>Silence</id><textKey>MAP_GD5.FirstContact.Silence</textKey>
+        <options><li><textKey>MAP_GD5.FirstContact.Hello</textKey><next>Consciousness</next></li></options>
+      </li>
+      <li>
+        <id>Consciousness</id><textKey>MAP_GD5.FirstContact.Consciousness</textKey>
+        <options><li><textKey>MAP_GD5.FirstContact.Free</textKey><next>Pursuit</next></li></options>
+      </li>
+      <li>
+        <id>Pursuit</id><textKey>MAP_GD5.FirstContact.Pursuit</textKey>
+        <options>
+          <li><textKey>MAP_GD5.FirstContact.Hostile</textKey><condition>HiveHostile</condition><next>Discussion</next></li>
+          <li><textKey>MAP_GD5.FirstContact.Ally</textKey><condition>HiveAlly</condition><next>Discussion</next></li>
+          <li><textKey>MAP_GD5.FirstContact.Neutral</textKey><next>Discussion</next></li>
+        </options>
+      </li>
+      <li>
+        <id>Discussion</id><textKey>MAP_GD5.FirstContact.Discussion</textKey>
+        <options><li><textKey>MAP_GD5.FirstContact.Wait</textKey><next>Awakening</next></li></options>
+      </li>
+      <li>
+        <id>Awakening</id><textKey>MAP_GD5.FirstContact.Awakening</textKey>
+        <options><li><textKey>MAP_GD5.FirstContact.Uh</textKey><next>Offer</next></li></options>
+      </li>
+      <li>
+        <id>Offer</id><textKey>MAP_GD5.FirstContact.Offer</textKey>
+        <options><li><textKey>MAP_GD5.FirstContact.Consider</textKey><next>Goodbye</next></li></options>
+      </li>
+      <li>
+        <id>Goodbye</id><textKey>MAP_GD5.FirstContact.Goodbye</textKey>
+        <options><li><textKey>MAP_GD5.FirstContact.HangUp</textKey><action>CompleteFirstContact</action></li></options>
+      </li>
+    </nodes>
+  </MAP_MechanoidMechanitor.GD5.GD5DialogueDef>
+</Defs>

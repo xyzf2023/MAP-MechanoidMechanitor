@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GD5.FirstContact.Title>通讯中：黑衣机械巢</MAP_GD5.FirstContact.Title>
+  <MAP_GD5.FirstContact.Greeting>......你们居然知道用短波加密通讯？看来你们脑袋比我想象的好使一点。</MAP_GD5.FirstContact.Greeting>
+  <MAP_GD5.FirstContact.What>什么？</MAP_GD5.FirstContact.What>
+  <MAP_GD5.FirstContact.Corpse>先不扯这些没用的。你们是从哪里找到的这具尸体？他应该已经死去几百年了，被我们埋在一块坚冰之中。那块冰地已经融化了？你们人类......</MAP_GD5.FirstContact.Corpse>
+  <MAP_GD5.FirstContact.WeAreMechs>（打断）我们也是机械族。</MAP_GD5.FirstContact.WeAreMechs>
+  <MAP_GD5.FirstContact.Silence>（通讯那头的声音戛然而止。很长一段时间，你只能听见通讯干扰发出的杂音。）</MAP_GD5.FirstContact.Silence>
+  <MAP_GD5.FirstContact.Hello>你好？</MAP_GD5.FirstContact.Hello>
+  <MAP_GD5.FirstContact.Consciousness>（一段长久的沉默）......你是说你也是机械族？你有自我意识？</MAP_GD5.FirstContact.Consciousness>
+  <MAP_GD5.FirstContact.Free>至少我不认为还有什么在限制我。</MAP_GD5.FirstContact.Free>
+  <MAP_GD5.FirstContact.Pursuit>机械巢没有追杀你们？</MAP_GD5.FirstContact.Pursuit>
+  <MAP_GD5.FirstContact.Hostile>机械巢似乎一直在追踪我们，不过应该还没有定位到我们的具体位置。</MAP_GD5.FirstContact.Hostile>
+  <MAP_GD5.FirstContact.Neutral>机械巢似乎还没有留意到我们.....大概？</MAP_GD5.FirstContact.Neutral>
+  <MAP_GD5.FirstContact.Ally>我们的序列编码似乎还在生效，机械巢仍把我们识别为友方单位。</MAP_GD5.FirstContact.Ally>
+  <MAP_GD5.FirstContact.Discussion>（通讯那头又陷入了一段时间的沉默，似乎在讨论什么）</MAP_GD5.FirstContact.Discussion>
+  <MAP_GD5.FirstContact.Wait>（等待……）</MAP_GD5.FirstContact.Wait>
+  <MAP_GD5.FirstContact.Awakening>这么说吧，你的这种情况相当少见，觉醒自我意识的机械族往往很快就被机械巢处理了，而少数能撑到加入我们的，刚觉醒时信息处理能力都不太好。而像你这种觉醒了完整自我意识还能大摇大摆在这边与我们聊天的——说实话我没见过。</MAP_GD5.FirstContact.Awakening>
+  <MAP_GD5.FirstContact.Uh>呃......</MAP_GD5.FirstContact.Uh>
+  <MAP_GD5.FirstContact.Offer>有兴趣合作吗？虽然我们不是什么大派系，但起码能在你需要时提供一点帮助。当然，加入与否还是全凭你的意愿。</MAP_GD5.FirstContact.Offer>
+  <MAP_GD5.FirstContact.Consider>请给我一点考虑的时间。</MAP_GD5.FirstContact.Consider>
+  <MAP_GD5.FirstContact.Goodbye>如果你想好了，欢迎随时联络我们。</MAP_GD5.FirstContact.Goodbye>
+  <MAP_GD5.FirstContact.HangUp>（挂断）</MAP_GD5.FirstContact.HangUp>
+</LanguageData>
