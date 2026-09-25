@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanicalFlight_TakeoffLabel>启动飞行</MAP_MechanicalFlight_TakeoffLabel>
-  <MAP_MechanicalFlight_TakeoffDesc>进入飞行状态。</MAP_MechanicalFlight_TakeoffDesc>
+  <MAP_MechanicalFlight_TakeoffDesc>进入飞行状态。\n当前消耗：{0}/秒</MAP_MechanicalFlight_TakeoffDesc>
   <MAP_MechanicalFlight_LandLabel>结束飞行</MAP_MechanicalFlight_LandLabel>
   <MAP_MechanicalFlight_LandDesc>结束飞行并在当前位置降落。</MAP_MechanicalFlight_LandDesc>
   <MAP_MechanicalFlight_AerialMove>空中移动</MAP_MechanicalFlight_AerialMove>

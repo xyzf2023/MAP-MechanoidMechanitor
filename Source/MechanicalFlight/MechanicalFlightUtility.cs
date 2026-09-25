@@ -141,7 +141,9 @@ namespace MAP_MechanoidMechanitor
                     : "MAP_MechanicalFlight_TakeoffLabel".Translate(),
                 defaultDesc = active
                     ? "MAP_MechanicalFlight_LandDesc".Translate()
-                    : "MAP_MechanicalFlight_TakeoffDesc".Translate(),
+                    : "MAP_MechanicalFlight_TakeoffDesc".Translate(
+                        (Mathf.Ceil(MechanicalFlightEnergyUtility.GetFlightEnergyFractionPerSecond(pawn)
+                            * 1000f) / 10f).ToString("F1") + "%"),
                 icon = FlightIcon,
                 action = () => ToggleFlight(pawn)
             };

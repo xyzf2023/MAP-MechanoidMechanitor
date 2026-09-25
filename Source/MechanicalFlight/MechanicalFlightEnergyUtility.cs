@@ -80,8 +80,30 @@ namespace MAP_MechanoidMechanitor
             if (GroupFlightUtility.IsManaged(pawn) && !GroupFlightUtility.IsProviding(pawn))
                 return false;
             return TryConsumeMaximumEnergyFraction(pawn,
-                profile.energyDrainFraction * (GetFlightEnergyMultiplier(pawn, profile)
-                    + 0.5f * GroupFlightUtility.PassengerCount(pawn)));
+                GetFlightEnergyDrainFraction(pawn, profile));
+        }
+
+        private static float GetFlightEnergyDrainFraction(
+            Pawn? pawn,
+            MechanicalFlightProfileDef profile)
+        {
+            return profile.energyDrainFraction * (GetFlightEnergyMultiplier(pawn, profile)
+                + 0.5f * GroupFlightUtility.PassengerCount(pawn));
+        }
+
+        /// <summary>按实际扣能倍率和间隔估算每秒消耗的最大能量比例，仅用于显示。</summary>
+        internal static float GetFlightEnergyFractionPerSecond(Pawn? pawn)
+        {
+            if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
+                || record?.Profile == null
+                || (GroupFlightUtility.IsManaged(pawn) && !GroupFlightUtility.IsProviding(pawn)))
+            {
+                return 0f;
+            }
+
+            MechanicalFlightProfileDef profile = record.Profile;
+            return GetFinalConsumptionFraction(pawn, GetFlightEnergyDrainFraction(pawn, profile))
+                * 60f / Mathf.Max(1, profile.energyDrainIntervalTicks);
         }
 
         private static float GetFlightEnergyMultiplier(
