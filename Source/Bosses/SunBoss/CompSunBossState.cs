@@ -77,6 +77,8 @@ namespace MAP_MechanoidMechanitor
         private int burnTicks;
         private int lastStabilizers = 6;
         private IntVec3 activationCell = IntVec3.Invalid;
+        // 瞬时表现不存档；重新生成到地图时清除，避免离图后补播。
+        private readonly SunBossShieldImpactVisuals shieldImpact = new SunBossShieldImpactVisuals();
         public CompProperties_SunBossState Props => (CompProperties_SunBossState)props;
         internal Pawn Boss => (Pawn)parent;
         public float Structure => initialized ? structure : Props.maxStructure;
@@ -92,6 +94,7 @@ namespace MAP_MechanoidMechanitor
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
+            shieldImpact.Reset();
             EnsureInitialized();
             if (!activationCell.IsValid)
             {
@@ -123,6 +126,15 @@ namespace MAP_MechanoidMechanitor
             if (initialized) return;
             structure = Props.maxStructure;
             initialized = true;
+        }
+
+        internal void NotifyShieldImpact(DamageInfo damage, float preventedDamage)
+            => shieldImpact.Notify(Boss, damage, preventedDamage);
+
+        public override void PostDraw()
+        {
+            base.PostDraw();
+            if (Stage.DamageFactor < 1f) shieldImpact.Draw(Boss);
         }
 
         internal void ConsumeStructure(float amount)

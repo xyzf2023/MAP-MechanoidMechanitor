@@ -28,6 +28,7 @@ namespace MAP_MechanoidMechanitor
         private int preparedDepth;
         private readonly DamageInfo originalDamage;
         private bool ended;
+        private bool shieldImpactNotified;
 
         private SunBossDamageContext(CompSunBossState state, DamageInfo damage, bool internalBurn)
         {
@@ -109,13 +110,26 @@ namespace MAP_MechanoidMechanitor
                 ?.NotifyShieldAbsorbed(State.Boss);
         }
 
+        private void NotifyShieldImpact(float postArmorAmount)
+        {
+            if (shieldImpactNotified || InternalBurn || !(Factor >= 0f && Factor < 1f)
+                || !(postArmorAmount > 0f) || float.IsInfinity(postArmorAmount)) return;
+            // 同一次伤害的分片、传播和伤口转移共用一次表现通知。
+            shieldImpactNotified = true;
+            State.NotifyShieldImpact(originalDamage, postArmorAmount * (1f - Factor));
+        }
+
         internal float Route(DamageWorker_AddInjury worker, Hediff_Injury injury, DamageInfo damage,
             DamageWorker.DamageResult result)
         {
             Pawn pawn = State.Boss;
             BodyPartRecord? part = injury.Part;
             if (part == null || pawn.health.hediffSet.PartIsMissing(part)) return 0f;
-            if (preparedDepth == 0) NotifyFullShieldAbsorption(injury.Severity);
+            if (preparedDepth == 0)
+            {
+                NotifyFullShieldAbsorption(injury.Severity);
+                NotifyShieldImpact(injury.Severity);
+            }
             float amount = injury.Severity * (InternalBurn || preparedDepth > 0 ? 1f : Factor);
             if (!(amount > 0f) || float.IsInfinity(amount))
             {
@@ -169,6 +183,7 @@ namespace MAP_MechanoidMechanitor
             try
             {
                 context.NotifyFullShieldAbsorption(amount);
+                context.NotifyShieldImpact(amount);
                 amount *= context.InternalBurn ? 1f : context.Factor;
                 if (!(amount > 0f) || float.IsInfinity(amount))
                 {
