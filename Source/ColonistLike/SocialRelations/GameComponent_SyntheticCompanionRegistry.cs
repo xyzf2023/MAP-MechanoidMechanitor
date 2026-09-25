@@ -41,7 +41,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             SyntheticCompanionAuthorizationRecord? record = registry.FindRecordForPawn(pawn);
-            if (record == null)
+            if (record == null || !record.AuthorizationEnabled)
             {
                 return false;
             }
@@ -51,7 +51,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 是否存在动态授权记录（含死亡/尸体中/离图；不含 Discarded）。
+        /// 是否存在有效动态授权记录（含死亡/尸体中/离图；不含停用记录与 Discarded）。
         /// </summary>
         public static bool HasAuthorizationRecord(Pawn? pawn)
         {
@@ -61,12 +61,12 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return registry.FindRecordForPawn(pawn) != null;
+            return registry.FindRecordForPawn(pawn)?.AuthorizationEnabled == true;
         }
 
         /// <summary>
         /// 动态授权记录快照：新集合，不暴露内部可变列表。
-        /// 包含死亡、尸体中、远行队、未生成与暂时离图；排除空记录与 Discarded。
+        /// 包含死亡、尸体中、远行队、未生成与暂时离图；排除空记录、停用记录与 Discarded。
         /// </summary>
         public static IReadOnlyList<SyntheticCompanionAuthorizationRecord>
             GetAuthorizationRecordSnapshot()
@@ -85,7 +85,7 @@ namespace MAP_MechanoidMechanitor
             {
                 SyntheticCompanionAuthorizationRecord? record = records[i];
                 Pawn? pawn = record?.Pawn;
-                if (record == null || pawn == null || pawn.Discarded)
+                if (record == null || !record.AuthorizationEnabled || pawn == null || pawn.Discarded)
                 {
                     continue;
                 }
@@ -111,9 +111,13 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (registry.FindRecordForPawn(pawn) != null)
+            SyntheticCompanionAuthorizationRecord? existing = registry.FindRecordForPawn(pawn);
+            if (existing != null)
             {
-                return false;
+                if (existing.AuthorizationEnabled) return false;
+                existing.SetAuthorizationEnabled(true);
+                ColonistLikeSocialTrackerUtility.EnsureTrackers(pawn);
+                return true;
             }
 
             SyntheticCompanionAuthorizationRecord record =
@@ -124,7 +128,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>
-        /// 撤销动态授权：删除全部对应记录与索引。不销毁 tracker、关系、床位、子女或孕期。
+        /// 撤销动态授权但保留设置，以便重新授权。不销毁 tracker、关系、床位、子女或孕期。
         /// </summary>
         public static bool TryRevokeAuthorization(Pawn? pawn)
         {
@@ -134,21 +138,16 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            bool removed = false;
-            List<SyntheticCompanionAuthorizationRecord> records =
-                registry.authorizationRecords;
-            for (int i = records.Count - 1; i >= 0; i--)
-            {
-                SyntheticCompanionAuthorizationRecord? record = records[i];
-                if (record != null && ReferenceEquals(record.Pawn, pawn))
-                {
-                    records.RemoveAt(i);
-                    removed = true;
-                }
-            }
-
-            bool removedFromIndex = registry.recordByPawn.Remove(pawn);
-            return removed || removedFromIndex;
+            SyntheticCompanionAuthorizationRecord? record = registry.FindRecordForPawn(pawn);
+            if (record == null || !record.AuthorizationEnabled) return false;
+            record.SetAuthorizationEnabled(false);
+            foreach (Pawn partner in SyntheticCompanionRelationshipUtility.GetPartners(pawn))
+                SyntheticCompanionRelationshipUtility.StopPairJobs(pawn, partner);
+            // 无伴侣时也可能仍在执行或排队等待追求；撤销后不能把它带入下一次存档。
+            pawn.jobs?.jobQueue?.RemoveAll(pawn, job => job.def == MAPMechanitor_JobDefOf.MAP_SyntheticRomance);
+            if (!pawn.Dead && pawn.Spawned && pawn.CurJobDef == MAPMechanitor_JobDefOf.MAP_SyntheticRomance)
+                pawn.jobs?.EndCurrentJob(Verse.AI.JobCondition.InterruptForced);
+            return true;
         }
 
         public override void ExposeData()
@@ -284,7 +283,8 @@ namespace MAP_MechanoidMechanitor
         {
             foreach (KeyValuePair<Pawn, SyntheticCompanionAuthorizationRecord> pair in recordByPawn)
             {
-                ColonistLikeSocialTrackerUtility.EnsureTrackers(pair.Key);
+                if (pair.Value.AuthorizationEnabled)
+                    ColonistLikeSocialTrackerUtility.EnsureTrackers(pair.Key);
             }
         }
     }

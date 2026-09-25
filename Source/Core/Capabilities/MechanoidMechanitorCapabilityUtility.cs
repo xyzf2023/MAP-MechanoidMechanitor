@@ -149,7 +149,7 @@ namespace MAP_MechanoidMechanitor
                 case MechanoidMechanitorCapability.ColonistLikeSocialTab:
                     return GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
                         || pawn.GetComp<CompColonistLikeSocialTabUser>() != null
-                        || GameComponent_SyntheticCompanionRegistry.IsAuthorized(pawn);
+                        || GameComponent_SyntheticCompanionRegistry.HasAuthorizationRecord(pawn);
                 case MechanoidMechanitorCapability.ClassroomTeaching:
                     return GameComponent_MechanoidMechanitorRegistry.TryGetMechanitorRecord(pawn, out _)
                         || pawn.GetComp<CompClassroomTeachingUser>() != null;

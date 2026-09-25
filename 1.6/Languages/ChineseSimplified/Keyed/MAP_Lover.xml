@@ -2,14 +2,9 @@
 <LanguageData>
 
   <!-- 模块：配偶与婚姻关系 -->
-  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button>指定配偶……</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button>
-  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>选择一名殖民者成为当前机械体的配偶。更换配偶时会与旧配偶离婚。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouse.Button.Description>
-  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseNoCandidate>当前没有可指定为配偶的殖民者。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseNoCandidate>
-  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>无法指定该殖民者为配偶。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>
-  <MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Label>结婚</MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Label>
-  <MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Text>{COMPANION_labelShort}与{TARGET_labelShort}已经结婚。{COMPANION_labelShort}已成为{TARGET_labelShort}的配偶。</MAP_MechanoidMechanitor.Lover.Spouse.Marriage.Letter.Text>
-  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>与配偶爱爱</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>
-  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>开启后，当前机械体将尝试在配偶允许时与配偶爱爱。\n注意：生育效果需在“社交”中手动开启。</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>
+  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>当前无法追求该殖民者。</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>
+  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>与伴侣爱爱</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>
+  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>开启后，当前机械体将尝试在伴侣允许时与其爱爱。\n注意：生育效果需在“社交”中手动开启。</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>
 
   <!-- 模块：仿生怀孕与分娩 -->
   <MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>仿生生育方式</MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>

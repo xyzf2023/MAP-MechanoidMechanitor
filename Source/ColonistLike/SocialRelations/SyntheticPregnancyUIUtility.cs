@@ -31,6 +31,8 @@ namespace MAP_MechanoidMechanitor
                     .Colorize(ColoredText.TipSectionTitleColor)
                     + "\n"
                     + GetLabel(current)
+                    + (ModsConfig.IdeologyActive && !BedUtility.WillingToShareBed(syntheticCompanion, spouse)
+                        ? "\n" + (SyntheticCompanionRelationshipUtility.Key + "IdeologyForbids").Translate() : "")
                     + "\n\n"
                     + "ClickToChangePregnancyApproach".Translate()
                     .Colorize(ColoredText.SubtleGrayColor));

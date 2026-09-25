@@ -7,7 +7,7 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 远程仿生伴侣配偶 Lovin 候选查询。不扫描地图，只遍历发起者 DirectRelations。
+    /// 远程仿生伴侣伴侣 Lovin 候选查询。不扫描地图，只遍历发起者 DirectRelations。
     /// </summary>
     public static class SyntheticLovinUtility
     {
@@ -182,8 +182,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!initiator.relations.DirectRelationExists(PawnRelationDefOf.Spouse, partner)
-                || !partner.relations.DirectRelationExists(PawnRelationDefOf.Spouse, initiator))
+            if (SyntheticCompanionRelationshipUtility.IntimacyReason(initiator, partner) != null)
             {
                 return false;
             }
@@ -228,8 +227,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            return human.relations.DirectRelationExists(PawnRelationDefOf.Spouse, syntheticCompanion)
-                && syntheticCompanion.relations.DirectRelationExists(PawnRelationDefOf.Spouse, human);
+            return SyntheticCompanionRelationshipUtility.IntimacyReason(human, syntheticCompanion) == null;
         }
 
         public static bool TryGetLovinPartnerAndBed(
@@ -254,6 +252,9 @@ namespace MAP_MechanoidMechanitor
             Pawn? syntheticCompanion,
             Building_Bed bed)
         {
+            if (syntheticCompanion == null
+                || SyntheticCompanionRelationshipUtility.IntimacyReason(humanSpouse, syntheticCompanion) != null)
+                return false;
             if (!IsLivingSpawnedPawn(syntheticCompanion) || syntheticCompanion!.Map != humanSpouse.Map)
             {
                 return false;
@@ -309,6 +310,9 @@ namespace MAP_MechanoidMechanitor
             Pawn? humanSpouse,
             Building_Bed? bed)
         {
+            if (humanSpouse == null
+                || SyntheticCompanionRelationshipUtility.IntimacyReason(humanSpouse, syntheticCompanion) != null)
+                return false;
             if (!IsLivingSpawnedPawn(humanSpouse) || humanSpouse!.Map != syntheticCompanion.Map)
             {
                 return false;
@@ -362,7 +366,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < relations.Count; i++)
             {
                 DirectPawnRelation relation = relations[i];
-                if (relation.def != PawnRelationDefOf.Spouse)
+                if (!SyntheticCompanionRelationshipUtility.IsLoveRelation(relation.def))
                 {
                     continue;
                 }
@@ -398,7 +402,10 @@ namespace MAP_MechanoidMechanitor
             foreach (Pawn curOccupant in bed.CurOccupants)
             {
                 if (curOccupant != pawn
-                    && LovePartnerRelationUtility.LovePartnerRelationExists(pawn, curOccupant))
+                    && LovePartnerRelationUtility.LovePartnerRelationExists(pawn, curOccupant)
+                    && (!(SyntheticCompanionRelationshipUtility.HasModule(pawn)
+                        || SyntheticCompanionRelationshipUtility.HasModule(curOccupant))
+                        || SyntheticCompanionRelationshipUtility.IntimacyReason(pawn, curOccupant) == null))
                 {
                     return curOccupant;
                 }
@@ -419,7 +426,7 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < relations.Count; i++)
             {
                 DirectPawnRelation relation = relations[i];
-                if (relation.def != PawnRelationDefOf.Spouse || relation.otherPawn == null)
+                if (!SyntheticCompanionRelationshipUtility.IsLoveRelation(relation.def) || relation.otherPawn == null)
                 {
                     continue;
                 }
@@ -471,7 +478,7 @@ namespace MAP_MechanoidMechanitor
 
             if (SyntheticCompanionStateUtility.IsSyntheticCompanion(pawn))
             {
-                Fail("发起者错误地是授权机械体本人（必须由人类配偶发起）。");
+                Fail("发起者错误地是授权机械体本人（必须由人类伴侣发起）。");
                 if (!collecting)
                 {
                     return first;
@@ -678,7 +685,7 @@ namespace MAP_MechanoidMechanitor
             }
             else if (!SyntheticCompanionStateUtility.IsLovinWithSpouseEnabled(syntheticCompanion))
             {
-                Fail("「与配偶爱爱」开关未开启。");
+                Fail("「与伴侣爱爱」开关未开启。");
                 if (!collecting)
                 {
                     return first;
@@ -766,22 +773,11 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (syntheticCompanion.relations == null
-                || !syntheticCompanion.relations.DirectRelationExists(PawnRelationDefOf.Spouse, humanSpouse))
+            string? intimacyReason = SyntheticRelationshipFeedback.DiagnosticReason(SyntheticCompanionRelationshipUtility.IntimacyReason(humanSpouse, syntheticCompanion));
+            if (intimacyReason != null)
             {
-                Fail("授权机械体对发起者不存在直接 Spouse 关系。");
-                if (!collecting)
-                {
-                    return first;
-                }
-            }
-            else if (collecting
-                && (humanSpouse.relations == null
-                    || !humanSpouse.relations.DirectRelationExists(
-                        PawnRelationDefOf.Spouse,
-                        syntheticCompanion)))
-            {
-                Fail("发起者对授权机械体不存在直接 Spouse 关系（双方关系不一致）。");
+                Fail(intimacyReason);
+                if (!collecting) return first;
             }
 
             if (syntheticCompanion.health != null && !syntheticCompanion.health.capacities.CanBeAwake)

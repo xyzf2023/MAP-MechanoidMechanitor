@@ -51,13 +51,12 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Pawn pawn, ref bool __result)
             {
-                if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                    pawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+                if (!SyntheticCompanionRelationshipUtility.HasModule(pawn))
                 {
                     return true;
                 }
 
-                __result = SyntheticSpouseUtility.CanShowAssignSpouseButton(pawn);
+                __result = SyntheticSpouseUtility.CanShowRelationshipButtons(pawn);
                 return false;
             }
         }
@@ -97,13 +96,12 @@ namespace MAP_MechanoidMechanitor
             [HarmonyPrefix]
             public static bool Prefix(Rect buttonRect, Pawn pawn)
             {
-                if (!MechanoidMechanitorCapabilityUtility.HasCapability(
-                    pawn, MechanoidMechanitorCapability.SyntheticSpouseInteraction))
+                if (!SyntheticCompanionRelationshipUtility.HasModule(pawn))
                 {
                     return true;
                 }
 
-                SyntheticSpouseUtility.DrawAssignSpouseButton(buttonRect, pawn);
+                SyntheticSpouseUtility.DrawRelationshipButtons(buttonRect, pawn);
                 return false;
             }
         }
@@ -174,12 +172,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (!selectedPawn.relations.DirectRelationExists(
-                    PawnRelationDefOf.Spouse,
-                    otherPawn)
-                || !otherPawn.relations.DirectRelationExists(
-                    PawnRelationDefOf.Spouse,
-                    selectedPawn))
+            if (!SyntheticCompanionRelationshipUtility.HasLoveRelation(selectedPawn, otherPawn))
             {
                 return false;
             }

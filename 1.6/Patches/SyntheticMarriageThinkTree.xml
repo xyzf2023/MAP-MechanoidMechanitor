@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- 玩家命令、倒地、低电量等分支之后，原版 LordDuty 之前；只加入自己的婚礼。 -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/ThinkTreeDef[defName="Mechanoid"]/thinkRoot/subNodes/li[@Class="ThinkNode_Subtree"][treeDef="LordDuty"]</xpath>
+    <order>Prepend</order>
+    <value>
+      <li Class="MAP_MechanoidMechanitor.ThinkNode_JoinSyntheticMarriage" />
+    </value>
+  </Operation>
+</Patch>

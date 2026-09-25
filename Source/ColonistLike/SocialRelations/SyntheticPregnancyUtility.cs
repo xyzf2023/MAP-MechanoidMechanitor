@@ -32,8 +32,7 @@ namespace MAP_MechanoidMechanitor
                 || spouse.Dead
                 || pregnantCompanion.relations == null
                 || spouse.relations == null
-                || !pregnantCompanion.relations.DirectRelationExists(PawnRelationDefOf.Spouse, spouse)
-                || !spouse.relations.DirectRelationExists(PawnRelationDefOf.Spouse, pregnantCompanion)
+                || SyntheticCompanionRelationshipUtility.IntimacyReason(spouse, pregnantCompanion) != null
                 || pregnantCompanion.health?.hediffSet == null
                 || HasPregnancyBlockingHediff(pregnantCompanion))
             {
@@ -49,7 +48,7 @@ namespace MAP_MechanoidMechanitor
             PawnKindDef? childKind = spouse.kindDef;
             if (childKind?.RaceProps == null)
             {
-                Log.Error($"{LogPrefix}受孕失败：配偶 {spouse} 没有有效 PawnKindDef。");
+                Log.Error($"{LogPrefix}受孕失败：伴侣 {spouse} 没有有效 PawnKindDef。");
                 return;
             }
 
@@ -424,7 +423,7 @@ namespace MAP_MechanoidMechanitor
                     {
                         failed = true;
                         Log.Error(
-                            $"{LogPrefix}为新生儿 {child} 添加遗传配偶 {geneticParent} " +
+                            $"{LogPrefix}为新生儿 {child} 添加遗传伴侣 {geneticParent} " +
                             $"的 Parent 关系时发生异常：{exception}");
                     }
                 }
@@ -436,7 +435,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     failed = true;
                     Log.Error(
-                        $"{LogPrefix}未能为新生儿 {child} 添加遗传配偶 {geneticParent} " +
+                        $"{LogPrefix}未能为新生儿 {child} 添加遗传伴侣 {geneticParent} " +
                         "的 Parent 关系。");
                 }
             }
@@ -470,7 +469,7 @@ namespace MAP_MechanoidMechanitor
                         if (!removed)
                         {
                             Log.Error(
-                                $"{LogPrefix}清理本次添加的遗传配偶 Parent 关系失败：" +
+                                $"{LogPrefix}清理本次添加的遗传伴侣 Parent 关系失败：" +
                                 $"child={child}，geneticParent={geneticParent}。");
                         }
                     }
@@ -478,7 +477,7 @@ namespace MAP_MechanoidMechanitor
                 catch (Exception exception)
                 {
                     Log.Error(
-                        $"{LogPrefix}清理本次添加的遗传配偶 Parent 关系时发生异常：" +
+                        $"{LogPrefix}清理本次添加的遗传伴侣 Parent 关系时发生异常：" +
                         exception);
                 }
             }

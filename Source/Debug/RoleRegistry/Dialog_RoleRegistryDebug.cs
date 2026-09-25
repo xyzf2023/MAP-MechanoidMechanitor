@@ -760,11 +760,11 @@ namespace MAP_MechanoidMechanitor
         private void ConfirmDeleteCompanion(Pawn pawn)
         {
             string message =
-                "确认从仿生伴侣注册表删除 "
+                "确认撤销 "
                 + pawn.LabelShortCap
                 + "（"
                 + pawn.ThingID
-                + "）的动态授权？";
+                + "）的仿生伴侣动态授权？撤销后关系与孕期保留，但不再受到模块保护。亲热及生育设置将保留，以便重新授权。";
 
             Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
                 message,

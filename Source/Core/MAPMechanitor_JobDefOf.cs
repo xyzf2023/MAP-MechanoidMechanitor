@@ -15,6 +15,7 @@ namespace MAP_MechanoidMechanitor
         public static JobDef MAP_TransferMechanicalConsciousness = null!;
         public static JobDef MAP_TransferMechanitorControl = null!;
         public static JobDef MAP_SyntheticGiveBirth = null!;
+        public static JobDef MAP_SyntheticRomance = null!;
         public static JobDef MAP_ContactMechanoidOvermind = null!;
         public static JobDef MAP_MechanoidMechanitorSelfRepair = null!;
         public static JobDef MAP_MechanicalFlightEmergencyLanding = null!;

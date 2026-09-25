@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Companion.UseModuleCommand>请从机械体的社交面板指定追求对象。</MAP_MechanoidMechanitor.Companion.UseModuleCommand>
+  <MAP_MechanoidMechanitor.Companion.Pursue>恋爱…</MAP_MechanoidMechanitor.Companion.Pursue>
+  <MAP_MechanoidMechanitor.Companion.PursueDescription>选择指定对象发起追求，必定成功。</MAP_MechanoidMechanitor.Companion.PursueDescription>
+  <MAP_MechanoidMechanitor.Companion.Breakup>分手…</MAP_MechanoidMechanitor.Companion.Breakup>
+  <MAP_MechanoidMechanitor.Companion.Divorce>离婚…</MAP_MechanoidMechanitor.Companion.Divorce>
+  <MAP_MechanoidMechanitor.Companion.EndDescription>结束这段关系。</MAP_MechanoidMechanitor.Companion.EndDescription>
+  <MAP_MechanoidMechanitor.Companion.BreakupConfirm>确认分手？</MAP_MechanoidMechanitor.Companion.BreakupConfirm>
+  <MAP_MechanoidMechanitor.Companion.DivorceConfirm>确认离婚？</MAP_MechanoidMechanitor.Companion.DivorceConfirm>
+  <MAP_MechanoidMechanitor.Companion.CannotAct>机械族无法行动。</MAP_MechanoidMechanitor.Companion.CannotAct>
+  <MAP_MechanoidMechanitor.Companion.InvalidTarget>目标不合法</MAP_MechanoidMechanitor.Companion.InvalidTarget>
+  <MAP_MechanoidMechanitor.Companion.TargetUnder16>目标未满16岁</MAP_MechanoidMechanitor.Companion.TargetUnder16>
+  <MAP_MechanoidMechanitor.Companion.Related>不能追求近亲。</MAP_MechanoidMechanitor.Companion.Related>
+  <MAP_MechanoidMechanitor.Companion.TargetCannotAct>对方不在场或无法行动。</MAP_MechanoidMechanitor.Companion.TargetCannotAct>
+  <MAP_MechanoidMechanitor.Companion.Unreachable>目标不可达。</MAP_MechanoidMechanitor.Companion.Unreachable>
+  <MAP_MechanoidMechanitor.Companion.NoCandidate>没有合适的追求对象。</MAP_MechanoidMechanitor.Companion.NoCandidate>
+  <MAP_MechanoidMechanitor.Companion.IdeologyForbids>一方的戒律禁止亲热。</MAP_MechanoidMechanitor.Companion.IdeologyForbids>
+</LanguageData>

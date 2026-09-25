@@ -18,7 +18,7 @@ namespace MAP_MechanoidMechanitor
 
         [DebugAction(
             "MAP-机械族机械师",
-            "诊断机械体与配偶爱爱条件",
+            "诊断机械体与伴侣爱爱条件",
             false,
             false,
             false,
@@ -67,7 +67,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            sb.AppendLine("=== MAP-机械族机械师：机械体与配偶爱爱条件诊断 ===");
+            sb.AppendLine("=== MAP-机械族机械师：机械体与伴侣爱爱条件诊断 ===");
             sb.AppendLine("点击的 Pawn：" + SyntheticLovinUtility.DescribePawn(clicked));
             sb.AppendLine("说明：只读诊断，不会分配 Job、修改冷却、开关、关系、床主或预约。");
 
@@ -85,12 +85,12 @@ namespace MAP_MechanoidMechanitor
                 SyntheticLovinUtility.CollectDirectSpousePawns(clicked, TmpSpouses);
                 if (TmpSpouses.Count == 0)
                 {
-                    Block("仿生伴侣当前没有直接配偶关系。");
+                    Block("仿生伴侣当前没有直接伴侣关系。");
                     Finish(sb, reportBlocks);
                     return;
                 }
 
-                sb.AppendLine("仿生伴侣对端直接 Spouse 列表：");
+                sb.AppendLine("仿生伴侣对端直接 Lover/Fiance/Spouse 列表：");
                 for (int i = 0; i < TmpSpouses.Count; i++)
                 {
                     sb.AppendLine("  - " + SyntheticLovinUtility.DescribePawn(TmpSpouses[i]));
@@ -112,7 +112,7 @@ namespace MAP_MechanoidMechanitor
                 if (initiator == null)
                 {
                     initiator = SyntheticLovinUtility.SelectPreferredPawnByThingId(TmpSpouses);
-                    Block("未能解析到合法的人类发起者（Spouse 中无有效 Humanlike 发起者）。");
+                    Block("未能解析到合法的人类发起者（伴侣关系中无有效 Humanlike 发起者）。");
                 }
 
                 primaryCompanion = clicked;
@@ -135,7 +135,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (TmpSyntheticCompanions.Count == 0)
                 {
-                    Block("发起者的直接 Spouse 中找不到拥有 SyntheticSpouseInteraction 的授权机械体。");
+                    Block("发起者的直接 Lover/Fiance/Spouse 中找不到拥有 SyntheticSpouseInteraction 的授权机械体。");
                     DiagnosePairDetails(
                         sb,
                         Block,
@@ -149,7 +149,7 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
 
-                sb.AppendLine("授权机械体配偶候选（按 DirectRelations 收集）：");
+                sb.AppendLine("授权机械体伴侣候选（按 DirectRelations 收集）：");
                 for (int i = 0; i < TmpSyntheticCompanions.Count; i++)
                 {
                     sb.AppendLine(
@@ -356,7 +356,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             Status(
-                "「与配偶爱爱」开关："
+                "「与伴侣爱爱」开关："
                 + (SyntheticCompanionStateUtility.IsLovinWithSpouseEnabled(primaryCompanion) ? "开启" : "关闭"));
 
             sb.AppendLine("--- 三、模组候选仿生伴侣条件 ---");

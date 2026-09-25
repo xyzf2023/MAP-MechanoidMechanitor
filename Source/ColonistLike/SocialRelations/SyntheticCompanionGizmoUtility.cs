@@ -27,7 +27,7 @@ namespace MAP_MechanoidMechanitor
             yield return new Command_Toggle
             {
                 defaultLabel = LovinToggleLabelKey.Translate(),
-                defaultDesc = LovinToggleDescKey.Translate(),
+                defaultDesc = GetLovinDescription(pawn),
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_LovinJob"),
                 isActive = () =>
                     SyntheticCompanionStateUtility.IsLovinWithSpouseEnabled(pawn),
@@ -48,13 +48,25 @@ namespace MAP_MechanoidMechanitor
             for (int i = 0; i < relations.Count; i++)
             {
                 DirectPawnRelation relation = relations[i];
-                if (relation.def == PawnRelationDefOf.Spouse && relation.otherPawn != null)
+                if (SyntheticCompanionRelationshipUtility.IsLoveRelation(relation.def) && relation.otherPawn != null)
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        private static string GetLovinDescription(Pawn pawn)
+        {
+            string text = LovinToggleDescKey.Translate();
+            foreach (Pawn partner in SyntheticCompanionRelationshipUtility.GetPartners(pawn))
+            {
+                if (ModsConfig.IdeologyActive && !BedUtility.WillingToShareBed(pawn, partner))
+                    text += "\n\n" + partner.LabelShortCap + ": "
+                        + (SyntheticCompanionRelationshipUtility.Key + "IdeologyForbids").Translate();
+            }
+            return text;
         }
     }
 }

@@ -9,11 +9,17 @@ namespace MAP_MechanoidMechanitor
         : IExposable, ISyntheticCompanionState
     {
         private Pawn? pawn;
+        private bool authorizationEnabled = true;
         private bool lovinWithSpouseEnabled;
         private SyntheticPregnancyApproach pregnancyApproach =
             SyntheticPregnancyApproach.AvoidPregnancy;
 
         public Pawn? Pawn => pawn;
+
+        // 撤销后保留玩家设置；旧档缺失该字段时仍视为已授权。
+        public bool AuthorizationEnabled => authorizationEnabled;
+
+        internal void SetAuthorizationEnabled(bool enabled) => authorizationEnabled = enabled;
 
         public bool LovinWithSpouseEnabled => lovinWithSpouseEnabled;
 
@@ -53,6 +59,7 @@ namespace MAP_MechanoidMechanitor
         public void ExposeData()
         {
             Scribe_References.Look(ref pawn, "authorizedPawn");
+            Scribe_Values.Look(ref authorizationEnabled, "syntheticCompanionAuthorizationEnabled", true);
             Scribe_Values.Look(
                 ref lovinWithSpouseEnabled,
                 "syntheticCompanionLovinWithSpouseEnabled",

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <JobDef>
+    <defName>MAP_SyntheticRomance</defName>
+    <driverClass>MAP_MechanoidMechanitor.JobDriver_SyntheticRomance</driverClass>
+    <reportString>正在追求TargetA。</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+</Defs>

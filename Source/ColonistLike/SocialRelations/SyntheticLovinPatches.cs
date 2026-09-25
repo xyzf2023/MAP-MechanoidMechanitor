@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using System.Reflection;
 using HarmonyLib;
 using RimWorld;
@@ -8,7 +9,7 @@ using Verse.AI;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>
-    /// 仿生伴侣响应人类配偶原版 Lovin：仅窄范围补丁。
+    /// 仿生伴侣响应人类伴侣原版 Lovin：仅窄范围补丁。
     /// </summary>
     public static class SyntheticLovinPatches
     {
@@ -29,7 +30,11 @@ namespace MAP_MechanoidMechanitor
             {
                 if (__result != null)
                 {
-                    return;
+                    if ((SyntheticCompanionRelationshipUtility.HasModule(pawn)
+                        || SyntheticCompanionRelationshipUtility.HasModule(__result))
+                        && SyntheticCompanionRelationshipUtility.IntimacyReason(pawn, __result) != null)
+                        __result = SyntheticLovinUtility.TryFindVanillaLovePartnerOccupyingBed(pawn)!;
+                    if (__result != null) return;
                 }
 
                 Pawn? partner =
@@ -153,6 +158,15 @@ namespace MAP_MechanoidMechanitor
 
                 bool isSyntheticCompanion =
                     SyntheticLovinUtility.IsRemoteSyntheticCompanionLovinJob(actor, partner, bed);
+                bool isHumanInitiator =
+                    SyntheticLovinUtility.IsRemoteHumanSpouseLovinJob(actor, partner, bed);
+                if (isSyntheticCompanion || isHumanInitiator)
+                {
+                    // 包含已同床与远程入床；授权撤销、分手、改信或关掉开关立即结束。
+                    driver.AddFailCondition(() =>
+                        SyntheticCompanionRelationshipUtility.IntimacyReason(actor, partner) != null);
+                    original = GuardCompletion(original, actor, partner);
+                }
                 if (isSyntheticCompanion)
                 {
                     Pawn humanSpouse = partner;
@@ -172,8 +186,6 @@ namespace MAP_MechanoidMechanitor
                     yield break;
                 }
 
-                bool isHumanInitiator =
-                    SyntheticLovinUtility.IsRemoteHumanSpouseLovinJob(actor, partner, bed);
                 if (!isHumanInitiator)
                 {
                     foreach (Toil toil in original)
@@ -228,6 +240,28 @@ namespace MAP_MechanoidMechanitor
                     }
 
                     yield return toils[i];
+                }
+            }
+
+            private static IEnumerable<Toil> GuardCompletion(IEnumerable<Toil> original, Pawn actor, Pawn partner)
+            {
+                foreach (Toil toil in original)
+                {
+                    // 原版最终亲热 Toil 的 finishActions 在中断时也会调用。
+                    // 只包装该最终等待 Toil 的结算，不影响上床等 Toil 的清理。
+                    if (toil.defaultCompleteMode == ToilCompleteMode.Never && toil.finishActions != null)
+                    {
+                        for (int i = 0; i < toil.finishActions.Count; i++)
+                        {
+                            Action finish = toil.finishActions[i];
+                            toil.finishActions[i] = () =>
+                            {
+                                if (SyntheticCompanionRelationshipUtility.IntimacyReason(actor, partner) == null)
+                                    finish();
+                            };
+                        }
+                    }
+                    yield return toil;
                 }
             }
 
