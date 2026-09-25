@@ -80,6 +80,9 @@ namespace MAP_MechanoidMechanitor
         private bool coolingFailed;
         private int burnTicks;
         private int lastStabilizers = 6;
+        private bool firstStabilizerLetterSent;
+        private bool fourthStabilizerLetterSent;
+        private bool allStabilizersLetterSent;
         private IntVec3 activationCell = IntVec3.Invalid;
         // 瞬时表现不存档；重新生成到地图时清除，避免离图后补播。
         private readonly SunBossShieldImpactVisuals shieldImpact = new SunBossShieldImpactVisuals();
@@ -175,6 +178,9 @@ namespace MAP_MechanoidMechanitor
             if (!Boss.Spawned || Boss.Dead || Boss.Destroyed || Boss.Suspended) return;
             EnsureInitialized();
             int count = Stabilizers;
+            NotifyStabilizerMilestone(count, 5, ref firstStabilizerLetterSent, "MAP_SunBoss_FirstStabilizerDestroyed");
+            NotifyStabilizerMilestone(count, 2, ref fourthStabilizerLetterSent, "MAP_SunBoss_ReactorCritical");
+            NotifyStabilizerMilestone(count, 0, ref allStabilizersLetterSent, "MAP_SunBoss_AllStabilizersDestroyed");
             if (SunBossStage.For(count).HeatRadius > SunBossStage.For(lastStabilizers).HeatRadius)
                 Messages.Message("MAP_SunBoss_HeatExpanded".Translate(Stage.HeatRadius), Boss,
                     MessageTypeDefOf.ThreatBig);
@@ -190,6 +196,15 @@ namespace MAP_MechanoidMechanitor
                 : SunBossDamageContext.RandomPart(Boss, _ => true);
             if (part != null)
                 SunBossDamageContext.ApplyInternalBurn(this, perSecond * BurnInterval / 60f, part);
+        }
+
+        private void NotifyStabilizerMilestone(int count, int remaining, ref bool sent, string key)
+        {
+            // 仅在数量下降并跨过节点时发送；一击摧毁多台也不会漏掉节点。
+            if (sent || lastStabilizers <= remaining || count > remaining) return;
+            sent = true;
+            Find.LetterStack.ReceiveLetter((key + "Label").Translate(),
+                (key + "Text").Translate(), LetterDefOf.PositiveEvent, Boss);
         }
 
         public override void Notify_Killed(Map prevMap, DamageInfo? dinfo = null)
@@ -239,6 +254,10 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref coolingFailed, "sunCoolingFailed");
             Scribe_Values.Look(ref burnTicks, "sunBurnTicks");
             Scribe_Values.Look(ref lastStabilizers, "sunLastStabilizers", 6);
+            // 旧档已经越过的节点视为已通知，不在更新后补发历史信件。
+            Scribe_Values.Look(ref firstStabilizerLetterSent, "sunFirstStabilizerLetterSent", lastStabilizers <= 5);
+            Scribe_Values.Look(ref fourthStabilizerLetterSent, "sunFourthStabilizerLetterSent", lastStabilizers <= 2);
+            Scribe_Values.Look(ref allStabilizersLetterSent, "sunAllStabilizersLetterSent", lastStabilizers <= 0);
             Scribe_Values.Look(ref activationCell, "sunActivationCell", IntVec3.Invalid);
         }
     }

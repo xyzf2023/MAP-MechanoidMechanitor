@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
+  <MAP_SunBoss_FirstStabilizerDestroyedLabel>稳定器被摧毁</MAP_SunBoss_FirstStabilizerDestroyedLabel>
+  <MAP_SunBoss_FirstStabilizerDestroyedText>我们成功利用湮灭炮摧毁了一台反应堆稳定器！\n「太阳」- 能源核心的运行稳定度开始下降，我们的攻击开始奏效了！</MAP_SunBoss_FirstStabilizerDestroyedText>
+  <MAP_SunBoss_ReactorCriticalLabel>核心失稳</MAP_SunBoss_ReactorCriticalLabel>
+  <MAP_SunBoss_ReactorCriticalText>「太阳」- 能源核心的反应堆已经到达稳定性临界值，如果能继续摧毁稳定器，它将被自身失控的反应堆烧毁。</MAP_SunBoss_ReactorCriticalText>
+  <MAP_SunBoss_AllStabilizersDestroyedLabel>稳定器全部损毁</MAP_SunBoss_AllStabilizersDestroyedLabel>
+  <MAP_SunBoss_AllStabilizersDestroyedText>所有的稳定器均被破坏，「太阳」- 能源核心已开始不可逆的结构崩解。</MAP_SunBoss_AllStabilizersDestroyedText>
   <MAP_SunBoss_DefeatedLabel>「太阳」陨落</MAP_SunBoss_DefeatedLabel>
   <MAP_SunBoss_DefeatedText>随着最后一部分机体结构崩解，「太阳」终于在我们的攻势下彻底停机。这台失控的机械造物已经不再构成威胁。\n\n在破碎的机体深处，一个异常精密的组件随之显露出来。尽管失去了主体的结构支撑，它似乎仍在独立运转。\n\n或许我们可以对它进行分析，从中获取一些新的技术成果?\n\n&lt;i&gt;选择一名智识等级大于12的殖民者，右键“反粒子约束器”以进行分析。&lt;/i&gt;</MAP_SunBoss_DefeatedText>
   <MAP_SunBoss_ReactorFoundLabel>核心反应堆</MAP_SunBoss_ReactorFoundLabel>
