@@ -4,7 +4,7 @@
   <ThingDef ParentName="ResourceBase">
     <defName>MAP_AntimatterContainmentDevice</defName>
     <label>反物质约束器</label>
-    <description>TODO</description>
+    <description>从「太阳」核心结构中剥离出的精密装置，用于约束并调控反物质反应堆内部不稳定的高能粒子。即使脱离主体，其内部的约束场仍在持续运转。\n\n这种装置的结构远超常规工程技术，但其中所采用的能量调控方式或许能够被重新解析。如果能够掌握其中原理，我们或许就能重构属于自己的「太阳」。</description>
     <techLevel>Archotech</techLevel>
     <stackLimit>1</stackLimit>
     <useHitPoints>false</useHitPoints>

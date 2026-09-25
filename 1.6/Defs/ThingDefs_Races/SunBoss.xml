@@ -4,7 +4,7 @@
   <ThingDef ParentName="MAP_SunBase">
     <defName>MAP_Mech_SunBOSS</defName>
     <label>「太阳」- 能源核心</label>
-    <description>TODO</description>
+    <description>一台从休眠中苏醒的超重型机械体，其核心是一座输出功率极其恐怖的高能反应堆。六台环绕在周围的稳定器持续约束着反应堆中狂暴的能量，使其得以维持稳定运行。与其说「太阳」- 能源核心是一台传统意义上的机械体，不如说它是一座能够自行移动的巨型反应堆。\n\n这些稳定器不仅维持着「太阳」的反应堆稳定，也使其能以全功率持续运转。只要稳定系统仍然完整，它看起来几乎坚不可摧。\n\n如果我们能从这些稳定器下手，或许就能破坏反应堆的稳态，迫使「太阳」逐渐失去战斗力……</description>
     <race>
       <baseHealthScale>8</baseHealthScale>
       <thinkTreeMain>MAP_SunBossCombat</thinkTreeMain>

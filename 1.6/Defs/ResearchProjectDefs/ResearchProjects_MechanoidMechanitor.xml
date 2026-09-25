@@ -341,7 +341,7 @@
   <ResearchProjectDef>
     <defName>MAP_AntiparticleApplications</defName>
     <label>反粒子应用研究</label>
-    <description>TODO</description>
+    <description>通过对反物质约束器的深入解析，我们掌握了稳定约束、调控并利用高能反粒子的方法。通过降低反应堆的峰值输出，并将原本庞大的稳定与约束系统重新整合，我们得以重构这种能够长期稳定运行的高能反应堆。\n\n研究此科技以解锁「太阳」（反应堆）的建造方式。「太阳」是一种可转换为机械体形态的高能反应堆，可以为殖民地提供近乎无限的能源，机械体形态下其配备的湮灭炮和高能激光也能为殖民地扫清一切障碍。\n\n建造「太阳」需要一台反物质约束器作为其反应堆的核心组件。</description>
     <baseCost>12000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>

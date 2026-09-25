@@ -3,7 +3,7 @@
   <ThingDef ParentName="BuildingBase">
     <defName>MAP_Building_ReactorStabilizer</defName>
     <label>反应堆稳定器</label>
-    <description>TODO</description>
+    <description>围绕「太阳」- 能源核心部署的大型能量稳定装置。稳定器持续监测并修正反应堆内部剧烈的能量波动，同时通过约束场维持其运行状态，使「太阳」能够在接近全功率的情况下保持稳定。\n\n一旦这些稳定器遭到破坏，「太阳」内部的能量平衡也会随之恶化，其原本稳定的运行状态将逐步瓦解。</description>
     <thingClass>Building</thingClass>
     <tickerType>Never</tickerType>
     <size>(3,3)</size>

@@ -3,7 +3,7 @@
   <HediffDef>
     <defName>MAP_SunBossStage</defName>
     <label>「太阳」- 能源核心</label>
-    <description>TODO</description>
+    <description>「太阳」核心反应堆当前的运行状态。周围的稳定器持续约束反应堆内狂暴的能量，随着稳定器被摧毁，反应堆的运行状态将不断恶化。</description>
     <hediffClass>HediffWithComps</hediffClass>
     <defaultLabelColor>(1.0, 0.5, 0.0)</defaultLabelColor>
     <isBad>false</isBad>

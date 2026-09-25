@@ -25,11 +25,11 @@
   <HediffDef ParentName="MAP_SunEnergyBase">
     <defName>MAP_SunEnergy</defName>
     <label>「太阳」</label>
-    <description>TODO</description>
+    <description>「太阳」内部的反物质反应堆正在为其提供几乎无限的能源。</description>
   </HediffDef>
   <HediffDef ParentName="MAP_SunEnergyBase">
     <defName>MAP_SunCorona</defName>
     <label>「日冕」</label>
-    <description>TODO</description>
+    <description>持续接收来自「太阳」的远程能源供给，大幅降低自身的能量消耗，并缓慢恢复能量。</description>
   </HediffDef>
 </Defs>

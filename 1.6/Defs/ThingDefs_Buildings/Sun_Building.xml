@@ -4,7 +4,7 @@
   <ThingDef ParentName="BuildingBase">
     <defName>MAP_Building_Sun</defName>
     <label>「太阳」（反应堆）</label>
-    <description>TODO</description>
+    <description>处于反应堆形态的「太阳」。在固定自身结构后，其内部的反物质反应堆能够以更稳定的状态持续运转，为殖民地提供庞大能源，其为殖民地机械族提供的「日冕」功能效果也比机械体形态更加强大。\n\n经过重新改装的约束系统已经被整合进机体内部，因此「太阳」无需外部稳定器即可维持反应堆运行。需要时，可向其下达转换命令，重新转化为机械体形态。\n\n注意：「太阳」在高功率产能时会持续释放大量废热。请尽量将其部署在室外，或确保所在区域拥有充足的散热能力。</description>
     <thingClass>Verse.Building</thingClass>
     <category>Building</category>
     <tickerType>Normal</tickerType>

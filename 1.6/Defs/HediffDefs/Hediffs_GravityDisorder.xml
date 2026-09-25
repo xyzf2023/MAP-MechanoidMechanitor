@@ -3,7 +3,8 @@
   <HediffDef>
     <defName>MAP_GravityDisorder</defName>
     <label>重力紊乱</label>
-    <description>TODO</description>
+    <description>由魔术师施加的重力紊乱状态。该单位身边的重力场十分不稳定，无法正常行动。</description>
+    <descriptionShort>该单位因重力场变化而无法进行任何行为。</descriptionShort>
     <hediffClass>MAP_MechanoidMechanitor.Hediff_GravityDisorder</hediffClass>
     <isBad>true</isBad>
     <initialSeverity>1</initialSeverity>

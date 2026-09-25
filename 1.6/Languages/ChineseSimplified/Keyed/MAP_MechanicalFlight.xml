@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanicalFlight_TakeoffLabel>启动飞行</MAP_MechanicalFlight_TakeoffLabel>
-  <MAP_MechanicalFlight_TakeoffDesc>启动持续飞行。起飞与持续飞行按当前飞行配置额外耗能；标准基础费用为起飞0.5%最大能量、之后每60 Tick再消耗0.5%，实际费用受重量级、先天飞行倍率和群体飞行乘员等修正。飞行耗能不取代机械体原有耗能，原版能量提示中的日耗不包含这部分额外费用。</MAP_MechanicalFlight_TakeoffDesc>
+  <MAP_MechanicalFlight_TakeoffDesc>进入飞行状态。</MAP_MechanicalFlight_TakeoffDesc>
   <MAP_MechanicalFlight_LandLabel>结束飞行</MAP_MechanicalFlight_LandLabel>
   <MAP_MechanicalFlight_LandDesc>结束飞行并在当前位置降落。</MAP_MechanicalFlight_LandDesc>
   <MAP_MechanicalFlight_AerialMove>空中移动</MAP_MechanicalFlight_AerialMove>
@@ -16,8 +16,8 @@
   <MAP_MechanicalFlight_LowEnergyLetterLabel>能量不足以维持飞行</MAP_MechanicalFlight_LowEnergyLetterLabel>
   <MAP_MechanicalFlight_LowEnergyLetterText>目前{0}的能量不足以维持飞行，请尽快寻找落点。</MAP_MechanicalFlight_LowEnergyLetterText>
   <MAP_MechanicalFlight_EmergencyLandingBlocked>正在执行紧急迫降，无法下达命令。</MAP_MechanicalFlight_EmergencyLandingBlocked>
-  <MAP_MechanicalFlight_CaravanLaunchLabel>机械飞行</MAP_MechanicalFlight_CaravanLaunchLabel>
-  <MAP_MechanicalFlight_CaravanLaunchDesc>使远行队通过机械飞行直线前往指定地点，可以越过不可通行地块。世界地图飞行不消耗机械能量。</MAP_MechanicalFlight_CaravanLaunchDesc>
+  <MAP_MechanicalFlight_CaravanLaunchLabel>飞行</MAP_MechanicalFlight_CaravanLaunchLabel>
+  <MAP_MechanicalFlight_CaravanLaunchDesc>命令远行队通过飞行前往指定地点。</MAP_MechanicalFlight_CaravanLaunchDesc>
   <MAP_MechanicalFlight_CaravanUnavailable>当前远行队无法进行机械飞行。</MAP_MechanicalFlight_CaravanUnavailable>
   <MAP_MechanicalFlight_CaravanNoMechanoid>远行队中没有机械族成员。</MAP_MechanicalFlight_CaravanNoMechanoid>
   <MAP_MechanicalFlight_CaravanMemberCannotFly>{0}不具备飞行能力。</MAP_MechanicalFlight_CaravanMemberCannotFly>
@@ -29,6 +29,6 @@
   <MAP_MechanicalFlight_CaravanInspect>目的地：{0}\n成员：{1}</MAP_MechanicalFlight_CaravanInspect>
   <MAP_MechanicalFlight_CaravanArrived>机械飞行远行队已抵达目的地。</MAP_MechanicalFlight_CaravanArrived>
   <MAP_MechanicalFlight_CaravanLaunchFailed>机械飞行启动失败，远行队内容已尝试恢复。</MAP_MechanicalFlight_CaravanLaunchFailed>
-  <MAP_MechanicalFlight_OutsideCommandRange>超出机械族机械师指挥范围</MAP_MechanicalFlight_OutsideCommandRange>
+  <MAP_MechanicalFlight_OutsideCommandRange>超出指挥范围</MAP_MechanicalFlight_OutsideCommandRange>
   <MAP_MechanicalFlight_SunBossEnergyField>这里奇怪的能量场干扰了推进器的工作</MAP_MechanicalFlight_SunBossEnergyField>
 </LanguageData>

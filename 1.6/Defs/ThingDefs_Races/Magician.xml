@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-
+<!-- 魔术师：操控重力的机械族 -->
   <ThingDef ParentName="MechCentipede">
     <defName>MAP_Mech_Magician</defName>
     <label>「魔术师」</label>
@@ -50,4 +50,3 @@
   </PawnKindDef>
 
 </Defs>
-
