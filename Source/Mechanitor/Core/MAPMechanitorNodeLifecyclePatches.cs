@@ -27,10 +27,23 @@ namespace MAP_MechanoidMechanitor
                 && !MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
                 return;
 
+            GameComponent_MechanoidMechanitorRegistry.NotifyPawnLifeStateChanged(pawn);
+
             // 原版首次创建组件时 Pawn 尚未解除死亡状态；dontSpawn / 离图复活
             // 也不会再经过 SpawnSetup。统一进入已有去重队列，在安全阶段补齐
             // 能力基础设施与机械师 Tracker，复用队列的离图处理分支。
             GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
+        }
+    }
+
+    [HarmonyPatch(typeof(Pawn), nameof(Pawn.Kill))]
+    internal static class MAPMechanitorNodeKilledPatch
+    {
+        [HarmonyPostfix]
+        private static void Postfix(Pawn __instance)
+        {
+            if (__instance?.Dead == true)
+                GameComponent_MechanoidMechanitorRegistry.NotifyPawnLifeStateChanged(__instance);
         }
     }
 

@@ -91,12 +91,13 @@ namespace MAP_MechanoidMechanitor
         internal static void SynchronizeAfterResurrection(Pawn? pawn)
         {
             if (pawn == null || !AppliesTo(pawn) || !CanSynchronize(pawn)) return;
+            // 先排队，后续同步即使失败也有安全阶段兜底；不在账单调用栈内重做升格。
+            if (GameComponent_MechanoidMechanitorRegistry.HasPersistentRecord(pawn))
+                GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
             try
             {
                 MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
                 MechanoidMechanitorCapabilityLifecycleUtility.EnsureInfrastructure(pawn);
-                if (GameComponent_MechanoidMechanitorRegistry.HasPersistentRecord(pawn))
-                    GameComponent_MechanoidMechanitorRegistry.QueuePostSpawnInitialization(pawn);
 
                 MechanoidMechanitorSelfWorkModeUtility.SyncSelfWorkModeEffects(pawn);
                 MechanitorControlGroup? group = pawn.GetMechControlGroup();

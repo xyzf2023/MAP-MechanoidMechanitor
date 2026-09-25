@@ -23,6 +23,9 @@ namespace MAP_MechanoidMechanitor
         private ReadOnlyCollection<Pawn>? registeredMechanitorsReadOnlyCache;
         private bool registeredMechanitorsCacheNeedsRetry;
         private HashSet<Pawn> pendingMechanitorInitializations = new HashSet<Pawn>();
+        // 仅运行时重试状态；读档由现有生命周期重新排队，不写入存档。
+        private readonly Dictionary<Pawn, int> initializationRetryTicks = new Dictionary<Pawn, int>();
+        private readonly Dictionary<Pawn, int> initializationFailureCounts = new Dictionary<Pawn, int>();
 
         public Pawn? MechanicalConsciousnessHost => mechanicalConsciousnessHost;
 
@@ -862,6 +865,8 @@ namespace MAP_MechanoidMechanitor
 
         private void RemoveRecordForPawnInternal(Pawn pawn)
         {
+            initializationRetryTicks.Remove(pawn);
+            initializationFailureCounts.Remove(pawn);
             bool removed = false;
             for (int i = mechanitorRecords.Count - 1; i >= 0; i--)
             {
@@ -1116,6 +1121,36 @@ namespace MAP_MechanoidMechanitor
             pendingMechanitorInitializations.Add(pawn);
         }
 
+        internal static void NotifyPawnLifeStateChanged(Pawn pawn)
+        {
+            GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
+            if (registry == null || !HasPersistentRecord(pawn)) return;
+            registry.InvalidateDerivedCaches();
+            // 新生周期不继承上一生命周期的退避；死亡不删除持久身份。
+            registry.initializationRetryTicks.Remove(pawn);
+            registry.initializationFailureCounts.Remove(pawn);
+            GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorRosterChanged();
+        }
+
+        private void RestoreRegisteredIdentityState(Pawn pawn)
+        {
+            MechanoidMechanitorRecord? record = FindRecordForPawn(pawn);
+            if (record == null) return;
+            HediffDef? identityDef = record.Origin == MechanoidMechanitorOrigin.Acquired
+                ? MechanoidMechanitorRoleUtility.GetAcquiredIdentityDef()
+                : GetNativeMechanitorHediffDef();
+            if (identityDef == null)
+                throw new InvalidOperationException("机械师身份 HediffDef 缺失。");
+
+            // 只恢复注册记录的派生状态，不能重新升格、导入人格或设置技能下限。
+            EnsureSingleHediffOnPawn(pawn, identityDef, "机械族机械师");
+            if (!pawn.health.hediffSet.HasHediff(identityDef))
+                throw new InvalidOperationException("机械师身份健康状态未能恢复。");
+            if (!IsPawnAliveAndInitialized(pawn)) return;
+            GameComponent_AutonomousMechRegistry.NotifyPawnLifecycle(pawn);
+            pawn.Notify_DisabledWorkTypesChanged();
+        }
+
         private void ProcessPendingMechanitorInitializations()
         {
             if (Scribe.mode != LoadSaveMode.Inactive
@@ -1132,17 +1167,26 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            bool finalizedAny = false;
+            int currentTick = Find.TickManager?.TicksGame ?? 0;
             List<Pawn> pending = new List<Pawn>(pendingMechanitorInitializations);
             for (int i = 0; i < pending.Count; i++)
             {
                 Pawn pawn = pending[i];
-                pendingMechanitorInitializations.Remove(pawn);
-
                 if (pawn == null || pawn.Destroyed || pawn.Discarded)
                 {
+                    if (pawn != null)
+                    {
+                        pendingMechanitorInitializations.Remove(pawn);
+                        initializationRetryTicks.Remove(pawn);
+                        initializationFailureCounts.Remove(pawn);
+                    }
                     continue;
                 }
+
+                if (initializationRetryTicks.TryGetValue(pawn, out int retryTick)
+                    && currentTick < retryTick)
+                    continue;
+                pendingMechanitorInitializations.Remove(pawn);
 
                 if (pawn.health == null)
                 {
@@ -1155,30 +1199,54 @@ namespace MAP_MechanoidMechanitor
                     || pawn.Faction == null
                     || !pawn.Faction.IsPlayerSafe())
                 {
+                    initializationRetryTicks.Remove(pawn);
+                    initializationFailureCounts.Remove(pawn);
                     continue;
                 }
-
-                MechanoidMechanitorCapabilityLifecycleUtility.EnsureInfrastructure(pawn);
-                if (!MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
-                    continue;
-
-                if (!pawn.Spawned || pawn.Map == null)
+                string phase = "恢复身份与工作资格";
+                try
                 {
-                    MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
-                    MAPMechanitorNodeLifecycleUtility.RepairMissingControlGroups(pawn);
-                    // 入队后离图：科研同步不依赖地图，交给其自身的安全检查与重试队列。
-                    // 地图生成收尾仍由下一次 PostSpawnSetup 重新入队执行。
-                    GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorInitialized(pawn);
-                    continue;
+                    // 在科研/能力查询前失效；离图复活同样改变活跃名单。
+                    InvalidateDerivedCaches();
+                    RestoreRegisteredIdentityState(pawn);
+                    if (IsPawnAliveAndInitialized(pawn))
+                    {
+                        phase = "补齐能力基础设施";
+                        MechanoidMechanitorCapabilityLifecycleUtility.EnsureInfrastructure(pawn);
+                        if (MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
+                        {
+                            phase = "恢复机械师控制组与科研状态";
+                            if (!pawn.Spawned || pawn.Map == null)
+                            {
+                                MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
+                                MAPMechanitorNodeLifecycleUtility.RepairMissingControlGroups(pawn);
+                                GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorInitialized(pawn);
+                            }
+                            else
+                            {
+                                MAPMechanitorInitializationUtility.FinalizeNow(pawn);
+                            }
+                        }
+                        phase = "刷新技能禁用缓存";
+                        pawn.Notify_DisabledWorkTypesChanged();
+                    }
+                    initializationRetryTicks.Remove(pawn);
+                    initializationFailureCounts.Remove(pawn);
                 }
-
-                MAPMechanitorInitializationUtility.FinalizeNow(pawn);
-                finalizedAny = true;
-            }
-
-            if (finalizedAny)
-            {
-                InvalidateDerivedCaches();
+                catch (Exception ex)
+                {
+                    int failures = initializationFailureCounts.TryGetValue(pawn, out int previous)
+                        ? Math.Min(previous + 1, 7) : 1;
+                    initializationFailureCounts[pawn] = failures;
+                    int delay = failures <= 3 ? 60 : failures <= 6 ? 600 : 60000;
+                    initializationRetryTicks[pawn] = currentTick + delay;
+                    pendingMechanitorInitializations.Add(pawn);
+                    MechanoidMechanitorRecord? record = FindRecordForPawn(pawn);
+                    Log.Error("[MAP-机械族机械师] 机械师初始化失败，已延迟重试："
+                        + $"pawn={pawn.ThingID}，phase={phase}，origin={record?.Origin}，"
+                        + $"mapped={record?.HasMappedPersonality}，skillsPresent={pawn.skills != null}，"
+                        + $"retryTicks={delay}：{ex}");
+                }
             }
         }
 

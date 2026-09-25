@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor
         public override void PostPostMake()
         {
             base.PostPostMake();
-            EnsureProfile();
+            EnsureProfile(initializeNewPawn: true);
         }
 
         public override void PostSpawnSetup(bool respawningAfterLoad)
@@ -39,7 +39,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private void EnsureProfile()
+        private void EnsureProfile(bool initializeNewPawn = false)
         {
             if (parent is not Pawn pawn || ProfileProps == null)
             {
@@ -48,8 +48,10 @@ namespace MAP_MechanoidMechanitor
 
             EnsureStory(pawn, ProfileProps);
 
-            bool shouldInitializeSkillLevels =
-                pawn.skills == null || initializedProfileVersion < ProfileProps.profileVersion;
+            // 版本迁移不代表已有技能可以覆盖；旧档缺字段、复活和重入图均保留现有数据。
+            // 只有新建 Pawn 的首次配置或 Tracker 确实缺失时才应用种族初始技能。
+            bool shouldInitializeSkillLevels = pawn.skills == null
+                || (initializeNewPawn && initializedProfileVersion < ProfileProps.profileVersion);
             EnsureSkills(pawn, ProfileProps, shouldInitializeSkillLevels);
 
             EnsureRelations(pawn, ProfileProps);
@@ -59,7 +61,7 @@ namespace MAP_MechanoidMechanitor
             EnsureWorkSettings(pawn, ProfileProps);
             EnsureGenes(pawn, ProfileProps);
 
-            if (shouldInitializeSkillLevels)
+            if (initializedProfileVersion < ProfileProps.profileVersion)
             {
                 initializedProfileVersion = ProfileProps.profileVersion;
             }

@@ -218,6 +218,10 @@ namespace MAP_MechanoidMechanitor
 
         private void AssignToJustice(Pawn reconstructedMech)
         {
+            // 自律机械体无需分配监管者，拒绝外部监管是正常结果而非复活失败。
+            if (AutonomousMechUtility.IsAutonomousMech(reconstructedMech))
+                return;
+
             MAPMechanitorNodeLifecycleUtility.EnsureBasicTrackers(pawn);
 
             if (reconstructedMech.Faction != Faction.OfPlayer)
