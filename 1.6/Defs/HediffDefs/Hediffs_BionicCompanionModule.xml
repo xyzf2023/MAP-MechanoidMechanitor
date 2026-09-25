@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <HediffDef>
+    <defName>MAP_BionicCompanionModuleInstalled</defName>
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.HediffDefExtension_MechResurrectionProtection" />
+    </modExtensions>
+    <label>仿生伴侣模块</label>
+    <description>一种整合了情感模拟与仿生孕育技术的机械族模块。安装后，机械体能够与指定的殖民者结为配偶，并可开启亲密互动功能。对于生活在边缘世界的人们而言，这些复杂的回路承载着一个朴素的愿望：有人相伴，有所牵挂，让平凡的日子也值得期待。\n\n安装模块的机械族能够与配偶进行爱爱，并通过内置的人造子宫孕育后代。是否生育及孩子的性别均可自行设定。后代将继承人类配偶的全部基因。精密的孕育调控使诞生的孩子拥有更强的身体素质与学习潜力，为这份陪伴带来新的希望。</description>
+    <descriptionShort>一个已安装的仿生伴侣模块。</descriptionShort>
+    <defaultLabelColor>(0.6, 1.0, 0.6)</defaultLabelColor>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+  </HediffDef>
+</Defs>

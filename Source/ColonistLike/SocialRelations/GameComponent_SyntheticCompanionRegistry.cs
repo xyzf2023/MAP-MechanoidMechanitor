@@ -9,6 +9,9 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public sealed class GameComponent_SyntheticCompanionRegistry : GameComponent
     {
+        private const string CompanionHediffDefName = "MAP_BionicCompanionModuleInstalled";
+        private static HediffDef? cachedCompanionHediffDef;
+
         private static readonly IReadOnlyList<SyntheticCompanionAuthorizationRecord>
             EmptyAuthorizationSnapshot =
                 Array.Empty<SyntheticCompanionAuthorizationRecord>();
@@ -117,6 +120,7 @@ namespace MAP_MechanoidMechanitor
                 if (existing.AuthorizationEnabled) return false;
                 existing.SetAuthorizationEnabled(true);
                 ColonistLikeSocialTrackerUtility.EnsureTrackers(pawn);
+                SynchronizeCompanionHediff(pawn, authorized: true);
                 return true;
             }
 
@@ -124,6 +128,7 @@ namespace MAP_MechanoidMechanitor
                 new SyntheticCompanionAuthorizationRecord(pawn);
             registry.AddRecord(record);
             ColonistLikeSocialTrackerUtility.EnsureTrackers(pawn);
+            SynchronizeCompanionHediff(pawn, authorized: true);
             return true;
         }
 
@@ -141,6 +146,7 @@ namespace MAP_MechanoidMechanitor
             SyntheticCompanionAuthorizationRecord? record = registry.FindRecordForPawn(pawn);
             if (record == null || !record.AuthorizationEnabled) return false;
             record.SetAuthorizationEnabled(false);
+            SynchronizeCompanionHediff(pawn, authorized: false);
             foreach (Pawn partner in SyntheticCompanionRelationshipUtility.GetPartners(pawn))
                 SyntheticCompanionRelationshipUtility.StopPairJobs(pawn, partner);
             // 无伴侣时也可能仍在执行或排队等待追求；撤销后不能把它带入下一次存档。
@@ -179,6 +185,7 @@ namespace MAP_MechanoidMechanitor
             CleanupInvalidRecords();
             RebuildRecordIndex();
             EnsureTrackersForIndexedRecords();
+            SynchronizeCompanionHediffs();
         }
 
         public override void LoadedGame()
@@ -188,6 +195,64 @@ namespace MAP_MechanoidMechanitor
             CleanupInvalidRecords();
             RebuildRecordIndex();
             EnsureTrackersForIndexedRecords();
+            SynchronizeCompanionHediffs();
+        }
+
+        private void SynchronizeCompanionHediffs()
+        {
+            foreach (KeyValuePair<Pawn, SyntheticCompanionAuthorizationRecord> pair in recordByPawn)
+            {
+                SynchronizeCompanionHediff(pair.Key, pair.Value.AuthorizationEnabled);
+            }
+        }
+
+        private static void SynchronizeCompanionHediff(Pawn pawn, bool authorized)
+        {
+            if (pawn.Discarded || pawn.health?.hediffSet == null)
+            {
+                return;
+            }
+
+            HediffDef? def = cachedCompanionHediffDef ??=
+                DefDatabase<HediffDef>.GetNamedSilentFail(CompanionHediffDefName);
+            if (def == null)
+            {
+                Log.Error($"[MAP-机械族机械师] 未找到仿生伴侣健康状态 {CompanionHediffDefName}。");
+                return;
+            }
+
+            try
+            {
+                Hediff? keeper = null;
+                List<Hediff> hediffs = pawn.health.hediffSet.hediffs;
+                for (int i = hediffs.Count - 1; i >= 0; i--)
+                {
+                    Hediff? hediff = hediffs[i];
+                    if (hediff?.def != def)
+                    {
+                        continue;
+                    }
+
+                    if (authorized && keeper == null)
+                    {
+                        keeper = hediff;
+                    }
+                    else
+                    {
+                        pawn.health.RemoveHediff(hediff);
+                    }
+                }
+
+                if (authorized && keeper == null && !pawn.Destroyed)
+                {
+                    pawn.health.AddHediff(def);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[MAP-机械族机械师] 同步仿生伴侣健康状态失败：" +
+                    $"pawn={pawn.LabelShort}（{pawn.ThingID}）：{ex}");
+            }
         }
 
         private void AddRecord(SyntheticCompanionAuthorizationRecord record)
