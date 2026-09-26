@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- 300 开头；最后接回原 scriptTree[3]，替换其 T1 并保留 T2 与后续按钮。 -->
+  <MAP_MechanoidMechanitor.GD5.GD5DialogueDef>
+    <defName>MAP_GD5_Cooperation</defName>
+    <entryNode>Contact</entryNode>
+    <titleKey>MAP_GD5.FirstContact.Title</titleKey>
+    <graphic>Pawn/BScyther_south</graphic>
+    <nodes>
+      <li>
+        <id>Contact</id>
+        <titleKey>MAP_GD5.Cooperation.ConnectingTitle</titleKey>
+        <hideGraphic>true</hideGraphic>
+        <textKey>MAP_GD5.Cooperation.Contact</textKey>
+        <options><li><textKey>MAP_GD5.Cooperation.Wait</textKey><next>Decision</next></li></options>
+      </li>
+      <li>
+        <id>Decision</id><textKey>MAP_GD5.Cooperation.Decision</textKey>
+        <options><li><textKey>MAP_GD5.Cooperation.Accept</textKey><next>Welcome</next></li></options>
+      </li>
+      <li>
+        <id>Welcome</id><textKey>MAP_GD5.Cooperation.Welcome</textKey>
+        <textVariants>
+          <li><condition>SpeakerJustice</condition><textKey>MAP_GD5.Cooperation.WelcomeJustice</textKey></li>
+        </textVariants>
+        <options><li><textKey>MAP_GD5.Cooperation.Continue</textKey><next>ElectronicWarfare</next></li></options>
+      </li>
+      <li>
+        <id>ElectronicWarfare</id><textKey>MAP_GD5.Cooperation.ElectronicWarfare</textKey>
+        <options>
+          <li><textKey>MAP_GD5.Cooperation.Hostile</textKey><condition>HiveHostile</condition><action>ResumeCooperation</action></li>
+          <li><textKey>MAP_GD5.Cooperation.Ally</textKey><condition>HiveAlly</condition><action>ResumeCooperation</action></li>
+          <li><textKey>MAP_GD5.Cooperation.Neutral</textKey><action>ResumeCooperation</action></li>
+        </options>
+      </li>
+    </nodes>
+  </MAP_MechanoidMechanitor.GD5.GD5DialogueDef>
+</Defs>

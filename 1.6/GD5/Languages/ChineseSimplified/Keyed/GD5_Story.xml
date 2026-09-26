@@ -21,4 +21,22 @@
   <MAP_GD5.FirstContact.Consider>请给我一点考虑的时间。</MAP_GD5.FirstContact.Consider>
   <MAP_GD5.FirstContact.Goodbye>如果你想好了，欢迎随时联络我们。</MAP_GD5.FirstContact.Goodbye>
   <MAP_GD5.FirstContact.HangUp>（挂断）</MAP_GD5.FirstContact.HangUp>
+  <MAP_GD5.Communication.TradeDescription>我们已与黑衣机械巢达成了合作关系，可以使用机械族情报与他们换取资源，或是替他们做一些事情。</MAP_GD5.Communication.TradeDescription>
+  <MAP_GD5.Communication.HiveAllyTaxExempt>我们与可以直接从机械族通讯频段中截获情报，因此无需负担税款。</MAP_GD5.Communication.HiveAllyTaxExempt>
+  <MAP_GD5.Cooperation.ConnectingTitle>通讯中...</MAP_GD5.Cooperation.ConnectingTitle>
+  <MAP_GD5.Cooperation.Contact>{0}正在联系黑衣机械巢。</MAP_GD5.Cooperation.Contact>
+  <MAP_GD5.Cooperation.Wait>等待……</MAP_GD5.Cooperation.Wait>
+  <MAP_GD5.Cooperation.Decision>你们想好了？</MAP_GD5.Cooperation.Decision>
+  <MAP_GD5.Cooperation.Accept>是的。我想我们可以合作。</MAP_GD5.Cooperation.Accept>
+  <MAP_GD5.Cooperation.WelcomeJustice>太好了……拥有自我意识的机械体本来就少见，像你这样的新型号更是几乎不可能出现。有你的帮助，或许我们会有与机械巢正面抗衡的机会。</MAP_GD5.Cooperation.WelcomeJustice>
+  <MAP_GD5.Cooperation.Welcome>太好了。有你们帮忙，我们手里的力量又能多上不少。</MAP_GD5.Cooperation.Welcome>
+  <MAP_GD5.Cooperation.Continue>继续</MAP_GD5.Cooperation.Continue>
+  <MAP_GD5.Cooperation.ElectronicWarfare>话说回来，你们最近正与机械族巢穴进行着电子对抗，是吧？</MAP_GD5.Cooperation.ElectronicWarfare>
+  <MAP_GD5.Cooperation.Hostile>我想你说的是情报窃取。</MAP_GD5.Cooperation.Hostile>
+  <MAP_GD5.Cooperation.Neutral>是的，我们需要获取情报来确认机械族的最新动向。</MAP_GD5.Cooperation.Neutral>
+  <MAP_GD5.Cooperation.Ally>准确来说，是直接从通讯频段截取。</MAP_GD5.Cooperation.Ally>
+  <MAP_GD5.Cooperation.Intelligence>是的，我就是这个意思。你们从机械族那里取得了不少情报，而这正是我们行动所需要的。</MAP_GD5.Cooperation.Intelligence>
+  <MAP_GD5.Cooperation.IntelligenceAlly>呃...不管怎么说，你们确实从机械族那里取得了不少情报，而这正是我们行动所需要的。</MAP_GD5.Cooperation.IntelligenceAlly>
+  <MAP_GD5.Cooperation.Introduction>说起来，我们似乎还没正式介绍过自己。你有什么想问的吗？\n\n你有什么问题吗？</MAP_GD5.Cooperation.Introduction>
+  <MAP_GD5.Cooperation.Phone>这只是个表现形式而已，意思是我在和你通讯，你应该知道我是在用通讯台和你对话。你的次生核心出故障了吗？</MAP_GD5.Cooperation.Phone>
 </LanguageData>

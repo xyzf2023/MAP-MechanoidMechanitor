@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor.GD5
     internal sealed class GD5StoryDialog : Window
     {
         private readonly GD5DialogueDef dialogue;
-        private readonly GD5DialogueCondition relation;
+        private readonly GD5StoryContext context;
         private readonly GD5DialogueNode node;
         private GraphicWindow? portraitWindow;
         private bool completed;
@@ -20,15 +20,20 @@ namespace MAP_MechanoidMechanitor.GD5
         public override Vector2 InitialSize => new Vector2(WindowWidth, WindowHeight);
 
         internal GD5StoryDialog(GD5DialogueDef dialogue)
-            : this(dialogue, dialogue.entryNode, GD5StoryFlowService.GetHiveRelation())
+            : this(dialogue, new GD5StoryContext(null, null))
         {
         }
 
-        private GD5StoryDialog(GD5DialogueDef dialogue, string nodeId, GD5DialogueCondition relation)
+        internal GD5StoryDialog(GD5DialogueDef dialogue, GD5StoryContext context)
+            : this(dialogue, dialogue.entryNode, context)
+        {
+        }
+
+        private GD5StoryDialog(GD5DialogueDef dialogue, string nodeId, GD5StoryContext context)
         {
             this.dialogue = dialogue;
             node = dialogue.nodes.First(n => n.id == nodeId);
-            this.relation = relation;
+            this.context = context;
             forcePause = true;
             absorbInputAroundWindow = true;
             closeOnAccept = false;
@@ -42,7 +47,7 @@ namespace MAP_MechanoidMechanitor.GD5
         public override void PreOpen()
         {
             base.PreOpen();
-            if (!string.IsNullOrEmpty(dialogue.graphic))
+            if (!node.hideGraphic && !string.IsNullOrEmpty(dialogue.graphic))
             {
                 // 直接复用闪毁5：200×200 左侧头像窗、电话叠图、缩放和偏移。
                 portraitWindow = new GraphicWindow(dialogue.graphic, dialogue.drawSize,
@@ -67,14 +72,15 @@ namespace MAP_MechanoidMechanitor.GD5
             Rect contentRect = inRect.ContractedBy(10f);
             Text.Font = GameFont.Medium;
             Widgets.Label(new Rect(contentRect.x, contentRect.y, contentRect.width, 40f),
-                dialogue.titleKey.Translate());
+                (node.titleKey ?? dialogue.titleKey).Translate());
             Text.Font = GameFont.Small;
-            string text = node.textKey.Translate();
+            string textKey = node.textVariants.FirstOrDefault(v => context.Matches(v.condition))?.textKey ?? node.textKey;
+            string text = context.Translate(textKey);
             Widgets.Label(new Rect(contentRect.x, contentRect.y + Text.LineHeight + 5f,
                 contentRect.width, Text.CalcHeight(text, contentRect.width)), text);
 
             // 条件选项优先；无匹配条件时使用无条件选项（中立回答）。
-            var options = node.options.Where(o => o.condition == relation).ToList();
+            var options = node.options.Where(o => o.condition != GD5DialogueCondition.Always && context.Matches(o.condition)).ToList();
             if (options.Count == 0)
                 options = node.options.Where(o => o.condition == GD5DialogueCondition.Always).ToList();
             for (int i = 0; i < options.Count; i++)
@@ -95,11 +101,21 @@ namespace MAP_MechanoidMechanitor.GD5
                         Close();
                     }
                 }
+                else if (option.action == GD5DialogueAction.ResumeCooperation)
+                {
+                    // 构造成功后再关闭当前窗；仍使用原对话树，保证 Parent 与后续跳转有效。
+                    Window? nextWindow = GD5StoryFlowService.CreateCooperationContinuation(context);
+                    if (nextWindow != null)
+                    {
+                        Close();
+                        Find.WindowStack.Add(nextWindow);
+                    }
+                }
                 else
                 {
                     // 与原通讯一样，每个节点关闭旧窗口并重新打开，保留通讯音效。
                     // 沿用本次通讯的关系快照，不在翻页时重新选择关系分支。
-                    var nextWindow = new GD5StoryDialog(dialogue, option.next, relation);
+                    var nextWindow = new GD5StoryDialog(dialogue, option.next, context);
                     Close();
                     Find.WindowStack.Add(nextWindow);
                 }

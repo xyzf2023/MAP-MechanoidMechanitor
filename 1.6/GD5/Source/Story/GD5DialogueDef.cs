@@ -38,6 +38,9 @@ namespace MAP_MechanoidMechanitor.GD5
                     if (option.action == GD5DialogueAction.Continue && !nodes.Any(n => n.id == option.next))
                         yield return "选项跳转目标不存在：" + node.id + " -> " + option.next;
                 }
+                foreach (GD5DialogueTextVariant variant in node.textVariants)
+                    if (string.IsNullOrEmpty(variant.textKey))
+                        yield return "条件正文缺少文本：" + node.id;
                 if (!node.options.Any(o => o.condition == GD5DialogueCondition.Always))
                     yield return "节点至少需要一个无条件选项：" + node.id;
             }
@@ -48,11 +51,20 @@ namespace MAP_MechanoidMechanitor.GD5
     {
         public string id = "";
         public string textKey = "";
+        public string? titleKey;
+        public bool hideGraphic;
+        public List<GD5DialogueTextVariant> textVariants = new List<GD5DialogueTextVariant>();
         public List<GD5DialogueOption> options = new List<GD5DialogueOption>();
     }
 
-    public enum GD5DialogueCondition { Always, HiveHostile, HiveNeutral, HiveAlly }
-    public enum GD5DialogueAction { Continue, CompleteFirstContact }
+    public sealed class GD5DialogueTextVariant
+    {
+        public GD5DialogueCondition condition;
+        public string textKey = "";
+    }
+
+    public enum GD5DialogueCondition { Always, HiveHostile, HiveNeutral, HiveAlly, SpeakerJustice }
+    public enum GD5DialogueAction { Continue, CompleteFirstContact, ResumeCooperation }
 
     public sealed class GD5DialogueOption
     {

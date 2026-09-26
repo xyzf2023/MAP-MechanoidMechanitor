@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Collections.Generic;
 using GD3;
 using Verse;
 
@@ -6,6 +7,23 @@ namespace MAP_MechanoidMechanitor.GD5
 {
     internal static class GD5StoryCompatibilityPatch
     {
+        // 原窗口每次跳转都会重新构造；只覆盖当前窗口正文，保留原树及所有按钮。
+        internal static void CommunicationConstructorPrefix(ref string description,
+            List<ScriptTree>? scriptTree, int index, Pawn pawn, Map map, ref List<ScriptButton> options)
+        {
+            if (!GD5StoryFlowService.IsEnabled
+                || GameComponent_GD5StoryState.Current?.firstContactCompleted != true
+                || scriptTree == null)
+                return;
+            GD5StoryTextOverrides.Apply(scriptTree, index, pawn, map, ref description, ref options);
+            MechanoidScriptDef? tree = DefDatabase<MechanoidScriptDef>.GetNamedSilentFail("Scripts_300");
+            if (tree == null || !ReferenceEquals(scriptTree, tree.scriptTree)) return;
+            if (index == 4)
+                description = "MAP_GD5.Cooperation.Introduction".Translate();
+            else if (index == 8)
+                description = "MAP_GD5.Cooperation.Phone".Translate();
+        }
+
         internal static bool Prefix(TradeWindow_BlackMech __instance, Map ___map, Pawn ___pawn)
         {
             if (!GD5StoryFlowService.IsEnabled) return true;
