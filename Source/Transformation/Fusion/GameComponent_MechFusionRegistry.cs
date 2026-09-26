@@ -229,8 +229,8 @@ namespace MAP_MechanoidMechanitor
             base.StartedNewGame();
             cachedRegistryGame = Current.Game;
             cachedRegistry = this;
-            eligibilityRecords = new List<MechFusionEligibilityRecord>();
-            recordByPawn = new Dictionary<Pawn, MechFusionEligibilityRecord>();
+            // 地图生成和其他组件可能已登记本局资格，只重建索引，不能清空记录。
+            RebuildIndexes();
         }
 
         public override void LoadedGame()

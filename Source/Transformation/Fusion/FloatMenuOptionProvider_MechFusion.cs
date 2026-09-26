@@ -36,7 +36,8 @@ namespace MAP_MechanoidMechanitor
             if (source == null
                 || wearer == null
                 || ReferenceEquals(source, wearer)
-                || !MechFusionEligibilityUtility.HasFusionEligibility(source)
+                || (!MechFusionEligibilityUtility.HasFusionEligibility(source)
+                    && !MechFusionEligibilityUtility.HasInnateFusionMarker(source))
                 || !wearer.RaceProps.Humanlike)
             {
                 yield break;
@@ -44,6 +45,7 @@ namespace MAP_MechanoidMechanitor
 
             string label =
                 "MAP_MechanoidMechanitor.Fusion.Gizmo.Label".Translate();
+            // 先天组件存在但记录缺失时，由统一校验器补登记。
             if (!MechFusionValidator.CanStart(
                     source,
                     wearer,
