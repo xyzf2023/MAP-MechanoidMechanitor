@@ -5,7 +5,6 @@ using HarmonyLib;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.Forgenest;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon;
-using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
@@ -21,12 +20,6 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
 
         private static readonly IThirdPartyCompatibilityModule[] Modules =
         {
-            new GlitterworldDestroyer5Compatibility(),
-            new GlitterworldDestroyer5CataphractCentipedeWeaponCompatibility(),
-            new GlitterworldDestroyer5DryseaCompatibility(),
-            new GlitterworldDestroyer5CerebrexTakeoverResearchCompatibility(),
-            new GlitterworldDestroyer5PurgeDirectiveResearchCompatibility(),
-            new GlitterworldDestroyer5ClusterReceiverCompatibility(),
             new GlitterworldDestroyer5ExpansionCompatibility(),
             new GlitterworldDestroyer5ExpansionMechFusionCompatibility(),
             new MechFusionAbilityGrantCompatibility(),

@@ -9,12 +9,13 @@ namespace MAP_MechanoidMechanitor
     /// <summary>第三方未设置 destroyOnDrop 的专武可显式使用此扩展；普通生成标签不代表专武。</summary>
     public sealed class MechBuiltInWeaponExtension : DefModExtension { }
 
-    internal static class MechWeaponUtility
+    public static class MechWeaponUtility
     {
         private static readonly HashSet<ThingDef> CompatibilityWeapons = new HashSet<ThingDef>();
-        internal static void RegisterBuiltInWeapon(ThingDef def) => CompatibilityWeapons.Add(def);
+        /// <summary>供条件兼容程序集登记第三方专武，继续使用主 MOD 的专武状态机。</summary>
+        public static void RegisterBuiltInWeapon(ThingDef def) => CompatibilityWeapons.Add(def);
 
-        internal static bool IsManaged(Pawn? pawn) => pawn != null && !pawn.Discarded
+        public static bool IsManaged(Pawn? pawn) => pawn != null && !pawn.Discarded
             && pawn.kindDef != null && pawn.RaceProps?.IsMechanoid == true
             && MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.HumanWeapons);
 
@@ -83,7 +84,7 @@ namespace MAP_MechanoidMechanitor
                 record.ExternalMode = true;
         }
 
-        internal static bool Missing(Pawn pawn)
+        public static bool Missing(Pawn pawn)
         {
             MechWeaponRecord? record = GameComponent_MechWeaponRegistry.Get(pawn);
             return record != null && (record.Missing || record.ActiveWeapon?.Destroyed == true);
@@ -149,6 +150,13 @@ namespace MAP_MechanoidMechanitor
                     }
                 }
             }
+        }
+
+        /// <summary>第三方专武切换入口：仅在实际操作时补齐记录，并保留损坏与操作资格限制。</summary>
+        public static bool TrySwitchBuiltInVariant(Pawn pawn, ThingDef variant)
+        {
+            GameComponent_MechWeaponRegistry.Ensure(pawn);
+            return CanOperate(pawn) && !Missing(pawn) && EquipBuiltIn(pawn, variant: variant);
         }
 
         internal static bool EquipBuiltIn(Pawn pawn, bool repairing = false, ThingDef? variant = null)

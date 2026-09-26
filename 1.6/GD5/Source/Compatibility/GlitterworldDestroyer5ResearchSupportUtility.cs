@@ -1,8 +1,9 @@
 using System;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5;
 using RimWorld;
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
+namespace MAP_MechanoidMechanitor.GD5
 {
     /// <summary>
     /// 闪耀世界毁灭者5集群科技支持的共享实现。
@@ -74,17 +75,6 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
 
             GameComponent_GD5ResearchSupport.QueueSupportLetter(research);
             return true;
-        }
-
-        internal static void SendResearchSupportLetter(ResearchProjectDef research)
-        {
-            TaggedString title = "MAP_GD5.PurgeResearchSupport.Title".Translate();
-            TaggedString text = "MAP_GD5.PurgeResearchSupport.Text".Translate(
-                research.LabelCap);
-            Find.LetterStack.ReceiveLetter(
-                title,
-                text,
-                LetterDefOf.PositiveEvent);
         }
     }
 }

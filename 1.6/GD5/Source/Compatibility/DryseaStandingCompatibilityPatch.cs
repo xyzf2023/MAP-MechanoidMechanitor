@@ -1,7 +1,8 @@
+using GD3;
 using RimWorld;
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
+namespace MAP_MechanoidMechanitor.GD5
 {
     /// <summary>
     /// 只在原方法拒绝时，为站在枯海白花格上的玩家机械族机械师补足资格。
@@ -9,20 +10,20 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
     /// </summary>
     internal static class DryseaStandingCompatibilityPatch
     {
-        internal static void Postfix(object? __instance, ref bool __result)
+        internal static void Postfix(DryseaDummy? __instance, ref bool __result)
         {
-            if (__result || __instance is not Thing trigger)
+            if (__result || __instance == null)
             {
                 return;
             }
 
-            Map? map = trigger.Map;
+            Map? map = __instance.Map;
             if (map == null)
             {
                 return;
             }
 
-            Pawn? pawn = trigger.Position.GetFirstPawn(map);
+            Pawn? pawn = __instance.Position.GetFirstPawn(map);
             if (pawn == null
                 || pawn.Faction != Faction.OfPlayer
                 || !pawn.RaceProps.IsMechanoid

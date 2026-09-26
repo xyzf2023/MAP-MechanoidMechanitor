@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using GD3;
 using RimWorld;
 using Verse;
 using Verse.Sound;
 
-namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
+namespace MAP_MechanoidMechanitor.GD5
 {
     /// <summary>
     /// 禁卫机械蜈蚣武器切换运行时兼容。
@@ -32,12 +33,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
         }
 
         internal static void Postfix(
-            object __instance,
+            CompChangeWeaponB __instance,
             ref IEnumerable<Gizmo> __result)
         {
             if (__result == null
-                || __instance is not ThingComp comp
-                || comp.parent is not Pawn pawn
+                || __instance?.parent is not Pawn pawn
                 || !MAPOverseerlessNodeUtility.IsOverseerlessNodeSubject(pawn))
             {
                 return;
@@ -134,9 +134,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
 
             if (MechWeaponUtility.IsManaged(pawn))
             {
-                GameComponent_MechWeaponRegistry.Ensure(pawn);
-                if (!MechWeaponUtility.CanOperate(pawn) || MechWeaponUtility.Missing(pawn)) return;
-                if (MechWeaponUtility.EquipBuiltIn(pawn, variant: targetDef)
+                if (MechWeaponUtility.TrySwitchBuiltInVariant(pawn, targetDef)
                     && switchSoundDef != null && pawn.MapHeld != null)
                     switchSoundDef.PlayOneShot(new TargetInfo(pawn.PositionHeld, pawn.MapHeld, false));
                 return;

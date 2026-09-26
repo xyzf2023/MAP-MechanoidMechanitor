@@ -1,6 +1,6 @@
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
+namespace MAP_MechanoidMechanitor.GD5
 {
     /// <summary>
     /// 只扩展闪耀世界毁灭者5“动手脚”指令的使用者资格。

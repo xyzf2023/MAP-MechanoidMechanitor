@@ -2,7 +2,7 @@ using System;
 using RimWorld;
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
+namespace MAP_MechanoidMechanitor.GD5
 {
     /// <summary>
     /// 在主脑接管成功时立即尝试，失败后由兼容状态组件按已持久化的接管状态补做。

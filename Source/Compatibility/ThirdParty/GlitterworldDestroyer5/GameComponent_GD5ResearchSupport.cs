@@ -6,11 +6,13 @@ using Verse;
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
 {
     /// <summary>
-    /// GD5 科研兼容的恢复入口。接管资格沿用现有持久状态，支持信件独立保存待发记录。
+    /// GD5 科研的存档兼容边界：保留原程序集、类型名和字段；业务恢复由条件程序集注册。
+    /// 主 DLL 不引用 GD3 或 GD5 联动程序集，未加载联动时不执行科研补做。
     /// </summary>
     public sealed class GameComponent_GD5ResearchSupport : GameComponent
     {
         private const int RetryIntervalTicks = 2500;
+        private static Action? takeoverRecovery;
         private HashSet<string> pendingLetterResearchIds = new HashSet<string>();
         private readonly HashSet<string> attemptedLetterResearchIds = new HashSet<string>();
 
@@ -18,7 +20,13 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
         {
         }
 
-        internal static void QueueSupportLetter(ResearchProjectDef research)
+        /// <summary>仅由成功安装的条件兼容模块注册；回调不得捕获 Game、Pawn 或组件实例。</summary>
+        public static void RegisterTakeoverRecovery(Action recovery)
+        {
+            takeoverRecovery = recovery ?? throw new ArgumentNullException(nameof(recovery));
+        }
+
+        public static void QueueSupportLetter(ResearchProjectDef research)
         {
             GameComponent_GD5ResearchSupport? component =
                 CurrentGameComponentCache<GameComponent_GD5ResearchSupport>.Get();
@@ -61,9 +69,16 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
                 return;
             }
 
-            // 目标 Def 仅在兼容模块成功安装后配置；未启用 GD5 时该入口不完成任何科研。
-            CerebrexTakeoverResearchCompatibilityPatch.EnsureTakeoverResearchCompleted();
+            // 使用当前游戏的权威接管状态；不在主 DLL 中静态依赖条件程序集。
+            takeoverRecovery?.Invoke();
             TrySendPendingLetters();
+        }
+
+        private static void SendResearchSupportLetter(ResearchProjectDef research)
+        {
+            TaggedString title = "MAP_GD5.PurgeResearchSupport.Title".Translate();
+            TaggedString text = "MAP_GD5.PurgeResearchSupport.Text".Translate(research.LabelCap);
+            Find.LetterStack.ReceiveLetter(title, text, LetterDefOf.PositiveEvent);
         }
 
         private void TrySendPendingLetters()
@@ -95,7 +110,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
 
                 try
                 {
-                    GlitterworldDestroyer5ResearchSupportUtility.SendResearchSupportLetter(research);
+                    SendResearchSupportLetter(research);
                     pendingLetterResearchIds.Remove(id);
                 }
                 catch (Exception ex)

@@ -1,10 +1,11 @@
 using System;
 using System.Reflection;
+using GD3;
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
+namespace MAP_MechanoidMechanitor.GD5
 {
     /// <summary>
     /// 短波接收器运行时兼容：
@@ -14,27 +15,18 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
     {
         private const int TicksPerDay = 60000;
 
-        private static MethodInfo? compSelectGetter;
-        private static MethodInfo? markGetter;
         private static FieldInfo? delayTicksField;
-        private static FieldInfo? detectCooldownField;
         private static ResearchProjectDef? mediumResearch;
         private static ResearchProjectDef? largeResearch;
         private static ResearchProjectDef? ultraResearch;
 
         internal static void Configure(
-            MethodInfo resolvedCompSelectGetter,
-            MethodInfo resolvedMarkGetter,
             FieldInfo resolvedDelayTicksField,
-            FieldInfo resolvedDetectCooldownField,
             ResearchProjectDef medium,
             ResearchProjectDef large,
             ResearchProjectDef ultra)
         {
-            compSelectGetter = resolvedCompSelectGetter;
-            markGetter = resolvedMarkGetter;
             delayTicksField = resolvedDelayTicksField;
-            detectCooldownField = resolvedDetectCooldownField;
             mediumResearch = medium;
             largeResearch = large;
             ultraResearch = ultra;
@@ -52,7 +44,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
             return false;
         }
 
-        internal static bool DoEffectPrefix(object __instance)
+        internal static bool DoEffectPrefix(CompUseEffect_Detection __instance)
         {
             // 读条过程中可能切换剧情路线，因此完成时必须再次按当前状态判断。
             if (GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive)
@@ -143,42 +135,35 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer
             return mechHive.RelationKindWith(player) == FactionRelationKind.Ally;
         }
 
-        private static bool TryGetSelectedMark(object instance, out int mark)
+        private static bool TryGetSelectedMark(CompUseEffect_Detection instance, out int mark)
         {
             mark = -1;
-            if (instance == null || compSelectGetter == null || markGetter == null)
+            if (instance == null)
             {
                 return false;
             }
 
-            object? compSelect = compSelectGetter.Invoke(instance, null);
+            CompReceiverSelect? compSelect = instance.CompSelect;
             if (compSelect == null)
             {
                 return false;
             }
 
-            object? value = markGetter.Invoke(compSelect, null);
-            if (value is not int resolvedMark)
-            {
-                return false;
-            }
-
-            mark = resolvedMark;
+            mark = compSelect.Mark;
             return true;
         }
 
-        private static void ApplyOriginalCooldown(object instance)
+        private static void ApplyOriginalCooldown(CompUseEffect_Detection instance)
         {
             if (instance == null
-                || delayTicksField == null
-                || detectCooldownField == null)
+                || delayTicksField == null)
             {
                 throw new InvalidOperationException(
                     "短波接收器冷却字段尚未正确配置。");
             }
 
-            object? value = detectCooldownField.GetValue(null);
-            if (value is not int cooldownDays || cooldownDays < 0)
+            int cooldownDays = GDSettings.DetectCooldown;
+            if (cooldownDays < 0)
             {
                 throw new InvalidOperationException(
                     "GDSettings.DetectCooldown不是有效的非负整数。");

@@ -2,7 +2,7 @@ using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
 using Verse;
 
-namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5
+namespace MAP_MechanoidMechanitor.GD5
 {
     /// <summary>
     /// 每次肃清评级等级变化后，按变化后的当前等级检查应拥有的集群科技。
