@@ -18,6 +18,42 @@ namespace MAP_MechanoidMechanitor
             && parent.Faction == Faction.OfPlayer
             && (!(parent is Pawn pawn) || (!pawn.Dead && pawn.RaceProps.IsMechanoid));
 
+        public override void PostExposeData()
+        {
+            base.PostExposeData();
+            if (Scribe.mode != LoadSaveMode.PostLoadInit) return;
+            // 世界 Pawn、建筑内源 Pawn 和地图 Pawn 都会加载此组件。
+            // 等引用、地图与游戏组件加载完成后再执行完整阵营变更通知。
+            Game? game = Current.Game;
+            LongEventHandler.ExecuteWhenFinished(() =>
+            {
+                if (game != null && Current.Game == game) RestorePlayerFactionAfterLoad();
+            });
+        }
+
+        private void RestorePlayerFactionAfterLoad()
+        {
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (player == null || parent.Destroyed || parent.Discarded
+                || parent.TryGetComp<CompSunBossState>() != null) return;
+            if (parent.Faction != player) parent.SetFaction(player);
+
+            CompMechBuildingForm? form = parent.TryGetComp<CompMechBuildingForm>();
+            Pawn? source = parent.TryGetComp<CompMechFormCarrier>()?.SourcePawn
+                ?? form?.StoredSourcePawn;
+            if (source != null && !source.Destroyed && !source.Discarded
+                && SunEnergyAuraUtility.IsPlayerSun(source))
+            {
+                form?.EnsureSourceStateForRecovery(source);
+                if (source.Faction != player) source.SetFaction(player);
+                SunEnergyAuraUtility.SyncHealth(source);
+            }
+
+            if (parent is Pawn pawn) SunEnergyAuraUtility.SyncHealth(pawn);
+            // Register 使用 HashSet，重复调用只标记日冕接收者需要重新同步。
+            if (parent.Spawned) parent.Map.GetComponent<MapComponent_SunEnergyAura>().Register(this);
+        }
+
         public override void PostSpawnSetup(bool respawningAfterLoad)
         {
             base.PostSpawnSetup(respawningAfterLoad);
@@ -103,6 +139,11 @@ namespace MAP_MechanoidMechanitor
 
     internal static class SunEnergyAuraUtility
     {
+        // 用普通太阳独有的能力组件识别本体，不依赖当前阵营；明确排除 BOSS。
+        internal static bool IsPlayerSun(Pawn pawn) =>
+            pawn.GetComp<CompSunEnergyAura>()?.BuildingForm == false
+            && pawn.GetComp<CompSunBossState>() == null;
+
         // 0：无效果；1/2：机械体/建筑日冕；3：太阳自身。查询不写入状态。
         internal static int Level(Pawn? pawn)
         {

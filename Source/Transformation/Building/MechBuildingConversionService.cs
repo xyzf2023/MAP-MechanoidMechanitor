@@ -50,6 +50,9 @@ namespace MAP_MechanoidMechanitor
                     throw new InvalidOperationException(reason);
 
                 Find.WorldPawns.PassToWorld(source, PawnDiscardDecideMode.KeepForever);
+                // 原版会给自由世界 Pawn 重新分配阵营；直接建造的源 Pawn 必须先
+                // 恢复建筑所有者，再初始化玩家专属状态并捕获身份、能源快照。
+                if (source.Faction != building.Faction) source.SetFaction(building.Faction);
                 MechFusionSourceUtility.ApplyDormantGuard(source);
                 if (!GameComponent_MechTransformationRegistry.TryCommitTransition(source, building, out reason))
                     throw new InvalidOperationException(reason);

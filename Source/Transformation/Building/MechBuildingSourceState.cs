@@ -73,6 +73,12 @@ namespace MAP_MechanoidMechanitor
                 sourceStateCaptured = true;
             }
 
+            // 普通太阳只属于玩家；旧存档可能已经捕获了 PassToWorld 改写后的
+            // 错误阵营。只修正阵营字段，不重拍能源、监管关系或控制组快照。
+            if (SunEnergyAuraUtility.IsPlayerSun(source)
+                && Faction.OfPlayerSilentFail is Faction playerFaction)
+                originalSourceFaction = playerFaction;
+
             if (!energyCaptured)
             {
                 // 旧存档无法追溯转换瞬间的电量，只能以当前真实 Pawn 值迁移；
