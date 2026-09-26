@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <StorytellerDef ParentName="BaseStoryteller">
+    <defName>MAP_WheelOfFate</defName>
+    <label>「命运之轮」埃翁</label>
+    <description>埃翁始终推演着万物的变化。每隔一段时间，祂都会随机选定一个新的叙事主题，以调整演算中的测试环境，并观察殖民地在不同条件下的演化。\n\n每一种环境都只是演算的一部分。每当一轮测试结束，命运之轮便会再次转动，重新调整测试条件，并开启新的演算周期。</description>
+    <listOrder>50</listOrder>
+
+    <modExtensions>
+      <li Class="MAP_MechanoidMechanitor.WheelOfFateThemeExtension">
+        <themePoolTag>MAP_WheelOfFate</themePoolTag>
+      </li>
+    </modExtensions>
+
+    <portraitLarge>Storyteller/WheelOfFate</portraitLarge>
+    <portraitTiny>Storyteller/WheelOfFateTiny</portraitTiny>
+
+    <comps>
+      <!-- 唯一的基地主要随机调度；不叠加 RandomMain 或 ClassicIntro。 -->
+      <li Class="MAP_MechanoidMechanitor.StorytellerCompProperties_WheelOfFateRandomMain">
+        <allowedTargetTags>
+          <li>Map_PlayerHome</li>
+        </allowedTargetTags>
+        <minDaysPassed>1</minDaysPassed>
+        <mtbDays>1.35</mtbDays>
+        <!-- 本组件中 0 表示关闭超时后优先选择大型威胁，不是立即触发。 -->
+        <maxThreatBigIntervalDays>0</maxThreatBigIntervalDays>
+        <minIncChancePopulationIntentFactor>0.2</minIncChancePopulationIntentFactor>
+        <randomPointsFactorRange>1~1</randomPointsFactorRange>
+        <spaceMtbDayFactor>2</spaceMtbDayFactor>
+        <spaceMinSpacingDays>2</spaceMinSpacingDays>
+        <skipThreatBigIfRaidBeacon>true</skipThreatBigIfRaidBeacon>
+        <!-- 类别相对权重；具体事件的基础权重仍取自各自 IncidentDef。 -->
+        <categoryWeights>
+          <Misc>3.5</Misc>
+          <ThreatBig>1.4</ThreatBig>
+          <OrbitalVisitor>1.1</OrbitalVisitor>
+          <FactionArrival>2.4</FactionArrival>
+          <ThreatSmall>0.6</ThreatSmall>
+          <ShipChunkDrop>0.22</ShipChunkDrop>
+        </categoryWeights>
+      </li>
+
+      <!-- 疾病独立按生态环境与难度调度，不属于上面的主要随机池。 -->
+      <li Class="StorytellerCompProperties_Disease">
+        <category>DiseaseHuman</category>
+        <minDaysPassed>0</minDaysPassed>
+      </li>
+      <li Class="StorytellerCompProperties_Disease">
+        <category>DiseaseAnimal</category>
+        <minDaysPassed>0</minDaysPassed>
+      </li>
+
+      <!-- 袭击信标使用原版专用威胁生成器。 -->
+      <li Class="StorytellerCompProperties_ThreatsGenerator">
+        <allowedTargetTags>
+          <li>Map_RaidBeacon</li>
+        </allowedTargetTags>
+        <parms>
+          <allowedThreats>Raids</allowedThreats>
+          <onDays>1</onDays>
+          <offDays>0.5</offDays>
+          <minSpacingDays>0.04</minSpacingDays>
+          <numIncidentsRange>1~2</numIncidentsRange>
+          <minThreatPoints>500</minThreatPoints>
+        </parms>
+      </li>
+
+      <!-- 高危局势下的盟友援军，独立于普通派系到访。 -->
+      <li Class="StorytellerCompProperties_FactionInteraction">
+        <incident>RaidFriendly</incident>
+        <baseIncidentsPerYear>10</baseIncidentsPerYear>
+        <minSpacingDays>0.4</minSpacingDays>
+        <fullAlliesOnly>true</fullAlliesOnly>
+        <minDanger>High</minDanger>
+      </li>
+
+      <!-- 远行队和临时事件地图使用生态环境调度，威胁保留可见度修正。 -->
+      <li Class="StorytellerCompProperties_CategoryIndividualMTBByBiome">
+        <category>Misc</category>
+        <allowedTargetTags>
+          <li>Caravan</li>
+          <li>Map_TempIncident</li>
+        </allowedTargetTags>
+      </li>
+      <li Class="StorytellerCompProperties_CategoryIndividualMTBByBiome">
+        <category>ThreatSmall</category>
+        <applyCaravanVisibility>true</applyCaravanVisibility>
+        <allowedTargetTags>
+          <li>Caravan</li>
+          <li>Map_TempIncident</li>
+        </allowedTargetTags>
+      </li>
+      <li Class="StorytellerCompProperties_CategoryIndividualMTBByBiome">
+        <category>ThreatBig</category>
+        <applyCaravanVisibility>true</applyCaravanVisibility>
+        <allowedTargetTags>
+          <li>Caravan</li>
+          <li>Map_TempIncident</li>
+        </allowedTargetTags>
+      </li>
+
+      <!-- 普通任务：有无皇权采用互斥配置，保留原版开局渐入曲线。 -->
+      <li Class="MAP_MechanoidMechanitor.StorytellerCompProperties_WheelOfFateRandomQuest">
+        <category>GiveQuest</category>
+        <allowedTargetTags>
+          <li>World</li>
+        </allowedTargetTags>
+        <onDays>10</onDays>
+        <numIncidentsRange>1</numIncidentsRange>
+        <acceptFractionByDaysPassedCurve>
+          <points>
+            <li>(8, 0)</li>
+            <li>(15, 1)</li>
+          </points>
+        </acceptFractionByDaysPassedCurve>
+        <minSpacingDays>0.2</minSpacingDays>
+        <disableIfAnyModActive>
+          <li>Ludeon.RimWorld.Royalty</li>
+        </disableIfAnyModActive>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.StorytellerCompProperties_WheelOfFateRandomQuest">
+        <category>GiveQuest</category>
+        <allowedTargetTags>
+          <li>World</li>
+        </allowedTargetTags>
+        <onDays>12</onDays>
+        <numIncidentsRange>1~3</numIncidentsRange>
+        <acceptFractionByDaysPassedCurve>
+          <points>
+            <li>(8, 0)</li>
+            <li>(15, 1)</li>
+          </points>
+        </acceptFractionByDaysPassedCurve>
+        <minSpacingDays>0.2</minSpacingDays>
+        <enableIfAnyModActive>
+          <li>Ludeon.RimWorld.Royalty</li>
+        </enableIfAnyModActive>
+      </li>
+
+      <!-- 世界杂项事件：沿用原版间隔，事件抽选接入主题倍率。 -->
+      <li Class="MAP_MechanoidMechanitor.StorytellerCompProperties_WheelOfFateCategoryMTB">
+        <category>Misc</category>
+        <allowedTargetTags>
+          <li>World</li>
+        </allowedTargetTags>
+        <minDaysPassed>1</minDaysPassed>
+        <mtbDays>15</mtbDays>
+      </li>
+
+      <!-- 殖民地陷入绝境时的黑衣人触发逻辑。 -->
+      <li Class="StorytellerCompProperties_Triggered">
+        <incident>StrangerInBlackJoin</incident>
+        <delayTicks>180</delayTicks>
+      </li>
+    </comps>
+  </StorytellerDef>
+</Defs>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_WheelOfFate.Settings.Details.Label>显示「命运之轮」叙事主题的详细说明</MAP_WheelOfFate.Settings.Details.Label>
+  <MAP_WheelOfFate.Settings.Details.Description>开启后，叙事主题变化时显示主题类型。</MAP_WheelOfFate.Settings.Details.Description>
+  <MAP_WheelOfFate.ThemeChanged.Label>命运之轮：{0}</MAP_WheelOfFate.ThemeChanged.Label>
+  <MAP_WheelOfFate.ThemeChanged.Text>「命运之轮」展开了新一轮推演。\n\n当前推演主题：{0}\n\n{1}</MAP_WheelOfFate.ThemeChanged.Text>
+  <MAP_WheelOfFate.ThemeChanged.HiddenLabel>命运之轮正在转动</MAP_WheelOfFate.ThemeChanged.HiddenLabel>
+  <MAP_WheelOfFate.ThemeChanged.HiddenText>命运之轮展开了新一轮推演。接下来迎接我们的是什么？</MAP_WheelOfFate.ThemeChanged.HiddenText>
+  <MAP_WheelOfFate.TravelSpeed>叙事主题远行速度：×{0}（生效后：{1} 格/天）</MAP_WheelOfFate.TravelSpeed>
+</LanguageData>

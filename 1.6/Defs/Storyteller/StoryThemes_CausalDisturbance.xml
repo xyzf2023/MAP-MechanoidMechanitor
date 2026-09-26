@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_CausalDisturbance</defName>
+    <label>因果扰动</label>
+    <description>关于因果关联性的推演。触发事件的概率大幅提升，且所有的事件将以相同的概率发生。当发生一个事件时，会同时触发另一个事件。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>0.5</selectionWeight>
+    <durationDays>3~15</durationDays>
+    <incidentIntervalFactor>0.2</incidentIntervalFactor>
+    <letterDef>NeutralEvent</letterDef>
+    <equalIncidentWeights>true</equalIncidentWeights>
+    <triggerLinkedIncident>true</triggerLinkedIncident>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

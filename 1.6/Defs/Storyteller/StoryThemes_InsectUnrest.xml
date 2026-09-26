@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_InsectUnrest</defName>
+    <label>虫群躁动</label>
+    <description>地下传来若有若无的震动，虫群正在寻找新的巢穴。与虫族有关的事件将更容易被触发。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>0.2</selectionWeight>
+    <minDaysPassed>15</minDaysPassed>
+    <durationDays>6~9</durationDays>
+    <!-- 通过种类倾向体现虫群活动，不缩短整个随机池的间隔。 -->
+    <incidentIntervalFactor>1</incidentIntervalFactor>
+    <letterDef>ThreatSmall</letterDef>
+
+    <categoryWeightFactors>
+      <ThreatBig>1.3</ThreatBig>
+      <ThreatSmall>0.9</ThreatSmall>
+    </categoryWeightFactors>
+    <incidentWeightRules>
+      <li><incident>Infestation</incident><factor>5</factor></li>
+      <li><incident>RaidEnemy</incident><factor>0.5</factor></li>
+      <li><incident>ManhunterPack</incident><factor>0.7</factor></li>
+      <li><incident>AnimalInsanityMass</incident><factor>0.7</factor></li>
+      <li><incident>DefoliatorShipPartCrash</incident><factor>0.7</factor></li>
+      <li><incident>PsychicEmanatorShipPartCrash</incident><factor>0.7</factor></li>
+      <li MayRequire="Ludeon.RimWorld.Royalty"><incident>MechCluster</incident><factor>0.7</factor></li>
+    </incidentWeightRules>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

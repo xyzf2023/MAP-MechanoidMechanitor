@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_WildPulse</defName>
+    <label>荒野脉动</label>
+    <description>荒野正焕发出旺盛而难测的生机。动物更易被驯服，游荡到此地的、或友善或发狂的动物数量也将增加。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>1</selectionWeight>
+    <minDaysPassed>0</minDaysPassed>
+    <durationDays>8~12</durationDays>
+    <incidentIntervalFactor>0.9</incidentIntervalFactor>
+    <letterDef>NeutralEvent</letterDef>
+
+    <categoryWeightFactors>
+      <Misc>1.4</Misc>
+      <ThreatSmall>1.3</ThreatSmall>
+      <ThreatBig>0.9</ThreatBig>
+    </categoryWeightFactors>
+    <incidentWeightRules>
+      <!-- 自然机遇：仍需满足生态环境、动物数量等原版条件。 -->
+      <li><incident>HerdMigration</incident><factor>4</factor></li>
+      <li><incident>FarmAnimalsWanderIn</incident><factor>3</factor></li>
+      <li><incident>SelfTame</incident><factor>3</factor></li>
+      <!-- 荒野风险；大威胁内偏向动物，但不整体提高大型威胁类别。 -->
+      <li><incident>AnimalInsanitySingle</incident><factor>2</factor></li>
+      <li><incident>AnimalInsanityMass</incident><factor>2</factor></li>
+      <li><incident>ManhunterPack</incident><factor>2.5</factor></li>
+      <li><incident>Alphabeavers</incident><factor>1.5</factor></li>
+      <li><incident>RaidEnemy</incident><factor>0.7</factor></li>
+    </incidentWeightRules>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

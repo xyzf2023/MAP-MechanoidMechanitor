@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_OrderInversion</defName>
+    <label>乾坤颠倒</label>
+    <description>既定的秩序正在悄然倒转，罕见之事逐渐浮出水面，而寻常景象反倒归于沉寂。触发事件的频率提升，且原本越少发生的事件将越容易触发，常见事件则会受到抑制。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>0.2</selectionWeight>
+    <minDaysPassed>0</minDaysPassed>
+    <durationDays>3~7</durationDays>
+    <incidentIntervalFactor>0.5</incidentIntervalFactor>
+    <incidentIntervalFactor>1</incidentIntervalFactor>
+    <letterDef>NeutralEvent</letterDef>
+    <invertIncidentWeights>true</invertIncidentWeights>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

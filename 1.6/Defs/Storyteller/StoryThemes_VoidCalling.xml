@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef MayRequire="Ludeon.RimWorld.Anomaly">
+    <defName>MAP_Theme_VoidCalling</defName>
+    <label>虚空呼唤</label>
+    <description>来自虚空的低语在你耳边响起。有些东西要来了。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>0.8</selectionWeight>
+    <durationDays>2~3</durationDays>
+    <letterDef>NegativeEvent</letterDef>
+    <requiresActivatedMonolith>true</requiresActivatedMonolith>
+    <initialVoidProvocation>VoidProvocation</initialVoidProvocation>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

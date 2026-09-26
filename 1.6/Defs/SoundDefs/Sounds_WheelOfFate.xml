@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <SoundDef>
+    <defName>MAP_WheelOfFate_ThemeChanged</defName>
+    <maxSimultaneous>1</maxSimultaneous>
+    <subSounds>
+      <li>
+        <onCamera>True</onCamera>
+        <grains>
+          <li Class="AudioGrain_Clip">
+            <clipPath>WheelOfFate</clipPath>
+          </li>
+        </grains>
+        <volumeRange>60~60</volumeRange>
+      </li>
+    </subSounds>
+  </SoundDef>
+</Defs>

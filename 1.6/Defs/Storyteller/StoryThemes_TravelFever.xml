@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_TravelFever</defName>
+    <label>旅行热</label>
+    <description>一股无形的躁动正沿着道路、荒野与天空蔓延。兽群开始迁徙，旅人纷纷上路，就连漫长的远行也仿佛不再如往日那般艰难。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>1</selectionWeight>
+    <durationDays>7~14</durationDays>
+    <letterDef>PositiveEvent</letterDef>
+    <ignoreHerdMigrationAllowedBiomes>true</ignoreHerdMigrationAllowedBiomes>
+    <extraHerdMigrationIntervalTicks>60000~120000</extraHerdMigrationIntervalTicks>
+    <caravanSpeedFactor>1.5</caravanSpeedFactor>
+    <gravEngineCooldownFactor>0.5</gravEngineCooldownFactor>
+    <incidentWeightRules>
+      <li><incident>HerdMigration</incident><factor>6</factor></li>
+      <li><incident>TravelerGroup</incident><factor>3</factor></li>
+      <li><incident>VisitorGroup</incident><factor>3</factor></li>
+    </incidentWeightRules>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

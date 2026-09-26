@@ -189,6 +189,12 @@ namespace MAP_MechanoidMechanitor
         private void DrawInterfaceSettings(Listing_Standard listing)
         {
             listing.CheckboxLabeled(
+                "MAP_WheelOfFate.Settings.Details.Label".Translate(),
+                ref Settings!.showWheelOfFateThemeDetails,
+                "MAP_WheelOfFate.Settings.Details.Description".Translate());
+            listing.Gap(4f);
+
+            listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.WorkTab.Label".Translate(),
                 ref Settings!.addMechanoidMechanitorsToWorkTab,
                 "MAP_MechanoidMechanitor.Settings.WorkTab.Description".Translate());

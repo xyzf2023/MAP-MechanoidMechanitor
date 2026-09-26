@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_DisplacedPeople</defName>
+    <label>流离之人</label>
+    <description>环境的变化导致一些求生者流离失所，也会让一些派系更频繁地发起劫掠。其余事件的发生频率会降低。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>1</selectionWeight>
+    <minDaysPassed>0</minDaysPassed>
+    <durationDays>8~12</durationDays>
+    <letterDef>NeutralEvent</letterDef>
+    <charityWeightFactor>4</charityWeightFactor>
+    <permanentEnemyRaidFactionFactor>1.3</permanentEnemyRaidFactionFactor>
+    <categoryWeightFactors>
+      <ThreatSmall>0.2</ThreatSmall>
+    </categoryWeightFactors>
+    <extraCharityIntervalTicks>30000~60000</extraCharityIntervalTicks>
+    <initialWeatherDelayTicks>30000~60000</initialWeatherDelayTicks>
+    <initialWeatherIncidents>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">Drought</li>
+      <li>ColdSnap</li>
+      <li>HeatWave</li>
+    </initialWeatherIncidents>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

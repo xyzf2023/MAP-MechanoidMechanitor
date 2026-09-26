@@ -22,6 +22,8 @@ namespace MAP_MechanoidMechanitor
         public bool enableAnnihilationCannonCrater = true;
 
         public bool enablePortraitDisplayForAllSaves = false;
+        /// <summary>默认显示主题详情；关闭后命运之轮仍发送不透露主题的中性信封。</summary>
+        public bool showWheelOfFateThemeDetails = true;
         public bool enableMechanoidMechanitorBrainImplants = false;
 
         // 字段名已改为 enableMoonImplants；序列化 key 仍沿用旧 "enableLoverImplants" 以保证旧设置兼容。
@@ -483,6 +485,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref enableSunAutonomy, "enableSunAutonomy", true);
             Scribe_Values.Look(ref enableHermitAutonomy, "enableHermitAutonomy", true);
             Scribe_Values.Look(ref enableAnnihilationCannonCrater, "enableAnnihilationCannonCrater", true);
+            Scribe_Values.Look(ref showWheelOfFateThemeDetails, "showWheelOfFateThemeDetails", true);
             Scribe_Deep.Look(ref overmindEconomy, "overmindEconomy");
             if (overmindEconomy == null) overmindEconomy = new OvermindEconomySettings();
             Scribe_Values.Look(

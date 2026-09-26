@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_TradeSeason</defName>
+    <label>贸易季</label>
+    <description>商路渐趋繁忙，来自地表与轨道的交流为殖民地带来新的机遇。贸易行为将变得常见，而负面事件的发生频率会显著降低。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>1</selectionWeight>
+    <durationDays>8~12</durationDays>
+    <incidentIntervalFactor>1</incidentIntervalFactor>
+    <!-- 信封类型 -->
+    <letterDef>PositiveEvent</letterDef>
+
+    <!-- 先调整类别的相对份额，使交流增加、威胁减少，而不改变事件机会总频率。 -->
+    <categoryWeightFactors>
+      <FactionArrival>2</FactionArrival>
+      <OrbitalVisitor>3</OrbitalVisitor>
+      <ThreatBig>0.5</ThreatBig>
+      <ThreatSmall>0.8</ThreatSmall>
+    </categoryWeightFactors>
+
+    <!-- 以下倍率作用于类别内的具体事件抽选；多条命中规则相乘。 -->
+    <incidentWeightRules>
+      <li>
+        <incident>TraderCaravanArrival</incident>
+        <factor>1.5</factor>
+      </li>
+      <li>
+        <incident>RaidEnemy</incident>
+        <factor>0.2</factor>
+      </li>
+      <!-- 普通负面事件按 IncidentDef 中声明的信封类型识别。 -->
+      <li>
+        <letterDef>NegativeEvent</letterDef>
+        <factor>0.8</factor>
+      </li>
+      <!-- 这些事件在 Worker 内决定信封，原版 IncidentDef 没有声明 letterDef。 -->
+      <li>
+        <incident>ShortCircuit</incident>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <incident>CropBlight</incident>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <incident>PsychicDrone</incident>
+        <factor>0.8</factor>
+      </li>
+    </incidentWeightRules>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>
