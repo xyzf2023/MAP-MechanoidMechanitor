@@ -8,7 +8,7 @@ using Verse.Sound;
 
 namespace MAP_MechanoidMechanitor
 {
-    /// <summary>保存落点事务：非 Pawn 消失、爆炸、Kill、残留清理分别只提交一次。</summary>
+    /// <summary>保存落点事务：正常 Kill 优先，爆炸结束后统一强制清理非 Pawn 残留。</summary>
     public sealed class AnnihilationImpact : ThingWithComps
     {
         private Pawn? launcher;
@@ -24,6 +24,9 @@ namespace MAP_MechanoidMechanitor
         private List<IntVec3> outerCells = new List<IntVec3>();
         private List<Pawn> releasedPawns = new List<Pawn>();
         private List<AnnihilationResidue> residues = new List<AnnihilationResidue>();
+        // 使用 ID 而非对象引用：正常 Kill 后对象可能已被丢弃，读档仍不能重复主动 Kill。
+        private List<string> attemptedKillIds = new List<string>();
+        private readonly HashSet<string> attemptedKills = new HashSet<string>();
 
         internal void Initialize(Pawn? actor, AnnihilationSettings snapshot)
         {
@@ -37,7 +40,8 @@ namespace MAP_MechanoidMechanitor
             phase = 1;
             nextPhaseTick = Find.TickManager.TicksGame + settings.delayTicks;
             RefreshInnerCells();
-            ClearNonPawns();
+            KillInnerThings();
+            KillInnerPawns();
         }
 
         private void RefreshInnerCells()
@@ -68,13 +72,105 @@ namespace MAP_MechanoidMechanitor
             return result;
         }
 
-        internal static bool IsPhysicalThing(Thing thing) => thing != null && !thing.Destroyed
+        internal static bool IsPhysicalThing(Thing thing) => thing != null && !thing.Destroyed && !thing.Discarded
             && thing.def.category != ThingCategory.Ethereal && thing.def.category != ThingCategory.Mote
             && thing.def.category != ThingCategory.Projectile;
 
-        private void ClearNonPawns()
+        private void KillInnerThings()
         {
-            HashSet<Thing> handled = new HashSet<Thing>();
+            // 先固定目标，不因逐个 Kill 拆墙而在同一阶段继续向外扩张。
+            List<Thing> targets = ThingsInInnerCells(includeContents: false);
+            HashSet<Thing> seen = new HashSet<Thing>(targets);
+            foreach (Thing thing in targets.ToArray())
+            {
+                if (thing is Pawn || !(thing is IThingHolder holder)) continue;
+                try
+                {
+                    List<Thing> contents = new List<Thing>();
+                    ThingOwnerUtility.GetAllThingsRecursively(holder, contents, allowUnreal: false,
+                        passCheck: child => !(child is Pawn pawn) || pawn.Dead);
+                    foreach (Thing content in contents)
+                        if (IsPhysicalThing(content) && seen.Add(content)) targets.Add(content);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("[MAP] 湮灭炮收集 " + thing + " 的容器内容时发生异常：" + ex);
+                }
+            }
+            // 持有者先走正常 Kill；其后已掉落的内容也有一次正常 Kill 的机会。
+            foreach (Thing thing in targets) TryKillThing(thing);
+        }
+
+        private void TryKillThing(Thing thing)
+        {
+            AnnihilationDeathCapture.Capture? capture = null;
+            try
+            {
+                if (!IsPhysicalThing(thing) || thing == this || thing.MapHeld != Map
+                    || AnnihilationWhitelistUtility.IsProtected(thing)
+                    || attemptedKills.Contains(thing.ThingID)) return;
+                if (thing is Pawn pawn)
+                {
+                    if (pawn.Dead || pawn.health == null || pawn.health.isBeingKilled
+                        || (pawn == launcher && pawn.GetComp<CompSunBossState>() != null)) return;
+                }
+                else
+                {
+                    // 不可摧毁对象（如地热喷口）只登记最终兜底，不触发原版错误日志。
+                    RecordResidue(thing, 0);
+                    if (!thing.def.destroyable || !thing.Spawned) return;
+                }
+                if (!TryReleaseProtectedContents(thing) || !TryReleaseLivingContents(thing)) return;
+                // 释放容器内容可能触发回调，临近调用再次检查状态。
+                if (!IsPhysicalThing(thing) || thing.MapHeld != Map
+                    || AnnihilationWhitelistUtility.IsProtected(thing)) return;
+                if (thing is Pawn living)
+                {
+                    if (living.Dead || living.health == null || living.health.isBeingKilled) return;
+                }
+                else if (!thing.Spawned || !thing.def.destroyable) return;
+                // 非 Pawn 的正常击毁也可能掉落到范围外或并入既有堆叠。
+                // Pawn 由现有死亡观察补丁统一捕获，避免重复创建整图快照。
+                if (!(thing is Pawn))
+                    capture = AnnihilationDeathCapture.BeginCapture(Map,
+                        new List<AnnihilationImpact> { this }, thing);
+                if (!attemptedKills.Add(thing.ThingID)) return;
+                attemptedKillIds.Add(thing.ThingID);
+                thing.Kill(new DamageInfo(DamageDefOf.Bomb, settings.damage,
+                    settings.armorPenetration, -1f, launcher));
+            }
+            catch (Exception ex)
+            {
+                Log.Error("[MAP] 湮灭炮尝试正常击毁 " + thing + " 时发生异常：" + ex);
+            }
+            finally
+            {
+                // Kill 可能在生成产物后抛错；仍收集残留，不重复 Kill 或补发通知。
+                AnnihilationDeathCapture.FinishCapture(capture);
+            }
+        }
+
+        private bool TryReleaseLivingContents(Thing thing)
+        {
+            // 活 Pawn 自己的装备和库存留给其正常死亡流程。
+            if (thing is Pawn || !(thing is IThingHolder holder)) return true;
+            List<Thing> contents = new List<Thing>();
+            ThingOwnerUtility.GetAllThingsRecursively(holder, contents, allowUnreal: false,
+                passCheck: child => !(child is Pawn pawn) || pawn.Dead);
+            IntVec3 cell = thing.PositionHeld;
+            if (!cell.InBounds(Map)) cell = Position;
+            foreach (Pawn pawn in contents.OfType<Pawn>().Where(p => !p.Dead && !p.Destroyed).ToArray())
+            {
+                if (!releasedPawns.Contains(pawn)) releasedPawns.Add(pawn);
+                if (pawn.def.destroyOnDrop || (pawn.holdingOwner != null
+                    && !pawn.holdingOwner.TryDrop(pawn, cell, Map, ThingPlaceMode.Near,
+                        out _, playDropSound: false))) return false;
+            }
+            return true;
+        }
+
+        private void ClearNonPawns(HashSet<Thing> handled)
+        {
             foreach (Thing thing in ThingsInInnerCells(includeContents: false))
                 TryDestroyNonPawn(thing, handled);
         }
@@ -91,26 +187,19 @@ namespace MAP_MechanoidMechanitor
 
         private void DestroyNonPawn(Thing thing, HashSet<Thing> handled)
         {
-            if (!IsPhysicalThing(thing) || thing is Pawn || !handled.Add(thing)) return;
+            if (!IsPhysicalThing(thing) || thing is Pawn || AnnihilationWhitelistUtility.IsProtected(thing)
+                || !handled.Add(thing)) return;
+            if (!TryReleaseProtectedContents(thing) || !TryReleaseLivingContents(thing)) return;
             if (thing is IThingHolder holder)
             {
                 List<Thing> contents = new List<Thing>();
                 // 活 Pawn 的装备留给死亡阶段；尸体内的装备则随尸体一起清除。
                 ThingOwnerUtility.GetAllThingsRecursively(holder, contents, allowUnreal: false,
                     passCheck: child => !(child is Pawn pawn) || pawn.Dead);
-                foreach (Pawn pawn in contents.OfType<Pawn>().Where(p => !p.Dead).ToArray())
-                {
-                    if (!releasedPawns.Contains(pawn)) releasedPawns.Add(pawn);
-                    IntVec3 cell = thing.PositionHeld;
-                    if (!cell.InBounds(Map)) cell = Position;
-                    // Vanish 会直接清空部分容器；先释放活 Pawn，确保之后走 Kill。
-                    if (pawn.holdingOwner != null && !pawn.holdingOwner.TryDrop(
-                            pawn, cell, Map, ThingPlaceMode.Near, out _, playDropSound: false))
-                        return;
-                }
-                foreach (Thing content in contents) DestroyNonPawn(content, handled);
+                foreach (Thing content in contents) TryDestroyNonPawn(content, handled);
             }
-            if (thing.Destroyed) return;
+            if (!IsPhysicalThing(thing) || AnnihilationWhitelistUtility.IsProtected(thing)
+                || !TryReleaseProtectedContents(thing)) return;
             bool previous = Thing.allowDestroyNonDestroyable;
             try
             {
@@ -120,9 +209,30 @@ namespace MAP_MechanoidMechanitor
             finally { Thing.allowDestroyNonDestroyable = previous; }
         }
 
+        private bool TryReleaseProtectedContents(Thing thing)
+        {
+            if (!AnnihilationWhitelistUtility.HasEntries || !(thing is IThingHolder holder)) return true;
+            // 先完成原版遍历再操作容器，避免掉落回调重入其共享遍历缓存。
+            List<Thing> contents = ThingOwnerUtility.GetAllThingsRecursively(holder, allowUnreal: false);
+            IntVec3 cell = thing.PositionHeld;
+            if (!cell.InBounds(Map)) cell = Position;
+            foreach (Thing content in contents)
+            {
+                if (content.Destroyed || !AnnihilationWhitelistUtility.IsProtected(content)
+                    || AnnihilationWhitelistUtility.IsProtectedByHolder(content)) continue;
+                // 整体释放最外层白名单容器，其内部对象随容器保留；不逐件拆出。
+                // 原版 TryDrop 对 destroyOnDrop 对象会返回成功却直接销毁，必须提前排除。
+                if (content.def.destroyOnDrop || content.holdingOwner == null
+                    || !content.holdingOwner.TryDrop(content, cell, Map, ThingPlaceMode.Near,
+                        out _, playDropSound: false)) return false;
+            }
+            // 无法安全释放时，调用方必须保留原容器或 Pawn，不能连带清空白名单内容。
+            return true;
+        }
+
         private void StartOuterExplosion()
         {
-            // 第一阶段移除了墙；爆炸和后续 Pawn 判定使用此时的地图。
+            // 正常 Kill 成功的墙已移除；未被击毁的遮挡物保留到最终清场。
             RefreshInnerCells();
             visualStartTick = Find.TickManager.TicksGame;
             // 立即复制爆炸前的遮挡快照；不使用被爆炸改变后的地图补算余波范围。
@@ -152,7 +262,6 @@ namespace MAP_MechanoidMechanitor
 
         private void KillInnerPawns()
         {
-            RefreshInnerCells();
             HashSet<Pawn> attempted = new HashSet<Pawn>();
             // 合体死亡可能同步恢复出新的机械体；在同一 Kill 阶段重新收集。
             // 有限轮次防止第三方死亡回调无限生成 Pawn。
@@ -160,22 +269,14 @@ namespace MAP_MechanoidMechanitor
             {
                 List<Pawn> targets = ThingsInInnerCells(includeContents: true).OfType<Pawn>()
                     .Concat(releasedPawns).Where(p => p != null && !p.Dead && !p.Destroyed
-                        && p.MapHeld == Map && !attempted.Contains(p)
+                        && p.MapHeld == Map && !attempted.Contains(p) && !attemptedKills.Contains(p.ThingID)
+                        && !AnnihilationWhitelistUtility.IsProtected(p)
                         && !(p == launcher && p.GetComp<CompSunBossState>() != null)).Distinct().ToList();
                 if (targets.Count == 0) break;
                 foreach (Pawn pawn in targets)
                 {
                     attempted.Add(pawn);
-                    // Kill 会调用本 MOD 的正常合体解除与原版死亡通知，不直接 Destroy 活 Pawn。
-                    try
-                    {
-                        pawn.Kill(new DamageInfo(DamageDefOf.Bomb, settings.damage,
-                            settings.armorPenetration, -1f, launcher));
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("[MAP] 湮灭炮处理 " + pawn + " 的死亡时发生异常：" + ex);
-                    }
+                    TryKillThing(pawn);
                     if (pawn.Corpse != null) RecordResidue(pawn.Corpse, 0);
                 }
             }
@@ -183,6 +284,7 @@ namespace MAP_MechanoidMechanitor
 
         internal bool WatchesDeath(Pawn pawn)
         {
+            if (AnnihilationWhitelistUtility.IsProtected(pawn)) return false;
             if (pawn == launcher && pawn.GetComp<CompSunBossState>() != null) return false;
             if (!Spawned || phase < 1 || finalCleanupDone || pawn.MapHeld != Map) return false;
             return releasedPawns.Contains(pawn) || innerCells.Contains(pawn.PositionHeld);
@@ -190,7 +292,7 @@ namespace MAP_MechanoidMechanitor
 
         internal void RecordResidue(Thing thing, int originalCount)
         {
-            if (!IsPhysicalThing(thing) || thing is Pawn) return;
+            if (!IsPhysicalThing(thing) || thing is Pawn || AnnihilationWhitelistUtility.IsProtected(thing)) return;
             AnnihilationResidue? existing = residues.FirstOrDefault(r => r.thing == thing);
             if (existing != null) existing.originalCount = Math.Min(existing.originalCount, originalCount);
             else residues.Add(new AnnihilationResidue { thing = thing, originalCount = originalCount });
@@ -206,7 +308,8 @@ namespace MAP_MechanoidMechanitor
                 foreach (AnnihilationResidue residue in pending)
                 {
                     Thing? thing = residue.thing;
-                    if (thing == null || thing.Destroyed) continue;
+                    // 读档前登记的残留也使用当前名单；在拆分堆叠前检查，避免先改动受保护对象。
+                    if (thing == null || !IsPhysicalThing(thing) || AnnihilationWhitelistUtility.IsProtected(thing)) continue;
                     int removeCount = thing.stackCount - residue.originalCount;
                     if (removeCount <= 0) continue;
                     if (residue.originalCount > 0)
@@ -217,7 +320,9 @@ namespace MAP_MechanoidMechanitor
                     }
                     else TryDestroyNonPawn(thing, handled);
                 }
-                if (pass == 0) ClearNonPawns();
+                if (pass == 0) ClearNonPawns(handled);
+                // 兜底销毁容器时释放的活 Pawn 仍只走正常死亡，绝不直接抹除。
+                KillInnerPawns();
                 // 销毁回调可能再次触发死亡；保留并处理回调中新登记的残留。
                 if (residues.Count == 0) break;
             }
@@ -252,12 +357,17 @@ namespace MAP_MechanoidMechanitor
                 phase++;
                 nextPhaseTick = now + settings.delayTicks;
                 if (action == 1) StartOuterExplosion();
-                else if (action == 2) KillInnerPawns();
-                else if (action == 3) CleanupResidues();
+                else if (action == 2)
+                {
+                    RefreshInnerCells();
+                    KillInnerThings();
+                    KillInnerPawns();
+                }
+                // phase 3 仅保留原有阶段间隔及存档编号，清场统一等待爆炸结束。
             }
             if (phase >= 4 && explosionEnded && !finalCleanupDone)
             {
-                // 爆炸晚于 T+9 到达的格子仍可能产生残留，仅在完成时补清一次。
+                // 爆炸晚于 T+9 到达的格子仍可能产生残留，完成后统一清理。
                 CleanupResidues();
                 CreateAftermath();
                 finalCleanupDone = true;
@@ -290,6 +400,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Collections.Look(ref outerCells, "outerCells", LookMode.Value);
             Scribe_Collections.Look(ref releasedPawns, "releasedPawns", LookMode.Reference);
             Scribe_Collections.Look(ref residues, "residues", LookMode.Deep);
+            Scribe_Collections.Look(ref attemptedKillIds, "attemptedKillIds", LookMode.Value);
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 innerCells ??= new List<IntVec3>();
@@ -300,6 +411,11 @@ namespace MAP_MechanoidMechanitor
                 releasedPawns.RemoveAll(p => p == null);
                 residues ??= new List<AnnihilationResidue>();
                 residues.RemoveAll(r => r == null || r.thing == null);
+                attemptedKillIds ??= new List<string>();
+                // 旧档保持已有 phase，不补跑落地阶段；新增去重字段缺失时从空集合开始。
+                attemptedKills.Clear();
+                foreach (string id in attemptedKillIds)
+                    if (!string.IsNullOrEmpty(id)) attemptedKills.Add(id);
             }
         }
     }

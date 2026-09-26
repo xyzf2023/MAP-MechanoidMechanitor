@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <!-- 湮灭炮白名单 -->
+  <MAP_MechanoidMechanitor.AnnihilationWhitelistDef>
+    <defName>MAP_AnnihilationWhitelist_Core</defName>
+    
+    <!-- ThingDef -->
+    <thingDefs>
+      <!-- GD5：机械巨黾，建筑 -->
+      <li MayRequire="fxz.glitterworlddestroyer.mk5">GD_Exostrider</li>
+    </thingDefs>
+
+    <!-- PawnKindDef -->
+    <pawnKinds>
+      <!-- GD5：黑衣憎恶毒蜂 -->
+      <li MayRequire="fxz.glitterworlddestroyer.mk5">Mech_BlackApocriton</li>
+    </pawnKinds>
+  </MAP_MechanoidMechanitor.AnnihilationWhitelistDef>
+</Defs>

@@ -51,9 +51,10 @@ namespace MAP_MechanoidMechanitor
             {
                 foreach (Thing thing in cell.GetThingList(map))
                 {
+                    // 完整占地内存在任何建筑（包括白名单保留建筑）就不生成，不移动落点。
                     // 矩形坑角落可能超出圆形内圈，不得因生成弹坑扩大攻击破坏。
                     if (thing is Building || thing is Blueprint || thing is Frame) return;
-                    if (thing.def.category != ThingCategory.Filth
+                    if ((thing.def.category != ThingCategory.Filth || AnnihilationWhitelistUtility.IsProtected(thing))
                         && GenSpawn.SpawningWipes(craterDef, thing.def)) return;
                 }
             }
