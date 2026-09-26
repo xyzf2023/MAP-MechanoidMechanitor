@@ -9,6 +9,10 @@ namespace MAP_MechanoidMechanitor.GD5
     {
         public string entryNode = "";
         public string titleKey = "";
+        // 与闪毁5 ScriptTree 相同的头像参数，由原 GraphicWindow 绘制。
+        public string? graphic;
+        public float drawSize = 1f;
+        public float drawOffset;
         public List<GD5DialogueNode> nodes = new List<GD5DialogueNode>();
 
         public override IEnumerable<string> ConfigErrors()

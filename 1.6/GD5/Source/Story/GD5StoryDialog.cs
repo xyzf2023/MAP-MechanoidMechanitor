@@ -1,4 +1,5 @@
 using System.Linq;
+using GD3;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -9,17 +10,25 @@ namespace MAP_MechanoidMechanitor.GD5
     {
         private readonly GD5DialogueDef dialogue;
         private readonly GD5DialogueCondition relation;
-        private GD5DialogueNode node;
-        private Vector2 scroll;
+        private readonly GD5DialogueNode node;
+        private GraphicWindow? portraitWindow;
         private bool completed;
 
-        public override Vector2 InitialSize => new Vector2(620f, 570f);
+        private const float WindowWidth = 520f;
+        private const float WindowHeight = 570f;
+
+        public override Vector2 InitialSize => new Vector2(WindowWidth, WindowHeight);
 
         internal GD5StoryDialog(GD5DialogueDef dialogue)
+            : this(dialogue, dialogue.entryNode, GD5StoryFlowService.GetHiveRelation())
+        {
+        }
+
+        private GD5StoryDialog(GD5DialogueDef dialogue, string nodeId, GD5DialogueCondition relation)
         {
             this.dialogue = dialogue;
-            node = dialogue.nodes.First(n => n.id == dialogue.entryNode);
-            relation = GD5StoryFlowService.GetHiveRelation();
+            node = dialogue.nodes.First(n => n.id == nodeId);
+            this.relation = relation;
             forcePause = true;
             absorbInputAroundWindow = true;
             closeOnAccept = false;
@@ -30,27 +39,53 @@ namespace MAP_MechanoidMechanitor.GD5
             soundClose = SoundDefOf.CommsWindow_Close;
         }
 
+        public override void PreOpen()
+        {
+            base.PreOpen();
+            if (!string.IsNullOrEmpty(dialogue.graphic))
+            {
+                // 直接复用闪毁5：200×200 左侧头像窗、电话叠图、缩放和偏移。
+                portraitWindow = new GraphicWindow(dialogue.graphic, dialogue.drawSize,
+                    dialogue.drawOffset, WindowWidth, WindowHeight);
+                Find.WindowStack.Add(portraitWindow);
+            }
+        }
+
+        public override void PostClose()
+        {
+            base.PostClose();
+            // 仅关闭本次通讯的头像；异常关闭也不能留下悬空窗口。
+            GraphicWindow? portrait = portraitWindow;
+            portraitWindow = null;
+            portrait?.Close();
+        }
+
         public override void DoWindowContents(Rect inRect)
         {
+            // 与创意工坊版 CommunicationWindow_BlackMech.DoWindowContents
+            // 使用相同的尺寸、内边距、正文排版及底部文字选项绘制。
+            Rect contentRect = inRect.ContractedBy(10f);
             Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(0, 0, inRect.width, 40f), dialogue.titleKey.Translate());
+            Widgets.Label(new Rect(contentRect.x, contentRect.y, contentRect.width, 40f),
+                dialogue.titleKey.Translate());
             Text.Font = GameFont.Small;
+            string text = node.textKey.Translate();
+            Widgets.Label(new Rect(contentRect.x, contentRect.y + Text.LineHeight + 5f,
+                contentRect.width, Text.CalcHeight(text, contentRect.width)), text);
+
             // 条件选项优先；无匹配条件时使用无条件选项（中立回答）。
             var options = node.options.Where(o => o.condition == relation).ToList();
             if (options.Count == 0)
                 options = node.options.Where(o => o.condition == GD5DialogueCondition.Always).ToList();
-            float footer = inRect.height - options.Count * 64f;
-            Rect outRect = new Rect(0, 50f, inRect.width, footer - 64f);
-            string text = node.textKey.Translate();
-            Rect view = new Rect(0, 0, outRect.width - 20f,
-                Mathf.Max(outRect.height, Text.CalcHeight(text, outRect.width - 20f)));
-            Widgets.BeginScrollView(outRect, ref scroll, view);
-            Widgets.Label(view, text);
-            Widgets.EndScrollView();
             for (int i = 0; i < options.Count; i++)
             {
                 GD5DialogueOption option = options[i];
-                if (!Widgets.ButtonText(new Rect(0, footer + i * 64f, inRect.width, 58f), option.textKey.Translate()))
+                Rect optionRect = new Rect(contentRect.x,
+                    inRect.height - 25f - (options.Count + 1) * Text.LineHeight + (i + 2) * Text.LineHeight,
+                    contentRect.width, Text.LineHeight);
+                Widgets.DrawHighlightIfMouseover(optionRect);
+                Widgets.Label(optionRect, option.textKey.Translate());
+                if (!Widgets.ButtonInvisible(optionRect))
                     continue;
                 if (option.action == GD5DialogueAction.CompleteFirstContact)
                 {
@@ -62,8 +97,11 @@ namespace MAP_MechanoidMechanitor.GD5
                 }
                 else
                 {
-                    node = dialogue.nodes.First(n => n.id == option.next);
-                    scroll = Vector2.zero;
+                    // 与原通讯一样，每个节点关闭旧窗口并重新打开，保留通讯音效。
+                    // 沿用本次通讯的关系快照，不在翻页时重新选择关系分支。
+                    var nextWindow = new GD5StoryDialog(dialogue, option.next, relation);
+                    Close();
+                    Find.WindowStack.Add(nextWindow);
                 }
                 // 本帧节点已改变，不能继续处理旧节点按钮。
                 return;

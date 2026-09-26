@@ -5,6 +5,10 @@
     <defName>MAP_GD5_FirstContact</defName>
     <entryNode>Greeting</entryNode>
     <titleKey>MAP_GD5.FirstContact.Title</titleKey>
+    <!-- 对应闪毁5 Scripts_Begin 的黑衣机械静螳通讯头像。 -->
+    <graphic>Pawn/BLancer_south</graphic>
+    <drawSize>1</drawSize>
+    <drawOffset>0</drawOffset>
     <nodes>
       <li>
         <id>Greeting</id><textKey>MAP_GD5.FirstContact.Greeting</textKey>
