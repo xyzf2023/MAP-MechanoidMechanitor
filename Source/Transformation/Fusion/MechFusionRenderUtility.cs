@@ -30,6 +30,9 @@ namespace MAP_MechanoidMechanitor
         private static readonly ConditionalWeakTable<Pawn, SilhouetteFrame>
             SilhouetteFrames = new ConditionalWeakTable<Pawn, SilhouetteFrame>();
 
+        // 每个真实源只生成一次详细诊断；弱键不延长 Pawn 生命周期，也不写入存档。
+        private static readonly ConditionalWeakTable<Pawn, object> ReportedRenderFailures = new();
+
         private static readonly AccessTools.FieldRef<PawnRenderer, Graphic>
             SilhouetteGraphicField =
                 AccessTools.FieldRefAccess<PawnRenderer, Graphic>("silhouetteGraphic");
@@ -142,30 +145,81 @@ namespace MAP_MechanoidMechanitor
 
             renderingSource = true;
             renderingSourcePawn = source;
+            PawnRenderer? renderer = null;
+            string stage = "获取源渲染器";
             try
             {
-                PawnRenderer? renderer = source.Drawer?.renderer;
+                renderer = source.Drawer?.renderer;
                 if (renderer == null)
                 {
                     return false;
                 }
 
+                // 世界源没有地图预绘制调度，不能复用离图前或异常帧遗留的 results。
+                ClearPreRenderResults(renderer);
+                stage = "初始化源图形";
                 renderer.EnsureGraphicsInitialized();
+                stage = "绘制源机械体";
                 renderer.RenderPawnAt(drawLoc, rotation, neverAimWeapon);
+                stage = "更新合体主体轮廓";
                 CompleteWearerRender(wearer, renderer, drawLoc, rotation);
                 return true;
             }
             catch (Exception ex)
             {
-                Log.ErrorOnce(
-                    "[MAP-机械族机械师] 合体源机械族渲染失败：" + ex,
-                    source.thingIDNumber ^ 0x51F2A3B);
+                if (!ReportedRenderFailures.TryGetValue(source, out _))
+                {
+                    ReportedRenderFailures.Add(source, new object());
+                    Log.ErrorOnce(
+                        "[MAP-机械族机械师] 合体源机械族渲染失败："
+                        + DescribeRenderFailure(wearer, source, stage, rotation) + "\n" + ex,
+                        source.thingIDNumber ^ 0x51F2A3B);
+                }
                 return false;
             }
             finally
             {
-                renderingSource = false;
-                renderingSourcePawn = null;
+                try
+                {
+                    // 原版在异常或不绘制的提前返回中可能未清理预绘制结果。
+                    if (renderer != null)
+                        ClearPreRenderResults(renderer);
+                }
+                finally
+                {
+                    renderingSource = false;
+                    renderingSourcePawn = null;
+                }
+            }
+        }
+
+        private static string DescribeRenderFailure(Pawn wearer, Pawn source, string stage, Rot4 rotation)
+        {
+            try
+            {
+                GameComponent_MechFusionSessionRegistry.TryGetSessionForWearer(wearer, out var session);
+                var lifeStage = source.ageTracker?.CurLifeStage;
+                // 人类种类不一定定义 PawnKindLifeStage，不为诊断强行访问无关分支。
+                var kindLifeStage = source.RaceProps.Humanlike ? null : source.ageTracker?.CurKindLifeStage;
+                return $"stage={stage}，source={source.ThingID}，wearer={wearer.ThingID}，"
+                    + $"def={source.def?.defName}，kind={source.kindDef?.defName}，"
+                    + $"session={session?.SessionId}，state={session?.State}，"
+                    + $"faction={source.Faction?.def?.defName ?? "null"}，"
+                    + $"originalFaction={session?.OriginalSourceFaction?.def?.defName ?? "null"}，"
+                    + $"spawned={source.Spawned}，dead={source.Dead}，"
+                    + $"destroyed={source.Destroyed}，discarded={source.Discarded}，"
+                    + $"worldPawn={Find.WorldPawns.Contains(source)}，"
+                    + $"holder={source.ParentHolder?.GetType().FullName ?? "null"}，"
+                    + $"humanlike={source.RaceProps.Humanlike}，rotation={rotation}，"
+                    + $"ageTracker={source.ageTracker != null}，lifeStage={lifeStage?.defName ?? "null"}，"
+                    + $"lifeSilhouette={lifeStage?.silhouetteGraphicData != null}，"
+                    + $"kindLifeStage={kindLifeStage != null}，"
+                    + $"kindSilhouette={kindLifeStage?.silhouetteGraphicData != null}。";
+            }
+            catch (Exception diagnosticException)
+            {
+                // 诊断属性也可能依赖损坏的 Pawn 状态，不能覆盖最初的渲染异常。
+                return $"stage={stage}，详细状态读取失败：{diagnosticException.GetType().Name}。";
             }
         }
 

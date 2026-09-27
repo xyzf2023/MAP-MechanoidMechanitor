@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using RimWorld;
-using RimWorld.Planet;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -564,13 +563,11 @@ namespace MAP_MechanoidMechanitor
             if (!Find.WorldPawns.Contains(source))
             {
                 Log.Warning(
-                    "[MAP-机械族机械师] 合体源 Pawn 未由 WorldPawns 管理，已补回：" +
+                    "[MAP-机械族机械师] 合体源 Pawn 未由 WorldPawns 管理，尝试补回：" +
                     $"pawn={source.LabelShort}（{source.ThingID}）。");
-                Find.WorldPawns.PassToWorld(
-                    source,
-                    PawnDiscardDecideMode.KeepForever);
             }
 
+            MechFusionWorldPawnStorage.EnsureStored(session, source);
             MechFusionSourceUtility.ApplyDormantGuard(source);
             // 旧会话没有机控快照；迁移版首次读取时只针对机械师源补捕获。
             MechFusionMechanitorSynchronizationService.EnsureLegacySnapshot(

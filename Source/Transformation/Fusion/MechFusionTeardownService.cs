@@ -614,7 +614,7 @@ namespace MAP_MechanoidMechanitor
 
                 if (map == null || map.Disposed || !anchor.IsValid)
                 {
-                    EnsureWorldPawn(source);
+                    MechFusionWorldPawnStorage.EnsureStored(session, source);
                     deferred = true;
                     return false;
                 }
@@ -627,7 +627,7 @@ namespace MAP_MechanoidMechanitor
                     RestoreSearchRadius);
                 if (!corpseCell.IsValid)
                 {
-                    EnsureWorldPawn(source);
+                    MechFusionWorldPawnStorage.EnsureStored(session, source);
                     deferred = true;
                     return false;
                 }
@@ -653,7 +653,7 @@ namespace MAP_MechanoidMechanitor
 
             if (map == null || map.Disposed || !anchor.IsValid)
             {
-                EnsureWorldPawn(source);
+                MechFusionWorldPawnStorage.EnsureStored(session, source);
                 deferred = true;
                 return false;
             }
@@ -667,7 +667,7 @@ namespace MAP_MechanoidMechanitor
                 RestoreSearchRadius);
             if (!spawnCell.IsValid)
             {
-                EnsureWorldPawn(source);
+                MechFusionWorldPawnStorage.EnsureStored(session, source);
                 deferred = true;
                 return false;
             }
@@ -1098,21 +1098,6 @@ namespace MAP_MechanoidMechanitor
             if (Find.WorldPawns.Contains(pawn))
             {
                 Find.WorldPawns.RemovePawn(pawn);
-            }
-        }
-
-        private static void EnsureWorldPawn(Pawn pawn)
-        {
-            if (pawn.Destroyed || pawn.Discarded)
-            {
-                return;
-            }
-
-            if (!Find.WorldPawns.Contains(pawn))
-            {
-                Find.WorldPawns.PassToWorld(
-                    pawn,
-                    PawnDiscardDecideMode.KeepForever);
             }
         }
 

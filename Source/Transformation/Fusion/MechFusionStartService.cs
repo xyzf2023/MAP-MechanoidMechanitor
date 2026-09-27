@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using RimWorld;
-using RimWorld.Planet;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -90,6 +89,10 @@ namespace MAP_MechanoidMechanitor
 
             try
             {
+                // 在离图、装备转移和控制关系捕获之前确认保护可用，失败直接走原事务回滚。
+                if (!MechFusionWorldPawnFactionPatch.Installed)
+                    throw new InvalidOperationException("合体世界暂存阵营保护未安装，无法开始合体。");
+
                 // 监管关系与限时效果必须在离图、迁移控制权之前捕获。
                 MechFusionRepairBeaconUtility.Capture(session, source);
                 MechFusionVoidEngineUtility.Capture(session, source);
@@ -154,9 +157,7 @@ namespace MAP_MechanoidMechanitor
                     source,
                     wearer);
                 source.DeSpawn(DestroyMode.Vanish);
-                Find.WorldPawns.PassToWorld(
-                    source,
-                    PawnDiscardDecideMode.KeepForever);
+                MechFusionWorldPawnStorage.EnsureStored(session, source);
                 transaction.SourceStored = true;
                 MechFusionSourceUtility.ApplyDormantGuard(source);
 
