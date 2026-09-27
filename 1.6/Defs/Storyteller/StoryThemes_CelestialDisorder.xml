@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_CelestialDisorder</defName>
+    <label>天象失序</label>
+    <description>大气与天候的演变正在逐渐偏离常态。极端天气与各类环境异象将更加频繁，而其他事件的发生机会会相应减少。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>1</selectionWeight>
+    <minDaysPassed>30</minDaysPassed>
+    <durationDays>7~14</durationDays>
+    <incidentIntervalFactor>1</incidentIntervalFactor>
+    <letterDef>NegativeEvent</letterDef>
+
+    <!-- 大型威胁中幅降权，其余主池类别小幅降权。 -->
+    <categoryWeightFactors>
+      <ThreatBig>0.5</ThreatBig>
+      <Misc>0.8</Misc>
+      <ThreatSmall>0.8</ThreatSmall>
+      <FactionArrival>0.8</FactionArrival>
+      <OrbitalVisitor>0.8</OrbitalVisitor>
+      <ShipChunkDrop>0.8</ShipChunkDrop>
+    </categoryWeightFactors>
+
+    <!-- 大幅提升天象类事件概率 -->
+    <incidentWeightRules>
+      <li>
+        <incident>HeatWave</incident>
+        <factor>8</factor>
+      </li>
+      <li>
+        <incident>ColdSnap</incident>
+        <factor>8</factor>
+      </li>
+      <li>
+        <incident>SolarFlare</incident>
+        <factor>8</factor>
+      </li>
+      <li>
+        <incident>Eclipse</incident>
+        <factor>8</factor>
+      </li>
+      <li>
+        <incident>Aurora</incident>
+        <factor>8</factor>
+      </li>
+      <li>
+        <incident>Flashstorm</incident>
+        <factor>8</factor>
+      </li>
+    </incidentWeightRules>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>
