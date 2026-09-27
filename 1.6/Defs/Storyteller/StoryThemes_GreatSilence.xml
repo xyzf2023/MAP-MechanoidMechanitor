@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_GreatSilence</defName>
+    <label>大静谧</label>
+    <description>世界从未如此安静。接下来的一段时间，不会有任何随机事件发生。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>0.1</selectionWeight>
+    <minDaysPassed>0</minDaysPassed>
+    <durationDays>3~5</durationDays>
+    <letterDef>NeutralEvent</letterDef>
+    <suppressRandomIncidents>true</suppressRandomIncidents>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

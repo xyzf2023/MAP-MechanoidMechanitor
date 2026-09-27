@@ -15,6 +15,7 @@ namespace MAP_MechanoidMechanitor
         public bool equalIncidentWeights;
         public bool invertIncidentWeights;
         public bool triggerLinkedIncident;
+        public bool suppressRandomIncidents;
         public bool requiresActivatedMonolith;
         public PsychicRitualDef_VoidProvocation? initialVoidProvocation;
         public LetterDef? letterDef;
