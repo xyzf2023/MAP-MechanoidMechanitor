@@ -8,10 +8,23 @@ namespace MAP_MechanoidMechanitor
     public static class SunBossSiteUtility
     {
         // 创建入口同时绑定专用 WorldObjectDef 与 SitePart，确保使用受控地图生成链。
-        // 后续任务可以复用此入口；当前不加入自然事件、任务或 BOSS 战斗行为。
+        // 自然调度与开发者工具共用此入口。
         public static Site? CreateSite(PlanetTile tile, float threatPoints = 1800f)
         {
             return CreateSite(tile, out _, threatPoints);
+        }
+
+        internal static Site? TryCreateNaturalSite()
+        {
+            if (!ModsConfig.OdysseyActive || Faction.OfMechanoids == null) return null;
+
+            // 沿用原版据点选址距离与可达性检查，限制为未被占用的可通行陆地。
+            if (!TileFinder.TryFindNewSiteTile(out PlanetTile tile, canBeSpace: false,
+                validator: candidate => candidate.Valid && !candidate.Layer.Def.isSpace
+                    && !Find.World.Impassable(candidate) && !Find.WorldGrid[candidate].WaterCovered
+                    && !Find.WorldObjects.AnyMapParentAt(candidate))) return null;
+
+            return CreateSite(tile);
         }
 
         private static Site? CreateSite(PlanetTile tile, out string failureReason, float threatPoints = 1800f)
