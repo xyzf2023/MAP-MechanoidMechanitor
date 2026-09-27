@@ -20,6 +20,7 @@ namespace MAP_MechanoidMechanitor
         private Mote? areaIndicator;
         private Sustainer? beamSound;
         private readonly List<Pawn> damageTargets = new List<Pawn>();
+        private readonly HashSet<Building> buildingDamageTargets = new HashSet<Building>();
         private CompHighEnergyLaserBeam? Laser => pawn.GetComp<CompHighEnergyLaserBeam>();
         internal bool IsFiring => firingStarted;
         // 不从可能在读档后失效的 Thing 引用推断模式，防止追踪模式退化为地块模式。
@@ -140,6 +141,8 @@ namespace MAP_MechanoidMechanitor
 
             // TakeDamage 可能杀死施法者并同步结束 Job，不能再结束其后续 Job。
             if (pawn.jobs?.curDriver != this) return;
+            if (firingTicks % CompHighEnergyLaserBeam.BuildingDamageInterval == 0) ApplyBuildingDamagePulse();
+            if (pawn.jobs?.curDriver != this) return;
             if (!CanContinue()) EndJobWith(JobCondition.InterruptForced);
             else if (firingTicks >= props.durationTicks) EndJobWith(JobCondition.Succeeded);
         }
@@ -169,6 +172,36 @@ namespace MAP_MechanoidMechanitor
                 victim.TakeDamage(damage);
             }
             damageTargets.Clear();
+        }
+
+        private void ApplyBuildingDamagePulse()
+        {
+            Map? map = castMap;
+            if (map == null) return;
+            buildingDamageTargets.Clear();
+            float halfSide = CompHighEnergyLaserBeam.AreaSideLength * 0.5f;
+            // 收集与浮点正方形范围相交的占地格；多格建筑每轮只结算一次。
+            int minX = Mathf.Max(0, Mathf.FloorToInt(impactPosition.x - halfSide));
+            int maxX = Mathf.Min(map.Size.x - 1, Mathf.CeilToInt(impactPosition.x + halfSide) - 1);
+            int minZ = Mathf.Max(0, Mathf.FloorToInt(impactPosition.z - halfSide));
+            int maxZ = Mathf.Min(map.Size.z - 1, Mathf.CeilToInt(impactPosition.z + halfSide) - 1);
+            for (int x = minX; x <= maxX; x++)
+                for (int z = minZ; z <= maxZ; z++)
+                    foreach (Thing thing in new IntVec3(x, 0, z).GetThingList(map))
+                        if (thing is Building building && !building.Destroyed)
+                            buildingDamageTargets.Add(building);
+
+            // 完成快照后再伤害，避免建筑销毁及其回调修改格内物体列表。
+            foreach (Building building in buildingDamageTargets)
+            {
+                if (pawn.jobs?.curDriver != this) break;
+                if (building.Destroyed || !building.Spawned || building.Map != map) continue;
+                DamageInfo damage = new DamageInfo(HighEnergyLaserBeamDefOf.MAP_ChariotLaserSiege,
+                    CompHighEnergyLaserBeam.BuildingDamageAmount, 1.5f, -1f, pawn);
+                damage.SetIgnoreArmor(true);
+                building.TakeDamage(damage);
+            }
+            buildingDamageTargets.Clear();
         }
 
         private void MaintainVisuals()

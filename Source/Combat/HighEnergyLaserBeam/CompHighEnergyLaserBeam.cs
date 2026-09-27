@@ -35,6 +35,9 @@ namespace MAP_MechanoidMechanitor
     {
         internal const int WarmupTicks = 180;
         internal const int DamageInterval = 20;
+        // 战车聚焦激光每 6 tick 对建筑造成 50 点伤害；太阳保持同频率、双倍伤害。
+        internal const int BuildingDamageInterval = 6;
+        internal const float BuildingDamageAmount = 100f;
         internal const int EmitterCheckInterval = 60;
         internal const float AreaSideLength = 3f;
         private int readyTick;
@@ -168,6 +171,7 @@ namespace MAP_MechanoidMechanitor
         public static JobDef MAP_HighEnergyLaserBeam = null!;
         public static BodyPartDef MAP_SunCentralLaserEmitter = null!;
         public static DamageDef MAP_HighEnergyLaserBeamHeat = null!;
+        public static DamageDef MAP_ChariotLaserSiege = null!;
         public static ThingDef Mote_MAP_HighEnergyLaserBeamOuter = null!;
         public static ThingDef Mote_MAP_HighEnergyLaserBeamCore = null!;
         public static ThingDef Mote_MAP_HighEnergyLaserBeamArea = null!;
