@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_Encirclement</defName>
+    <label>四面楚歌</label>
+    <description>四面八方的敌意正在向殖民地汇聚。不同的敌人将以不同的方式接连发动袭击，一轮攻势结束后，下一轮或许已经近在眼前。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>0.2</selectionWeight>
+    <minDaysPassed>75</minDaysPassed>
+    <durationDays>0.5~1</durationDays>
+    <letterDef>ThreatBig</letterDef>
+    <triggerEncirclementRaids>true</triggerEncirclementRaids>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

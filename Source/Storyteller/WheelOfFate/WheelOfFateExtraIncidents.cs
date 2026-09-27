@@ -12,6 +12,7 @@ namespace MAP_MechanoidMechanitor
         private int nextHerdMigrationTick = -1;
         private int weatherTick = -1; // -1 尚未计时，-2 本轮已尝试。
         private QuestScriptDef? lastCharityQuest;
+        private WheelOfFateRaidWaves raidWaves = new WheelOfFateRaidWaves();
 
         public void ExposeData()
         {
@@ -19,6 +20,9 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref nextHerdMigrationTick, "nextHerdMigrationTick", -1);
             Scribe_Values.Look(ref weatherTick, "weatherTick", -1);
             Scribe_Defs.Look(ref lastCharityQuest, "lastCharityQuest");
+            Scribe_Deep.Look(ref raidWaves, "raidWaves");
+            if (Scribe.mode == LoadSaveMode.PostLoadInit && raidWaves == null)
+                raidWaves = new WheelOfFateRaidWaves();
         }
 
         internal void Reset()
@@ -27,16 +31,19 @@ namespace MAP_MechanoidMechanitor
             nextHerdMigrationTick = -1;
             weatherTick = -1;
             lastCharityQuest = null;
+            raidWaves.Reset();
         }
 
         internal bool IsDue(int now) => (nextCharityTick >= 0 && now >= nextCharityTick)
             || (nextHerdMigrationTick >= 0 && now >= nextHerdMigrationTick)
-            || (weatherTick >= 0 && now >= weatherTick);
+            || (weatherTick >= 0 && now >= weatherTick)
+            || raidWaves.IsDue(now);
 
         internal void Begin(StoryThemeDef theme)
         {
             Reset();
             InitializeTimers(theme, GenTicks.TicksGame);
+            if (theme.triggerEncirclementRaids) raidWaves.Begin();
             // 只在新周期入口尝试一次；读档和逐 tick 的计时初始化不会补发。
             if (theme.initialVoidProvocation != null)
                 WheelOfFateVoidProvocation.TryQueue(theme.initialVoidProvocation);
@@ -66,6 +73,7 @@ namespace MAP_MechanoidMechanitor
 
             StorytellerComp_WheelOfFateRandomMain? comp = Find.Storyteller.storytellerComps
                 .OfType<StorytellerComp_WheelOfFateRandomMain>().FirstOrDefault();
+            raidWaves.Tick(now, comp);
             if (nextHerdMigrationTick >= 0 && now >= nextHerdMigrationTick)
             {
                 nextHerdMigrationTick = Enabled(theme.extraHerdMigrationIntervalTicks)

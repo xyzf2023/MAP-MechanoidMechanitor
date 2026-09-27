@@ -22,44 +22,46 @@ namespace MAP_MechanoidMechanitor
                 return true;
 
             var worker = (IncidentWorker_RaidEnemy)incident.Worker;
-            float points = parms.points;
-            // 不让派系资格检查中暂时填写的 faction 泄漏进正式事件参数。
-            IncidentParms validationParms = parms.ShallowCopy();
-            List<Faction> candidates = Candidates(false);
-            // 只有原版正常候选本身为空时才使用其 desperate 回退，
-            // 不因主题将正常候选权重设为 0 而放宽资格。
-            if (candidates.Count == 0) candidates = Candidates(true);
+            List<Faction> candidates = Candidates(worker, parms);
             if (!candidates.TryRandomElementByWeight(Weight, out var selected)) return false;
             parms.faction = selected;
             return true;
 
-            List<Faction> Candidates(bool desperate)
+            float Weight(Faction faction)
             {
-                // 原版 PawnGroupMakerUtility.UsableFactions 是 private；这里保留其
-                // RaidEnemy 调用的筛选条件，并复用公开的 FactionCanBeGroupSource。
+                float weight = BaseWeight(faction, parms) * theme.RaidFactionFactor(faction.def);
+                return StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(weight)
+                    ? weight : 0f;
+            }
+        }
+
+        /// <summary>主池与主题连波共用原版敌对派系资格；只在正常候选为空时放宽最早袭击天数。</summary>
+        internal static List<Faction> Candidates(IncidentWorker_RaidEnemy worker, IncidentParms parms)
+        {
+            // 不让资格检查中暂时填写的 faction 泄漏进正式事件参数。
+            IncidentParms validationParms = parms.ShallowCopy();
+            List<Faction> candidates = Collect(false);
+            return candidates.Count > 0 ? candidates : Collect(true);
+
+            List<Faction> Collect(bool desperate)
+            {
+                // UsableFactions 是 private，保留其筛选条件并复用公开资格入口。
                 return Find.FactionManager.AllFactions.Where(faction =>
                     !faction.temporary
                     && faction.def.pawnGroupMakers != null
                     && faction.def.pawnGroupMakers.Any(maker => maker.kindDef == PawnGroupKindDefOf.Combat)
                     && !faction.def.raidsForbidden
                     && worker.FactionCanBeGroupSource(faction, validationParms, desperate)
-                    && points >= faction.def.MinPointsToGeneratePawnGroup(PawnGroupKindDefOf.Combat)
-                    && StorytellerCompProperties_WheelOfFateRandomMain.IsFinitePositive(BaseWeight(faction)))
+                    && parms.points >= faction.def.MinPointsToGeneratePawnGroup(PawnGroupKindDefOf.Combat)
+                    && StorytellerCompProperties_WheelOfFateRandomMain.IsFinitePositive(BaseWeight(faction, parms)))
                     .ToList();
             }
+        }
 
-            float BaseWeight(Faction faction)
-            {
-                float repeatFactor = parms.target.StoryState.lastRaidFaction == faction ? 0.4f : 1f;
-                return faction.def.RaidCommonalityFromPoints(points) * repeatFactor;
-            }
-
-            float Weight(Faction faction)
-            {
-                float weight = BaseWeight(faction) * theme.RaidFactionFactor(faction.def);
-                return StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(weight)
-                    ? weight : 0f;
-            }
+        internal static float BaseWeight(Faction faction, IncidentParms parms)
+        {
+            float repeatFactor = parms.target.StoryState.lastRaidFaction == faction ? 0.4f : 1f;
+            return faction.def.RaidCommonalityFromPoints(parms.points) * repeatFactor;
         }
     }
 }
