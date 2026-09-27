@@ -256,7 +256,7 @@ namespace MAP_MechanoidMechanitor
             explosion.StartExplosion(null, launcher?.GetComp<CompSunBossState>() != null
                 ? new List<Thing> { launcher } : null);
             AnnihilationHitEffect.StartBlackout(this, settings.VisualDurationTicks);
-            DefDatabase<SoundDef>.GetNamedSilentFail("Psycast_Skip_Entry")
+            DefDatabase<SoundDef>.GetNamedSilentFail("MAP_AnnihilationCannon_Expand")
                 ?.PlayOneShot(new TargetInfo(Position, Map));
         }
 
