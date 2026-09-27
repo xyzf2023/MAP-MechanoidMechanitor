@@ -13,6 +13,15 @@
       <BandwidthCost>5</BandwidthCost>
     </statBases>
     <comps>
+      <!-- 玩家太阳：高能激光束蓄力时跟随 Pawn -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_HighEnergyLaserBeam">
+        <range>35</range>
+        <cooldownTicks>60</cooldownTicks>
+        <damageAmount>50</damageAmount>
+        <durationTicks>300</durationTicks>
+        <trackingSpeed>2.5</trackingSpeed>
+        <trackPawnDuringWarmup>true</trackPawnDuringWarmup>
+      </li>
       <!-- 产热组件 -->
       <li Class="CompProperties_HeatPusher">
         <compClass>MAP_MechanoidMechanitor.CompPawnHeatPusher</compClass>

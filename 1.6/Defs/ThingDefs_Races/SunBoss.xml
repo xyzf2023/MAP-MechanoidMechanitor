@@ -19,6 +19,15 @@
     </killedLeavings>
     <killedLeavingsChance>1</killedLeavingsChance>
     <comps>
+      <!-- 太阳 BOSS：高能激光束蓄力时保持初始落点 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_HighEnergyLaserBeam">
+        <range>20</range>
+        <cooldownTicks>0</cooldownTicks>
+        <damageAmount>50</damageAmount>
+        <durationTicks>300</durationTicks>
+        <trackingSpeed>0.8</trackingSpeed>
+        <trackPawnDuringWarmup>false</trackPawnDuringWarmup>
+      </li>
       <!-- 产热组件 -->
       <li Class="CompProperties_HeatPusher">
         <compClass>MAP_MechanoidMechanitor.CompPawnHeatPusher</compClass>

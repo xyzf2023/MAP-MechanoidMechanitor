@@ -13,6 +13,7 @@ namespace MAP_MechanoidMechanitor
         public float damageAmount = 50f;
         public int durationTicks = 300;
         public float trackingSpeed = 0.8f; // 格/秒，运行时换算为每 tick 位移。
+        public bool trackPawnDuringWarmup = false; // 蓄力落点直接跟随选中的 Pawn；关闭时保留选中格。
 
         public CompProperties_HighEnergyLaserBeam() => compClass = typeof(CompHighEnergyLaserBeam);
 

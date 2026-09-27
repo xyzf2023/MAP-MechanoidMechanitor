@@ -49,6 +49,7 @@ namespace MAP_MechanoidMechanitor
                     EndJobWith(JobCondition.InterruptForced);
                     return;
                 }
+                UpdateWarmupImpactPosition();
                 MaintainAreaIndicator();
             };
             charge.tickAction = () =>
@@ -58,6 +59,7 @@ namespace MAP_MechanoidMechanitor
                     EndJobWith(JobCondition.InterruptForced);
                     return;
                 }
+                UpdateWarmupImpactPosition();
                 pawn.rotationTracker?.Face(impactPosition);
                 MaintainAreaIndicator();
                 if (++chargeTicks >= CompHighEnergyLaserBeam.WarmupTicks) ReadyForNextToil();
@@ -84,6 +86,14 @@ namespace MAP_MechanoidMechanitor
             };
             firing.tickAction = TickFiring;
             yield return firing;
+        }
+
+        private void UpdateWarmupImpactPosition()
+        {
+            // 调用前已通过 CanContinue，目标必须仍存活且位于同一地图。
+            if (TracksPawn && Laser?.Props.trackPawnDuringWarmup == true
+                && job.targetA.Thing is Pawn target)
+                impactPosition = target.DrawPos.Yto0();
         }
 
         private bool CanContinue()
@@ -120,7 +130,7 @@ namespace MAP_MechanoidMechanitor
                 EndJobWith(JobCondition.InterruptForced);
                 return;
             }
-            // 第一帧保留选中时记录的格子，此后才移动，且始终保存浮点落点。
+            // 第一帧沿用蓄力结束时的落点；未开启蓄力跟随时仍为选中格，此后按速度追踪。
             if (TracksPawn && firingTicks > 1)
                 impactPosition = Vector3.MoveTowards(impactPosition,
                     ((Pawn)job.targetA.Thing).DrawPos.Yto0(), props.trackingSpeed / 60f);
