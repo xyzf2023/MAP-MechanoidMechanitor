@@ -19,6 +19,7 @@ namespace MAP_MechanoidMechanitor
         public bool suppressRandomIncidents;
         public bool onlyPositiveRandomIncidents;
         public bool blockPositiveRandomIncidents;
+        public float positiveRandomIncidentWeightFactor = 1f;
         // 补充由执行代码指定正面信件、而非在 IncidentDef 中声明信件类型的事件。
         public List<IncidentDef> positiveRandomIncidents = new List<IncidentDef>();
         public bool requiresActivatedMonolith;
@@ -43,7 +44,7 @@ namespace MAP_MechanoidMechanitor
         public bool CanSelect => !themePoolTag.NullOrEmpty()
             && !(equalIncidentWeights && invertIncidentWeights)
             && minDaysPassed >= 0
-            && StorytellerCompProperties_WheelOfFateRandomMain.IsFinitePositive(selectionWeight)
+            && StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(selectionWeight)
             && StorytellerCompProperties_WheelOfFateRandomMain.IsFinitePositive(durationDays.min)
             && StorytellerCompProperties_WheelOfFateRandomMain.IsFinitePositive(durationDays.max)
             && durationDays.max >= durationDays.min
@@ -55,6 +56,7 @@ namespace MAP_MechanoidMechanitor
             && (!requiresActivatedMonolith || WheelOfFateVoidProvocation.MonolithActivated);
 
         public bool CanSelectNow => CanSelectInCurrentGame
+            && selectionWeight > 0f
             && GenDate.DaysPassedSinceSettleFloat >= minDaysPassed;
 
         public float RaidFactionFactor(FactionDef faction)
@@ -97,16 +99,22 @@ namespace MAP_MechanoidMechanitor
         public bool AllowsRandomIncident(IncidentDef incident)
         {
             if (!onlyPositiveRandomIncidents && !blockPositiveRandomIncidents) return true;
-            bool positive = incident.letterDef == LetterDefOf.PositiveEvent
-                || (incident.letterDef == null && positiveRandomIncidents != null
-                    && positiveRandomIncidents.Contains(incident));
+            bool positive = IsPositiveRandomIncident(incident);
             return (!onlyPositiveRandomIncidents || positive)
                 && (!blockPositiveRandomIncidents || !positive);
         }
 
+        private bool IsPositiveRandomIncident(IncidentDef incident) =>
+            incident.letterDef == LetterDefOf.PositiveEvent
+            || (incident.letterDef == null && positiveRandomIncidents != null
+                && positiveRandomIncidents.Contains(incident));
+
         public float IncidentFactor(IncidentDef incident)
         {
             float factor = QuestFactor(incident.questScriptDef);
+            if (IsPositiveRandomIncident(incident)
+                && StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(positiveRandomIncidentWeightFactor))
+                factor *= positiveRandomIncidentWeightFactor;
             if (incidentWeightRules != null)
             {
                 foreach (StoryThemeIncidentWeightRule rule in incidentWeightRules)
@@ -147,6 +155,8 @@ namespace MAP_MechanoidMechanitor
             if (!StorytellerCompProperties_WheelOfFateRandomMain.IsFinitePositive(incidentIntervalFactor))
                 yield return "命运之轮主题：incidentIntervalFactor 必须是大于 0 的有限数值。";
             if (letterDef == null) yield return "命运之轮主题：必须配置详细公告的 letterDef。";
+            if (!StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(positiveRandomIncidentWeightFactor))
+                yield return "命运之轮主题：正面随机事件权重倍率必须为非负有限数值。";
             if (!StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(charityWeightFactor)
                 || !StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(permanentEnemyRaidFactionFactor))
                 yield return "命运之轮主题：仁善和永久敌对派系倍率必须为非负有限数值。";
@@ -262,10 +272,16 @@ namespace MAP_MechanoidMechanitor
     public sealed class WheelOfFateThemeExtension : DefModExtension
     {
         public string themePoolTag = "MAP_WheelOfFate";
+        public StoryThemeDef? initialTheme;
+        public float initialThemeMaxDaysPassed = 5f;
 
         public override IEnumerable<string> ConfigErrors()
         {
             if (themePoolTag.NullOrEmpty()) yield return "命运之轮：themePoolTag 不得为空。";
+            if (!StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(initialThemeMaxDaysPassed))
+                yield return "命运之轮：开局主题最晚启用天数必须为非负有限数值。";
+            if (initialTheme != null && (!initialTheme.CanSelect || initialTheme.themePoolTag != themePoolTag))
+                yield return "命运之轮：开局主题须配置有效且属于当前主题池。";
         }
     }
 }

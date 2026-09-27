@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_SimulationBeginning</defName>
+    <label>推演伊始</label>
+    <description>新的演算周期刚刚开始，命运之轮正以相对稳定的环境推演殖民地的变化。正面事件将更容易发生，而负面事件的发生概率有所降低。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>0</selectionWeight>
+    <durationDays>12~15</durationDays>
+    <letterDef>PositiveEvent</letterDef>
+    <positiveRandomIncidentWeightFactor>1.2</positiveRandomIncidentWeightFactor>
+    <!-- 复用正面事件识别名单，补充执行代码中才指定蓝色信件的事件。 -->
+    <positiveRandomIncidents>
+      <li>ResourcePodCrash</li>
+      <li>FarmAnimalsWanderIn</li>
+      <li>PsychicSoothe</li>
+      <li>SelfTame</li>
+      <li>ThrumboPasses</li>
+      <li>TraderCaravanArrival</li>
+      <li>OrbitalTraderArrival</li>
+      <li>RaidFriendly</li>
+      <li MayRequire="Ludeon.RimWorld.Royalty">CaravanArrivalTributeCollector</li>
+    </positiveRandomIncidents>
+    <!-- 先修正类别，再修正类别内事件；提高到访类别避免正面倍率在类内归一化后抵消。 -->
+    <categoryWeightFactors>
+      <FactionArrival>1.2</FactionArrival>
+      <OrbitalVisitor>1.2</OrbitalVisitor>
+      <ThreatSmall>0.8</ThreatSmall>
+      <ThreatBig>0.2</ThreatBig>
+    </categoryWeightFactors>
+    <incidentWeightRules>
+      <li>
+        <letterDef>NegativeEvent</letterDef>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <letterDef>ThreatSmall</letterDef>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <letterDef>ThreatBig</letterDef>
+        <factor>0.2</factor>
+      </li>
+      <!-- 这些原版杂项负面事件在执行代码中指定信件类型。 -->
+      <li>
+        <incident>PsychicDrone</incident>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <incident>ShortCircuit</incident>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <incident>CropBlight</incident>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <incident>Alphabeavers</incident>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <letterDef>ThreatSmall</letterDef>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <letterDef>ThreatBig</letterDef>
+        <factor>0.2</factor>
+      </li>
+      <!-- 这些原版杂项负面事件在执行代码中指定信件类型。 -->
+      <li>
+        <incident>PsychicDrone</incident>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <incident>ShortCircuit</incident>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <incident>CropBlight</incident>
+        <factor>0.8</factor>
+      </li>
+      <li>
+        <incident>Alphabeavers</incident>
+        <factor>0.8</factor>
+      </li>
+    </incidentWeightRules>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

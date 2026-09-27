@@ -18,6 +18,8 @@ namespace MAP_MechanoidMechanitor
         private int lastUpdateTick = -1;
         private long nextThemeSelectionTick = -1;
         private bool announcementPending;
+        private bool initialThemeHandled;
+        private bool initialThemePending;
         private WheelOfFateExtraIncidents extraIncidents = new WheelOfFateExtraIncidents();
 
         public GameComponent_WheelOfFateThemes(Game game) { }
@@ -48,6 +50,9 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref lastUpdateTick, "lastUpdateTick", -1);
             Scribe_Values.Look(ref nextThemeSelectionTick, "nextThemeSelectionTick", -1L);
             Scribe_Values.Look(ref announcementPending, "announcementPending", false);
+            // 已有主题记录的旧存档视为已经开始推演，不覆盖原周期。
+            Scribe_Values.Look(ref initialThemeHandled, "initialThemeHandled", currentTheme != null);
+            Scribe_Values.Look(ref initialThemePending, "initialThemePending", false);
             Scribe_Deep.Look(ref extraIncidents, "extraIncidents");
             if (Scribe.mode == LoadSaveMode.PostLoadInit && extraIncidents == null)
                 extraIncidents = new WheelOfFateExtraIncidents();
@@ -79,6 +84,7 @@ namespace MAP_MechanoidMechanitor
             {
                 // 保留已记录主题和剩余时间；未开始的首次抽选在下次启用时重新等待。
                 nextThemeSelectionTick = -1;
+                initialThemePending = false;
                 announcementPending = false;
                 return;
             }
@@ -95,7 +101,13 @@ namespace MAP_MechanoidMechanitor
 
             if (currentTheme == null)
             {
-                if (nextThemeSelectionTick < 0) nextThemeSelectionTick = (long)now + 300;
+                if (nextThemeSelectionTick < 0)
+                {
+                    nextThemeSelectionTick = (long)now + 300;
+                    // 在切入时锁定资格，避免 300 tick 公告延迟跨过第五日边界。
+                    initialThemePending = !initialThemeHandled && extension.initialTheme != null
+                        && GenDate.DaysPassedFloat <= extension.initialThemeMaxDaysPassed;
+                }
                 if (now < nextThemeSelectionTick) return;
             }
             else
@@ -105,7 +117,13 @@ namespace MAP_MechanoidMechanitor
 
             if (currentTheme == null || remainingTicks <= 0)
             {
-                if (TryChooseNextTheme(extension.themePoolTag, currentTheme, out var next))
+                StoryThemeDef? initial = extension.initialTheme;
+                if (!initialThemeHandled && initialThemePending && initial != null
+                    && initial.CanSelectInCurrentGame && initial.themePoolTag == extension.themePoolTag)
+                {
+                    BeginTheme(storyteller, initial);
+                }
+                else if (TryChooseNextTheme(extension.themePoolTag, currentTheme, out var next))
                 {
                     BeginTheme(storyteller, next);
                 }
@@ -175,6 +193,8 @@ namespace MAP_MechanoidMechanitor
 
         private void BeginTheme(StorytellerDef storyteller, StoryThemeDef next, bool forceAnnouncement = false)
         {
+            initialThemeHandled = true;
+            initialThemePending = false;
             announcementPending |= forceAnnouncement || ownerStoryteller != storyteller || currentTheme != next;
             ownerStoryteller = storyteller;
             currentTheme = next;

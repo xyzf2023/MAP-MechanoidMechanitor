@@ -10,6 +10,8 @@
     <modExtensions>
       <li Class="MAP_MechanoidMechanitor.WheelOfFateThemeExtension">
         <themePoolTag>MAP_WheelOfFate</themePoolTag>
+        <initialTheme>MAP_Theme_SimulationBeginning</initialTheme>
+        <initialThemeMaxDaysPassed>5</initialThemeMaxDaysPassed>
       </li>
     </modExtensions>
 
