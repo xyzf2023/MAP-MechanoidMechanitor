@@ -37,6 +37,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
             harmony.Patch(
                 AccessTools.Method(typeof(GameComponent_MechanoidMechanitorStoryState), "ExposeData"),
                 postfix: new HarmonyMethod(typeof(PurgeDirectiveQuestScheduler), nameof(PostExpose)));
+            harmony.Patch(
+                AccessTools.Method(typeof(QuestUtility), "QuestAvailableLetterLabel"),
+                postfix: new HarmonyMethod(typeof(PurgeDirectiveQuestScheduler), nameof(QuestAvailableLetterLabelPostfix)));
+        }
+
+        // 仅替换肃清任务的信封标题，保留原版任务信件正文、跳转及发送流程。
+        private static void QuestAvailableLetterLabelPostfix(Quest quest, ref TaggedString __result)
+        {
+            if (quest.root != null && quest.root == QuestScript)
+            {
+                __result = quest.name;
+            }
         }
 
         private static PurgeDirectiveRatingConfigDef RatingConfig =>
@@ -269,26 +281,31 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
         }
 
-        private static void GenerateQuest(WorldObject target, PurgeDirectiveRatingConfigDef cfg)
+        private static bool GenerateQuest(WorldObject target, PurgeDirectiveRatingConfigDef cfg)
         {
             QuestScriptDef? questScriptDef = QuestScript;
             if (cfg == null || questScriptDef == null)
             {
-                return;
+                return false;
             }
 
             Faction? targetFaction = target.Faction;
             if (!MechanoidMechanitorMechHiveCommunicationUtility.TryGetContactableMechHive(
                     out Faction proposerFaction))
             {
-                return;
+                return false;
             }
 
             string? stableId = PurgeDirectiveQuestTargetUtility.TryGetStableId(target);
             PurgeDirectiveTargetType type = PurgeDirectiveQuestTargetUtility.ClassifyTargetType(target);
+            int challengeRating = PurgeDirectiveQuestTargetUtility.GetChallengeRatingAtGeneration(target);
             int extraReward = PurgeDirectiveRatingUtility.GetQuestExtraReward(type);
-            int offerTimeout = cfg.questOfferTimeoutDays * 60000;
-            int operationTimeout = cfg.questOperationTimeoutDays * 60000;
+            // 发布前再次读取工作站寿命，保存精确期限，不使用显示用的取整结果。
+            if (!PurgeDirectiveQuestTargetUtility.IsValidTarget(target)
+                || !PurgeDirectiveQuestTargetUtility.TryGetOperationTimeoutTicks(target, out int operationTimeout))
+            {
+                return false;
+            }
 
             Slate slate = new Slate();
             slate.Set("targetWorldObject", target);
@@ -296,7 +313,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             slate.Set("proposerFaction", proposerFaction);
             slate.Set("purgeQuestConfigDefName", cfg.defName);
             slate.Set("rewardValue", extraReward);
-            slate.Set("offerTimeoutTicks", offerTimeout);
+            slate.Set("purgeChallengeRating", challengeRating);
             slate.Set("operationTimeoutTicks", operationTimeout);
 
             Quest quest = QuestUtility.GenerateQuestAndMakeAvailable(questScriptDef, slate);
@@ -308,9 +325,52 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     PurgeDirectiveRatingUtility.Runtime?.MarkQuestTargetUsed(stableId);
                 }
 
-                quest.name = "MAP_PurgeDirectiveRating.Quest.Title".Translate(target.LabelCap);
                 QuestUtility.SendLetterQuestAvailable(quest);
+                return true;
             }
+            return false;
+        }
+
+        /// <summary>DEV：绕过调度冷却，但复用正式目标筛选、生成和结算路径。</summary>
+        internal static bool TryGenerateDebugQuest(out string message)
+        {
+            if (Current.Game == null || !PurgeDirectiveRatingUtility.IsRatingSystemActive()
+                || PurgeDirectiveRatingUtility.IsFinalPenaltyTriggered())
+            {
+                message = "肃清评级系统未启用、主脑已接管或已触发最终处罚。";
+                return false;
+            }
+            if (!Find.Storyteller.difficulty.allowViolentQuests)
+            {
+                message = "当前难度不允许暴力任务。";
+                return false;
+            }
+            if (!MechanoidMechanitorMechHiveCommunicationUtility.TryGetContactableMechHive(out _))
+            {
+                message = "当前无法联络机械巢。";
+                return false;
+            }
+            if (AnyActivePurgeQuest())
+            {
+                message = "已有活动中的肃清任务，请先完成或使用DEV结算。";
+                return false;
+            }
+            if (RatingConfig == null || QuestScript == null)
+            {
+                message = "肃清任务配置或任务定义不可用。";
+                return false;
+            }
+            WorldObject? target = PurgeDirectiveQuestTargetUtility.SelectTarget(
+                PurgeDirectiveRatingUtility.CurrentRatingLevel);
+            if (target == null)
+            {
+                message = "没有合法肃清目标：开局未满60天不选派系据点，工作站须至少剩余5天；目标还须敌对、未生成地图、未被任务占用且未曾用于肃清任务。";
+                return false;
+            }
+            bool generated = GenerateQuest(target, RatingConfig);
+            message = generated ? "已发布并自动接受肃清任务：" + target.LabelCap
+                : "肃清任务生成失败：目标或配置已失效。";
+            return generated;
         }
     }
 }

@@ -74,8 +74,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // ===== 肃清评级任务调度（唯一权威数值源） =====
         public int questMinRatingLevel = 1;       // 额定最低等级（修复后 0 点即一级，此值仅用于下限保护）
         public int questMaxActive = 1;            // 同一时间最多 1 个（含待接受邀请）
-        public int questOfferTimeoutDays = 3;     // 玩家抉择期（天），超过则按拒绝（无处罚）结束
-        public int questOperationTimeoutDays = 15;// 接取后完成期限（天），超时按任务失败
+        public int questOfferTimeoutDays = 3;     // 旧版配置兼容字段，新任务不使用抉择期
+        public int questOperationTimeoutDays = 15;// 旧版配置兼容字段，旧任务使用存档中的期限
+        // 新版自动指令；旧任务继续使用已存储的期限。
+        public int questSettlementMinDaysPassed = 60;
+        public int questWorkSiteMinRemainingDays = 5;
+        public int questOutpostTimeoutDays = 20;
+        public int questSettlementTimeoutDays = 30;
         public int questFirstDelayDaysMin = 4;    // 新游戏/旧存档首次任务：随机下限（天）
         public int questFirstDelayDaysMax = 6;    // 新游戏/旧存档首次任务：随机上限（天）
         public int questRetryDelayDaysMin = 7;    // 任意结束后再尝试：随机下限（天）
@@ -215,7 +220,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 yield return $"{defName}: questMaxActive must be >= 1.";
             }
 
-            if (questOfferTimeoutDays <= 0 || questOperationTimeoutDays <= 0
+            if (questSettlementMinDaysPassed < 0 || questWorkSiteMinRemainingDays <= 0
+                || questOutpostTimeoutDays <= 0 || questSettlementTimeoutDays <= 0
+                || questOfferTimeoutDays <= 0 || questOperationTimeoutDays <= 0
                 || questFirstDelayDaysMin <= 0 || questFirstDelayDaysMax < questFirstDelayDaysMin
                 || questRetryDelayDaysMin <= 0 || questRetryDelayDaysMax < questRetryDelayDaysMin
                 || questNoTargetRetryDays <= 0)

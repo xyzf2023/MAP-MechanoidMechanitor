@@ -142,6 +142,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             PurgeDirectiveTargetType type = ClassifyTargetType(obj);
             if (type == PurgeDirectiveTargetType.Invalid) return false;
+            PurgeDirectiveRatingConfigDef cfg = PurgeDirectiveRatingUtility.Config;
+            if (type == PurgeDirectiveTargetType.Settlement
+                && Find.TickManager.TicksGame < cfg.questSettlementMinDaysPassed * 60000) return false;
+            if (!TryGetOperationTimeoutTicks(obj, out _)) return false;
 
             Faction? faction = obj.Faction;
             if (!IsHostileTargetFaction(faction)) return false;
@@ -204,12 +208,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 按当前评级选择目标：评级只影响优先顺序，最高类别无目标时允许回退。
+        /// 固定按前哨、工作站、派系据点选择目标；评级不再改变优先级。
         /// 同优先级内随机选择（不永远返回列表第一个）。
-        /// 五级高威胁前哨：仅在目标已生成地图、存在可靠守军威胁快照时按威胁排序，否则退化为同类随机。
         /// </summary>
         public static WorldObject? SelectTarget(int ratingLevel)
         {
+            // 保留参数以兼容既有调用方；所有评级使用同一目标优先级。
             List<WorldObject> worksites = new List<WorldObject>();
             List<WorldObject> outposts = new List<WorldObject>();
             List<WorldObject> settlements = new List<WorldObject>();
@@ -233,53 +237,52 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
             }
 
-            List<List<WorldObject>> ordered = GetOrderedCategories(ratingLevel, worksites, outposts, settlements);
+            List<List<WorldObject>> ordered = new List<List<WorldObject>> { outposts, worksites, settlements };
             for (int i = 0; i < ordered.Count; i++)
             {
                 List<WorldObject> bucket = ordered[i];
                 if (bucket.Count == 0) continue;
-                if (ratingLevel >= 5 && bucket == outposts)
-                {
-                    WorldObject? best = PickHighestThreatOutpostIfReliable(bucket);
-                    if (best != null) return best;
-                }
-
                 return bucket.RandomElement();
             }
 
             return null;
         }
 
-        private static List<List<WorldObject>> GetOrderedCategories(
-            int ratingLevel,
-            List<WorldObject> worksites,
-            List<WorldObject> outposts,
-            List<WorldObject> settlements)
+        /// <summary>只在发布时读取建设阶段；星级随后由 Quest 自身存档，不随前哨完工改变。</summary>
+        internal static int GetChallengeRatingAtGeneration(WorldObject target)
         {
-            switch (ratingLevel)
-            {
-                case 1:
-                    return new List<List<WorldObject>> { worksites, outposts, settlements };
-                case 2:
-                    return new List<List<WorldObject>> { outposts, worksites, settlements };
-                case 3:
-                    return new List<List<WorldObject>> { outposts, settlements, worksites };
-                case 4:
-                    return new List<List<WorldObject>> { settlements, outposts, worksites };
-                default: // 5
-                    return new List<List<WorldObject>> { settlements, outposts, worksites };
-            }
+            if (target is MAPFactionOutpost outpost && outpost.IsBuilding) return 1;
+            return ClassifyTargetType(target) == PurgeDirectiveTargetType.Settlement ? 3 : 2;
         }
 
-        /// <summary>
-        /// 仅在目标已生成地图、存在可靠守军威胁快照时按威胁排序；否则返回 null 退化为同类随机。
-        /// 不为了读取威胁值而生成目标地图。
-        /// </summary>
-        private static WorldObject? PickHighestThreatOutpostIfReliable(List<WorldObject> outposts)
+        /// <summary>读取发布时的精确期限；工作站无有效寿命或不足最低剩余时间时不发布。</summary>
+        internal static bool TryGetOperationTimeoutTicks(WorldObject target, out int ticks)
         {
-            // 合法候选明确排除已生成地图的地点；未生成地图时没有可靠、统一的实际守军
-            // 威胁快照，因此不猜测第三方 Site 的强度，交由调用方在同类中随机选择。
-            return null;
+            ticks = 0;
+            PurgeDirectiveRatingConfigDef cfg = PurgeDirectiveRatingUtility.Config;
+            switch (ClassifyTargetType(target))
+            {
+                case PurgeDirectiveTargetType.WorkSite:
+                    TimeoutComp? timeout = target.GetComponent<TimeoutComp>();
+                    if (timeout == null || !timeout.Active) return false;
+                    ticks = timeout.TicksLeft;
+                    return ticks >= cfg.questWorkSiteMinRemainingDays * 60000;
+                case PurgeDirectiveTargetType.Outpost:
+                    ticks = cfg.questOutpostTimeoutDays * 60000;
+                    break;
+                case PurgeDirectiveTargetType.Settlement:
+                    ticks = cfg.questSettlementTimeoutDays * 60000;
+                    break;
+            }
+            return ticks > 0;
+        }
+
+        /// <summary>整日显示日数，否则总小时数向下取整；不改变实际截止 tick。</summary>
+        internal static string FormatOperationDuration(int ticks)
+        {
+            return ticks % 60000 == 0
+                ? "MAP_PurgeDirectiveRating.Quest.DurationDays".Translate(ticks / 60000).ToString()
+                : "MAP_PurgeDirectiveRating.Quest.DurationHours".Translate(ticks / 2500).ToString();
         }
     }
 }

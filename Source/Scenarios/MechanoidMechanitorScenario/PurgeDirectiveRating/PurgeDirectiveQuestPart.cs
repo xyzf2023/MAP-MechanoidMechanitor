@@ -12,12 +12,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// 援军 / Lord 等任何代码。
     ///
     /// 状态转换（QuestPart 是活动任务状态的唯一权威来源，GameComponent 不保存第二份阶段）：
-    ///  OfferPending →（玩家接取）→ OperationActive →（明确守军击败信号）→ 成功
+    ///  新指令发布即 OperationActive；旧任务保留 OfferPending →（玩家接取）→ OperationActive。
+    ///  OperationActive →（明确守军击败信号）→ 成功
     ///                                          →（超时）→ 失败（按目标类型扣评级，不扣肃清额度）
     ///                                          →（目标失去敌对 / 接管主脑 / 失效）→ 无处罚结束
     ///  OfferPending →（玩家拒绝 / 抉择期过期）→ 无处罚结束
     ///
-    /// 成功结算顺序：确保基础200点(按稳定ID去重) → 发放任务额外奖励(按目标类型) → 登记待结束结果 → 信 → 结束。
+    /// 成功结算顺序：确保基础200点(按稳定ID去重) → 发放任务额外奖励(按目标类型) → 登记待结束结果 → 原版结束通知。
     /// 完成信号幂等：无论守军清除通知 / Tick 重试多少次，奖励与 Success 都只结算一次。
     /// </summary>
     public class PurgeDirectiveQuestPart : QuestPartActivable
@@ -44,6 +45,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private Stage stage = Stage.OfferPending;
         private int offerExpireTick = -1;
         private int operationExpireTick = -1;
+        // 缺省 false 保留旧任务手动接受、原期限及失效处理；新指令从发布时计时。
+        private bool automaticDirective;
 
         // 各结算动作只允许发生一次（幂等），读档后不得重复奖励/处罚/冷却。
         private bool baseRewardHandled;
@@ -106,6 +109,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             offerExpireTick = absoluteTick;
         }
 
+        internal void InitializeAutomaticDirective(int absoluteTick)
+        {
+            automaticDirective = true;
+            stage = Stage.OperationActive;
+            operationExpireTick = absoluteTick;
+            offerExpireTick = -1;
+        }
+
         public override void PreQuestAccept()
         {
             if (stage == Stage.OfferPending)
@@ -143,6 +154,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 工作站的自然到期与本指令共用截止时间。即便世界对象已被移除（或读档
+            // 引用为空），也必须按超时结算，不能落入下面的目标消失免罚分支。
+            // 仍存在的目标若换主/失去敌对关系，则保持无处罚失效。
+            if (automaticDirective && targetType == PurgeDirectiveTargetType.WorkSite
+                && operationExpireTick > 0 && Find.TickManager.TicksGame >= operationExpireTick
+                && PurgeDirectiveQuestTargetUtility.IsHostileTargetFaction(targetFaction)
+                && (targetWorldObject == null || targetWorldObject.Faction == targetFaction))
+            {
+                Fail();
+                return;
+            }
+
             // 任务约定的目标一旦换主或不再具备敌对资格，无处罚失效；不把新所有者
             // 自动接入旧任务，也不因旧派系快照仍敌对而继续计时。
             if (!HasOriginalHostileOwner()
@@ -175,6 +198,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && HasOriginalHostileOwner()
                 && PurgeDirectiveRatingUtility.IsRatingSystemActive())
             {
+                // 新指令必须在发布时确定的期限内完成；已确认成功后的补发不再受期限影响。
+                if (automaticDirective && !completionConfirmed
+                    && Find.TickManager.TicksGame >= operationExpireTick)
+                {
+                    Fail();
+                    return;
+                }
                 completionConfirmed = true;
                 Success();
             }
@@ -301,22 +331,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     cooldownHandled = true;
                 }
 
-                if (pendingEndOutcome == QuestEndOutcome.Success && !completionLetterHandled)
-                {
-                    // 通知失败不能阻塞已提交的奖励与任务结束，也不能在重试时重复发送。
-                    completionLetterHandled = true;
-                    try
-                    {
-                        PurgeDirectiveRatingLetterUtility.SendQuestCompleteLetter(
-                            targetWorldObject,
-                            targetType,
-                            creditedByQuest);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("[MAP-机械族机械师] 肃清任务完成通知失败，继续结束任务：" + ex);
-                    }
-                }
+                // 保留旧存档标记，但不再发送额外的“肃清节点：目标肃清”通知。
+                // 下方 Quest.End 统一发送原版任务完成/失败信件。
+                completionLetterHandled = true;
 
                 if (quest != null && !quest.Historical)
                 {
@@ -343,7 +360,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && !GameComponent_CerebrexTakeoverState.IsActive
                 && !penaltyHandled)
             {
-                // 玩家接取后从任务界面放弃/外部结束，也属于失败；待接受邀请被拒绝或过期不处罚。
+                // 未经正式结算的外部结束也属于失败；旧版待接受邀请被拒绝或过期不处罚。
+                // 原版任务面板的“忽略”仅收起任务，不触发清理，也不停止计时。
                 PurgeDirectiveRatingUtility.ApplyQuestFailurePenalty(targetType);
                 penaltyHandled = true;
             }
@@ -412,6 +430,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref stage, "pdqStage");
             Scribe_Values.Look(ref offerExpireTick, "pdqOfferExpireTick");
             Scribe_Values.Look(ref operationExpireTick, "pdqOperationExpireTick");
+            Scribe_Values.Look(ref automaticDirective, "pdqAutomaticDirective", false);
             Scribe_Values.Look(ref baseRewardHandled, "pdqBaseRewardHandled");
             Scribe_Values.Look(ref extraRewardHandled, "pdqExtraRewardHandled");
             Scribe_Values.Look(ref penaltyHandled, "pdqPenaltyHandled");

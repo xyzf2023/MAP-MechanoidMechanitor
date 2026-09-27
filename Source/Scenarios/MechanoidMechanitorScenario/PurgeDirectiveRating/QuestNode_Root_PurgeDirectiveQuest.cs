@@ -21,8 +21,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Faction proposerFaction = slate.Get<Faction>("proposerFaction");
             string configName = slate.Get<string>("purgeQuestConfigDefName");
             int rewardValue = slate.Get<int>("rewardValue", 0);
-            int offerTimeout = slate.Get<int>("offerTimeoutTicks", 0);
             int operationTimeout = slate.Get<int>("operationTimeoutTicks", 0);
+            // 星级与奖励均在生成时确定，读档和目标建设阶段变化不重新计算。
+            QuestGen.quest.challengeRating = slate.Get<int>("purgeChallengeRating", 1);
 
             PurgeDirectiveTargetType targetType =
                 PurgeDirectiveQuestTargetUtility.ClassifyTargetType(target);
@@ -41,12 +42,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 questTag = "Quest" + QuestGen.quest.id + "."
             };
 
-            part.InitializeOfferExpiry(Find.TickManager.TicksGame + offerTimeout);
+            part.InitializeAutomaticDirective(Find.TickManager.TicksGame + operationTimeout);
             QuestGen.quest.AddPart(part);
 
-            // 玩家抉择期：由 QuestScriptDef.expireDaysRange 控制，到期未接取则按拒绝（无处罚）结束。
-            QuestGen.quest.name =
+            string title =
                 "MAP_PurgeDirectiveRating.Quest.Title".Translate(target?.LabelCap ?? "?");
+            string description = "MAP_PurgeDirectiveRating.Quest.Description".Translate(
+                targetFaction?.Name ?? "?", target?.LabelCap ?? "?",
+                PurgeDirectiveQuestTargetUtility.FormatOperationDuration(operationTimeout));
+            QuestGen.quest.name = title;
+            slate.Set("resolvedQuestName", title);
+            QuestGen.quest.description = description;
+            slate.Set("resolvedQuestDescription", description);
+
+            // 单项奖励只用于任务面板展示；额度与评级仍由状态机幂等结算。
+            QuestPart_Choice rewards = new QuestPart_Choice();
+            QuestPart_Choice.Choice choice = new QuestPart_Choice.Choice();
+            choice.rewards.Add(new Reward_PurgeDirectiveCredits());
+            rewards.choices.Add(choice);
+            QuestGen.quest.AddPart(rewards);
         }
 
         protected override bool TestRunInt(Slate slate)
@@ -57,7 +71,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && slate.Exists("proposerFaction")
                 && slate.Exists("purgeQuestConfigDefName")
                 && slate.Exists("rewardValue")
-                && slate.Exists("offerTimeoutTicks")
+                && slate.Exists("purgeChallengeRating")
                 && slate.Exists("operationTimeoutTicks");
         }
     }

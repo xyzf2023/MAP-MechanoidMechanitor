@@ -45,7 +45,7 @@
   <MAP_PurgeDirectiveRating.Perm.GoodsStandard>标准军需</MAP_PurgeDirectiveRating.Perm.GoodsStandard>
   <MAP_PurgeDirectiveRating.Perm.GoodsFull>全部合法物资</MAP_PurgeDirectiveRating.Perm.GoodsFull>
   <MAP_PurgeDirectiveRating.Perm.ForceSupport>部队支援</MAP_PurgeDirectiveRating.Perm.ForceSupport>
-  <MAP_PurgeDirectiveRating.Perm.ForceUnlimited>部队支援无上限</MAP_PurgeDirectiveRating.Perm.ForceUnlimited>
+  <MAP_PurgeDirectiveRating.Perm.ForceUnlimited>部队支援上限解除</MAP_PurgeDirectiveRating.Perm.ForceUnlimited>
   <MAP_PurgeDirectiveRating.Perm.Cluster>机械集群</MAP_PurgeDirectiveRating.Perm.Cluster>
   <MAP_PurgeDirectiveRating.Perm.Environment>环境影响器</MAP_PurgeDirectiveRating.Perm.Environment>
   <MAP_PurgeDirectiveRating.Perm.Discount>折扣 {0}%</MAP_PurgeDirectiveRating.Perm.Discount>
@@ -56,7 +56,7 @@
   <MAP_PurgeDirectiveRating.Communication.Query.ControlPermission>查询控制权限</MAP_PurgeDirectiveRating.Communication.Query.ControlPermission>
   <MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>已获取全部主脑指挥权限。</MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>
   <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled>节点评级系统不可用（主脑通讯链路未建立或主脑已被接管）。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled>
-  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>节点评级：{0}（满级）。评级值 {1}。当前额度消耗减免 {2}%。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>
+  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>节点评级：{0}（最高）。评级值 {1}。当前额度消耗减免 {2}%。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>
   <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level>节点评级：{0}。评级值 {1}，距下一等级 {2}。当前额度消耗减免{3}%。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level>
   <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Opened>当前已开放权限：{0}</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Opened>
   <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.NextNew>下一评级主要新增：{0}</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.NextNew>
@@ -65,11 +65,15 @@
   <MAP_PurgeDirectiveRating.Delivery.ErrorRatingLocked>存在未解锁评级的机械族或物资，无法交付。</MAP_PurgeDirectiveRating.Delivery.ErrorRatingLocked>
 
   <!-- ===== 肃清评级：任务 ===== -->
-  <MAP_PurgeDirectiveRating.Quest.Title>肃清指令：摧毁 {0}</MAP_PurgeDirectiveRating.Quest.Title>
+  <MAP_PurgeDirectiveRating.Quest.Title>指令：肃清{0}</MAP_PurgeDirectiveRating.Quest.Title>
+  <MAP_PurgeDirectiveRating.Quest.Description>情报分析：\n{0}的{1}有碍机械巢发展。\n\n指令：\n于{2}内对该据点执行肃清。\n\n&lt;i&gt;注意：如果未能在目标期限内完成肃清，可能会导致肃清评级降低。&lt;/i&gt;</MAP_PurgeDirectiveRating.Quest.Description>
+  <MAP_PurgeDirectiveRating.Quest.DurationDays>{0}日</MAP_PurgeDirectiveRating.Quest.DurationDays>
+  <MAP_PurgeDirectiveRating.Quest.DurationHours>{0}小时</MAP_PurgeDirectiveRating.Quest.DurationHours>
+  <MAP_PurgeDirectiveRating.Quest.Reward>肃清额度</MAP_PurgeDirectiveRating.Quest.Reward>
 
   <!-- ===== 肃清评级：升级/降级信件 ===== -->
   <MAP_PurgeDirectiveRating.Letter.Upgrade.Title>肃清评级提升</MAP_PurgeDirectiveRating.Letter.Upgrade.Title>
-  <MAP_PurgeDirectiveRating.Letter.Upgrade.Text>您的肃清评级已提升：{0} → {1}。当前评级值 {2}。新增权限：{3}。</MAP_PurgeDirectiveRating.Letter.Upgrade.Text>
+  <MAP_PurgeDirectiveRating.Letter.Upgrade.Text>肃清评级已提升：{0} → {1}。当前评级值 {2}。新增权限：{3}。</MAP_PurgeDirectiveRating.Letter.Upgrade.Text>
   <MAP_PurgeDirectiveRating.Letter.Downgrade.Title>肃清评级下降</MAP_PurgeDirectiveRating.Letter.Downgrade.Title>
   <MAP_PurgeDirectiveRating.Letter.Downgrade.Text>肃清评级已下降：{0} → {1}。当前评级值 {2}。暂时失去权限：{3}。已交付的单位与物资不受影响。</MAP_PurgeDirectiveRating.Letter.Downgrade.Text>
 

@@ -74,11 +74,16 @@
 
     <!-- 肃清评级任务调度（唯一权威数值源）。
          新游戏/旧存档首次任务：随机 4~6 天；任意结束后再尝试：随机 7~10 天；
-         到期但无合法目标：1 天后重试。玩家抉择期 3 天，接取后完成期限 15 天。 -->
+         到期但无合法目标：1 天后重试。新任务自动接受，前哨20天、据点30天，工作站使用剩余寿命。
+         旧版抉择期/行动期字段保留用于兼容，新任务不再读取。 -->
     <questMinRatingLevel>1</questMinRatingLevel>
     <questMaxActive>1</questMaxActive>
     <questOfferTimeoutDays>3</questOfferTimeoutDays>
     <questOperationTimeoutDays>15</questOperationTimeoutDays>
+    <questSettlementMinDaysPassed>60</questSettlementMinDaysPassed>
+    <questWorkSiteMinRemainingDays>5</questWorkSiteMinRemainingDays>
+    <questOutpostTimeoutDays>20</questOutpostTimeoutDays>
+    <questSettlementTimeoutDays>30</questSettlementTimeoutDays>
     <questFirstDelayDaysMin>4</questFirstDelayDaysMin>
     <questFirstDelayDaysMax>6</questFirstDelayDaysMax>
     <questRetryDelayDaysMin>7</questRetryDelayDaysMin>
@@ -127,10 +132,9 @@
   <QuestScriptDef>
     <defName>MAP_PurgeDirectiveQuest</defName>
     <label>purge directive node rating quest</label>
-    <autoAccept>false</autoAccept>
+    <autoAccept>true</autoAccept>
     <defaultHidden>false</defaultHidden>
     <everAcceptableInSpace>true</everAcceptableInSpace>
-    <expireDaysRange>3</expireDaysRange>
     <root Class="MAP_MechanoidMechanitor.Scenarios.QuestNode_Root_PurgeDirectiveQuest" />
   </QuestScriptDef>
 

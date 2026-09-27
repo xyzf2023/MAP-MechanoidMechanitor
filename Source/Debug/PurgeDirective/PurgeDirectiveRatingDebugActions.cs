@@ -1,4 +1,5 @@
 using System.Text;
+using LudeonTK;
 using RimWorld;
 using Verse;
 
@@ -6,10 +7,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 肃清指令 DEV 面板使用的任务测试辅助方法。
-    /// 不注册全局 DebugAction；所有入口均由通讯面板显式调用。
+    /// 全局快速生成入口与通讯面板共用正式任务流程。
     /// </summary>
     internal static class PurgeDirectiveRatingDebugUtility
     {
+        [DebugAction("MAP-机械族机械师", "快速生成肃清任务",
+            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.Playing)]
+        private static void GenerateQuest()
+        {
+            bool success = PurgeDirectiveQuestScheduler.TryGenerateDebugQuest(out string message);
+            Messages.Message(message, success ? MessageTypeDefOf.PositiveEvent : MessageTypeDefOf.RejectInput, false);
+        }
+
         internal static bool TryForceActiveQuestSuccess(out string message)
         {
             PurgeDirectiveQuestPart? part = PurgeDirectiveRatingDisplay.ActiveQuestPart();
