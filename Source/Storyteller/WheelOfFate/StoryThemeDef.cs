@@ -17,6 +17,9 @@ namespace MAP_MechanoidMechanitor
         public bool triggerLinkedIncident;
         public bool triggerEncirclementRaids;
         public bool suppressRandomIncidents;
+        public bool onlyPositiveRandomIncidents;
+        // 补充由执行代码指定正面信件、而非在 IncidentDef 中声明信件类型的事件。
+        public List<IncidentDef> positiveRandomIncidents = new List<IncidentDef>();
         public bool requiresActivatedMonolith;
         public PsychicRitualDef_VoidProvocation? initialVoidProvocation;
         public LetterDef? letterDef;
@@ -86,6 +89,12 @@ namespace MAP_MechanoidMechanitor
             return factor;
         }
 
+        /// <summary>仅供自然随机调度筛选，不限制任务、队列及外部逻辑执行事件。</summary>
+        public bool AllowsRandomIncident(IncidentDef incident) =>
+            !onlyPositiveRandomIncidents || incident.letterDef == LetterDefOf.PositiveEvent
+            || (incident.letterDef == null && positiveRandomIncidents != null
+                && positiveRandomIncidents.Contains(incident));
+
         public float IncidentFactor(IncidentDef incident)
         {
             float factor = QuestFactor(incident.questScriptDef);
@@ -141,6 +150,18 @@ namespace MAP_MechanoidMechanitor
                 yield return "命运之轮主题：启用首次天气尝试时须配置有效事件。";
             if (label.NullOrEmpty() || description.NullOrEmpty())
                 yield return "命运之轮主题：label 和 description 不得为空。";
+
+            if (positiveRandomIncidents != null)
+            {
+                var incidents = new HashSet<IncidentDef>();
+                foreach (IncidentDef incident in positiveRandomIncidents)
+                {
+                    if (incident == null)
+                        yield return "命运之轮主题：正面随机事件补充名单须包含有效事件引用。";
+                    else if (!incidents.Add(incident))
+                        yield return $"命运之轮主题：正面随机事件 {incident.defName} 重复配置。";
+                }
+            }
 
             if (categoryWeightFactors != null)
             {

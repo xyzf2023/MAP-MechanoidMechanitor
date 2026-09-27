@@ -35,6 +35,7 @@ namespace MAP_MechanoidMechanitor
             foreach (IncidentDef incident in DefDatabase<IncidentDef>.AllDefsListForReading)
             {
                 if (incident == excluded || !allowedCategories.Contains(incident.category)
+                    || (theme != null && !theme.AllowsRandomIncident(incident))
                     || (skipThreatBig && incident.category == IncidentCategoryDefOf.ThreatBig)
                     || !incident.TargetAllowed(target)) continue;
                 float rawWeight = baseWeight(incident);
@@ -87,7 +88,7 @@ namespace MAP_MechanoidMechanitor
             StoryThemeDef theme, Func<IncidentDef, float> baseWeight)
         {
             // 先物化候选列表，避免人口分组失败后的回退再次执行 CanFireNow 筛选。
-            List<IncidentDef> usable = incidents.ToList();
+            List<IncidentDef> usable = incidents.Where(theme.AllowsRandomIncident).ToList();
             if (theme.equalIncidentWeights)
                 return usable.Where(incident =>
                     StorytellerCompProperties_WheelOfFateRandomMain.IsFinitePositive(baseWeight(incident)))

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_AbundantBlessings</defName>
+    <label>嘉祉纷至</label>
+    <description>难得的顺遂正在悄然汇聚。援助、机遇与意外之喜将接连而至，各类正面事件也会比往常更加频繁地发生。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>0.1</selectionWeight>
+    <durationDays>1~2</durationDays>
+    <incidentIntervalFactor>0.1</incidentIntervalFactor>
+    <letterDef>PositiveEvent</letterDef>
+    <onlyPositiveRandomIncidents>true</onlyPositiveRandomIncidents>
+    <!-- 额外白名单，有些事件无法通过通用组件识别 -->
+    <positiveRandomIncidents>
+      <li>ResourcePodCrash</li>
+      <li>FarmAnimalsWanderIn</li>
+      <li>PsychicSoothe</li>
+      <li>SelfTame</li>
+      <li>ThrumboPasses</li>
+      <li>TraderCaravanArrival</li>
+      <li>OrbitalTraderArrival</li>
+      <li>RaidFriendly</li>
+      <li MayRequire="Ludeon.RimWorld.Royalty">CaravanArrivalTributeCollector</li>
+    </positiveRandomIncidents>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>
