@@ -32,6 +32,9 @@ namespace MAP_MechanoidMechanitor
         public float gravEngineCooldownFactor = 1f;
         public IntRange initialWeatherDelayTicks;
         public List<IncidentDef> initialWeatherIncidents = new List<IncidentDef>();
+        public bool randomizeNaturalWeather;
+        public IntRange randomWeatherDurationTicks = new IntRange(15000, 45000);
+        public List<WeatherDef> randomWeatherPool = new List<WeatherDef>();
         public List<IncidentCategoryEntry> categoryWeightFactors = new List<IncidentCategoryEntry>();
         public List<StoryThemeIncidentWeightRule> incidentWeightRules = new List<StoryThemeIncidentWeightRule>();
         public List<StoryThemeRaidFactionWeight> raidFactionWeightFactors = new List<StoryThemeRaidFactionWeight>();
@@ -150,6 +153,26 @@ namespace MAP_MechanoidMechanitor
                 yield return "命运之轮主题：启用首次天气尝试时须配置有效事件。";
             if (label.NullOrEmpty() || description.NullOrEmpty())
                 yield return "命运之轮主题：label 和 description 不得为空。";
+
+            if (randomizeNaturalWeather)
+            {
+                if (randomWeatherDurationTicks.min <= 0
+                    || randomWeatherDurationTicks.max < randomWeatherDurationTicks.min)
+                    yield return "命运之轮主题：随机天气持续时间须为有效正整数范围。";
+                var weathers = new HashSet<WeatherDef>();
+                if (randomWeatherPool != null)
+                {
+                    foreach (WeatherDef weather in randomWeatherPool)
+                    {
+                        if (weather == null)
+                            yield return "命运之轮主题：随机天气池须包含有效天气引用。";
+                        else if (!weathers.Add(weather))
+                            yield return $"命运之轮主题：随机天气 {weather.defName} 重复配置。";
+                    }
+                }
+                if (weathers.Count < 2)
+                    yield return "命运之轮主题：随机天气池至少需要两种不同天气，以避免连续重复。";
+            }
 
             if (positiveRandomIncidents != null)
             {

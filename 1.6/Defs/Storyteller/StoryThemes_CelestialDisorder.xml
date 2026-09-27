@@ -11,6 +11,26 @@
     <incidentIntervalFactor>1</incidentIntervalFactor>
     <letterDef>NegativeEvent</letterDef>
 
+    <!-- 额外天气配置 -->
+    <randomizeNaturalWeather>true</randomizeNaturalWeather>
+    <randomWeatherDurationTicks>15000~45000</randomWeatherDurationTicks> 
+    <randomWeatherPool>
+      <li>Clear</li>
+      <li>Fog</li>
+      <li>Rain</li>
+      <li>DryThunderstorm</li>
+      <li>RainyThunderstorm</li>
+      <li>FoggyRain</li>
+      <li>SnowHard</li>
+      <li>SnowGentle</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">Windy</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">Overcast</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">Sandstorm</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">Blizzard</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">BlindFog</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">TorrentialRain</li>
+    </randomWeatherPool>
+
     <!-- 大型威胁中幅降权，其余主池类别小幅降权。 -->
     <categoryWeightFactors>
       <ThreatBig>0.5</ThreatBig>
