@@ -4,8 +4,8 @@
     <defName>MAP_SunBossFacility</defName>
     <label>异常机械族设施</label>
     <description>一座不寻常的机械族设施，仪器显示其内有着异常能量波动。或许我们能从其中获取一些先进的技术？</description>
-    <siteTexture>World/WorldObjects/Sites/GravcoreLocation</siteTexture>
-    <expandingIconTexture>World/WorldObjects/Expanding/Gravcore</expandingIconTexture>
+    <siteTexture>World/WorldObjects/Sites/GenericSite</siteTexture>
+    <expandingIconTexture>World/WorldObjects/Expanding/Sites/AncientComplex</expandingIconTexture>
     <wantsThreatPoints>true</wantsThreatPoints>
     <minThreatPoints>1000</minThreatPoints>
     <minMapSize>(200, 0, 200)</minMapSize>
