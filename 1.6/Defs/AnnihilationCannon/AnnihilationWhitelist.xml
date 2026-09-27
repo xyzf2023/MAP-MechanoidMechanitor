@@ -6,12 +6,41 @@
     
     <!-- ThingDef -->
     <thingDefs>
+      <!-- Odyssey：主脑 -->
+      <li MayRequire="Ludeon.RimWorld.Odyssey">CerebrexCore</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">Apparel_CerebrexNode</li>
+      <!-- Odyssey：地下通道 -->
+      <li MayRequire="Ludeon.RimWorld.Odyssey">AncientHatch</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">AncientHatchExit</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">InsectLairEntrance</li>
+      <!-- Odyssey：古代喷口 -->
+      <li MayRequire="Ludeon.RimWorld.Odyssey">AncientSmokeVent</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">AncientToxVent</li>
+      <li MayRequire="Ludeon.RimWorld.Odyssey">AncientHeatVent</li>
+      <!-- Anomaly：异象巨石/结局 -->
+      <li MayRequire="Ludeon.RimWorld.Anomaly">VoidMonolith</li>
+      <li MayRequire="Ludeon.RimWorld.Anomaly">VoidNode</li>
+      <!-- Anomaly：深坑/迷宫 -->
+      <li MayRequire="Ludeon.RimWorld.Anomaly">PitGateSpawner</li>
+      <li MayRequire="Ludeon.RimWorld.Anomaly">PitGate</li>
+      <li MayRequire="Ludeon.RimWorld.Anomaly">PitGateExit</li>
+      <li MayRequire="Ludeon.RimWorld.Anomaly">WarpedObelisk_Labyrinth</li>
+      <!-- Core：地下出口 -->
+      <li>CaveExit</li>
+      <!-- Ideology：超凡枢纽结局 -->
+      <li MayRequire="Ludeon.RimWorld.Ideology">ArchonexusCore</li>
+      <li MayRequire="Ludeon.RimWorld.Ideology">MajorArchotechStructureStudiable</li>
+      <li MayRequire="Ludeon.RimWorld.Ideology">GrandArchotechStructure</li>
+      <!-- MAP：太阳BOSS -->
+      <li>MAP_Building_SunBOSS</li>
       <!-- GD5：机械巨黾，建筑 -->
       <li MayRequire="fxz.glitterworlddestroyer.mk5">GD_Exostrider</li>
     </thingDefs>
 
     <!-- PawnKindDef -->
     <pawnKinds>
+      <!-- MAP：太阳BOSS -->
+      <li>MAP_Mech_SunBOSS</li>
       <!-- GD5：黑衣憎恶毒蜂 -->
       <li MayRequire="fxz.glitterworlddestroyer.mk5">Mech_BlackApocriton</li>
     </pawnKinds>
