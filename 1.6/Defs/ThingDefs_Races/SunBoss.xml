@@ -66,7 +66,7 @@
 
   <PawnKindDef ParentName="MAP_SunKindBase">
     <defName>MAP_Mech_SunBOSS</defName>
-    <label>「太阳」</label>
+    <label>「太阳」- 能源核心</label>
     <race>MAP_Mech_SunBOSS</race>
     <defaultFactionDef>Mechanoid</defaultFactionDef>
     <destroyGearOnDrop>true</destroyGearOnDrop>
