@@ -73,6 +73,6 @@
   <!-- 模块：交易限制与说明 -->
   <MAP_OvermindEconomy.InsufficientSupply>物资供应不足，请减少订单数量。</MAP_OvermindEconomy.InsufficientSupply>
   <MAP_OvermindEconomy.DetailsTip>同种物资共享供应额度与采购压力。</MAP_OvermindEconomy.DetailsTip>
-  <MAP_OvermindEconomy.PriceTip>显示单价已计入评级折扣。</MAP_OvermindEconomy.PriceTip>
+  <MAP_OvermindEconomy.PriceTip>价格受各种因素影响而波动。</MAP_OvermindEconomy.PriceTip>
 
 </LanguageData>

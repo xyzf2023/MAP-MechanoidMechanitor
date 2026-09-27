@@ -4,6 +4,7 @@
     <defName>MAP_PurgeTradeBlacklist_Core</defName>
     <thingDefs>
       <li>Skull</li>
+      <li>Wort</li>
       <!-- Biotech：依赖实例数据或不适合作为普通调拨物资 -->
       <li MayRequire="ludeon.rimworld.biotech">Xenogerm</li>
       <li MayRequire="ludeon.rimworld.biotech">HumanOvum</li>

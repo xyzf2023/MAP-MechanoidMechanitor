@@ -32,6 +32,7 @@
 
   <!-- 模块：肃清额度 -->
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Credits>肃清额度：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Credits>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.CallableCredits>可调用额度：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.CallableCredits>
 
   <!-- 模块：通讯加载流程 -->
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission>接入权限：{0}</MAP_MechanoidMechanitor.PurgeDirective.Communication.Boot.AccessPermission>
@@ -85,7 +86,7 @@
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Medium>中型</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Medium>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Heavy>重型</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Heavy>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.UltraHeavy>超重型</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.UltraHeavy>
-  <MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>{0}　带宽 {1}　点数 {2}</MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>{0}　带宽 {1}　{2}</MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>
 
   <!-- 模块：物资请求 -->
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.All>全部</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.All>

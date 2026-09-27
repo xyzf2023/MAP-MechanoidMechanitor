@@ -271,11 +271,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Light".Translate();
             int shownPrice = MechanoidOvermindRatingPricingService.GetDiscountedUnitPrice(
                 entry.PurgePrice);
-            string priceMeta = shownPrice != entry.PurgePrice
-                ? "MAP_PurgeDirectiveRating.MechRow.PriceDiscounted".Translate(
-                    shownPrice,
-                    entry.PurgePrice)
-                : "MAP_PurgeDirectiveRating.MechRow.Price".Translate(shownPrice);
+            string priceMeta = "MAP_PurgeDirectiveRating.MechRow.Price".Translate(shownPrice);
 
             MechanoidOvermindUiStyle.DrawSecondaryLabel(
                 new Rect(textX, rowRect.y + 24f, textWidth, 20f),

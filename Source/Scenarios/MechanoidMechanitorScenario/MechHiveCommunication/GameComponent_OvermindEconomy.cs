@@ -41,6 +41,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Prepare(lastScan != Find.TickManager.TicksGame);
         }
 
+        /// <summary>只读查询经济稀缺分类，不依赖动态经济开关或存档账本。</summary>
+        public static bool IsScarceGoods(ThingDef def) => Tier(def) == 2;
+
         private static int Tier(ThingDef def)
         {
             if (def.IsMedicine || def.IsApparel

@@ -110,6 +110,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int over = PurgeDirectiveGoodsRatingOverrideUtility.GetOverrideLevel(def);
             if (over > 0) return over; // 覆盖替代自动分类，不是 max
 
+            // 复用经济系统的稀缺分类；纺织品虽按工业材料定价，也需三级解锁。
+            if (GameComponent_OvermindEconomy.IsScarceGoods(def)
+                || def.IsWithinCategory(ThingCategoryDefOf.Textiles))
+            {
+                return 3;
+            }
+
             if (MechanoidOvermindCatalogService.TryFindThingCatalogEntry(def, out MechanoidOvermindThingCatalogEntry entry))
             {
                 return Config.ClassifyGoodsLevel(entry.Category, entry.DefaultReferenceMarketValue);

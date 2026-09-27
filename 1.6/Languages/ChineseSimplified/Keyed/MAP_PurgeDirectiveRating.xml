@@ -26,8 +26,7 @@
 
   <!-- ===== 肃清评级：机械族/物资行 ===== -->
   <MAP_PurgeDirectiveRating.Mechs.RatingNotMet>节点评级未满足</MAP_PurgeDirectiveRating.Mechs.RatingNotMet>
-  <MAP_PurgeDirectiveRating.MechRow.PriceDiscounted>单价 {0}（原价 {1}）</MAP_PurgeDirectiveRating.MechRow.PriceDiscounted>
-  <MAP_PurgeDirectiveRating.MechRow.Price>单价 {0}</MAP_PurgeDirectiveRating.MechRow.Price>
+  <MAP_PurgeDirectiveRating.MechRow.Price>价格 {0}</MAP_PurgeDirectiveRating.MechRow.Price>
   <MAP_PurgeDirectiveRating.LockedForLevel>需要评级：{0}</MAP_PurgeDirectiveRating.LockedForLevel>
   <MAP_PurgeDirectiveRating.RequiresLevel>需要评级：{0}</MAP_PurgeDirectiveRating.RequiresLevel>
   <MAP_PurgeDirectiveRating.Reason.Invalid>无效物品</MAP_PurgeDirectiveRating.Reason.Invalid>
@@ -52,14 +51,8 @@
   <MAP_PurgeDirectiveRating.Perm.None>无新增权限</MAP_PurgeDirectiveRating.Perm.None>
 
   <!-- ===== 肃清评级：通讯查询 ===== -->
-  <MAP_PurgeDirectiveRating.Communication.Query.NodeRating>查询节点评级</MAP_PurgeDirectiveRating.Communication.Query.NodeRating>
   <MAP_PurgeDirectiveRating.Communication.Query.ControlPermission>查询控制权限</MAP_PurgeDirectiveRating.Communication.Query.ControlPermission>
   <MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>已获取全部主脑指挥权限。</MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>
-  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled>节点评级系统不可用（主脑通讯链路未建立或主脑已被接管）。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled>
-  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>节点评级：{0}（最高）。评级值 {1}。当前额度消耗减免 {2}%。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed>
-  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level>节点评级：{0}。评级值 {1}，距下一等级 {2}。当前额度消耗减免{3}%。</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level>
-  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Opened>当前已开放权限：{0}</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Opened>
-  <MAP_PurgeDirectiveRating.Communication.Response.NodeRating.NextNew>下一评级主要新增：{0}</MAP_PurgeDirectiveRating.Communication.Response.NodeRating.NextNew>
 
   <!-- ===== 肃清评级：交付错误 ===== -->
   <MAP_PurgeDirectiveRating.Delivery.ErrorRatingLocked>存在未解锁评级的机械族或物资，无法交付。</MAP_PurgeDirectiveRating.Delivery.ErrorRatingLocked>

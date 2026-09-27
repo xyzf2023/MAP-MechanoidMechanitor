@@ -25,15 +25,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     selected = MechanoidOvermindCommunicationQueryKind.PurgeCredits;
                 }
 
-                Rect ratingRect = new Rect(inner.x, inner.y + QueryRowHeight + 8f, inner.width, QueryRowHeight);
-                if (DrawQueryCard(
-                        ratingRect,
+                Rect permissionRect = new Rect(inner.x, inner.y + QueryRowHeight + 8f, inner.width, QueryRowHeight);
+                if (GameComponent_CerebrexTakeoverState.IsActive && DrawQueryCard(
+                        permissionRect,
                         "02",
-                        (GameComponent_CerebrexTakeoverState.IsActive
-                            ? "MAP_PurgeDirectiveRating.Communication.Query.ControlPermission"
-                            : "MAP_PurgeDirectiveRating.Communication.Query.NodeRating").Translate()))
+                        "MAP_PurgeDirectiveRating.Communication.Query.ControlPermission".Translate()))
                 {
-                    selected = MechanoidOvermindCommunicationQueryKind.NodeRating;
+                    selected = MechanoidOvermindCommunicationQueryKind.ControlPermission;
                 }
 
                 return selected;

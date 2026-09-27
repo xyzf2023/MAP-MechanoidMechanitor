@@ -18,7 +18,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private const float MinVirtualHeight = 640f;
 
-        private const float BaseTopBarHeight = 72f;
+        private const float BaseTopBarHeight = 80f;
 
         private const float RatingTopBarHeight = 90f;
 
@@ -1105,20 +1105,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 "MAP_MechanoidMechanitor.PurgeDirective.Communication.Title".Translate(),
                 GameFont.Medium);
 
-            MechanoidOvermindUiStyle.DrawSecondaryLabel(
-                new Rect(inner.x, inner.y + 28f, inner.width * 0.55f, 22f),
-                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Subtitle".Translate(
-                    overmindDisplayName));
-
             int credits = GameComponent_MechanoidMechanitorStoryState.GetPurgeDirectiveRewardPoints();
+            MechanoidOvermindUiStyle.DrawLabel(
+                new Rect(inner.x, inner.y + 28f, inner.width * 0.55f, 30f),
+                (GameComponent_CerebrexTakeoverState.IsActive
+                    ? "MAP_MechanoidMechanitor.PurgeDirective.Communication.CallableCredits"
+                    : "MAP_MechanoidMechanitor.PurgeDirective.Communication.Credits").Translate(credits),
+                GameFont.Medium,
+                TextAnchor.MiddleLeft,
+                MechanoidOvermindUiStyle.AccentBright);
+
             float rightWidth = inner.width * 0.42f;
             float rightX = inner.xMax - rightWidth;
             MechanoidOvermindUiStyle.DrawLabel(
                 new Rect(rightX, inner.y, rightWidth, 20f),
-                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Credits".Translate(credits),
+                "MAP_MechanoidMechanitor.PurgeDirective.Communication.Subtitle".Translate(
+                    overmindDisplayName),
                 GameFont.Small,
                 TextAnchor.MiddleRight,
-                MechanoidOvermindUiStyle.AccentBright);
+                MechanoidOvermindUiStyle.TextSecondary);
 
             bool ratingActive = PurgeDirectiveRatingUtility.IsRatingSystemActive();
             float connectionY = ratingActive ? 38f : 20f;
@@ -2722,8 +2727,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 case MechanoidOvermindCommunicationQueryKind.PurgeCredits:
                     PlayPurgeCreditsQueryResponse();
                     break;
-                case MechanoidOvermindCommunicationQueryKind.NodeRating:
-                    PlayNodeRatingQueryResponse();
+                case MechanoidOvermindCommunicationQueryKind.ControlPermission:
+                    PlayControlPermissionQueryResponse();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(query), query, null);
@@ -2741,53 +2746,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 MechanoidOvermindCommunicationQueryKind.PurgeCredits;
         }
 
-        private void PlayNodeRatingQueryResponse()
+        private void PlayControlPermissionQueryResponse()
         {
-            TaggedString translated;
-            if (GameComponent_CerebrexTakeoverState.IsActive)
-            {
-                translated =
-                    "MAP_PurgeDirectiveRating.Communication.Response.ControlPermission".Translate();
-            }
-            else if (!PurgeDirectiveRatingUtility.IsRatingSystemActive())
-            {
-                translated =
-                    "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Disabled".Translate();
-            }
-            else
-            {
-                int level = PurgeDirectiveRatingUtility.CurrentRatingLevel;
-                int value = PurgeDirectiveRatingUtility.CurrentRatingValue();
-                int next = PurgeDirectiveRatingUtility.Config.GetNextLevelStart(level);
-                int discountPercent = Mathf.RoundToInt(
-                    PurgeDirectiveRatingUtility.GetDiscountRate() * 100f);
-                if (PurgeDirectiveRatingUtility.IsMaxRatingLevel())
-                {
-                    translated = "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Maxed".Translate(
-                        PurgeDirectiveRatingDisplay.RatingName(level),
-                        value,
-                        discountPercent);
-                }
-                else
-                {
-                    translated = "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Level".Translate(
-                        PurgeDirectiveRatingDisplay.RatingName(level),
-                        value,
-                        next,
-                        discountPercent);
-                }
+            if (!GameComponent_CerebrexTakeoverState.IsActive) return;
 
-                translated += "\n" + "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.Opened".Translate(
-                    PurgeDirectiveRatingDisplay.PermissionSummaryForLevel(level));
-                if (!PurgeDirectiveRatingUtility.IsMaxRatingLevel())
-                {
-                    translated += "\n" + "MAP_PurgeDirectiveRating.Communication.Response.NodeRating.NextNew".Translate(
-                        PurgeDirectiveRatingDisplay.NewPermissionsAtLevel(level + 1));
-                }
-            }
+            TaggedString translated =
+                "MAP_PurgeDirectiveRating.Communication.Response.ControlPermission".Translate();
 
             PlayDialogueText(translated.RawText);
-            activeCommunicationQuery = MechanoidOvermindCommunicationQueryKind.NodeRating;
+            activeCommunicationQuery = MechanoidOvermindCommunicationQueryKind.ControlPermission;
         }
 
         private void PlayDialogueText(string text)
