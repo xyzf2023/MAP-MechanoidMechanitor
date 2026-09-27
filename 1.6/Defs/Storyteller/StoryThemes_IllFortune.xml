@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <MAP_MechanoidMechanitor.StoryThemeDef>
+    <defName>MAP_Theme_IllFortune</defName>
+    <label>诸事不顺</label>
+    <description>乌鸦在远处嘶鸣，黑猫从阴影间掠过，种种不祥的征兆接连出现。接下来的一段时间，小麻烦将频频发生，好运则不会降临。不过值得庆幸的是，大麻烦反而会变少。</description>
+    <themePoolTag>MAP_WheelOfFate</themePoolTag>
+    <selectionWeight>0.5</selectionWeight>
+    <minDaysPassed>30</minDaysPassed>
+    <durationDays>1~3</durationDays>
+    <incidentIntervalFactor>0.8</incidentIntervalFactor>
+    <letterDef>NegativeEvent</letterDef>
+    <blockPositiveRandomIncidents>true</blockPositiveRandomIncidents>
+
+    <!-- 与嘉祉纷至采用相同的正面事件补充名单，覆盖执行代码中指定正面信件的事件。 -->
+    <positiveRandomIncidents>
+      <li>ResourcePodCrash</li>
+      <li>FarmAnimalsWanderIn</li>
+      <li>PsychicSoothe</li>
+      <li>SelfTame</li>
+      <li>ThrumboPasses</li>
+      <li>TraderCaravanArrival</li>
+      <li>OrbitalTraderArrival</li>
+      <li>RaidFriendly</li>
+      <li MayRequire="Ludeon.RimWorld.Royalty">CaravanArrivalTributeCollector</li>
+    </positiveRandomIncidents>
+
+    <!-- 小型负面事件大幅增权，大型负面事件中幅降权。 -->
+    <categoryWeightFactors>
+      <ThreatSmall>3</ThreatSmall>
+      <ThreatBig>0.5</ThreatBig>
+    </categoryWeightFactors>
+  </MAP_MechanoidMechanitor.StoryThemeDef>
+</Defs>

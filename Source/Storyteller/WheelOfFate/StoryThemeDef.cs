@@ -18,6 +18,7 @@ namespace MAP_MechanoidMechanitor
         public bool triggerEncirclementRaids;
         public bool suppressRandomIncidents;
         public bool onlyPositiveRandomIncidents;
+        public bool blockPositiveRandomIncidents;
         // 补充由执行代码指定正面信件、而非在 IncidentDef 中声明信件类型的事件。
         public List<IncidentDef> positiveRandomIncidents = new List<IncidentDef>();
         public bool requiresActivatedMonolith;
@@ -93,10 +94,15 @@ namespace MAP_MechanoidMechanitor
         }
 
         /// <summary>仅供自然随机调度筛选，不限制任务、队列及外部逻辑执行事件。</summary>
-        public bool AllowsRandomIncident(IncidentDef incident) =>
-            !onlyPositiveRandomIncidents || incident.letterDef == LetterDefOf.PositiveEvent
-            || (incident.letterDef == null && positiveRandomIncidents != null
-                && positiveRandomIncidents.Contains(incident));
+        public bool AllowsRandomIncident(IncidentDef incident)
+        {
+            if (!onlyPositiveRandomIncidents && !blockPositiveRandomIncidents) return true;
+            bool positive = incident.letterDef == LetterDefOf.PositiveEvent
+                || (incident.letterDef == null && positiveRandomIncidents != null
+                    && positiveRandomIncidents.Contains(incident));
+            return (!onlyPositiveRandomIncidents || positive)
+                && (!blockPositiveRandomIncidents || !positive);
+        }
 
         public float IncidentFactor(IncidentDef incident)
         {
@@ -127,6 +133,8 @@ namespace MAP_MechanoidMechanitor
             foreach (string error in base.ConfigErrors()) yield return error;
             if (equalIncidentWeights && invertIncidentWeights)
                 yield return "命运之轮主题：等权抽选与倒数权重不能同时启用。";
+            if (onlyPositiveRandomIncidents && blockPositiveRandomIncidents)
+                yield return "命运之轮主题：仅允许正面随机事件与阻止正面随机事件不能同时启用。";
             if (themePoolTag.NullOrEmpty()) yield return "命运之轮主题：themePoolTag 不得为空。";
             if (minDaysPassed < 0) yield return "命运之轮主题：minDaysPassed 不得小于 0。";
             if (!StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(selectionWeight))

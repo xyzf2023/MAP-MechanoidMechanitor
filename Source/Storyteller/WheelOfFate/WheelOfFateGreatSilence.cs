@@ -34,13 +34,13 @@ namespace MAP_MechanoidMechanitor
         {
             if (__instance != Find.Storyteller || IsScriptedComponent(comp)) return;
             StoryThemeDef? theme = GameComponent_WheelOfFateThemes.Current?.ActiveTheme;
-            if (theme?.onlyPositiveRandomIncidents == true)
-                __result = PositiveIncidents(__result, theme);
+            if (theme != null && (theme.onlyPositiveRandomIncidents || theme.blockPositiveRandomIncidents))
+                __result = AllowedIncidents(__result, theme);
         }
 
         // 主随机池在抽选前过滤；此处覆盖疾病、远行队等独立随机组件。
         // 只枚举一次，不重试或执行事件，也不拦截 TryFire 和事件队列。
-        private static IEnumerable<FiringIncident> PositiveIncidents(
+        private static IEnumerable<FiringIncident> AllowedIncidents(
             IEnumerable<FiringIncident> incidents, StoryThemeDef theme)
         {
             foreach (FiringIncident incident in incidents)
