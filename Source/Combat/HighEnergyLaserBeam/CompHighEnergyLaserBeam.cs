@@ -43,6 +43,7 @@ namespace MAP_MechanoidMechanitor
         private int readyTick;
 
         public CompProperties_HighEnergyLaserBeam Props => (CompProperties_HighEnergyLaserBeam)props;
+        internal void ResetCooldown() => readyTick = 0;
 
         internal bool HasEmitter(Pawn actor)
         {

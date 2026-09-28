@@ -38,6 +38,8 @@ namespace MAP_MechanoidMechanitor
     {
         private int readyTick;
         public CompProperties_EnergyPulse Props => (CompProperties_EnergyPulse)props;
+        internal bool IsOnCooldown => Find.TickManager.TicksGame < readyTick;
+        internal void ResetCooldown() => readyTick = 0;
         // 动画可读取独立 Job 的阶段与进度，无需接管 Pawn 的主武器。
         public bool IsCharging => (parent as Pawn)?.jobs?.curDriver is JobDriver_EnergyPulse driver
             && !driver.Released;
@@ -86,26 +88,45 @@ namespace MAP_MechanoidMechanitor
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
-            if (!(parent is Pawn actor) || actor.Faction != Faction.OfPlayer || !actor.Drafted) yield break;
-            Command_Action command = new Command_Action
+            if (!(parent is Pawn actor) || actor.Faction != Faction.OfPlayer) yield break;
+            if (actor.Drafted)
             {
-                defaultLabel = "MAP_EnergyPulse.Label".Translate(),
-                defaultDesc = "MAP_EnergyPulse.Description".Translate(
-                    (Props.warmupTicks / 60f).ToString("0.##"), Props.radius.ToString("0.##"),
-                    (Props.stunTicks / 60f).ToString("0.##")).Resolve(),
-                icon = ContentFinder<Texture2D>.Get(Props.iconPath),
+                Command_Action command = new Command_Action
+                {
+                    defaultLabel = "MAP_EnergyPulse.Label".Translate(),
+                    defaultDesc = "MAP_EnergyPulse.Description".Translate(
+                        (Props.warmupTicks / 60f).ToString("0.##"), Props.radius.ToString("0.##"),
+                        (Props.stunTicks / 60f).ToString("0.##")).Resolve(),
+                    icon = ContentFinder<Texture2D>.Get(Props.iconPath),
+                    action = () =>
+                    {
+                        Job? job = TryMakeCastJob();
+                        if (job != null) actor.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                    }
+                };
+                if (!CanOperate(actor)) command.Disable("MAP_EnergyPulse.Disabled.Unavailable".Translate());
+                else if (IsCharging) command.Disable("MAP_EnergyPulse.Disabled.Charging".Translate());
+                else if (IsOnCooldown)
+                    command.Disable("MAP_EnergyPulse.Disabled.Cooldown".Translate(
+                        ((readyTick - Find.TickManager.TicksGame) / 60f).ToString("0.0")));
+                yield return command;
+            }
+
+            if (actor.def.defName != "MAP_Mech_Sun" || !DebugSettings.ShowDevGizmos) yield break;
+            CompHighEnergyLaserBeam? laser = actor.GetComp<CompHighEnergyLaserBeam>();
+            CompAnnihilationCannon? cannon = actor.GetComp<CompAnnihilationCannon>();
+            yield return new Command_Action
+            {
+                defaultLabel = "DEV：重置冷却",
                 action = () =>
                 {
-                    Job? job = TryMakeCastJob();
-                    if (job != null) actor.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                    if (!DebugSettings.ShowDevGizmos || actor.Destroyed
+                        || actor.Faction != Faction.OfPlayer || actor.def.defName != "MAP_Mech_Sun") return;
+                    ResetCooldown();
+                    laser?.ResetCooldown();
+                    cannon?.ResetCooldown();
                 }
             };
-            if (!CanOperate(actor)) command.Disable("MAP_EnergyPulse.Disabled.Unavailable".Translate());
-            else if (IsCharging) command.Disable("MAP_EnergyPulse.Disabled.Charging".Translate());
-            else if (Find.TickManager.TicksGame < readyTick)
-                command.Disable("MAP_EnergyPulse.Disabled.Cooldown".Translate(
-                    ((readyTick - Find.TickManager.TicksGame) / 60f).ToString("0.0")));
-            yield return command;
         }
 
         public override void PostExposeData()

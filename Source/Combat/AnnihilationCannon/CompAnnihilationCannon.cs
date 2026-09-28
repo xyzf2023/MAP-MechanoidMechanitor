@@ -55,6 +55,7 @@ namespace MAP_MechanoidMechanitor
     {
         private int readyTick;
         public CompProperties_AnnihilationCannon Props => (CompProperties_AnnihilationCannon)props;
+        internal void ResetCooldown() => readyTick = 0;
 
         internal static bool HasEmitter(Pawn actor)
         {
