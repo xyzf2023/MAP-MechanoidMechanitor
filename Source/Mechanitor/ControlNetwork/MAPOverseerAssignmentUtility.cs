@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using Verse;
 
@@ -18,6 +19,45 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class MAPOverseerAssignmentUtility
     {
+        /// <summary>
+        /// 剧情换派系前解除整个监管网络连接，包括同行下属、外部监管者及残留控制组。
+        /// 不调用 GetOverseer：机械师之间的 Overseer 是双向关系，必须同时清理两侧控制组。
+        /// </summary>
+        internal static void DisconnectAllOverseerRelations(Pawn pawn)
+        {
+            var related = new HashSet<Pawn>();
+            var subjects = new HashSet<Pawn>();
+            if (pawn.relations != null)
+                foreach (DirectPawnRelation relation in pawn.relations.DirectRelations)
+                    if (relation.def == PawnRelationDefOf.Overseer && relation.otherPawn != null)
+                        related.Add(relation.otherPawn);
+            if (pawn.mechanitor?.controlGroups != null)
+                foreach (MechanitorControlGroup group in pawn.mechanitor.controlGroups)
+                    foreach (AssignedMech assigned in group.AssignedMechs)
+                    {
+                        if (assigned.pawn == null) continue;
+                        subjects.Add(assigned.pawn);
+                        related.Add(assigned.pawn);
+                    }
+
+            foreach (Pawn other in related)
+            {
+                pawn.relations?.TryRemoveDirectRelation(PawnRelationDefOf.Overseer, other);
+                pawn.mechanitor?.UnassignPawnFromAnyControlGroup(other);
+                other.mechanitor?.UnassignPawnFromAnyControlGroup(pawn);
+                other.mechanitor?.Notify_BandwidthChanged();
+            }
+            pawn.mechanitor?.Notify_BandwidthChanged();
+            // 留守下属立即结束原控制指令；离图者不调用依赖 Map 的掉落和工作通知。
+            foreach (Pawn subject in subjects)
+                if (subject.Spawned && !subject.Dead && !subject.Destroyed)
+                    subject.OverseerSubject?.Notify_DisconnectedFromOverseer();
+            if (pawn.relations?.DirectRelations.Any(r => r.def == PawnRelationDefOf.Overseer) == true
+                || pawn.mechanitor?.controlGroups.Any(g => g.AssignedMechs.Count > 0) == true
+                || pawn.mechanitor?.ControlledPawns.Count > 0)
+                throw new InvalidOperationException("监管关系或下属控制组尚未全部解除。");
+        }
+
         public static bool TryAssignActualOverseer(
             Pawn? overseer,
             Pawn? subject,

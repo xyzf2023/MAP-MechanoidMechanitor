@@ -7,13 +7,15 @@ namespace MAP_MechanoidMechanitor.GD5
     {
         internal readonly Map? Map;
         internal readonly Pawn? Speaker;
+        internal readonly Pawn? Visitor;
         internal readonly GD5DialogueCondition Relation;
         private readonly bool speakerIsJustice;
 
-        internal GD5StoryContext(Map? map, Pawn? speaker)
+        internal GD5StoryContext(Map? map, Pawn? speaker, Pawn? visitor = null)
         {
             Map = map;
             Speaker = speaker;
+            Visitor = visitor;
             Relation = GD5StoryFlowService.GetHiveRelation();
             speakerIsJustice = JusticePawnUtility.IsJustice(speaker);
         }

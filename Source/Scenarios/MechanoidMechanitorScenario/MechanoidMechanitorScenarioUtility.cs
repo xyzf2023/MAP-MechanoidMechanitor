@@ -50,7 +50,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         public static bool ShouldPreventGameOver =>
-            IsScenarioActive && HasLivingMechanicalConsciousnessHost;
+            IsScenarioActive && !GameComponent_MechanoidStoryDeparture.UseVanillaEnding
+            && (HasLivingMechanicalConsciousnessHost
+                || GameComponent_MechanoidStoryDeparture.ProtectRemainingMechanitors);
 
         public static bool HasGameEndedLetter
         {

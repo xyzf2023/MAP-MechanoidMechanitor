@@ -19,6 +19,8 @@ namespace MAP_MechanoidMechanitor.GD5
 
         public override Vector2 InitialSize => new Vector2(WindowWidth, WindowHeight);
 
+        internal bool IsVisitorConversation(Pawn visitor) => ReferenceEquals(context.Visitor, visitor);
+
         internal GD5StoryDialog(GD5DialogueDef dialogue)
             : this(dialogue, new GD5StoryContext(null, null))
         {
@@ -47,11 +49,15 @@ namespace MAP_MechanoidMechanitor.GD5
         public override void PreOpen()
         {
             base.PreOpen();
-            if (!node.hideGraphic && !string.IsNullOrEmpty(dialogue.graphic))
+            string? graphicPath = dialogue.graphic;
+            if (!node.hideGraphic && graphicPath != null && graphicPath.Length > 0)
             {
-                // 直接复用闪毁5：200×200 左侧头像窗、电话叠图、缩放和偏移。
-                portraitWindow = new GraphicWindow(dialogue.graphic, dialogue.drawSize,
-                    dialogue.drawOffset, WindowWidth, WindowHeight);
+                // 通讯保留电话叠图；面对面交谈沿用同一窗口布局，只绘制角色头像。
+                portraitWindow = context.Visitor == null
+                    ? new GraphicWindow(graphicPath, dialogue.drawSize,
+                        dialogue.drawOffset, WindowWidth, WindowHeight)
+                    : new GD5VisitorPortraitWindow(graphicPath, dialogue.drawSize,
+                        dialogue.drawOffset, WindowWidth, WindowHeight);
                 Find.WindowStack.Add(portraitWindow);
             }
         }
@@ -89,11 +95,61 @@ namespace MAP_MechanoidMechanitor.GD5
                 Rect optionRect = new Rect(contentRect.x,
                     inRect.height - 25f - (options.Count + 1) * Text.LineHeight + (i + 2) * Text.LineHeight,
                     contentRect.width, Text.LineHeight);
-                Widgets.DrawHighlightIfMouseover(optionRect);
+                string? disabledReason = option.action == GD5DialogueAction.DepartWithBlackHive
+                    ? GD5BlackHiveEndingService.DepartureDisabledReason(context) : null;
+                if (option.action == GD5DialogueAction.CancelBlackHiveVisit
+                    || option.action == GD5DialogueAction.ReturnBlackHiveSpeaker)
+                    disabledReason = GD5BlackHiveEndingService.ReturnDisabledReason(context,
+                        speakerOnly: option.action == GD5DialogueAction.ReturnBlackHiveSpeaker);
+                if (disabledReason == null) Widgets.DrawHighlightIfMouseover(optionRect);
+                Color oldColor = GUI.color;
+                if (disabledReason != null) GUI.color = Color.gray;
                 Widgets.Label(optionRect, option.textKey.Translate());
-                if (!Widgets.ButtonInvisible(optionRect))
+                GUI.color = oldColor;
+                if (disabledReason != null) TooltipHandler.TipRegion(optionRect, disabledReason);
+                if (disabledReason != null || !Widgets.ButtonInvisible(optionRect))
                     continue;
-                if (option.action == GD5DialogueAction.CompleteFirstContact)
+                if (option.action == GD5DialogueAction.Close)
+                {
+                    Close();
+                }
+                else if (option.action == GD5DialogueAction.ScheduleBlackHiveVisit)
+                {
+                    if (!completed)
+                    {
+                        completed = true;
+                        if (GameComponent_GD5StoryState.Current?.TrySchedule(context.Map, context.Speaker) != true)
+                            Messages.Message(GD5BlackHiveEndingService.ContactDisabledReason(context.Map)
+                                ?? "MAP_GD5.Ending.Unavailable".Translate(), MessageTypeDefOf.RejectInput);
+                        Close();
+                    }
+                }
+                else if (option.action == GD5DialogueAction.DepartWithBlackHive)
+                {
+                    if (!completed && GameComponent_GD5StoryState.Current?.TryStartDeparture(context.Visitor) == true)
+                    {
+                        completed = true;
+                        Close();
+                    }
+                }
+                else if (option.action == GD5DialogueAction.CancelBlackHiveVisit)
+                {
+                    if (!completed && GameComponent_GD5StoryState.Current?.TryCancelVisit(context.Visitor) == true)
+                    {
+                        completed = true;
+                        Close();
+                    }
+                }
+                else if (option.action == GD5DialogueAction.ReturnBlackHiveSpeaker)
+                {
+                    if (!completed && GameComponent_GD5StoryState.Current?.TryReturnSpeaker(
+                        context.Visitor, context.Speaker) == true)
+                    {
+                        completed = true;
+                        Close();
+                    }
+                }
+                else if (option.action == GD5DialogueAction.CompleteFirstContact)
                 {
                     if (!completed && GD5StoryFlowService.CompleteFirstContact())
                     {

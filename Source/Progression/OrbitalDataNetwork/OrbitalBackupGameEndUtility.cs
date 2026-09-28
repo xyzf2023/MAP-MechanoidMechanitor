@@ -19,7 +19,8 @@ namespace MAP_MechanoidMechanitor
     {
         public static bool IsActive =>
             MechanoidMechanitorScenarioUtility.IsScenarioActive
-            && ResearchFeatureUnlockUtility.IsOrbitalDataNetworkUnlocked();
+            && ResearchFeatureUnlockUtility.IsOrbitalDataNetworkUnlocked()
+            && !GameComponent_MechanoidStoryDeparture.UseVanillaEnding;
 
         /// <summary>
         /// 是否还有任意存活且初始化完成的注册机械族机械师。
@@ -32,7 +33,8 @@ namespace MAP_MechanoidMechanitor
 
             for (int i = 0; i < registered.Count; i++)
             {
-                if (IsLivingMechanitor(registered[i]))
+                if (IsLivingMechanitor(registered[i])
+                    && !GameComponent_MechanoidStoryDeparture.HasDeparted(registered[i]))
                 {
                     return true;
                 }
@@ -59,6 +61,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static void HandleCheckOrUpdateGameOver(GameEnder gameEnder)
         {
+            if (GameComponent_MechanoidStoryDeparture.IsProcessing
+                || GameComponent_MechanoidStoryDeparture.UseVanillaEnding) return;
             RemoveVanillaGameEndedLetters();
 
             if (AnyLivingRegisteredMechanitor())
@@ -78,6 +82,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static void HandleGameEndTick(GameEnder gameEnder)
         {
+            if (GameComponent_MechanoidStoryDeparture.IsProcessing
+                || GameComponent_MechanoidStoryDeparture.UseVanillaEnding) return;
             RemoveVanillaGameEndedLetters();
 
             if (AnyLivingRegisteredMechanitor())
@@ -99,7 +105,7 @@ namespace MAP_MechanoidMechanitor
         {
             try
             {
-                if (!IsActive)
+                if (!IsActive || GameComponent_MechanoidStoryDeparture.IsProcessing)
                 {
                     return true;
                 }
@@ -133,6 +139,7 @@ namespace MAP_MechanoidMechanitor
         /// <summary>确保存在且只存在一封未归档的备用机体信件。</summary>
         public static void EnsureBackupLetter()
         {
+            if (!IsActive || GameComponent_MechanoidStoryDeparture.IsProcessing) return;
             if (Current.Game == null || Find.LetterStack == null)
             {
                 return;
@@ -199,6 +206,8 @@ namespace MAP_MechanoidMechanitor
         /// <summary>清理功能切换过程中可能已经存在的原版游戏结束信件。</summary>
         public static void RemoveVanillaGameEndedLetters()
         {
+            if (GameComponent_MechanoidStoryDeparture.IsProcessing
+                || GameComponent_MechanoidStoryDeparture.UseVanillaEnding) return;
             RemoveLettersOfDef(LetterDefOf.GameEnded);
         }
 

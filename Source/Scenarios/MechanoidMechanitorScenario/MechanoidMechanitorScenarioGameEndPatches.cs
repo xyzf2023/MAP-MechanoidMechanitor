@@ -9,6 +9,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [HarmonyPrefix]
         public static bool Prefix(GameEnder __instance)
         {
+            if (GameComponent_MechanoidStoryDeparture.IsProcessing) return false;
+            if (GameComponent_MechanoidStoryDeparture.UseVanillaEnding) return true;
             if (OrbitalBackupGameEndUtility.IsActive)
             {
                 OrbitalBackupGameEndUtility.HandleCheckOrUpdateGameOver(__instance);
@@ -40,6 +42,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [HarmonyPrefix]
         public static bool Prefix(GameEnder __instance)
         {
+            if (GameComponent_MechanoidStoryDeparture.IsProcessing) return false;
+            if (GameComponent_MechanoidStoryDeparture.UseVanillaEnding) return true;
             if (OrbitalBackupGameEndUtility.IsActive)
             {
                 // 完全接管：阻止原版“所有人都死了”信件，
@@ -69,6 +73,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         [HarmonyPrefix]
         public static bool Prefix(ref bool __result)
         {
+            if (GameComponent_MechanoidStoryDeparture.IsProcessing)
+            {
+                __result = false;
+                return false;
+            }
+            if (GameComponent_MechanoidStoryDeparture.UseVanillaEnding) return true;
             if (OrbitalBackupGameEndUtility.IsActive
                 && !OrbitalBackupGameEndUtility.AnyLivingRegisteredMechanitor())
             {

@@ -64,7 +64,11 @@ namespace MAP_MechanoidMechanitor.GD5
     }
 
     public enum GD5DialogueCondition { Always, HiveHostile, HiveNeutral, HiveAlly, SpeakerJustice }
-    public enum GD5DialogueAction { Continue, CompleteFirstContact, ResumeCooperation }
+    public enum GD5DialogueAction
+    {
+        Continue, CompleteFirstContact, ResumeCooperation,
+        Close, ScheduleBlackHiveVisit, DepartWithBlackHive, CancelBlackHiveVisit, ReturnBlackHiveSpeaker
+    }
 
     public sealed class GD5DialogueOption
     {

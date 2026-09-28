@@ -43,6 +43,7 @@ namespace MAP_MechanoidMechanitor
 
         internal static void NotifyLifecycle(Pawn pawn)
         {
+            GameComponent_MechanoidStoryDeparture.NotifyPlayerReturned(pawn);
             GameComponent_AutonomousMechRegistry.SynchronizeAutomaticSources(pawn);
             if (!MAPMechanitorNodeUtility.IsMechanitorNodeController(pawn))
                 return;

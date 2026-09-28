@@ -856,6 +856,7 @@ namespace MAP_MechanoidMechanitor
             mechanitorRecords.Add(record);
             recordByPawn[record.Pawn] = record;
             InvalidateDerivedCaches();
+            GameComponent_MechanoidStoryDeparture.NotifyPlayerReturned(record.Pawn);
             GameComponent_MechanoidMechanitorFeatureManager.NotifyMechanitorRosterChanged();
 
             // 记录正式进入 Registry 后立即保证 timetable（在 recordByPawn 写入之后，
@@ -1126,6 +1127,7 @@ namespace MAP_MechanoidMechanitor
             GameComponent_MechanoidMechanitorRegistry? registry = CurrentRegistry;
             if (registry == null || !HasPersistentRecord(pawn)) return;
             registry.InvalidateDerivedCaches();
+            GameComponent_MechanoidStoryDeparture.NotifyPlayerReturned(pawn);
             // 新生周期不继承上一生命周期的退避；死亡不删除持久身份。
             registry.initializationRetryTicks.Remove(pawn);
             registry.initializationFailureCounts.Remove(pawn);

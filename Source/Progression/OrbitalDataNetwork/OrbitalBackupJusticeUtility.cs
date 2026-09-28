@@ -38,7 +38,8 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static string? GetDisabledReason()
         {
-            if (!IsFeatureActive)
+            if (!IsFeatureActive || GameComponent_MechanoidStoryDeparture.UseVanillaEnding
+                || GameComponent_MechanoidStoryDeparture.IsProcessing)
             {
                 return NotAvailableKey.Translate().Resolve();
             }

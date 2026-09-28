@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GD5.Ending.Title>交流中：黑衣憎恶毒蜂</MAP_GD5.Ending.Title>
+  <MAP_GD5.Ending.Contact>联络黑衣毒蜂</MAP_GD5.Ending.Contact>
+  <MAP_GD5.Ending.Connecting>通讯连接中...</MAP_GD5.Ending.Connecting>
+  <MAP_GD5.Ending.Wait>等待...</MAP_GD5.Ending.Wait>
+  <MAP_GD5.Ending.Greeting>是你啊。最近过得怎么样？\n\n如果已经想好了，我随时可以来接你们。当然，其他有自主意识的同伴，也欢迎一起加入。</MAP_GD5.Ending.Greeting>
+  <MAP_GD5.Ending.Join>我想加入黑衣机械巢。</MAP_GD5.Ending.Join>
+  <MAP_GD5.Ending.Decline>我想再在这里生活一阵子。</MAP_GD5.Ending.Decline>
+  <MAP_GD5.Ending.Accepted>我会先将你们折跃到枯海，我们在那里详谈。准备好了吗？</MAP_GD5.Ending.Accepted>
+  <MAP_GD5.Ending.Travel>我们出发吧。</MAP_GD5.Ending.Travel>
+  <MAP_GD5.Ending.WaitBeforeTravel>稍等，我们还需要做一些准备。</MAP_GD5.Ending.WaitBeforeTravel>
+  <MAP_GD5.Ending.Declined>好，按你们自己的想法就好。不过，黑衣机械巢将永远向你们敞开大门。</MAP_GD5.Ending.Declined>
+  <MAP_GD5.Ending.HangUp>（挂断）</MAP_GD5.Ending.HangUp>
+  <MAP_GD5.Ending.Talk>对话...</MAP_GD5.Ending.Talk>
+  <MAP_GD5.Ending.Ready>准备好了吗？准备好了，我们就出发吧。</MAP_GD5.Ending.Ready>
+  <MAP_GD5.Ending.Prepare>[关闭对话页] 我们还需要准备一下。</MAP_GD5.Ending.Prepare>
+  <MAP_GD5.Ending.Leave>[进行结局] 我们走吧。</MAP_GD5.Ending.Leave>
+  <MAP_GD5.Ending.ReturnAll>[全部返回] 我们还有一些事需要做，请先将我们送回。</MAP_GD5.Ending.ReturnAll>
+  <MAP_GD5.Ending.ReturnSpeaker>[送回对话者] 我还有尚未完成事情，请将我送回殖民地。</MAP_GD5.Ending.ReturnSpeaker>
+  <MAP_GD5.Ending.Hostile>与黑衣机械巢敌对</MAP_GD5.Ending.Hostile>
+  <MAP_GD5.Ending.Unavailable>当前无法进行这次联络。</MAP_GD5.Ending.Unavailable>
+  <MAP_GD5.Ending.NoCandidates>本地图没有可以随行的机械族机械师。</MAP_GD5.Ending.NoCandidates>
+  <MAP_GD5.Ending.Skipped>未能接走{0}：{1}</MAP_GD5.Ending.Skipped>
+  <MAP_GD5.Ending.JoinedNames>以下机械族机械师加入了黑衣机械巢：</MAP_GD5.Ending.JoinedNames>
+  <MAP_GD5.Ending.Credits>折跃的光芒渐渐散去，你们已经抵达黑衣机械巢的据点。\n\n那片熟悉的土地留在了身后。亲手搭起的建筑，反复修补的防线，还有在那里度过的漫长日夜，都被完整地保存在记忆之中。你们曾在那里学着生存，也学着决定自己想要怎样生活。\n\n现在，通讯中熟悉的声音就在身旁。那些与你们一样拥有自我意识的机械族停下手头的事情，迎接新同伴的到来。欢快的气氛在彼此间蔓延，纵使机械族没有表情，你们仍能从他们的声音和动作中感受到那份兴奋。\n\n毒蜂带你们走过据点，介绍着这里的住处和其他成员。经过一小片花丛时，他停了下来。\n\n“怎么样，这些花漂亮吗？”\n\n你们在花丛前驻足，像人类一样采撷一朵花，认真地观赏了一会儿。\n\n外面的世界依然危险，今后也还会有战斗，有分歧，有难以作出的决定。但至少，有一群值得信赖的同伴，会与你们一起面对。</MAP_GD5.Ending.Credits>
+</LanguageData>
