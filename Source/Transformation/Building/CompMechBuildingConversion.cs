@@ -11,6 +11,8 @@ namespace MAP_MechanoidMechanitor
         public ThingDef? buildingFormDef;
         public ThingDef? buildingStuff;
         public int placementSearchRadius = 8;
+        // 可由每个机械体 Def 单独指定；未配置时沿用通用转换图标。
+        public string iconPath = "UI/Commands/MM_BuildingConversion";
 
         public CompProperties_MechBuildingConversion()
         {
@@ -25,8 +27,22 @@ namespace MAP_MechanoidMechanitor
     [StaticConstructorOnStartup]
     public sealed class CompMechBuildingConversion : ThingComp
     {
-        private static readonly Texture2D ConvertIcon =
+        private static readonly Texture2D DefaultIcon =
             ContentFinder<Texture2D>.Get("UI/Commands/MM_BuildingConversion");
+
+        internal static Texture2D GetGizmoIcon(Pawn? source)
+        {
+            string? path = source?.def
+                .GetCompProperties<CompProperties_MechBuildingConversion>()
+                ?.iconPath;
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return DefaultIcon;
+            }
+
+            return ContentFinder<Texture2D>.Get(path, reportFailure: false)
+                ?? DefaultIcon;
+        }
 
         public CompProperties_MechBuildingConversion Props =>
             (CompProperties_MechBuildingConversion)props;
@@ -52,7 +68,7 @@ namespace MAP_MechanoidMechanitor
                     "MAP_MechanoidMechanitor.Transformation.Building.Convert.Label".Translate(),
                 defaultDesc =
                     "MAP_MechanoidMechanitor.Transformation.Building.Convert.Description".Translate(),
-                icon = ConvertIcon,
+                icon = GetGizmoIcon(pawn),
                 action = delegate
                 {
                     Job job = JobMaker.MakeJob(

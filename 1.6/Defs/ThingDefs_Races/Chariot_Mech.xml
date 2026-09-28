@@ -96,6 +96,7 @@
       <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingConversion">
         <buildingFormDef>MAP_Building_Chariot</buildingFormDef>
         <placementSearchRadius>8</placementSearchRadius>
+        <iconPath>UI/Commands/MM_ChariotBuildingConversion</iconPath>
       </li>
 
       <!-- 两种激光共用源战车上的组件与冷却；合体形态也读取此组件。 -->
