@@ -45,6 +45,10 @@
         <li>Teeth</li>
         <li>Mouth</li>
       </bodyPartGroups>
+      <!-- 显式禁用外观遮挡 -->
+      <renderSkipFlags>
+        <li>None</li>
+      </renderSkipFlags>
       <wornGraphicPath>Things/Apparel/MAP_MechFusionShell</wornGraphicPath>
       <layers>
         <li>Middle</li>
