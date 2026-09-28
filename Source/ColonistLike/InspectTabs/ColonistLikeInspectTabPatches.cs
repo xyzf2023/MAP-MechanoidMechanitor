@@ -49,8 +49,8 @@ namespace MAP_MechanoidMechanitor
 
         public static bool ShouldShowCharacterTab(Pawn? pawn)
         {
-            return HasCharacterTabAuthorization(pawn)
-                && HasCharacterTabData(pawn);
+            return HasCharacterTabData(pawn)
+                && HasCharacterTabAuthorization(pawn);
         }
 
         public static bool ShouldAddSocialTab(Pawn? pawn)
@@ -68,17 +68,12 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            bool allowsHumanWeapons =
-                pawn.Faction == Faction.OfPlayer
-                && MechanoidMechanitorRoleUtility.AllowsHumanWeapons(pawn);
-
-            bool allowsHumanApparel =
-                HumanApparelUtility.TryGetApparelComp(
-                    pawn,
-                    out CompHumanApparelUser? apparelComp)
-                && apparelComp!.AllowRemoveApparel;
-
-            return allowsHumanWeapons || allowsHumanApparel;
+            return (pawn.Faction == Faction.OfPlayer
+                    && MechanoidMechanitorRoleUtility.AllowsHumanWeapons(pawn))
+                || (HumanApparelUtility.TryGetApparelComp(
+                        pawn,
+                        out CompHumanApparelUser? apparelComp)
+                    && apparelComp!.AllowRemoveApparel);
         }
 
         public static bool ShouldAddFormingCaravanTab(Pawn? pawn)
@@ -90,14 +85,16 @@ namespace MAP_MechanoidMechanitor
                     || pawn.IsFormingCaravan());
         }
 
-        public static bool ShouldAddGeneTabs(Pawn? pawn)
+        public static bool ShouldAddGeneTabs(
+            Pawn? pawn,
+            bool? characterTabAuthorization = null)
         {
             if (!ModsConfig.BiotechActive || pawn?.genes == null)
             {
                 return false;
             }
 
-            return HasCharacterTabAuthorization(pawn)
+            return (characterTabAuthorization ?? HasCharacterTabAuthorization(pawn))
                 || MechanoidMechanitorCapabilityUtility.HasCapability(
                     pawn,
                     MechanoidMechanitorCapability.SyntheticPregnancy);
@@ -106,11 +103,23 @@ namespace MAP_MechanoidMechanitor
 
     /// <summary>
     /// 为显式获得类殖民者能力、但其 ThingDef 删除了原版页签的 Pawn 动态补齐页签。
-    /// 始终复制 GetInspectTabs 的结果，不修改 ThingDef.inspectorTabsResolved 或第三方共享列表。
+    /// 可索引列表先检查缺失页签，仅在补齐或清理空条目时复制；未知枚举保留单次物化回退。
+    /// 不修改 ThingDef.inspectorTabsResolved 或第三方共享列表。
     /// </summary>
     [HarmonyPatch(typeof(Thing), nameof(Thing.GetInspectTabs))]
     public static class Patch_Thing_GetInspectTabs_ColonistLikeCompletion
     {
+        private struct InspectTabPresence
+        {
+            public bool Character;
+            public bool Social;
+            public bool Gear;
+            public bool FormingCaravan;
+            public bool Genes;
+            public bool GenesPregnancy;
+            public bool HasNullTabs;
+        }
+
         [HarmonyPostfix]
         public static IEnumerable<InspectTabBase> Postfix(
             IEnumerable<InspectTabBase> __result,
@@ -122,26 +131,57 @@ namespace MAP_MechanoidMechanitor
                 return __result;
             }
 
-            bool addCharacter = ColonistLikeInspectTabUtility.ShouldShowCharacterTab(pawn);
-            bool addSocial = ColonistLikeInspectTabUtility.ShouldAddSocialTab(pawn);
-            bool addGear = ColonistLikeInspectTabUtility.ShouldAddGearTab(pawn);
+            // 原版返回已解析的 List；先扫描一次，已有页签不再查询能力和注册表。
+            // 未知 IEnumerable 不预先枚举，保留后续单次物化的兼容路径。
+            IList<InspectTabBase>? sourceTabs = __result as IList<InspectTabBase>;
+            InspectTabPresence existing = sourceTabs != null
+                ? ScanTabs(sourceTabs)
+                : default;
+
+            bool? characterTabAuthorization = null;
+            bool addCharacter = false;
+            if (!existing.Character && ColonistLikeInspectTabUtility.HasCharacterTabData(pawn))
+            {
+                characterTabAuthorization =
+                    ColonistLikeInspectTabUtility.HasCharacterTabAuthorization(pawn);
+                addCharacter = characterTabAuthorization.Value;
+            }
+
+            bool addSocial = !existing.Social
+                && ColonistLikeInspectTabUtility.ShouldAddSocialTab(pawn);
+            bool addGear = !existing.Gear
+                && ColonistLikeInspectTabUtility.ShouldAddGearTab(pawn);
             // 原版远行队页签只通过 SelPawn 取目标，不支持 Corpse.InnerPawn。
-            bool addFormingCaravan = __instance is Pawn
+            bool addFormingCaravan = !existing.FormingCaravan
+                && __instance is Pawn
                 && ColonistLikeInspectTabUtility.ShouldAddFormingCaravanTab(pawn);
-            bool addGenes = ColonistLikeInspectTabUtility.ShouldAddGeneTabs(pawn);
+            bool addGenes = (!existing.Genes || !existing.GenesPregnancy)
+                && ColonistLikeInspectTabUtility.ShouldAddGeneTabs(pawn, characterTabAuthorization);
 
             if (!addCharacter
                 && !addSocial
                 && !addGear
                 && !addFormingCaravan
-                && !addGenes)
+                && !addGenes
+                && !existing.HasNullTabs)
             {
                 return __result;
             }
 
-            List<InspectTabBase> tabs = CopyTabs(__result);
+            int additionalCapacity = (addCharacter ? 1 : 0)
+                + (addSocial ? 1 : 0)
+                + (addGear ? 1 : 0)
+                + (addFormingCaravan ? 1 : 0)
+                + (addGenes && !existing.Genes ? 1 : 0)
+                + (addGenes && !existing.GenesPregnancy ? 1 : 0);
+            List<InspectTabBase> tabs = CopyTabs(__result, additionalCapacity);
+            if (sourceTabs == null)
+            {
+                // 第三方延迟枚举只消费一次，再对物化结果去重。
+                existing = ScanTabs(tabs);
+            }
 
-            if (addCharacter && !ContainsTab<ITab_Pawn_Character>(tabs))
+            if (addCharacter && !existing.Character)
             {
                 InsertBeforeFirst<ITab_Pawn_Health>(
                     tabs,
@@ -149,7 +189,7 @@ namespace MAP_MechanoidMechanitor
                     fallbackIndex: 0);
             }
 
-            if (addFormingCaravan && !ContainsTab<ITab_Pawn_FormingCaravan>(tabs))
+            if (addFormingCaravan && !existing.FormingCaravan)
             {
                 int insertIndex = FindFirstIndex<ITab_Pawn_Social>(tabs);
                 if (insertIndex < 0)
@@ -167,7 +207,7 @@ namespace MAP_MechanoidMechanitor
                     insertIndex);
             }
 
-            if (addSocial && !ContainsTab<ITab_Pawn_Social>(tabs))
+            if (addSocial && !existing.Social)
             {
                 int insertIndex = FindFirstIndex<ITab_Pawn_Gear>(tabs);
                 if (insertIndex < 0)
@@ -181,7 +221,7 @@ namespace MAP_MechanoidMechanitor
                     insertIndex);
             }
 
-            if (addGear && !ContainsTab<ITab_Pawn_Gear>(tabs))
+            if (addGear && !existing.Gear)
             {
                 InsertBeforeFirst<ITab_Pawn_Log>(
                     tabs,
@@ -192,12 +232,12 @@ namespace MAP_MechanoidMechanitor
             if (addGenes)
             {
                 // ITab_GenesPregnancy 继承 ITab_Genes，必须按具体运行时类型分别去重。
-                if (!ContainsExactTab(tabs, typeof(ITab_Genes)))
+                if (!existing.Genes)
                 {
                     tabs.Add(GetSharedTab(typeof(ITab_Genes)));
                 }
 
-                if (!ContainsExactTab(tabs, typeof(ITab_GenesPregnancy)))
+                if (!existing.GenesPregnancy)
                 {
                     tabs.Add(GetSharedTab(typeof(ITab_GenesPregnancy)));
                 }
@@ -207,11 +247,27 @@ namespace MAP_MechanoidMechanitor
         }
 
         private static List<InspectTabBase> CopyTabs(
-            IEnumerable<InspectTabBase> source)
+            IEnumerable<InspectTabBase> source,
+            int additionalCapacity)
         {
-            List<InspectTabBase> result = new List<InspectTabBase>();
+            int sourceCount = (source as ICollection<InspectTabBase>)?.Count ?? 0;
+            List<InspectTabBase> result = new List<InspectTabBase>(sourceCount + additionalCapacity);
             if (source == null)
             {
+                return result;
+            }
+
+            if (source is IList<InspectTabBase> sourceTabs)
+            {
+                for (int i = 0; i < sourceTabs.Count; i++)
+                {
+                    InspectTabBase tab = sourceTabs[i];
+                    if (tab != null)
+                    {
+                        result.Add(tab);
+                    }
+                }
+
                 return result;
             }
 
@@ -231,25 +287,48 @@ namespace MAP_MechanoidMechanitor
             return InspectTabManager.GetSharedInstance(tabType);
         }
 
-        private static bool ContainsTab<TTab>(List<InspectTabBase> tabs)
-            where TTab : InspectTabBase
+        private static InspectTabPresence ScanTabs(IList<InspectTabBase> tabs)
         {
-            return FindFirstIndex<TTab>(tabs) >= 0;
-        }
-
-        private static bool ContainsExactTab(
-            List<InspectTabBase> tabs,
-            Type tabType)
-        {
+            InspectTabPresence result = default;
             for (int i = 0; i < tabs.Count; i++)
             {
-                if (tabs[i].GetType() == tabType)
+                InspectTabBase tab = tabs[i];
+                if (tab == null)
                 {
-                    return true;
+                    result.HasNullTabs = true;
+                }
+                else if (tab is ITab_Pawn_Character)
+                {
+                    result.Character = true;
+                }
+                else if (tab is ITab_Pawn_Social)
+                {
+                    result.Social = true;
+                }
+                else if (tab is ITab_Pawn_Gear)
+                {
+                    result.Gear = true;
+                }
+                else if (tab is ITab_Pawn_FormingCaravan)
+                {
+                    result.FormingCaravan = true;
+                }
+                else if (tab is ITab_Genes)
+                {
+                    // 孕育页是基因页的子类，两者分别按具体运行时类型记录。
+                    Type tabType = tab.GetType();
+                    if (tabType == typeof(ITab_Genes))
+                    {
+                        result.Genes = true;
+                    }
+                    else if (tabType == typeof(ITab_GenesPregnancy))
+                    {
+                        result.GenesPregnancy = true;
+                    }
                 }
             }
 
-            return false;
+            return result;
         }
 
         private static int FindFirstIndex<TTab>(List<InspectTabBase> tabs)
