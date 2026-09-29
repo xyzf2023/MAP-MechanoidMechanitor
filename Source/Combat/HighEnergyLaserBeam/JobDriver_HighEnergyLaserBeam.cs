@@ -40,6 +40,7 @@ namespace MAP_MechanoidMechanitor
         public override bool PlayerInterruptable => !recovering;
         // 不从可能在读档后失效的 Thing 引用推断模式，防止追踪模式退化为地块模式。
         private bool TracksPawn => job.count == 1;
+        private bool Sweeps => job.count == CompHighEnergyLaserBeam.SweepMode;
 
         public override bool TryMakePreToilReservations(bool errorOnFailed) => true;
 
@@ -159,6 +160,7 @@ namespace MAP_MechanoidMechanitor
             if (initialized && (pawn.Map != castMap || pawn.Position != job.targetC.Cell
                 || pawn.pather?.Moving == true || pawn.stances?.FullBodyBusy == true)) return false;
             if (!job.targetB.Cell.IsValid || !job.targetB.Cell.InBounds(pawn.Map)) return false;
+            if (Sweeps) return job.targetA.Cell.IsValid && job.targetA.Cell.InBounds(pawn.Map);
             if (!TracksPawn) return true;
             Pawn? target = job.targetA.Thing as Pawn;
             return target != null && !target.Dead && !target.Destroyed
@@ -185,10 +187,16 @@ namespace MAP_MechanoidMechanitor
                 EndJobWith(JobCondition.InterruptForced);
                 return;
             }
-            // 第一帧沿用蓄力结束时的落点；未开启蓄力跟随时仍为选中格，此后按速度追踪。
-            if (TracksPawn && firingTicks > 1)
-                impactPosition = Vector3.MoveTowards(impactPosition,
-                    ((Pawn)job.targetA.Thing).DrawPos.Yto0(), props.trackingSpeed / 60f);
+            // 第一帧沿用蓄力落点；横扫与追踪共用移动速度，抵达终点后停留至持续时间耗尽。
+            if (firingTicks > 1)
+            {
+                if (Sweeps)
+                    impactPosition = Vector3.MoveTowards(impactPosition,
+                        job.targetA.Cell.ToVector3Shifted().Yto0(), props.trackingSpeed / 60f);
+                else if (TracksPawn)
+                    impactPosition = Vector3.MoveTowards(impactPosition,
+                        ((Pawn)job.targetA.Thing).DrawPos.Yto0(), props.trackingSpeed / 60f);
+            }
             pawn.Rotation = Rot4.South;
             MaintainVisuals();
             if (firingTicks % CompHighEnergyLaserBeam.DamageInterval == 0) ApplyDamagePulse();

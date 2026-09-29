@@ -45,6 +45,7 @@ namespace MAP_MechanoidMechanitor
         internal const float BuildingDamageAmount = 100f;
         internal const int EmitterCheckInterval = 60;
         internal const float AreaSideLength = 3f;
+        internal const int SweepMode = 2;
         private int readyTick;
         private HighEnergyLaserBeamTargetSearcher? autoTargetSearcher;
 
@@ -105,6 +106,18 @@ namespace MAP_MechanoidMechanitor
             return job;
         }
 
+        internal Job? TryMakeSweepCastJob(IntVec3 start, IntVec3 end)
+        {
+            if (!(parent is Pawn actor) || actor.Faction != Faction.OfPlayer
+                || IsFiring(actor) || DisabledReason(actor) != null
+                || !ValidInitialTarget(actor, start) || !ValidInitialTarget(actor, end)) return null;
+            // B 继续保存初始落点，横扫模式下 A 保存终点；C 仍锁定施法者位置。
+            Job job = JobMaker.MakeJob(HighEnergyLaserBeamDefOf.MAP_HighEnergyLaserBeam, end, start, actor.Position);
+            job.count = SweepMode;
+            job.playerForced = true;
+            return job;
+        }
+
         internal Job? TryMakeAutoFireJob()
         {
             if (!(parent is Pawn actor) || !AutoFireEnabled || DisabledReason(actor) != null) return null;
@@ -127,13 +140,14 @@ namespace MAP_MechanoidMechanitor
         {
             if (!(parent is Pawn actor) || actor.Faction != Faction.OfPlayer) yield break;
             bool firing = IsFiring(actor);
-            Command_Action command = new Command_Action
+            Command_HighEnergyLaserBeam command = new Command_HighEnergyLaserBeam
             {
                 defaultLabel = (firing ? "MAP_HighEnergyLaserBeam.Stop.Label" : "MAP_HighEnergyLaserBeam.Label").Translate(),
                 defaultDesc = (firing ? "MAP_HighEnergyLaserBeam.Stop.Description" : "MAP_HighEnergyLaserBeam.Description")
                     .Translate().Resolve(),
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_HighEnergyLaserBeam"),
-                action = firing ? () => StopFiring(actor) : () => BeginTargeting(actor)
+                action = firing ? () => StopFiring(actor) : () => BeginTargeting(actor),
+                rightClickAction = firing ? () => StopFiring(actor) : () => BeginSweepStartTargeting(actor)
             };
             if (!firing)
             {
@@ -167,20 +181,75 @@ namespace MAP_MechanoidMechanitor
             }, target =>
             {
                 if (!actor.Spawned || actor.Map != Find.CurrentMap) return;
-                GenDraw.DrawRadiusRing(actor.Position, Props.range);
-                if (ValidInitialTarget(actor, target))
-                {
-                    GenDraw.DrawTargetHighlight(target);
-                    List<IntVec3> cells = new List<IntVec3>(9);
-                    for (int x = -1; x <= 1; x++)
-                        for (int z = -1; z <= 1; z++)
-                        {
-                            IntVec3 cell = target.Cell + new IntVec3(x, 0, z);
-                            if (cell.InBounds(actor.Map)) cells.Add(cell);
-                        }
-                    GenDraw.DrawFieldEdges(cells);
-                }
+                DrawTargetingPreview(actor, target);
             }, target => actor.Map == Find.CurrentMap && ValidInitialTarget(actor, target), actor);
+        }
+
+        private void BeginSweepStartTargeting(Pawn actor)
+        {
+            if (!actor.Spawned || actor.Map == null || actor.Map != Find.CurrentMap) return;
+            Map map = actor.Map;
+            // 两步均由原版 Targeter 处理左键确认、右键/Esc 取消；未选完不创建 Job。
+            Find.Targeter.BeginTargeting(TargetingParameters.ForCell(),
+                first => BeginSweepEndTargeting(actor, map, first.Cell),
+                target =>
+                {
+                    if (!IsOnTargetingMap(actor, map)) return;
+                    DrawTargetingPreview(actor, target.Cell);
+                },
+                target => IsOnTargetingMap(actor, map) && ValidInitialTarget(actor, target.Cell), actor);
+        }
+
+        private void BeginSweepEndTargeting(Pawn actor, Map map, IntVec3 first)
+        {
+            if (!IsOnTargetingMap(actor, map) || !ValidInitialTarget(actor, first)) return;
+            Find.Targeter.BeginTargeting(TargetingParameters.ForCell(), second =>
+            {
+                if (!IsOnTargetingMap(actor, map)) return;
+                Job? job = TryMakeSweepCastJob(first, second.Cell);
+                if (job != null) actor.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+            }, target =>
+            {
+                if (!IsOnTargetingMap(actor, map)) return;
+                DrawTargetingPreview(actor, target.Cell);
+                GenDraw.DrawTargetHighlight(first);
+                if (ValidInitialTarget(actor, first) && ValidInitialTarget(actor, target.Cell))
+                    GenDraw.DrawLineBetween(first.ToVector3Shifted(), target.Cell.ToVector3Shifted(),
+                        AltitudeLayer.MetaOverlays.AltitudeFor());
+            }, target => IsOnTargetingMap(actor, map) && ValidInitialTarget(actor, first)
+                && ValidInitialTarget(actor, target.Cell), actor);
+        }
+
+        private static bool IsOnTargetingMap(Pawn actor, Map map) => actor.Spawned
+            && actor.Map == map && map == Find.CurrentMap;
+
+        private void DrawTargetingPreview(Pawn actor, LocalTargetInfo target)
+        {
+            GenDraw.DrawRadiusRing(actor.Position, Props.range);
+            if (!ValidInitialTarget(actor, target)) return;
+            GenDraw.DrawTargetHighlight(target);
+            List<IntVec3> cells = new List<IntVec3>(9);
+            for (int x = -1; x <= 1; x++)
+                for (int z = -1; z <= 1; z++)
+                {
+                    IntVec3 cell = target.Cell + new IntVec3(x, 0, z);
+                    if (cell.InBounds(actor.Map)) cells.Add(cell);
+                }
+            GenDraw.DrawFieldEdges(cells);
+        }
+
+        private sealed class Command_HighEnergyLaserBeam : Command
+        {
+            public System.Action action = null!;
+            public System.Action rightClickAction = null!;
+
+            public override void ProcessInput(Event ev)
+            {
+                base.ProcessInput(ev);
+                // 没有右键菜单项时，原版 GizmoGridDrawer 会转发右键并在处理后消费事件。
+                if (ev.button == 1) rightClickAction();
+                else action();
+            }
         }
 
         public override void PostExposeData()

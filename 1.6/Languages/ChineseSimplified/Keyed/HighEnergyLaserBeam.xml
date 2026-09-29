@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_HighEnergyLaserBeam.Label>高能激光束</MAP_HighEnergyLaserBeam.Label>
-  <MAP_HighEnergyLaserBeam.Description>向指定地点发射高能激光束，对小范围内敌人造成无视护甲的高额伤害。</MAP_HighEnergyLaserBeam.Description>
+  <MAP_HighEnergyLaserBeam.Description>向指定地点发射高能激光束，对小范围内敌人造成无视护甲的高额伤害。\n\n右键点击可以选择两点，使激光沿路径扫射</MAP_HighEnergyLaserBeam.Description>
   <MAP_HighEnergyLaserBeam.FireAtWill.Description>开启此选项后，「太阳」会主动使用高能激光束攻击。</MAP_HighEnergyLaserBeam.FireAtWill.Description>
   <MAP_HighEnergyLaserBeam.Stop.Label>终止发射高能激光束</MAP_HighEnergyLaserBeam.Stop.Label>
   <MAP_HighEnergyLaserBeam.Stop.Description>终止当前高能激光的发射流程。</MAP_HighEnergyLaserBeam.Stop.Description>
