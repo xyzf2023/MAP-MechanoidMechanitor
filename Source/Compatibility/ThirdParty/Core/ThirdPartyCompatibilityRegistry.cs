@@ -8,6 +8,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimSkyBlock;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpanded;
 using Verse;
@@ -28,6 +29,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new DeadManSwitchCompatibility(),
             new ForgenestCompatibility(),
             new MobileDragoonCompatibility(),
+            new RimSkyBlockImperialTaskCompatibility(),
+            new RimSkyBlockCoronationCompatibility(),
             new SRTSExpandedCompatibility(),
             new VanillaPsycastsExpandedCompatibility()
         };
