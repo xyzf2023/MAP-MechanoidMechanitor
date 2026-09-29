@@ -220,11 +220,11 @@ namespace MAP_MechanoidMechanitor
             {
                 Vector3 offset = victim.DrawPos.Yto0() - impactPosition;
                 // 与范围贴图共用浮点中心，正方形沿地图坐标轴对齐，不随射线旋转。
-                if (!victim.Dead && !victim.Destroyed
+                if (victim != pawn && !victim.Dead && !victim.Destroyed
                     && Mathf.Abs(offset.x) <= halfSide && Mathf.Abs(offset.z) <= halfSide)
                     damageTargets.Add(victim);
             }
-            // 先取快照，防止死亡/离图回调修改地图 Pawn 列表；包括友方和施法者。
+            // 先取快照，防止死亡/离图回调修改地图 Pawn 列表；包括友方，但排除施法者自身。
             foreach (Pawn victim in damageTargets)
             {
                 if (victim.Dead || victim.Destroyed || !victim.Spawned || victim.Map != map) continue;
