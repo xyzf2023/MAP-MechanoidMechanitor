@@ -34,7 +34,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public override string Summary(Scenario scen)
         {
-            return def.description;
+            // Def 描述不能以前导空白开头，仅在显示摘要时添加分隔换行。
+            return def.description.NullOrEmpty() ? string.Empty : "\n" + def.description;
         }
     }
 }

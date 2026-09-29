@@ -2,7 +2,7 @@
 <LanguageData>
 
   <!-- 模块：剧本词条 -->
-  <MAP_MechanoidMechanitor.Scenario.Editor.Tooltip>机械族机械师剧本：扮演一个觉醒了自我意识的机械族进行游戏。加入此词条后，当前剧本原定的殖民者将会被选定的机械族机械师替换，且存档会启用一系列机械族机械师殖民地专属效果。\n注意：可能与某些MOD剧本发生冲突。</MAP_MechanoidMechanitor.Scenario.Editor.Tooltip>
+  <MAP_MechanoidMechanitor.Scenario.Editor.Tooltip>\n&lt;color=#80CBC4&gt;机械族机械师剧本：扮演一个觉醒了自我意识的机械族进行游戏。加入此词条后，当前剧本原定的殖民者将会被选定的机械族机械师替换，且存档会启用一系列机械族机械师殖民地专属效果。\n注意：可能与某些MOD剧本发生冲突。&lt;/color&gt;</MAP_MechanoidMechanitor.Scenario.Editor.Tooltip>
 
   <!-- 模块：剧情组件 -->
   <MAP_MechanoidMechanitor.Scenario.MechanitorEditor.Tooltip>选择一个任意机械族以作为开局的机械族机械师。</MAP_MechanoidMechanitor.Scenario.MechanitorEditor.Tooltip>
