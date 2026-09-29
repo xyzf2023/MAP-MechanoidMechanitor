@@ -107,13 +107,52 @@ namespace MAP_MechanoidMechanitor
         private void RefreshStabilizers()
         {
             Stabilizers = map.listerThings.ThingsOfDef(SunBossDefOf.MAP_Building_ReactorStabilizer)
+                .Concat(map.listerThings.ThingsOfDef(SunBossDefOf.MAP_Building_UnknownDevice))
                 .OfType<Building>().Where(b => ArenaBounds.Contains(b.Position)).ToList();
+        }
+
+        private void SynchronizeStabilizerDefs(bool awakening)
+        {
+            ThingDef targetDef = awakening ? SunBossDefOf.MAP_Building_ReactorStabilizer
+                : SunBossDefOf.MAP_Building_UnknownDevice;
+            for (int i = 0; i < Stabilizers.Count; i++)
+            {
+                Building previous = Stabilizers[i];
+                if (previous == null || previous.Destroyed || !previous.Spawned
+                    || previous.Map != map || previous.def == targetDef) continue;
+                if (previous.def != SunBossDefOf.MAP_Building_ReactorStabilizer
+                    && previous.def != SunBossDefOf.MAP_Building_UnknownDevice) continue;
+
+                Building replacement = (Building)ThingMaker.MakeThing(targetDef);
+                if (targetDef.CanHaveFaction) replacement.SetFaction(previous.Faction);
+                IntVec3 position = previous.Position;
+                Rot4 rotation = previous.Rotation;
+                // 占地不变；替换时保留附着设施、屋顶和迷雾阻挡关系。
+                previous.DeSpawn(DestroyMode.WillReplace);
+                try
+                {
+                    GenSpawn.Spawn(replacement, position, map, rotation);
+                    if (!replacement.Spawned)
+                        throw new System.InvalidOperationException("[MAP] 太阳稳定器替换后未成功生成。");
+                }
+                catch
+                {
+                    if (replacement.Spawned) replacement.DeSpawn(DestroyMode.WillReplace);
+                    if (!replacement.Destroyed) replacement.Destroy(DestroyMode.Vanish);
+                    GenSpawn.Spawn(previous, position, map, rotation);
+                    throw;
+                }
+                // 先更新计数所用引用，再清理旧对象；不重置竞技场的激活时间线。
+                Stabilizers[i] = replacement;
+                previous.Destroy(DestroyMode.Vanish);
+            }
         }
 
         // 自然靠近与 DEV 按钮共用入口；后续苏醒、生成和设施激活仍由地图 Tick 推进。
         internal bool TryStartActivation(Building core)
         {
             if (!CanStartActivation(core)) return false;
+            SynchronizeStabilizerDefs(awakening: true);
             discoveryLetterSent = true;
             activationStartedTick = Find.TickManager.TicksGame;
             Find.LetterStack.ReceiveLetter("MAP_SunBoss_ReactorAwakeningLabel".Translate(),
@@ -254,6 +293,8 @@ namespace MAP_MechanoidMechanitor
             if (!Generated && activationStartedTick < 0 && !activated) return;
             // 按实际存活建筑修复旧档引用；被摧毁的稳定器不会被补造。
             RefreshStabilizers();
+            // 旧档休眠稳定器改为未知设备；苏醒中或已激活的存档沿用原计时。
+            SynchronizeStabilizerDefs(awakening: activated || activationStartedTick >= 0);
             if (bossPawn == null)
                 bossPawn = map.mapPawns.AllPawnsSpawned.FirstOrDefault(p => !p.Dead && p.GetComp<CompSunBossState>() != null);
             if (activated && !summonedMechsInitialized)

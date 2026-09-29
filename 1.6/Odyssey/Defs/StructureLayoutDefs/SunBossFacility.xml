@@ -13,7 +13,7 @@
     <arenaRoom>MAP_SunBossArena</arenaRoom>
     <passageRoom>MAP_SunBossPassage</passageRoom>
     <coreBuilding>MAP_Building_SunBOSS</coreBuilding>
-    <stabilizerBuilding>MAP_Building_ReactorStabilizer</stabilizerBuilding>
+    <stabilizerBuilding>MAP_Building_UnknownDevice</stabilizerBuilding>
     <arenaWallCount>10~14</arenaWallCount>
     <arenaWallLength>3~5</arenaWallLength>
 

@@ -277,6 +277,7 @@ namespace MAP_MechanoidMechanitor
         public static BodyPartDef MAP_SunFluidFilter = null!;
         public static BodyPartDef MAP_SunCoolingSystem = null!;
         public static ThingDef MAP_Building_ReactorStabilizer = null!;
+        public static ThingDef MAP_Building_UnknownDevice = null!;
         static SunBossDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(SunBossDefOf));
     }
 }

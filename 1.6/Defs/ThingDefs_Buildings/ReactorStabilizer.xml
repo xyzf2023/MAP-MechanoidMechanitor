@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-  <ThingDef ParentName="BuildingBase">
-    <defName>MAP_Building_ReactorStabilizer</defName>
-    <label>反应堆稳定器</label>
-    <description>围绕「太阳」- 能源核心部署的大型能量稳定装置。稳定器持续监测并修正反应堆内部剧烈的能量波动，同时通过约束场维持其运行状态，使「太阳」能够在接近全功率的情况下保持稳定。\n\n一旦这些稳定器遭到破坏，「太阳」内部的能量平衡也会随之恶化，其原本稳定的运行状态将逐步瓦解。</description>
+  <!-- 共用玩法属性，休眠与展开状态各自配置绘制方式。 -->
+  <ThingDef Name="MAP_ReactorStabilizerBase" ParentName="BuildingBase" Abstract="True">
     <thingClass>Building</thingClass>
     <tickerType>Never</tickerType>
-    <!-- 分层升降与纹路由表现组件统一绘制，避免静态整图残留。 -->
-    <drawerType>RealtimeOnly</drawerType>
     <!-- 高主体应遮住后方墙灯；内部图层在代码中保留小幅高度间隔。 -->
     <altitudeLayer>BuildingOnTop</altitudeLayer>
-    <!-- 原版裁剪范围不包含 drawOffset，避免高主体在屏幕边缘提前消失。 -->
-    <drawOffscreen>true</drawOffscreen>
     <!-- 占地对应宽基座，主体高度由绘制尺寸表现。 -->
     <size>(4,2)</size>
     <rotatable>false</rotatable>
@@ -33,9 +27,6 @@
     <statBases>
       <Flammability>0</Flammability>
     </statBases>
-    <comps>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_ReactorStabilizerPresentation" />
-    </comps>
     <building>
       <neverBuildable>true</neverBuildable>
       <deconstructible>false</deconstructible>
@@ -44,5 +35,30 @@
       <canBeDamagedByAttacks>false</canBeDamagedByAttacks>
       <allowAutoroof>false</allowAutoroof>
     </building>
+  </ThingDef>
+  <ThingDef ParentName="MAP_ReactorStabilizerBase">
+    <defName>MAP_Building_ReactorStabilizer</defName>
+    <label>反应堆稳定器</label>
+    <!-- 分层升降与纹路由表现组件统一绘制，避免静态整图残留。 -->
+    <drawerType>RealtimeOnly</drawerType>
+    <!-- 原版动态裁剪范围不包含 drawOffset，避免高主体在屏幕边缘提前消失。 -->
+    <drawOffscreen>true</drawOffscreen>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_ReactorStabilizerPresentation" />
+    </comps>
+    <description>围绕「太阳」- 能源核心部署的大型能量稳定装置。稳定器持续监测并修正反应堆内部剧烈的能量波动，同时通过约束场维持其运行状态，使「太阳」能够在接近全功率的情况下保持稳定。\n\n一旦这些稳定器遭到破坏，「太阳」内部的能量平衡也会随之恶化，其原本稳定的运行状态将逐步瓦解。</description>
+  </ThingDef>
+  <ThingDef ParentName="MAP_ReactorStabilizerBase">
+    <defName>MAP_Building_UnknownDevice</defName>
+    <label>未知设备</label>
+    <description>一个奇怪的设备，似乎与中心的反应堆有着某种联系</description>
+    <!-- 休眠期只写入地图网格，不注册逐帧绘制或加载动态表现资源。 -->
+    <drawerType>MapMeshOnly</drawerType>
+    <seeThroughFog>false</seeThroughFog>
+    <graphicData>
+      <texPath>Buildings/SunBOSSAncient/ReactorStabilizerAncientDormant</texPath>
+      <graphicClass>MAP_MechanoidMechanitor.Graphic_UnknownDevice</graphicClass>
+      <shaderType>Transparent</shaderType>
+    </graphicData>
   </ThingDef>
 </Defs>

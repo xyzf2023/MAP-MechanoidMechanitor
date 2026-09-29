@@ -25,8 +25,7 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    /// <summary>分层升降、整图交接及沿折线分流的灯效；所有网格和材质只在启动时创建。</summary>
-    [StaticConstructorOnStartup]
+    /// <summary>分层升降、整图交接及沿折线分流的灯效；动态资源在首次实际绘制时创建并复用。</summary>
     internal static class ReactorStabilizerPresentation
     {
         private const string TextureRoot = "Buildings/SunBOSSAncient/";
@@ -46,61 +45,68 @@ namespace MAP_MechanoidMechanitor
         private const int FlowCycleTicks = 156;
         private const float FlowHalfWidth = 0.16f;
 
-        private static readonly Material Body = MaterialPool.MatFrom(
-            TextureRoot + "ReactorStabilizerAncientBody", ShaderDatabase.Transparent);
-        private static readonly Material Base = MaterialPool.MatFrom(
-            TextureRoot + "ReactorStabilizerAncientBase", ShaderDatabase.Transparent);
-        private static readonly Material Complete = MaterialPool.MatFrom(
-            TextureRoot + "ReactorStabilizerAncient", ShaderDatabase.Transparent);
-        private static readonly MaterialPropertyBlock Properties = new();
         private static readonly Color NormalColor = new Color(1f, 0.49f, 0.09f);
         private static readonly Color OverloadColor = new Color(1f, 0.14f, 0.025f);
         private static readonly Color PeakColor = new Color(1f, 0.91f, 0.62f);
-        private static readonly Mesh BaseMesh = MakeQuad(
-            new Rect(217f, 443f, 782f, 811f), new Rect(0f, 0f, 1f, 1f), "Base");
-        private static readonly Mesh[] BodyMeshes = MakeBodyMeshes();
 
-        // 坐标以原纹路画布左上角为原点；折线长度控制流速，分支起点承接输入干线的累计长度。
-        private static readonly PatternPart[] Patterns =
+        // 显式静态构造阻止提前初始化；休眠地图和仅执行扬尘 Tick 都不会创建这些资源。
+        private static class Resources
         {
-            new PatternPart("UpperTrace", new Rect(124f, 0f, 168f, 218f), 0.53f, 0.38f,
-                new FlowPath(0f, new Vector2(285f, 213f), new Vector2(261f, 213f),
-                    new Vector2(129f, 35f), new Vector2(129f, 7f))),
-            new PatternPart("StatusLight", new Rect(299f, 65f, 20f, 120f), 0f, 0f),
-            new PatternPart("CoreNode", new Rect(162f, 315f, 51f, 56f), 0f, 0f),
-            new PatternPart("LowerTrace", new Rect(175f, 398f, 138f, 131f), 0.16f, 0.37f,
-                new FlowPath(0f, new Vector2(306f, 520f), new Vector2(211f, 520f),
-                    new Vector2(182f, 487f), new Vector2(182f, 405f))),
-            new PatternPart("LeftBranch", new Rect(0f, 632f, 77f, 87f), 0f, 0.28f,
-                new FlowPath(0f, new Vector2(64f, 710f), new Vector2(64f, 667f), new Vector2(42f, 667f)),
-                new FlowPath(65f, new Vector2(42f, 667f), new Vector2(42f, 681f), new Vector2(7f, 681f)),
-                new FlowPath(65f, new Vector2(42f, 667f), new Vector2(42f, 638f), new Vector2(70f, 638f))),
-            new PatternPart("RightBranch", new Rect(431f, 645f, 67f, 74f), 0f, 0.28f,
-                new FlowPath(0f, new Vector2(458f, 708f), new Vector2(458f, 650f)),
-                new FlowPath(58f, new Vector2(458f, 650f), new Vector2(437f, 650f)),
-                new FlowPath(58f, new Vector2(458f, 650f), new Vector2(491f, 650f))),
-            new PatternPart("BottomTrace", new Rect(163f, 683f, 11f, 36f), 0f, 0.22f,
-                new FlowPath(0f, new Vector2(168f, 711f), new Vector2(168f, 690f)))
-        };
+            static Resources() { }
+
+            internal static readonly Material Body = MaterialPool.MatFrom(
+                TextureRoot + "ReactorStabilizerAncientBody", ShaderDatabase.Transparent);
+            internal static readonly Material Base = MaterialPool.MatFrom(
+                TextureRoot + "ReactorStabilizerAncientBase", ShaderDatabase.Transparent);
+            internal static readonly Material Complete = MaterialPool.MatFrom(
+                TextureRoot + "ReactorStabilizerAncient", ShaderDatabase.Transparent);
+            internal static readonly MaterialPropertyBlock Properties = new();
+            internal static readonly Mesh BaseMesh = MakeQuad(
+                new Rect(217f, 443f, 782f, 811f), new Rect(0f, 0f, 1f, 1f), "Base");
+            internal static readonly Mesh[] BodyMeshes = MakeBodyMeshes();
+
+            // 坐标以原纹路画布左上角为原点；折线长度控制流速，分支起点承接输入干线的累计长度。
+            internal static readonly PatternPart[] Patterns =
+            {
+                new PatternPart("UpperTrace", new Rect(124f, 0f, 168f, 218f), 0.53f, 0.38f,
+                    new FlowPath(0f, new Vector2(285f, 213f), new Vector2(261f, 213f),
+                        new Vector2(129f, 35f), new Vector2(129f, 7f))),
+                new PatternPart("StatusLight", new Rect(299f, 65f, 20f, 120f), 0f, 0f),
+                new PatternPart("CoreNode", new Rect(162f, 315f, 51f, 56f), 0f, 0f),
+                new PatternPart("LowerTrace", new Rect(175f, 398f, 138f, 131f), 0.16f, 0.37f,
+                    new FlowPath(0f, new Vector2(306f, 520f), new Vector2(211f, 520f),
+                        new Vector2(182f, 487f), new Vector2(182f, 405f))),
+                new PatternPart("LeftBranch", new Rect(0f, 632f, 77f, 87f), 0f, 0.28f,
+                    new FlowPath(0f, new Vector2(64f, 710f), new Vector2(64f, 667f), new Vector2(42f, 667f)),
+                    new FlowPath(65f, new Vector2(42f, 667f), new Vector2(42f, 681f), new Vector2(7f, 681f)),
+                    new FlowPath(65f, new Vector2(42f, 667f), new Vector2(42f, 638f), new Vector2(70f, 638f))),
+                new PatternPart("RightBranch", new Rect(431f, 645f, 67f, 74f), 0f, 0.28f,
+                    new FlowPath(0f, new Vector2(458f, 708f), new Vector2(458f, 650f)),
+                    new FlowPath(58f, new Vector2(458f, 650f), new Vector2(437f, 650f)),
+                    new FlowPath(58f, new Vector2(458f, 650f), new Vector2(491f, 650f))),
+                new PatternPart("BottomTrace", new Rect(163f, 683f, 11f, 36f), 0f, 0.22f,
+                    new FlowPath(0f, new Vector2(168f, 711f), new Vector2(168f, 690f)))
+            };
+        }
 
         internal static void Draw(Thing building, Vector3 drawLoc)
         {
             if (building.Destroyed || !building.Spawned || building.Map != Find.CurrentMap
                 || building.Position.Fogged(building.Map)) return;
 
+            ApplyGraphicTransform(building, ref drawLoc, out Vector3 scale);
             MapComponent_SunBossArena arena = building.Map.GetComponent<MapComponent_SunBossArena>();
             arena.TryGetStabilizerActivation(building, out int elapsed, out bool powered);
-            ApplyGraphicTransform(building, ref drawLoc, out Vector3 scale);
             if (elapsed < DeploymentTicks)
             {
-                DrawMesh(BodyMeshes[Mathf.Clamp(elapsed, 0, DeploymentTicks)],
-                    Body, drawLoc, scale, Color.white, 0.004f);
-                DrawMesh(BaseMesh, Base, drawLoc, scale, Color.white, 0.008f);
+                DrawMesh(Resources.BodyMeshes[Mathf.Clamp(elapsed, 0, DeploymentTicks)],
+                    Resources.Body, drawLoc, scale, Color.white, 0.004f);
+                DrawMesh(Resources.BaseMesh, Resources.Base, drawLoc, scale, Color.white, 0.008f);
             }
             else
             {
                 // 到位后只画整图，避免整图与拆分零件叠加导致描边变粗或半透明边缘加深。
-                DrawMesh(MeshPool.plane10, Complete, drawLoc, scale, Color.white, 0.008f);
+                DrawMesh(MeshPool.plane10, Resources.Complete, drawLoc, scale, Color.white, 0.008f);
             }
 
             // 隐藏特效只影响灯，不隐藏建筑；BOSS 死亡后保留展开姿态并熄灯。
@@ -117,9 +123,9 @@ namespace MAP_MechanoidMechanitor
             float phase = ((elapsed - DeploymentTicks) % FlowCycleTicks + seed % 37)
                 % FlowCycleTicks / (float)FlowCycleTicks;
 
-            for (int i = 0; i < Patterns.Length; i++)
+            for (int i = 0; i < Resources.Patterns.Length; i++)
             {
-                PatternPart part = Patterns[i];
+                PatternPart part = Resources.Patterns[i];
                 Color surface = tint;
                 surface.a = power * 0.5f;
                 DrawMesh(part.FullMesh, part.Surface, drawLoc, scale, surface, 0.012f);
@@ -236,10 +242,10 @@ namespace MAP_MechanoidMechanitor
         {
             if (color.a <= 0.001f) return;
             center.y += altitude;
-            Properties.Clear();
-            Properties.SetColor(ShaderPropertyIDs.Color, color);
+            Resources.Properties.Clear();
+            Resources.Properties.SetColor(ShaderPropertyIDs.Color, color);
             Graphics.DrawMesh(mesh, Matrix4x4.TRS(center, Quaternion.identity, scale),
-                material, 0, null, 0, Properties);
+                material, 0, null, 0, Resources.Properties);
         }
 
         private sealed class FlowPath
