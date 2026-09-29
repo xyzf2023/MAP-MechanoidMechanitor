@@ -6,8 +6,16 @@
     <description>围绕「太阳」- 能源核心部署的大型能量稳定装置。稳定器持续监测并修正反应堆内部剧烈的能量波动，同时通过约束场维持其运行状态，使「太阳」能够在接近全功率的情况下保持稳定。\n\n一旦这些稳定器遭到破坏，「太阳」内部的能量平衡也会随之恶化，其原本稳定的运行状态将逐步瓦解。</description>
     <thingClass>Building</thingClass>
     <tickerType>Never</tickerType>
-    <size>(3,3)</size>
+    <!-- 分层升降与纹路由表现组件统一绘制，避免静态整图残留。 -->
+    <drawerType>RealtimeOnly</drawerType>
+    <!-- 高主体应遮住后方墙灯；内部图层在代码中保留小幅高度间隔。 -->
+    <altitudeLayer>BuildingOnTop</altitudeLayer>
+    <!-- 原版裁剪范围不包含 drawOffset，避免高主体在屏幕边缘提前消失。 -->
+    <drawOffscreen>true</drawOffscreen>
+    <!-- 占地对应宽基座，主体高度由绘制尺寸表现。 -->
+    <size>(4,2)</size>
     <rotatable>false</rotatable>
+    <defaultPlacingRot>North</defaultPlacingRot>
     <passability>Impassable</passability>
     <fillPercent>1</fillPercent>
     <useHitPoints>false</useHitPoints>
@@ -18,11 +26,16 @@
     <graphicData>
       <texPath>Buildings/SunBOSSAncient/ReactorStabilizerAncient</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(3,3)</drawSize>
+      <!-- 基座可见约 4.01×2.23 格；补偿画布透明边距并将基座中心对齐占地中心。 -->
+      <drawSize>(6.8,6.8)</drawSize>
+      <drawOffset>(0, 0, 1.98)</drawOffset>
     </graphicData>
     <statBases>
       <Flammability>0</Flammability>
     </statBases>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_ReactorStabilizerPresentation" />
+    </comps>
     <building>
       <neverBuildable>true</neverBuildable>
       <deconstructible>false</deconstructible>

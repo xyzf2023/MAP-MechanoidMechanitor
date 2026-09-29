@@ -47,6 +47,32 @@ namespace MAP_MechanoidMechanitor
                 ? Mathf.Clamp01((float)(Find.TickManager.TicksGame - activationStartedTick) / ActivationDurationTicks)
                 : 0f;
 
+        // 稳定器共用已存档的竞技场时间线。核心转成 Pawn 后仍返回展开状态；
+        // 旧档缺少激活起点时直接视为已完成，流光仍随游戏刻推进。
+        internal bool TryGetStabilizerActivation(Thing stabilizer, out int elapsedTicks, out bool powered)
+        {
+            elapsedTicks = -1;
+            powered = false;
+            if (!(stabilizer is Building building) || building.Destroyed || !building.Spawned
+                || building.Map != map || !Stabilizers.Contains(building)) return false;
+
+            int now = Find.TickManager.TicksGame;
+            if (activated)
+            {
+                elapsedTicks = activationStartedTick >= 0
+                    ? Mathf.Max(ActivationDurationTicks, now - activationStartedTick)
+                    : ActivationDurationTicks + now;
+                powered = !BossDefeated;
+                return true;
+            }
+            if (activationStartedTick < 0 || Core == null || Core.Destroyed
+                || !Core.Spawned || Core.Map != map) return false;
+
+            elapsedTicks = Mathf.Max(0, now - activationStartedTick);
+            powered = true;
+            return true;
+        }
+
         internal bool CanStartActivation(Building core) => !activated && activationStartedTick < 0
             && !core.Destroyed && core.Spawned && core.Map == map
             && (ReferenceEquals(Core, core) || (!Generated && Core == null));
@@ -148,8 +174,15 @@ namespace MAP_MechanoidMechanitor
                 if (!TryStartActivation(core)) return;
             }
 
-            if (now - activationStartedTick < ActivationDurationTicks)
+            int activationElapsed = now - activationStartedTick;
+            if (activationElapsed < ActivationDurationTicks)
+            {
+                // 共用已存档的激活时间，只在升降阶段喷尘；稳定器本身仍不需要 Tick。
+                foreach (Building stabilizer in Stabilizers)
+                    if (stabilizer != null && stabilizer.Map == map)
+                        ReactorStabilizerPresentation.TickDeploymentDust(stabilizer, activationElapsed);
                 return;
+            }
 
             // 先生成 Pawn，再移除建筑；生成失败时保留反应堆。
             Pawn boss = PawnGenerator.GeneratePawn(
