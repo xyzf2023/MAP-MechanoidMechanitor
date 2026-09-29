@@ -41,7 +41,7 @@ namespace MAP_MechanoidMechanitor
             this, TargetScanFlags.NeedLOSToAll | TargetScanFlags.NeedThreat | TargetScanFlags.NeedAutoTargetable,
             IsValidTarget, MinTargetDistance, laser.Props.range)?.Thing;
 
-        internal static LocalTargetInfo CastTarget(Thing target) => target is Pawn
+        internal static LocalTargetInfo CastTarget(Thing target) => target is Pawn || target is Building
             ? new LocalTargetInfo(target) : new LocalTargetInfo(target.Position);
 
         internal bool IsValidTarget(Thing target)

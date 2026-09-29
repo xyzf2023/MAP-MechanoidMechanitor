@@ -46,6 +46,7 @@ namespace MAP_MechanoidMechanitor
         internal const int EmitterCheckInterval = 60;
         internal const float AreaSideLength = 3f;
         internal const int SweepMode = 2;
+        internal const int BuildingTargetMode = 3;
         private int readyTick;
         private HighEnergyLaserBeamTargetSearcher? autoTargetSearcher;
 
@@ -99,8 +100,13 @@ namespace MAP_MechanoidMechanitor
         internal bool ValidInitialTarget(Pawn actor, LocalTargetInfo target)
         {
             if (!actor.Spawned || actor.Map == null || !target.IsValid) return false;
-            if (target.HasThing && (!(target.Thing is Pawn victim) || victim.Dead
-                || victim.Destroyed || !victim.Spawned || victim.Map != actor.Map)) return false;
+            if (target.HasThing)
+            {
+                Thing victim = target.Thing;
+                if (!(victim is Pawn) && !(victim is Building)) return false;
+                if (victim.Destroyed || !victim.Spawned || victim.Map != actor.Map
+                    || (victim is Pawn targetPawn && targetPawn.Dead)) return false;
+            }
             IntVec3 cell = target.Cell;
             // 射程只约束初始选取；不要求视线、可达性或敌对关系。
             return cell.InBounds(actor.Map) && (!cell.Fogged(actor.Map) || actor.GetComp<CompSunBossState>() != null)
@@ -117,9 +123,9 @@ namespace MAP_MechanoidMechanitor
 
         private static Job MakeCastJob(Pawn actor, LocalTargetInfo target, bool playerForced)
         {
-            // A 保留 Pawn/地块目标，B 独立保存确认目标瞬间的所在格，C 锁定施法者位置。
+            // A 保留 Pawn/建筑/地块目标，B 独立保存确认目标瞬间的所在格，C 锁定施法者位置。
             Job job = JobMaker.MakeJob(HighEnergyLaserBeamDefOf.MAP_HighEnergyLaserBeam, target, target.Cell, actor.Position);
-            job.count = target.HasThing ? 1 : 0;
+            job.count = target.Thing is Building ? BuildingTargetMode : target.HasThing ? 1 : 0;
             job.playerForced = playerForced;
             return job;
         }
@@ -147,7 +153,7 @@ namespace MAP_MechanoidMechanitor
         internal Job? TryMakeAutoFireJob(Thing target)
         {
             if (!(parent is Pawn actor) || !CanAutoFireAt(target)) return null;
-            // Pawn 沿用追踪模式；炮塔等原版可自动攻击目标沿用指定地点发射。
+            // Pawn 沿用追踪模式；建筑保留引用以检查存活，落点仍固定在初始地格。
             // 使用原版 Job 存档字段区分自动施放与玩家手动命令。
             return MakeCastJob(actor, HighEnergyLaserBeamTargetSearcher.CastTarget(target), playerForced: false);
         }
@@ -196,7 +202,7 @@ namespace MAP_MechanoidMechanitor
                 canTargetLocations = true,
                 canTargetPawns = true,
                 canTargetSelf = true,
-                canTargetBuildings = false,
+                canTargetBuildings = true,
                 canTargetItems = false,
                 mapObjectTargetsMustBeAutoAttackable = false
             };

@@ -38,8 +38,9 @@ namespace MAP_MechanoidMechanitor
             : SunSkillAnimation.Laser(poseInitialized ? startPose : SunSkillAnimation.Rest(pawn),
                 ChargeProgress, WarmupTicks, firingStarted, firingTicks);
         public override bool PlayerInterruptable => !recovering;
-        // 不从可能在读档后失效的 Thing 引用推断模式，防止追踪模式退化为地块模式。
+        // 不从可能在读档后失效的 Thing 引用推断模式，防止对象目标退化为地块模式。
         private bool TracksPawn => job.count == 1;
+        private bool TargetsBuilding => job.count == CompHighEnergyLaserBeam.BuildingTargetMode;
         private bool Sweeps => job.count == CompHighEnergyLaserBeam.SweepMode;
 
         public override bool TryMakePreToilReservations(bool errorOnFailed) => true;
@@ -161,6 +162,9 @@ namespace MAP_MechanoidMechanitor
                 || pawn.pather?.Moving == true || pawn.stances?.FullBodyBusy == true)) return false;
             if (!job.targetB.Cell.IsValid || !job.targetB.Cell.InBounds(pawn.Map)) return false;
             if (Sweeps) return job.targetA.Cell.IsValid && job.targetA.Cell.InBounds(pawn.Map);
+            if (TargetsBuilding)
+                return job.targetA.Thing is Building building && !building.Destroyed
+                    && building.Spawned && building.Map == pawn.Map;
             if (!TracksPawn) return true;
             Pawn? target = job.targetA.Thing as Pawn;
             return target != null && !target.Dead && !target.Destroyed
