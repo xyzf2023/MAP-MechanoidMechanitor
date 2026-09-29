@@ -44,6 +44,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             CompHighEnergyLaserBeam? laser = pawn.GetComp<CompHighEnergyLaserBeam>();
+            // 最近的追击目标被封住时先开路，避免可隔墙选取的普通激光一直抢占破障。
+            if (laser != null && targets.Count > 0
+                && !pawn.CanReach(targets[0], PathEndMode.Touch, Danger.Deadly))
+            {
+                Job? breach = TryBreach(pawn, targets[0], laser);
+                if (breach != null) return breach;
+            }
             if (laser != null)
                 foreach (Pawn target in targets.OfType<Pawn>())
                 {
@@ -53,7 +60,7 @@ namespace MAP_MechanoidMechanitor
 
             foreach (Thing target in targets)
             {
-                Job? approach = Approach(pawn, target);
+                Job? approach = Approach(pawn, target, laser);
                 if (approach != null) return approach;
             }
             IntVec3 home = state.ActivationCell;
@@ -78,7 +85,7 @@ namespace MAP_MechanoidMechanitor
                 .OrderBy(t => t.Position.DistanceToSquared(pawn.Position)).ThenBy(t => t.thingIDNumber).ToList();
         }
 
-        private static Job? Approach(Pawn pawn, Thing target)
+        private static Job? Approach(Pawn pawn, Thing target, CompHighEnergyLaserBeam? laser)
         {
             if (!pawn.health.capacities.CapableOf(PawnCapacityDefOf.Moving))
                 return pawn.CanReachImmediate(target, PathEndMode.Touch) ? Melee(target) : null;
@@ -90,6 +97,12 @@ namespace MAP_MechanoidMechanitor
                     return walk.Found ? Reconsider(JobMaker.MakeJob(JobDefOf.Goto, walk.LastNode)) : null;
             }
 
+            return TryBreach(pawn, target, laser);
+        }
+
+        private static Job? TryBreach(Pawn pawn, Thing target, CompHighEnergyLaserBeam? laser)
+        {
+            if (!pawn.health.capacities.CapableOf(PawnCapacityDefOf.Moving)) return null;
             if (!pawn.CanReach(target, PathEndMode.Touch, Danger.Deadly, canBashDoors: true,
                 canBashFences: true, mode: TraverseMode.PassAllDestroyableThings)) return null;
             using (PawnPath path = pawn.Map.pathFinder.FindPathNow(pawn.Position, target,
@@ -99,9 +112,13 @@ namespace MAP_MechanoidMechanitor
                 if (!path.Found) return null;
                 Thing blocker = path.FirstBlockingBuilding(out IntVec3 cellBefore, pawn);
                 if (blocker == null) return Reconsider(JobMaker.MakeJob(JobDefOf.Goto, path.LastNode));
-                // 稳定器不能靠近战打通，也不能选择该路径后永远敲打无耐久建筑。
-                if (blocker.def == SunBossDefOf.MAP_Building_ReactorStabilizer
+                // 激光和近战共用排除规则：不主动破坏稳定器或攻击无耐久、不可摧毁的障碍。
+                if (!blocker.Spawned || blocker.Destroyed || blocker.Map != pawn.Map
+                    || blocker.def == SunBossDefOf.MAP_Building_ReactorStabilizer
                     || !blocker.def.useHitPoints || !blocker.def.destroyable) return null;
+                // 复用建筑目标模式、射程及冷却检查；技能任务不附加移动任务的短期重选期限。
+                Job? cast = laser?.TryMakeCastJob(blocker);
+                if (cast != null) return cast;
                 if (pawn.CanReachImmediate(blocker, PathEndMode.Touch)) return Melee(blocker);
                 if (cellBefore.IsValid && pawn.CanReach(cellBefore, PathEndMode.OnCell, Danger.Deadly))
                     return Reconsider(JobMaker.MakeJob(JobDefOf.Goto, cellBefore));
