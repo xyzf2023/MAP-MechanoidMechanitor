@@ -123,12 +123,14 @@ namespace MAP_MechanoidMechanitor
 
         private static float StartupPower(float progress, int seed)
         {
-            // 起初短促闪烁；装甲展开时逐渐稳定，收稳阶段已完成通电。
-            float unstable = 1f - SunSkillAnimation.Smooth(Mathf.InverseLerp(0.2f, 1.6f / 3f, progress));
-            int ticks = Mathf.FloorToInt(progress * MapComponent_SunBossArena.ActivationDurationTicks);
-            float sample = Noise(seed, ticks / 3, 17);
+            // 外推期间由短促闪烁过渡到稳定通电，之后随完整展开继续增强辉光。
+            float ticks = SunSkillAnimation.AwakeningElapsed(progress);
+            float unstable = 1f - SunSkillAnimation.Smooth(Mathf.InverseLerp(
+                SunSkillAnimation.AwakeningPushStartTick, SunSkillAnimation.AwakeningPushEndTick, ticks));
+            float sample = Noise(seed, Mathf.FloorToInt(ticks) / 3, 17);
             float flicker = sample < 0.38f ? 0.04f + sample * 0.4f : 0.65f + sample * 0.35f;
-            return SunSkillAnimation.Smooth(progress / (1.6f / 3f)) * Mathf.Lerp(1f, flicker, unstable);
+            return SunSkillAnimation.Smooth(ticks / SunSkillAnimation.AwakeningPushEndTick)
+                * Mathf.Lerp(1f, flicker, unstable);
         }
 
         private static float Breathing(int now, int seed)

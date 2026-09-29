@@ -66,6 +66,8 @@ namespace MAP_MechanoidMechanitor
         private const float BodyBlendPortion = 0.35f;
         private const float ReferenceDrawSize = 3f;
         private const float OpenArmorRadius = 1.36f;
+        // 基准尺寸下外推 0.1 格；当前太阳绘制尺寸下约 0.17 格。
+        private const float PreOpenPushDistance = 0.1f;
         private const float MotionEpsilon = 0.001f;
         private static readonly Vector2 CoreSize = PixelSize(847f, 1162f);
         private static readonly Material Core = MaterialPool.MatFrom(
@@ -388,7 +390,8 @@ namespace MAP_MechanoidMechanitor
             Vector2 drawScale = (building.def.graphicData?.drawSize ?? Vector2.one * ReferenceDrawSize)
                 / ReferenceDrawSize;
             DrawBodyLayers(drawLoc, drawScale, SunSkillAnimation.Awakening(progress), true,
-                AncientClosedBuilding, Rot4.South, building.thingIDNumber);
+                AncientClosedBuilding, Rot4.South, building.thingIDNumber,
+                preOpen: SunSkillAnimation.AwakeningPreOpen(progress));
             SunLightPresentation.DrawBuilding(building, true, drawLoc);
         }
 
@@ -405,12 +408,15 @@ namespace MAP_MechanoidMechanitor
             Mathf.InverseLerp(BodyBlendPortion * 0.5f, 1f, pose.Openness));
 
         private static Vector2 ArmorOffset(int seed, SunArmorPose pose, int index,
-            float open, float floatBlend)
+            float open, float floatBlend, float preOpen = 0f)
         {
             ArmorLayer layer = Armor[index];
             bool inner = index % 2 == 0;
             float radius = inner ? pose.InnerRadius : pose.OuterRadius;
-            Vector2 offset = Vector2.Lerp(layer.ClosedOffset, layer.OpenOffset * radius, open);
+            // 先沿闭合位置的径向缓慢推出，再从这个位置完整展开；末端不残留额外位移。
+            Vector2 closedOffset = layer.ClosedOffset
+                + layer.ClosedOffset.normalized * (PreOpenPushDistance * preOpen);
+            Vector2 offset = Vector2.Lerp(closedOffset, layer.OpenOffset * radius, open);
             // 漂浮只用于待机，技能发射端与绘制端共用甲板位置计算。
             float floatPhase = (Find.TickManager.TicksGame
                 + seed * 11) * 0.025f + index * 1.17f;
@@ -421,9 +427,9 @@ namespace MAP_MechanoidMechanitor
         }
 
         private static Vector2 FlightArmorOffset(int seed, SunArmorPose pose, int index,
-            float open, float floatBlend, SunFlightPresentation.Pose flight)
+            float open, float floatBlend, SunFlightPresentation.Pose flight, float preOpen = 0f)
         {
-            Vector2 offset = ArmorOffset(seed, pose, index, open, floatBlend * flight.FloatFactor);
+            Vector2 offset = ArmorOffset(seed, pose, index, open, floatBlend * flight.FloatFactor, preOpen);
             offset = RotateClockwise(offset, flight.LayoutAngle(open));
             return flight.ApplyToOffset(offset, open);
         }
@@ -478,19 +484,21 @@ namespace MAP_MechanoidMechanitor
             DrawDebugCharge(pawn, lampCenter);
         }
 
-        private static float StaticBodyAlpha(SunArmorPose pose) => 1f - Mathf.SmoothStep(0f, 1f,
-            Mathf.InverseLerp(BodyBlendPortion * 0.5f, BodyBlendPortion, pose.Openness));
+        private static float StaticBodyAlpha(SunArmorPose pose, float preOpen = 0f) => 1f - Mathf.SmoothStep(0f, 1f,
+            Mathf.InverseLerp(BodyBlendPortion * 0.5f, BodyBlendPortion, Mathf.Max(pose.Openness, preOpen)));
 
         // 建筑与机械体共用装甲位置、材质和整图交接；建筑无需提前生成临时 Pawn。
         private static void DrawBodyLayers(Vector3 drawLoc, Vector2 drawScale, SunArmorPose pose,
             bool ancient, Graphic closedBody, Rot4 facing, int seed, float floatBlend = 0f,
-            SunFlightPresentation.Pose flight = default, float postureAngle = 0f)
+            SunFlightPresentation.Pose flight = default, float postureAngle = 0f, float preOpen = 0f)
         {
-            float open = ArmorOpenProgress(pose);
+            // 外推时已完成整图到零件的交接，后续展开无需再等待一次贴图淡出。
+            float open = preOpen > MotionEpsilon ? pose.Openness : ArmorOpenProgress(pose);
+            float bodyBlend = Mathf.Max(pose.Openness, preOpen);
             // 先在不透明整图下淡入零件，再淡出整图，避免交接中段出现透明缺口。
             float layerAlpha = Mathf.SmoothStep(0f, 1f,
-                Mathf.Clamp01(pose.Openness / (BodyBlendPortion * 0.5f)));
-            float staticAlpha = StaticBodyAlpha(pose);
+                Mathf.Clamp01(bodyBlend / (BodyBlendPortion * 0.5f)));
+            float staticAlpha = StaticBodyAlpha(pose, preOpen);
             float bodyAngle = postureAngle + flight.BodyAngle;
             Vector3 layoutCenter = drawLoc;
             layoutCenter.y += 0.028f;
@@ -506,7 +514,7 @@ namespace MAP_MechanoidMechanitor
                     // 0/2/4：上、右下、左下；1/3/5：右上、下、左上。
                     bool inner = i % 2 == 0;
                     float orbitAngle = inner ? pose.InnerAngle : pose.OuterAngle;
-                    Vector2 offset = FlightArmorOffset(seed, pose, i, open, floatBlend, flight);
+                    Vector2 offset = FlightArmorOffset(seed, pose, i, open, floatBlend, flight, preOpen);
                     Vector2 size = Vector2.Scale(layer.Size,
                         Vector2.Lerp(layer.ClosedScale, Vector2.one, open));
                     float layerAngle = flight.LayoutAngle(open) + orbitAngle

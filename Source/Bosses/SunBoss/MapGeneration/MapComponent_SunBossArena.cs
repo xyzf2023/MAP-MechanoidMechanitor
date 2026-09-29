@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor
         private bool bossDefeated;
         internal bool BossDefeated => bossDefeated || (activated && bossPawn != null && (bossPawn.Dead || bossPawn.Destroyed));
 
-        public const int ActivationDurationTicks = 180;
+        public const int ActivationDurationTicks = 360;
         private const int RallyDelayTicks = 300;
         private const int RallyIntervalTicks = 1250;
         private const int RallyCheckIntervalTicks = 30;

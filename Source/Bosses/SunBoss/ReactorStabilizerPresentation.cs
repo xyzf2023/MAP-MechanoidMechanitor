@@ -35,7 +35,8 @@ namespace MAP_MechanoidMechanitor
         private const float PatternHeight = 719f;
         private const float PatternLeft = 376f;
         private const float PatternTop = 338f;
-        private const int DeploymentTicks = 150;
+        // 与太阳最后的收稳阶段对齐：在总时长的 8/9 处升到位，随后点亮纹路。
+        private const int DeploymentTicks = SunSkillAnimation.AwakeningSettleTick;
         private const int DustStartTick = 5;
         private const int DustIntervalTicks = 15;
         private const float RetractedDistance = 480f;

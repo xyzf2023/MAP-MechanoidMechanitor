@@ -55,21 +55,35 @@ namespace MAP_MechanoidMechanitor
         internal const float CannonInnerRadius = 1.15f;
         internal const float CannonOuterRadius = 2f;
 
+        // 苏醒装甲、核心灯和稳定器按总时长同比缩放；最后 1/9 的时间用于收稳与点亮。
+        internal const int AwakeningPushStartTick = MapComponent_SunBossArena.ActivationDurationTicks * 2 / 15;
+        internal const int AwakeningPushEndTick = MapComponent_SunBossArena.ActivationDurationTicks * 2 / 5;
+        private const int AwakeningOpenStartTick = MapComponent_SunBossArena.ActivationDurationTicks * 4 / 9;
+        private const int AwakeningOpenEndTick = MapComponent_SunBossArena.ActivationDurationTicks * 38 / 45;
+        internal const int AwakeningSettleTick = MapComponent_SunBossArena.ActivationDurationTicks * 8 / 9;
+
         internal static float Smooth(float progress) => Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(progress));
         internal static float Progress(int ticks, int duration) => duration > 0
             ? Mathf.Clamp01((float)ticks / duration) : 1f;
 
+        internal static float AwakeningElapsed(float progress) =>
+            Mathf.Clamp01(progress) * MapComponent_SunBossArena.ActivationDurationTicks;
+
+        internal static float AwakeningPreOpen(float progress) =>
+            Smooth(Mathf.InverseLerp(AwakeningPushStartTick, AwakeningPushEndTick, AwakeningElapsed(progress)));
+
         internal static SunArmorPose Awakening(float progress)
         {
-            // 三秒分镜：通电 0~0.6，展开 0.6~1.6，之后保持朝向收稳并增强辉光。
+            // 通电、缓慢外推、短暂停顿、完整展开，最后保持朝向收稳。
+            // 外推独立于展开进度，甲片先保持闭合形状移动，随后才改变形状和展开半径。
             // 直接从已保存的苏醒进度求姿态，不依赖绘制次数或运行时缓存。
-            float seconds = Mathf.Clamp01(progress) * 3f;
-            float opening = Smooth(Mathf.InverseLerp(0.6f, 1.6f, seconds));
+            float ticks = AwakeningElapsed(progress);
+            float opening = Smooth(Mathf.InverseLerp(AwakeningOpenStartTick, AwakeningOpenEndTick, ticks));
             SunArmorPose pose = SunArmorPose.Rest(true);
             pose.Openness = opening;
             // 与脉冲开始时的半径、辉光一致，避免交接后再次展开或突然变暗。
             pose.InnerRadius = pose.OuterRadius = Mathf.Lerp(1f, 1.08f, opening);
-            pose.Glow = 0.2f * Smooth(Mathf.InverseLerp(0.6f, 2.5f, seconds));
+            pose.Glow = 0.2f * Smooth(Mathf.InverseLerp(AwakeningPushStartTick, AwakeningSettleTick, ticks));
             return pose;
         }
 
