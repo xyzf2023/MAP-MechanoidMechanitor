@@ -23,7 +23,7 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_JusticeBossCallTracker.Current;
             if (tracker == null)
             {
-                Log.Error("[MAP JusticeBoss] Missing GameComponent_JusticeBossCallTracker.");
+                Log.Error("[MAP-机械族机械师] 正义 BOSS： 缺少正义 BOSS 呼叫跟踪组件 GameComponent_JusticeBossCallTracker。");
                 return;
             }
 
@@ -41,9 +41,9 @@ namespace MAP_MechanoidMechanitor
             if (def.rewardDef == null)
             {
                 Log.Error(
-                    "[MAP JusticeBoss] BossgroupDef "
+                    "[MAP-机械族机械师] 正义 BOSS： BossgroupDef "
                     + def.defName
-                    + " has null rewardDef; aborting call.");
+                    + " 的 rewardDef 为空，已中止呼叫。");
                 return;
             }
 
@@ -63,7 +63,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (System.Exception e)
             {
-                Log.Error("[MAP JusticeBoss] Failed to generate quest: " + e);
+                Log.Error("[MAP-机械族机械师] 正义 BOSS： 任务生成失败：" + e);
                 tracker.Clear();
                 return;
             }

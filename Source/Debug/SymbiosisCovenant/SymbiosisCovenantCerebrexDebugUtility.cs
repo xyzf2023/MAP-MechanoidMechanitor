@@ -210,7 +210,7 @@ namespace MAP_MechanoidMechanitor
                     catch (Exception ex)
                     {
                         Log.Error(
-                            "[MAP-CerebrexDebug] 进入主巢地图时发生异常：\n" + ex);
+                            "[MAP-机械族机械师] 主脑调试： 进入主巢地图时发生异常：\n" + ex);
                         enterMessage = "进入主巢地图时发生异常，详见日志"
                             + "（未删除任何 Pawn，也未销毁仍持有 Pawn 的商队）。";
                     }
@@ -240,7 +240,7 @@ namespace MAP_MechanoidMechanitor
                 MapGenKey,
                 doAsynchronously: false,
                 ex => Log.Error(
-                    "[MAP-CerebrexDebug] 进入主巢地图长事件未捕获异常：\n" + ex));
+                    "[MAP-机械族机械师] 主脑调试： 进入主巢地图长事件未捕获异常：\n" + ex));
 
             // 前置准备已成功且地图生成长事件已排队：立即返回 true，
             // 不在本同步调用内读取 enterSucceeded 决定成败。
@@ -281,7 +281,7 @@ namespace MAP_MechanoidMechanitor
                     MessageTypeDefOf.RejectInput,
                     historical: false);
                 Log.Error(
-                    "[MAP-CerebrexDebug] 一键准备并进入：长事件未能成功进入主巢地图。"
+                    "[MAP-机械族机械师] 主脑调试： 一键准备并进入：长事件未能成功进入主巢地图。"
                     + (enterMessage.NullOrEmpty() ? string.Empty : " 原因：" + enterMessage));
                 return;
             }
@@ -294,7 +294,7 @@ namespace MAP_MechanoidMechanitor
                     MessageTypeDefOf.RejectInput,
                     historical: false);
                 Log.Error(
-                    "[MAP-CerebrexDebug] 一键准备并进入：已进入但 site/supportPart/state "
+                    "[MAP-机械族机械师] 主脑调试： 一键准备并进入：已进入但 site/supportPart/state "
                     + "引用为空，跳过最终验证（未删除任何任务、Site、地图、Caravan 或 Pawn）。");
                 return;
             }
@@ -312,7 +312,7 @@ namespace MAP_MechanoidMechanitor
                     MessageTypeDefOf.RejectInput,
                     historical: false);
                 Log.Error(
-                    "[MAP-CerebrexDebug] 一键准备并进入：已进入但验证失败。原因："
+                    "[MAP-机械族机械师] 主脑调试： 一键准备并进入：已进入但验证失败。原因："
                     + verifyMessage
                     + "（未删除任何任务、Site、地图、Caravan 或 Pawn）。");
                 return;
@@ -531,7 +531,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[MAP-CerebrexDebug] ===== 主脑 BOSS 测试状态 =====");
+            sb.AppendLine("[MAP-机械族机械师] 主脑调试： ===== 主脑 BOSS 测试状态 =====");
             sb.AppendLine("OdysseyActive = " + ModsConfig.OdysseyActive);
             sb.AppendLine(
                 "MechanitorScenarioEnabled = "
@@ -1573,7 +1573,7 @@ namespace MAP_MechanoidMechanitor
             {
                 message = "主脑任务已生成，但盟约支援 QuestPart 注入失败。";
                 Log.Error(
-                    "[MAP-CerebrexDebug] 主脑任务已生成但支援 QuestPart 注入失败；"
+                    "[MAP-机械族机械师] 主脑调试： 主脑任务已生成但支援 QuestPart 注入失败；"
                     + "quest=" + quest.id
                     + "，缺失部件=QuestPart_SymbiosisCovenantCerebrexSupport。");
                 return false;
@@ -1606,7 +1606,7 @@ namespace MAP_MechanoidMechanitor
                     .CerebrexSupportStage.WaitingForMap)
             {
                 Log.Warning(
-                    "[MAP-CerebrexDebug] 支援 Part 在地图未生成时 stage 不是 "
+                    "[MAP-机械族机械师] 主脑调试： 支援 Part 在地图未生成时 stage 不是 "
                     + "WaitingForMap（" + supportPart.stage + "）。");
             }
 
@@ -1716,7 +1716,7 @@ namespace MAP_MechanoidMechanitor
             if (stabilizerCount == 0)
             {
                 Log.Warning(
-                    "[MAP-CerebrexDebug] 主巢地图中未找到 CerebrexStabilizer"
+                    "[MAP-机械族机械师] 主脑调试： 主巢地图中未找到 CerebrexStabilizer"
                     + "（按原版生成结果，不补生成）。");
             }
 
@@ -1789,7 +1789,7 @@ namespace MAP_MechanoidMechanitor
             if (string.IsNullOrEmpty(supportPart.offerId))
             {
                 Log.Warning(
-                    "[MAP-CerebrexDebug] 支援 Part 的 offerId 在地图生成后为空"
+                    "[MAP-机械族机械师] 主脑调试： 支援 Part 的 offerId 在地图生成后为空"
                     + "（请检查支援 Part 的 Enable 是否完整执行）。");
             }
 

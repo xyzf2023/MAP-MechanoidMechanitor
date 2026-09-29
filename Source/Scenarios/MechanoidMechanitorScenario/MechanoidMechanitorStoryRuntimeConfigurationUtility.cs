@@ -324,7 +324,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     string warningText = string.Join("；", warnings);
                     Log.Warning(
-                        "[MAP-StoryStateDebug] "
+                        "[MAP-机械族机械师] 剧情状态调试： "
                         + operation
                         + " 已写入配置，但存在运行时同步警告："
                         + warningText);
@@ -336,7 +336,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-StoryStateDebug] 执行局内剧情配置切换时发生异常。操作="
+                    "[MAP-机械族机械师] 剧情状态调试： 执行局内剧情配置切换时发生异常。操作="
                     + operation
                     + "，configurationWritten="
                     + configurationWritten

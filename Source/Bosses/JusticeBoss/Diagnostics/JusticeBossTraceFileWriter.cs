@@ -314,7 +314,7 @@ namespace MAP_MechanoidMechanitor
             {
                 ioFailureReported = true;
                 Log.ErrorOnce(
-                    "[MAP JusticeBoss Trace] 独立轨迹日志已禁用，文件操作失败："
+                    "[MAP-机械族机械师] 正义 BOSS 轨迹： 独立轨迹日志已禁用，文件操作失败："
                         + exception,
                     TraceIoErrorKey);
             }

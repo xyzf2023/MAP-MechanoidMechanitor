@@ -106,7 +106,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (System.Exception e)
             {
-                Log.Warning("[MAP CerebrexBoss] Failed to generate " + kind?.defName + ": " + e.Message);
+                Log.Warning("[MAP-机械族机械师] 主脑 BOSS： 生成失败，种类=" + kind?.defName + ": " + e.Message);
                 return null;
             }
         }
@@ -135,7 +135,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (System.Exception e)
             {
-                Log.Warning("[MAP CerebrexBoss] Drop pod creation failed: " + e.Message);
+                Log.Warning("[MAP-机械族机械师] 主脑 BOSS： 空投舱创建失败：" + e.Message);
                 return false;
             }
         }

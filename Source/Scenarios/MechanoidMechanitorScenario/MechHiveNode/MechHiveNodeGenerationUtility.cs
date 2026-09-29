@@ -138,7 +138,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 机械巢节点生成尝试异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 机械巢节点生成尝试异常: " + ex);
                 return false;
             }
         }

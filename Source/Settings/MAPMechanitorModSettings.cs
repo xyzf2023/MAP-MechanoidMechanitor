@@ -77,6 +77,7 @@ namespace MAP_MechanoidMechanitor
         /// 关闭时失败日志只保留补丁名称。
         /// </summary>
         public bool enableCompatibilityDetailedLogging = false;
+        public bool enableStartupDetailedLogging = false;
 
         /// <summary>
         /// 默认开启。开启后，阻止加载存档期间原本存活的机械族机械师意外死亡。
@@ -531,6 +532,10 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref enableCompatibilityDetailedLogging,
                 "enableCompatibilityDetailedLogging",
+                false);
+            Scribe_Values.Look(
+                ref enableStartupDetailedLogging,
+                "enableStartupDetailedLogging",
                 false);
             Scribe_Values.Look(
                 ref preventMechanoidMechanitorDeathDuringLoad,

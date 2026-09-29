@@ -180,7 +180,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                     catch (Exception exception)
                     {
-                        Log.Error($"[MAP] 共生盟约联合商队库存生成失败：{exception}");
+                        Log.Error($"[MAP-机械族机械师] 共生盟约联合商队库存生成失败：{exception}");
                         continue;
                     }
 

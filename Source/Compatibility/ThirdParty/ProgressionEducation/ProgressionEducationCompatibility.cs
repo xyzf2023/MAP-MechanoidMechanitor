@@ -55,7 +55,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation
                     DisplayName,
                     PackageId,
                     "Progression: Education 目标解析结果为空。",
-                    new InvalidOperationException("ResolvedTargets is null."));
+                    new InvalidOperationException("解析后的目标成员集合为空。"));
             }
 
             MethodInfo? candidatePoolPostfix = GetPostfix(

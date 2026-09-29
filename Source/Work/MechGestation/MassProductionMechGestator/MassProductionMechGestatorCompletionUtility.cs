@@ -35,11 +35,11 @@ namespace MAP_MechanoidMechanitor
             if (map == null)
             {
                 Log.Error(
-                    "[MAP-MechanoidMechanitor] Mass production gestator cannot auto-settle because the map is missing. Building="
+                    "[MAP-机械族机械师] 量产机械培育仓缺少地图，无法自动结算。建筑="
                     + gestator.ToStringSafe()
-                    + ", bill="
+                    + "，账单="
                     + bill.ToStringSafe()
-                    + ", recipe="
+                    + "，配方="
                     + bill.recipe.ToStringSafe()
                     + ".");
                 return false;
@@ -105,9 +105,9 @@ namespace MAP_MechanoidMechanitor
             if (bill != null && !MassProductionMechGestatorBillUtility.IsSupported(bill))
             {
                 Log.ErrorOnce(
-                    "[MAP-MechanoidMechanitor] Mass production gestator restored an unsupported committed bill. Building="
+                    "[MAP-机械族机械师] 量产机械培育仓恢复了不受支持的已提交账单。建筑="
                     + gestator.ToStringSafe()
-                    + ", bill="
+                    + "，账单="
                     + bill.ToStringSafe()
                     + ".",
                     gestator.thingIDNumber ^ 0x4D505342);
@@ -133,9 +133,9 @@ namespace MAP_MechanoidMechanitor
                 && activeBill!.State == FormingState.Formed)
             {
                 Log.ErrorOnce(
-                    "[MAP-MechanoidMechanitor] Mass production gestator has settlementCommitted but lost committed bill reference while ActiveBill is still Formed. Building="
+                    "[MAP-机械族机械师] 量产机械培育仓已提交结算，但已提交账单引用丢失，当前账单仍处于已成型状态。建筑="
                     + gestator.ToStringSafe()
-                    + ", activeBill="
+                    + "，当前账单="
                     + activeBill.ToStringSafe()
                     + ".",
                     gestator.thingIDNumber ^ 0x4D505343);
@@ -329,9 +329,9 @@ namespace MAP_MechanoidMechanitor
             catch (Exception e)
             {
                 Log.Error(
-                    "[MAP-MechanoidMechanitor] RecordsUtility.Notify_BillDone failed after mass production settlement. Building="
+                    "[MAP-机械族机械师] 量产培育结算后更新生产记录失败（RecordsUtility.Notify_BillDone）。建筑="
                     + gestator.ToStringSafe()
-                    + ", recipe="
+                    + "，配方="
                     + bill?.recipe.ToStringSafe()
                     + ": "
                     + e);
@@ -347,9 +347,9 @@ namespace MAP_MechanoidMechanitor
             catch (Exception e)
             {
                 Log.Error(
-                    "[MAP-MechanoidMechanitor] QuestManager.Notify_ThingsProduced failed after mass production settlement. Building="
+                    "[MAP-机械族机械师] 量产培育结算后通知任务产物生成失败（QuestManager.Notify_ThingsProduced）。建筑="
                     + gestator.ToStringSafe()
-                    + ", recipe="
+                    + "，配方="
                     + bill?.recipe.ToStringSafe()
                     + ": "
                     + e);
@@ -375,7 +375,7 @@ namespace MAP_MechanoidMechanitor
                 LogAutoSettleAbort(
                     gestator,
                     bill,
-                    "bill is not Formed (state=" + bill.State + ")");
+                    "账单尚未成型（状态=" + bill.State + ")");
                 return false;
             }
 
@@ -384,7 +384,7 @@ namespace MAP_MechanoidMechanitor
                 LogAutoSettleAbort(
                     gestator,
                     bill,
-                    "ActiveMechBill mismatch (activeBill="
+                    "当前机械培育账单不匹配（当前账单="
                     + gestator.ActiveMechBill.ToStringSafe()
                     + ")");
                 return false;
@@ -393,14 +393,14 @@ namespace MAP_MechanoidMechanitor
             Pawn? boundPawn = bill.BoundPawn;
             if (boundPawn == null || boundPawn.Destroyed)
             {
-                LogAutoSettleAbort(gestator, bill, "BoundPawn is missing");
+                LogAutoSettleAbort(gestator, bill, "缺少账单绑定角色");
                 return false;
             }
 
             Pawn? gestatingMech = gestator.GestatingMech;
             if (gestatingMech == null)
             {
-                LogAutoSettleAbort(gestator, bill, "GestatingMech is null");
+                LogAutoSettleAbort(gestator, bill, "培育中的机械体为空");
                 return false;
             }
 
@@ -409,7 +409,7 @@ namespace MAP_MechanoidMechanitor
                 LogAutoSettleAbort(
                     gestator,
                     bill,
-                    "GestatingMech is not in innerContainer (mech="
+                    "培育中的机械体不在内部容器中（机械体="
                     + gestatingMech.ToStringSafe()
                     + ")");
                 return false;
@@ -426,15 +426,15 @@ namespace MAP_MechanoidMechanitor
             string reason)
         {
             Log.ErrorOnce(
-                "[MAP-MechanoidMechanitor] Mass production auto-settle aborted: "
+                "[MAP-机械族机械师] 量产培育自动结算已中止："
                 + reason
-                + ". Building="
+                + "。建筑="
                 + gestator.ToStringSafe()
-                + ", bill="
+                + "，账单="
                 + bill.ToStringSafe()
-                + ", recipe="
+                + "，配方="
                 + bill.recipe.ToStringSafe()
-                + ". Leaving Formed state for diagnosis.",
+                + "。保留已成型状态以便诊断。",
                 gestator.thingIDNumber ^ bill.GetUniqueLoadID().GetHashCode() ^ 0x4D505341);
         }
 
@@ -444,19 +444,19 @@ namespace MAP_MechanoidMechanitor
             Pawn? product)
         {
             Log.ErrorOnce(
-                "[MAP-MechanoidMechanitor] Mass production gestator settlement postconditions unsafe after Notify_IterationCompleted. Holding product in innerContainer and retrying repair only. Building="
+                "[MAP-机械族机械师] 量产培育完成通知后，结算后置条件不安全。产物保留在内部容器中，仅重试状态修复。建筑="
                 + gestator.ToStringSafe()
-                + ", bill="
+                + "，账单="
                 + bill.ToStringSafe()
-                + ", recipe="
+                + "，配方="
                 + bill.recipe.ToStringSafe()
-                + ", activeBill="
+                + "，当前账单="
                 + gestator.ActiveMechBill.ToStringSafe()
-                + ", state="
+                + "，状态="
                 + bill.State
-                + ", boundPawn="
+                + "，绑定角色="
                 + bill.BoundPawn.ToStringSafe()
-                + ", productContained="
+                + "，产物仍在容器内="
                 + (product != null && gestator.innerContainer.Contains(product))
                 + ".",
                 gestator.thingIDNumber ^ bill.GetUniqueLoadID().GetHashCode() ^ 0x4D505350);

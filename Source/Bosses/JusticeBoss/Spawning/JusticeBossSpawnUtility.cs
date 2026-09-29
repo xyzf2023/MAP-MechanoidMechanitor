@@ -353,7 +353,7 @@ namespace MAP_MechanoidMechanitor
                         FatalFailure = true,
                     };
                 Log.ErrorOnce(
-                    "[MAP JusticeBoss] Cannot build the guard mechanoid pool.",
+                    "[MAP-机械族机械师] 正义 BOSS： 无法构建机械族守卫候选池。",
                     map?.uniqueID ^ 0x2C91 ?? 0x2C91);
                 return failed;
             }
@@ -660,7 +660,7 @@ namespace MAP_MechanoidMechanitor
                         + JusticeBossTraceFormatting.FormatElapsed(started),
                     exception);
                 Log.Warning(
-                    "[MAP JusticeBoss] Failed to generate "
+                    "[MAP-机械族机械师] 正义 BOSS： 生成失败，种类="
                         + kind?.defName
                         + ": "
                         + exception.Message);
@@ -793,7 +793,7 @@ namespace MAP_MechanoidMechanitor
                     }
 
                     Log.ErrorOnce(
-                        "[MAP JusticeBoss] No legal drop cells for summoned mechanoids; aborting launch.",
+                        "[MAP-机械族机械师] 正义 BOSS： 召唤的机械族没有合法空投落点，已中止发射。",
                         map.uniqueID ^ 0x5B0D);
                     AddFailedKinds(result, pawns, pawnKinds);
                     DiscardPawns(pawns);
@@ -933,7 +933,7 @@ namespace MAP_MechanoidMechanitor
                     AddFailedKinds(result, group, pawnKinds);
                     DiscardPawns(group);
                     Log.Warning(
-                        "[MAP JusticeBoss] Failed to create drop pod for summoned mechs.");
+                        "[MAP-机械族机械师] 正义 BOSS： 无法为召唤的机械族创建空投舱。");
                     continue;
                 }
 
@@ -1099,7 +1099,7 @@ namespace MAP_MechanoidMechanitor
                         + " cell=" + JusticeBossTraceFormatting.DescribeCell(cell),
                     exception);
                 Log.Warning(
-                    "[MAP JusticeBoss] Drop pod creation failed: "
+                    "[MAP-机械族机械师] 正义 BOSS： 空投舱创建失败："
                         + exception.Message);
                 return false;
             }

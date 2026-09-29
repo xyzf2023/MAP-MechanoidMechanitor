@@ -38,7 +38,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (referenceMap == null || referenceMap.Disposed)
             {
                 Log.Warning(
-                    "[MAP] 机械巢节点创建时无法获得来源玩家殖民地地图，守军点数将回退旧默认完成态值。");
+                    "[MAP-机械族机械师] 机械巢节点创建时无法获得来源玩家殖民地地图，守军点数将回退旧默认完成态值。");
                 points = LegacyCompletedGarrisonThreatPoints;
             }
             else

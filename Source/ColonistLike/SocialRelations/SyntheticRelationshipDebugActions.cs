@@ -49,7 +49,7 @@ namespace MAP_MechanoidMechanitor
                 if (ModsConfig.IdeologyActive)
                     text.AppendLine("双方肉欲戒律允许共床：" + BedUtility.WillingToShareBed(pawn, partner));
             }
-            Log.Message(text.ToString());
+            Log.Message("[MAP-机械族机械师] " + text);
             Messages.Message("仿生伴侣关系诊断已写入日志。", MessageTypeDefOf.NeutralEvent, historical: false);
         }
     }

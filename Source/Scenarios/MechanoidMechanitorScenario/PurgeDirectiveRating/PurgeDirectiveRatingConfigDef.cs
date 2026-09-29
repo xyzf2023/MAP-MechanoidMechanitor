@@ -117,7 +117,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || bandwidthSupportCostByLevel == null || bandwidthSupportCostByLevel.Count != 5
                 || bandwidthSupportCostByLevel.Exists(value => value < 0)
                 || bandwidthSupportUnit <= 0 || bandwidthSupportPeriodDays <= 0)
-                yield return $"{defName}: invalid bandwidth support configuration.";
+                yield return $"{defName}: 带宽支援配置无效。";
 
             foreach (string error in base.ConfigErrors())
             {
@@ -126,7 +126,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (ratingLevelStart1 != 0)
             {
-                yield return $"{defName}: ratingLevelStart1 must be 0 (level 1 always covers 0).";
+                yield return $"{defName}: ratingLevelStart1 必须为 0（等级 1 始终包含 0）。";
             }
 
             if (ratingLevelStart2 <= ratingLevelStart1
@@ -135,12 +135,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || ratingLevelStart5 <= ratingLevelStart4)
             {
                 yield return
-                    $"{defName}: rating level starts must be strictly increasing (0<750<1500<2250<3000).";
+                    $"{defName}: 评级各等级起始值必须严格递增（0<750<1500<2250<3000）。";
             }
 
             if (maxRatingValue <= ratingLevelStart5)
             {
-                yield return $"{defName}: maxRatingValue must be greater than level5 start (3000).";
+                yield return $"{defName}: maxRatingValue 必须大于等级 5 的起始值（3000）。";
             }
 
             float[] discounts = { discountLevel1, discountLevel2, discountLevel3, discountLevel4, discountLevel5 };
@@ -148,14 +148,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (d < 0f || d >= 1f)
                 {
-                    yield return $"{defName}: discount rates must be in [0,1).";
+                    yield return $"{defName}: 折扣率 必须在 [0,1) 范围内。";
                     break;
                 }
             }
 
             if (takeoverDiscount < 0f || takeoverDiscount >= 1f)
             {
-                yield return $"{defName}: takeoverDiscount must be in [0,1).";
+                yield return $"{defName}: takeoverDiscount 必须在 [0,1) 范围内。";
             }
 
             if (goodsSpecialMarketValueThreshold <= 0f
@@ -163,18 +163,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || goodsMaterialTier1MaxValue < 0f
                 || goodsOtherTier1MaxValue < 0f)
             {
-                yield return $"{defName}: goods tier thresholds must be non-negative.";
+                yield return $"{defName}: 商品档位阈值 不能为负。";
             }
 
             if (nodeDemandDeliveryRatingMultiplier < 0f)
             {
-                yield return $"{defName}: nodeDemandDeliveryRatingMultiplier cannot be negative.";
+                yield return $"{defName}: nodeDemandDeliveryRatingMultiplier 不能为负。";
             }
 
             if (mechForceSupportMaxThreatPointsByLevel == null
                 || mechForceSupportMaxThreatPointsByLevel.Count != 5)
             {
-                yield return $"{defName}: mechForceSupportMaxThreatPointsByLevel must have exactly 5 entries.";
+                yield return $"{defName}: mechForceSupportMaxThreatPointsByLevel 必须恰好包含 5 项。";
             }
             else
             {
@@ -182,7 +182,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     if (v < 0)
                     {
-                        yield return $"{defName}: mechForceSupportMaxThreatPointsByLevel cannot be negative.";
+                        yield return $"{defName}: mechForceSupportMaxThreatPointsByLevel 不能为负。";
                         break;
                     }
                 }
@@ -191,7 +191,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (mechClusterMaxThreatPointsByLevel == null
                 || mechClusterMaxThreatPointsByLevel.Count != 5)
             {
-                yield return $"{defName}: mechClusterMaxThreatPointsByLevel must have exactly 5 entries.";
+                yield return $"{defName}: mechClusterMaxThreatPointsByLevel 必须恰好包含 5 项。";
             }
             else
             {
@@ -199,7 +199,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     if (v < 0)
                     {
-                        yield return $"{defName}: mechClusterMaxThreatPointsByLevel cannot be negative.";
+                        yield return $"{defName}: mechClusterMaxThreatPointsByLevel 不能为负。";
                         break;
                     }
                 }
@@ -207,17 +207,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (mechClusterEnvironmentMinLevel < 1 || mechClusterEnvironmentMinLevel > 5)
             {
-                yield return $"{defName}: mechClusterEnvironmentMinLevel must be in 1..5.";
+                yield return $"{defName}: mechClusterEnvironmentMinLevel 必须在 1..5 范围内。";
             }
 
             if (questMinRatingLevel < 1 || questMinRatingLevel > 5)
             {
-                yield return $"{defName}: questMinRatingLevel must be in 1..5.";
+                yield return $"{defName}: questMinRatingLevel 必须在 1..5 范围内。";
             }
 
             if (questMaxActive < 1)
             {
-                yield return $"{defName}: questMaxActive must be >= 1.";
+                yield return $"{defName}: questMaxActive 必须大于等于 1。";
             }
 
             if (questSettlementMinDaysPassed < 0 || questWorkSiteMinRemainingDays <= 0
@@ -227,7 +227,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || questRetryDelayDaysMin <= 0 || questRetryDelayDaysMax < questRetryDelayDaysMin
                 || questNoTargetRetryDays <= 0)
             {
-                yield return $"{defName}: quest timing values must be positive and ranges ordered.";
+                yield return $"{defName}: 任务时间参数必须大于零，且范围上下界顺序正确。";
             }
 
             if (questBaseRewardPoints < 0
@@ -235,29 +235,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || questOutpostExtraRewardPoints < 0
                 || questSettlementExtraRewardPoints < 0)
             {
-                yield return $"{defName}: quest reward values must be >= 0.";
+                yield return $"{defName}: 任务奖励数值 必须大于等于 0。";
             }
 
             if (yellowWarningPenalty < 0)
             {
-                yield return $"{defName}: yellowWarningPenalty cannot be negative.";
+                yield return $"{defName}: yellowWarningPenalty 不能为负。";
             }
 
             if (orange1WarningPenalty < 0)
             {
-                yield return $"{defName}: orange1WarningPenalty cannot be negative.";
+                yield return $"{defName}: orange1WarningPenalty 不能为负。";
             }
 
             if (orange2WarningPenalty < 0)
             {
-                yield return $"{defName}: orange2WarningPenalty cannot be negative.";
+                yield return $"{defName}: orange2WarningPenalty 不能为负。";
             }
 
             if (workSiteFailurePenalty < 0
                 || outpostFailurePenalty < 0
                 || baseFailurePenalty < 0)
             {
-                yield return $"{defName}: quest failure penalties cannot be negative.";
+                yield return $"{defName}: 任务失败惩罚 不能为负。";
             }
         }
 

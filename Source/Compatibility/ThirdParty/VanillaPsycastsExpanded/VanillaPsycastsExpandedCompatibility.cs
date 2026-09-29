@@ -97,7 +97,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     DisplayName,
                     PackageId,
                     "原版灵能拓展兼容目标解析结果为空。",
-                    new InvalidOperationException("ResolvedTargets is null."));
+                    new InvalidOperationException("解析后的目标成员集合为空。"));
             }
 
             // 第四步：精确解析本项目自身的三个 Harmony 目标并校验签名。
@@ -268,7 +268,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                     PackageId,
                     "原版灵能拓展兼容运行时配置失败，兼容已停止。",
                     new InvalidOperationException(
-                        "Runtime.Configure did not configure the runtime."));
+                        "Runtime.Configure 未完成运行时配置。"));
             }
 
             DefInjectionTracker injectionTracker = new DefInjectionTracker();
@@ -456,7 +456,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
             if (!abilityAutoCastGetter.IsSpecialName)
             {
                 failureReason =
-                    $"{VefAbilityTypeName}.get_AutoCast 不是属性 getter" +
+                    $"{VefAbilityTypeName}.get_AutoCast 不是属性 属性读取方法" +
                     $"（IsSpecialName 为 false），签名不符，兼容已安全跳过。";
                 return false;
             }
@@ -860,8 +860,9 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpand
                 AddPsycastsTab(def, targets.ITabPsycastsType, sharedPsycastsTab, tracker);
             }
 
-            // 护盾冲突种族只在 DevMode 下输出一次聚合提示，不逐个刷日志。
-            if (tracker.SkippedShieldConflictCount > 0 && Prefs.DevMode)
+            // 启用启动详细日志时输出一次护盾冲突聚合提示，不逐个刷日志。
+            if (tracker.SkippedShieldConflictCount > 0
+                && MAPMechanitorMod.Settings?.enableStartupDetailedLogging == true)
             {
                 Log.Message(
                     "[MAP-机械族机械师] 原版灵能拓展兼容："

@@ -75,7 +75,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.Forgenest
 
             return ThirdPartyCompatibilityResult.CreateApplied(
                 ModuleId, DisplayName, PackageId,
-                $"{TargetTypeName}.AllMechanitors getter");
+                $"{TargetTypeName}.AllMechanitors 属性读取方法");
         }
     }
 }

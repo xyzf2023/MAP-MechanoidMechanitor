@@ -95,7 +95,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 普通派系前哨盟军援军处理异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 普通派系前哨盟军援军处理异常: " + ex);
             }
         }
 
@@ -112,7 +112,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 普通派系前哨盟军部署异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 普通派系前哨盟军部署异常: " + ex);
             }
         }
     }

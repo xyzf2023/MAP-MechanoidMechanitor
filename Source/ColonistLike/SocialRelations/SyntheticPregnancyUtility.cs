@@ -163,7 +163,7 @@ namespace MAP_MechanoidMechanitor
                 EnforceExactGenes(child, endogenes, xenogenes);
                 if (child.health?.hediffSet == null)
                 {
-                    throw new InvalidOperationException("新生儿没有 health tracker。");
+                    throw new InvalidOperationException("新生儿没有 健康追踪器。");
                 }
 
                 child.health.AddHediff(MAPMechanitor_HediffDefOf.MAP_ExtraordinaryOffspring);
@@ -338,7 +338,7 @@ namespace MAP_MechanoidMechanitor
                 if (endogenes.Count > 0 || xenogenes.Count > 0)
                 {
                     Log.Warning(
-                        $"{LogPrefix}新生儿种族 {child.kindDef?.defName} 没有 genes tracker，" +
+                        $"{LogPrefix}新生儿种族 {child.kindDef?.defName} 没有 基因追踪器，" +
                         "无法应用已保存的基因快照。");
                 }
 
@@ -375,7 +375,7 @@ namespace MAP_MechanoidMechanitor
             if (child.relations == null)
             {
                 Log.Error(
-                    $"{LogPrefix}新生儿 {child} 没有 relations tracker，无法建立必要亲属关系。");
+                    $"{LogPrefix}新生儿 {child} 没有 关系追踪器，无法建立必要亲属关系。");
                 return false;
             }
 

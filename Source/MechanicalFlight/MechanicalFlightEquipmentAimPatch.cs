@@ -38,7 +38,7 @@ namespace MAP_MechanoidMechanitor
 
             if (pawnDrawPosGetter == null && thingDrawPosGetter == null)
             {
-                Log.Error($"{LogPrefix}未找到 DrawPos getter，补丁未应用。");
+                Log.Error($"{LogPrefix}未找到 DrawPos 属性读取方法，补丁未应用。");
                 return codes;
             }
 

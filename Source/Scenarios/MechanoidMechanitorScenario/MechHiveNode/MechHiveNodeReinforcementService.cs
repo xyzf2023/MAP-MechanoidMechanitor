@@ -92,7 +92,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 机械巢盟军援军处理异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 机械巢盟军援军处理异常: " + ex);
             }
         }
 
@@ -138,7 +138,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP] 机械巢盟军部署失败: " + ex);
+                Log.Error("[MAP-机械族机械师] 机械巢盟军部署失败: " + ex);
                 return false;
             }
 
@@ -162,7 +162,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 机械巢盟军援军信件发送失败: " + ex);
+                Log.Warning("[MAP-机械族机械师] 机械巢盟军援军信件发送失败: " + ex);
             }
         }
     }

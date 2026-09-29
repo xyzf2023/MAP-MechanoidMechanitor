@@ -76,7 +76,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (SwitchToCompletedMethod == null)
             {
                 Log.ErrorOnce(
-                    "[MAP] 未找到 MAPMechHiveNode.SwitchToCompleted，无法执行 DEV 立即完成建设。",
+                    "[MAP-机械族机械师] 未找到 MAPMechHiveNode.SwitchToCompleted，无法执行 DEV 立即完成建设。",
                     184732651);
                 return;
             }
@@ -88,11 +88,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (TargetInvocationException ex)
             {
                 Exception actual = ex.InnerException ?? ex;
-                Log.Error("[MAP] DEV 立即完成机械巢节点建设时发生异常: " + actual);
+                Log.Error("[MAP-机械族机械师] DEV 立即完成机械巢节点建设时发生异常: " + actual);
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP] DEV 立即完成机械巢节点建设时发生异常: " + ex);
+                Log.Error("[MAP-机械族机械师] DEV 立即完成机械巢节点建设时发生异常: " + ex);
             }
         }
     }

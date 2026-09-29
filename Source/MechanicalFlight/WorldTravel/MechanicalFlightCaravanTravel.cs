@@ -173,18 +173,18 @@ namespace MAP_MechanoidMechanitor
                     out List<Pawn> unplacedPawns))
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 机械飞行远行队重建异常后接管 partial Caravan：" +
+                    "[MAP-机械族机械师] 机械飞行远行队重建异常后接管 部分重建的远行队：" +
                     DescribeCaravan(recoveredCaravan) +
                     "；未入队 Pawn=" + unplacedPawns.Count);
                 // 先完成 Pawn 所有权修复，再转移物资。否则 partial Caravan 在 AddPawn 前抛异常时
                 // 可能暂时没有成员，提前处理物资会误判为“无接收者”并触发最终处置。
-                EnsurePawnsHaveStableOwner(unplacedPawns, recoveredCaravan, "partial Caravan 修复");
+                EnsurePawnsHaveStableOwner(unplacedPawns, recoveredCaravan, "部分重建的远行队 修复");
                 CompleteCaravanArrival(recoveredCaravan, looseThings, tile);
                 return;
             }
 
             Log.Error(
-                "[MAP-机械族机械师] 机械飞行远行队重建异常且未识别到 partial Caravan，" +
+                "[MAP-机械族机械师] 机械飞行远行队重建异常且未识别到 部分重建的远行队，" +
                 "已将内容恢复至运输舱并交还原版 FormCaravan。");
 
             // 阶段 4：没有任何 partial Caravan 可修复，才允许恢复内容并进入原版兜底。
@@ -558,7 +558,7 @@ namespace MAP_MechanoidMechanitor
             if (usableCaravans.Count > 1)
             {
                 Log.Error(
-                    "[MAP-机械族机械师] 机械飞行远行队检测到多个 partial Caravan：" +
+                    "[MAP-机械族机械师] 机械飞行远行队检测到多个 部分重建的远行队：" +
                     string.Join("；", usableCaravans.Select(DescribeCaravan)) +
                     "。已选择主 Caravan=" + DescribeCaravan(mainCaravan));
             }
@@ -580,7 +580,7 @@ namespace MAP_MechanoidMechanitor
                     other.RemovePawn(pawn);
                     if (!TryAddPawnToCaravan(mainCaravan, pawn))
                     {
-                        PassPawnToWorldSafely(pawn, "多个 partial Caravan 合并失败");
+                        PassPawnToWorldSafely(pawn, "多个 部分重建的远行队 合并失败");
                     }
                 }
 
@@ -643,7 +643,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception exception)
             {
-                Log.Error("[MAP-机械族机械师] 为 partial Caravan 补设 uniqueId 失败：" + exception);
+                Log.Error("[MAP-机械族机械师] 为 部分重建的远行队 补设 uniqueId 失败：" + exception);
             }
         }
 

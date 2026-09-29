@@ -82,7 +82,7 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("[MAP] 湮灭炮收集击毁残留时发生异常：" + ex);
+                    Log.Error("[MAP-机械族机械师] 湮灭炮收集击毁残留时发生异常：" + ex);
                 }
             }
         }

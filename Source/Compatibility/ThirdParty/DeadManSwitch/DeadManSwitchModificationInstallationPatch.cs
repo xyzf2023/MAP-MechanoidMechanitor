@@ -63,7 +63,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
             if (getter == null || helper == null)
             {
                 throw new InvalidOperationException(
-                    $"{LogPrefix}无法解析 Pawn.IsColonistPlayerControlled getter 或本 MOD 辅助方法，" +
+                    $"{LogPrefix}无法解析 Pawn.IsColonistPlayerControlled 属性读取方法 或本 MOD 辅助方法，" +
                     $"补丁未应用。");
             }
 
@@ -89,7 +89,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
             if (codes[getterIndex].blocks.Count > 0)
             {
                 throw new InvalidOperationException(
-                    $"{LogPrefix}DoEffect 中 IsColonistPlayerControlled 调用位于 exception block，" +
+                    $"{LogPrefix}DoEffect 中 IsColonistPlayerControlled 调用位于 异常处理块，" +
                     $"无法安全扩展，兼容安全跳过。");
             }
 
@@ -156,7 +156,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch
             if (codes[callIndex].blocks.Count > 0)
             {
                 throw new InvalidOperationException(
-                    $"{LogPrefix}MakeNewToils 状态机中 WaitWith 调用位于 exception block，" +
+                    $"{LogPrefix}MakeNewToils 状态机中 WaitWith 调用位于 异常处理块，" +
                     $"无法安全改写，兼容安全跳过。");
             }
 

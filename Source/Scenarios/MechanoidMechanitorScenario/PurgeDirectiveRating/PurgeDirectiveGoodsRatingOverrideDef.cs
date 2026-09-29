@@ -42,18 +42,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (o.thing == null)
                 {
-                    yield return $"{defName}: override with null thing.";
+                    yield return $"{defName}: 覆盖配置的物品为空。";
                     continue;
                 }
 
                 if (o.requiredLevel < 1 || o.requiredLevel > 3)
                 {
-                    yield return $"{defName}: override {o.thing.defName} requiredLevel must be 1..3 (goods only have three open tiers).";
+                    yield return $"{defName}: 物品 {o.thing.defName} 的覆盖等级 requiredLevel 必须在 1..3 范围内（商品只有三个开放档位）。";
                 }
 
                 if (!seen.Add(o.thing))
                 {
-                    yield return $"{defName}: duplicate override for {o.thing.defName}.";
+                    yield return $"{defName}: 物品 {o.thing.defName} 的覆盖配置重复。";
                 }
             }
         }

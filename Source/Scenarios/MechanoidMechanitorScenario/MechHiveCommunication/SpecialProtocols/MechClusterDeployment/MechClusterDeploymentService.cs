@@ -294,7 +294,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] Failed to prepare requested mech cluster: " + ex);
+                Log.Warning("[MAP-机械族机械师] 请求的机械集群准备失败：" + ex);
                 errorKey = ErrorGenerationFailed;
                 return false;
             }
@@ -466,14 +466,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP] Requested mech cluster failed after commit: " + ex);
+                Log.Error("[MAP-机械族机械师] 机械集群部署提交后执行失败：" + ex);
                 return MechClusterDeploymentResult.FailedAfterCommit(
                     ErrorCommittedFailure);
             }
 
             if (spawned == null || spawned.Count == 0)
             {
-                Log.Error("[MAP] Requested mech cluster produced no spawned things.");
+                Log.Error("[MAP-机械族机械师] 请求的机械集群未生成任何已部署实体。");
                 return MechClusterDeploymentResult.FailedAfterCommit(
                     ErrorCommittedFailure);
             }
@@ -505,7 +505,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechClusterSketch sketch = session.Sketch;
             if (Faction.OfMechanoids == null)
             {
-                Log.Warning("[MAP] Could not spawn mech cluster, no world mech faction found.");
+                Log.Warning("[MAP-机械族机械师] 未找到世界机械族派系，无法生成机械集群。");
                 return spawnedThings;
             }
 
@@ -719,7 +719,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] Failed to send requested mech cluster letter: " + ex);
+                Log.Warning("[MAP-机械族机械师] 请求的机械集群信件发送失败：" + ex);
             }
         }
     }

@@ -95,7 +95,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
             MethodInfo helper = AccessTools.Method(typeof(MobileDragoonMoonPilotPatch), helperName);
             if (getter == null || helper == null)
             {
-                throw new InvalidOperationException("月亮驾驶龙骑兵：无法解析原版 getter 或兼容辅助方法。");
+                throw new InvalidOperationException("月亮驾驶龙骑兵：无法解析原版 属性读取方法 或兼容辅助方法。");
             }
 
             List<int> matches = new List<int>();
@@ -105,7 +105,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon
                 {
                     if (codes[i].blocks.Count != 0)
                     {
-                        throw new InvalidOperationException("月亮驾驶龙骑兵：目标 getter 带有异常块边界，拒绝改写。");
+                        throw new InvalidOperationException("月亮驾驶龙骑兵：目标 属性读取方法 带有异常块边界，拒绝改写。");
                     }
                     matches.Add(i);
                 }

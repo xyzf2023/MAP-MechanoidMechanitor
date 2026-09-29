@@ -262,7 +262,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && !initAttemptRecord.CleanupFullyCompleted)
             {
                 throw new InvalidOperationException(
-                    "[MAP] 上一轮完整节点初始化回滚尚未完成，禁止覆盖精确清理记录。");
+                    "[MAP-机械族机械师] 上一轮完整节点初始化回滚尚未完成，禁止覆盖精确清理记录。");
             }
 
             initAttemptRecord ??= new MechHiveNodeInitAttemptRecord();

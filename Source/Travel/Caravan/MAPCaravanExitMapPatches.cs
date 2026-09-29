@@ -132,7 +132,7 @@ namespace MAP_MechanoidMechanitor
             if (matchCount != 1)
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}{targetMethodName} 中 Pawn.IsColonist getter " +
+                    $"{LogPrefix}{targetMethodName} 中 Pawn.IsColonist 属性读取方法 " +
                     $"预期仅 1 处，实际匹配 {matchCount} 处，" +
                     "未应用机械族机械师边缘撤离补丁。",
                     errorKeyMatchCount);

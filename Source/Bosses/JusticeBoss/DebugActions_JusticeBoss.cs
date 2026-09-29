@@ -221,7 +221,7 @@ namespace MAP_MechanoidMechanitor
             string compText = comp?.GetDebugStatus() ?? "controller=null";
             string diagnosticText = JusticeBossDiagnosticUtility.GetLastStatusText();
             Log.Message(
-                "[MAP JusticeBoss] "
+                "[MAP-机械族机械师] 正义 BOSS： "
                 + trackerText
                 + " | "
                 + compText

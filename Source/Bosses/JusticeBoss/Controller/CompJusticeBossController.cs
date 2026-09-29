@@ -556,7 +556,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     loggedActivationTimeout = true;
                     Log.Warning(
-                        "[MAP JusticeBoss] Timed out waiting for some infrastructure pods to open.");
+                        "[MAP-机械族机械师] 正义 BOSS： 等待部分基础设施空投舱开启超时。");
                 }
 
                 activationFinished = true;
@@ -594,7 +594,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     loggedGuardDropFailure = true;
                     Log.Error(
-                        "[MAP JusticeBoss] Guard drop retries stopped because of a fatal launch failure.");
+                        "[MAP-机械族机械师] 正义 BOSS： 守卫空投发生致命发射错误，已停止重试。");
                 }
 
                 nextGuardRetryTick = -1;
@@ -616,7 +616,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     loggedGuardDropFailure = true;
                     Log.Error(
-                        "[MAP JusticeBoss] Guard drop retries exhausted; missing guards were not launched.");
+                        "[MAP-机械族机械师] 正义 BOSS： 守卫空投重试次数已耗尽，缺失的守卫未能发射。");
                 }
 
                 nextGuardRetryTick = -1;
@@ -668,7 +668,7 @@ namespace MAP_MechanoidMechanitor
                 if (composition.Count == 0)
                 {
                     Log.ErrorOnce(
-                        "[MAP JusticeBoss] Cannot build the next summoned mechanoid wave.",
+                        "[MAP-机械族机械师] 正义 BOSS： 无法构建下一波召唤机械族。",
                         Pawn.thingIDNumber ^ waveIndex ^ 0x681A);
                     nextWaveTick = -1;
                     return;
@@ -702,7 +702,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     loggedWaveDropFailure = true;
                     Log.Error(
-                        "[MAP JusticeBoss] Wave drop retries stopped because of a fatal launch failure.");
+                        "[MAP-机械族机械师] 正义 BOSS： 波次空投发生致命发射错误，已停止重试。");
                 }
 
                 nextWaveTick = -1;
@@ -727,7 +727,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     loggedWaveDropFailure = true;
                     Log.Error(
-                        "[MAP JusticeBoss] Wave drop retries exhausted; the wave remains incomplete.");
+                        "[MAP-机械族机械师] 正义 BOSS： 波次空投重试次数已耗尽，该波次仍不完整。");
                 }
 
                 nextWaveTick = -1;

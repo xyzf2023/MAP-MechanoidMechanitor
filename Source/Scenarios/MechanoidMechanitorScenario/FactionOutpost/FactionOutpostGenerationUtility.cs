@@ -86,7 +86,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 普通派系前哨生成尝试异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 普通派系前哨生成尝试异常: " + ex);
                 return false;
             }
         }
@@ -119,7 +119,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 普通派系前哨指定关系生成尝试异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 普通派系前哨指定关系生成尝试异常: " + ex);
                 return false;
             }
         }
@@ -285,7 +285,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (fellBack)
             {
                 Log.Warning(
-                    "[MAP] 普通派系前哨来源殖民地地图未加载，回退使用其他玩家殖民地地图计算守军预算。");
+                    "[MAP-机械族机械师] 普通派系前哨来源殖民地地图未加载，回退使用其他玩家殖民地地图计算守军预算。");
             }
 
             CreateOutpost(tile, faction, referenceMap);
@@ -624,7 +624,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (fellBack)
             {
                 Log.Warning(
-                    "[MAP] DEV 生成前哨：来源殖民地地图未加载，回退使用其他玩家殖民地地图计算守军预算。");
+                    "[MAP-机械族机械师] DEV 生成前哨：来源殖民地地图未加载，回退使用其他玩家殖民地地图计算守军预算。");
             }
 
             created.InitializeNewOutpost(Find.TickManager.TicksGame, Rand.Int, referenceMap);

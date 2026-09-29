@@ -303,6 +303,10 @@ namespace MAP_MechanoidMechanitor
             MAPMechanitorModSettings settings = Settings!;
 
             listing.CheckboxLabeled(
+                "MAP_Settings.StartupDetailedLogging.Label".Translate(),
+                ref settings.enableStartupDetailedLogging);
+
+            listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Label".Translate(),
                 ref settings.preventMechanoidMechanitorDeathDuringLoad,
                 "MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description"

@@ -198,7 +198,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             Log.Message(
-                "[MAP-StoryStateDebug] BOOTSTRAP 已为既有存档建立运行时剧情配置。来源="
+                "[MAP-机械族机械师] 剧情状态调试： BOOTSTRAP 已为既有存档建立运行时剧情配置。来源="
                 + runtimeOrigin);
             message = actionMessage;
             return true;

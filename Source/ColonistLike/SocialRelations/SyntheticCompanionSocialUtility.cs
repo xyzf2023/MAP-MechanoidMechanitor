@@ -81,7 +81,7 @@ namespace MAP_MechanoidMechanitor
                 skillSafetyReady = calls == 2;
                 if (!skillSafetyReady)
                 {
-                    Log.Error("[MAP] 伴侣交谈的技能经验补丁结构变化；无技能机械体暂停发起交谈。");
+                    Log.Error("[MAP-机械族机械师] 伴侣交谈的技能经验补丁结构变化；无技能机械体暂停发起交谈。");
                     foreach (CodeInstruction code in codes) yield return code;
                     yield break;
                 }

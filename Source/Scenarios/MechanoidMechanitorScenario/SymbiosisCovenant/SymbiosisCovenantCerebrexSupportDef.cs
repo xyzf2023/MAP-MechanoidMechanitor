@@ -78,52 +78,52 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (offerDelayTicks < 0)
             {
-                yield return $"{defName}: offerDelayTicks cannot be negative.";
+                yield return $"{defName}: offerDelayTicks 不能为负。";
             }
 
             if (offerTimeoutTicks <= 0)
             {
-                yield return $"{defName}: offerTimeoutTicks must be positive.";
+                yield return $"{defName}: offerTimeoutTicks 必须大于零。";
             }
 
             if (firstWaveDelayTicks < 0)
             {
-                yield return $"{defName}: firstWaveDelayTicks cannot be negative.";
+                yield return $"{defName}: firstWaveDelayTicks 不能为负。";
             }
 
             if (maxWaves < 1 || maxWaves > 8)
             {
-                yield return $"{defName}: maxWaves must be in 1..8, got {maxWaves}.";
+                yield return $"{defName}: maxWaves 必须在 1..8 范围内，当前为 {maxWaves}。";
             }
 
             if (remainingCombatCapableThreshold <= 0f || remainingCombatCapableThreshold >= 1f)
             {
-                yield return $"{defName}: remainingCombatCapableThreshold must be strictly between 0 and 1.";
+                yield return $"{defName}: remainingCombatCapableThreshold 必须严格大于 0 且小于 1。";
             }
 
             if (minimumWaveAgeTicks < 0)
             {
-                yield return $"{defName}: minimumWaveAgeTicks cannot be negative.";
+                yield return $"{defName}: minimumWaveAgeTicks 不能为负。";
             }
 
             if (minimumWaveIntervalTicks < 0)
             {
-                yield return $"{defName}: minimumWaveIntervalTicks cannot be negative.";
+                yield return $"{defName}: minimumWaveIntervalTicks 不能为负。";
             }
 
             if (failedDeploymentRetryTicks < 0)
             {
-                yield return $"{defName}: failedDeploymentRetryTicks cannot be negative.";
+                yield return $"{defName}: failedDeploymentRetryTicks 不能为负。";
             }
 
             if (minWavePoints <= 0)
             {
-                yield return $"{defName}: minWavePoints must be positive.";
+                yield return $"{defName}: minWavePoints 必须大于零。";
             }
 
             if (maxWavePoints < minWavePoints)
             {
-                yield return $"{defName}: maxWavePoints must be >= minWavePoints.";
+                yield return $"{defName}: maxWavePoints 必须大于等于 minWavePoints。";
             }
 
             if (level2ThreatOffsetFactor < 0f
@@ -131,47 +131,47 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || level4ThreatOffsetFactor < 0f
                 || level5ThreatOffsetFactor < 0f)
             {
-                yield return $"{defName}: threat offset factors (L2..L5) cannot be negative.";
+                yield return $"{defName}: 威胁偏移倍率（等级 2..5） 不能为负。";
             }
 
             if (completionTrustReward < 0)
             {
-                yield return $"{defName}: completionTrustReward must be non-negative.";
+                yield return $"{defName}: completionTrustReward 不能为负。";
             }
 
             if (completionUnityReward < 0)
             {
-                yield return $"{defName}: completionUnityReward must be non-negative.";
+                yield return $"{defName}: completionUnityReward 不能为负。";
             }
 
             if (maxParticipantsPerWave < 1)
             {
-                yield return $"{defName}: maxParticipantsPerWave must be >= 1.";
+                yield return $"{defName}: maxParticipantsPerWave 必须大于等于 1。";
             }
 
             if (dropPodOpenDelayTicks < 0)
             {
-                yield return $"{defName}: dropPodOpenDelayTicks cannot be negative.";
+                yield return $"{defName}: dropPodOpenDelayTicks 不能为负。";
             }
 
             if (threatCheckIntervalTicks <= 0)
             {
-                yield return $"{defName}: threatCheckIntervalTicks must be positive.";
+                yield return $"{defName}: threatCheckIntervalTicks 必须大于零。";
             }
 
             if (threatClearStableTicks < 0)
             {
-                yield return $"{defName}: threatClearStableTicks cannot be negative.";
+                yield return $"{defName}: threatClearStableTicks 不能为负。";
             }
 
             if (evacuationRetryTicks < 0)
             {
-                yield return $"{defName}: evacuationRetryTicks cannot be negative.";
+                yield return $"{defName}: evacuationRetryTicks 不能为负。";
             }
 
             if (evacuationLoadingTimeoutTicks <= 0)
             {
-                yield return $"{defName}: evacuationLoadingTimeoutTicks must be positive.";
+                yield return $"{defName}: evacuationLoadingTimeoutTicks 必须大于零。";
             }
 
             if (dropCellSearchRadius <= 0f
@@ -181,27 +181,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || dropCellEdgeCandidateLimit <= 0
                 || dropCellEdgeCandidateStep <= 0)
             {
-                yield return $"{defName}: drop cell search bounds are invalid.";
+                yield return $"{defName}: 空投落点搜索范围无效。";
             }
 
             if (evacPodMassCapacityFallback <= 0)
             {
-                yield return $"{defName}: evacPodMassCapacityFallback must be positive.";
+                yield return $"{defName}: evacPodMassCapacityFallback 必须大于零。";
             }
 
             if (partialLoadDepartureDelayTicks <= 0)
             {
-                yield return $"{defName}: partialLoadDepartureDelayTicks must be positive.";
+                yield return $"{defName}: partialLoadDepartureDelayTicks 必须大于零。";
             }
 
             if (evacuationBreachCheckIntervalTicks <= 0)
             {
-                yield return $"{defName}: evacuationBreachCheckIntervalTicks must be positive.";
+                yield return $"{defName}: evacuationBreachCheckIntervalTicks 必须大于零。";
             }
 
             if (evacuationBreachInitialChecksPerInterval <= 0)
             {
-                yield return $"{defName}: evacuationBreachInitialChecksPerInterval must be positive.";
+                yield return $"{defName}: evacuationBreachInitialChecksPerInterval 必须大于零。";
             }
         }
     }

@@ -61,7 +61,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     loggedEmptyCombatPool = true;
                     Log.Error(
-                        "[MAP JusticeBoss] Mechanoid Combat pawn group pool is empty; using fallback.");
+                        "[MAP-机械族机械师] 正义 BOSS： 机械族战斗编组候选池为空，正在使用备用方案。");
                 }
 
                 return GetFallbackCombatOptions();
@@ -82,7 +82,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     loggedEmptyHeavyPool = true;
                     Log.Warning(
-                        "[MAP JusticeBoss] Heavy mech pool empty; falling back to combat pool.");
+                        "[MAP-机械族机械师] 正义 BOSS： 重型机械族候选池为空，改用战斗候选池。");
                 }
 
                 return combatPool;
@@ -99,7 +99,7 @@ namespace MAP_MechanoidMechanitor
             if (bosses.Count == 0 && !loggedEmptyBossPool)
             {
                 loggedEmptyBossPool = true;
-                Log.Message("[MAP JusticeBoss] No boss candidates available for 2% replacement.");
+                Log.Message("[MAP-机械族机械师] 正义 BOSS： 没有可用于 2% 概率替换的 BOSS 候选。");
             }
 
             return bosses;

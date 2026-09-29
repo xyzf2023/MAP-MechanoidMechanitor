@@ -145,30 +145,30 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 SymbiosisCovenantDelegationLevelSettings settings = levels[i];
                 if (settings.level < 2 || settings.level > 5)
                 {
-                    yield return $"{defName}: delegation level must be in 2..5, got {settings.level}.";
+                    yield return $"{defName}: 代表团等级必须在 2..5 范围内，当前为 {settings.level}。";
                 }
                 if (!seenLevels.Add(settings.level))
                 {
-                    yield return $"{defName}: duplicate delegation level {settings.level}.";
+                    yield return $"{defName}: 代表团等级 {settings.level} 重复。";
                 }
                 if (settings.intervalDays.min <= 0f || settings.intervalDays.max < settings.intervalDays.min)
                 {
-                    yield return $"{defName}: invalid intervalDays for level {settings.level}.";
+                    yield return $"{defName}: 等级 {settings.level} 的间隔天数 intervalDays 无效。";
                 }
                 if (settings.participantFactionCount.min < 1
                     || settings.participantFactionCount.max < settings.participantFactionCount.min
                     || settings.memberPawnCount.min < 1
                     || settings.memberPawnCount.max < settings.memberPawnCount.min)
                 {
-                    yield return $"{defName}: invalid participant/member pawn range for level {settings.level}.";
+                    yield return $"{defName}: 等级 {settings.level} 的参与派系或成员数量范围无效。";
                 }
                 if (settings.guardPointMultiplier <= 0f || settings.silverMultiplier <= 0f)
                 {
-                    yield return $"{defName}: non-positive multiplier for level {settings.level}.";
+                    yield return $"{defName}: 等级 {settings.level} 的倍率必须大于零。";
                 }
                 if (settings.silverClamp.min < 0 || settings.silverClamp.max < settings.silverClamp.min)
                 {
-                    yield return $"{defName}: invalid silverClamp for level {settings.level}.";
+                    yield return $"{defName}: 等级 {settings.level} 的白银数量限制 silverClamp 无效。";
                 }
                 if (settings.logisticsSlots < 0
                     || settings.rareSlots < 0
@@ -177,18 +177,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     || settings.contributionMarketValue.min < 0f
                     || settings.contributionMarketValue.max < settings.contributionMarketValue.min)
                 {
-                    yield return $"{defName}: invalid stock slot/contribution range for level {settings.level}.";
+                    yield return $"{defName}: 等级 {settings.level} 的货物槽位或贡献范围无效。";
                 }
                 for (int j = 0; j < settings.minimumStock.Count; j++)
                 {
                     SymbiosisCovenantDelegationMinimumStock minimum = settings.minimumStock[j];
                     if (minimum.thingDef == null || minimum.count < 0)
                     {
-                        yield return $"{defName}: invalid minimumStock entry for level {settings.level}.";
+                        yield return $"{defName}: 等级 {settings.level} 的最低库存 minimumStock 条目无效。";
                     }
                     else if (!minimum.thingDef.tradeability.TraderCanSell())
                     {
-                        yield return $"{defName}: minimumStock {minimum.thingDef.defName} cannot be sold by traders.";
+                        yield return $"{defName}: 最低库存物品 {minimum.thingDef.defName} 不能由商人出售。";
                     }
                 }
             }
@@ -197,7 +197,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (!seenLevels.Contains(level))
                 {
-                    yield return $"{defName}: missing delegation settings for level {level}.";
+                    yield return $"{defName}: 缺少等级 {level} 的代表团设置。";
                 }
             }
 
@@ -208,7 +208,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     || tier.memberCount.max < tier.memberCount.min
                     || tier.speedMultiplier <= 0f)
                 {
-                    yield return $"{defName}: memberFrequencyTiers[{i}] is invalid.";
+                    yield return $"{defName}: memberFrequencyTiers[{i}] 无效。";
                 }
                 for (int j = i + 1; j < memberFrequencyTiers.Count; j++)
                 {
@@ -216,7 +216,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (tier.memberCount.min <= other.memberCount.max
                         && other.memberCount.min <= tier.memberCount.max)
                     {
-                        yield return $"{defName}: memberFrequencyTiers[{i}] overlaps tier {j}.";
+                        yield return $"{defName}: memberFrequencyTiers[{i}] 与第 {j} 档重叠。";
                     }
                 }
             }
@@ -235,11 +235,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (name.NullOrEmpty())
                 {
-                    yield return $"{defName}: excluded contribution defName cannot be empty.";
+                    yield return $"{defName}: 排除的贡献物品 defName 不能为空。";
                 }
                 else if (!excluded.Add(name))
                 {
-                    yield return $"{defName}: duplicate excluded contribution defName '{name}'.";
+                    yield return $"{defName}: 排除的贡献物品 defName '{name}' 重复。";
                 }
             }
 
@@ -248,25 +248,25 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (allowed.NullOrEmpty())
                 {
-                    yield return $"{defName}: allowed contribution defName cannot be empty.";
+                    yield return $"{defName}: 允许的贡献物品 defName 不能为空。";
                 }
                 else if (!allowedSet.Add(allowed))
                 {
-                    yield return $"{defName}: duplicate allowed contribution defName '{allowed}'.";
+                    yield return $"{defName}: 允许的贡献物品 defName '{allowed}' 重复。";
                 }
                 if (excluded.Contains(allowed))
                 {
-                    yield return $"{defName}: contribution defName '{allowed}' is in both allow and exclude lists.";
+                    yield return $"{defName}: 贡献物品 defName '{allowed}' 同时出现在允许与排除列表中。";
                 }
             }
 
             if (retryDelayTicks <= 0 || maxShortRetries < 0 || carrierThingDivisor <= 0 || maxCarriers <= 0)
             {
-                yield return $"{defName}: retry/carrier settings must be positive.";
+                yield return $"{defName}: 重试与运输角色设置必须大于零。";
             }
             if (repeatedLeadWeight < 0f || minimumIntervalDays <= 0f)
             {
-                yield return $"{defName}: repeatedLeadWeight/minimumIntervalDays is invalid.";
+                yield return $"{defName}: repeatedLeadWeight/minimumIntervalDays 无效。";
             }
         }
 
@@ -279,15 +279,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 SymbiosisCovenantDelegationStockPoolEntry entry = pool[i];
                 if (entry.minLevel < 2 || entry.maxLevel > 5 || entry.minLevel > entry.maxLevel)
                 {
-                    yield return $"{defName}: {poolName}[{i}] has invalid level range.";
+                    yield return $"{defName}: {poolName}[{i}] 的等级范围无效。";
                 }
                 if (entry.weight <= 0f)
                 {
-                    yield return $"{defName}: {poolName}[{i}] has non-positive weight.";
+                    yield return $"{defName}: {poolName}[{i}] 的权重必须大于零。";
                 }
                 if (entry.generators.Count == 0)
                 {
-                    yield return $"{defName}: {poolName}[{i}] has no StockGenerator.";
+                    yield return $"{defName}: {poolName}[{i}] 缺少库存生成器 StockGenerator。";
                     continue;
                 }
 

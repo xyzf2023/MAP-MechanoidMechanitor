@@ -73,7 +73,7 @@ namespace MAP_MechanoidMechanitor
             if (!TryExpandIsMechanoidGetter(codes, isMechanoidIndex, helperMethod))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}无法安全扩展 IsMechanoid 值生产点（目标 getter 上存在 exception block），补丁未应用。",
+                    $"{LogPrefix}无法安全扩展 IsMechanoid 值生产点（目标 属性读取方法 上存在 异常处理块），补丁未应用。",
                     ErrorKeyExpandFailed);
                 return codes;
             }

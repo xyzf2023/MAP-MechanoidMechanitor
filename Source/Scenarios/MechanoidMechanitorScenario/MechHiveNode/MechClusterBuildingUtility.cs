@@ -679,7 +679,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 catch (Exception ex)
                 {
                     Log.Warning(
-                        "[MAP] 完整机械巢节点集群草图生成第 "
+                        "[MAP-机械族机械师] 完整机械巢节点集群草图生成第 "
                             + (attempt + 1)
                             + " 次失败: "
                             + ex);
@@ -687,7 +687,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             sketch = null!;
-            Log.Error("[MAP] 完整机械巢节点在有限次数内未能生成合法集群草图，终止该节点布局生成。");
+            Log.Error("[MAP-机械族机械师] 完整机械巢节点在有限次数内未能生成合法集群草图，终止该节点布局生成。");
             return false;
         }
 
@@ -745,7 +745,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && !EnsureRoyaltyRequiredBuildings(sketch, buildingPoints))
             {
                 Log.Error(
-                    "[MAP] 完整机械巢节点草图在补充后仍缺少必需的低角护盾、高角护盾或地图状态建筑，终止该次布局尝试。");
+                    "[MAP-机械族机械师] 完整机械巢节点草图在补充后仍缺少必需的低角护盾、高角护盾或地图状态建筑，终止该次布局尝试。");
                 return false;
             }
 

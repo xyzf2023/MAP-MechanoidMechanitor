@@ -54,7 +54,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 机械巢 Combat 部队参数构建失败: " + ex);
+                Log.Warning("[MAP-机械族机械师] 机械巢 Combat 部队参数构建失败: " + ex);
                 groupParms = null;
                 return false;
             }
@@ -155,7 +155,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 机械巢 Combat 部队生成异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 机械巢 Combat 部队生成异常: " + ex);
                 DiscardPawns(result);
                 return new List<Pawn>();
             }
@@ -259,7 +259,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                     catch (Exception ex)
                     {
-                        Log.Warning("[MAP] 从 Lord 移除机械巢 Pawn 失败: " + ex);
+                        Log.Warning("[MAP-机械族机械师] 从 Lord 移除机械巢 Pawn 失败: " + ex);
                     }
                 }
 
@@ -279,7 +279,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 安全丢弃机械巢 Pawn 失败: " + ex);
+                Log.Warning("[MAP-机械族机械师] 安全丢弃机械巢 Pawn 失败: " + ex);
             }
         }
 
@@ -312,7 +312,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             loggedEmptyTemplateOnce = true;
             Log.Warning(
-                "[MAP] 机械巢派系（" + (faction?.def?.defName ?? "?")
+                "[MAP-机械族机械师] 机械巢派系（" + (faction?.def?.defName ?? "?")
                 + "）没有可用的 Combat 部队模板，相关功能将不生成机械族部队。");
         }
     }

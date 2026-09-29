@@ -362,7 +362,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (kind == null)
                     {
                         Log.Warning(
-                            "[MAP] 肃清指令机械族固定价格配置包含空 PawnKindDef，已忽略。"
+                            "[MAP-机械族机械师] 肃清指令机械族固定价格配置包含空 PawnKindDef，已忽略。"
                             + " Def="
                             + overrideDef.defName
                             + "。条目索引="
@@ -374,7 +374,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (entry!.price <= 0)
                     {
                         Log.Warning(
-                            "[MAP] 肃清指令机械族固定价格必须大于 0，已忽略。"
+                            "[MAP-机械族机械师] 肃清指令机械族固定价格必须大于 0，已忽略。"
                             + " Def="
                             + overrideDef.defName
                             + ", PawnKindDef="
@@ -388,7 +388,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (cache.ContainsKey(kind))
                     {
                         Log.Warning(
-                            "[MAP] 肃清指令机械族固定价格存在重复配置，后续条目已忽略。"
+                            "[MAP-机械族机械师] 肃清指令机械族固定价格存在重复配置，后续条目已忽略。"
                             + " Def="
                             + overrideDef.defName
                             + ", PawnKindDef="
@@ -489,7 +489,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             string stuff = spec.Stuff != null ? spec.Stuff.defName : "null";
             string quality = spec.HasQuality ? spec.Quality.ToString() : "无品质";
             string message =
-                "[MAP] MechanoidOvermindPricingService 无法静态计算商品市场价值。"
+                "[MAP-机械族机械师] MechanoidOvermindPricingService 无法静态计算商品市场价值。"
                 + " ThingDef="
                 + spec.Def.defName
                 + ", Stuff="

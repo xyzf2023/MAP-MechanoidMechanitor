@@ -133,7 +133,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     GenSpawn.Spawn(replacement, position, map, rotation);
                     if (!replacement.Spawned)
-                        throw new System.InvalidOperationException("[MAP] 太阳稳定器替换后未成功生成。");
+                        throw new System.InvalidOperationException("[MAP-机械族机械师] 太阳稳定器替换后未成功生成。");
                 }
                 catch
                 {

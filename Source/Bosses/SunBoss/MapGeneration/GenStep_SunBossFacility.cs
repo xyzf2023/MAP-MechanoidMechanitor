@@ -20,12 +20,12 @@ namespace MAP_MechanoidMechanitor
             if (record.Generated) return;
             if (layout == null || layout.coreBuilding == null || layout.stabilizerBuilding == null ||
                 layout.terrainDef == null || Faction.OfMechanoids == null)
-                throw new InvalidOperationException("[MAP] 太阳设施缺少布局或场景建筑定义。");
+                throw new InvalidOperationException("[MAP-机械族机械师] 太阳设施缺少布局或场景建筑定义。");
 
             int width = facilitySize.RandomInRange;
             int height = facilitySize.RandomInRange;
             if (width + 24 > map.Size.x || height + 24 > map.Size.z)
-                throw new InvalidOperationException("[MAP] 地图太小，无法保留太阳设施及外围入场空间。");
+                throw new InvalidOperationException("[MAP-机械族机械师] 地图太小，无法保留太阳设施及外围入场空间。");
             CellRect bounds = new CellRect((map.Size.x - width) / 2, (map.Size.z - height) / 2, width, height);
             LayoutStructureSketch sketch = layout.Worker.GenerateStructureSketch(new StructureGenParams
             {
@@ -64,7 +64,7 @@ namespace MAP_MechanoidMechanitor
             foreach (IntVec3 entrance in entrances)
                 ClearApproach(map, entrance, entrance.z == bounds.minZ, layout.terrainDef);
             if (entrances.Count == 0)
-                throw new InvalidOperationException("[MAP] 太阳设施未生成外部入口。");
+                throw new InvalidOperationException("[MAP-机械族机械师] 太阳设施未生成外部入口。");
 
             record.FacilityBounds = bounds;
             record.ArenaBounds = arena;
@@ -107,7 +107,7 @@ namespace MAP_MechanoidMechanitor
                 List<IntVec3>? path = FindRoomRoute(map, domain, root, target, false)
                     ?? FindRoomRoute(map, domain, root, target, true);
                 if (path == null)
-                    throw new InvalidOperationException("[MAP] 太阳设施房间无法建立内部通路。");
+                    throw new InvalidOperationException("[MAP-机械族机械师] 太阳设施房间无法建立内部通路。");
                 foreach (IntVec3 cell in path)
                     if (interior.Contains(cell))
                         foreach (Thing thing in cell.GetThingList(map).ToList())
@@ -185,7 +185,7 @@ namespace MAP_MechanoidMechanitor
                     break;
                 }
                 if (!placed)
-                    throw new InvalidOperationException("[MAP] 太阳设施房间缺少不会堵路的加固墙支撑位置。");
+                    throw new InvalidOperationException("[MAP-机械族机械师] 太阳设施房间缺少不会堵路的加固墙支撑位置。");
             }
         }
 
@@ -197,7 +197,7 @@ namespace MAP_MechanoidMechanitor
             List<IntVec3> candidates = interior.Where(c => c.GetThingList(map).Count == 0 && c.Walkable(map))
                 .OrderBy(c => c.z).ThenBy(c => c.x).ToList();
             if (candidates.Count == 0)
-                throw new InvalidOperationException("[MAP] 太阳设施战利品房间无法放置密封箱。");
+                throw new InvalidOperationException("[MAP-机械族机械师] 太阳设施战利品房间无法放置密封箱。");
             // 仅在原版预制件没有放下战利品箱时保底，沿用原版 CompLootSpawn 的奖励表。
             GenSpawn.Spawn(ThingMaker.MakeThing(layout.fallbackLootCrate), candidates.RandomElement(), map);
         }
@@ -236,7 +236,7 @@ namespace MAP_MechanoidMechanitor
             CompProperties_AnnihilationCannon cannon = DefDatabase<ThingDef>.GetNamed("MAP_Mech_SunBOSS")
                 .GetCompProperties<CompProperties_AnnihilationCannon>();
             if (cannon == null || !AllStabilizersHaveLure(map, arena, record, cannon))
-                throw new InvalidOperationException("[MAP] 太阳设施存在无法诱导湮灭炮摧毁的稳定器。");
+                throw new InvalidOperationException("[MAP-机械族机械师] 太阳设施存在无法诱导湮灭炮摧毁的稳定器。");
 
             // 大厅内门口、中轴和周边留空；短墙彼此间隔，避免生成封闭小房间。
             int requested = layout.arenaWallCount.RandomInRange;
@@ -314,7 +314,7 @@ namespace MAP_MechanoidMechanitor
             CellRect occupied = GenAdj.OccupiedRect(cell, Rot4.North, def.size);
             if (!occupied.FullyContainedWithin(arena) || reserved.Any(r => r.Overlaps(occupied)) ||
                 occupied.Cells.Any(c => c.GetEdifice(map) != null))
-                throw new InvalidOperationException("[MAP] 太阳大厅场景建筑尺寸或位置冲突：" + def.defName);
+                throw new InvalidOperationException("[MAP-机械族机械师] 太阳大厅场景建筑尺寸或位置冲突：" + def.defName);
             Thing thing = ThingMaker.MakeThing(def);
             if (def.CanHaveFaction) thing.SetFaction(Faction.OfMechanoids);
             Building building = (Building)GenSpawn.Spawn(thing, cell, map);
@@ -361,7 +361,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     if (!rect.ContractedBy(1).Cells.Any(reachable.Contains) ||
                         rect.EdgeCells.Any(c => c.GetDoor(map) != null && !reachable.Contains(c)))
-                        throw new InvalidOperationException("[MAP] 太阳设施内容填充后存在不可通行的房间或门。");
+                        throw new InvalidOperationException("[MAP-机械族机械师] 太阳设施内容填充后存在不可通行的房间或门。");
                 }
             }
         }

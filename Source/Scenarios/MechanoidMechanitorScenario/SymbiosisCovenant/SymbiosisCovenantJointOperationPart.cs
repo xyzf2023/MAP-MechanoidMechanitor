@@ -82,7 +82,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private const string AidQuestTagPrefix = "MAP_SymbiosisCovenantJointOp";
 
         // 联合军事行动诊断日志统一前缀。
-        private const string JointOpLogPrefix = "[MAP-JointOperation]";
+        private const string JointOpLogPrefix = "[MAP-机械族机械师] 联合行动：";
 
         // ===== 高科技援军专用安全室外空投参数（不使用原版 CenterDrop，避免落入前哨建筑 / 封闭院落） =====
         // 只在地图中心附近一定范围内寻找空投区，避免援军散落到地图极远处。
@@ -2112,7 +2112,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || preparedPods.Count != dropCells.Count)
             {
                 throw new ArgumentException(
-                    "Joint operation prepared drop pods must match validated drop cells.");
+                    "联合行动已准备的空投舱必须与验证通过的落点一一对应。");
             }
 
             for (int i = 0; i < preparedPods.Count; i++)
@@ -2823,7 +2823,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // ===== 内部辅助 =====
 
         /// <summary>
-        /// 正常流程的详细诊断日志：仅在开发者模式下输出，统一前缀 [MAP-JointOperation]。
+        /// 正常流程的详细诊断日志：仅在开发者模式下输出，统一前缀 [MAP-机械族机械师] 联合行动：。
         /// </summary>
         private static void LogDeploymentDiagnostic(string eventName, string details)
         {

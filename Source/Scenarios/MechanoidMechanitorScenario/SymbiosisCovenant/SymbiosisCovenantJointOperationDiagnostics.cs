@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// 所有本次新增诊断日志的统一前缀。必须与原 QuestPart 既有的 JointOpLogPrefix 一致，
         /// 否则会产生两个不同前缀。
         /// </summary>
-        internal const string LogPrefix = "[MAP-JointOperation]";
+        internal const string LogPrefix = "[MAP-机械族机械师] 联合行动：";
 
         /// <summary>
         /// 仅在开发者模式下输出普通诊断 Log.Message。非 DevMode 时零开销、零副作用。

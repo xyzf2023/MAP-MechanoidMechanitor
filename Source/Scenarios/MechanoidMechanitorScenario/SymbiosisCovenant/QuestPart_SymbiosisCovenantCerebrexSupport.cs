@@ -15,7 +15,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// </summary>
     public sealed class QuestPart_SymbiosisCovenantCerebrexSupport : QuestPartActivable
     {
-        private const string LogPrefix = "[MAP][SymbiosisCovenantCerebrexSupport]";
+        private const string LogPrefix = "[MAP-机械族机械师] 共生盟约主脑支援：";
 
         public enum CerebrexSupportStage : byte
         {

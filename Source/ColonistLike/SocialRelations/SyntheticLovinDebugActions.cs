@@ -403,7 +403,7 @@ namespace MAP_MechanoidMechanitor
                     "诊断结果：当前存在 " + n + " 项阻断条件。");
             }
 
-            Log.Message(sb.ToString());
+            Log.Message("[MAP-机械族机械师] " + sb);
 
             if (n == 0)
             {

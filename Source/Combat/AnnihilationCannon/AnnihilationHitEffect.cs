@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor
             catch (Exception ex)
             {
                 visualFailed = true;
-                Log.ErrorOnce("[MAP] 湮灭炮命中动画绘制失败，结算继续执行：" + ex, 1908263101);
+                Log.ErrorOnce("[MAP-机械族机械师] 湮灭炮命中动画绘制失败，结算继续执行：" + ex, 1908263101);
             }
         }
 
@@ -38,7 +38,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
-                Log.ErrorOnce("[MAP] 湮灭炮地图压暗失败，结算继续执行：" + ex, 1908263102);
+                Log.ErrorOnce("[MAP-机械族机械师] 湮灭炮地图压暗失败，结算继续执行：" + ex, 1908263102);
             }
         }
     }

@@ -176,7 +176,7 @@ namespace MAP_MechanoidMechanitor
             {
                 Log.Error(
                     $"[MAP-机械族机械师] 转移后 Hediff 失败：target={target.LabelShort} " +
-                    $"（{target.ThingID}）缺少 health tracker。");
+                    $"（{target.ThingID}）缺少 健康追踪器。");
                 return;
             }
 

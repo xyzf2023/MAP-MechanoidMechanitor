@@ -35,7 +35,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Faction? owner = outpost.Faction;
             if (owner == null || !FactionOutpostFactionUtility.IsEligibleFaction(owner))
             {
-                Log.Warning("[MAP] 普通派系前哨缺少可用所属派系，拒绝初始化地图内容。");
+                Log.Warning("[MAP-机械族机械师] 普通派系前哨缺少可用所属派系，拒绝初始化地图内容。");
                 return;
             }
 
@@ -153,7 +153,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP] 普通派系前哨地图初始化失败，已回滚本轮守军: " + ex);
+                Log.Error("[MAP-机械族机械师] 普通派系前哨地图初始化失败，已回滚本轮守军: " + ex);
                 CleanupFailedGeneration(map, lords, generatedPawns);
                 outpost.NotifyMapGarrisonInitialized(false);
             }
@@ -601,7 +601,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                     catch (Exception ex)
                     {
-                        Log.Warning("[MAP] 回滚普通派系前哨 Lord 失败: " + ex);
+                        Log.Warning("[MAP-机械族机械师] 回滚普通派系前哨 Lord 失败: " + ex);
                     }
                 }
             }
@@ -629,13 +629,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 outpost.LayoutTier);
 
             StringBuilder sb = new StringBuilder();
-            sb.Append("[MAP-FactionOutpost] ");
-            sb.Append("Outpost=").Append(outpost.Label);
-            sb.Append(", Phase=").Append(outpost.IsCompleted ? "Completed" : "Building");
-            sb.Append(", GarrisonBudget=").Append(outpost.GarrisonThreatPoints);
-            sb.Append(", LayoutTier=").Append(outpost.LayoutTier);
-            sb.Append(", ExpectedClusters=").Append(expected);
-            sb.Append(", DetectedClusters=").Append(clusters.Count);
+            sb.Append("[MAP-机械族机械师] 派系前哨： ");
+            sb.Append("前哨=").Append(outpost.Label);
+            sb.Append("，阶段=").Append(outpost.IsCompleted ? "已完成" : "建设中");
+            sb.Append("，守军预算=").Append(outpost.GarrisonThreatPoints);
+            sb.Append("，布局档位=").Append(outpost.LayoutTier);
+            sb.Append("，预期集群数=").Append(expected);
+            sb.Append("，检测到的集群数=").Append(clusters.Count);
             Log.Message(sb.ToString());
 
             for (int i = 0; i < clusters.Count; i++)
@@ -643,10 +643,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 BuildingCluster cluster = clusters[i];
                 int landed = landedClusterPawns.TryGetValue(cluster, out List<Pawn>? list) ? list.Count : 0;
                 Log.Message(
-                    "[MAP-FactionOutpost] Cluster[" + i + "]=Buildings:" + cluster.Buildings.Count
-                    + ", Score:" + cluster.Score
-                    + ", Pawns:" + landed
-                    + ", Center:" + cluster.Center);
+                    "[MAP-机械族机械师] 派系前哨：集群[" + i + "]，建筑数=" + cluster.Buildings.Count
+                    + "，评分=" + cluster.Score
+                    + "，角色数=" + landed
+                    + "，中心=" + cluster.Center);
             }
         }
     }

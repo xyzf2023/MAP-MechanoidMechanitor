@@ -160,7 +160,7 @@ namespace MAP_MechanoidMechanitor
                 && Equals(code.operand, field));
             if (field == null || stores.Count != 1)
             {
-                Log.Error("[MAP] 未找到唯一的征召自由开火重置入口，太阳开关保留补丁未应用。");
+                Log.Error("[MAP-机械族机械师] 未找到唯一的征召自由开火重置入口，太阳开关保留补丁未应用。");
                 return codes;
             }
             // 原版随后会结束当前 Job 并立即重选任务，必须在原赋值处保留状态，

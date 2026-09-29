@@ -30,7 +30,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     workerCreationFailed = true;
                     Log.Error(
-                        $"[MAP-机械族机械师] {defName}: cannot create story component worker. {error}");
+                        $"[MAP-机械族机械师] {defName}: 无法创建剧情组件执行器。{error}");
                     return null;
                 }
 
@@ -46,14 +46,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     {
                         workerCreationFailed = true;
                         Log.Error(
-                            $"[MAP-机械族机械师] {defName}: workerClass '{workerClass}' did not produce a {nameof(MechanoidMechanitorStoryComponentWorker)} instance.");
+                            $"[MAP-机械族机械师] {defName}: workerClass '{workerClass}' 未创建 {nameof(MechanoidMechanitorStoryComponentWorker)} 类型的实例。");
                     }
                 }
                 catch (Exception ex)
                 {
                     workerCreationFailed = true;
                     Log.Error(
-                        $"[MAP-机械族机械师] {defName}: failed to create story component worker '{workerClass}': {ex}");
+                        $"[MAP-机械族机械师] {defName}: 创建剧情组件执行器 '{workerClass}' 失败：{ex}");
                 }
 
                 return workerInt;
@@ -78,22 +78,22 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (workerClass == null)
             {
-                return "workerClass is not configured; expected a concrete MechanoidMechanitorStoryComponentWorker subclass.";
+                return "未配置 workerClass；应指定 MechanoidMechanitorStoryComponentWorker 的非抽象子类。";
             }
 
             if (!typeof(MechanoidMechanitorStoryComponentWorker).IsAssignableFrom(workerClass))
             {
-                return $"workerClass '{workerClass.FullName}' does not derive from {nameof(MechanoidMechanitorStoryComponentWorker)}.";
+                return $"workerClass '{workerClass.FullName}' 未继承 {nameof(MechanoidMechanitorStoryComponentWorker)}。";
             }
 
             if (workerClass.IsAbstract)
             {
-                return $"workerClass '{workerClass.FullName}' is abstract and cannot be instantiated.";
+                return $"workerClass '{workerClass.FullName}' 是抽象类，无法实例化。";
             }
 
             if (workerClass.GetConstructor(Type.EmptyTypes) == null)
             {
-                return $"workerClass '{workerClass.FullName}' has no public parameterless constructor and cannot be instantiated by Activator.CreateInstance.";
+                return $"workerClass '{workerClass.FullName}' 没有公共无参构造函数，无法通过 Activator.CreateInstance 实例化。";
             }
 
             return null;

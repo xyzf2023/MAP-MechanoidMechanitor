@@ -85,7 +85,7 @@ namespace MAP_MechanoidMechanitor
             FactionOutpostManager? manager = Find.World.GetComponent<FactionOutpostManager>();
             if (manager == null)
             {
-                Log.Warning("[MAP] 未找到 FactionOutpostManager，无法执行开发者生成指令。");
+                Log.Warning("[MAP-机械族机械师] 未找到 FactionOutpostManager，无法执行开发者生成指令。");
                 return;
             }
 

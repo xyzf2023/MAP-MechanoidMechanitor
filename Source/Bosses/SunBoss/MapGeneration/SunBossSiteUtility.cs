@@ -64,11 +64,11 @@ namespace MAP_MechanoidMechanitor
             Site? site = CreateSite(tile, out string failureReason);
             if (site == null)
             {
-                Log.Warning($"[MAP SunBoss] 太阳据点创建失败，地块={tile}：{failureReason}");
+                Log.Warning($"[MAP-机械族机械师] 太阳 BOSS： 太阳据点创建失败，地块={tile}：{failureReason}");
                 return;
             }
             Find.WorldSelector.Select(site);
-            Log.Message($"[MAP SunBoss] 已创建太阳据点，地块={tile}。进入地点后生成设施地图。");
+            Log.Message($"[MAP-机械族机械师] 太阳 BOSS： 已创建太阳据点，地块={tile}。进入地点后生成设施地图。");
         }
     }
 }

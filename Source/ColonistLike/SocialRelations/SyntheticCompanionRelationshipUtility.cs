@@ -88,7 +88,7 @@ namespace MAP_MechanoidMechanitor
                 // 菜单每帧及工作执行期间都会检查，同一对象对、同一原因只警告一次。
                 int warningKey = unchecked(((879346610 * 397 ^ mech.thingIDNumber) * 397
                     ^ target.thingIDNumber) * 397 ^ invalidTargetReason.GetHashCode());
-                Log.WarningOnce($"[MAP] 仿生伴侣追求目标不合法：发起者={mech.LabelShort}({mech.ThingID})，"
+                Log.WarningOnce($"[MAP-机械族机械师] 仿生伴侣追求目标不合法：发起者={mech.LabelShort}({mech.ThingID})，"
                     + $"目标={target.LabelShort}({target.ThingID})，原因={invalidTargetReason}", warningKey);
                 return SyntheticRelationshipFailure.InvalidTarget;
             }

@@ -28,7 +28,7 @@ namespace MAP_MechanoidMechanitor
             MechHiveNodeManager? manager = Find.World.GetComponent<MechHiveNodeManager>();
             if (manager == null)
             {
-                Log.Warning("[MAP] 未找到 MechHiveNodeManager，无法执行开发者生成指令。");
+                Log.Warning("[MAP-机械族机械师] 未找到 MechHiveNodeManager，无法执行开发者生成指令。");
                 return;
             }
 

@@ -134,7 +134,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Faction? mechHive = MechHiveNodeRelationUtility.GetMechHive();
             if (mechHive == null)
             {
-                Log.Warning("[MAP] 机械巢派系不存在，机械巢节点地图不生成守军与建筑。");
+                Log.Warning("[MAP-机械族机械师] 机械巢派系不存在，机械巢节点地图不生成守军与建筑。");
                 if (node.IsCompleted)
                 {
                     node.NotifyMapContentInitFailed();
@@ -163,7 +163,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP] 机械巢节点地图生成异常: " + ex);
+                Log.Error("[MAP-机械族机械师] 机械巢节点地图生成异常: " + ex);
                 if (node.IsCompleted)
                 {
                     node.NotifyMapContentInitFailed();
@@ -565,7 +565,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 record.RegisterThingsFromList(instance.SpawnedThings);
                 Log.Warning(
-                    "[MAP] 完整机械巢节点蓝图实际范围重算失败（预算 "
+                    "[MAP-机械族机械师] 完整机械巢节点蓝图实际范围重算失败（预算 "
                         + buildingPoints
                         + "）："
                         + boundsFailure);
@@ -999,7 +999,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 record.FailureLogged = true;
                 Log.Error(
-                    "[MAP] 完整机械巢节点初始化失败（阶段："
+                    "[MAP-机械族机械师] 完整机械巢节点初始化失败（阶段："
                         + stage
                         + "）："
                         + reason
@@ -1142,7 +1142,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning("[MAP] 完整节点守军落地异常: " + ex);
+                    Log.Warning("[MAP-机械族机械师] 完整节点守军落地异常: " + ex);
                 }
             }
 
@@ -1514,7 +1514,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     || dormantComp.Awake)
                 {
                     Log.Error(
-                        "[MAP] 建设中机械巢节点守军休眠校验失败："
+                        "[MAP-机械族机械师] 建设中机械巢节点守军休眠校验失败："
                             + (pawn != null ? pawn.ToString() : "null"));
                 }
             }
@@ -1752,7 +1752,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 机械巢节点建筑生成失败（" + def.defName + "）: " + ex);
+                Log.Warning("[MAP-机械族机械师] 机械巢节点建筑生成失败（" + def.defName + "）: " + ex);
 
                 // 已实例化但本次调用不会返回的对象：已登记的交给统一回滚，未登记的就地销毁，
                 // 避免留下“既未返回、也未登记/清理”的地图对象。
@@ -1797,7 +1797,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Warning(
-                    "[MAP] 机械巢节点建筑异常残留清理失败（"
+                    "[MAP-机械族机械师] 机械巢节点建筑异常残留清理失败（"
                         + (def?.defName ?? "?")
                         + "）: "
                         + ex);

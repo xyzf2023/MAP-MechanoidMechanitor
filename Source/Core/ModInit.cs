@@ -22,10 +22,7 @@ namespace MAP_MechanoidMechanitor
             MechanoidMechanitorBrainImplantFeatureState.InitializeFromSettings();
             HumanImplantFeatureState.InitializeFromSettings();
 
-            if (Prefs.DevMode)
-            {
-                Log.Message("[MAP-机械族机械师] Harmony补丁初始化成功。");
-            }
+            Log.Message("[MAP-机械族机械师] Harmony补丁初始化成功。");
         }
     }
 }

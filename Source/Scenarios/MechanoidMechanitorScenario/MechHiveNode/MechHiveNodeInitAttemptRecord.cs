@@ -153,7 +153,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         }
                         catch (Exception ex)
                         {
-                            Log.Warning("[MAP] 精确回滚 Lord 失败（loadID="
+                            Log.Warning("[MAP-机械族机械师] 精确回滚 Lord 失败（loadID="
                                 + trackedLordLoadId
                                 + "）: "
                                 + ex);
@@ -197,7 +197,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning("[MAP] 精确回滚守军失败: " + ex);
+                    Log.Warning("[MAP-机械族机械师] 精确回滚守军失败: " + ex);
                 }
 
                 if (IsPawnFullyDiscarded(pawn))
@@ -227,7 +227,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 catch (Exception ex)
                 {
                     Log.Warning(
-                        "[MAP] 精确回滚建筑失败（"
+                        "[MAP-机械族机械师] 精确回滚建筑失败（"
                             + (thing.def?.defName ?? "?")
                             + "）: "
                             + ex);

@@ -41,7 +41,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (referenceMap == null || referenceMap.Disposed)
             {
                 Log.Warning(
-                    "[MAP] 前哨创建时无法获得来源玩家殖民地地图，守军点数将回退旧默认完成态值。");
+                    "[MAP-机械族机械师] 前哨创建时无法获得来源玩家殖民地地图，守军点数将回退旧默认完成态值。");
                 basePoints = LegacyCompletedGarrisonThreatPoints;
             }
             else

@@ -32,11 +32,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (questScriptDef == null)
             {
-                yield return $"{defName}: questScriptDef must be set.";
+                yield return $"{defName}: 必须设置 questScriptDef。";
             }
             else if (DefDatabase<QuestScriptDef>.GetNamed(questScriptDef, false) == null)
             {
-                yield return $"{defName}: questScriptDef '{questScriptDef}' not found in QuestScriptDef database.";
+                yield return $"{defName}: 在 QuestScriptDef 定义库中未找到 questScriptDef '{questScriptDef}'。";
             }
         }
     }

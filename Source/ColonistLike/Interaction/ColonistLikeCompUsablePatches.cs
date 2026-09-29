@@ -150,7 +150,7 @@ namespace MAP_MechanoidMechanitor
             if (!TryAppendAuthorizedUserGate(codes, isFleshIndex, helperMethod))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}无法安全扩展 IsFlesh 值生产点（getter 或后继指令存在 exception block，或不存在安全插入位置），补丁未应用。",
+                    $"{LogPrefix}无法安全扩展 IsFlesh 值生产点（属性读取方法 或后继指令存在 异常处理块，或不存在安全插入位置），补丁未应用。",
                     ErrorKeyExpandFailed);
                 return codes;
             }
@@ -418,7 +418,7 @@ namespace MAP_MechanoidMechanitor
             if (!TryExpandPlayerControlledGetter(codes, getterIndex, helperMethod))
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}无法安全扩展 IsPlayerControlled 值生产点（目标 getter 上存在 exception block），补丁未应用。",
+                    $"{LogPrefix}无法安全扩展 IsPlayerControlled 值生产点（目标 属性读取方法 上存在 异常处理块），补丁未应用。",
                     ErrorKeyExpandFailed);
                 return codes;
             }

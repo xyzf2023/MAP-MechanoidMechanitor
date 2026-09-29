@@ -230,7 +230,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP] MechanoidOvermindDeliveryService.TryDeliver failed: " + ex);
+                    "[MAP-机械族机械师] 机械主脑交付失败：" + ex);
 
                 if (IsDropCommitted(info))
                 {
@@ -420,7 +420,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP] MechanoidOvermindDeliveryService refund failed: " + ex);
+                    "[MAP-机械族机械师] 机械主脑交付退款失败：" + ex);
             }
         }
 
@@ -436,7 +436,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             lastDropResolveErrorKey = errorKey;
             lastDropResolveErrorTick = tick;
             Log.Warning(
-                "[MAP] MechanoidOvermindDeliveryService.TryResolveTradeDropTarget failed: "
+                "[MAP-机械族机械师] 机械主脑交易投放目标解析失败："
                 + ex);
         }
 
@@ -535,7 +535,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Warning(
-                    "[MAP] Failed to generate mechanoid " + kind.defName + ": " + ex);
+                    "[MAP-机械族机械师] 机械族生成失败，种类=" + kind.defName + ": " + ex);
                 return null;
             }
         }
@@ -663,7 +663,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Warning(
-                    "[MAP] Failed to create thing " + spec.Def.defName + ": " + ex);
+                    "[MAP-机械族机械师] 实体创建失败，定义=" + spec.Def.defName + ": " + ex);
                 if (thing != null && !thing.Destroyed)
                 {
                     thing.Destroy(DestroyMode.Vanish);
@@ -687,7 +687,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Warning(
-                    "[MAP] MechanoidOvermindDeliveryService.CleanupUndelivered failed: " + ex);
+                    "[MAP-机械族机械师] 机械主脑未交付实体清理失败：" + ex);
             }
         }
     }

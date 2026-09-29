@@ -170,7 +170,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Warning(
-                    "[MAP] Failed to read local time for mechanoid overmind dialogue: " + ex);
+                    "[MAP-机械族机械师] 机械主脑对话读取本地时间失败：" + ex);
                 return "MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.TimeUnavailable"
                     .Translate();
             }

@@ -203,7 +203,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (carriers.Count == 0)
                 {
                     throw new InvalidOperationException(
-                        $"No valid carrier could be generated for covenant trade delegation led by {leadFaction}.");
+                        $"无法为 {leadFaction} 领导的盟约贸易代表团生成有效运输角色。");
                 }
                 pawns.AddRange(carriers);
 
@@ -262,7 +262,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception exception)
             {
-                Log.Error($"[MAP] 共生盟约联合贸易代表团生成失败：{exception}");
+                Log.Error($"[MAP-机械族机械师] 共生盟约联合贸易代表团生成失败：{exception}");
                 CleanupFailedPawns(pawns, map, leadFaction);
                 CleanupUnheldStock(stock);
                 return false;

@@ -234,7 +234,7 @@ namespace MAP_MechanoidMechanitor
                     JusticeBossTraceWriteMode.Emergency);
                 JusticeBossTraceFileWriter.CloseSession("install-failed");
                 Log.Error(
-                    "[MAP JusticeBoss Trace] 生成与发射轨迹补丁安装失败："
+                    "[MAP-机械族机械师] 正义 BOSS 轨迹： 生成与发射轨迹补丁安装失败："
                         + exception);
             }
         }

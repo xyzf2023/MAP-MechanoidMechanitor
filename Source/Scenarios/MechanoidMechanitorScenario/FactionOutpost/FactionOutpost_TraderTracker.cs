@@ -218,12 +218,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 null);
             if (pawn == null)
             {
-                Log.Error("Could not find any pawn to give sold thing to.");
+                Log.Error("[MAP-机械族机械师] 未找到可接收售出物品的角色。");
                 thing.Destroy();
             }
             else if (!pawn.inventory.innerContainer.TryAdd(thing))
             {
-                Log.Error("Could not add sold thing to inventory.");
+                Log.Error("[MAP-机械族机械师] 无法将售出物品加入物品栏。");
                 thing.Destroy();
             }
         }
@@ -253,7 +253,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (stock[num2] is Pawn pawn2 && !pawn2.IsWorldPawn())
                 {
-                    Log.Error("Faction outpost has non-world-pawns in its stock. Removing...");
+                    Log.Error("[MAP-机械族机械师] 派系前哨库存中存在未登记为世界角色的角色，正在移除。");
                     stock.Remove(pawn2);
                 }
             }

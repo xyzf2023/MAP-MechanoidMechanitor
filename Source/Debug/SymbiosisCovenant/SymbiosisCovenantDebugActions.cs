@@ -146,7 +146,7 @@ namespace MAP_MechanoidMechanitor
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-SymbiosisDebug] "
+                    "[MAP-机械族机械师] 共生盟约调试： "
                     + label
                     + " 发生未处理异常。\n"
                     + ex);
@@ -172,7 +172,7 @@ namespace MAP_MechanoidMechanitor
             if (succeeded)
             {
                 Log.Message(
-                    "[MAP-SymbiosisDebug] OK "
+                    "[MAP-机械族机械师] 共生盟约调试： 成功 "
                     + label
                     + " | "
                     + message);
@@ -180,7 +180,7 @@ namespace MAP_MechanoidMechanitor
             else
             {
                 Log.Warning(
-                    "[MAP-SymbiosisDebug] FAIL "
+                    "[MAP-机械族机械师] 共生盟约调试： 失败 "
                     + label
                     + " | "
                     + message);

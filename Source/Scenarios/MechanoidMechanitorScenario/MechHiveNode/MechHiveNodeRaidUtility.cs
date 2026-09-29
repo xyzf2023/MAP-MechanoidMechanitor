@@ -74,7 +74,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 机械巢节点每日额外袭击检查异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 机械巢节点每日额外袭击检查异常: " + ex);
             }
         }
 
@@ -93,7 +93,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 机械巢节点额外袭击触发异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 机械巢节点额外袭击触发异常: " + ex);
             }
         }
     }

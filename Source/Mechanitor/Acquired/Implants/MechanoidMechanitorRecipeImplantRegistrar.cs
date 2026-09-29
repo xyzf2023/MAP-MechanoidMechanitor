@@ -78,7 +78,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (Prefs.DevMode)
+            if (MAPMechanitorMod.Settings?.enableStartupDetailedLogging == true)
             {
                 Log.Message(
                     $"{LogPrefix}扫描 {scannedCount} 个配方，" +
@@ -254,7 +254,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void LogSkippedRecipe(RecipeDef recipe, string reason)
         {
-            if (!Prefs.DevMode)
+            if (MAPMechanitorMod.Settings?.enableStartupDetailedLogging != true)
             {
                 return;
             }

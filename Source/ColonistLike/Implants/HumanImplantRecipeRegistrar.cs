@@ -48,7 +48,7 @@ namespace MAP_MechanoidMechanitor
                     if (!TryResolveImplantThing(recipe, out ThingDef? itemDef)
                         || itemDef == null)
                     {
-                        if (Prefs.DevMode)
+                        if (MAPMechanitorMod.Settings?.enableStartupDetailedLogging == true)
                         {
                             Log.Message(
                                 $"{LogPrefix}跳过配方 {recipe.defName}，无法唯一识别安装物品。");
@@ -66,7 +66,7 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            if (Prefs.DevMode)
+            if (MAPMechanitorMod.Settings?.enableStartupDetailedLogging == true)
             {
                 int mappingCount = recipesByItem.Values.Sum(x => x.Count);
                 int multiRecipeItemCount =

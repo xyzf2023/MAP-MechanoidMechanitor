@@ -56,39 +56,39 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (offerTimeoutTicks <= 0)
             {
-                yield return $"{defName}: offerTimeoutTicks must be positive.";
+                yield return $"{defName}: offerTimeoutTicks 必须大于零。";
             }
 
             if (operationTimeoutTicks <= 0)
             {
-                yield return $"{defName}: operationTimeoutTicks must be positive.";
+                yield return $"{defName}: operationTimeoutTicks 必须大于零。";
             }
 
             if (declinedOrExpiredCooldownTicks < 0
                 || completedOrFailedCooldownTicks < 0
                 || invalidEndCooldownTicks < 0)
             {
-                yield return $"{defName}: cooldown ticks cannot be negative.";
+                yield return $"{defName}: 冷却 Tick 数 不能为负。";
             }
 
             if (successUnityDelta < 0)
             {
-                yield return $"{defName}: successUnityDelta must be non-negative.";
+                yield return $"{defName}: successUnityDelta 不能为负。";
             }
 
             if (failUnityDelta > 0)
             {
-                yield return $"{defName}: failUnityDelta must be non-positive.";
+                yield return $"{defName}: failUnityDelta 不能为正。";
             }
 
             if (successTrustDeltaPerValidParticipant < 0)
             {
-                yield return $"{defName}: successTrustDeltaPerValidParticipant must be non-negative.";
+                yield return $"{defName}: successTrustDeltaPerValidParticipant 不能为负。";
             }
 
             if (failTrustDeltaPerValidParticipant > 0)
             {
-                yield return $"{defName}: failTrustDeltaPerValidParticipant must be non-positive.";
+                yield return $"{defName}: failTrustDeltaPerValidParticipant 不能为正。";
             }
 
             if (level2SupportPointsFactor < 0f
@@ -96,7 +96,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || level4SupportPointsFactor < 0f
                 || level5SupportPointsFactor < 0f)
             {
-                yield return $"{defName}: support points factors (L2..L5) cannot be negative.";
+                yield return $"{defName}: 支援点数倍率（等级 2..5） 不能为负。";
             }
 
             // 必须非递减：等级越高，盟友投入的援军比例不应反而变小。
@@ -104,12 +104,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || level3SupportPointsFactor > level4SupportPointsFactor
                 || level4SupportPointsFactor > level5SupportPointsFactor)
             {
-                yield return $"{defName}: support points factors (L2..L5) must be non-decreasing.";
+                yield return $"{defName}: 支援点数倍率（等级 2..5） 必须非递减。";
             }
 
             if (maxParticipants < 1 || maxParticipants > 3)
             {
-                yield return $"{defName}: maxParticipants must be in 1..3.";
+                yield return $"{defName}: maxParticipants 必须在 1..3 范围内。";
             }
         }
 

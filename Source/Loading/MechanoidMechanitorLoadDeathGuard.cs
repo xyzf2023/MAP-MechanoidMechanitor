@@ -28,7 +28,7 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     internal static class MechanoidMechanitorLoadDeathGuard
     {
-        private const string LogPrefix = "[MAP-LOAD-DEATH-GUARD]";
+        private const string LogPrefix = "[MAP-机械族机械师] 加载期死亡保护：";
         private const int LogKeyBase = 0x4D415047; // "MAPG"
 
         private static readonly HashSet<Pawn> protectedPawns =

@@ -94,7 +94,7 @@ namespace MAP_MechanoidMechanitor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("[MAP] 湮灭炮收集 " + thing + " 的容器内容时发生异常：" + ex);
+                    Log.Error("[MAP-机械族机械师] 湮灭炮收集 " + thing + " 的容器内容时发生异常：" + ex);
                 }
             }
             // 持有者先走正常 Kill；其后已掉落的内容也有一次正常 Kill 的机会。
@@ -141,7 +141,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP] 湮灭炮尝试正常击毁 " + thing + " 时发生异常：" + ex);
+                Log.Error("[MAP-机械族机械师] 湮灭炮尝试正常击毁 " + thing + " 时发生异常：" + ex);
             }
             finally
             {
@@ -181,7 +181,7 @@ namespace MAP_MechanoidMechanitor
             catch (Exception ex)
             {
                 // 单个对象的销毁回调异常不能中止其余格子的结算。
-                Log.Error("[MAP] 湮灭炮销毁 " + thing + " 时发生异常：" + ex);
+                Log.Error("[MAP-机械族机械师] 湮灭炮销毁 " + thing + " 时发生异常：" + ex);
             }
         }
 
@@ -339,7 +339,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP] 湮灭炮余波生成失败：" + ex);
+                Log.Error("[MAP-机械族机械师] 湮灭炮余波生成失败：" + ex);
             }
         }
 

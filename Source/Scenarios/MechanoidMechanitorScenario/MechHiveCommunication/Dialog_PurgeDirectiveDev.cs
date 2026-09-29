@@ -235,7 +235,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static void LogQuestState()
         {
             string state = PurgeDirectiveRatingDebugUtility.BuildTaskStateText();
-            Log.Message("[肃清指令 DEV]\n" + state);
+            Log.Message("[MAP-机械族机械师] 肃清指令调试：\n" + state);
             ShowResult(true, "任务状态已写入开发者日志。");
         }
 

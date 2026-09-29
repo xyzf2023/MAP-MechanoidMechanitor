@@ -69,7 +69,7 @@ namespace MAP_MechanoidMechanitor
             catch (System.Exception exception)
             {
                 // 第三方射弹的材质读取失败也不能阻止真实拦截。
-                Log.ErrorOnce("[MAP] Gravity field projectile visual: " + exception, 193847201);
+                Log.ErrorOnce("[MAP-机械族机械师] 重力场投射物视觉效果异常：" + exception, 193847201);
             }
             finally
             {

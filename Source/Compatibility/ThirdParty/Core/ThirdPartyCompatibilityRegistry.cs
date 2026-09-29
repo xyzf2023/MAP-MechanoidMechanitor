@@ -85,7 +85,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
         private static void LogAppliedSummary(
             List<ThirdPartyCompatibilityResult> applied)
         {
-            if (applied.Count == 0)
+            if (applied.Count == 0
+                || MAPMechanitorMod.Settings?.enableStartupDetailedLogging != true)
             {
                 return;
             }

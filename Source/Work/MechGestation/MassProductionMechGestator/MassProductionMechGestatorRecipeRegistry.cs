@@ -131,17 +131,22 @@ namespace MAP_MechanoidMechanitor
             // 使全部 mechResurrection 配方形成连续的置顶区块。
             accepted.Sort(CompareRecipesForStableAppend);
 
-            if (Prefs.DevMode)
+            if (MAPMechanitorMod.Settings?.enableStartupDetailedLogging == true)
             {
-                LogDevSummary(
+                LogStartupSummary(
                     accepted,
                     productionRecipeCount,
-                    resurrectionRecipeCount,
-                    rejectedNoProduct,
-                    rejectedNotPawn,
-                    rejectedNotMechanoid,
-                    rejectedNoPawnKind,
-                    rejectedBadCount);
+                    resurrectionRecipeCount);
+            }
+
+            // 警告保留原有开发者模式条件，不受启动详细日志开关影响。
+            if (Prefs.DevMode)
+            {
+                LogRejectedGroup("无产物", rejectedNoProduct);
+                LogRejectedGroup("产物数量不等于 1", rejectedBadCount);
+                LogRejectedGroup("产物不是角色", rejectedNotPawn);
+                LogRejectedGroup("产物不是机械族", rejectedNotMechanoid);
+                LogRejectedGroup("没有匹配的 PawnKindDef", rejectedNoPawnKind);
             }
 
             return accepted;
@@ -218,15 +223,10 @@ namespace MAP_MechanoidMechanitor
             return string.CompareOrdinal(a.defName, b.defName);
         }
 
-        private static void LogDevSummary(
+        private static void LogStartupSummary(
             List<RecipeDef> accepted,
             int productionRecipeCount,
-            int resurrectionRecipeCount,
-            List<string> rejectedNoProduct,
-            List<string> rejectedNotPawn,
-            List<string> rejectedNotMechanoid,
-            List<string> rejectedNoPawnKind,
-            List<string> rejectedBadCount)
+            int resurrectionRecipeCount)
         {
             StringBuilder names = new StringBuilder();
             for (int i = 0; i < accepted.Count; i++)
@@ -240,21 +240,15 @@ namespace MAP_MechanoidMechanitor
             }
 
             Log.Message(
-                "[MAP-MechanoidMechanitor] Mass production gestator recipe registry initialized. Eligible count="
+                "[MAP-机械族机械师] 量产机械培育仓配方注册完成。合格配方数="
                 + accepted.Count
-                + ", production="
+                + "，生产配方数="
                 + productionRecipeCount
-                + ", resurrection="
+                + "，复活配方数="
                 + resurrectionRecipeCount
-                + ". Candidates=["
+                + "。候选配方=["
                 + names
-                + "].");
-
-            LogRejectedGroup("no product", rejectedNoProduct);
-            LogRejectedGroup("product count != 1", rejectedBadCount);
-            LogRejectedGroup("product is not Pawn", rejectedNotPawn);
-            LogRejectedGroup("product is not mechanoid", rejectedNotMechanoid);
-            LogRejectedGroup("no matching PawnKindDef", rejectedNoPawnKind);
+                + "]。");
         }
 
         private static void LogRejectedGroup(string reason, List<string> defNames)
@@ -265,9 +259,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             Log.Warning(
-                "[MAP-MechanoidMechanitor] Suspected mech gestation recipes excluded ("
+                "[MAP-机械族机械师] 已排除疑似机械培育配方（"
                 + reason
-                + "): "
+                + "）："
                 + string.Join(", ", defNames));
         }
     }

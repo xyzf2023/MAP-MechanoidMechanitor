@@ -31,7 +31,7 @@ namespace MAP_MechanoidMechanitor
                 catch (Exception ex)
                 {
                     // 单格地形回调异常不阻止其余格子和落点生命周期继续推进。
-                    Log.ErrorOnce("[MAP] 湮灭炮移除地形失败：" + ex, 1908263103);
+                    Log.ErrorOnce("[MAP-机械族机械师] 湮灭炮移除地形失败：" + ex, 1908263103);
                 }
             }
         }

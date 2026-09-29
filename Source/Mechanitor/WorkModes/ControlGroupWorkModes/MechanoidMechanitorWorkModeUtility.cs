@@ -99,7 +99,7 @@ namespace MAP_MechanoidMechanitor
             if (mobileDef == null)
             {
                 Log.ErrorOnce(
-                    "[MAP] MAP_MechanoidMechanitor_WorkMode_MobileCombat HediffDef missing.",
+                    "[MAP-机械族机械师] 缺少移动作战健康状态定义 MAP_MechanoidMechanitor_WorkMode_MobileCombat。",
                     87422031);
                 return;
             }

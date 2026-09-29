@@ -100,7 +100,7 @@ namespace MAP_MechanoidMechanitor
             if (targetInstruction.blocks.Count > 0)
             {
                 Log.ErrorOnce(
-                    $"{LogPrefix}GetOverseer 门控调用位于 exception block 内，补丁未应用。",
+                    $"{LogPrefix}GetOverseer 门控调用位于 异常处理块 内，补丁未应用。",
                     ErrorKeyExceptionBlock);
                 return codes;
             }

@@ -411,7 +411,7 @@ namespace MAP_MechanoidMechanitor
                     if (codes[i].Calls(race) && codes[i + 1].Calls(humanlike)) replaced++;
                 if (replaced != 2)
                 {
-                    Log.Error("[MAP] 仿生伴侣好感资格补丁结构变化，保持原方法：" + __originalMethod.Name);
+                    Log.Error("[MAP-机械族机械师] 仿生伴侣好感资格补丁结构变化，保持原方法：" + __originalMethod.Name);
                     return codes;
                 }
                 for (int i = 0; i < codes.Count - 1; i++)

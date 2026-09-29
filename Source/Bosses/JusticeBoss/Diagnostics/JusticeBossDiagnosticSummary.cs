@@ -28,7 +28,7 @@ namespace MAP_MechanoidMechanitor
 
     public static class JusticeBossDiagnosticUtility
     {
-        private const string LogPrefix = "[MAP JusticeBoss Diagnostic]";
+        private const string LogPrefix = "[MAP-机械族机械师] 正义 BOSS 诊断：";
 
         internal const double WaveSlowMs = 1000d;
         internal const double InfrastructureSlowMs = 1000d;
@@ -311,7 +311,7 @@ namespace MAP_MechanoidMechanitor
                 installed = false;
                 JusticeBossDiagnosticUtility.ResetRuntimeState();
                 Log.Error(
-                    "[MAP JusticeBoss Diagnostic] 汇总诊断补丁安装失败："
+                    "[MAP-机械族机械师] 正义 BOSS 诊断： 汇总诊断补丁安装失败："
                         + exception);
             }
         }

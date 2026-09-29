@@ -149,7 +149,7 @@ namespace MAP_MechanoidMechanitor
                     if (!inWorld && !held && pawn.MapHeld == null)
                     {
                         Log.WarningOnce(
-                            "[MAP JusticeBoss] Pending drop pawn lost before landing: "
+                            "[MAP-机械族机械师] 正义 BOSS： 等待空投的角色在落地前丢失："
                                 + pawn.LabelShort,
                             pawn.thingIDNumber ^ 0x4A05);
                         pending.RemoveAt(i);

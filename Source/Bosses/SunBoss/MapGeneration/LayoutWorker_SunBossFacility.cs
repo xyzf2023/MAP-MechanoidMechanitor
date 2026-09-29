@@ -55,14 +55,14 @@ namespace MAP_MechanoidMechanitor
         {
             SunBossLayoutDef settings = Settings;
             if (settings.arenaInteriorSize % 2 == 0)
-                throw new InvalidOperationException("[MAP] 太阳大厅净尺寸必须为奇数。");
+                throw new InvalidOperationException("[MAP-机械族机械师] 太阳大厅净尺寸必须为奇数。");
             int hallSize = settings.arenaInteriorSize + 2;
             int ringMargin = settings.corridorWidth + 1;
             int minBand = 12;
             int slackX = (rect.Width - hallSize) / 2 - ringMargin - minBand;
             int slackZ = (rect.Height - hallSize) / 2 - ringMargin - minBand;
             if (slackX < 0 || slackZ < 0 || settings.arenaRoom == null || settings.passageRoom == null)
-                throw new InvalidOperationException("[MAP] 太阳设施尺寸不足或缺少大厅/走廊定义。");
+                throw new InvalidOperationException("[MAP-机械族机械师] 太阳设施尺寸不足或缺少大厅/走廊定义。");
 
             int shiftX = Math.Min(settings.centerOffset, slackX);
             int shiftZ = Math.Min(settings.centerOffset, slackZ);
@@ -153,7 +153,7 @@ namespace MAP_MechanoidMechanitor
                 foreach (LayoutRoom neighbour in queue.Dequeue().connections)
                     if (seen.Add(neighbour)) queue.Enqueue(neighbour);
             if (seen.Count != layout.Rooms.Count)
-                throw new InvalidOperationException("[MAP] 太阳设施出现不连通房间，拒绝生成。");
+                throw new InvalidOperationException("[MAP-机械族机械师] 太阳设施出现不连通房间，拒绝生成。");
         }
     }
 }

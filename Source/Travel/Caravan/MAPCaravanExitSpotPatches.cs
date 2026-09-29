@@ -337,7 +337,7 @@ namespace MAP_MechanoidMechanitor
             {
                 Log.ErrorOnce(
                     $"{LogPrefix}{targetDescription} 中 "
-                    + "Pawn.IsColonist getter "
+                    + "Pawn.IsColonist 属性读取方法 "
                     + $"预期匹配 {expectedCount} 处，"
                     + $"实际匹配 {matchIndices.Count} 处。"
                     + "本次不进行替换并保留原版行为。",

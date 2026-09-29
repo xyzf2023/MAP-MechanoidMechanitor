@@ -261,9 +261,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 foreach (Pawn pawn in changes.Keys)
                 {
                     try { SyncPawn(pawn); }
-                    catch (Exception rollbackError) { Log.Error("[MAP] 带宽调拨健康状态恢复失败：" + rollbackError); }
+                    catch (Exception rollbackError) { Log.Error("[MAP-机械族机械师] 带宽调拨健康状态恢复失败：" + rollbackError); }
                 }
-                Log.Error("[MAP] 带宽调拨失败，已恢复配额：" + ex);
+                Log.Error("[MAP-机械族机械师] 带宽调拨失败，已恢复配额：" + ex);
                 return false;
             }
         }

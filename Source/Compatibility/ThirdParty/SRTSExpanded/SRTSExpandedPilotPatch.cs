@@ -35,7 +35,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded
             if (getter == null || helper == null)
             {
                 throw new InvalidOperationException(
-                    $"{LogPrefix}无法解析 Pawn.IsFreeColonist getter 或本 MOD 辅助方法，补丁未应用。");
+                    $"{LogPrefix}无法解析 Pawn.IsFreeColonist 属性读取方法 或本 MOD 辅助方法，补丁未应用。");
             }
 
             int matchCount = 0;
@@ -59,7 +59,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded
             if (codes[getterIndex].blocks.Count > 0)
             {
                 throw new InvalidOperationException(
-                    $"{LogPrefix}IsPilot(Pawn) 中 IsFreeColonist 调用位于 exception block，" +
+                    $"{LogPrefix}IsPilot(Pawn) 中 IsFreeColonist 调用位于 异常处理块，" +
                     "无法安全扩展，兼容安全跳过。");
             }
 

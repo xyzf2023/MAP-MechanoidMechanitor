@@ -53,7 +53,7 @@ namespace MAP_MechanoidMechanitor
             BossgroupDef? def = MAP_JusticeBossDefOf.MAP_JusticeBossGroup;
             if (def?.Worker == null)
             {
-                Log.Error("[MAP JusticeBoss] BossgroupDef or Worker missing.");
+                Log.Error("[MAP-机械族机械师] 正义 BOSS： 缺少 BOSS 编组定义或执行器。");
                 return false;
             }
 

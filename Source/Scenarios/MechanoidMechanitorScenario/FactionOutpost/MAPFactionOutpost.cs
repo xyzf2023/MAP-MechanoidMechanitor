@@ -444,7 +444,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] 卸载普通派系前哨失败初始化地图时发生异常: " + ex);
+                Log.Warning("[MAP-机械族机械师] 卸载普通派系前哨失败初始化地图时发生异常: " + ex);
             }
         }
 

@@ -53,7 +53,7 @@ namespace MAP_MechanoidMechanitor
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("[MAP] 剧情离场准备失败：" + pawn + "\n" + ex);
+                        Log.Error("[MAP-机械族机械师] 剧情离场准备失败：" + pawn + "\n" + ex);
                         failed(pawn, "恢复形态或取出容器时发生异常。");
                     }
                 }
@@ -86,7 +86,7 @@ namespace MAP_MechanoidMechanitor
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("[MAP] 剧情离图失败：" + pawn + "\n" + ex);
+                        Log.Error("[MAP-机械族机械师] 剧情离图失败：" + pawn + "\n" + ex);
                         failed(pawn, "离开地图时发生异常。");
                     }
                     finally
@@ -114,7 +114,7 @@ namespace MAP_MechanoidMechanitor
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("[MAP] 剧情离场监管解除失败：" + pawn + "\n" + ex);
+                        Log.Error("[MAP-机械族机械师] 剧情离场监管解除失败：" + pawn + "\n" + ex);
                         failed(pawn, "未能完全解除监管控制，已取消该角色的派系转换。");
                     }
                 }
@@ -133,7 +133,7 @@ namespace MAP_MechanoidMechanitor
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("[MAP] 剧情离场派系转换失败：" + pawn + "\n" + ex);
+                        Log.Error("[MAP-机械族机械师] 剧情离场派系转换失败：" + pawn + "\n" + ex);
                         failed(pawn, "离图后转换派系失败，已尝试送回原地图。");
                         // 若第三方 Postfix 在换派系之后才抛错，角色已经完成目标状态。
                         if (!pawn.Spawned && pawn.MapHeld == null && pawn.Faction == destination)
@@ -154,7 +154,7 @@ namespace MAP_MechanoidMechanitor
                     }
                     catch (Exception ex)
                     {
-                        Log.Error("[MAP] 剧情离场失败后的地图恢复异常：" + pawn + "\n" + ex);
+                        Log.Error("[MAP-机械族机械师] 剧情离场失败后的地图恢复异常：" + pawn + "\n" + ex);
                     }
                     finally
                     {

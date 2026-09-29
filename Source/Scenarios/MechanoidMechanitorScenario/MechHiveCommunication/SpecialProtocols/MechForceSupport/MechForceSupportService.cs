@@ -402,7 +402,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP] 部队支援生成部队时发生异常，已终止部署且未扣款: " + ex);
+                    "[MAP-机械族机械师] 部队支援生成部队时发生异常，已终止部署且未扣款: " + ex);
                 MechHiveCombatPawnUtility.DiscardPawns(pawns);
                 return MechForceSupportDeploymentResult.Failed(
                     ErrorGenerationFailed);
@@ -431,7 +431,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Error("[MAP] Requested mech force support failed after commit: " + ex);
+                Log.Error("[MAP-机械族机械师] 机械部队支援提交后执行失败：" + ex);
                 return MechForceSupportDeploymentResult.FailedAfterCommit(
                     ErrorCommittedFailure);
             }
@@ -628,7 +628,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
                 string composition = DescribeMakerCompositionForLog(maker);
                 string message =
-                    "[MAP] 部队支援跳过了一个异常的 PawnGroupMaker"
+                    "[MAP-机械族机械师] 部队支援跳过了一个异常的 PawnGroupMaker"
                     + " | faction=" + factionInfo
                     + " | composition=" + composition;
                 if (ex != null)
@@ -640,7 +640,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch
             {
-                Log.Warning("[MAP] 部队支援跳过了一个异常的 PawnGroupMaker");
+                Log.Warning("[MAP-机械族机械师] 部队支援跳过了一个异常的 PawnGroupMaker");
             }
         }
 
@@ -675,7 +675,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
             catch (Exception ex)
             {
-                Log.Warning("[MAP] Failed to send mech force support letter: " + ex);
+                Log.Warning("[MAP-机械族机械师] 机械部队支援信件发送失败：" + ex);
             }
         }
     }

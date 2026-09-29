@@ -36,7 +36,7 @@ namespace MAP_MechanoidMechanitor
                 if (stack.Count == 0)
                 {
                     Log.Error(
-                        "[MAP-MechanoidMechanitor] vanilla BillTick allowance stack was empty when unwinding for "
+                        "[MAP-机械族机械师] 恢复原版账单 Tick 许可时许可栈为空，账单="
                         + bill.ToStringSafe()
                         + ".");
                 }
@@ -46,9 +46,9 @@ namespace MAP_MechanoidMechanitor
                     if (!ReferenceEquals(popped, bill))
                     {
                         Log.Error(
-                            "[MAP-MechanoidMechanitor] vanilla BillTick allowance stack mismatch. Expected "
+                            "[MAP-机械族机械师] 原版账单 Tick 许可栈不匹配，预期账单="
                             + bill.ToStringSafe()
-                            + ", popped "
+                            + "，实际弹出账单="
                             + popped.ToStringSafe()
                             + ".");
                     }

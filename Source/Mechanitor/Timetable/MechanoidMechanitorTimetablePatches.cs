@@ -209,7 +209,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             Log.WarningOnce(
-                "[MAP-机械族机械师] Schedule UI 跳过 timetable 为 null 的 "
+                "[MAP-机械族机械师] 日程界面 跳过 timetable 为 null 的 "
                 + "ColonistLikeTimetable 机械族（生命周期异常，不在 UI 层初始化）："
                 + $"{pawn.LabelShort}（{pawn.ThingID}）。",
                 WarningKeyScheduleTimetableNullBase ^ pawn.thingIDNumber);

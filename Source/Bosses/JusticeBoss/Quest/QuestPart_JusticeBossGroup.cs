@@ -70,7 +70,7 @@ namespace MAP_MechanoidMechanitor
             else
             {
                 Log.Warning(
-                    "[MAP JusticeBoss] Justice left map unexpectedly while state="
+                    "[MAP-机械族机械师] 正义 BOSS： 正义意外离开地图，当前状态="
                     + (tracker?.State.ToString() ?? "null"));
             }
 

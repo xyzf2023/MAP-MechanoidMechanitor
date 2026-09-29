@@ -416,7 +416,7 @@ namespace MAP_MechanoidMechanitor
             catch (Exception ex)
             {
                 Log.Error(
-                    "[MAP-StoryStateDebug] 控制台剧情状态切换发生未处理异常。\n"
+                    "[MAP-机械族机械师] 剧情状态调试： 控制台剧情状态切换发生未处理异常。\n"
                     + ex);
                 succeeded = false;
                 message = "切换剧本状态时发生异常；请查看日志。";
@@ -446,11 +446,11 @@ namespace MAP_MechanoidMechanitor
 
             if (succeeded)
             {
-                Log.Message("[MAP-StoryStateDebug] OK " + message);
+                Log.Message("[MAP-机械族机械师] 剧情状态调试： 成功 " + message);
             }
             else
             {
-                Log.Warning("[MAP-StoryStateDebug] REJECT " + message);
+                Log.Warning("[MAP-机械族机械师] 剧情状态调试： 拒绝 " + message);
             }
         }
 

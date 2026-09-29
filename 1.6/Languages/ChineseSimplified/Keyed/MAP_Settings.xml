@@ -40,6 +40,7 @@
   <MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>开启后，阻止加载存档期间原本存活的机械族机械师因奇妙の逻辑冲突意外死亡。</MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>
 
   <!-- 模块：兼容层日志 -->
+  <MAP_Settings.StartupDetailedLogging.Label>游戏启动时输出详细日志</MAP_Settings.StartupDetailedLogging.Label>
   <MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Label>启用兼容层详细日志输出</MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Label>
   <MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Description>开启后在兼容补丁加载失败时输出详细日志</MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Description>
 

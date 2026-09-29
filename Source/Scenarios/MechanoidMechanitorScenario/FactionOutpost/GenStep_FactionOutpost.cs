@@ -19,7 +19,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (!(map?.Parent is MAPFactionOutpost outpost))
             {
-                Log.Error("[MAP] 前哨建筑生成步骤缺少对应的前哨世界对象。");
+                Log.Error("[MAP-机械族机械师] 前哨建筑生成步骤缺少对应的前哨世界对象。");
                 return;
             }
 
@@ -27,7 +27,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (sizesByTier == null || sizesByTier.Count != 4
                 || tier < 0 || tier >= sizesByTier.Count || sizesByTier[tier] < 0)
             {
-                Log.Error("[MAP] 前哨建筑生成步骤的四档尺寸配置或已保存布局档位无效。");
+                Log.Error("[MAP-机械族机械师] 前哨建筑生成步骤的四档尺寸配置或已保存布局档位无效。");
                 return;
             }
 

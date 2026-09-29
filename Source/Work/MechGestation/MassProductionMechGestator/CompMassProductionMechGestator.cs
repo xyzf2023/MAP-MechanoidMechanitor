@@ -233,7 +233,7 @@ namespace MAP_MechanoidMechanitor
             catch (Exception e)
             {
                 Log.Error(
-                    "[MAP-MechanoidMechanitor] resourceCounter.UpdateResourceCounts failed after mass production release. Building="
+                    "[MAP-机械族机械师] 量产培育释放产物后更新资源数量失败（resourceCounter.UpdateResourceCounts）。建筑="
                     + parent.ToStringSafe()
                     + ": "
                     + e);
@@ -251,11 +251,11 @@ namespace MAP_MechanoidMechanitor
 
             releaseFailureLogged = true;
             Log.ErrorOnce(
-                "[MAP-MechanoidMechanitor] Mass production gestator failed to release product near InteractionCell. Building="
+                "[MAP-机械族机械师] 量产机械培育仓无法在交互格附近释放产物。建筑="
                 + gestator.ToStringSafe()
-                + ", product="
+                + "，产物="
                 + product.ToStringSafe()
-                + ". Will retry without resettling the bill.",
+                + "。将重试释放，不会重复结算账单。",
                 GestatorStableHash(gestator) ^ 0x4D505247);
         }
 
@@ -265,7 +265,7 @@ namespace MAP_MechanoidMechanitor
             {
                 releaseMissingLogged = true;
                 Log.Error(
-                    "[MAP-MechanoidMechanitor] Mass production gestator settlementCommitted/releasePending was true but no pawn remains in innerContainer. Clearing settlement state. Building="
+                    "[MAP-机械族机械师] 量产机械培育仓已提交结算或等待释放，但内部容器已无角色，正在清除结算状态。建筑="
                     + gestator.ToStringSafe()
                     + ".");
             }
@@ -421,11 +421,11 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Log.Error(
-                    "[MAP-MechanoidMechanitor] Mass production gestator completion failed. Building="
+                    "[MAP-机械族机械师] 量产机械培育仓完成生产失败。建筑="
                     + gestator.ToStringSafe()
-                    + ", bill="
+                    + "，账单="
                     + bill.ToStringSafe()
-                    + ", recipe="
+                    + "，配方="
                     + bill.recipe.ToStringSafe()
                     + ": "
                     + e);
@@ -470,11 +470,11 @@ namespace MAP_MechanoidMechanitor
                 }
 
                 Log.Error(
-                    "[MAP-MechanoidMechanitor] Mass production gestator auto-settle from Formed state failed. Building="
+                    "[MAP-机械族机械师] 量产机械培育仓从已成型状态自动结算失败。建筑="
                     + gestator.ToStringSafe()
-                    + ", bill="
+                    + "，账单="
                     + bill.ToStringSafe()
-                    + ", recipe="
+                    + "，配方="
                     + bill.recipe.ToStringSafe()
                     + ": "
                     + e);

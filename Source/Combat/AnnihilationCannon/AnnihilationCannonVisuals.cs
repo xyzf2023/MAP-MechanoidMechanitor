@@ -96,7 +96,7 @@ namespace MAP_MechanoidMechanitor
             catch (Exception ex)
             {
                 if (mask != null) UnityEngine.Object.Destroy(mask);
-                Log.Warning("[MAP] 湮灭炮灰度蓄力贴图初始化失败：" + ex.Message);
+                Log.Warning("[MAP-机械族机械师] 湮灭炮灰度蓄力贴图初始化失败：" + ex.Message);
                 return new Material(ShaderDatabase.Transparent) { mainTexture = BaseContent.WhiteTex };
             }
             finally

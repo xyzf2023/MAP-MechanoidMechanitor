@@ -65,7 +65,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimSkyBlock
             List<CodeInstruction> codes = new List<CodeInstruction>(instructions);
             MethodInfo helper = AccessTools.Method(typeof(RimSkyBlockCoronationPatch), helperName);
             if (getter == null || helper == null)
-                throw new InvalidOperationException("空岛加冕：无法解析 getter 或兼容方法。");
+                throw new InvalidOperationException("空岛加冕：无法解析 属性读取方法 或兼容方法。");
 
             int match = -1;
             for (int i = 0; i < codes.Count; i++)

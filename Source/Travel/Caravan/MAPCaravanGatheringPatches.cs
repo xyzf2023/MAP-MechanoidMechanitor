@@ -113,7 +113,7 @@ namespace MAP_MechanoidMechanitor
             {
                 Log.ErrorOnce(
                     $"{LogPrefix}{targetMethodName} 中 "
-                    + "Pawn.IsColonist getter 预期仅有 1 处，"
+                    + "Pawn.IsColonist 属性读取方法 预期仅有 1 处，"
                     + $"实际匹配 {matchCount} 处。"
                     + "本次不进行替换并保留原版行为。",
                     errorKeyMatchCount);

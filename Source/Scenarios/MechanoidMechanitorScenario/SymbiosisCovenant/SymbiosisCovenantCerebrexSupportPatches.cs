@@ -25,7 +25,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public static MethodBase TargetMethod()
         {
             return AccessTools.Method(typeof(QuestNode_Root_Gravcore_Mechhive), "RunInt")
-                ?? throw new InvalidOperationException("QuestNode_Root_Gravcore_Mechhive.RunInt not found");
+                ?? throw new InvalidOperationException("未找到 QuestNode_Root_Gravcore_Mechhive.RunInt");
         }
 
         public static void Postfix()
@@ -71,7 +71,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             quest.AddPart(part);
 
-            Log.Message($"[MAP][SymbiosisCovenantCerebrexSupport] 已注入主脑援军支援 QuestPart（quest={quest.id}）。");
+            Log.Message($"[MAP-机械族机械师] 共生盟约主脑支援： 已注入主脑援军支援 QuestPart（quest={quest.id}）。");
         }
     }
 }

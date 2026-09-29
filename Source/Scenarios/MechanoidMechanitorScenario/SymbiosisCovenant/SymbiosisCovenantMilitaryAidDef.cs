@@ -77,19 +77,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 SymbiosisCovenantMilitaryAidLevelSettings settings = levels[i];
                 if (settings.level < 3 || settings.level > 5)
                 {
-                    yield return $"{defName}: military aid level must be in 3..5, got {settings.level}.";
+                    yield return $"{defName}: 军事援助等级必须在 3..5 范围内，当前为 {settings.level}。";
                 }
                 if (!seenLevels.Add(settings.level))
                 {
-                    yield return $"{defName}: duplicate military aid level {settings.level}.";
+                    yield return $"{defName}: 军事援助等级 {settings.level} 重复。";
                 }
                 if (settings.offerChance < 0f || settings.offerChance > 1f)
                 {
-                    yield return $"{defName}: offerChance must be in 0..1 for level {settings.level}.";
+                    yield return $"{defName}: 等级 {settings.level} 的援助提议概率 offerChance 必须在 0..1 范围内。";
                 }
                 if (settings.supportPointsFactor < 0f)
                 {
-                    yield return $"{defName}: supportPointsFactor cannot be negative for level {settings.level}.";
+                    yield return $"{defName}: 等级 {settings.level} 的支援点数倍率 supportPointsFactor 不能为负。";
                 }
             }
 
@@ -97,7 +97,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (!seenLevels.Contains(level))
                 {
-                    yield return $"{defName}: missing military aid settings for level {level}.";
+                    yield return $"{defName}: 缺少等级 {level} 的军事援助设置。";
                 }
             }
 
@@ -107,11 +107,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 if (tier.eligibleResponderCount.min < 1
                     || tier.eligibleResponderCount.max < tier.eligibleResponderCount.min)
                 {
-                    yield return $"{defName}: responderChanceTiers[{i}] has invalid responder count range.";
+                    yield return $"{defName}: responderChanceTiers[{i}] 的响应派系数量范围无效。";
                 }
                 if (tier.additionalChance < 0f || tier.additionalChance > 1f)
                 {
-                    yield return $"{defName}: responderChanceTiers[{i}] has invalid additionalChance.";
+                    yield return $"{defName}: responderChanceTiers[{i}] 的额外概率 additionalChance 无效。";
                 }
                 for (int j = i + 1; j < responderChanceTiers.Count; j++)
                 {
@@ -119,7 +119,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     if (tier.eligibleResponderCount.min <= other.eligibleResponderCount.max
                         && other.eligibleResponderCount.min <= tier.eligibleResponderCount.max)
                     {
-                        yield return $"{defName}: responderChanceTiers[{i}] overlaps tier {j}.";
+                        yield return $"{defName}: responderChanceTiers[{i}] 与第 {j} 档重叠。";
                     }
                 }
             }
@@ -130,21 +130,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 string name = triggerRaidIncidentDefNames[i];
                 if (name.NullOrEmpty())
                 {
-                    yield return $"{defName}: triggerRaidIncidentDefNames cannot contain empty values.";
+                    yield return $"{defName}: triggerRaidIncidentDefNames 不能包含空值。";
                 }
                 else if (!incidentNames.Add(name))
                 {
-                    yield return $"{defName}: duplicate trigger raid incident defName '{name}'.";
+                    yield return $"{defName}: 触发袭击事件 defName '{name}' 重复。";
                 }
             }
 
             if (triggerRaidIncidentDefNames.Count == 0)
             {
-                yield return $"{defName}: at least one trigger raid incident defName is required.";
+                yield return $"{defName}: 必须至少配置一个触发袭击事件的 defName。";
             }
             if (maxOfferChance < 0f || maxOfferChance > 1f)
             {
-                yield return $"{defName}: maxOfferChance must be in 0..1.";
+                yield return $"{defName}: maxOfferChance 必须在 0..1 范围内。";
             }
             if (repeatedResponderWeight < 0f
                 || minimumInitialActiveThreatCombatPower < 0f
@@ -152,7 +152,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 || offerTimeoutTicks <= 0
                 || acceptedCooldownTicks < 0)
             {
-                yield return $"{defName}: military aid global settings contain invalid values.";
+                yield return $"{defName}: 军事援助全局设置包含无效值。";
             }
         }
     }

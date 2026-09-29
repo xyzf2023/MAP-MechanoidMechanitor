@@ -1513,7 +1513,7 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_SymbiosisCovenantState.CurrentComponent;
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[MAP-SymbiosisDebug] ===== JointOperation =====");
+            sb.AppendLine("[MAP-机械族机械师] 共生盟约调试： ===== 联合行动 =====");
 
             if (state == null)
             {
@@ -1676,7 +1676,7 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_SymbiosisCovenantState.CurrentComponent;
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[MAP-SymbiosisDebug] ===== Covenant =====");
+            sb.AppendLine("[MAP-机械族机械师] 共生盟约调试： ===== 盟约 =====");
 
             if (state == null)
             {
@@ -1708,7 +1708,7 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_SymbiosisCovenantState.CurrentComponent;
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[MAP-SymbiosisDebug] ===== TradeDelegation =====");
+            sb.AppendLine("[MAP-机械族机械师] 共生盟约调试： ===== 贸易代表团 =====");
 
             if (state == null)
             {
@@ -1753,7 +1753,7 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_SymbiosisCovenantState.CurrentComponent;
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[MAP-SymbiosisDebug] ===== MilitaryAid =====");
+            sb.AppendLine("[MAP-机械族机械师] 共生盟约调试： ===== 军事援助 =====");
 
             if (state == null || Find.CurrentMap == null)
             {
@@ -1822,7 +1822,7 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_SymbiosisCovenantState.CurrentComponent;
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[MAP-SymbiosisDebug] ===== FactionRecords =====");
+            sb.AppendLine("[MAP-机械族机械师] 共生盟约调试： ===== 派系记录 =====");
 
             if (state == null)
             {

@@ -187,9 +187,9 @@ namespace MAP_MechanoidMechanitor
                     {
                         loggedAnySkip = true;
                         Log.Warning(
-                            "[MAP JusticeBoss] Skipped deploying "
+                            "[MAP-机械族机械师] 正义 BOSS： 跳过部署："
                             + def.defName
-                            + " (no legal cell).");
+                            + "（没有合法位置）。");
                     }
 
                     continue;

@@ -272,7 +272,7 @@ namespace MAP_MechanoidMechanitor
                 yield return call;
             }
             if (replaced != 1)
-                throw new InvalidOperationException("[MAP] 太阳伤害结算未找到唯一的护甲后传播入口，拒绝加载不完整保护。");
+                throw new InvalidOperationException("[MAP-机械族机械师] 太阳伤害结算未找到唯一的护甲后传播入口，拒绝加载不完整保护。");
         }
     }
 

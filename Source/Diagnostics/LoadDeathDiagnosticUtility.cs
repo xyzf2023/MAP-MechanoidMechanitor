@@ -17,7 +17,7 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     internal static class LoadDeathDiagnosticUtility
     {
-        internal const string LogPrefix = "[MAP-LOAD-DEATH-DIAG]";
+        internal const string LogPrefix = "[MAP-机械族机械师] 加载期死亡诊断：";
 
         private static readonly object Sync = new object();
         private static readonly HashSet<string> WatchedPawnIds = new HashSet<string>();
@@ -373,7 +373,7 @@ namespace MAP_MechanoidMechanitor
             {
                 try
                 {
-                    Log.Message(LogPrefix + " STACK " + stack);
+                    Log.Message(LogPrefix + " 调用堆栈 " + stack);
                 }
                 catch
                 {
@@ -439,7 +439,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             string details =
-                "*** FIRST DEAD TRANSITION ***"
+                "*** 首次进入死亡状态 ***"
                 + " METHOD=" + SafeText(methodName)
                 + " TRIGGER_HEDIFF=" + SafeText(triggeringHediff)
                 + " DEAD_BEFORE=" + state.deadBefore
@@ -458,7 +458,7 @@ namespace MAP_MechanoidMechanitor
                 + " AFTER_MECHANITOR={" + BuildMechanitorRecordSnapshot(pawn) + "}";
 
             WriteWithStack(
-                "*** FIRST DEAD TRANSITION ***",
+                "*** 首次进入死亡状态 ***",
                 pawn,
                 details,
                 state.stackTrace ?? SafeStackTrace(2));
