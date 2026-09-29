@@ -10,7 +10,7 @@ namespace MAP_MechanoidMechanitor
     /// <summary>仅为原版索敌提供激光射程与射线判定，实际施放仍由已有 Job 执行。</summary>
     internal sealed class HighEnergyLaserBeamTargetSearcher : IAttackTargetSearcher
     {
-        private const float MinTargetDistance = 5f;
+        internal const float MinTargetDistance = 5f;
         private readonly Pawn pawn;
         private readonly CompHighEnergyLaserBeam laser;
 
@@ -44,9 +44,11 @@ namespace MAP_MechanoidMechanitor
         internal static LocalTargetInfo CastTarget(Thing target) => target is Pawn
             ? new LocalTargetInfo(target) : new LocalTargetInfo(target.Position);
 
-        private bool IsValidTarget(Thing target)
+        internal bool IsValidTarget(Thing target)
         {
             if (target.Destroyed || !target.Spawned || target.Map != pawn.Map
+                || !pawn.HostileTo(target) || !(target is IAttackTarget attackTarget)
+                || attackTarget.ThreatDisabled(this) || !AttackTargetFinder.IsAutoTargetable(attackTarget)
                 || (target.Position - pawn.Position).LengthHorizontalSquared <= MinTargetDistance * MinTargetDistance
                 || !laser.ValidInitialTarget(pawn, CastTarget(target))) return false;
             // 搜索器不是 Pawn，显式保留原版对 Pawn 所属 Lord 的目标限制。
@@ -57,6 +59,12 @@ namespace MAP_MechanoidMechanitor
 
         private sealed class Verb_HighEnergyLaserBeamTargeting : Verb
         {
+            // 射击位置搜索也遵守自动激光的中心点射程与严格大于 5 格的限制。
+            public override bool CanHitTargetFrom(IntVec3 root, LocalTargetInfo targ) => targ.IsValid
+                && (targ.Cell - root).LengthHorizontalSquared > MinTargetDistance * MinTargetDistance
+                && (targ.Cell - root).LengthHorizontalSquared <= verbProps.range * verbProps.range
+                && base.CanHitTargetFrom(root, targ);
+
             protected override bool TryCastShot() => false;
         }
     }
@@ -66,8 +74,7 @@ namespace MAP_MechanoidMechanitor
     {
         private static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> __result, Pawn_DraftController __instance)
         {
-            bool showToggle = __instance.Drafted
-                && __instance.pawn.GetComp<CompHighEnergyLaserBeam>()?.SupportsFireAtWill == true;
+            bool showToggle = __instance.pawn.GetComp<CompHighEnergyLaserBeam>()?.SupportsFireAtWill == true;
             bool foundToggle = false;
             foreach (Gizmo gizmo in __result)
             {

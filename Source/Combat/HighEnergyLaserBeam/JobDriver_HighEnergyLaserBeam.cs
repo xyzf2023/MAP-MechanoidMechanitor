@@ -152,7 +152,7 @@ namespace MAP_MechanoidMechanitor
                     && pawn.Map == castMap && pawn.Position == job.targetC.Cell
                     && pawn.pather?.Moving != true
                     && (pawn.stances?.FullBodyBusy != true || SunSkillCooldown.Owns(pawn, job));
-            if (Laser?.CanOperate(pawn) != true) return false;
+            if (Laser?.CanOperate(pawn, allowUndrafted: !job.playerForced) != true) return false;
             // 关闭自由开火只终止自动施放；手动命令及已经开始的恢复阶段保持原行为。
             if (!job.playerForced && Laser.Props.allowAutoFire && !Laser.AutoFireEnabled) return false;
             // 玩家仍保留原有的部件检查周期；BOSS 部件真正损毁后当 tick 停止技能。

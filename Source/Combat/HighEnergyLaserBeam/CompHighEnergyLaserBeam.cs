@@ -54,7 +54,20 @@ namespace MAP_MechanoidMechanitor
         internal bool SupportsFireAtWill => Props.allowAutoFire
             && parent is Pawn actor && actor.Faction == Faction.OfPlayer;
         internal bool AutoFireEnabled => SupportsFireAtWill
-            && parent is Pawn actor && actor.Drafted && actor.drafter?.FireAtWill == true;
+            && parent is Pawn actor && actor.drafter?.FireAtWill == true;
+        internal bool CanStartAutoFire => parent is Pawn actor && AutoFireEnabled
+            && CanOperate(actor, allowUndrafted: true) && HasEmitter(actor)
+            && Find.TickManager.TicksGame >= readyTick && actor.stances?.FullBodyBusy == false
+            && actor.kindDef.canMeleeAttack && !actor.IsCarryingPawn() && !actor.IsShambler
+            && !actor.WorkTagIsDisabled(WorkTags.Violent)
+            && (actor.IsPlayerControlled || !actor.IsPsychologicallyInvisible())
+            && !IsUsingSunSkill;
+        internal bool IsUsingSunSkill => parent is Pawn actor
+            && (actor.CurJobDef == HighEnergyLaserBeamDefOf.MAP_HighEnergyLaserBeam
+                || actor.CurJobDef == AnnihilationCannonDefOf.MAP_AnnihilationCannon
+                || actor.CurJobDef == EnergyPulseDefOf.MAP_EnergyPulse);
+        internal Verb? AutoAttackVerb => parent is Pawn actor
+            ? GetAutoTargetSearcher(actor).CurrentEffectiveVerb : null;
         internal void ResetCooldown() => readyTick = 0;
 
         internal bool HasEmitter(Pawn actor)
@@ -66,9 +79,9 @@ namespace MAP_MechanoidMechanitor
         }
 
         // 发射期间的每 tick 检查不包含部件检查；部件由 Job 每 60 tick 单独检查。
-        internal bool CanOperate(Pawn actor) => actor.Spawned && actor.Map != null
+        internal bool CanOperate(Pawn actor, bool allowUndrafted = false) => actor.Spawned && actor.Map != null
             && actor.jobs != null && !actor.Dead && !actor.Downed && !actor.InMentalState
-            && (actor.Faction != Faction.OfPlayer || actor.Drafted)
+            && (actor.Faction != Faction.OfPlayer || actor.Drafted || (allowUndrafted && SupportsFireAtWill))
             && actor.stances?.stunner?.Stunned != true
             && actor.CurJobDef != MAPMechanitor_JobDefOf.MAP_MechanicalFlightEmergencyLanding;
 
@@ -99,10 +112,15 @@ namespace MAP_MechanoidMechanitor
         {
             if (!(parent is Pawn actor) || IsFiring(actor) || DisabledReason(actor) != null
                 || !ValidInitialTarget(actor, target)) return null;
+            return MakeCastJob(actor, target, actor.Faction == Faction.OfPlayer);
+        }
+
+        private static Job MakeCastJob(Pawn actor, LocalTargetInfo target, bool playerForced)
+        {
             // A 保留 Pawn/地块目标，B 独立保存确认目标瞬间的所在格，C 锁定施法者位置。
             Job job = JobMaker.MakeJob(HighEnergyLaserBeamDefOf.MAP_HighEnergyLaserBeam, target, target.Cell, actor.Position);
             job.count = target.HasThing ? 1 : 0;
-            job.playerForced = actor.Faction == Faction.OfPlayer;
+            job.playerForced = playerForced;
             return job;
         }
 
@@ -120,16 +138,25 @@ namespace MAP_MechanoidMechanitor
 
         internal Job? TryMakeAutoFireJob()
         {
-            if (!(parent is Pawn actor) || !AutoFireEnabled || DisabledReason(actor) != null) return null;
-            autoTargetSearcher ??= new HighEnergyLaserBeamTargetSearcher(actor, this);
-            Thing? target = autoTargetSearcher.FindTarget();
-            if (target == null) return null;
-            // Pawn 沿用追踪模式；炮塔等原版可自动攻击目标沿用指定地点发射。
-            Job? job = TryMakeCastJob(HighEnergyLaserBeamTargetSearcher.CastTarget(target));
-            // 使用原版 Job 存档字段区分自动施放与玩家手动命令。
-            if (job != null) job.playerForced = false;
-            return job;
+            if (!(parent is Pawn actor) || !CanStartAutoFire) return null;
+            Thing? target = GetAutoTargetSearcher(actor).FindTarget();
+            return target == null ? null : TryMakeAutoFireJob(target);
         }
+
+        // 原版 AI 已选定目标时不重新索敌；自动施放不经过手动命令的征召限制。
+        internal Job? TryMakeAutoFireJob(Thing target)
+        {
+            if (!(parent is Pawn actor) || !CanAutoFireAt(target)) return null;
+            // Pawn 沿用追踪模式；炮塔等原版可自动攻击目标沿用指定地点发射。
+            // 使用原版 Job 存档字段区分自动施放与玩家手动命令。
+            return MakeCastJob(actor, HighEnergyLaserBeamTargetSearcher.CastTarget(target), playerForced: false);
+        }
+
+        internal bool CanAutoFireAt(Thing target) => parent is Pawn actor && CanStartAutoFire
+            && GetAutoTargetSearcher(actor).IsValidTarget(target);
+
+        private HighEnergyLaserBeamTargetSearcher GetAutoTargetSearcher(Pawn actor) =>
+            autoTargetSearcher ??= new HighEnergyLaserBeamTargetSearcher(actor, this);
 
         internal void NotifyFiringStarted() => readyTick = Find.TickManager.TicksGame + Props.cooldownTicks;
 
