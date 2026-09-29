@@ -13,6 +13,25 @@ namespace MAP_MechanoidMechanitor
 
     public sealed class CompSunBuildingLight : ThingComp
     {
+        public override System.Collections.Generic.IEnumerable<Gizmo> CompGetGizmosExtra()
+        {
+            foreach (Gizmo gizmo in base.CompGetGizmosExtra()) yield return gizmo;
+            if (!((CompProperties_SunBuildingLight)props).ancient || !DebugSettings.ShowDevGizmos || !(parent is Building core)
+                || core.Destroyed || !core.Spawned) yield break;
+
+            MapComponent_SunBossArena arena = core.Map.GetComponent<MapComponent_SunBossArena>();
+            Command_Action command = new Command_Action
+            {
+                defaultLabel = "DEV：激活",
+                defaultDesc = "发送反应堆异常信件，并启动与殖民者靠近时相同的苏醒及设施激活流程。",
+                action = () =>
+                {
+                    if (DebugSettings.ShowDevGizmos) arena.TryStartDevActivation(core);
+                }
+            };
+            yield return command;
+        }
+
         public override void PostDraw()
         {
             base.PostDraw();

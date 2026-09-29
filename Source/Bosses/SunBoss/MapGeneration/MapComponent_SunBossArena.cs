@@ -48,6 +48,54 @@ namespace MAP_MechanoidMechanitor
                 ? Mathf.Clamp01((float)(Find.TickManager.TicksGame - activationStartedTick) / ActivationDurationTicks)
                 : 0f;
 
+        internal bool CanStartActivation(Building core) => !activated && activationStartedTick < 0
+            && !core.Destroyed && core.Spawned && core.Map == map
+            && (ReferenceEquals(Core, core) || (!Generated && Core == null));
+
+        internal bool TryStartDevActivation(Building core)
+        {
+            if (!DebugSettings.ShowDevGizmos || core.Destroyed || !core.Spawned || core.Map != map)
+                return false;
+            // 同一建筑正在苏醒时不重置计时；其他反应堆随时可接管调试记录。
+            if (ReferenceEquals(Core, core) && !activated && activationStartedTick >= 0) return true;
+
+            // DEV 可反复激活；保留已经生成的 BOSS，仅将地图级调度切换到本次测试。
+            Core = core;
+            bossPawn = null;
+            bossDefeated = false;
+            activated = false;
+            activationStartedTick = -1;
+            pendingRallyMechs.Clear();
+            rallyAtTick = -1;
+            nextRallyBatchTick = -1;
+            rallyBatchSchedulingInitialized = false;
+            noRallyCandidates = false;
+            if (!Generated)
+            {
+                // 普通地图不设置 Generated，避免启用设施禁飞和迷雾规则。
+                ArenaBounds = CellRect.CenteredOn(core.Position, (int)ActivationRadius).ClipInsideMap(map);
+            }
+            RefreshStabilizers();
+            return TryStartActivation(core);
+        }
+
+        private void RefreshStabilizers()
+        {
+            Stabilizers = map.listerThings.ThingsOfDef(SunBossDefOf.MAP_Building_ReactorStabilizer)
+                .OfType<Building>().Where(b => ArenaBounds.Contains(b.Position)).ToList();
+        }
+
+        // 自然靠近与 DEV 按钮共用入口；后续苏醒、生成和设施激活仍由地图 Tick 推进。
+        internal bool TryStartActivation(Building core)
+        {
+            if (!CanStartActivation(core)) return false;
+            discoveryLetterSent = true;
+            activationStartedTick = Find.TickManager.TicksGame;
+            Find.LetterStack.ReceiveLetter("MAP_SunBoss_ReactorAwakeningLabel".Translate(),
+                "MAP_SunBoss_ReactorAwakeningText".Translate(), LetterDefOf.ThreatBig, core);
+            return true;
+        }
+
         internal static bool SuppressesMechanicalFlight(Pawn? pawn)
         {
             Map? pawnMap = pawn?.Map;
@@ -57,7 +105,7 @@ namespace MAP_MechanoidMechanitor
 
         public override void MapComponentTick()
         {
-            if (!Generated) return;
+            if (!Generated && activationStartedTick < 0 && !activated) return;
             int now = Find.TickManager.TicksGame;
             if (activated)
             {
@@ -101,9 +149,7 @@ namespace MAP_MechanoidMechanitor
             if (activationStartedTick < 0)
             {
                 if (!discoveryLetterSent || !ColonistNearCore(core)) return;
-                activationStartedTick = now;
-                Find.LetterStack.ReceiveLetter("MAP_SunBoss_ReactorAwakeningLabel".Translate(),
-                    "MAP_SunBoss_ReactorAwakeningText".Translate(), LetterDefOf.ThreatBig, core);
+                if (!TryStartActivation(core)) return;
             }
 
             if (now - activationStartedTick < ActivationDurationTicks)
@@ -205,10 +251,9 @@ namespace MAP_MechanoidMechanitor
         public override void FinalizeInit()
         {
             base.FinalizeInit();
-            if (!Generated) return;
+            if (!Generated && activationStartedTick < 0 && !activated) return;
             // 按实际存活建筑修复旧档引用；被摧毁的稳定器不会被补造。
-            Stabilizers = map.listerThings.ThingsOfDef(SunBossDefOf.MAP_Building_ReactorStabilizer)
-                .OfType<Building>().Where(b => ArenaBounds.Contains(b.Position)).ToList();
+            RefreshStabilizers();
             if (bossPawn == null)
                 bossPawn = map.mapPawns.AllPawnsSpawned.FirstOrDefault(p => !p.Dead && p.GetComp<CompSunBossState>() != null);
             if (activated && !summonedMechsInitialized)
