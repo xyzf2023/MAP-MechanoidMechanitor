@@ -377,7 +377,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 2. 接入共生盟约
-            if (SymbiosisCovenantCommunicationUtility.CanAccessCovenant())
+            if (SymbiosisCovenantCommunicationUtility.CanAccessCovenant()
+                && !SymbiosisCovenantCommunicationUtility.CanBroadcastDeclaration())
             {
                 options.Add(
                     new FloatMenuOption(

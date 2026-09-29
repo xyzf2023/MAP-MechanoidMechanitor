@@ -423,6 +423,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public const int CovenantLevel5UnityThreshold = 350;
 
         private const int SynchronizeIntervalTicks = 2500;
+        private const int AllianceGuidanceLetterTick = 30000;
         private const int ProposalMinTicks = 60000;
         private const int ProposalMaxTicks = 180000;
         private const int InvitationCooldownTicks = 1800000;
@@ -441,6 +442,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private bool initialized;
         private bool contactUnlockedLetterSent;
+        private bool allianceGuidanceLetterSent;
         private bool publicDeclarationBroadcast;
         private float unity;
         private int covenantLevel;
@@ -519,6 +521,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 TryInitializeOrSynchronize();
                 CalibrateMechHiveHostility();
+                TrySendAllianceGuidanceLetter();
             }
 
             // 历史任务续跑必须每 tick 参与，内部再按威胁检查间隔节流，
@@ -561,6 +564,24 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     }
                 }
             }
+        }
+
+        private void TrySendAllianceGuidanceLetter()
+        {
+            if (allianceGuidanceLetterSent
+                || publicDeclarationBroadcast
+                || !initialized
+                || !IsActive
+                || CurrentTick < AllianceGuidanceLetterTick)
+            {
+                return;
+            }
+
+            Find.LetterStack.ReceiveLetter(
+                "MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Label".Translate(),
+                "MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Text".Translate(),
+                LetterDefOf.NeutralEvent);
+            allianceGuidanceLetterSent = true;
         }
 
         public void SynchronizeNow()
@@ -1805,6 +1826,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.ExposeData();
             Scribe_Values.Look(ref initialized, "initialized", false);
+            Scribe_Values.Look(
+                ref allianceGuidanceLetterSent,
+                "allianceGuidanceLetterSent",
+                false);
             Scribe_Values.Look(
                 ref postQuestContinuationTick,
                 "postQuestContinuationTick",

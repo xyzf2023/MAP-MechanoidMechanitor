@@ -2,6 +2,8 @@
 <LanguageData>
 
   <!-- 模块：通讯入口与主窗口 -->
+  <MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Label>组建联盟</MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Text>想要终结机械主脑的威胁，仅凭我们自己的力量恐怕还不够。我们可以通过通讯台发布「公开脱离声明」，向其他派系表明立场逐步赢得他们的信任，邀请他们共同对抗机械主脑。\n\n我们与机械巢的连接仍未恢复，机械巢暂未将我们视为敌人。不过，如果收到这份声明，我们将与机械巢彻底敌对。在公开立场之前，我们最好先稳固据点，做好应对袭击的准备。</MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Text>
   <MAP_MechanoidMechanitor.Symbiosis.Access>接入共生盟约</MAP_MechanoidMechanitor.Symbiosis.Access>
   <MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>公开脱离声明</MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>
   <MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Label>可以建立多方通讯链路</MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Label>

@@ -243,7 +243,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             Pawn? selectedPawn = context.FirstSelectedPawn;
             if (!SymbiosisCovenantCommunicationUtility.IsValidContactPawn(selectedPawn)
-                || !SymbiosisCovenantCommunicationUtility.CanAccessCovenant())
+                || !SymbiosisCovenantCommunicationUtility.CanAccessCovenant()
+                || SymbiosisCovenantCommunicationUtility.CanBroadcastDeclaration())
             {
                 yield break;
             }
