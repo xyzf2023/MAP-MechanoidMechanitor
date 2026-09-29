@@ -4,7 +4,7 @@ using Verse;
 
 namespace MAP_MechanoidMechanitor
 {
-    /// <summary>建筑只在恢复机械体的读条中显示灯效；进度由原有转换系统保存。</summary>
+    /// <summary>建筑转换的灯效与 BOSS 苏醒装甲；进度由原有转换系统保存。</summary>
     public sealed class CompProperties_SunBuildingLight : CompProperties
     {
         public bool ancient;
@@ -13,6 +13,8 @@ namespace MAP_MechanoidMechanitor
 
     public sealed class CompSunBuildingLight : ThingComp
     {
+        private bool Ancient => ((CompProperties_SunBuildingLight)props).ancient;
+
         public override System.Collections.Generic.IEnumerable<Gizmo> CompGetGizmosExtra()
         {
             foreach (Gizmo gizmo in base.CompGetGizmosExtra()) yield return gizmo;
@@ -32,10 +34,19 @@ namespace MAP_MechanoidMechanitor
             yield return command;
         }
 
+        public override bool DontDrawParent() => Ancient && SunArmorPresentation.ReplacesBuilding(parent);
+
+        public override void DrawAt(Vector3 drawLoc, bool flip = false)
+        {
+            base.DrawAt(drawLoc, flip);
+            if (Ancient) SunArmorPresentation.DrawBuilding(parent, drawLoc);
+        }
+
         public override void PostDraw()
         {
             base.PostDraw();
-            SunLightPresentation.DrawBuilding(parent, ((CompProperties_SunBuildingLight)props).ancient);
+            // BOSS 灯效随分层装甲统一绘制，避免同一帧重复叠加。
+            if (!Ancient) SunLightPresentation.DrawBuilding(parent, false);
         }
     }
 
@@ -82,10 +93,11 @@ namespace MAP_MechanoidMechanitor
                 power *= 1f - SunSkillAnimation.Smooth(conversion.ConversionProgress);
 
             Draw(center, drawScale, angle, visibility, pawn.def.defName == "MAP_Mech_SunBOSS",
-                pawn.thingIDNumber, health, power, pose.Glow, pose.Flash);
+                pawn.GetComp<CompSunBossState>()?.LightSeed ?? pawn.thingIDNumber,
+                health, power, pose.Glow, pose.Flash);
         }
 
-        internal static void DrawBuilding(Thing building, bool ancient)
+        internal static void DrawBuilding(Thing building, bool ancient, Vector3? drawLoc = null)
         {
             if (!building.Spawned || building.Destroyed || building.Map != Find.CurrentMap
                 || building.Position.Fogged(building.Map) || Find.UIRoot?.HideMotes == true) return;
@@ -101,20 +113,22 @@ namespace MAP_MechanoidMechanitor
             float health = building.def.useHitPoints
                 ? Mathf.Clamp01((float)building.HitPoints / Mathf.Max(1, building.MaxHitPoints)) : 1f;
             float power = ancient ? StartupPower(progress, seed) : SunSkillAnimation.Smooth(progress);
+            SunArmorPose pose = ancient ? SunSkillAnimation.Awakening(progress) : default;
             Vector2 drawScale = (building.def.graphicData?.drawSize ?? Vector2.one * ReferenceDrawSize)
                 / ReferenceDrawSize;
-            Draw(SunDrawUtility.BreathingLightPosition(building.DrawPos), drawScale, 0f,
-                SunSkillAnimation.Smooth(Mathf.Clamp01(progress * 10f)), ancient, seed, health, power, 0f, 0f);
+            Draw(SunDrawUtility.BreathingLightPosition(drawLoc ?? building.DrawPos), drawScale, 0f,
+                SunSkillAnimation.Smooth(Mathf.Clamp01(progress * 10f)), ancient, seed, health, power,
+                pose.Glow, pose.Flash);
         }
 
         private static float StartupPower(float progress, int seed)
         {
-            // 老电视开机：前半段短促断电、反复尝试点亮，后半段渐亮并在转换前稳定。
-            float unstable = 1f - SunSkillAnimation.Smooth(Mathf.InverseLerp(0.4f, 0.9f, progress));
+            // 起初短促闪烁；装甲展开时逐渐稳定，收稳阶段已完成通电。
+            float unstable = 1f - SunSkillAnimation.Smooth(Mathf.InverseLerp(0.2f, 1.6f / 3f, progress));
             int ticks = Mathf.FloorToInt(progress * MapComponent_SunBossArena.ActivationDurationTicks);
             float sample = Noise(seed, ticks / 3, 17);
             float flicker = sample < 0.38f ? 0.04f + sample * 0.4f : 0.65f + sample * 0.35f;
-            return SunSkillAnimation.Smooth(progress) * Mathf.Lerp(1f, flicker, unstable);
+            return SunSkillAnimation.Smooth(progress / (1.6f / 3f)) * Mathf.Lerp(1f, flicker, unstable);
         }
 
         private static float Breathing(int now, int seed)

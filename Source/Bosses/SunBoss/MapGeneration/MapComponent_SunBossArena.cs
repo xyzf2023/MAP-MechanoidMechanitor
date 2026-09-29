@@ -39,7 +39,6 @@ namespace MAP_MechanoidMechanitor
             && p.Faction == Faction.OfMechanoids && p.HostileTo(Faction.OfPlayer));
         internal bool NoRallyCandidates => noRallyCandidates
             && ActiveSummonedMechCount < SunBossActivationUtility.BatchSize;
-        private Effecter? activationProgress;
 
         public MapComponent_SunBossArena(Map map) : base(map) { }
 
@@ -134,10 +133,7 @@ namespace MAP_MechanoidMechanitor
 
             Building? core = Core;
             if (core == null || !core.Spawned || core.Map != map)
-            {
-                CleanupActivationProgress();
                 return;
-            }
 
             if (!discoveryLetterSent && core.OccupiedRect().Any(c => !c.Fogged(map)))
             {
@@ -153,14 +149,13 @@ namespace MAP_MechanoidMechanitor
             }
 
             if (now - activationStartedTick < ActivationDurationTicks)
-            {
-                TickActivationProgress(core, now);
                 return;
-            }
 
             // 先生成 Pawn，再移除建筑；生成失败时保留反应堆。
             Pawn boss = PawnGenerator.GeneratePawn(
                 DefDatabase<PawnKindDef>.GetNamed("MAP_Mech_SunBOSS"), Faction.OfMechanoids);
+            // 只交接表现；实际生成、开场脉冲及援军调度仍走原有流程。
+            boss.GetComp<CompSunBossState>()?.BeginAwakeningHandoff(core.thingIDNumber);
             IntVec3 position = core.Position;
             Rot4 rotation = core.Rotation;
             core.DeSpawn();
@@ -179,7 +174,6 @@ namespace MAP_MechanoidMechanitor
             bossPawn = boss;
             core.Destroy(DestroyMode.Vanish);
             Core = null;
-            CleanupActivationProgress();
             SunBossActivationUtility.ActivateFacility(map);
             PrepareRallyBatch(now);
         }
@@ -219,33 +213,6 @@ namespace MAP_MechanoidMechanitor
                     return true;
             }
             return false;
-        }
-
-        private void TickActivationProgress(Building core, int now)
-        {
-            if (activationProgress == null)
-                activationProgress = EffecterDefOf.ProgressBar.Spawn();
-            activationProgress.EffectTick(core, TargetInfo.Invalid);
-            MoteProgressBar? mote = ((SubEffecter_ProgressBar)activationProgress.children[0]).mote;
-            if (mote != null)
-            {
-                mote.progress = (float)(now - activationStartedTick) / ActivationDurationTicks;
-                mote.offsetZ = -1.5f;
-                mote.alwaysShow = true;
-                mote.linearScale.x = 2.4f;
-            }
-        }
-
-        private void CleanupActivationProgress()
-        {
-            activationProgress?.Cleanup();
-            activationProgress = null;
-        }
-
-        public override void MapRemoved()
-        {
-            CleanupActivationProgress();
-            base.MapRemoved();
         }
 
         public override void FinalizeInit()

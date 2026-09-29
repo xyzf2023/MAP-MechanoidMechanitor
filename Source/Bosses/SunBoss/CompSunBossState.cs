@@ -62,8 +62,12 @@ namespace MAP_MechanoidMechanitor
         private bool deathLetterSent;
         private bool deathEffectsReleased;
         private bool openingPulsePending = true;
+        private int awakeningLightSeed = -1;
         private int openingCannonReadyTick;
         internal bool OpeningPulsePending => openingPulsePending;
+        internal bool HasAwakeningHandoff => openingPulsePending && awakeningLightSeed >= 0;
+        internal int LightSeed => awakeningLightSeed >= 0 ? awakeningLightSeed : parent.thingIDNumber;
+        internal void BeginAwakeningHandoff(int lightSeed) => awakeningLightSeed = lightSeed;
         private bool rallyPulsePending;
         internal bool RallyPulsePending => rallyPulsePending;
         internal void RequestRallyPulse() => rallyPulsePending = true;
@@ -247,6 +251,8 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref deathEffectsReleased, "sunDeathEffectsReleased", deathLetterSent);
             // 旧存档中的既有 BOSS 不补播开场；新生成的实例默认等待第一次实际释放。
             Scribe_Values.Look(ref openingPulsePending, "sunOpeningPulsePending", false);
+            // 仅据点建筑转换写入；旧档与直接生成的 BOSS 不额外进入苏醒姿态。
+            Scribe_Values.Look(ref awakeningLightSeed, "sunAwakeningLightSeed", -1);
             Scribe_Values.Look(ref rallyPulsePending, "sunRallyPulsePending");
             // 旧存档缺少该字段时不额外插入开场等待。
             Scribe_Values.Look(ref openingCannonReadyTick, "sunOpeningCannonReadyTick");

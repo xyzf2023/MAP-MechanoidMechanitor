@@ -59,6 +59,20 @@ namespace MAP_MechanoidMechanitor
         internal static float Progress(int ticks, int duration) => duration > 0
             ? Mathf.Clamp01((float)ticks / duration) : 1f;
 
+        internal static SunArmorPose Awakening(float progress)
+        {
+            // 三秒分镜：通电 0~0.6，展开 0.6~1.6，之后保持朝向收稳并增强辉光。
+            // 直接从已保存的苏醒进度求姿态，不依赖绘制次数或运行时缓存。
+            float seconds = Mathf.Clamp01(progress) * 3f;
+            float opening = Smooth(Mathf.InverseLerp(0.6f, 1.6f, seconds));
+            SunArmorPose pose = SunArmorPose.Rest(true);
+            pose.Openness = opening;
+            // 与脉冲开始时的半径、辉光一致，避免交接后再次展开或突然变暗。
+            pose.InnerRadius = pose.OuterRadius = Mathf.Lerp(1f, 1.08f, opening);
+            pose.Glow = 0.2f * Smooth(Mathf.InverseLerp(0.6f, 2.5f, seconds));
+            return pose;
+        }
+
         internal static SunArmorPose Rest(Pawn pawn)
         {
             bool open = GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)

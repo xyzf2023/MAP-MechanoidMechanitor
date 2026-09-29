@@ -7,7 +7,8 @@
     <description>这个建筑看起来是此设施的能源来源......但总感觉哪里不对劲。小心行事。</description>
     <thingClass>Building</thingClass>
     <tickerType>Never</tickerType>
-    <drawerType>MapMeshAndRealTime</drawerType>
+    <!-- 苏醒时由组件接管整机绘制，避免静态地图网格残留闭合外壳。 -->
+    <drawerType>RealtimeOnly</drawerType>
     <size>(3,3)</size>
     <rotatable>false</rotatable>
     <passability>Impassable</passability>

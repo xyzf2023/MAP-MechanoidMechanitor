@@ -77,6 +77,8 @@ namespace MAP_MechanoidMechanitor
             "Mech/Sun/Sun", ShaderDatabase.Transparent, Vector2.one, Color.white);
         private static readonly Graphic AncientClosedBody = GraphicDatabase.Get<Graphic_Multi>(
             "Mech/SunAncient/SunAncient", ShaderDatabase.Transparent, Vector2.one, Color.white);
+        private static readonly Graphic AncientClosedBuilding = GraphicDatabase.Get<Graphic_Single>(
+            "Mech/SunAncient/SunAncient_Building", ShaderDatabase.Transparent, Vector2.one, Color.white);
         private static readonly MaterialPropertyBlock Properties = new();
         private static readonly Dictionary<int, AnimationState> States = new();
         private static readonly Dictionary<int, SkillPreview> DebugPreviews = new();
@@ -281,9 +283,14 @@ namespace MAP_MechanoidMechanitor
                 JobDriver_HighEnergyLaserBeam laser => laser.HasAnimation,
                 _ => false
             };
-            return live || (DebugPreviews.TryGetValue(pawn.thingIDNumber, out var preview)
+            return live || HoldsAwakeningPose(pawn)
+                || (DebugPreviews.TryGetValue(pawn.thingIDNumber, out var preview)
                 && Find.TickManager.TicksGame - preview.Started < preview.Duration);
         }
+
+        private static bool HoldsAwakeningPose(Pawn pawn) => pawn.Spawned && !pawn.Dead && !pawn.Downed
+            && pawn.GetComp<CompSunBossState>()?.HasAwakeningHandoff == true
+            && pawn.Awake() && !pawn.IsSelfShutdown() && !pawn.IsDeactivated();
 
         private static bool TryGetLivePose(Pawn pawn, out SunArmorPose pose, out float speed)
         {
@@ -300,6 +307,13 @@ namespace MAP_MechanoidMechanitor
                 case JobDriver_HighEnergyLaserBeam laser when laser.HasAnimation:
                     pose = laser.AnimationPose;
                     return true;
+            }
+            // 真实技能优先；生成后等待首个脉冲期间保持建筑末帧，不先闭合再展开。
+            // 标记与灯效相位存于 BOSS 组件，读档及首次离屏绘制都能恢复。
+            if (HoldsAwakeningPose(pawn))
+            {
+                pose = SunSkillAnimation.Awakening(1f);
+                return true;
             }
             pose = default;
             return false;
@@ -356,6 +370,28 @@ namespace MAP_MechanoidMechanitor
         private static bool CanPresent(Pawn pawn) => pawn.Spawned && !pawn.Dead
             && !pawn.IsHiddenFromPlayer() && Find.UIRoot?.HideMotes != true;
 
+        private static bool TryGetBuildingAwakening(Thing building, out float progress)
+        {
+            progress = 0f;
+            if (!building.Spawned || building.Destroyed || building.Map != Find.CurrentMap
+                || building.def.drawerType != DrawerType.RealtimeOnly
+                || building.Position.Fogged(building.Map) || Find.UIRoot?.HideMotes == true) return false;
+            progress = building.Map.GetComponent<MapComponent_SunBossArena>().ActivationProgressFor(building);
+            return progress > 0f;
+        }
+
+        internal static bool ReplacesBuilding(Thing building) => TryGetBuildingAwakening(building, out _);
+
+        internal static void DrawBuilding(Thing building, Vector3 drawLoc)
+        {
+            if (!TryGetBuildingAwakening(building, out float progress)) return;
+            Vector2 drawScale = (building.def.graphicData?.drawSize ?? Vector2.one * ReferenceDrawSize)
+                / ReferenceDrawSize;
+            DrawBodyLayers(drawLoc, drawScale, SunSkillAnimation.Awakening(progress), true,
+                AncientClosedBuilding, Rot4.South, building.thingIDNumber);
+            SunLightPresentation.DrawBuilding(building, true, drawLoc);
+        }
+
         private static Vector2 AnimationDrawScale(Pawn pawn)
         {
             Vector2 drawSize = pawn.ageTracker?.CurKindLifeStage?.bodyGraphicData?.drawSize
@@ -368,7 +404,7 @@ namespace MAP_MechanoidMechanitor
         private static float ArmorOpenProgress(SunArmorPose pose) => Mathf.SmoothStep(0f, 1f,
             Mathf.InverseLerp(BodyBlendPortion * 0.5f, 1f, pose.Openness));
 
-        private static Vector2 ArmorOffset(Pawn pawn, SunArmorPose pose, int index,
+        private static Vector2 ArmorOffset(int seed, SunArmorPose pose, int index,
             float open, float floatBlend)
         {
             ArmorLayer layer = Armor[index];
@@ -377,17 +413,17 @@ namespace MAP_MechanoidMechanitor
             Vector2 offset = Vector2.Lerp(layer.ClosedOffset, layer.OpenOffset * radius, open);
             // 漂浮只用于待机，技能发射端与绘制端共用甲板位置计算。
             float floatPhase = (Find.TickManager.TicksGame
-                + pawn.thingIDNumber * 11) * 0.025f + index * 1.17f;
+                + seed * 11) * 0.025f + index * 1.17f;
             float floatWeight = open * floatBlend;
             offset += layer.OpenOffset.normalized * (Mathf.Sin(floatPhase) * 0.018f * floatWeight);
             offset.y += Mathf.Cos(floatPhase * 0.83f) * 0.012f * floatWeight;
             return RotateClockwise(offset, inner ? pose.InnerAngle : pose.OuterAngle);
         }
 
-        private static Vector2 FlightArmorOffset(Pawn pawn, SunArmorPose pose, int index,
+        private static Vector2 FlightArmorOffset(int seed, SunArmorPose pose, int index,
             float open, float floatBlend, SunFlightPresentation.Pose flight)
         {
-            Vector2 offset = ArmorOffset(pawn, pose, index, open, floatBlend * flight.FloatFactor);
+            Vector2 offset = ArmorOffset(seed, pose, index, open, floatBlend * flight.FloatFactor);
             offset = RotateClockwise(offset, flight.LayoutAngle(open));
             return flight.ApplyToOffset(offset, open);
         }
@@ -397,7 +433,7 @@ namespace MAP_MechanoidMechanitor
             // 武器按 tick 更新时也准备姿态；与绘制共用漂浮、倾斜、压缩及制动位移。
             Prepare(pawn);
             float floatBlend = States.TryGetValue(pawn.thingIDNumber, out var state) ? state.FloatBlend : 0f;
-            Vector2 offset = FlightArmorOffset(pawn, pose, index, ArmorOpenProgress(pose),
+            Vector2 offset = FlightArmorOffset(pawn.thingIDNumber, pose, index, ArmorOpenProgress(pose),
                 floatBlend, SunFlightPresentation.Current(pawn));
             offset = Vector2.Scale(offset, AnimationDrawScale(pawn));
             return new Vector3(offset.x, 0f, offset.y);
@@ -414,13 +450,7 @@ namespace MAP_MechanoidMechanitor
             CleanupDebugFlightAuthorization(pawn);
 
             SunArmorPose pose = state.Pose;
-            float halfBlend = BodyBlendPortion * 0.5f;
-            float open = ArmorOpenProgress(pose);
-            // 先在不透明整图下淡入零件，再淡出整图；重叠区域始终至少有一层不透明。
-            float layerAlpha = Mathf.SmoothStep(0f, 1f,
-                Mathf.Clamp01(pose.Openness / halfBlend));
-            float staticAlpha = 1f - Mathf.SmoothStep(0f, 1f,
-                Mathf.InverseLerp(halfBlend, BodyBlendPortion, pose.Openness));
+            float staticAlpha = StaticBodyAlpha(pose);
             SunFlightPresentation.Pose flight = SunFlightPresentation.Current(pawn);
             PawnRenderer renderer = pawn.Drawer.renderer;
             bool standing = pawn.GetPosture() == PawnPosture.Standing;
@@ -433,16 +463,41 @@ namespace MAP_MechanoidMechanitor
                 ? pawn.Rotation : renderer.LayingFacing());
             // 按机体 Def 选择缓存材质，确保整图、装甲和光效在交接期间配色一致。
             bool ancient = pawn.def.defName == "MAP_Mech_SunBOSS";
-            Material core = ancient ? AncientCore : Core;
             Graphic closedBody = ancient ? AncientClosedBody : ClosedBody;
 
             // 交接结束后完全使用正面分层贴图；侧/背面通过对应方向的整图渐变接入。
             if (state.LastReplacingBody)
+                DrawBodyLayers(drawLoc, drawScale, pose, ancient, closedBody, facing,
+                    pawn.thingIDNumber, state.FloatBlend, flight, postureAngle);
+
+            // 机械体和建筑转换共用灯效曲线；侧/背面只在展开露出核心后显示。
+            float lightVisibility = facing == Rot4.South ? 1f : 1f - staticAlpha;
+            SunLightPresentation.DrawPawn(pawn, lampCenter, drawScale, bodyAngle,
+                lightVisibility, pose, state.HealthFraction);
+
+            DrawDebugCharge(pawn, lampCenter);
+        }
+
+        private static float StaticBodyAlpha(SunArmorPose pose) => 1f - Mathf.SmoothStep(0f, 1f,
+            Mathf.InverseLerp(BodyBlendPortion * 0.5f, BodyBlendPortion, pose.Openness));
+
+        // 建筑与机械体共用装甲位置、材质和整图交接；建筑无需提前生成临时 Pawn。
+        private static void DrawBodyLayers(Vector3 drawLoc, Vector2 drawScale, SunArmorPose pose,
+            bool ancient, Graphic closedBody, Rot4 facing, int seed, float floatBlend = 0f,
+            SunFlightPresentation.Pose flight = default, float postureAngle = 0f)
+        {
+            float open = ArmorOpenProgress(pose);
+            // 先在不透明整图下淡入零件，再淡出整图，避免交接中段出现透明缺口。
+            float layerAlpha = Mathf.SmoothStep(0f, 1f,
+                Mathf.Clamp01(pose.Openness / (BodyBlendPortion * 0.5f)));
+            float staticAlpha = StaticBodyAlpha(pose);
+            float bodyAngle = postureAngle + flight.BodyAngle;
+            Vector3 layoutCenter = drawLoc;
+            layoutCenter.y += 0.028f;
+            Color layerColor = new Color(1f, 1f, 1f, layerAlpha);
+            if (layerAlpha > MotionEpsilon)
             {
-                Vector3 layoutCenter = drawLoc;
-                layoutCenter.y += 0.028f;
-                Color layerColor = new Color(1f, 1f, 1f, layerAlpha);
-                DrawLayer(core, layoutCenter, Vector3.zero, CoreSize,
+                DrawLayer(ancient ? AncientCore : Core, layoutCenter, Vector3.zero, CoreSize,
                     drawScale, bodyAngle, layerColor);
 
                 for (int i = 0; i < Armor.Length; i++)
@@ -451,7 +506,7 @@ namespace MAP_MechanoidMechanitor
                     // 0/2/4：上、右下、左下；1/3/5：右上、下、左上。
                     bool inner = i % 2 == 0;
                     float orbitAngle = inner ? pose.InnerAngle : pose.OuterAngle;
-                    Vector2 offset = FlightArmorOffset(pawn, pose, i, open, state.FloatBlend, flight);
+                    Vector2 offset = FlightArmorOffset(seed, pose, i, open, floatBlend, flight);
                     Vector2 size = Vector2.Scale(layer.Size,
                         Vector2.Lerp(layer.ClosedScale, Vector2.one, open));
                     float layerAngle = flight.LayoutAngle(open) + orbitAngle
@@ -459,27 +514,17 @@ namespace MAP_MechanoidMechanitor
                         + pose.PanelTilt * (inner ? 1f : -1f) * open;
 
                     Vector3 layerOffset = new Vector3(offset.x, 0.004f + i * 0.001f, offset.y);
-                    // 倒地时，尚未收拢的装甲也随身体整体旋转，避免与核心灯效脱节。
+                    // 倒地时整体跟随身体旋转，飞行偏移已在位置计算中应用。
                     DrawLayer(ancient ? layer.AncientMaterial : layer.Material, layoutCenter, layerOffset, size,
                         drawScale, postureAngle + layerAngle, layerColor, layoutAngle: postureAngle);
                 }
-
-                if (staticAlpha > MotionEpsilon)
-                {
-                    // 覆盖装甲但位于灯罩下方；原 Body 节点在整个交接期间统一隐藏。
-                    DrawLayer(closedBody.MatAt(facing), layoutCenter,
-                        new Vector3(0f, 0.011f, 0f), Vector2.one * ReferenceDrawSize,
-                        drawScale, bodyAngle, new Color(1f, 1f, 1f, staticAlpha),
-                        mesh: closedBody.MeshAt(facing));
-                }
             }
 
-            // 机械体和建筑转换共用灯效曲线；侧/背面只在展开露出核心后显示。
-            float lightVisibility = facing == Rot4.South ? 1f : 1f - staticAlpha;
-            SunLightPresentation.DrawPawn(pawn, lampCenter, drawScale, bodyAngle,
-                lightVisibility, pose, state.HealthFraction);
-
-            DrawDebugCharge(pawn, lampCenter);
+            if (staticAlpha > MotionEpsilon)
+                DrawLayer(closedBody.MatAt(facing), layoutCenter,
+                    new Vector3(0f, 0.011f, 0f), Vector2.one * ReferenceDrawSize,
+                    drawScale, bodyAngle, new Color(1f, 1f, 1f, staticAlpha),
+                    mesh: closedBody.MeshAt(facing));
         }
 
         private static Vector2 RotateClockwise(Vector2 point, float degrees)
