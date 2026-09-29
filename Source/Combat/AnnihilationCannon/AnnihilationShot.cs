@@ -74,15 +74,17 @@ namespace MAP_MechanoidMechanitor
         {
             launcher = actor;
             destination = target;
-            Vector3 direction = (target.ToVector3Shifted() - actor.DrawPos).Yto0().normalized;
-            origin = actor.DrawPos + direction * 1.07f;
+            // 发射时固定呼吸灯位置；飞行和读档继续使用已保存的起点。
+            origin = SunDrawUtility.BreathingLightPosition(actor.DrawPos);
             flightTicks = Mathf.Max(1, Mathf.CeilToInt(
                 (target.ToVector3Shifted() - origin).Yto0().magnitude * 60f / props.projectileSpeed));
             settings = new AnnihilationSettings(props);
         }
 
+        // 原版 Projectile 图层低于 Pawn；从核心内出射时必须高于呼吸灯，避免被机体遮住。
         public override Vector3 DrawPos => Vector3.Lerp(origin, destination.ToVector3Shifted(),
-            Mathf.Clamp01((float)elapsedTicks / Mathf.Max(1, flightTicks))).WithY(def.altitudeLayer.AltitudeFor());
+            Mathf.Clamp01((float)elapsedTicks / Mathf.Max(1, flightTicks)))
+            .WithY(Mathf.Max(def.altitudeLayer.AltitudeFor(), origin.y + Altitudes.AltInc));
 
         protected override void DrawAt(Vector3 drawLoc, bool flip = false)
         {

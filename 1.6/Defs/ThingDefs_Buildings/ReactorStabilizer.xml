@@ -16,7 +16,7 @@
     <destroyable>true</destroyable>
     <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
     <graphicData>
-      <texPath>Buildings/SunBOSS/ReactorStabilizer</texPath>
+      <texPath>Buildings/SunBOSSAncient/ReactorStabilizerAncient</texPath>
       <graphicClass>Graphic_Single</graphicClass>
       <drawSize>(3,3)</drawSize>
     </graphicData>

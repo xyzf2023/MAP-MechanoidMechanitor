@@ -22,9 +22,11 @@
       <!-- 太阳 BOSS：高能激光束蓄力时保持初始落点 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_HighEnergyLaserBeam">
         <range>20</range>
+        <warmupTicks>180</warmupTicks>
         <cooldownTicks>0</cooldownTicks>
         <damageAmount>50</damageAmount>
         <durationTicks>300</durationTicks>
+        <recoveryTicks>36</recoveryTicks>
         <trackingSpeed>0.8</trackingSpeed>
         <trackPawnDuringWarmup>false</trackPawnDuringWarmup>
       </li>
@@ -45,6 +47,7 @@
       <!-- 能量脉冲数值 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_EnergyPulse">
         <warmupTicks>180</warmupTicks>
+        <recoveryTicks>42</recoveryTicks>
         <radius>10</radius>
         <stunTicks>300</stunTicks>
         <propagationSpeed>0.5</propagationSpeed>
@@ -56,6 +59,10 @@
       <!-- 湮灭炮 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_AnnihilationCannon">
         <warmupTicks>600</warmupTicks>
+        <deployTicks>60</deployTicks>
+        <brakeTicks>36</brakeTicks>
+        <alignTicks>30</alignTicks>
+        <closeTicks>24</closeTicks>
         <innerRadius>4.9</innerRadius>
         <outerRadius>9.8</outerRadius>
         <skipEffectRadius>15</skipEffectRadius>
@@ -77,6 +84,25 @@
     <defName>MAP_Mech_SunBOSS</defName>
     <label>「太阳」- 能源核心</label>
     <race>MAP_Mech_SunBOSS</race>
+    <!-- BOSS 的两个年龄阶段均使用 Ancient 本体，玩家太阳继续继承普通贴图。 -->
+    <lifeStages Inherit="False">
+      <li>
+        <bodyGraphicData>
+          <texPath>Mech/SunAncient/SunAncient</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>(5.1,5.1)</drawSize>
+        </bodyGraphicData>
+      </li>
+      <li>
+        <bodyGraphicData>
+          <texPath>Mech/SunAncient/SunAncient</texPath>
+          <shaderType>Cutout</shaderType>
+          <graphicClass>Graphic_Multi</graphicClass>
+          <drawSize>(5.1,5.1)</drawSize>
+        </bodyGraphicData>
+      </li>
+    </lifeStages>
     <defaultFactionDef>Mechanoid</defaultFactionDef>
     <destroyGearOnDrop>true</destroyGearOnDrop>
     <isBoss>true</isBoss>

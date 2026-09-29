@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 
@@ -13,6 +14,10 @@ namespace MAP_MechanoidMechanitor
     {
         public const int ConversionDurationTicks = 180;
         private bool failureReported;
+
+        // 沿用原版已存档的 Toil 进度；不增加计时器，也不改变旧存档的步骤编号。
+        internal float ConversionProgress => CurToilIndex < 1 ? 0f
+            : CurToilIndex == 1 ? Mathf.Clamp01(1f - (float)ticksLeftThisToil / ConversionDurationTicks) : 1f;
 
         public override bool TryMakePreToilReservations(bool errorOnFailed)
         {
@@ -39,15 +44,18 @@ namespace MAP_MechanoidMechanitor
 
             yield return Toils_General.StopDead();
 
-            Toil wait = Toils_General.Wait(
-                ConversionDurationTicks,
-                TargetIndex.A);
+            Toil wait = Toils_General.Wait(ConversionDurationTicks);
+            // 转换读条自行控制朝向，不再由原版等待步骤转向目标。
+            wait.handlingFacing = true;
+            wait.AddPreInitAction(() => pawn.Rotation = Rot4.South);
+            wait.tickAction = () => pawn.Rotation = Rot4.South;
             wait.WithProgressBarToilDelay(TargetIndex.A);
             yield return wait;
 
             yield return Toils_General.Do(
                 () =>
                 {
+                    pawn.Rotation = Rot4.South;
                     if (GameComponent_MechBuildingConversionQueue
                         .TryQueueConversion(pawn, out string? failureReason))
                     {

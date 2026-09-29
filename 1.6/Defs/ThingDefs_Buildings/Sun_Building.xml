@@ -8,6 +8,7 @@
     <thingClass>Verse.Building</thingClass>
     <category>Building</category>
     <tickerType>Normal</tickerType>
+    <drawerType>MapMeshAndRealTime</drawerType>
     <altitudeLayer>Building</altitudeLayer>
     <size>(3,3)</size>
     <rotatable>false</rotatable>
@@ -22,7 +23,8 @@
     <graphicData>
       <texPath>Mech/Sun/Sun_Building</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(3,3)</drawSize>
+      <!-- 主体宽约占贴图的 58.8%；补偿透明边距后贴近 3 格选框。 -->
+      <drawSize>(5.1,5.1)</drawSize>
     </graphicData>
     <statBases>
       <MaxHitPoints>10000</MaxHitPoints>
@@ -54,6 +56,7 @@
       <allowAutoroof>false</allowAutoroof>
     </building>
     <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_SunBuildingLight" />
       <li Class="MAP_MechanoidMechanitor.CompProperties_SunEnergyAura">
         <buildingForm>true</buildingForm>
       </li>

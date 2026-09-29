@@ -271,7 +271,7 @@ namespace MAP_MechanoidMechanitor
             IntVec3 originalPosition = pawn.Position;
             Rot4 originalRotation = pawn.Rotation;
             Rot4 buildingRotation = buildingDef.rotatable
-                ? originalRotation
+                ? Rot4.South
                 : buildingDef.defaultPlacingRot;
             int searchRadius = Math.Max(0, profile.placementSearchRadius);
             IntVec3 spawnCell = FindBuildingPlacementNear(
@@ -326,6 +326,8 @@ namespace MAP_MechanoidMechanitor
 
                 transitionStarted = true;
                 building.SetFaction(pawn.Faction);
+                // 安全队列下一 tick 才转换；再次校正读条结束后可能变化的朝向。
+                pawn.Rotation = Rot4.South;
                 pawn.DeSpawn(DestroyMode.Vanish);
                 Find.WorldPawns.PassToWorld(
                     pawn,
@@ -433,7 +435,7 @@ namespace MAP_MechanoidMechanitor
             buildingComp.EnsureSourceStateForRecovery(sourcePawn);
             Map map = carrier.Map;
             IntVec3 position = carrier.Position;
-            Rot4 rotation = carrier.Rotation;
+            Rot4 rotation = Rot4.South;
 
             if (!TryRestorePawn(
                     sourcePawn,
@@ -457,6 +459,11 @@ namespace MAP_MechanoidMechanitor
             MechFusionSourceUtility.RemoveDormantGuard(sourcePawn);
             restoredThing = ResolveRestoredThing(sourcePawn, restoredThing);
             carrier.Destroy(DestroyMode.Vanish);
+            // 生成及耐久结算回调结束后，只设置恢复瞬间的朝向，后续仍正常行动。
+            if (sourcePawn.Spawned && !sourcePawn.Dead)
+            {
+                sourcePawn.Rotation = Rot4.South;
+            }
             if (restoredThing != null && restoredThing.Spawned)
             {
                 FleckMaker.ThrowDustPuffThick(

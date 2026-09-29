@@ -84,6 +84,10 @@ namespace MAP_MechanoidMechanitor
             {
                 return 0f;
             }
+            if (SunArmorPresentation.IsSun(pawn))
+            {
+                return SunFlightPresentation.Current(pawn).BodyAngle;
+            }
 
             if (!TiltStates.TryGetValue(pawn.thingIDNumber, out TiltState? state))
             {
@@ -132,6 +136,11 @@ namespace MAP_MechanoidMechanitor
             Vector3 bodyDrawLoc,
             float tiltAngle)
         {
+            // 太阳使用核心反重力悬浮，不显示通用机械飞行的推进器尾焰。
+            if (SunArmorPresentation.IsSun(pawn))
+            {
+                return;
+            }
             // 唯一实际推进焰实现：巡飞表现层负责脉动与移动拉伸缓存。
             MechanicalFlightCruisePresentation.DrawThrusterVisual(
                 pawn, record, bodyDrawLoc, tiltAngle);
@@ -144,6 +153,8 @@ namespace MAP_MechanoidMechanitor
             {
                 return;
             }
+
+            SunFlightPresentation.Prepare(pawn);
 
             // 合体快速转移的隐藏换位帧只允许逻辑 Position 改变，
             // 不得在新 landingCell 提前留下迷雾揭示、地面气流或悬浮光照。
@@ -177,7 +188,8 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             MechanicalFlightAuthorizationRecord record)
         {
-            ResetTilt(pawn);
+            if (SunArmorPresentation.IsSun(pawn)) SunFlightPresentation.BeginFlight(pawn);
+            else ResetTilt(pawn);
             Tick(pawn, record);
         }
 
@@ -189,6 +201,7 @@ namespace MAP_MechanoidMechanitor
             }
             CleanupGlow(pawn);
             MechanicalFlightStraightPathPatch.ClearMotion(pawn);
+            SunFlightPresentation.Forget(pawn);
             TiltStates.Remove(pawn.thingIDNumber);
             LastGroundWashTick.Remove(pawn.thingIDNumber);
             LastRevealedFogCells.Remove(pawn.thingIDNumber);
@@ -204,6 +217,8 @@ namespace MAP_MechanoidMechanitor
             LastRevealedFogCells.Clear();
             MechanicalFlightVisualSmoothing.ClearAllRuntimeState();
             MechanicalFlightCruisePresentation.ClearAllRuntimeState();
+            SunFlightPresentation.ClearAllRuntimeState();
+            SunArmorPresentation.ClearAllRuntimeState();
         }
 
         private static void ResetTilt(Pawn pawn)
@@ -252,6 +267,10 @@ namespace MAP_MechanoidMechanitor
             MechanicalFlightAuthorizationRecord record,
             MechanicalFlightProfileDef profile)
         {
+            if (SunArmorPresentation.IsSun(pawn))
+            {
+                return;
+            }
             FleckDef? fleck = profile.thrusterSparkFleck;
             int interval = Mathf.Max(1, profile.thrusterSparkIntervalTicks);
             if (fleck == null || (Find.TickManager.TicksGame + pawn.thingIDNumber) % interval != 0

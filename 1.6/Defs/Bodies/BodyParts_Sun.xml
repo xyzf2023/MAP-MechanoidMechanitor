@@ -29,7 +29,7 @@
 
   <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
     <defName>MAP_SunCentralLaserEmitter</defName>
-    <label>中央激光发射器</label>
+    <label>激光发射器</label>
     <hitPoints>70</hitPoints>
   </BodyPartDef>
 

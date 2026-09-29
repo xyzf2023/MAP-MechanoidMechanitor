@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 using Verse.Sound;
@@ -11,6 +12,14 @@ namespace MAP_MechanoidMechanitor
         private int chargeTicks;
         private int chargeDuration;
         private bool launched;
+        private bool sequenceInitialized;
+        private bool openingStarted;
+        private bool recoveryStarted;
+        private int openingDuration;
+        private int brakeDuration;
+        private int alignDuration;
+        private int closeDuration;
+        private SunArmorPose openingPose;
         private IntVec3 chargePosition = IntVec3.Invalid;
         private Map? chargeMap;
         private Sustainer? aimingSound;
@@ -18,34 +27,87 @@ namespace MAP_MechanoidMechanitor
         private Mote_AnnihilationWarmup? chargeMote;
         private Mote_AnnihilationWarmup? targetMote;
         private CompAnnihilationCannon? Cannon => pawn.GetComp<CompAnnihilationCannon>();
-        internal float ChargeProgress => chargeDuration > 0 ? (float)chargeTicks / chargeDuration : 0f;
+        internal float ChargeProgress => chargeDuration > 0 ? Mathf.Clamp01((float)chargeTicks / chargeDuration) : 0f;
+        private bool IsOpening => openingStarted && chargeDuration <= 0 && !launched;
+        private int RecoveryDuration => brakeDuration + alignDuration + closeDuration;
+        internal bool HasAnimation => sequenceInitialized || chargeDuration > 0;
+        internal float AnimationSpeed => launched
+            ? CannonRecoverySpeed : (IsOpening ? 0f : SunSkillAnimation.CannonSpeed(ChargeProgress));
+        private float CannonRecoverySpeed => recoveryStarted
+            ? SunSkillAnimation.CannonMaxSpeed * (1f - SunSkillAnimation.Progress(
+                SunSkillCooldown.Elapsed(pawn, job, RecoveryDuration), brakeDuration))
+            : SunSkillAnimation.CannonMaxSpeed;
+        internal SunArmorPose AnimationPose => launched
+            ? SunSkillAnimation.CannonRecovery(recoveryStarted
+                    ? SunSkillCooldown.Elapsed(pawn, job, RecoveryDuration) : 0,
+                chargeDuration, brakeDuration, alignDuration, closeDuration, SunSkillAnimation.Rest(pawn))
+            : IsOpening
+                ? SunSkillAnimation.CannonOpening(openingPose,
+                    SunSkillCooldown.Elapsed(pawn, job, openingDuration), openingDuration)
+                : SunSkillAnimation.CannonCharge(chargeTicks, chargeDuration);
+
+        // 固定展开、发射和后摇不能被普通指令跳过；正式蓄力保留原有取消方式。
+        public override bool PlayerInterruptable => !IsOpening && !launched;
 
         public override bool TryMakePreToilReservations(bool errorOnFailed) => true;
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            AddFailCondition(() => !CanContinueCharge());
+            AddFailCondition(() => !CanContinue());
             AddFinishAction(_ =>
             {
-                aimingSound?.End();
-                aimingSound = null;
-                // 与原版 Stance_Warmup 一致：只停止维护，不直接 Destroy 特效。
-                // Aim 自行淡出，Charge/Target 在下一次 Mote 更新时消失。
-                aimMote = null;
-                chargeMote = null;
-                targetMote = null;
-                chargeDuration = 0;
+                if (HasAnimation)
+                    SunArmorPresentation.NotifySkillEnded(pawn, AnimationPose,
+                        AnimationSpeed, AnimationSpeed * SunSkillAnimation.OuterSpeedFactor);
+                FinishChargeVisuals();
+                SunSkillCooldown.Finish(pawn, job);
             });
-            yield return Toils_General.StopDead();
+
+            // 保留旧存档的 0=停止、1=蓄力、2=发射编号；新阶段追加并显式跳转。
+            Toil stop = Toils_General.StopDead();
+            stop.handlingFacing = true;
+            Toil opening = ToilMaker.MakeToil("AnnihilationOpening");
             Toil charge = ToilMaker.MakeToil("AnnihilationCharge");
+            Toil launch = ToilMaker.MakeToil("AnnihilationLaunch");
+            Toil recovery = ToilMaker.MakeToil("AnnihilationRecovery");
+            stop.initAction = () =>
+            {
+                pawn.pather.StopDead();
+                pawn.Rotation = Rot4.South;
+                InitializeSequence();
+                JumpToToil(opening);
+            };
+
+            opening.defaultCompleteMode = ToilCompleteMode.Never;
+            opening.handlingFacing = true;
+            opening.initAction = () =>
+            {
+                pawn.Rotation = Rot4.South;
+                InitializeSequence();
+                // 旧档若保存于瞬时发射步骤之后，顺序推进也必须进入后摇。
+                if (launched)
+                {
+                    JumpToToil(recovery);
+                    return;
+                }
+                openingStarted = true;
+                SunSkillCooldown.Begin(pawn, job, openingDuration);
+            };
+            opening.tickAction = () =>
+            {
+                pawn.Rotation = Rot4.South;
+                if (SunSkillCooldown.Elapsed(pawn, job, openingDuration) >= openingDuration)
+                    JumpToToil(charge);
+            };
+
             charge.defaultCompleteMode = ToilCompleteMode.Never;
             charge.handlingFacing = true;
             charge.initAction = () =>
             {
-                // 开始蓄力时采样瞄准时间系数；实际时长随 Job 存档，读档不重复乘算。
-                chargeDuration = Cannon!.WarmupTicksFor(pawn);
-                chargePosition = pawn.Position;
-                chargeMap = pawn.Map;
+                pawn.Rotation = Rot4.South;
+                InitializeSequence();
+                // 固定展开不消耗蓄力；仅在正式蓄力开始时采样瞄准系数。
+                if (chargeDuration <= 0) chargeDuration = Cannon!.WarmupTicksFor(pawn);
                 if (pawn.GetComp<CompSunBossState>() != null)
                     CurrentGameComponentCache<GameComponent_SunBossNotifications>.Get()
                         ?.NotifyCannonCharging(pawn);
@@ -53,12 +115,13 @@ namespace MAP_MechanoidMechanitor
             };
             charge.tickAction = () =>
             {
-                if (!CanContinueCharge())
+                InitializeSequence(); // 旧存档正在蓄力时不会重跑 initAction。
+                if (!CanContinue())
                 {
                     EndJobWith(JobCondition.InterruptForced);
                     return;
                 }
-                pawn.rotationTracker.FaceCell(job.targetA.Cell);
+                pawn.Rotation = Rot4.South;
                 if (aimingSound == null || aimingSound.Ended)
                     aimingSound = DefDatabase<SoundDef>.GetNamedSilentFail("HellsphereCannon_Aiming")
                         ?.TrySpawnSustainer(SoundInfo.InMap(pawn, MaintenanceType.PerTick));
@@ -67,15 +130,21 @@ namespace MAP_MechanoidMechanitor
                 chargeTicks++;
                 if (chargeTicks >= chargeDuration) ReadyForNextToil();
             };
-            charge.WithProgressBar(TargetIndex.A, () => ChargeProgress);
-            yield return charge;
-            Toil launch = ToilMaker.MakeToil("AnnihilationLaunch");
+            charge.WithProgressBar(TargetIndex.None, () => ChargeProgress);
+            charge.AddFinishAction(FinishChargeVisuals);
             launch.defaultCompleteMode = ToilCompleteMode.Instant;
+            launch.handlingFacing = true;
             launch.initAction = () =>
             {
-                if (launched || Cannon == null) return;
+                pawn.Rotation = Rot4.South;
+                InitializeSequence();
+                if (launched)
+                {
+                    JumpToToil(recovery);
+                    return;
+                }
                 // Toil 切换到发射时再验证一次，受控/位移后不能补发已经取消的攻击。
-                if (!CanContinueCharge())
+                if (!CanContinue() || Cannon == null)
                 {
                     EndJobWith(JobCondition.InterruptForced);
                     return;
@@ -88,15 +157,56 @@ namespace MAP_MechanoidMechanitor
                 Cannon.NotifyLaunched();
                 DefDatabase<SoundDef>.GetNamedSilentFail("Shot_HellsphereCannonGun")
                     ?.PlayOneShot(new TargetInfo(pawn));
+                JumpToToil(recovery);
             };
+
+            recovery.defaultCompleteMode = ToilCompleteMode.Never;
+            recovery.handlingFacing = true;
+            recovery.initAction = () =>
+            {
+                pawn.Rotation = Rot4.South;
+                if (recoveryStarted) return;
+                recoveryStarted = true;
+                SunSkillCooldown.Begin(pawn, job, RecoveryDuration);
+            };
+            recovery.tickAction = () =>
+            {
+                pawn.Rotation = Rot4.South;
+                if (SunSkillCooldown.Elapsed(pawn, job, RecoveryDuration) >= RecoveryDuration)
+                    ReadyForNextToil();
+            };
+            yield return stop;
+            yield return charge;
             yield return launch;
+            yield return opening;
+            yield return recovery;
         }
 
-        private bool CanContinueCharge()
+        private void InitializeSequence()
+        {
+            if (sequenceInitialized || Cannon == null) return;
+            bool legacyCharge = chargeDuration > 0 || launched;
+            openingPose = SunArmorPresentation.CapturePose(pawn);
+            openingDuration = legacyCharge ? 0 : Mathf.Max(1, Cannon.Props.deployTicks);
+            brakeDuration = Mathf.Max(1, Cannon.Props.brakeTicks);
+            alignDuration = Mathf.Max(1, Cannon.Props.alignTicks);
+            closeDuration = Mathf.Max(1, Cannon.Props.closeTicks);
+            if (!chargePosition.IsValid)
+            {
+                chargePosition = pawn.Position;
+                chargeMap = pawn.Map;
+            }
+            sequenceInitialized = true;
+        }
+
+        private bool CanContinue()
         {
             CompAnnihilationCannon? cannon = Cannon;
-            if (cannon == null || !cannon.CanOperate(pawn)
-                || !cannon.ValidTarget(pawn, job.targetA.Cell)) return false;
+            if (!pawn.Spawned || pawn.Map == null || pawn.Dead || pawn.Downed
+                || pawn.InMentalState || pawn.stances?.stunner?.Stunned == true) return false;
+            // 炮弹已经独立运行；后摇不再依赖目标视线、发射器或征召状态。
+            if (!launched && (cannon == null || !cannon.CanOperate(pawn)
+                || !cannon.ValidTarget(pawn, job.targetA.Cell))) return false;
             if (chargeDuration > 0 && !chargePosition.IsValid)
             {
                 // 旧存档缺少锚点时，等 Pawn 真正回到地图后再补齐，不能在 PostLoadInit 读取 Map。
@@ -104,9 +214,23 @@ namespace MAP_MechanoidMechanitor
                 chargeMap = pawn.Map;
             }
             // StopDead 执行前允许 Pawn 仍在移动；开始蓄力后锁定地图和所在格。
-            return chargeDuration <= 0 || (pawn.Map == chargeMap && pawn.Position == chargePosition
-                && pawn.pather?.Moving != true && pawn.stances?.FullBodyBusy != true);
+            return !chargePosition.IsValid || (pawn.Map == chargeMap && pawn.Position == chargePosition
+                && pawn.pather?.Moving != true
+                && (pawn.stances?.FullBodyBusy != true || SunSkillCooldown.Owns(pawn, job)));
         }
+
+        private void FinishChargeVisuals()
+        {
+            aimingSound?.End();
+            aimingSound = null;
+            // 与原版一致，停止维护后自行淡出；发射时清理，不延长到后摇结束。
+            aimMote = null;
+            chargeMote = null;
+            targetMote = null;
+        }
+
+        public override string GetReport() => IsOpening ? "MAP_Annihilation.Report.Opening".Translate().Resolve()
+            : launched ? "MAP_Annihilation.Report.Recovery".Translate().Resolve() : base.GetReport();
 
         private void MaintainVisuals()
         {
@@ -135,6 +259,14 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref chargeTicks, "annihilationChargeTicks");
             Scribe_Values.Look(ref chargeDuration, "annihilationChargeDuration");
             Scribe_Values.Look(ref launched, "annihilationLaunched");
+            Scribe_Values.Look(ref sequenceInitialized, "annihilationSequenceInitialized");
+            Scribe_Values.Look(ref openingStarted, "annihilationOpeningStarted");
+            Scribe_Values.Look(ref recoveryStarted, "annihilationRecoveryStarted");
+            Scribe_Values.Look(ref openingDuration, "annihilationOpeningDuration");
+            Scribe_Values.Look(ref brakeDuration, "annihilationBrakeDuration");
+            Scribe_Values.Look(ref alignDuration, "annihilationAlignDuration");
+            Scribe_Values.Look(ref closeDuration, "annihilationCloseDuration");
+            openingPose.ExposeData("annihilationOpeningPose");
             Scribe_Values.Look(ref chargePosition, "annihilationChargePosition", IntVec3.Invalid);
             Scribe_References.Look(ref chargeMap, "annihilationChargeMap");
             base.ExposeData();

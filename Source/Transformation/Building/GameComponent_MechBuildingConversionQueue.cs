@@ -21,6 +21,15 @@ namespace MAP_MechanoidMechanitor
         {
         }
 
+        // 灯效在读条结束至安全转换提交之间继续保持末帧；只读查询，不处理队列。
+        internal static bool IsConversionQueued(Pawn pawn) =>
+            CurrentGameComponentCache<GameComponent_MechBuildingConversionQueue>.Get()
+                ?.PendingConversions.Contains(pawn) == true;
+
+        internal static bool IsRestoreQueued(Thing carrier) =>
+            CurrentGameComponentCache<GameComponent_MechBuildingConversionQueue>.Get()
+                ?.PendingRestores.Contains(carrier) == true;
+
         public static bool TryQueueConversion(
             Pawn? pawn,
             out string? failureReason)

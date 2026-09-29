@@ -25,6 +25,11 @@ namespace MAP_MechanoidMechanitor
     {
         public const int RestoreDurationTicks = 180;
 
+        // 队列执行失败时结束表现；读档仍由原有的剩余时间恢复进度。
+        internal float RestoreProgress => restoreInProgress
+            && (!restoreQueued || GameComponent_MechBuildingConversionQueue.IsRestoreQueued(parent))
+                ? Mathf.Clamp01(1f - (float)remainingRestoreTicks / RestoreDurationTicks) : 0f;
+
         private IntVec3 lastMapPosition = IntVec3.Invalid;
         private Rot4 lastMapRotation = Rot4.South;
         private bool restoreInProgress;

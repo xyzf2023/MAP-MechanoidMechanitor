@@ -10,6 +10,7 @@ namespace MAP_MechanoidMechanitor
     public sealed class CompProperties_EnergyPulse : CompProperties
     {
         public int warmupTicks = 180;
+        public int recoveryTicks;
         public float radius = 10f;
         public int stunTicks = 300;
         public float propagationSpeed = 0.5f; // 格 / tick，与憎恶毒蜂死亡冲击波一致。
@@ -25,6 +26,7 @@ namespace MAP_MechanoidMechanitor
             foreach (string error in base.ConfigErrors(parentDef)) yield return error;
             if (warmupTicks < 1 || stunTicks < 1 || cooldownTicks < 0)
                 yield return "能量脉冲蓄力、眩晕时间必须为正，冷却不得为负。";
+            if (recoveryTicks < 0) yield return "能量脉冲恢复时长不得为负。";
             if (!(radius > 0f) || float.IsInfinity(radius)
                 || !(propagationSpeed > 0f) || float.IsInfinity(propagationSpeed)
                 || !(effectReferenceRadius > 0f) || float.IsInfinity(effectReferenceRadius))
@@ -118,6 +120,8 @@ namespace MAP_MechanoidMechanitor
             yield return new Command_Action
             {
                 defaultLabel = "DEV：重置冷却",
+                // 与脉冲按钮共用生成入口，但排在太阳的常规组件按钮之后。
+                Order = 1f,
                 action = () =>
                 {
                     if (!DebugSettings.ShowDevGizmos || actor.Destroyed

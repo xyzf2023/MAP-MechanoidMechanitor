@@ -195,12 +195,19 @@ namespace MAP_MechanoidMechanitor
             return pawn!.jobs.TryTakeOrderedJob(job, JobTag.Misc);
         }
 
-        public static bool TryBeginTakeoff(Pawn? pawn)
+        public static bool TryBeginTakeoff(Pawn? pawn) =>
+            TryBeginTakeoff(pawn, requireDrafted: true);
+
+        /// <summary>开发者视觉测试入口：完整复用正式起飞流程，仅跳过征召要求。</summary>
+        internal static bool TryBeginDebugTakeoff(Pawn? pawn) =>
+            TryBeginTakeoff(pawn, requireDrafted: false);
+
+        private static bool TryBeginTakeoff(Pawn? pawn, bool requireDrafted)
         {
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
                 || record == null || pawn == null
                 || !record.HasSelfFlightAuthorization || GroupFlightUtility.IsManaged(pawn)
-                || !CanBeginTakeoff(pawn, record, requireDrafted: true, out _))
+                || !CanBeginTakeoff(pawn, record, requireDrafted, out _))
             {
                 return false;
             }
@@ -427,6 +434,12 @@ namespace MAP_MechanoidMechanitor
 
         public static bool TryBeginLanding(Pawn? pawn, bool showMessage = false)
         {
+            // 手动起降不能绕过太阳的固定动作；能源耗尽等自动迫降仍走原有流程。
+            if (showMessage && SunSkillCooldown.IsActive(pawn))
+            {
+                Messages.Message("MAP_SunSkill.Busy".Translate(), pawn, MessageTypeDefOf.RejectInput, false);
+                return false;
+            }
             if (GroupFlightUtility.IsProviding(pawn))
             {
                 GroupFlightUtility.BeginGroupLanding(GroupFlightUtility.ProvidedSession(pawn)!, false);
@@ -936,6 +949,8 @@ namespace MAP_MechanoidMechanitor
             bool externallySupported = false,
             bool requireEnergy = true)
         {
+            if (SunSkillCooldown.IsActive(pawn))
+                return "MAP_SunSkill.Busy".Translate();
             if (GravityDisorderUtility.IsAffected(pawn))
                 return GravityDisorderUtility.BlockedReason;
             if (pawn == null || record?.Profile == null || !pawn.Spawned

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace MAP_MechanoidMechanitor
@@ -41,6 +42,11 @@ namespace MAP_MechanoidMechanitor
         private Effecter? activationProgress;
 
         public MapComponent_SunBossArena(Map map) : base(map) { }
+
+        internal float ActivationProgressFor(Thing core) => !activated && activationStartedTick >= 0
+            && ReferenceEquals(Core, core) && core.Spawned
+                ? Mathf.Clamp01((float)(Find.TickManager.TicksGame - activationStartedTick) / ActivationDurationTicks)
+                : 0f;
 
         internal static bool SuppressesMechanicalFlight(Pawn? pawn)
         {

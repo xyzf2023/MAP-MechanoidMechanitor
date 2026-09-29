@@ -72,7 +72,7 @@
           <texPath>Mech/Sun/Sun</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
-          <drawSize>3</drawSize>
+          <drawSize>(5.1,5.1)</drawSize>
         </bodyGraphicData>
       </li>
       <li>
@@ -80,7 +80,7 @@
           <texPath>Mech/Sun/Sun</texPath>
           <shaderType>Cutout</shaderType>
           <graphicClass>Graphic_Multi</graphicClass>
-          <drawSize>3</drawSize>
+          <drawSize>(5.1,5.1)</drawSize>
         </bodyGraphicData>
       </li>
     </lifeStages>

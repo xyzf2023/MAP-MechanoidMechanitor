@@ -13,43 +13,13 @@
       <BandwidthCost>5</BandwidthCost>
     </statBases>
     <comps>
-      <!-- 玩家太阳：高能激光束蓄力时跟随 Pawn -->
-      <li Class="MAP_MechanoidMechanitor.CompProperties_HighEnergyLaserBeam">
-        <range>35</range>
-        <cooldownTicks>60</cooldownTicks>
-        <damageAmount>50</damageAmount>
-        <durationTicks>300</durationTicks>
-        <trackingSpeed>2.5</trackingSpeed>
-        <trackPawnDuringWarmup>true</trackPawnDuringWarmup>
-      </li>
-      <!-- 产热组件 -->
-      <li Class="CompProperties_HeatPusher">
-        <compClass>MAP_MechanoidMechanitor.CompPawnHeatPusher</compClass>
-        <heatPerSecond>100</heatPerSecond>
-        <heatPushMaxTemperature>50</heatPushMaxTemperature>
-      </li>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_SunEnergyAura" />
-      <li Class="MAP_MechanoidMechanitor.CompProperties_AutonomousMech">
-        <setting>Sun</setting>
-      </li>
-      <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingConversion">
-        <buildingFormDef>MAP_Building_Sun</buildingFormDef>
-        <iconPath>UI/Commands/MM_SunBuildingConversion</iconPath>
-      </li>
-      <!-- 玩家太阳：能量脉冲数值 -->
-      <li Class="MAP_MechanoidMechanitor.CompProperties_EnergyPulse">
-        <warmupTicks>180</warmupTicks>
-        <radius>10</radius>
-        <stunTicks>300</stunTicks>
-        <propagationSpeed>2.5</propagationSpeed>
-        <cooldownTicks>300</cooldownTicks>
-        <releaseEffecter>BlastMechBandShockwave</releaseEffecter>
-        <effectReferenceRadius>30.9</effectReferenceRadius>
-        <iconPath>UI/Commands/MM_EnergyPulse</iconPath>
-      </li>
       <!-- 玩家太阳：湮灭炮数值 -->
       <li Class="MAP_MechanoidMechanitor.CompProperties_AnnihilationCannon">
         <warmupTicks>300</warmupTicks>
+        <deployTicks>60</deployTicks>
+        <brakeTicks>36</brakeTicks>
+        <alignTicks>30</alignTicks>
+        <closeTicks>24</closeTicks>
         <innerRadius>4.9</innerRadius>
         <outerRadius>9.8</outerRadius>
         <skipEffectRadius>15</skipEffectRadius>
@@ -63,6 +33,44 @@
         <effectExpandTicks>15</effectExpandTicks>
         <effectHoldTicks>60</effectHoldTicks>
         <effectContractTicks>20</effectContractTicks>
+      </li>
+      <!-- 玩家太阳：高能激光束蓄力时跟随 Pawn -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_HighEnergyLaserBeam">
+        <range>35</range>
+        <warmupTicks>60</warmupTicks>
+        <cooldownTicks>60</cooldownTicks>
+        <damageAmount>50</damageAmount>
+        <durationTicks>300</durationTicks>
+        <recoveryTicks>36</recoveryTicks>
+        <trackingSpeed>2.5</trackingSpeed>
+        <trackPawnDuringWarmup>true</trackPawnDuringWarmup>
+        <allowAutoFire>true</allowAutoFire>
+      </li>
+      <!-- 产热组件 -->
+      <li Class="CompProperties_HeatPusher">
+        <compClass>MAP_MechanoidMechanitor.CompPawnHeatPusher</compClass>
+        <heatPerSecond>100</heatPerSecond>
+        <heatPushMaxTemperature>50</heatPushMaxTemperature>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_SunEnergyAura" />
+      <li Class="MAP_MechanoidMechanitor.CompProperties_AutonomousMech">
+        <setting>Sun</setting>
+      </li>
+      <!-- 玩家太阳：能量脉冲数值 -->
+      <li Class="MAP_MechanoidMechanitor.CompProperties_EnergyPulse">
+        <warmupTicks>180</warmupTicks>
+        <recoveryTicks>42</recoveryTicks>
+        <radius>10</radius>
+        <stunTicks>300</stunTicks>
+        <propagationSpeed>2.5</propagationSpeed>
+        <cooldownTicks>300</cooldownTicks>
+        <releaseEffecter>BlastMechBandShockwave</releaseEffecter>
+        <effectReferenceRadius>30.9</effectReferenceRadius>
+        <iconPath>UI/Commands/MM_EnergyPulse</iconPath>
+      </li>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_MechBuildingConversion">
+        <buildingFormDef>MAP_Building_Sun</buildingFormDef>
+        <iconPath>UI/Commands/MM_SunBuildingConversion</iconPath>
       </li>
     </comps>
   </ThingDef>

@@ -49,15 +49,15 @@
     <defName>Mote_MAP_HighEnergyLaserBeamOuter</defName>
     <graphicData>
       <color>(1.0,0.35,0.04)</color>
-      <!-- 双端点 Mote 会再次乘 drawSize.y；固定为 1 保持端点长度，仅用 x 加粗。 -->
-      <drawSize>(5.0,1.0)</drawSize>
+      <!-- 六块甲板各发射一束细激光；y 固定为 1，保持双端点长度。 -->
+      <drawSize>(0.65,1.0)</drawSize>
     </graphicData>
   </ThingDef>
   <ThingDef ParentName="MAP_HighEnergyLaserBeamBase">
     <defName>Mote_MAP_HighEnergyLaserBeamCore</defName>
     <graphicData>
       <color>(1.0,1.0,1.0)</color>
-      <drawSize>(1.75,1.0)</drawSize>
+      <drawSize>(0.22,1.0)</drawSize>
     </graphicData>
   </ThingDef>
 </Defs>

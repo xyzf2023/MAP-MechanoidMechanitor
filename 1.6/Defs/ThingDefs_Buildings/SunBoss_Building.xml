@@ -7,6 +7,7 @@
     <description>这个建筑看起来是此设施的能源来源......但总感觉哪里不对劲。小心行事。</description>
     <thingClass>Building</thingClass>
     <tickerType>Never</tickerType>
+    <drawerType>MapMeshAndRealTime</drawerType>
     <size>(3,3)</size>
     <rotatable>false</rotatable>
     <passability>Impassable</passability>
@@ -15,13 +16,19 @@
     <destroyable>true</destroyable>
     <leaveResourcesWhenKilled>false</leaveResourcesWhenKilled>
     <graphicData>
-      <texPath>Buildings/SunBOSS/SunBOSS</texPath>
+      <texPath>Mech/SunAncient/SunAncient_Building</texPath>
       <graphicClass>Graphic_Single</graphicClass>
-      <drawSize>(3,3)</drawSize>
+      <!-- 与太阳建筑形态使用相同的透明边距补偿，主体贴近 3 格占地。 -->
+      <drawSize>(5.1,5.1)</drawSize>
     </graphicData>
     <statBases>
       <Flammability>0</Flammability>
     </statBases>
+    <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_SunBuildingLight">
+        <ancient>true</ancient>
+      </li>
+    </comps>
     <building>
       <neverBuildable>true</neverBuildable>
       <deconstructible>false</deconstructible>

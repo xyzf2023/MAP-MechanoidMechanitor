@@ -482,8 +482,11 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn,
             MechanicalFlightProfileDef profile)
         {
+            float amplitude = profile.hoverBobAmplitude;
+            if (SunArmorPresentation.IsSun(pawn))
+                amplitude *= SunFlightPresentation.Current(pawn).FloatFactor;
             return PawnHoverUtility.ExtraHeight(pawn, profile.hoverExtraVisualHeight,
-                profile.hoverBobAmplitude, profile.hoverBobPeriodTicks);
+                amplitude, profile.hoverBobPeriodTicks);
         }
 
         internal static float TotalVisualZOffset(

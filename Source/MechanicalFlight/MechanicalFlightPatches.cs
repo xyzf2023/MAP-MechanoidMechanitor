@@ -15,6 +15,7 @@ namespace MAP_MechanoidMechanitor
             // 注册表下一 tick 会校准飞行阶段；运动坐标必须在离图时立即失效，
             // 避免同 tick 重新生成到另一张地图后沿用旧位置。
             MechanicalFlightStraightPathPatch.ClearMotion(__instance);
+            SunFlightPresentation.Forget(__instance);
         }
     }
 

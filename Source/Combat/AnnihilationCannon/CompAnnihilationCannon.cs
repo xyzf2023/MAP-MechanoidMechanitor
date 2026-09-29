@@ -9,6 +9,10 @@ namespace MAP_MechanoidMechanitor
     public sealed class CompProperties_AnnihilationCannon : CompProperties
     {
         public int warmupTicks = 600;
+        public int deployTicks = 60;
+        public int brakeTicks = 36;
+        public int alignTicks = 30;
+        public int closeTicks = 24;
         public float innerRadius = 4.9f;
         public float outerRadius = 9.8f;
         public float skipEffectRadius = 10f;
@@ -33,6 +37,8 @@ namespace MAP_MechanoidMechanitor
             foreach (string error in base.ConfigErrors(parentDef)) yield return error;
             if (warmupTicks < 1 || phaseDelayTicks < 1 || cooldownTicks < 0)
                 yield return "湮灭炮蓄力、阶段间隔必须为正，冷却不得为负。";
+            if (deployTicks < 1 || brakeTicks < 1 || alignTicks < 1 || closeTicks < 1)
+                yield return "湮灭炮固定展开、制动、归位和收拢时长必须为正。";
             if (!(innerRadius > 0f) || innerRadius > GenRadial.MaxRadialPatternRadius
                 || !(outerRadius > 0f) || outerRadius > GenRadial.MaxRadialPatternRadius)
                 yield return "湮灭炮内外圈半径必须在原版径向格子表支持的范围内。";
@@ -116,7 +122,9 @@ namespace MAP_MechanoidMechanitor
             {
                 defaultLabel = "MAP_Annihilation.Label".Translate(),
                 // defaultDesc 是 string；TaggedString 的隐式转换会 StripTags，必须显式保留富文本。
-                defaultDesc = "MAP_Annihilation.Description".Translate().Resolve(),
+                defaultDesc = "MAP_Annihilation.Description".Translate().Resolve() + "\n\n"
+                    + "MAP_Annihilation.Timing".Translate(
+                        (WarmupTicksFor(actor) / 60f).ToString("0.##").Named("n")).Resolve(),
                 icon = ContentFinder<Texture2D>.Get("UI/Commands/MM_AnnihilationCannon"),
                 action = () => BeginTargeting(actor)
             };

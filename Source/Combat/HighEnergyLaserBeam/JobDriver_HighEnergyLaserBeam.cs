@@ -13,16 +13,31 @@ namespace MAP_MechanoidMechanitor
         private int firingTicks;
         private bool initialized;
         private bool firingStarted;
+        private bool recovering;
+        private int recoveryDuration;
+        private bool poseInitialized;
+        private SunArmorPose startPose;
+        private SunArmorPose recoveryPose;
         private Map? castMap;
         private Vector3 impactPosition;
-        private MoteDualAttached? outerBeam;
-        private MoteDualAttached? coreBeam;
+        private readonly MoteDualAttached?[] outerBeams = new MoteDualAttached?[SunArmorPresentation.ArmorCount];
+        private readonly MoteDualAttached?[] coreBeams = new MoteDualAttached?[SunArmorPresentation.ArmorCount];
         private Mote? areaIndicator;
         private Sustainer? beamSound;
         private readonly List<Pawn> damageTargets = new List<Pawn>();
         private readonly HashSet<Building> buildingDamageTargets = new HashSet<Building>();
         private CompHighEnergyLaserBeam? Laser => pawn.GetComp<CompHighEnergyLaserBeam>();
-        internal bool IsFiring => firingStarted;
+        private int WarmupTicks => Laser?.WarmupTicks ?? CompHighEnergyLaserBeam.DefaultWarmupTicks;
+        internal float ChargeProgress => Mathf.Clamp01(
+            (float)chargeTicks / WarmupTicks);
+        internal bool IsFiring => firingStarted && !recovering;
+        internal bool HasAnimation => initialized;
+        internal SunArmorPose AnimationPose => recovering
+            ? SunArmorPose.Lerp(recoveryPose, SunSkillAnimation.Rest(pawn), SunSkillAnimation.Smooth(
+                SunSkillAnimation.Progress(SunSkillCooldown.Elapsed(pawn, job, recoveryDuration), recoveryDuration)))
+            : SunSkillAnimation.Laser(poseInitialized ? startPose : SunSkillAnimation.Rest(pawn),
+                ChargeProgress, WarmupTicks, firingStarted, firingTicks);
+        public override bool PlayerInterruptable => !recovering;
         // 不从可能在读档后失效的 Thing 引用推断模式，防止追踪模式退化为地块模式。
         private bool TracksPawn => job.count == 1;
 
@@ -31,7 +46,12 @@ namespace MAP_MechanoidMechanitor
         protected override IEnumerable<Toil> MakeNewToils()
         {
             AddFailCondition(() => !CanContinue());
-            AddFinishAction(_ => FinishVisuals());
+            AddFinishAction(_ =>
+            {
+                if (HasAnimation) SunArmorPresentation.NotifySkillEnded(pawn, AnimationPose);
+                FinishVisuals();
+                SunSkillCooldown.Finish(pawn, job);
+            });
             yield return Toils_General.StopDead();
 
             Toil charge = ToilMaker.MakeToil("HighEnergyLaserBeamCharge");
@@ -39,8 +59,11 @@ namespace MAP_MechanoidMechanitor
             charge.handlingFacing = true;
             charge.initAction = () =>
             {
+                pawn.Rotation = Rot4.South;
                 if (!initialized)
                 {
+                    startPose = SunArmorPresentation.CapturePose(pawn);
+                    poseInitialized = true;
                     castMap = pawn.Map;
                     impactPosition = job.targetB.Cell.ToVector3Shifted().Yto0();
                     initialized = true;
@@ -61,11 +84,11 @@ namespace MAP_MechanoidMechanitor
                     return;
                 }
                 UpdateWarmupImpactPosition();
-                pawn.rotationTracker?.Face(impactPosition);
+                pawn.Rotation = Rot4.South;
                 MaintainAreaIndicator();
-                if (++chargeTicks >= CompHighEnergyLaserBeam.WarmupTicks) ReadyForNextToil();
+                if (++chargeTicks >= WarmupTicks) ReadyForNextToil();
             };
-            charge.WithProgressBar(TargetIndex.None, () => Mathf.Clamp01((float)chargeTicks / CompHighEnergyLaserBeam.WarmupTicks));
+            charge.WithProgressBar(TargetIndex.None, () => ChargeProgress);
             yield return charge;
 
             Toil firing = ToilMaker.MakeToil("HighEnergyLaserBeamFiring");
@@ -73,6 +96,7 @@ namespace MAP_MechanoidMechanitor
             firing.handlingFacing = true;
             firing.initAction = () =>
             {
+                pawn.Rotation = Rot4.South;
                 if (!CanContinue() || Laser?.HasEmitter(pawn) != true)
                 {
                     EndJobWith(JobCondition.InterruptForced);
@@ -87,6 +111,28 @@ namespace MAP_MechanoidMechanitor
             };
             firing.tickAction = TickFiring;
             yield return firing;
+
+            Toil recovery = ToilMaker.MakeToil("HighEnergyLaserBeamRecovery");
+            recovery.defaultCompleteMode = ToilCompleteMode.Never;
+            recovery.handlingFacing = true;
+            recovery.initAction = () =>
+            {
+                pawn.Rotation = Rot4.South;
+                if (recovering) return;
+                recoveryPose = AnimationPose;
+                recoveryDuration = Mathf.Max(0, Laser?.Props.recoveryTicks ?? 0);
+                recovering = true;
+                FinishVisuals();
+                SunSkillCooldown.Begin(pawn, job, recoveryDuration);
+                if (recoveryDuration == 0) ReadyForNextToil();
+            };
+            recovery.tickAction = () =>
+            {
+                pawn.Rotation = Rot4.South;
+                if (SunSkillCooldown.Elapsed(pawn, job, recoveryDuration) >= recoveryDuration)
+                    ReadyForNextToil();
+            };
+            yield return recovery;
         }
 
         private void UpdateWarmupImpactPosition()
@@ -99,7 +145,15 @@ namespace MAP_MechanoidMechanitor
 
         private bool CanContinue()
         {
+            if (recovering)
+                return pawn.Spawned && !pawn.Dead && !pawn.Downed && !pawn.InMentalState
+                    && pawn.stances?.stunner?.Stunned != true
+                    && pawn.Map == castMap && pawn.Position == job.targetC.Cell
+                    && pawn.pather?.Moving != true
+                    && (pawn.stances?.FullBodyBusy != true || SunSkillCooldown.Owns(pawn, job));
             if (Laser?.CanOperate(pawn) != true) return false;
+            // 关闭自由开火只终止自动施放；手动命令及已经开始的恢复阶段保持原行为。
+            if (!job.playerForced && Laser.Props.allowAutoFire && !Laser.AutoFireEnabled) return false;
             // 玩家仍保留原有的部件检查周期；BOSS 部件真正损毁后当 tick 停止技能。
             if (pawn.GetComp<CompSunBossState>() != null && Laser.HasEmitter(pawn) != true) return false;
             if (initialized && (pawn.Map != castMap || pawn.Position != job.targetC.Cell
@@ -121,7 +175,7 @@ namespace MAP_MechanoidMechanitor
             }
             if (firingTicks >= props.durationTicks)
             {
-                EndJobWith(JobCondition.Succeeded);
+                ReadyForNextToil();
                 return;
             }
             firingTicks++;
@@ -135,7 +189,7 @@ namespace MAP_MechanoidMechanitor
             if (TracksPawn && firingTicks > 1)
                 impactPosition = Vector3.MoveTowards(impactPosition,
                     ((Pawn)job.targetA.Thing).DrawPos.Yto0(), props.trackingSpeed / 60f);
-            pawn.rotationTracker?.Face(impactPosition);
+            pawn.Rotation = Rot4.South;
             MaintainVisuals();
             if (firingTicks % CompHighEnergyLaserBeam.DamageInterval == 0) ApplyDamagePulse();
 
@@ -144,7 +198,7 @@ namespace MAP_MechanoidMechanitor
             if (firingTicks % CompHighEnergyLaserBeam.BuildingDamageInterval == 0) ApplyBuildingDamagePulse();
             if (pawn.jobs?.curDriver != this) return;
             if (!CanContinue()) EndJobWith(JobCondition.InterruptForced);
-            else if (firingTicks >= props.durationTicks) EndJobWith(JobCondition.Succeeded);
+            else if (firingTicks >= props.durationTicks) ReadyForNextToil();
         }
 
         private void ApplyDamagePulse()
@@ -210,9 +264,16 @@ namespace MAP_MechanoidMechanitor
             MaintainAreaIndicator();
             TargetInfo target = new TargetInfo(impactPosition.ToIntVec3(), castMap);
             Vector3 offset = impactPosition - target.Cell.ToVector3Shifted();
-            Vector3 direction = (impactPosition - pawn.DrawPos).Yto0().normalized;
-            MaintainBeam(ref outerBeam, HighEnergyLaserBeamDefOf.Mote_MAP_HighEnergyLaserBeamOuter, target, offset, direction);
-            MaintainBeam(ref coreBeam, HighEnergyLaserBeamDefOf.Mote_MAP_HighEnergyLaserBeamCore, target, offset, direction);
+            SunArmorPose pose = AnimationPose;
+            // 每块甲板各发射一束双色细激光，六束共用已有的追踪落点与伤害结算。
+            for (int i = 0; i < outerBeams.Length; i++)
+            {
+                Vector3 sourceOffset = SunArmorPresentation.LaserEmissionOffset(pawn, pose, i);
+                MaintainBeam(ref outerBeams[i], HighEnergyLaserBeamDefOf.Mote_MAP_HighEnergyLaserBeamOuter,
+                    target, offset, sourceOffset);
+                MaintainBeam(ref coreBeams[i], HighEnergyLaserBeamDefOf.Mote_MAP_HighEnergyLaserBeamCore,
+                    target, offset, sourceOffset);
+            }
             if (beamSound == null || beamSound.Ended)
                 beamSound = DefDatabase<SoundDef>.GetNamedSilentFail("BeamGraser_Shooting")
                     ?.TrySpawnSustainer(SoundInfo.InMap(pawn, MaintenanceType.PerTick));
@@ -220,11 +281,11 @@ namespace MAP_MechanoidMechanitor
         }
 
         private void MaintainBeam(ref MoteDualAttached? mote, ThingDef def, TargetInfo target,
-            Vector3 offset, Vector3 direction)
+            Vector3 offset, Vector3 sourceOffset)
         {
             if (mote == null || mote.Destroyed)
-                mote = MoteMaker.MakeInteractionOverlay(def, pawn, target);
-            mote?.UpdateTargets(new TargetInfo(pawn), target, direction * 0.85f, offset);
+                mote = MoteMaker.MakeInteractionOverlay(def, pawn, target, sourceOffset, offset);
+            mote?.UpdateTargets(new TargetInfo(pawn), target, sourceOffset, offset);
             mote?.Maintain();
         }
 
@@ -255,8 +316,11 @@ namespace MAP_MechanoidMechanitor
             beamSound?.End();
             beamSound = null;
             // 与战车一致，停止维护后由 Mote 自行淡出；视觉不负责伤害。
-            outerBeam = null;
-            coreBeam = null;
+            for (int i = 0; i < outerBeams.Length; i++)
+            {
+                outerBeams[i] = null;
+                coreBeams[i] = null;
+            }
         }
 
         public override void ExposeData()
@@ -265,10 +329,18 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref firingTicks, "highEnergyLaserBeamFiringTicks");
             Scribe_Values.Look(ref initialized, "highEnergyLaserBeamInitialized");
             Scribe_Values.Look(ref firingStarted, "highEnergyLaserBeamFiringStarted");
+            Scribe_Values.Look(ref recovering, "highEnergyLaserBeamRecovering");
+            Scribe_Values.Look(ref recoveryDuration, "highEnergyLaserBeamRecoveryDuration");
+            Scribe_Values.Look(ref poseInitialized, "highEnergyLaserBeamPoseInitialized");
+            startPose.ExposeData("highEnergyLaserBeamStartPose");
+            recoveryPose.ExposeData("highEnergyLaserBeamRecoveryPose");
             Scribe_Values.Look(ref impactPosition, "highEnergyLaserBeamImpactPosition");
             Scribe_References.Look(ref castMap, "highEnergyLaserBeamCastMap");
             // base 在 PostLoadInit 重建 Toil，不能在 MakeNewToils 中重置上述状态。
             base.ExposeData();
         }
+
+        public override string GetReport() => recovering
+            ? "MAP_SunSkill.LaserRecovery".Translate().Resolve() : base.GetReport();
     }
 }

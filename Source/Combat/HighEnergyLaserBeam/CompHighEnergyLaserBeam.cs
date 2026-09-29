@@ -9,11 +9,14 @@ namespace MAP_MechanoidMechanitor
     public sealed class CompProperties_HighEnergyLaserBeam : CompProperties
     {
         public float range = 20f;
+        public int warmupTicks = CompHighEnergyLaserBeam.DefaultWarmupTicks;
         public int cooldownTicks;
         public float damageAmount = 50f;
         public int durationTicks = 300;
+        public int recoveryTicks;
         public float trackingSpeed = 0.8f; // 格/秒，运行时换算为每 tick 位移。
         public bool trackPawnDuringWarmup = false; // 蓄力落点直接跟随选中的 Pawn；关闭时保留选中格。
+        public bool allowAutoFire;
 
         public CompProperties_HighEnergyLaserBeam() => compClass = typeof(CompHighEnergyLaserBeam);
 
@@ -22,8 +25,10 @@ namespace MAP_MechanoidMechanitor
             foreach (string error in base.ConfigErrors(parentDef)) yield return error;
             if (!(range > 0f) || float.IsInfinity(range))
                 yield return "高能激光束射程必须为有限正数。";
+            if (warmupTicks < 1) yield return "高能激光束蓄力时间必须为正。";
             if (cooldownTicks < 0) yield return "高能激光束冷却不得为负。";
             if (durationTicks < 1) yield return "高能激光束持续时间必须为正。";
+            if (recoveryTicks < 0) yield return "高能激光束恢复时长不得为负。";
             if (!(trackingSpeed >= 0f) || float.IsInfinity(trackingSpeed))
                 yield return "高能激光束追踪速度必须为有限非负数。";
             if (!(damageAmount > 0f) || float.IsInfinity(damageAmount))
@@ -33,7 +38,7 @@ namespace MAP_MechanoidMechanitor
 
     public sealed class CompHighEnergyLaserBeam : ThingComp
     {
-        internal const int WarmupTicks = 180;
+        internal const int DefaultWarmupTicks = 180;
         internal const int DamageInterval = 20;
         // 战车聚焦激光每 6 tick 对建筑造成 50 点伤害；太阳保持同频率、双倍伤害。
         internal const int BuildingDamageInterval = 6;
@@ -41,8 +46,14 @@ namespace MAP_MechanoidMechanitor
         internal const int EmitterCheckInterval = 60;
         internal const float AreaSideLength = 3f;
         private int readyTick;
+        private HighEnergyLaserBeamTargetSearcher? autoTargetSearcher;
 
         public CompProperties_HighEnergyLaserBeam Props => (CompProperties_HighEnergyLaserBeam)props;
+        internal int WarmupTicks => Mathf.Max(1, Props.warmupTicks);
+        internal bool SupportsFireAtWill => Props.allowAutoFire
+            && parent is Pawn actor && actor.Faction == Faction.OfPlayer;
+        internal bool AutoFireEnabled => SupportsFireAtWill
+            && parent is Pawn actor && actor.Drafted && actor.drafter?.FireAtWill == true;
         internal void ResetCooldown() => readyTick = 0;
 
         internal bool HasEmitter(Pawn actor)
@@ -91,6 +102,19 @@ namespace MAP_MechanoidMechanitor
             Job job = JobMaker.MakeJob(HighEnergyLaserBeamDefOf.MAP_HighEnergyLaserBeam, target, target.Cell, actor.Position);
             job.count = target.HasThing ? 1 : 0;
             job.playerForced = actor.Faction == Faction.OfPlayer;
+            return job;
+        }
+
+        internal Job? TryMakeAutoFireJob()
+        {
+            if (!(parent is Pawn actor) || !AutoFireEnabled || DisabledReason(actor) != null) return null;
+            autoTargetSearcher ??= new HighEnergyLaserBeamTargetSearcher(actor, this);
+            Thing? target = autoTargetSearcher.FindTarget();
+            if (target == null) return null;
+            // Pawn 沿用追踪模式；炮塔等原版可自动攻击目标沿用指定地点发射。
+            Job? job = TryMakeCastJob(HighEnergyLaserBeamTargetSearcher.CastTarget(target));
+            // 使用原版 Job 存档字段区分自动施放与玩家手动命令。
+            if (job != null) job.playerForced = false;
             return job;
         }
 
