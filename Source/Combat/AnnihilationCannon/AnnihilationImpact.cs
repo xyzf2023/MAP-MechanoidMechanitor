@@ -136,7 +136,7 @@ namespace MAP_MechanoidMechanitor
                         new List<AnnihilationImpact> { this }, thing);
                 if (!attemptedKills.Add(thing.ThingID)) return;
                 attemptedKillIds.Add(thing.ThingID);
-                thing.Kill(new DamageInfo(DamageDefOf.Bomb, settings.damage,
+                thing.Kill(new DamageInfo(AnnihilationCannonDefOf.MAP_AnnihilationInner, settings.damage,
                     settings.armorPenetration, -1f, launcher));
             }
             catch (Exception ex)
@@ -243,7 +243,7 @@ namespace MAP_MechanoidMechanitor
             explosion.owner = this;
             GenSpawn.Spawn(explosion, Position, Map);
             explosion.radius = settings.outerRadius;
-            explosion.damType = DamageDefOf.Bomb;
+            explosion.damType = AnnihilationCannonDefOf.MAP_AnnihilationOuter;
             explosion.damAmount = settings.damage;
             explosion.armorPenetration = settings.armorPenetration;
             explosion.instigator = launcher;

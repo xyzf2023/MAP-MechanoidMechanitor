@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <DamageDef ParentName="Bomb">
+    <defName>MAP_AnnihilationInner</defName>
+    <label>反物质湮灭</label>
+    <deathMessage>{0}被反物质湮灭成虚无。</deathMessage>
+  </DamageDef>
+
+  <DamageDef ParentName="Bomb">
+    <defName>MAP_AnnihilationOuter</defName>
+    <label>湮灭炮能量冲击</label>
+    <deathMessage>{0}被湮灭炮释放的能量彻底摧毁。</deathMessage>
+  </DamageDef>
+</Defs>

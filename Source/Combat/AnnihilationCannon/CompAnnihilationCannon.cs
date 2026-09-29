@@ -162,6 +162,8 @@ namespace MAP_MechanoidMechanitor
     public static class AnnihilationCannonDefOf
     {
         public static JobDef MAP_AnnihilationCannon = null!;
+        public static DamageDef MAP_AnnihilationInner = null!;
+        public static DamageDef MAP_AnnihilationOuter = null!;
         public static BodyPartDef MAP_SunAnnihilationCannon = null!;
         public static ThingDef MAP_AnnihilationShot = null!;
         public static ThingDef MAP_AnnihilationImpact = null!;

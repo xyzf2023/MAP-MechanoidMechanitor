@@ -3,6 +3,7 @@
   <DamageDef ParentName="Beam">
     <defName>MAP_HighEnergyLaserBeamHeat</defName>
     <label>高能激光束热伤害</label>
+    <deathMessage>{0}被高能激光束烧蚀致死。</deathMessage>
     <defaultDamage>50</defaultDamage>
     <defaultArmorPenetration>0</defaultArmorPenetration>
   </DamageDef>
