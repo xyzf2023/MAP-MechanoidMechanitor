@@ -10,7 +10,6 @@ namespace MAP_MechanoidMechanitor
     /// <summary>仅为原版索敌提供激光射程与射线判定，实际施放仍由已有 Job 执行。</summary>
     internal sealed class HighEnergyLaserBeamTargetSearcher : IAttackTargetSearcher
     {
-        internal const float MinTargetDistance = 5f;
         private readonly Pawn pawn;
         private readonly CompHighEnergyLaserBeam laser;
 
@@ -31,7 +30,7 @@ namespace MAP_MechanoidMechanitor
                 {
                     verbClass = typeof(Verb_HighEnergyLaserBeamTargeting),
                     range = laser.Props.range,
-                    minRange = MinTargetDistance,
+                    minRange = 0f,
                     requireLineOfSight = true
                 }
             };
@@ -39,7 +38,7 @@ namespace MAP_MechanoidMechanitor
 
         internal Thing? FindTarget() => AttackTargetFinder.BestShootTargetFromCurrentPosition(
             this, TargetScanFlags.NeedLOSToAll | TargetScanFlags.NeedThreat | TargetScanFlags.NeedAutoTargetable,
-            IsValidTarget, MinTargetDistance, laser.Props.range)?.Thing;
+            IsValidTarget, 0f, laser.Props.range)?.Thing;
 
         internal static LocalTargetInfo CastTarget(Thing target) => target is Pawn || target is Building
             ? new LocalTargetInfo(target) : new LocalTargetInfo(target.Position);
@@ -49,7 +48,6 @@ namespace MAP_MechanoidMechanitor
             if (target.Destroyed || !target.Spawned || target.Map != pawn.Map
                 || !pawn.HostileTo(target) || !(target is IAttackTarget attackTarget)
                 || attackTarget.ThreatDisabled(this) || !AttackTargetFinder.IsAutoTargetable(attackTarget)
-                || (target.Position - pawn.Position).LengthHorizontalSquared <= MinTargetDistance * MinTargetDistance
                 || !laser.ValidInitialTarget(pawn, CastTarget(target))) return false;
             // 搜索器不是 Pawn，显式保留原版对 Pawn 所属 Lord 的目标限制。
             Lord? lord = pawn.GetLord();
@@ -59,9 +57,8 @@ namespace MAP_MechanoidMechanitor
 
         private sealed class Verb_HighEnergyLaserBeamTargeting : Verb
         {
-            // 射击位置搜索也遵守自动激光的中心点射程与严格大于 5 格的限制。
+            // 射击位置搜索也遵守自动激光的中心点最大射程，不设最小距离。
             public override bool CanHitTargetFrom(IntVec3 root, LocalTargetInfo targ) => targ.IsValid
-                && (targ.Cell - root).LengthHorizontalSquared > MinTargetDistance * MinTargetDistance
                 && (targ.Cell - root).LengthHorizontalSquared <= verbProps.range * verbProps.range
                 && base.CanHitTargetFrom(root, targ);
 

@@ -41,10 +41,7 @@ namespace MAP_MechanoidMechanitor
             HighEnergyLaserBeamCombatContext? context = current;
             if (context == null || context.pawn != actor || verb?.IsMeleeAttack == false) return;
             // 有原版远程攻击就完整保留其索敌、射程和射击位置逻辑；激光在任务返回后补位。
-            // 无远程攻击时让原版识别激光，近距离仍可选择原来的近战攻击。
-            if (target != null && (target.Position - actor.Position).LengthHorizontalSquared
-                <= HighEnergyLaserBeamTargetSearcher.MinTargetDistance * HighEnergyLaserBeamTargetSearcher.MinTargetDistance)
-                return;
+            // 无远程攻击时让原版识别激光，不按目标距离退回近战攻击。
             Verb? targetingVerb = context.laser.AutoAttackVerb;
             if (targetingVerb == null) return;
             verb = targetingVerb;
@@ -86,7 +83,7 @@ namespace MAP_MechanoidMechanitor
             else if (hostilityResponse && usedLaserVerb && job.def == JobDefOf.AttackStatic
                 && ordinaryVerb?.IsMeleeAttack != false)
             {
-                // 反击先根据有效 Verb 判定远程，再选目标。若选中 5 格内目标，
+                // 反击先根据有效 Verb 判定远程，再选目标。若选中无法自动施放的目标，
                 // 不能留下一个依赖临时激光 Verb、实际无法射击的 AttackStatic。
                 JobMaker.ReturnToPool(job);
                 job = ordinaryVerb == null ? null : JobMaker.MakeJob(JobDefOf.AttackMelee, target);
