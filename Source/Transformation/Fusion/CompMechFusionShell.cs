@@ -53,7 +53,7 @@ namespace MAP_MechanoidMechanitor
             return session != null && session.IsActive ? session : null;
         }
 
-        private MechFusionSession? GetBoundSession()
+        internal MechFusionSession? GetBoundSession()
         {
             if (string.IsNullOrEmpty(sessionId))
             {

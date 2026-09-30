@@ -19,6 +19,8 @@
     <tradeability>None</tradeability>
     <generateCommonality>0</generateCommonality>
     <generateAllowChance>0</generateAllowChance>
+    <!-- 非服装追踪器发起的原版掉落也不能留下独立外甲。 -->
+    <destroyOnDrop>true</destroyOnDrop>
     <drawerType>MapMeshOnly</drawerType>
     <tickerType>Never</tickerType>
     <graphicData>
