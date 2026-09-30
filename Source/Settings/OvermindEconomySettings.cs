@@ -40,6 +40,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public OvermindEconomySettings Copy() =>
             new OvermindEconomySettings { Enabled = Enabled, Values = (int[])Values.Clone() };
 
+        public void ResetToDefaults()
+        {
+            Enabled = true;
+            Values = Defaults();
+        }
+
         public bool SameAs(OvermindEconomySettings other)
         {
             if (Enabled != other.Enabled) return false;
@@ -60,7 +66,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         public static void Draw(
-            Listing_Standard listing, OvermindEconomySettings settings, bool showHeading = true)
+            Listing_Standard listing, OvermindEconomySettings settings, bool showHeading = true,
+            bool showResetButton = true)
         {
             if (showHeading)
             {
@@ -93,10 +100,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 settings.Values[i] = Mathf.Clamp(Mathf.RoundToInt(raw), Minimum[i], Maximum[i]);
             }
             GUI.enabled = oldEnabled;
-            if (listing.ButtonText("MAP_OvermindEconomy.Settings.Reset".Translate()))
+            if (showResetButton && listing.ButtonText("MAP_OvermindEconomy.Settings.Reset".Translate()))
             {
-                settings.Enabled = true;
-                settings.Values = Defaults();
+                settings.ResetToDefaults();
             }
             GameComponent_OvermindEconomy.Current?.Prepare();
         }

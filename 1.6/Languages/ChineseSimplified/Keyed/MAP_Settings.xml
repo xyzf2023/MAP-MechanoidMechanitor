@@ -6,6 +6,10 @@
   <MAP_Settings.PsychicCoreMentalStateRecovery.Description>开启后，每10秒尝试移除心灵中枢已满级的角色的精神状态。</MAP_Settings.PsychicCoreMentalStateRecovery.Description>
 
   <!-- 设置页导航与分组 -->
+  <MAP_Settings.Reset.All>恢复全部默认设置</MAP_Settings.Reset.All>
+  <MAP_Settings.Reset.All.Confirmation>将全部设置重置为默认？</MAP_Settings.Reset.All.Confirmation>
+  <MAP_Settings.Reset.Section>恢复默认</MAP_Settings.Reset.Section>
+  <MAP_Settings.Reset.Section.Confirmation>将{0}中的设置重置为默认？</MAP_Settings.Reset.Section.Confirmation>
   <MAP_Settings.Group.Autonomy>自律机械体</MAP_Settings.Group.Autonomy>
   <MAP_Settings.Autonomy.Sun.Label>启用太阳自律</MAP_Settings.Autonomy.Sun.Label>
   <MAP_Settings.Autonomy.Sun.Description>开启后，太阳将成为不需要监管者的自律机械体。关闭时则仍使用原版机械族监管逻辑。开关后即刻生效。</MAP_Settings.Autonomy.Sun.Description>

@@ -82,6 +82,16 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
+            string resetAllLabel = "MAP_Settings.Reset.All".Translate();
+            Rect resetAllRect = new Rect(inRect.x, inRect.y + SettingsPageKeys.Length * 40f + 12f,
+                navigationWidth, Mathf.Max(36f, Text.CalcHeight(resetAllLabel, navigationWidth - 16f) + 12f));
+            Color previousColor = GUI.color;
+            GUI.color = previousColor * new Color(1f, 1f, 1f, 0.25f);
+            Widgets.DrawLineHorizontal(inRect.x + 8f, resetAllRect.y - 6f, navigationWidth - 16f);
+            GUI.color = previousColor;
+            DrawSettingsResetAction(resetAllRect, MAPSettingsSection.All, resetAllLabel,
+                "MAP_Settings.Reset.All.Confirmation".Translate(), TextAnchor.MiddleLeft);
+
             Widgets.DrawLineVertical(inRect.x + navigationWidth + 6f, inRect.y, inRect.height);
             Rect contentRect = new Rect(
                 inRect.x + navigationWidth + 18f, inRect.y,
@@ -103,36 +113,47 @@ namespace MAP_MechanoidMechanitor
                 case SettingsPage.Mech:
                     DrawSettingsGroup(listing, "MAP_Settings.Group.Autonomy", DrawAutonomySettings);
                     DrawSettingsGroup(listing, "MAP_Settings.Group.Implants", DrawImplantSettings);
-                    DrawSettingsGroup(listing, "MAP_Settings.Group.Cores", DrawCoreSettings);
+                    DrawSettingsGroup(listing, "MAP_Settings.Group.Cores", DrawCoreSettings,
+                        MAPSettingsSection.Cores);
                     DrawSettingsGroup(listing, "MAP_Settings.Group.SkillsAndOffspring", DrawSkillsAndOffspringSettings);
-                    DrawJusticeAbilitySettings(listing);
                     DrawSettingsGroup(listing,
-                        "MAP_MechanoidMechanitor.Settings.Recreation.Section", DrawRecreationSettings);
+                        "MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section", DrawJusticeAbilitySettings);
+                    DrawSettingsGroup(listing,
+                        "MAP_MechanoidMechanitor.Settings.Recreation.Section", DrawRecreationSettings,
+                        MAPSettingsSection.Recreation);
                     break;
                 case SettingsPage.Start:
                     DrawSettingsGroup(listing,
                         "MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section",
-                        group => MechanoidMechanitorGeneralScenarioDefaultSettingsUI.Draw(group, false));
+                        group => MechanoidMechanitorGeneralScenarioDefaultSettingsUI.Draw(group, false),
+                        MAPSettingsSection.GeneralScenario);
                     DrawSettingsGroup(listing,
                         "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Section",
-                        StartingPawnValueProtectionSettingsUI.Draw);
+                        StartingPawnValueProtectionSettingsUI.Draw, MAPSettingsSection.StartingPawnValueProtection);
                     break;
                 case SettingsPage.World:
                     DrawSettingsGroup(listing,
-                        "MAP_MechanoidMechanitor.Settings.StrategicNodes.Section", DrawStrategicNodeSettings);
+                        "MAP_MechanoidMechanitor.Settings.StrategicNodes.Section", DrawStrategicNodeSettings,
+                        MAPSettingsSection.StrategicNodes);
                     DrawSettingsGroup(listing,
-                        "MAP_MechanoidMechanitor.Settings.Insects.Section", DrawInsectStorySettings);
-                    DrawSymbiosisCovenantSettings(listing);
+                        "MAP_MechanoidMechanitor.Settings.Insects.Section", DrawInsectStorySettings,
+                        MAPSettingsSection.Insects);
+                    DrawSettingsGroup(listing,
+                        "MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section", DrawSymbiosisCovenantSettings,
+                        MAPSettingsSection.SymbiosisCovenant);
                     DrawSettingsGroup(listing, "MAP_OvermindEconomy.Settings.Title",
-                        group => OvermindEconomySettings.Draw(group, Settings.overmindEconomy, false));
+                        group => OvermindEconomySettings.Draw(group, Settings.overmindEconomy, false, false),
+                        MAPSettingsSection.OvermindEconomy);
                     break;
                 case SettingsPage.Boss:
                     DrawSettingsGroup(listing,
-                        "MAP_MechanoidMechanitor.Settings.JusticeBoss.Section", DrawJusticeBossDifficultySettings);
+                        "MAP_MechanoidMechanitor.Settings.JusticeBoss.Section", DrawJusticeBossDifficultySettings,
+                        MAPSettingsSection.JusticeBoss);
                     if (ModsConfig.OdysseyActive)
                     {
                         DrawSettingsGroup(listing,
-                            "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section", DrawCerebrexBossDifficultySettings);
+                            "MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section", DrawCerebrexBossDifficultySettings,
+                            MAPSettingsSection.CerebrexBoss);
                     }
                     break;
                 case SettingsPage.Diagnostics:
@@ -152,17 +173,35 @@ namespace MAP_MechanoidMechanitor
         }
 
         private void DrawSettingsGroup(
-            Listing_Standard listing, string titleKey, Action<Listing_Standard> drawContents)
+            Listing_Standard listing, string titleKey, Action<Listing_Standard> drawContents,
+            MAPSettingsSection? resetSection = null)
         {
             bool expanded = !collapsedSettingsGroups.Contains(titleKey);
             string title = (expanded ? "▼ " : "▶ ") + titleKey.Translate();
-            Rect header = listing.GetRect(
-                Mathf.Max(30f, Text.CalcHeight(title, listing.ColumnWidth - 12f) + 8f));
+            // 只有含数值或选择项的分组显式提供重置入口；纯开关分组保持简洁。
+            bool showReset = expanded && resetSection.HasValue;
+            string resetLabel = "MAP_Settings.Reset.Section".Translate();
+            float resetWidth = showReset
+                ? Mathf.Min(Text.CalcSize(resetLabel).x + 24f, listing.ColumnWidth * 0.42f) : 0f;
+            float titleWidth = Mathf.Max(1f, listing.ColumnWidth - resetWidth - 12f);
+            float headerHeight = Mathf.Max(30f, Text.CalcHeight(title, titleWidth) + 8f);
+            if (showReset)
+                headerHeight = Mathf.Max(headerHeight,
+                    Text.CalcHeight(resetLabel, Mathf.Max(1f, resetWidth - 16f)) + 8f);
+            Rect header = listing.GetRect(headerHeight);
+            Rect toggleRect = new Rect(header.x, header.y, header.width - resetWidth, header.height);
             Widgets.DrawHighlight(header);
-            Widgets.DrawHighlightIfMouseover(header);
+            Widgets.DrawHighlightIfMouseover(toggleRect);
             Widgets.Label(new Rect(header.x + 6f, header.y + 4f,
-                header.width - 12f, header.height - 4f), title);
-            if (Widgets.ButtonInvisible(header))
+                titleWidth, header.height - 4f), title);
+            if (showReset)
+            {
+                Rect resetRect = new Rect(header.xMax - resetWidth, header.y, resetWidth, header.height);
+                DrawSettingsResetAction(resetRect, resetSection.GetValueOrDefault(), resetLabel,
+                    "MAP_Settings.Reset.Section.Confirmation".Translate(titleKey.Translate()));
+            }
+            // 折叠与重置使用互不重叠的点击区域，恢复数值不会同时收起分组。
+            if (Widgets.ButtonInvisible(toggleRect))
             {
                 CommitProductivityCoreWorkSpeedBuffer();
                 productivityCoreWorkSpeedFieldWasFocused = false;
@@ -184,6 +223,39 @@ namespace MAP_MechanoidMechanitor
                 drawContents(listing);
             }
             listing.Gap(8f);
+        }
+
+        private void DrawSettingsResetAction(
+            Rect rect, MAPSettingsSection section, string label, string confirmation,
+            TextAnchor anchor = TextAnchor.MiddleCenter)
+        {
+            // 与导航、分组标题共用扁平悬停高亮，不再使用整行凸起按钮。
+            Widgets.DrawHighlightIfMouseover(rect);
+            Color previousColor = GUI.color;
+            TextAnchor previousAnchor = Text.Anchor;
+            GUI.color = previousColor * new Color(0.78f, 0.78f, 0.78f, 1f);
+            Text.Anchor = anchor;
+            Widgets.Label(new Rect(rect.x + 8f, rect.y,
+                Mathf.Max(1f, rect.width - 16f), rect.height), label);
+            Text.Anchor = previousAnchor;
+            GUI.color = previousColor;
+            if (Widgets.ButtonInvisible(rect))
+            {
+                Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                    confirmation, () => ResetSettings(section)));
+            }
+        }
+
+        private void ResetSettings(MAPSettingsSection section)
+        {
+            // 其它分组恢复时先保留输入；恢复核心或全部设置时直接丢弃旧缓冲，
+            // 避免失焦或关闭窗口时把旧输入再次写回默认值。
+            if (section != MAPSettingsSection.All && section != MAPSettingsSection.Cores)
+                CommitProductivityCoreWorkSpeedBuffer();
+            productivityCoreWorkSpeedBuffer = null;
+            productivityCoreWorkSpeedFieldWasFocused = false;
+            GUI.FocusControl(null);
+            MAPMechanitorSettingsResetUtility.Reset(section);
         }
 
         private void DrawInterfaceSettings(Listing_Standard listing)
