@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.HediffExtra.ProductivityCoreLevel>Productivity core: level {0}</MAP_MechanoidMechanitor.HediffExtra.ProductivityCoreLevel>
+  <MAP_MechanoidMechanitor.HediffExtra.PsyfocusPerHour>Automatic psyfocus recovery: {0}/hour</MAP_MechanoidMechanitor.HediffExtra.PsyfocusPerHour>
+  <MAP_MechanoidMechanitor.HediffExtra.BlocksMentalBreaks>No longer suffers mental breaks</MAP_MechanoidMechanitor.HediffExtra.BlocksMentalBreaks>
+  <MAP_MechanoidMechanitor.HediffExtra.StatValue>{0}: {1}</MAP_MechanoidMechanitor.HediffExtra.StatValue>
+  <MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized>Flight capability: ready</MAP_MechanoidMechanitor.HediffExtra.FlightAuthorized>
+  <MAP_MechanoidMechanitor.HediffExtra.VoidEngineRunning>Void engine: running</MAP_MechanoidMechanitor.HediffExtra.VoidEngineRunning>
+  <MAP_MechanoidMechanitor.HediffExtra.StructuralStabilization>Structural self-stabilization: enabled</MAP_MechanoidMechanitor.HediffExtra.StructuralStabilization>
+  <MAP_MechanoidMechanitor.HediffExtra.MechanitorConnected>Mech control system connected</MAP_MechanoidMechanitor.HediffExtra.MechanitorConnected>
+  <MAP_MechanoidMechanitor.HediffExtra.QuantumCommunicator>Quantum communicator enabled</MAP_MechanoidMechanitor.HediffExtra.QuantumCommunicator>
+  <MAP_MechanoidMechanitor.HediffExtra.ProxySubchain>Proxy subchain enabled</MAP_MechanoidMechanitor.HediffExtra.ProxySubchain>
+</LanguageData>

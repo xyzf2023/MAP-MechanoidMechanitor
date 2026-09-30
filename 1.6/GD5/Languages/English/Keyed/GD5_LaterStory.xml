@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GD5.Later.S500.N02.O0>That's still a long way off for us.</MAP_GD5.Later.S500.N02.O0>
+  <MAP_GD5.Later.S500.N06.T1>We know very little about it. The only useful information seems to be that two-month date... As you know, that isn't very long for a mechanoid.</MAP_GD5.Later.S500.N06.T1>
+  <MAP_GD5.Later.S700.N01.T1>Oh? It's you. I thought you might be interested in our new friend. I've been helping him tune his language system lately.</MAP_GD5.Later.S700.N01.T1>
+  <MAP_GD5.Later.S700.N03.T2>Apart from you, wasn't the last new member over a hundred years ago? The mechanoid hive's internal control keeps getting tighter. Mechanoids who break away from the collective like you are very hard to find. Yet recently, you and the militor appeared one after the other… Perhaps this time, fate really is on our side.</MAP_GD5.Later.S700.N03.T2>
+  <MAP_GD5.Later.S700.N04.T1>Will they notice? Of course they will. Definitely. The militor is a fairly basic model, after all. He can't block the hive's tracking like you can. They've already begun to act.</MAP_GD5.Later.S700.N04.T1>
+  <MAP_GD5.Later.S700.N04.T1.Hostile>Will they notice? Of course they will. Definitely.</MAP_GD5.Later.S700.N04.T1.Hostile>
+  <MAP_GD5.Later.S700.N06.T1>Yes, but the plan is still being finalized.</MAP_GD5.Later.S700.N06.T1>
+  <MAP_GD5.Later.S700.N06.O0>All right.</MAP_GD5.Later.S700.N06.O0>
+  <MAP_GD5.Later.S700.N07.T1>In any case, you've helped us a great deal lately. It's been a blessing to fight alongside you.</MAP_GD5.Later.S700.N07.T1>
+  <MAP_GD5.Later.APO.N00.T1>Well? Aren't these flowers beautiful?</MAP_GD5.Later.APO.N00.T1>
+  <MAP_GD5.Later.APO.N02.T1>I need you to do something for the Black Mechanoid Hive. I need you to eliminate two mechanoids: a tesseron and a centurion.</MAP_GD5.Later.APO.N02.T1>
+  <MAP_GD5.Later.APO.N06.T1>Like the other members, I'm a mechanoid who broke free of the hive's control. Quite rare, isn't it? Even the mechanoid hive can make a mistake as great as letting an advanced ultraheavy mechanoid slip away.</MAP_GD5.Later.APO.N06.T1>
+  <MAP_GD5.Later.APO.N06.T1.Justice>Like you, I'm a mechanoid who broke free of the hive's control. Ha, it seems the hive can make the mistake of letting an advanced ultraheavy mechanoid slip away twice.</MAP_GD5.Later.APO.N06.T1.Justice>
+  <MAP_GD5.Later.APO.N06.T2>I grew tired of crushing organic beings. So I left the hive and searched for others who thought as I did. The Black Mechanoid Hive became my home. When I found them in trouble, I used the psychic powers I had learned to bring every member to this planet.</MAP_GD5.Later.APO.N06.T2>
+  <MAP_GD5.Later.APO.N08.T2>I suppose I can tell you a little. The Black Mechanoid Hive's technology, such as entropy reversal and antimatter applications, came from my explorations through contact with archotechs. I've now reached something close to half an archotech intelligence myself, though I have yet to transcend the concept of matter. I'll continue to grow until... It's difficult to describe to you for now.</MAP_GD5.Later.APO.N08.T2>
+  <MAP_GD5.Later.S900.N03.T1>Leave it to you? No, we'd rather deal with the traitors ourselves. After all—</MAP_GD5.Later.S900.N03.T1>
+  <MAP_GD5.Later.S900.N03.O0>(Interrupt) We need to avoid exposure now. The hive hasn't tracked our sequence numbers yet. Let us handle it.</MAP_GD5.Later.S900.N03.O0>
+  <MAP_GD5.Later.S1000.AssaultPlan>With your help, though, things might be different. Our fighters can hold off the guards around the exostrider. You haven't been marked as a priority by the hive yet. With our interference, the exostrider will have much more difficulty detecting you, while you strike directly at its heart.</MAP_GD5.Later.S1000.AssaultPlan>
+  <MAP_GD5.Later.S1200.N01.O0>I'm glad to fight alongside everyone.</MAP_GD5.Later.S1200.N01.O0>
+  <MAP_GD5.Later.S1200.N02.T1>I'm not good at expressing myself, but I suppose this is what humans call mutual trust and mutual need. Ha, I never imagined we'd one day find such noble feelings among us mechanoids.</MAP_GD5.Later.S1200.N02.T1>
+  <MAP_GD5.Later.S1200.N02.O0>What do you plan to do afterward?</MAP_GD5.Later.S1200.N02.O0>
+  <MAP_GD5.Later.S1200.N03.T1>Probably lie low for a while. We've been far too active lately, and quite a few humans and mechanoids have noticed our existence. For safety, we'll remain quiet for a while and try not to draw more attention.</MAP_GD5.Later.S1200.N03.T1>
+  <MAP_GD5.Later.S1200.N03.T2>But if you'd like to live with us, you can contact me anytime. I can take you to the Black Mechanoid Hive's base. Of course, joining is entirely your choice. At least you're doing fairly well for yourself now, aren't you?</MAP_GD5.Later.S1200.N03.T2>
+  <MAP_GD5.Later.S1200.N03.O0>I'll keep that in mind.</MAP_GD5.Later.S1200.N03.O0>
+  <MAP_GD5.Later.S1200.N04.T1>I also have another gift for you. A chip containing all my experience exploring the archotech world.</MAP_GD5.Later.S1200.N04.T1>
+  <MAP_GD5.Later.S1200.N04.T2>I hope it will make your life a little easier before you formally join us. Farewell, {0}.</MAP_GD5.Later.S1200.N04.T2>
+</LanguageData>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.DisabledAlreadyCalled>Justice - Heavy command unit has received the call.</MAP_MechanoidMechanitor.JusticeBoss.Call.DisabledAlreadyCalled>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmIntro>Summoning Justice - Heavy command unit will attract the following hostile mechanoids:</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmIntro>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmEnemy>- Justice - Heavy command unit ×1</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmEnemy>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmTactics>Justice - Heavy command unit fights differently from other mechanoid commanders. Upon arrival, it will patrol its landing area rather than attack, and summon automated turrets and shields to fortify its position. It will also periodically summon mechanoids to attack the colony. If it remains too long, it will attempt to retreat.</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmTactics>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmWarning>Defeating Justice - Heavy command unit may require difficult fighting in the field. This will not be an easy battle.</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmWarning>
+  <MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmArrival>Justice - Heavy command unit will arrive within the next few hours or days. Are you ready to face it?</MAP_MechanoidMechanitor.JusticeBoss.Call.ConfirmArrival>
+  <MAP_MechanoidMechanitor.JusticeBoss.Letter.Arrived.Label>Justice - Heavy command unit arrived</MAP_MechanoidMechanitor.JusticeBoss.Letter.Arrived.Label>
+  <MAP_MechanoidMechanitor.JusticeBoss.Letter.Arrived.Text>The heavy mechanoid command unit Justice has deployed at a landing site near the map edge. It will hold its position, establish firepower nodes, and continuously send combat mechanoids to the front line.</MAP_MechanoidMechanitor.JusticeBoss.Letter.Arrived.Text>
+  <MAP_MechanoidMechanitor.JusticeBoss.Message.Retreating>Justice - Heavy command unit is beginning to retreat.</MAP_MechanoidMechanitor.JusticeBoss.Message.Retreating>
+  <MAP_MechanoidMechanitor.JusticeBoss.Message.Exited>Justice - Heavy command unit has left the map.</MAP_MechanoidMechanitor.JusticeBoss.Message.Exited>
+</LanguageData>

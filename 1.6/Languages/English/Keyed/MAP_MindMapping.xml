@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MindMapping.Core.BlankLabel>Autonomous directive core (blank)</MAP_MindMapping.Core.BlankLabel>
+  <MAP_MindMapping.Core.LoadedLabel>Autonomous directive core ({0})</MAP_MindMapping.Core.LoadedLabel>
+  <MAP_MindMapping.Tab.Details>Details</MAP_MindMapping.Tab.Details>
+  <MAP_MindMapping.Details.NotRecorded>Not recorded</MAP_MindMapping.Details.NotRecorded>
+  <MAP_MindMapping.Scanner.Toggle>Mind mapping scan</MAP_MindMapping.Scanner.Toggle>
+  <MAP_MindMapping.Scanner.ToggleDesc>Switch to mind mapping mode: use an autonomous directive core (blank) to fully copy the scanned person's mind data. A mechanoid upgraded using this core inherits most of the original character's traits.</MAP_MindMapping.Scanner.ToggleDesc>
+  <MAP_MindMapping.Scanner.ToggleDisabled>The ripscanner has been initialized; cannot switch modes.</MAP_MindMapping.Scanner.ToggleDisabled>
+  <MAP_MindMapping.Scanner.RequiresCore>Requires one blank {0}.</MAP_MindMapping.Scanner.RequiresCore>
+  <MAP_MindMapping.Command.Import>Import mind data</MAP_MindMapping.Command.Import>
+  <MAP_MindMapping.Command.Export>Export mind data</MAP_MindMapping.Command.Export>
+  <MAP_MindMapping.Command.Copy>Copy mind data</MAP_MindMapping.Command.Copy>
+  <MAP_MindMapping.Reason.CopyCooldown>Affected by mind mapping load</MAP_MindMapping.Reason.CopyCooldown>
+  <MAP_MindMapping.Export.Confirm>Exporting mind data will reset the current mechanoid mechanitor's data.\n\nContinue exporting?</MAP_MindMapping.Export.Confirm>
+  <MAP_MindMapping.Message.Success>Mind data operation complete.</MAP_MindMapping.Message.Success>
+  <MAP_MindMapping.Message.Invalidated>The requirements for the mind data operation are no longer met.</MAP_MindMapping.Message.Invalidated>
+</LanguageData>

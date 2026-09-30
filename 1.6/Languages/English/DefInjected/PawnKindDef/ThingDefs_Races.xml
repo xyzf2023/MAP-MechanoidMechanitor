@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/ThingDefs_Races -->
+  <MAP_Mech_Chariot.label>Chariot</MAP_Mech_Chariot.label>
+  <MAP_Mech_Hermit.label>Hermit</MAP_Mech_Hermit.label>
+  <MAP_Mech_Justice.label>Justice</MAP_Mech_Justice.label>
+  <MAP_Mech_JusticeBOSS.label>Justice - Heavy command unit</MAP_Mech_JusticeBOSS.label>
+  <MAP_Mech_Lover.label>Lover</MAP_Mech_Lover.label>
+  <MAP_Mech_Moon.label>Moon</MAP_Mech_Moon.label>
+  <MAP_Mech_Sun.label>Sun</MAP_Mech_Sun.label>
+  <MAP_Mech_SunBOSS.label>Sun - Energy core</MAP_Mech_SunBOSS.label>
+</LanguageData>

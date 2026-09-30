@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.DataProcessing.OverseerInvalid>This unit can no longer allocate data processing.</MAP_MechanoidMechanitor.DataProcessing.OverseerInvalid>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization>Specialization: {0}</MAP_MechanoidMechanitor.DataProcessing.Specialization>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectNone>None</MAP_MechanoidMechanitor.DataProcessing.EffectNone>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectWorkSpeed>Work speed +{0}</MAP_MechanoidMechanitor.DataProcessing.EffectWorkSpeed>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange>Can operate outside command range</MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>This mechanoid can operate beyond its current mechanoid mechanitor's command range and accept local orders on a different map from its overseer. Oversight and bandwidth requirements still apply.</MAP_MechanoidMechanitor.DataProcessing.EffectCommandRange.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead>Can lead caravans</MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>This mechanoid gains full caravan leadership capability.</MAP_MechanoidMechanitor.DataProcessing.EffectTravelLead.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed>Move speed +{0}</MAP_MechanoidMechanitor.DataProcessing.EffectMoveSpeed>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectStaggerDuration>Stagger duration ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectStaggerDuration>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectIncomingDamage>Damage taken factor ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectIncomingDamage>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectAimingDelay>Aiming time ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectAimingDelay>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectRangedCooldown>Ranged attack cooldown ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectRangedCooldown>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectMeleeCooldown>Melee attack cooldown ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectMeleeCooldown>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectMechEnergyUsage>Mech energy consumption ×{0}</MAP_MechanoidMechanitor.DataProcessing.EffectMechEnergyUsage>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectTravelAndPilot>Can lead caravans/pilot shuttles</MAP_MechanoidMechanitor.DataProcessing.EffectTravelAndPilot>
+  <MAP_MechanoidMechanitor.DataProcessing.EffectTravelAndPilot.Tooltip>This mechanoid gains full caravan leadership capability and can pilot shuttles.</MAP_MechanoidMechanitor.DataProcessing.EffectTravelAndPilot.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning>General tuning</MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination>Production coordination</MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation>Fire control computation</MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol>Assault protocol</MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning.Tooltip>Allocate data processing capacity evenly to improve work, attack timing, mobility, defense, and recovery from stagger.</MAP_MechanoidMechanitor.DataProcessing.Specialization.GeneralTuning.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination.Tooltip>Focus on optimizing production processes to improve work speed and move speed while reducing mech energy consumption.</MAP_MechanoidMechanitor.DataProcessing.Specialization.ProductionCoordination.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation.Tooltip>Focus on ranged fire control computation to reduce aiming time and ranged attack cooldown.</MAP_MechanoidMechanitor.DataProcessing.Specialization.FireControlCalculation.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol.Tooltip>Focus on frontline assault protocols to improve melee attack cycles, mobility, protection, and resistance to stagger.</MAP_MechanoidMechanitor.DataProcessing.Specialization.AssaultProtocol.Tooltip>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation>Dynamic allocation</MAP_MechanoidMechanitor.DataProcessing.DynamicAllocation>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicAllocationFailed>Unable to change dynamic allocation state.</MAP_MechanoidMechanitor.DataProcessing.DynamicAllocationFailed>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicAdvancedMax>Enable advanced limits</MAP_MechanoidMechanitor.DataProcessing.DynamicAdvancedMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicGeneralMax>General tuning limit</MAP_MechanoidMechanitor.DataProcessing.DynamicGeneralMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicProductionMax>Production coordination limit</MAP_MechanoidMechanitor.DataProcessing.DynamicProductionMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicFireControlMax>Fire control computation limit</MAP_MechanoidMechanitor.DataProcessing.DynamicFireControlMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicAssaultMax>Assault protocol limit</MAP_MechanoidMechanitor.DataProcessing.DynamicAssaultMax>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicPriority>Priority</MAP_MechanoidMechanitor.DataProcessing.DynamicPriority>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicCheckInterval>State check interval</MAP_MechanoidMechanitor.DataProcessing.DynamicCheckInterval>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicSeconds>{0} seconds</MAP_MechanoidMechanitor.DataProcessing.DynamicSeconds>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateIdle>Idle</MAP_MechanoidMechanitor.DataProcessing.DynamicStateIdle>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateWorking>Working</MAP_MechanoidMechanitor.DataProcessing.DynamicStateWorking>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateDraftedRanged>Drafted ranged</MAP_MechanoidMechanitor.DataProcessing.DynamicStateDraftedRanged>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateDraftedMelee>Drafted melee</MAP_MechanoidMechanitor.DataProcessing.DynamicStateDraftedMelee>
+  <MAP_MechanoidMechanitor.DataProcessing.DynamicStateCloseMelee>Engaged in melee</MAP_MechanoidMechanitor.DataProcessing.DynamicStateCloseMelee>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityCritical>Critical P1</MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityCritical>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityHigh>High P2</MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityHigh>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityStandard>Standard P3</MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityStandard>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityLow>Low P4</MAP_MechanoidMechanitor.DataProcessing.MatrixPriorityLow>
+  <MAP_MechanoidMechanitor.DataProcessing.MatrixIntervalHighFrequency>Frequent checks. Using a one-second interval for many mechanoids may increase performance costs.</MAP_MechanoidMechanitor.DataProcessing.MatrixIntervalHighFrequency>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ShowDetail>Back to target settings</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ShowDetail>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ShowTargets>Select target</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ShowTargets>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.TargetsPage>Target</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.TargetsPage>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BudgetPage>Overseer budget</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BudgetPage>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.DefaultsPage>New target defaults</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.DefaultsPage>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchPage>Batch operations</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchPage>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Targets> targets</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Targets>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Pending>Pending update</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Pending>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.More>More</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.More>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.NoActions>No operations available</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.NoActions>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.On>Enable</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.On>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Off>Disable</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Off>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.GlobalAutomatic>Automatic allocation</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.GlobalAutomatic>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Enabled>Enabled</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Enabled>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Disabled>Disabled</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Disabled>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.AutomaticRunning>Automatically adjust allocation according to target state</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.AutomaticRunning>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.AutomaticStopped>Currently using fixed allocation</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.AutomaticStopped>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.GlobalPaused>Automatic allocation disabled.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.GlobalPaused>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.All>All</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.All>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Limited>Insufficient</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Limited>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Automatic>Automatic</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Automatic>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Fixed>Fixed</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Fixed>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Filter>Filter:</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Filter>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Sort>Sort:</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Sort>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SortName>By name</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SortName>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SortDeficit>By current shortfall</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SortDeficit>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SortActual>By current allocation</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SortActual>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SortPriority>By priority</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SortPriority>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SearchPlaceholder>Search target name…</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SearchPlaceholder>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.NoMatches>No matching targets.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.NoMatches>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Self>Mechanitor</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Self>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SelfUnavailable>This mechanitor cannot currently receive self-allocation, but remains displayed as the overseer.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SelfUnavailable>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Favorite>Pin this unit to the top</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Favorite>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Unfavorite>Unpin</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Unfavorite>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Current>Total capacity</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Current>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Reserve>Dynamic allocation reserve</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Reserve>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Margin>Available capacity</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Margin>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Deficit>Unmet requests</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Deficit>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BudgetHelp>Set the minimum consciousness/data processing level this mechanitor must retain after dynamic allocation. Cannot be set below 50%.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BudgetHelp>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ReservePaused>Automatic allocation is disabled; this reserve is not currently in effect.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ReservePaused>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BudgetBreakdown>Budget breakdown</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BudgetBreakdown>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Base>Base capacity before allocation</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Base>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.FixedCost>Net cost of fixed targets</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.FixedCost>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.DynamicCost>Net cost of dynamic targets</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.DynamicCost>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SelfReturn>Self-allocation refund</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SelfReturn>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ActualRequest>Allocated / Requested</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ActualRequest>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.InputHelp>Input is automatically rounded to the nearest multiple of 5%.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.InputHelp>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.TargetAutomatic>Automatic allocation for this target</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.TargetAutomatic>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.NormalRequest>Baseline allocation</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.NormalRequest>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.FixedRequest>Fixed allocation</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.FixedRequest>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ActiveMaximum>Dynamic allocation limit</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ActiveMaximum>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.TaskMaximum>Dynamic allocation limit</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.TaskMaximum>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.CommonUnused>Per-specialization limits enabled; the shared limit is not currently used for allocation.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.CommonUnused>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RequestHelp>Use baseline allocation when idle and dynamic allocation while performing tasks.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RequestHelp>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Priority>Allocation priority</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Priority>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.PriorityHelp>Priority for allocation when available capacity is insufficient</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.PriorityHelp>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.DefaultMode>Default specialization</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.DefaultMode>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.CurrentMode>Current specialization</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.CurrentMode>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SavedRequest>Saved baseline request (for restoration/automatic allocation):</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SavedRequest>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.AdvancedOptions>Advanced options</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.AdvancedOptions>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Rules>Automatic rules</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Rules>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleOrder>Dynamic allocation follows these rules</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleOrder>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleMelee>1. Engaged in melee</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleMelee>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleMeleeHelp>Prioritize switching to Assault protocol when engaged in melee.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleMeleeHelp>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleDraft>2. Drafted weapon</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleDraft>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleDraftHelp>When drafted, switch to Assault protocol or Fire control computation based on the equipped weapon.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleDraftHelp>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleWork>3. Working</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleWork>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleWorkHelp>Switch to Production coordination while working.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleWorkHelp>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleFallback>4. No task</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleFallback>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleFallbackHelp>Return to baseline allocation when there is no task.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.RuleFallbackHelp>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Interval>State check interval</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Interval>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Seconds> seconds</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Seconds>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SeparateMaximum>Set individual specialization limits</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SeparateMaximum>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SeparateDisabled>When enabled, limits can be set separately for each of the four specializations used in dynamic allocation</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SeparateDisabled>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Effects>Current actual effects</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Effects>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.EffectCap>Bonuses have reached their limits; further increases only affect the data processing bonus.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.EffectCap>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ManualLimited>Failed to increase fixed allocation: the overseer lacks available capacity or the target is ineligible.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ManualLimited>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Missing>Still short by </MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Missing>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.PendingHelp>Allocation state is initializing.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.PendingHelp>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.DynamicLimited>The current request is unmet; dynamic allocation is constrained by the reserve and allocation order.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.DynamicLimited>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.FixedLimited>The fixed request is unmet; fixed targets are constrained by the absolute 50% safety threshold and allocation order.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.FixedLimited>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.PasteConfirm>The following settings for {0} will be overwritten:\n\n</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.PasteConfirm>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.CopyQuota>Copy allocation settings</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.CopyQuota>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.CopyAll>Copy all policies</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.CopyAll>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Paste>Paste settings</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Paste>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Copied>Copied:</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Copied>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Applied>Saved:</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Applied>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Skipped>Skipped:</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Skipped>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SelectVisible>Select visible</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SelectVisible>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Select>Add to batch selection</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Select>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Unselect>Remove from batch selection</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.Unselect>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ClearSelection>Clear selection</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.ClearSelection>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchConfigure>Back to batch settings</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchConfigure>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchAll>Adjust all</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchAll>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchApplyAll>Change all</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchApplyAll>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchApplyConfirm>Apply the target rules to all selected mechanoids?</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchApplyConfirm>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchUnsaved>Changes have not been saved.\n\nExit anyway?</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchUnsaved>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchSingle>Adjust individual options</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchSingle>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchApplySingle>Apply selected settings</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchApplySingle>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchSingleConfirm>Apply the following options uniformly to all selected mechanoids?\n\n</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.BatchSingleConfirm>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SingleGeneralMax>General tuning limit</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SingleGeneralMax>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SingleProductionMax>Production coordination limit</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SingleProductionMax>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SingleFireMax>Fire control computation limit</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SingleFireMax>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SingleAssaultMax>Assault protocol limit</MAP_MechanoidMechanitor.DataProcessing.Dashboard.V2.SingleAssaultMax>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.Title>Data processing allocation</MAP_MechanoidMechanitor.DataProcessing.Dashboard.Title>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOn>Enable</MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOn>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOff>Disable</MAP_MechanoidMechanitor.DataProcessing.Dashboard.ToggleOff>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsHeader>Defaults for newly added mechanoids</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsHeader>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsDescription>The following settings apply only to mechanoids newly connected to the system.</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsDescription>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsTabBasic>Basic</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultsTabBasic>
+  <MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultTargetEnabled>Enable dynamic allocation by default</MAP_MechanoidMechanitor.DataProcessing.Dashboard.DefaultTargetEnabled>
+  <MAP_MechanoidMechanitor.DataProcessing.PermissionLocked>{0} (requires {1})</MAP_MechanoidMechanitor.DataProcessing.PermissionLocked>
+  <MAP_MechanoidMechanitor.DataProcessing.FusionGizmoLabel>Data processing allocation</MAP_MechanoidMechanitor.DataProcessing.FusionGizmoLabel>
+  <MAP_MechanoidMechanitor.DataProcessing.FusionGizmoDescription>Manage {0}'s data processing allocation through the current fusion host.\nAllocation records, consciousness budget, and data stream distribution costs still belong to the original mechanoid.\nSelf-allocation is frozen during this fusion and can only be changed after fusion ends.</MAP_MechanoidMechanitor.DataProcessing.FusionGizmoDescription>
+  <MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelf>Fused: self-allocation frozen</MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelf>
+  <MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelfDetails>This fusion retains the initial self-allocation level and specialization; its net cost still uses the original mechanoid's budget. Editing and dynamic adjustment resume after fusion ends. Other mechanoids can still be managed normally.</MAP_MechanoidMechanitor.DataProcessing.FusionFrozenSelfDetails>
+</LanguageData>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/BossgroupDefs -->
+  <MAP_JusticeBossGroupQuest.questContentRules.rulesStrings.0>bossDefeatedLetterLabel-&gt;[escortees0_label] defeated: [reward_label]</MAP_JusticeBossGroupQuest.questContentRules.rulesStrings.0>
+  <MAP_JusticeBossGroupQuest.questContentRules.rulesStrings.3>defeated-&gt;The hostile [escortees0_label] has been destroyed and dropped a [reward_label]!</MAP_JusticeBossGroupQuest.questContentRules.rulesStrings.3>
+  <MAP_JusticeBossGroupQuest.questContentRules.rulesStrings.4>manufacture-&gt;\n\nThis chip can be used to manufacture advanced mech equipment.</MAP_JusticeBossGroupQuest.questContentRules.rulesStrings.4>
+  <MAP_JusticeBossGroupQuest.questContentRules.rulesStrings.5>study-&gt;\n\nYou can have a mechanitor right-click and analyze this chip. Analyzing [reward_label] provides the key data needed for quantum mechtech research.</MAP_JusticeBossGroupQuest.questContentRules.rulesStrings.5>
+</LanguageData>

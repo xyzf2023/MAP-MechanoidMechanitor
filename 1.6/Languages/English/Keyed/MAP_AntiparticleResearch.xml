@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_Antiparticle.Analyze>Analyze antimatter containment device</MAP_Antiparticle.Analyze>
+  <MAP_Antiparticle.AnalyzeCompleted>Analyze antimatter containment device (already analyzed)</MAP_Antiparticle.AnalyzeCompleted>
+  <MAP_Antiparticle.AnalysisHint>Can be analyzed by a colonist with an Intellectual skill of at least 12.</MAP_Antiparticle.AnalysisHint>
+  <MAP_Antiparticle.SkillRequired>Requires Intellectual skill of at least 12</MAP_Antiparticle.SkillRequired>
+  <MAP_Antiparticle.Unavailable>Analysis unavailable</MAP_Antiparticle.Unavailable>
+  <MAP_Antiparticle.NoResearchBench>No research bench available</MAP_Antiparticle.NoResearchBench>
+  <MAP_Antiparticle.AnalysisInProgress>Analysis already in progress</MAP_Antiparticle.AnalysisInProgress>
+  <MAP_Antiparticle.ItemUnreachable>Item unreachable</MAP_Antiparticle.ItemUnreachable>
+  <MAP_Antiparticle.Progress>Analysis progress: {0}/{1}</MAP_Antiparticle.Progress>
+  <MAP_Antiparticle.DevComplete>DEV: Complete analysis</MAP_Antiparticle.DevComplete>
+  <MAP_Antiparticle.DevCompleteDesc>Immediately complete analysis of the antimatter containment device and reveal "Antiparticle applications research".</MAP_Antiparticle.DevCompleteDesc>
+  <MAP_Antiparticle.CompletedTitle>Antimatter containment device analysis complete</MAP_Antiparticle.CompletedTitle>
+  <MAP_Antiparticle.CompletedText>We have completed our study of the antimatter containment device. We can now use this technology to construct Sun.</MAP_Antiparticle.CompletedText>
+</LanguageData>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/ThingDefs/Implants -->
+  <MAP_MicroCommunicator.label>Micro communicator</MAP_MicroCommunicator.label>
+  <MAP_MicroCommunicator.description>A miniature communication device that allows its user to make contact without a comms console.</MAP_MicroCommunicator.description>
+  <MAP_MicroCommunicator.comps.CompUsableImplant.useLabel>Implant micro communicator</MAP_MicroCommunicator.comps.CompUsableImplant.useLabel>
+  <MAP_ParallelThoughtInterface.label>Parallel thought interface</MAP_ParallelThoughtInterface.label>
+  <MAP_ParallelThoughtInterface.description>A high-bandwidth neural-mechanical interface installed in a human mechanitor's brain. It receives computational results from a parallel thought array and converts mechanical data streams into neural signals that human consciousness can process.\n\nOnce implanted, the mechanitor can become a parallel thought array's boost target and use data processing allocation. The interface itself provides no consciousness boost.\n\nCannot be implanted in mechanoid mechanitors.</MAP_ParallelThoughtInterface.description>
+  <MAP_ParallelThoughtInterface.comps.CompUsableImplant.useLabel>Implant parallel thought interface</MAP_ParallelThoughtInterface.comps.CompUsableImplant.useLabel>
+  <MAP_EfficiencyCoreQuantumComputingArray.label>Productivity core (quantum computing array)</MAP_EfficiencyCoreQuantumComputingArray.label>
+  <MAP_EfficiencyCoreQuantumComputingArray.description>An implantable miniature quantum computing array for mechanitors that calculates optimal work plans for overseen mechanoids in real time.\n\nGreatly improves the work speed and crafted item quality of this mechanitor's overseen mechanoids, removes their work skill restrictions, prevents cooking skill-related food poisoning, and guarantees successful surgery. Can only be installed once.</MAP_EfficiencyCoreQuantumComputingArray.description>
+  <MAP_EfficiencyCoreQuantumComputingArray.comps.CompUsableImplant.useLabel>Implant productivity core (quantum computing array)</MAP_EfficiencyCoreQuantumComputingArray.comps.CompUsableImplant.useLabel>
+  <MAP_EfficiencyCoreMemoryExpansion.label>Productivity core (memory expansion)</MAP_EfficiencyCoreMemoryExpansion.label>
+  <MAP_EfficiencyCoreMemoryExpansion.description>A high-density memory module that expands the productivity core's quantum computing array, increasing the volume of data it can process simultaneously.\n\nOnce installed, it further improves overseen mechanoids' work speed and crafted item quality. Requires an installed quantum computing array. Can be installed up to four times.</MAP_EfficiencyCoreMemoryExpansion.description>
+  <MAP_EfficiencyCoreMemoryExpansion.comps.CompUsableImplant.useLabel>Implant productivity core (memory expansion)</MAP_EfficiencyCoreMemoryExpansion.comps.CompUsableImplant.useLabel>
+  <MAP_ProxySubchain.label>Proxy subchain</MAP_ProxySubchain.label>
+  <MAP_ProxySubchain.description>A mechanitor implant containing a proxy AI. When the mechanitor temporarily loses the ability to command, it takes over the existing control network so controlled mechanoids can continue operating normally.</MAP_ProxySubchain.description>
+  <MAP_ProxySubchain.comps.CompUsableImplant.useLabel>Implant proxy subchain</MAP_ProxySubchain.comps.CompUsableImplant.useLabel>
+  <MAP_PsychicCore.label>Psychic core</MAP_PsychicCore.label>
+  <MAP_PsychicCore.description>A precise implant built around a psylink neuroformer. While preserving the neuroformer's original functions, it further stabilizes and strengthens psychic pathways, improving the user's psychic abilities in several ways.\n\nThis device can also provide psylink levels to mechanoid mechanitors.</MAP_PsychicCore.description>
+  <MAP_PsychicCore.comps.CompUsableImplant.useLabel>Implant psychic core</MAP_PsychicCore.comps.CompUsableImplant.useLabel>
+  <MAP_QuantumCommunicator.label>Quantum communicator</MAP_QuantumCommunicator.label>
+  <MAP_QuantumCommunicator.description>An archotech communication device that uses quantum effects for communication at a distance. Once implanted, mechanoid control is no longer limited by distance.</MAP_QuantumCommunicator.description>
+  <MAP_QuantumCommunicator.comps.CompUsableImplant.useLabel>Implant quantum communicator</MAP_QuantumCommunicator.comps.CompUsableImplant.useLabel>
+  <MAP_RepairBeacon.label>Repair beacon</MAP_RepairBeacon.label>
+  <MAP_RepairBeacon.description>A mechanitor implant with a built-in quantum structural computation array. It continuously analyzes damage to overseen mechanoids and transmits precise self-repair sequences through oversight links. When necessary, it can overload to activate the battlefield repair protocol and guide rapid mechanoid self-repair.</MAP_RepairBeacon.description>
+  <MAP_RepairBeacon.comps.CompUsableImplant.useLabel>Implant repair beacon</MAP_RepairBeacon.comps.CompUsableImplant.useLabel>
+  <MAP_VoidEngine.label>Void engine</MAP_VoidEngine.label>
+  <MAP_VoidEngine.description>A mechanitor implant that stabilizes microscopic void bubbles and continuously draws energy from the quantum vacuum. It supplies overseen mechanoid reactors through oversight links, stopping routine energy consumption, preventing energy loss from body damage, and slowly restoring energy reserves.</MAP_VoidEngine.description>
+  <MAP_VoidEngine.comps.CompUsableImplant.useLabel>Implant void engine</MAP_VoidEngine.comps.CompUsableImplant.useLabel>
+</LanguageData>

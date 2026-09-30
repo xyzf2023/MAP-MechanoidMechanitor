@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/RecipeDefs -->
+  <MAP_Make_Mechlink.label>Make mechlink</MAP_Make_Mechlink.label>
+  <MAP_Make_Mechlink.description>Make a mechlink.</MAP_Make_Mechlink.description>
+  <MAP_Make_Mechlink.jobString>Making mechlink.</MAP_Make_Mechlink.jobString>
+  <MAP_Make_AutonomousDirectiveCore.label>Make autonomous directive core</MAP_Make_AutonomousDirectiveCore.label>
+  <MAP_Make_AutonomousDirectiveCore.description>Make an autonomous directive core.</MAP_Make_AutonomousDirectiveCore.description>
+  <MAP_Make_AutonomousDirectiveCore.jobString>Making autonomous directive core.</MAP_Make_AutonomousDirectiveCore.jobString>
+  <MAP_Make_BionicCompanionModule.label>Make bionic companion module</MAP_Make_BionicCompanionModule.label>
+  <MAP_Make_BionicCompanionModule.description>Make a bionic companion module.</MAP_Make_BionicCompanionModule.description>
+  <MAP_Make_BionicCompanionModule.jobString>Making bionic companion module.</MAP_Make_BionicCompanionModule.jobString>
+  <MAP_Make_MindMappingAutonomousDirectiveCore.label>Make autonomous directive core (blank)</MAP_Make_MindMappingAutonomousDirectiveCore.label>
+  <MAP_Make_MindMappingAutonomousDirectiveCore.description>Make a blank autonomous directive core without pre-simulated mind data.</MAP_Make_MindMappingAutonomousDirectiveCore.description>
+  <MAP_Make_MindMappingAutonomousDirectiveCore.jobString>Making autonomous directive core (blank).</MAP_Make_MindMappingAutonomousDirectiveCore.jobString>
+  <MAP_Make_ReactionlessThruster.label>Make propellantless thruster</MAP_Make_ReactionlessThruster.label>
+  <MAP_Make_ReactionlessThruster.description>Make a propellantless thruster.</MAP_Make_ReactionlessThruster.description>
+  <MAP_Make_ReactionlessThruster.jobString>Making propellantless thruster.</MAP_Make_ReactionlessThruster.jobString>
+  <MAP_Gestate_Justice.label>Gestate Justice</MAP_Gestate_Justice.label>
+  <MAP_Gestate_Justice.description>Gestate a Justice.</MAP_Gestate_Justice.description>
+  <MAP_Gestate_Justice.jobString>Gestating Justice.</MAP_Gestate_Justice.jobString>
+  <MAP_Gestate_Moon.label>Gestate Moon</MAP_Gestate_Moon.label>
+  <MAP_Gestate_Moon.description>Gestate a Moon.</MAP_Gestate_Moon.description>
+  <MAP_Gestate_Moon.jobString>Gestating Moon.</MAP_Gestate_Moon.jobString>
+  <MAP_Gestate_Lover.label>Gestate Lover</MAP_Gestate_Lover.label>
+  <MAP_Gestate_Lover.description>Gestate a Lover.</MAP_Gestate_Lover.description>
+  <MAP_Gestate_Lover.jobString>Gestating Lover.</MAP_Gestate_Lover.jobString>
+  <MAP_Gestate_Hermit.label>Gestate Hermit</MAP_Gestate_Hermit.label>
+  <MAP_Gestate_Hermit.description>Gestate a Hermit.</MAP_Gestate_Hermit.description>
+  <MAP_Gestate_Hermit.jobString>Gestating Hermit.</MAP_Gestate_Hermit.jobString>
+  <MAP_Gestate_Chariot.label>Gestate Chariot</MAP_Gestate_Chariot.label>
+  <MAP_Gestate_Chariot.description>Gestate a Chariot.</MAP_Gestate_Chariot.description>
+  <MAP_Gestate_Chariot.jobString>Gestating Chariot.</MAP_Gestate_Chariot.jobString>
+  <MAP_DuplicateRegularSubcore.label>Copy standard subcore</MAP_DuplicateRegularSubcore.label>
+  <MAP_DuplicateRegularSubcore.description>In-depth research into mechanoid data processing has taught us to directly copy standard subcores using existing data.</MAP_DuplicateRegularSubcore.description>
+  <MAP_DuplicateRegularSubcore.jobString>Copying standard subcore.</MAP_DuplicateRegularSubcore.jobString>
+  <MAP_DuplicateHighSubcore.label>Copy high subcore</MAP_DuplicateHighSubcore.label>
+  <MAP_DuplicateHighSubcore.description>In-depth research into mechanoid data processing has taught us to directly copy high subcores using existing data.</MAP_DuplicateHighSubcore.description>
+  <MAP_DuplicateHighSubcore.jobString>Copying high subcore.</MAP_DuplicateHighSubcore.jobString>
+</LanguageData>

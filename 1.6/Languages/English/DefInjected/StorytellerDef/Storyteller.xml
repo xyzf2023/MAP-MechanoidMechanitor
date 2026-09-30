@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Storyteller -->
+  <MAP_WheelOfFate.label>Aeon, the Wheel of Fate</MAP_WheelOfFate.label>
+  <MAP_WheelOfFate.description>Aeon continually simulates the changes of all things. Periodically, they randomly select a new story theme to adjust the simulation's test environment and observe how the colony evolves under different conditions.\n\nEach environment is only one part of the simulation. When a test cycle ends, the Wheel of Fate turns again, readjusting the test conditions and beginning a new simulation cycle.</MAP_WheelOfFate.description>
+</LanguageData>

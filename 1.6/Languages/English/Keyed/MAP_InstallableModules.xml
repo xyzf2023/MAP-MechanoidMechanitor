@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.InstallableModule.Install>Install {0}</MAP_MechanoidMechanitor.InstallableModule.Install>
+  <MAP_MechanoidMechanitor.InstallableModule.Rejected>{0} cannot install {1}.</MAP_MechanoidMechanitor.InstallableModule.Rejected>
+  <MAP_MechanoidMechanitor.InstallableModule.AlreadyMechanitorSuffix>: already a mechanoid mechanitor</MAP_MechanoidMechanitor.InstallableModule.AlreadyMechanitorSuffix>
+  <MAP_MechanoidMechanitor.InstallableModule.AlreadyCompanionSuffix>: already has bionic companion functions</MAP_MechanoidMechanitor.InstallableModule.AlreadyCompanionSuffix>
+  <MAP_MechanoidMechanitor.InstallableModule.AlreadyFlightSuffix>: already capable of flight</MAP_MechanoidMechanitor.InstallableModule.AlreadyFlightSuffix>
+  <MAP_MechanoidMechanitor.InstallableModule.AutonomousDirectiveCore.Success>{0} has become a mechanoid mechanitor.</MAP_MechanoidMechanitor.InstallableModule.AutonomousDirectiveCore.Success>
+  <MAP_MechanoidMechanitor.InstallableModule.BionicCompanion.Success>{0} has installed a bionic companion module.</MAP_MechanoidMechanitor.InstallableModule.BionicCompanion.Success>
+  <MAP_MechanoidMechanitor.InstallableModule.ReactionlessThruster.Success>{0} has installed a propellantless thruster and gained independent flight capability.</MAP_MechanoidMechanitor.InstallableModule.ReactionlessThruster.Success>
+</LanguageData>

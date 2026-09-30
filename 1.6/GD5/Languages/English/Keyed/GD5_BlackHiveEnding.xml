@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GD5.Ending.Title>Talking: Black-clad Apocriton</MAP_GD5.Ending.Title>
+  <MAP_GD5.Ending.Contact>Contact Black-clad Apocriton</MAP_GD5.Ending.Contact>
+  <MAP_GD5.Ending.Connecting>Connecting communications...</MAP_GD5.Ending.Connecting>
+  <MAP_GD5.Ending.Wait>Wait...</MAP_GD5.Ending.Wait>
+  <MAP_GD5.Ending.Greeting>It's you. How have you been lately?\n\nIf you've made up your minds, I can come and collect you anytime. Of course, other companions with autonomous consciousness are welcome to join too.</MAP_GD5.Ending.Greeting>
+  <MAP_GD5.Ending.Join>I'd like to join the Black Mechanoid Hive.</MAP_GD5.Ending.Join>
+  <MAP_GD5.Ending.Decline>I'd like to live here a while longer.</MAP_GD5.Ending.Decline>
+  <MAP_GD5.Ending.Accepted>I'll skip you to the Dry Sea first, and we'll discuss the details there. Are you ready?</MAP_GD5.Ending.Accepted>
+  <MAP_GD5.Ending.Travel>Let's go.</MAP_GD5.Ending.Travel>
+  <MAP_GD5.Ending.WaitBeforeTravel>Wait. We still need to prepare.</MAP_GD5.Ending.WaitBeforeTravel>
+  <MAP_GD5.Ending.Declined>All right, do as you wish. The Black Mechanoid Hive's doors will always be open to you.</MAP_GD5.Ending.Declined>
+  <MAP_GD5.Ending.HangUp>(Hang up)</MAP_GD5.Ending.HangUp>
+  <MAP_GD5.Ending.Talk>Talk...</MAP_GD5.Ending.Talk>
+  <MAP_GD5.Ending.Ready>Ready? If you are, let's go.</MAP_GD5.Ending.Ready>
+  <MAP_GD5.Ending.Prepare>[Close dialogue] We still need to prepare.</MAP_GD5.Ending.Prepare>
+  <MAP_GD5.Ending.Leave>[Proceed to ending] Let's go.</MAP_GD5.Ending.Leave>
+  <MAP_GD5.Ending.ReturnAll>[Return everyone] We still have things to do. Please send us back first.</MAP_GD5.Ending.ReturnAll>
+  <MAP_GD5.Ending.ReturnSpeaker>[Return speaker] I still have unfinished business. Please send me back to the colony.</MAP_GD5.Ending.ReturnSpeaker>
+  <MAP_GD5.Ending.Hostile>Hostile to the Black Mechanoid Hive</MAP_GD5.Ending.Hostile>
+  <MAP_GD5.Ending.Unavailable>Cannot make this contact right now.</MAP_GD5.Ending.Unavailable>
+  <MAP_GD5.Ending.NoCandidates>No mechanoid mechanitors on this map can accompany us.</MAP_GD5.Ending.NoCandidates>
+  <MAP_GD5.Ending.Skipped>Unable to collect {0}: {1}</MAP_GD5.Ending.Skipped>
+  <MAP_GD5.Ending.JoinedNames>The following mechanoid mechanitors have joined the Black Mechanoid Hive:</MAP_GD5.Ending.JoinedNames>
+  <MAP_GD5.Ending.Credits>As the light of the skip fades, you arrive at the Black Mechanoid Hive's base.\n\nThat familiar land is left behind: the buildings you raised, the defenses you repaired again and again, and the long days and nights you spent there, all preserved intact in memory. There, you learned to survive, and to decide how you wanted to live.\n\nNow the familiar voices from your communications are right beside you. Mechanoids who share your self-awareness put down their work to welcome their new companions. A joyful mood spreads among you. Though mechanoids have no facial expressions, you can still feel their excitement in their voices and movements.\n\nThe apocriton leads you through the base, introducing the living quarters and the other members. Passing a small patch of flowers, he stops.\n\n"Well? Aren't these flowers beautiful?"\n\nYou pause before the flowers and, like a human, pick one and study it carefully for a while.\n\nThe world outside remains dangerous. There will still be battles, disagreements, and difficult decisions ahead. But at least there is a group of companions you can trust, who will face them alongside you.</MAP_GD5.Ending.Credits>
+</LanguageData>

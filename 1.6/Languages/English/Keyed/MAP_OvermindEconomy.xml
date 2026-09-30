@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_OvermindEconomy.Settings.Title>Purge directive: dynamic supply allocation</MAP_OvermindEconomy.Settings.Title>
+  <MAP_OvermindEconomy.Settings.Enabled>Enable dynamic supply allocation</MAP_OvermindEconomy.Settings.Enabled>
+  <MAP_OvermindEconomy.Settings.Enabled.Desc>When enabled, supply allocation through "Contact cerebrex" adjusts prices dynamically and limits the amount of each supply that can be purchased over a period of time.</MAP_OvermindEconomy.Settings.Enabled.Desc>
+  <MAP_OvermindEconomy.Settings.Reset>Restore default dynamic pricing settings</MAP_OvermindEconomy.Settings.Reset>
+  <MAP_OvermindEconomy.Settings.Section.Time>Supply replenishment and price recovery time (game days)</MAP_OvermindEconomy.Settings.Section.Time>
+  <MAP_OvermindEconomy.Settings.RefillDays>Time to fully replenish each supply's quota</MAP_OvermindEconomy.Settings.RefillDays>
+  <MAP_OvermindEconomy.Settings.RefillDays.Desc>Game days required for each supply's quota to recover from empty to full.</MAP_OvermindEconomy.Settings.RefillDays.Desc>
+  <MAP_OvermindEconomy.Settings.PressureDays>Recent purchase pressure half-life</MAP_OvermindEconomy.Settings.PressureDays>
+  <MAP_OvermindEconomy.Settings.PressureDays.Desc>After purchasing stops, accumulated purchase pressure halves every specified number of days.</MAP_OvermindEconomy.Settings.PressureDays.Desc>
+  <MAP_OvermindEconomy.Settings.DemandDays>Markup decay time after node demand falls</MAP_OvermindEconomy.Settings.DemandDays>
+  <MAP_OvermindEconomy.Settings.DemandDays.Desc>After node demand falls, its markup gradually decays over the specified number of days.</MAP_OvermindEconomy.Settings.DemandDays.Desc>
+  <MAP_OvermindEconomy.Settings.BenefitDays>Discount duration for deliveries of unneeded supplies</MAP_OvermindEconomy.Settings.BenefitDays>
+  <MAP_OvermindEconomy.Settings.BenefitDays.Desc>Discounts from delivering unneeded supplies gradually decay over the specified number of days.</MAP_OvermindEconomy.Settings.BenefitDays.Desc>
+  <MAP_OvermindEconomy.Settings.Section.Supply>Base prices and supply limits by category</MAP_OvermindEconomy.Settings.Section.Supply>
+  <MAP_OvermindEconomy.Settings.MaterialPrice>Common industrial material base price multiplier</MAP_OvermindEconomy.Settings.MaterialPrice>
+  <MAP_OvermindEconomy.Settings.MaterialPrice.Desc>Base selling price multiplier for materials such as steel, plasteel, and components.</MAP_OvermindEconomy.Settings.MaterialPrice.Desc>
+  <MAP_OvermindEconomy.Settings.OrdinaryPrice>Regular equipment and other supply base price multiplier</MAP_OvermindEconomy.Settings.OrdinaryPrice>
+  <MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>Base selling price multiplier for supplies such as regular weapons.</MAP_OvermindEconomy.Settings.OrdinaryPrice.Desc>
+  <MAP_OvermindEconomy.Settings.ScarcePrice>Food, medicine, and apparel base price multiplier</MAP_OvermindEconomy.Settings.ScarcePrice>
+  <MAP_OvermindEconomy.Settings.ScarcePrice.Desc>Base selling price multiplier for available food, medicine, and apparel. The default ×3 means three times the original base cost.</MAP_OvermindEconomy.Settings.ScarcePrice.Desc>
+  <MAP_OvermindEconomy.Settings.MaterialSupply>Common industrial material supply limit multiplier</MAP_OvermindEconomy.Settings.MaterialSupply>
+  <MAP_OvermindEconomy.Settings.MaterialSupply.Desc>Maximum supply quota for each industrial material.</MAP_OvermindEconomy.Settings.MaterialSupply.Desc>
+  <MAP_OvermindEconomy.Settings.OrdinarySupply>Regular equipment and other supply limit multiplier</MAP_OvermindEconomy.Settings.OrdinarySupply>
+  <MAP_OvermindEconomy.Settings.OrdinarySupply.Desc>Maximum supply quota for each regular supply.</MAP_OvermindEconomy.Settings.OrdinarySupply.Desc>
+  <MAP_OvermindEconomy.Settings.ScarceSupply>Food, medicine, and apparel supply limit multiplier</MAP_OvermindEconomy.Settings.ScarceSupply>
+  <MAP_OvermindEconomy.Settings.ScarceSupply.Desc>Maximum supply quota for each available food, medicine, and apparel item.</MAP_OvermindEconomy.Settings.ScarceSupply.Desc>
+  <MAP_OvermindEconomy.Settings.Section.Construction>Markup from global node construction demand</MAP_OvermindEconomy.Settings.Section.Construction>
+  <MAP_OvermindEconomy.Settings.Protection>Minimum transaction price / delivery reward multiplier during construction</MAP_OvermindEconomy.Settings.Protection>
+  <MAP_OvermindEconomy.Settings.Protection.Desc>When node construction demand exists, the minimum transaction price is calculated from the delivery reward.</MAP_OvermindEconomy.Settings.Protection.Desc>
+  <MAP_OvermindEconomy.Settings.DemandStrength>Additional markup strength from global construction demand</MAP_OvermindEconomy.Settings.DemandStrength>
+  <MAP_OvermindEconomy.Settings.DemandStrength.Desc>Additional proportion charged for each full supply quota's worth of global demand for that supply.</MAP_OvermindEconomy.Settings.DemandStrength.Desc>
+  <MAP_OvermindEconomy.Settings.DemandCap>Additional markup limit from global construction demand</MAP_OvermindEconomy.Settings.DemandCap>
+  <MAP_OvermindEconomy.Settings.DemandCap.Desc>Limit on additional markup from node demand. Does not affect purchase-driven price increases or the minimum transaction price.</MAP_OvermindEconomy.Settings.DemandCap.Desc>
+  <MAP_OvermindEconomy.Settings.Section.Purchase>Price increases from recent large player purchases</MAP_OvermindEconomy.Settings.Section.Purchase>
+  <MAP_OvermindEconomy.Settings.PressureStrength>Price increase strength from accumulated purchases</MAP_OvermindEconomy.Settings.PressureStrength>
+  <MAP_OvermindEconomy.Settings.PressureStrength.Desc>Proportional increase in subsequent selling prices for each full supply quota's worth of accumulated purchase value.</MAP_OvermindEconomy.Settings.PressureStrength.Desc>
+  <MAP_OvermindEconomy.Settings.PressureCap>Maximum additional markup from recent purchases</MAP_OvermindEconomy.Settings.PressureCap>
+  <MAP_OvermindEconomy.Settings.PressureCap.Desc>Maximum additional markup multiplier from recent purchases.</MAP_OvermindEconomy.Settings.PressureCap.Desc>
+  <MAP_OvermindEconomy.Settings.Section.Delivery>Discounts from delivering unneeded supplies to nodes</MAP_OvermindEconomy.Settings.Section.Delivery>
+  <MAP_OvermindEconomy.Settings.BenefitStrength>Price reduction strength from deliveries of unneeded supplies</MAP_OvermindEconomy.Settings.BenefitStrength>
+  <MAP_OvermindEconomy.Settings.BenefitStrength.Desc>Reduce the base selling price according to the ratio of delivery value to the supply limit.</MAP_OvermindEconomy.Settings.BenefitStrength.Desc>
+  <MAP_OvermindEconomy.Settings.BenefitCap>Accumulated discount limit for unneeded supplies</MAP_OvermindEconomy.Settings.BenefitCap>
+  <MAP_OvermindEconomy.Settings.BenefitCap.Desc>Maximum accumulated discount multiplier from deliveries of unneeded supplies.</MAP_OvermindEconomy.Settings.BenefitCap.Desc>
+  <MAP_OvermindEconomy.Days>{0} days</MAP_OvermindEconomy.Days>
+  <MAP_OvermindEconomy.NextPrice>Price: {0}</MAP_OvermindEconomy.NextPrice>
+  <MAP_OvermindEconomy.Stock>Available to request: {0}    Daily replenishment: {1}    Time until full: {2} days</MAP_OvermindEconomy.Stock>
+  <MAP_OvermindEconomy.StockCompact>Available to request: {0}</MAP_OvermindEconomy.StockCompact>
+  <MAP_OvermindEconomy.Fluctuation>Current price fluctuation: {0}%</MAP_OvermindEconomy.Fluctuation>
+  <MAP_OvermindEconomy.Factors>Base ×{0}    Purchases +{1}%    Deliveries -{2}%    Construction: {3}</MAP_OvermindEconomy.Factors>
+  <MAP_OvermindEconomy.Demand.Active>In demand</MAP_OvermindEconomy.Demand.Active>
+  <MAP_OvermindEconomy.Demand.Fading>Premium decaying</MAP_OvermindEconomy.Demand.Fading>
+  <MAP_OvermindEconomy.Demand.Global>Global price protection</MAP_OvermindEconomy.Demand.Global>
+  <MAP_OvermindEconomy.Demand.None>None</MAP_OvermindEconomy.Demand.None>
+  <MAP_OvermindEconomy.InsufficientSupply>Insufficient supply. Reduce the order quantity.</MAP_OvermindEconomy.InsufficientSupply>
+  <MAP_OvermindEconomy.DetailsTip>Supplies of the same type share a supply quota and purchase pressure.</MAP_OvermindEconomy.DetailsTip>
+  <MAP_OvermindEconomy.PriceTip>Prices fluctuate under the influence of various factors.</MAP_OvermindEconomy.PriceTip>
+</LanguageData>

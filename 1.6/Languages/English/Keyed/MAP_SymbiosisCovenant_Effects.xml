@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Symbiosis.Page.Effects>Covenant effects</MAP_MechanoidMechanitor.Symbiosis.Page.Effects>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Current>Current effects</MAP_MechanoidMechanitor.Symbiosis.Effects.Current>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Next>Next stage</MAP_MechanoidMechanitor.Symbiosis.Effects.Next>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished>Covenant not established</MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished.Body>Covenant level effects begin only after at least one faction formally joins the Symbiosis covenant.</MAP_MechanoidMechanitor.Symbiosis.Effects.NotEstablished.Body>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Title>Member relations guarantee</MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral>Relations between covenant members remain at least neutral.</MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral.Tooltip>Members already allied are unaffected.</MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Neutral.Tooltip>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Allied>Covenant members remain allied with one another.</MAP_MechanoidMechanitor.Symbiosis.Effects.Relations.Allied>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Title>Trade price improvement</MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Value>+{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.Trade.Value>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Title>Joint trade delegation</MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Description>Symbiosis covenant joint trade delegations begin visiting regularly.</MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Description>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Tooltip>Base visit interval: {0} days\nParticipating members: {1}\n\nMore covenant members increase the frequency of joint trade caravan visits.</MAP_MechanoidMechanitor.Symbiosis.Effects.Delegation.Tooltip>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Title>Common defense</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Description>Covenant members may offer military support when a hostile raid occurs.</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Description>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.BaseChance>Base response probability: {0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.BaseChance>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.MaxChance>Maximum response probability: {0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.MaxChance>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.SupportScale>Base reinforcement size: triggering raid points ×{0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.SupportScale>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusHeader>The number of covenant members increases response probability:</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusHeader>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusLine>{0}: +{1}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.ResponderBonusLine>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.OfferTimeout>Aid invitation duration: {0}</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.OfferTimeout>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.AcceptCooldown>After successfully accepting aid: {0} common defense cooldown</MAP_MechanoidMechanitor.Symbiosis.Effects.MilitaryAid.Tooltip.AcceptCooldown>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Title>Joint military operations</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Description>The covenant can launch joint military operations, inviting allies to attack enemy sites together.</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Description>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Tooltip>Total allied reinforcement points are approximately {0} of the target's threat points.</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Tooltip>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Locked>Joint military operations not yet unlocked (requires L{0}).</MAP_MechanoidMechanitor.Symbiosis.Effects.JointOperation.Locked>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.NextLevel>Next stage: {0}</MAP_MechanoidMechanitor.Symbiosis.Effects.NextLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.RequiredUnity>Required unity: {0}</MAP_MechanoidMechanitor.Symbiosis.Effects.RequiredUnity>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.CurrentUnity>Current unity: {0}</MAP_MechanoidMechanitor.Symbiosis.Effects.CurrentUnity>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.NextCondition.Join>Requirement: at least one faction formally joins the Symbiosis covenant.</MAP_MechanoidMechanitor.Symbiosis.Effects.NextCondition.Join>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel>Maximum covenant stage reached</MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Body>The current covenant level has reached the "Symbiotic alliance" stage.</MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Body>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Hint>Maintaining trust between members helps sustain current unity and alliance status.</MAP_MechanoidMechanitor.Symbiosis.Effects.MaxLevel.Hint>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.Trade>Trade price improvement: {0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.Trade>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockDelegation>Unlocked: joint trade delegation</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockDelegation>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationInterval>Joint delegation visit interval: {0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationInterval>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationParticipants>Participating members: {0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.DelegationParticipants>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockMilitaryAid>Unlocked: common defense</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockMilitaryAid>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitaryBaseChance>Base response probability: {0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitaryBaseChance>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitarySupportScale>Base reinforcement size: {0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.MilitarySupportScale>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock>Unlocked: covenant members remain allied</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockAllianceLock>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockJointOperation>Unlocked: joint military operations</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.UnlockJointOperation>
+  <MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.JointOperationSupportScale>Joint military operation reinforcement size: {0} → {1}</MAP_MechanoidMechanitor.Symbiosis.Effects.Changed.JointOperationSupportScale>
+</LanguageData>

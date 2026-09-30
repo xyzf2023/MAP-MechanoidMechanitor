@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/HediffDefs -->
+  <MAP_BionicCompanionModuleInstalled.label>Bionic companion module</MAP_BionicCompanionModuleInstalled.label>
+  <MAP_BionicCompanionModuleInstalled.description>A mechanoid module combining emotional simulation and bionic gestation technology. Once installed, it allows a mechanoid to marry a designated colonist and enables intimate interactions. For people living on the rimworlds, these intricate circuits carry a simple wish: someone to share life with, someone to care about, and a reason to look forward to ordinary days.\n\nA mechanoid with this module can engage in lovin' with its spouse and gestate offspring in a built-in artificial womb. Reproduction and the child's sex can be configured freely. Offspring inherit all genes from the human spouse. Precise gestation control gives children stronger physiques and greater learning potential, bringing new hope to this companionship.</MAP_BionicCompanionModuleInstalled.description>
+  <MAP_BionicCompanionModuleInstalled.descriptionShort>An installed bionic companion module.</MAP_BionicCompanionModuleInstalled.descriptionShort>
+  <MAP_BodySynchronization.label>Body synchronization</MAP_BodySynchronization.label>
+  <MAP_BodySynchronization.description>The wearer has established deep synchronization with the mechanoid's control system, allowing direct use of its power, structure, and functional modules.\nDuring fusion, the mechanoid's physical performance is mapped to the wearer.</MAP_BodySynchronization.description>
+  <MAP_BodySynchronization.descriptionShort>This colonist has established deep synchronization with the mechanoid's control system.</MAP_BodySynchronization.descriptionShort>
+  <MAP_MechControlSynchronization.label>Mech control synchronization</MAP_MechControlSynchronization.label>
+  <MAP_MechControlSynchronization.description>The wearer has established temporary synchronization with the mechanoid's mech control system. Its oversight privileges and control network transfer along with fusion.\nDuring fusion, the wearer inherits the mechanoid's mech control capabilities and can continue overseeing the mechanoids it originally controlled.</MAP_MechControlSynchronization.description>
+  <MAP_MechControlSynchronization.descriptionShort>This colonist has established temporary synchronization with the mechanoid's mech control system.</MAP_MechControlSynchronization.descriptionShort>
+  <MAP_PsychicSynchronization.label>Psychic synchronization</MAP_PsychicSynchronization.label>
+  <MAP_PsychicSynchronization.description>The wearer's psychic pathways have synchronized with the mechanoid's psychic core.\nDuring fusion, the mechanoid's installed psychic core can directly affect the wearer.</MAP_PsychicSynchronization.description>
+  <MAP_PsychicSynchronization.descriptionShort>This colonist's psychic pathways have synchronized with the mechanoid's psychic core.</MAP_PsychicSynchronization.descriptionShort>
+  <MAP_FusionDormantGuard.label>Fusion dormant maintenance</MAP_FusionDormantGuard.label>
+  <MAP_FusionDormantGuard.description>Maintain the original mechanoid's health condition timers during fusion.</MAP_FusionDormantGuard.description>
+  <MAP_CerebrexBandwidthInterference.label>Cerebrex bandwidth disruption</MAP_CerebrexBandwidthInterference.label>
+  <MAP_CerebrexBandwidthInterference.description>The cerebrex is injecting redundant instructions into this mechanoid's control link, temporarily doubling its oversight bandwidth usage.</MAP_CerebrexBandwidthInterference.description>
+  <MAP_CerebrexBandwidthInterference.descriptionShort>Bandwidth usage temporarily doubled</MAP_CerebrexBandwidthInterference.descriptionShort>
+  <MAP_CerebrexBandwidthBerserkMarker.label>Cerebrex berserk marker</MAP_CerebrexBandwidthBerserkMarker.label>
+  <MAP_CerebrexBandwidthBerserkMarker.description>Used only by the cerebrex bandwidth disruption logic to identify berserk states caused by this ability.</MAP_CerebrexBandwidthBerserkMarker.description>
+  <MAP_DataStreamDistribution.label>Data stream distribution</MAP_DataStreamDistribution.label>
+  <MAP_DataStreamDistribution.description>This mechanoid mechanitor allocates part of its data processing capacity to monitoring its subordinates, improving the precision of commands to target mechanoids at the cost of its own data processing.</MAP_DataStreamDistribution.description>
+  <MAP_DataStreamDistribution.descriptionShort>This mechanoid mechanitor is distributing part of its data processing capacity to subordinates.</MAP_DataStreamDistribution.descriptionShort>
+  <MAP_CommandFocus.label>Directive focus</MAP_CommandFocus.label>
+  <MAP_CommandFocus.description>The overseer has allocated part of its computing capacity to precisely directing this mechanoid. Some capabilities are improved.</MAP_CommandFocus.description>
+  <MAP_CommandFocus.descriptionShort>The overseer is allocating additional computing capacity to this mechanoid to improve command precision.</MAP_CommandFocus.descriptionShort>
+  <MAP_CommandFocus_GeneralTuning.label>Directive focus: General tuning</MAP_CommandFocus_GeneralTuning.label>
+  <MAP_CommandFocus_GeneralTuning.description>The overseer's allocated data processing capacity is used to tune this mechanoid's general performance, improving work, mobility, attack timing, and defense while reducing stagger duration.</MAP_CommandFocus_GeneralTuning.description>
+  <MAP_CommandFocus_GeneralTuning.descriptionShort>The overseer is allocating additional computing capacity to this mechanoid for general performance tuning.</MAP_CommandFocus_GeneralTuning.descriptionShort>
+  <MAP_CommandFocus_ProductionCoordination.label>Directive focus: Production coordination</MAP_CommandFocus_ProductionCoordination.label>
+  <MAP_CommandFocus_ProductionCoordination.description>The overseer's allocated data processing capacity is used to coordinate production processes, improving this mechanoid's work speed, movement efficiency, and energy efficiency.</MAP_CommandFocus_ProductionCoordination.description>
+  <MAP_CommandFocus_ProductionCoordination.descriptionShort>The overseer is allocating additional computing capacity to this mechanoid to coordinate production processes.</MAP_CommandFocus_ProductionCoordination.descriptionShort>
+  <MAP_CommandFocus_FireControlCalculation.label>Directive focus: Fire control computation</MAP_CommandFocus_FireControlCalculation.label>
+  <MAP_CommandFocus_FireControlCalculation.description>The overseer's allocated data processing capacity is concentrated on ranged fire control computation, greatly reducing this mechanoid's aiming time and ranged attack cooldown.</MAP_CommandFocus_FireControlCalculation.description>
+  <MAP_CommandFocus_FireControlCalculation.descriptionShort>The overseer is allocating additional computing capacity to this mechanoid for ranged fire control computation.</MAP_CommandFocus_FireControlCalculation.descriptionShort>
+  <MAP_CommandFocus_AssaultProtocol.label>Directive focus: Assault protocol</MAP_CommandFocus_AssaultProtocol.label>
+  <MAP_CommandFocus_AssaultProtocol.description>The overseer's allocated data processing capacity is used for frontline assault protocols, improving this mechanoid's melee attack cycles, mobility, protection, and resistance to stagger.</MAP_CommandFocus_AssaultProtocol.description>
+  <MAP_CommandFocus_AssaultProtocol.descriptionShort>The overseer is allocating additional computing capacity to this mechanoid to execute assault protocols.</MAP_CommandFocus_AssaultProtocol.descriptionShort>
+  <MAP_EmergencyConsciousnessTransfer.label>Emergency consciousness transfer</MAP_EmergencyConsciousnessTransfer.label>
+  <MAP_EmergencyConsciousnessTransfer.description>This body has undergone an emergency mechanical consciousness transfer and is attempting to recover data lost during the emergency procedure.</MAP_EmergencyConsciousnessTransfer.description>
+  <MAP_Hediff_MechHackImmobilized.label>Being hacked</MAP_Hediff_MechHackImmobilized.label>
+  <MAP_Hediff_MechHackImmobilized.description>This mechanoid is being hacked and cannot move.</MAP_Hediff_MechHackImmobilized.description>
+  <MAP_MechanicalConsciousness.label>Mechanical consciousness</MAP_MechanicalConsciousness.label>
+  <MAP_MechanicalConsciousness.description>This body hosts the autonomous mechanical consciousness of the current mechanoid hive.</MAP_MechanicalConsciousness.description>
+  <MAP_AcquiredMechanoidMechanitor.label>Mechanoid mechanitor</MAP_AcquiredMechanoidMechanitor.label>
+  <MAP_AcquiredMechanoidMechanitor.description>Under the influence of an autonomous directive core, this mechanoid has become a mechanoid mechanitor.</MAP_AcquiredMechanoidMechanitor.description>
+  <MAP_AcquiredMechanoidMechanitor.descriptionShort>This mechanoid has gained mechanoid mechanitor status.</MAP_AcquiredMechanoidMechanitor.descriptionShort>
+  <MAP_NativeMechanoidMechanitor.label>Mechanoid mechanitor</MAP_NativeMechanoidMechanitor.label>
+  <MAP_NativeMechanoidMechanitor.description>This mechanoid has awakened to self-awareness and become a mechanoid mechanitor.</MAP_NativeMechanoidMechanitor.description>
+  <MAP_NativeMechanoidMechanitor.descriptionShort>This mechanoid has awakened to self-awareness.</MAP_NativeMechanoidMechanitor.descriptionShort>
+  <MAP_MechanoidMechanitor_PsychicReceiver.label>Mechanical psychic receiver</MAP_MechanoidMechanitor_PsychicReceiver.label>
+  <MAP_MechanoidMechanitor_PsychicReceiver.description>A hidden interface used by mechanoid mechanitors to receive psychic field signals.\n\nThis hidden health condition supplies missing psychic sensitivity to mechanoids whose sensitivity is insufficient.</MAP_MechanoidMechanitor_PsychicReceiver.description>
+  <MAP_MechanoidMechanitor_PsychicReceiver.descriptionShort>A hidden interface used by mechanoid mechanitors to receive psychic field signals.</MAP_MechanoidMechanitor_PsychicReceiver.descriptionShort>
+  <MAP_MindMappingLoad.label>Mind mapping load</MAP_MindMappingLoad.label>
+  <MAP_MindMappingLoad.description>Copying mind data is a complex task. The resulting data residue prevents a second copy from being made in a short period.</MAP_MindMappingLoad.description>
+  <MAP_OvermindBandwidthSupport.label>Cerebrex bandwidth support</MAP_OvermindBandwidthSupport.label>
+  <MAP_OvermindBandwidthSupport.description>A bandwidth processing server requested from the mechanoid hive's orbital servers is providing this unit with additional bandwidth.</MAP_OvermindBandwidthSupport.description>
+  <MAP_MechanoidMechanitor_SelfWorkMode_AutonomousDirective.label>Autonomous directives</MAP_MechanoidMechanitor_SelfWorkMode_AutonomousDirective.label>
+  <MAP_MechanoidMechanitor_SelfWorkMode_AutonomousDirective.description>The mechanoid mechanitor's own body enters an autonomous execution state, allowing self-maintenance and mapping to automatic work behavior.</MAP_MechanoidMechanitor_SelfWorkMode_AutonomousDirective.description>
+  <MAP_MechanoidMechanitor_SelfWorkMode_SelfRepair.label>Self-repair</MAP_MechanoidMechanitor_SelfWorkMode_SelfRepair.label>
+  <MAP_MechanoidMechanitor_SelfWorkMode_SelfRepair.description>This mechanoid is dormant, and its self-repair components are rapidly repairing damaged parts.</MAP_MechanoidMechanitor_SelfWorkMode_SelfRepair.description>
+  <MAP_StartingPawnValueProtection.label>Starting value protection</MAP_StartingPawnValueProtection.label>
+  <MAP_StartingPawnValueProtection.description>Temporarily reduces the character's weight in value and threat calculations.</MAP_StartingPawnValueProtection.description>
+  <MAP_SyntheticPregnant.label>Pregnant</MAP_SyntheticPregnant.label>
+  <MAP_SyntheticPregnant.description>A new life gestated by a mechanoid with bionic gestation capability is growing.</MAP_SyntheticPregnant.description>
+  <MAP_SyntheticPregnant.stages.0.label>early</MAP_SyntheticPregnant.stages.0.label>
+  <MAP_SyntheticPregnant.stages.1.label>middle</MAP_SyntheticPregnant.stages.1.label>
+  <MAP_SyntheticPregnant.stages.2.label>late</MAP_SyntheticPregnant.stages.2.label>
+  <MAP_ExtraordinaryOffspring.label>Archotech offspring</MAP_ExtraordinaryOffspring.label>
+  <MAP_ExtraordinaryOffspring.description>This human was gestated by a mechanoid with bionic gestation capability and has a stronger physique.</MAP_ExtraordinaryOffspring.description>
+  <MAP_MechanoidMechanitor_WorkMode_EfficientExecution.label>Work mode: Efficient execution</MAP_MechanoidMechanitor_WorkMode_EfficientExecution.label>
+  <MAP_MechanoidMechanitor_WorkMode_EfficientExecution.description>Under a mechanoid mechanitor's coordination, this mechanoid adopts an efficient work mode optimized by a higher-level coordination unit, efficiently reorganizing task order and paths. Overall work efficiency improves and energy consumption decreases without changing base performance.</MAP_MechanoidMechanitor_WorkMode_EfficientExecution.description>
+  <MAP_MechanoidMechanitor_WorkMode_EfficientExecution.descriptionShort>Under a mechanoid mechanitor's coordination, this mechanoid is in efficient execution mode</MAP_MechanoidMechanitor_WorkMode_EfficientExecution.descriptionShort>
+  <MAP_MechanoidMechanitor_WorkMode_MobileCombat.label>Work mode: Mobile warfare</MAP_MechanoidMechanitor_WorkMode_MobileCombat.label>
+  <MAP_MechanoidMechanitor_WorkMode_MobileCombat.description>Under a mechanoid mechanitor's coordination, this mechanoid adopts a mobile warfare mode optimized by a higher-level coordination unit. Integrated gait control removes terrain effects on movement, while the fire control computation module reduces recovery intervals after firing and helps avoid some incoming damage. Movement in this mode ignores terrain penalties.</MAP_MechanoidMechanitor_WorkMode_MobileCombat.description>
+  <MAP_MechanoidMechanitor_WorkMode_MobileCombat.descriptionShort>Under a mechanoid mechanitor's coordination, this mechanoid is in mobile warfare mode</MAP_MechanoidMechanitor_WorkMode_MobileCombat.descriptionShort>
+  <MAP_MechanoidMechanitor_WorkMode_FortifiedDefense.label>Work mode: Positional defense</MAP_MechanoidMechanitor_WorkMode_FortifiedDefense.label>
+  <MAP_MechanoidMechanitor_WorkMode_FortifiedDefense.description>Under a mechanoid mechanitor's coordination, this mechanoid adopts a positional defense mode optimized by a higher-level coordination unit. Its position anchoring system deliberately restricts mobility in exchange for shorter aiming and firing recovery intervals and greatly improved shooting stability.</MAP_MechanoidMechanitor_WorkMode_FortifiedDefense.description>
+  <MAP_MechanoidMechanitor_WorkMode_FortifiedDefense.descriptionShort>Under a mechanoid mechanitor's coordination, this mechanoid is in positional defense mode</MAP_MechanoidMechanitor_WorkMode_FortifiedDefense.descriptionShort>
+  <MAP_SunBossStage.label>Sun - Energy core</MAP_SunBossStage.label>
+  <MAP_SunBossStage.description>The current operating state of Sun's core reactor. Surrounding stabilizers continuously contain its violent energy. As stabilizers are destroyed, the reactor's operating state steadily deteriorates.</MAP_SunBossStage.description>
+  <MAP_SunBossStage.stages.0.label>Structural disintegration</MAP_SunBossStage.stages.0.label>
+  <MAP_SunBossStage.stages.1.label>Core unstable</MAP_SunBossStage.stages.1.label>
+  <MAP_SunBossStage.stages.2.label>Critical stability</MAP_SunBossStage.stages.2.label>
+  <MAP_SunBossStage.stages.3.label>Feedback detuned</MAP_SunBossStage.stages.3.label>
+  <MAP_SunBossStage.stages.4.label>Load fluctuation</MAP_SunBossStage.stages.4.label>
+  <MAP_SunBossStage.stages.5.label>Stability disturbed</MAP_SunBossStage.stages.5.label>
+  <MAP_SunBossStage.stages.6.label>Fully stable</MAP_SunBossStage.stages.6.label>
+  <MAP_SunEnergy.label>Sun</MAP_SunEnergy.label>
+  <MAP_SunEnergy.description>Sun's internal antimatter reactor is supplying it with nearly unlimited energy.</MAP_SunEnergy.description>
+  <MAP_SunCorona.label>Corona</MAP_SunCorona.label>
+  <MAP_SunCorona.description>Continuously receives energy remotely from Sun, greatly reducing its own energy consumption and slowly restoring energy.</MAP_SunCorona.description>
+</LanguageData>

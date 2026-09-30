@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Settings.Recreation.Section>Mechanoid mechanitor recreation and inspiration</MAP_MechanoidMechanitor.Settings.Recreation.Section>
+  <MAP_MechanoidMechanitor.Settings.Recreation.Description>Mechanoid mechanitors can take part in some vanilla recreation activities while idle, with a chance to gain inspiration.</MAP_MechanoidMechanitor.Settings.Recreation.Description>
+  <MAP_MechanoidMechanitor.Settings.Recreation.Enable.Label>Allow mechanoid mechanitors to enjoy recreation and gain inspiration</MAP_MechanoidMechanitor.Settings.Recreation.Enable.Label>
+  <MAP_MechanoidMechanitor.Settings.Recreation.Enable.Description>When enabled, mechanoid mechanitors have a chance to enjoy recreation while idle.</MAP_MechanoidMechanitor.Settings.Recreation.Enable.Description>
+  <MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Label>Chance to attempt recreation while idle: {0}%</MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Label>
+  <MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Description>The chance for a mechanoid mechanitor to attempt recreation each time it becomes idle.</MAP_MechanoidMechanitor.Settings.Recreation.IdleChance.Description>
+  <MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Label>Chance to gain inspiration after recreation: {0}%</MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Label>
+  <MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Description>The chance for a mechanoid mechanitor to gain inspiration after completing a recreation activity.</MAP_MechanoidMechanitor.Settings.Recreation.InspirationChance.Description>
+  <MAP_MechanoidMechanitor.Recreation.InspirationReason>After completing a recreation activity, a new inspiration emerges.</MAP_MechanoidMechanitor.Recreation.InspirationReason>
+</LanguageData>

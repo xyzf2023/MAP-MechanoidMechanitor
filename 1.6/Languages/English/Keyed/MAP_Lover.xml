@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>Cannot pursue this colonist right now.</MAP_MechanoidMechanitor.Lover.Spouse.AssignSpouseFailed>
+  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>Lovin' with partner</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle>
+  <MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>When enabled, this mechanoid will try to engage in lovin' with its partner when the partner allows it.\nNote: reproduction must be enabled manually in "Social".</MAP_MechanoidMechanitor.Lover.Spouse.LovinWithSpouse.Toggle.Description>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>Bionic reproduction approach</MAP_MechanoidMechanitor.Lover.Pregnancy.Approach.Title>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyMale>Try for baby (boy)</MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyMale>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyFemale>Try for baby (girl)</MAP_MechanoidMechanitor.Lover.Pregnancy.TryForBabyFemale>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Label>{0} is pregnant</MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Label>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Text>{0} is nurturing a new life in a bionic womb! Embryos carried by {0} mature faster and have stronger physiques after birth.</MAP_MechanoidMechanitor.Lover.Pregnancy.Conceived.Letter.Text>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Label>{0} is ready to give birth</MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Label>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Text>The baby carried by {0} is fully developed. Select {0} to order birth at any time.\n\nUntil birth is complete, the baby's physiological activity will remain temporarily suspended.</MAP_MechanoidMechanitor.Lover.Pregnancy.ReadyForBirth.Letter.Text>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Label>Begin birth</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Label>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Description>Order {0} to perform the birth procedure at the current location. Make sure the area is safe before issuing this order.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Gizmo.Description>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InvalidPawn>Invalid mechanoid.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InvalidPawn>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NotSpawned>The mechanoid is not currently on the map.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NotSpawned>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Dead>The mechanoid is dead.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Dead>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Downed>The mechanoid is downed.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Downed>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Drafted>The mechanoid is drafted.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Drafted>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.MentalState>The mechanoid is in a mental state.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.MentalState>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Burning>The mechanoid is on fire.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.Burning>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NoJobs>The mechanoid cannot perform jobs.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.NoJobs>
+  <MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InProgress>The mechanoid is giving birth.</MAP_MechanoidMechanitor.Lover.Pregnancy.StartBirth.Disabled.InProgress>
+</LanguageData>

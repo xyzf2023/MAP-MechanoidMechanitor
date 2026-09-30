@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/ThingDefs_Buildings -->
+  <MAP_Building_Chariot.label>Chariot (deployed)</MAP_Building_Chariot.label>
+  <MAP_Building_Chariot.description>Chariot's stationary form, with its structure deployed and anchored.</MAP_Building_Chariot.description>
+  <MAP_CommandBandAntenna.label>Command frequency antenna</MAP_CommandBandAntenna.label>
+  <MAP_CommandBandAntenna.description>A special communication device operating on mechanoid frequencies. When activated, it transmits a forged command-frequency pulse, attracting a mechanoid commander to investigate. If you defeat it, you can recover a special mechtech device from its remains. The forged pulse will then be flagged, so this device can only be used once.</MAP_CommandBandAntenna.description>
+  <MAP_CommandBandAntenna.comps.CompUsable.useLabel>Summon Justice - Heavy command unit</MAP_CommandBandAntenna.comps.CompUsable.useLabel>
+  <MAP_Building_JusticeDormant.label>Justice (unactivated)</MAP_Building_JusticeDormant.label>
+  <MAP_Building_JusticeDormant.description>An unactivated Justice that can serve as a host for emergency consciousness transfer.</MAP_Building_JusticeDormant.description>
+  <MAP_MassProductionMechGestator.label>Mass-production mech gestator</MAP_MassProductionMechGestator.label>
+  <MAP_MassProductionMechGestator.description>A mech gestator built with archotech technology, and a key facility for the cerebrex's rapid production of large mechanoid forces.\n\nGestation time is fixed at 6 hours, and finished mechanoids are automatically released. This gestator can also gestate all mechanoids with unlocked recipes.</MAP_MassProductionMechGestator.description>
+  <MAP_MechServiceStation.label>Mech service station</MAP_MechServiceStation.label>
+  <MAP_MechServiceStation.description>An integrated mechanoid repair and recharge device built with archotech technology.\n\nThis station quickly charges mechanoids and repairs their bodies without producing toxic wastepacks. Mechanoids can use it automatically according to its service policy, with configurable charging, repair, and post-service standby behavior.\n\nThe building's power consumption varies with use.</MAP_MechServiceStation.description>
+  <MAP_ParallelThoughtArray.label>Parallel thought array</MAP_ParallelThoughtArray.label>
+  <MAP_ParallelThoughtArray.description>An external thought facility composed of quantum computing modules. The array establishes an ongoing synchronized connection with a designated mechanitor, processing consciousness activity and control data externally in parallel and feeding computational results back to the target in real time.\n\nFor mechanoid mechanitors, this increases data processing capacity available for allocation. For human mechanitors with a parallel thought interface, it directly increases consciousness. Increasing the array's computing intensity raises both the boost and power consumption.</MAP_ParallelThoughtArray.description>
+  <MAP_Building_ReactorStabilizer.label>Reactor stabilizer</MAP_Building_ReactorStabilizer.label>
+  <MAP_Building_ReactorStabilizer.description>A large energy stabilization device deployed around Sun - Energy core. It continuously monitors and corrects violent fluctuations inside the reactor, using containment fields to maintain its operation so Sun can remain stable at near-full power.\n\nIf these stabilizers are destroyed, Sun's internal energy balance deteriorates and its previously stable operation gradually breaks down.</MAP_Building_ReactorStabilizer.description>
+  <MAP_Building_UnknownDevice.label>Unknown device</MAP_Building_UnknownDevice.label>
+  <MAP_Building_UnknownDevice.description>A strange device that seems to be connected to the central reactor</MAP_Building_UnknownDevice.description>
+  <MAP_Building_Sun.label>Sun (reactor)</MAP_Building_Sun.label>
+  <MAP_Building_Sun.description>Sun in reactor form. After anchoring its structure, its internal antimatter reactor runs continuously in a more stable state, supplying enormous energy to the colony. Its Corona effect for colony mechanoids is also stronger than in mechanoid form.\n\nThe redesigned containment system is integrated into its body, allowing Sun to maintain reactor operation without external stabilizers. When needed, it can be ordered to transform back into mechanoid form.\n\nNote: Sun continuously emits large amounts of waste heat while producing energy at high power. Deploy it outdoors when possible, or ensure the area has sufficient heat dissipation.</MAP_Building_Sun.description>
+  <MAP_Building_SunBOSS.label>Core reactor?</MAP_Building_SunBOSS.label>
+  <MAP_Building_SunBOSS.description>This building seems to be the facility's power source...... but something feels wrong. Proceed with caution.</MAP_Building_SunBOSS.description>
+</LanguageData>

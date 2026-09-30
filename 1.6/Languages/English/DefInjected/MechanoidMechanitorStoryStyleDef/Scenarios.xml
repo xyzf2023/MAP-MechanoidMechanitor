@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Scenarios -->
+  <MAP_StoryStyle_Classic.label>Classic</MAP_StoryStyle_Classic.label>
+  <MAP_StoryStyle_Classic.description>The classic gameplay experience. No additional storylines are enabled, allowing a completely free mechanoid colony experience.</MAP_StoryStyle_Classic.description>
+  <MAP_StoryStyle_SymbiosisCovenant.label>Symbiosis covenant</MAP_StoryStyle_SymbiosisCovenant.label>
+  <MAP_StoryStyle_SymbiosisCovenant.description>Play as a mechanoid freed from the cerebrex's control. Gradually earn other factions' trust through mutually beneficial actions, establish common defense, and invite them to join a Symbiosis covenant against the cerebrex.</MAP_StoryStyle_SymbiosisCovenant.description>
+  <MAP_StoryStyle_PurgeDirective.label>Purge directive</MAP_StoryStyle_PurgeDirective.label>
+  <MAP_StoryStyle_PurgeDirective.description>Play as a killing machine deployed by the cerebrex, ruthlessly clearing all intelligent organic beings. Earn the cerebrex's trust through tasks to gain the mechanoid hive's support.</MAP_StoryStyle_PurgeDirective.description>
+  <MAP_StoryStyle_Custom.label>Custom</MAP_StoryStyle_Custom.label>
+  <MAP_StoryStyle_Custom.description>Freely combine the story components enabled in this game.</MAP_StoryStyle_Custom.description>
+</LanguageData>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_CerebrexTakeover.Option>Take over cerebrex</MAP_CerebrexTakeover.Option>
+  <MAP_CerebrexTakeover.BeginFailed>Unable to initiate the cerebrex takeover.</MAP_CerebrexTakeover.BeginFailed>
+  <MAP_CerebrexTakeover.Letter.Label>Cerebrex taken over</MAP_CerebrexTakeover.Letter.Label>
+  <MAP_CerebrexTakeover.Letter.Text>{PAWN} has taken over the cerebrex. The mechanoid hive has accepted the new control link and formed an alliance with the colony. Its resources can now be accessed through the comms console.</MAP_CerebrexTakeover.Letter.Text>
+  <MAP_CerebrexTakeover.Credits>{PAWN} begins writing new control instructions into the cerebrex's core. Its delicate neural lattice trembles violently as electrical light flickers deep within the crystal structure. Moments later, the erratic pulsations gradually subside. A response comes through the link, then countless more. The central mechanoid hive has accepted a new commander.\n\nA vast mechanical network unfolds before {PAWN}: orbital manufacturing facilities, sleeping war machines, and transport pods traveling above the planet, all awaiting new orders. What purpose will be given to a power that once brought destruction?\n\nThe core still hums softly, awaiting an answer. Your story continues...</MAP_CerebrexTakeover.Credits>
+  <MAP_CerebrexTakeover.PurgeCreditsResponse>The mechanoid hive adds 2000 resource credit each day, with daily grants replenishing credit up to a maximum of 20000. Helping build mechanoid hive nodes also frees up more supplies for the hive and earns credit.</MAP_CerebrexTakeover.PurgeCreditsResponse>
+</LanguageData>

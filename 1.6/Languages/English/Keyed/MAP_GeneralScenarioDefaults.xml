@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section>Scenario defaults</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Section>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Description>New games will use the following configuration.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFaction.Subsection>Factions</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFaction.Subsection>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFactionRelations.Label>Faction relations</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFactionRelations.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFactionRelations.Description>Determine the initial relationship mode with all factions.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.OrdinaryFactionRelations.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Label>Faction outpost generation frequency</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Description>Determine how frequently faction outposts generate naturally.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.FactionOutpost.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.HostileFactions.Subsection>Mechanoid and insect hives</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.HostileFactions.Subsection>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveRelation.Label>Mechanoid hive relations</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveRelation.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveRelation.Description>Determine the initial relationship mode with the mechanoid hive. Only applies when a mechanoid hive faction exists.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveRelation.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Label>Mechanoid hive node generation frequency</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Description>Determine how frequently mechanoid hive nodes generate naturally.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.MechHiveNode.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.InsectRelation.Label>Insect hive relations</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.InsectRelation.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.InsectRelation.Description>Determine the initial relationship mode with the insect hive faction. Only applies when an insect hive faction exists.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.InsectRelation.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Routes.Subsection>Story routes</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Routes.Subsection>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Label>Purge directive</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Description>Determine whether new saves enable the Purge directive route.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.DisabledReason>Purge directive can only be enabled when mechanoid hive relations are set to "Ally".</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.PurgeDirective.DisabledReason>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Label>Symbiosis covenant</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Description>Determine whether new saves enable the Symbiosis covenant route.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.Description>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.DisabledReason>Current faction relations are permanently locked and do not meet the requirements for enabling the Symbiosis covenant.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.SymbiosisCovenant.DisabledReason>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Ideology.Subsection>Cultural adaptation</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.Ideology.Subsection>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.IdeologyAdaptation.Label>Cultural adaptation level</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.IdeologyAdaptation.Label>
+  <MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.IdeologyAdaptation.Description>Determine the cultural adaptation level used by mechanoid mechanitors.</MAP_MechanoidMechanitor.Settings.GeneralScenarioDefaults.IdeologyAdaptation.Description>
+</LanguageData>

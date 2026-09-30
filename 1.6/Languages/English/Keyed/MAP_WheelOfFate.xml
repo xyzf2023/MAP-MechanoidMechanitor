@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_WheelOfFate.Settings.Details.Label>Show detailed descriptions of Wheel of Fate story themes</MAP_WheelOfFate.Settings.Details.Label>
+  <MAP_WheelOfFate.Settings.Details.Description>When enabled, display the theme type when the story theme changes.</MAP_WheelOfFate.Settings.Details.Description>
+  <MAP_WheelOfFate.ThemeChanged.Label>Wheel of Fate: {0}</MAP_WheelOfFate.ThemeChanged.Label>
+  <MAP_WheelOfFate.ThemeChanged.Text>The Wheel of Fate has begun a new simulation.\n\nCurrent simulation theme: {0}\n\n{1}</MAP_WheelOfFate.ThemeChanged.Text>
+  <MAP_WheelOfFate.ThemeChanged.HiddenLabel>The Wheel of Fate is turning</MAP_WheelOfFate.ThemeChanged.HiddenLabel>
+  <MAP_WheelOfFate.ThemeChanged.HiddenText>The Wheel of Fate has begun a new simulation. What awaits us next?</MAP_WheelOfFate.ThemeChanged.HiddenText>
+  <MAP_WheelOfFate.TravelSpeed>Story theme caravan speed: ×{0} (effective: {1} tiles/day)</MAP_WheelOfFate.TravelSpeed>
+</LanguageData>

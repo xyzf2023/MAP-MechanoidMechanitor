@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/SitePartDefs -->
+  <MAP_SunBossFacility.label>Anomalous mechanoid facility</MAP_SunBossFacility.label>
+  <MAP_SunBossFacility.description>An unusual mechanoid facility. Instruments show anomalous energy fluctuations inside. Perhaps we can obtain advanced technology from it?</MAP_SunBossFacility.description>
+  <MAP_SunBossFacility.mainPartAllThreatsLabel>Mechanoid facility</MAP_SunBossFacility.mainPartAllThreatsLabel>
+</LanguageData>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/ThingDefs_Weapons -->
+  <MAP_AnnihilationShot.label>Annihilation shell</MAP_AnnihilationShot.label>
+  <MAP_AnnihilationImpact.label>Annihilation field</MAP_AnnihilationImpact.label>
+  <MAP_AnnihilationExplosion.label>Annihilation cannon impact</MAP_AnnihilationExplosion.label>
+  <MAP_EnergyPulseWave.label>Energy pulse</MAP_EnergyPulseWave.label>
+</LanguageData>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Label>Body energy management</MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Label>
+  <MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Text>As a mechanoid, you do not need to eat and rest every day like organic beings, but you still need regular charging to keep your body running.\n\nBuild power generation facilities and rechargers early to ensure a stable energy supply and avoid being forced into dormancy by depleted energy.\n\nIf you want mechanoid mechanitors to recharge on a regular schedule like organic beings, assign sleep hours in the "Schedule" menu. During scheduled sleep hours, mechanoid mechanitors will prioritize trying to recharge.</MAP_MechanoidMechanitor.Scenario.EnergyManagementLetter.Text>
+  <MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Label>Obtaining bandwidth</MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Label>
+  <MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Text>Although mechanoid mechanitors generally cannot gain bandwidth by wearing equipment, other methods available to human mechanitors still apply, such as bandwidth-providing buildings and mechanitor implants.\nMechanoid mechanitors can also increase their bandwidth by using mechanoid commander chips.</MAP_MechanoidMechanitor.Scenario.BandwidthAcquisitionLetter.Text>
+</LanguageData>

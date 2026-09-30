@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Section>Starting value protection</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Section>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Label>Enable starting value protection for mechanoid mechanitors</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Label>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Description>When enabled, starting with the mechanoid mechanitor scenario adds a hidden health condition to mechanoid mechanitors to reduce their value. The reduction decreases over time. This helps maintain balance when starting mechanoids have a high value.</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.EnableMechanitor.Description>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Label>Add starting value protection to other mechanoids</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Label>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Description>When enabled, starting with the mechanoid mechanitor scenario also adds a hidden health condition to other mechanoids to reduce their value.</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.OtherMechs.Description>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Duration.Label>Adjust value protection duration: {0} days</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Duration.Label>
+  <MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.MinimumFactor.Label>Adjust minimum value protection multiplier: {0}%</MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.MinimumFactor.Label>
+</LanguageData>

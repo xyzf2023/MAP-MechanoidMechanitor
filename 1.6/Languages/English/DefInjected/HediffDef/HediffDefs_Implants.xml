@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/HediffDefs/Implants -->
+  <MAP_MicroCommunicator.label>Micro communicator</MAP_MicroCommunicator.label>
+  <MAP_MicroCommunicator.description>A miniature communication device that allows its user to make contact without a comms console.</MAP_MicroCommunicator.description>
+  <MAP_MicroCommunicator.descriptionShort>This unit can use its built-in communication functions to make contact.</MAP_MicroCommunicator.descriptionShort>
+  <MAP_ParallelThoughtInterface.label>Parallel thought interface</MAP_ParallelThoughtInterface.label>
+  <MAP_ParallelThoughtInterface.description>A high-bandwidth neural-mechanical interface installed in a human mechanitor's brain. It receives computational results from a parallel thought array and converts mechanical data streams into neural signals that human consciousness can process.\n\nOnce installed, the mechanitor can become a parallel thought array's boost target and use data processing allocation. The interface itself provides no consciousness boost.\n\nCannot be installed by mechanoid mechanitors.</MAP_ParallelThoughtInterface.description>
+  <MAP_ParallelThoughtInterface.descriptionShort>This unit can connect to a parallel thought array for a consciousness bonus and gains data processing allocation capability.</MAP_ParallelThoughtInterface.descriptionShort>
+  <MAP_ProductivityCore.label>Productivity core</MAP_ProductivityCore.label>
+  <MAP_ProductivityCore.description>An implantable miniature quantum computing array for mechanitors that calculates optimal work plans for overseen mechanoids in real time.\n\nGreatly improves the work speed and crafted item quality of this mechanitor's overseen mechanoids, removes their work skill restrictions, prevents cooking skill-related food poisoning, and guarantees successful surgery. Memory expansion modules can upgrade it to a maximum of level 5.</MAP_ProductivityCore.description>
+  <MAP_ProductivityCore.descriptionShort>This mechanitor's overseen mechanoids have greatly improved work efficiency and quality.</MAP_ProductivityCore.descriptionShort>
+  <MAP_ProductivityCoreActive.label>Productivity core active</MAP_ProductivityCoreActive.label>
+  <MAP_ProductivityCoreActive.description>An effect provided by the overseer's productivity core, significantly improving this mechanoid's work efficiency. Each productivity core level also grants a +1 crafted item quality offset. This mechanoid's work is not restricted by skills, its cooking will not cause food poisoning due to insufficient skill, and its surgeries always succeed.</MAP_ProductivityCoreActive.description>
+  <MAP_ProductivityCoreActive.descriptionShort>The productivity core is improving this mechanoid's work efficiency and quality.</MAP_ProductivityCoreActive.descriptionShort>
+  <MAP_ProxySubchain.label>Proxy subchain</MAP_ProxySubchain.label>
+  <MAP_ProxySubchain.labelNoun>a proxy subchain</MAP_ProxySubchain.labelNoun>
+  <MAP_ProxySubchain.description>A mechanitor implant containing a proxy AI. When the mechanitor temporarily loses the ability to command, it takes over the existing control network so controlled mechanoids can continue operating normally.</MAP_ProxySubchain.description>
+  <MAP_ProxySubchain.descriptionShort>This mechanitor's overseen mechanoids can still be commanded while the mechanitor is incapacitated.</MAP_ProxySubchain.descriptionShort>
+  <MAP_PsychicCore.label>Psychic core</MAP_PsychicCore.label>
+  <MAP_PsychicCore.description>A precise implant built around a psylink neuroformer. While preserving the neuroformer's original functions, it further stabilizes and strengthens psychic pathways, improving the user's psychic abilities in several ways.\n\nThis device can also provide psylink levels to mechanoid mechanitors.</MAP_PsychicCore.description>
+  <MAP_PsychicCore.descriptionShort>This unit's psychic abilities are enhanced. The enhancement increases with the number of implants.</MAP_PsychicCore.descriptionShort>
+  <MAP_PsychicActivationActive.label>Psychic activation</MAP_PsychicActivationActive.label>
+  <MAP_PsychicActivationActive.description>This unit's psychic abilities have been activated, briefly bringing its psychic pathways into a highly active state.\n\nDuring this period, the user's psychic abilities are further enhanced, with additional psyfocus recovery.\nAdditional recovery increases with psychic core level. Lasts six hours.</MAP_PsychicActivationActive.description>
+  <MAP_PsychicActivationActive.descriptionShort>This unit's psychic abilities are activated.</MAP_PsychicActivationActive.descriptionShort>
+  <MAP_QuantumCommunicator.label>Quantum communicator</MAP_QuantumCommunicator.label>
+  <MAP_QuantumCommunicator.labelNoun>a quantum communicator</MAP_QuantumCommunicator.labelNoun>
+  <MAP_QuantumCommunicator.description>An archotech communication device that uses quantum effects for communication at a distance. Once implanted, mechanoid control is no longer limited by distance.</MAP_QuantumCommunicator.description>
+  <MAP_QuantumCommunicator.descriptionShort>This mechanitor's subordinates are no longer limited by command range and can accept local orders on different maps. Oversight and bandwidth requirements still apply.</MAP_QuantumCommunicator.descriptionShort>
+  <MAP_RepairBeacon.label>Repair beacon</MAP_RepairBeacon.label>
+  <MAP_RepairBeacon.description>A mechanitor implant with a built-in quantum structural computation array. It continuously analyzes damage to overseen mechanoids and transmits precise self-repair sequences through oversight links. When necessary, it can overload to activate the battlefield repair protocol.</MAP_RepairBeacon.description>
+  <MAP_RepairBeacon.descriptionShort>This mechanitor can guide overseen mechanoids in self-repair. Automatic repair must be enabled.</MAP_RepairBeacon.descriptionShort>
+  <MAP_RepairBoost.label>Repair beacon active</MAP_RepairBoost.label>
+  <MAP_RepairBoost.description>The repair beacon is guiding mechanoid self-repair.</MAP_RepairBoost.description>
+  <MAP_RepairBoost.descriptionShort>The repair beacon is guiding self-repair.</MAP_RepairBoost.descriptionShort>
+  <MAP_BeaconRepairGuidance.label>Beacon repair guidance</MAP_BeaconRepairGuidance.label>
+  <MAP_BeaconRepairGuidance.description>The mechanitor is guiding intensive mechanoid self-repair and therefore experiences some interference.</MAP_BeaconRepairGuidance.description>
+  <MAP_BattlefieldRepairProtocolActive.label>Battlefield repair protocol active</MAP_BattlefieldRepairProtocolActive.label>
+  <MAP_BattlefieldRepairProtocolActive.description>The repair beacon is operating in overload mode to guide rapid mechanoid self-repair.</MAP_BattlefieldRepairProtocolActive.description>
+  <MAP_BattlefieldRepairProtocolActive.descriptionShort>Performing rapid self-repair.</MAP_BattlefieldRepairProtocolActive.descriptionShort>
+  <MAP_FusionStructuralRepair.label>Structural repair</MAP_FusionStructuralRepair.label>
+  <MAP_FusionStructuralRepair.description>The repair beacon is guiding the fused mechanoid to restore its structural stability.</MAP_FusionStructuralRepair.description>
+  <MAP_FusionStructuralRepair.descriptionShort>Recover 10% of maximum structural stability per hour.</MAP_FusionStructuralRepair.descriptionShort>
+  <MAP_VoidEngine.label>Void engine</MAP_VoidEngine.label>
+  <MAP_VoidEngine.description>A mechanitor implant that stabilizes microscopic void bubbles and continuously draws energy from the quantum vacuum. It supplies overseen mechanoid reactors through oversight links, stopping routine energy consumption, preventing energy loss from body damage, and slowly restoring energy reserves.</MAP_VoidEngine.description>
+  <MAP_VoidEngine.descriptionShort>This mechanitor's overseen mechanoids can supply their own energy.</MAP_VoidEngine.descriptionShort>
+  <MAP_ReactorSelfPowering.label>Self-powered reactor</MAP_ReactorSelfPowering.label>
+  <MAP_ReactorSelfPowering.description>The void engine is guiding the mechanoid to draw energy from a void bubble.</MAP_ReactorSelfPowering.description>
+  <MAP_ReactorSelfPowering.descriptionShort>Mechanoid reactor self-power system.</MAP_ReactorSelfPowering.descriptionShort>
+</LanguageData>

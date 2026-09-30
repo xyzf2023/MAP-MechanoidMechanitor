@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>representative</MAP_MechanoidMechanitor.Symbiosis.JointOp.Proposer.Representative>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>{0}'s {1} has invited alliance members to join a military operation against {2}'s {3}.\n\nFactions currently participating: {4}.\n\nJoining this operation and successfully destroying the target will improve covenant unity and participating factions' trust in us. Shall we take part?</MAP_MechanoidMechanitor.Symbiosis.JointOp.Offer.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>{0}'s reinforcements are withdrawing from the battlefield.</MAP_MechanoidMechanitor.Symbiosis.JointOp.AidLeaving>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>Joint military operation invitation</MAP_MechanoidMechanitor.Symbiosis.JointOp.Quest.Name>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.TargetInspectLabel>Joint military operation target</MAP_MechanoidMechanitor.Symbiosis.JointOp.TargetInspectLabel>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Label>Joint military operation: reinforcements arrived</MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Text>{0}'s covenant reinforcements have arrived on the battlefield. They will attack the target site alongside you.</MAP_MechanoidMechanitor.Symbiosis.JointOp.Reinforcements.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.JointOperation>Joint military operation</MAP_MechanoidMechanitor.Symbiosis.TrustReason.JointOperation>
+</LanguageData>

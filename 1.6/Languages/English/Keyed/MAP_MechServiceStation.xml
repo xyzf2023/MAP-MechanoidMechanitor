@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechServiceStation.Mode.AssignedOnly>Assigned mechanoids only</MAP_MechServiceStation.Mode.AssignedOnly>
+  <MAP_MechServiceStation.Mode.MechanitorOnly>Mechanoid mechanitors only</MAP_MechServiceStation.Mode.MechanitorOnly>
+  <MAP_MechServiceStation.Mode.AssignedPriority>Assigned mechanoids first</MAP_MechServiceStation.Mode.AssignedPriority>
+  <MAP_MechServiceStation.Mode.ChargeFirst>Prioritize charging</MAP_MechServiceStation.Mode.ChargeFirst>
+  <MAP_MechServiceStation.Mode.RepairFirst>Prioritize repairs</MAP_MechServiceStation.Mode.RepairFirst>
+  <MAP_MechServiceStation.Mode.AsNeeded>Use as needed</MAP_MechServiceStation.Mode.AsNeeded>
+  <MAP_MechServiceStation.Policy.Title>Mech service station policy</MAP_MechServiceStation.Policy.Title>
+  <MAP_MechServiceStation.Policy.Hint>Select a usage mode. Changes take effect immediately.</MAP_MechServiceStation.Policy.Hint>
+  <MAP_MechServiceStation.Policy.LegacyAssignedPriority>Currently using legacy policy: assigned mechanoids first</MAP_MechServiceStation.Policy.LegacyAssignedPriority>
+  <MAP_MechServiceStation.Policy.AssignedPawn>Assigned mechanoid: {0}</MAP_MechServiceStation.Policy.AssignedPawn>
+  <MAP_MechServiceStation.Policy.Unassigned>Unassigned</MAP_MechServiceStation.Policy.Unassigned>
+  <MAP_MechServiceStation.Policy.MechanitorPriority>Prioritize mechanoid mechanitors</MAP_MechServiceStation.Policy.MechanitorPriority>
+  <MAP_MechServiceStation.Policy.MechanitorPriorityHint>When enabled, mechanoid mechanitors that need servicing receive priority access, even if the station is occupied.</MAP_MechServiceStation.Policy.MechanitorPriorityHint>
+  <MAP_MechServiceStation.Policy.StandbyAfterService>Stand by after completion</MAP_MechServiceStation.Policy.StandbyAfterService>
+  <MAP_MechServiceStation.Policy.StandbyAfterServiceHint>When enabled, mechanoids using this station will stand by after servicing is complete.</MAP_MechServiceStation.Policy.StandbyAfterServiceHint>
+  <MAP_MechServiceStation.Policy.EnableRepair>Enable repairs</MAP_MechServiceStation.Policy.EnableRepair>
+  <MAP_MechServiceStation.Policy.EnableCharging>Enable charging</MAP_MechServiceStation.Policy.EnableCharging>
+  <MAP_MechServiceStation.Policy.ClearAssignment>Clear assignment</MAP_MechServiceStation.Policy.ClearAssignment>
+  <MAP_MechServiceStation.Policy.CommandLabel>Service policy</MAP_MechServiceStation.Policy.CommandLabel>
+  <MAP_MechServiceStation.Policy.CommandDescription>Adjust this station's usage policy.\nCurrent: {0}</MAP_MechServiceStation.Policy.CommandDescription>
+  <MAP_MechServiceStation.Inspect.StandbyOccupied>Mechanoid standing by...</MAP_MechServiceStation.Inspect.StandbyOccupied>
+  <MAP_MechServiceStation.Inspect.Unpowered>Paused due to power loss</MAP_MechServiceStation.Inspect.Unpowered>
+  <MAP_MechServiceStation.Inspect.RepairingAndCharging>Repairing and charging</MAP_MechServiceStation.Inspect.RepairingAndCharging>
+  <MAP_MechServiceStation.Inspect.Charging>Charging</MAP_MechServiceStation.Inspect.Charging>
+  <MAP_MechServiceStation.Inspect.Repairing>Repairing</MAP_MechServiceStation.Inspect.Repairing>
+  <MAP_MechServiceStation.Inspect.Standby>Standing by...</MAP_MechServiceStation.Inspect.Standby>
+  <MAP_MechServiceStation.Inspect.Policy>Service policy: {0}</MAP_MechServiceStation.Inspect.Policy>
+  <MAP_MechServiceStation.Inspect.AssignedPawn>Assigned mechanoid: {0}</MAP_MechServiceStation.Inspect.AssignedPawn>
+  <MAP_MechServiceStation.Inspect.User>User: {0}</MAP_MechServiceStation.Inspect.User>
+  <MAP_MechServiceStation.Inspect.StandbyPawn>Mechanoid on standby: {0}</MAP_MechServiceStation.Inspect.StandbyPawn>
+  <MAP_MechServiceStation.Inspect.QueueCount>Waiting: {0}</MAP_MechServiceStation.Inspect.QueueCount>
+  <MAP_MechServiceStation.FloatMenu.HaulToStation>Carry to mech service station: {0}</MAP_MechServiceStation.FloatMenu.HaulToStation>
+  <MAP_MechServiceStation.FloatMenu.CancelService>Cancel servicing</MAP_MechServiceStation.FloatMenu.CancelService>
+  <MAP_MechServiceStation.FloatMenu.Disabled>Service station disabled</MAP_MechServiceStation.FloatMenu.Disabled>
+  <MAP_MechServiceStation.FloatMenu.AssignedOnly>Assigned mechanoids only</MAP_MechServiceStation.FloatMenu.AssignedOnly>
+  <MAP_MechServiceStation.FloatMenu.MechanitorOnly>Mechanoid mechanitors only</MAP_MechServiceStation.FloatMenu.MechanitorOnly>
+  <MAP_MechServiceStation.FloatMenu.Unpowered>No power</MAP_MechServiceStation.FloatMenu.Unpowered>
+  <MAP_MechServiceStation.FloatMenu.NoNeed>No servicing needed</MAP_MechServiceStation.FloatMenu.NoNeed>
+  <MAP_MechServiceStation.FloatMenu.Unreachable>Unreachable</MAP_MechServiceStation.FloatMenu.Unreachable>
+  <MAP_MechServiceStation.FloatMenu.PrioritizeUnavailable>Prioritize service station: {0}</MAP_MechServiceStation.FloatMenu.PrioritizeUnavailable>
+  <MAP_MechServiceStation.FloatMenu.Prioritize>Perform servicing</MAP_MechServiceStation.FloatMenu.Prioritize>
+</LanguageData>

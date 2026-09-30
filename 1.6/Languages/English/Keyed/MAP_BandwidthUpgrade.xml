@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.UseOne>Increase bandwidth: use one {0} (bandwidth +{1})</MAP_MechanoidMechanitor.BandwidthUpgrade.UseOne>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.UseAll>Increase bandwidth: use all {0} (bandwidth +{1})</MAP_MechanoidMechanitor.BandwidthUpgrade.UseAll>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.AtCap>Current bandwidth is already at the limit.</MAP_MechanoidMechanitor.BandwidthUpgrade.AtCap>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.WasteConfirm>{0}'s bandwidth limit is {1}. Using all the chips will waste some of them.\n\nContinue anyway?</MAP_MechanoidMechanitor.BandwidthUpgrade.WasteConfirm>
+  <MAP_MechanoidMechanitor.BandwidthUpgrade.Success>{0}'s bandwidth limit successfully increased by {1}.</MAP_MechanoidMechanitor.BandwidthUpgrade.Success>
+</LanguageData>

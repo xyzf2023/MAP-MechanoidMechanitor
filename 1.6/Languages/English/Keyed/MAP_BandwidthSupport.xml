@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_BandwidthSupport.Title>Bandwidth support</MAP_BandwidthSupport.Title>
+  <MAP_BandwidthSupport.NoPendingOrder>No adjustments pending.</MAP_BandwidthSupport.NoPendingOrder>
+  <MAP_BandwidthSupport.InvalidOrder>Check credit, quotas, and recipient eligibility.</MAP_BandwidthSupport.InvalidOrder>
+  <MAP_BandwidthSupport.TotalLabel>Total support</MAP_BandwidthSupport.TotalLabel>
+  <MAP_BandwidthSupport.BaseLabel>Base bandwidth</MAP_BandwidthSupport.BaseLabel>
+  <MAP_BandwidthSupport.ExtensionLabel>Extended bandwidth</MAP_BandwidthSupport.ExtensionLabel>
+  <MAP_BandwidthSupport.UnallocatedLabel>Unallocated bandwidth</MAP_BandwidthSupport.UnallocatedLabel>
+  <MAP_BandwidthSupport.BaseTooltip>The bandwidth the mechanoid hive can provide free of charge at our current purge rating.</MAP_BandwidthSupport.BaseTooltip>
+  <MAP_BandwidthSupport.ExtensionTooltip>The additional bandwidth we currently need to obtain with purge credit.</MAP_BandwidthSupport.ExtensionTooltip>
+  <MAP_BandwidthSupport.UnallocatedTooltip>The total bandwidth we can currently allocate ourselves.</MAP_BandwidthSupport.UnallocatedTooltip>
+  <MAP_BandwidthSupport.TotalTooltip>The total bandwidth the mechanoid hive currently has available for allocation.</MAP_BandwidthSupport.TotalTooltip>
+  <MAP_BandwidthSupport.AddTarget>Add recipient</MAP_BandwidthSupport.AddTarget>
+  <MAP_BandwidthSupport.NoTargets>No recipients added.</MAP_BandwidthSupport.NoTargets>
+  <MAP_BandwidthSupport.NoAdditionalTargets>No eligible recipients to add.</MAP_BandwidthSupport.NoAdditionalTargets>
+  <MAP_BandwidthSupport.CycleLabel>Recurring cost</MAP_BandwidthSupport.CycleLabel>
+  <MAP_BandwidthSupport.CycleValue>{0} credit / {1} days</MAP_BandwidthSupport.CycleValue>
+  <MAP_BandwidthSupport.SettlementLabel>Next assessment</MAP_BandwidthSupport.SettlementLabel>
+  <MAP_BandwidthSupport.DaysValue>In {0} days</MAP_BandwidthSupport.DaysValue>
+  <MAP_BandwidthSupport.CreditsLabel>Available purge credit</MAP_BandwidthSupport.CreditsLabel>
+  <MAP_BandwidthSupport.AllocationTitle>Bandwidth allocation</MAP_BandwidthSupport.AllocationTitle>
+  <MAP_BandwidthSupport.CurrentAllocation>Current support +{0}</MAP_BandwidthSupport.CurrentAllocation>
+  <MAP_BandwidthSupport.Description>Request additional bandwidth support from the mechanoid hive.</MAP_BandwidthSupport.Description>
+  <MAP_BandwidthSupport.ExpandedDescription>Request access to the mechanoid hive's orbital bandwidth servers to provide bandwidth to designated mechanitors.</MAP_BandwidthSupport.ExpandedDescription>
+  <MAP_BandwidthSupport.TakeoverDescription>The cerebrex provides control bandwidth as needed, which can be allocated to designated mechanitors.</MAP_BandwidthSupport.TakeoverDescription>
+  <MAP_BandwidthSupport.Unavailable>Bandwidth support unavailable.</MAP_BandwidthSupport.Unavailable>
+  <MAP_BandwidthSupport.Activate>Request support</MAP_BandwidthSupport.Activate>
+  <MAP_BandwidthSupport.Base>Base bandwidth: {0}</MAP_BandwidthSupport.Base>
+  <MAP_BandwidthSupport.Extension>Extended bandwidth: {0}</MAP_BandwidthSupport.Extension>
+  <MAP_BandwidthSupport.Cycle>Recurring cost: {0} purge credit / {1} days    Next assessment: in {2} days</MAP_BandwidthSupport.Cycle>
+  <MAP_BandwidthSupport.Credits>Available purge credit: {0}</MAP_BandwidthSupport.Credits>
+  <MAP_BandwidthSupport.RequestedTotal>Request bandwidth</MAP_BandwidthSupport.RequestedTotal>
+  <MAP_BandwidthSupport.RequestedExtension>Request extended bandwidth</MAP_BandwidthSupport.RequestedExtension>
+  <MAP_BandwidthSupport.Apply>Confirm adjustments</MAP_BandwidthSupport.Apply>
+  <MAP_BandwidthSupport.Withdraw>Withdraw extension</MAP_BandwidthSupport.Withdraw>
+  <MAP_BandwidthSupport.NextCycle>Takes effect at the next assessment.</MAP_BandwidthSupport.NextCycle>
+  <MAP_BandwidthSupport.ImmediateCost>Current cost: {0} credit</MAP_BandwidthSupport.ImmediateCost>
+  <MAP_BandwidthSupport.Allocated>Allocated: {0} / {1}</MAP_BandwidthSupport.Allocated>
+  <MAP_BandwidthSupport.Assign>Allocate</MAP_BandwidthSupport.Assign>
+  <MAP_BandwidthSupport.Clear>Clear</MAP_BandwidthSupport.Clear>
+  <MAP_BandwidthSupport.NoMechanitors>No mechanitors can receive bandwidth support.</MAP_BandwidthSupport.NoMechanitors>
+  <MAP_BandwidthSupport.Rejected>Adjustment failed: check available credit, remaining bandwidth, and mechanitor eligibility.</MAP_BandwidthSupport.Rejected>
+  <MAP_BandwidthSupport.BaseRaised>Base bandwidth increased from {0} to {1}.</MAP_BandwidthSupport.BaseRaised>
+  <MAP_BandwidthSupport.BaseWillFall>Base bandwidth will be adjusted to {0} at the next assessment.</MAP_BandwidthSupport.BaseWillFall>
+  <MAP_BandwidthSupport.Shortage>The next assessment requires {0} purge credit. Warning: current credit is insufficient, and extended bandwidth may be reclaimed.</MAP_BandwidthSupport.Shortage>
+  <MAP_BandwidthSupport.Recalled>Insufficient purge credit. {0} extended bandwidth reclaimed.</MAP_BandwidthSupport.Recalled>
+</LanguageData>

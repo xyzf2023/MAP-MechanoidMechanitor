@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_SunEnergy_Restore>Mech energy recovery: {0}%/second</MAP_SunEnergy_Restore>
+  <MAP_SunEnergy_Consumption>Ability energy cost multiplier: {0}%</MAP_SunEnergy_Consumption>
+</LanguageData>

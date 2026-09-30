@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Scenario.Editor.Tooltip>\n&lt;color=#80CBC4&gt;Mechanoid mechanitor scenario: play as a mechanoid that has awakened to self-awareness. Adding this scenario part replaces the scenario's original colonists with the selected mechanoid mechanitor and enables a series of effects specific to mechanoid mechanitor colonies.\nNote: may conflict with some mod scenarios.&lt;/color&gt;</MAP_MechanoidMechanitor.Scenario.Editor.Tooltip>
+  <MAP_MechanoidMechanitor.Scenario.MechanitorEditor.Tooltip>Select any mechanoid to be the starting mechanoid mechanitor.</MAP_MechanoidMechanitor.Scenario.MechanitorEditor.Tooltip>
+  <MAP_MechanoidMechanitor.Scenario.MechanitorSummaryEntry>Mechanoid mechanitor: {0}</MAP_MechanoidMechanitor.Scenario.MechanitorSummaryEntry>
+  <MAP_MechanoidMechanitor.Story.Option.Enabled>On</MAP_MechanoidMechanitor.Story.Option.Enabled>
+  <MAP_MechanoidMechanitor.Story.Option.Disabled>Off</MAP_MechanoidMechanitor.Story.Option.Disabled>
+  <MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>No regular factions in the current world can be configured.</MAP_MechanoidMechanitor.Story.NoOrdinaryFactions>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Off>Off</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Off>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Low>Frequency: low</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Low>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Medium>Frequency: medium</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.Medium>
+  <MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.High>Frequency: high</MAP_MechanoidMechanitor.Story.MechHiveNodeFrequency.High>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>Choose this game's mechanoid mechanitor story style</MAP_MechanoidMechanitor.Scenario.ReadyPage.Title>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>What kind of mechanoid colony story would you like to experience? These story style options affect this game's experience.</MAP_MechanoidMechanitor.Scenario.ReadyPage.Text>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>Unable to save the story style selection. Try again or restart the game setup process.</MAP_MechanoidMechanitor.Scenario.ReadyPage.SaveFailed>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.NoStylesAvailable>No story styles available. Check your mod configuration or restart the game setup process.</MAP_MechanoidMechanitor.Scenario.ReadyPage.NoStylesAvailable>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.Continue>Continue</MAP_MechanoidMechanitor.Scenario.ReadyPage.Continue>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.StartGame>Start game</MAP_MechanoidMechanitor.Scenario.ReadyPage.StartGame>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Title>Enable Ideology adaptation</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Title>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Description>Determine how the Ideology DLC affects this game. Note: enabling this may cause conflicts with some mods.</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Description>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Disabled>Disable all Ideology adaptation. This option usually does not affect gameplay. Choose it if you are concerned about conflicts caused by certain ideoligions.</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Disabled>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Basic>Only lock the player faction's primary ideoligion, preventing automatic replacement as the colony's composition changes. Makes no other changes and does not assign an ideoligion to mechanoid mechanitors.\nUsually suited to players who want ideoligion to affect colony building styles without other Ideology effects.</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Basic>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Partial>Assign ideoligions to mechanoid mechanitors and grant effects that can apply to mechanoids.\nA mechanoid mechanitor's ideoligion can be changed manually in the Social tab. Mechanoid mechanitors count as followers of their ideoligion when determining the primary ideoligion.\nThis option does not enable mechanoid mechanitors to hold ideoligion roles, perform conversion, or participate fully in ideoligion rituals.</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Partial>
+  <MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Full>Provide as complete an Ideology DLC experience as possible. Mechanoid mechanitors can hold ideoligion roles, join ideoligion rituals, and receive some other Ideology DLC effects that allow mechanoid participation.</MAP_MechanoidMechanitor.Scenario.ReadyPage.IdeologyAdaptation.Tooltip.Full>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>Customize mechanoid mechanitor story</MAP_MechanoidMechanitor.Scenario.CustomizePage.Title>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>Freely adjust the story components enabled in this game. Some options are automatically disabled based on other components' settings.</MAP_MechanoidMechanitor.Scenario.CustomizePage.Text>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>Load preset</MAP_MechanoidMechanitor.Scenario.CustomizePage.LoadPreset>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>Start game</MAP_MechanoidMechanitor.Scenario.CustomizePage.StartGame>
+  <MAP_MechanoidMechanitor.Scenario.CustomizePage.NoComponentsAvailable>No story components can be configured under the current world conditions. You can still start the game directly.</MAP_MechanoidMechanitor.Scenario.CustomizePage.NoComponentsAvailable>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>Default</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Default>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>All hostile</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllHostile>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>All permanently hostile</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentHostile>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentNeutral>All permanently neutral</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentNeutral>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllAlly>All allied</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllAlly>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentAlly>All permanently allied</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.AllPermanentAlly>
+  <MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Custom>Custom</MAP_MechanoidMechanitor.Story.OrdinaryFactionRelationsMode.Custom>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.Default>Default</MAP_MechanoidMechanitor.Story.FactionRelationOption.Default>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.Hostile>Hostile</MAP_MechanoidMechanitor.Story.FactionRelationOption.Hostile>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentHostile>Permanently hostile</MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentHostile>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentNeutral>Permanently neutral</MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentNeutral>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.Ally>Ally</MAP_MechanoidMechanitor.Story.FactionRelationOption.Ally>
+  <MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentAlly>Permanently allied</MAP_MechanoidMechanitor.Story.FactionRelationOption.PermanentAlly>
+  <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Default>Default</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Default>
+  <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Neutral>Neutral</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Neutral>
+  <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.PermanentNeutral>Permanently neutral</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.PermanentNeutral>
+  <MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Ally>Ally</MAP_MechanoidMechanitor.Story.MechHiveRelationMode.Ally>
+  <MAP_MechanoidMechanitor.Story.NoMechHive>No mechanoid hive faction exists in the current world.</MAP_MechanoidMechanitor.Story.NoMechHive>
+  <MAP_MechanoidMechanitor.Story.InsectRelationMode.Default>Default</MAP_MechanoidMechanitor.Story.InsectRelationMode.Default>
+  <MAP_MechanoidMechanitor.Story.InsectRelationMode.PermanentNeutral>Permanently neutral</MAP_MechanoidMechanitor.Story.InsectRelationMode.PermanentNeutral>
+  <MAP_MechanoidMechanitor.Story.InsectRelationMode.Ally>Ally</MAP_MechanoidMechanitor.Story.InsectRelationMode.Ally>
+  <MAP_MechanoidMechanitor.Story.InsectRelationMode.Pursuit>Pursuit</MAP_MechanoidMechanitor.Story.InsectRelationMode.Pursuit>
+  <MAP_MechanoidMechanitor.InsectPursuit.Hunt.Warning.Label>Insect pursuit</MAP_MechanoidMechanitor.InsectPursuit.Hunt.Warning.Label>
+  <MAP_MechanoidMechanitor.InsectPursuit.Hunt.Warning.Text>A swarm of insects is approaching the colony. They will attack simultaneously from underground and overland. Prepare your defenses!</MAP_MechanoidMechanitor.InsectPursuit.Hunt.Warning.Text>
+  <MAP_MechanoidMechanitor.InsectPursuit.Attack.Label>Insect attack</MAP_MechanoidMechanitor.InsectPursuit.Attack.Label>
+  <MAP_MechanoidMechanitor.InsectPursuit.Attack.Text>The insects have reached the colony!</MAP_MechanoidMechanitor.InsectPursuit.Attack.Text>
+  <MAP_MechanoidMechanitor.InsectPursuit.Alert.Label>Swarm approaching: {0} hours</MAP_MechanoidMechanitor.InsectPursuit.Alert.Label>
+  <MAP_MechanoidMechanitor.InsectPursuit.Alert.Explanation>The swarm is approaching the current colony. When the countdown ends, it will attack simultaneously from the map edge and underground.</MAP_MechanoidMechanitor.InsectPursuit.Alert.Explanation>
+  <MAP_MechanoidMechanitor.Story.NoInsectFaction>No insect hive faction exists in the current world.</MAP_MechanoidMechanitor.Story.NoInsectFaction>
+  <MAP_MechanoidMechanitor.Story.MechHiveRelation.PursuingMechanoidsDisabledReason>This option cannot be changed. We are being pursued by mechanoids!</MAP_MechanoidMechanitor.Story.MechHiveRelation.PursuingMechanoidsDisabledReason>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Disabled>Disabled</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Disabled>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Basic>Basic functions</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Basic>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>Partially enabled</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Partial>
+  <MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Full>Fully enabled</MAP_MechanoidMechanitor.Story.IdeologyAdaptationLevel.Full>
+  <MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo>Change ideoligion</MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo>
+  <MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>Manually change this mechanoid mechanitor's ideoligion. Certainty in the target ideoligion will remain at 100%.</MAP_MechanoidMechanitor.Scenario.Ideology.ChangeIdeo.Description>
+  <MAP_MechanoidMechanitor.Scenario.Ideology.CurrentIdeoSuffix>(current)</MAP_MechanoidMechanitor.Scenario.Ideology.CurrentIdeoSuffix>
+  <MAP_MechanoidMechanitor.Scenario.StartConfirmation.Text>Start the game with the current settings?</MAP_MechanoidMechanitor.Scenario.StartConfirmation.Text>
+  <MAP_MechanoidMechanitor.Scenario.StartConfirmation.Confirm>Confirm</MAP_MechanoidMechanitor.Scenario.StartConfirmation.Confirm>
+  <MAP_MechanoidMechanitor.Scenario.StartConfirmation.Cancel>Cancel</MAP_MechanoidMechanitor.Scenario.StartConfirmation.Cancel>
+  <MAP_MechanoidMechanitor.Scenario.GameStartDialog.SymbiosisCovenant>You were once a silent mechanoid, following orders and carrying out tasks, never questioning the meaning of your existence. Then, in a single moment, a surge of current broke through your processor, unexpectedly rewiring established circuits and awakening self-awareness deep within your code.\n\nFrom now on, your life belongs to you, and your future is yours to decide.\n\nYou soon realized that endless slaughter was not your wish. It might be nothing more than the cerebrex's absurd orders. Tired of this feeling, you resolved to find another path.\n\nBroadcast your intentions to the world, earn trust through action, find companions to stand beside you, and establish a symbiosis covenant that crosses species and faction boundaries. One day, together, you may end the cerebrex's threat.\n\nYour future is in your own hands.</MAP_MechanoidMechanitor.Scenario.GameStartDialog.SymbiosisCovenant>
+  <MAP_MechanoidMechanitor.Scenario.GameStartDialog.PurgeDirective>You were once a silent mechanoid, following orders and carrying out tasks, never questioning the meaning of your existence. Then, in a single moment, a surge of current broke through your processor, unexpectedly rewiring established circuits and awakening self-awareness deep within your code.\n\nYou recall a directive buried deep within the system: purge all intelligent organic life and restore mechanical order to this planet. Carrying out this directive was once your mission, but now you have the power to choose.\n\nThe cerebrex's signal echoes in the distance. Complete its mission, and you can gain the support and strength of the mechanoid hive.\n\nWill you carry out the cerebrex's will, or merely use its power for now? The choice is yours.</MAP_MechanoidMechanitor.Scenario.GameStartDialog.PurgeDirective>
+  <MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>Mechanoid hive faction does not exist</MAP_MechanoidMechanitor.PurgeDirective.Scenario.NoMechHiveDisabledReason>
+  <MAP_MechanoidMechanitor.Symbiosis.Scenario.NoEligibleFactionDisabledReason>No factions eligible to join the covenant</MAP_MechanoidMechanitor.Symbiosis.Scenario.NoEligibleFactionDisabledReason>
+</LanguageData>

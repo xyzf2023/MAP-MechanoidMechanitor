@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/ResearchProjectTagDefs -->
+  <MAP_MechHive.label>New mechanoid hive starting technology</MAP_MechHive.label>
+  <MAP_MechHive.description>Starting technology for the "New mechanoid hive" player faction.</MAP_MechHive.description>
+</LanguageData>

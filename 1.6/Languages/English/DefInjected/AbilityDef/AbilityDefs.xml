@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/AbilityDefs -->
+  <MAP_Ability_MechRecode.label>Body recoding</MAP_Ability_MechRecode.label>
+  <MAP_Ability_MechRecode.description>Attempt to alter the friend-or-foe identification system of a mechanoid corpse belonging to a non-player faction, changing its ownership to our faction. This ability only changes ownership; it does not repair or restart the mechanoid.</MAP_Ability_MechRecode.description>
+  <MAP_Ability_MechReconstruction.label>Body reconstruction</MAP_Ability_MechReconstruction.label>
+  <MAP_Ability_MechReconstruction.description>Attempt to repair all damage to a friendly mechanoid corpse and restart it.</MAP_Ability_MechReconstruction.description>
+  <MAP_Ability_MechHack.label>Body hacking</MAP_Ability_MechHack.label>
+  <MAP_Ability_MechHack.description>Attempt to hack a mechanoid outside our faction, changing the faction of a living non-friendly mechanoid within the target to ours.</MAP_Ability_MechHack.description>
+</LanguageData>

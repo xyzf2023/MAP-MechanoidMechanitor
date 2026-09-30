@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/JobDefs -->
+  <MAP_ContinueAntimatterAnalysis.label>Analyze antimatter containment device</MAP_ContinueAntimatterAnalysis.label>
+  <MAP_ContinueAntimatterAnalysis.verb>Analyze</MAP_ContinueAntimatterAnalysis.verb>
+  <MAP_ContinueAntimatterAnalysis.gerund>Analyze antimatter containment device</MAP_ContinueAntimatterAnalysis.gerund>
+</LanguageData>

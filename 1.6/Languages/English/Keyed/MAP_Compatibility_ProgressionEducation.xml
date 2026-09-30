@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_ProgressionEducation.ReasonStudentRole>This mechanoid can only serve as a classroom teacher, not a student.</MAP_ProgressionEducation.ReasonStudentRole>
+  <MAP_ProgressionEducation.ReasonMissingTeachingInfrastructure>Required classroom facilities are missing.</MAP_ProgressionEducation.ReasonMissingTeachingInfrastructure>
+  <MAP_ProgressionEducation.ReasonUnsupportedClassType>This mechanoid can only teach regular skill classes and childcare classes.</MAP_ProgressionEducation.ReasonUnsupportedClassType>
+  <MAP_ProgressionEducation.ReasonCompatibilityReflectionFailure>The mechanoid classroom compatibility layer failed to read course information. This role is temporarily unavailable.</MAP_ProgressionEducation.ReasonCompatibilityReflectionFailure>
+</LanguageData>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.WorkMode.MobileCombat.MovementCostImmunity>Move speed ignores terrain effects</MAP_MechanoidMechanitor.WorkMode.MobileCombat.MovementCostImmunity>
+  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerHour>Self-repair: {0} points/hour</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerHour>
+  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerSecond>Self-repair: {0} points/second</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.RepairPerSecond>
+  <MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour>Energy recovery: {0}%/hour</MAP_MechanoidMechanitor.SelfWorkMode.Recovery.EnergyPerHour>
+</LanguageData>

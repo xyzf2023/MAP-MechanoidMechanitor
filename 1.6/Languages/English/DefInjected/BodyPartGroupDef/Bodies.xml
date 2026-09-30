@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Bodies -->
+  <MAP_SunArmorAttackTool.label>Sun armored attack parts</MAP_SunArmorAttackTool.label>
+  <MAP_SunArmorAttackTool.labelShort>heavy armor</MAP_SunArmorAttackTool.labelShort>
+  <MAP_SunFrameAttackTool.label>Sun body attack parts</MAP_SunFrameAttackTool.label>
+  <MAP_SunFrameAttackTool.labelShort>Sun body</MAP_SunFrameAttackTool.labelShort>
+</LanguageData>

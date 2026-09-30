@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Core.Bill.Reason.MissingSkillsTracker>Missing skills tracker</MAP_MechanoidMechanitor.Core.Bill.Reason.MissingSkillsTracker>
+  <MAP_MechanoidMechanitor.Core.SelfRepair.FloatMenu>Perform self-repair</MAP_MechanoidMechanitor.Core.SelfRepair.FloatMenu>
+  <MAP_MechanoidMechanitor.Core.Gravship.NoGravshipLaunchRitual>Unable to find the gravship launch ritual.</MAP_MechanoidMechanitor.Core.Gravship.NoGravshipLaunchRitual>
+  <MAP_MechanoidMechanitor.Core.WorkSpeed.Feedback>Work speed offset: +{0}</MAP_MechanoidMechanitor.Core.WorkSpeed.Feedback>
+  <MAP_MechanoidMechanitor.Core.Reclamation.Letter.Text>After a prolonged period without mechanitor oversight, the following mechanoids have reconnected to {0}'s control network and been reclaimed by the mechanoid hive. They are no longer under colony control and will leave the area.\n\nAffected mechanoids:\n\n{1}</MAP_MechanoidMechanitor.Core.Reclamation.Letter.Text>
+</LanguageData>

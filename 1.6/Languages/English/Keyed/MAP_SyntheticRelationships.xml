@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Companion.UseModuleCommand>Assign a romantic target from the mechanoid's Social tab.</MAP_MechanoidMechanitor.Companion.UseModuleCommand>
+  <MAP_MechanoidMechanitor.Companion.Pursue>Romance…</MAP_MechanoidMechanitor.Companion.Pursue>
+  <MAP_MechanoidMechanitor.Companion.PursueDescription>Select a designated target to pursue. Success is guaranteed.</MAP_MechanoidMechanitor.Companion.PursueDescription>
+  <MAP_MechanoidMechanitor.Companion.Breakup>Break up…</MAP_MechanoidMechanitor.Companion.Breakup>
+  <MAP_MechanoidMechanitor.Companion.Divorce>Divorce…</MAP_MechanoidMechanitor.Companion.Divorce>
+  <MAP_MechanoidMechanitor.Companion.EndDescription>End this relationship.</MAP_MechanoidMechanitor.Companion.EndDescription>
+  <MAP_MechanoidMechanitor.Companion.BreakupConfirm>Confirm breakup?</MAP_MechanoidMechanitor.Companion.BreakupConfirm>
+  <MAP_MechanoidMechanitor.Companion.DivorceConfirm>Confirm divorce?</MAP_MechanoidMechanitor.Companion.DivorceConfirm>
+  <MAP_MechanoidMechanitor.Companion.CannotAct>The mechanoid cannot act.</MAP_MechanoidMechanitor.Companion.CannotAct>
+  <MAP_MechanoidMechanitor.Companion.InvalidTarget>Invalid target</MAP_MechanoidMechanitor.Companion.InvalidTarget>
+  <MAP_MechanoidMechanitor.Companion.TargetUnder16>Target is younger than 16</MAP_MechanoidMechanitor.Companion.TargetUnder16>
+  <MAP_MechanoidMechanitor.Companion.Related>Cannot pursue close relatives.</MAP_MechanoidMechanitor.Companion.Related>
+  <MAP_MechanoidMechanitor.Companion.TargetCannotAct>The other person is absent or unable to act.</MAP_MechanoidMechanitor.Companion.TargetCannotAct>
+  <MAP_MechanoidMechanitor.Companion.Unreachable>Target unreachable.</MAP_MechanoidMechanitor.Companion.Unreachable>
+  <MAP_MechanoidMechanitor.Companion.NoCandidate>No suitable romantic targets.</MAP_MechanoidMechanitor.Companion.NoCandidate>
+  <MAP_MechanoidMechanitor.Companion.IdeologyForbids>One participant's precepts forbid physical intimacy.</MAP_MechanoidMechanitor.Companion.IdeologyForbids>
+</LanguageData>

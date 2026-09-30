@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Fusion.Gizmo.Label>Begin fusion</MAP_MechanoidMechanitor.Fusion.Gizmo.Label>
+  <MAP_MechanoidMechanitor.Fusion.Started>{0} and {1} have fused.</MAP_MechanoidMechanitor.Fusion.Started>
+  <MAP_MechanoidMechanitor.Fusion.Ended>The fusion of {0} and {1} has ended.</MAP_MechanoidMechanitor.Fusion.Ended>
+  <MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable>The mechanoid performing fusion is unavailable.</MAP_MechanoidMechanitor.Fusion.Failure.SourceUnavailable>
+  <MAP_MechanoidMechanitor.Fusion.Failure.NoEligibility>This mechanoid has no innate fusion capability.</MAP_MechanoidMechanitor.Fusion.Failure.NoEligibility>
+  <MAP_MechanoidMechanitor.Fusion.Failure.SourceFormInvalid>The mechanoid's current form cannot perform fusion.</MAP_MechanoidMechanitor.Fusion.Failure.SourceFormInvalid>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>The target is currently unavailable.</MAP_MechanoidMechanitor.Fusion.Failure.TargetUnavailable>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>The target must be human.</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotHumanlike>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetAgeInvalid>The target cannot be a baby.</MAP_MechanoidMechanitor.Fusion.Failure.TargetAgeInvalid>
+  <MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>The target must be the overseer.</MAP_MechanoidMechanitor.Fusion.Failure.TargetNotOverseer>
+  <MAP_MechanoidMechanitor.Fusion.Failure.NotSameMap>Both participants must be on the same map.</MAP_MechanoidMechanitor.Fusion.Failure.NotSameMap>
+  <MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>The target is already fused with a mechanoid.</MAP_MechanoidMechanitor.Fusion.Failure.SessionBusy>
+  <MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>The target cannot wear the fusion shell.</MAP_MechanoidMechanitor.Fusion.Failure.CannotWear>
+  <MAP_MechanoidMechanitor.Fusion.Failure.ShellMissing>The designated fusion shell definition was not found.</MAP_MechanoidMechanitor.Fusion.Failure.ShellMissing>
+  <MAP_MechanoidMechanitor.Fusion.Failure.Unexpected>An error occurred during fusion; a rollback was attempted.</MAP_MechanoidMechanitor.Fusion.Failure.Unexpected>
+  <MAP_MechanoidMechanitor.Fusion.Approach.OrderFailed>Unable to issue an approach order. Please try again later.</MAP_MechanoidMechanitor.Fusion.Approach.OrderFailed>
+  <MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>The mechanoid cannot reach the target. Fusion canceled.</MAP_MechanoidMechanitor.Fusion.Approach.Unreachable>
+  <MAP_MechanoidMechanitor.Fusion.Approach.LandingInvalid>The fusion flight landing site is no longer valid. Replanning.</MAP_MechanoidMechanitor.Fusion.Approach.LandingInvalid>
+  <MAP_MechanoidMechanitor.Fusion.Energy.Label>Mechanical energy</MAP_MechanoidMechanitor.Fusion.Energy.Label>
+  <MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>The mechanoid's remaining energy.\nFusion ends when energy reaches zero.</MAP_MechanoidMechanitor.Fusion.Energy.Tooltip>
+  <MAP_MechanoidMechanitor.Fusion.Stability.Label>Structural stability</MAP_MechanoidMechanitor.Fusion.Stability.Label>
+  <MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>The mechanoid's current structural stability.\nWhile structural stability is above 50%, all damage is absorbed by the mechanical structure.\nReaching zero stability ends fusion and destroys the mechanoid's body.</MAP_MechanoidMechanitor.Fusion.Stability.Tooltip>
+  <MAP_MechanoidMechanitor.Fusion.Release.Label>End fusion</MAP_MechanoidMechanitor.Fusion.Release.Label>
+  <MAP_MechanoidMechanitor.Fusion.Release.Description>End this fusion and restore the original mechanoid. Land first if flying.</MAP_MechanoidMechanitor.Fusion.Release.Description>
+  <MAP_MechanoidMechanitor.Fusion.Release.Flying>Cannot end fusion while flying. Land first.</MAP_MechanoidMechanitor.Fusion.Release.Flying>
+  <MAP_MechanoidMechanitor.Fusion.Release.InProgress>Another fusion exit operation is in progress.</MAP_MechanoidMechanitor.Fusion.Release.InProgress>
+</LanguageData>

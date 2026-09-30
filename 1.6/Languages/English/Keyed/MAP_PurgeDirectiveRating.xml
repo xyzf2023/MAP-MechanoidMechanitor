@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_PurgeDirectiveRating.LevelName1>Sequence Five</MAP_PurgeDirectiveRating.LevelName1>
+  <MAP_PurgeDirectiveRating.LevelName2>Sequence Four</MAP_PurgeDirectiveRating.LevelName2>
+  <MAP_PurgeDirectiveRating.LevelName3>Sequence Three</MAP_PurgeDirectiveRating.LevelName3>
+  <MAP_PurgeDirectiveRating.LevelName4>Sequence Two</MAP_PurgeDirectiveRating.LevelName4>
+  <MAP_PurgeDirectiveRating.LevelName5>Sequence One</MAP_PurgeDirectiveRating.LevelName5>
+  <MAP_PurgeDirectiveRating.TopBar.Maxed>Node rating: {0} (maximum) · Rating value {1}/{2}</MAP_PurgeDirectiveRating.TopBar.Maxed>
+  <MAP_PurgeDirectiveRating.TopBar.Level>Node rating: {0} · {1}/{2}</MAP_PurgeDirectiveRating.TopBar.Level>
+  <MAP_PurgeDirectiveRating.Order.TotalWithDiscount>Total price {0} (discount applied -{1})</MAP_PurgeDirectiveRating.Order.TotalWithDiscount>
+  <MAP_PurgeDirectiveRating.RequiredLevel>Required rating: {0}</MAP_PurgeDirectiveRating.RequiredLevel>
+  <MAP_PurgeDirectiveRating.ClusterEnvironmentLocked>Condition causer requires rating: {0}</MAP_PurgeDirectiveRating.ClusterEnvironmentLocked>
+  <MAP_PurgeDirectiveRating.Quest.None>Retrieving directives</MAP_PurgeDirectiveRating.Quest.None>
+  <MAP_PurgeDirectiveRating.Quest.OfferPending>Available</MAP_PurgeDirectiveRating.Quest.OfferPending>
+  <MAP_PurgeDirectiveRating.Quest.OperationActive>In progress</MAP_PurgeDirectiveRating.Quest.OperationActive>
+  <MAP_PurgeDirectiveRating.Mechs.RatingNotMet>Node rating requirement not met</MAP_PurgeDirectiveRating.Mechs.RatingNotMet>
+  <MAP_PurgeDirectiveRating.MechRow.Price>Price {0}</MAP_PurgeDirectiveRating.MechRow.Price>
+  <MAP_PurgeDirectiveRating.LockedForLevel>Required rating: {0}</MAP_PurgeDirectiveRating.LockedForLevel>
+  <MAP_PurgeDirectiveRating.RequiresLevel>Required rating: {0}</MAP_PurgeDirectiveRating.RequiresLevel>
+  <MAP_PurgeDirectiveRating.Reason.Invalid>Invalid item</MAP_PurgeDirectiveRating.Reason.Invalid>
+  <MAP_PurgeDirectiveRating.Reason.Blacklist>Blacklisted; cannot request</MAP_PurgeDirectiveRating.Reason.Blacklist>
+  <MAP_PurgeDirectiveRating.Reason.Building>Required rating: {0}</MAP_PurgeDirectiveRating.Reason.Building>
+  <MAP_PurgeDirectiveRating.Reason.XmlOverride>Required rating: {0}</MAP_PurgeDirectiveRating.Reason.XmlOverride>
+  <MAP_PurgeDirectiveRating.Reason.AutoClassify>Required rating: {0}</MAP_PurgeDirectiveRating.Reason.AutoClassify>
+  <MAP_PurgeDirectiveRating.Perm.MechLight>Light mechanoids</MAP_PurgeDirectiveRating.Perm.MechLight>
+  <MAP_PurgeDirectiveRating.Perm.MechMedium>Medium mechanoids</MAP_PurgeDirectiveRating.Perm.MechMedium>
+  <MAP_PurgeDirectiveRating.Perm.MechHeavy>Heavy mechanoids</MAP_PurgeDirectiveRating.Perm.MechHeavy>
+  <MAP_PurgeDirectiveRating.Perm.MechUltraHeavy>Ultraheavy mechanoids</MAP_PurgeDirectiveRating.Perm.MechUltraHeavy>
+  <MAP_PurgeDirectiveRating.Perm.GoodsBasic>Basic supplies</MAP_PurgeDirectiveRating.Perm.GoodsBasic>
+  <MAP_PurgeDirectiveRating.Perm.GoodsStandard>Standard military supplies</MAP_PurgeDirectiveRating.Perm.GoodsStandard>
+  <MAP_PurgeDirectiveRating.Perm.GoodsFull>All permitted supplies</MAP_PurgeDirectiveRating.Perm.GoodsFull>
+  <MAP_PurgeDirectiveRating.Perm.ForceSupport>Troop support</MAP_PurgeDirectiveRating.Perm.ForceSupport>
+  <MAP_PurgeDirectiveRating.Perm.ForceUnlimited>Troop support limit removed</MAP_PurgeDirectiveRating.Perm.ForceUnlimited>
+  <MAP_PurgeDirectiveRating.Perm.Cluster>Mech clusters</MAP_PurgeDirectiveRating.Perm.Cluster>
+  <MAP_PurgeDirectiveRating.Perm.Environment>Condition causers</MAP_PurgeDirectiveRating.Perm.Environment>
+  <MAP_PurgeDirectiveRating.Perm.Discount>Discount {0}%</MAP_PurgeDirectiveRating.Perm.Discount>
+  <MAP_PurgeDirectiveRating.Perm.None>No new privileges</MAP_PurgeDirectiveRating.Perm.None>
+  <MAP_PurgeDirectiveRating.Communication.Query.ControlPermission>Query control privileges</MAP_PurgeDirectiveRating.Communication.Query.ControlPermission>
+  <MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>All cerebrex command privileges acquired.</MAP_PurgeDirectiveRating.Communication.Response.ControlPermission>
+  <MAP_PurgeDirectiveRating.Delivery.ErrorRatingLocked>The delivery includes mechanoids or supplies whose required rating has not been unlocked.</MAP_PurgeDirectiveRating.Delivery.ErrorRatingLocked>
+  <MAP_PurgeDirectiveRating.Quest.Title>Directive: purge {0}</MAP_PurgeDirectiveRating.Quest.Title>
+  <MAP_PurgeDirectiveRating.Quest.Description>Intelligence analysis:\n{0}'s {1} obstructs the mechanoid hive's development.\n\nDirective:\nPurge this site within {2}.\n\n&lt;i&gt;Note: failing to complete the purge before the deadline may lower your purge rating.&lt;/i&gt;</MAP_PurgeDirectiveRating.Quest.Description>
+  <MAP_PurgeDirectiveRating.Quest.DurationDays>{0} days</MAP_PurgeDirectiveRating.Quest.DurationDays>
+  <MAP_PurgeDirectiveRating.Quest.DurationHours>{0} hours</MAP_PurgeDirectiveRating.Quest.DurationHours>
+  <MAP_PurgeDirectiveRating.Quest.Reward>Purge credit</MAP_PurgeDirectiveRating.Quest.Reward>
+  <MAP_PurgeDirectiveRating.Letter.Upgrade.Title>Purge rating increased</MAP_PurgeDirectiveRating.Letter.Upgrade.Title>
+  <MAP_PurgeDirectiveRating.Letter.Upgrade.Text>Purge rating increased: {0} → {1}. Current rating value {2}. New privileges: {3}.</MAP_PurgeDirectiveRating.Letter.Upgrade.Text>
+  <MAP_PurgeDirectiveRating.Letter.Downgrade.Title>Purge rating decreased</MAP_PurgeDirectiveRating.Letter.Downgrade.Title>
+  <MAP_PurgeDirectiveRating.Letter.Downgrade.Text>Purge rating decreased: {0} → {1}. Current rating value {2}. Privileges temporarily lost: {3}. Previously delivered units and supplies are unaffected.</MAP_PurgeDirectiveRating.Letter.Downgrade.Text>
+  <MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>Purge node: target purge</MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>
+  <MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>You have purged {0} (currently {1}). Purge credit granted: {2}.</MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>
+  <MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>You have purged {0} (currently {1}).</MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>
+</LanguageData>

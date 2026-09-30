@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/DamageDefs -->
+  <MAP_AnnihilationInner.label>Antimatter annihilation</MAP_AnnihilationInner.label>
+  <MAP_AnnihilationInner.deathMessage>{0} was annihilated into nothingness by antimatter.</MAP_AnnihilationInner.deathMessage>
+  <MAP_AnnihilationOuter.label>Annihilation cannon energy impact</MAP_AnnihilationOuter.label>
+  <MAP_AnnihilationOuter.deathMessage>{0} was completely destroyed by the energy released from an annihilation cannon.</MAP_AnnihilationOuter.deathMessage>
+  <MAP_ChariotLaserHeat.label>Chariot laser heat damage</MAP_ChariotLaserHeat.label>
+  <MAP_ChariotLaserSiege.label>Chariot laser siege damage</MAP_ChariotLaserSiege.label>
+  <MAP_HighEnergyLaserBeamHeat.label>High-energy laser beam heat damage</MAP_HighEnergyLaserBeamHeat.label>
+  <MAP_HighEnergyLaserBeamHeat.deathMessage>{0} was burned to death by a high-energy laser beam.</MAP_HighEnergyLaserBeamHeat.deathMessage>
+</LanguageData>

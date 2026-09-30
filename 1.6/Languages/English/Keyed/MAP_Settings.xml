@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_Settings.Category>[MAP] Mechanoid Mechanitor</MAP_Settings.Category>
+  <MAP_Settings.PsychicCoreMentalStateRecovery.Label>Allow level 10 psychic cores to remove mental states</MAP_Settings.PsychicCoreMentalStateRecovery.Label>
+  <MAP_Settings.PsychicCoreMentalStateRecovery.Description>When enabled, attempt every 10 seconds to remove mental states from characters whose psychic core has reached maximum level.</MAP_Settings.PsychicCoreMentalStateRecovery.Description>
+  <MAP_Settings.Reset.All>Restore all default settings</MAP_Settings.Reset.All>
+  <MAP_Settings.Reset.All.Confirmation>Reset all settings to default?</MAP_Settings.Reset.All.Confirmation>
+  <MAP_Settings.Reset.Section>Restore defaults</MAP_Settings.Reset.Section>
+  <MAP_Settings.Reset.Section.Confirmation>Reset the settings in {0} to default?</MAP_Settings.Reset.Section.Confirmation>
+  <MAP_Settings.Group.Autonomy>Autonomous mechanoids</MAP_Settings.Group.Autonomy>
+  <MAP_Settings.Autonomy.Sun.Label>Enable Sun autonomy</MAP_Settings.Autonomy.Sun.Label>
+  <MAP_Settings.Autonomy.Sun.Description>When enabled, Sun becomes an autonomous mechanoid that needs no overseer. When disabled, it uses vanilla mechanoid oversight logic. Changes take effect immediately.</MAP_Settings.Autonomy.Sun.Description>
+  <MAP_Settings.Autonomy.Hermit.Label>Enable Hermit autonomy</MAP_Settings.Autonomy.Hermit.Label>
+  <MAP_Settings.Autonomy.Hermit.Description>When enabled, Hermit becomes an autonomous mechanoid that needs no overseer. When disabled, it uses vanilla mechanoid oversight logic. This setting does not affect Hermit's bandwidth functions. Changes take effect immediately.</MAP_Settings.Autonomy.Hermit.Description>
+  <MAP_Settings.Page.Interface>Controls and interface</MAP_Settings.Page.Interface>
+  <MAP_Settings.Page.Mech>Body functions</MAP_Settings.Page.Mech>
+  <MAP_Settings.Page.Start>Starting configuration</MAP_Settings.Page.Start>
+  <MAP_Settings.Page.World>World operation</MAP_Settings.Page.World>
+  <MAP_Settings.Page.Boss>Boss configuration</MAP_Settings.Page.Boss>
+  <MAP_Settings.Page.Diagnostics>Compatibility and diagnostics</MAP_Settings.Page.Diagnostics>
+  <MAP_Settings.Group.Implants>Implants and modifications</MAP_Settings.Group.Implants>
+  <MAP_Settings.Group.Cores>Cores and abilities</MAP_Settings.Group.Cores>
+  <MAP_Settings.AnnihilationCannonCrater.Label>Annihilation cannon leaves craters</MAP_Settings.AnnihilationCannonCrater.Label>
+  <MAP_Settings.AnnihilationCannonCrater.Description>When enabled, the annihilation cannon creates a crater at its impact location. Affects both friendly and hostile Suns.</MAP_Settings.AnnihilationCannonCrater.Description>
+  <MAP_Settings.Group.SkillsAndOffspring>Skills and reproduction</MAP_Settings.Group.SkillsAndOffspring>
+  <MAP_MechanoidMechanitor.Settings.WorkTab.Label>Show mechanoid mechanitors in the Work tab</MAP_MechanoidMechanitor.Settings.WorkTab.Label>
+  <MAP_MechanoidMechanitor.Settings.WorkTab.Description>When enabled, eligible mechanoid mechanitors appear in the vanilla "Work" tab for adjusting work priorities. Disable this if it conflicts with mods that alter the Work tab or work priority interface.</MAP_MechanoidMechanitor.Settings.WorkTab.Description>
+  <MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Label>Enable mechanoid "Show portrait" in all saves</MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Label>
+  <MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>When enabled, the "Show portrait" toggle is available for mechanoids in all saves. When disabled, it is only available in the mechanoid mechanitor scenario.</MAP_MechanoidMechanitor.Settings.PortraitDisplayForAllSaves.Description>
+  <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>Refresh dynamic allocation immediately when drafting changes</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Label>
+  <MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>When enabled, mechanoids using dynamic allocation perform a state check immediately when their drafted state changes.</MAP_MechanoidMechanitor.Settings.DataProcessing.ImmediateDraftRefresh.Description>
+  <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>Enable loading death diagnostic logs</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Label>
+  <MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>This is a developer feature. If your mechanoid mechanitor unexpectedly dies while loading a save, use this feature to generate logs and send them to the author for investigation.</MAP_MechanoidMechanitor.Settings.LoadDeathDiagnostics.Description>
+  <MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Label>Prevent mechanoid mechanitor deaths during save loading</MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Label>
+  <MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>When enabled, prevent previously living mechanoid mechanitors from dying unexpectedly due to peculiar logic conflicts while a save is loading.</MAP_MechanoidMechanitor.Settings.PreventLoadDeath.Description>
+  <MAP_Settings.StartupDetailedLogging.Label>Output detailed logs at game startup</MAP_Settings.StartupDetailedLogging.Label>
+  <MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Label>Enable detailed compatibility layer logging</MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Label>
+  <MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Description>When enabled, output detailed logs if compatibility patches fail to load</MAP_MechanoidMechanitor.Settings.Compatibility.DetailedLogging.Description>
+  <MAP_MechanoidMechanitor.Settings.BrainImplants.Label>Allow mechanoid mechanitors to install brain implants</MAP_MechanoidMechanitor.Settings.BrainImplants.Label>
+  <MAP_MechanoidMechanitor.Settings.BrainImplants.Description>When enabled, mechanoid mechanitors can be ordered to install brain implants through right-click commands. This slightly affects loading speed at game startup.</MAP_MechanoidMechanitor.Settings.BrainImplants.Description>
+  <MAP_MechanoidMechanitor.Settings.BrainImplants.RestartRequired>This setting takes effect after restarting the game.</MAP_MechanoidMechanitor.Settings.BrainImplants.RestartRequired>
+  <MAP_MechanoidMechanitor.Settings.MoonImplants.Label>Allow Moon to install bionics</MAP_MechanoidMechanitor.Settings.MoonImplants.Label>
+  <MAP_MechanoidMechanitor.Settings.MoonImplants.Description>When enabled, Moon can right-click implant items to install them. This slightly affects loading speed at game startup. Restart the game after changing this setting.</MAP_MechanoidMechanitor.Settings.MoonImplants.Description>
+  <MAP_MechanoidMechanitor.Settings.MoonImplants.RestartRequired>This setting has changed and requires a game restart to take effect.</MAP_MechanoidMechanitor.Settings.MoonImplants.RestartRequired>
+  <MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label>Synthetically gestated offspring inherit xenogenes</MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label>
+  <MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description>When enabled, offspring gestated by mechanoids with bionic gestation capability additionally inherit their partner's xenogenes.</MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description>
+  <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>Enable Purge directive UI loading screen</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Label>
+  <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>When enabled, show the progress bar screen while contacting the cerebrex.</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>
+  <MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Label>Mechanoid mechanitor skill passion is at least "Passion"</MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Label>
+  <MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description>When enabled, all mechanoid mechanitors' skill passions are never below "Passion".</MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description>
+  <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>Symbiosis covenant</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>
+  <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>Symbiosis covenant growth multiplier: ×{0}</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>
+  <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>Adjust the multiplier for positive and negative changes to trust and unity in the Symbiosis covenant.</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>Strategic node probabilities</MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>Note: this sets the independent base probability for each eligible completed node. The combined probability for multiple nodes is calculated as 1-(1-p)^n.</MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost>Regular faction outposts</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Label>Daily raid probability per hostile outpost: {0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>Independent base probability used by each eligible completed hostile faction outpost during its additional daily raid check. 0% disables additional raids from regular faction outposts. At 100%, the probability check always succeeds whenever at least one eligible completed hostile outpost exists.</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Label>Support probability per allied outpost: {0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Description>Independent base probability for each eligible completed allied faction outpost to provide reinforcements after a hostile raid on the colony. Existing shared-enemy and faction hostility checks still apply. 0% disables these automatic reinforcements.</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Label>Regular faction outpost defense strength: {0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Description>Threat point multiplier for the garrison when an outpost is generated.\nOnly affects newly generated regular faction outposts.</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode>Mechanoid hive nodes</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Label>Daily raid probability per hostile node: {0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>Daily probability for each mechanoid hive node to launch an additional raid while the hive is hostile.</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>Support probability per allied node: {0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>Probability for each mechanoid hive node to provide reinforcements while allied with the hive.</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>Justice abilities</MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label>Restrict body hacking boss targets</MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>When enabled, body hacking cannot target mechanoid bosses other than the diabolus and war queen.</MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>Justice boss battle difficulty</MAP_MechanoidMechanitor.Settings.JusticeBoss.Section>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>Adjust the parameters of the Justice - Heavy command unit boss battle. Only affects subsequent waves.</MAP_MechanoidMechanitor.Settings.JusticeBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>Enable detailed Justice boss diagnostic logs</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>Generate detailed logs for the Justice boss battle. Developer option; may cause game lag.</MAP_MechanoidMechanitor.Settings.JusticeBoss.DiagnosticLogging.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>Summon high-shield</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>When enabled, Justice summons a mech high-shield when deploying facilities.</MAP_MechanoidMechanitor.Settings.JusticeBoss.MortarShield.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Label>Summon low-shield</MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Description>When enabled, Justice summons a mech low-shield when deploying facilities.</MAP_MechanoidMechanitor.Settings.JusticeBoss.BulletShield.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Label>Auto mortars: {0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Description>Number of auto mortars deployed after Justice arrives.</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoMortar.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Label>Auto charge turrets: {0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Description>Number of auto charge turrets deployed after Justice arrives.</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoChargeBlaster.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Label>Auto inferno turrets: {0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Description>Number of auto inferno turrets deployed after Justice arrives.</MAP_MechanoidMechanitor.Settings.JusticeBoss.AutoInferno.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Label>Summoning waves: {0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Description>After summoning this number of mechanoid waves, Justice stops summoning and leaves after a while.</MAP_MechanoidMechanitor.Settings.JusticeBoss.TotalWaves.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Label>Wave interval: {0} seconds</MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Description>Time Justice waits between summoning two mechanoid waves.</MAP_MechanoidMechanitor.Settings.JusticeBoss.WaveInterval.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Label>Mechanoids per wave: {0}</MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>Number of mechanoids Justice summons per wave. Note: the first wave summons twice this number.</MAP_MechanoidMechanitor.Settings.JusticeBoss.MechsPerWave.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label>Allow boss mechanoid generation</MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>When enabled, each regular wave has a 2% chance to generate a boss mechanoid.</MAP_MechanoidMechanitor.Settings.JusticeBoss.AllowBossReplacement.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Label>Add Mobile warfare to summoned units</MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Description>When enabled, Justice adds the Mobile warfare health condition to the mechanoids it summons.</MAP_MechanoidMechanitor.Settings.JusticeBoss.ApplyMobileCombat.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section>Cerebrex boss battle difficulty</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Section>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>Adjust the parameters of the cerebrex boss battle. Only affects subsequent waves.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Label>Enable additional cerebrex boss abilities</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>When enabled, allow the cerebrex to use the following additional abilities.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableExtraSkills.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection>Summon mechanoids</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Summoning.Subsection>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Label>Enable mechanoid summoning</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>When enabled, the cerebrex periodically summons additional mechanoid reinforcements.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableSummoning.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Label>Summoning interval: {0} seconds</MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description>Wait time between two summoning waves.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.SummonInterval.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Label>Mechanoids per wave: {0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>Number of mechanoids each summoning wave attempts to summon.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MechsPerWave.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Label>Maximum simultaneous units: {0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Description>Maximum number of cerebrex-summoned mechanoids present at once.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.MaxLivingSummonedMechs.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label>Apply Mobile warfare to summoned units</MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>When enabled, the cerebrex adds the Mobile warfare health condition to the mechanoids it summons.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.ApplyMobileCombat.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Bandwidth.Subsection>Bandwidth disruption</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Bandwidth.Subsection>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Label>Enable bandwidth disruption</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description>When enabled, the cerebrex periodically disrupts the bandwidth of player faction mechanoids.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableBandwidth.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Label>Minimum bandwidth disruption cooldown: {0} seconds</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>Minimum cooldown between the end of one bandwidth disruption and the next activation.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMin.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Label>Maximum bandwidth disruption cooldown: {0} seconds</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>Maximum cooldown between the end of one bandwidth disruption and the next activation.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthCooldownMax.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Label>Bandwidth disruption duration: {0} seconds</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description>Maximum duration allowed for a single bandwidth disruption.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthDuration.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Label>Maximum bandwidth disruption targets: {0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Description>Maximum number of targets a single bandwidth disruption can select.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.BandwidthMaxTargets.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.Emp.Subsection>EMP shockwave</MAP_MechanoidMechanitor.Settings.CerebrexBoss.Emp.Subsection>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Label>Enable EMP shockwave</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Description>When enabled, the cerebrex periodically releases EMP shockwaves.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EnableEmp.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Label>Minimum EMP cooldown: {0} seconds</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Description>Minimum cooldown between one EMP release and the next.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMin.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Label>Maximum EMP cooldown: {0} seconds</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Description>Maximum cooldown between one EMP release and the next.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpCooldownMax.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Label>Base EMP stun duration: {0} seconds</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description>Base duration of the stun inflicted on targets by the EMP shockwave.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpBaseDuration.Description>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Label>EMP shockwave radius: {0}</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Label>
+  <MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>Maximum radius affected by the EMP shockwave.</MAP_MechanoidMechanitor.Settings.CerebrexBoss.EmpRadius.Description>
+  <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>Work speed offset per productivity core level</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Label>
+  <MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>Set the mechanoid work speed offset granted by each productivity core level; range 0 to 10000.</MAP_MechanoidMechanitor.Settings.ProductivityCore.WorkSpeedOffset.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Section>Insect hive story</MAP_MechanoidMechanitor.Settings.Insects.Section>
+  <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>Prevent insect hive raids while allied with the insect hive</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>When enabled, block vanilla infestations and infestations generated by the vanilla quest system while allied with the insect hive.\nA warning is logged whenever an infestation is blocked.</MAP_MechanoidMechanitor.Settings.Insects.BlockAlliedInfestations.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Label>Allow pursuit mode infestations to ignore overhead mountains</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Description>When enabled, pursuit mode infestations can spawn in areas without overhead mountains.</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.AllowNoThickRoof.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Label>Pursuit mode starting grace period: {0} days</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Description>Set the number of game days at the start during which pursuit events cannot occur.</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.GracePeriod.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Label>Daily insect pursuit probability: {0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Description>Daily probability of triggering insect pursuit.</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.HuntChance.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Label>Daily additional infestation probability: {0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Description>Daily probability of triggering an additional infestation event.</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.ExtraInfestationChance.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Label>Pursuit event recurrence interval: {0} days</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Description>Cooldown between additional insect events.</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.Cooldown.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Label>Insect pursuit surface swarm point multiplier: {0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Description>Threat point multiplier for insects that arrive on foot from the map edge during insect pursuit.</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.SurfacePoints.Description>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Label>Insect pursuit underground infestation point multiplier: {0}%</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Label>
+  <MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>Threat point multiplier for the burrowing infestation during insect pursuit.</MAP_MechanoidMechanitor.Settings.Insects.Pursuit.InfestationPoints.Description>
+  <MAP_MechanoidPrioritizedWorkOrders_Label>Allow prioritized work orders for mechanoids</MAP_MechanoidPrioritizedWorkOrders_Label>
+  <MAP_MechanoidPrioritizedWorkOrders_Description>When enabled, regular mechanoids can receive prioritized work orders through right-click commands.</MAP_MechanoidPrioritizedWorkOrders_Description>
+</LanguageData>

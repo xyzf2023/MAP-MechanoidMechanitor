@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/ThingDefs -->
+  <MAP_SymbiosisCovenant_CerebrexEvacDropPod.label>Covenant drop pod</MAP_SymbiosisCovenant_CerebrexEvacDropPod.label>
+  <MAP_SymbiosisCovenant_CerebrexEvacDropPod.description>A drop pod used for evacuation by the Symbiosis covenant.</MAP_SymbiosisCovenant_CerebrexEvacDropPod.description>
+  <MAP_MechFusionShell.label>Fusion shell</MAP_MechFusionShell.label>
+  <MAP_MechFusionShell.description>An exoskeleton for fusion between mechanoids and humans.</MAP_MechFusionShell.description>
+</LanguageData>

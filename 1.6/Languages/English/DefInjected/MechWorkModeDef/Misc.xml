@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Misc -->
+  <MAP_WorkMode_AutonomousDirective.label>Autonomous directives</MAP_WorkMode_AutonomousDirective.label>
+  <MAP_WorkMode_AutonomousDirective.description>The mechanoid mechanitor's own body enters an autonomous execution state, which can later be mapped to automatic work behavior.</MAP_WorkMode_AutonomousDirective.description>
+  <MAP_WorkMode_EfficientExecution.label>Work (Efficient execution)</MAP_WorkMode_EfficientExecution.label>
+  <MAP_WorkMode_MobileCombat.label>Work (Mobile warfare)</MAP_WorkMode_MobileCombat.label>
+  <MAP_WorkMode_MobileCombat_Guard.label>Escort (Mobile warfare)</MAP_WorkMode_MobileCombat_Guard.label>
+  <MAP_WorkMode_FortifiedDefense.label>Work (Positional defense)</MAP_WorkMode_FortifiedDefense.label>
+</LanguageData>

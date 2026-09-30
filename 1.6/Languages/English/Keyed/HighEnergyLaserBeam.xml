@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_HighEnergyLaserBeam.Label>High-energy laser beam</MAP_HighEnergyLaserBeam.Label>
+  <MAP_HighEnergyLaserBeam.Description>Fire a high-energy laser beam at the selected location, dealing massive armor-ignoring damage to units in a small area.\n\nRight-click to select two points and sweep the laser along the path</MAP_HighEnergyLaserBeam.Description>
+  <MAP_HighEnergyLaserBeam.FireAtWill.Description>When enabled, Sun will actively use its high-energy laser beam to attack.</MAP_HighEnergyLaserBeam.FireAtWill.Description>
+  <MAP_HighEnergyLaserBeam.Stop.Label>Stop firing high-energy laser beam</MAP_HighEnergyLaserBeam.Stop.Label>
+  <MAP_HighEnergyLaserBeam.Stop.Description>Stop the current high-energy laser firing sequence.</MAP_HighEnergyLaserBeam.Stop.Description>
+  <MAP_HighEnergyLaserBeam.Disabled.EmitterMissing>Laser emitter damaged</MAP_HighEnergyLaserBeam.Disabled.EmitterMissing>
+  <MAP_HighEnergyLaserBeam.Disabled.NotDrafted>Not drafted</MAP_HighEnergyLaserBeam.Disabled.NotDrafted>
+  <MAP_HighEnergyLaserBeam.Disabled.Unavailable>Cannot fire the high-energy laser beam right now.</MAP_HighEnergyLaserBeam.Disabled.Unavailable>
+  <MAP_HighEnergyLaserBeam.Disabled.Cooldown>{0} seconds of cooldown remaining.</MAP_HighEnergyLaserBeam.Disabled.Cooldown>
+</LanguageData>

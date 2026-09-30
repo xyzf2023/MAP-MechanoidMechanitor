@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/WorldObjectDefs -->
+  <MAP_FactionOutpost_Building.label>Faction outpost (under construction)</MAP_FactionOutpost_Building.label>
+  <MAP_FactionOutpost_Building.description>A faction military outpost under construction. Its fortifications are incomplete, but a garrison has already been deployed.</MAP_FactionOutpost_Building.description>
+  <MAP_FactionOutpost_Completed.label>Faction outposts</MAP_FactionOutpost_Completed.label>
+  <MAP_FactionOutpost_Completed.description>A completed faction military outpost with a full garrison and fortifications.</MAP_FactionOutpost_Completed.description>
+  <MAP_MechHiveNode_Building.label>Mechanoid hive node (under construction)</MAP_MechHiveNode_Building.label>
+  <MAP_MechHiveNode_Building.description>A mechanoid hive node under construction. Its mechanoids and defenses are not fully deployed, but it retains some defensive strength.</MAP_MechHiveNode_Building.description>
+  <MAP_MechHiveNode_Completed.label>Mechanoid hive node</MAP_MechHiveNode_Completed.label>
+  <MAP_MechHiveNode_Completed.description>A completed mechanoid hive node with many dormant mechanoid defenders and heavy defensive facilities.</MAP_MechHiveNode_Completed.description>
+</LanguageData>

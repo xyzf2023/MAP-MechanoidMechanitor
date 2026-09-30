@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Letter.Label>Symbiosis covenant trade delegation arrived</MAP_MechanoidMechanitor.Symbiosis.Delegation.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Delegation.Letter.Text>A joint trade delegation from the Symbiosis covenant, organized by {0}, has arrived.\n\nTrade type: {1}\nCurrent covenant level: {2}\nParticipating members: {3}</MAP_MechanoidMechanitor.Symbiosis.Delegation.Letter.Text>
+</LanguageData>

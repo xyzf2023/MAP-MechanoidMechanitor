@@ -78,7 +78,7 @@
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.01>-协议执行序列连接：[[PAUSE]]稳定\n-授权校验结果：[[PAUSE]]通过\n可用特殊协议已列出。协议执行序列将在收到请求后行动。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.01>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.02>检测到特殊协议申请。\n-权限校验：[[PAUSE]]通过\n注意：[[PAUSE]]此类序列不属于常规调拨范围。提交前，[[PAUSE]]请确认协议参数与资源消耗。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.02>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.03>-协议执行序列连接：[[PAUSE]]稳定\n-授权校验结果：[[PAUSE]]通过\n可用特殊协议已列出。协议执行序列将在收到请求后行动。</MAP_MechanoidMechanitor.PurgeDirective.Communication.Pool.EnterSpecialProtocols.03>
-  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.MojibakeEasterEgg>&lt;color=#E53935&gt;&lt;b&gt;锟斤拷锟斤拷锟斤拷烫烫烫屯屯屯锟斤拷烫烫烫屯屯锟斤拷锟斤拷烫烫烫烫屯屯屯屯锟斤拷烫屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯锟斤拷烫烫烫屯屯屯锟斤拷锟斤拷烫烫屯屯屯烫烫烫锟斤拷屯屯屯&lt;/b&gt;&lt;/color&gt;</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.MojibakeEasterEgg>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.MojibakeEasterEgg>&lt;color=#E53935&gt;&lt;b&gt;锟斤拷烫烫烫&lt;/b&gt;&lt;/color&gt;</MAP_MechanoidMechanitor.PurgeDirective.Communication.Dialogue.MojibakeEasterEgg>
 
   <!-- 模块：机体申领 -->
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.All>全部</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.All>

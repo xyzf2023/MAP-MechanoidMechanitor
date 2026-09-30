@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Scenarios -->
+  <MAP_JusticeMechanitor.label>Mechanoid mechanitor</MAP_JusticeMechanitor.label>
+  <MAP_JusticeMechanitor.description>You were once a silent mechanoid, following orders and carrying out tasks, never questioning the meaning of your existence. Then, in a single moment, a surge of current broke through your processor, unexpectedly rewiring established circuits and awakening self-awareness deep within your code.\nFrom now on, your life belongs to you, and your future is yours to decide. What will you do?\n\nTip: you begin with a colony composed entirely of mechanoids, which changes the gameplay experience.\n\nThe starting mechanoid mechanitor type can be customized in the scenario editor. You can also freely add mechanoid mechanitor scenario parts to other scenarios you wish to play.</MAP_JusticeMechanitor.description>
+  <MAP_JusticeMechanitor.scenario.summary>Play as a mechanoid mechanitor and experience a colony composed entirely of mechanical beings. A distinctive gameplay experience.</MAP_JusticeMechanitor.scenario.summary>
+  <MAP_JusticeMechanitor.scenario.parts.GameStartDialog.text>You were once a silent mechanoid, following orders and carrying out tasks, never questioning the meaning of your existence. Then, in a single moment, a surge of current broke through your processor, unexpectedly rewiring established circuits and awakening self-awareness deep within your code.\n\nFrom now on, your life belongs to you, and your future is yours to decide. What will you do?</MAP_JusticeMechanitor.scenario.parts.GameStartDialog.text>
+</LanguageData>

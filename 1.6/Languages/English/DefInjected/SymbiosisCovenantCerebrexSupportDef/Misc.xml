@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Misc -->
+  <MAP_SymbiosisCovenant_CerebrexSupportConfig.label>Central mechanoid hive covenant reinforcement configuration</MAP_SymbiosisCovenant_CerebrexSupportConfig.label>
+  <MAP_SymbiosisCovenant_CerebrexSupportConfig.description>Configuration for the timing, waves, and landing site searches of additional Symbiosis covenant reinforcements when the player attacks the Odyssey central mechanoid hive.</MAP_SymbiosisCovenant_CerebrexSupportConfig.description>
+</LanguageData>

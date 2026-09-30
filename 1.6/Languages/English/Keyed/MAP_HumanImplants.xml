@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.HumanImplant.Install>Install {0}</MAP_MechanoidMechanitor.HumanImplant.Install>
+  <MAP_MechanoidMechanitor.HumanImplant.InstallToPart>Install {0}: {1}</MAP_MechanoidMechanitor.HumanImplant.InstallToPart>
+  <MAP_MechanoidMechanitor.HumanImplant.NoValidPart>No eligible body parts for installation</MAP_MechanoidMechanitor.HumanImplant.NoValidPart>
+  <MAP_MechanoidMechanitor.HumanImplant.InvalidSelection>This implant cannot be installed in the corresponding body part</MAP_MechanoidMechanitor.HumanImplant.InvalidSelection>
+  <MAP_MechanoidMechanitor.HumanImplant.InstallFailed>Implant installation failed</MAP_MechanoidMechanitor.HumanImplant.InstallFailed>
+  <MAP_MechanoidMechanitor.HumanImplant.InstallSucceeded>{0} has installed {1} in {2}.</MAP_MechanoidMechanitor.HumanImplant.InstallSucceeded>
+  <MAP_MechanoidMechanitor.HumanImplant.AmbiguousRecipe>Multiple installation recipes available</MAP_MechanoidMechanitor.HumanImplant.AmbiguousRecipe>
+</LanguageData>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_SunBoss_FacilityFoundLabel>Anomalous energy signal</MAP_SunBoss_FacilityFoundLabel>
+  <MAP_SunBoss_FacilityFoundText>Our monitoring equipment has detected an unusually massive energy signal. Its output far exceeds the limits of conventional equipment, sustaining an intense reaction with almost no fluctuation.\n\nFurther tracking has identified its source: a distant mechanoid facility. Its location has been marked on the world map.\n\nWe cannot yet confirm what lies inside, but anything capable of sustaining such an enormous energy reaction may be extremely dangerous. It also suggests that technology far beyond conventional science may be preserved there. Exploring the facility could reveal something very valuable.\n\nThe scan also detected strong, anomalous energy disturbances within the facility. Propellantless thrusters may not function properly there. If we decide to explore it, we should assemble a highly mobile team.</MAP_SunBoss_FacilityFoundText>
+  <MAP_SunBoss_FirstStabilizerDestroyedLabel>Stabilizer destroyed</MAP_SunBoss_FirstStabilizerDestroyedLabel>
+  <MAP_SunBoss_FirstStabilizerDestroyedText>We successfully used the annihilation cannon to destroy a reactor stabilizer!\nSun - Energy core is losing operational stability. Our attack is starting to work!</MAP_SunBoss_FirstStabilizerDestroyedText>
+  <MAP_SunBoss_ReactorCriticalLabel>Core unstable</MAP_SunBoss_ReactorCriticalLabel>
+  <MAP_SunBoss_ReactorCriticalText>Sun - Energy core's reactor has reached a critical stability threshold. If we keep destroying stabilizers, its own uncontrolled reactor will burn it out.</MAP_SunBoss_ReactorCriticalText>
+  <MAP_SunBoss_AllStabilizersDestroyedLabel>All stabilizers destroyed</MAP_SunBoss_AllStabilizersDestroyedLabel>
+  <MAP_SunBoss_AllStabilizersDestroyedText>All stabilizers have been destroyed. Sun - Energy core has begun irreversible structural disintegration.</MAP_SunBoss_AllStabilizersDestroyedText>
+  <MAP_SunBoss_DefeatedLabel>Sun has fallen</MAP_SunBoss_DefeatedLabel>
+  <MAP_SunBoss_DefeatedText>As the last of its body structure disintegrates, Sun finally shuts down completely under our assault. This runaway mechanical creation is no longer a threat.\n\nDeep within its shattered body, an extraordinarily intricate component is revealed. Despite losing the support of the main structure, it seems to still be operating independently.\n\nPerhaps we can analyze it and obtain new technological advances?\n\n&lt;i&gt;Select a colonist with an Intellectual skill of at least 12 and right-click the "antiparticle containment device" to analyze it.&lt;/i&gt;</MAP_SunBoss_DefeatedText>
+  <MAP_SunBoss_ReactorFoundLabel>Core reactor</MAP_SunBoss_ReactorFoundLabel>
+  <MAP_SunBoss_ReactorFoundText>We have found the facility's core reactor.\n\nInstruments show an extraordinary energy reaction within it. Studying its technology could yield extremely valuable advances.\n\nBut… something about this reactor does not look right. Proceed with caution.\n\nYour instincts tell you to clear all mechanoids from the facility before taking the next step.</MAP_SunBoss_ReactorFoundText>
+  <MAP_SunBoss_ReactorAwakeningLabel>Reactor anomaly</MAP_SunBoss_ReactorAwakeningLabel>
+  <MAP_SunBoss_ReactorAwakeningText>This is no conventional reactor. It is a dormant mechanoid!\n\nIt is awakening and beginning to transform into its mechanoid form. Prepare for battle!</MAP_SunBoss_ReactorAwakeningText>
+  <MAP_SunBoss_HeatWarningLabel>{PAWN} is being burned by extreme heat!</MAP_SunBoss_HeatWarningLabel>
+  <MAP_SunBoss_HeatWarningText>This mechanoid is radiating terrifying heat, severely burning {PAWN}!\n\nMove away from it immediately!</MAP_SunBoss_HeatWarningText>
+  <MAP_SunBoss_ShieldWarningLabel>Attack ineffective</MAP_SunBoss_ShieldWarningLabel>
+  <MAP_SunBoss_ShieldWarningText>An attack against Sun was completely absorbed by a powerful energy shield.\n\nThe six stabilizers surrounding it appear to continuously power the shield. To actually hurt it, we must deal with those stabilizers first.</MAP_SunBoss_ShieldWarningText>
+  <MAP_SunBoss_CannonWarningLabel>Destructive energy reaction</MAP_SunBoss_CannonWarningLabel>
+  <MAP_SunBoss_CannonWarningText>Sun is gathering an unusually massive amount of energy. Judging by the rapidly rising readings alone, a hit could have &lt;b&gt;&lt;color=#FF0000FF&gt;unbearable consequences&lt;/color&gt;&lt;/b&gt;.\n\nBut… if this power is truly so great, perhaps it can destroy the seemingly indestructible stabilizers.</MAP_SunBoss_CannonWarningText>
+  <MAP_SunBoss_FullSteadyState>Fully stable</MAP_SunBoss_FullSteadyState>
+  <MAP_SunBoss_SteadyStateDisturbed>Stability disturbed</MAP_SunBoss_SteadyStateDisturbed>
+  <MAP_SunBoss_LoadFluctuation>Load fluctuation</MAP_SunBoss_LoadFluctuation>
+  <MAP_SunBoss_FeedbackDetuning>Feedback detuned</MAP_SunBoss_FeedbackDetuning>
+  <MAP_SunBoss_SteadyStateCritical>Critical stability</MAP_SunBoss_SteadyStateCritical>
+  <MAP_SunBoss_CoreInstability>Core unstable</MAP_SunBoss_CoreInstability>
+  <MAP_SunBoss_StructuralCollapse>Structural disintegration</MAP_SunBoss_StructuralCollapse>
+  <MAP_SunBoss_HeatExpanded>Sun's thermal field is expanding! Current danger radius: {0} cells.</MAP_SunBoss_HeatExpanded>
+  <MAP_SunBoss_StatusHeading>{0}    {1}    Stabilizers: {2}/6</MAP_SunBoss_StatusHeading>
+  <MAP_SunBoss_StructureValue>Structural integrity: {0} / {1}</MAP_SunBoss_StructureValue>
+  <MAP_SunBoss_StructureCollapsing>Structural collapse imminent</MAP_SunBoss_StructureCollapsing>
+  <MAP_SunBoss_StageDamage>Damage taken factor: {0}%.</MAP_SunBoss_StageDamage>
+  <MAP_SunBoss_StageCannonEnabled>Annihilation cannon: enabled.</MAP_SunBoss_StageCannonEnabled>
+  <MAP_SunBoss_StageCannonHighPower>Annihilation cannon: high power.</MAP_SunBoss_StageCannonHighPower>
+  <MAP_SunBoss_StageCannonOverloaded>Annihilation cannon: overloaded.</MAP_SunBoss_StageCannonOverloaded>
+  <MAP_SunBoss_StageCannonDestroyed>Annihilation cannon: destroyed.</MAP_SunBoss_StageCannonDestroyed>
+  <MAP_SunBoss_StageHeatField>High-temperature thermal field: {0} cells.</MAP_SunBoss_StageHeatField>
+</LanguageData>

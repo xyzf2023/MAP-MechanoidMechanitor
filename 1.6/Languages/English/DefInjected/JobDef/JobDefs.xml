@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/JobDefs -->
+  <MAP_AnalyzeAntimatterContainmentDevice.reportString>Analyzing antimatter containment device.</MAP_AnalyzeAntimatterContainmentDevice.reportString>
+  <MAP_AnnihilationCannon.reportString>Charging annihilation cannon.</MAP_AnnihilationCannon.reportString>
+  <MAP_UseAutonomousDirectiveCore.label>Install autonomous directive core</MAP_UseAutonomousDirectiveCore.label>
+  <MAP_UseAutonomousDirectiveCore.reportString>Installing autonomous directive core.</MAP_UseAutonomousDirectiveCore.reportString>
+  <MAP_UseBionicCompanionModule.label>Install bionic companion module</MAP_UseBionicCompanionModule.label>
+  <MAP_UseBionicCompanionModule.reportString>Installing bionic companion module.</MAP_UseBionicCompanionModule.reportString>
+  <MAP_ContactMechanoidOvermind.label>Contact cerebrex</MAP_ContactMechanoidOvermind.label>
+  <MAP_ContactMechanoidOvermind.reportString>Contacting cerebrex.</MAP_ContactMechanoidOvermind.reportString>
+  <MAP_EnergyPulse.reportString>Charging energy pulse</MAP_EnergyPulse.reportString>
+  <MAP_HighEnergyLaserBeam.reportString>Firing high-energy laser beam.</MAP_HighEnergyLaserBeam.reportString>
+  <MAP_HumanImplantInstall.label>Install implant</MAP_HumanImplantInstall.label>
+  <MAP_HumanImplantInstall.reportString>Installing implant.</MAP_HumanImplantInstall.reportString>
+  <MAP_Job_MechRecode.reportString>Performing body recoding on TargetA.</MAP_Job_MechRecode.reportString>
+  <MAP_LoverInstallImplant.label>Install implant</MAP_LoverInstallImplant.label>
+  <MAP_LoverInstallImplant.reportString>Installing implant.</MAP_LoverInstallImplant.reportString>
+  <MAP_TransferMechanicalConsciousness.label>Transfer consciousness</MAP_TransferMechanicalConsciousness.label>
+  <MAP_TransferMechanicalConsciousness.reportString>Transferring consciousness.</MAP_TransferMechanicalConsciousness.reportString>
+  <MAP_TransferMechanitorControl.label>Hand over control</MAP_TransferMechanitorControl.label>
+  <MAP_TransferMechanitorControl.reportString>Handing over control.</MAP_TransferMechanitorControl.reportString>
+  <MAP_MechanoidMechanitorUseBossChipForBandwidth.label>Expand bandwidth</MAP_MechanoidMechanitorUseBossChipForBandwidth.label>
+  <MAP_MechanoidMechanitorUseBossChipForBandwidth.reportString>Using chip to expand bandwidth.</MAP_MechanoidMechanitorUseBossChipForBandwidth.reportString>
+  <MAP_MechanoidMechanitorSelfRepair.label>Perform self-repair</MAP_MechanoidMechanitorSelfRepair.label>
+  <MAP_MechanoidMechanitorSelfRepair.reportString>Performing self-repair.</MAP_MechanoidMechanitorSelfRepair.reportString>
+  <MAP_InstallMechanoidModule.label>Install mechanoid mechanitor module</MAP_InstallMechanoidModule.label>
+  <MAP_InstallMechanoidModule.reportString>Installing {TargetA}.</MAP_InstallMechanoidModule.reportString>
+  <MAP_ChariotConvertToBuilding.label>Transform into building form</MAP_ChariotConvertToBuilding.label>
+  <MAP_ChariotConvertToBuilding.reportString>Transforming into building form.</MAP_ChariotConvertToBuilding.reportString>
+  <MAP_MechFusionApproach.reportString>Approaching TargetA for fusion.</MAP_MechFusionApproach.reportString>
+  <MAP_MechFusionReleaseTransition.reportString>Ending fusion.</MAP_MechFusionReleaseTransition.reportString>
+  <MAP_AscendWithMindData.reportString>Importing mind data.</MAP_AscendWithMindData.reportString>
+  <MAP_ImportMindData.reportString>Importing mind data.</MAP_ImportMindData.reportString>
+  <MAP_ExportMindData.reportString>Exporting mind data.</MAP_ExportMindData.reportString>
+  <MAP_CopyMindData.reportString>Copying mind data.</MAP_CopyMindData.reportString>
+  <MAP_AccessSymbiosisCovenant.label>Connect to Symbiosis covenant</MAP_AccessSymbiosisCovenant.label>
+  <MAP_AccessSymbiosisCovenant.reportString>Establishing multilateral communication link.</MAP_AccessSymbiosisCovenant.reportString>
+  <MAP_BroadcastSymbiosisDeclaration.label>Public secession declaration</MAP_BroadcastSymbiosisDeclaration.label>
+  <MAP_BroadcastSymbiosisDeclaration.reportString>Broadcasting secession declaration worldwide.</MAP_BroadcastSymbiosisDeclaration.reportString>
+  <MAP_BroadcastSymbiosisDeclarationPortable.label>Public secession declaration</MAP_BroadcastSymbiosisDeclarationPortable.label>
+  <MAP_BroadcastSymbiosisDeclarationPortable.reportString>Broadcasting secession declaration worldwide through micro communicator.</MAP_BroadcastSymbiosisDeclarationPortable.reportString>
+  <MAP_SyntheticGiveBirth.label>Begin birth</MAP_SyntheticGiveBirth.label>
+  <MAP_SyntheticGiveBirth.reportString>Giving birth.</MAP_SyntheticGiveBirth.reportString>
+  <MAP_SyntheticRomance.reportString>Pursuing TargetA.</MAP_SyntheticRomance.reportString>
+  <MAP_Job_HaulMechToServiceStation.reportString>Carrying TargetA to mech service station.</MAP_Job_HaulMechToServiceStation.reportString>
+  <MAP_Job_ReceiveMechService.reportString>Servicing mechanoid...</MAP_Job_ReceiveMechService.reportString>
+  <MAP_Job_UseMechServiceStation.reportString>Using mech service station.</MAP_Job_UseMechServiceStation.reportString>
+  <MAP_Job_MechServiceStandby.reportString>Awaiting orders...</MAP_Job_MechServiceStandby.reportString>
+  <MAP_SunBossRally.reportString>Moving to the edge of the hall.</MAP_SunBossRally.reportString>
+  <MAP_MechanicalFlightEmergencyLanding.reportString>Performing an emergency landing.</MAP_MechanicalFlightEmergencyLanding.reportString>
+</LanguageData>

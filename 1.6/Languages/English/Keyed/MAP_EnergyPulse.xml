@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_EnergyPulse.Label>Energy pulse</MAP_EnergyPulse.Label>
+  <MAP_EnergyPulse.Description>Charge for {0} seconds, then release an energy shockwave with a radius of {1} cells, stunning all mechanoids outside our faction for {2} seconds.</MAP_EnergyPulse.Description>
+  <MAP_EnergyPulse.Disabled.Unavailable>Cannot cast energy pulse right now.</MAP_EnergyPulse.Disabled.Unavailable>
+  <MAP_EnergyPulse.Disabled.Charging>Energy pulse is charging.</MAP_EnergyPulse.Disabled.Charging>
+  <MAP_EnergyPulse.Disabled.Cooldown>{0} seconds of cooldown remaining.</MAP_EnergyPulse.Disabled.Cooldown>
+</LanguageData>

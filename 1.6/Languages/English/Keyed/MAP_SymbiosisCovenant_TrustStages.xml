@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.ExplicitRejection>Firm rejection</MAP_MechanoidMechanitor.Symbiosis.Stage.ExplicitRejection>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.InitialRecognition>Initial acceptance</MAP_MechanoidMechanitor.Symbiosis.Stage.InitialRecognition>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.CooperationWillingness>Willingness to cooperate</MAP_MechanoidMechanitor.Symbiosis.Stage.CooperationWillingness>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.BasicTrust>Basic trust</MAP_MechanoidMechanitor.Symbiosis.Stage.BasicTrust>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.StableMutualTrust>Stable mutual trust</MAP_MechanoidMechanitor.Symbiosis.Stage.StableMutualTrust>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.HighRecognition>Strong approval</MAP_MechanoidMechanitor.Symbiosis.Stage.HighRecognition>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.CoexistenceConsensus>Symbiotic consensus</MAP_MechanoidMechanitor.Symbiosis.Stage.CoexistenceConsensus>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.NotEstablished>Covenant not established</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.NotEstablished>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MultilateralAgreement>Multilateral agreement</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MultilateralAgreement>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.TradeCoordination>Trade coordination</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.TradeCoordination>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MutualDefense>Common defense</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.MutualDefense>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.StrategicAlliance>Strategic alliance</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.StrategicAlliance>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantStage.SymbiosisAlliance>Symbiotic alliance</MAP_MechanoidMechanitor.Symbiosis.CovenantStage.SymbiosisAlliance>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.TrustTooLow>Current trust is insufficient. Trust must reach at least {0} (Willingness to cooperate) before a Symbiosis covenant invitation can be proposed.</MAP_MechanoidMechanitor.Symbiosis.SecretContact.TrustTooLow>
+</LanguageData>

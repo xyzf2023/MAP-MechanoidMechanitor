@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.Title>Backup body ready</MAP_MechanoidMechanitor.OrbitalBackup.Letter.Title>
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.Text>All active mechanoid mechanitors have been destroyed, but our orbital facilities are still operating. A backup body is ready for deployment.\n\nDeploy a backup body now?</MAP_MechanoidMechanitor.OrbitalBackup.Letter.Text>
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.KeepWatching>Keep watching</MAP_MechanoidMechanitor.OrbitalBackup.Letter.KeepWatching>
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.Deploy>Deploy backup body</MAP_MechanoidMechanitor.OrbitalBackup.Letter.Deploy>
+  <MAP_MechanoidMechanitor.OrbitalBackup.Letter.MainMenu>Return to main menu</MAP_MechanoidMechanitor.OrbitalBackup.Letter.MainMenu>
+  <MAP_MechanoidMechanitor.OrbitalBackup.WaitHours>Must wait {0} hours</MAP_MechanoidMechanitor.OrbitalBackup.WaitHours>
+  <MAP_MechanoidMechanitor.OrbitalBackup.NotAvailable>Cannot deploy a backup body right now.</MAP_MechanoidMechanitor.OrbitalBackup.NotAvailable>
+  <MAP_MechanoidMechanitor.OrbitalBackup.NoDropSpot>No suitable airdrop location found.</MAP_MechanoidMechanitor.OrbitalBackup.NoDropSpot>
+</LanguageData>

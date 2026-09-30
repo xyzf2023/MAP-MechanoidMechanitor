@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Bodies -->
+  <MAP_Body_Chariot.label>Chariot body</MAP_Body_Chariot.label>
+  <MAP_Body_Chariot.corePart.customLabel>torso</MAP_Body_Chariot.corePart.customLabel>
+  <MAP_Body_Chariot.corePart.parts.0.customLabel>mechanical neck</MAP_Body_Chariot.corePart.parts.0.customLabel>
+  <MAP_Body_Chariot.corePart.parts.0.parts.0.customLabel>head</MAP_Body_Chariot.corePart.parts.0.parts.0.customLabel>
+  <MAP_Body_Chariot.corePart.parts.0.parts.0.parts.0.customLabel>control core</MAP_Body_Chariot.corePart.parts.0.parts.0.parts.0.customLabel>
+  <MAP_Body_Chariot.corePart.parts.0.parts.0.parts.1.customLabel>left visual sensor</MAP_Body_Chariot.corePart.parts.0.parts.0.parts.1.customLabel>
+  <MAP_Body_Chariot.corePart.parts.0.parts.0.parts.2.customLabel>right visual sensor</MAP_Body_Chariot.corePart.parts.0.parts.0.parts.2.customLabel>
+  <MAP_Body_Chariot.corePart.parts.0.parts.0.parts.3.customLabel>left auditory sensor</MAP_Body_Chariot.corePart.parts.0.parts.0.parts.3.customLabel>
+  <MAP_Body_Chariot.corePart.parts.0.parts.0.parts.4.customLabel>right auditory sensor</MAP_Body_Chariot.corePart.parts.0.parts.0.parts.4.customLabel>
+  <MAP_Body_Chariot.corePart.parts.1.customLabel>left shoulder</MAP_Body_Chariot.corePart.parts.1.customLabel>
+  <MAP_Body_Chariot.corePart.parts.1.parts.0.customLabel>left arm</MAP_Body_Chariot.corePart.parts.1.parts.0.customLabel>
+  <MAP_Body_Chariot.corePart.parts.1.parts.0.parts.0.customLabel>left hand</MAP_Body_Chariot.corePart.parts.1.parts.0.parts.0.customLabel>
+  <MAP_Body_Chariot.corePart.parts.2.customLabel>right shoulder</MAP_Body_Chariot.corePart.parts.2.customLabel>
+  <MAP_Body_Chariot.corePart.parts.2.parts.0.customLabel>right arm</MAP_Body_Chariot.corePart.parts.2.parts.0.customLabel>
+  <MAP_Body_Chariot.corePart.parts.2.parts.0.parts.0.customLabel>right hand</MAP_Body_Chariot.corePart.parts.2.parts.0.parts.0.customLabel>
+  <MAP_Body_Chariot.corePart.parts.3.customLabel>left leg</MAP_Body_Chariot.corePart.parts.3.customLabel>
+  <MAP_Body_Chariot.corePart.parts.3.parts.0.customLabel>left foot</MAP_Body_Chariot.corePart.parts.3.parts.0.customLabel>
+  <MAP_Body_Chariot.corePart.parts.4.customLabel>right leg</MAP_Body_Chariot.corePart.parts.4.customLabel>
+  <MAP_Body_Chariot.corePart.parts.4.parts.0.customLabel>right foot</MAP_Body_Chariot.corePart.parts.4.parts.0.customLabel>
+  <MAP_Body_Chariot.corePart.parts.5.customLabel>reactor</MAP_Body_Chariot.corePart.parts.5.customLabel>
+  <MAP_Body_Chariot.corePart.parts.6.customLabel>body fluid processor</MAP_Body_Chariot.corePart.parts.6.customLabel>
+  <MAP_Body_Hermit.label>Hermit body</MAP_Body_Hermit.label>
+  <MAP_Body_Hermit.corePart.parts.0.parts.0.parts.1.customLabel>left visual sensor</MAP_Body_Hermit.corePart.parts.0.parts.0.parts.1.customLabel>
+  <MAP_Body_Hermit.corePart.parts.0.parts.0.parts.2.customLabel>right visual sensor</MAP_Body_Hermit.corePart.parts.0.parts.0.parts.2.customLabel>
+  <MAP_Body_Hermit.corePart.parts.0.parts.0.parts.3.customLabel>left auditory sensor</MAP_Body_Hermit.corePart.parts.0.parts.0.parts.3.customLabel>
+  <MAP_Body_Hermit.corePart.parts.0.parts.0.parts.4.customLabel>right auditory sensor</MAP_Body_Hermit.corePart.parts.0.parts.0.parts.4.customLabel>
+  <MAP_Body_Hermit.corePart.parts.1.customLabel>left shoulder structure</MAP_Body_Hermit.corePart.parts.1.customLabel>
+  <MAP_Body_Hermit.corePart.parts.1.parts.0.customLabel>left mechanical arm</MAP_Body_Hermit.corePart.parts.1.parts.0.customLabel>
+  <MAP_Body_Hermit.corePart.parts.1.parts.0.parts.0.customLabel>left hand</MAP_Body_Hermit.corePart.parts.1.parts.0.parts.0.customLabel>
+  <MAP_Body_Hermit.corePart.parts.2.customLabel>right shoulder structure</MAP_Body_Hermit.corePart.parts.2.customLabel>
+  <MAP_Body_Hermit.corePart.parts.2.parts.0.customLabel>right mechanical arm</MAP_Body_Hermit.corePart.parts.2.parts.0.customLabel>
+  <MAP_Body_Hermit.corePart.parts.2.parts.0.parts.0.customLabel>right hand</MAP_Body_Hermit.corePart.parts.2.parts.0.parts.0.customLabel>
+  <MAP_Body_Hermit.corePart.parts.3.customLabel>left leg connection structure</MAP_Body_Hermit.corePart.parts.3.customLabel>
+  <MAP_Body_Hermit.corePart.parts.3.parts.0.customLabel>left leg</MAP_Body_Hermit.corePart.parts.3.parts.0.customLabel>
+  <MAP_Body_Hermit.corePart.parts.3.parts.0.parts.0.customLabel>left foot</MAP_Body_Hermit.corePart.parts.3.parts.0.parts.0.customLabel>
+  <MAP_Body_Hermit.corePart.parts.4.customLabel>right leg connection structure</MAP_Body_Hermit.corePart.parts.4.customLabel>
+  <MAP_Body_Hermit.corePart.parts.4.parts.0.customLabel>right leg</MAP_Body_Hermit.corePart.parts.4.parts.0.customLabel>
+  <MAP_Body_Hermit.corePart.parts.4.parts.0.parts.0.customLabel>right foot</MAP_Body_Hermit.corePart.parts.4.parts.0.parts.0.customLabel>
+  <MAP_Body_Justice.label>Justice body</MAP_Body_Justice.label>
+  <MAP_Body_Justice.corePart.parts.0.customLabel>main armor</MAP_Body_Justice.corePart.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.1.parts.0.parts.0.customLabel>head armor</MAP_Body_Justice.corePart.parts.1.parts.0.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.1.parts.0.parts.2.customLabel>left visual sensor</MAP_Body_Justice.corePart.parts.1.parts.0.parts.2.customLabel>
+  <MAP_Body_Justice.corePart.parts.1.parts.0.parts.3.customLabel>right visual sensor</MAP_Body_Justice.corePart.parts.1.parts.0.parts.3.customLabel>
+  <MAP_Body_Justice.corePart.parts.1.parts.0.parts.4.customLabel>left auditory sensor</MAP_Body_Justice.corePart.parts.1.parts.0.parts.4.customLabel>
+  <MAP_Body_Justice.corePart.parts.1.parts.0.parts.5.customLabel>right auditory sensor</MAP_Body_Justice.corePart.parts.1.parts.0.parts.5.customLabel>
+  <MAP_Body_Justice.corePart.parts.2.customLabel>left shoulder structure</MAP_Body_Justice.corePart.parts.2.customLabel>
+  <MAP_Body_Justice.corePart.parts.2.parts.0.customLabel>left mechanical arm</MAP_Body_Justice.corePart.parts.2.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.2.parts.0.parts.0.customLabel>left arm armor</MAP_Body_Justice.corePart.parts.2.parts.0.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.2.parts.0.parts.1.customLabel>left hand</MAP_Body_Justice.corePart.parts.2.parts.0.parts.1.customLabel>
+  <MAP_Body_Justice.corePart.parts.3.customLabel>right shoulder structure</MAP_Body_Justice.corePart.parts.3.customLabel>
+  <MAP_Body_Justice.corePart.parts.3.parts.0.customLabel>right mechanical arm</MAP_Body_Justice.corePart.parts.3.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.3.parts.0.parts.0.customLabel>right arm armor</MAP_Body_Justice.corePart.parts.3.parts.0.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.3.parts.0.parts.1.customLabel>right hand</MAP_Body_Justice.corePart.parts.3.parts.0.parts.1.customLabel>
+  <MAP_Body_Justice.corePart.parts.4.customLabel>left leg connection structure</MAP_Body_Justice.corePart.parts.4.customLabel>
+  <MAP_Body_Justice.corePart.parts.4.parts.0.customLabel>left leg</MAP_Body_Justice.corePart.parts.4.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.4.parts.0.parts.0.customLabel>left leg armor</MAP_Body_Justice.corePart.parts.4.parts.0.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.4.parts.0.parts.1.customLabel>left foot</MAP_Body_Justice.corePart.parts.4.parts.0.parts.1.customLabel>
+  <MAP_Body_Justice.corePart.parts.5.customLabel>right leg connection structure</MAP_Body_Justice.corePart.parts.5.customLabel>
+  <MAP_Body_Justice.corePart.parts.5.parts.0.customLabel>right leg</MAP_Body_Justice.corePart.parts.5.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.5.parts.0.parts.0.customLabel>right leg armor</MAP_Body_Justice.corePart.parts.5.parts.0.parts.0.customLabel>
+  <MAP_Body_Justice.corePart.parts.5.parts.0.parts.1.customLabel>right foot</MAP_Body_Justice.corePart.parts.5.parts.0.parts.1.customLabel>
+  <MAP_Body_Lover.label>Lover body</MAP_Body_Lover.label>
+  <MAP_Body_Lover.corePart.parts.0.customLabel>bionic spine</MAP_Body_Lover.corePart.parts.0.customLabel>
+  <MAP_Body_Lover.corePart.parts.1.customLabel>reactor</MAP_Body_Lover.corePart.parts.1.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.customLabel>bionic neck</MAP_Body_Lover.corePart.parts.2.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.parts.0.customLabel>head</MAP_Body_Lover.corePart.parts.2.parts.0.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.parts.0.parts.0.customLabel>bionic brain</MAP_Body_Lover.corePart.parts.2.parts.0.parts.0.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.parts.0.parts.1.customLabel>left eye</MAP_Body_Lover.corePart.parts.2.parts.0.parts.1.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.parts.0.parts.2.customLabel>right eye</MAP_Body_Lover.corePart.parts.2.parts.0.parts.2.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.parts.0.parts.3.customLabel>left ear</MAP_Body_Lover.corePart.parts.2.parts.0.parts.3.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.parts.0.parts.4.customLabel>right ear</MAP_Body_Lover.corePart.parts.2.parts.0.parts.4.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.parts.0.parts.5.customLabel>bionic nose</MAP_Body_Lover.corePart.parts.2.parts.0.parts.5.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.parts.0.parts.6.customLabel>bionic jaw</MAP_Body_Lover.corePart.parts.2.parts.0.parts.6.customLabel>
+  <MAP_Body_Lover.corePart.parts.2.parts.0.parts.6.parts.0.customLabel>bionic tongue</MAP_Body_Lover.corePart.parts.2.parts.0.parts.6.parts.0.customLabel>
+  <MAP_Body_Lover.corePart.parts.3.customLabel>left shoulder</MAP_Body_Lover.corePart.parts.3.customLabel>
+  <MAP_Body_Lover.corePart.parts.3.parts.0.customLabel>left arm</MAP_Body_Lover.corePart.parts.3.parts.0.customLabel>
+  <MAP_Body_Lover.corePart.parts.3.parts.0.parts.0.customLabel>left hand</MAP_Body_Lover.corePart.parts.3.parts.0.parts.0.customLabel>
+  <MAP_Body_Lover.corePart.parts.4.customLabel>right shoulder</MAP_Body_Lover.corePart.parts.4.customLabel>
+  <MAP_Body_Lover.corePart.parts.4.parts.0.customLabel>right arm</MAP_Body_Lover.corePart.parts.4.parts.0.customLabel>
+  <MAP_Body_Lover.corePart.parts.4.parts.0.parts.0.customLabel>right hand</MAP_Body_Lover.corePart.parts.4.parts.0.parts.0.customLabel>
+  <MAP_Body_Lover.corePart.parts.5.customLabel>bionic waist</MAP_Body_Lover.corePart.parts.5.customLabel>
+  <MAP_Body_Lover.corePart.parts.6.customLabel>left leg</MAP_Body_Lover.corePart.parts.6.customLabel>
+  <MAP_Body_Lover.corePart.parts.6.parts.0.customLabel>left foot</MAP_Body_Lover.corePart.parts.6.parts.0.customLabel>
+  <MAP_Body_Lover.corePart.parts.7.customLabel>right leg</MAP_Body_Lover.corePart.parts.7.customLabel>
+  <MAP_Body_Lover.corePart.parts.7.parts.0.customLabel>right foot</MAP_Body_Lover.corePart.parts.7.parts.0.customLabel>
+  <MAP_Body_Moon.label>Moon body</MAP_Body_Moon.label>
+  <MAP_Body_Moon.corePart.parts.0.customLabel>bionic spine</MAP_Body_Moon.corePart.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.1.customLabel>reactor</MAP_Body_Moon.corePart.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.2.customLabel>bionic stomach</MAP_Body_Moon.corePart.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.3.customLabel>bionic heart</MAP_Body_Moon.corePart.parts.3.customLabel>
+  <MAP_Body_Moon.corePart.parts.4.customLabel>left bionic lung</MAP_Body_Moon.corePart.parts.4.customLabel>
+  <MAP_Body_Moon.corePart.parts.5.customLabel>right bionic lung</MAP_Body_Moon.corePart.parts.5.customLabel>
+  <MAP_Body_Moon.corePart.parts.6.customLabel>left bionic kidney</MAP_Body_Moon.corePart.parts.6.customLabel>
+  <MAP_Body_Moon.corePart.parts.7.customLabel>right bionic kidney</MAP_Body_Moon.corePart.parts.7.customLabel>
+  <MAP_Body_Moon.corePart.parts.8.customLabel>bionic liver</MAP_Body_Moon.corePart.parts.8.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.customLabel>bionic neck</MAP_Body_Moon.corePart.parts.9.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.customLabel>head</MAP_Body_Moon.corePart.parts.9.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.parts.0.customLabel>bionic skull</MAP_Body_Moon.corePart.parts.9.parts.0.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.parts.0.parts.0.customLabel>bionic brain</MAP_Body_Moon.corePart.parts.9.parts.0.parts.0.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.parts.1.customLabel>left eye</MAP_Body_Moon.corePart.parts.9.parts.0.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.parts.2.customLabel>right eye</MAP_Body_Moon.corePart.parts.9.parts.0.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.parts.3.customLabel>left ear</MAP_Body_Moon.corePart.parts.9.parts.0.parts.3.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.parts.4.customLabel>right ear</MAP_Body_Moon.corePart.parts.9.parts.0.parts.4.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.parts.5.customLabel>bionic nose</MAP_Body_Moon.corePart.parts.9.parts.0.parts.5.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.parts.6.customLabel>bionic jaw</MAP_Body_Moon.corePart.parts.9.parts.0.parts.6.customLabel>
+  <MAP_Body_Moon.corePart.parts.9.parts.0.parts.6.parts.0.customLabel>bionic tongue</MAP_Body_Moon.corePart.parts.9.parts.0.parts.6.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.customLabel>left shoulder</MAP_Body_Moon.corePart.parts.10.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.0.customLabel>bionic left clavicle</MAP_Body_Moon.corePart.parts.10.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.1.customLabel>left arm</MAP_Body_Moon.corePart.parts.10.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.1.parts.0.customLabel>bionic left humerus</MAP_Body_Moon.corePart.parts.10.parts.1.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.1.parts.1.customLabel>bionic left radius</MAP_Body_Moon.corePart.parts.10.parts.1.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.customLabel>left hand</MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.0.customLabel>left little finger</MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.1.customLabel>left ring finger</MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.2.customLabel>left middle finger</MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.3.customLabel>left index finger</MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.3.customLabel>
+  <MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.4.customLabel>left thumb</MAP_Body_Moon.corePart.parts.10.parts.1.parts.2.parts.4.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.customLabel>right shoulder</MAP_Body_Moon.corePart.parts.11.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.0.customLabel>bionic right clavicle</MAP_Body_Moon.corePart.parts.11.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.1.customLabel>right arm</MAP_Body_Moon.corePart.parts.11.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.1.parts.0.customLabel>bionic right humerus</MAP_Body_Moon.corePart.parts.11.parts.1.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.1.parts.1.customLabel>bionic right radius</MAP_Body_Moon.corePart.parts.11.parts.1.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.customLabel>right hand</MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.0.customLabel>right little finger</MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.1.customLabel>right ring finger</MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.2.customLabel>right middle finger</MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.3.customLabel>right index finger</MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.3.customLabel>
+  <MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.4.customLabel>right thumb</MAP_Body_Moon.corePart.parts.11.parts.1.parts.2.parts.4.customLabel>
+  <MAP_Body_Moon.corePart.parts.12.customLabel>bionic waist</MAP_Body_Moon.corePart.parts.12.customLabel>
+  <MAP_Body_Moon.corePart.parts.13.customLabel>left leg</MAP_Body_Moon.corePart.parts.13.customLabel>
+  <MAP_Body_Moon.corePart.parts.13.parts.0.customLabel>bionic left femur</MAP_Body_Moon.corePart.parts.13.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.13.parts.1.customLabel>bionic left tibia</MAP_Body_Moon.corePart.parts.13.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.13.parts.2.customLabel>left foot</MAP_Body_Moon.corePart.parts.13.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.13.parts.2.parts.0.customLabel>left little toe</MAP_Body_Moon.corePart.parts.13.parts.2.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.13.parts.2.parts.1.customLabel>left fourth toe</MAP_Body_Moon.corePart.parts.13.parts.2.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.13.parts.2.parts.2.customLabel>left middle toe</MAP_Body_Moon.corePart.parts.13.parts.2.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.13.parts.2.parts.3.customLabel>left second toe</MAP_Body_Moon.corePart.parts.13.parts.2.parts.3.customLabel>
+  <MAP_Body_Moon.corePart.parts.13.parts.2.parts.4.customLabel>left big toe</MAP_Body_Moon.corePart.parts.13.parts.2.parts.4.customLabel>
+  <MAP_Body_Moon.corePart.parts.14.customLabel>right leg</MAP_Body_Moon.corePart.parts.14.customLabel>
+  <MAP_Body_Moon.corePart.parts.14.parts.0.customLabel>bionic right femur</MAP_Body_Moon.corePart.parts.14.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.14.parts.1.customLabel>bionic right tibia</MAP_Body_Moon.corePart.parts.14.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.14.parts.2.customLabel>right foot</MAP_Body_Moon.corePart.parts.14.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.14.parts.2.parts.0.customLabel>right little toe</MAP_Body_Moon.corePart.parts.14.parts.2.parts.0.customLabel>
+  <MAP_Body_Moon.corePart.parts.14.parts.2.parts.1.customLabel>right fourth toe</MAP_Body_Moon.corePart.parts.14.parts.2.parts.1.customLabel>
+  <MAP_Body_Moon.corePart.parts.14.parts.2.parts.2.customLabel>right middle toe</MAP_Body_Moon.corePart.parts.14.parts.2.parts.2.customLabel>
+  <MAP_Body_Moon.corePart.parts.14.parts.2.parts.3.customLabel>right second toe</MAP_Body_Moon.corePart.parts.14.parts.2.parts.3.customLabel>
+  <MAP_Body_Moon.corePart.parts.14.parts.2.parts.4.customLabel>right big toe</MAP_Body_Moon.corePart.parts.14.parts.2.parts.4.customLabel>
+  <MAP_Body_Sun.label>Sun body</MAP_Body_Sun.label>
+  <MAP_Body_Sun.corePart.parts.4.parts.0.customLabel>left heat dissipation array</MAP_Body_Sun.corePart.parts.4.parts.0.customLabel>
+  <MAP_Body_Sun.corePart.parts.4.parts.1.customLabel>right heat dissipation array</MAP_Body_Sun.corePart.parts.4.parts.1.customLabel>
+  <MAP_Body_Sun.corePart.parts.4.parts.2.customLabel>main coolant pump</MAP_Body_Sun.corePart.parts.4.parts.2.customLabel>
+  <MAP_Body_Sun.corePart.parts.4.parts.3.customLabel>secondary coolant pump</MAP_Body_Sun.corePart.parts.4.parts.3.customLabel>
+  <MAP_Body_Sun.corePart.parts.5.customLabel>first core processing array</MAP_Body_Sun.corePart.parts.5.customLabel>
+  <MAP_Body_Sun.corePart.parts.6.customLabel>second core processing array</MAP_Body_Sun.corePart.parts.6.customLabel>
+  <MAP_Body_Sun.corePart.parts.7.customLabel>central reactor</MAP_Body_Sun.corePart.parts.7.customLabel>
+  <MAP_Body_Sun.corePart.parts.8.customLabel>left reactor</MAP_Body_Sun.corePart.parts.8.customLabel>
+  <MAP_Body_Sun.corePart.parts.9.customLabel>right reactor</MAP_Body_Sun.corePart.parts.9.customLabel>
+  <MAP_Body_Sun.corePart.parts.10.customLabel>left liquid filter</MAP_Body_Sun.corePart.parts.10.customLabel>
+  <MAP_Body_Sun.corePart.parts.11.customLabel>right liquid filter</MAP_Body_Sun.corePart.parts.11.customLabel>
+</LanguageData>

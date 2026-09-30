@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/GoodwillSituationDefs -->
+  <MAP_SymbiosisTrust.label>This faction is gradually coming to trust us</MAP_SymbiosisTrust.label>
+  <MAP_SymbiosisMember.label>ally</MAP_SymbiosisMember.label>
+</LanguageData>

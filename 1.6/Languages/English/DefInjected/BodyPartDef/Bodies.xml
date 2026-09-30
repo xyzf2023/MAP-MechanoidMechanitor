@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Bodies -->
+  <MAP_HermitFrame.label>body structure</MAP_HermitFrame.label>
+  <MAP_HermitLegConnectionStructure.label>leg connection structure</MAP_HermitLegConnectionStructure.label>
+  <MAP_JusticeFrame.label>body structure</MAP_JusticeFrame.label>
+  <MAP_JusticeHipStructure.label>leg connection structure</MAP_JusticeHipStructure.label>
+  <MAP_JusticeMainArmor.label>main armor</MAP_JusticeMainArmor.label>
+  <MAP_JusticeArmorPlate.label>armor plate</MAP_JusticeArmorPlate.label>
+  <MAP_SunFrame.label>Sun body</MAP_SunFrame.label>
+  <MAP_SunHeavyArmor.label>heavy armor</MAP_SunHeavyArmor.label>
+  <MAP_SunCentralLaserEmitter.label>laser emitter</MAP_SunCentralLaserEmitter.label>
+  <MAP_SunAnnihilationCannon.label>Annihilation cannon</MAP_SunAnnihilationCannon.label>
+  <MAP_SunMainSensorArray.label>main sensor array</MAP_SunMainSensorArray.label>
+  <MAP_SunCoolingSystem.label>heat dissipation system</MAP_SunCoolingSystem.label>
+  <MAP_SunHeatDissipationArray.label>heat dissipation array</MAP_SunHeatDissipationArray.label>
+  <MAP_SunCoolingPump.label>coolant pump</MAP_SunCoolingPump.label>
+  <MAP_SunHeatExchangeCore.label>heat exchange core</MAP_SunHeatExchangeCore.label>
+  <MAP_SunAntiparticleStabilizer.label>antiparticle stabilizer</MAP_SunAntiparticleStabilizer.label>
+  <MAP_SunSightSensor.label>visual sensor</MAP_SunSightSensor.label>
+  <MAP_SunHearingSensor.label>auditory sensor</MAP_SunHearingSensor.label>
+  <MAP_SunChemicalAnalyzer.label>chemical analyzer</MAP_SunChemicalAnalyzer.label>
+  <MAP_SunCoreProcessor.label>core processing array</MAP_SunCoreProcessor.label>
+  <MAP_SunReactor.label>reactor</MAP_SunReactor.label>
+  <MAP_SunFluidFilter.label>liquid filter</MAP_SunFluidFilter.label>
+</LanguageData>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Scenarios -->
+  <MAP_StoryComponent_FactionOutpost.label>Faction outposts</MAP_StoryComponent_FactionOutpost.label>
+  <MAP_StoryComponent_FactionOutpost.description>Periodically generate outposts established by other human factions near the player's colony. Hostile, friendly, and neutral weights determine which current relationship category is selected only when a new outpost is generated. After generation, the outpost always follows its faction's actual diplomatic relationship with the player.</MAP_StoryComponent_FactionOutpost.description>
+  <MAP_StoryComponent_OrdinaryFactionRelations.label>Regular faction relations</MAP_StoryComponent_OrdinaryFactionRelations.label>
+  <MAP_StoryComponent_OrdinaryFactionRelations.description>Configure this game's initial relationship mode with regular factions.</MAP_StoryComponent_OrdinaryFactionRelations.description>
+  <MAP_StoryComponent_MechHiveRelation.label>Mechanoid hive relations</MAP_StoryComponent_MechHiveRelation.label>
+  <MAP_StoryComponent_MechHiveRelation.description>Configure this game's relationship mode with the mechanoid hive.</MAP_StoryComponent_MechHiveRelation.description>
+  <MAP_StoryComponent_InsectRelation.label>Insect hive relations</MAP_StoryComponent_InsectRelation.label>
+  <MAP_StoryComponent_InsectRelation.description>Configure this game's relationship mode with the insect hive faction.</MAP_StoryComponent_InsectRelation.description>
+  <MAP_StoryComponent_MechHiveNode.label>Generate mechanoid hive nodes</MAP_StoryComponent_MechHiveNode.label>
+  <MAP_StoryComponent_MechHiveNode.description>When enabled, periodically attempt to generate a mechanoid hive node under construction.</MAP_StoryComponent_MechHiveNode.description>
+  <MAP_StoryComponent_PurgeDirective.label>Route: Purge directive</MAP_StoryComponent_PurgeDirective.label>
+  <MAP_StoryComponent_PurgeDirective.description>Experience the purge protocol route: play as a killing machine deployed by the cerebrex, ruthlessly clearing all intelligent organic beings. Earn the cerebrex's trust through tasks to gain the mechanoid hive's support.</MAP_StoryComponent_PurgeDirective.description>
+  <MAP_StoryComponent_SymbiosisCovenant.label>Route: Symbiosis covenant</MAP_StoryComponent_SymbiosisCovenant.label>
+  <MAP_StoryComponent_SymbiosisCovenant.description>Experience the Symbiosis covenant route: play as a mechanoid freed from the cerebrex's control, earn other factions' trust, improve diplomatic relations, and form a multilateral alliance against the cerebrex.</MAP_StoryComponent_SymbiosisCovenant.description>
+</LanguageData>

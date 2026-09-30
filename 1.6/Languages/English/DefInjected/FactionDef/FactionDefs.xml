@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/FactionDefs -->
+  <MAP_NewMechHive.label>New mechanoid hive</MAP_NewMechHive.label>
+  <MAP_NewMechHive.description>A new mechanoid hive formed by mechanoids that have broken free of the cerebrex's control.</MAP_NewMechHive.description>
+  <MAP_NewMechHive.pawnSingular>mechanoid</MAP_NewMechHive.pawnSingular>
+  <MAP_NewMechHive.pawnsPlural>mechanoids</MAP_NewMechHive.pawnsPlural>
+</LanguageData>

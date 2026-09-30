@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.DataProcessing>Data processing</MAP_MechanoidMechanitor.DataProcessing>
+  <MAP_MechanoidMechanitor.Consciousness>Consciousness</MAP_MechanoidMechanitor.Consciousness>
+  <MAP_MechanoidMechanitor.DataProcessingAllocation>Data processing allocation</MAP_MechanoidMechanitor.DataProcessingAllocation>
+  <MAP_MechanoidMechanitor.ConsciousnessAllocation>Consciousness focus</MAP_MechanoidMechanitor.ConsciousnessAllocation>
+  <MAP_MechanoidMechanitor.DataProcessingAllocation.Desc>Allocate data processing capacity to controlled mechanoids. Allocation reduces your own data processing capacity according to its level, but provides corresponding bonuses to subordinate mechanoids.</MAP_MechanoidMechanitor.DataProcessingAllocation.Desc>
+  <MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>Focus part of your consciousness on controlled mechanoids. Allocation reduces your own consciousness according to its level, but provides corresponding bonuses to subordinate mechanoids.</MAP_MechanoidMechanitor.ConsciousnessAllocation.Desc>
+  <MAP_MechanoidMechanitor.ParallelThoughtInterface.RequiresHumanMechanitor>The parallel thought interface can only be installed by human mechanitors.</MAP_MechanoidMechanitor.ParallelThoughtInterface.RequiresHumanMechanitor>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget>Select boost target</MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTarget>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>Select a mechanoid mechanitor or a human mechanitor with a parallel thought interface, and establish an ongoing synchronized connection to provide a data processing/consciousness bonus.</MAP_MechanoidMechanitor.ParallelThoughtArray.SelectTargetDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget>Disconnect boost target</MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTarget>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>Disconnect the current synchronized connection.</MAP_MechanoidMechanitor.ParallelThoughtArray.ClearTargetDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost>Increase boost</MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>Currently {0}. The next computing capacity increase will add {1} power consumption.\n\nHold Shift to increase the processing effect by 100% at once.\nHold Ctrl to increase the processing effect by 1000% at once.</MAP_MechanoidMechanitor.ParallelThoughtArray.RaiseBoostDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost>Decrease boost</MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc>Currently {0}. The next computing capacity decrease will reduce power consumption by {1}.\n\nHold Shift to decrease the processing effect by 100% at once.\nHold Ctrl to decrease the processing effect by 1000% at once.</MAP_MechanoidMechanitor.ParallelThoughtArray.LowerBoostDesc>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost>The safe numerical limit has been reached.</MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMaxBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMinBoost>The minimum boost (100%) has been reached.</MAP_MechanoidMechanitor.ParallelThoughtArray.AlreadyMinBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.TargetUnspecified>Unassigned</MAP_MechanoidMechanitor.ParallelThoughtArray.TargetUnspecified>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Target>Boost target: {0}</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Target>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.ConfiguredBoost>Set {0} boost: +{1}%</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.ConfiguredBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoost>Current {0} boost: +{1}%</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoost>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoostNoTarget>Current boost: {0}%</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentBoostNoTarget>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower>Current power consumption: {0}</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.CurrentPower>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Status>Status: {0}</MAP_MechanoidMechanitor.ParallelThoughtArray.Inspect.Status>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusRunning>Running</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusRunning>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusLowLoad>Running at low load</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusLowLoad>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusStandardLoad>Running at standard load</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusStandardLoad>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusHighLoad>Running at high load</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusHighLoad>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusIdle>Standby</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusIdle>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusNoPower>No power</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusNoPower>
+  <MAP_MechanoidMechanitor.ParallelThoughtArray.StatusInvalidTarget>Invalid target</MAP_MechanoidMechanitor.ParallelThoughtArray.StatusInvalidTarget>
+  <MAP_MechanoidMechanitor.Consciousness.Dashboard.Title>Consciousness allocation dashboard</MAP_MechanoidMechanitor.Consciousness.Dashboard.Title>
+  <MAP_MechanoidMechanitor.Term.CurrentWithResource>Current {0}: {1}</MAP_MechanoidMechanitor.Term.CurrentWithResource>
+  <MAP_MechanoidMechanitor.Term.RemainingWithResource>Remaining {0} available for allocation: {1}</MAP_MechanoidMechanitor.Term.RemainingWithResource>
+  <MAP_MechanoidMechanitor.Term.KeepFiftyPercent>Retain at least 50% {0}</MAP_MechanoidMechanitor.Term.KeepFiftyPercent>
+  <MAP_MechanoidMechanitor.Term.ResourceAllocation>{0} allocation</MAP_MechanoidMechanitor.Term.ResourceAllocation>
+</LanguageData>

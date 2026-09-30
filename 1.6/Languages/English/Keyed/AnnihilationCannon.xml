@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_Annihilation.Label>Annihilation cannon</MAP_Annihilation.Label>
+  <MAP_Annihilation.Description>Fire an annihilation shell at the target location. &lt;b&gt;&lt;color=#FF0000FF&gt;Completely erases&lt;/color&gt;&lt;/b&gt; targets in a small area and deals massive explosive damage to units in a larger area.</MAP_Annihilation.Description>
+  <MAP_Annihilation.Unavailable>Currently unavailable.</MAP_Annihilation.Unavailable>
+  <MAP_Annihilation.EmitterMissing>Annihilation cannon launcher damaged</MAP_Annihilation.EmitterMissing>
+  <MAP_Annihilation.Cooldown>Cooldown: {0} seconds.</MAP_Annihilation.Cooldown>
+  <MAP_Annihilation.Timing>Charge time is affected by aiming time. Current charge time: {n} seconds.</MAP_Annihilation.Timing>
+  <MAP_Annihilation.Report.Opening>Deploying annihilation cannon.</MAP_Annihilation.Report.Opening>
+  <MAP_Annihilation.Report.Recovery>Retracting annihilation cannon.</MAP_Annihilation.Report.Recovery>
+</LanguageData>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Storyteller -->
+  <MAP_Theme_AbundantBlessings.label>Abundant blessings</MAP_Theme_AbundantBlessings.label>
+  <MAP_Theme_AbundantBlessings.description>A rare run of good fortune is quietly gathering. Aid, opportunities, and unexpected gifts will arrive in succession, and positive events will occur more frequently than usual.</MAP_Theme_AbundantBlessings.description>
+  <MAP_Theme_CausalDisturbance.label>Causal disturbance</MAP_Theme_CausalDisturbance.label>
+  <MAP_Theme_CausalDisturbance.description>A simulation of causal relationships. Event probabilities increase greatly, and all events occur with equal probability. When one event occurs, another is triggered at the same time.</MAP_Theme_CausalDisturbance.description>
+  <MAP_Theme_CelestialDisorder.label>Celestial disorder</MAP_Theme_CelestialDisorder.label>
+  <MAP_Theme_CelestialDisorder.description>The atmosphere and weather are gradually departing from their usual patterns. Extreme weather and environmental anomalies become more frequent, while the chances of other events decrease.</MAP_Theme_CelestialDisorder.description>
+  <MAP_Theme_DisplacedPeople.label>Displaced people</MAP_Theme_DisplacedPeople.label>
+  <MAP_Theme_DisplacedPeople.description>Environmental changes leave some survivors homeless and cause some factions to raid more often. Other events become less frequent.</MAP_Theme_DisplacedPeople.description>
+  <MAP_Theme_Encirclement.label>Encirclement</MAP_Theme_Encirclement.label>
+  <MAP_Theme_Encirclement.description>Hostility from every direction is converging on the colony. Different enemies will attack in different ways, one after another. When one assault ends, the next may already be close at hand.</MAP_Theme_Encirclement.description>
+  <MAP_Theme_GreatSilence.label>Great silence</MAP_Theme_GreatSilence.label>
+  <MAP_Theme_GreatSilence.description>The world has never been so quiet. For a time, no random events will occur.</MAP_Theme_GreatSilence.description>
+  <MAP_Theme_IllFortune.label>Ill fortune</MAP_Theme_IllFortune.label>
+  <MAP_Theme_IllFortune.description>Crows call in the distance, black cats dart through shadows, and ominous signs appear one after another. For a time, small troubles will arise frequently and good fortune will not arrive. Fortunately, major troubles will become less common.</MAP_Theme_IllFortune.description>
+  <MAP_Theme_InsectUnrest.label>Insect unrest</MAP_Theme_InsectUnrest.label>
+  <MAP_Theme_InsectUnrest.description>Faint tremors rise from underground as insects search for new hives. Insect-related events become more likely.</MAP_Theme_InsectUnrest.description>
+  <MAP_Theme_MechanicalEcho.label>Mechanical echo</MAP_Theme_MechanicalEcho.label>
+  <MAP_Theme_MechanicalEcho.description>Distant mechanical signals are gathering as dormant war machines answer one another's calls. Mechanoid-related events become more likely.</MAP_Theme_MechanicalEcho.description>
+  <MAP_Theme_OrderInversion.label>Order inversion</MAP_Theme_OrderInversion.label>
+  <MAP_Theme_OrderInversion.description>The established order is quietly reversing. Rare events emerge while ordinary occurrences fall silent. Events become more frequent; the rarer an event was originally, the more likely it becomes, while common events are suppressed.</MAP_Theme_OrderInversion.description>
+  <MAP_Theme_SimulationBeginning.label>Simulation beginning</MAP_Theme_SimulationBeginning.label>
+  <MAP_Theme_SimulationBeginning.description>A new simulation cycle has just begun. The Wheel of Fate is simulating the colony's changes in a relatively stable environment. Positive events become more likely, while negative events become less likely.</MAP_Theme_SimulationBeginning.description>
+  <MAP_Theme_TradeSeason.label>Trade season</MAP_Theme_TradeSeason.label>
+  <MAP_Theme_TradeSeason.description>Trade routes grow busier, with surface and orbital exchanges bringing new opportunities to the colony. Trading becomes more common, while negative events become significantly less frequent.</MAP_Theme_TradeSeason.description>
+  <MAP_Theme_TravelFever.label>Travel fever</MAP_Theme_TravelFever.label>
+  <MAP_Theme_TravelFever.description>An invisible restlessness spreads along roads, through wilderness, and across the sky. Herds begin migrating, travelers take to the roads, and even long journeys no longer seem as difficult as before.</MAP_Theme_TravelFever.description>
+  <MAP_Theme_VoidCalling.label>Void calling</MAP_Theme_VoidCalling.label>
+  <MAP_Theme_VoidCalling.description>Whispers from the void sound in your ears. Something is coming.</MAP_Theme_VoidCalling.description>
+  <MAP_Theme_WildPulse.label>Wild pulse</MAP_Theme_WildPulse.label>
+  <MAP_Theme_WildPulse.description>The wilderness is full of vigorous, unpredictable life. Animals become easier to tame, and more animals wander here, both friendly and maddened.</MAP_Theme_WildPulse.description>
+</LanguageData>

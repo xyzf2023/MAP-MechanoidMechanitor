@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanoidMechanitor.ChariotLaser.Tracking.Label>Tracking laser</MAP_MechanoidMechanitor.ChariotLaser.Tracking.Label>
-  <MAP_MechanoidMechanitor.ChariotLaser.Tracking.Description>Select a pawn or building. After a one-second charge, the beam tracks its target for up to ten seconds. It consumes 0.05% maximum energy every 6 ticks and deals 50 damage to a building every 6 ticks.</MAP_MechanoidMechanitor.ChariotLaser.Tracking.Description>
+  <MAP_MechanoidMechanitor.ChariotLaser.Tracking.Description>Select a unit. After charging for one second, fire a focused laser that continuously tracks the target. Consumes 0.5% of maximum energy per second and lasts up to ten seconds per firing cycle.</MAP_MechanoidMechanitor.ChariotLaser.Tracking.Description>
   <MAP_MechanoidMechanitor.ChariotLaser.Sweep.Label>Sweeping laser</MAP_MechanoidMechanitor.ChariotLaser.Sweep.Label>
-  <MAP_MechanoidMechanitor.ChariotLaser.Sweep.Description>Select two visible cells. The second must be within 10 cells of the first. After a one-second charge, the beam sweeps between them for four seconds and consumes 0.05% maximum energy every 6 ticks.</MAP_MechanoidMechanitor.ChariotLaser.Sweep.Description>
+  <MAP_MechanoidMechanitor.ChariotLaser.Sweep.Description>Select two visible locations in sequence. After charging for one second, fire a sweeping laser that consumes 0.5% of maximum energy per second.</MAP_MechanoidMechanitor.ChariotLaser.Sweep.Description>
   <MAP_MechanoidMechanitor.ChariotLaser.StopTracking.Label>Stop tracking laser</MAP_MechanoidMechanitor.ChariotLaser.StopTracking.Label>
   <MAP_MechanoidMechanitor.ChariotLaser.StopSweep.Label>Stop sweeping laser</MAP_MechanoidMechanitor.ChariotLaser.StopSweep.Label>
-  <MAP_MechanoidMechanitor.ChariotLaser.Stop.Description>Immediately end the current laser discharge.</MAP_MechanoidMechanitor.ChariotLaser.Stop.Description>
-  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.NotDrafted>Must be drafted.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.NotDrafted>
-  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Emergency>Cannot fire during an emergency landing.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Emergency>
-  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Cooldown>Laser system cooldown: {0} seconds.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Cooldown>
-  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.NoEnergy>Not enough energy for the next pulse.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.NoEnergy>
-  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Busy>The other laser mode is currently firing.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Busy>
-  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Unavailable>The Chariot laser cannot fire right now.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Unavailable>
+  <MAP_MechanoidMechanitor.ChariotLaser.Stop.Description>Stop firing the laser.</MAP_MechanoidMechanitor.ChariotLaser.Stop.Description>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.NotDrafted>Only available while drafted.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.NotDrafted>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Emergency>Cannot fire during emergency landing.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Emergency>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Cooldown>Laser system cooling down: {0} seconds.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Cooldown>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.NoEnergy>Insufficient energy for the next pulse.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.NoEnergy>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Busy>The other laser is firing.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Busy>
+  <MAP_MechanoidMechanitor.ChariotLaser.Disabled.Unavailable>This Chariot cannot fire its lasers right now.</MAP_MechanoidMechanitor.ChariotLaser.Disabled.Unavailable>
 </LanguageData>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/MechanicalFlight -->
+  <MAP_MechanicalFlyingCaravan.label>Flying caravan</MAP_MechanicalFlyingCaravan.label>
+  <MAP_MechanicalFlyingCaravan.description>A caravan traveling to its destination by mechanical flight.</MAP_MechanicalFlyingCaravan.description>
+</LanguageData>

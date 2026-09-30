@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Label>Symbiosis covenant: military support offer</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Text>{0} has noticed that your colony is being raided by {1}. They ask whether you need support.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Accept>Accept military support</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Accept>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Decline>Politely decline aid</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Option.Decline>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.MapInvalid>The colony associated with this military aid is no longer available.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.MapInvalid>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.CovenantUnavailable>The Symbiosis covenant can no longer provide common defense support.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.CovenantUnavailable>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ResponderUnavailable>{0} can no longer fulfill this military support offer.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ResponderUnavailable>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.AlreadySupported>Covenant reinforcements are already present, or common defense is still on cooldown.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.AlreadySupported>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ThreatEnded>The hostile threat that triggered this aid offer has been resolved.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.ThreatEnded>
+  <MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.DeploymentImpossible>{0} cannot deploy valid reinforcements.</MAP_MechanoidMechanitor.Symbiosis.MilitaryAid.Failed.DeploymentImpossible>
+</LanguageData>

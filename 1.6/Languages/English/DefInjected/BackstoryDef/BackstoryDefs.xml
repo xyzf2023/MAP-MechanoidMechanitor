@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/BackstoryDefs -->
+  <MAP_GenericMechanoid_Childhood.title>Mechanoid</MAP_GenericMechanoid_Childhood.title>
+  <MAP_GenericMechanoid_Childhood.titleFemale>Mechanoid</MAP_GenericMechanoid_Childhood.titleFemale>
+  <MAP_GenericMechanoid_Childhood.titleShort>Mechanoid</MAP_GenericMechanoid_Childhood.titleShort>
+  <MAP_GenericMechanoid_Childhood.titleShortFemale>Mechanoid</MAP_GenericMechanoid_Childhood.titleShortFemale>
+  <MAP_GenericMechanoid_Childhood.description>This is a mechanoid.</MAP_GenericMechanoid_Childhood.description>
+  <MAP_GenericMechanoid_Adulthood.title>Mechanoid</MAP_GenericMechanoid_Adulthood.title>
+  <MAP_GenericMechanoid_Adulthood.titleFemale>Mechanoid</MAP_GenericMechanoid_Adulthood.titleFemale>
+  <MAP_GenericMechanoid_Adulthood.titleShort>Mechanoid</MAP_GenericMechanoid_Adulthood.titleShort>
+  <MAP_GenericMechanoid_Adulthood.titleShortFemale>Mechanoid</MAP_GenericMechanoid_Adulthood.titleShortFemale>
+  <MAP_GenericMechanoid_Adulthood.description>This is a mechanoid.</MAP_GenericMechanoid_Adulthood.description>
+  <MAP_Justice_Childhood.title>Justice</MAP_Justice_Childhood.title>
+  <MAP_Justice_Childhood.titleFemale>Justice</MAP_Justice_Childhood.titleFemale>
+  <MAP_Justice_Childhood.titleShort>Justice</MAP_Justice_Childhood.titleShort>
+  <MAP_Justice_Childhood.titleShortFemale>Justice</MAP_Justice_Childhood.titleShortFemale>
+  <MAP_Justice_Childhood.description>This is a Justice.</MAP_Justice_Childhood.description>
+  <MAP_Justice_Adulthood.title>Justice</MAP_Justice_Adulthood.title>
+  <MAP_Justice_Adulthood.titleFemale>Justice</MAP_Justice_Adulthood.titleFemale>
+  <MAP_Justice_Adulthood.titleShort>Justice</MAP_Justice_Adulthood.titleShort>
+  <MAP_Justice_Adulthood.titleShortFemale>Justice</MAP_Justice_Adulthood.titleShortFemale>
+  <MAP_Justice_Adulthood.description>This is a Justice.</MAP_Justice_Adulthood.description>
+  <MAP_Lover_Childhood.title>Lover</MAP_Lover_Childhood.title>
+  <MAP_Lover_Childhood.titleFemale>Lover</MAP_Lover_Childhood.titleFemale>
+  <MAP_Lover_Childhood.titleShort>Lover</MAP_Lover_Childhood.titleShort>
+  <MAP_Lover_Childhood.titleShortFemale>Lover</MAP_Lover_Childhood.titleShortFemale>
+  <MAP_Lover_Childhood.description>This is a Lover.</MAP_Lover_Childhood.description>
+  <MAP_Lover_Adulthood.title>Lover</MAP_Lover_Adulthood.title>
+  <MAP_Lover_Adulthood.titleFemale>Lover</MAP_Lover_Adulthood.titleFemale>
+  <MAP_Lover_Adulthood.titleShort>Lover</MAP_Lover_Adulthood.titleShort>
+  <MAP_Lover_Adulthood.titleShortFemale>Lover</MAP_Lover_Adulthood.titleShortFemale>
+  <MAP_Lover_Adulthood.description>This is a Lover.</MAP_Lover_Adulthood.description>
+</LanguageData>

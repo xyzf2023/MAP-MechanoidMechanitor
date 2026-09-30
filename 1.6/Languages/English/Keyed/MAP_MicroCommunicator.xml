@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MicroCommunicator_CommandLabel>Communicate</MAP_MicroCommunicator_CommandLabel>
+  <MAP_MicroCommunicator_CommandDesc>Communicate using the micro communicator.</MAP_MicroCommunicator_CommandDesc>
+  <MAP_MicroCommunicator_SolarFlareDisabled>A solar flare is blocking communications.</MAP_MicroCommunicator_SolarFlareDisabled>
+  <MAP_MicroCommunicator_NoTargets>No communication targets available</MAP_MicroCommunicator_NoTargets>
+  <MAP_MicroCommunicator_Disabled>Micro communicator temporarily unavailable.</MAP_MicroCommunicator_Disabled>
+</LanguageData>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/AbilityDefs/Implants -->
+  <MAP_PsychicActivation.label>Psychic activation</MAP_PsychicActivation.label>
+  <MAP_PsychicActivation.description>Actively stimulate the psychic core, briefly bringing psychic pathways into a highly active state.\nDuring this period, the user's psychic abilities are further enhanced, with additional psyfocus recovery.\nThe additional recovery increases with psychic core level. Lasts six hours.</MAP_PsychicActivation.description>
+  <MAP_BattlefieldRepairProtocol.label>Battlefield repair protocol</MAP_BattlefieldRepairProtocol.label>
+  <MAP_BattlefieldRepairProtocol.description>Activate the battlefield repair protocol, overloading the guidance of mechanoid self-repair to provide powerful self-repair effects to all overseen mechanoids. The mechanitor's consciousness is reduced as the cost of this divided attention.</MAP_BattlefieldRepairProtocol.description>
+</LanguageData>

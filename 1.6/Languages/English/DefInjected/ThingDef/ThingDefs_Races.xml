@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/ThingDefs_Races -->
+  <MAP_Mech_Chariot.label>Chariot</MAP_Mech_Chariot.label>
+  <MAP_Mech_Chariot.description>An exoskeleton mechanoid designed to fight alongside humans. Chariot can deploy its structure into a mechanical exoskeleton that envelops its wearer, offering strong protection while placing its power and combat systems directly at the wearer's disposal.\n\nChariot carries advanced propellantless propulsion and high-energy laser weapons. Its body is specially adapted for flight, allowing prolonged airborne operation and sustained beam suppression of targets. It can also transform into a stationary form for different combat and deployment requirements.\n\nSelect Chariot and right-click its overseer to order fusion.\n\nA Chariot upgraded to a mechanoid mechanitor can fuse with any human. Certain quantum mechtech implants can also provide additional synergy with the wearer during fusion.</MAP_Mech_Chariot.description>
+  <MAP_Mech_Chariot.tools.0.label>left mechanical fist</MAP_Mech_Chariot.tools.0.label>
+  <MAP_Mech_Chariot.tools.0.labelNoLocation>mechanical fist</MAP_Mech_Chariot.tools.0.labelNoLocation>
+  <MAP_Mech_Chariot.tools.1.label>right mechanical fist</MAP_Mech_Chariot.tools.1.label>
+  <MAP_Mech_Chariot.tools.1.labelNoLocation>mechanical fist</MAP_Mech_Chariot.tools.1.labelNoLocation>
+  <MAP_Mech_Chariot.tools.2.label>headbutt</MAP_Mech_Chariot.tools.2.label>
+  <MAP_Mech_Chariot.tools.2.labelNoLocation>headbutt</MAP_Mech_Chariot.tools.2.labelNoLocation>
+  <MAP_Mech_Hermit.label>Hermit</MAP_Mech_Hermit.label>
+  <MAP_Mech_Hermit.description>A medium mechanoid designed for proxy command. Hermit maintains mech control links, handles basic decisions, and relays instructions to subordinate mechanoids. Its built-in bandwidth lets it lead a small mechanoid team far from the main command node. Although its computing capacity is lower than Justice's, its low cost and capable computing systems make it a common auxiliary commander under Justice.\n\nHermit excels at research, independently analyzing information and advancing technological studies. It can also use human weapons, though its slow movement makes it better suited to working under mechanoid escort. When a team explores unfamiliar territory, it can both coordinate subordinate mechanoids and competently perform the necessary research.</MAP_Mech_Hermit.description>
+  <MAP_Mech_Justice.label>Justice</MAP_Mech_Justice.label>
+  <MAP_Mech_Justice.description>A heavy command mechanoid designed to establish new mechanoid hive nodes. Justice was originally manufactured by the hive as a fully autonomous unit with strong independent decision-making capabilities. It can maintain a mech control network without an overseer and direct subordinate mechanoids in production and combat. Reportedly, a single Justice and a few auxiliary mechanoids are enough to build a complete hive node from nothing in the wilderness.\n\nJustice has enough intelligence to judge and act independently and can almost be regarded as a mechanoid colonist, even far surpassing humans in some fields. It carries heavy armor to face the changing conditions of pioneering, giving it considerable combat strength even unarmed. Besides commanding subordinates, it excels at many production tasks and can personally perform the work needed to establish a new node.</MAP_Mech_Justice.description>
+  <MAP_Mech_JusticeBOSS.label>Justice - Heavy command unit</MAP_Mech_JusticeBOSS.label>
+  <MAP_Mech_JusticeBOSS.description>A heavily armored command unit belonging to the mechanoid hive. Justice acts as a battlefield control node, rapidly deploying automated firepower facilities in the target area and continuously sending combat mechanoids to the front line. Its self-awareness is restricted to controllable limits. Its operational protocols prioritize establishing mechanical strongholds, wearing down enemy defenses, and preserving the command core.</MAP_Mech_JusticeBOSS.description>
+  <MAP_Mech_Lover.label>Lover</MAP_Mech_Lover.label>
+  <MAP_Mech_Lover.description>A bionic mechanoid designed to accompany and care for humans. Lover's advanced cognitive architecture allows her to understand complex human emotions and meet everyday communication and emotional needs. From preparing a delicious meal to watching over a sleeping child, her presence makes life more secure for those around her.\n\nLover can perform medical, cooking, warden, animal handling, and childcare work. Her built-in professional care systems let her carry out delicate tasks once dependent on humans, often more skillfully than an untrained person. Although companionship and care are her primary duties, she can also use human weapons to protect those she cares for when danger comes.</MAP_Mech_Lover.description>
+  <MAP_Mech_Lover.tools.0.label>left bionic fist</MAP_Mech_Lover.tools.0.label>
+  <MAP_Mech_Lover.tools.0.labelNoLocation>bionic fist</MAP_Mech_Lover.tools.0.labelNoLocation>
+  <MAP_Mech_Lover.tools.1.label>right bionic fist</MAP_Mech_Lover.tools.1.label>
+  <MAP_Mech_Lover.tools.1.labelNoLocation>bionic fist</MAP_Mech_Lover.tools.1.labelNoLocation>
+  <MAP_Mech_Lover.tools.2.label>headbutt</MAP_Mech_Lover.tools.2.label>
+  <MAP_Mech_Lover.tools.2.labelNoLocation>headbutt</MAP_Mech_Lover.tools.2.labelNoLocation>
+  <MAP_Mech_Moon.label>Moon</MAP_Mech_Moon.label>
+  <MAP_Mech_Moon.description>A bionic combat mechanoid designed to fit human equipment systems. Moon uses a highly humanlike body structure, freely wearing human armor, using human weapons, and accepting most human implants. This open design lets it fully use the colony's equipment and modification technology to meet varied battlefield needs.\n\nMoon carries high-performance combat systems, delivering formidable strength in both melee and ranged combat. Its advanced body armor provides reliable protection, making it capable of the fiercest direct engagements.</MAP_Mech_Moon.description>
+  <MAP_Mech_Moon.tools.0.label>left bionic fist</MAP_Mech_Moon.tools.0.label>
+  <MAP_Mech_Moon.tools.0.labelNoLocation>bionic fist</MAP_Mech_Moon.tools.0.labelNoLocation>
+  <MAP_Mech_Moon.tools.1.label>right bionic fist</MAP_Mech_Moon.tools.1.label>
+  <MAP_Mech_Moon.tools.1.labelNoLocation>bionic fist</MAP_Mech_Moon.tools.1.labelNoLocation>
+  <MAP_Mech_Moon.tools.2.label>headbutt</MAP_Mech_Moon.tools.2.label>
+  <MAP_Mech_Moon.tools.2.labelNoLocation>headbutt</MAP_Mech_Moon.tools.2.labelNoLocation>
+  <MAP_Mech_Sun.label>Sun</MAP_Mech_Sun.label>
+  <MAP_Mech_Sun.description>A mechanoid reconstructed through research into the antimatter containment device. Sun is less a conventional mechanoid than a mobile high-energy reactor. When it anchors itself and transforms into a building, its internal antimatter reactor continuously supplies the colony with nearly unlimited energy.\n\nEven though it was not designed specifically for combat, Sun has terrifying combat capability. Its high-energy laser continuously burns targets, while its annihilation cannon delivers devastating strikes across large areas.\n\nThis Sun has been redesigned for colony use, no longer depending on external stabilizers and better suited to long-term deployment and everyday operation. While Sun is present, its special energy output device also grants Corona to all colony mechanoids, greatly reducing their energy consumption.\n\nNote: Sun continuously produces large amounts of heat while operating. Do not keep it indoors for long periods.</MAP_Mech_Sun.description>
+  <MAP_Mech_SunBOSS.label>Sun - Energy core</MAP_Mech_SunBOSS.label>
+  <MAP_Mech_SunBOSS.description>An ultraheavy mechanoid awakened from dormancy, built around a high-energy reactor with terrifying output. Six surrounding stabilizers continuously contain its violent energy, maintaining stable operation. Sun - Energy core is less a conventional mechanoid than a giant mobile reactor.\n\nThe stabilizers not only keep Sun's reactor stable but also allow it to operate continuously at full power. While its stabilization system remains intact, it appears nearly indestructible.\n\nAttacking these stabilizers might disrupt the reactor's stable state and gradually deprive Sun of its combat capability…</MAP_Mech_SunBOSS.description>
+  <MAP_Mech_Justice.tools.0.label>left mechanical fist</MAP_Mech_Justice.tools.0.label>
+  <MAP_Mech_JusticeBOSS.tools.0.label>left mechanical fist</MAP_Mech_JusticeBOSS.tools.0.label>
+  <MAP_Mech_Justice.tools.0.labelNoLocation>mechanical fist</MAP_Mech_Justice.tools.0.labelNoLocation>
+  <MAP_Mech_JusticeBOSS.tools.0.labelNoLocation>mechanical fist</MAP_Mech_JusticeBOSS.tools.0.labelNoLocation>
+  <MAP_Mech_Justice.tools.1.label>right mechanical fist</MAP_Mech_Justice.tools.1.label>
+  <MAP_Mech_JusticeBOSS.tools.1.label>right mechanical fist</MAP_Mech_JusticeBOSS.tools.1.label>
+  <MAP_Mech_Justice.tools.1.labelNoLocation>mechanical fist</MAP_Mech_Justice.tools.1.labelNoLocation>
+  <MAP_Mech_JusticeBOSS.tools.1.labelNoLocation>mechanical fist</MAP_Mech_JusticeBOSS.tools.1.labelNoLocation>
+  <MAP_Mech_Justice.tools.2.label>reinforced kick</MAP_Mech_Justice.tools.2.label>
+  <MAP_Mech_JusticeBOSS.tools.2.label>reinforced kick</MAP_Mech_JusticeBOSS.tools.2.label>
+  <MAP_Mech_Justice.tools.2.labelNoLocation>reinforced kick</MAP_Mech_Justice.tools.2.labelNoLocation>
+  <MAP_Mech_JusticeBOSS.tools.2.labelNoLocation>reinforced kick</MAP_Mech_JusticeBOSS.tools.2.labelNoLocation>
+  <MAP_Mech_Justice.tools.3.label>armored headbutt</MAP_Mech_Justice.tools.3.label>
+  <MAP_Mech_JusticeBOSS.tools.3.label>armored headbutt</MAP_Mech_JusticeBOSS.tools.3.label>
+  <MAP_Mech_Justice.tools.3.labelNoLocation>armored headbutt</MAP_Mech_Justice.tools.3.labelNoLocation>
+  <MAP_Mech_JusticeBOSS.tools.3.labelNoLocation>armored headbutt</MAP_Mech_JusticeBOSS.tools.3.labelNoLocation>
+  <MAP_Mech_Sun.tools.0.label>armored charge</MAP_Mech_Sun.tools.0.label>
+  <MAP_Mech_SunBOSS.tools.0.label>armored charge</MAP_Mech_SunBOSS.tools.0.label>
+  <MAP_Mech_Sun.tools.0.labelNoLocation>armored charge</MAP_Mech_Sun.tools.0.labelNoLocation>
+  <MAP_Mech_SunBOSS.tools.0.labelNoLocation>armored charge</MAP_Mech_SunBOSS.tools.0.labelNoLocation>
+  <MAP_Mech_Sun.tools.1.label>body crush</MAP_Mech_Sun.tools.1.label>
+  <MAP_Mech_SunBOSS.tools.1.label>body crush</MAP_Mech_SunBOSS.tools.1.label>
+  <MAP_Mech_Sun.tools.1.labelNoLocation>body crush</MAP_Mech_Sun.tools.1.labelNoLocation>
+  <MAP_Mech_SunBOSS.tools.1.labelNoLocation>body crush</MAP_Mech_SunBOSS.tools.1.labelNoLocation>
+</LanguageData>

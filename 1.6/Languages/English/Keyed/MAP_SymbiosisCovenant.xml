@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Label>Form an alliance</MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Text>Our own strength may not be enough to end the cerebrex's threat. We can broadcast a "Public secession declaration" through the comms console, make our position clear to other factions, gradually earn their trust, and invite them to oppose the cerebrex together.\n\nOur connection to the mechanoid hive has not been restored, and the hive does not yet consider us enemies. Once it receives this declaration, however, we will become fully hostile to it. Before making our position public, we should secure our base and prepare for raids.</MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Access>Connect to Symbiosis covenant</MAP_MechanoidMechanitor.Symbiosis.Access>
+  <MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>Public secession declaration</MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>
+  <MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Label>Multilateral communication link available</MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Text>The Symbiosis covenant can be accessed through the comms console. Improve relations with other factions, build trust, and invite them to form a covenant against the cerebrex.</MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Title>Symbiosis covenant // Multilateral coordination link</MAP_MechanoidMechanitor.Symbiosis.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Subtitle>Symbiosis covenant online. View covenant members, unity, and secession declaration status.</MAP_MechanoidMechanitor.Symbiosis.Subtitle>
+  <MAP_MechanoidMechanitor.Symbiosis.NoLeader>NO DATA // LEADER UNAVAILABLE</MAP_MechanoidMechanitor.Symbiosis.NoLeader>
+  <MAP_MechanoidMechanitor.Symbiosis.NoMembers>No covenant members currently.</MAP_MechanoidMechanitor.Symbiosis.NoMembers>
+  <MAP_MechanoidMechanitor.Symbiosis.MemberBadge>Covenant members</MAP_MechanoidMechanitor.Symbiosis.MemberBadge>
+  <MAP_MechanoidMechanitor.Symbiosis.Disconnect>Disconnect</MAP_MechanoidMechanitor.Symbiosis.Disconnect>
+  <MAP_MechanoidMechanitor.Symbiosis.ConnectionLost>Multilateral communication link unavailable.</MAP_MechanoidMechanitor.Symbiosis.ConnectionLost>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantLevel>Covenant level: {0} / {1}</MAP_MechanoidMechanitor.Symbiosis.CovenantLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.MemberCount>Covenant members: {0}</MAP_MechanoidMechanitor.Symbiosis.MemberCount>
+  <MAP_MechanoidMechanitor.Symbiosis.UnityNext>Unity: {0} / Next level {1}</MAP_MechanoidMechanitor.Symbiosis.UnityNext>
+  <MAP_MechanoidMechanitor.Symbiosis.UnityMax>Unity: {0} (maximum level reached)</MAP_MechanoidMechanitor.Symbiosis.UnityMax>
+  <MAP_MechanoidMechanitor.Symbiosis.HighestLevel>Highest historical level: {0}</MAP_MechanoidMechanitor.Symbiosis.HighestLevel>
+  <MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation>Vigilant surveillance</MAP_MechanoidMechanitor.Symbiosis.Stage.WaryObservation>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact>Secret contact</MAP_MechanoidMechanitor.Symbiosis.SecretContact>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Done>Publicly seceded from the cerebrex</MAP_MechanoidMechanitor.Symbiosis.Declaration.Done>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.NotDone>Not yet publicly seceded from the cerebrex</MAP_MechanoidMechanitor.Symbiosis.Declaration.NotDone>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Title>Public secession declaration</MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Text>We are about to broadcast a secession declaration worldwide, informing other factions that we have broken free of the mechanoid hive's control and are determined to resist it to the end. The hive will also receive this message and mark us as anomalous rogue units. We will face retaliation from the mechanoid hive.\n\nShall we proceed?</MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Continue>Continue</MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Continue>
+  <MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Cancel>Cancel</MAP_MechanoidMechanitor.Symbiosis.Declaration.Confirm.Cancel>
+  <MAP_MechanoidMechanitor.Symbiosis.Page.Relations>Relations</MAP_MechanoidMechanitor.Symbiosis.Page.Relations>
+  <MAP_MechanoidMechanitor.Symbiosis.Relations.Title>Relations</MAP_MechanoidMechanitor.Symbiosis.Relations.Title>
+  <MAP_MechanoidMechanitor.Symbiosis.Relations.Goodwill>Faction goodwill: {0}</MAP_MechanoidMechanitor.Symbiosis.Relations.Goodwill>
+  <MAP_MechanoidMechanitor.Symbiosis.Relations.NoFactions>No faction relations to display.</MAP_MechanoidMechanitor.Symbiosis.Relations.NoFactions>
+  <MAP_MechanoidMechanitor.Symbiosis.Page.Communication>Communicate</MAP_MechanoidMechanitor.Symbiosis.Page.Communication>
+  <MAP_MechanoidMechanitor.Symbiosis.Relations.Trust>Trust: {0}</MAP_MechanoidMechanitor.Symbiosis.Relations.Trust>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Goodwill>Positive diplomatic action</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Goodwill>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Trade>Completed mutually beneficial trade</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Trade>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Quest>Completed faction commission</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Quest>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.Betrayal>Harmed faction members</MAP_MechanoidMechanitor.Symbiosis.TrustReason.Betrayal>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.DestroyedSettlement>Destroyed this faction's site</MAP_MechanoidMechanitor.Symbiosis.TrustReason.DestroyedSettlement>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>Destroyed a mechanoid hive node</MAP_MechanoidMechanitor.Symbiosis.TrustReason.MechHiveNode>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>Cleared a shared enemy's site</MAP_MechanoidMechanitor.Symbiosis.TrustReason.SharedEnemy>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.CerebrexVictory>Defeated the cerebrex</MAP_MechanoidMechanitor.Symbiosis.TrustReason.CerebrexVictory>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock>Pre-declaration lock tightened</MAP_MechanoidMechanitor.Symbiosis.TrustReason.PreDeclarationLock>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node1>They have connected to the encrypted communication link and are waiting for us to explain the purpose of our contact.</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node1>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Explain>Explain our position</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Explain>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.End>End secret contact</MAP_MechanoidMechanitor.Symbiosis.SecretContact.End>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2>We have publicly seceded from the cerebrex's control and are preparing to resist the mechanoid hive. We hope to build lasting cooperation with organic factions.</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node2>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Propose>Propose a Symbiosis covenant</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Propose>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Decline>Do not propose an invitation yet</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Decline>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3>After a formal invitation, they will assess our actions, current relations, and the value of cooperation. Deliberation usually takes one to three days.</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Node3>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Issue>Send formal invitation</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Issue>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Back>Back</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Back>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Unavailable>Secret contact requirements are not currently met.</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Unavailable>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Pending>This faction is considering our invitation.</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Pending>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.PermanentRefuse>This faction has permanently refused to rejoin the Symbiosis covenant.</MAP_MechanoidMechanitor.Symbiosis.SecretContact.PermanentRefuse>
+  <MAP_MechanoidMechanitor.Symbiosis.SecretContact.Cooling>This faction is still on cooldown ({0} remaining).</MAP_MechanoidMechanitor.Symbiosis.SecretContact.Cooling>
+  <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label>Cerebrex detects a breakaway alliance</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>The cerebrex has detected our globally broadcast secession declaration. The hive has classified us as hostile anomalous units. The mechanoid hive may now raid us at any time.</MAP_MechanoidMechanitor.Symbiosis.MechHiveRetaliation.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Label>{0} agrees to join the Symbiosis covenant</MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Text>{0} agrees to join the Symbiosis covenant. We will stand together against the threat of uncontrolled mechanoids.</MAP_MechanoidMechanitor.Symbiosis.Covenant.Join.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Label>{0} refuses to join the Symbiosis covenant</MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Text>{0} has declined the invitation to join the Symbiosis covenant, saying the decision still requires careful consideration.</MAP_MechanoidMechanitor.Symbiosis.Covenant.Refuse.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Label>{0} leaves the covenant</MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Text>Our actions have caused {0} to lose trust in us. {0} has left the Symbiosis covenant.</MAP_MechanoidMechanitor.Symbiosis.Covenant.Exit.Letter.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Label>Symbiosis covenant dissolved</MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Text>With the departure of the last faction, the vision of the Symbiosis covenant has collapsed completely.</MAP_MechanoidMechanitor.Symbiosis.Covenant.Dissolved.Letter.Text>
+  <MAP_SymbiosisCovenant_CerebrexSupport_Description>The Symbiosis covenant is providing reinforcements for the assault on the central mechanoid hive.</MAP_SymbiosisCovenant_CerebrexSupport_Description>
+  <MAP_SymbiosisCovenant_CerebrexSupport_OfferTitle>Letter from the covenant</MAP_SymbiosisCovenant_CerebrexSupport_OfferTitle>
+  <MAP_SymbiosisCovenant_CerebrexSupport_OfferBody>Your allies have noticed that you have begun attacking the central mechanoid hive. They ask whether you need reinforcements.</MAP_SymbiosisCovenant_CerebrexSupport_OfferBody>
+  <MAP_SymbiosisCovenant_CerebrexSupport_Accept>Accept aid</MAP_SymbiosisCovenant_CerebrexSupport_Accept>
+  <MAP_SymbiosisCovenant_CerebrexSupport_Decline>Politely decline aid</MAP_SymbiosisCovenant_CerebrexSupport_Decline>
+  <MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailInvalid>Cannot accept reinforcements: the quest or map is no longer valid.</MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailInvalid>
+  <MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailCovenant>Cannot accept reinforcements: the Symbiosis covenant is currently unavailable.</MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailCovenant>
+  <MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailNoAlly>Cannot accept reinforcements: no allies are currently eligible to participate.</MAP_SymbiosisCovenant_CerebrexSupport_AcceptFailNoAlly>
+  <MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle>Allied forces arrived</MAP_SymbiosisCovenant_CerebrexSupport_ArrivalTitle>
+  <MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody>Symbiosis covenant reinforcements have reached the battlefield. Together, we will end this ancient threat.</MAP_SymbiosisCovenant_CerebrexSupport_ArrivalBody>
+  <MAP_SymbiosisCovenant_CerebrexSupport_EvacTitle>Covenant reinforcements beginning withdrawal</MAP_SymbiosisCovenant_CerebrexSupport_EvacTitle>
+  <MAP_SymbiosisCovenant_CerebrexSupport_EvacBody>The central mechanoid hive's defenses have been neutralized. Covenant reinforcements are withdrawing from the platform.</MAP_SymbiosisCovenant_CerebrexSupport_EvacBody>
+  <MAP_SymbiosisCovenant_CerebrexSupport_EvacDone>Covenant reinforcements have safely withdrawn from the central mechanoid hive platform.</MAP_SymbiosisCovenant_CerebrexSupport_EvacDone>
+  <MAP_MechanoidMechanitor.Symbiosis.TradePriceImprovement>Covenant trade price improvement: +{0}</MAP_MechanoidMechanitor.Symbiosis.TradePriceImprovement>
+</LanguageData>

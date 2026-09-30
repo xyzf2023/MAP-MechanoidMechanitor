@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <!-- Source folder: Defs/Scenarios -->
+  <MAP_MechanoidMechanitorScenario.label>Mechanoid mechanitor scenario</MAP_MechanoidMechanitorScenario.label>
+  <MAP_MechanoidMechanitorScenario.description>&lt;color=#80CBC4&gt;Mechanoid mechanitor scenario: play as a mechanoid that has awakened to self-awareness. Adding this scenario part replaces the scenario's original colonists with the selected mechanoid mechanitor and enables a series of effects specific to mechanoid mechanitor colonies.\nNote: may conflict with some mod scenarios.&lt;/color&gt;</MAP_MechanoidMechanitorScenario.description>
+  <MAP_MechanoidMechanitorStart.label>Mechanoid mechanitor</MAP_MechanoidMechanitorStart.label>
+</LanguageData>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechWeapon.Switch>Switch to {0}</MAP_MechWeapon.Switch>
+  <MAP_MechWeapon.SwitchDesc>Switch between the mechanoid's dedicated weapon and a regular weapon in its inventory. When switching back to the dedicated weapon, the current regular weapon is stored in the inventory.</MAP_MechWeapon.SwitchDesc>
+  <MAP_MechWeapon.Missing>Weapon part missing</MAP_MechWeapon.Missing>
+  <MAP_MechWeapon.Unavailable>Cannot switch weapons right now, or the dedicated weapon is being transferred.</MAP_MechWeapon.Unavailable>
+  <MAP_MechWeapon.BuiltInLocked>Cannot drop: dedicated mechanoid weapon</MAP_MechWeapon.BuiltInLocked>
+</LanguageData>

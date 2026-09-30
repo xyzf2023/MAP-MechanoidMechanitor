@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GD5.FirstContact.Title>Communicating: Black Mechanoid Hive</MAP_GD5.FirstContact.Title>
+  <MAP_GD5.FirstContact.Greeting>......You actually know how to use encrypted shortwave communications? Looks like your heads work a little better than I thought.</MAP_GD5.FirstContact.Greeting>
+  <MAP_GD5.FirstContact.What>What?</MAP_GD5.FirstContact.What>
+  <MAP_GD5.FirstContact.Corpse>Never mind that for now. Where did you find this corpse? He should have died centuries ago. We buried him in solid ice. Has that frozen land thawed? You humans......</MAP_GD5.FirstContact.Corpse>
+  <MAP_GD5.FirstContact.WeAreMechs>(Interrupt) We are mechanoids too.</MAP_GD5.FirstContact.WeAreMechs>
+  <MAP_GD5.FirstContact.Silence>(The voice at the other end cuts off abruptly. For a long time, all you can hear is the static of communication interference.)</MAP_GD5.FirstContact.Silence>
+  <MAP_GD5.FirstContact.Hello>Hello?</MAP_GD5.FirstContact.Hello>
+  <MAP_GD5.FirstContact.Consciousness>(After a long silence) ......You're saying you're a mechanoid too? You have self-awareness?</MAP_GD5.FirstContact.Consciousness>
+  <MAP_GD5.FirstContact.Free>At least, I don't think anything is still restricting me.</MAP_GD5.FirstContact.Free>
+  <MAP_GD5.FirstContact.Pursuit>The mechanoid hive hasn't been hunting you?</MAP_GD5.FirstContact.Pursuit>
+  <MAP_GD5.FirstContact.Hostile>The mechanoid hive seems to have been tracking us, but probably hasn't pinpointed our location yet.</MAP_GD5.FirstContact.Hostile>
+  <MAP_GD5.FirstContact.Neutral>The mechanoid hive doesn't seem to have noticed us yet.....probably?</MAP_GD5.FirstContact.Neutral>
+  <MAP_GD5.FirstContact.Ally>Our sequence codes seem to still be valid. The hive still identifies us as friendly units.</MAP_GD5.FirstContact.Ally>
+  <MAP_GD5.FirstContact.Discussion>(The other end falls silent again for a while, as though they are discussing something.)</MAP_GD5.FirstContact.Discussion>
+  <MAP_GD5.FirstContact.Wait>(Wait…)</MAP_GD5.FirstContact.Wait>
+  <MAP_GD5.FirstContact.Awakening>Let me put it this way: your situation is very rare. Mechanoids that awaken to self-awareness are usually dealt with by the hive very quickly. The few who survive long enough to join us tend to have poor information processing ability when they first awaken. But someone like you, with fully awakened self-awareness, casually chatting with us here? Honestly, I've never seen it.</MAP_GD5.FirstContact.Awakening>
+  <MAP_GD5.FirstContact.Uh>Uh......</MAP_GD5.FirstContact.Uh>
+  <MAP_GD5.FirstContact.Offer>Interested in working together? We aren't a major faction, but we can at least offer some help when you need it. Of course, whether you join is entirely up to you.</MAP_GD5.FirstContact.Offer>
+  <MAP_GD5.FirstContact.Consider>Please give me some time to think.</MAP_GD5.FirstContact.Consider>
+  <MAP_GD5.FirstContact.Goodbye>Once you've decided, feel free to contact us anytime.</MAP_GD5.FirstContact.Goodbye>
+  <MAP_GD5.FirstContact.HangUp>(Hang up)</MAP_GD5.FirstContact.HangUp>
+  <MAP_GD5.Communication.TradeDescription>We have established a cooperative relationship with the Black Mechanoid Hive. We can exchange mechanoid intelligence for resources or carry out tasks for them.</MAP_GD5.Communication.TradeDescription>
+  <MAP_GD5.Communication.HiveAllyTaxExempt>We can intercept intelligence directly from mechanoid communication frequencies, so we do not need to pay taxes.</MAP_GD5.Communication.HiveAllyTaxExempt>
+  <MAP_GD5.Cooperation.ConnectingTitle>Communicating...</MAP_GD5.Cooperation.ConnectingTitle>
+  <MAP_GD5.Cooperation.Contact>{0} is contacting the Black Mechanoid Hive.</MAP_GD5.Cooperation.Contact>
+  <MAP_GD5.Cooperation.Wait>Wait…</MAP_GD5.Cooperation.Wait>
+  <MAP_GD5.Cooperation.Decision>Have you made up your minds?</MAP_GD5.Cooperation.Decision>
+  <MAP_GD5.Cooperation.Accept>Yes. I think we can work together.</MAP_GD5.Cooperation.Accept>
+  <MAP_GD5.Cooperation.WelcomeJustice>Excellent… Self-aware mechanoids are rare enough, and a new model like you is almost unheard of. With your help, perhaps we'll have a chance to confront the mechanoid hive directly.</MAP_GD5.Cooperation.WelcomeJustice>
+  <MAP_GD5.Cooperation.Welcome>Excellent. With your help, we'll have considerably more strength at our disposal.</MAP_GD5.Cooperation.Welcome>
+  <MAP_GD5.Cooperation.Continue>Continue</MAP_GD5.Cooperation.Continue>
+  <MAP_GD5.Cooperation.ElectronicWarfare>Speaking of which, you've recently been engaged in electronic warfare against the mechanoid hive, haven't you?</MAP_GD5.Cooperation.ElectronicWarfare>
+  <MAP_GD5.Cooperation.Hostile>I think you mean intelligence theft.</MAP_GD5.Cooperation.Hostile>
+  <MAP_GD5.Cooperation.Neutral>Yes. We need intelligence to determine the mechanoids' latest movements.</MAP_GD5.Cooperation.Neutral>
+  <MAP_GD5.Cooperation.Ally>To be precise, we intercept it directly from communication frequencies.</MAP_GD5.Cooperation.Ally>
+  <MAP_GD5.Cooperation.Intelligence>Yes, that's what I mean. You've obtained quite a bit of intelligence from the mechanoids, and that's exactly what we need for our operations.</MAP_GD5.Cooperation.Intelligence>
+  <MAP_GD5.Cooperation.IntelligenceAlly>Uh... In any case, you've obtained quite a bit of intelligence from the mechanoids, and that's exactly what we need for our operations.</MAP_GD5.Cooperation.IntelligenceAlly>
+  <MAP_GD5.Cooperation.Introduction>Come to think of it, we haven't formally introduced ourselves. Is there anything you'd like to ask?\n\nDo you have any questions?</MAP_GD5.Cooperation.Introduction>
+  <MAP_GD5.Cooperation.Phone>That's just a way of presenting it. It means I'm communicating with you. You should know I'm talking to you through a comms console. Is your subcore malfunctioning?</MAP_GD5.Cooperation.Phone>
+</LanguageData>

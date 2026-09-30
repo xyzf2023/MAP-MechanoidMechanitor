@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Off>Off</MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Off>
+  <MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Low>Frequency: low</MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Low>
+  <MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Medium>Frequency: medium</MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.Medium>
+  <MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.High>Frequency: high</MAP_MechanoidMechanitor.Story.FactionOutpostFrequency.High>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Hostile>Hostile faction outposts</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Hostile>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Ally>Friendly faction outposts</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Ally>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Neutral>Neutral faction outposts</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Neutral>
+  <MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Tooltip>When generating a new outpost, use these weights to select its faction. Outposts will not be generated for factions without the corresponding relationship. A weight of 0 disables outposts for that relationship category.</MAP_MechanoidMechanitor.Story.FactionOutpost.Weight.Tooltip>
+  <MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Building>{0} outpost (under construction)</MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Building>
+  <MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Completed>{0} outpost</MAP_MechanoidMechanitor.FactionOutpost.WorldLabel.Completed>
+  <MAP_MechanoidMechanitor.FactionOutpost.Attack.OutpostUnavailable>This faction outpost no longer exists or cannot be attacked.</MAP_MechanoidMechanitor.FactionOutpost.Attack.OutpostUnavailable>
+  <MAP_MechanoidMechanitor.FactionOutpost.Attack.RelationBlocked>The story style locks this outpost's faction relationship with the player, preventing deliberate attacks.</MAP_MechanoidMechanitor.FactionOutpost.Attack.RelationBlocked>
+  <MAP_MechanoidMechanitor.FactionOutpost.Attack.TurnHostileFailed>Unable to turn the outpost's faction hostile. Entry canceled.</MAP_MechanoidMechanitor.FactionOutpost.Attack.TurnHostileFailed>
+  <MAP_MechanoidMechanitor.FactionOutpost.Attack.MapInitFailed>Faction outpost map initialization failed. Entry canceled.</MAP_MechanoidMechanitor.FactionOutpost.Attack.MapInitFailed>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Label>Faction outpost established</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Label>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Hostile>The hostile faction {0} is building an outpost near your colony.</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Hostile>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Ally>Your ally {0} is building an outpost near your colony.</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Ally>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Neutral>The neutral faction {0} is building an outpost near your colony.</MAP_MechanoidMechanitor.FactionOutpost.Letter.Created.Neutral>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Label>Faction outpost construction complete</MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Label>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Hostile> {0}'s outpost has been completed. This outpost may send troops to raid your colony.</MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Hostile>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Ally> {0}'s outpost has been completed. This outpost may send support when you are raided.</MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Ally>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Neutral> {0}'s outpost has been completed.</MAP_MechanoidMechanitor.FactionOutpost.Letter.Completed.Neutral>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Cleaned.Label>Faction outpost destroyed</MAP_MechanoidMechanitor.FactionOutpost.Letter.Cleaned.Label>
+  <MAP_MechanoidMechanitor.FactionOutpost.Letter.Cleaned.Text> The outpost established here by {0} has been destroyed.</MAP_MechanoidMechanitor.FactionOutpost.Letter.Cleaned.Text>
+</LanguageData>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GD5.PurgeResearchSupport.Title>Cerebrex technology support</MAP_GD5.PurgeResearchSupport.Title>
+  <MAP_GD5.PurgeResearchSupport.Text>The cerebrex has transmitted data on {0} to us. This research is complete.</MAP_GD5.PurgeResearchSupport.Text>
+  <MAP_GD5.ClusterReceiver.PurgeDisabled>We should not interfere with the mechanoid hive's other clusters. We can obtain the related technologies by improving our purge rating.</MAP_GD5.ClusterReceiver.PurgeDisabled>
+  <MAP_GD5.ClusterReceiver.NoResponse.Title>Scan unresponsive</MAP_GD5.ClusterReceiver.NoResponse.Title>
+  <MAP_GD5.ClusterReceiver.NoResponse.Text>The receiver emits a burst of static, but seems to have detected no usable information.</MAP_GD5.ClusterReceiver.NoResponse.Text>
+</LanguageData>

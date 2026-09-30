@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.ControlNetwork.CircularOverseer>Cannot create a circular overseer relationship.</MAP_MechanoidMechanitor.ControlNetwork.CircularOverseer>
+  <MAP_MechanoidMechanitor.ControlNetwork.AutonomousNoOverseer>The target is an autonomous mechanoid and needs no overseer.</MAP_MechanoidMechanitor.ControlNetwork.AutonomousNoOverseer>
+</LanguageData>

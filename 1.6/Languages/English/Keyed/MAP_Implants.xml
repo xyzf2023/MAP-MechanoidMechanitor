@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Implants.Brain.Install.Label>Install {0_label}</MAP_MechanoidMechanitor.Implants.Brain.Install.Label>
+  <MAP_MechanoidMechanitor.Implants.Brain.FeatureDisabled>Brain implant installation was not enabled when this game session started</MAP_MechanoidMechanitor.Implants.Brain.FeatureDisabled>
+  <MAP_MechanoidMechanitor.Implants.Brain.MissingCapability>This character cannot install implants</MAP_MechanoidMechanitor.Implants.Brain.MissingCapability>
+  <MAP_MechanoidMechanitor.Implants.Brain.InvalidRecipe>Unable to identify the installation recipe for this implant</MAP_MechanoidMechanitor.Implants.Brain.InvalidRecipe>
+  <MAP_MechanoidMechanitor.Implants.Brain.NoConsciousnessSource>No consciousness-related body part available for implant installation</MAP_MechanoidMechanitor.Implants.Brain.NoConsciousnessSource>
+  <MAP_MechanoidMechanitor.Implants.Brain.PartReplaced>The consciousness-related body part or one of its parent parts has been replaced</MAP_MechanoidMechanitor.Implants.Brain.PartReplaced>
+  <MAP_MechanoidMechanitor.Implants.Brain.IncompatibleImplant>Incompatible with the installed {0}</MAP_MechanoidMechanitor.Implants.Brain.IncompatibleImplant>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.WorkSpeedOffset>Productivity core: +{0}</MAP_MechanoidMechanitor.Implants.ProductivityCore.WorkSpeedOffset>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.WorkSpeed>Work speed +{0}</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.WorkSpeed>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.Quality>Crafted item quality offset +{0}</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.Quality>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.IgnoreSkillRequirements>Work is not restricted by skill level</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.IgnoreSkillRequirements>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoFoodPoisoning>Cooked food does not cause food poisoning</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoFoodPoisoning>
+  <MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoSurgeryFailure>Surgeries cannot fail</MAP_MechanoidMechanitor.Implants.ProductivityCore.ActiveTooltip.NoSurgeryFailure>
+</LanguageData>
