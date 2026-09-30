@@ -9,7 +9,7 @@
   <MAP_SunBoss_AllStabilizersDestroyedLabel>稳定器全部损毁</MAP_SunBoss_AllStabilizersDestroyedLabel>
   <MAP_SunBoss_AllStabilizersDestroyedText>所有的稳定器均被破坏，「太阳」- 能源核心已开始不可逆的结构崩解。</MAP_SunBoss_AllStabilizersDestroyedText>
   <MAP_SunBoss_DefeatedLabel>「太阳」陨落</MAP_SunBoss_DefeatedLabel>
-  <MAP_SunBoss_DefeatedText>随着最后一部分机体结构崩解，「太阳」终于在我们的攻势下彻底停机。这台失控的机械造物已经不再构成威胁。\n\n在破碎的机体深处，一个异常精密的组件随之显露出来。尽管失去了主体的结构支撑，它似乎仍在独立运转。\n\n或许我们可以对它进行分析，从中获取一些新的技术成果?\n\n&lt;i&gt;选择一名智识等级大于12的殖民者，右键“反粒子约束器”以进行分析。&lt;/i&gt;</MAP_SunBoss_DefeatedText>
+  <MAP_SunBoss_DefeatedText>随着最后一部分机体结构崩解，「太阳」终于在我们的攻势下彻底停机。这台失控的机械造物已经不再构成威胁。\n\n在破碎的机体深处，一个异常精密的组件随之显露出来。尽管失去了主体的结构支撑，它似乎仍在独立运转。\n\n或许我们可以对它进行分析，从中获取一些新的技术成果?\n\n&lt;i&gt;选择一名智识等级不低于12的殖民者，右键“反粒子约束器”以进行分析。&lt;/i&gt;</MAP_SunBoss_DefeatedText>
   <MAP_SunBoss_ReactorFoundLabel>核心反应堆</MAP_SunBoss_ReactorFoundLabel>
   <MAP_SunBoss_ReactorFoundText>我们找到了这座设施的核心反应堆。\n\n仪器显示，其中有着非同寻常的能量反应。如果能够研究其中技术，我们或许能获取极具价值的科技成果。\n\n不过……这个反应堆看起来有些不太对劲。小心行事。\n\n你的直觉告诉你，最好先清理完这座设施的所有机械族再进行下一步行动。</MAP_SunBoss_ReactorFoundText>
   <MAP_SunBoss_ReactorAwakeningLabel>反应堆异常</MAP_SunBoss_ReactorAwakeningLabel>

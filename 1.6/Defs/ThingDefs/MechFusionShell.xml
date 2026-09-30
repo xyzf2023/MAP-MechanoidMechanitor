@@ -8,7 +8,7 @@
   <ThingDef>
     <defName>MAP_MechFusionShell</defName>
     <label>合体外甲</label>
-    <description>供机械族与机械族机械师合体后使用的固定外壳。</description>
+    <description>供机械族与人类合体使用的外骨骼。</description>
     <thingClass>Apparel</thingClass>
     <category>Item</category>
     <altitudeLayer>Item</altitudeLayer>

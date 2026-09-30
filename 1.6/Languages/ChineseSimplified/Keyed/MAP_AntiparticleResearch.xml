@@ -2,7 +2,7 @@
 <LanguageData>
   <MAP_Antiparticle.Analyze>分析反物质约束器</MAP_Antiparticle.Analyze>
   <MAP_Antiparticle.AnalyzeCompleted>分析反物质约束器（已分析）</MAP_Antiparticle.AnalyzeCompleted>
-  <MAP_Antiparticle.AnalysisHint>可由一名智识等级大于12的殖民者分析。</MAP_Antiparticle.AnalysisHint>
+  <MAP_Antiparticle.AnalysisHint>可由一名智识等级不低于12的殖民者分析。</MAP_Antiparticle.AnalysisHint>
   <MAP_Antiparticle.SkillRequired>需要智识等级不低于12</MAP_Antiparticle.SkillRequired>
   <MAP_Antiparticle.Unavailable>分析不可用</MAP_Antiparticle.Unavailable>
   <MAP_Antiparticle.NoResearchBench>没有可用的研究台</MAP_Antiparticle.NoResearchBench>
