@@ -9,21 +9,26 @@ namespace MAP_MechanoidMechanitor
     /// <summary>通过原生开发者菜单轮换主题；构造菜单不初始化或修改主题状态。</summary>
     public static class WheelOfFateDebugActions
     {
-        [DebugAction(
-            "MAP-机械族机械师",
-            "命运之轮：立即轮换主题",
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
+        [DebugAction("MAP-机械族机械师", "命运之轮测试",
+            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.Playing)]
+        private static List<DebugActionNode> BuildRootMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                new DebugActionNode("命运之轮：立即轮换主题",
+                    DebugActionType.Action, AdvanceTheme),
+                new DebugActionNode("命运之轮：切换到指定主题（忽略天数）")
+                {
+                    childGetter = ChooseTheme
+                }
+            };
+        }
+
         private static void AdvanceTheme()
         {
             SwitchTheme(null);
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "命运之轮：切换到指定主题（忽略天数）",
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static List<DebugActionNode> ChooseTheme()
         {
             var nodes = new List<DebugActionNode>();

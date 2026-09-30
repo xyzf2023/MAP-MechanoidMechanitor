@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using LudeonTK;
 using RimWorld;
@@ -7,9 +8,19 @@ namespace MAP_MechanoidMechanitor
 {
     public static class SyntheticRelationshipDebugActions
     {
-        [DebugAction("MAP-机械族机械师", "诊断仿生伴侣关系流程",
-            false, false, false, false, false, 0, false,
-            actionType = DebugActionType.ToolMapForPawns, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        [DebugAction("MAP-机械族机械师", "仿生伴侣关系测试",
+            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static List<DebugActionNode> BuildRootMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                new DebugActionNode("诊断仿生伴侣关系流程",
+                    DebugActionType.ToolMapForPawns, pawnAction: Diagnose),
+                new DebugActionNode("诊断机械体与伴侣爱爱条件",
+                    DebugActionType.ToolMapForPawns, pawnAction: SyntheticLovinDebugActions.DiagnoseSyntheticSpouseLovinConditions)
+            };
+        }
+
         private static void Diagnose(Pawn pawn)
         {
             var text = new StringBuilder();

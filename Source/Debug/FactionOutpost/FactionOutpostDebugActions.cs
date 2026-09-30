@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LudeonTK;
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
@@ -7,69 +8,38 @@ namespace MAP_MechanoidMechanitor
 {
     public static class FactionOutpostDebugActions
     {
-        [DebugAction(
-            "MAP-机械族机械师",
-            "尝试生成派系前哨",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
+        [DebugAction("MAP-机械族机械师", "派系前哨测试",
+            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.Playing)]
+        private static List<DebugActionNode> BuildRootMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                new DebugActionNode("尝试生成派系前哨",
+                    DebugActionType.Action, DevTryGenerateFactionOutpost),
+                new DebugActionNode("尝试生成敌对派系前哨",
+                    DebugActionType.Action, DevTryGenerateHostileFactionOutpost),
+                new DebugActionNode("尝试生成中立派系前哨",
+                    DebugActionType.Action, DevTryGenerateNeutralFactionOutpost),
+                new DebugActionNode("尝试生成盟友派系前哨",
+                    DebugActionType.Action, DevTryGenerateAllyFactionOutpost)
+            };
+        }
+
         private static void DevTryGenerateFactionOutpost()
         {
             TryRun(manager => manager.DevTryNaturalGenerationAttempt());
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "尝试生成敌对派系前哨",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DevTryGenerateHostileFactionOutpost()
         {
             TryRun(manager => manager.DevTryGenerationAttemptForRelation(FactionRelationKind.Hostile));
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "尝试生成中立派系前哨",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DevTryGenerateNeutralFactionOutpost()
         {
             TryRun(manager => manager.DevTryGenerationAttemptForRelation(FactionRelationKind.Neutral));
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "尝试生成盟友派系前哨",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DevTryGenerateAllyFactionOutpost()
         {
             TryRun(manager => manager.DevTryGenerationAttemptForRelation(FactionRelationKind.Ally));

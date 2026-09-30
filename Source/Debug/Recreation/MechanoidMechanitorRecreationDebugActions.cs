@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LudeonTK;
 using RimWorld;
 using Verse;
@@ -10,22 +11,23 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class MechanoidMechanitorRecreationDebugActions
     {
+        [DebugAction("MAP-机械族机械师", "娱乐与灵感测试",
+            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static List<DebugActionNode> BuildRootMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                new DebugActionNode("T：下一次空闲强制尝试娱乐...",
+                    DebugActionType.ToolMapForPawns, pawnAction: ForceNextRecreation),
+                new DebugActionNode("T：立即尝试获得随机灵感...",
+                    DebugActionType.ToolMapForPawns, pawnAction: TryGrantInspirationNow)
+            };
+        }
+
         /// <summary>
         /// 标记目标机械族机械师下一次空闲时强制尝试娱乐。
         /// DEV 临时标记，不保存，不强制打断当前高优先级工作。
         /// </summary>
-        [DebugAction(
-            "MAP-机械族机械师",
-            "机械族机械师：下一次空闲强制尝试娱乐...",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.ToolMapForPawns,
-            allowedGameStates = AllowedGameStates.PlayingOnMap)]
         private static void ForceNextRecreation(Pawn clickedPawn)
         {
             if (clickedPawn == null)
@@ -86,18 +88,6 @@ namespace MAP_MechanoidMechanitor
         /// 绕过 5% 概率，但仍受白名单、Skill、WorkType、Capacity、Stat、
         /// Trait、WorkTag、blocking Hediff 约束。
         /// </summary>
-        [DebugAction(
-            "MAP-机械族机械师",
-            "机械族机械师：立即尝试获得随机灵感...",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.ToolMapForPawns,
-            allowedGameStates = AllowedGameStates.PlayingOnMap)]
         private static void TryGrantInspirationNow(Pawn clickedPawn)
         {
             if (clickedPawn == null)

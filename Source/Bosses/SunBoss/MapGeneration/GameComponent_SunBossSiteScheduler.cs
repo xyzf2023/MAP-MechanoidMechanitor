@@ -1,4 +1,3 @@
-using LudeonTK;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -24,7 +23,7 @@ namespace MAP_MechanoidMechanitor
             AdvanceSchedule();
         }
 
-        private void AdvanceSchedule(bool bypassUnlockConditions = false)
+        private void AdvanceSchedule()
         {
             // 已生成时永久停止；移除设施或读档都不会重新开放自然生成。
             if (generated || !ModsConfig.OdysseyActive) return;
@@ -32,12 +31,9 @@ namespace MAP_MechanoidMechanitor
             int now = Find.TickManager.TicksGame;
             if (!scheduled)
             {
-                if (!bypassUnlockConditions)
-                {
-                    if (now % ConditionCheckInterval != 0 || now < MinimumGameTicks) return;
-                    if (DefDatabase<ResearchProjectDef>.GetNamedSilentFail("MAP_QuantumMechtech")?.IsFinished != true
-                        || WealthUtility.PlayerWealth < MinimumWealth) return;
-                }
+                if (now % ConditionCheckInterval != 0 || now < MinimumGameTicks) return;
+                if (DefDatabase<ResearchProjectDef>.GetNamedSilentFail("MAP_QuantumMechtech")?.IsFinished != true
+                    || WealthUtility.PlayerWealth < MinimumWealth) return;
 
                 // 仅在首次满足条件时随机一次。财富与研究状态之后不再参与调度。
                 scheduledGenerationTick = now + Rand.RangeInclusive(15 * GenDate.TicksPerDay, 30 * GenDate.TicksPerDay);
@@ -58,31 +54,6 @@ namespace MAP_MechanoidMechanitor
                 "MAP_SunBoss_FacilityFoundLabel".Translate(),
                 "MAP_SunBoss_FacilityFoundText".Translate(),
                 LetterDefOf.PositiveEvent, site);
-        }
-
-        [DebugAction("MAP-机械族机械师", "太阳据点：启动自然生成调度（跳过解锁条件）", false, false, false, false, false, 0, false,
-            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.Playing)]
-        private static void DebugStartNaturalGeneration()
-        {
-            GameComponent_SunBossSiteScheduler? scheduler = CurrentGameComponentCache<GameComponent_SunBossSiteScheduler>.Get();
-            if (scheduler == null || !ModsConfig.OdysseyActive)
-            {
-                Messages.Message("需要在已启用奥德赛的游戏中使用。", MessageTypeDefOf.RejectInput, historical: false);
-                return;
-            }
-
-            if (scheduler.generated)
-            {
-                Messages.Message("太阳设施已经自然生成过，本局不会再次生成。", MessageTypeDefOf.RejectInput, historical: false);
-                return;
-            }
-
-            // 只绕过首次解锁检查；既有排期、失败重试间隔和永久防重标记均沿用正常调度。
-            scheduler.AdvanceSchedule(bypassUnlockConditions: true);
-            if (scheduler.generated) return;
-
-            Messages.Message($"太阳设施已进入自然生成调度，预定游戏 Tick：{scheduler.scheduledGenerationTick}。既有排期不会重置；到期失败时按原调度重试。",
-                MessageTypeDefOf.NeutralEvent, historical: false);
         }
 
         public override void ExposeData()

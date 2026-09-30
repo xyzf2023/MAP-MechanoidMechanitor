@@ -43,7 +43,7 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    /// <summary>实际命中与预览共用原版天空组件，保留原有无阳光效果的颜色与强度。</summary>
+    /// <summary>实际命中使用原版天空组件，保留原有无阳光效果的颜色与强度。</summary>
     public sealed class CompProperties_AnnihilationSky : CompProperties_AffectsSky
     {
         public CompProperties_AnnihilationSky()

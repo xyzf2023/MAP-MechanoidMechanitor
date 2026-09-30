@@ -10,18 +10,8 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class RoleRegistryDebugActions
     {
-        [DebugAction(
-            "MAP-机械族机械师",
-            "查看角色注册表",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
+        [DebugAction("MAP-机械族机械师", "查看角色注册表",
+            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.Playing)]
         private static void OpenRoleRegistryDialog()
         {
             if (Current.Game == null)
@@ -49,18 +39,8 @@ namespace MAP_MechanoidMechanitor
             Find.WindowStack.Add(new Dialog_RoleRegistryDebug());
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "添加目标到角色注册表...",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.ToolMapForPawns,
-            allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        [DebugAction("MAP-机械族机械师", "添加目标到角色注册表...",
+            actionType = DebugActionType.ToolMapForPawns, allowedGameStates = AllowedGameStates.PlayingOnMap)]
         private static void AddPawnToRoleRegistry(Pawn clickedPawn)
         {
             if (clickedPawn == null

@@ -195,19 +195,12 @@ namespace MAP_MechanoidMechanitor
             return pawn!.jobs.TryTakeOrderedJob(job, JobTag.Misc);
         }
 
-        public static bool TryBeginTakeoff(Pawn? pawn) =>
-            TryBeginTakeoff(pawn, requireDrafted: true);
-
-        /// <summary>开发者视觉测试入口：完整复用正式起飞流程，仅跳过征召要求。</summary>
-        internal static bool TryBeginDebugTakeoff(Pawn? pawn) =>
-            TryBeginTakeoff(pawn, requireDrafted: false);
-
-        private static bool TryBeginTakeoff(Pawn? pawn, bool requireDrafted)
+        public static bool TryBeginTakeoff(Pawn? pawn)
         {
             if (!GameComponent_MechanicalFlightRegistry.TryGetRecord(pawn, out var record)
                 || record == null || pawn == null
                 || !record.HasSelfFlightAuthorization || GroupFlightUtility.IsManaged(pawn)
-                || !CanBeginTakeoff(pawn, record, requireDrafted, out _))
+                || !CanBeginTakeoff(pawn, record, requireDrafted: true, out _))
             {
                 return false;
             }

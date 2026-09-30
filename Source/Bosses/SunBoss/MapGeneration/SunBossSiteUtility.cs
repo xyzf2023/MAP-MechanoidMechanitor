@@ -56,7 +56,7 @@ namespace MAP_MechanoidMechanitor
             return site;
         }
 
-        [DebugAction("MAP-机械族机械师", "太阳据点：在指定地块创建", false, false, false, false, false, 0, false,
+        [DebugAction("MAP-机械族机械师", "太阳据点：在指定地块创建",
             actionType = DebugActionType.ToolWorld, allowedGameStates = AllowedGameStates.PlayingOnWorld)]
         private static void CreateAtClickedTile()
         {

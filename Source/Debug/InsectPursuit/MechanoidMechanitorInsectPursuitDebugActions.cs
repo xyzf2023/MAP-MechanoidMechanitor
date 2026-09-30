@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LudeonTK;
 using MAP_MechanoidMechanitor.Scenarios;
 using RimWorld;
@@ -11,11 +12,23 @@ namespace MAP_MechanoidMechanitor
     /// </summary>
     public static class MechanoidMechanitorInsectPursuitDebugActions
     {
-        [DebugAction(
-            "MAP-机械族机械师",
-            "虫巢追杀：立即触发额外虫灾",
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
+        [DebugAction("MAP-机械族机械师", "虫巢追杀测试",
+            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.Playing)]
+        private static List<DebugActionNode> BuildRootMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                new DebugActionNode("虫巢追杀：立即触发额外虫灾",
+                    DebugActionType.Action, DevTriggerExtraInfestation),
+                new DebugActionNode("虫巢追杀：立即开始虫族追猎",
+                    DebugActionType.Action, DevStartHunt),
+                new DebugActionNode("虫巢追杀：立即发动当前追猎",
+                    DebugActionType.Action, DevLaunchCurrentHunt),
+                new DebugActionNode("虫巢追杀：清除运行状态",
+                    DebugActionType.Action, DevClearRuntimeState)
+            };
+        }
+
         public static void DevTriggerExtraInfestation()
         {
             GameComponent_MechanoidMechanitorInsectPursuitManager? manager =
@@ -32,11 +45,6 @@ namespace MAP_MechanoidMechanitor
             manager.DevTriggerExtraInfestation();
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "虫巢追杀：立即开始虫族追猎",
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         public static void DevStartHunt()
         {
             GameComponent_MechanoidMechanitorInsectPursuitManager? manager =
@@ -53,11 +61,6 @@ namespace MAP_MechanoidMechanitor
             manager.DevStartHunt();
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "虫巢追杀：立即发动当前追猎",
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         public static void DevLaunchCurrentHunt()
         {
             GameComponent_MechanoidMechanitorInsectPursuitManager? manager =
@@ -74,11 +77,6 @@ namespace MAP_MechanoidMechanitor
             manager.DevLaunchCurrentHunt();
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "虫巢追杀：清除运行状态",
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         public static void DevClearRuntimeState()
         {
             GameComponent_MechanoidMechanitorInsectPursuitManager? manager =

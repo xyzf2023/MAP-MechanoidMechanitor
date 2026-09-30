@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Text;
-using LudeonTK;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -16,19 +15,7 @@ namespace MAP_MechanoidMechanitor
         private static readonly List<Pawn> TmpSyntheticCompanions = new List<Pawn>();
         private static readonly List<string> TmpFailures = new List<string>();
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "诊断机械体与伴侣爱爱条件",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.ToolMapForPawns,
-            allowedGameStates = AllowedGameStates.PlayingOnMap)]
-        private static void DiagnoseSyntheticSpouseLovinConditions(Pawn clicked)
+        internal static void DiagnoseSyntheticSpouseLovinConditions(Pawn clicked)
         {
             if (clicked == null)
             {

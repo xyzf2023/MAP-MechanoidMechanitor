@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using LudeonTK;
 using RimWorld;
 using Verse;
 
@@ -61,19 +59,6 @@ namespace MAP_MechanoidMechanitor
 
             // 所有检查均通过后才创建；失败时不移动落点、不回滚已完成的地形破坏。
             GenSpawn.Spawn(craterDef, center, map, Rot4.North, WipeMode.Vanish);
-        }
-
-        [DebugAction("MAP-机械族机械师", "湮灭炮余波：点击地图测试（掀地板并尝试生成实体坑）",
-            false, false, false, false, false, 0, false,
-            actionType = DebugActionType.ToolMap, allowedGameStates = AllowedGameStates.Playing)]
-        private static void DebugCreateAtMouse()
-        {
-            Map? map = Find.CurrentMap;
-            IntVec3 cell = UI.MouseCell();
-            if (map == null || !cell.InBounds(map)) return;
-            float radius = AnnihilationHitDebugActions.CreatePreviewSettings().outerRadius;
-            var cells = DamageDefOf.Bomb.Worker.ExplosionCellsToHit(cell, map, radius).ToList();
-            Create(map, cell, cells);
         }
     }
 

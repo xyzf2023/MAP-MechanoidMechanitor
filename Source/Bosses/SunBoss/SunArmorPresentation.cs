@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using HarmonyLib;
-using LudeonTK;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -29,13 +28,6 @@ namespace MAP_MechanoidMechanitor
             internal int PreparedTick = -1;
             internal int HealthTick = -1;
             internal float HealthFraction = 1f;
-        }
-
-        private sealed class SkillPreview
-        {
-            internal int Kind, Started, Deploy, Charge, Firing, Brake, Align, Close, Recovery;
-            internal SunArmorPose StartPose;
-            internal int Duration => Deploy + Charge + Firing + Brake + Align + Close + Recovery;
         }
 
         private readonly struct ArmorLayer
@@ -83,9 +75,6 @@ namespace MAP_MechanoidMechanitor
             "Mech/SunAncient/SunAncient_Building", ShaderDatabase.Transparent, Vector2.one, Color.white);
         private static readonly MaterialPropertyBlock Properties = new();
         private static readonly Dictionary<int, AnimationState> States = new();
-        private static readonly Dictionary<int, SkillPreview> DebugPreviews = new();
-        private static readonly HashSet<int> DebugFlightGranted = new();
-        private static readonly HashSet<int> DebugFlightPendingRevoke = new();
 
         // 六块甲板按上、右上、右下、下、左下、左上排列。
         // 闭合姿态按静态正面图近似标定（完整画布像素坐标，含透明边距）；
@@ -141,9 +130,6 @@ namespace MAP_MechanoidMechanitor
         {
             // 仅表现缓存，不写入存档；避免切换存档后复用同一 thingID 的旧角度。
             States.Clear();
-            DebugPreviews.Clear();
-            DebugFlightGranted.Clear();
-            DebugFlightPendingRevoke.Clear();
         }
 
         internal static bool IsSun(Pawn? pawn) => pawn?.def?.defName is
@@ -153,11 +139,8 @@ namespace MAP_MechanoidMechanitor
         {
             if (!IsSun(pawn)) return SunSkillAnimation.Rest(pawn);
             Prepare(pawn, force: true);
-            SunArmorPose pose = States.TryGetValue(pawn.thingIDNumber, out AnimationState? state)
+            return States.TryGetValue(pawn.thingIDNumber, out AnimationState? state)
                 ? state.Pose : SunSkillAnimation.Rest(pawn);
-            // 正式技能或新的预览接管当前姿态后，旧预览不能在技能结束时重新出现。
-            DebugPreviews.Remove(pawn.thingIDNumber);
-            return pose;
         }
 
         internal static void NotifySkillEnded(Pawn pawn, SunArmorPose pose,
@@ -210,7 +193,6 @@ namespace MAP_MechanoidMechanitor
                 state.TransitionTick = -1;
                 state.FloatBlend = 0f;
                 state.SkillActive = false;
-                DebugPreviews.Remove(pawn.thingIDNumber);
             }
             else
             {
@@ -221,16 +203,7 @@ namespace MAP_MechanoidMechanitor
                     state.HealthTick = now;
                 }
                 SunArmorPose rest = SunSkillAnimation.Rest(pawn);
-                if (DebugPreviews.TryGetValue(pawn.thingIDNumber, out SkillPreview? expired)
-                    && now - expired.Started >= expired.Duration)
-                {
-                    DebugPreviews.Remove(pawn.thingIDNumber);
-                    state.Pose = rest;
-                    state.SkillActive = false;
-                    state.TransitionTick = -1;
-                }
-                bool active = TryGetLivePose(pawn, out SunArmorPose pose, out float speed)
-                    || TryGetPreviewPose(pawn, now, rest, out pose, out speed);
+                bool active = TryGetLivePose(pawn, out SunArmorPose pose, out float speed);
                 if (active)
                 {
                     state.Pose = pose;
@@ -285,9 +258,7 @@ namespace MAP_MechanoidMechanitor
                 JobDriver_HighEnergyLaserBeam laser => laser.HasAnimation,
                 _ => false
             };
-            return live || HoldsAwakeningPose(pawn)
-                || (DebugPreviews.TryGetValue(pawn.thingIDNumber, out var preview)
-                && Find.TickManager.TicksGame - preview.Started < preview.Duration);
+            return live || HoldsAwakeningPose(pawn);
         }
 
         private static bool HoldsAwakeningPose(Pawn pawn) => pawn.Spawned && !pawn.Dead && !pawn.Downed
@@ -319,46 +290,6 @@ namespace MAP_MechanoidMechanitor
             }
             pose = default;
             return false;
-        }
-
-        private static bool TryGetPreviewPose(Pawn pawn, int now, SunArmorPose rest,
-            out SunArmorPose pose, out float speed)
-        {
-            pose = default;
-            speed = 0f;
-            if (!DebugPreviews.TryGetValue(pawn.thingIDNumber, out SkillPreview? preview)) return false;
-            int ticks = Mathf.Max(0, now - preview.Started);
-            if (preview.Kind == 0)
-            {
-                if (ticks < preview.Deploy)
-                    pose = SunSkillAnimation.CannonOpening(preview.StartPose, ticks, preview.Deploy);
-                else if (ticks < preview.Deploy + preview.Charge)
-                {
-                    int charge = ticks - preview.Deploy;
-                    pose = SunSkillAnimation.CannonCharge(charge, preview.Charge);
-                    speed = SunSkillAnimation.CannonSpeed(SunSkillAnimation.Progress(charge, preview.Charge));
-                }
-                else
-                {
-                    int recovery = ticks - preview.Deploy - preview.Charge;
-                    pose = SunSkillAnimation.CannonRecovery(recovery, preview.Charge,
-                        preview.Brake, preview.Align, preview.Close, rest);
-                    speed = SunSkillAnimation.CannonMaxSpeed
-                        * (1f - SunSkillAnimation.Progress(recovery, preview.Brake));
-                }
-            }
-            else if (preview.Kind == 1)
-                pose = ticks < preview.Charge
-                    ? SunSkillAnimation.PulseCharge(preview.StartPose, SunSkillAnimation.Progress(ticks, preview.Charge))
-                    : SunSkillAnimation.PulseRecovery(ticks - preview.Charge, preview.Recovery, rest);
-            else if (ticks < preview.Charge + preview.Firing)
-                pose = SunSkillAnimation.Laser(preview.StartPose, SunSkillAnimation.Progress(ticks, preview.Charge),
-                    preview.Charge, ticks >= preview.Charge, Mathf.Max(0, ticks - preview.Charge));
-            else
-                pose = SunArmorPose.Lerp(SunSkillAnimation.Laser(preview.StartPose, 1f, preview.Charge, true, preview.Firing),
-                    rest, SunSkillAnimation.Smooth(SunSkillAnimation.Progress(
-                        ticks - preview.Charge - preview.Firing, preview.Recovery)));
-            return true;
         }
 
         internal static bool ReplacesBody(Pawn? pawn)
@@ -453,8 +384,6 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            CleanupDebugFlightAuthorization(pawn);
-
             SunArmorPose pose = state.Pose;
             float staticAlpha = StaticBodyAlpha(pose);
             SunFlightPresentation.Pose flight = SunFlightPresentation.Current(pawn);
@@ -480,8 +409,6 @@ namespace MAP_MechanoidMechanitor
             float lightVisibility = facing == Rot4.South ? 1f : 1f - staticAlpha;
             SunLightPresentation.DrawPawn(pawn, lampCenter, drawScale, bodyAngle,
                 lightVisibility, pose, state.HealthFraction);
-
-            DrawDebugCharge(pawn, lampCenter);
         }
 
         private static float StaticBodyAlpha(SunArmorPose pose, float preOpen = 0f) => 1f - Mathf.SmoothStep(0f, 1f,
@@ -542,147 +469,6 @@ namespace MAP_MechanoidMechanitor
             float cos = Mathf.Cos(radians);
             return new Vector2(point.x * cos + point.y * sin,
                 -point.x * sin + point.y * cos);
-        }
-
-        private static void DrawDebugCharge(Pawn pawn, Vector3 lampCenter)
-        {
-            if (TryGetLivePose(pawn, out _, out _)
-                || !DebugPreviews.TryGetValue(pawn.thingIDNumber, out SkillPreview? preview)
-                || preview.Kind != 0) return;
-            int chargeTicks = Find.TickManager.TicksGame - preview.Started - preview.Deploy;
-            if (chargeTicks < 0 || chargeTicks >= preview.Charge) return;
-            IntVec3 target = pawn.Position + new IntVec3(0, 0, -10);
-            AnnihilationCannonVisuals.DrawWarmupPart(lampCenter, target,
-                SunSkillAnimation.Progress(chargeTicks, preview.Charge), chargeTicks / 60f, 1, 1f);
-        }
-
-        [DebugAction("MAP-机械族机械师", "太阳湮灭炮动作：点击太阳预览（无伤害）",
-            false, false, false, false, false, 0, false,
-            actionType = DebugActionType.ToolMap, allowedGameStates = AllowedGameStates.Playing)]
-        private static void DebugPreviewAtMouse() => BeginPreviewAtMouse(0);
-
-        [DebugAction("MAP-机械族机械师", "太阳能量脉冲动作：点击太阳预览（无伤害）",
-            false, false, false, false, false, 0, false,
-            actionType = DebugActionType.ToolMap, allowedGameStates = AllowedGameStates.Playing)]
-        private static void DebugPreviewPulseAtMouse() => BeginPreviewAtMouse(1);
-
-        [DebugAction("MAP-机械族机械师", "太阳高能激光动作：点击太阳预览（无伤害）",
-            false, false, false, false, false, 0, false,
-            actionType = DebugActionType.ToolMap, allowedGameStates = AllowedGameStates.Playing)]
-        private static void DebugPreviewLaserAtMouse() => BeginPreviewAtMouse(2);
-
-        private static void BeginPreviewAtMouse(int kind)
-        {
-            Map? map = Find.CurrentMap;
-            Pawn? pawn = map == null ? null : UI.MouseCell().GetFirstPawn(map);
-            if (!IsSun(pawn))
-            {
-                Messages.Message("请点击一个太阳机械体。", MessageTypeDefOf.RejectInput, false);
-                return;
-            }
-            if (TryGetLivePose(pawn!, out _, out _))
-            {
-                Messages.Message("请等待太阳当前技能结束后再预览。", MessageTypeDefOf.RejectInput, false);
-                return;
-            }
-            var preview = new SkillPreview
-            {
-                Kind = kind,
-                Started = Find.TickManager.TicksGame,
-                StartPose = CapturePose(pawn!)
-            };
-            if (kind == 0)
-            {
-                CompAnnihilationCannon? cannon = pawn!.GetComp<CompAnnihilationCannon>();
-                preview.Deploy = Mathf.Max(1, cannon?.Props.deployTicks ?? 60);
-                preview.Charge = cannon?.WarmupTicksFor(pawn) ?? 300;
-                preview.Brake = Mathf.Max(1, cannon?.Props.brakeTicks ?? 36);
-                preview.Align = Mathf.Max(1, cannon?.Props.alignTicks ?? 30);
-                preview.Close = Mathf.Max(1, cannon?.Props.closeTicks ?? 24);
-            }
-            else if (kind == 1)
-            {
-                CompEnergyPulse? pulse = pawn!.GetComp<CompEnergyPulse>();
-                preview.Charge = Mathf.Max(1, pulse?.Props.warmupTicks ?? 180);
-                preview.Recovery = Mathf.Max(0, pulse?.Props.recoveryTicks ?? 42);
-            }
-            else
-            {
-                CompHighEnergyLaserBeam? laser = pawn!.GetComp<CompHighEnergyLaserBeam>();
-                preview.Charge = laser?.WarmupTicks ?? CompHighEnergyLaserBeam.DefaultWarmupTicks;
-                preview.Firing = Mathf.Max(1, laser?.Props.durationTicks ?? 300);
-                preview.Recovery = Mathf.Max(0, laser?.Props.recoveryTicks ?? 36);
-            }
-            DebugPreviews[pawn!.thingIDNumber] = preview;
-            if (States.TryGetValue(pawn.thingIDNumber, out AnimationState? state))
-                state.PreparedFrame = -1;
-        }
-
-        [DebugAction("MAP-机械族机械师", "太阳悬浮测试：点击太阳切换起飞/降落",
-            false, false, false, false, false, 0, false,
-            actionType = DebugActionType.ToolMap, allowedGameStates = AllowedGameStates.Playing)]
-        private static void DebugToggleFlightAtMouse()
-        {
-            Map? map = Find.CurrentMap;
-            Pawn? pawn = map == null ? null : UI.MouseCell().GetFirstPawn(map);
-            if (!IsSun(pawn))
-            {
-                Messages.Message("请点击一个太阳机械体。", MessageTypeDefOf.RejectInput, false);
-                return;
-            }
-
-            if (GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                    pawn, out MechanicalFlightAuthorizationRecord? activeRecord)
-                && activeRecord?.IsRuntimeActive == true)
-            {
-                if (MechanicalFlightUtility.TryBeginLanding(pawn, showMessage: true))
-                {
-                    if (DebugFlightGranted.Contains(pawn!.thingIDNumber))
-                        DebugFlightPendingRevoke.Add(pawn.thingIDNumber);
-                    Messages.Message("太阳开始降落；落地后将移除临时测试授权。",
-                        pawn, MessageTypeDefOf.TaskCompletion, false);
-                }
-                return;
-            }
-
-            bool granted = GameComponent_MechanicalFlightRegistry.TryAuthorize(
-                pawn, source: MechanicalFlightAuthorizationSource.Debug);
-            if (granted) DebugFlightGranted.Add(pawn!.thingIDNumber);
-
-            if (MechanicalFlightUtility.TryBeginDebugTakeoff(pawn))
-            {
-                if (pawn!.Faction == Faction.OfPlayer && pawn.drafter != null && !pawn.Drafted)
-                    pawn.drafter.Drafted = true;
-                Messages.Message("太阳已进入悬浮测试；再次使用同一操作可降落。",
-                    pawn, MessageTypeDefOf.TaskCompletion, false);
-                return;
-            }
-
-            if (granted)
-            {
-                GameComponent_MechanicalFlightRegistry.TryRemoveAuthorizationSource(
-                    pawn, MechanicalFlightAuthorizationSource.Debug);
-                DebugFlightGranted.Remove(pawn!.thingIDNumber);
-            }
-            Messages.Message("太阳当前无法起飞，请检查屋顶、失能或飞行冷却状态。",
-                pawn, MessageTypeDefOf.RejectInput, false);
-        }
-
-        private static void CleanupDebugFlightAuthorization(Pawn pawn)
-        {
-            int id = pawn.thingIDNumber;
-            if (!DebugFlightPendingRevoke.Contains(id)
-                || (GameComponent_MechanicalFlightRegistry.TryGetRecord(
-                        pawn, out MechanicalFlightAuthorizationRecord? record)
-                    && record?.IsRuntimeActive == true))
-            {
-                return;
-            }
-
-            GameComponent_MechanicalFlightRegistry.TryRemoveAuthorizationSource(
-                pawn, MechanicalFlightAuthorizationSource.Debug);
-            DebugFlightPendingRevoke.Remove(id);
-            DebugFlightGranted.Remove(id);
         }
 
         private static void DrawLayer(Material material, Vector3 origin, Vector3 offset,

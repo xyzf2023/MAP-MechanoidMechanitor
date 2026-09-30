@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LudeonTK;
 using RimWorld;
 using Verse;
@@ -6,6 +7,31 @@ namespace MAP_MechanoidMechanitor
 {
     public static class DebugActions_JusticeBoss
     {
+        [DebugAction("MAP-机械族机械师", "正义Boss测试",
+            actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.Playing)]
+        private static List<DebugActionNode> BuildRootMenu()
+        {
+            return new List<DebugActionNode>
+            {
+                new DebugActionNode("正义Boss：立即呼叫",
+                    DebugActionType.Action, DebugCallJusticeBoss),
+                new DebugActionNode("正义Boss：立即部署设施",
+                    DebugActionType.Action, DebugDeployInfra),
+                new DebugActionNode("正义Boss：立即召唤下一波",
+                    DebugActionType.Action, DebugNextWave),
+                new DebugActionNode("正义Boss：强制下一波Boss替换",
+                    DebugActionType.Action, DebugNextWaveBossReplace),
+                new DebugActionNode("正义Boss：进入撤退等待",
+                    DebugActionType.Action, DebugRetreatWait),
+                new DebugActionNode("正义Boss：立即下达撤退",
+                    DebugActionType.Action, DebugRetreatNow),
+                new DebugActionNode("正义Boss：清除召唤锁",
+                    DebugActionType.Action, DebugClearLock),
+                new DebugActionNode("正义Boss：输出状态",
+                    DebugActionType.Action, DebugDumpStatus)
+            };
+        }
+
         private static CompJusticeBossController? FindControllerOnMap()
         {
             Map? map = Find.CurrentMap;
@@ -31,18 +57,6 @@ namespace MAP_MechanoidMechanitor
             return null;
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "正义Boss：立即呼叫",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DebugCallJusticeBoss()
         {
             Map? map = Find.CurrentMap;
@@ -59,18 +73,6 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "正义Boss：立即部署设施",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DebugDeployInfra()
         {
             CompJusticeBossController? comp = FindControllerOnMap();
@@ -83,18 +85,6 @@ namespace MAP_MechanoidMechanitor
             comp.DebugForceDeployInfrastructure();
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "正义Boss：立即召唤下一波",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DebugNextWave()
         {
             CompJusticeBossController? comp = FindControllerOnMap();
@@ -107,18 +97,6 @@ namespace MAP_MechanoidMechanitor
             comp.DebugForceNextWave(forceBossReplace: false);
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "正义Boss：强制下一波Boss替换",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DebugNextWaveBossReplace()
         {
             CompJusticeBossController? comp = FindControllerOnMap();
@@ -131,18 +109,6 @@ namespace MAP_MechanoidMechanitor
             comp.DebugForceNextWave(forceBossReplace: true);
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "正义Boss：进入撤退等待",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DebugRetreatWait()
         {
             CompJusticeBossController? comp = FindControllerOnMap();
@@ -155,18 +121,6 @@ namespace MAP_MechanoidMechanitor
             comp.DebugForceRetreatWait();
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "正义Boss：立即下达撤退",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DebugRetreatNow()
         {
             CompJusticeBossController? comp = FindControllerOnMap();
@@ -179,36 +133,12 @@ namespace MAP_MechanoidMechanitor
             comp.DebugForceRetreatNow();
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "正义Boss：清除召唤锁",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DebugClearLock()
         {
             GameComponent_JusticeBossCallTracker.Current?.Clear();
             Messages.Message("已清除正义Boss召唤锁。", MessageTypeDefOf.TaskCompletion, historical: false);
         }
 
-        [DebugAction(
-            "MAP-机械族机械师",
-            "正义Boss：输出状态",
-            false,
-            false,
-            false,
-            false,
-            false,
-            0,
-            false,
-            actionType = DebugActionType.Action,
-            allowedGameStates = AllowedGameStates.Playing)]
         private static void DebugDumpStatus()
         {
             GameComponent_JusticeBossCallTracker? tracker =
