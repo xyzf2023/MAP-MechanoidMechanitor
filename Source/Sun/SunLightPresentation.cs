@@ -74,6 +74,10 @@ namespace MAP_MechanoidMechanitor
             "Mech/SunAncient/Animation/SunAncientCoreLight", ShaderDatabase.MoteGlow);
         private static readonly MaterialPropertyBlock Properties = new();
 
+        // 机体灯效和 BOSS 仪表共用完整度配色，避免两处对同一结构值显示不同状态。
+        internal static Color BossTint(float health) =>
+            Color.Lerp(BossHealthyColor, BossCriticalColor, SunSkillAnimation.Smooth(1f - health));
+
         internal static float HealthFraction(Pawn pawn)
         {
             CompSunBossState? boss = pawn.GetComp<CompSunBossState>();
@@ -180,7 +184,7 @@ namespace MAP_MechanoidMechanitor
             // 技能只提高灯效亮度，受损闪烁和转换断电最终作用于灯罩及全部辉光。
             float intensity = Mathf.Clamp01(power) * Breathing(now, seed) * DamageFlicker(now, seed, health);
             Color tint = ancient
-                ? Color.Lerp(BossHealthyColor, BossCriticalColor, SunSkillAnimation.Smooth(1f - health))
+                ? BossTint(health)
                 : SunColor;
             Color charged = Color.Lerp(tint, Color.white, glow * 0.65f);
             charged = Color.Lerp(charged, Color.white, flash);

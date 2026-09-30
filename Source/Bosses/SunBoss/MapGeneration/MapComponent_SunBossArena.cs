@@ -17,6 +17,8 @@ namespace MAP_MechanoidMechanitor
         internal int RemainingStabilizers => Stabilizers.Count(s => s != null && !s.Destroyed && s.Spawned && s.Map == map);
         private Pawn? bossPawn;
         private bool bossDefeated;
+        // 仅本地图的临时界面状态；不保存伤害残影、节点闪光或死亡退场进度。
+        private readonly SunBossStatusPanel statusPanel = new SunBossStatusPanel();
         internal bool BossDefeated => bossDefeated || (activated && bossPawn != null && (bossPawn.Dead || bossPawn.Destroyed));
 
         public const int ActivationDurationTicks = 360;
@@ -319,7 +321,8 @@ namespace MAP_MechanoidMechanitor
 
         public override void MapComponentOnGUI()
         {
-            if (activated && bossPawn != null) SunBossStatusPanel.Draw(bossPawn, map);
+            if (activated || activationStartedTick >= 0)
+                statusPanel.Draw(map, bossPawn, Core, activated, activationStartedTick, RemainingStabilizers);
         }
 
         public override void ExposeData()
