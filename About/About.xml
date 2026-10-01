@@ -10,7 +10,83 @@
 		<li>数据删除</li>
 	</authors>
 	<modVersion IgnoreIfNoMatchingField="true">0.7.0</modVersion>
-	<description>扮演觉醒了自我意识的机械族机械师，体验纯粹由机械族组成的殖民地。</description>
+	<description>扮演觉醒了自我意识的机械族机械师，体验纯粹由机械族组成的殖民地。已适配文化仪式、异象心灵仪式、爵位与灵能、逆重飞船等多项原版玩法。
+
+- 预设「共生盟约」「肃清指令」两条额外玩法路线。与其他派系建立盟约，发展贸易、共同防卫与联合军事行动，最终携手挑战奥德赛的机械主脑；或贯彻主脑的意志，肃清有机智慧生命，换取机械巢的调拨与支援。选择权在你手中。
+
+- 新增派系前哨与机械巢节点。与前哨贸易、赠礼或交战，向机械巢节点交付物资、参与建设。附近的敌对据点会带来额外威胁，盟友据点则有机会派遣援军。
+
+- 普通机械族也能觉醒。安装自律指令核心，使符合条件的机械体升格为拥有自主意识与指挥能力的机械族机械师。
+
+- 机械族机械师也有自己的日常生活：安排工作与作息、参与娱乐、获得灵感，并进行自我维修。具备对应能力的机体还可使用人类武器、穿戴服饰与安装人类植入体。
+
+- 六种各具特色的全新机械族：「正义」「恋人」「隐者」「月亮」「战车」「太阳」。
+
+- 全新的量子机械科技树与算力成长体系。通过数据处理分配强化下属的生产与作战能力，并按工作、射击或近战状态自动调整分配。并行思维阵列可进一步扩充算力，人类机械师也能通过专用接口接入这一体系。
+
+- 八类机械师植入体，涵盖指挥范围、供能、修复、灵能与工作效率，强化机械师及其下属机械族。
+
+- 全新的机械飞行机制。安装无工质推进器后，机械族可以悬浮、跨越地形与障碍，并在满足队伍条件时组成飞行远行队。
+
+- 合体与建筑形态转换。「战车」可与人类合体，共享飞行与激光武器系统，也能展开为驻定形态；「太阳」可转换为高能反应堆，为殖民地供电并降低机械族的能量消耗。
+
+- 伴侣模拟与仿生孕育。安装仿生伴侣模块后，机械族可以与人类建立伴侣关系、结婚并孕育子嗣。
+
+- 两个全新建筑：量产型机械培育仓与机体整备台。快速培育机械族并自动释放；按策略为机械体充电、维修与安排待命，完善机械殖民地的生产与维护体系。
+
+- 两场各具特色的全新 BOSS 战等你挑战：
+「正义」- 重装指挥单元：在野外部署炮塔与护盾，固守阵地，持续调拨机械族向殖民地发起进攻。
+「太阳」- 能源核心：沉睡于设施之中的超重型机械体，拥有恐怖的火力，以及围绕反应堆稳定器展开的独特战斗机制。
+
+- 拓展奥德赛机械主脑战，为主脑增加机械增援、EMP 冲击与带宽干扰。你也可以在任务线中选择接管主脑，使机械巢成为永久盟友，并将机械巢的力量为己所用（需要奥德赛DLC）。
+
+- 全新叙事者「命运之轮」埃翁，每隔一段时间随机切换叙事主题，为殖民地带来不同的事件倾向与生存挑战。
+
+- 提供专用开局剧本，也支持为其他剧本添加机械族机械师规则。自由配置派系关系、文化适配、前哨与节点频率，或开启虫族追杀；多项玩法与战斗参数均可在设置中调整。
+
+- 与闪耀世界毁灭者5联动：使用机械族机械师专用剧本开局，可体验专门改写的黑衣巢剧情，并在满足条件后选择跟随黑衣毒蜂、加入黑衣机械巢的额外结局。
+
+- 多项MOD兼容：为原版灵能拓展等MOD提供专门适配，让机械族机械师接入更多工作、交互与成长玩法。
+
+
+
+Play as a mechanoid mechanitor who has awakened to self-awareness, and experience a colony composed entirely of mechanoids. Support is included for many vanilla gameplay systems, including Ideology rituals, Anomaly psychic rituals, royal titles and psycasts, gravships, and more.
+
+- Two additional preset gameplay paths: "Symbiosis covenant" and "Purge directive". Form a covenant with other factions, develop trade, organize mutual defense and joint military operations, and ultimately unite to challenge Odyssey's cerebrex. Or carry out the cerebrex's will, purge intelligent organic life, and earn resource allocations and support from the mechanoid hive. The choice is yours.
+
+- New faction outposts and mechanoid hive nodes. Trade with outposts, offer gifts, or wage war; deliver supplies to hive nodes and help with their construction. Nearby hostile sites pose additional threats, while allied sites may send reinforcements.
+
+- Ordinary mechanoids can awaken, too. Install an autonomous directive core to elevate eligible mechanoids into mechanoid mechanitors with self-awareness and command capabilities.
+
+- Mechanoid mechanitors have daily lives of their own: assign work and schedules, enjoy recreation, gain inspirations, and perform self-repair. Bodies with the appropriate capabilities can also wield human weapons, wear apparel, and receive human implants.
+
+- Six distinctive new mechanoids: Justice, Lover, Hermit, Moon, Chariot, and Sun.
+
+- A new quantum mechtech research tree and a system for expanding computing power. Allocate data processing to improve subordinate mechanoids' production and combat capabilities, with automatic adjustments for work, shooting, or melee combat. Parallel thought arrays further expand computing power, and human mechanitors can access the same system through a dedicated interface.
+
+- Eight categories of mechanitor implants covering command range, energy supply, repair, psychic abilities, and work efficiency, strengthening both mechanitors and their subordinate mechanoids.
+
+- A new mechanoid flight system. With a propellantless thruster installed, mechanoids can hover, cross terrain and obstacles, and form flying caravans when the group meets the required conditions.
+
+- Fusion and transformation into building forms. Chariot can fuse with a human, sharing its flight and laser weapon systems, or deploy into a stationary form. Sun can transform into a high-energy reactor, supplying power to the colony and reducing mechanoids' energy consumption.
+
+- Companion simulation and bionic reproduction. With a bionic companion module installed, mechanoids can form romantic relationships with humans, marry, and have children.
+
+- Two new buildings: the mass-production mech gestator and the mech service station. Gestate mechanoids rapidly and release them automatically; manage charging, repairs, and standby according to configured policies to complete your mechanical colony's production and maintenance systems.
+
+- Two distinctive new boss battles await:
+Justice - Heavy command unit: Deploys turrets and shields in the wilderness, holds its position, and continually dispatches mechanoids to attack the colony.
+Sun - Energy core: A super-heavy mechanoid lying dormant within a facility, armed with terrifying firepower and featuring unique combat mechanics centered on reactor stabilizers.
+
+- An expanded Odyssey cerebrex battle, adding mechanoid reinforcements, EMP pulses, and bandwidth interference. During the questline, you can also choose to take over the cerebrex, making the mechanoid hive a permanent ally and putting its power at your disposal (requires the Odyssey DLC).
+
+- A new storyteller, Aeon, the Wheel of Fate, periodically selects a random story theme, bringing different event tendencies and survival challenges to your colony.
+
+- A dedicated starting scenario, with support for adding mechanoid mechanitor rules to other scenarios. Freely configure faction relations, Ideology integration, and outpost and node frequencies, or enable insectoid pursuit. Many gameplay and combat parameters can be adjusted in the settings.
+
+- Integration with Glitterworld Destroyer 5: Start with the dedicated mechanoid mechanitor scenario to experience a specially rewritten Black Mechanoid Hive storyline. Once the conditions are met, you can choose an additional ending in which you follow the Black-clad Apocriton and join the Black Mechanoid Hive.
+
+- Compatibility with multiple mods: Dedicated integration with Vanilla Psycasts Expanded and other mods gives mechanoid mechanitors access to more work, interactions, and progression systems.</description>
 	<modDependencies>
 		<li>
 			<packageId>brrainz.harmony</packageId>
