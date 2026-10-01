@@ -9,6 +9,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.NewRatkin;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimTalk;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimSkyBlock;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpanded;
@@ -33,6 +34,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new MobileDragoonCompatibility(),
             new NewRatkinWanderingTraderInteractionCompatibility(),
             new NewRatkinWanderingTraderIncidentCompatibility(),
+            new RimTalkCompatibility(),
             new RimSkyBlockImperialTaskCompatibility(),
             new RimSkyBlockCoronationCompatibility(),
             new SRTSExpandedCompatibility(),
