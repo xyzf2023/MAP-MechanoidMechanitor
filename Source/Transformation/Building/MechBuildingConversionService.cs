@@ -1,5 +1,6 @@
 using System;
 using RimWorld;
+using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
@@ -484,6 +485,62 @@ namespace MAP_MechanoidMechanitor
                 restoredThing ?? sourcePawn,
                 MessageTypeDefOf.PositiveEvent,
                 historical: false);
+            return true;
+        }
+
+        /// <summary>卸载入口同时覆盖已经打包、被搬运或位于远行队内的建筑载体。</summary>
+        internal static bool TryRestoreForUninstall(Thing carrier)
+        {
+            if (carrier.Spawned)
+                return TryRestore(carrier, sendFailureMessage: false);
+            if (!CanRestore(carrier, allowDestroyedCarrier: false, out _)
+                && !CanRestore(carrier, allowDestroyedCarrier: true, out _))
+                return false;
+
+            CompMechBuildingForm form = carrier.TryGetComp<CompMechBuildingForm>()!;
+            Pawn? source = carrier.TryGetComp<CompMechFormCarrier>()?.SourcePawn ?? form?.StoredSourcePawn;
+            if (source == null || form == null || carrier.Destroyed)
+                return false;
+            form.EnsureSourceStateForRecovery(source);
+            RimWorld.Planet.Caravan? caravan = carrier.GetCaravan();
+            if (caravan != null)
+            {
+                if (!GameComponent_MechTransformationRegistry.TryBeginRecoveryToPawn(source, carrier, out _, out _))
+                    return false;
+                try
+                {
+                    form.SourceState.RestoreSourceIdentity(source);
+                    if (!MechanicalFlyingCaravanArrivalAction.TryAddPawnToCaravan(caravan, source)
+                        || !form.SourceState.TryWriteBackEnergy(source)
+                        || !GameComponent_MechTransformationRegistry.TryCommitTransition(source, null, out _))
+                    {
+                        if (caravan.ContainsPawn(source))
+                            caravan.RemovePawn(source);
+                        form.SourceState.EnsureStored(source, carrier.Faction);
+                        GameComponent_MechTransformationRegistry.TryCancelTransition(source);
+                        return false;
+                    }
+                }
+                catch
+                {
+                    if (caravan.ContainsPawn(source))
+                        caravan.RemovePawn(source);
+                    form.SourceState.EnsureStored(source, carrier.Faction);
+                    GameComponent_MechTransformationRegistry.TryCancelTransition(source);
+                    throw;
+                }
+            }
+            else
+            {
+                Map? map = carrier.MapHeld;
+                if (map == null || !TryRestorePawn(source, carrier, form.SourceState, map,
+                        carrier.PositionHeld, Rot4.South, emergencyRecovery: true, out _, out _))
+                    return false;
+            }
+            SettleBuildingDurability(carrier, source, useDestructionSnapshot: false);
+            MechFusionSourceUtility.RemoveDormantGuard(source);
+            carrier.holdingOwner?.Remove(carrier);
+            carrier.Destroy(DestroyMode.Vanish);
             return true;
         }
 

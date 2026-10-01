@@ -22,6 +22,61 @@ namespace MAP_MechanoidMechanitor
 
     public sealed class WorldObject_MechanicalFlyingCaravan : TravellingTransporters
     {
+        private Caravan? uninstallRecoveryCaravan;
+        private static readonly AccessTools.FieldRef<TravellingTransporters, List<ActiveTransporterInfo>>
+            Transporters = AccessTools.FieldRefAccess<TravellingTransporters, List<ActiveTransporterInfo>>("transporters");
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            Scribe_References.Look(ref uninstallRecoveryCaravan, "uninstallRecoveryCaravan");
+        }
+
+        /// <summary>原抵达流程有丢弃载荷的兜底；卸载时只允许有明确所有权的转移。</summary>
+        internal bool TryLandForUninstall()
+        {
+            PlanetTile desired = Tile;
+            if (!desired.Valid || desired.LayerDef?.canFormCaravans != true)
+                desired = destinationTile;
+            if (desired.LayerDef?.canFormCaravans != true
+                || !MechanicalFlyingCaravanArrivalAction.TryResolveLandingTile(desired, out PlanetTile landingTile))
+                return false;
+
+            List<ActiveTransporterInfo> pods = Transporters(this);
+            if (uninstallRecoveryCaravan == null || uninstallRecoveryCaravan.Destroyed)
+            {
+                uninstallRecoveryCaravan = CaravanMaker.MakeCaravan(
+                    Array.Empty<Pawn>(), Faction ?? RimWorld.Faction.OfPlayer, landingTile, addToWorldPawnsIfNotAlready: true);
+                if (arrivalAction is MechanicalFlyingCaravanArrivalAction originalAction
+                    && !originalAction.OriginalCaravanName.NullOrEmpty())
+                    uninstallRecoveryCaravan.Name = originalAction.OriginalCaravanName;
+            }
+            Caravan caravan = uninstallRecoveryCaravan;
+            foreach (ActiveTransporterInfo pod in pods)
+            {
+                foreach (Pawn pawn in pod.innerContainer.OfType<Pawn>().ToArray())
+                {
+                    if (MechanicalFlyingCaravanArrivalAction.TryAddPawnToCaravan(caravan, pawn))
+                        continue;
+                    // AddPawn 可能已经拆出源容器；失败时把尚无所有者的 Pawn 放回原舱。
+                    if (pawn.holdingOwner == null && !caravan.ContainsPawn(pawn))
+                        pod.innerContainer.TryAdd(pawn);
+                    return false;
+                }
+            }
+            foreach (ActiveTransporterInfo pod in pods)
+                foreach (Thing thing in pod.innerContainer.ToArray())
+                    if (!MechanicalFlyingCaravanArrivalAction.TryGiveThingToCaravanPawn(caravan, thing, out _))
+                        return false;
+            if (pods.Any(pod => pod.innerContainer.Count != 0))
+                return false;
+
+            pods.Clear();
+            arrivalAction = null;
+            Destroy();
+            return true;
+        }
+
         public override string GetInspectString()
         {
             string baseText = base.GetInspectString();
@@ -38,6 +93,8 @@ namespace MAP_MechanoidMechanitor
     public sealed class MechanicalFlyingCaravanArrivalAction : TransportersArrivalAction
     {
         private string originalCaravanName = string.Empty;
+
+        internal string OriginalCaravanName => originalCaravanName;
 
         // legacy 存档兼容字段：旧版本用 arrivalStarted 做一次性抵达保护。
         // 新逻辑完全不读取它（不参与 StillValid / Arrived / 防重入），
@@ -257,9 +314,11 @@ namespace MAP_MechanoidMechanitor
         }
 
         internal static bool TryGiveThingToCaravanPawn(
-            Caravan caravan, Thing thing, out string failureReason)
+            Caravan caravan, Thing thing, out string failureReason, Predicate<Pawn>? receiverFilter = null)
         {
             failureReason = string.Empty;
+            List<Pawn> candidates = receiverFilter == null ? caravan.PawnsListForReading
+                : caravan.PawnsListForReading.Where(p => receiverFilter(p)).ToList();
             ThingOwner? originalOwner;
             Pawn? receiver = null;
             try
@@ -268,7 +327,7 @@ namespace MAP_MechanoidMechanitor
                 // 因此这里先做与原版一致的接收者预检，只有确认存在接收 Pawn 才脱离原 Owner。
                 originalOwner = thing.holdingOwner;
                 receiver = CaravanInventoryUtility.FindPawnToMoveInventoryTo(
-                    thing, caravan.PawnsListForReading, null);
+                    thing, candidates, null);
             }
             catch (Exception exception)
             {
@@ -276,7 +335,7 @@ namespace MAP_MechanoidMechanitor
                 failureReason = "寻找接收 Pawn 时异常：" + exception;
             }
 
-            if (receiver == null && caravan.PawnsListForReading.Count == 0)
+            if (receiver == null && candidates.Count == 0)
             {
                 failureReason = failureReason.NullOrEmpty()
                     ? "Caravan 没有任何可接收物资的 Pawn"
@@ -293,9 +352,9 @@ namespace MAP_MechanoidMechanitor
             }
 
             // 预检接收者失败时的二级兜底：逐个尝试 Caravan 成员的 inventory（TryAdd 不会 Destroy 物品）。
-            for (int i = 0; i < caravan.PawnsListForReading.Count; i++)
+            for (int i = 0; i < candidates.Count; i++)
             {
-                Pawn candidate = caravan.PawnsListForReading[i];
+                Pawn candidate = candidates[i];
                 if (candidate == null
                     || candidate == receiver
                     || candidate.inventory == null)
@@ -401,7 +460,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool TryResolveLandingTile(
+        internal static bool TryResolveLandingTile(
             PlanetTile desiredTile, out PlanetTile landingTile)
         {
             landingTile = desiredTile;
@@ -647,7 +706,7 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        private static bool TryAddPawnToCaravan(Caravan caravan, Pawn pawn)
+        internal static bool TryAddPawnToCaravan(Caravan caravan, Pawn pawn)
         {
             try
             {

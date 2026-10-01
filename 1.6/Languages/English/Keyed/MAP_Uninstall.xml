@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Uninstall.Action>Prepare to uninstall mod</MAP_MechanoidMechanitor.Uninstall.Action>
+  <MAP_MechanoidMechanitor.Uninstall.Confirmation>The mod uninstall procedure is about to begin.\n\nContinue?</MAP_MechanoidMechanitor.Uninstall.Confirmation>
+  <MAP_MechanoidMechanitor.Uninstall.Completed>Mod uninstall preparation is complete.\n\nSave to a new save file, then return to the main menu, disable this mod, restart the game, and load the new save.\n\nWhile this mod remains enabled, this save will stay paused to prevent new data requiring cleanup from being created.{0}</MAP_MechanoidMechanitor.Uninstall.Completed>
+  <MAP_MechanoidMechanitor.Uninstall.UnassignedMechs>\n\n{0} mechanoids from the base game or other mods still have no overseer. They have been preserved in the game's standard uncontrolled state. After removing this mod, a mechanitor with a mechlink and sufficient bandwidth can take control of them again. No persistent record was kept of their overseer assignments before they became mechanoid mechanitors or autonomous mechanoids, so those assignments cannot be restored exactly.</MAP_MechanoidMechanitor.Uninstall.UnassignedMechs>
+  <MAP_MechanoidMechanitor.Uninstall.Failed>Mod uninstall preparation is incomplete.\n\nThe following objects could not be handled safely. The data needed to restore them has been retained:\n{0}\n\nDo not remove this mod yet. Check the log for details, resolve the reported issues, and run this option again. Objects already restored successfully will not be created again.</MAP_MechanoidMechanitor.Uninstall.Failed>
+  <MAP_MechanoidMechanitor.Uninstall.StepFailed>{0}: {1}</MAP_MechanoidMechanitor.Uninstall.StepFailed>
+  <MAP_MechanoidMechanitor.Uninstall.UnexpectedFailure>An unexpected error occurred during the procedure. Check the log for details; preparation has not been confirmed complete.</MAP_MechanoidMechanitor.Uninstall.UnexpectedFailure>
+  <MAP_MechanoidMechanitor.Uninstall.FusionRemaining>Unresolved fusion recovery records remain.</MAP_MechanoidMechanitor.Uninstall.FusionRemaining>
+  <MAP_MechanoidMechanitor.Uninstall.FormRemaining>An entity has not yet returned to mechanoid form: {0}</MAP_MechanoidMechanitor.Uninstall.FormRemaining>
+  <MAP_MechanoidMechanitor.Uninstall.Step.WorldFlight>Failed to restore a flying caravan</MAP_MechanoidMechanitor.Uninstall.Step.WorldFlight>
+  <MAP_MechanoidMechanitor.Uninstall.Step.MapFlight>Failed to land a flying mechanoid safely</MAP_MechanoidMechanitor.Uninstall.Step.MapFlight>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Fusion>Failed to end fusion</MAP_MechanoidMechanitor.Uninstall.Step.Fusion>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Building>Failed to restore a mechanoid from building form</MAP_MechanoidMechanitor.Uninstall.Step.Building>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Contents>Failed to retrieve pawns or items from the base game</MAP_MechanoidMechanitor.Uninstall.Step.Contents>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Pawn>Failed to clean up pawn state</MAP_MechanoidMechanitor.Uninstall.Step.Pawn>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Quest>Failed to clean up a quest</MAP_MechanoidMechanitor.Uninstall.Step.Quest>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Lord>Failed to replace group behavior</MAP_MechanoidMechanitor.Uninstall.Step.Lord>
+  <MAP_MechanoidMechanitor.Uninstall.Step.WorldObject>Failed to replace or clean up a world object</MAP_MechanoidMechanitor.Uninstall.Step.WorldObject>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Travel>Failed to remove a travel arrival action. Complete the journey first</MAP_MechanoidMechanitor.Uninstall.Step.Travel>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Global>Failed to clean up the scenario, letters, or global events</MAP_MechanoidMechanitor.Uninstall.Step.Global>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Control>Failed to disconnect the mechanoid control network</MAP_MechanoidMechanitor.Uninstall.Step.Control>
+</LanguageData>

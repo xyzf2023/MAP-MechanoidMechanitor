@@ -157,6 +157,19 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_References.Look(ref transportShip, "MAP_transportShip");
         }
 
+        internal bool TryGetVanillaAction(
+            Dictionary<MapParent, MapParent> replacements,
+            out TransportersArrivalAction? action)
+        {
+            action = null;
+            if (node == null || transportShip == null || transportShip.Disposed)
+                return false;
+            if (!replacements.TryGetValue(node, out MapParent target))
+                return false;
+            action = new TransportersArrivalAction_TransportShip(target, transportShip);
+            return true;
+        }
+
         private static void FallBackToCaravan(
             List<ActiveTransporterInfo> transporters,
             PlanetTile tile,

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_MechanoidMechanitor.Uninstall.Action>执行卸载MOD准备</MAP_MechanoidMechanitor.Uninstall.Action>
+  <MAP_MechanoidMechanitor.Uninstall.Confirmation>即将执行MOD卸载流程。\n\n确认继续？</MAP_MechanoidMechanitor.Uninstall.Confirmation>
+  <MAP_MechanoidMechanitor.Uninstall.Completed>MOD 卸载准备已完成。\n\n请另存为一个新存档，然后退出到主菜单，禁用本 MOD 并重新启动游戏，再加载新存档。\n\n该存档会在本 MOD 仍启用时保持暂停，避免重新产生需要卸载的状态。{0}</MAP_MechanoidMechanitor.Uninstall.Completed>
+  <MAP_MechanoidMechanitor.Uninstall.UnassignedMechs>\n\n有 {0} 个原版或其他 MOD 机械体尚未分配监管者。它们已保留为原版未受控状态；移除本 MOD 后，可使用拥有机械控制中枢且带宽足够的机械师重新控制。升格或自律前的监管者没有持久快照，无法精确回溯。</MAP_MechanoidMechanitor.Uninstall.UnassignedMechs>
+  <MAP_MechanoidMechanitor.Uninstall.Failed>MOD 卸载准备尚未完成。\n\n以下对象无法安全处理，恢复所需的数据仍然保留：\n{0}\n\n请勿移除本 MOD。查看日志中的具体原因，处理后可再次执行此选项。已经成功恢复的对象不会重复生成。</MAP_MechanoidMechanitor.Uninstall.Failed>
+  <MAP_MechanoidMechanitor.Uninstall.StepFailed>{0}：{1}</MAP_MechanoidMechanitor.Uninstall.StepFailed>
+  <MAP_MechanoidMechanitor.Uninstall.UnexpectedFailure>流程发生异常，请查看日志；尚未确认准备完成。</MAP_MechanoidMechanitor.Uninstall.UnexpectedFailure>
+  <MAP_MechanoidMechanitor.Uninstall.FusionRemaining>仍有未结束的合体恢复记录。</MAP_MechanoidMechanitor.Uninstall.FusionRemaining>
+  <MAP_MechanoidMechanitor.Uninstall.FormRemaining>仍有未恢复为 Pawn 形态的对象：{0}</MAP_MechanoidMechanitor.Uninstall.FormRemaining>
+  <MAP_MechanoidMechanitor.Uninstall.Step.WorldFlight>恢复飞行远行队失败</MAP_MechanoidMechanitor.Uninstall.Step.WorldFlight>
+  <MAP_MechanoidMechanitor.Uninstall.Step.MapFlight>机械飞行安全着陆失败</MAP_MechanoidMechanitor.Uninstall.Step.MapFlight>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Fusion>解除合体失败</MAP_MechanoidMechanitor.Uninstall.Step.Fusion>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Building>恢复建筑形态失败</MAP_MechanoidMechanitor.Uninstall.Step.Building>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Contents>取出原版人员或物品失败</MAP_MechanoidMechanitor.Uninstall.Step.Contents>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Pawn>清理 Pawn 状态失败</MAP_MechanoidMechanitor.Uninstall.Step.Pawn>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Quest>清理任务失败</MAP_MechanoidMechanitor.Uninstall.Step.Quest>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Lord>替换群体行为失败</MAP_MechanoidMechanitor.Uninstall.Step.Lord>
+  <MAP_MechanoidMechanitor.Uninstall.Step.WorldObject>替换或清理世界对象失败</MAP_MechanoidMechanitor.Uninstall.Step.WorldObject>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Travel>清理旅行抵达动作失败，请先完成该行程</MAP_MechanoidMechanitor.Uninstall.Step.Travel>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Global>清理剧本、信件或全局事件失败</MAP_MechanoidMechanitor.Uninstall.Step.Global>
+  <MAP_MechanoidMechanitor.Uninstall.Step.Control>解除机械族监管网络失败</MAP_MechanoidMechanitor.Uninstall.Step.Control>
+</LanguageData>

@@ -223,6 +223,19 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        /// <summary>取消尚未执行的请求，只在真实源 Pawn 恢复成功后删除紧急恢复凭据。</summary>
+        internal bool PrepareForUninstall()
+        {
+            PendingConversions.Clear();
+            PendingRestores.Clear();
+            foreach (MechBuildingEmergencyRestoreRecord entry in PendingEmergencyRestores.ToArray())
+            {
+                if (MechBuildingConversionService.TryEmergencyRestore(entry))
+                    PendingEmergencyRestores.Remove(entry);
+            }
+            return PendingEmergencyRestores.Count == 0;
+        }
+
         private void ClearQueues()
         {
             PendingConversions.Clear();

@@ -34,6 +34,9 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        internal static IReadOnlyList<MechTransformationRecord> GetRecordSnapshot() =>
+            CurrentRegistry?.records.ToArray() ?? Array.Empty<MechTransformationRecord>();
+
         public static bool TryGetRecord(
             Pawn? pawn,
             out MechTransformationRecord? record)

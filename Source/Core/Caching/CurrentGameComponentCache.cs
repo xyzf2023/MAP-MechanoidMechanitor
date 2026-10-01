@@ -14,10 +14,25 @@ namespace MAP_MechanoidMechanitor
         private static Game? cachedGame;
         private static T? cachedComponent;
 
+        /// <summary>同一 Game 的组件列表被读档替换时，由明确的生命周期入口失效。</summary>
+        internal static void Invalidate()
+        {
+            cachedGame = null;
+            cachedComponent = null;
+        }
+
         internal static T? Get()
         {
             Game? game = Current.Game;
             if (game == null)
+            {
+                cachedGame = null;
+                cachedComponent = null;
+                return null;
+            }
+
+            if (typeof(T) != typeof(GameComponent_ModUninstallPreparation)
+                && GameComponent_ModUninstallPreparation.IsPrepared)
             {
                 cachedGame = null;
                 cachedComponent = null;
