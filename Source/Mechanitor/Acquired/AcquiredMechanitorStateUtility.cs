@@ -29,7 +29,6 @@ namespace MAP_MechanoidMechanitor
             pawn.Notify_DisabledWorkTypesChanged();
             MechanoidMechanitorRoleUtility.EnsureRoleState(pawn);
             ApplyInitialPassionPolicyOnce(pawn, record);
-            InitializeRoleWorkSettingsIfNeeded(pawn, record);
             MechanoidMechanitorSelfWorkModeUtility.ApplyAcquiredSelfWorkMode(
                 pawn,
                 record.SelfWorkMode
@@ -57,27 +56,6 @@ namespace MAP_MechanoidMechanitor
 
             MechanoidMechanitorSkillUtility.ApplyConfiguredInitialPassionFloor(pawn);
             record.InitialPassionPolicyApplied = true;
-        }
-
-        private static void InitializeRoleWorkSettingsIfNeeded(
-            Pawn pawn,
-            MechanoidMechanitorRecord record)
-        {
-            if (record.RoleWorkSettingsInitialized || pawn.workSettings == null)
-            {
-                return;
-            }
-
-            foreach (WorkTypeDef workType in MechanoidMechanitorRoleUtility.GetRoleWorkTypes())
-            {
-                if (!pawn.WorkTypeIsDisabled(workType)
-                    && pawn.workSettings.GetPriority(workType) == 0)
-                {
-                    pawn.workSettings.SetPriority(workType, 3);
-                }
-            }
-
-            record.RoleWorkSettingsInitialized = true;
         }
     }
 }

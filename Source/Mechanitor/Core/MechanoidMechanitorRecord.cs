@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -11,6 +12,9 @@ namespace MAP_MechanoidMechanitor
         public int ChipBandwidthBonus;
         public MechWorkModeDef? SelfWorkMode;
         public bool RoleWorkSettingsInitialized;
+        // 每个类别只接入一次；保存 defName，移除/重加 MOD 后也不重复自动启用。
+        // 旧存档缺字段时保持 null，由安全生命周期按旧白名单建立迁移基线。
+        public List<string>? KnownGeneralWorkTypeDefNames;
         public bool HasMappedPersonality;
 
         // 后天机械族机械师“技能兴趣度最低为好奇”策略的一次性应用标记。
@@ -35,6 +39,7 @@ namespace MAP_MechanoidMechanitor
         {
             Pawn = pawn;
             Origin = origin;
+            KnownGeneralWorkTypeDefNames = new List<string>();
         }
 
         public void ExposeData()
@@ -47,6 +52,10 @@ namespace MAP_MechanoidMechanitor
                 ref RoleWorkSettingsInitialized,
                 "roleWorkSettingsInitialized",
                 false);
+            Scribe_Collections.Look(
+                ref KnownGeneralWorkTypeDefNames,
+                "knownGeneralWorkTypeDefNames",
+                LookMode.Value);
             Scribe_Values.Look(ref HasMappedPersonality, "hasMappedPersonality", false);
             // 旧存档缺字段时按 true（已处理）读入，避免读档后把已有机械族机械师的无兴趣
             // 追溯提升为好奇；运行时新建记录（未经过 ExposeData）保持默认 false。

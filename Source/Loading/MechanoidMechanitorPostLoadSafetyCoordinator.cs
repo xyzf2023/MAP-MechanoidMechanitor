@@ -437,6 +437,8 @@ namespace MAP_MechanoidMechanitor
                         // 覆盖非宿主先天机械师等不会走 EnsureRoleState 的路径，
                         // 不建立每 Tick 轮询，仅在读档时一次性执行。
                         MechanoidMechanitorRoleUtility.EnsureTimetableState(pawn);
+                        // 非宿主先天机械师也要迁移新增工作；在安全阶段一次执行，保留玩家设置。
+                        MechWorkSettingsUtility.SynchronizeGeneralWorkSettings(pawn);
                         PendingDynamicConsciousnessRefresh.Add(pawn);
                     }
                 }

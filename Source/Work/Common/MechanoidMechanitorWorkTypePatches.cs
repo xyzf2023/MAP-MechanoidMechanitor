@@ -22,8 +22,6 @@ namespace MAP_MechanoidMechanitor
             WorkTypeDef? warden = WardenWorkUtility.WardenWorkType;
             WorkTypeDef? handling = AnimalHandlingWorkUtility.HandlingWorkType;
             WorkTypeDef? childcare = MechanicalChildcareUtility.ChildcareWorkType;
-            bool acquiredMechanitorChecked = false;
-            bool isAcquiredMechanitor = false;
 
             for (int i = __result.Count - 1; i >= 0; i--)
             {
@@ -47,24 +45,11 @@ namespace MAP_MechanoidMechanitor
                     authorizedChildcare = MechanicalChildcareUtility.IsAuthorized(__instance);
                 }
 
-                bool acquiredRoleWorkType = false;
-                if (MechanoidMechanitorRoleUtility.IsRoleWorkType(workType))
-                {
-                    if (!acquiredMechanitorChecked)
-                    {
-                        isAcquiredMechanitor =
-                            MechanoidMechanitorCapabilityUtility.HasCapability(
-                                __instance, MechanoidMechanitorCapability.DynamicWorkTypes);
-                        acquiredMechanitorChecked = true;
-                    }
-
-                    acquiredRoleWorkType = isAcquiredMechanitor;
-                }
-
+                // 通用类别在原版种族限制分支中开放，不在 Postfix 中删除其最终禁用结果。
+                // 此处仅保留已有特殊工作授权，避免抹掉其他 MOD 对通用工作的禁用。
                 if (!authorizedWarden
                     && !authorizedHandling
-                    && !authorizedChildcare
-                    && !acquiredRoleWorkType)
+                    && !authorizedChildcare)
                 {
                     continue;
                 }

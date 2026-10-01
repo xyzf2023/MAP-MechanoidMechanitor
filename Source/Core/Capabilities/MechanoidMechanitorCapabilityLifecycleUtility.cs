@@ -26,6 +26,8 @@ namespace MAP_MechanoidMechanitor
                 ColonistLikeSocialTrackerUtility.EnsureTrackers(pawn);
             if (CompWorkTabVisibleUser.PawnCanShowInWorkTab(pawn))
                 CompWorkTabVisibleUser.EnsureWorkSettingsForWorkTab(pawn);
+            if (MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.GeneralMechWork))
+                MechWorkSettingsUtility.SynchronizeGeneralWorkSettings(pawn);
             if (MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.ColonistLikeTimetable))
                 ColonistLikeMechTimetableUtility.EnsureTimetableState(pawn);
             if (MechanoidMechanitorCapabilityUtility.HasCapability(pawn, MechanoidMechanitorCapability.Recreation))

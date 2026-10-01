@@ -13,7 +13,8 @@ namespace MAP_MechanoidMechanitor
 
         private const string AcquiredIdentityDefName = "MAP_AcquiredMechanoidMechanitor";
 
-        private static readonly HashSet<string> roleWorkTypeDefNames = new HashSet<string>
+        // 仅用于旧存档迁移：这些类别原本已开放，不重新启用玩家关闭的工作。
+        private static readonly HashSet<string> legacyRoleWorkTypeDefNames = new HashSet<string>
         {
             "Firefighter",
             "Patient",
@@ -39,6 +40,7 @@ namespace MAP_MechanoidMechanitor
 
         private static HediffDef? acquiredIdentityDef;
         private static List<WorkTypeDef>? cachedRoleWorkTypes;
+        private static int cachedRoleWorkTypeDefCount = -1;
 
         public static bool HasNativeMechanitorMarker(Pawn? pawn)
         {
@@ -411,24 +413,27 @@ namespace MAP_MechanoidMechanitor
 
         public static bool IsRoleWorkType(WorkTypeDef? workType)
         {
-            return workType != null
-                && roleWorkTypeDefNames.Contains(workType.defName);
+            return MechWorkTypeAuthorizationUtility.IsGeneralWorkType(workType);
         }
+
+        internal static bool IsLegacyRoleWorkType(WorkTypeDef workType) =>
+            legacyRoleWorkTypeDefNames.Contains(workType.defName);
 
         public static List<WorkTypeDef> GetRoleWorkTypes()
         {
-            if (cachedRoleWorkTypes == null)
+            List<WorkTypeDef> all = DefDatabase<WorkTypeDef>.AllDefsListForReading;
+            if (cachedRoleWorkTypes == null || cachedRoleWorkTypeDefCount != all.Count)
             {
                 cachedRoleWorkTypes = new List<WorkTypeDef>();
-                List<WorkTypeDef> all = DefDatabase<WorkTypeDef>.AllDefsListForReading;
                 for (int i = 0; i < all.Count; i++)
                 {
                     WorkTypeDef def = all[i];
-                    if (roleWorkTypeDefNames.Contains(def.defName))
+                    if (IsRoleWorkType(def))
                     {
                         cachedRoleWorkTypes.Add(def);
                     }
                 }
+                cachedRoleWorkTypeDefCount = all.Count;
             }
 
             return cachedRoleWorkTypes;
@@ -511,12 +516,7 @@ namespace MAP_MechanoidMechanitor
 
         private static void EnsureWorkSettings(Pawn pawn)
         {
-            if (!MechWorkSettingsUtility.TryEnsureWorkSettingsInitialized(pawn))
-            {
-                return;
-            }
-
-            MechWorkSettingsUtility.RestrictToMechEnabledWorkTypes(pawn);
+            MechWorkSettingsUtility.SynchronizeGeneralWorkSettings(pawn);
         }
 
         private static void EnsureAcquiredSkillProfile(Pawn pawn)

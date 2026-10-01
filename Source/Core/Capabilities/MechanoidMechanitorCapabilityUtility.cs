@@ -106,6 +106,7 @@ namespace MAP_MechanoidMechanitor
             if (capability == MechanoidMechanitorCapability.SelfRepair
                 || capability == MechanoidMechanitorCapability.Recreation
                 || capability == MechanoidMechanitorCapability.GeneralMechWork
+                || capability == MechanoidMechanitorCapability.DynamicWorkTypes
                 || capability == MechanoidMechanitorCapability.ManagedSchedule
                 || capability == MechanoidMechanitorCapability.Inspiration
                 || capability == MechanoidMechanitorCapability.SelfDataProcessing
@@ -129,8 +130,6 @@ namespace MAP_MechanoidMechanitor
             // 常用单项只读其来源，不为一次持械/工作查询解析指挥关系、合体或全部能力。
             switch (capability)
             {
-                case MechanoidMechanitorCapability.DynamicWorkTypes:
-                    return IsAcquiredSource(pawn);
                 case MechanoidMechanitorCapability.HumanWeapons:
                     return IsAcquiredSource(pawn) || pawn.GetComp<CompHumanWeaponUser>() != null;
                 case MechanoidMechanitorCapability.ColonistLikeFloatMenu:

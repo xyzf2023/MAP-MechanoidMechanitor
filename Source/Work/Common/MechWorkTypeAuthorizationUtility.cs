@@ -7,6 +7,26 @@ namespace MAP_MechanoidMechanitor
 {
     public static class MechWorkTypeAuthorizationUtility
     {
+        /// <summary>通用类别动态开放；监管、驯兽、保育继续由各自授权系统处理。</summary>
+        internal static bool IsGeneralWorkType(WorkTypeDef? workType) =>
+            workType != null
+            && workType.defName != "Warden"
+            && workType.defName != "Handling"
+            && workType.defName != "Childcare";
+
+        /// <summary>只扩展原版种族工作列表判断，不修改共享 Def 或其他禁用来源。</summary>
+        internal static bool RaceProfileAllowsWorkType(
+            List<WorkTypeDef>? raceWorkTypes,
+            WorkTypeDef workType,
+            Pawn pawn)
+        {
+            return raceWorkTypes?.Contains(workType) == true
+                || (pawn.RaceProps?.IsMechanoid == true
+                    && IsGeneralWorkType(workType)
+                    && MechanoidMechanitorCapabilityUtility.HasCapability(
+                        pawn, MechanoidMechanitorCapability.DynamicWorkTypes));
+        }
+
         internal static bool AllowsWorkGiver(Pawn? pawn, WorkGiverDef? workGiver, bool vanillaAllowed)
         {
             if (pawn == null || workGiver == null)
