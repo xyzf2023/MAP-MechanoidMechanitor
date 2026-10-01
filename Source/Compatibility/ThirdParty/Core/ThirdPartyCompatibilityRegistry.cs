@@ -5,6 +5,7 @@ using HarmonyLib;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.Forgenest;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.NewRatkin;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
@@ -29,6 +30,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new DeadManSwitchCompatibility(),
             new ForgenestCompatibility(),
             new MobileDragoonCompatibility(),
+            new NewRatkinWanderingTraderInteractionCompatibility(),
+            new NewRatkinWanderingTraderIncidentCompatibility(),
             new RimSkyBlockImperialTaskCompatibility(),
             new RimSkyBlockCoronationCompatibility(),
             new SRTSExpandedCompatibility(),
