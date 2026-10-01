@@ -52,7 +52,10 @@ namespace MAP_MechanoidMechanitor.GD5
                 Log.Error("[MAP-GD5] " + label + "兼容安装失败。\n" + exception);
                 return;
             }
-            Log.Message("[MAP-GD5] " + label + "兼容已加载。");
+            if (MAPMechanitorMod.Settings?.enableStartupDetailedLogging == true)
+            {
+                Log.Message("[MAP-GD5] " + label + "兼容已加载。");
+            }
         }
 
         // 不内联：第三方类型/成员解析异常留在各模块的安装异常边界内。

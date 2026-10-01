@@ -52,7 +52,10 @@ namespace MAP_MechanoidMechanitor.GD5
                 harmony.Patch(AccessTools.DeclaredMethod(typeof(MapParent), nameof(MapParent.CheckRemoveMapNow)),
                     prefix: new HarmonyMethod(typeof(GD5BlackHiveEndingBootstrap), nameof(RemoveMapPrefix)));
                 IsReady = true;
-                Log.Message("[MAP-GD5] 黑衣机械巢接人结局已加载。");
+                if (MAPMechanitorMod.Settings?.enableStartupDetailedLogging == true)
+                {
+                    Log.Message("[MAP-GD5] 黑衣机械巢接人结局已加载。");
+                }
             }
             catch (Exception ex)
             {

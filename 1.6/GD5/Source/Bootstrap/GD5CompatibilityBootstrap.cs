@@ -62,7 +62,10 @@ namespace MAP_MechanoidMechanitor.GD5
                 harmony.Patch(target,
                     prefix: new HarmonyMethod(typeof(GD5StoryCompatibilityPatch), nameof(GD5StoryCompatibilityPatch.Prefix)));
                 IsReady = true;
-                Log.Message("[MAP-GD5] 黑衣首次通讯联动已加载，仅在机械族机械师剧本启用。");
+                if (MAPMechanitorMod.Settings?.enableStartupDetailedLogging == true)
+                {
+                    Log.Message("[MAP-GD5] 黑衣首次通讯联动已加载，仅在机械族机械师剧本启用。");
+                }
             }
             catch (Exception exception)
             {

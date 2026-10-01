@@ -33,7 +33,10 @@ namespace MAP_MechanoidMechanitor.GD5
                     nameof(GD5CommunicationCompatibilityPatch.TradeWindowPrefix)));
                 harmony.Patch(taxGetter, postfix: new HarmonyMethod(typeof(GD5CommunicationCompatibilityPatch),
                     nameof(GD5CommunicationCompatibilityPatch.ShouldPayTaxPostfix)));
-                Log.Message("[MAP-GD5] 剧本交易文案与机械巢盟友情报免税兼容已加载。");
+                if (MAPMechanitorMod.Settings?.enableStartupDetailedLogging == true)
+                {
+                    Log.Message("[MAP-GD5] 剧本交易文案与机械巢盟友情报免税兼容已加载。");
+                }
             }
             catch (Exception exception)
             {
