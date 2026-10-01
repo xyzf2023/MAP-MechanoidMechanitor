@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using RimWorld;
-using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
@@ -153,20 +152,15 @@ namespace MAP_MechanoidMechanitor
                     parent, constructedKind);
             }
             Pawn? source = carrier?.SourcePawn ?? StoredSourcePawn;
-            if (carrier?.Committed == true
+            // 读档补存由安全协调器在引用和注册表完整恢复后统一处理。
+            if (!respawningAfterLoad && carrier?.Committed == true
                 && carrier.CarrierForm == MechTransformationForm.Building
                 && source != null
+                && !source.Spawned
                 && !source.Destroyed
                 && !source.Discarded)
             {
-                EnsureSourceStateForRecovery(source);
-                if (!source.Spawned && !Find.WorldPawns.Contains(source))
-                {
-                    Find.WorldPawns.PassToWorld(
-                        source,
-                        PawnDiscardDecideMode.KeepForever);
-                }
-
+                sourceState.EnsureStored(source, parent.Faction);
                 MechFusionSourceUtility.ApplyDormantGuard(source);
             }
         }

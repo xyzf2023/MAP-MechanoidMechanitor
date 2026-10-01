@@ -49,6 +49,44 @@ namespace MAP_MechanoidMechanitor
             return registry.recordByPawn!.TryGetValue(pawn, out record);
         }
 
+        /// <summary>仅在读档安全阶段修复有效建筑形态的暂存身份，覆盖所有机械体。</summary>
+        internal static void RestoreBuildingSourcesAfterLoad()
+        {
+            GameComponent_MechTransformationRegistry? registry = CurrentRegistry;
+            if (registry == null)
+                return;
+
+            registry.EnsureIndexes();
+            // 回调可能访问注册表；使用索引快照，重复执行不重建身份或能源数据。
+            var snapshot = new List<MechTransformationRecord>(registry.recordByPawn!.Values);
+            foreach (MechTransformationRecord record in snapshot)
+            {
+                Pawn? source = record.SourcePawn;
+                Thing? carrier = record.ExternalCarrier;
+                if (record.CurrentForm != MechTransformationForm.Building
+                    || record.TransitionInProgress
+                    || source == null || source.Spawned || source.health == null || source.Dead
+                    || source.Destroyed || source.Discarded
+                    || carrier == null || carrier.Destroyed || carrier.Discarded)
+                    continue;
+
+                CompMechFormCarrier? link = carrier.TryGetComp<CompMechFormCarrier>();
+                CompMechBuildingForm? form = carrier.TryGetComp<CompMechBuildingForm>();
+                if (link == null || !link.Matches(record) || form == null)
+                    continue;
+
+                if (form.StoredSourcePawn != null && !ReferenceEquals(form.StoredSourcePawn, source))
+                {
+                    Log.ErrorOnce("[MAP-机械族机械师] 建筑快照与形态注册表的源 Pawn 不一致，未改写暂存身份："
+                        + carrier.ThingID, carrier.thingIDNumber ^ 0x4D42534D);
+                    continue;
+                }
+
+                form.SourceState.EnsureStored(source, carrier.Faction);
+                MechFusionSourceUtility.ApplyDormantGuard(source);
+            }
+        }
+
         public static MechTransformationRecord? GetOrCreateRecord(Pawn? pawn)
         {
             GameComponent_MechTransformationRegistry? registry = CurrentRegistry;

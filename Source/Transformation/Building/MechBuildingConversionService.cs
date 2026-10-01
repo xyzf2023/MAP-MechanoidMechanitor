@@ -1,6 +1,5 @@
 using System;
 using RimWorld;
-using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
@@ -40,6 +39,9 @@ namespace MAP_MechanoidMechanitor
             bool committed = false;
             try
             {
+                if (!MechTransformationWorldPawnStorage.IsAvailable)
+                    throw new InvalidOperationException("形态世界暂存阵营保护未安装，无法初始化建筑形态。");
+
                 source = PawnGenerator.GeneratePawn(new PawnGenerationRequest(
                     kind, building.Faction, forceGenerateNewPawn: true,
                     allowDead: false, allowDowned: false, canGeneratePawnRelations: false));
@@ -49,10 +51,7 @@ namespace MAP_MechanoidMechanitor
                         source, MechTransformationForm.Building, out _, out string? reason))
                     throw new InvalidOperationException(reason);
 
-                Find.WorldPawns.PassToWorld(source, PawnDiscardDecideMode.KeepForever);
-                // 原版会给自由世界 Pawn 重新分配阵营；直接建造的源 Pawn 必须先
-                // 恢复建筑所有者，再初始化玩家专属状态并捕获身份、能源快照。
-                if (source.Faction != building.Faction) source.SetFaction(building.Faction);
+                MechTransformationWorldPawnStorage.EnsureStored(source, building.Faction);
                 MechFusionSourceUtility.ApplyDormantGuard(source);
                 if (!GameComponent_MechTransformationRegistry.TryCommitTransition(source, building, out reason))
                     throw new InvalidOperationException(reason);
@@ -130,6 +129,13 @@ namespace MAP_MechanoidMechanitor
             if (pawn.Faction == null || !pawn.Faction.IsPlayerSafe())
             {
                 failureReason = "源 Pawn 不属于玩家派系。";
+                return false;
+            }
+
+            // 必须在离图前确认保护可用，不能先触发自动改派再事后改回阵营。
+            if (!MechTransformationWorldPawnStorage.IsAvailable)
+            {
+                failureReason = "形态世界暂存阵营保护未安装，无法转换建筑形态。";
                 return false;
             }
 
@@ -292,7 +298,7 @@ namespace MAP_MechanoidMechanitor
             }
 
             Thing? building = null;
-            bool pawnStored = false;
+            bool pawnNeedsRestore = false;
             bool buildingSpawned = false;
             bool transitionStarted = false;
             try
@@ -328,11 +334,10 @@ namespace MAP_MechanoidMechanitor
                 building.SetFaction(pawn.Faction);
                 // 安全队列下一 tick 才转换；再次校正读条结束后可能变化的朝向。
                 pawn.Rotation = Rot4.South;
+                // 收存或离图回调抛异常时也必须恢复已离图的 Pawn。
+                pawnNeedsRestore = true;
                 pawn.DeSpawn(DestroyMode.Vanish);
-                Find.WorldPawns.PassToWorld(
-                    pawn,
-                    PawnDiscardDecideMode.KeepForever);
-                pawnStored = true;
+                buildingComp.SourceState.EnsureStored(pawn, building.Faction);
                 MechFusionSourceUtility.ApplyDormantGuard(pawn);
 
                 // DeSpawn / PassToWorld / Hediff 回调可能在原落点生成其他 Thing。
@@ -340,7 +345,7 @@ namespace MAP_MechanoidMechanitor
                 if (!CanPlaceBuildingForm(pawn, buildingDef, map, spawnCell, buildingRotation))
                 {
                     RollBackConversion(pawn, building, map, originalPosition,
-                        originalRotation, pawnStored, buildingSpawned);
+                        originalRotation, pawnNeedsRestore, buildingSpawned);
                     Reject(pawn,
                         "MAP_MechanoidMechanitor.Transformation.Building.NoPlacement".Translate(),
                         sendFailureMessage);
@@ -368,7 +373,7 @@ namespace MAP_MechanoidMechanitor
                         map,
                         originalPosition,
                         originalRotation,
-                        pawnStored,
+                        pawnNeedsRestore,
                         buildingSpawned);
                     Reject(pawn, failureReason, sendFailureMessage);
                     return false;
@@ -397,7 +402,7 @@ namespace MAP_MechanoidMechanitor
                         map,
                         originalPosition,
                         originalRotation,
-                        pawnStored,
+                        pawnNeedsRestore,
                         buildingSpawned);
                 }
 
@@ -749,7 +754,6 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            bool removedFromWorld = false;
             try
             {
                 if (!buildingState.RestoreSourceIdentity(sourcePawn))
@@ -763,7 +767,6 @@ namespace MAP_MechanoidMechanitor
                 if (Find.WorldPawns.Contains(sourcePawn))
                 {
                     Find.WorldPawns.RemovePawn(sourcePawn);
-                    removedFromWorld = true;
                 }
 
                 if (sourcePawn.Dead)
@@ -806,7 +809,7 @@ namespace MAP_MechanoidMechanitor
                 if (!buildingState.TryWriteBackEnergy(sourcePawn))
                 {
                     failureReason = "恢复源 Pawn 能源需求失败，已回滚本次恢复。";
-                    RollBackRestore(sourcePawn, restoredThing, removedFromWorld);
+                    RollBackRestore(sourcePawn, buildingState, restoredThing);
                     GameComponent_MechTransformationRegistry
                         .TryCancelTransition(sourcePawn);
                     restoredThing = null;
@@ -818,7 +821,7 @@ namespace MAP_MechanoidMechanitor
                         targetCarrier: null,
                         out failureReason))
                 {
-                    RollBackRestore(sourcePawn, restoredThing, removedFromWorld);
+                    RollBackRestore(sourcePawn, buildingState, restoredThing);
                     GameComponent_MechTransformationRegistry
                         .TryCancelTransition(sourcePawn);
                     restoredThing = null;
@@ -829,7 +832,7 @@ namespace MAP_MechanoidMechanitor
             }
             catch (Exception ex)
             {
-                RollBackRestore(sourcePawn, restoredThing, removedFromWorld);
+                RollBackRestore(sourcePawn, buildingState, restoredThing);
                 GameComponent_MechTransformationRegistry.TryCancelTransition(sourcePawn);
                 restoredThing = null;
                 failureReason = "恢复源 Pawn 时抛出异常，已尝试回滚。";
@@ -922,7 +925,7 @@ namespace MAP_MechanoidMechanitor
             Map map,
             IntVec3 originalPosition,
             Rot4 originalRotation,
-            bool pawnStored,
+            bool pawnNeedsRestore,
             bool buildingSpawned)
         {
             if (buildingSpawned && building != null && !building.Destroyed)
@@ -930,8 +933,9 @@ namespace MAP_MechanoidMechanitor
                 building.Destroy(DestroyMode.Vanish);
             }
 
-            if (pawnStored && !pawn.Spawned && !pawn.Destroyed)
+            if (pawnNeedsRestore && !pawn.Spawned && !pawn.Destroyed && !pawn.Discarded)
             {
+                building?.TryGetComp<CompMechBuildingForm>()?.SourceState.RestoreSourceIdentity(pawn);
                 if (Find.WorldPawns.Contains(pawn))
                 {
                     Find.WorldPawns.RemovePawn(pawn);
@@ -954,9 +958,7 @@ namespace MAP_MechanoidMechanitor
                 }
                 else
                 {
-                    Find.WorldPawns.PassToWorld(
-                        pawn,
-                        PawnDiscardDecideMode.KeepForever);
+                    MechTransformationWorldPawnStorage.EnsureStored(pawn, pawn.Faction);
                     Log.Error(
                         "[MAP-机械族机械师] 建筑转换回滚时地图上没有安全位置，" +
                         "原始 Pawn 已保留在 WorldPawns：" +
@@ -970,21 +972,18 @@ namespace MAP_MechanoidMechanitor
 
         private static void RollBackRestore(
             Pawn sourcePawn,
-            Thing? restoredThing,
-            bool removedFromWorld)
+            MechBuildingSourceState buildingState,
+            Thing? restoredThing)
         {
             if (restoredThing != null && restoredThing.Spawned)
             {
                 restoredThing.DeSpawn(DestroyMode.Vanish);
             }
 
-            if (!sourcePawn.Destroyed
-                && !sourcePawn.Discarded
-                && (removedFromWorld || !Find.WorldPawns.Contains(sourcePawn)))
+            if (!sourcePawn.Spawned && !sourcePawn.Destroyed && !sourcePawn.Discarded)
             {
-                Find.WorldPawns.PassToWorld(
-                    sourcePawn,
-                    PawnDiscardDecideMode.KeepForever);
+                // 已在 WorldPawns 中也要维护快照阵营；公共入口避免重复收存。
+                buildingState.EnsureStored(sourcePawn);
             }
         }
 

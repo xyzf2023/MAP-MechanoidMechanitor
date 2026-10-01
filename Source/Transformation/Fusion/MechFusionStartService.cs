@@ -90,7 +90,7 @@ namespace MAP_MechanoidMechanitor
             try
             {
                 // 在离图、装备转移和控制关系捕获之前确认保护可用，失败直接走原事务回滚。
-                if (!MechFusionWorldPawnFactionPatch.Installed)
+                if (!MechTransformationWorldPawnStorage.IsAvailable)
                     throw new InvalidOperationException("合体世界暂存阵营保护未安装，无法开始合体。");
 
                 // 监管关系与限时效果必须在离图、迁移控制权之前捕获。

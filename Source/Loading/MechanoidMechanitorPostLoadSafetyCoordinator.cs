@@ -390,6 +390,10 @@ namespace MAP_MechanoidMechanitor
             invokingPositiveRestore = true;
             try
             {
+                // 建筑源可能在旧档中被世界暂存自动改派；先恢复快照阵营，
+                // 再同步机械师身份和机械意识，避免错误资格影响正面来源恢复。
+                GameComponent_MechTransformationRegistry.RestoreBuildingSourcesAfterLoad();
+
                 if (!InvokeVoid(RestoreAcquiredRecordsMethod, registry, "恢复后天机械师记录")
                     || !InvokeVoid(SynchronizeAcquiredHediffsMethod, registry, "同步后天机械师身份")
                     || !InvokeVoid(SynchronizeNativeHediffsMethod, registry, "同步先天机械师身份"))

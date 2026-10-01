@@ -28,6 +28,16 @@ namespace MAP_MechanoidMechanitor
 
         internal Pawn? StoredSourcePawn => storedSourcePawn;
 
+        /// <summary>按已有快照维护暂存阵营，不恢复监管关系或重新捕获能源。</summary>
+        internal void EnsureStored(Pawn source, Faction? carrierFaction = null)
+        {
+            if (storedSourcePawn != null && !ReferenceEquals(storedSourcePawn, source))
+                throw new InvalidOperationException("建筑暂存快照与源 Pawn 不一致。");
+
+            EnsureSourceStateForRecovery(source, carrierFaction);
+            MechTransformationWorldPawnStorage.EnsureStored(source, originalSourceFaction);
+        }
+
         internal void CaptureSourceState(Pawn source)
         {
             storedSourcePawn = source;
