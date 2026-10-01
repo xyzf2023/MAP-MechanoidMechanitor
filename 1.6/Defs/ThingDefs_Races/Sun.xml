@@ -9,8 +9,9 @@
       <baseHealthScale>3</baseHealthScale>
     </race>
     <statBases>
+      <MarketValue>20000</MarketValue>
       <MoveSpeed>3.0</MoveSpeed>
-      <BandwidthCost>5</BandwidthCost>
+      <BandwidthCost>20</BandwidthCost>
     </statBases>
     <comps>
       <!-- 玩家太阳：湮灭炮数值 -->
