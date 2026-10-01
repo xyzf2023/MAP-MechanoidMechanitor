@@ -12,6 +12,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimSkyBlock;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpanded;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.WorkTab;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
@@ -35,7 +36,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new RimSkyBlockImperialTaskCompatibility(),
             new RimSkyBlockCoronationCompatibility(),
             new SRTSExpandedCompatibility(),
-            new VanillaPsycastsExpandedCompatibility()
+            new VanillaPsycastsExpandedCompatibility(),
+            new WorkTabCompatibility()
         };
 
         public static void ApplyAll(Harmony harmony)
