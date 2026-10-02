@@ -34,6 +34,8 @@
     <label>黑衣憎恶毒蜂</label>
     <race>MAP_GD5_BlackHiveVisitor</race>
     <combatPower>1</combatPower>
+    <allowInMechClusters>false</allowInMechClusters>
+    <appearsRandomlyInCombatGroups>false</appearsRandomlyInCombatGroups>
     <canMeleeAttack>false</canMeleeAttack>
     <useFixedRotation>true</useFixedRotation>
     <fixedRotation>North</fixedRotation>
