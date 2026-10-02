@@ -26,6 +26,27 @@ namespace MAP_MechanoidMechanitor
                 && pawn.apparel != null;
         }
 
+        public static bool CanUseOutfitStand(Pawn? pawn)
+        {
+            return pawn != null
+                && pawn.Spawned
+                && !pawn.Destroyed
+                && !pawn.Dead
+                && !pawn.InMentalState
+                && !pawn.Deathresting
+                && !pawn.IsSelfShutdown()
+                && pawn.Faction == Faction.OfPlayer
+                && pawn.HostFaction == null
+                && pawn.CanTakeOrder
+                && pawn.jobs != null
+                && CanUseWearFloatMenu(pawn)
+                && CanRemoveApparel(pawn)
+                && pawn.outfits?.forcedHandler != null
+                // 原版整套换装同时处理架上的武器，必须具备现有的人类武器资格。
+                && CompHumanWeaponUser.PawnCanUseHumanWeapons(pawn)
+                && CompHumanWeaponUser.PawnAllowsEquipFloatMenu(pawn);
+        }
+
         public static bool CanUseApparelVerbCommands(Pawn? pawn)
         {
             if (pawn == null)
