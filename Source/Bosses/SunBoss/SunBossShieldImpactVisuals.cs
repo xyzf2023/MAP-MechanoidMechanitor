@@ -6,6 +6,7 @@ using Verse.Sound;
 namespace MAP_MechanoidMechanitor
 {
     /// <summary>太阳阶段减伤的瞬时表现；只复用护盾素材，不参与伤害和能量结算。</summary>
+    [StaticConstructorOnStartup]
     internal sealed class SunBossShieldImpactVisuals
     {
         private const int DurationTicks = 18;
@@ -15,7 +16,8 @@ namespace MAP_MechanoidMechanitor
         private int lastBurstTick = -9999;
         private Vector3 impactDirection;
         private MaterialPropertyBlock? properties;
-        private static Material? bubbleMaterial;
+        private static readonly Material bubbleMaterial =
+            MaterialPool.MatFrom("Other/ShieldBubble", ShaderDatabase.Transparent);
 
         private static float DrawSize(Pawn pawn)
         {
@@ -62,7 +64,6 @@ namespace MAP_MechanoidMechanitor
             if (!pawn.Spawned || pawn.Dead || pawn.Destroyed) return;
             int elapsed = Find.TickManager.TicksGame - lastImpactTick;
             if (elapsed < 0 || elapsed >= DurationTicks) return;
-            bubbleMaterial ??= MaterialPool.MatFrom("Other/ShieldBubble", ShaderDatabase.Transparent);
             properties ??= new MaterialPropertyBlock();
             float jitter = Mathf.Clamp01(1f - elapsed / (float)JitterTicks) * 0.05f;
             float size = DrawSize(pawn) - jitter;

@@ -25,7 +25,7 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
-    /// <summary>分层升降、整图交接及沿折线分流的灯效；动态资源在首次实际绘制时创建并复用。</summary>
+    /// <summary>分层升降、整图交接及沿折线分流的灯效；绘制资源在启动主线程创建并复用。</summary>
     internal static class ReactorStabilizerPresentation
     {
         private const string TextureRoot = "Buildings/SunBOSSAncient/";
@@ -49,7 +49,8 @@ namespace MAP_MechanoidMechanitor
         private static readonly Color OverloadColor = new Color(1f, 0.14f, 0.025f);
         private static readonly Color PeakColor = new Color(1f, 0.91f, 0.62f);
 
-        // 显式静态构造阻止提前初始化；休眠地图和仅执行扬尘 Tick 都不会创建这些资源。
+        // 由原版启动流程在主线程统一初始化材质和网格，绘制时只复用缓存。
+        [StaticConstructorOnStartup]
         private static class Resources
         {
             static Resources() { }
