@@ -9,7 +9,7 @@
 		<li>星羽枝繁</li>
 		<li>数据删除</li>
 	</authors>
-	<modVersion IgnoreIfNoMatchingField="true">0.7.0</modVersion>
+	<modVersion IgnoreIfNoMatchingField="true">1.0.0</modVersion>
 	<description>扮演觉醒了自我意识的机械族机械师，体验纯粹由机械族组成的殖民地。已适配文化仪式、异象心灵仪式、爵位与灵能、逆重飞船等多项原版玩法。
 
 - 预设「共生盟约」「肃清指令」两条额外玩法路线。与其他派系建立盟约，发展贸易、共同防卫与联合军事行动，最终携手挑战奥德赛的机械主脑；或贯彻主脑的意志，肃清有机智慧生命，换取机械巢的调拨与支援。选择权在你手中。
@@ -34,9 +34,7 @@
 
 - 三个全新建筑：量产型机械培育仓、机体整备台与并行思维阵列。
 
-- 两场各具特色的全新 BOSS 战等你挑战：
-「正义」- 重装指挥单元：在野外部署炮塔与护盾，固守阵地，持续调拨机械族向殖民地发起进攻。
-「太阳」- 能源核心：沉睡于设施之中的超重型机械体，拥有恐怖的火力，以及围绕反应堆稳定器展开的独特战斗机制。
+- 两场各具特色的全新 BOSS 战等你挑战。
 
 - 拓展奥德赛机械主脑战，为主脑增加机械增援、EMP 冲击与带宽干扰。你也可以在任务线中选择接管主脑，使机械巢成为永久盟友，并将机械巢的力量为己所用（需要奥德赛DLC）。
 
@@ -74,9 +72,7 @@ Play as a mechanoid mechanitor who has awakened to self-awareness, and experienc
 
 - Two new buildings: the mass-production mech gestator and the mech service station. Gestate mechanoids rapidly and release them automatically; manage charging, repairs, and standby according to configured policies to complete your mechanical colony's production and maintenance systems.
 
-- Two distinctive new boss battles await:
-Justice - Heavy command unit: Deploys turrets and shields in the wilderness, holds its position, and continually dispatches mechanoids to attack the colony.
-Sun - Energy core: A super-heavy mechanoid lying dormant within a facility, armed with terrifying firepower and featuring unique combat mechanics centered on reactor stabilizers.
+- Two distinctive new boss battles await.
 
 - An expanded Odyssey cerebrex battle, adding mechanoid reinforcements, EMP pulses, and bandwidth interference. During the questline, you can also choose to take over the cerebrex, making the mechanoid hive a permanent ally and putting its power at your disposal (requires the Odyssey DLC).
 
