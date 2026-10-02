@@ -35,56 +35,76 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
-            if (pawn.MapHeld == null)
+            Map? map = pawn.MapHeld;
+            if (map == null)
             {
                 return false;
             }
 
-            if (pawn.ParentHolder is Pawn_CarryTracker carryTracker)
+            IThingHolder? holder = pawn.ParentHolder;
+            // 搬运者也可能进入穿梭机等容器；沿搬运链寻找地图上的有效指挥位置。
+            while (holder is Pawn_CarryTracker carryTracker)
             {
-                return carryTracker.pawn != null && carryTracker.pawn.Spawned;
+                Pawn? carrier = carryTracker.pawn;
+                if (carrier == null || carrier.Destroyed || carrier.Dead || carrier == pawn)
+                {
+                    return false;
+                }
+
+                if (carrier.Spawned)
+                {
+                    return carrier.Map == map;
+                }
+
+                holder = carrier.ParentHolder;
             }
 
-            if (pawn.ParentHolder is Building_CryptosleepCasket casket && casket.Spawned)
-            {
-                return true;
-            }
+            return IsSupportedHolder(holder, map);
+        }
 
-            // 文化 DLC 塑形仓（CompBiosculpterPod）内的机械师可继续控制。
-            if (IsSupportedBiosculpterPodHolder(pawn))
+        // 仅认可仍在地图上的原版容器，不将飞行运输舱、世界对象或任意 ThingOwner 放行。
+        public static bool IsSupportedHolder(IThingHolder? holder, Map? expectedMap)
+        {
+            switch (holder)
             {
-                return true;
+                case Building_CryptosleepCasket casket:
+                    return IsSpawnedOnMap(casket, expectedMap);
+                case Building_Enterable building:
+                    // 基因提取器、成长舱及软/高阶子核心扫描仪共享此原版基类。
+                    return IsSpawnedOnMap(building, expectedMap);
+                case Building_HoldingPlatform platform:
+                    return ModsConfig.AnomalyActive && IsSpawnedOnMap(platform, expectedMap);
+                case PawnFlyer flyer:
+                    return IsSpawnedOnMap(flyer, expectedMap);
+                case CompDevourer devourer:
+                    return ModsConfig.AnomalyActive && IsSpawnedOnMap(devourer.parent, expectedMap);
+                case CompBiosculpterPod pod:
+                    return IsSupportedBiosculpterPod(pod, expectedMap);
+                case CompTransporter transporter:
+                    return IsSupportedTransporter(transporter, expectedMap);
+                default:
+                    return false;
             }
+        }
 
-            // 原版空投舱发射器（TransportPod）内、且尚未发射离图的机械师可继续控制。
-            if (pawn.ParentHolder is CompTransporter transporter
-                && IsOriginalTransportPodTransporter(transporter))
-            {
-                return true;
-            }
+        private static bool IsSpawnedOnMap(Thing? thing, Map? expectedMap)
+        {
+            return thing != null && !thing.Destroyed && thing.Spawned && thing.Map != null
+                && (expectedMap == null || thing.Map == expectedMap);
+        }
 
-            return false;
+        // 空投舱及带有原版穿梭机组件的运输器均可在登舱后、起飞前维持控制。
+        public static bool IsSupportedTransporter(CompTransporter? comp, Map? expectedMap = null)
+        {
+            ThingWithComps? parent = comp?.parent;
+            return IsSpawnedOnMap(parent, expectedMap)
+                && (parent!.def == ThingDefOf.TransportPod || parent.GetComp<CompShuttle>() != null);
         }
 
         // 是否为有效代理子链机械师（供各 Harmony 补丁类的临时例外判断复用）。
         public static bool IsValidProxySubchainMechanitor(Pawn? pawn)
         {
             return IsEligibleHost(pawn);
-        }
-
-        // 是否为原版空投舱发射器（TransportPod）的 CompTransporter，且其父建筑仍在当前地图。
-        // 仅放行原版空投舱发射器，不覆盖穿梭机、运输车队、传送门或其他 Mod 的任意运输容器。
-        public static bool IsOriginalTransportPodTransporter(CompTransporter? comp)
-        {
-            if (comp == null)
-            {
-                return false;
-            }
-
-            Thing? parentBuilding = comp.parent;
-            return parentBuilding != null
-                && parentBuilding.def == ThingDefOf.TransportPod
-                && parentBuilding.Spawned;
         }
 
         // 统一判断：指定塑形仓是否为代理子链可认可的受支持容器。
@@ -101,31 +121,12 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            Thing? parentBuilding = pod.parent;
-            if (parentBuilding == null
-                || !parentBuilding.Spawned
-                || parentBuilding.Map == null)
-            {
-                return false;
-            }
-
-            return expectedMap == null || parentBuilding.Map == expectedMap;
+            return IsSpawnedOnMap(pod.parent, expectedMap);
         }
 
-        // Pawn 当前是否位于受支持的塑形仓内。
-        private static bool IsSupportedBiosculpterPodHolder(Pawn pawn)
-        {
-            if (pawn.ParentHolder is not CompBiosculpterPod pod)
-            {
-                return false;
-            }
-
-            return IsSupportedBiosculpterPod(pod, pawn.MapHeld);
-        }
-
-        // 收集本次发射组中、位于原版空投舱发射器内、且为有效代理子链机械师的 Pawn。
+        // 收集本次发射组内受支持容器中的机械师，包括搬运者携带的机械师。
         // 在 CompLaunchable.TryLaunch 真正执行前调用，以在原容器被销毁/转移前锁定目标。
-        public static List<Pawn> CollectProxySubchainMechanitorsInOriginalTransportPods(
+        public static List<Pawn> CollectProxySubchainMechanitorsInSupportedTransporters(
             CompLaunchable launchable)
         {
             List<Pawn> result = new List<Pawn>();
@@ -165,26 +166,40 @@ namespace MAP_MechanoidMechanitor
             List<CompTransporter> group = new List<CompTransporter>(originalGroup);
             foreach (CompTransporter comp in group)
             {
-                if (!IsOriginalTransportPodTransporter(comp))
+                if (!IsSupportedTransporter(comp, map))
                 {
                     continue;
                 }
 
-                foreach (Thing thing in comp.GetDirectlyHeldThings())
-                {
-                    if (thing is Pawn p
-                        && IsValidProxySubchainMechanitor(p)
-                        && p.mechanitor != null)
-                    {
-                        result.Add(p);
-                    }
-                }
+                CollectHeldMechanitors(comp, result);
             }
 
             return result;
         }
 
-        // 对发射前采集的机械师，仅当发射后确实已离开“地图内空投舱发射器”白名单状态时，
+        // 任务穿梭机不通过 CompLaunchable 起飞，直接在其搬运容器转移前采集。
+        public static List<Pawn> CollectProxySubchainMechanitorsInTransporter(CompTransporter? comp)
+        {
+            List<Pawn> result = new List<Pawn>();
+            if (IsSupportedTransporter(comp))
+            {
+                CollectHeldMechanitors(comp!, result);
+            }
+            return result;
+        }
+
+        private static void CollectHeldMechanitors(IThingHolder holder, List<Pawn> result)
+        {
+            foreach (Thing thing in ThingOwnerUtility.GetAllThingsRecursively(holder))
+            {
+                if (thing is Pawn pawn && CanMaintainControl(pawn) && !result.Contains(pawn))
+                {
+                    result.Add(pawn);
+                }
+            }
+        }
+
+        // 对起飞前采集的机械师，仅当起飞后确实已离开地图内受支持容器时，
         // 才解除其下属机械族征召；发射被取消、或仍停留在地图内发射器中的 Pawn 不受影响。
         public static void UndraftProxySubchainMechsIfLeftSupportedHolders(List<Pawn>? pawns)
         {
@@ -238,6 +253,17 @@ namespace MAP_MechanoidMechanitor
             }
 
             supportedHolderTransitionDepth[pawn] = depth - 1;
+        }
+
+        // 容器入口整体执行完后再校验，异常或加入失败不得留下临时控制例外。
+        public static void CompleteSupportedHolderTransition(Pawn? pawn)
+        {
+            EndSupportedHolderTransition(pawn);
+            if (pawn != null && !supportedHolderTransitionDepth.ContainsKey(pawn)
+                && !pawn.Destroyed && pawn.mechanitor != null && !CanMaintainControl(pawn))
+            {
+                pawn.mechanitor.UndraftAllMechs();
+            }
         }
 
         public static bool ShouldPreserveControlDuringCurrentHolderTransition(Pawn? pawn)

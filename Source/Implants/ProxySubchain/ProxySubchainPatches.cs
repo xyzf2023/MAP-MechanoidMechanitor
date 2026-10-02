@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using RimWorld;
 using Verse;
@@ -79,29 +80,38 @@ namespace MAP_MechanoidMechanitor
     public static class ProxySubchainCryptosleepPatches
     {
         [HarmonyPrefix]
-        public static void Prefix(Thing thing, out Pawn? __state)
+        public static void Prefix(Building_CryptosleepCasket __instance, Thing thing, out Pawn? __state)
         {
-            __state = ProxySubchainUtility.BeginSupportedHolderTransition(thing);
+            __state = ProxySubchainUtility.IsSupportedHolder(__instance, thing?.MapHeld)
+                ? ProxySubchainUtility.BeginSupportedHolderTransition(thing)
+                : null;
         }
 
         [HarmonyFinalizer]
         public static Exception? Finalizer(Exception? __exception, Pawn? __state)
         {
-            ProxySubchainUtility.EndSupportedHolderTransition(__state);
+            ProxySubchainUtility.CompleteSupportedHolderTransition(__state);
             return __exception;
         }
     }
 
-    // 文化 DLC 塑形仓：进入塑形仓的短暂过程中，阻止 Pawn_MechanitorTracker.Notify_DeSpawned
-    // 自动解除下属机械族征召。仅在真正进入塑形仓时给予这一受支持容器切換例外。
-    [HarmonyPatch(typeof(CompBiosculpterPod), nameof(CompBiosculpterPod.TryAcceptPawn), new Type[] { typeof(Pawn), typeof(string) })]
+    // 塑形仓的字符串入口和直接周期入口都需要保护；嵌套调用由深度计数处理。
+    [HarmonyPatch]
     public static class ProxySubchainBiosculpterPatches
     {
+        public static IEnumerable<MethodBase> TargetMethods()
+        {
+            yield return AccessTools.Method(typeof(CompBiosculpterPod),
+                nameof(CompBiosculpterPod.TryAcceptPawn), new[] { typeof(Pawn), typeof(string) });
+            yield return AccessTools.Method(typeof(CompBiosculpterPod),
+                nameof(CompBiosculpterPod.TryAcceptPawn), new[] { typeof(Pawn), typeof(CompBiosculpterPod_Cycle) });
+        }
+
         [HarmonyPrefix]
         public static void Prefix(CompBiosculpterPod __instance, Pawn pawn, out Pawn? __state)
         {
             __state = null;
-            if (!ProxySubchainUtility.IsSupportedBiosculpterPod(__instance, pawn.Map))
+            if (!ProxySubchainUtility.IsSupportedBiosculpterPod(__instance, pawn?.MapHeld))
             {
                 return;
             }
@@ -112,15 +122,83 @@ namespace MAP_MechanoidMechanitor
         [HarmonyFinalizer]
         public static Exception? Finalizer(Exception? __exception, Pawn? __state)
         {
+            ProxySubchainUtility.CompleteSupportedHolderTransition(__state);
+            return __exception;
+        }
+    }
+
+    // 基因提取器、成长舱和子核心扫描仪在加入容器前先将 Pawn 移出地图。
+    [HarmonyPatch]
+    public static class ProxySubchainEnterablePatches
+    {
+        public static IEnumerable<MethodBase> TargetMethods()
+        {
+            Type[] parameters = { typeof(Pawn) };
+            yield return AccessTools.Method(typeof(Building_GeneExtractor), nameof(Building_Enterable.TryAcceptPawn), parameters);
+            yield return AccessTools.Method(typeof(Building_GrowthVat), nameof(Building_Enterable.TryAcceptPawn), parameters);
+            yield return AccessTools.Method(typeof(Building_SubcoreScanner), nameof(Building_Enterable.TryAcceptPawn), parameters);
+        }
+
+        [HarmonyPrefix]
+        public static void Prefix(Building_Enterable __instance, Pawn pawn, out Pawn? __state)
+        {
+            __state = ProxySubchainUtility.IsSupportedHolder(__instance, pawn?.MapHeld)
+                ? ProxySubchainUtility.BeginSupportedHolderTransition(pawn)
+                : null;
+        }
+
+        [HarmonyFinalizer]
+        public static Exception? Finalizer(Exception? __exception, Pawn? __state)
+        {
+            ProxySubchainUtility.CompleteSupportedHolderTransition(__state);
+            return __exception;
+        }
+    }
+
+    // 吞噬者内仍存活的机械师沿用吞噬者的地图位置，不绕过伤害或死亡通知。
+    [HarmonyPatch(typeof(CompDevourer), nameof(CompDevourer.StartDigesting))]
+    public static class ProxySubchainDevourerPatches
+    {
+        [HarmonyPrefix]
+        public static void Prefix(CompDevourer __instance, LocalTargetInfo target, out Pawn? __state)
+        {
+            Pawn? pawn = target.Thing as Pawn;
+            __state = pawn != null && ProxySubchainUtility.IsSupportedHolder(__instance, pawn.MapHeld)
+                ? ProxySubchainUtility.BeginSupportedHolderTransition(pawn)
+                : null;
+        }
+
+        [HarmonyFinalizer]
+        public static Exception? Finalizer(Exception? __exception, Pawn? __state)
+        {
+            ProxySubchainUtility.CompleteSupportedHolderTransition(__state);
+            return __exception;
+        }
+    }
+
+    // 跳跃本体使用 WillReplace，原版已保留征召；随行搬运物却会额外 DeSpawn。
+    // MakeFlyer 返回后才由调用方生成载体，此处只结束保护，不在尚未生成时误判离图。
+    [HarmonyPatch(typeof(PawnFlyer), nameof(PawnFlyer.MakeFlyer))]
+    public static class ProxySubchainFlyerCarriedPawnPatches
+    {
+        [HarmonyPrefix]
+        public static void Prefix(Pawn pawn, bool flyWithCarriedThing, out Pawn? __state)
+        {
+            __state = flyWithCarriedThing && pawn?.Spawned == true
+                ? ProxySubchainUtility.BeginSupportedHolderTransition(pawn.carryTracker?.CarriedThing)
+                : null;
+        }
+
+        [HarmonyFinalizer]
+        public static Exception? Finalizer(Exception? __exception, Pawn? __state)
+        {
             ProxySubchainUtility.EndSupportedHolderTransition(__state);
             return __exception;
         }
     }
 
-    // 原版空投舱发射器：Pawn 通过 JobDriver_EnterTransporter 进入 CompTransporter 时，
-    // DeSpawnOrDeselect 会触发 Notify_DeSpawned。仅在“当前 Pawn 为有效代理子链机械师、
-    // 正执行 EnterTransporter、目标是原版空投舱发射器且发射器仍在当前地图”时才临时保留控制。
-    // 该补丁不影响其他 Pawn 的 DeSpawnOrDeselect，也不影响非空投舱的离图逻辑。
+    // 登入运输器或休眠舱时，原版先 DeSpawnOrDeselect，之后才加入实际容器。
+    // 必须在此保护，不能仅在容器的 TryAcceptThing 中才开始保护。
     [HarmonyPatch(typeof(Thing), nameof(Thing.DeSpawnOrDeselect))]
     public static class ProxySubchainTransporterEnterDespawnPatches
     {
@@ -133,7 +211,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
-            if (!IsEnteringSupportedTransportPod(pawn))
+            if (!IsEnteringSupportedContainer(pawn))
             {
                 return;
             }
@@ -148,34 +226,25 @@ namespace MAP_MechanoidMechanitor
             return __exception;
         }
 
-        private static bool IsEnteringSupportedTransportPod(Pawn pawn)
+        private static bool IsEnteringSupportedContainer(Pawn pawn)
         {
             if (!ProxySubchainUtility.IsValidProxySubchainMechanitor(pawn))
             {
                 return false;
             }
 
-            if (pawn.jobs?.curDriver is not JobDriver_EnterTransporter enterDriver)
+            if (pawn.jobs?.curDriver is JobDriver_EnterTransporter enterDriver)
             {
-                return false;
+                return ProxySubchainUtility.IsSupportedTransporter(enterDriver.Transporter, pawn.Map);
             }
 
-            CompTransporter? transporter = enterDriver.Transporter;
-            if (!ProxySubchainUtility.IsOriginalTransportPodTransporter(transporter))
-            {
-                return false;
-            }
-
-            Thing? parentBuilding = transporter.parent;
-            return parentBuilding != null
-                && parentBuilding.Spawned
-                && parentBuilding.Map == pawn.Map;
+            return pawn.jobs?.curDriver is JobDriver_EnterCryptosleepCasket
+                && pawn.CurJob?.targetA.Thing is Building_CryptosleepCasket casket
+                && ProxySubchainUtility.IsSupportedHolder(casket, pawn.Map);
         }
     }
 
-    // 原版空投舱发射器真正发射：发射会将 Pawn 从地图内空投舱发射器转移到飞行空投舱/世界对象，
-    // 此时代理子链不再能维持控制。发射前锁定本次发射组中处于原版空投舱发射器的有效代理子链机械师，
-    // 发射后只对确实已离开白名单状态者解除下属机械族征召；发射被取消或仍停留地图内者不受影响。
+    // 玩家发射空投舱或穿梭机：转移到飞行运输舱后结束代理控制。
     [HarmonyPatch(typeof(CompLaunchable), nameof(CompLaunchable.TryLaunch))]
     public static class ProxySubchainTransporterLaunchCleanupPatches
     {
@@ -183,7 +252,27 @@ namespace MAP_MechanoidMechanitor
         public static void Prefix(CompLaunchable __instance, out List<Pawn>? __state)
         {
             __state = ProxySubchainUtility
-                .CollectProxySubchainMechanitorsInOriginalTransportPods(__instance);
+                .CollectProxySubchainMechanitorsInSupportedTransporters(__instance);
+        }
+
+        [HarmonyFinalizer]
+        public static Exception? Finalizer(Exception? __exception, List<Pawn>? __state)
+        {
+            ProxySubchainUtility.UndraftProxySubchainMechsIfLeftSupportedHolders(__state);
+            return __exception;
+        }
+    }
+
+    // 帝国/任务穿梭机的起飞不经过 CompLaunchable，须单独覆盖其实际转移入口。
+    [HarmonyPatch(typeof(ShipJob_FlyAway), nameof(ShipJob_FlyAway.TryStart))]
+    public static class ProxySubchainShuttleLaunchCleanupPatches
+    {
+        [HarmonyPrefix]
+        public static void Prefix(ShipJob_FlyAway __instance, out List<Pawn>? __state)
+        {
+            Thing? ship = __instance.transportShip?.shipThing;
+            __state = ProxySubchainUtility.CollectProxySubchainMechanitorsInTransporter(
+                ship?.TryGetComp<CompTransporter>());
         }
 
         [HarmonyFinalizer]
