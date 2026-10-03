@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GroupFlight_Label>Group antigravity</MAP_GroupFlight_Label>
+  <MAP_GroupFlight_RequiresDraft>Can only be used while drafted.</MAP_GroupFlight_RequiresDraft>
+  <MAP_GroupFlight_OutsideFormationBounds>This position would place a formation member outside the map boundaries.</MAP_GroupFlight_OutsideFormationBounds>
+  <MAP_GroupFlight_PassengerMoveBlocked>Movement is controlled by group antigravity.</MAP_GroupFlight_PassengerMoveBlocked>
+</LanguageData>

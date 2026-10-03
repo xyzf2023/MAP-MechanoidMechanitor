@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <MAP_GravityField_Label>Gravity field</MAP_GravityField_Label>
+  <MAP_GravityField_Description>Deploy a selective gravity field that suppresses and neutralizes all hostile projectiles within range and prevents explosions.\nConsumes 10% energy on activation, then 1% energy per second.</MAP_GravityField_Description>
+  <MAP_GravityField_NotEnoughEnergy>Deploying the gravity field requires at least 10% energy.</MAP_GravityField_NotEnoughEnergy>
+  <MAP_GravityField_Unavailable>Magician cannot act.</MAP_GravityField_Unavailable>
+</LanguageData>

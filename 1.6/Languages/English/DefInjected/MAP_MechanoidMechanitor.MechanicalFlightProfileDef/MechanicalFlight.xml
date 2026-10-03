@@ -2,4 +2,5 @@
 <LanguageData>
   <!-- Source folder: Defs/MechanicalFlight -->
   <MAP_DefaultMechanicalFlightProfile.label>Default mechanical flight profile</MAP_DefaultMechanicalFlightProfile.label>
+  <MAP_GroupAntigravityFlightProfile.label>Group antigravity flight profile</MAP_GroupAntigravityFlightProfile.label>
 </LanguageData>

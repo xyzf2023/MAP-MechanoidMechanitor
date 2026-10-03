@@ -49,4 +49,5 @@
   <MAP_Job_MechServiceStandby.reportString>Awaiting orders...</MAP_Job_MechServiceStandby.reportString>
   <MAP_SunBossRally.reportString>Moving to the edge of the hall.</MAP_SunBossRally.reportString>
   <MAP_MechanicalFlightEmergencyLanding.reportString>Performing an emergency landing.</MAP_MechanicalFlightEmergencyLanding.reportString>
+  <MAP_GravityDisorderWait.reportString>Unable to act due to gravity disruption.</MAP_GravityDisorderWait.reportString>
 </LanguageData>

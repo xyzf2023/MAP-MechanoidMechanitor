@@ -92,4 +92,7 @@
   <MAP_SunEnergy.description>Sun's internal antimatter reactor is supplying it with nearly unlimited energy.</MAP_SunEnergy.description>
   <MAP_SunCorona.label>Corona</MAP_SunCorona.label>
   <MAP_SunCorona.description>Continuously receives energy remotely from Sun, greatly reducing its own energy consumption and slowly restoring energy.</MAP_SunCorona.description>
+  <MAP_GravityDisorder.label>Gravity disruption</MAP_GravityDisorder.label>
+  <MAP_GravityDisorder.description>Gravity disruption inflicted by Magician. The gravity field around this unit is highly unstable, preventing it from acting normally.</MAP_GravityDisorder.description>
+  <MAP_GravityDisorder.descriptionShort>This unit cannot perform any actions due to changes in the gravity field.</MAP_GravityDisorder.descriptionShort>
 </LanguageData>
