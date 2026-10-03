@@ -53,7 +53,7 @@ namespace MAP_MechanoidMechanitor
             // 先撤销临时 Verb，再检查真实武器；返回的 Job 不依赖当前调用上下文。
             Dispose();
             if (job == null || job.playerForced || job == pawn.CurJob || !laser.CanStartAutoFire) return;
-            // 已准备待战时直接交给原版等待 Driver：贴身近战、灭火、普通射击均先于激光。
+            // 已准备待战时交给原版等待 Driver：贴身接敌在近战入口优先尝试激光，其他攻击仍由待战检查处理。
             if (!hostilityResponse && job.def == JobDefOf.Wait_Combat) return;
             bool attackJob = job.def == JobDefOf.AttackMelee || job.def == JobDefOf.AttackStatic;
             if (!attackJob && (hostilityResponse
@@ -68,7 +68,7 @@ namespace MAP_MechanoidMechanitor
                 if (!laser.CanAutoFireAt(target)) return;
                 JobMaker.ReturnToPool(job);
                 // 当前普通武器无法射击，而激光可以时，先进入原版待战检查，
-                // 不直接跳过贴身威胁处理；真正施放继续复用等待 Driver 的补位入口。
+                // 保留原版贴身威胁选择；真正施放复用近战优先入口或等待 Driver 的补位入口。
                 job = JobMaker.MakeJob(JobDefOf.Wait_Combat,
                     JobGiver_AIFightEnemy.ExpiryInterval_ShooterSucceeded.RandomInRange,
                     checkOverrideOnExpiry: true);

@@ -97,6 +97,39 @@ namespace MAP_MechanoidMechanitor
         }
     }
 
+    /// <summary>待战接敌和自动近战共用原版出手入口；条件满足时对当前接敌目标优先施放激光。</summary>
+    [HarmonyPatch(typeof(Pawn_MeleeVerbs), nameof(Pawn_MeleeVerbs.TryMeleeAttack))]
+    internal static class HighEnergyLaserBeamMeleePriorityPatch
+    {
+        [HarmonyPriority(Priority.Last)]
+        private static bool Prefix(Pawn_MeleeVerbs __instance, Thing target, bool surpriseAttack,
+            ref bool __result)
+        {
+            Pawn pawn = __instance.Pawn;
+            if (pawn?.jobs == null) return true;
+            JobDriver? driver = pawn.jobs.curDriver;
+            Job? currentJob = pawn.CurJob;
+            if (target == null || surpriseAttack || driver == null || driver.ended || currentJob == null)
+                return true;
+            if (driver is JobDriver_Wait)
+            {
+                // 征召待战也允许自动激光；沿用待战任务的远程攻击开关。
+                if (currentJob.def != JobDefOf.Wait_Combat || !currentJob.canUseRangedWeapon) return true;
+            }
+            else if (!(driver is JobDriver_AttackMelee) || currentJob.def != JobDefOf.AttackMelee
+                || currentJob.playerForced || currentJob.targetA.Thing != target)
+                return true;
+
+            CompHighEnergyLaserBeam? laser = pawn.GetComp<CompHighEnergyLaserBeam>();
+            Job? cast = laser?.TryMakeAutoFireJob(target);
+            if (cast == null) return true;
+            pawn.jobs.StartJob(cast, JobCondition.InterruptForced, cancelBusyStances: false);
+            // 返回未执行近战，避免旧近战 Driver 计数或结束新技能；待战 Postfix 也会因 Driver 已切换退出。
+            __result = false;
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(JobDriver_Wait), "CheckForAutoAttack")]
     internal static class HighEnergyLaserBeamAutoAttackPatch
     {
@@ -105,7 +138,7 @@ namespace MAP_MechanoidMechanitor
             Pawn pawn = __instance.pawn;
             CompHighEnergyLaserBeam? laser = pawn?.GetComp<CompHighEnergyLaserBeam>();
             if (laser?.AutoFireEnabled != true) return;
-            // 沿用原版每 4 tick 的待战检查；先保留原版贴身近战、灭火和正在执行的攻击。
+            // 沿用原版每 4 tick 的待战检查；贴身攻击由近战入口优先尝试激光，其他情况保留原版灭火和正在执行的攻击。
             if (pawn?.jobs?.curDriver != __instance || __instance.ended || __instance.collideWithPawns
                 || __instance.job?.def != JobDefOf.Wait_Combat || !__instance.job.canUseRangedWeapon
                 || !pawn.kindDef.canMeleeAttack || pawn.stances?.FullBodyBusy != false
