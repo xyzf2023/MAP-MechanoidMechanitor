@@ -10,6 +10,26 @@ using Verse.AI;
 
 namespace MAP_MechanoidMechanitor
 {
+    /// <summary>
+    /// 仅阻止原版定期技能遗忘，不拦截 Learn 的主动经验增减。
+    /// </summary>
+    [HarmonyPatch(typeof(SkillRecord), nameof(SkillRecord.Interval))]
+    public static class MechanoidMechanitorSkillDecayPatch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(SkillRecord __instance)
+        {
+            if (MAPMechanitorMod.Settings?.preventMechanoidMechanitorSkillDecay != true)
+            {
+                return true;
+            }
+
+            Pawn? pawn = __instance.Pawn;
+            return pawn?.skills == null
+                || !MechanoidMechanitorRoleUtility.IsMechanoidMechanitor(pawn);
+        }
+    }
+
     internal static class MechanoidMechanitorSkillPatchIL
     {
         internal const string LogPrefix = "[MAP-机械族机械师] SkillRecord优先补丁：";

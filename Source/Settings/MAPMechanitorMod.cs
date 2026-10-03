@@ -368,6 +368,11 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description".Translate());
 
             listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.PreventSkillDecay.Label".Translate(),
+                ref Settings.preventMechanoidMechanitorSkillDecay,
+                "MAP_MechanoidMechanitor.Settings.PreventSkillDecay.Description".Translate());
+
+            listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Label".Translate(),
                 ref Settings.syntheticOffspringInheritXenogenes,
                 "MAP_MechanoidMechanitor.Settings.SyntheticOffspring.InheritXenogenes.Description".Translate());

@@ -104,6 +104,7 @@ namespace MAP_MechanoidMechanitor
                     break;
                 case MAPSettingsSection.SkillsAndOffspring:
                     settings.ensureMechanoidMechanitorMinimumMinorPassion = defaults.ensureMechanoidMechanitorMinimumMinorPassion;
+                    settings.preventMechanoidMechanitorSkillDecay = defaults.preventMechanoidMechanitorSkillDecay;
                     settings.syntheticOffspringInheritXenogenes = defaults.syntheticOffspringInheritXenogenes;
                     break;
                 case MAPSettingsSection.JusticeAbilities:

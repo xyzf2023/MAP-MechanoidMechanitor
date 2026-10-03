@@ -48,6 +48,9 @@
   <MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>When enabled, show the progress bar screen while contacting the cerebrex.</MAP_MechanoidMechanitor.Settings.PurgeDirective.UiLoadingScreen.Description>
   <MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Label>Mechanoid mechanitor skill passion is at least "Passion"</MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Label>
   <MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description>When enabled, all mechanoid mechanitors' skill passions are never below "Passion".</MAP_MechanoidMechanitor.Settings.MinimumSkillPassion.Description>
+
+  <MAP_MechanoidMechanitor.Settings.PreventSkillDecay.Label>Prevent mechanoid mechanitor skill XP decay</MAP_MechanoidMechanitor.Settings.PreventSkillDecay.Label>
+  <MAP_MechanoidMechanitor.Settings.PreventSkillDecay.Description>When enabled, prevents skill XP decay for mechanoid mechanitors.</MAP_MechanoidMechanitor.Settings.PreventSkillDecay.Description>
   <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>Symbiosis covenant</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.Section>
   <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>Symbiosis covenant growth multiplier: ×{0}</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Label>
   <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>Adjust the multiplier for positive and negative changes to trust and unity in the Symbiosis covenant.</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>
