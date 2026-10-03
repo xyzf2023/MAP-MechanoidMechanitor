@@ -39,7 +39,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new RimSkyBlockCoronationCompatibility(),
             new SRTSExpandedCompatibility(),
             new VanillaPsycastsExpandedCompatibility(),
-            new WorkTabCompatibility()
+            new WorkTabCompatibility(),
+            new WorkTabPawnListCompatibility()
         };
 
         public static void ApplyAll(Harmony harmony)

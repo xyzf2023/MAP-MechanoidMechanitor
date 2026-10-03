@@ -266,10 +266,13 @@ namespace MAP_MechanoidMechanitor
                 "MAP_WheelOfFate.Settings.Details.Description".Translate());
             listing.Gap(4f);
 
+            bool previousWorkTabDisplay = Settings!.addMechanoidMechanitorsToWorkTab;
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.WorkTab.Label".Translate(),
                 ref Settings!.addMechanoidMechanitorsToWorkTab,
                 "MAP_MechanoidMechanitor.Settings.WorkTab.Description".Translate());
+            if (Settings.addMechanoidMechanitorsToWorkTab != previousWorkTabDisplay)
+                WorkTabPawnListUtility.NotifyPawnsChangedIfReady();
 
             listing.CheckboxLabeled(
                 "MAP_MechanoidPrioritizedWorkOrders_Label".Translate(),

@@ -39,6 +39,7 @@ namespace MAP_MechanoidMechanitor
             bool previousSun = settings.enableSunAutonomy;
             bool previousHermit = settings.enableHermitAutonomy;
             bool previousPortraits = settings.enablePortraitDisplayForAllSaves;
+            bool previousWorkTabDisplay = settings.addMechanoidMechanitorsToWorkTab;
             bool previousDiagnostics = settings.enableJusticeBossDiagnosticLogging;
             bool resetEconomy = section == MAPSettingsSection.All
                 || section == MAPSettingsSection.OvermindEconomy;
@@ -67,6 +68,8 @@ namespace MAP_MechanoidMechanitor
                 GameComponent_AutonomousMechRegistry.NotifySettingsChanged();
             if (previousPortraits != settings.enablePortraitDisplayForAllSaves)
                 MechanoidMechanitorScenarioFreeColonistUtility.NotifyColonistDisplaysDirtyIfReady();
+            else if (previousWorkTabDisplay != settings.addMechanoidMechanitorsToWorkTab)
+                WorkTabPawnListUtility.NotifyPawnsChangedIfReady();
             if (previousDiagnostics != settings.enableJusticeBossDiagnosticLogging)
                 JusticeBossDiagnosticsRuntime.Refresh();
             if (resetEconomy) GameComponent_OvermindEconomy.Current?.Prepare();
@@ -211,4 +214,3 @@ namespace MAP_MechanoidMechanitor
         }
     }
 }
-

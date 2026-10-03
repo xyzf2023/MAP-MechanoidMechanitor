@@ -17,19 +17,31 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            __result = WorkTabPawnListUtility.AppendEligiblePawns(__result);
+        }
+    }
+
+    /// <summary>
+    /// 原版与第三方工作窗口共用的名单追加规则；查询不初始化 Pawn 或改写工作设置。
+    /// </summary>
+    internal static class WorkTabPawnListUtility
+    {
+        internal static IEnumerable<Pawn> AppendEligiblePawns(IEnumerable<Pawn> source)
+        {
             MAPMechanitorModSettings? settings = MAPMechanitorMod.Settings;
             if (settings == null || !settings.addMechanoidMechanitorsToWorkTab)
             {
-                return;
+                return source;
             }
 
             Map? map = Find.CurrentMap;
             if (map == null)
             {
-                return;
+                return source;
             }
 
-            List<Pawn> pawns = __result.ToList();
+            // 不修改窗口或其他 MOD 提供的原始名单；剧本已追加的成员保持原样。
+            List<Pawn> pawns = source.ToList();
             HashSet<Pawn> existing = new HashSet<Pawn>(pawns);
 
             foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
@@ -48,7 +60,13 @@ namespace MAP_MechanoidMechanitor
                 }
             }
 
-            __result = pawns;
+            return pawns;
+        }
+
+        internal static void NotifyPawnsChangedIfReady()
+        {
+            if (Current.ProgramState == ProgramState.Playing && Current.Game != null)
+                MainTabWindowUtility.NotifyAllPawnTables_PawnsChanged();
         }
     }
 }
