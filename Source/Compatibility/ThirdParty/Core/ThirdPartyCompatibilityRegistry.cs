@@ -15,6 +15,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaGravshipExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.WorkTab;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.YetAnotherOptimizer;
 using Verse;
 
 namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
@@ -43,7 +44,8 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new VanillaGravshipPilotCompatibility(),
             new VanillaPsycastsExpandedCompatibility(),
             new WorkTabCompatibility(),
-            new WorkTabPawnListCompatibility()
+            new WorkTabPawnListCompatibility(),
+            new YetAnotherOptimizerColonistBarCompatibility()
         };
 
         public static void ApplyAll(Harmony harmony)
