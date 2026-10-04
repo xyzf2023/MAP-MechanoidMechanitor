@@ -214,8 +214,7 @@ namespace MAP_MechanoidMechanitor
                 && GameComponent_AutonomousMechRegistry.TryGetRecord(pawn,
                     out AutonomousMechAuthorizationRecord? autonomousRecord))
             {
-                mode = autonomousRecord!.SelfShutdown
-                    ? MechWorkModeDefOf.SelfShutdown : GetAutonomousDirectiveDef();
+                mode = autonomousRecord!.BehaviorMode;
                 return true;
             }
 
@@ -243,7 +242,7 @@ namespace MAP_MechanoidMechanitor
                     out MechanoidMechanitorRecord? record)
                 || record == null)
             {
-                GameComponent_AutonomousMechRegistry.TrySetSelfShutdown(pawn, IsSelfShutdownMode(mode));
+                GameComponent_AutonomousMechRegistry.TrySetBehaviorMode(pawn, mode);
                 return;
             }
 
@@ -269,7 +268,7 @@ namespace MAP_MechanoidMechanitor
                 autonomous.uiIcon,
                 Color.white));
 
-            if (HasSelfWorkMode(pawn))
+            if (HasSelfWorkMode(pawn) || AutonomousMechUtility.UsesPersonalRechargeSettings(pawn))
             {
                 MechWorkModeDef recharge = MechWorkModeDefOf.Recharge;
                 options.Add(new FloatMenuOption(

@@ -16,6 +16,7 @@ namespace MAP_MechanoidMechanitor
         {
             Harmony harmony = new Harmony(HarmonyId);
             harmony.PatchAll();
+            AutonomousMechRepairUtility.EnsureInnateRepairableDefs();
             MechFusionGenerationPatch.RemoveFromInitialCache();
             ThirdPartyCompatibilityBootstrap.ApplyAll(harmony);
             PawnNameValidationUtility.ExtendPawnNameRegex();

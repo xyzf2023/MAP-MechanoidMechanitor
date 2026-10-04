@@ -107,19 +107,22 @@ namespace MAP_MechanoidMechanitor
             return true;
         }
 
-        public static bool TrySetSelfShutdown(Pawn? pawn, bool selfShutdown)
+        // 保留原公共入口，旧调用方仍可明确选择休眠或自律指令。
+        public static bool TrySetSelfShutdown(Pawn? pawn, bool selfShutdown) =>
+            TrySetBehaviorMode(pawn, selfShutdown ? MechWorkModeDefOf.SelfShutdown : null);
+
+        public static bool TrySetBehaviorMode(Pawn? pawn, MechWorkModeDef? mode)
         {
+            MechWorkModeDef sanitized = MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(mode);
             if (!AutonomousMechUtility.CanReceiveAuthorization(pawn)
                 || !AutonomousMechUtility.IsPlayerAutonomousMech(pawn)
                 || MechanoidMechanitorSelfWorkModeUtility.HasSelfWorkMode(pawn)
                 || !TryGetRecord(pawn, out AutonomousMechAuthorizationRecord? record)
-                || record!.SelfShutdown == selfShutdown)
+                || record!.BehaviorMode == sanitized)
                 return false;
-            record.SetSelfShutdown(selfShutdown);
+            record.SetBehaviorMode(sanitized);
             MechanoidMechanitorSelfWorkModeUtility.SyncSelfWorkModeEffects(pawn);
-            MechanoidMechanitorSelfWorkModeUtility.NotifyModeChanged(pawn!, selfShutdown
-                ? MechWorkModeDefOf.SelfShutdown
-                : MechanoidMechanitorSelfWorkModeUtility.SanitizeWorkMode(null));
+            MechanoidMechanitorSelfWorkModeUtility.NotifyModeChanged(pawn!, sanitized);
             return true;
         }
 
