@@ -12,6 +12,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimTalk;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimSkyBlock;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaGravshipExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaPsycastsExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.WorkTab;
 using Verse;
@@ -38,6 +39,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new RimSkyBlockImperialTaskCompatibility(),
             new RimSkyBlockCoronationCompatibility(),
             new SRTSExpandedCompatibility(),
+            new VanillaGravshipLaunchStateCompatibility(),
             new VanillaPsycastsExpandedCompatibility(),
             new WorkTabCompatibility(),
             new WorkTabPawnListCompatibility()
