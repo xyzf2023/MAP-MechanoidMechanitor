@@ -7,8 +7,8 @@ namespace MAP_MechanoidMechanitor
     public static class MechanicalChildcareUtility
     {
         private static WorkTypeDef? cachedChildcareWorkType;
-        private static HashSet<WorkGiverDef>? allowedWorkGivers;
-        private static bool allowedWorkGiversInitialized;
+        private static volatile HashSet<WorkGiverDef>? allowedWorkGivers;
+        private static readonly object AllowedWorkGiversInitLock = new object();
 
         private static readonly string[] AllowedWorkGiverDefNames =
         {
@@ -47,8 +47,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            EnsureAllowedWorkGiversInitialized();
-            return allowedWorkGivers!.Contains(workGiver);
+            return EnsureAllowedWorkGiversInitialized().Contains(workGiver);
         }
 
         public static void GrantAndEnsureInfrastructure(Pawn? pawn, int defaultPriority)
@@ -113,24 +112,36 @@ namespace MAP_MechanoidMechanitor
             caregiver.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.FedBaby, baby);
         }
 
-        private static void EnsureAllowedWorkGiversInitialized()
+        private static HashSet<WorkGiverDef> EnsureAllowedWorkGiversInitialized()
         {
-            if (allowedWorkGiversInitialized)
+            HashSet<WorkGiverDef>? cached = allowedWorkGivers;
+            if (cached != null)
             {
-                return;
+                return cached;
             }
 
-            allowedWorkGiversInitialized = true;
-            allowedWorkGivers = new HashSet<WorkGiverDef>();
-
-            for (int i = 0; i < AllowedWorkGiverDefNames.Length; i++)
+            lock (AllowedWorkGiversInitLock)
             {
-                WorkGiverDef? def = DefDatabase<WorkGiverDef>.GetNamedSilentFail(
-                    AllowedWorkGiverDefNames[i]);
-                if (def != null)
+                cached = allowedWorkGivers;
+                if (cached != null)
                 {
-                    allowedWorkGivers.Add(def);
+                    return cached;
                 }
+
+                HashSet<WorkGiverDef> initialized = new HashSet<WorkGiverDef>();
+                for (int i = 0; i < AllowedWorkGiverDefNames.Length; i++)
+                {
+                    WorkGiverDef? def = DefDatabase<WorkGiverDef>.GetNamedSilentFail(
+                        AllowedWorkGiverDefNames[i]);
+                    if (def != null)
+                    {
+                        initialized.Add(def);
+                    }
+                }
+
+                // 完整构建后再发布；非空缓存同时表示初始化完成，后续仅查询。
+                allowedWorkGivers = initialized;
+                return initialized;
             }
         }
 
