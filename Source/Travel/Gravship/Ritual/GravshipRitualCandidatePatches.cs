@@ -56,7 +56,7 @@ namespace MAP_MechanoidMechanitor
 
         private static bool IsGravshipLaunch(Precept_Ritual ritual)
         {
-            return ritual != null && ritual.def == PreceptDefOf.GravshipLaunch;
+            return GravshipLaunchRitualUtility.IsSupportedLaunch(ritual);
         }
 
         private static bool IsPilotConsoleTarget(TargetInfo target)

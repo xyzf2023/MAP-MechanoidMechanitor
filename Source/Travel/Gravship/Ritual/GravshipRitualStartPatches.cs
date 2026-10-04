@@ -148,7 +148,7 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
-            if (ritual == null || ritual.def != PreceptDefOf.GravshipLaunch)
+            if (!GravshipLaunchRitualUtility.IsSupportedLaunch(ritual))
             {
                 return false;
             }

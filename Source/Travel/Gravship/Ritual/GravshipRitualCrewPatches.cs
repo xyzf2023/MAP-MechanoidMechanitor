@@ -9,8 +9,7 @@ namespace MAP_MechanoidMechanitor
     {
         public static bool IsGravshipLaunch(RitualRoleAssignments? assignments)
         {
-            return assignments?.Ritual != null
-                && assignments.Ritual.def == PreceptDefOf.GravshipLaunch;
+            return GravshipLaunchRitualUtility.IsSupportedLaunch(assignments?.Ritual);
         }
 
         public static bool IsPilotConsoleTarget(TargetInfo target)

@@ -99,7 +99,7 @@ namespace MAP_MechanoidMechanitor
                 precept ?? assignments?.Ritual ?? lordRitual?.Ritual;
             if (explicitRitual != null)
             {
-                return explicitRitual.def == PreceptDefOf.GravshipLaunch;
+                return GravshipLaunchRitualUtility.IsSupportedLaunch(explicitRitual);
             }
 
             // lordRitual / assignments / precept 均无法提供 ritual 时，

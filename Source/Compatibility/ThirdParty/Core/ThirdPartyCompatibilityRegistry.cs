@@ -40,6 +40,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new RimSkyBlockCoronationCompatibility(),
             new SRTSExpandedCompatibility(),
             new VanillaGravshipLaunchStateCompatibility(),
+            new VanillaGravshipPilotCompatibility(),
             new VanillaPsycastsExpandedCompatibility(),
             new WorkTabCompatibility(),
             new WorkTabPawnListCompatibility()

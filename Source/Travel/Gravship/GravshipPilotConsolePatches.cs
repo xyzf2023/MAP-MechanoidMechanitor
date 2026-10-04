@@ -268,28 +268,7 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public static Precept_Ritual? ResolveGravshipLaunchRitualForPilot(Pawn? pawn)
         {
-            if (pawn == null)
-            {
-                return null;
-            }
-
-            if (pawn.Ideo != null)
-            {
-                return pawn.Ideo.GetPrecept(PreceptDefOf.GravshipLaunch) as Precept_Ritual;
-            }
-
-            if (!CompGravshipPilotUser.PawnCanUseGravshipPilotConsole(pawn))
-            {
-                return null;
-            }
-
-            Ideo? primaryIdeo = Faction.OfPlayer?.ideos?.PrimaryIdeo;
-            if (primaryIdeo == null)
-            {
-                return null;
-            }
-
-            return primaryIdeo.GetPrecept(PreceptDefOf.GravshipLaunch) as Precept_Ritual;
+            return GravshipLaunchRitualUtility.ResolveForPilot(pawn, PreceptDefOf.GravshipLaunch);
         }
 
         /// <summary>
