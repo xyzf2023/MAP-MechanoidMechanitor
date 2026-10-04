@@ -16,7 +16,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
     {
         public const int ColonyProximityTiles = 20;
 
+        /// <summary>袭击和援军概率计数的固定上限，不随生成上限设置改变。</summary>
         public const int MaxNodesPerColony = 8;
+
+        /// <summary>当前机械巢节点生成上限，设置缺失时取默认值；不影响概率计数上限。</summary>
+        public static int CurrentGenerationMaxNodesPerColony => Mathf.Clamp(
+            MAPMechanitorMod.Settings?.mechHiveNodeMaxNodesPerColony
+                ?? MAPMechanitorModSettings.DefaultStrategicGenerationLimit,
+            MAPMechanitorModSettings.MinStrategicGenerationLimit,
+            MAPMechanitorModSettings.MaxStrategicGenerationLimit);
 
         public const int MinNodeSpacingTiles = 3;
 
@@ -99,6 +107,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             try
             {
+                int generationLimit = CurrentGenerationMaxNodesPerColony;
                 Faction? mechHive = MechHiveNodeRelationUtility.GetMechHive();
                 if (mechHive == null)
                 {
@@ -121,12 +130,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 PlanetTile colonyTile = colony.Tile;
                 ColonyProximityCache? targetCache = FindCache(caches, colonyTile);
                 if (targetCache == null
-                    || targetCache.ExistingUncleanedNodeCount >= MaxNodesPerColony)
+                    || targetCache.ExistingUncleanedNodeCount >= generationLimit)
                 {
                     return false;
                 }
 
-                if (!TryFindNodeTile(targetCache, existing, caches, out PlanetTile tile))
+                if (!TryFindNodeTile(targetCache, existing, caches, generationLimit, out PlanetTile tile))
                 {
                     return false;
                 }
@@ -239,6 +248,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ColonyProximityCache targetCache,
             List<MAPMechHiveNode> existing,
             List<ColonyProximityCache> caches,
+            int generationLimit,
             out PlanetTile tile)
         {
             if (TryPickTileFromCache(
@@ -247,6 +257,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     PreferredMaxDistTiles,
                     existing,
                     caches,
+                    generationLimit,
                     out tile))
             {
                 return true;
@@ -258,6 +269,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 FallbackMaxDistTiles,
                 existing,
                 caches,
+                generationLimit,
                 out tile);
         }
 
@@ -267,6 +279,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int maxDist,
             List<MAPMechHiveNode> existing,
             List<ColonyProximityCache> caches,
+            int generationLimit,
             out PlanetTile tile)
         {
             tile = PlanetTile.Invalid;
@@ -278,7 +291,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                if (ValidateNodeTile(pair.Key, existing, caches))
+                if (ValidateNodeTile(pair.Key, existing, caches, generationLimit))
                 {
                     candidates.Add(pair.Key);
                 }
@@ -299,7 +312,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static bool ValidateNodeTile(
             PlanetTile tile,
             List<MAPMechHiveNode> existing,
-            List<ColonyProximityCache> caches)
+            List<ColonyProximityCache> caches,
+            int generationLimit)
         {
             if (!TileFinder.IsValidTileForNewSettlement(tile))
             {
@@ -329,7 +343,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     continue;
                 }
 
-                if (cache.ExistingUncleanedNodeCount + 1 > MaxNodesPerColony)
+                if (cache.ExistingUncleanedNodeCount + 1 > generationLimit)
                 {
                     return false;
                 }

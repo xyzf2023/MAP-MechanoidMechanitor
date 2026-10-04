@@ -864,6 +864,15 @@ namespace MAP_MechanoidMechanitor
                 "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost"
                     .Translate());
 
+            settings.factionOutpostMaxOutpostsPerColony =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GenerationLimit.Label",
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GenerationLimit.Description",
+                    settings.factionOutpostMaxOutpostsPerColony,
+                    MAPMechanitorModSettings.MinStrategicGenerationLimit,
+                    MAPMechanitorModSettings.MaxStrategicGenerationLimit);
+
             settings.factionOutpostRaidChancePercent =
                 DrawIntSliderSetting(
                     listing,
@@ -898,6 +907,15 @@ namespace MAP_MechanoidMechanitor
             listing.Label(
                 "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode"
                     .Translate());
+
+            settings.mechHiveNodeMaxNodesPerColony =
+                DrawIntSliderSetting(
+                    listing,
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.GenerationLimit.Label",
+                    "MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.GenerationLimit.Description",
+                    settings.mechHiveNodeMaxNodesPerColony,
+                    MAPMechanitorModSettings.MinStrategicGenerationLimit,
+                    MAPMechanitorModSettings.MaxStrategicGenerationLimit);
 
             settings.mechHiveNodeRaidChancePercent =
                 DrawIntSliderSetting(

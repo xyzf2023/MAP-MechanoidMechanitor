@@ -302,6 +302,16 @@ namespace MAP_MechanoidMechanitor
         public int mechHiveNodeSupportChancePercent =
             DefaultMechHiveNodeSupportChancePercent;
 
+        /// <summary>每座殖民地附近未清理前哨的生成上限，所有派系及关系共用；全局设置，不处理已有对象。</summary>
+        public int factionOutpostMaxOutpostsPerColony = DefaultStrategicGenerationLimit;
+
+        /// <summary>每座殖民地附近未清理机械巢节点的生成上限；全局设置，不处理已有对象。</summary>
+        public int mechHiveNodeMaxNodesPerColony = DefaultStrategicGenerationLimit;
+
+        public const int DefaultStrategicGenerationLimit = 8;
+        public const int MinStrategicGenerationLimit = 1;
+        public const int MaxStrategicGenerationLimit = 15;
+
         public const int DefaultFactionOutpostRaidChancePercent = 1;
         public const int DefaultFactionOutpostSupportChancePercent = 10;
         public const int DefaultMechHiveNodeRaidChancePercent = 1;
@@ -473,6 +483,10 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public void NormalizeStrategicNodeSettings()
         {
+            factionOutpostMaxOutpostsPerColony = Mathf.Clamp(
+                factionOutpostMaxOutpostsPerColony, MinStrategicGenerationLimit, MaxStrategicGenerationLimit);
+            mechHiveNodeMaxNodesPerColony = Mathf.Clamp(
+                mechHiveNodeMaxNodesPerColony, MinStrategicGenerationLimit, MaxStrategicGenerationLimit);
             factionOutpostRaidChancePercent =
                 Mathf.Clamp(factionOutpostRaidChancePercent, 0, 100);
             factionOutpostSupportChancePercent =
@@ -725,6 +739,14 @@ namespace MAP_MechanoidMechanitor
                 ref factionOutpostGarrisonThreatScalePercent,
                 "factionOutpostGarrisonThreatScalePercent",
                 FactionOutpostThreatPointsUtility.DefaultScalePercent);
+            Scribe_Values.Look(
+                ref factionOutpostMaxOutpostsPerColony,
+                "factionOutpostMaxOutpostsPerColony",
+                DefaultStrategicGenerationLimit);
+            Scribe_Values.Look(
+                ref mechHiveNodeMaxNodesPerColony,
+                "mechHiveNodeMaxNodesPerColony",
+                DefaultStrategicGenerationLimit);
             Scribe_Values.Look(
                 ref mechHiveNodeRaidChancePercent,
                 "mechHiveNodeRaidChancePercent",

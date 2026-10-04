@@ -14,8 +14,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
     public static class FactionOutpostGenerationUtility
     {
         public const int ColonyProximityTiles = 20;
+        /// <summary>保留原有默认上限常量；生成检查改用当前全局设置。</summary>
         public const int MaxOutpostsPerColony = 8;
         public const int MinOutpostSpacingTiles = 3;
+
+        /// <summary>当前前哨生成上限，设置缺失时取默认值；所有派系及关系共用。</summary>
+        public static int CurrentGenerationMaxOutpostsPerColony => Mathf.Clamp(
+            MAPMechanitorMod.Settings?.factionOutpostMaxOutpostsPerColony
+                ?? MAPMechanitorModSettings.DefaultStrategicGenerationLimit,
+            MAPMechanitorModSettings.MinStrategicGenerationLimit,
+            MAPMechanitorModSettings.MaxStrategicGenerationLimit);
 
         private const int PreferredMinDistTiles = 6;
         private const int PreferredMaxDistTiles = 16;
@@ -246,6 +254,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         private static bool TryGenerateWithFaction(Faction faction)
         {
+            int generationLimit = CurrentGenerationMaxOutpostsPerColony;
             if (!FactionOutpostFactionUtility.IsEligibleFaction(faction))
             {
                 return false;
@@ -264,7 +273,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             List<ColonyProximityCache> availableCaches = new List<ColonyProximityCache>();
             for (int i = 0; i < caches.Count; i++)
             {
-                if (caches[i].ExistingUncleanedOutpostCount < MaxOutpostsPerColony)
+                if (caches[i].ExistingUncleanedOutpostCount < generationLimit)
                 {
                     availableCaches.Add(caches[i]);
                 }
@@ -276,7 +285,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             ColonyProximityCache targetCache = availableCaches.RandomElement();
-            if (!TryFindOutpostTile(targetCache, existing, caches, out PlanetTile tile))
+            if (!TryFindOutpostTile(targetCache, existing, caches, generationLimit, out PlanetTile tile))
             {
                 return false;
             }
@@ -362,6 +371,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             ColonyProximityCache targetCache,
             List<MAPFactionOutpost> existing,
             List<ColonyProximityCache> caches,
+            int generationLimit,
             out PlanetTile tile)
         {
             if (TryPickTileFromCache(
@@ -370,6 +380,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     PreferredMaxDistTiles,
                     existing,
                     caches,
+                    generationLimit,
                     out tile))
             {
                 return true;
@@ -381,6 +392,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 FallbackMaxDistTiles,
                 existing,
                 caches,
+                generationLimit,
                 out tile);
         }
 
@@ -390,6 +402,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             int maxDist,
             List<MAPFactionOutpost> existing,
             List<ColonyProximityCache> caches,
+            int generationLimit,
             out PlanetTile tile)
         {
             tile = PlanetTile.Invalid;
@@ -398,7 +411,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 if (pair.Value >= minDist
                     && pair.Value <= maxDist
-                    && ValidateOutpostTile(pair.Key, existing, caches))
+                    && ValidateOutpostTile(pair.Key, existing, caches, generationLimit))
                 {
                     candidates.Add(pair.Key);
                 }
@@ -416,7 +429,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private static bool ValidateOutpostTile(
             PlanetTile tile,
             List<MAPFactionOutpost> existing,
-            List<ColonyProximityCache> caches)
+            List<ColonyProximityCache> caches,
+            int generationLimit)
         {
             if (!TileFinder.IsValidTileForNewSettlement(tile)
                 || Find.WorldObjects.AnyWorldObjectAt(tile))
@@ -437,7 +451,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 ColonyProximityCache cache = caches[i];
                 if (cache.TileDistances.ContainsKey(tile)
-                    && cache.ExistingUncleanedOutpostCount + 1 > MaxOutpostsPerColony)
+                    && cache.ExistingUncleanedOutpostCount + 1 > generationLimit)
                 {
                     return false;
                 }
@@ -543,7 +557,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// DEV 专用：生成一个「建成」状态的普通派系前哨，并返回精确引用。
-        /// 允许绕过自然生成概率与普通前哨数量上限；仍保留基本的合法 tile 校验与不可覆盖已有 WorldObject。
+        /// 绕过自然生成概率，仍检查当前生成数量上限、间距、合法 tile 与不可覆盖已有 WorldObject。
         /// 正式游戏路径不得调用。
         /// </summary>
         public static bool TryDevGenerateCompletedOutpost(
@@ -553,6 +567,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             outpost = null!;
             message = string.Empty;
+            int generationLimit = CurrentGenerationMaxOutpostsPerColony;
 
             if (!Prefs.DevMode)
             {
@@ -583,7 +598,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             GetAllOutposts(existing);
             List<ColonyProximityCache> caches = BuildColonyProximityCaches(colonies, existing);
 
-            // DEV 允许放宽到全部殖民地缓存（不强制 MaxOutpostsPerColony，但仍要求 tile 合法）。
+            // DEV 从全部殖民地缓存选择来源，后续候选校验仍检查当前生成数量上限。
             ColonyProximityCache? chosen = null;
             foreach (ColonyProximityCache cache in caches)
             {
@@ -605,6 +620,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     chosen,
                     tmpExisting,
                     caches,
+                    generationLimit,
                     out PlanetTile tile))
             {
                 message = "找不到合法生成 tile";

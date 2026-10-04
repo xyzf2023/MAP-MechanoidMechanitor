@@ -124,6 +124,8 @@ namespace MAP_MechanoidMechanitor
                     ResetStartingPawnValueProtection();
                     break;
                 case MAPSettingsSection.StrategicNodes:
+                    settings.factionOutpostMaxOutpostsPerColony = defaults.factionOutpostMaxOutpostsPerColony;
+                    settings.mechHiveNodeMaxNodesPerColony = defaults.mechHiveNodeMaxNodesPerColony;
                     settings.factionOutpostRaidChancePercent = defaults.factionOutpostRaidChancePercent;
                     settings.factionOutpostSupportChancePercent = defaults.factionOutpostSupportChancePercent;
                     settings.factionOutpostGarrisonThreatScalePercent = defaults.factionOutpostGarrisonThreatScalePercent;

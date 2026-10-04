@@ -78,16 +78,20 @@
   <MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>调整共生盟约中信任度与团结度的正负变化倍率。</MAP_MechanoidMechanitor.Settings.SymbiosisCovenant.GrowthMultiplier.Description>
 
   <!-- 模块：战略节点概率 -->
-  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>战略节点概率</MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>
-  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>注意：设置的是每座符合条件的完整节点的独立基础概率；多个节点的最终概率使用公式 1-(1-p)^n 计算。</MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>战略节点</MAP_MechanoidMechanitor.Settings.StrategicNodes.Section>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>下方设置的是每座符合条件的完整节点的独立基础概率；多个节点的最终概率使用公式 1-(1-p)^n 计算。</MAP_MechanoidMechanitor.Settings.StrategicNodes.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost>普通派系前哨</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GenerationLimit.Label>每座殖民地附近前哨站上限：{0}</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GenerationLimit.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GenerationLimit.Description>每座玩家地表殖民地可通行路径距离20格内，未清理前哨站的生成数量上限。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GenerationLimit.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Label>单个敌对前哨每日袭击概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Label>
-  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>每座符合条件的完整敌对派系前哨，每日进行额外袭击检查时使用的独立基础概率。0%表示禁用由普通派系前哨额外产生的袭击；100%表示只要至少存在一座符合条件的完整敌对前哨，该次检查就必定通过概率判定。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>每座符合条件的完整敌对派系前哨，每日进行额外袭击检查时使用的独立基础概率。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.RaidChance.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Label>单个盟友前哨支援概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Label>
-  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Description>每座符合条件的完整盟友派系前哨，在殖民地遭遇敌对袭击后提供援军的独立基础概率。原有共同敌人和派系敌对关系判定保持不变。0%表示不提供这种自动援军。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Description>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Description>每座符合条件的完整盟友派系前哨，在殖民地遭遇敌对袭击后提供援军的独立基础概率。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.SupportChance.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Label>普通派系前哨防卫强度：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Label>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Description>前哨生成时其中守军的威胁点数倍率。\n仅影响新生成的普通派系前哨。</MAP_MechanoidMechanitor.Settings.StrategicNodes.FactionOutpost.GarrisonThreatScale.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode>机械巢节点</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.GenerationLimit.Label>每座殖民地附近机械巢节点上限：{0}</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.GenerationLimit.Label>
+  <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.GenerationLimit.Description>每座玩家地表殖民地可通行路径距离20格内，未清理机械巢节点的生成数量上限。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.GenerationLimit.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Label>单个敌对节点每日袭击概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Label>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>与机械巢敌对时，每个机械巢节点每日进行额外袭击的概率。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.RaidChance.Description>
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>单个盟友节点支援概率：{0}%</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Label>
