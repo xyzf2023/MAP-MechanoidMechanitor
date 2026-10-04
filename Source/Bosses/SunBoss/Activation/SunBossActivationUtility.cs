@@ -20,6 +20,8 @@ namespace MAP_MechanoidMechanitor
 
         public static void ActivateFacility(Map map)
         {
+            // 独立反应堆不要求奥德赛；未启用时没有远古防爆门 Def。
+            if (!ModsConfig.OdysseyActive) return;
             foreach (Thing door in map.listerThings.ThingsOfDef(ThingDefOf.AncientBlastDoor).ToList())
             {
                 CompHackable? hackable = door.TryGetComp<CompHackable>();
@@ -56,7 +58,8 @@ namespace MAP_MechanoidMechanitor
                     selected.Add(sleeper);
             }
 
-            if (selected.Count >= BatchSize) return selected;
+            // 普通地图仍可集结现有机械体，奥德赛培养舱只在 DLC 启用时查询。
+            if (selected.Count >= BatchSize || !ModsConfig.OdysseyActive) return selected;
             List<ThingWithComps> tanks = map.listerThings.AllThings.OfType<ThingWithComps>()
                 .Where(t => t.TryGetComp<CompMechGestatorTank>() is CompMechGestatorTank tank
                     && tank.State != CompMechGestatorTank.TankState.Empty).ToList();

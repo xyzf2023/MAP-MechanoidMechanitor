@@ -22,4 +22,10 @@
   <MAP_Building_Sun.description>Sun in reactor form. After anchoring its structure, its internal antimatter reactor runs continuously in a more stable state, supplying enormous energy to the colony. Its Corona effect for colony mechanoids is also stronger than in mechanoid form.\n\nThe redesigned containment system is integrated into its body, allowing Sun to maintain reactor operation without external stabilizers. When needed, it can be ordered to transform back into mechanoid form.\n\nNote: Sun continuously emits large amounts of waste heat while producing energy at high power. Deploy it outdoors when possible, or ensure the area has sufficient heat dissipation.</MAP_Building_Sun.description>
   <MAP_Building_SunBOSS.label>Core reactor?</MAP_Building_SunBOSS.label>
   <MAP_Building_SunBOSS.description>This building seems to be the facility's power source...... but something feels wrong. Proceed with caution.</MAP_Building_SunBOSS.description>
+  <MAP_Building_SunBOSS.comps.CompSunBossInspection.activateLabelString>Inspect...</MAP_Building_SunBOSS.comps.CompSunBossInspection.activateLabelString>
+  <MAP_Building_SunBOSS.comps.CompSunBossInspection.activateDescString>Send a colonist or mechanoid mechanitor to approach and inspect this reactor to identify the source of the anomalous energy reaction.</MAP_Building_SunBOSS.comps.CompSunBossInspection.activateDescString>
+  <MAP_Building_SunBOSS.comps.CompSunBossInspection.guiLabelString>Select a colonist or mechanoid mechanitor to perform the inspection</MAP_Building_SunBOSS.comps.CompSunBossInspection.guiLabelString>
+  <MAP_Building_SunBOSS.comps.CompSunBossInspection.jobString>inspect reactor</MAP_Building_SunBOSS.comps.CompSunBossInspection.jobString>
+  <MAP_Building_SunBOSS.comps.CompSunBossInspection.activatingStringPending>inspecting reactor</MAP_Building_SunBOSS.comps.CompSunBossInspection.activatingStringPending>
+  <MAP_Building_SunBOSS.comps.CompSunBossInspection.activatingString>inspecting reactor: {1}s</MAP_Building_SunBOSS.comps.CompSunBossInspection.activatingString>
 </LanguageData>

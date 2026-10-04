@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
+  <MAP_SunBoss_InspectionUnavailable>反应堆正在苏醒。</MAP_SunBoss_InspectionUnavailable>
+  <MAP_SunBoss_InspectionInspectorRequired>只能由殖民者或机械族机械师检查。</MAP_SunBoss_InspectionInspectorRequired>
   <MAP_SunBoss_FacilityFoundLabel>异常能源信号</MAP_SunBoss_FacilityFoundLabel>
   <MAP_SunBoss_FacilityFoundText>我们的监测设备捕捉到了一组异常庞大的能源信号。其输出规模远超常规设备的极限，并且在始终维持着几乎无波动的高强度反应。\n\n经过进一步追踪，我们已经确定了信号的来源——一座位于远方的机械族设施。它的位置已经被标记在世界地图上。\n\n目前还无法确认设施内部究竟存在什么，但能够维持如此规模的能源反应，其中恐怕隐藏着相当危险的东西。不过，这也意味着那里可能保存着某种远超常规科技的技术。若能深入其中，或许我们能发现一些相当有价值的东西。\n\n扫描同时发现，设施内部存在强烈而异常的能量扰动，无工质推进器可能无法在那里正常工作。此外，如果决定前往探索，最好组建一支具备较强机动能力的队伍。</MAP_SunBoss_FacilityFoundText>
   <MAP_SunBoss_FirstStabilizerDestroyedLabel>稳定器被摧毁</MAP_SunBoss_FirstStabilizerDestroyedLabel>

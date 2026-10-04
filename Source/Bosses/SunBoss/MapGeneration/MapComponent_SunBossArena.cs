@@ -97,12 +97,8 @@ namespace MAP_MechanoidMechanitor
             nextRallyBatchTick = -1;
             rallyBatchSchedulingInitialized = false;
             noRallyCandidates = false;
-            if (!Generated)
-            {
-                // 普通地图不设置 Generated，避免启用设施禁飞和迷雾规则。
-                ArenaBounds = CellRect.CenteredOn(core.Position, (int)ActivationRadius).ClipInsideMap(map);
-            }
-            RefreshStabilizers();
+            // 普通地图的区域和稳定器由共用激活入口初始化，避免重复刷新。
+            if (Generated) RefreshStabilizers();
             return TryStartActivation(core);
         }
 
@@ -150,10 +146,17 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
-        // 自然靠近与 DEV 按钮共用入口；后续苏醒、生成和设施激活仍由地图 Tick 推进。
+        // 自然靠近、成功检查与 DEV 按钮共用入口；后续流程仍由地图 Tick 推进。
         internal bool TryStartActivation(Building core)
         {
             if (!CanStartActivation(core)) return false;
+            if (!Generated)
+            {
+                // 独立反应堆也需绑定核心和调度区域；不启用设施禁飞及迷雾规则。
+                Core = core;
+                ArenaBounds = CellRect.CenteredOn(core.Position, (int)ActivationRadius).ClipInsideMap(map);
+                RefreshStabilizers();
+            }
             SynchronizeStabilizerDefs(awakening: true);
             discoveryLetterSent = true;
             activationStartedTick = Find.TickManager.TicksGame;

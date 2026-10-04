@@ -26,6 +26,18 @@
       <Flammability>0</Flammability>
     </statBases>
     <comps>
+      <li Class="MAP_MechanoidMechanitor.CompProperties_SunBossInspection">
+        <ticksToActivate>900</ticksToActivate>
+        <activateTexPath>UI/Commands/Inspect</activateTexPath>
+        <activateLabelString>检查...</activateLabelString>
+        <activateDescString>派一名殖民者或机械族机械师靠近并检查这座反应堆，确认异常能源反应的来源。</activateDescString>
+        <guiLabelString>选择执行检查的殖民者或机械族机械师</guiLabelString>
+        <jobString>检查反应堆</jobString>
+        <activatingStringPending>正在检查反应堆</activatingStringPending>
+        <activatingString>正在检查反应堆：{1}秒</activatingString>
+        <showMustBeActivatedByColonist>false</showMustBeActivatedByColonist>
+        <ignoreForbidden>true</ignoreForbidden>
+      </li>
       <li Class="MAP_MechanoidMechanitor.CompProperties_SunBuildingLight">
         <ancient>true</ancient>
       </li>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
+  <MAP_SunBoss_InspectionUnavailable>The reactor is awakening.</MAP_SunBoss_InspectionUnavailable>
+  <MAP_SunBoss_InspectionInspectorRequired>Only colonists or mechanoid mechanitors can inspect this.</MAP_SunBoss_InspectionInspectorRequired>
   <MAP_SunBoss_FacilityFoundLabel>Anomalous energy signal</MAP_SunBoss_FacilityFoundLabel>
   <MAP_SunBoss_FacilityFoundText>Our monitoring equipment has detected an unusually massive energy signal. Its output far exceeds the limits of conventional equipment, sustaining an intense reaction with almost no fluctuation.\n\nFurther tracking has identified its source: a distant mechanoid facility. Its location has been marked on the world map.\n\nWe cannot yet confirm what lies inside, but anything capable of sustaining such an enormous energy reaction may be extremely dangerous. It also suggests that technology far beyond conventional science may be preserved there. Exploring the facility could reveal something very valuable.\n\nThe scan also detected strong, anomalous energy disturbances within the facility. Propellantless thrusters may not function properly there. If we decide to explore it, we should assemble a highly mobile team.</MAP_SunBoss_FacilityFoundText>
   <MAP_SunBoss_FirstStabilizerDestroyedLabel>Stabilizer destroyed</MAP_SunBoss_FirstStabilizerDestroyedLabel>
