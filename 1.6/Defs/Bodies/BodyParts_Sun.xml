@@ -71,7 +71,7 @@
 
   <BodyPartDef ParentName="MAP_SunMechanicalPartBase">
     <defName>MAP_SunAntiparticleStabilizer</defName>
-    <label>反粒子稳定器</label>
+    <label>反物质约束器</label>
     <hitPoints>80</hitPoints>
   </BodyPartDef>
 

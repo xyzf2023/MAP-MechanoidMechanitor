@@ -16,7 +16,7 @@
   <MAP_SunHeatDissipationArray.label>heat dissipation array</MAP_SunHeatDissipationArray.label>
   <MAP_SunCoolingPump.label>coolant pump</MAP_SunCoolingPump.label>
   <MAP_SunHeatExchangeCore.label>heat exchange core</MAP_SunHeatExchangeCore.label>
-  <MAP_SunAntiparticleStabilizer.label>antiparticle stabilizer</MAP_SunAntiparticleStabilizer.label>
+  <MAP_SunAntiparticleStabilizer.label>antimatter containment device</MAP_SunAntiparticleStabilizer.label>
   <MAP_SunSightSensor.label>visual sensor</MAP_SunSightSensor.label>
   <MAP_SunHearingSensor.label>auditory sensor</MAP_SunHearingSensor.label>
   <MAP_SunChemicalAnalyzer.label>chemical analyzer</MAP_SunChemicalAnalyzer.label>
