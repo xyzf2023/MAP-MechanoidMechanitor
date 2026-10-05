@@ -939,6 +939,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 旧档中已经敌对也必须归零锁定；在关系校准之前保留敌对事实。
+            PurgeDirectiveRatingUtility.UpdateHostilityRatingLock();
             ValidateLockedPrimaryIdeoAfterLoad();
             MechanoidMechanitorIdeologyAdaptationUtility.CalibrateAllRegisteredMechanitors();
 

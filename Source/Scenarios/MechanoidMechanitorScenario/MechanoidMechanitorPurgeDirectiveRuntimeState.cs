@@ -37,6 +37,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         // 评级值与肃清额度分别存储；额度增减不自动改变评级，仅在统一奖励入口同步增加等量评级。
         private int purgeDirectiveRatingValue;          // 0 ~ 4000 钳制
         private bool purgeDirectiveRatingInitialized;   // 旧存档迁移标记
+        private bool purgeDirectiveRatingLockedByHostility; // 敌对后永久归零，随存档保留
         // 世界目标基础奖励（如摧毁据点 200 点）按稳定ID持久化去重，防止重复结算。
         private List<string> purgeDirectiveAwardedBaseRewardIds = new List<string>();
         // 历史已用于肃清评级任务的世界目标稳定ID（排重：同一目标不重复生成任务）。
@@ -52,6 +53,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int PurgeDirectiveRatingValue => purgeDirectiveRatingValue;
 
         public bool PurgeDirectiveRatingInitialized => purgeDirectiveRatingInitialized;
+
+        public bool RatingLockedByHostility => purgeDirectiveRatingLockedByHostility;
+
+        /// <summary>只锁定评级，不清空现有额度，也不重复发送降级通知。</summary>
+        public void LockRatingByHostility()
+        {
+            if (purgeDirectiveRatingLockedByHostility) return;
+            purgeDirectiveRatingLockedByHostility = true;
+            purgeDirectiveRatingValue = 0;
+            nextPurgeQuestCheckTick = -1;
+        }
 
         public int NextPurgeQuestCheckTick => nextPurgeQuestCheckTick;
 
@@ -138,12 +150,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int RatingValue
         {
             get => purgeDirectiveRatingValue;
-            set => purgeDirectiveRatingValue = value;
+            set => purgeDirectiveRatingValue = purgeDirectiveRatingLockedByHostility ? 0 : value;
         }
 
         public void SetRatingValue(int value)
         {
-            purgeDirectiveRatingValue = value;
+            RatingValue = value;
         }
 
         public bool HasAwardedBaseReward(string stableId)
@@ -186,6 +198,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             // 新游戏：评级清零并标记已初始化，不依赖旧存档迁移路径。
             purgeDirectiveRatingValue = 0;
             purgeDirectiveRatingInitialized = true;
+            purgeDirectiveRatingLockedByHostility = false;
             purgeDirectiveAwardedBaseRewardIds = new List<string>();
             purgeDirectiveUsedQuestTargetIds = new List<string>();
             nextPurgeQuestCheckTick = -1;
@@ -391,6 +404,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 ref purgeDirectiveRatingInitialized,
                 "purgeDirectiveRatingInitialized",
                 false);
+            Scribe_Values.Look(
+                ref purgeDirectiveRatingLockedByHostility,
+                "purgeDirectiveRatingLockedByHostility",
+                false);
             Scribe_Collections.Look(
                 ref purgeDirectiveAwardedBaseRewardIds,
                 "purgeDirectiveAwardedBaseRewardIds",
@@ -462,6 +479,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 {
                     purgeDirectiveRatingValue = 0;
                     purgeDirectiveRatingInitialized = true;
+                }
+
+                if (purgeDirectiveRatingLockedByHostility)
+                {
+                    purgeDirectiveRatingValue = 0;
                 }
 
                 // 旧存档缺调度字段（或仍为立即触发的 0）：载入后随机 4~6 天再尝试；

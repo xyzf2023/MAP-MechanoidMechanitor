@@ -140,6 +140,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            PurgeDirectiveRatingUtility.UpdateHostilityRatingLock();
+            if (PurgeDirectiveRatingUtility.IsRatingLockedByHostility()
+                && !GameComponent_CerebrexTakeoverState.IsActive)
+            {
+                EndWithoutPenalty();
+                return;
+            }
+
             // 接管主脑优先于一切完成重试：现存评级任务必须立即无处罚结束。
             if (GameComponent_CerebrexTakeoverState.IsActive)
             {
@@ -192,6 +200,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// <summary>由守军清除/完成信号调用（如工作站 AllEnemiesDefeated）：若正在针对该目标操作则记为成功。</summary>
         public void NotifyTargetDefeated(WorldObject? obj)
         {
+            PurgeDirectiveRatingUtility.UpdateHostilityRatingLock();
+            if (PurgeDirectiveRatingUtility.IsRatingLockedByHostility())
+            {
+                EndWithoutPenalty();
+                return;
+            }
             if (stage == Stage.OperationActive
                 && obj != null
                 && obj == targetWorldObject
@@ -225,6 +239,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (stage == Stage.Ended || endPending || !completionConfirmed)
             {
+                return;
+            }
+
+            // 完成重试也必须重新核验敌对锁定，不能在关系恢复后补发旧奖励。
+            PurgeDirectiveRatingUtility.UpdateHostilityRatingLock();
+            if (PurgeDirectiveRatingUtility.IsRatingLockedByHostility())
+            {
+                EndWithoutPenalty();
                 return;
             }
 

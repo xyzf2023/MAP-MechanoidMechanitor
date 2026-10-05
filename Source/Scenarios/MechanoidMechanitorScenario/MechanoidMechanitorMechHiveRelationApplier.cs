@@ -84,6 +84,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     return false;
                 }
 
+                // 双向关系已验证；立即锁定敌对后的评级，不依赖延迟通知。
+                PurgeDirectiveRatingUtility.UpdateHostilityRatingLock();
+
                 if (previousPlayerKind != relationKind)
                 {
                     MechanoidMechanitorFactionRelationNotificationUtility.Dispatch(

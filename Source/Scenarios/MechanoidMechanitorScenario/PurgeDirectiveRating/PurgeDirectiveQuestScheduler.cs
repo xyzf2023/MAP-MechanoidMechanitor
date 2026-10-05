@@ -75,7 +75,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = story?.PurgeDirectiveRuntimeState;
             if (rs != null)
             {
-                rs.SetNextPurgeQuestCheckTick(Find.TickManager.TicksGame + CheckIntervalTicks);
+                rs.SetNextPurgeQuestCheckTick(rs.RatingLockedByHostility
+                    ? -1 : Find.TickManager.TicksGame + CheckIntervalTicks);
             }
         }
 
@@ -89,6 +90,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             {
                 return;
             }
+
+            PurgeDirectiveRatingUtility.UpdateHostilityRatingLock();
 
             // 接管主脑：安全结束所有活动评级任务（无处罚），不再生成新任务。
             // 首次检测执行一次清理，之后每 Tick 只廉价返回。
@@ -104,6 +107,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             takeoverCleanupCompleted = false;
 
             int now = Find.TickManager.TicksGame;
+
+            // 敌对锁定后清理已有任务；失败结束的重试仍按现有检查间隔节流。
+            if (rs.RatingLockedByHostility)
+            {
+                if (rs.NextPurgeQuestCheckTick <= 0 || now >= rs.NextPurgeQuestCheckTick)
+                {
+                    rs.SetNextPurgeQuestCheckTick(now + CheckIntervalTicks);
+                    EndAllActivePurgeQuestsWithoutPenalty();
+                }
+                return;
+            }
 
             // 未到检查时间时立即返回。
             if (rs.NextPurgeQuestCheckTick > 0
@@ -252,7 +266,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return false;
         }
 
-        /// <summary>接管主脑发生时：无处罚结束所有尚未真正结束的活动评级任务（含待接受邀请）。</summary>
+        /// <summary>接管主脑或敌对锁定时：无处罚结束所有尚未真正结束的活动评级任务（含待接受邀请）。</summary>
         private static void EndAllActivePurgeQuestsWithoutPenalty()
         {
             QuestScriptDef? questScriptDef = QuestScript;
@@ -337,7 +351,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             if (Current.Game == null || !PurgeDirectiveRatingUtility.IsRatingSystemActive()
                 || PurgeDirectiveRatingUtility.IsFinalPenaltyTriggered())
             {
-                message = "肃清评级系统未启用、主脑已接管或已触发最终处罚。";
+                message = "肃清评级系统未启用、已因机械巢敌对锁定、主脑已接管或已触发最终处罚。";
                 return false;
             }
             if (!Find.Storyteller.difficulty.allowViolentQuests)

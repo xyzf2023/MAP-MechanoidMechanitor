@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -20,7 +21,36 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             if (GameComponent_CerebrexTakeoverState.IsActive) return false;
             if (!GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive) return false;
-            return true;
+            return !IsRatingLockedByHostility();
+        }
+
+        /// <summary>只读查询；初始化完成后任一方向明确敌对即视为评级不可用。</summary>
+        public static bool IsRatingLockedByHostility()
+        {
+            return Runtime?.RatingLockedByHostility == true || HasHostileMechHiveRelation();
+        }
+
+        private static bool HasHostileMechHiveRelation()
+        {
+            GameComponent_MechanoidMechanitorStoryState? story =
+                CurrentGameComponentCache<GameComponent_MechanoidMechanitorStoryState>.Get();
+            if (story == null || !story.PurgeDirectiveEnabled) return false;
+            if (story.PurgeDirectiveFinalPenaltyTriggered) return true;
+            if (!story.InitialMechHiveRelationApplied) return false;
+            Faction? mechHive = story.CachedMechHive;
+            Faction? player = Faction.OfPlayerSilentFail;
+            if (mechHive == null || player == null || !story.IsCurrentMechHive(mechHive)) return false;
+            return player.RelationWith(mechHive, allowNull: true)?.kind == FactionRelationKind.Hostile
+                || mechHive.RelationWith(player, allowNull: true)?.kind == FactionRelationKind.Hostile;
+        }
+
+        /// <summary>关系写入、正常 Tick 和正式评级写入前调用；敌对锁定只提交一次。</summary>
+        public static void UpdateHostilityRatingLock()
+        {
+            if (GameComponent_CerebrexTakeoverState.IsActive) return;
+            MechanoidMechanitorPurgeDirectiveRuntimeState? rs = Runtime;
+            if (rs == null || rs.RatingLockedByHostility || !HasHostileMechHiveRelation()) return;
+            rs.LockRatingByHostility();
         }
 
         public static bool IsFinalPenaltyTriggered()
@@ -31,13 +61,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         public static MechanoidMechanitorPurgeDirectiveRuntimeState? Runtime =>
-            Current.Game?.GetComponent<GameComponent_MechanoidMechanitorStoryState>()?.PurgeDirectiveRuntimeState;
+            CurrentGameComponentCache<GameComponent_MechanoidMechanitorStoryState>.Get()?.PurgeDirectiveRuntimeState;
 
         public static int CurrentRatingValue()
         {
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = Runtime;
             if (rs == null) return 0;
-            return rs.RatingValue;
+            return IsRatingLockedByHostility() ? 0 : rs.RatingValue;
         }
 
         /// <summary>当前等级（1..5）。0 点也返回一级；接管主脑一律视为五级有效权限。</summary>
@@ -217,6 +247,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         public static bool TryAddRating(int amount)
         {
+            UpdateHostilityRatingLock();
             if (!IsRatingSystemActive()) return false;
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = Runtime;
             if (rs == null) return false;
@@ -236,6 +267,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         public static bool SetRatingDirect(int value)
         {
+            UpdateHostilityRatingLock();
+            if (IsRatingLockedByHostility()) return false;
             if (!IsRatingSystemActive() && !IsFinalPenaltyTriggered()) return false;
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = Runtime;
             if (rs == null) return false;
@@ -283,6 +316,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         public static bool TryAddPurgeDirectiveRewardPoints(int points)
         {
+            UpdateHostilityRatingLock();
             if (!IsRatingSystemActive()) return false;
             if (points <= 0) return false;
 
@@ -390,6 +424,27 @@ namespace MAP_MechanoidMechanitor.Scenarios
             MechanoidMechanitorPurgeDirectiveRuntimeState? rs = Runtime;
             if (rs == null) return false;
             return rs.RewardPoints >= finalCost;
+        }
+    }
+
+    /// <summary>原版派系关系通知前锁定，避免通知中的任务信号先发放评级奖励。</summary>
+    [HarmonyPatch(typeof(Faction), nameof(Faction.Notify_RelationKindChanged))]
+    public static class PurgeDirectiveRatingHostilityRelationPatch
+    {
+        public static void Prefix(Faction __instance, Faction other)
+        {
+            // 统一关系写入器会在双向写入验证后处理，跳过中间初始化状态。
+            if (MechanoidMechanitorMechHiveRelationApplier.IsApplying) return;
+            GameComponent_MechanoidMechanitorStoryState? story =
+                CurrentGameComponentCache<GameComponent_MechanoidMechanitorStoryState>.Get();
+            Faction? player = Faction.OfPlayerSilentFail;
+            Faction? mechHive = story?.CachedMechHive;
+            if (player == null || mechHive == null) return;
+            if ((__instance == player && other == mechHive)
+                || (__instance == mechHive && other == player))
+            {
+                PurgeDirectiveRatingUtility.UpdateHostilityRatingLock();
+            }
         }
     }
 }
