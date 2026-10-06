@@ -28,7 +28,7 @@
   <MAP_PurgeDirectiveRating.Perm.MechUltraHeavy>Ultraheavy mechanoids</MAP_PurgeDirectiveRating.Perm.MechUltraHeavy>
   <MAP_PurgeDirectiveRating.Perm.GoodsBasic>Basic supplies</MAP_PurgeDirectiveRating.Perm.GoodsBasic>
   <MAP_PurgeDirectiveRating.Perm.GoodsStandard>Standard military supplies</MAP_PurgeDirectiveRating.Perm.GoodsStandard>
-  <MAP_PurgeDirectiveRating.Perm.GoodsFull>All permitted supplies</MAP_PurgeDirectiveRating.Perm.GoodsFull>
+  <MAP_PurgeDirectiveRating.Perm.GoodsFull>All regular supplies</MAP_PurgeDirectiveRating.Perm.GoodsFull>
   <MAP_PurgeDirectiveRating.Perm.GoodsSpecified>Additional supply authorization: {0}</MAP_PurgeDirectiveRating.Perm.GoodsSpecified>
   <MAP_PurgeDirectiveRating.Perm.ForceSupport>Troop support</MAP_PurgeDirectiveRating.Perm.ForceSupport>
   <MAP_PurgeDirectiveRating.Perm.ForceUnlimited>Troop support limit removed</MAP_PurgeDirectiveRating.Perm.ForceUnlimited>
@@ -45,9 +45,35 @@
   <MAP_PurgeDirectiveRating.Quest.DurationHours>{0} hours</MAP_PurgeDirectiveRating.Quest.DurationHours>
   <MAP_PurgeDirectiveRating.Quest.Reward>Purge credit</MAP_PurgeDirectiveRating.Quest.Reward>
   <MAP_PurgeDirectiveRating.Letter.Upgrade.Title>Purge rating increased</MAP_PurgeDirectiveRating.Letter.Upgrade.Title>
-  <MAP_PurgeDirectiveRating.Letter.Upgrade.Text>Purge rating increased: {0} → {1}. Current rating value {2}. New privileges: {3}.</MAP_PurgeDirectiveRating.Letter.Upgrade.Text>
+  <MAP_PurgeDirectiveRating.Letter.Upgrade.Text>Node rating: {0} → {1}\nCurrent rating value: {2}\n\nPrivilege changes\n\n{3}</MAP_PurgeDirectiveRating.Letter.Upgrade.Text>
   <MAP_PurgeDirectiveRating.Letter.Downgrade.Title>Purge rating decreased</MAP_PurgeDirectiveRating.Letter.Downgrade.Title>
-  <MAP_PurgeDirectiveRating.Letter.Downgrade.Text>Purge rating decreased: {0} → {1}. Current rating value {2}. Privileges temporarily lost: {3}. Previously delivered units and supplies are unaffected.</MAP_PurgeDirectiveRating.Letter.Downgrade.Text>
+  <MAP_PurgeDirectiveRating.Letter.Downgrade.Text>Node rating: {0} → {1}\nCurrent rating value: {2}\n\nPrivilege changes\n\n{3}\n\nPreviously delivered units and supplies are unaffected.</MAP_PurgeDirectiveRating.Letter.Downgrade.Text>
+  <MAP_PurgeDirectiveRating.Letter.RatingValue>{0} / {1} {2}</MAP_PurgeDirectiveRating.Letter.RatingValue>
+  <MAP_PurgeDirectiveRating.Letter.RatingCapped>(maximum reached)</MAP_PurgeDirectiveRating.Letter.RatingCapped>
+  <MAP_PurgeDirectiveRating.Letter.Section.Mechs>Mechanoid requisitions</MAP_PurgeDirectiveRating.Letter.Section.Mechs>
+  <MAP_PurgeDirectiveRating.Letter.Section.Goods>Supply requests</MAP_PurgeDirectiveRating.Letter.Section.Goods>
+  <MAP_PurgeDirectiveRating.Letter.Section.Protocols>Special protocols</MAP_PurgeDirectiveRating.Letter.Section.Protocols>
+  <MAP_PurgeDirectiveRating.Letter.Section.Discount>Requisition discounts</MAP_PurgeDirectiveRating.Letter.Section.Discount>
+  <MAP_PurgeDirectiveRating.Letter.Section.Bandwidth>Bandwidth support</MAP_PurgeDirectiveRating.Letter.Section.Bandwidth>
+  <MAP_PurgeDirectiveRating.Letter.Change.None>No privilege changes.</MAP_PurgeDirectiveRating.Letter.Change.None>
+  <MAP_PurgeDirectiveRating.Letter.Change.MechGranted>Unlocked: {0}.</MAP_PurgeDirectiveRating.Letter.Change.MechGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.MechRevoked>Temporarily unavailable for requisition: {0}.</MAP_PurgeDirectiveRating.Letter.Change.MechRevoked>
+  <MAP_PurgeDirectiveRating.Letter.Change.GoodsGranted>Access granted: {0}.</MAP_PurgeDirectiveRating.Letter.Change.GoodsGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.GoodsReduced>Regular supply access reduced to: {0}.</MAP_PurgeDirectiveRating.Letter.Change.GoodsReduced>
+  <MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedGranted>Specific supplies unlocked: {0}.</MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedRevoked>Specific supplies temporarily unavailable: {0}.</MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedRevoked>
+  <MAP_PurgeDirectiveRating.Letter.Change.ProtocolGranted>Authorized: {0}. Threat point limit: {1}.</MAP_PurgeDirectiveRating.Letter.Change.ProtocolGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.ProtocolRevoked>Temporarily unavailable: {0}.</MAP_PurgeDirectiveRating.Letter.Change.ProtocolRevoked>
+  <MAP_PurgeDirectiveRating.Letter.Change.ProtocolLimit>{0} threat point limit: {1} → {2}.</MAP_PurgeDirectiveRating.Letter.Change.ProtocolLimit>
+  <MAP_PurgeDirectiveRating.Letter.Change.Unlimited>Unlimited</MAP_PurgeDirectiveRating.Letter.Change.Unlimited>
+  <MAP_PurgeDirectiveRating.Letter.Change.EnvironmentGranted>Condition causers can now be deployed.</MAP_PurgeDirectiveRating.Letter.Change.EnvironmentGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.EnvironmentRevoked>Condition causers temporarily cannot be deployed.</MAP_PurgeDirectiveRating.Letter.Change.EnvironmentRevoked>
+  <MAP_PurgeDirectiveRating.Letter.Change.Discount>Mechanoid and supply requisition discount: {0}% → {1}%.</MAP_PurgeDirectiveRating.Letter.Change.Discount>
+  <MAP_PurgeDirectiveRating.Letter.Change.BandwidthBase>Base bandwidth for this rating: {0} → {1}.</MAP_PurgeDirectiveRating.Letter.Change.BandwidthBase>
+  <MAP_PurgeDirectiveRating.Letter.Change.BandwidthCost>Additional bandwidth rate: {0} → {1} purge credit (per {2} bandwidth / {3} days).</MAP_PurgeDirectiveRating.Letter.Change.BandwidthCost>
+  <MAP_PurgeDirectiveRating.Letter.Change.BandwidthBaseDeferred>For active bandwidth support, the base allocation decreases at the start of the next billing period.</MAP_PurgeDirectiveRating.Letter.Change.BandwidthBaseDeferred>
+  <MAP_PurgeDirectiveRating.Letter.Change.BandwidthCostDeferred>Purchased additional bandwidth is not repriced during the current billing period. Renewals use the rate for the new rating.</MAP_PurgeDirectiveRating.Letter.Change.BandwidthCostDeferred>
+
   <MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>Purge node: target purge</MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>
   <MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>You have purged {0} (currently {1}). Purge credit granted: {2}.</MAP_PurgeDirectiveRating.Letter.QuestComplete.Text>
   <MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>You have purged {0} (currently {1}).</MAP_PurgeDirectiveRating.Letter.QuestComplete.LegacyText>

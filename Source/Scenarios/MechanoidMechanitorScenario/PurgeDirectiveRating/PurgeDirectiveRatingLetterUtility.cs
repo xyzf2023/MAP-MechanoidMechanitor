@@ -22,8 +22,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             TaggedString text = "MAP_PurgeDirectiveRating.Letter.Upgrade.Text".Translate(
                 PurgeDirectiveRatingDisplay.RatingName(prevLevel),
                 PurgeDirectiveRatingDisplay.RatingName(newLevel),
-                ratingValue,
-                PurgeDirectiveRatingDisplay.PermissionsBetween(prevLevel, newLevel));
+                RatingValueText(ratingValue, def.maxRatingValue),
+                PurgeDirectiveRatingDisplay.LetterPermissionChanges(prevLevel, newLevel));
             Find.LetterStack.ReceiveLetter(title, text, letterDef);
         }
 
@@ -40,9 +40,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             TaggedString text = "MAP_PurgeDirectiveRating.Letter.Downgrade.Text".Translate(
                 PurgeDirectiveRatingDisplay.RatingName(prevLevel),
                 PurgeDirectiveRatingDisplay.RatingName(newLevel),
-                ratingValue,
-                PurgeDirectiveRatingDisplay.PermissionsBetween(newLevel, prevLevel));
+                RatingValueText(ratingValue, def.maxRatingValue),
+                PurgeDirectiveRatingDisplay.LetterPermissionChanges(prevLevel, newLevel));
             Find.LetterStack.ReceiveLetter(title, text, letterDef);
+        }
+
+        private static string RatingValueText(int ratingValue, int maxRatingValue)
+        {
+            string suffix = ratingValue >= maxRatingValue
+                ? "MAP_PurgeDirectiveRating.Letter.RatingCapped".Translate()
+                : string.Empty;
+            return "MAP_PurgeDirectiveRating.Letter.RatingValue".Translate(ratingValue, maxRatingValue, suffix);
         }
 
         public static void SendQuestCompleteLetter(

@@ -42,7 +42,7 @@
   <MAP_PurgeDirectiveRating.Perm.MechUltraHeavy>超重机械族</MAP_PurgeDirectiveRating.Perm.MechUltraHeavy>
   <MAP_PurgeDirectiveRating.Perm.GoodsBasic>基础物资</MAP_PurgeDirectiveRating.Perm.GoodsBasic>
   <MAP_PurgeDirectiveRating.Perm.GoodsStandard>标准军需</MAP_PurgeDirectiveRating.Perm.GoodsStandard>
-  <MAP_PurgeDirectiveRating.Perm.GoodsFull>全部合法物资</MAP_PurgeDirectiveRating.Perm.GoodsFull>
+  <MAP_PurgeDirectiveRating.Perm.GoodsFull>全部普通物资</MAP_PurgeDirectiveRating.Perm.GoodsFull>
   <MAP_PurgeDirectiveRating.Perm.GoodsSpecified>额外物资授权：{0}</MAP_PurgeDirectiveRating.Perm.GoodsSpecified>
   <MAP_PurgeDirectiveRating.Perm.ForceSupport>部队支援</MAP_PurgeDirectiveRating.Perm.ForceSupport>
   <MAP_PurgeDirectiveRating.Perm.ForceUnlimited>部队支援上限解除</MAP_PurgeDirectiveRating.Perm.ForceUnlimited>
@@ -67,9 +67,35 @@
 
   <!-- ===== 肃清评级：升级/降级信件 ===== -->
   <MAP_PurgeDirectiveRating.Letter.Upgrade.Title>肃清评级提升</MAP_PurgeDirectiveRating.Letter.Upgrade.Title>
-  <MAP_PurgeDirectiveRating.Letter.Upgrade.Text>肃清评级已提升：{0} → {1}。当前评级值 {2}。新增权限：{3}。</MAP_PurgeDirectiveRating.Letter.Upgrade.Text>
+  <MAP_PurgeDirectiveRating.Letter.Upgrade.Text>节点评级：{0} → {1}\n当前评级值：{2}\n\n本次权限变化\n\n{3}</MAP_PurgeDirectiveRating.Letter.Upgrade.Text>
   <MAP_PurgeDirectiveRating.Letter.Downgrade.Title>肃清评级下降</MAP_PurgeDirectiveRating.Letter.Downgrade.Title>
-  <MAP_PurgeDirectiveRating.Letter.Downgrade.Text>肃清评级已下降：{0} → {1}。当前评级值 {2}。暂时失去权限：{3}。已交付的单位与物资不受影响。</MAP_PurgeDirectiveRating.Letter.Downgrade.Text>
+  <MAP_PurgeDirectiveRating.Letter.Downgrade.Text>节点评级：{0} → {1}\n当前评级值：{2}\n\n本次权限变化\n\n{3}\n\n已交付的单位与物资不受影响。</MAP_PurgeDirectiveRating.Letter.Downgrade.Text>
+
+  <MAP_PurgeDirectiveRating.Letter.RatingValue>{0} / {1}{2}</MAP_PurgeDirectiveRating.Letter.RatingValue>
+  <MAP_PurgeDirectiveRating.Letter.RatingCapped>（已达上限）</MAP_PurgeDirectiveRating.Letter.RatingCapped>
+  <MAP_PurgeDirectiveRating.Letter.Section.Mechs>机械族调拨</MAP_PurgeDirectiveRating.Letter.Section.Mechs>
+  <MAP_PurgeDirectiveRating.Letter.Section.Goods>物资请求</MAP_PurgeDirectiveRating.Letter.Section.Goods>
+  <MAP_PurgeDirectiveRating.Letter.Section.Protocols>特殊协议</MAP_PurgeDirectiveRating.Letter.Section.Protocols>
+  <MAP_PurgeDirectiveRating.Letter.Section.Discount>调拨优惠</MAP_PurgeDirectiveRating.Letter.Section.Discount>
+  <MAP_PurgeDirectiveRating.Letter.Section.Bandwidth>带宽支持</MAP_PurgeDirectiveRating.Letter.Section.Bandwidth>
+  <MAP_PurgeDirectiveRating.Letter.Change.None>无权限变化。</MAP_PurgeDirectiveRating.Letter.Change.None>
+  <MAP_PurgeDirectiveRating.Letter.Change.MechGranted>解锁{0}。</MAP_PurgeDirectiveRating.Letter.Change.MechGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.MechRevoked>暂时无法调拨{0}。</MAP_PurgeDirectiveRating.Letter.Change.MechRevoked>
+  <MAP_PurgeDirectiveRating.Letter.Change.GoodsGranted>开放{0}。</MAP_PurgeDirectiveRating.Letter.Change.GoodsGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.GoodsReduced>普通物资权限降至：{0}。</MAP_PurgeDirectiveRating.Letter.Change.GoodsReduced>
+  <MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedGranted>解锁指定物资：{0}。</MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedRevoked>暂时无法请求指定物资：{0}。</MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedRevoked>
+  <MAP_PurgeDirectiveRating.Letter.Change.ProtocolGranted>开放{0}，威胁点上限：{1}。</MAP_PurgeDirectiveRating.Letter.Change.ProtocolGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.ProtocolRevoked>暂时无法调用{0}。</MAP_PurgeDirectiveRating.Letter.Change.ProtocolRevoked>
+  <MAP_PurgeDirectiveRating.Letter.Change.ProtocolLimit>{0}威胁点上限：{1} → {2}。</MAP_PurgeDirectiveRating.Letter.Change.ProtocolLimit>
+  <MAP_PurgeDirectiveRating.Letter.Change.Unlimited>无限制</MAP_PurgeDirectiveRating.Letter.Change.Unlimited>
+  <MAP_PurgeDirectiveRating.Letter.Change.EnvironmentGranted>允许部署环境影响器。</MAP_PurgeDirectiveRating.Letter.Change.EnvironmentGranted>
+  <MAP_PurgeDirectiveRating.Letter.Change.EnvironmentRevoked>暂时无法部署环境影响器。</MAP_PurgeDirectiveRating.Letter.Change.EnvironmentRevoked>
+  <MAP_PurgeDirectiveRating.Letter.Change.Discount>机械族与物资调拨折扣：{0}% → {1}%。</MAP_PurgeDirectiveRating.Letter.Change.Discount>
+  <MAP_PurgeDirectiveRating.Letter.Change.BandwidthBase>评级基础带宽：{0} → {1}。</MAP_PurgeDirectiveRating.Letter.Change.BandwidthBase>
+  <MAP_PurgeDirectiveRating.Letter.Change.BandwidthCost>额外带宽单价：{0} → {1} 肃清额度（每 {2} 带宽 / {3} 天）。</MAP_PurgeDirectiveRating.Letter.Change.BandwidthCost>
+  <MAP_PurgeDirectiveRating.Letter.Change.BandwidthBaseDeferred>已启用的带宽支持于下一账期下调基础配额。</MAP_PurgeDirectiveRating.Letter.Change.BandwidthBaseDeferred>
+  <MAP_PurgeDirectiveRating.Letter.Change.BandwidthCostDeferred>已购买的额外带宽本期不重新计价，续费按新评级单价结算。</MAP_PurgeDirectiveRating.Letter.Change.BandwidthCostDeferred>
 
   <!-- ===== 肃清评级：任务完成信件 ===== -->
   <MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>肃清节点：目标肃清</MAP_PurgeDirectiveRating.Letter.QuestComplete.Title>

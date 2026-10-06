@@ -229,24 +229,153 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return string.Join("、", items);
         }
 
-        /// <summary>汇总跨级变化中新增或失去的权限；lowerExclusive 不包含，upperInclusive 包含。</summary>
-        public static string PermissionsBetween(int lowerExclusive, int upperInclusive)
+        /// <summary>
+        /// 信件专用的权限变化正文：比较前后评级，按类别合并跨级结果，不影响通讯界面的紧凑摘要。
+        /// 仅查询配置和目录，不读取新评级下的当前权限代替旧评级，也不修改运行状态。
+        /// </summary>
+        public static string LetterPermissionChanges(int prevLevel, int newLevel)
         {
-            List<string> segs = new List<string>();
-            for (int level = Mathf.Max(1, lowerExclusive + 1);
-                 level <= Mathf.Min(5, upperInclusive);
-                 level++)
+            prevLevel = Mathf.Clamp(prevLevel, 1, 5);
+            newLevel = Mathf.Clamp(newLevel, 1, 5);
+            if (prevLevel == newLevel)
+                return "MAP_PurgeDirectiveRating.Letter.Change.None".Translate();
+
+            PurgeDirectiveRatingConfigDef cfg = PurgeDirectiveRatingUtility.Config;
+            bool upgrading = newLevel > prevLevel;
+            List<string> sections = new List<string>();
+            List<string> mechs = new List<string>();
+            AddChangedMechWeight(mechs, prevLevel, newLevel, cfg.mechLightRequiredLevel,
+                "MAP_PurgeDirectiveRating.Perm.MechLight");
+            AddChangedMechWeight(mechs, prevLevel, newLevel, cfg.mechMediumRequiredLevel,
+                "MAP_PurgeDirectiveRating.Perm.MechMedium");
+            AddChangedMechWeight(mechs, prevLevel, newLevel, cfg.mechHeavyRequiredLevel,
+                "MAP_PurgeDirectiveRating.Perm.MechHeavy");
+            AddChangedMechWeight(mechs, prevLevel, newLevel, cfg.mechUltraHeavyRequiredLevel,
+                "MAP_PurgeDirectiveRating.Perm.MechUltraHeavy");
+            List<string> items = new List<string>();
+            if (mechs.Count > 0)
+                items.Add((upgrading
+                    ? "MAP_PurgeDirectiveRating.Letter.Change.MechGranted"
+                    : "MAP_PurgeDirectiveRating.Letter.Change.MechRevoked").Translate(string.Join("、", mechs)));
+            AddLetterSection(sections, "MAP_PurgeDirectiveRating.Letter.Section.Mechs", items);
+
+            items = new List<string>();
+            int oldGoodsLevel = Mathf.Min(prevLevel, 3);
+            int newGoodsLevel = Mathf.Min(newLevel, 3);
+            if (oldGoodsLevel != newGoodsLevel)
             {
-                string permissions = NewPermissionsAtLevel(level);
-                if (!string.IsNullOrEmpty(permissions))
-                {
-                    segs.Add(permissions);
-                }
+                string goodsKey = newGoodsLevel == 1 ? "MAP_PurgeDirectiveRating.Perm.GoodsBasic"
+                    : newGoodsLevel == 2 ? "MAP_PurgeDirectiveRating.Perm.GoodsStandard"
+                    : "MAP_PurgeDirectiveRating.Perm.GoodsFull";
+                items.Add((upgrading
+                    ? "MAP_PurgeDirectiveRating.Letter.Change.GoodsGranted"
+                    : "MAP_PurgeDirectiveRating.Letter.Change.GoodsReduced").Translate(goodsKey.Translate()));
             }
 
-            return segs.Count == 0
-                ? "MAP_PurgeDirectiveRating.Perm.None".Translate()
-                : string.Join("；", segs);
+            // 只列实际目录中前后可用状态改变的指定物资，黑名单优先，并按 Def 去重。
+            List<string> specifiedGoods = new List<string>();
+            HashSet<ThingDef> seen = new HashSet<ThingDef>();
+            HashSet<ThingDef> blacklist = MechanoidOvermindCatalogService.GetMergedBlacklist();
+            foreach (MechanoidOvermindThingCatalogEntry entry in MechanoidOvermindCatalogService.GetThingCatalog())
+            {
+                ThingDef thing = entry.Def;
+                if (thing == null || blacklist.Contains(thing) || !seen.Add(thing)) continue;
+                if (PurgeDirectiveGoodsRatingOverrideUtility.GetOverrideLevel(thing) <= 0) continue;
+                int requiredLevel = PurgeDirectiveRatingUtility.RequiredLevelForThing(thing);
+                if ((prevLevel >= requiredLevel) != (newLevel >= requiredLevel))
+                    specifiedGoods.Add(thing.LabelCap.ToString());
+            }
+            specifiedGoods.Sort();
+            if (specifiedGoods.Count > 0)
+                items.Add((upgrading
+                    ? "MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedGranted"
+                    : "MAP_PurgeDirectiveRating.Letter.Change.GoodsSpecifiedRevoked")
+                    .Translate(string.Join("、", specifiedGoods)));
+            AddLetterSection(sections, "MAP_PurgeDirectiveRating.Letter.Section.Goods", items);
+
+            items = new List<string>();
+            AddProtocolChange(items, "MAP_PurgeDirectiveRating.Perm.ForceSupport",
+                cfg.GetForceSupportMaxThreat(prevLevel), cfg.GetForceSupportMaxThreat(newLevel));
+            AddProtocolChange(items, "MAP_PurgeDirectiveRating.Perm.Cluster",
+                cfg.GetClusterMaxThreat(prevLevel), cfg.GetClusterMaxThreat(newLevel));
+            bool oldEnvironment = PurgeDirectiveRatingUtility.ClusterEnvironmentAllowed(prevLevel);
+            bool newEnvironment = PurgeDirectiveRatingUtility.ClusterEnvironmentAllowed(newLevel);
+            if (oldEnvironment != newEnvironment)
+                items.Add((newEnvironment
+                    ? "MAP_PurgeDirectiveRating.Letter.Change.EnvironmentGranted"
+                    : "MAP_PurgeDirectiveRating.Letter.Change.EnvironmentRevoked").Translate());
+            AddLetterSection(sections, "MAP_PurgeDirectiveRating.Letter.Section.Protocols", items);
+
+            items = new List<string>();
+            float oldDiscount = cfg.GetDiscountRateForLevel(prevLevel);
+            float newDiscount = cfg.GetDiscountRateForLevel(newLevel);
+            if (oldDiscount != newDiscount)
+                items.Add("MAP_PurgeDirectiveRating.Letter.Change.Discount".Translate(
+                    Mathf.RoundToInt(oldDiscount * 100f), Mathf.RoundToInt(newDiscount * 100f)));
+            AddLetterSection(sections, "MAP_PurgeDirectiveRating.Letter.Section.Discount", items);
+
+            // 带宽单价独立于调拨折扣；描述评级配额，不把本期缓存单价误写为即时重算。
+            if (ModsConfig.BiotechActive
+                && cfg.bandwidthSupportBaseByLevel != null
+                && cfg.bandwidthSupportCostByLevel != null
+                && cfg.bandwidthSupportBaseByLevel.Count >= Mathf.Max(prevLevel, newLevel)
+                && cfg.bandwidthSupportCostByLevel.Count >= Mathf.Max(prevLevel, newLevel)
+                && cfg.bandwidthSupportUnit > 0 && cfg.bandwidthSupportPeriodDays > 0)
+            {
+                items = new List<string>();
+                int oldBase = Mathf.Max(0, cfg.bandwidthSupportBaseByLevel[prevLevel - 1]);
+                int newBase = Mathf.Max(0, cfg.bandwidthSupportBaseByLevel[newLevel - 1]);
+                int oldCost = Mathf.Max(0, cfg.bandwidthSupportCostByLevel[prevLevel - 1]);
+                int newCost = Mathf.Max(0, cfg.bandwidthSupportCostByLevel[newLevel - 1]);
+                if (oldBase != newBase)
+                    items.Add("MAP_PurgeDirectiveRating.Letter.Change.BandwidthBase".Translate(oldBase, newBase));
+                if (oldCost != newCost)
+                    items.Add("MAP_PurgeDirectiveRating.Letter.Change.BandwidthCost".Translate(
+                        oldCost, newCost, cfg.bandwidthSupportUnit, cfg.bandwidthSupportPeriodDays));
+                if (newBase < oldBase)
+                    items.Add("MAP_PurgeDirectiveRating.Letter.Change.BandwidthBaseDeferred".Translate());
+                if (oldCost != newCost)
+                    items.Add("MAP_PurgeDirectiveRating.Letter.Change.BandwidthCostDeferred".Translate());
+                AddLetterSection(sections, "MAP_PurgeDirectiveRating.Letter.Section.Bandwidth", items);
+            }
+
+            return sections.Count == 0
+                ? "MAP_PurgeDirectiveRating.Letter.Change.None".Translate()
+                : string.Join("\n\n", sections);
+        }
+
+        private static void AddChangedMechWeight(
+            List<string> items, int prevLevel, int newLevel, int requiredLevel, string labelKey)
+        {
+            if ((prevLevel >= requiredLevel) != (newLevel >= requiredLevel))
+                items.Add(labelKey.Translate());
+        }
+
+        private static void AddProtocolChange(List<string> items, string labelKey, int oldMax, int newMax)
+        {
+            if (oldMax == newMax) return;
+            string label = labelKey.Translate();
+            if (newMax <= 0)
+                items.Add("MAP_PurgeDirectiveRating.Letter.Change.ProtocolRevoked".Translate(label));
+            else if (oldMax <= 0)
+                items.Add("MAP_PurgeDirectiveRating.Letter.Change.ProtocolGranted".Translate(
+                    label, ProtocolLimitText(newMax)));
+            else
+                items.Add("MAP_PurgeDirectiveRating.Letter.Change.ProtocolLimit".Translate(
+                    label, ProtocolLimitText(oldMax), ProtocolLimitText(newMax)));
+        }
+
+        private static string ProtocolLimitText(int value)
+        {
+            return value == int.MaxValue
+                ? "MAP_PurgeDirectiveRating.Letter.Change.Unlimited".Translate()
+                : value.ToString();
+        }
+
+        private static void AddLetterSection(List<string> sections, string titleKey, List<string> items)
+        {
+            if (items.Count > 0)
+                sections.Add(titleKey.Translate() + "\n• " + string.Join("\n• ", items));
         }
 
         /// <summary>汇总某等级当前已开放的权限（1..level 各档新增权限的合并）。</summary>
