@@ -262,6 +262,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public static void ClearCaches()
         {
+            PurgeDirectiveGoodsRatingOverrideUtility.ClearCache();
             mechCatalog = null;
             thingCatalog = null;
             thingLookup = null;

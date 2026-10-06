@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <!-- 指定物资最低评级名单 -->
+  <MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveGoodsRatingOverrideDef>
+    <defName>MAP_PurgeDirectiveGoodsRatingOverrides</defName>
+    <label>肃清指令物资评级名单</label>
+    <overrides>
+      <!-- 同步信号芯片：序列四 -->
+      <li>
+        <thing>SignalChip</thing>
+        <requiredLevel>2</requiredLevel>
+      </li>
+      <!-- 能量汇聚芯片：序列三 -->
+      <li>
+        <thing>PowerfocusChip</thing>
+        <requiredLevel>3</requiredLevel>
+      </li>
+      <!-- 纳米结构芯片：序列三 -->
+      <li>
+        <thing>NanostructuringChip</thing>
+        <requiredLevel>3</requiredLevel>
+      </li>
+      <!-- 量子运算芯片：序列二 -->
+      <li>
+        <thing>MAP_QuantumComputingChip</thing>
+        <requiredLevel>4</requiredLevel>
+      </li>
+    </overrides>
+  </MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveGoodsRatingOverrideDef>
+
+</Defs>

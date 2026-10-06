@@ -29,6 +29,7 @@
   <MAP_PurgeDirectiveRating.Perm.GoodsBasic>Basic supplies</MAP_PurgeDirectiveRating.Perm.GoodsBasic>
   <MAP_PurgeDirectiveRating.Perm.GoodsStandard>Standard military supplies</MAP_PurgeDirectiveRating.Perm.GoodsStandard>
   <MAP_PurgeDirectiveRating.Perm.GoodsFull>All permitted supplies</MAP_PurgeDirectiveRating.Perm.GoodsFull>
+  <MAP_PurgeDirectiveRating.Perm.GoodsSpecified>Additional supply authorization: {0}</MAP_PurgeDirectiveRating.Perm.GoodsSpecified>
   <MAP_PurgeDirectiveRating.Perm.ForceSupport>Troop support</MAP_PurgeDirectiveRating.Perm.ForceSupport>
   <MAP_PurgeDirectiveRating.Perm.ForceUnlimited>Troop support limit removed</MAP_PurgeDirectiveRating.Perm.ForceUnlimited>
   <MAP_PurgeDirectiveRating.Perm.Cluster>Mech clusters</MAP_PurgeDirectiveRating.Perm.Cluster>

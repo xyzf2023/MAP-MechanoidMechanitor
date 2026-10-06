@@ -23,7 +23,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         public int PointsToNextLevel { get; private set; }
         public int CurrentLevel { get; private set; }
         public int MaxMechWeightLevel { get; private set; } // 当前可调度的最高机械族重量级（1..4）
-        public int GoodsCatalogLevel { get; private set; }  // 1=基础 2=标准 3=完整
+        public int GoodsCatalogLevel { get; private set; }  // 普通物资自动分级：1=基础 2=标准 3=全部；指定物资另按名单评级开放
         public float Discount { get; private set; }
         public bool ForceSupportAvailable { get; private set; }
         public int ForceSupportMax { get; private set; }
@@ -204,6 +204,21 @@ namespace MAP_MechanoidMechanitor.Scenarios
                         "MAP_PurgeDirectiveRating.Perm.Discount".Translate(),
                         Mathf.RoundToInt(cfg.discountLevel5 * 100f)));
                     break;
+            }
+
+            // 从实际商品目录和评级名单读取，避免把芯片等具体物品写死在提示中。
+            List<string> specifiedGoods = new List<string>();
+            foreach (MechanoidOvermindThingCatalogEntry entry in MechanoidOvermindCatalogService.GetThingCatalog())
+            {
+                if (PurgeDirectiveGoodsRatingOverrideUtility.GetOverrideLevel(entry.Def) == level)
+                {
+                    specifiedGoods.Add(entry.Def.LabelCap.ToString());
+                }
+            }
+            if (specifiedGoods.Count > 0)
+            {
+                items.Add("MAP_PurgeDirectiveRating.Perm.GoodsSpecified".Translate(
+                    string.Join("、", specifiedGoods)));
             }
 
             if (items.Count == 0)

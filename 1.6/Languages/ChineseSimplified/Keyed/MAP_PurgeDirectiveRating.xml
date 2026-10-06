@@ -43,6 +43,7 @@
   <MAP_PurgeDirectiveRating.Perm.GoodsBasic>基础物资</MAP_PurgeDirectiveRating.Perm.GoodsBasic>
   <MAP_PurgeDirectiveRating.Perm.GoodsStandard>标准军需</MAP_PurgeDirectiveRating.Perm.GoodsStandard>
   <MAP_PurgeDirectiveRating.Perm.GoodsFull>全部合法物资</MAP_PurgeDirectiveRating.Perm.GoodsFull>
+  <MAP_PurgeDirectiveRating.Perm.GoodsSpecified>额外物资授权：{0}</MAP_PurgeDirectiveRating.Perm.GoodsSpecified>
   <MAP_PurgeDirectiveRating.Perm.ForceSupport>部队支援</MAP_PurgeDirectiveRating.Perm.ForceSupport>
   <MAP_PurgeDirectiveRating.Perm.ForceUnlimited>部队支援上限解除</MAP_PurgeDirectiveRating.Perm.ForceUnlimited>
   <MAP_PurgeDirectiveRating.Perm.Cluster>机械集群</MAP_PurgeDirectiveRating.Perm.Cluster>

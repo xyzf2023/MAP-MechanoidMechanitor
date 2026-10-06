@@ -6,7 +6,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 {
     /// <summary>
     /// 物资评级覆盖：允许通过 XML 把指定 ThingDef 显式锁定到某个所需评级等级，
-    /// 覆盖按市场价值的自动分级。例如把某件贵重但低价的功能性建筑固定为 3 级。
+    /// 支持 1..5 级指定物资；未配置物品继续使用原有三级自动分级。
     /// 集中在一处维护，避免把大量具体 DefName 写死成另一套权限表。
     /// </summary>
     public sealed class PurgeDirectiveGoodsRatingOverrideDef : Def
@@ -40,15 +40,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
             HashSet<ThingDef> seen = new HashSet<ThingDef>();
             foreach (ThingRatingOverride o in overrides)
             {
-                if (o.thing == null)
+                if (o == null || o.thing == null)
                 {
                     yield return $"{defName}: 覆盖配置的物品为空。";
                     continue;
                 }
 
-                if (o.requiredLevel < 1 || o.requiredLevel > 3)
+                if (o.requiredLevel < 1 || o.requiredLevel > 5)
                 {
-                    yield return $"{defName}: 物品 {o.thing.defName} 的覆盖等级 requiredLevel 必须在 1..3 范围内（商品只有三个开放档位）。";
+                    yield return $"{defName}: 物品 {o.thing.defName} 的覆盖等级 requiredLevel 必须在 1..5 范围内（序列五至序列一）。";
                 }
 
                 if (!seen.Add(o.thing))
@@ -105,9 +105,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             foreach (PurgeDirectiveGoodsRatingOverrideDef.ThingRatingOverride o in def.overrides)
             {
-                if (o.thing != null)
+                if (o != null && o.thing != null)
                 {
-                    dict[o.thing] = o.requiredLevel;
+                    int level = o.requiredLevel >= 1 && o.requiredLevel <= 5
+                        ? o.requiredLevel
+                        : 5; // 非法等级从严处理，避免提前开放。
+                    if (dict.TryGetValue(o.thing, out int previous))
+                    {
+                        level = System.Math.Max(previous, level);
+                    }
+                    dict[o.thing] = level;
                 }
             }
 

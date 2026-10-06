@@ -91,18 +91,6 @@
 
   </MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveRatingConfigDef>
 
-  <!-- 物资评级覆盖 -->
-  <MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveGoodsRatingOverrideDef>
-    <defName>MAP_PurgeDirectiveGoodsRatingOverrides</defName>
-    <label>purge directive goods rating overrides</label>
-    <overrides>
-      <!-- <li>
-        <thing>SomeTransportableBuilding</thing>
-        <requiredLevel>3</requiredLevel>
-      </li> -->
-    </overrides>
-  </MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveGoodsRatingOverrideDef>
-
   <!-- 肃清评级任务配置 -->
   <MAP_MechanoidMechanitor.Scenarios.PurgeDirectiveQuestConfigDef>
     <defName>MAP_PurgeDirectiveQuestConfig</defName>
