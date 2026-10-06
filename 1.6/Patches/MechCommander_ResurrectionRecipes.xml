@@ -19,11 +19,12 @@
     </value>
   </Operation>
 
-  <!-- 将「正义」加入原版超重型机械族复活配方 -->
+  <!-- 将「正义」与玩家型「太阳」加入原版超重型机械族复活配方 -->
   <Operation Class="PatchOperationAdd">
     <xpath>Defs/RecipeDef[defName="ResurrectUltraheavyMech"]/fixedIngredientFilter/thingDefs</xpath>
     <value>
       <li>Corpse_MAP_Mech_Justice</li>
+      <li>Corpse_MAP_Mech_Sun</li>
     </value>
   </Operation>
 
