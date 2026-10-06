@@ -6,6 +6,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.Forgenest;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.NewRatkin;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.PerspectiveShift;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
@@ -38,6 +39,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new MobileDragoonCompatibility(),
             new NewRatkinWanderingTraderInteractionCompatibility(),
             new NewRatkinWanderingTraderIncidentCompatibility(),
+            new PerspectiveShiftControlCompatibility(),
+            new PerspectiveShiftEnergySafetyCompatibility(),
+            new PerspectiveShiftFlightCompatibility(),
+            new PerspectiveShiftFireAtWillCompatibility(),
+            new PerspectiveShiftScenarioCompatibility(),
             new RimTalkCompatibility(),
             new RimSkyBlockImperialTaskCompatibility(),
             new RimSkyBlockCoronationCompatibility(),

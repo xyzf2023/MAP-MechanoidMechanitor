@@ -186,13 +186,73 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            Job job = MakeAerialMoveJob(pawn!, cell);
+            return pawn!.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+        }
+
+        // 连续方向输入立即执行，不受 QueueOrder 按键影响；实际运动仍走原有飞行 Goto/直线路径。
+        internal static bool TryStartAerialInputMove(Pawn pawn, IntVec3 cell, out Job? startedJob)
+        {
+            startedJob = null;
+            if (!CanIssueAerialMove(pawn, cell) || pawn.jobs == null
+                || !pawn.jobs.IsCurrentJobPlayerInterruptible()
+                || pawn.CurJob?.def.forceCompleteBeforeNextJob == true
+                || MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
+                return false;
+            Job job = MakeAerialMoveJob(pawn, cell);
+            // 方向键抵达边界只停在边界，不留下落地后自动离图的意图。
+            job.exitMapOnArrival = false;
+            job.playerForced = true;
+            if (pawn.CurJob != null)
+                pawn.CurJob.playerInterruptedForced = true;
+            pawn.jobs.ClearQueuedJobs();
+            pawn.jobs.StartJob(job, JobCondition.InterruptForced, tag: JobTag.Misc,
+                canReturnCurJobToPool: true, preToilReservationsCanFail: true);
+            if (!ReferenceEquals(pawn.CurJob, job))
+                return false;
+            startedJob = job;
+            return true;
+        }
+
+        internal static bool TryRetargetAerialInputMove(Pawn pawn, Job job, IntVec3 cell)
+        {
+            if (!ReferenceEquals(pawn.CurJob, job) || job.def != JobDefOf.Goto || !job.flying
+                || !CanIssueAerialMove(pawn, cell) || MechanicalFlightEmergencyUtility.IsEmergencySequence(pawn))
+                return false;
+            // 使用直线路径的重定向入口保留当前精确位置，避免结束/重开 Goto 将位置退回格中心。
+            if (!MechanicalFlightStraightPathPatch.TryStartDirectPath(pawn.pather, pawn, cell, PathEndMode.OnCell))
+                return false;
+            job.targetA = cell;
+            job.exitMapOnArrival = false;
+            // 同一 Job 持续重定向时释放旧预约，避免原版 Reserve 仅标记过期而不断积累。
+            pawn.Map.pawnDestinationReservationManager.ReleaseClaimedBy(pawn, job);
+            pawn.Map.pawnDestinationReservationManager.Reserve(pawn, job, cell);
+            return true;
+        }
+
+        internal static void StopAerialInputMove(Pawn pawn)
+        {
+            if (pawn.jobs == null || pawn.pather == null)
+                return;
+            pawn.pather.StopDead();
+            Job wait = JobMaker.MakeJob(pawn.Drafted ? JobDefOf.Wait_Combat : JobDefOf.Wait);
+            wait.expiryInterval = 60;
+            wait.checkOverrideOnExpire = true;
+            wait.flying = IsActivelyFlying(pawn);
+            // 松键/射击停止移动时保留当前暖机或冷却，不用 EndCurrentJob 的软取消射击路径。
+            pawn.jobs.StartJob(wait, JobCondition.InterruptForced, cancelBusyStances: false,
+                tag: JobTag.Misc, canReturnCurJobToPool: true, preToilReservationsCanFail: true);
+        }
+
+        private static Job MakeAerialMoveJob(Pawn pawn, IntVec3 cell)
+        {
             Job job = JobMaker.MakeJob(JobDefOf.Goto, cell);
             job.locomotionUrgency = LocomotionUrgency.Sprint;
             job.expiryInterval = -1;
             job.flying = true;
             job.exitMapOnArrival = !GroupFlightUtility.IsManaged(pawn)
-                && MechanicalFlightMapExitUtility.IsExitMove(pawn!, cell);
-            return pawn!.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                && MechanicalFlightMapExitUtility.IsExitMove(pawn, cell);
+            return job;
         }
 
         public static bool TryBeginTakeoff(Pawn? pawn)
