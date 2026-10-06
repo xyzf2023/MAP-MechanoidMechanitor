@@ -73,7 +73,10 @@ namespace MAP_MechanoidMechanitor
 
             IEnumerable<MechWorkModeDef> defs = DefDatabase<MechWorkModeDef>.AllDefsListForReading
                 .Where(d => !MechanoidMechanitorWorkModeUtility.IsMechanoidMechanitorSelfOnlyWorkMode(d));
-            if (!isMechanoidMechanitor || !ResearchFeatureUnlockUtility.IsQuantumTaskComputationUnlocked())
+            // 关闭设置与未研究时采用同一过滤规则；不修改控制组当前模式。
+            if (!isMechanoidMechanitor
+                || !(MAPMechanitorMod.Settings?.enableExtraWorkModes ?? true)
+                || !ResearchFeatureUnlockUtility.IsQuantumTaskComputationUnlocked())
             {
                 defs = defs.Where(d => !MechanoidMechanitorWorkModeUtility.IsMechanoidMechanitorWorkMode(d));
             }

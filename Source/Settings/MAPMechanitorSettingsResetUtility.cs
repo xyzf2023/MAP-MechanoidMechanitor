@@ -108,6 +108,10 @@ namespace MAP_MechanoidMechanitor
                     settings.syntheticOffspringInheritXenogenes = defaults.syntheticOffspringInheritXenogenes;
                     break;
                 case MAPSettingsSection.JusticeAbilities:
+                    settings.allowUnlockMechRecode = defaults.allowUnlockMechRecode;
+                    settings.allowUnlockMechReconstruction = defaults.allowUnlockMechReconstruction;
+                    settings.allowUnlockMechHack = defaults.allowUnlockMechHack;
+                    settings.enableExtraWorkModes = defaults.enableExtraWorkModes;
                     settings.restrictMechHackBossTargets = defaults.restrictMechHackBossTargets;
                     break;
                 case MAPSettingsSection.Recreation:

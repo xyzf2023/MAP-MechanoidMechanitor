@@ -165,6 +165,16 @@ namespace MAP_MechanoidMechanitor
                 return ManagedResearchAbilityTransferApplyResult.Skipped;
             }
 
+            // 目标已有技能时继续原有冷却迁移；开关关闭只阻止向缺失技能的目标补发。
+            ManagedResearchAbilityDescriptor? descriptor =
+                ManagedResearchAbilitySyncUtility.FindDescriptor(abilityDef);
+            if (target.abilities?.GetAbility(abilityDef) == null
+                && descriptor != null
+                && !ResearchFeatureUnlockUtility.IsAbilityGrantAllowedBySettings(descriptor))
+            {
+                return ManagedResearchAbilityTransferApplyResult.Skipped;
+            }
+
             // B. 正义 → 非正义
             if (snapshot.SourceIsJustice && !snapshot.TargetIsJustice)
             {

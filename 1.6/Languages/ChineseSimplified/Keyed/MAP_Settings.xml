@@ -98,7 +98,15 @@
   <MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>与机械巢为盟友时，每个机械巢节点提供援军的概率。</MAP_MechanoidMechanitor.Settings.StrategicNodes.MechHiveNode.SupportChance.Description>
 
   <!-- 模块：正义能力 -->
-  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>正义能力</MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>机械族能力</MAP_MechanoidMechanitor.Settings.JusticeAbilities.Section>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechRecode.Label>允许解锁技能：机体再编码</MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechRecode.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechRecode.Description>开启后，在研究标准机械科技后为正义及机械族机械师剧本中的机械意识载体添加机体再编码技能。</MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechRecode.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechReconstruction.Label>允许解锁技能：机体重构</MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechReconstruction.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechReconstruction.Description>开启后，在研究高级机械科技后为正义及机械族机械师剧本中的机械意识载体添加机体重构技能。</MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechReconstruction.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechHack.Label>允许解锁技能：机体骇入</MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechHack.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechHack.Description>开启后，在研究极致机械科技后为正义及机械族机械师剧本中的机械意识载体添加机体骇入技能。</MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechHack.Description>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.EnableExtraWorkModes.Label>启用额外行为模式</MAP_MechanoidMechanitor.Settings.JusticeAbilities.EnableExtraWorkModes.Label>
+  <MAP_MechanoidMechanitor.Settings.JusticeAbilities.EnableExtraWorkModes.Description>开启后，在研究完对应科技后，解锁额外的行为模式。</MAP_MechanoidMechanitor.Settings.JusticeAbilities.EnableExtraWorkModes.Description>
   <MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label>限制机体骇入 BOSS 目标</MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label>
   <MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>开启后，机体骇入无法以除炼狱魔王、战争女皇之外的机械族 BOSS 为目标。</MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Description>
 

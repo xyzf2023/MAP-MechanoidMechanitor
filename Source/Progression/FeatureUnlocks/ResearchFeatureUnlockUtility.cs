@@ -80,6 +80,28 @@ namespace MAP_MechanoidMechanitor
             return cachedMindMapping;
         }
 
+        // 只控制缺失技能的发放/补发，不参与科研完成状态或角色能力资格判断。
+        public static bool IsAbilityGrantAllowedBySettings(ManagedResearchAbilityDescriptor descriptor)
+        {
+            if (descriptor == null)
+            {
+                return false;
+            }
+
+            MAPMechanitorModSettings? settings = MAPMechanitorMod.Settings;
+            switch (descriptor.AbilityDefName)
+            {
+                case ManagedResearchAbilityCatalog.MechRecodeAbilityDefName:
+                    return settings?.allowUnlockMechRecode ?? true;
+                case ManagedResearchAbilityCatalog.MechReconstructionAbilityDefName:
+                    return settings?.allowUnlockMechReconstruction ?? true;
+                case ManagedResearchAbilityCatalog.MechHackAbilityDefName:
+                    return settings?.allowUnlockMechHack ?? true;
+                default:
+                    return true;
+            }
+        }
+
         public static bool IsAbilityUnlocked(ManagedResearchAbilityDescriptor descriptor)
         {
             return descriptor != null && descriptor.IsResearchFinished();

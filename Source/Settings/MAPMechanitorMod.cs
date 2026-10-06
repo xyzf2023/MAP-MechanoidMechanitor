@@ -507,6 +507,23 @@ namespace MAP_MechanoidMechanitor
             }
 
             listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechRecode.Label".Translate(),
+                ref Settings.allowUnlockMechRecode,
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechRecode.Description".Translate());
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechReconstruction.Label".Translate(),
+                ref Settings.allowUnlockMechReconstruction,
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechReconstruction.Description".Translate());
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechHack.Label".Translate(),
+                ref Settings.allowUnlockMechHack,
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.AllowUnlockMechHack.Description".Translate());
+            listing.CheckboxLabeled(
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.EnableExtraWorkModes.Label".Translate(),
+                ref Settings.enableExtraWorkModes,
+                "MAP_MechanoidMechanitor.Settings.JusticeAbilities.EnableExtraWorkModes.Description".Translate());
+
+            listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.JusticeAbilities.RestrictBossHackTargets.Label"
                     .Translate(),
                 ref Settings.restrictMechHackBossTargets,

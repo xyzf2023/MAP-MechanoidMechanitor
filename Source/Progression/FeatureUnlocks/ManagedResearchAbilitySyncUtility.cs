@@ -54,7 +54,9 @@ namespace MAP_MechanoidMechanitor
 
             if (shouldHave)
             {
-                if (existing != null)
+                // 开关只阻止缺失技能的发放；已有实例及其冷却保持原样。
+                if (existing != null
+                    || !ResearchFeatureUnlockUtility.IsAbilityGrantAllowedBySettings(descriptor))
                 {
                     return;
                 }

@@ -336,6 +336,14 @@ namespace MAP_MechanoidMechanitor
         /// </summary>
         public bool restrictMechHackBossTargets = true;
 
+        // 默认开启。控制科研技能的发放/补发，不因关闭开关移除已有技能。
+        public bool allowUnlockMechRecode = true;
+        public bool allowUnlockMechReconstruction = true;
+        public bool allowUnlockMechHack = true;
+
+        // 只控制量子作业演算追加的模式选项，不改变已选择的模式及其效果。
+        public bool enableExtraWorkModes = true;
+
         /// <summary>
         /// 默认开启。开启后，安装了满级心灵中枢的角色每 600 游戏刻（10 秒）将尝试结束
         /// 当前精神状态。该设置只控制「定期结束已存在的精神状态」，不影响心灵中枢基础/
@@ -770,6 +778,11 @@ namespace MAP_MechanoidMechanitor
                 ref mechanoidMechanitorInspirationChancePercent,
                 "mechanoidMechanitorInspirationChancePercent",
                 DefaultMechanoidMechanitorInspirationChancePercent);
+
+            Scribe_Values.Look(ref allowUnlockMechRecode, "allowUnlockMechRecode", true);
+            Scribe_Values.Look(ref allowUnlockMechReconstruction, "allowUnlockMechReconstruction", true);
+            Scribe_Values.Look(ref allowUnlockMechHack, "allowUnlockMechHack", true);
+            Scribe_Values.Look(ref enableExtraWorkModes, "enableExtraWorkModes", true);
 
             Scribe_Values.Look(
                 ref restrictMechHackBossTargets,
