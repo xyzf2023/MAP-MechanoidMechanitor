@@ -24,6 +24,12 @@
       <detritusLeavings Inherit="False" />
     </race>
 
+    <!-- 普通太阳与能源核心的基础拆解产物 -->
+    <butcherProducts Inherit="False">
+      <Steel>200</Steel>
+      <Plasteel>100</Plasteel>
+    </butcherProducts>
+
     <tools Inherit="False">
       <li>
         <label>装甲冲撞</label>

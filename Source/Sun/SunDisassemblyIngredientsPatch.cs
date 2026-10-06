@@ -27,4 +27,27 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
     }
+
+    /// <summary>保留基础尸体拆解产物，玩家阵营的普通太阳额外返还一个反物质约束器。</summary>
+    [HarmonyPatch(typeof(Corpse), nameof(Corpse.ButcherProducts))]
+    internal static class SunCorpseDisassemblyProductsPatch
+    {
+        [HarmonyPostfix]
+        private static IEnumerable<Thing> Postfix(IEnumerable<Thing> values, Corpse __instance)
+        {
+            foreach (Thing value in values)
+            {
+                yield return value;
+            }
+
+            Pawn? pawn = __instance.InnerPawn;
+            // 能源核心使用 MAP_Mech_SunBOSS，即使属于玩家也不追加约束器。
+            if (pawn == null || pawn.def.defName != "MAP_Mech_Sun" || pawn.Faction != Faction.OfPlayer)
+                yield break;
+
+            ThingDef containmentDeviceDef =
+                DefDatabase<ThingDef>.GetNamed("MAP_AntimatterContainmentDevice");
+            yield return ThingMaker.MakeThing(containmentDeviceDef);
+        }
+    }
 }
