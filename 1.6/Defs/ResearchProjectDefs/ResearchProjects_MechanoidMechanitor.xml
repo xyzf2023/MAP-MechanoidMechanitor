@@ -66,7 +66,7 @@
   <ResearchProjectDef>
     <defName>MAP_QuantumTaskComputation</defName>
     <label>量子作业演算</label>
-    <description>利用量子运算同时处理大量作业变量，为机械族计算更高效、更精确的执行方案。\n\n研究此科技以解锁“效能核心”的制作方式。</description>
+    <description>利用量子运算同时处理大量作业变量，为机械族计算更高效、更精确的执行方案。\n\n研究此科技以解锁“效能核心”的制作方式，并使机械族机械师监管的机械族获得额外可选的、更高效的行为模式。</description>
     <baseCost>5000</baseCost>
     <techLevel>Archotech</techLevel>
     <tab>MAP_MechanoidMechanitorResearch</tab>

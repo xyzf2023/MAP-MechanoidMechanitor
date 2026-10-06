@@ -12,10 +12,12 @@ namespace MAP_MechanoidMechanitor
     public static class ResearchFeatureUnlockUtility
     {
         public const string MindMappingResearchDefName = "MAP_MindMapping";
+        public const string QuantumTaskComputationResearchDefName = "MAP_QuantumTaskComputation";
 
         private static ResearchProjectDef? cachedStandardMechtech;
         private static bool standardMechtechMissingLogged;
         private static ResearchProjectDef? cachedMindMapping;
+        private static ResearchProjectDef? cachedQuantumTaskComputation;
         private static bool mindMappingMissingLogged;
 
         public static bool IsStandardMechtechFinished()
@@ -28,6 +30,14 @@ namespace MAP_MechanoidMechanitor
         {
             ResearchProjectDef? research = GetMindMappingResearch();
             return research != null && research.IsFinished;
+        }
+
+        public static bool IsQuantumTaskComputationUnlocked()
+        {
+            cachedQuantumTaskComputation ??=
+                DefDatabase<ResearchProjectDef>.GetNamedSilentFail(
+                    QuantumTaskComputationResearchDefName);
+            return cachedQuantumTaskComputation != null && cachedQuantumTaskComputation.IsFinished;
         }
 
         public static ResearchProjectDef? GetStandardMechtech()

@@ -26,6 +26,9 @@ namespace MAP_MechanoidMechanitor
         public const string ParallelThoughtMatrixResearchDefName =
             "MAP_ParallelThoughtMatrix";
 
+        public const string QuantumTaskComputationDescriptionKey =
+            "MAP_MechanoidMechanitor.Justice.Unlock.Feature.QuantumTaskComputation.Description";
+
         public const string AutonomousDirectiveOptimizationDescriptionKey =
             "MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description";
 
@@ -46,6 +49,12 @@ namespace MAP_MechanoidMechanitor
 
         public const string ParallelThoughtMatrixDescriptionKey =
             "MAP_MechanoidMechanitor.Justice.Unlock.Feature.ParallelThoughtMatrix.Description";
+
+        public static readonly ManagedResearchFeatureDescriptor QuantumTaskComputation =
+            new ManagedResearchFeatureDescriptor(
+                id: "QuantumTaskComputation",
+                researchProjectDefName: ResearchFeatureUnlockUtility.QuantumTaskComputationResearchDefName,
+                unlockLetterDescriptionKey: QuantumTaskComputationDescriptionKey);
 
         public static readonly ManagedResearchFeatureDescriptor AutonomousDirectiveOptimization =
             new ManagedResearchFeatureDescriptor(
@@ -91,6 +100,7 @@ namespace MAP_MechanoidMechanitor
 
         private static readonly ManagedResearchFeatureDescriptor[] allInternal =
         {
+            QuantumTaskComputation,
             AutonomousDirectiveOptimization,
             MechanicalConsciousnessTransfer,
             OrbitalDataNetwork,

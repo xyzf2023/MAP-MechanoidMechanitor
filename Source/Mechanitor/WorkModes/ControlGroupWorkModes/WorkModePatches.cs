@@ -73,7 +73,7 @@ namespace MAP_MechanoidMechanitor
 
             IEnumerable<MechWorkModeDef> defs = DefDatabase<MechWorkModeDef>.AllDefsListForReading
                 .Where(d => !MechanoidMechanitorWorkModeUtility.IsMechanoidMechanitorSelfOnlyWorkMode(d));
-            if (!isMechanoidMechanitor)
+            if (!isMechanoidMechanitor || !ResearchFeatureUnlockUtility.IsQuantumTaskComputationUnlocked())
             {
                 defs = defs.Where(d => !MechanoidMechanitorWorkModeUtility.IsMechanoidMechanitorWorkMode(d));
             }

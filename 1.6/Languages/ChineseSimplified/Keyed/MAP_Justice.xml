@@ -28,6 +28,7 @@
 
   <MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Title>特性：{0}</MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Title>
   <MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Text>已解锁机械族机械师特性：{0}。\n\n{1}</MAP_MechanoidMechanitor.Justice.Unlock.Feature.Letter.Text>
+  <MAP_MechanoidMechanitor.Justice.Unlock.Feature.QuantumTaskComputation.Description>通过对量子作业演算方案的深入研究，我们进一步优化了机械族的行为逻辑，解锁「高效执行」「机动作战」与「阵地防御」三类新的行为模式。这些模式已加入控制组的行为模式切换选项。同时，机械族机械师自身会获得与第一控制组行为模式一致的加成效果。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.QuantumTaskComputation.Description>
   <MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description>通过优化自律指令的运算逻辑，机械族机械师能更高效地根据环境调整自身运行状态。现在，机械族机械师处于“自律指令”和“休眠（自机充电）”行为模式时，将获得对应的机体加成。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.AutonomousDirectiveOptimization.Description>
   <MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description>通过对量子信息传输技术的深入研究，我们掌握了在极短时间内传输大量数据的方法，使机械意识能够迅速转移至另一具兼容机体中。当机械意识载体即将损毁时，也可以借助这项技术紧急转移意识数据，避免机械意识随宿主一同彻底丢失。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.MechanicalConsciousnessTransfer.Description>
   <MAP_MechanoidMechanitor.Justice.Unlock.Feature.OrbitalDataNetwork.Description>通过接管近地轨道数据库，我们得以在所有机械族机械师之间同步并备份机械意识数据。</MAP_MechanoidMechanitor.Justice.Unlock.Feature.OrbitalDataNetwork.Description>
