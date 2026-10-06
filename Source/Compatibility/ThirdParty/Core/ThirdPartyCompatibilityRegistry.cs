@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using HarmonyLib;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.FamilyRelationsAdoption;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.Forgenest;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.NewRatkin;
@@ -35,6 +36,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new ProgressionEducationCompatibility(),
             new QualityBuilderCompatibility(),
             new DeadManSwitchCompatibility(),
+            new FamilyRelationsAdoptionCompatibility(),
             new ForgenestCompatibility(),
             new MobileDragoonCompatibility(),
             new NewRatkinWanderingTraderInteractionCompatibility(),
