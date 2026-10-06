@@ -976,12 +976,32 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 BeginTransitionHome();
             }
 
+            string pageTitle = GetPageTitle(currentPage);
+            Rect titleRect = new Rect(
+                backRect.xMax + 10f, inner.y, inner.width - backRect.width - 10f, inner.height);
             MechanoidOvermindUiStyle.DrawLabel(
-                new Rect(backRect.xMax + 10f, inner.y, inner.width - backRect.width - 10f, inner.height),
-                GetPageTitle(currentPage),
+                titleRect,
+                pageTitle,
                 GameFont.Small,
                 TextAnchor.MiddleLeft,
                 MechanoidOvermindUiStyle.AccentBright);
+
+            if (currentPage == MechanoidOvermindPageKind.Goods
+                && PurgeDirectiveRatingUtility.IsRatingSystemActive()
+                && !PurgeDirectiveRatingUtility.IsMaxRatingLevel())
+            {
+                using (MechanoidOvermindUiStyle.Push())
+                {
+                    Text.Font = GameFont.Small;
+                    float hintX = titleRect.x + Text.CalcSize(pageTitle).x + 16f;
+                    MechanoidOvermindUiStyle.DrawLabel(
+                        new Rect(hintX, inner.y, Mathf.Max(0f, inner.xMax - hintX), inner.height),
+                        "MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.RatingUnlockHint".Translate(),
+                        GameFont.Small,
+                        TextAnchor.MiddleLeft,
+                        Color.Lerp(MechanoidOvermindUiStyle.TextSecondary, MechanoidOvermindUiStyle.TextPrimary, 0.5f));
+                }
+            }
 
             contentRect = new Rect(
                 leftRect.x,

@@ -89,6 +89,7 @@
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>{0}　带宽 {1}　{2}</MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>
 
   <!-- 模块：物资请求 -->
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.RatingUnlockHint>提升肃清评级以解锁更多物资的调拨资格</MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.RatingUnlockHint>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.All>全部</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.All>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Weapon>武器</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Weapon>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Apparel>服装</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Apparel>

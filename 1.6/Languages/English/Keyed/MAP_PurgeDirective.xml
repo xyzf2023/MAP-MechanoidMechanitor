@@ -69,6 +69,7 @@
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Heavy>Heavy</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.Heavy>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.UltraHeavy>Ultraheavy</MAP_MechanoidMechanitor.PurgeDirective.Communication.Weight.UltraHeavy>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>{0}    Bandwidth {1}    {2}</MAP_MechanoidMechanitor.PurgeDirective.Communication.MechRowMeta>
+  <MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.RatingUnlockHint>Increase your purge rating to unlock access to more supplies.</MAP_MechanoidMechanitor.PurgeDirective.Communication.Goods.RatingUnlockHint>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.All>All</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.All>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Weapon>Weapons</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Weapon>
   <MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Apparel>Apparel</MAP_MechanoidMechanitor.PurgeDirective.Communication.Category.Apparel>
