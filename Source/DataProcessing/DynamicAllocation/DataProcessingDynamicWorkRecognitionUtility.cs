@@ -148,7 +148,12 @@ namespace MAP_MechanoidMechanitor
 
         private static bool IsVanillaSpecialWork(JobDef jobDef)
         {
-            return jobDef.defName == BeatFireJobDefName;
+            // 顺路搬运、成品入库和库存卸载可能直接创建 Job，不经过 WorkGiver。
+            // 按原版 JobDef 兜底覆盖完整流程，不依赖当前是否已拿起物品。
+            return jobDef.defName == BeatFireJobDefName
+                || jobDef == JobDefOf.HaulToCell
+                || jobDef == JobDefOf.HaulToContainer
+                || jobDef == JobDefOf.UnloadYourInventory;
         }
     }
 }
