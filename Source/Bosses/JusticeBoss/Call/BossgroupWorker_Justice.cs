@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor
         public override AcceptanceReport CanResolve(Pawn caller)
         {
             Map? map = caller?.Map ?? Find.CurrentMap;
-            return JusticeBossCallUtility.CanCall(map);
+            return JusticeBossCallUtility.CanCall(map, caller);
         }
 
         public override AcceptanceReport ShouldSummonNow(Map map)
@@ -75,6 +75,8 @@ namespace MAP_MechanoidMechanitor
             }
 
             tracker.UpdatePendingQuestId(quest.id);
+            // 成功创建任务后才登记共享 CD；生成失败不消耗召唤冷却。
+            Find.BossgroupManager.Notify_BossgroupCalled(def);
         }
     }
 }

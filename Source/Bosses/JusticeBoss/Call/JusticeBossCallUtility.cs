@@ -12,7 +12,10 @@ namespace MAP_MechanoidMechanitor
 
         public const string RetreatMemo = "MAP_JusticeBossRetreat";
 
-        public static AcceptanceReport CanCall(Map? map)
+        // 只复用原版的全局 CD 与待抵达检查，不调用其任务生成逻辑。
+        private static readonly BossgroupWorker VanillaCallChecks = new BossgroupWorker();
+
+        public static AcceptanceReport CanCall(Map? map, Pawn? caller = null)
         {
             if (map == null || map.Parent == null)
             {
@@ -31,7 +34,8 @@ namespace MAP_MechanoidMechanitor
                 return "MAP_MechanoidMechanitor.JusticeBoss.Call.DisabledAlreadyCalled".Translate();
             }
 
-            return true;
+            // 原版 CanResolve 不使用 caller，直接呼叫入口也可复用同一检查。
+            return VanillaCallChecks.CanResolve(caller!);
         }
 
         public static bool TryCall(Map map)
