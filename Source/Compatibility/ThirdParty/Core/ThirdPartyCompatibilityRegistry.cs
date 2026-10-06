@@ -9,6 +9,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.NewRatkin;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.QualityBuilder;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimTalk;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimSkyBlock;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded;
@@ -31,6 +32,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new MechFusionAbilityGrantCompatibility(),
             new MechFusionCastEligibilityCompatibility(),
             new ProgressionEducationCompatibility(),
+            new QualityBuilderCompatibility(),
             new DeadManSwitchCompatibility(),
             new ForgenestCompatibility(),
             new MobileDragoonCompatibility(),
