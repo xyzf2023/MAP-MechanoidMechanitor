@@ -35,6 +35,12 @@ namespace MAP_MechanoidMechanitor
                 return true;
             }
 
+            // 建筑形态的源 Pawn 在 WorldPawns 中，由已提交的形态绑定提供位置。
+            if (TryGetBuildingCommandOrigin(pawn, out _, out _))
+            {
+                return true;
+            }
+
             Map? map = pawn.MapHeld;
             if (map == null)
             {
@@ -286,15 +292,73 @@ namespace MAP_MechanoidMechanitor
                 : MAPOverseerRelationDirectionUtility.FindActualOverseer(mech);
             if (overseer == null
                 || overseer.Spawned
-                || !CanMaintainControl(overseer)
                 || overseer.mechanitor?.ControlledPawns?.Contains(mech!) != true)
             {
                 return false;
             }
 
-            map = overseer.MapHeld;
-            origin = overseer.PositionHeld;
+            return TryGetCommandOrigin(overseer, out map, out origin);
+        }
+
+        /// <summary>只读解析代理子链的有效位置；不修改 Pawn 的地图、位置或持有者。</summary>
+        internal static bool TryGetCommandOrigin(Pawn? pawn, out Map? map, out IntVec3 origin)
+        {
+            map = null;
+            origin = IntVec3.Invalid;
+            if (!CanMaintainControl(pawn))
+                return false;
+
+            if (!pawn!.Spawned && TryGetBuildingCommandOrigin(pawn, out map, out origin))
+                return true;
+
+            map = pawn.MapHeld;
+            origin = pawn.PositionHeld;
             return map != null && origin.IsValid;
+        }
+
+        private static bool TryGetBuildingCommandOrigin(Pawn pawn, out Map? map, out IntVec3 origin)
+        {
+            map = null;
+            origin = IntVec3.Invalid;
+            if (!GameComponent_MechTransformationRegistry.TryGetRecord(pawn, out MechTransformationRecord? record)
+                || record == null || record.CurrentForm != MechTransformationForm.Building)
+                return false;
+
+            Thing? building = record.ExternalCarrier;
+            CompMechFormCarrier? link = building?.TryGetComp<CompMechFormCarrier>();
+            CompMechBuildingForm? form = building?.TryGetComp<CompMechBuildingForm>();
+            if (building is not Building || building.Destroyed || building.Discarded
+                || !building.Spawned || building.Map == null || !building.Position.IsValid
+                || building.Faction != pawn.Faction || link == null || !link.Matches(record)
+                || form == null || !ReferenceEquals(form.StoredSourcePawn, pawn))
+                return false;
+
+            // 恢复读条仍使用已提交的建筑；首次转换提交前不会得到有效位置。
+            map = building.Map;
+            origin = building.Position;
+            return true;
+        }
+
+        /// <summary>建筑失效时收束已征召下属；正常恢复后的地图 Pawn 由原版管理。</summary>
+        internal static void ReconcileBuildingControl(Pawn? source)
+        {
+            Pawn_MechanitorTracker? tracker = source?.mechanitor;
+            if (source == null || source.Spawned || tracker == null || tracker.controlGroups == null)
+                return;
+
+            // 无已征召下属时不重复扫描形态绑定，也不触发取消征召回调。
+            foreach (MechanitorControlGroup group in tracker.controlGroups)
+            {
+                if (group == null) continue;
+                foreach (Pawn mech in group.MechsForReading)
+                {
+                    if (mech == null || !mech.Drafted)
+                        continue;
+                    if (!CanMaintainControl(source))
+                        tracker.UndraftAllMechs();
+                    return;
+                }
+            }
         }
 
         private static bool IsEligibleHost(Pawn? pawn)
@@ -302,6 +366,7 @@ namespace MAP_MechanoidMechanitor
             return ModsConfig.BiotechActive
                 && pawn != null
                 && !pawn.Destroyed
+                && !pawn.Discarded
                 && !pawn.Dead
                 && !pawn.IsPrisoner
                 && pawn.Faction != null

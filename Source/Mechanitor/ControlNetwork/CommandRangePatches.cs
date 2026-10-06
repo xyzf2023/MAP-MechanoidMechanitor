@@ -22,7 +22,17 @@ namespace MAP_MechanoidMechanitor
                     hasSelectedSubject = true;
                     if (!MechanoidMechanitorCapabilityUtility.HasCapability(
                         selected, MechanoidMechanitorCapability.CommandRangeBypass))
+                    {
+                        if (!__instance.Pawn.Spawned
+                            && ProxySubchainUtility.TryGetHeldCommandOrigin(selected, out Map? commandMap, out IntVec3 origin)
+                            && commandMap == Find.CurrentMap)
+                        {
+                            GenDraw.DrawRadiusRing(origin, 24.9f, UnityEngine.Color.white,
+                                cell => cell.InBounds(commandMap) && origin.DistanceToSquared(cell) < 620.01f);
+                            return false;
+                        }
                         return true;
+                    }
                 }
             }
             return !hasSelectedSubject && !QuantumCommunicatorUtility.HasEffect(__instance.Pawn);

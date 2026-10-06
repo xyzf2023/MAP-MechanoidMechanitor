@@ -168,6 +168,9 @@ namespace MAP_MechanoidMechanitor
         public override void CompTick()
         {
             base.CompTick();
+            // 同时覆盖建筑阵营变化、源 Pawn 死亡及代理子链效果失效。
+            ProxySubchainUtility.ReconcileBuildingControl(
+                parent.TryGetComp<CompMechFormCarrier>()?.SourcePawn ?? StoredSourcePawn);
             if (!restoreInProgress || restoreQueued)
             {
                 return;
@@ -207,6 +210,8 @@ namespace MAP_MechanoidMechanitor
             lastMapRotation = parent.Rotation;
             CancelRestoreWarmup();
             base.PostDeSpawn(map, mode);
+            ProxySubchainUtility.ReconcileBuildingControl(
+                parent.TryGetComp<CompMechFormCarrier>()?.SourcePawn ?? StoredSourcePawn);
         }
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
@@ -244,6 +249,16 @@ namespace MAP_MechanoidMechanitor
             yield return command;
         }
 
+        public override void PostDraw()
+        {
+            base.PostDraw();
+            // 源 Pawn 在世界中不会绘制，由建筑转发指挥圈显示入口。
+            Pawn? source = parent.TryGetComp<CompMechFormCarrier>()?.SourcePawn;
+            if (source != null && !source.Spawned && parent.Map == Find.CurrentMap
+                && ProxySubchainUtility.CanMaintainControl(source))
+                source.mechanitor?.DrawCommandRadius();
+        }
+
         public override void PostDrawExtraSelectionOverlays()
         {
             base.PostDrawExtraSelectionOverlays();
@@ -277,6 +292,8 @@ namespace MAP_MechanoidMechanitor
             hasDestructionHealthSnapshot = true;
             CancelRestoreWarmup();
             base.PostDestroy(mode, previousMap);
+            ProxySubchainUtility.ReconcileBuildingControl(
+                parent.TryGetComp<CompMechFormCarrier>()?.SourcePawn ?? StoredSourcePawn);
             if (previousMap == null)
             {
                 return;

@@ -62,7 +62,10 @@ namespace MAP_MechanoidMechanitor
                 mech, MechanoidMechanitorCapability.CommandRangeBypass))
             {
                 Pawn? overseer = MAPOverseerRelationDirectionUtility.FindActualOverseer(mech);
-                inRange = overseer == null || overseer.MapHeld == targetMap
+                Map? overseerMap = overseer?.MapHeld;
+                if (overseer != null && ProxySubchainUtility.TryGetCommandOrigin(overseer, out Map? proxyMap, out _))
+                    overseerMap = proxyMap;
+                inRange = overseer == null || overseerMap == targetMap
                     || MechanoidMechanitorCapabilityUtility.HasCapability(
                         mech, MechanoidMechanitorCapability.CrossMapCommand);
                 return true;
