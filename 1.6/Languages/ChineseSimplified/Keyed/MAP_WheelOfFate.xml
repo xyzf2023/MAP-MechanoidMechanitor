@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
+  <MAP_WheelOfFate.Settings.Section>命运之轮</MAP_WheelOfFate.Settings.Section>
+  <MAP_WheelOfFate.Settings.InitialTheme.Label>将开局叙事主题在开局时锁定为推演伊始</MAP_WheelOfFate.Settings.InitialTheme.Label>
+  <MAP_WheelOfFate.Settings.InitialTheme.Description>开启后，命运之轮在开局时将优先进入“推演伊始叙事”主题。这是一个轻松的开局主题。</MAP_WheelOfFate.Settings.InitialTheme.Description>
+  <MAP_WheelOfFate.Settings.ThemeSelection.Label>允许主动选择的叙事主题</MAP_WheelOfFate.Settings.ThemeSelection.Label>
+  <MAP_WheelOfFate.Settings.ThemeSelection.Description>被取消勾选的叙事主题的选择权重降为 0，不会自然生成。</MAP_WheelOfFate.Settings.ThemeSelection.Description>
+  <MAP_WheelOfFate.Settings.ThemeSelection.InitialOnly>此主题不参与自然轮换；仅在开启开局优先设置且勾选本主题时自动进入。</MAP_WheelOfFate.Settings.ThemeSelection.InitialOnly>
   <MAP_WheelOfFate.Settings.Details.Label>显示「命运之轮」叙事主题的详细说明</MAP_WheelOfFate.Settings.Details.Label>
   <MAP_WheelOfFate.Settings.Details.Description>开启后，叙事主题变化时显示主题类型。</MAP_WheelOfFate.Settings.Details.Description>
   <MAP_WheelOfFate.ThemeChanged.Label>命运之轮：{0}</MAP_WheelOfFate.ThemeChanged.Label>

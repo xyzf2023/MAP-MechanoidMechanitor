@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
+  <MAP_WheelOfFate.Settings.Section>Wheel of Fate</MAP_WheelOfFate.Settings.Section>
+  <MAP_WheelOfFate.Settings.InitialTheme.Label>Lock the starting story theme to Simulation beginning</MAP_WheelOfFate.Settings.InitialTheme.Label>
+  <MAP_WheelOfFate.Settings.InitialTheme.Description>When enabled, the Wheel of Fate will prioritize the "Simulation beginning" story theme at the start of the game. This is a relaxed starting theme.</MAP_WheelOfFate.Settings.InitialTheme.Description>
+  <MAP_WheelOfFate.Settings.ThemeSelection.Label>Story themes available for automatic selection</MAP_WheelOfFate.Settings.ThemeSelection.Label>
+  <MAP_WheelOfFate.Settings.ThemeSelection.Description>Unchecked story themes have their selection weight reduced to 0 and will not be selected naturally.</MAP_WheelOfFate.Settings.ThemeSelection.Description>
+  <MAP_WheelOfFate.Settings.ThemeSelection.InitialOnly>This theme does not participate in natural rotation. It is entered automatically only when both the starting theme priority setting and this theme are enabled.</MAP_WheelOfFate.Settings.ThemeSelection.InitialOnly>
   <MAP_WheelOfFate.Settings.Details.Label>Show detailed descriptions of Wheel of Fate story themes</MAP_WheelOfFate.Settings.Details.Label>
   <MAP_WheelOfFate.Settings.Details.Description>When enabled, display the theme type when the story theme changes.</MAP_WheelOfFate.Settings.Details.Description>
   <MAP_WheelOfFate.ThemeChanged.Label>Wheel of Fate: {0}</MAP_WheelOfFate.ThemeChanged.Label>

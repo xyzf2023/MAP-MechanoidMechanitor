@@ -55,8 +55,12 @@ namespace MAP_MechanoidMechanitor
         public bool CanSelectInCurrentGame => CanSelect
             && (!requiresActivatedMonolith || WheelOfFateVoidProvocation.MonolithActivated);
 
+        // 设置只控制主动选择，不使正在运行的主题失效，也不改写 XML 的基础权重。
+        public bool EnabledInSettings => MAPMechanitorMod.Settings?.IsWheelOfFateThemeEnabled(defName) ?? true;
+        public float EffectiveSelectionWeight => EnabledInSettings ? selectionWeight : 0f;
+
         public bool CanSelectNow => CanSelectInCurrentGame
-            && selectionWeight > 0f
+            && EffectiveSelectionWeight > 0f
             && GenDate.DaysPassedSinceSettleFloat >= minDaysPassed;
 
         public float RaidFactionFactor(FactionDef faction)

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using MAP_MechanoidMechanitor.Scenarios;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -24,6 +26,7 @@ namespace MAP_MechanoidMechanitor
             Interface,
             Mech,
             Start,
+            Storyteller,
             World,
             Boss,
             Diagnostics
@@ -34,6 +37,7 @@ namespace MAP_MechanoidMechanitor
             "MAP_Settings.Page.Interface",
             "MAP_Settings.Page.Mech",
             "MAP_Settings.Page.Start",
+            "MAP_Settings.Page.Storyteller",
             "MAP_Settings.Page.World",
             "MAP_Settings.Page.Boss",
             "MAP_Settings.Page.Diagnostics"
@@ -130,6 +134,10 @@ namespace MAP_MechanoidMechanitor
                     DrawSettingsGroup(listing,
                         "MAP_MechanoidMechanitor.Settings.StartingPawnValueProtection.Section",
                         StartingPawnValueProtectionSettingsUI.Draw, MAPSettingsSection.StartingPawnValueProtection);
+                    break;
+                case SettingsPage.Storyteller:
+                    DrawSettingsGroup(listing, "MAP_WheelOfFate.Settings.Section",
+                        DrawWheelOfFateSettings, MAPSettingsSection.Storyteller);
                     break;
                 case SettingsPage.World:
                     DrawSettingsGroup(listing,
@@ -258,14 +266,44 @@ namespace MAP_MechanoidMechanitor
             MAPMechanitorSettingsResetUtility.Reset(section);
         }
 
-        private void DrawInterfaceSettings(Listing_Standard listing)
+        private static void DrawWheelOfFateSettings(Listing_Standard listing)
         {
+            if (Settings == null) return;
             listing.CheckboxLabeled(
                 "MAP_WheelOfFate.Settings.Details.Label".Translate(),
-                ref Settings!.showWheelOfFateThemeDetails,
+                ref Settings.showWheelOfFateThemeDetails,
                 "MAP_WheelOfFate.Settings.Details.Description".Translate());
+            listing.CheckboxLabeled(
+                "MAP_WheelOfFate.Settings.InitialTheme.Label".Translate(),
+                ref Settings.lockWheelOfFateInitialTheme,
+                "MAP_WheelOfFate.Settings.InitialTheme.Description".Translate());
+
+            listing.GapLine();
+            listing.Label("MAP_WheelOfFate.Settings.ThemeSelection.Label".Translate());
+            listing.Label("MAP_WheelOfFate.Settings.ThemeSelection.Description".Translate());
             listing.Gap(4f);
 
+            // 从当前 Def 收集主题，主菜单也可配置，不受游戏天数及巨石状态影响。
+            WheelOfFateThemeExtension? extension = DefDatabase<StorytellerDef>
+                .GetNamedSilentFail("MAP_WheelOfFate")?.GetModExtension<WheelOfFateThemeExtension>();
+            if (extension == null) return;
+            foreach (StoryThemeDef theme in DefDatabase<StoryThemeDef>.AllDefsListForReading
+                .Where(theme => theme.themePoolTag == extension.themePoolTag)
+                .OrderBy(theme => theme.minDaysPassed).ThenBy(theme => theme.defName))
+            {
+                bool enabled = Settings.IsWheelOfFateThemeEnabled(theme.defName);
+                bool previous = enabled;
+                string tooltip = theme.description;
+                if (theme == extension.initialTheme)
+                    tooltip += "\n\n" + "MAP_WheelOfFate.Settings.ThemeSelection.InitialOnly".Translate();
+                listing.CheckboxLabeled(theme.LabelCap, ref enabled, tooltip);
+                if (enabled != previous)
+                    Settings.SetWheelOfFateThemeEnabled(theme.defName, enabled);
+            }
+        }
+
+        private void DrawInterfaceSettings(Listing_Standard listing)
+        {
             bool previousWorkTabDisplay = Settings!.addMechanoidMechanitorsToWorkTab;
             listing.CheckboxLabeled(
                 "MAP_MechanoidMechanitor.Settings.WorkTab.Label".Translate(),

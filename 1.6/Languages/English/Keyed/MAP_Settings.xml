@@ -15,6 +15,7 @@
   <MAP_Settings.Page.Interface>Controls and interface</MAP_Settings.Page.Interface>
   <MAP_Settings.Page.Mech>Body functions</MAP_Settings.Page.Mech>
   <MAP_Settings.Page.Start>Starting configuration</MAP_Settings.Page.Start>
+  <MAP_Settings.Page.Storyteller>Storyteller</MAP_Settings.Page.Storyteller>
   <MAP_Settings.Page.World>World operation</MAP_Settings.Page.World>
   <MAP_Settings.Page.Boss>Boss configuration</MAP_Settings.Page.Boss>
   <MAP_Settings.Page.Diagnostics>Compatibility and diagnostics</MAP_Settings.Page.Diagnostics>

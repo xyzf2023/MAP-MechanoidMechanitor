@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 using MAP_MechanoidMechanitor.Scenarios;
@@ -24,6 +25,10 @@ namespace MAP_MechanoidMechanitor
         public bool enablePortraitDisplayForAllSaves = false;
         /// <summary>默认显示主题详情；关闭后命运之轮仍发送不透露主题的中性信封。</summary>
         public bool showWheelOfFateThemeDetails = true;
+        /// <summary>默认保留现有开局优先主题；仅在首次推演开始时读取，不覆盖已有周期。</summary>
+        public bool lockWheelOfFateInitialTheme = true;
+        /// <summary>只保存取消勾选的主题 defName，旧设置及新增主题默认启用。</summary>
+        public List<string> disabledWheelOfFateThemes = new List<string>();
         public bool enableMechanoidMechanitorBrainImplants = false;
 
         // 字段名已改为 enableMoonImplants；序列化 key 仍沿用旧 "enableLoverImplants" 以保证旧设置兼容。
@@ -508,6 +513,22 @@ namespace MAP_MechanoidMechanitor
                 Mathf.Clamp(mechHiveNodeSupportChancePercent, 0, 100);
         }
 
+        /// <summary>只查询玩家的主题选择，不改变共享 Def 或当前存档的主题周期。</summary>
+        public bool IsWheelOfFateThemeEnabled(string defName)
+        {
+            return disabledWheelOfFateThemes == null || !disabledWheelOfFateThemes.Contains(defName);
+        }
+
+        public void SetWheelOfFateThemeEnabled(string defName, bool enabled)
+        {
+            if (defName.NullOrEmpty()) return;
+            disabledWheelOfFateThemes ??= new List<string>();
+            if (enabled)
+                disabledWheelOfFateThemes.RemoveAll(name => name == defName);
+            else if (!disabledWheelOfFateThemes.Contains(defName))
+                disabledWheelOfFateThemes.Add(defName);
+        }
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -515,6 +536,9 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref enableHermitAutonomy, "enableHermitAutonomy", true);
             Scribe_Values.Look(ref enableAnnihilationCannonCrater, "enableAnnihilationCannonCrater", true);
             Scribe_Values.Look(ref showWheelOfFateThemeDetails, "showWheelOfFateThemeDetails", true);
+            Scribe_Values.Look(ref lockWheelOfFateInitialTheme, "lockWheelOfFateInitialTheme", true);
+            Scribe_Collections.Look(ref disabledWheelOfFateThemes, "disabledWheelOfFateThemes", LookMode.Value);
+            if (disabledWheelOfFateThemes == null) disabledWheelOfFateThemes = new List<string>();
             Scribe_Deep.Look(ref overmindEconomy, "overmindEconomy");
             if (overmindEconomy == null) overmindEconomy = new OvermindEconomySettings();
             Scribe_Values.Look(

@@ -18,6 +18,7 @@
   <MAP_Settings.Page.Interface>操作与界面</MAP_Settings.Page.Interface>
   <MAP_Settings.Page.Mech>机体功能</MAP_Settings.Page.Mech>
   <MAP_Settings.Page.Start>开局配置</MAP_Settings.Page.Start>
+  <MAP_Settings.Page.Storyteller>叙事者</MAP_Settings.Page.Storyteller>
   <MAP_Settings.Page.World>世界运行</MAP_Settings.Page.World>
   <MAP_Settings.Page.Boss>BOSS 配置</MAP_Settings.Page.Boss>
   <MAP_Settings.Page.Diagnostics>兼容与诊断</MAP_Settings.Page.Diagnostics>

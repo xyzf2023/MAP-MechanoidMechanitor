@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MAP_MechanoidMechanitor.Scenarios;
 
 namespace MAP_MechanoidMechanitor
@@ -8,6 +9,7 @@ namespace MAP_MechanoidMechanitor
     {
         All,
         Interface,
+        Storyteller,
         Autonomy,
         Implants,
         Cores,
@@ -82,12 +84,16 @@ namespace MAP_MechanoidMechanitor
             switch (section)
             {
                 case MAPSettingsSection.Interface:
-                    settings.showWheelOfFateThemeDetails = defaults.showWheelOfFateThemeDetails;
                     settings.addMechanoidMechanitorsToWorkTab = defaults.addMechanoidMechanitorsToWorkTab;
                     settings.enableMechanoidPrioritizedWorkOrders = defaults.enableMechanoidPrioritizedWorkOrders;
                     settings.enableImmediateDraftStateRefresh = defaults.enableImmediateDraftStateRefresh;
                     settings.enablePortraitDisplayForAllSaves = defaults.enablePortraitDisplayForAllSaves;
                     settings.enablePurgeDirectiveUiLoadingScreen = defaults.enablePurgeDirectiveUiLoadingScreen;
+                    break;
+                case MAPSettingsSection.Storyteller:
+                    settings.showWheelOfFateThemeDetails = defaults.showWheelOfFateThemeDetails;
+                    settings.lockWheelOfFateInitialTheme = defaults.lockWheelOfFateInitialTheme;
+                    settings.disabledWheelOfFateThemes = new List<string>(defaults.disabledWheelOfFateThemes);
                     break;
                 case MAPSettingsSection.Autonomy:
                     settings.enableSunAutonomy = defaults.enableSunAutonomy;

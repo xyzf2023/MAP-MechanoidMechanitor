@@ -119,6 +119,8 @@ namespace MAP_MechanoidMechanitor
             {
                 StoryThemeDef? initial = extension.initialTheme;
                 if (!initialThemeHandled && initialThemePending && initial != null
+                    && (MAPMechanitorMod.Settings?.lockWheelOfFateInitialTheme ?? true)
+                    && initial.EnabledInSettings
                     && initial.CanSelectInCurrentGame && initial.themePoolTag == extension.themePoolTag)
                 {
                     BeginTheme(storyteller, initial);
@@ -131,6 +133,9 @@ namespace MAP_MechanoidMechanitor
                 {
                     currentTheme = null;
                     announcementPending = false;
+                    // 首次抽选已处理：空池重试不能把开局优先机会延续到中后期。
+                    initialThemeHandled = true;
+                    initialThemePending = false;
                     // 空池时限频重试，避免逐 tick 扫描全部主题。
                     nextThemeSelectionTick = (long)now + 1000;
                 }
@@ -168,7 +173,7 @@ namespace MAP_MechanoidMechanitor
             }
             else if (!TryChooseNextTheme(extension.themePoolTag, previous, out next))
             {
-                message = "当前没有达到首次出现天数且配置有效的主题。";
+                message = "当前没有已勾选、选择权重大于 0、达到首次出现天数且配置有效的主题。";
                 return false;
             }
 
@@ -188,7 +193,7 @@ namespace MAP_MechanoidMechanitor
                 .ToList();
             // 有其他主题时避免立即重复；仅有一个时续期，不伪造主题变更公告。
             if (candidates.Count > 1 && previous != null) candidates.Remove(previous);
-            return candidates.TryRandomElementByWeight(theme => theme.selectionWeight, out next);
+            return candidates.TryRandomElementByWeight(theme => theme.EffectiveSelectionWeight, out next);
         }
 
         private void BeginTheme(StorytellerDef storyteller, StoryThemeDef next, bool forceAnnouncement = false)
