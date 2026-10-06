@@ -31,7 +31,7 @@ namespace MAP_MechanoidMechanitor
             int radius = System.Math.Max(0, profile.roofBreakRadius);
             foreach (IntVec3 cell in CellRect.CenteredOn(pawn.Position, radius).ClipInsideMap(map))
             {
-                BreakRoofAt(cell, map, pawn, profile);
+                BreakRoofAt(cell, map, pawn);
             }
             map.GetComponent<MechanicalFlightRoofLightingRefresh>().Request(pawn.Position);
         }
@@ -39,22 +39,12 @@ namespace MAP_MechanoidMechanitor
         private static void BreakRoofAt(
             IntVec3 cell,
             Map map,
-            Pawn pawn,
-            MechanicalFlightProfileDef profile)
+            Pawn pawn)
         {
             RoofDef? roof = map.roofGrid.RoofAt(cell);
             if (roof == null || roof.isThickRoof)
             {
                 return;
-            }
-
-            if (profile.clearBuildRoofArea && map.areaManager?.BuildRoof != null)
-            {
-                map.areaManager.BuildRoof[cell] = false;
-            }
-            if (profile.markNoRoofArea && map.areaManager?.NoRoof != null)
-            {
-                map.areaManager.NoRoof[cell] = true;
             }
 
             Pawn? previous = MechanicalFlightRoofPunchProtection.ProtectedPawn;

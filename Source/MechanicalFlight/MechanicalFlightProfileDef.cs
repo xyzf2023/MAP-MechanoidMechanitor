@@ -48,6 +48,7 @@ namespace MAP_MechanoidMechanitor
         public bool breakThinRoofOnTakeoff = true;
         public bool breakThinRoofOnLanding = true;
         public int roofBreakRadius = 1;
+        // 兼容旧 Def 配置保留；撞破屋顶不再读取这两个字段，也不修改屋顶区域。
         public bool clearBuildRoofArea = true;
         public bool markNoRoofArea = true;
     }
