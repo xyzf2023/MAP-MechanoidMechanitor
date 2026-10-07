@@ -121,11 +121,11 @@
         <skillLevels>
           <li>
             <skill>Shooting</skill>
-            <level>20</level>
+            <level>10</level>
           </li>
           <li>
             <skill>Melee</skill>
-            <level>20</level>
+            <level>10</level>
           </li>
           <li>
             <skill>Social</skill>
