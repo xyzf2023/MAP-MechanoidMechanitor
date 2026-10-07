@@ -950,7 +950,19 @@ namespace MAP_MechanoidMechanitor
 
             if (!hasMechanoid)
             {
-                return "MAP_MechanicalFlight_CaravanNoMechanoid".Translate();
+                // 无机械族时，仅允许所有成员均为人类且各自拥有自主飞行授权的队伍。
+                if (caravan.PawnsListForReading.Count == 0
+                    || !caravan.PawnsListForReading.All(pawn => pawn.RaceProps?.Humanlike == true))
+                {
+                    return "MAP_MechanicalFlight_CaravanNoMechanoid".Translate();
+                }
+                foreach (Pawn pawn in caravan.PawnsListForReading)
+                {
+                    if (!GameComponent_MechanicalFlightRegistry.IsAuthorized(pawn))
+                    {
+                        return "MAP_MechanicalFlight_CaravanMemberCannotFly".Translate(pawn.LabelShort);
+                    }
+                }
             }
             if (!caravan.PawnsListForReading.Any(pawn =>
                     !pawn.Dead && CaravanUtility.IsOwner(pawn, Faction.OfPlayer)))
@@ -1168,11 +1180,14 @@ namespace MAP_MechanoidMechanitor
                 yield return gizmo;
             }
 
-            if (__instance != null && __instance.Faction == Faction.OfPlayer
-                && __instance.PawnsListForReading.Any(pawn =>
-                    pawn.RaceProps?.IsMechanoid == true))
+            if (__instance != null && __instance.Faction == Faction.OfPlayer)
             {
-                yield return MechanicalFlightCaravanUtility.MakeCommand(__instance);
+                // 复用起飞资格检查：成员资格不齐或其他条件导致禁用时，不显示按钮。
+                Command_Action command = MechanicalFlightCaravanUtility.MakeCommand(__instance);
+                if (!command.Disabled)
+                {
+                    yield return command;
+                }
             }
         }
     }
