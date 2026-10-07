@@ -35,7 +35,7 @@ namespace MAP_MechanoidMechanitor
                     parms.questScriptDef = invertedQuest;
                 return parms;
             }
-            if (theme == null || theme.charityWeightFactor == 1f)
+            if (theme == null || theme.EffectiveCharityWeightFactor == 1f)
             {
                 parms.questScriptDef = NaturalRandomQuestChooser.ChooseNaturalRandomQuest(parms.points, target);
                 return parms;

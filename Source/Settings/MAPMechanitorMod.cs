@@ -266,41 +266,8 @@ namespace MAP_MechanoidMechanitor
             MAPMechanitorSettingsResetUtility.Reset(section);
         }
 
-        private static void DrawWheelOfFateSettings(Listing_Standard listing)
-        {
-            if (Settings == null) return;
-            listing.CheckboxLabeled(
-                "MAP_WheelOfFate.Settings.Details.Label".Translate(),
-                ref Settings.showWheelOfFateThemeDetails,
-                "MAP_WheelOfFate.Settings.Details.Description".Translate());
-            listing.CheckboxLabeled(
-                "MAP_WheelOfFate.Settings.InitialTheme.Label".Translate(),
-                ref Settings.lockWheelOfFateInitialTheme,
-                "MAP_WheelOfFate.Settings.InitialTheme.Description".Translate());
-
-            listing.GapLine();
-            listing.Label("MAP_WheelOfFate.Settings.ThemeSelection.Label".Translate());
-            listing.Label("MAP_WheelOfFate.Settings.ThemeSelection.Description".Translate());
-            listing.Gap(4f);
-
-            // 从当前 Def 收集主题，主菜单也可配置，不受游戏天数及巨石状态影响。
-            WheelOfFateThemeExtension? extension = DefDatabase<StorytellerDef>
-                .GetNamedSilentFail("MAP_WheelOfFate")?.GetModExtension<WheelOfFateThemeExtension>();
-            if (extension == null) return;
-            foreach (StoryThemeDef theme in DefDatabase<StoryThemeDef>.AllDefsListForReading
-                .Where(theme => theme.themePoolTag == extension.themePoolTag)
-                .OrderBy(theme => theme.minDaysPassed).ThenBy(theme => theme.defName))
-            {
-                bool enabled = Settings.IsWheelOfFateThemeEnabled(theme.defName);
-                bool previous = enabled;
-                string tooltip = theme.description;
-                if (theme == extension.initialTheme)
-                    tooltip += "\n\n" + "MAP_WheelOfFate.Settings.ThemeSelection.InitialOnly".Translate();
-                listing.CheckboxLabeled(theme.LabelCap, ref enabled, tooltip);
-                if (enabled != previous)
-                    Settings.SetWheelOfFateThemeEnabled(theme.defName, enabled);
-            }
-        }
+        private static void DrawWheelOfFateSettings(Listing_Standard listing) =>
+            WheelOfFateSettingsUI.Draw(listing);
 
         private void DrawInterfaceSettings(Listing_Standard listing)
         {

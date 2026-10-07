@@ -14,7 +14,7 @@ namespace MAP_MechanoidMechanitor
         internal static bool TryApply(IncidentDef incident, IncidentParms parms, StoryThemeDef? theme)
         {
             if (theme == null || (theme.raidFactionWeightFactors.NullOrEmpty()
-                    && theme.permanentEnemyRaidFactionFactor == 1f)
+                    && theme.EffectivePermanentEnemyRaidFactionFactor == 1f)
                 || incident != IncidentDefOf.RaidEnemy || parms.faction != null
                 || parms.quest != null || parms.forced || !(parms.target is Map)
                 || !StorytellerCompProperties_WheelOfFateRandomMain.IsFinitePositive(parms.points)

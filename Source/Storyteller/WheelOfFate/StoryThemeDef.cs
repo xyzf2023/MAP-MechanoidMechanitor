@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using Verse;
 
@@ -41,6 +43,39 @@ namespace MAP_MechanoidMechanitor
         public List<StoryThemeIncidentWeightRule> incidentWeightRules = new List<StoryThemeIncidentWeightRule>();
         public List<StoryThemeRaidFactionWeight> raidFactionWeightFactors = new List<StoryThemeRaidFactionWeight>();
 
+        // XML 引用解析后建立只读派生数据，抽选时不重复分组，也不把玩家值写入 Def。
+        private readonly Dictionary<LetterDef, float> xmlLetterFactors = new Dictionary<LetterDef, float>();
+        private List<StoryThemeIncidentWeightGroup> specificRuleGroups = new List<StoryThemeIncidentWeightGroup>();
+
+        public override void ResolveReferences()
+        {
+            base.ResolveReferences();
+            xmlLetterFactors.Clear();
+            var groups = new Dictionary<string, StoryThemeIncidentWeightGroup>();
+            if (incidentWeightRules != null)
+                foreach (var rule in incidentWeightRules)
+                {
+                    if (rule == null || !rule.IsValid) continue;
+                    if (rule.incident == null)
+                    {
+                        LetterDef letter = rule.letterDef!;
+                        xmlLetterFactors.TryGetValue(letter, out float current);
+                        xmlLetterFactors[letter] = (xmlLetterFactors.ContainsKey(letter) ? current : 1f) * rule.factor;
+                    }
+                    else
+                    {
+                        string key = "incident:" + rule.incident.defName + ":" + (rule.letterDef?.defName ?? "");
+                        if (!groups.TryGetValue(key, out var group))
+                        {
+                            group = new StoryThemeIncidentWeightGroup(key, rule);
+                            groups.Add(key, group);
+                        }
+                        group.XmlFactor *= rule.factor;
+                    }
+                }
+            specificRuleGroups = groups.Values.ToList();
+        }
+
         public bool CanSelect => !themePoolTag.NullOrEmpty()
             && !(equalIncidentWeights && invertIncidentWeights)
             && minDaysPassed >= 0
@@ -57,24 +92,45 @@ namespace MAP_MechanoidMechanitor
 
         // 设置只控制主动选择，不使正在运行的主题失效，也不改写 XML 的基础权重。
         public bool EnabledInSettings => MAPMechanitorMod.Settings?.IsWheelOfFateThemeEnabled(defName) ?? true;
-        public float EffectiveSelectionWeight => EnabledInSettings ? selectionWeight : 0f;
+        public float EffectiveSelectionWeight => EnabledInSettings
+            ? EffectiveValue("selectionWeight", selectionWeight) : 0f;
+        public int EffectiveMinDaysPassed => (int)EffectiveValue("minDaysPassed", minDaysPassed, 0f, 1000000f);
+        public float EffectiveIncidentIntervalFactor =>
+            EffectiveValue("incidentIntervalFactor", incidentIntervalFactor, 0.05f);
+        public float EffectiveCharityWeightFactor => EffectiveValue("charityWeightFactor", charityWeightFactor);
+        public float EffectivePermanentEnemyRaidFactionFactor =>
+            EffectiveValue("permanentEnemyRaidFactionFactor", permanentEnemyRaidFactionFactor);
+        public FloatRange EffectiveDurationDays
+        {
+            get
+            {
+                float min = EffectiveValue("durationMin", durationDays.min, 0.5f, 20f);
+                float max = EffectiveValue("durationMax", durationDays.max, 0.5f, 20f);
+                return new FloatRange(min, Math.Max(min, max));
+            }
+        }
+
+        private float EffectiveValue(string key, float xmlDefault,
+            float minimum = 0f, float maximum = float.MaxValue) =>
+            MAPMechanitorMod.Settings?.wheelOfFate?.Value(this, key, xmlDefault, minimum, maximum)
+            ?? xmlDefault;
 
         public bool CanSelectNow => CanSelectInCurrentGame
             && EffectiveSelectionWeight > 0f
-            && GenDate.DaysPassedSinceSettleFloat >= minDaysPassed;
+            && GenDate.DaysPassedSinceSettleFloat >= EffectiveMinDaysPassed;
 
         public float RaidFactionFactor(FactionDef faction)
         {
             float factor = faction.permanentEnemy
                 && StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(permanentEnemyRaidFactionFactor)
-                ? permanentEnemyRaidFactionFactor : 1f;
+                ? EffectivePermanentEnemyRaidFactionFactor : 1f;
             if (raidFactionWeightFactors != null)
             {
                 foreach (StoryThemeRaidFactionWeight entry in raidFactionWeightFactors)
                 {
                     if (entry != null && entry.factionDef == faction
                         && StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(entry.factor))
-                        factor *= entry.factor;
+                        factor *= EffectiveValue("faction:" + faction.defName, entry.factor);
                 }
             }
 
@@ -91,7 +147,7 @@ namespace MAP_MechanoidMechanitor
                     if (entry?.category == category
                         && StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(entry.weight))
                     {
-                        factor *= entry.weight;
+                        factor *= EffectiveValue("category:" + category.defName, entry.weight);
                     }
                 }
             }
@@ -118,18 +174,14 @@ namespace MAP_MechanoidMechanitor
             float factor = QuestFactor(incident.questScriptDef);
             if (IsPositiveRandomIncident(incident)
                 && StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(positiveRandomIncidentWeightFactor))
-                factor *= positiveRandomIncidentWeightFactor;
-            if (incidentWeightRules != null)
+                factor *= EffectiveValue("positiveRandomIncidentWeightFactor", positiveRandomIncidentWeightFactor);
+            if (incident.letterDef != null)
+                factor *= EffectiveValue("letter:" + incident.letterDef.defName, XmlLetterFactor(incident.letterDef));
+            foreach (var group in SpecificIncidentRuleGroups())
             {
-                foreach (StoryThemeIncidentWeightRule rule in incidentWeightRules)
-                {
-                    if (rule != null && rule.Matches(incident))
-                    {
-                        factor *= rule.factor;
-                    }
-                }
+                if (group.Rule.Matches(incident))
+                    factor *= EffectiveValue(group.Key, group.XmlFactor);
             }
-
             return factor;
         }
 
@@ -137,8 +189,14 @@ namespace MAP_MechanoidMechanitor
         {
             return quest?.defaultCharity == true
                 && StorytellerCompProperties_WheelOfFateRandomMain.IsFiniteNonNegative(charityWeightFactor)
-                ? charityWeightFactor : 1f;
+                ? EffectiveCharityWeightFactor : 1f;
         }
+
+        // 同条件的多条 XML 规则合并显示其乘积，覆盖值只应用一次，不因重复规则重复相乘。
+        internal float XmlLetterFactor(LetterDef letter) =>
+            xmlLetterFactors.TryGetValue(letter, out float factor) ? factor : 1f;
+
+        internal IEnumerable<StoryThemeIncidentWeightGroup> SpecificIncidentRuleGroups() => specificRuleGroups;
 
         public override IEnumerable<string> ConfigErrors()
         {
@@ -246,6 +304,20 @@ namespace MAP_MechanoidMechanitor
 
         private static bool ValidOptionalInterval(IntRange range) =>
             (range.min == 0 && range.max == 0) || (range.min > 0 && range.max >= range.min);
+    }
+
+    /// <summary>相同 XML 匹配条件的倍率乘积；玩家覆盖值在整个组上只应用一次。</summary>
+    internal sealed class StoryThemeIncidentWeightGroup
+    {
+        internal readonly string Key;
+        internal readonly StoryThemeIncidentWeightRule Rule;
+        internal float XmlFactor = 1f;
+
+        internal StoryThemeIncidentWeightGroup(string key, StoryThemeIncidentWeightRule rule)
+        {
+            Key = key;
+            Rule = rule;
+        }
     }
 
     /// <summary>仅影响主随机池产生的普通敌对袭击，不改动外交关系或任务指定派系。</summary>

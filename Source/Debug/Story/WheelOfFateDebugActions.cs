@@ -42,10 +42,10 @@ namespace MAP_MechanoidMechanitor
 
             foreach (StoryThemeDef theme in DefDatabase<StoryThemeDef>.AllDefsListForReading
                 .Where(theme => theme.CanSelectInCurrentGame && theme.themePoolTag == extension.themePoolTag)
-                .OrderBy(theme => theme.minDaysPassed).ThenBy(theme => theme.defName))
+                .OrderBy(theme => theme.EffectiveMinDaysPassed).ThenBy(theme => theme.defName))
             {
                 nodes.Add(new DebugActionNode(
-                    $"{theme.label}（{theme.defName}；首次第 {theme.minDaysPassed} 天）",
+                    $"{theme.label}（{theme.defName}；首次第 {theme.EffectiveMinDaysPassed} 天）",
                     action: () => SwitchTheme(theme)));
             }
 

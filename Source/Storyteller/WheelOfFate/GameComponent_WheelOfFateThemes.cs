@@ -204,7 +204,7 @@ namespace MAP_MechanoidMechanitor
             ownerStoryteller = storyteller;
             currentTheme = next;
             remainingTicks = (int)Math.Max(1d, Math.Min(int.MaxValue,
-                Math.Ceiling((double)next.durationDays.RandomInRange * GenDate.TicksPerDay)));
+                Math.Ceiling((double)next.EffectiveDurationDays.RandomInRange * GenDate.TicksPerDay)));
             // 避免下一次自然更新把切换前已经流逝的时间扣到新主题上。
             lastUpdateTick = GenTicks.TicksGame;
             nextThemeSelectionTick = -1;

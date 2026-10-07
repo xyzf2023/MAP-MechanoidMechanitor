@@ -32,7 +32,7 @@ namespace MAP_MechanoidMechanitor
             StoryThemeDef? theme = themeState?.ActiveTheme;
 
             bool inSpace = target.Tile.Valid && target.Tile.LayerDef.isSpace;
-            float mtbDays = settings.mtbDays * (theme?.incidentIntervalFactor ?? 1f);
+            float mtbDays = settings.mtbDays * (theme?.EffectiveIncidentIntervalFactor ?? 1f);
             if (inSpace)
             {
                 mtbDays *= settings.spaceMtbDayFactor;

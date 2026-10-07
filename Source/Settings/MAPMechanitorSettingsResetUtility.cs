@@ -94,6 +94,7 @@ namespace MAP_MechanoidMechanitor
                     settings.showWheelOfFateThemeDetails = defaults.showWheelOfFateThemeDetails;
                     settings.lockWheelOfFateInitialTheme = defaults.lockWheelOfFateInitialTheme;
                     settings.disabledWheelOfFateThemes = new List<string>(defaults.disabledWheelOfFateThemes);
+                    settings.wheelOfFate = new WheelOfFateSettings();
                     break;
                 case MAPSettingsSection.Autonomy:
                     settings.enableSunAutonomy = defaults.enableSunAutonomy;

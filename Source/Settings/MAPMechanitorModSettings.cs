@@ -29,6 +29,7 @@ namespace MAP_MechanoidMechanitor
         public bool lockWheelOfFateInitialTheme = true;
         /// <summary>只保存取消勾选的主题 defName，旧设置及新增主题默认启用。</summary>
         public List<string> disabledWheelOfFateThemes = new List<string>();
+        public WheelOfFateSettings wheelOfFate = new WheelOfFateSettings();
         public bool enableMechanoidMechanitorBrainImplants = false;
 
         // 字段名已改为 enableMoonImplants；序列化 key 仍沿用旧 "enableLoverImplants" 以保证旧设置兼容。
@@ -539,6 +540,8 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(ref lockWheelOfFateInitialTheme, "lockWheelOfFateInitialTheme", true);
             Scribe_Collections.Look(ref disabledWheelOfFateThemes, "disabledWheelOfFateThemes", LookMode.Value);
             if (disabledWheelOfFateThemes == null) disabledWheelOfFateThemes = new List<string>();
+            Scribe_Deep.Look(ref wheelOfFate, "wheelOfFate");
+            if (wheelOfFate == null) wheelOfFate = new WheelOfFateSettings();
             Scribe_Deep.Look(ref overmindEconomy, "overmindEconomy");
             if (overmindEconomy == null) overmindEconomy = new OvermindEconomySettings();
             Scribe_Values.Look(
