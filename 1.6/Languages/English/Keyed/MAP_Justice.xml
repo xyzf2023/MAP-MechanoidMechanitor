@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <MAP_MechanoidMechanitor.Justice.Ability.MechRecode.InvalidTarget>Can only be used on mechanoid corpses belonging to non-player factions.</MAP_MechanoidMechanitor.Justice.Ability.MechRecode.InvalidTarget>
+  <MAP_MechanoidMechanitor.Justice.Ability.MechRecode.UnsupportedSystem>This mechanoid's system does not support body recoding.</MAP_MechanoidMechanitor.Justice.Ability.MechRecode.UnsupportedSystem>
   <MAP_MechanoidMechanitor.Justice.Ability.MechRecode.Success>Body recoding completed for {0}.</MAP_MechanoidMechanitor.Justice.Ability.MechRecode.Success>
   <MAP_MechanoidMechanitor.Justice.Ability.MechReconstruction.InvalidTarget>Can only be used on friendly mechanoid corpses.</MAP_MechanoidMechanitor.Justice.Ability.MechReconstruction.InvalidTarget>
   <MAP_MechanoidMechanitor.Justice.Ability.MechReconstruction.ReportWithTarget>Reconstructing {0}'s body.</MAP_MechanoidMechanitor.Justice.Ability.MechReconstruction.ReportWithTarget>

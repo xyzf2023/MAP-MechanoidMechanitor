@@ -3,6 +3,7 @@
 
   <!-- 模块：机体再编码 -->
   <MAP_MechanoidMechanitor.Justice.Ability.MechRecode.InvalidTarget>只能对非玩家阵营的机械体尸体使用。</MAP_MechanoidMechanitor.Justice.Ability.MechRecode.InvalidTarget>
+  <MAP_MechanoidMechanitor.Justice.Ability.MechRecode.UnsupportedSystem>该机械体的系统不支持机体再编码</MAP_MechanoidMechanitor.Justice.Ability.MechRecode.UnsupportedSystem>
   <MAP_MechanoidMechanitor.Justice.Ability.MechRecode.Success>已完成对{0}的机体再编码。</MAP_MechanoidMechanitor.Justice.Ability.MechRecode.Success>
 
   <!-- 模块：机体重构 -->

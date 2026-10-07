@@ -6,6 +6,7 @@ namespace MAP_MechanoidMechanitor
     public class CompAbilityEffect_MechRecode : CompAbilityEffect
     {
         private const string InvalidTargetMessageKey = "MAP_MechanoidMechanitor.Justice.Ability.MechRecode.InvalidTarget";
+        private const string UnsupportedSystemMessageKey = "MAP_MechanoidMechanitor.Justice.Ability.MechRecode.UnsupportedSystem";
 
         public new CompProperties_AbilityMechRecode Props =>
             (CompProperties_AbilityMechRecode)props;
@@ -25,9 +26,10 @@ namespace MAP_MechanoidMechanitor
                 return false;
             }
 
+            string rejectionMessageKey = InvalidTargetMessageKey;
             if (target.HasThing
                 && target.Thing is Corpse corpse
-                && CanRecode(corpse))
+                && CanRecode(corpse, out rejectionMessageKey))
             {
                 return true;
             }
@@ -35,7 +37,7 @@ namespace MAP_MechanoidMechanitor
             if (throwMessages)
             {
                 Messages.Message(
-                    InvalidTargetMessageKey.Translate(),
+                    rejectionMessageKey.Translate(),
                     parent.pawn,
                     MessageTypeDefOf.RejectInput,
                     historical: false);
@@ -44,15 +46,32 @@ namespace MAP_MechanoidMechanitor
             return false;
         }
 
-        public bool CanRecode(Corpse corpse)
+        public bool CanRecode(Corpse? corpse)
         {
+            return CanRecode(corpse, out _);
+        }
+
+        public bool CanRecode(Corpse? corpse, out string rejectionMessageKey)
+        {
+            rejectionMessageKey = InvalidTargetMessageKey;
             Pawn? innerPawn = corpse?.InnerPawn;
 
-            return innerPawn != null
-                && innerPawn.Dead
-                && innerPawn.RaceProps.IsMechanoid
-                && innerPawn.Faction != Faction.OfPlayer
-                && !MechAbilityTargetUtility.IsProtectedBoss(innerPawn);
+            if (innerPawn == null
+                || !innerPawn.Dead
+                || !innerPawn.RaceProps.IsMechanoid
+                || innerPawn.Faction == Faction.OfPlayer
+                || MechAbilityTargetUtility.IsProtectedBoss(innerPawn))
+            {
+                return false;
+            }
+
+            if (!MassProductionMechGestatorRecipeRegistry.HasProductionOrResurrectionRecipe(corpse))
+            {
+                rejectionMessageKey = UnsupportedSystemMessageKey;
+                return false;
+            }
+
+            return true;
         }
 
         public override void Apply(LocalTargetInfo target, LocalTargetInfo dest)

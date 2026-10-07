@@ -90,15 +90,16 @@ namespace MAP_MechanoidMechanitor
             CompAbilityEffect_MechRecode? recodeComp = GetRecodeComp();
             Faction? player = Faction.OfPlayerSilentFail;
 
+            string rejectionMessageKey = InvalidTargetMessageKey;
             if (player == null
                 || corpse == null
                 || recodeComp == null
                 || !corpse.Spawned
                 || corpse.Map != pawn.Map
-                || !recodeComp.CanRecode(corpse))
+                || !recodeComp.CanRecode(corpse, out rejectionMessageKey))
             {
                 Messages.Message(
-                    InvalidTargetMessageKey.Translate(),
+                    rejectionMessageKey.Translate(),
                     pawn,
                     MessageTypeDefOf.RejectInput,
                     historical: false);

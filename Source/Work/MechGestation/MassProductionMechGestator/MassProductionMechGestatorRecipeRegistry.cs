@@ -24,6 +24,39 @@ namespace MAP_MechanoidMechanitor
             }
         }
 
+        /// <summary>
+        /// 判断目标机体是否有生产配方，或其尸体定义是否被机械族复活配方接受。
+        /// 只检查配方定义，不检查科研、材料或尸体当前阵营等实例条件。
+        /// </summary>
+        public static bool HasProductionOrResurrectionRecipe(Corpse? corpse)
+        {
+            Pawn? innerPawn = corpse?.InnerPawn;
+            if (corpse == null || innerPawn == null || !innerPawn.RaceProps.IsMechanoid)
+            {
+                return false;
+            }
+
+            IReadOnlyList<RecipeDef> recipes = EligibleRecipes;
+            for (int i = 0; i < recipes.Count; i++)
+            {
+                RecipeDef recipe = recipes[i];
+                if (recipe.mechResurrection)
+                {
+                    // 使用 ThingDef 重载，避免友方尸体特殊筛选器排除待再编码的敌方尸体。
+                    if (recipe.fixedIngredientFilter?.Allows(corpse.def) == true)
+                    {
+                        return true;
+                    }
+                }
+                else if (recipe.ProducedThingDef == innerPawn.def)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static void EnsureInitialized()
         {
             if (eligibleRecipes != null)
