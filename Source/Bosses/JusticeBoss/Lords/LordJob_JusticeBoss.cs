@@ -60,6 +60,14 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            if (condition == PawnLostCondition.ExitedMap
+                || condition == PawnLostCondition.Killed
+                || condition == PawnLostCondition.ChangedFaction
+                || condition == PawnLostCondition.Vanished)
+            {
+                pawn.TryGetComp<CompJusticeBossController>()?.EndBattle();
+            }
+
             if (condition == PawnLostCondition.ExitedMap)
             {
                 foreach (Quest quest in Find.QuestManager.QuestsListForReading)

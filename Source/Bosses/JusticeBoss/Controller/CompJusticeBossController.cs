@@ -358,7 +358,7 @@ namespace MAP_MechanoidMechanitor
 
             if (Pawn.Dead || Pawn.Destroyed)
             {
-                stopped = true;
+                EndBattle();
                 return;
             }
 
@@ -783,16 +783,36 @@ namespace MAP_MechanoidMechanitor
             GameComponent_JusticeBossCallTracker.Current?.MarkRetreating();
         }
 
+        public void EndBattle()
+        {
+            stopped = true;
+            activationFinished = true;
+            for (int i = 0; i < deployedInfrastructure.Count; i++)
+            {
+                Thing? thing = deployedInfrastructure[i];
+                if (thing == null || thing.Destroyed
+                    || (thing.def.defName != "ShieldGeneratorMortar"
+                        && thing.def.defName != "ShieldGeneratorBullets"))
+                {
+                    continue;
+                }
+
+                // 复用原版集群战败通知：永久关闭且由护盾自身存档。
+                // 不要求已落地，空投舱中的护盾同样需要提前关机；重复通知无副作用。
+                thing.Notify_LordDestroyed();
+            }
+        }
+
         public override void PostDestroy(DestroyMode mode, Map previousMap)
         {
             base.PostDestroy(mode, previousMap);
-            stopped = true;
+            EndBattle();
         }
 
         public override void Notify_Killed(Map prevMap, DamageInfo? dinfo = null)
         {
             base.Notify_Killed(prevMap, dinfo);
-            stopped = true;
+            EndBattle();
         }
 
         public string GetDebugStatus()

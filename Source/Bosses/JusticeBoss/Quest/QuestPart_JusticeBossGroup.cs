@@ -40,6 +40,11 @@ namespace MAP_MechanoidMechanitor
 
         public override void Notify_PawnKilled(Pawn pawn, DamageInfo? dinfo)
         {
+            if (bosses.Contains(pawn))
+            {
+                pawn.TryGetComp<CompJusticeBossController>()?.EndBattle();
+            }
+
             base.Notify_PawnKilled(pawn, dinfo);
             if (!bosses.Contains(pawn))
             {
@@ -52,6 +57,11 @@ namespace MAP_MechanoidMechanitor
 
         public override void Notify_PawnDiscarded(Pawn pawn)
         {
+            if (bosses.Contains(pawn))
+            {
+                pawn.TryGetComp<CompJusticeBossController>()?.EndBattle();
+            }
+
             base.Notify_PawnDiscarded(pawn);
             if (!bosses.Contains(pawn))
             {
@@ -84,6 +94,7 @@ namespace MAP_MechanoidMechanitor
                 return;
             }
 
+            pawn.TryGetComp<CompJusticeBossController>()?.EndBattle();
             bosses.Remove(pawn);
             Messages.Message(
                 "MAP_MechanoidMechanitor.JusticeBoss.Message.Exited".Translate(),
@@ -102,6 +113,12 @@ namespace MAP_MechanoidMechanitor
 
         public override void Cleanup()
         {
+            // 在原版任务清理前使用本任务仍持有的 BOSS 引用，避免影响其他召唤事件。
+            for (int i = 0; i < bosses.Count; i++)
+            {
+                bosses[i]?.TryGetComp<CompJusticeBossController>()?.EndBattle();
+            }
+
             base.Cleanup();
             GameComponent_JusticeBossCallTracker? tracker =
                 GameComponent_JusticeBossCallTracker.Current;
