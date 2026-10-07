@@ -60,9 +60,25 @@ namespace MAP_MechanoidMechanitor
             float x,
             ref float lineEndWidth)
         {
-            if (!ShouldShowRechargeButton(pawn))
+            float buttonX = x - ButtonSize;
+            if (!TryDrawRechargeButton(pawn, new Rect(buttonX, 0f, ButtonSize, ButtonSize)))
             {
                 return x;
+            }
+
+            lineEndWidth += ButtonSize;
+            return buttonX;
+        }
+
+        /// <summary>
+        /// 原版与第三方面板共用的按钮绘制入口，矩形由各自布局流水线提供。
+        /// false 表示资格或图标不满足，调用方不应占用宽度；绘制异常仍保留布局占位。
+        /// </summary>
+        internal static bool TryDrawRechargeButton(Pawn? pawn, Rect buttonRect)
+        {
+            if (!ShouldShowRechargeButton(pawn))
+            {
+                return false;
             }
 
             Texture2D? icon = Icon;
@@ -72,11 +88,8 @@ namespace MAP_MechanoidMechanitor
                     $"{LogPrefix}未找到原版图标 {RechargeIconPath}，" +
                     "个人充电阈值按钮不会显示。",
                     ErrorKeyMissingIcon);
-                return x;
+                return false;
             }
-
-            float buttonX = x - ButtonSize;
-            Rect buttonRect = new Rect(buttonX, 0f, ButtonSize, ButtonSize);
 
             try
             {
@@ -105,8 +118,7 @@ namespace MAP_MechanoidMechanitor
                     ErrorKeyDrawFailed);
             }
 
-            lineEndWidth += ButtonSize;
-            return buttonX;
+            return true;
         }
     }
 }

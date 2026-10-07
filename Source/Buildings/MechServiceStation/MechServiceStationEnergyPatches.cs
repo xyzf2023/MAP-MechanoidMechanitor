@@ -17,6 +17,22 @@ namespace MAP_MechanoidMechanitor
         internal static bool IsCharging(Need_MechEnergy energy) =>
             PawnField(energy)?.jobs?.curDriver is JobDriver_UseMechServiceStation driver
             && driver.IsPoweredService && driver.Station!.NeedsCharge(PawnField(energy));
+
+        // 原版检查面板与第三方能量提示共用同一速率；只读当前服务状态，不补充能量。
+        internal static bool TryGetServiceEnergyRate(Pawn? pawn, out string rate)
+        {
+            rate = string.Empty;
+            if (pawn?.needs?.energy is not Need_MechEnergy energy || energy.MaxLevel <= 0f
+                || pawn.jobs?.curDriver is not JobDriver_UseMechServiceStation driver
+                || !driver.IsPoweredService || driver.Station is not CompMechServiceStation station)
+                return false;
+
+            int percent = Mathf.Max(0, Mathf.RoundToInt(station.Props.energyPerTick * 60000f / energy.MaxLevel * 100f));
+            rate = station.NeedsCharge(pawn) && percent > 0
+                ? "+" + "PerDay".Translate(percent + "%")
+                : "-" + "PerDay".Translate("0%");
+            return true;
+        }
     }
 
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.GetInspectString))]
@@ -25,16 +41,12 @@ namespace MAP_MechanoidMechanitor
         public static void Postfix(Pawn __instance, ref string __result)
         {
             if (__instance.needs?.energy is not Need_MechEnergy energy
-                || __instance.jobs?.curDriver is not JobDriver_UseMechServiceStation driver
-                || !driver.IsPoweredService || energy.MaxLevel <= 0f || string.IsNullOrEmpty(__result)) return;
+                || string.IsNullOrEmpty(__result)
+                || !MechServiceEnergyContext.TryGetServiceEnergyRate(__instance, out string rate)) return;
 
             // 只替换原版能量行的显示；实际充电仍只由 ServiceTick 写入。
             string prefix = "MechEnergy".Translate() + ": " + energy.CurLevelPercentage.ToStringPercent();
             string original = prefix + " (-" + "PerDay".Translate((energy.FallPerDay / energy.MaxLevel).ToStringPercent()) + ")";
-            int percent = Mathf.Max(0, Mathf.RoundToInt(driver.Station!.Props.energyPerTick * 60000f / energy.MaxLevel * 100f));
-            string rate = driver.Station!.ChargingEnabled && energy.CurLevel < energy.MaxLevel && percent > 0
-                ? "+" + "PerDay".Translate(percent + "%")
-                : "-" + "PerDay".Translate("0%");
             __result = __result.Replace(original, prefix + " (" + rate + ")");
         }
     }

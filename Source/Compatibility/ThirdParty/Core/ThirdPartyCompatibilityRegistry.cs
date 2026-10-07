@@ -14,6 +14,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Exp
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5ExpansionMechFusion;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.QualityBuilder;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimHUD;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimTalk;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RPGStyleInventory;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimSkyBlock;
@@ -54,6 +55,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new PerspectiveShiftFireAtWillCompatibility(),
             new PerspectiveShiftScenarioCompatibility(),
             new RimTalkCompatibility(),
+            new RimHUDRechargeButtonCompatibility(),
+            new RimHUDPawnDisplayCompatibility(RimHUDPawnDisplayCompatibility.Feature.CompInfo),
+            new RimHUDPawnDisplayCompatibility(RimHUDPawnDisplayCompatibility.Feature.Inspiration),
+            new RimHUDPawnDisplayCompatibility(RimHUDPawnDisplayCompatibility.Feature.CapabilityLayout),
+            new RimHUDPawnDisplayCompatibility(RimHUDPawnDisplayCompatibility.Feature.ServiceEnergy),
             new RPGInventoryCompatibility(revamped: false),
             new RPGInventoryCompatibility(revamped: true),
             new RPGInventoryCompatibility(revamped: false, layout: true),
