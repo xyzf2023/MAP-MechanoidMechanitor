@@ -4,6 +4,10 @@
   <!-- 模块：通讯入口与主窗口 -->
   <MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Label>组建联盟</MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Label>
   <MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Text>想要终结机械主脑的威胁，仅凭我们自己的力量恐怕还不够。我们可以通过通讯台发布「公开脱离声明」，向其他派系表明立场逐步赢得他们的信任，邀请他们共同对抗机械主脑。\n\n我们与机械巢的连接仍未恢复，机械巢暂未将我们视为敌人。不过，如果收到这份声明，我们将与机械巢彻底敌对。在公开立场之前，我们最好先稳固据点，做好应对袭击的准备。</MAP_MechanoidMechanitor.Symbiosis.AllianceGuidance.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustGuidance.Label>关于信任度</MAP_MechanoidMechanitor.Symbiosis.TrustGuidance.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.TrustGuidance.Text>我们已经公开发表了脱离主脑的声明。其他派系不再单纯将我们视作敌对机械族；但对于我们的真实意图，他们仍然将信将疑。\n\n现在，我们可以通过行动逐步赢得各派系的信任。当某个派系对我们的信任度达到25时，我们便可以在通讯台邀请其加入「共生盟约」。\n\n信任度可以通过以下方式提升：\n\n进行贸易、完成派系委托、清理机械巢节点，以及其他能够提高对应派系好感的行为。\n\n注意：通过贸易和提升好感获得的信任度在一定时间内存在上限。若想更快获取其他派系的信任，我们需要用实际行动证明立场。</MAP_MechanoidMechanitor.Symbiosis.TrustGuidance.Text>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantGuidance.Label>关于共生盟约</MAP_MechanoidMechanitor.Symbiosis.CovenantGuidance.Label>
+  <MAP_MechanoidMechanitor.Symbiosis.CovenantGuidance.Text>「共生盟约」已经正式成立。各成员愿意暂时放下疑虑，尝试一种不同于过去的相处方式。\n\n现在开始，盟约将拥有共享的团结度。团结度代表盟约的整体凝聚力，并将决定盟约能够发展到何种阶段。\n\n正式加入盟约的派系会根据其对我们的信任程度，为盟约提供每日团结度。当成员的信任度超过50后，信任越高，每日提供的团结度也越多；而过低的信任会削弱盟约的团结。\n\n除此之外，成功完成联合军事行动等盟约合作，也可以直接提高团结度。\n\n随着团结度不断提升，盟约将逐步解锁更深入的合作方式。请尝试维持成员间的信任，这是盟约长久存在的基础。</MAP_MechanoidMechanitor.Symbiosis.CovenantGuidance.Text>
   <MAP_MechanoidMechanitor.Symbiosis.Access>接入共生盟约</MAP_MechanoidMechanitor.Symbiosis.Access>
   <MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>公开脱离声明</MAP_MechanoidMechanitor.Symbiosis.AccessDeclaration>
   <MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Label>可以建立多方通讯链路</MAP_MechanoidMechanitor.Symbiosis.ContactUnlocked.Label>

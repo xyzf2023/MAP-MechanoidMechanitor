@@ -794,6 +794,13 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 null,
                 mechHive);
 
+            // 复用原版延迟信件队列；待投递信件及到达 tick 由 LetterStack 保存。
+            Find.LetterStack.ReceiveLetter(
+                "MAP_MechanoidMechanitor.Symbiosis.TrustGuidance.Label".Translate(),
+                "MAP_MechanoidMechanitor.Symbiosis.TrustGuidance.Text".Translate(),
+                LetterDefOf.NeutralEvent,
+                delayTicks: 7500);
+
             return true;
         }
 
@@ -1332,6 +1339,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
+            // 历史最高等级已持久化且不会随解散清零，用于识别盟约首次成立。
+            bool firstFormation = highestCovenantLevel == 0 && CovenantMemberCount == 0;
             record.CovenantMember = true;
             record.ClearProposal();
             record.ClearInvitationCooldown();
@@ -1339,6 +1348,16 @@ namespace MAP_MechanoidMechanitor.Scenarios
             RecalculateGoodwillSituations();
             EnsureNeutralAmongMembers();
             RecalculateCovenantLevel();
+
+            if (firstFormation)
+            {
+                // 与信任度说明相同，复用原版可存档的延迟信件队列。
+                Find.LetterStack.ReceiveLetter(
+                    "MAP_MechanoidMechanitor.Symbiosis.CovenantGuidance.Label".Translate(),
+                    "MAP_MechanoidMechanitor.Symbiosis.CovenantGuidance.Text".Translate(),
+                    LetterDefOf.NeutralEvent,
+                    delayTicks: 7500);
+            }
 
             if (record.Faction != null)
             {
