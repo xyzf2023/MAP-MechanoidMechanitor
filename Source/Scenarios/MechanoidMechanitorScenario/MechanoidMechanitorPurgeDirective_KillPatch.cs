@@ -10,6 +10,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             public bool wasAlive;
             public bool wasHumanlike;
+            public bool wasMutant;
             public bool wasPlayerFaction;
         }
 
@@ -27,6 +28,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 && !__instance.health.isBeingKilled;
             __state.wasHumanlike =
                 __instance.RaceProps != null && __instance.RaceProps.Humanlike;
+            // 原版 Kill 可能清除变体身份，必须在死亡前捕获，避免蹒跚怪等变体获得肃清奖励。
+            __state.wasMutant = __instance.IsMutant || __instance.IsShambler;
             __state.wasPlayerFaction = __instance.Faction?.IsPlayer == true;
         }
 
@@ -39,7 +42,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             if (!GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive
-                || !__state.wasHumanlike)
+                || !__state.wasHumanlike
+                || __state.wasMutant)
             {
                 return;
             }
