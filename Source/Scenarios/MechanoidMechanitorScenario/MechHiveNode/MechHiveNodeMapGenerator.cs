@@ -164,15 +164,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             catch (Exception ex)
             {
                 Log.Error("[MAP-机械族机械师] 机械巢节点地图生成异常: " + ex);
-                if (node.IsCompleted)
-                {
-                    node.NotifyMapContentInitFailed();
-                    node.TryContinueFailedInitCleanup();
-                }
-                else if (node.MapInitState != MechHiveNodeMapInitState.Succeeded)
-                {
-                    node.NotifyMapContentInitSucceeded();
-                }
+                // 两个阶段生成异常都保持 Failed，禁止进入或把缺失内容误结算为肃清。
+                // 完成态继续精确回滚；建设中无事务记录，由现有安全空地图卸载流程恢复。
+                node.NotifyMapContentInitFailed();
+                node.TryContinueFailedInitCleanup();
             }
             finally
             {

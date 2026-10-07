@@ -324,16 +324,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 完整节点进入前准备：若存在未完成失败记录或非成功地图，先清理，禁止复用。
+        /// 节点进入前准备：建设中与完成态均禁止复用非成功地图；已有失败记录先精确清理。
         /// </summary>
         public bool TryPrepareCompletedMapForEntry(out string? failMessage)
         {
             failMessage = null;
-            if (!IsCompleted)
-            {
-                return true;
-            }
-
             if (initAttemptRecord != null
                 && !initAttemptRecord.CleanupFullyCompleted)
             {
@@ -377,16 +372,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 商队与运输舱共用的完整节点进入最终检查。
+        /// 商队与运输舱共用的节点进入最终检查；建设中与完成态都必须明确初始化成功。
         /// </summary>
         public bool TryValidateCompletedMapReadyForEntry(out string? failMessage)
         {
             failMessage = null;
-            if (!IsCompleted)
-            {
-                return true;
-            }
-
             if (IsMapContentReady)
             {
                 return true;
@@ -437,7 +427,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         /// </summary>
         private void TryPeriodicFailedMapRecovery()
         {
-            if (!IsCompleted || cleaned)
+            if (cleaned)
             {
                 return;
             }
@@ -452,7 +442,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 地图加载期间按固定间隔检查威胁；仅 Succeeded 完整节点可结算。
+        /// 地图加载期间按固定间隔检查威胁；建设中与完成态均只在 Succeeded 时结算。
         /// </summary>
         private void TryPeriodicThreatClearCheck()
         {
@@ -461,7 +451,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            if (!IsCompleted || mapInitState != MechHiveNodeMapInitState.Succeeded)
+            if (mapInitState != MechHiveNodeMapInitState.Succeeded)
             {
                 return;
             }
@@ -476,7 +466,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         /// <summary>
         /// 若当前地图已无有效节点威胁，则立即且仅一次标记为 Cleaned 并发送提示。
-        /// 仅完整节点且 mapInitState == Succeeded 时有效；失败初始化绝不可攻克结算。
+        /// 建设中与完成态均可结算，但必须明确初始化成功；失败初始化绝不可攻克结算。
         /// </summary>
         public bool TryMarkCleanedIfNoThreats()
         {
@@ -485,42 +475,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
-            // 建设中节点、以及任何非明确成功的初始化状态，均不得攻克结算。
-            if (!IsCompleted || mapInitState != MechHiveNodeMapInitState.Succeeded)
-            {
-                return false;
-            }
-
-            Map map = base.Map;
-            if (map == null || map.Disposed)
-            {
-                return false;
-            }
-
-            if (MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(map))
-            {
-                return false;
-            }
-
-            MarkCleaned();
-            return true;
-        }
-
-        /// <summary>
-        /// 联合军事行动专用攻克入口：同时允许建设中与完成态节点进入 Cleaned。
-        /// 普通进攻路径仍只使用 <see cref="TryMarkCleanedIfNoThreats"/>，
-        /// 不得因为本方法放宽了阶段限制就把全局清理条件一起放宽。
-        /// 只在地图有效、初始化已明确成功、且 <see cref="MechHiveNodeThreatUtility"/>
-        /// 判定全部节点威胁（含休眠/倒地机械族、炮塔、护盾、状态建筑、生成器）都消失时成立。
-        /// </summary>
-        public bool TryMarkCleanedByJointOperationIfNoThreats()
-        {
-            if (cleaned)
-            {
-                return false;
-            }
-
-            // 初始化失败或仍在 Generating 的节点绝不可被攻克结算。
+            // 任何非明确成功的初始化状态均不得攻克结算。
             if (mapInitState != MechHiveNodeMapInitState.Succeeded)
             {
                 return false;
@@ -544,6 +499,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             MarkCleaned();
             return true;
+        }
+
+        /// <summary>
+        /// 联合军事行动攻克入口：复用普通进攻的肃清判定，建设中与完成态规则一致。
+        /// 必须地图有效、初始化成功，且全部节点威胁（含休眠/倒地机械族和威胁建筑）消失。
+        /// </summary>
+        public bool TryMarkCleanedByJointOperationIfNoThreats()
+        {
+            return TryMarkCleanedIfNoThreats();
         }
 
         /// <summary>幂等清理状态转换：标记 Cleaned，停止参与未清理节点逻辑，并发送一次提示。</summary>
