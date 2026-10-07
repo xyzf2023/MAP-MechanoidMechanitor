@@ -370,10 +370,10 @@ namespace MAP_MechanoidMechanitor
         public bool ensureMechanoidMechanitorMinimumMinorPassion = true;
 
         /// <summary>
-        /// 默认关闭。开启后，阻止注册表中具有技能组件的机械族机械师自然流失技能经验。
+        /// 默认开启。开启后，阻止注册表中具有技能组件的机械族机械师自然流失技能经验。
         /// 全局设置实时生效，不阻止事件或其他 MOD 主动扣除经验。
         /// </summary>
-        public bool preventMechanoidMechanitorSkillDecay = false;
+        public bool preventMechanoidMechanitorSkillDecay = true;
 
         // ===== 共生盟约全局设置（所有存档共享） =====
 
@@ -827,7 +827,7 @@ namespace MAP_MechanoidMechanitor
             Scribe_Values.Look(
                 ref preventMechanoidMechanitorSkillDecay,
                 "preventMechanoidMechanitorSkillDecay",
-                false);
+                true);
 
             Scribe_Values.Look(
                 ref symbiosisCovenantGrowthMultiplierTenths,
