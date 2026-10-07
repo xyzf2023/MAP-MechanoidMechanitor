@@ -6,6 +6,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.DeadManSwitch;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.FamilyRelationsAdoption;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.Forgenest;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MobileDragoon;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.MiliraRace;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.NewRatkin;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.PerspectiveShift;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Expansion;
@@ -39,6 +40,7 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new FamilyRelationsAdoptionCompatibility(),
             new ForgenestCompatibility(),
             new MobileDragoonCompatibility(),
+            new MiliraEquipmentCompatibility(),
             new NewRatkinWanderingTraderInteractionCompatibility(),
             new NewRatkinWanderingTraderIncidentCompatibility(),
             new PerspectiveShiftControlCompatibility(),
