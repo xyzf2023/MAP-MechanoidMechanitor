@@ -112,7 +112,7 @@ namespace MAP_MechanoidMechanitor
                 if (thing is Pawn pawn)
                 {
                     if (pawn.Dead || pawn.health == null || pawn.health.isBeingKilled
-                        || (pawn == launcher && pawn.GetComp<CompSunBossState>() != null)) return;
+                        || pawn == launcher) return;
                 }
                 else
                 {
@@ -253,7 +253,8 @@ namespace MAP_MechanoidMechanitor
             explosion.doSoundEffects = false;
             explosion.damageFalloff = false;
             explosion.chanceToStartFire = 0f;
-            explosion.StartExplosion(null, launcher?.GetComp<CompSunBossState>() != null
+            // 本次发射者免疫自己的爆炸；原版会保存 ignoredThings，读档后仍有效。
+            explosion.StartExplosion(null, launcher != null
                 ? new List<Thing> { launcher } : null);
             AnnihilationHitEffect.StartBlackout(this, settings.VisualDurationTicks);
             DefDatabase<SoundDef>.GetNamedSilentFail("MAP_AnnihilationCannon_Expand")
@@ -271,7 +272,7 @@ namespace MAP_MechanoidMechanitor
                     .Concat(releasedPawns).Where(p => p != null && !p.Dead && !p.Destroyed
                         && p.MapHeld == Map && !attempted.Contains(p) && !attemptedKills.Contains(p.ThingID)
                         && !AnnihilationWhitelistUtility.IsProtected(p)
-                        && !(p == launcher && p.GetComp<CompSunBossState>() != null)).Distinct().ToList();
+                        && p != launcher).Distinct().ToList();
                 if (targets.Count == 0) break;
                 foreach (Pawn pawn in targets)
                 {
@@ -285,7 +286,7 @@ namespace MAP_MechanoidMechanitor
         internal bool WatchesDeath(Pawn pawn)
         {
             if (AnnihilationWhitelistUtility.IsProtected(pawn)) return false;
-            if (pawn == launcher && pawn.GetComp<CompSunBossState>() != null) return false;
+            if (pawn == launcher) return false;
             if (!Spawned || phase < 1 || finalCleanupDone || pawn.MapHeld != Map) return false;
             return releasedPawns.Contains(pawn) || innerCells.Contains(pawn.PositionHeld);
         }
