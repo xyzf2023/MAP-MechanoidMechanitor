@@ -225,7 +225,7 @@ namespace MAP_MechanoidMechanitor
             {
                 InsertBeforeFirst<ITab_Pawn_Log>(
                     tabs,
-                    GetSharedTab(typeof(ITab_Pawn_Gear)),
+                    GetSharedTab(ColonistLikeGearTabProvider.TabType),
                     fallbackIndex: tabs.Count);
             }
 

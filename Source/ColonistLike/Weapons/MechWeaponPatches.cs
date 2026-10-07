@@ -102,8 +102,7 @@ namespace MAP_MechanoidMechanitor
         }
 
         internal static bool DestroyGear(Pawn pawn) => pawn.kindDef.destroyGearOnDrop && !MechWeaponUtility.IsManaged(pawn);
-        internal static bool LockGear(Pawn pawn, Thing thing) => MechWeaponUtility.IsManaged(pawn)
-            ? MechWeaponUtility.IsBuiltIn(thing.def) : pawn.kindDef.destroyGearOnDrop;
+        internal static bool LockGear(Pawn pawn, Thing thing) => GearInteractionUtility.IsGearLocked(pawn, thing);
 
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase __originalMethod)
         {
@@ -181,8 +180,8 @@ namespace MAP_MechanoidMechanitor
     {
         private static bool Prefix(JobDriver_DropEquipment __instance, ref bool __result)
         {
-            if (!MechWeaponUtility.IsManaged(__instance.pawn)
-                || __instance.job.targetA.Thing is not Thing target || !MechWeaponUtility.IsBuiltIn(target.def)) return true;
+            if (__instance.job.targetA.Thing is not Thing target
+                || !GearInteractionUtility.IsProtectedBuiltIn(__instance.pawn, target)) return true;
             __result = false;
             return false;
         }

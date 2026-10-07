@@ -15,6 +15,7 @@ using MAP_MechanoidMechanitor.Compatibility.ThirdParty.GlitterworldDestroyer5Exp
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.ProgressionEducation;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.QualityBuilder;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimTalk;
+using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RPGStyleInventory;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.RimSkyBlock;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.SRTSExpanded;
 using MAP_MechanoidMechanitor.Compatibility.ThirdParty.VanillaGravshipExpanded;
@@ -53,6 +54,11 @@ namespace MAP_MechanoidMechanitor.Compatibility.ThirdParty
             new PerspectiveShiftFireAtWillCompatibility(),
             new PerspectiveShiftScenarioCompatibility(),
             new RimTalkCompatibility(),
+            new RPGInventoryCompatibility(revamped: false),
+            new RPGInventoryCompatibility(revamped: true),
+            new RPGInventoryCompatibility(revamped: false, layout: true),
+            new RPGInventoryCompatibility(revamped: true, layout: true),
+            new RPGInventoryCECompatibility(),
             new RimSkyBlockImperialTaskCompatibility(),
             new RimSkyBlockCoronationCompatibility(),
             new SRTSExpandedCompatibility(),
