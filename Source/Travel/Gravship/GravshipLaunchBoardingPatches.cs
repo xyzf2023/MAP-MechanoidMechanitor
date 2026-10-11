@@ -21,10 +21,10 @@ namespace MAP_MechanoidMechanitor
         private const int ErrorKeyArgResolve = 879349003;
 
         /// <summary>
-        /// 仅当 Pawn 是 GravshipLaunch 中实际分配的 pilot/copilot 合法机械驾驶员时，
+        /// 仅当 Pawn 是受支持发射仪式中实际分配的合法机械驾驶员或船员时，
         /// 跳过原版访客离开/动物/机械体自动登船分类。
         /// </summary>
-        public static bool ShouldSkipAutomaticBoardingForAssignedPilot(
+        public static bool ShouldSkipAutomaticBoardingForAssignedParticipant(
             Pawn? pawn,
             Precept_Ritual? ritual,
             RitualRoleAssignments? assignments)
@@ -42,6 +42,13 @@ namespace MAP_MechanoidMechanitor
             if (!GravshipLaunchRitualUtility.IsSupportedLaunch(ritual))
             {
                 return false;
+            }
+
+            // 实际船员由仪式职责登船；其资格不要求驾驶员的智识技能。
+            if (assignments.PawnSpectating(pawn)
+                && GravshipRitualCrewUtility.IsGravshipCrewCandidate(pawn))
+            {
+                return true;
             }
 
             if (!GravshipRitualPilotCandidateUtility.IsEligiblePilotCandidate(pawn))
@@ -83,7 +90,7 @@ namespace MAP_MechanoidMechanitor
                 nameof(Pawn.IsColonyMech));
             MethodInfo? skipHelper = AccessTools.Method(
                 typeof(GravshipLaunchBoarding_TryExecuteOn_Patch),
-                nameof(ShouldSkipAutomaticBoardingForAssignedPilot));
+                nameof(ShouldSkipAutomaticBoardingForAssignedParticipant));
 
             if (downedGetter == null
                 || forceVisitorsField == null
