@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RimWorld;
 using RimWorld.SketchGen;
 using UnityEngine;
@@ -17,6 +18,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
     /// </summary>
     public static class MechClusterBuildingUtility
     {
+        // 与原版集群共用建筑威胁规则，包含其他 MOD 对原版方法的补丁。
+        private static readonly Func<Thing, bool> VanillaIsBuildingThreat =
+            AccessTools.MethodDelegate<Func<Thing, bool>>(
+                AccessTools.Method(typeof(MechClusterUtility), "IsBuildingThreat"));
+
         public const string MemberTag = "MechClusterMember";
 
         public const string ProblemCauserTag = "MechClusterProblemCauser";
@@ -502,39 +508,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 建筑是否属于“有实际战斗或地图威胁”的机械集群建筑：
-        /// 炮塔、会苏醒生成 Pawn 的建筑、机械族生成器、地图状态建筑（含护盾）。
+        /// 原版集群的主要威胁建筑：炮塔、仍可生成 Pawn 的建筑、地图状态建筑。
+        /// 单纯护盾不属于主要威胁，由原版集群战败流程负责关机。
         /// </summary>
         public static bool IsBuildingThreat(Thing b)
         {
-            if (b == null)
-            {
-                return false;
-            }
-
-            CompPawnSpawnOnWakeup? spawnOnWakeup = b.TryGetComp<CompPawnSpawnOnWakeup>();
-            if (spawnOnWakeup != null && spawnOnWakeup.CanSpawn)
-            {
-                return true;
-            }
-
-            CompSpawnerPawn? spawnerPawn = b.TryGetComp<CompSpawnerPawn>();
-            if (spawnerPawn != null && spawnerPawn.pawnsLeftToSpawn != 0)
-            {
-                return true;
-            }
-
-            if (b.TryGetComp<CompProjectileInterceptor>() != null)
-            {
-                return true;
-            }
-
-            if (b.def?.building != null && b.def.building.IsTurret)
-            {
-                return true;
-            }
-
-            return b.TryGetComp<CompCauseGameCondition>() != null;
+            return b is Building && !b.Destroyed && VanillaIsBuildingThreat(b);
         }
 
         /// <summary>高低角护盾识别（护盾拦截器）。</summary>

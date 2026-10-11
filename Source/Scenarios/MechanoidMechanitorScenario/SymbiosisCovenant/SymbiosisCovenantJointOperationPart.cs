@@ -637,10 +637,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
             if (!offerPendingTargetThreatObserved)
             {
-                // 机械巢节点守军可能全部休眠，站立 Pawn 判定会漏判；
-                // 必须用节点专用威胁判定（含休眠/倒地机械族、炮塔、护盾、状态建筑、生成器）。
+                // 节点初始化证据包含休眠/倒地守军与原版集群主要威胁建筑；
+                // 此处仅确认目标曾有防御内容，完成条件另按原版集群判断。
                 bool nodeThreat = targetWorldObject is MAPMechHiveNode
-                    ? MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(map)
+                    ? MechHiveNodeThreatUtility.AnyMechHiveThreatEvidenceOnMap(map)
                     : AnyStandingTargetFactionDefender(map);
                 if (nodeThreat)
                 {
@@ -711,8 +711,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             // 机械巢节点：MapGenerated 早期守军尚未初始化时不得误判成功；
-            // 必须曾观察到真实节点威胁、初始化已成功，且 MechHiveNodeThreatUtility 判定无威胁，
-            // 才通过联合行动专用入口转入 Cleaned，再由 node.Cleaned 决定成功。
+            // 必须曾观察到真实节点防御内容、初始化已成功，且原版集群主要威胁建筑消失；
+            // 节点入口还会确保原版战败处理完成，再由 node.Cleaned 决定成功。
             if (target is MAPMechHiveNode node)
             {
                 Map? nodeMap = (target as MapParent)?.Map;
@@ -884,12 +884,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return;
             }
 
-            // 联合援军的离场与任务成功必须以既有的原版活动威胁清除标准为准：
-            // 由 QuestPartTickLight 周期性调用 TryCompleteOperationIfTargetCleared 判定，
-            // 以及 Site 发出的 <targetQuestTag>.NoActiveThreats / .AllEnemiesDefeated 信号触发。
-            // 目标派系是否还有站立 Pawn 不能单独决定离场：地图可能仍存在原版活动威胁
-            // （敌对炮塔、倒地敌人、其他敌对派系单位等），此时援军不得提前撤离。
-            // 本分支不再调用 CommandReinforcementsLeave()。
+            // 离场与成功由 TryCompleteOperationIfTargetCleared 按目标类型判断：
+            // 节点沿用原版集群主要威胁建筑，前哨与普通 Site 沿用各自的活动威胁规则。
+            // 目标派系是否还有站立 Pawn 不能单独决定离场。
         }
 
         /// <summary>
@@ -1218,12 +1215,11 @@ namespace MAP_MechanoidMechanitor.Scenarios
             bool hasThreat = false;
             if (targetWorldObject is MAPMechHiveNode node)
             {
-                // 机械巢节点的威胁包含休眠/倒地但未死亡的机械族、炮塔、高低角护盾、
-                // 状态建筑与机械族生成器：不得只用「站立目标派系 Pawn」判断，
-                // 否则守军尚未苏醒时会误判为没有威胁。
+                // 初始化证据包含休眠/倒地守军，避免守军尚未苏醒时漏记真实防御内容。
+                // 该证据只控制战斗就绪，完成判定仍复用节点的原版集群规则。
                 if (node.MapInitState == MechHiveNodeMapInitState.Succeeded
                     && map == node.Map
-                    && MechHiveNodeThreatUtility.AnyMechHiveThreatOnMap(map))
+                    && MechHiveNodeThreatUtility.AnyMechHiveThreatEvidenceOnMap(map))
                 {
                     hasThreat = true;
                 }
@@ -1302,7 +1298,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             // MAPMechHiveNode 本身是 Site，必须最先判断，再判断 MAPFactionOutpost，最后才是普通 Site。
-            // 多蓝图中任何一个集群仍有有效节点威胁时，任务都不得完成。
+            // 多蓝图中任何一处仍有原版集群主要威胁建筑时，任务都不得完成。
             if (target is MAPMechHiveNode node)
             {
                 node.TryMarkCleanedByJointOperationIfNoThreats();

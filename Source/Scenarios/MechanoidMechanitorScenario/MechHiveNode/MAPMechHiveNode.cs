@@ -5,6 +5,7 @@ using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
 using Verse;
+using Verse.AI.Group;
 
 namespace MAP_MechanoidMechanitor.Scenarios
 {
@@ -87,6 +88,12 @@ namespace MAP_MechanoidMechanitor.Scenarios
         private MechHiveNodeMapInitState mapInitState = MechHiveNodeMapInitState.None;
 
         private MechHiveNodeInitAttemptRecord? initAttemptRecord;
+
+        // 保存节点自己的原版 Lord；建筑集合与战败状态由 LordJob 原生存档。
+        private Lord? clusterLord;
+
+        // 旧档首次恢复后即使 Lord 已消失，也不再误绑定地图上后来出现的集群。
+        private bool clusterLordRecorded;
 
         public MechanoidMechanitorMechHiveNodePhase Phase => phase;
 
@@ -244,6 +251,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             this.cleanedLetterSent = false;
             this.mapInitState = MechHiveNodeMapInitState.None;
             this.initAttemptRecord = null;
+            ResetClusterLord();
 
             // 建设态与完成态各保存一份快照：建设中节点自然升级为完成态后，
             // 仍使用创建时保存的完成态预算，而不是升级时刻的当前财富。
@@ -272,6 +280,59 @@ namespace MAP_MechanoidMechanitor.Scenarios
 
         public MechHiveNodeInitAttemptRecord? CurrentInitAttemptRecord => initAttemptRecord;
 
+        /// <summary>绑定本轮节点守军；初始化完成前禁止触发集群战败。</summary>
+        internal void RegisterClusterLord(Lord lord)
+        {
+            clusterLord = lord;
+            clusterLordRecorded = true;
+            MechHiveNodeThreatUtility.SetClusterDefeatEnabled(lord, false);
+        }
+
+        private void ResetClusterLord()
+        {
+            clusterLord = null;
+            clusterLordRecorded = false;
+        }
+
+        /// <summary>旧存档从现有节点守军恢复一次引用，不重新生成建筑或守军。</summary>
+        internal Lord? ResolveClusterLord()
+        {
+            if (clusterLordRecorded)
+            {
+                return clusterLord;
+            }
+
+            if (mapInitState != MechHiveNodeMapInitState.Succeeded
+                || !base.HasMap
+                || base.Map == null
+                || base.Map.Disposed)
+            {
+                return null;
+            }
+
+            Faction? mechHive = MechHiveNodeRelationUtility.GetMechHive();
+            if (mechHive != null)
+            {
+                foreach (Lord lord in base.Map.lordManager.lords)
+                {
+                    if (lord.faction != mechHive
+                        || lord.LordJob is not LordJob_SleepThenMechanoidsDefend lordJob
+                        || MechHiveNodeThreatUtility.ClusterDefeatEnabled(lordJob))
+                    {
+                        continue;
+                    }
+
+                    // 旧节点原来关闭 isMechCluster，不接管后来出现的原版集群。
+                    clusterLord = lord;
+                    break;
+                }
+            }
+
+            clusterLordRecorded = true;
+            MechHiveNodeThreatUtility.SetClusterDefeatEnabled(clusterLord, true);
+            return clusterLord;
+        }
+
         /// <summary>成功后丢弃追踪，保留地图内容。</summary>
         public void FinishInitAttemptAsSucceeded()
         {
@@ -281,11 +342,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 initAttemptRecord.AbandonTrackingKeepContent();
                 initAttemptRecord = null;
             }
+
+            MechHiveNodeThreatUtility.SetClusterDefeatEnabled(clusterLord, true);
         }
 
         public void NotifyMapContentInitStarted()
         {
             mapInitState = MechHiveNodeMapInitState.Generating;
+            ResetClusterLord();
         }
 
         public void NotifyMapContentInitSucceeded()
@@ -465,7 +529,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
-        /// 若当前地图已无有效节点威胁，则立即且仅一次标记为 Cleaned 并发送提示。
+        /// 节点全部蓝图已无原版集群主要威胁建筑，且原版战败处理完成后，仅结算一次。
         /// 建设中与完成态均可结算，但必须明确初始化成功；失败初始化绝不可攻克结算。
         /// </summary>
         public bool TryMarkCleanedIfNoThreats()
@@ -497,13 +561,18 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            if (!MechHiveNodeThreatUtility.TryFinishClusterDefeat(ResolveClusterLord()))
+            {
+                return false;
+            }
+
             MarkCleaned();
             return true;
         }
 
         /// <summary>
         /// 联合军事行动攻克入口：复用普通进攻的肃清判定，建设中与完成态规则一致。
-        /// 必须地图有效、初始化成功，且全部节点威胁（含休眠/倒地机械族和威胁建筑）消失。
+        /// 必须地图有效、初始化成功，且全部蓝图的主要威胁建筑消失并完成原版战败处理。
         /// </summary>
         public bool TryMarkCleanedByJointOperationIfNoThreats()
         {
@@ -519,6 +588,10 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             cleaned = true;
+            // 原版 Site 的 NoActiveThreats 可能仍被残留守军阻止；联合行动以节点集群解除为准。
+            SymbiosisCovenantJointOperationUtility.NotifyJointOperationTargetCleared(
+                this,
+                "MAPMechHiveNodeCleaned");
             if (!cleanedLetterSent)
             {
                 cleanedLetterSent = true;
@@ -579,6 +652,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             acceleratedCompletionTick = -1;
             mapInitState = MechHiveNodeMapInitState.None;
             initAttemptRecord = null;
+            ResetClusterLord();
 
             // 切换主 SitePart（标签、说明、地图生成配置随之切换）。
             parts.Clear();
@@ -849,6 +923,8 @@ namespace MAP_MechanoidMechanitor.Scenarios
         {
             base.Notify_MyMapRemoved(map);
 
+            ResetClusterLord();
+
             if (cleaned)
             {
                 return;
@@ -955,6 +1031,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             Scribe_Values.Look(ref cleanedLetterSent, "MAP_cleanedLetterSent", false);
             Scribe_Values.Look(ref mapInitState, "MAP_mapInitState", MechHiveNodeMapInitState.None);
             Scribe_Deep.Look(ref initAttemptRecord, "MAP_initAttemptRecord");
+
+            if (Scribe.mode == LoadSaveMode.Saving
+                && clusterLord != null
+                && !clusterLord.lordManager.lords.Contains(clusterLord))
+            {
+                // Lord 被移除后不再有原生存档对象，避免写入无法解析的引用；登记标记仍保留。
+                clusterLord = null;
+            }
+
+            Scribe_References.Look(ref clusterLord, "MAP_clusterLord");
+            Scribe_Values.Look(ref clusterLordRecorded, "MAP_clusterLordRecorded", false);
         }
     }
 }

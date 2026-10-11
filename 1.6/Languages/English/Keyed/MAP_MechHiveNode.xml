@@ -7,7 +7,7 @@
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>A nearby mechanoid hive node has been completed. It may send mechanoids to raid the colony.</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>A nearby mechanoid hive node has been completed.</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>Mechanoid hive node cleared</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>
-  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>The threat at this mechanoid hive node has been eliminated.</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>The mech cluster at this mechanoid hive node has been defeated.</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>
   <MAP_MechanoidMechanitor.MechHiveNode.MaterialDemand>Materials required: {0} ×{1}</MAP_MechanoidMechanitor.MechHiveNode.MaterialDemand>
   <MAP_MechanoidMechanitor.MechHiveNode.Caravan.GoDeliver>Travel to deliver materials: {0}</MAP_MechanoidMechanitor.MechHiveNode.Caravan.GoDeliver>
   <MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Label>Provide materials</MAP_MechanoidMechanitor.MechHiveNode.ProvideMaterials.Label>

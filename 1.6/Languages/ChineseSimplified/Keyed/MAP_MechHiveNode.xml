@@ -9,7 +9,7 @@
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>附近一个机械巢节点已经建设完毕。该节点可能会派出机械族袭击殖民地。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Hostile>
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>附近一个机械巢节点已经建设完毕。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Completed.Neutral>
   <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>机械巢节点已肃清</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Label>
-  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>该机械巢节点的威胁已被消灭。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>
+  <MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>该机械巢节点的集群威胁已解除。</MAP_MechanoidMechanitor.MechHiveNode.Letter.Cleaned.Text>
 
   <!-- 模块：建设材料需求 -->
   <MAP_MechanoidMechanitor.MechHiveNode.MaterialDemand>材料需求：{0} ×{1}</MAP_MechanoidMechanitor.MechHiveNode.MaterialDemand>

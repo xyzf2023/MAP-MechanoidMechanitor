@@ -267,7 +267,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 sharedDefendRadius,
                 sharedDefSpot,
                 canAssaultColony: false,
-                isMechCluster: false);
+                isMechCluster: true);
             Lord lord = LordMaker.MakeNewLord(mechHive, lordJob, map);
             if (lord == null)
             {
@@ -275,6 +275,7 @@ namespace MAP_MechanoidMechanitor.Scenarios
             }
 
             session.Lord = lord;
+            node.RegisterClusterLord(lord);
             record.RegisterLord(lord);
 
             MechClusterBuildingInitUtility.InitializeSpawnedBuildings(
@@ -1450,8 +1451,9 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 defendRadius,
                 center,
                 canAssaultColony: false,
-                isMechCluster: false);
+                isMechCluster: true);
             Lord lord = LordMaker.MakeNewLord(mechHive, lordJob, map);
+            node.RegisterClusterLord(lord);
 
             // 建设中节点：复用同一初始化链路（休眠 + CompSpawnerPawn 首次生成时间），无 Royalty 必需建筑。
             MechClusterBuildingInitUtility.InitializeSpawnedBuildings(
