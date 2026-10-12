@@ -167,9 +167,8 @@ namespace MAP_MechanoidMechanitor
             if (ModsConfig.IdeologyActive && !BedUtility.WillingToShareBed(mech, human))
                 return SyntheticRelationshipFailure.IdeologyForbids;
             var traits = human.story?.traits;
-            if (traits != null && (traits.HasTrait(TraitDefOf.Asexual)
-                || (!traits.HasTrait(TraitDefOf.Bisexual)
-                    && (traits.HasTrait(TraitDefOf.Gay) ? human.gender != mech.gender : human.gender == mech.gender))))
+            // 仿生伴侣适配人类伴侣的性取向，不以机械体性别限制亲热。
+            if (traits?.HasTrait(TraitDefOf.Asexual) == true)
                 return SyntheticRelationshipFailure.IntimacyUnwilling;
             return null;
         }

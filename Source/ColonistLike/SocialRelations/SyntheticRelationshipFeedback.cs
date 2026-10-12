@@ -62,7 +62,7 @@ namespace MAP_MechanoidMechanitor
                 case SyntheticRelationshipFailure.NotPartners: return "伴侣关系、模块授权或人机配对资格无效。";
                 case SyntheticRelationshipFailure.IntimacyOff: return "尚未开启与伴侣爱爱。";
                 case SyntheticRelationshipFailure.IdeologyForbids: return "至少一方肉欲戒律不允许当前关系阶段亲热。";
-                case SyntheticRelationshipFailure.IntimacyUnwilling: return "人类伴侣的性取向或无性恋特性不允许亲热。";
+                case SyntheticRelationshipFailure.IntimacyUnwilling: return "人类伴侣的无性恋特性不允许亲热。";
                 default: return "未知伴侣资格状态：" + failure.Value;
             }
         }
