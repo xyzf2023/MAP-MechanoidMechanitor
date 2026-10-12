@@ -2453,6 +2453,38 @@ namespace MAP_MechanoidMechanitor.Scenarios
         }
 
         /// <summary>
+        /// 仅供本 MOD 的 DEV 地点移除按钮：视为目标已清理，复用现有成功结算。
+        /// 正式战斗入口仍要求援军、交战和威胁确认等就绪条件。
+        /// </summary>
+        public void DevForceCompleteIfTargetCleared(WorldObject clearedTarget)
+        {
+            if (!DebugSettings.ShowDevGizmos
+                || quest == null
+                || clearedTarget == null
+                || !ReferenceEquals(targetWorldObject, clearedTarget)
+                || !IsActive
+                || successApplied
+                || failureApplied
+                || invalidEndApplied
+                || declinedOrExpiredApplied
+                || !IsTargetWorldObjectTrulyCleared(clearedTarget))
+            {
+                return;
+            }
+
+            // 已满足正常结算条件时先复用原本成功流程；DEV 专用入口仅跳过战斗就绪检查。
+            if (TryCompleteOfferPendingTarget(clearedTarget, "DevSiteCleared"))
+            {
+                return;
+            }
+
+            if (IsOperationAccepted)
+            {
+                BeginSuccess("DevSiteCleared", completionBeforeAcceptance: false);
+            }
+        }
+
+        /// <summary>
         /// 据点（Settlement）被原版 SettlementDefeatUtility 真正摧毁时由窄范围 Patch 调用。
         /// 直接复用外部目标清除结算路径：内部会再次核对引用相等、是否已结束、
         /// 目标是否真实清除（Settlement 取 settlement.Destroyed），以及是否已接取且战斗就绪；

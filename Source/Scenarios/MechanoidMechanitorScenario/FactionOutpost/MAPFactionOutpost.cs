@@ -116,7 +116,14 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 yield return gizmo;
             }
 
-            if (!DebugSettings.ShowDevGizmos || !IsBuilding || cleaned)
+            if (!DebugSettings.ShowDevGizmos)
+            {
+                yield break;
+            }
+
+            yield return DevSiteRemovalUtility.CreateRemoveGizmo(this);
+
+            if (!IsBuilding || cleaned)
             {
                 yield break;
             }
@@ -373,6 +380,29 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 return false;
             }
 
+            MarkCleaned();
+            return true;
+        }
+
+        /// <summary>仅供 DEV 删除：跳过地图威胁验证，但使用正常清理通知。</summary>
+        internal void DevForceMarkCleaned()
+        {
+            if (!DebugSettings.ShowDevGizmos || !Spawned || Destroyed)
+            {
+                return;
+            }
+
+            MarkCleaned();
+        }
+
+        /// <summary>正常战斗结算与 DEV 清理共用的幂等状态转移。</summary>
+        private void MarkCleaned()
+        {
+            if (cleaned)
+            {
+                return;
+            }
+
             cleaned = true;
 
             // 前哨确认无活动敌对威胁后，向联合军事行动系统发送一次精确清除通知。
@@ -394,7 +424,6 @@ namespace MAP_MechanoidMechanitor.Scenarios
                     Faction);
             }
 
-            return true;
         }
 
         public bool TryValidateMapReadyForEntry(out string? failMessage)

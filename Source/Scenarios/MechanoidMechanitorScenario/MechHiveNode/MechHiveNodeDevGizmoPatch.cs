@@ -37,8 +37,15 @@ namespace MAP_MechanoidMechanitor.Scenarios
                 yield return gizmo;
             }
 
-            // 与普通派系前哨保持同一显示规则：仅 DEV + 上帝模式、仅建设中、已清理不显示。
-            if (!DebugSettings.ShowDevGizmos || !node.IsBuilding || node.Cleaned)
+            if (!DebugSettings.ShowDevGizmos)
+            {
+                yield break;
+            }
+
+            yield return DevSiteRemovalUtility.CreateRemoveGizmo(node);
+
+            // 立即完成建设仍只针对尚未清理的建设中节点。
+            if (!node.IsBuilding || node.Cleaned)
             {
                 yield break;
             }

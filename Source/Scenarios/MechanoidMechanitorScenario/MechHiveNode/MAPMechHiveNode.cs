@@ -579,6 +579,17 @@ namespace MAP_MechanoidMechanitor.Scenarios
             return TryMarkCleanedIfNoThreats();
         }
 
+        /// <summary>仅供 DEV 删除：跳过建筑威胁验证，但复用正常清理信件与任务通知。</summary>
+        internal void DevForceMarkCleaned()
+        {
+            if (!DebugSettings.ShowDevGizmos || !Spawned || Destroyed)
+            {
+                return;
+            }
+
+            MarkCleaned();
+        }
+
         /// <summary>幂等清理状态转换：标记 Cleaned，停止参与未清理节点逻辑，并发送一次提示。</summary>
         private void MarkCleaned()
         {
