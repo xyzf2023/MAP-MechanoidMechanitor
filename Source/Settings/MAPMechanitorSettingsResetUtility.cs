@@ -92,6 +92,7 @@ namespace MAP_MechanoidMechanitor
                     break;
                 case MAPSettingsSection.Storyteller:
                     settings.showWheelOfFateThemeDetails = defaults.showWheelOfFateThemeDetails;
+                    settings.playWheelOfFateThemeChangeSpecialSound = defaults.playWheelOfFateThemeChangeSpecialSound;
                     settings.lockWheelOfFateInitialTheme = defaults.lockWheelOfFateInitialTheme;
                     settings.disabledWheelOfFateThemes = new List<string>(defaults.disabledWheelOfFateThemes);
                     settings.wheelOfFate = new WheelOfFateSettings();

@@ -215,13 +215,14 @@ namespace MAP_MechanoidMechanitor
         {
             if (!announcementPending || currentTheme == null || Find.LetterStack == null) return;
             bool detailed = MAPMechanitorMod.Settings?.showWheelOfFateThemeDetails ?? true;
+            bool specialSound = MAPMechanitorMod.Settings?.playWheelOfFateThemeChangeSpecialSound ?? true;
             if (detailed)
             {
                 Find.LetterStack.ReceiveLetter(
                     "MAP_WheelOfFate.ThemeChanged.Label".Translate(currentTheme.label),
                     "MAP_WheelOfFate.ThemeChanged.Text".Translate(currentTheme.label, currentTheme.description),
                     currentTheme.letterDef ?? LetterDefOf.NeutralEvent,
-                    playSound: false);
+                    playSound: !specialSound);
             }
             else
             {
@@ -229,11 +230,12 @@ namespace MAP_MechanoidMechanitor
                     "MAP_WheelOfFate.ThemeChanged.HiddenLabel".Translate(),
                     "MAP_WheelOfFate.ThemeChanged.HiddenText".Translate(),
                     LetterDefOf.NeutralEvent,
-                    playSound: false);
+                    playSound: !specialSound);
             }
 
-            DefDatabase<SoundDef>.GetNamedSilentFail("MAP_WheelOfFate_ThemeChanged")
-                ?.PlayOneShotOnCamera();
+            if (specialSound)
+                DefDatabase<SoundDef>.GetNamedSilentFail("MAP_WheelOfFate_ThemeChanged")
+                    ?.PlayOneShotOnCamera();
             announcementPending = false;
         }
     }

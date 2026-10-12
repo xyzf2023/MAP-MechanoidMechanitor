@@ -25,6 +25,8 @@ namespace MAP_MechanoidMechanitor
             listing.CheckboxLabeled("MAP_WheelOfFate.Settings.Details.Label".Translate(),
                 ref settings.showWheelOfFateThemeDetails,
                 "MAP_WheelOfFate.Settings.Details.Description".Translate());
+            listing.CheckboxLabeled("MAP_WheelOfFate.Settings.ThemeChangeSpecialSound.Label".Translate(),
+                ref settings.playWheelOfFateThemeChangeSpecialSound);
             listing.CheckboxLabeled("MAP_WheelOfFate.Settings.InitialTheme.Label".Translate(),
                 ref settings.lockWheelOfFateInitialTheme,
                 "MAP_WheelOfFate.Settings.InitialTheme.Description".Translate());
