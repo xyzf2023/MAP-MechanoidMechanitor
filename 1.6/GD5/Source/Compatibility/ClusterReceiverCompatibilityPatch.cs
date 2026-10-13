@@ -9,7 +9,7 @@ namespace MAP_MechanoidMechanitor.GD5
 {
     /// <summary>
     /// 短波接收器运行时兼容：
-    /// 肃清指令开启时禁止扫描；机械巢实际为盟友时阻止敌对集群任务并改为对应扫描结果。
+    /// 肃清指令开启且机械巢当前非敌对时禁止扫描；机械巢实际为盟友时阻止敌对集群任务并改为对应扫描结果。
     /// </summary>
     internal static class ClusterReceiverCompatibilityPatch
     {
@@ -34,7 +34,8 @@ namespace MAP_MechanoidMechanitor.GD5
 
         internal static bool CanBeUsedByPrefix(ref AcceptanceReport __result)
         {
-            if (!GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive)
+            if (!MechanoidMechanitorPurgeDirectiveRelationUtility
+                .ShouldApplyNonHostileMechHiveRestrictions())
             {
                 return true;
             }
@@ -46,8 +47,9 @@ namespace MAP_MechanoidMechanitor.GD5
 
         internal static bool DoEffectPrefix(CompUseEffect_Detection __instance)
         {
-            // 读条过程中可能切换剧情路线，因此完成时必须再次按当前状态判断。
-            if (GameComponent_MechanoidMechanitorStoryState.IsPurgeDirectiveActive)
+            // 读条过程中可能切换剧情路线或机械巢关系，因此完成时必须再次按当前状态判断。
+            if (MechanoidMechanitorPurgeDirectiveRelationUtility
+                .ShouldApplyNonHostileMechHiveRestrictions())
             {
                 return false;
             }
