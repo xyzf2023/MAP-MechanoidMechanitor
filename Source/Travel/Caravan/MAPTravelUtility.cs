@@ -15,6 +15,29 @@ namespace MAP_MechanoidMechanitor
             return MAPMechanitorTravelUtility.CanCollectCaravanItems(pawn);
         }
 
+        /// <summary>远行队牵引者：保留殖民者资格，机械体须有远行能力及驯兽授权。</summary>
+        public static bool CanActAsCaravanAnimalRoper(Pawn? pawn)
+        {
+            if (pawn == null)
+            {
+                return false;
+            }
+
+            if (pawn.IsColonist)
+            {
+                return true;
+            }
+
+            return pawn.RaceProps.IsMechanoid
+                && pawn.Spawned
+                && !pawn.Destroyed
+                && !pawn.InMentalState
+                && pawn.roping != null
+                && (MAPMechanitorTravelUtility.CanLeadCaravan(pawn)
+                    || MAPMechanitorTravelUtility.CanCollectCaravanItems(pawn))
+                && AnimalHandlingWorkUtility.IsAuthorized(pawn);
+        }
+
         public static bool ShouldCheckCaravanExitReachability(Pawn? pawn)
         {
             if (pawn == null)

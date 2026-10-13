@@ -69,7 +69,8 @@ namespace MAP_MechanoidMechanitor
             ReplaceSingleIsColonistCall(
                 IEnumerable<CodeInstruction> instructions,
                 string targetMethodName,
-                int errorKeyMatchCount)
+                int errorKeyMatchCount,
+                string helperMethodName = nameof(MAPTravelUtility.CanActAsCaravanCollector))
         {
             List<CodeInstruction> codes =
                 new List<CodeInstruction>(instructions);
@@ -79,16 +80,16 @@ namespace MAP_MechanoidMechanitor
                     typeof(Pawn),
                     nameof(Pawn.IsColonist));
 
-            MethodInfo? collectorHelper =
+            MethodInfo? helperMethod =
                 AccessTools.Method(
                     typeof(MAPTravelUtility),
-                    nameof(MAPTravelUtility.CanActAsCaravanCollector));
+                    helperMethodName);
 
-            if (isColonistGetter == null || collectorHelper == null)
+            if (isColonistGetter == null || helperMethod == null)
             {
                 Log.ErrorOnce(
                     $"{LogPrefix}无法解析 Pawn.IsColonist 或 "
-                    + "MAPTravelUtility.CanActAsCaravanCollector，"
+                    + $"MAPTravelUtility.{helperMethodName}，"
                     + $"目标方法 {targetMethodName} 保留原版行为。",
                     ErrorKeyResolveMembers);
 
@@ -123,7 +124,7 @@ namespace MAP_MechanoidMechanitor
 
             CodeInstruction instruction = codes[matchIndex];
             instruction.opcode = OpCodes.Call;
-            instruction.operand = collectorHelper;
+            instruction.operand = helperMethod;
 
             return codes;
         }

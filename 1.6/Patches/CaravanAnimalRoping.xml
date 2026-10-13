@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- 保留原版任务节点，只扩展三个动物牵引职责的执行者条件。 -->
+  <Operation Class="PatchOperationAttributeSet">
+    <xpath>Defs/DutyDef[defName="PrepareCaravan_GatherAnimals" or defName="PrepareCaravan_CollectAnimals" or defName="ReturnedCaravan_PenAnimals"]/thinkNode/subNodes/li[@Class="ThinkNode_ConditionalColonist"]</xpath>
+    <attribute>Class</attribute>
+    <value>MAP_MechanoidMechanitor.ThinkNode_ConditionalCaravanAnimalRoper</value>
+  </Operation>
+</Patch>
