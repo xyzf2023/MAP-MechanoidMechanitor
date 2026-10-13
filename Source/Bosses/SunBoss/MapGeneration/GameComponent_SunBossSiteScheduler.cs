@@ -51,7 +51,7 @@ namespace MAP_MechanoidMechanitor
                     || WealthUtility.PlayerWealth < MinimumWealth) return;
 
                 // 仅在首次满足条件时随机一次。财富与研究状态之后不再参与调度。
-                scheduledGenerationTick = now + Rand.RangeInclusive(15 * GenDate.TicksPerDay, 30 * GenDate.TicksPerDay);
+                scheduledGenerationTick = now + Rand.RangeInclusive(3 * GenDate.TicksPerDay, 5 * GenDate.TicksPerDay);
                 nextGenerationAttemptTick = scheduledGenerationTick;
                 scheduled = true;
             }
