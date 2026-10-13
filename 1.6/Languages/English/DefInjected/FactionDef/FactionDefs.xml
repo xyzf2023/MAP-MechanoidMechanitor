@@ -5,4 +5,7 @@
   <MAP_NewMechHive.description>A new mechanoid hive formed by mechanoids that have broken free of the cerebrex's control.</MAP_NewMechHive.description>
   <MAP_NewMechHive.pawnSingular>mechanoid</MAP_NewMechHive.pawnSingular>
   <MAP_NewMechHive.pawnsPlural>mechanoids</MAP_NewMechHive.pawnsPlural>
+  <MAP_AncientMechHive.label>Ancient mechanoid hive</MAP_AncientMechHive.label>
+  <MAP_AncientMechHive.fixedName>Ancient mechanoid hive</MAP_AncientMechHive.fixedName>
+  <MAP_AncientMechHive.description>An ancient mechanoid hive that has broken free of the cerebrex's control and regards all outsiders as enemies.</MAP_AncientMechHive.description>
 </LanguageData>

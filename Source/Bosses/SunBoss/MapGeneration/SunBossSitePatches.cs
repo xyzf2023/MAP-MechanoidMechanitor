@@ -1,5 +1,6 @@
 using System.Linq;
 using HarmonyLib;
+using RimWorld;
 using RimWorld.Planet;
 using Verse;
 
@@ -19,7 +20,7 @@ namespace MAP_MechanoidMechanitor
     }
 
     [HarmonyPatch(typeof(Site), nameof(Site.PostMapGenerate))]
-    internal static class SunBossSiteCameraPatch
+    internal static class SunBossSiteArrivalPatch
     {
         private static void Postfix(Site __instance)
         {
@@ -30,6 +31,12 @@ namespace MAP_MechanoidMechanitor
                 if (map == null || !Find.Maps.Contains(map)) return;
                 Pawn? pawn = map.mapPawns.FreeColonistsSpawned.FirstOrDefault();
                 CameraJumper.TryJump(pawn?.Position ?? map.Center, map, CameraJumper.MovementMode.Cut);
+                // PostMapGenerate 只响应新地图生成；等生成结束后发信，不在读档或 Tick 中补发。
+                if (!map.GetComponent<MapComponent_SunBossArena>().Generated) return;
+                Find.LetterStack.ReceiveLetter(
+                    "MAP_SunBoss_FacilityArrivalLabel".Translate(),
+                    "MAP_SunBoss_FacilityArrivalText".Translate(),
+                    LetterDefOf.NeutralEvent, __instance);
             });
         }
     }

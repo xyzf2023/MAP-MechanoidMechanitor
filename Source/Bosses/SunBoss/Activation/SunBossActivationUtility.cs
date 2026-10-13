@@ -91,7 +91,8 @@ namespace MAP_MechanoidMechanitor
         {
             return pawn != null && pawn.Spawned && pawn.Map == map && !pawn.Dead && !pawn.Downed
                 && pawn.RaceProps.IsMechanoid && pawn.GetComp<CompSunBossState>() == null
-                && pawn.Faction == Faction.OfMechanoids && pawn.HostileTo(Faction.OfPlayer)
+                && pawn.Faction == map.GetComponent<MapComponent_SunBossArena>().CombatFaction
+                && pawn.HostileTo(Faction.OfPlayer)
                 && pawn.jobs != null && pawn.health.capacities.CapableOf(PawnCapacityDefOf.Moving)
                 && !pawn.IsSelfShutdown() && !pawn.IsDeactivated()
                 && (allowStunned || pawn.stances?.stunner?.Stunned != true)

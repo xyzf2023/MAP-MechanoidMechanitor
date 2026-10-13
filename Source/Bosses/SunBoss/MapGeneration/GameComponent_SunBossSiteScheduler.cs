@@ -1,3 +1,4 @@
+using System;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -17,6 +18,20 @@ namespace MAP_MechanoidMechanitor
         private int nextGenerationAttemptTick = -1;
 
         public GameComponent_SunBossSiteScheduler(Game game) { }
+
+        public override void LoadedGame()
+        {
+            base.LoadedGame();
+            // 此时世界对象、派系交叉引用和地图均已恢复；每次读档只执行一遍。
+            try
+            {
+                SunBossFactionUtility.RepairFacilityFactionsAfterLoad();
+            }
+            catch (Exception ex)
+            {
+                Log.Error("[MAP-机械族机械师] 加载存档时修复太阳设施派系失败：" + ex);
+            }
+        }
 
         public override void GameComponentTick()
         {

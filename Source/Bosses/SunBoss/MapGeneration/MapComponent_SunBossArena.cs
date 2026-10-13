@@ -14,6 +14,12 @@ namespace MAP_MechanoidMechanitor
         public CellRect ArenaBounds;
         public Building? Core;
         public List<Building> Stabilizers = new List<Building>();
+        private Faction? facilityFaction;
+        internal Faction? FacilityFaction => facilityFaction;
+        internal Faction? CombatFaction => facilityFaction ?? Faction.OfMechanoids;
+        // 新地图生成及读档归属修复共用；始终读取世界设施，不保留失效的旧缓存。
+        internal Faction BindFacilityFaction()
+            => facilityFaction = SunBossFactionUtility.GetFacilityFaction(map);
         internal int RemainingStabilizers => Stabilizers.Count(s => s != null && !s.Destroyed && s.Spawned && s.Map == map);
         private Pawn? bossPawn;
         private bool bossDefeated;
@@ -38,7 +44,7 @@ namespace MAP_MechanoidMechanitor
         private bool noRallyCandidates;
         private int ActiveSummonedMechCount => summonedMechs.Count(p => p != null && !p.Destroyed
             && !p.Dead && p.Spawned && p.Map == map && !p.Downed
-            && p.Faction == Faction.OfMechanoids && p.HostileTo(Faction.OfPlayer));
+            && p.Faction == CombatFaction && p.HostileTo(Faction.OfPlayer));
         internal bool NoRallyCandidates => noRallyCandidates
             && ActiveSummonedMechCount < SunBossActivationUtility.BatchSize;
 
@@ -230,7 +236,7 @@ namespace MAP_MechanoidMechanitor
 
             // 先生成 Pawn，再移除建筑；生成失败时保留反应堆。
             Pawn boss = PawnGenerator.GeneratePawn(
-                DefDatabase<PawnKindDef>.GetNamed("MAP_Mech_SunBOSS"), Faction.OfMechanoids);
+                DefDatabase<PawnKindDef>.GetNamed("MAP_Mech_SunBOSS"), CombatFaction);
             // 只交接表现；实际生成、开场脉冲及援军调度仍走原有流程。
             boss.GetComp<CompSunBossState>()?.BeginAwakeningHandoff(core.thingIDNumber);
             IntVec3 position = core.Position;
@@ -306,7 +312,7 @@ namespace MAP_MechanoidMechanitor
             {
                 // 旧档没有历史召唤名单：将大厅内和正在集结的敌方机械体纳入限流。
                 summonedMechs = map.mapPawns.AllPawnsSpawned.Where(p => p != bossPawn
-                    && !p.Dead && p.RaceProps.IsMechanoid && p.Faction == Faction.OfMechanoids
+                    && !p.Dead && p.RaceProps.IsMechanoid && p.Faction == CombatFaction
                     && (ArenaBounds.Contains(p.Position) || p.CurJobDef?.defName == "MAP_SunBossRally"))
                     .Concat(pendingRallyMechs.Take(SunBossActivationUtility.BatchSize)).Distinct().ToList();
                 pendingRallyMechs = pendingRallyMechs.Take(SunBossActivationUtility.BatchSize).ToList();
@@ -331,6 +337,7 @@ namespace MAP_MechanoidMechanitor
         public override void ExposeData()
         {
             Scribe_Values.Look(ref Generated, "sunFacilityGenerated");
+            Scribe_References.Look(ref facilityFaction, "sunFacilityFaction");
             Scribe_Values.Look(ref FacilityBounds, "sunFacilityBounds");
             Scribe_Values.Look(ref ArenaBounds, "sunArenaBounds");
             Scribe_References.Look(ref Core, "sunArenaCore");

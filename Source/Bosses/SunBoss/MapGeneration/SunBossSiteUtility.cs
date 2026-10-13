@@ -50,10 +50,23 @@ namespace MAP_MechanoidMechanitor
 
             SitePartDef part = DefDatabase<SitePartDef>.GetNamed("MAP_SunBossFacility");
             WorldObjectDef worldObject = DefDatabase<WorldObjectDef>.GetNamed("MAP_SunBossFacility");
-            Site site = SiteMaker.MakeSite(part, tile, Faction.OfMechanoids,
-                threatPoints: threatPoints, worldObjectDef: worldObject);
-            Find.WorldObjects.Add(site);
-            return site;
+            // 所有地块与 Def 校验完成后才创建派系；设施从出现时起就拥有真实敌对归属。
+            Faction faction = SunBossFactionUtility.CreateFacilityFaction();
+            Site? site = null;
+            try
+            {
+                site = SiteMaker.MakeSite(part, tile, faction,
+                    threatPoints: threatPoints, worldObjectDef: worldObject);
+                Find.WorldObjects.Add(site);
+                return site;
+            }
+            catch
+            {
+                // 仅清理此次创建的设施；无世界对象保留的临时派系交给原版安全回收。
+                if (site != null && !site.Destroyed) site.Destroy();
+                Find.FactionManager.Notify_PawnLeftFaction(faction);
+                throw;
+            }
         }
 
         [DebugAction("MAP-机械族机械师", "太阳据点：在指定地块创建",

@@ -27,10 +27,11 @@ namespace MAP_MechanoidMechanitor
             if (width + 24 > map.Size.x || height + 24 > map.Size.z)
                 throw new InvalidOperationException("[MAP-机械族机械师] 地图太小，无法保留太阳设施及外围入场空间。");
             CellRect bounds = new CellRect((map.Size.x - width) / 2, (map.Size.z - height) / 2, width, height);
+            Faction faction = record.BindFacilityFaction();
             LayoutStructureSketch sketch = layout.Worker.GenerateStructureSketch(new StructureGenParams
             {
                 size = bounds.Size,
-                faction = Faction.OfMechanoids
+                faction = faction
             });
 
             ClearSite(map, bounds.ExpandedBy(3), layout.terrainDef);
@@ -43,7 +44,7 @@ namespace MAP_MechanoidMechanitor
             bool oldDestroyPermission = Thing.allowDestroyNonDestroyable;
             try
             {
-                layout.Worker.Spawn(sketch, map, bounds.Min, points, faction: Faction.OfMechanoids);
+                layout.Worker.Spawn(sketch, map, bounds.Min, points, faction: faction);
             }
             finally
             {
@@ -316,7 +317,7 @@ namespace MAP_MechanoidMechanitor
                 occupied.Cells.Any(c => c.GetEdifice(map) != null))
                 throw new InvalidOperationException("[MAP-机械族机械师] 太阳大厅场景建筑尺寸或位置冲突：" + def.defName);
             Thing thing = ThingMaker.MakeThing(def);
-            if (def.CanHaveFaction) thing.SetFaction(Faction.OfMechanoids);
+            if (def.CanHaveFaction) thing.SetFaction(map.GetComponent<MapComponent_SunBossArena>().CombatFaction);
             Building building = (Building)GenSpawn.Spawn(thing, cell, map);
             reserved.Add(occupied.ExpandedBy(2));
             return building;

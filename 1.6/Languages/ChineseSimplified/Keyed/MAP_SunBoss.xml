@@ -3,6 +3,8 @@
   <MAP_SunBoss_InspectionUnavailable>反应堆正在苏醒。</MAP_SunBoss_InspectionUnavailable>
   <MAP_SunBoss_InspectionInspectorRequired>只能由殖民者或机械族机械师检查。</MAP_SunBoss_InspectionInspectorRequired>
   <MAP_SunBoss_FacilityFoundLabel>异常能源信号</MAP_SunBoss_FacilityFoundLabel>
+  <MAP_SunBoss_FacilityArrivalLabel>抵达异常机械族设施</MAP_SunBoss_FacilityArrivalLabel>
+  <MAP_SunBoss_FacilityArrivalText>我们已经抵达了这座有异常能源波动的机械族设施。仪器显示，能量波动的源头位于该设施中央。\n\n值得注意的是，这座设施似乎已经脱离了机械主脑的掌控，其内的机械族会将所有外来者视作敌人。\n\n小心行事。</MAP_SunBoss_FacilityArrivalText>
   <MAP_SunBoss_FacilityFoundText>我们的监测设备捕捉到了一组异常庞大的能源信号。其输出规模远超常规设备的极限，并且在始终维持着几乎无波动的高强度反应。\n\n经过进一步追踪，我们已经确定了信号的来源——一座位于远方的机械族设施。它的位置已经被标记在世界地图上。\n\n目前还无法确认设施内部究竟存在什么，但能够维持如此规模的能源反应，其中恐怕隐藏着相当危险的东西。不过，这也意味着那里可能保存着某种远超常规科技的技术。若能深入其中，或许我们能发现一些相当有价值的东西。\n\n扫描同时发现，设施内部存在强烈而异常的能量扰动，无工质推进器可能无法在那里正常工作。此外，如果决定前往探索，最好组建一支具备较强机动能力的队伍。</MAP_SunBoss_FacilityFoundText>
   <MAP_SunBoss_FirstStabilizerDestroyedLabel>稳定器被摧毁</MAP_SunBoss_FirstStabilizerDestroyedLabel>
   <MAP_SunBoss_FirstStabilizerDestroyedText>我们成功利用湮灭炮摧毁了一台反应堆稳定器！\n「太阳」- 能源核心的运行稳定度开始下降，我们的攻击开始奏效了！</MAP_SunBoss_FirstStabilizerDestroyedText>

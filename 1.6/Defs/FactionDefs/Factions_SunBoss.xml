@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <!-- 仅由太阳设施世界对象创建入口生成；使用独立 Def，避免被主机械巢关系策略接管。 -->
+  <FactionDef ParentName="FactionBase">
+    <defName>MAP_AncientMechHive</defName>
+    <label>远古机械巢</label>
+    <fixedName>远古机械巢</fixedName>
+    <description>一个脱离了主脑掌控的远古机械巢，将所有外来者视作敌人。</description>
+    <pawnSingular>机械族</pawnSingular>
+    <pawnsPlural>机械族</pawnsPlural>
+    <humanlikeFaction>false</humanlikeFaction>
+    <hidden>true</hidden>
+    <permanentEnemy>true</permanentEnemy>
+    <hostileToFactionlessHumanlikes>true</hostileToFactionlessHumanlikes>
+    <autoFlee>false</autoFlee>
+    <canUseAvoidGrid>false</canUseAvoidGrid>
+    <techLevel>Ultra</techLevel>
+    <factionIconPath>World/WorldObjects/Expanding/Mechanoids</factionIconPath>
+    <colorSpectrum>
+      <li>(0.78, 0.79, 0.71)</li>
+    </colorSpectrum>
+    <requiredCountAtGameStart>0</requiredCountAtGameStart>
+    <maxConfigurableAtWorldCreation>0</maxConfigurableAtWorldCreation>
+    <canMakeRandomly>false</canMakeRandomly>
+    <canStageAttacks>false</canStageAttacks>
+  </FactionDef>
+</Defs>
